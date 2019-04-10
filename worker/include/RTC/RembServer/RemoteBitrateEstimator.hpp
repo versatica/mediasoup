@@ -43,10 +43,10 @@ namespace RTC
 			{
 			public:
 				// Called when a receive channel group has a new bandwidth estimate for the incoming streams.
-				virtual void OnRembServerBandwidth(
+				virtual void OnRembServerAvailableBitrate(
 				  const RemoteBitrateEstimator* remoteBitrateEstimator,
 				  const std::vector<uint32_t>& ssrcs,
-				  uint32_t bandwidth) = 0;
+				  uint32_t availableBitrate) = 0;
 			};
 
 		protected:

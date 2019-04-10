@@ -40,8 +40,9 @@ namespace RTC
 		void UserOnNewConsumer(RTC::Consumer* consumer) override;
 		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
 
+		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
-		void OnConsumerNeedBandwidth(RTC::Consumer* consumer) override;
+		void OnConsumerNeedBitrate(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:

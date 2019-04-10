@@ -80,7 +80,7 @@ namespace RTC
 		}
 	}
 
-	uint32_t PipeConsumer::UseBandwidth(uint32_t availableBandwidth)
+	uint32_t PipeConsumer::UseBitrate(uint32_t availableBitrate)
 	{
 		MS_TRACE();
 
@@ -259,9 +259,9 @@ namespace RTC
 			rtpStream->Resume();
 		}
 
-		// We need to ask the Transport for bandwidth.
+		// We need to ask the Transport for bitrate.
 		if (IsActive())
-			this->listener->OnConsumerNeedBandwidth(this);
+			this->listener->OnConsumerNeedBitrate(this);
 	}
 
 	void PipeConsumer::CreateRtpStreams()

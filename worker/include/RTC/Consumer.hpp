@@ -12,6 +12,7 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
+#include <limits>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -24,10 +25,10 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnConsumerNeedBandwidth(RTC::Consumer* consumer)                         = 0;
 			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
+			virtual void OnConsumerNeedBitrate(RTC::Consumer* consumer)                            = 0;
 			virtual void onConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
 		};
 
@@ -52,7 +53,7 @@ namespace RTC
 		bool IsActive() const;
 		bool IsPaused() const;
 		bool IsProducerPaused() const;
-		virtual uint32_t UseBandwidth(uint32_t availableBandwidth) = 0;
+		virtual uint32_t UseBitrate(uint32_t availableBitrate = std::numeric_limits<uint32_t>::max()) = 0;
 		void ProducerPaused();
 		void ProducerResumed();
 		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;

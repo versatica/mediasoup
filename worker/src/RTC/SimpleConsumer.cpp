@@ -99,7 +99,7 @@ namespace RTC
 		}
 	}
 
-	uint32_t SimpleConsumer::UseBandwidth(uint32_t availableBandwidth)
+	uint32_t SimpleConsumer::UseBitrate(uint32_t availableBitrate)
 	{
 		MS_TRACE();
 
@@ -128,8 +128,8 @@ namespace RTC
 		if (IsActive())
 		{
 			// Since the Producer RtpStream has been created right now, we need to ask
-			// the Transport for bandwidth.
-			this->listener->OnConsumerNeedBandwidth(this);
+			// the Transport for bitrate.
+			this->listener->OnConsumerNeedBitrate(this);
 		}
 
 		// Emit the score event.
@@ -355,9 +355,9 @@ namespace RTC
 		// receiver will request lot of NACKs due to unknown RTP packets.
 		this->syncRequired = true;
 
-		// We need to ask the Transport for bandwidth.
+		// We need to ask the Transport for bitrate.
 		if (IsActive() && this->producerRtpStream)
-			this->listener->OnConsumerNeedBandwidth(this);
+			this->listener->OnConsumerNeedBitrate(this);
 	}
 
 	void SimpleConsumer::CreateRtpStream()

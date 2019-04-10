@@ -60,8 +60,9 @@ namespace RTC
 		void UserOnNewConsumer(RTC::Consumer* consumer) override;
 		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
 
+		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
-		void OnConsumerNeedBandwidth(RTC::Consumer* consumer) override;
+		void OnConsumerNeedBitrate(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
@@ -106,14 +107,14 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
 	public:
-		void OnRembClientAvailableBandwidth(RTC::RembClient* rembClient, int32_t availableBandwidth) override;
+		void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, int32_t availableBitrate) override;
 
 		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:
-		void OnRembServerBandwidth(
+		void OnRembServerAvailableBitrate(
 		  const RTC::RembServer::RemoteBitrateEstimator* remoteBitrateEstimator,
 		  const std::vector<uint32_t>& ssrcs,
-		  uint32_t bandwidth) override;
+		  uint32_t availableBitrate) override;
 
 	private:
 		// Allocated by this.

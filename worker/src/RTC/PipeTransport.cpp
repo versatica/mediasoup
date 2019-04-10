@@ -236,6 +236,14 @@ namespace RTC
 				// and tell the parent class.
 				RTC::Transport::Connected();
 
+				// Tell all Consumers.
+				for (auto& kv : this->mapConsumers)
+				{
+					auto* consumer = kv.second;
+
+					consumer->UseBitrate();
+				}
+
 				break;
 			}
 
@@ -406,11 +414,14 @@ namespace RTC
 		// Do nothing.
 	}
 
-	void PipeTransport::UserOnNewConsumer(RTC::Consumer* /*consumer*/)
+	void PipeTransport::UserOnNewConsumer(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
-		// Do nothing.
+		// If the Transport is already connected tell the new Consumer to use
+		// available bitrate.
+		if (IsConnected())
+			consumer->UseBitrate();
 	}
 
 	void PipeTransport::UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* /*remb*/)
@@ -420,7 +431,7 @@ namespace RTC
 		// TODO
 	}
 
-	inline void PipeTransport::OnConsumerNeedBandwidth(RTC::Consumer* consumer)
+	inline void PipeTransport::OnConsumerNeedBitrate(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -428,9 +439,7 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
-		// TODO: Here we must check the available sending BWE and so on.
-
-		consumer->UseBandwidth(0);
+		consumer->UseBitrate();
 	}
 
 	inline void PipeTransport::OnPacketRecv(

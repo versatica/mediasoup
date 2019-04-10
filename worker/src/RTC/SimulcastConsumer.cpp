@@ -216,7 +216,7 @@ namespace RTC
 				  this->id.c_str());
 
 				if (IsActive())
-					this->listener->OnConsumerNeedBandwidth(this);
+					this->listener->OnConsumerNeedBitrate(this);
 
 				request->Accept();
 
@@ -231,7 +231,7 @@ namespace RTC
 		}
 	}
 
-	uint32_t SimulcastConsumer::UseBandwidth(uint32_t availableBandwidth)
+	uint32_t SimulcastConsumer::UseBitrate(uint32_t availableBitrate)
 	{
 		MS_TRACE();
 
@@ -275,7 +275,7 @@ namespace RTC
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
 		// If the Consumer is active and this is the first Producer RtpStream, we
-		// need to ask for bandwidth.
+		// need to ask for bitrate.
 		//
 		// clang-format off
 		if (
@@ -288,7 +288,7 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			this->listener->OnConsumerNeedBandwidth(this);
+			this->listener->OnConsumerNeedBitrate(this);
 		}
 		// TODO: We should never upgrade layers by ourselves.
 		else if (IsActive())
@@ -584,9 +584,9 @@ namespace RTC
 		// receiver will request lot of NACKs due to unknown RTP packets.
 		this->syncRequired = true;
 
-		// We need to ask the Transport for bandwidth.
+		// We need to ask the Transport for bitrate.
 		if (IsActive())
-			this->listener->OnConsumerNeedBandwidth(this);
+			this->listener->OnConsumerNeedBitrate(this);
 	}
 
 	void SimulcastConsumer::CreateRtpStream()

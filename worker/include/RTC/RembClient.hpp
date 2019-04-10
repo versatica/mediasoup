@@ -14,8 +14,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRembClientAvailableBandwidth(
-			  RTC::RembClient* rembClient, int32_t availableBandwidth) = 0;
+			virtual void OnRembClientAvailableBitrate(
+			  RTC::RembClient* rembClient, int32_t availableBitrate) = 0;
 		};
 
 	public:
@@ -23,13 +23,17 @@ namespace RTC
 		virtual ~RembClient();
 
 	public:
-		uint32_t GetAvailableBitrate() const;
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb);
+		uint32_t GetAvailableBitrate() const;
+		void AddExtraBitrate(uint32_t extraBitrate);
+		void RemoveExtraBitrate(uint32_t extraBitrate);
 
 	private:
 		Listener* listener;
 		RTC::RtpDataCounter transmissionCounter;
+		uint32_t averageBitrate{ 0 };
+		uint32_t extraBitrate{ 0 };
 		uint32_t availableBitrate{ 0 };
 	};
 
@@ -37,7 +41,23 @@ namespace RTC
 
 	inline uint32_t RembClient::GetAvailableBitrate() const
 	{
-		return this->availableBitrate;
+		if (this->availableBitrate >= this->extraBitrate)
+			return this->availableBitrate - this->extraBitrate;
+		else
+			return 0;
+	}
+
+	inline void RembClient::AddExtraBitrate(uint32_t extraBitrate)
+	{
+		this->extraBitrate += extraBitrate;
+	}
+
+	inline void RembClient::RemoveExtraBitrate(uint32_t extraBitrate)
+	{
+		if (this->extraBitrate >= extraBitrate)
+			this->extraBitrate -= extraBitrate;
+		else
+			this->extraBitrate = 0;
 	}
 } // namespace RTC
 
