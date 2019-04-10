@@ -69,7 +69,7 @@ namespace RTC
 					if (*arrivalTimeDeltaMs - systemTimeDeltaMs >= ArrivalTimeOffsetThresholdMs)
 					{
 						MS_WARN_TAG(
-						  rbe,
+						  bwe,
 						  "the arrival time clock offset has changed, resetting"
 						  "[diff:%" PRId64 "ms]",
 						  *arrivalTimeDeltaMs - systemTimeDeltaMs);
@@ -87,7 +87,7 @@ namespace RTC
 						if (this->numConsecutiveReorderedPackets >= ReorderedResetThreshold)
 						{
 							MS_WARN_TAG(
-							  rbe,
+							  bwe,
 							  "packets are being reordered on the path from the "
 							  "socket to the bandwidth estimator, ignoring this "
 							  "packet for bandwidth estimation, resetting");

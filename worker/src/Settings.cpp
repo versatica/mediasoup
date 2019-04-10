@@ -187,8 +187,8 @@ void Settings::PrintConfiguration()
 		logTags.emplace_back("rtcp");
 	if (Settings::configuration.logTags.rtx)
 		logTags.emplace_back("rtx");
-	if (Settings::configuration.logTags.rbe)
-		logTags.emplace_back("rbe");
+	if (Settings::configuration.logTags.bwe)
+		logTags.emplace_back("bwe");
 	if (Settings::configuration.logTags.score)
 		logTags.emplace_back("score");
 	if (Settings::configuration.logTags.simulcast)
@@ -308,8 +308,8 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 			newLogTags.rtcp = true;
 		else if (tag == "rtx")
 			newLogTags.rtx = true;
-		else if (tag == "rbe")
-			newLogTags.rbe = true;
+		else if (tag == "bwe")
+			newLogTags.bwe = true;
 		else if (tag == "score")
 			newLogTags.score = true;
 		else if (tag == "simulcast")

@@ -777,14 +777,14 @@ namespace RTC
 			if (producerScore == 0)
 				continue;
 
-			if (producerScore >= maxProducerScore)
+			if (producerScore >= maxProducerScore || producerScore >= 7)
 			{
 				maxProducerScore      = producerScore;
 				newTargetSpatialLayer = spatialLayer;
 
 				// If this is the preferred or higher spatial layer and has good score,
 				// take it and exit.
-				if (spatialLayer >= this->preferredSpatialLayer && maxProducerScore >= 7)
+				if (spatialLayer >= this->preferredSpatialLayer && producerScore >= 7)
 					break;
 			}
 		}

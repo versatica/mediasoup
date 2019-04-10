@@ -146,7 +146,7 @@ namespace RTC
 					int recvBitrateBps = it->meanSize * 8 * 1000 / it->recvMeanMs;
 
 					MS_DEBUG_TAG(
-					  rbe,
+					  bwe,
 					  "probe failed, sent at %d bps, received at %d bps [mean "
 					  "send delta:%fms, mean recv delta:%fms, num probes:%d]",
 					  sendBitrateBps,
@@ -190,7 +190,7 @@ namespace RTC
 				if (IsBitrateImproving(probeBitrateBps))
 				{
 					MS_DEBUG_TAG(
-					  rbe,
+					  bwe,
 					  "probe successful, sent at %d bps, received at %d bps "
 					  "[mean send delta:%fms, mean recv delta:%f ms, "
 					  "num probes:%d",
@@ -309,7 +309,7 @@ namespace RTC
 						}
 
 						MS_DEBUG_TAG(
-						  rbe,
+						  bwe,
 						  "probe packet received [send time:%" PRId64
 						  "ms, recv "
 						  "time:%" PRId64 "ms, send delta:%dms, recv delta:%d ms]",

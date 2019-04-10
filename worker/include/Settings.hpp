@@ -20,7 +20,7 @@ public:
 		bool srtp{ false };
 		bool rtcp{ false };
 		bool rtx{ false };
-		bool rbe{ false };
+		bool bwe{ false };
 		bool score{ false };
 		bool simulcast{ false };
 		bool svc{ false };

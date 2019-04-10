@@ -626,7 +626,7 @@ namespace RTC
 
 				this->maxIncomingBitrate = bitrate;
 
-				MS_DEBUG_TAG(rbe, "WebRtcTransport maximum incoming bitrate set to %" PRIu32 "bps", bitrate);
+				MS_DEBUG_TAG(bwe, "WebRtcTransport maximum incoming bitrate set to %" PRIu32 "bps", bitrate);
 
 				request->Accept();
 
@@ -1101,7 +1101,7 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			MS_DEBUG_TAG(rbe, "enabling REMB server");
+			MS_DEBUG_TAG(bwe, "enabling REMB server");
 
 			this->rembServer = new RTC::RembServer::RemoteBitrateEstimatorAbsSendTime(this);
 		}
@@ -1135,7 +1135,7 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			MS_DEBUG_TAG(rbe, "enabling REMB client");
+			MS_DEBUG_TAG(bwe, "enabling REMB client");
 
 			this->rembClient = new RTC::RembClient(this);
 		}
@@ -1448,7 +1448,7 @@ namespace RTC
 		if (this->maxIncomingBitrate != 0u)
 			availableBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
 
-		if (MS_HAS_DEBUG_TAG(rbe))
+		if (MS_HAS_DEBUG_TAG(bwe))
 		{
 			std::ostringstream ssrcsStream;
 
@@ -1459,7 +1459,7 @@ namespace RTC
 			}
 
 			MS_DEBUG_TAG(
-			  rbe,
+			  bwe,
 			  "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
 			  availableBitrate,
 			  ssrcsStream.str().c_str());

@@ -32,33 +32,12 @@ namespace RTC
 	private:
 		Listener* listener;
 		RTC::RtpDataCounter transmissionCounter;
-		uint32_t averageBitrate{ 0 };
-		uint32_t extraBitrate{ 0 };
+		uint32_t bitrateInUse{ 0 };
+		uint32_t extraBitrateInUse{ 0 };
+		uint32_t rembBitrate{ 0 };
 		uint32_t availableBitrate{ 0 };
+		uint64_t lastEventAt{ 0 };
 	};
-
-	/* Inline methods. */
-
-	inline uint32_t RembClient::GetAvailableBitrate() const
-	{
-		if (this->availableBitrate >= this->extraBitrate)
-			return this->availableBitrate - this->extraBitrate;
-		else
-			return 0;
-	}
-
-	inline void RembClient::AddExtraBitrate(uint32_t extraBitrate)
-	{
-		this->extraBitrate += extraBitrate;
-	}
-
-	inline void RembClient::RemoveExtraBitrate(uint32_t extraBitrate)
-	{
-		if (this->extraBitrate >= extraBitrate)
-			this->extraBitrate -= extraBitrate;
-		else
-			this->extraBitrate = 0;
-	}
 } // namespace RTC
 
 #endif
