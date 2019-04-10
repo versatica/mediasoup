@@ -39,10 +39,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		uint64_t now = DepLibUV::GetTime();
+
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
+		jsonObject["timestamp"]     = now;
 		jsonObject["type"]          = "outbound-rtp";
 		jsonObject["roundTripTime"] = this->rtt;
+		jsonObject["packetCount"]   = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"]     = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"]       = this->transmissionCounter.GetRate(now);
 	}
 
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
@@ -207,6 +213,17 @@ namespace RTC
 	void RtpStreamSend::Resume()
 	{
 		MS_TRACE();
+	}
+
+	uint32_t RtpStreamSend::GetBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+	{
+		MS_ABORT("Invalid method call");
+	}
+
+	uint32_t RtpStreamSend::GetLayerBitrate(
+	  uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+	{
+		MS_ABORT("Invalid method call");
 	}
 
 	void RtpStreamSend::ClearRetransmissionBuffer()

@@ -137,6 +137,7 @@ namespace RTC
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
 		uint8_t GetPayloadPadding() const;
+		uint8_t GetSpatialLayer() const;
 		uint8_t GetTemporalLayer() const;
 		bool IsKeyFrame() const;
 		RtpPacket* Clone(const uint8_t* buffer) const;
@@ -507,6 +508,14 @@ namespace RTC
 			return 0u;
 
 		return this->payloadDescriptorHandler->GetTemporalLayer();
+	}
+
+	inline uint8_t RtpPacket::GetSpatialLayer() const
+	{
+		if (!this->payloadDescriptorHandler)
+			return 0u;
+
+		return this->payloadDescriptorHandler->GetSpatialLayer();
 	}
 
 	inline bool RtpPacket::IsKeyFrame() const

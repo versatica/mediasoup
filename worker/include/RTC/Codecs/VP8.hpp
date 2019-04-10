@@ -102,6 +102,7 @@ namespace RTC
 				void Dump() const;
 				bool Encode(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data);
 				void Restore(uint8_t* data);
+				uint8_t GetSpatialLayer() const;
 				uint8_t GetTemporalLayer() const;
 				bool IsKeyFrame() const;
 
@@ -118,6 +119,11 @@ namespace RTC
 		};
 
 		/* Inline PayloadDescriptorHandler methods */
+
+		inline uint8_t VP8::PayloadDescriptorHandler::GetSpatialLayer() const
+		{
+			return 0u;
+		};
 
 		inline uint8_t VP8::PayloadDescriptorHandler::GetTemporalLayer() const
 		{

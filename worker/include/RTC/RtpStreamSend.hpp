@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
 #include "Utils.hpp"
+#include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpStream.hpp"
 #include <list>
 #include <vector>
@@ -50,6 +51,9 @@ namespace RTC
 		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 		void Pause() override;
 		void Resume() override;
+		uint32_t GetBitrate(uint64_t now) override;
+		uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
+		uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
@@ -64,13 +68,21 @@ namespace RTC
 		std::list<BufferItem> buffer;
 		float rtt{ 0 };
 		uint16_t rtxSeq{ 0 };
+		RTC::RtpDataCounter transmissionCounter;
 	};
+
+	/* Inline instance methods */
 
 	inline void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
 	{
 		RTC::RtpStream::SetRtx(payloadType, ssrc);
 
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
+	}
+
+	inline uint32_t RtpStreamSend::GetBitrate(uint64_t now)
+	{
+		return this->transmissionCounter.GetRate(now);
 	}
 } // namespace RTC
 

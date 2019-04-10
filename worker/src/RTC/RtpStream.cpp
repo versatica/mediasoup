@@ -50,15 +50,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
-
-		jsonObject["timestamp"]            = now;
 		jsonObject["ssrc"]                 = this->params.ssrc;
 		jsonObject["kind"]                 = RtpCodecMimeType::type2String[this->params.mimeType.type];
 		jsonObject["mimeType"]             = this->params.mimeType.ToString();
-		jsonObject["packetCount"]          = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"]            = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]              = this->transmissionCounter.GetRate(now);
 		jsonObject["packetsLost"]          = this->packetsLost;
 		jsonObject["fractionLost"]         = this->fractionLost;
 		jsonObject["packetsDiscarded"]     = this->packetsDiscarded;

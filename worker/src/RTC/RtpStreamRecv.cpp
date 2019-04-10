@@ -12,10 +12,120 @@ namespace RTC
 
 	static constexpr uint16_t InactivityCheckPeriod{ 250 };
 
+	/* TransmissionCounter methods. */
+
+	RtpStreamRecv::TransmissionCounter::TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers)
+	{
+		// Reserve vectors capacity.
+		this->spatialLayerCounters = std::vector<std::vector<RTC::RtpDataCounter>>(spatialLayers);
+		;
+
+		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		{
+			spatialLayerCounter = std::vector<RTC::RtpDataCounter>(temporalLayers);
+		}
+	}
+
+	void RtpStreamRecv::TransmissionCounter::Update(RTC::RtpPacket* packet)
+	{
+		auto spatialLayer  = packet->GetSpatialLayer();
+		auto temporalLayer = packet->GetTemporalLayer();
+
+		// Sanity check. Do not allow spatial layers higher than defined.
+		if (spatialLayer > this->spatialLayerCounters.size() - 1)
+			spatialLayer = this->spatialLayerCounters.size() - 1;
+
+		// Sanity check. Do not allow temporal layers higher than defined.
+		if (temporalLayer > this->spatialLayerCounters[0].size() - 1)
+			temporalLayer = this->spatialLayerCounters[0].size() - 1;
+
+		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
+		counter.Update(packet);
+	}
+
+	uint32_t RtpStreamRecv::TransmissionCounter::GetRate(uint64_t now)
+	{
+		uint32_t rate{ 0u };
+
+		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		{
+			for (auto& temporalLayerCounter : spatialLayerCounter)
+			{
+				rate += temporalLayerCounter.GetRate(now);
+			}
+		}
+
+		return rate;
+	}
+
+	uint32_t RtpStreamRecv::TransmissionCounter::GetRate(
+	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	{
+		uint32_t rate{ 0u };
+
+		uint8_t spatialLayerIdx{ 0u };
+		uint8_t temporalLayerIdx{ 0u };
+
+		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		{
+			for (auto& temporalLayerCounter : spatialLayerCounter)
+			{
+				rate += temporalLayerCounter.GetRate(now);
+
+				if (++temporalLayerIdx > temporalLayer)
+					break;
+			}
+
+			if (++spatialLayerIdx > spatialLayer)
+				break;
+		}
+
+		return rate;
+	}
+
+	size_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
+	{
+		size_t packetCount{ 0u };
+
+		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		{
+			for (auto& temporalLayerCounter : spatialLayerCounter)
+			{
+				packetCount += temporalLayerCounter.GetPacketCount();
+			}
+		}
+
+		return packetCount;
+	}
+
+	size_t RtpStreamRecv::TransmissionCounter::GetBytes() const
+	{
+		size_t bytes{ 0u };
+
+		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		{
+			for (auto& temporalLayerCounter : spatialLayerCounter)
+			{
+				bytes += temporalLayerCounter.GetBytes();
+			}
+		}
+
+		return bytes;
+	}
+
+	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerRate(
+	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	{
+		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
+		return counter.GetRate(now);
+	}
+
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params)
-	  : RTC::RtpStream::RtpStream(listener, params, 10)
+	  : RTC::RtpStream::RtpStream(listener, params, 10),
+	    transmissionCounter(params.spatialLayers, params.temporalLayers)
+
 	{
 		MS_TRACE();
 
@@ -45,10 +155,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		uint64_t now = DepLibUV::GetTime();
+
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["type"]   = "inbound-rtp";
-		jsonObject["jitter"] = this->jitter;
+		jsonObject["timestamp"]   = now;
+		jsonObject["type"]        = "inbound-rtp";
+		jsonObject["jitter"]      = this->jitter;
+		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"]     = this->transmissionCounter.GetRate(now);
 	}
 
 	bool RtpStreamRecv::ReceivePacket(RTC::RtpPacket* packet)

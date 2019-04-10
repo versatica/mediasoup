@@ -11,7 +11,6 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
-#include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <string>
@@ -71,10 +70,12 @@ namespace RTC
 		uint8_t GetSpatialLayers() const;
 		uint8_t GetTemporalLayers() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
-		virtual void Pause()  = 0;
-		virtual void Resume() = 0;
+		virtual void Pause()                                                                        = 0;
+		virtual void Resume()                                                                       = 0;
+		virtual uint32_t GetBitrate(uint64_t now)                                                   = 0;
+		virtual uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)      = 0;
+		virtual uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 		void ResetScore(uint8_t score, bool notify);
-		uint32_t GetBitrate(uint64_t now);
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
@@ -114,7 +115,6 @@ namespace RTC
 		size_t repairedPrior{ 0 };      // Packets repaired at last interval.
 		size_t retransmittedPrior{ 0 }; // Packets retransmitted at last interval.
 		uint32_t expectedPrior{ 0 };    // Packets expected at last interval.
-		RTC::RtpDataCounter transmissionCounter;
 
 	private:
 		// Score related.
@@ -189,11 +189,6 @@ namespace RTC
 	inline uint8_t RtpStream::GetTemporalLayers() const
 	{
 		return this->params.temporalLayers;
-	}
-
-	inline uint32_t RtpStream::GetBitrate(uint64_t now)
-	{
-		return this->transmissionCounter.GetRate(now);
 	}
 
 	inline uint8_t RtpStream::GetFractionLost() const

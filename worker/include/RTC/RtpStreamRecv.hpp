@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_STREAM_RECV_HPP
 
 #include "RTC/NackGenerator.hpp"
+#include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpStream.hpp"
 #include "handles/Timer.hpp"
 #include <vector>
@@ -23,6 +24,22 @@ namespace RTC
 		};
 
 	public:
+		class TransmissionCounter
+		{
+		public:
+			TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers);
+			void Update(RTC::RtpPacket* packet);
+			uint32_t GetRate(uint64_t now);
+			uint32_t GetRate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer);
+			uint32_t GetLayerRate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer);
+			size_t GetPacketCount() const;
+			size_t GetBytes() const;
+
+		private:
+			std::vector<std::vector<RTC::RtpDataCounter>> spatialLayerCounters;
+		};
+
+	public:
 		RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params);
 		~RtpStreamRecv();
 
@@ -35,6 +52,9 @@ namespace RTC
 		void RequestKeyFrame();
 		void Pause() override;
 		void Resume() override;
+		uint32_t GetBitrate(uint64_t now) override;
+		uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
+		uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
@@ -63,7 +83,25 @@ namespace RTC
 		bool inactive{ false }; // Stream is inactive.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		Timer* inactivityCheckPeriodicTimer{ nullptr };
+		TransmissionCounter transmissionCounter;
 	};
+
+	/* Inline instance methods */
+
+	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t now)
+	{
+		return this->transmissionCounter.GetRate(now);
+	}
+
+	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	{
+		return this->transmissionCounter.GetRate(now, spatialLayer, temporalLayer);
+	}
+
+	inline uint32_t RtpStreamRecv::GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	{
+		return this->transmissionCounter.GetRate(now, spatialLayer, temporalLayer);
+	}
 } // namespace RTC
 
 #endif
