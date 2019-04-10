@@ -418,7 +418,8 @@ namespace RTC
 				{
 					auto* consumer = kv.second;
 
-					consumer->UseBitrate();
+					if (consumer->IsActive())
+						consumer->UseBitrate();
 				}
 
 				break;
@@ -690,9 +691,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// If the Transport is already connected tell the new Consumer to use
-		// available bitrate.
-		if (IsConnected())
+		// If the Transport is already connected and the Consumer is active, tell the
+		// new Consumer to use available bitrate.
+		if (IsConnected() && consumer->IsActive())
 			consumer->UseBitrate();
 	}
 

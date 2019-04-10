@@ -142,11 +142,11 @@ namespace RTC
 				}
 				else
 				{
+#ifdef MS_LOG_DEV
 					int sendBitrateBps = it->meanSize * 8 * 1000 / it->sendMeanMs;
 					int recvBitrateBps = it->meanSize * 8 * 1000 / it->recvMeanMs;
 
-					MS_DEBUG_TAG(
-					  bwe,
+					MS_WARN_DEV(
 					  "probe failed, sent at %d bps, received at %d bps [mean "
 					  "send delta:%fms, mean recv delta:%fms, num probes:%d]",
 					  sendBitrateBps,
@@ -154,6 +154,7 @@ namespace RTC
 					  it->sendMeanMs,
 					  it->recvMeanMs,
 					  it->count);
+#endif
 
 					break;
 				}
@@ -189,8 +190,7 @@ namespace RTC
 				// reduce the estimate.
 				if (IsBitrateImproving(probeBitrateBps))
 				{
-					MS_DEBUG_TAG(
-					  bwe,
+					MS_DEBUG_DEV(
 					  "probe successful, sent at %d bps, received at %d bps "
 					  "[mean send delta:%fms, mean recv delta:%f ms, "
 					  "num probes:%d",
@@ -308,8 +308,7 @@ namespace RTC
 							recvDeltaMs = arrivalTimeMs - this->probes.back().recvTimeMs;
 						}
 
-						MS_DEBUG_TAG(
-						  bwe,
+						MS_DEBUG_DEV(
 						  "probe packet received [send time:%" PRId64
 						  "ms, recv "
 						  "time:%" PRId64 "ms, send delta:%dms, recv delta:%d ms]",

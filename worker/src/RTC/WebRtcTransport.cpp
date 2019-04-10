@@ -1140,10 +1140,14 @@ namespace RTC
 			this->rembClient = new RTC::RembClient(this);
 		}
 
-		// If the Transport is already connected tell the new Consumer to use
-		// available bitrate.
-		if (IsConnected())
+		// If the Transport is already connected and the Consumer is active, tell the
+		// new Consumer to use available bitrate.
+		if (IsConnected() && consumer->IsActive())
 		{
+			// TODO
+			if (this->rembClient)
+				this->rembClient->GetAvailableBitrate();
+
 			// TODO
 			consumer->UseBitrate();
 		}
@@ -1166,6 +1170,10 @@ namespace RTC
 		// Ignore if not connected.
 		if (!IsConnected())
 			return;
+
+		// TODO
+		if (this->rembClient)
+			this->rembClient->GetAvailableBitrate();
 
 		// TODO
 		consumer->UseBitrate();
@@ -1369,7 +1377,8 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			// TODO
-			consumer->UseBitrate();
+			if (consumer->IsActive())
+				consumer->UseBitrate();
 		}
 	}
 
@@ -1430,7 +1439,15 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnRembClientAvailableBitrate(
-	  RTC::RembClient* rembClient, int32_t availableBitrate)
+	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	inline void WebRtcTransport::OnRembClientExceedingBitrate(
+	  RTC::RembClient* /*rembClient*/, uint32_t exceedingBitrate)
 	{
 		MS_TRACE();
 
@@ -1458,11 +1475,13 @@ namespace RTC
 				ssrcsStream << ssrcs.back();
 			}
 
+#ifdef MS_LOG_DEV
 			MS_DEBUG_TAG(
 			  bwe,
 			  "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
 			  availableBitrate,
 			  ssrcsStream.str().c_str());
+#endif
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);

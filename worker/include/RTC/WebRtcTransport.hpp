@@ -107,7 +107,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
 	public:
-		void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, int32_t availableBitrate) override;
+		void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, uint32_t availableBitrate) override;
+		void OnRembClientExceedingBitrate(RTC::RembClient* rembClient, uint32_t exceedingBitrate) override;
 
 		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:
