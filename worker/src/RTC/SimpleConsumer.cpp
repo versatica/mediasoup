@@ -84,7 +84,8 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
-				RequestKeyFrame();
+				if (IsActive())
+					RequestKeyFrame();
 
 				request->Accept();
 
@@ -97,16 +98,6 @@ namespace RTC
 				RTC::Consumer::HandleRequest(request);
 			}
 		}
-	}
-
-	uint32_t SimpleConsumer::UseBitrate(uint32_t availableBitrate)
-	{
-		MS_TRACE();
-
-		RequestKeyFrame();
-
-		// TODO.
-		return 0;
 	}
 
 	void SimpleConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
@@ -124,13 +115,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-
-		if (IsActive())
-		{
-			// Since the Producer RtpStream has been created right now, we need to ask
-			// the Transport for bitrate.
-			this->listener->OnConsumerNeedBitrate(this);
-		}
 
 		// Emit the score event.
 		EmitScore();
@@ -301,7 +285,8 @@ namespace RTC
 
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
-		RequestKeyFrame();
+		if (IsActive())
+			RequestKeyFrame();
 	}
 
 	void SimpleConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -325,7 +310,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive() || !this->producerRtpStream)
+		if (!IsActive())
 			return 0;
 
 		if (this->producerRtpStream->GetLossPercentage() >= this->rtpStream->GetLossPercentage())
@@ -338,26 +323,46 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::Paused()
+	void SimpleConsumer::UserOnTransportConnected()
+	{
+		MS_TRACE();
+
+		this->syncRequired = true;
+
+		if (IsActive())
+		{
+			this->rtpStream->Resume();
+
+			RequestKeyFrame();
+		}
+	}
+
+	void SimpleConsumer::UserOnTransportDisconnected()
 	{
 		MS_TRACE();
 
 		this->rtpStream->Pause();
 	}
 
-	void SimpleConsumer::Resumed()
+	void SimpleConsumer::UserOnPaused()
 	{
 		MS_TRACE();
 
-		this->rtpStream->Resume();
+		this->rtpStream->Pause();
+	}
 
-		// We need to sync and wait for a key frame (if supported). Otherwise the
-		// receiver will request lot of NACKs due to unknown RTP packets.
+	void SimpleConsumer::UserOnResumed()
+	{
+		MS_TRACE();
+
 		this->syncRequired = true;
 
-		// We need to ask the Transport for bitrate.
-		if (IsActive() && this->producerRtpStream)
-			this->listener->OnConsumerNeedBitrate(this);
+		if (IsActive())
+		{
+			this->rtpStream->Resume();
+
+			RequestKeyFrame();
+		}
 	}
 
 	void SimpleConsumer::CreateRtpStream()
@@ -446,7 +451,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive() || !this->producerRtpStream || this->kind != RTC::Media::Kind::VIDEO)
+		if (this->kind != RTC::Media::Kind::VIDEO)
 			return;
 
 		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;

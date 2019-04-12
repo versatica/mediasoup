@@ -157,7 +157,7 @@ namespace RTC
 		// Clear the map.
 		ResetMapProducerDBovs();
 
-		if (mapDBovsProducer.size() > 0)
+		if (!mapDBovsProducer.empty())
 		{
 			this->silence = false;
 

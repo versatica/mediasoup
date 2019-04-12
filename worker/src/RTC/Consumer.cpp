@@ -219,7 +219,7 @@ namespace RTC
 				MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
 
 				if (wasActive)
-					Paused();
+					UserOnPaused();
 
 				request->Accept();
 
@@ -240,7 +240,7 @@ namespace RTC
 				MS_DEBUG_DEV("Consumer resumed [consumerId:%s]", this->id.c_str());
 
 				if (IsActive())
-					Resumed();
+					UserOnResumed();
 
 				request->Accept();
 
@@ -252,6 +252,28 @@ namespace RTC
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 			}
 		}
+	}
+
+	void Consumer::TransportConnected()
+	{
+		MS_TRACE();
+
+		this->transportConnected = true;
+
+		MS_DEBUG_DEV("Transport connected [consumerId:%s]", this->id.c_str());
+
+		UserOnTransportConnected();
+	}
+
+	void Consumer::TransportDisconnected()
+	{
+		MS_TRACE();
+
+		this->transportConnected = false;
+
+		MS_DEBUG_DEV("Transport disconnected [consumerId:%s]", this->id.c_str());
+
+		UserOnTransportDisconnected();
 	}
 
 	void Consumer::ProducerPaused()
@@ -268,7 +290,7 @@ namespace RTC
 		MS_DEBUG_DEV("Producer paused [consumerId:%s]", this->id.c_str());
 
 		if (wasActive)
-			Paused();
+			UserOnPaused();
 
 		Channel::Notifier::Emit(this->id, "producerpause");
 	}
@@ -285,7 +307,7 @@ namespace RTC
 		MS_DEBUG_DEV("Producer resumed [consumerId:%s]", this->id.c_str());
 
 		if (IsActive())
-			Resumed();
+			UserOnResumed();
 
 		Channel::Notifier::Emit(this->id, "producerresume");
 	}

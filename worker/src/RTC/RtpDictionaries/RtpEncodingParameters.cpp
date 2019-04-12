@@ -73,7 +73,7 @@ namespace RTC
 
 			std::regex_match(scalabilityMode, match, ScalabilityModeRegex);
 
-			if (match.size() > 0)
+			if (!match.empty())
 			{
 				this->scalabilityMode = scalabilityMode;
 

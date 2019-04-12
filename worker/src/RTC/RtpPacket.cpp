@@ -330,7 +330,7 @@ namespace RTC
 			}
 		}
 
-		size_t paddedExtensionsTotalSize =
+		auto paddedExtensionsTotalSize =
 		  static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(extensionsTotalSize)));
 		size_t padding = paddedExtensionsTotalSize - extensionsTotalSize;
 

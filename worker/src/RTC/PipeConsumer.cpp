@@ -43,14 +43,14 @@ namespace RTC
 		RTC::Consumer::FillJson(jsonObject);
 	}
 
-	void PipeConsumer::FillJsonStats(json& jsonArray) const
+	void PipeConsumer::FillJsonStats(json& /*jsonArray*/) const
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
 
-	void PipeConsumer::FillJsonScore(json& jsonObject) const
+	void PipeConsumer::FillJsonScore(json& /*jsonObject*/) const
 	{
 		MS_TRACE();
 
@@ -65,7 +65,8 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
-				RequestKeyFrame();
+				if (IsActive())
+					RequestKeyFrame();
 
 				request->Accept();
 
@@ -78,16 +79,6 @@ namespace RTC
 				RTC::Consumer::HandleRequest(request);
 			}
 		}
-	}
-
-	uint32_t PipeConsumer::UseBitrate(uint32_t availableBitrate)
-	{
-		MS_TRACE();
-
-		RequestKeyFrame();
-
-		// TODO.
-		return 0;
 	}
 
 	void PipeConsumer::ProducerRtpStream(RTC::RtpStream* /*rtpStream*/, uint32_t /*mappedSsrc*/)
@@ -187,11 +178,12 @@ namespace RTC
 		// Do nothing since we do not enable NACK.
 	}
 
-	void PipeConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
+	void PipeConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType /*messageType*/)
 	{
 		MS_TRACE();
 
-		RequestKeyFrame();
+		if (IsActive())
+			RequestKeyFrame();
 	}
 
 	void PipeConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -216,6 +208,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsActive())
+			return 0u;
+
 		uint32_t rate{ 0 };
 
 		for (auto& kv : this->mapMappedSsrcRtpStream)
@@ -236,7 +231,24 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::Paused()
+	void PipeConsumer::UserOnTransportConnected()
+	{
+		MS_TRACE();
+
+		if (IsActive())
+		{
+			for (auto& kv : this->mapMappedSsrcRtpStream)
+			{
+				auto& rtpStream = kv.second;
+
+				rtpStream->Resume();
+			}
+
+			RequestKeyFrame();
+		}
+	}
+
+	void PipeConsumer::UserOnTransportDisconnected()
 	{
 		MS_TRACE();
 
@@ -248,7 +260,7 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::Resumed()
+	void PipeConsumer::UserOnPaused()
 	{
 		MS_TRACE();
 
@@ -256,12 +268,25 @@ namespace RTC
 		{
 			auto& rtpStream = kv.second;
 
-			rtpStream->Resume();
+			rtpStream->Pause();
 		}
+	}
 
-		// We need to ask the Transport for bitrate.
+	void PipeConsumer::UserOnResumed()
+	{
+		MS_TRACE();
+
 		if (IsActive())
-			this->listener->OnConsumerNeedBitrate(this);
+		{
+			for (auto& kv : this->mapMappedSsrcRtpStream)
+			{
+				auto& rtpStream = kv.second;
+
+				rtpStream->Resume();
+			}
+
+			RequestKeyFrame();
+		}
 	}
 
 	void PipeConsumer::CreateRtpStreams()
@@ -352,7 +377,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive() || this->kind != RTC::Media::Kind::VIDEO)
+		if (this->kind != RTC::Media::Kind::VIDEO)
 			return;
 
 		for (auto& encoding : this->rtpParameters.encodings)

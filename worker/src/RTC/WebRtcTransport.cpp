@@ -747,7 +747,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
 
@@ -1137,19 +1137,8 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(bwe, "enabling REMB client");
 
-			this->rembClient = new RTC::RembClient(this);
-		}
-
-		// If the Transport is already connected and the Consumer is active, tell the
-		// new Consumer to use available bitrate.
-		if (IsConnected() && consumer->IsActive())
-		{
-			// TODO
-			if (this->rembClient)
-				this->rembClient->GetAvailableBitrate();
-
-			// TODO
-			consumer->UseBitrate();
+			// TODO: Make this value configurable.
+			this->rembClient = new RTC::RembClient(this, 300000);
 		}
 	}
 
@@ -1163,20 +1152,11 @@ namespace RTC
 		this->rembClient->ReceiveRembFeedback(remb);
 	}
 
-	inline void WebRtcTransport::OnConsumerNeedBitrate(RTC::Consumer* consumer)
+	inline void WebRtcTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
 
-		// Ignore if not connected.
-		if (!IsConnected())
-			return;
-
 		// TODO
-		if (this->rembClient)
-			this->rembClient->GetAvailableBitrate();
-
-		// TODO
-		consumer->UseBitrate();
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(
@@ -1370,16 +1350,6 @@ namespace RTC
 
 		// Tell the parent class.
 		RTC::Transport::Connected();
-
-		// Tell all Consumers.
-		for (auto& kv : this->mapConsumers)
-		{
-			auto* consumer = kv.second;
-
-			// TODO
-			if (consumer->IsActive())
-				consumer->UseBitrate();
-		}
 	}
 
 	inline void WebRtcTransport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1438,16 +1408,16 @@ namespace RTC
 		// NOTE: No DataChannel support, si just ignore it.
 	}
 
-	inline void WebRtcTransport::OnRembClientAvailableBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate)
+	inline void WebRtcTransport::OnRembClientIncreaseBitrate(
+	  RTC::RembClient* /*rembClient*/, uint32_t /*bitrate*/)
 	{
 		MS_TRACE();
 
 		// TODO
 	}
 
-	inline void WebRtcTransport::OnRembClientExceedingBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t exceedingBitrate)
+	inline void WebRtcTransport::OnRembClientDecreaseBitrate(
+	  RTC::RembClient* /*rembClient*/, uint32_t /*bitrate*/)
 	{
 		MS_TRACE();
 

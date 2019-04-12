@@ -17,7 +17,6 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
-		uint32_t UseBitrate(uint32_t availableBitrate) override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
@@ -31,8 +30,10 @@ namespace RTC
 		float GetLossPercentage() const override;
 
 	private:
-		void Paused() override;
-		void Resumed() override;
+		void UserOnTransportConnected() override;
+		void UserOnTransportDisconnected() override;
+		void UserOnPaused() override;
+		void UserOnResumed() override;
 		void CreateRtpStreams();
 		void RequestKeyFrame();
 

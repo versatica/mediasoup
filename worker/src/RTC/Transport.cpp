@@ -338,6 +338,9 @@ namespace RTC
 				// Tell the subclass.
 				UserOnNewConsumer(consumer);
 
+				if (IsConnected())
+					consumer->TransportConnected();
+
 				break;
 			}
 
@@ -432,6 +435,14 @@ namespace RTC
 
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+
+		// Tell all Consumers.
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+
+			consumer->TransportConnected();
+		}
 	}
 
 	void Transport::Disconnected()

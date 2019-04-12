@@ -112,7 +112,7 @@ Generates the `worker/compile_commands_template.json` file which is a ["Clang co
 
 It requires [jq](https://stedolan.github.io/jq/) command-line JSON processor. Install it in Debian/Ubuntu via `apt install jq` and in OSX via `brew install jq`.
 
-**NOTE:** Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean && make` before running `make bear`.
+**NOTE:** Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean-all && make` before running `make bear`.
 
 
 ### `make tidy`

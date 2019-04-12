@@ -89,10 +89,8 @@ namespace RTC
 
 			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
 
-			for (auto it2 = RetransmissionContainer.begin(); it2 != RetransmissionContainer.end(); ++it2)
+			for (auto* bufferItem : RetransmissionContainer)
 			{
-				auto* bufferItem = *it2;
-
 				if (bufferItem == nullptr)
 					break;
 

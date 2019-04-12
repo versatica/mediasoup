@@ -165,7 +165,8 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
-				RequestKeyFrame();
+				if (IsActive())
+					RequestKeyFrame();
 
 				request->Accept();
 
@@ -174,6 +175,9 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
 			{
+				auto previousPreferredSpatialLayer  = this->preferredSpatialLayer;
+				auto previousPreferredTemporalLayer = this->preferredTemporalLayer;
+
 				auto jsonSpatialLayerIt  = request->data.find("spatialLayer");
 				auto jsonTemporalLayerIt = request->data.find("temporalLayer");
 
@@ -215,10 +219,17 @@ namespace RTC
 				  this->preferredTemporalLayer,
 				  this->id.c_str());
 
-				if (IsActive())
-					this->listener->OnConsumerNeedBitrate(this);
-
 				request->Accept();
+
+				if (
+				  IsActive() && (this->preferredSpatialLayer != previousPreferredSpatialLayer ||
+				                 this->preferredTemporalLayer != previousPreferredTemporalLayer))
+				{
+					this->listener->OnConsumerNeedBitrateChange(this);
+
+					// TODO: No.
+					RecalculateTargetSpatialLayer();
+				}
 
 				break;
 			}
@@ -229,21 +240,6 @@ namespace RTC
 				RTC::Consumer::HandleRequest(request);
 			}
 		}
-	}
-
-	uint32_t SimulcastConsumer::UseBitrate(uint32_t availableBitrate)
-	{
-		MS_TRACE();
-
-		if (IsActive())
-		{
-			// TODO: Here we should be able to use the best layer we can.
-
-			RecalculateTargetSpatialLayer();
-		}
-
-		// TODO.
-		return 0;
 	}
 
 	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
@@ -257,9 +253,6 @@ namespace RTC
 		int16_t spatialLayer = it->second;
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
-
-		// Emit the score event.
-		EmitScore();
 	}
 
 	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
@@ -274,25 +267,11 @@ namespace RTC
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
-		// If the Consumer is active and this is the first Producer RtpStream, we
-		// need to ask for bitrate.
-		//
-		// clang-format off
-		if (
-			IsActive() &&
-			std::none_of(
-				this->producerRtpStreams.begin(), this->producerRtpStreams.end(), [](const RTC::RtpStream* rtpStream)
-				{
-					return rtpStream != nullptr;
-				})
-		)
-		// clang-format on
+		if (IsActive())
 		{
-			this->listener->OnConsumerNeedBitrate(this);
-		}
-		// TODO: We should never upgrade layers by ourselves.
-		else if (IsActive())
-		{
+			this->listener->OnConsumerNeedBitrateChange(this);
+
+			// TODO: No.
 			RecalculateTargetSpatialLayer();
 		}
 
@@ -303,6 +282,14 @@ namespace RTC
 	void SimulcastConsumer::ProducerRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
 	{
 		MS_TRACE();
+
+		if (IsActive())
+		{
+			// TODO
+			// If score 0 (inactivity) and this is the Producer's RtpStream we are using,
+			// then we must recalculate our targets and notify the listener for
+			// redistribution.
+		}
 
 		// TODO: NO, we just can downgrade layers.
 		if (IsActive())
@@ -515,7 +502,8 @@ namespace RTC
 
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
-		RequestKeyFrame();
+		if (IsActive())
+			RequestKeyFrame();
 	}
 
 	void SimulcastConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -554,7 +542,23 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::Paused()
+	void SimulcastConsumer::UserOnTransportConnected()
+	{
+		MS_TRACE();
+
+		this->syncRequired = true;
+
+		if (IsActive())
+		{
+			this->rtpStream->Resume();
+			this->listener->OnConsumerNeedBitrateChange(this);
+
+			// TODO: No.
+			RecalculateTargetSpatialLayer();
+		}
+	}
+
+	void SimulcastConsumer::UserOnTransportDisconnected()
 	{
 		MS_TRACE();
 
@@ -574,19 +578,40 @@ namespace RTC
 		// TODO: Emit JS event?
 	}
 
-	void SimulcastConsumer::Resumed()
+	void SimulcastConsumer::UserOnPaused()
 	{
 		MS_TRACE();
 
-		this->rtpStream->Resume();
+		this->rtpStream->Pause();
 
-		// We need to sync and wait for a key frame (if supported). Otherwise the
-		// receiver will request lot of NACKs due to unknown RTP packets.
+		// Unset current and target layers.
+		this->targetSpatialLayer   = -1;
+		this->currentSpatialLayer  = -1;
+		this->targetTemporalLayer  = -1;
+		this->currentTemporalLayer = -1;
+
+		if (this->encodingContext)
+		{
+			this->encodingContext->preferences.temporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+		}
+
+		// TODO: Emit JS event?
+	}
+
+	void SimulcastConsumer::UserOnResumed()
+	{
+		MS_TRACE();
+
 		this->syncRequired = true;
 
-		// We need to ask the Transport for bitrate.
 		if (IsActive())
-			this->listener->OnConsumerNeedBitrate(this);
+		{
+			this->rtpStream->Resume();
+			this->listener->OnConsumerNeedBitrateChange(this);
+
+			// TODO: No.
+			RecalculateTargetSpatialLayer();
+		}
 	}
 
 	void SimulcastConsumer::CreateRtpStream()
@@ -679,7 +704,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive() || this->kind != RTC::Media::Kind::VIDEO)
+		if (this->kind != RTC::Media::Kind::VIDEO)
 			return;
 
 		auto* producerTargetRtpStream  = GetProducerTargetRtpStream();
@@ -860,7 +885,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: NO, we just can downgrade layers.
+		// TODO: NO.
 		if (IsActive())
 			RecalculateTargetSpatialLayer();
 

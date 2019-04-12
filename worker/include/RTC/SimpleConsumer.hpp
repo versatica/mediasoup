@@ -18,7 +18,7 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
-		uint32_t UseBitrate(uint32_t availableBitrate) override;
+		bool IsActive() const override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
@@ -32,8 +32,10 @@ namespace RTC
 		float GetLossPercentage() const override;
 
 	private:
-		void Paused() override;
-		void Resumed() override;
+		void UserOnTransportConnected() override;
+		void UserOnTransportDisconnected() override;
+		void UserOnPaused() override;
+		void UserOnResumed() override;
 		void CreateRtpStream();
 		void RequestKeyFrame();
 		void EmitScore() const;
@@ -48,11 +50,18 @@ namespace RTC
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
 		bool keyFrameSupported{ false };
-		bool syncRequired{ true };
+		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		RTC::RtpStream* producerRtpStream{ nullptr };
 	};
+
+	/* Inline methods. */
+
+	inline bool SimpleConsumer::IsActive() const
+	{
+		return (RTC::Consumer::IsActive() && this->producerRtpStream);
+	}
 } // namespace RTC
 
 #endif

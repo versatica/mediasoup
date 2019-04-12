@@ -62,7 +62,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
-		void OnConsumerNeedBitrate(RTC::Consumer* consumer) override;
+		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
@@ -107,8 +107,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
 	public:
-		void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, uint32_t availableBitrate) override;
-		void OnRembClientExceedingBitrate(RTC::RembClient* rembClient, uint32_t exceedingBitrate) override;
+		void OnRembClientIncreaseBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
+		void OnRembClientDecreaseBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
 
 		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:

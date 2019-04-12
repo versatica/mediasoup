@@ -42,7 +42,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
-		void OnConsumerNeedBitrate(RTC::Consumer* consumer) override;
+		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:

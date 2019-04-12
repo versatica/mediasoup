@@ -14,8 +14,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RembClient::RembClient(RTC::RembClient::Listener* listener)
-	  : listener(listener), lastEventAt(DepLibUV::GetTime())
+	RembClient::RembClient(RTC::RembClient::Listener* listener, uint32_t initialAvailableBitrate)
+	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate),
+	    availableBitrate(initialAvailableBitrate)
 	{
 		MS_TRACE();
 	}
@@ -36,25 +37,20 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Check if we should fire the event.
+		MS_ERROR("remb:%" PRIu64, remb->GetBitrate());
+
 		uint64_t now = DepLibUV::GetTime();
 
-		if (!HasRecentData())
+		// If we don't have recent data yet, start from here.
+		if (!CheckStatus())
 		{
-			MS_DEBUG_DEV(bwe, "ignoring first REMB after inactivity");
-
 			// Update last event time.
 			this->lastEventAt = now;
 
-			// Set available bitrate to the maximum value.
-			this->availableBitrate = std::numeric_limits<uint32_t>::max();
-
-			// Update REMB bitrate.
-			this->rembBitrate = static_cast<uint32_t>(remb->GetBitrate());
-
 			return;
 		}
-		else if (now - this->lastEventAt < EventInterval)
+		// Otherwise ensure EventInterval has happened.
+		else if (this->lastEventAt != 0 && (now - this->lastEventAt) < EventInterval)
 		{
 			return;
 		}
@@ -62,56 +58,52 @@ namespace RTC
 		// Update last event time.
 		this->lastEventAt = now;
 
-		uint32_t newRembBitrate = static_cast<uint32_t>(remb->GetBitrate());
-		int64_t rembTrend =
-		  static_cast<int64_t>(newRembBitrate) - static_cast<int64_t>(this->rembBitrate);
-		uint32_t bitrateInUse = this->transmissionCounter.GetRate(now);
+		auto previousAvailableBitrate = this->availableBitrate;
 
-		// Update REMB bitrate.
-		this->rembBitrate = newRembBitrate;
+		// Update available bitrate.
+		this->availableBitrate = static_cast<uint32_t>(remb->GetBitrate());
 
-		if (this->rembBitrate >= bitrateInUse)
+		int64_t trend =
+		  static_cast<int64_t>(this->availableBitrate) - static_cast<int64_t>(previousAvailableBitrate);
+		uint32_t usedBitrate = this->transmissionCounter.GetRate(now);
+
+		if (this->availableBitrate >= usedBitrate)
 		{
-			uint32_t availableBitrate = this->rembBitrate - bitrateInUse;
+			uint32_t usableBitrate = this->availableBitrate - usedBitrate;
 
 			MS_DEBUG_TAG(
 			  bwe,
-			  "available bitrate [REMB:%" PRIu32 " >= bitrateInUse:%" PRIu32 ", availableBitrate:%" PRIu32
-			  "]",
-			  this->rembBitrate,
-			  bitrateInUse,
-			  availableBitrate);
+			  "usable bitrate [availableBitrate:%" PRIu32 " >= usedBitrate:%" PRIu32
+			  ", usableBitrate:%" PRIu32 "]",
+			  this->availableBitrate,
+			  usedBitrate,
+			  usableBitrate);
 
-			this->availableBitrate = availableBitrate;
-
-			this->listener->OnRembClientAvailableBitrate(this, availableBitrate);
+			this->listener->OnRembClientIncreaseBitrate(this, usableBitrate);
 		}
-		else if (rembTrend > 0)
+		else if (trend > 0)
 		{
 			MS_DEBUG_TAG(
 			  bwe,
-			  "positive REMB trend [REMB:%" PRIu32 " < bitrateInUse:%" PRIu32 ", trend:%" PRIi64 "]",
-			  this->rembBitrate,
-			  bitrateInUse,
-			  rembTrend);
-
-			this->availableBitrate = 0;
+			  "positive REMB trend [availableBitrate:%" PRIu32 " < usedBitrate:%" PRIu32
+			  ", trend:%" PRIi64 "]",
+			  this->availableBitrate,
+			  usedBitrate,
+			  trend);
 		}
 		else
 		{
-			uint32_t exceedingBitrate = bitrateInUse - this->rembBitrate;
+			uint32_t exceedingBitrate = usedBitrate - this->availableBitrate;
 
 			MS_WARN_TAG(
 			  bwe,
-			  "exceeding bitrate [REMB:%" PRIu32 " < bitrateInUse:%" PRIu32 ", exceedingBitrate:%" PRIu32
-			  "]",
-			  this->rembBitrate,
-			  bitrateInUse,
+			  "exceeding bitrate [availableBitrate:%" PRIu32 " < usedBitrate:%" PRIu32
+			  ", exceedingBitrate:%" PRIu32 "]",
+			  this->availableBitrate,
+			  usedBitrate,
 			  exceedingBitrate);
 
-			this->availableBitrate = 0;
-
-			this->listener->OnRembClientExceedingBitrate(this, exceedingBitrate);
+			this->listener->OnRembClientDecreaseBitrate(this, exceedingBitrate);
 		}
 	}
 
@@ -119,49 +111,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!HasRecentData())
-			this->availableBitrate = std::numeric_limits<uint32_t>::max();
-
-		  // TODO
-		  MS_ERROR("--- availableBitrate:%" PRIu32, this->availableBitrate);
+		CheckStatus();
 
 		return this->availableBitrate;
 	}
 
-	void RembClient::AddExtraBitrate(uint32_t extraBitrate)
+	inline bool RembClient::CheckStatus()
 	{
 		MS_TRACE();
 
-		// Update last event time.
-		this->lastEventAt = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTime();
 
-		if (!HasRecentData())
-			this->availableBitrate = std::numeric_limits<uint32_t>::max();
-		else if (this->availableBitrate > extraBitrate)
-			this->availableBitrate -= extraBitrate;
+		if (this->lastEventAt != 0 && (now - this->lastEventAt) < MaxEventInterval)
+		{
+			return true;
+		}
 		else
-			this->availableBitrate = 0;
-	}
+		{
+			this->availableBitrate = this->initialAvailableBitrate;
 
-	void RembClient::RemoveExtraBitrate(uint32_t extraBitrate)
-	{
-		MS_TRACE();
-
-		// Update last event time.
-		this->lastEventAt = DepLibUV::GetTime();
-
-		if (!HasRecentData())
-			this->availableBitrate = std::numeric_limits<uint32_t>::max();
-		else if (std::numeric_limits<uint32_t>::max() - this->availableBitrate > extraBitrate)
-			this->availableBitrate += extraBitrate;
-		else
-			this->availableBitrate = std::numeric_limits<uint32_t>::max();
-	}
-
-	inline bool RembClient::HasRecentData() const
-	{
-		MS_TRACE();
-
-		return (DepLibUV::GetTime() - this->lastEventAt < MaxEventInterval);
+			return false;
+		}
 	}
 } // namespace RTC

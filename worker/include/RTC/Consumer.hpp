@@ -12,7 +12,6 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
-#include <limits>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -28,7 +27,7 @@ namespace RTC
 			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
-			virtual void OnConsumerNeedBitrate(RTC::Consumer* consumer)                            = 0;
+			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
 			virtual void onConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
 		};
 
@@ -50,10 +49,11 @@ namespace RTC
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		RTC::RtpParameters::Type GetType() const;
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
-		bool IsActive() const;
+		virtual bool IsActive() const;
+		void TransportConnected();
+		void TransportDisconnected();
 		bool IsPaused() const;
 		bool IsProducerPaused() const;
-		virtual uint32_t UseBitrate(uint32_t availableBitrate = std::numeric_limits<uint32_t>::max()) = 0;
 		void ProducerPaused();
 		void ProducerResumed();
 		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
@@ -69,9 +69,11 @@ namespace RTC
 		virtual uint32_t GetTransmissionRate(uint64_t now)                                  = 0;
 		virtual float GetLossPercentage() const                                             = 0;
 
-	protected:
-		virtual void Paused()  = 0;
-		virtual void Resumed() = 0;
+	private:
+		virtual void UserOnTransportConnected()    = 0;
+		virtual void UserOnTransportDisconnected() = 0;
+		virtual void UserOnPaused()                = 0;
+		virtual void UserOnResumed()               = 0;
 
 	public:
 		// Passed by argument.
@@ -93,6 +95,7 @@ namespace RTC
 	private:
 		// Others.
 		std::vector<uint32_t> mediaSsrcs;
+		bool transportConnected{ false };
 		bool paused{ false };
 		bool producerPaused{ false };
 		bool producerClosed{ false };
@@ -127,7 +130,10 @@ namespace RTC
 
 	inline bool Consumer::IsActive() const
 	{
-		return !this->paused && !this->producerPaused && !this->producerClosed;
+		// The parent Consumer just checks whether Consumer and Producer are
+		// not paused and the transport connected.
+		return (
+		  this->transportConnected && !this->paused && !this->producerPaused && !this->producerClosed);
 	}
 
 	inline bool Consumer::IsPaused() const

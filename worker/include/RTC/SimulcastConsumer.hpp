@@ -19,7 +19,7 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
-		uint32_t UseBitrate(uint32_t availableBitrate) override;
+		bool IsActive() const override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
@@ -33,8 +33,10 @@ namespace RTC
 		float GetLossPercentage() const override;
 
 	private:
-		void Paused() override;
-		void Resumed() override;
+		void UserOnTransportConnected() override;
+		void UserOnTransportDisconnected() override;
+		void UserOnPaused() override;
+		void UserOnResumed() override;
 		void CreateRtpStream();
 		void RequestKeyFrame();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
@@ -56,7 +58,7 @@ namespace RTC
 		std::vector<RTC::RtpStream*> producerRtpStreams; // Indexed by spatial layer.
 		// Others.
 		bool keyFrameSupported{ false };
-		bool syncRequired{ true };
+		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
@@ -67,6 +69,22 @@ namespace RTC
 		int16_t currentSpatialLayer{ -1 };
 		int16_t currentTemporalLayer{ -1 };
 	};
+
+	/* Inline methods. */
+
+	inline bool SimulcastConsumer::IsActive() const
+	{
+		// clang-format off
+		return (
+			RTC::Consumer::IsActive() &&
+			std::any_of(
+				this->producerRtpStreams.begin(),
+				this->producerRtpStreams.end(),
+				[](const RTC::RtpStream* rtpStream) { return rtpStream != nullptr; }
+			)
+		);
+		// clang-format on
+	}
 } // namespace RTC
 
 #endif
