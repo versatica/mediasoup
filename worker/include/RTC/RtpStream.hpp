@@ -26,7 +26,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) = 0;
+			virtual void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) = 0;
 		};
 
 	public:

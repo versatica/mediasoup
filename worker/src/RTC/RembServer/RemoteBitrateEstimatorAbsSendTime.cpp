@@ -296,6 +296,7 @@ namespace RTC
 				  (!this->remoteRate.ValidEstimate() ||
 				   nowMs - this->firstPacketTimeMs < InitialProbingIntervalMs))
 				{
+#ifdef MS_LOG_DEV
 					// TODO(holmer): Use a map instead to get correct order?
 					if (this->totalProbesReceived < MaxProbePackets)
 					{
@@ -317,6 +318,7 @@ namespace RTC
 						  sendDeltaMs,
 						  recvDeltaMs);
 					}
+#endif
 
 					this->probes.emplace_back(sendTimeMs, arrivalTimeMs, payloadSize);
 					++this->totalProbesReceived;

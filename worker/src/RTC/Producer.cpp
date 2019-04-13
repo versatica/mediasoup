@@ -975,12 +975,12 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "score", data);
 	}
 
-	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)
+	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
 		// Notify the listener.
-		this->listener->OnProducerRtpStreamScore(this, rtpStream, score);
+		this->listener->OnProducerRtpStreamScore(this, rtpStream, score, previousScore);
 
 		// Emit the score event.
 		EmitScore();

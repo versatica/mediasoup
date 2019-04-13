@@ -41,7 +41,8 @@ namespace RTC
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
 			  RTC::RtpStream* rtpStream,
-			  uint8_t score) = 0;
+			  uint8_t score,
+			  uint8_t previousScore) = 0;
 			virtual void OnTransportProducerRtpPacketReceived(
 			  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnTransportNeedWorstRemoteFractionLost(
@@ -103,7 +104,7 @@ namespace RTC
 		void OnProducerNewRtpStream(
 		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void OnProducerRtpStreamScore(
-		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score) override;
+		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
 		void OnProducerNeedWorstRemoteFractionLost(

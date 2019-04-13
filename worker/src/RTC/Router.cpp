@@ -562,7 +562,11 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerRtpStreamScore(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)
+	  RTC::Transport* /*transport*/,
+	  RTC::Producer* producer,
+	  RTC::RtpStream* rtpStream,
+	  uint8_t score,
+	  uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -570,7 +574,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->ProducerRtpStreamScore(rtpStream, score);
+			consumer->ProducerRtpStreamScore(rtpStream, score, previousScore);
 		}
 	}
 

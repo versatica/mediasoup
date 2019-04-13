@@ -279,7 +279,8 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimulcastConsumer::ProducerRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	void SimulcastConsumer::ProducerRtpStreamScore(
+	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 
@@ -881,7 +882,8 @@ namespace RTC
 		return this->producerRtpStreams.at(this->targetSpatialLayer);
 	}
 
-	inline void SimulcastConsumer::OnRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	inline void SimulcastConsumer::OnRtpStreamScore(
+	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 

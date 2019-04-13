@@ -57,7 +57,8 @@ namespace RTC
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
 		  RTC::RtpStream* rtpStream,
-		  uint8_t score) override;
+		  uint8_t score,
+		  uint8_t previousScore) override;
 		void OnTransportNewConsumer(
 		  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;

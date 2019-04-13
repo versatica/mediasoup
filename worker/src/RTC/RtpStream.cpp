@@ -122,11 +122,13 @@ namespace RTC
 
 		if (this->score != score)
 		{
+			auto previousScore = this->score;
+
 			this->score = score;
 
 			// Notify the listener.
 			if (notify)
-				this->listener->OnRtpStreamScore(this, score);
+				this->listener->OnRtpStreamScore(this, score, previousScore);
 		}
 	}
 
@@ -250,7 +252,7 @@ namespace RTC
 			  previousScore,
 			  this->score);
 
-			this->listener->OnRtpStreamScore(this, this->score);
+			this->listener->OnRtpStreamScore(this, this->score, previousScore);
 		}
 		else
 		{

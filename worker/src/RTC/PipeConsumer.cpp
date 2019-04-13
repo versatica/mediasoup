@@ -95,7 +95,8 @@ namespace RTC
 		// Do nothing.
 	}
 
-	void PipeConsumer::ProducerRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	void PipeConsumer::ProducerRtpStreamScore(
+	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 
@@ -388,7 +389,8 @@ namespace RTC
 		}
 	}
 
-	inline void PipeConsumer::OnRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/)
+	inline void PipeConsumer::OnRtpStreamScore(
+	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 

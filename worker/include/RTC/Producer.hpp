@@ -29,7 +29,7 @@ namespace RTC
 			virtual void OnProducerNewRtpStream(
 			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerRtpStreamScore(
-			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)                      = 0;
+			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 			virtual void OnProducerNeedWorstRemoteFractionLost(
@@ -88,7 +88,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
-		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score) override;
+		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamSendRtcpPacket(RTC::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override;
 		void OnRtpStreamNeedWorstRemoteFractionLost(
 		  RTC::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost) override;

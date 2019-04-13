@@ -58,7 +58,8 @@ namespace RTC
 		void ProducerResumed();
 		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
 		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
-		virtual void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score)     = 0;
+		virtual void ProducerRtpStreamScore(
+		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) = 0;
 		void ProducerClosed();
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)                    = 0;
 		virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) = 0;

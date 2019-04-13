@@ -830,11 +830,11 @@ namespace RTC
 	}
 
 	inline void Transport::OnProducerRtpStreamScore(
-	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score)
+	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportProducerRtpStreamScore(this, producer, rtpStream, score);
+		this->listener->OnTransportProducerRtpStreamScore(this, producer, rtpStream, score, previousScore);
 	}
 
 	inline void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet)
