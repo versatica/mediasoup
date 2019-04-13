@@ -13,7 +13,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 	class TestRtpStreamListener : public RtpStreamSend::Listener
 	{
 	public:
-		void OnRtpStreamScore(RtpStream* /*rtpStream*/, uint8_t /*score*/) override
+		void OnRtpStreamScore(RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
 		{
 		}
 
