@@ -47,13 +47,17 @@ public:
 	{
 		return;
 	};
-	bool IsKeyFrame() const
+	uint8_t GetSpatialLayer() const
 	{
-		return this->isKeyFrame;
+		return 0;
 	};
 	uint8_t GetTemporalLayer() const
 	{
 		return 0;
+	};
+	bool IsKeyFrame() const
+	{
+		return this->isKeyFrame;
 	};
 
 private:
