@@ -47,8 +47,8 @@ namespace RTC
 			bool useFir{ false };
 			bool useInBandFec{ false };
 			bool useDtx{ false };
-			uint8_t spatialLayers{ 0 };
-			uint8_t temporalLayers{ 0 };
+			uint8_t spatialLayers{ 1 };
+			uint8_t temporalLayers{ 1 };
 		};
 
 	public:
