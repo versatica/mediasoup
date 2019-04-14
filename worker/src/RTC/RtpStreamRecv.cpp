@@ -40,6 +40,7 @@ namespace RTC
 			temporalLayer = this->spatialLayerCounters[0].size() - 1;
 
 		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
+
 		counter.Update(packet);
 	}
 
@@ -62,7 +63,6 @@ namespace RTC
 	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
 		uint32_t rate{ 0u };
-
 		uint8_t spatialLayerIdx{ 0u };
 		uint8_t temporalLayerIdx{ 0u };
 
@@ -116,7 +116,16 @@ namespace RTC
 	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerRate(
 	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
+		// Sanity check. Do not allow spatial layers higher than defined.
+		if (spatialLayer > this->spatialLayerCounters.size() - 1)
+			spatialLayer = this->spatialLayerCounters.size() - 1;
+
+		// Sanity check. Do not allow temporal layers higher than defined.
+		if (temporalLayer > this->spatialLayerCounters[0].size() - 1)
+			temporalLayer = this->spatialLayerCounters[0].size() - 1;
+
 		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
+
 		return counter.GetRate(now);
 	}
 
