@@ -155,7 +155,7 @@ const consumerDeviceCapabilities =
 		{
 			kind             : 'audio',
 			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-			preferredId      : 1,
+			preferredId      : 8,
 			preferredEncrypt : false
 		}
 	]
@@ -231,7 +231,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 		[
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 5
+				id  : 8
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -268,7 +268,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 		[
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 5
+				id  : 8
 			}
 		]);
 	expect(pipeProducer.rtpParameters.encodings).toEqual(
@@ -320,11 +320,11 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		[
 			{
 				uri : 'urn:3gpp:video-orientation',
-				id  : 6
+				id  : 9
 			},
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 7
+				id  : 10
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -362,11 +362,11 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		[
 			{
 				uri : 'urn:3gpp:video-orientation',
-				id  : 6
+				id  : 9
 			},
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 7
+				id  : 10
 			}
 		]);
 	expect(pipeProducer.paused).toBe(true);

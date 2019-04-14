@@ -131,9 +131,10 @@ namespace RTC
 			RTP_STREAM_ID          = 2,
 			REPAIRED_RTP_STREAM_ID = 3,
 			ABS_SEND_TIME          = 4,
-			SSRC_AUDIO_LEVEL       = 5,
-			VIDEO_ORIENTATION      = 6,
-			TOFFSET                = 7
+			TRANSPORT_CC_01        = 5,
+			SSRC_AUDIO_LEVEL       = 8,
+			VIDEO_ORIENTATION      = 9,
+			TOFFSET                = 10
 		};
 
 	private:
