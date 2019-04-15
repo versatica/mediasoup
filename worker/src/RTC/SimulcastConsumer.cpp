@@ -920,8 +920,15 @@ namespace RTC
 
 		json data = json::object();
 
-		data["spatialLayer"]  = this->currentSpatialLayer;
-		data["temporalLayer"] = this->currentTemporalLayer;
+		if (this->currentSpatialLayer >= 0 && this->currentTemporalLayer >= 0)
+		{
+			data["spatialLayer"]  = this->currentSpatialLayer;
+			data["temporalLayer"] = this->currentTemporalLayer;
+		}
+		else
+		{
+			data = nullptr;
+		}
 
 		Channel::Notifier::Emit(this->id, "layerschange", data);
 	}
