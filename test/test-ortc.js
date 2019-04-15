@@ -70,7 +70,8 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 				{ type: 'nack' },
 				{ type: 'nack', parameter: 'pli' },
 				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' }
+				{ type: 'goog-remb' },
+				{ type: 'transport-cc' }
 			],
 			parameters : {}
 		});
@@ -101,7 +102,8 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 				{ type: 'nack' },
 				{ type: 'nack', parameter: 'pli' },
 				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' }
+				{ type: 'goog-remb' },
+				{ type: 'transport-cc' }
 			],
 			parameters :
 			{

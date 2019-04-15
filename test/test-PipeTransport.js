@@ -97,6 +97,10 @@ const videoProducerParameters =
 				id  : 10
 			},
 			{
+				uri : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id  : 11
+			},
+			{
 				uri : 'urn:3gpp:video-orientation',
 				id  : 13
 			}
@@ -135,7 +139,8 @@ const consumerDeviceCapabilities =
 			[
 				{ type: 'nack' },
 				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' }
+				{ type: 'google-remb' },
+				{ type: 'transport-cc' }
 			]
 		},
 		{
@@ -152,6 +157,19 @@ const consumerDeviceCapabilities =
 	],
 	headerExtensions :
 	[
+		{
+			kind             : 'video',
+			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+			preferredId      : 4,
+			preferredEncrypt : false,
+			direction        : 'sendrecv'
+		},
+		{
+			kind             : 'video',
+			uri              : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+			preferredId      : 5,
+			preferredEncrypt : false
+		},
 		{
 			kind             : 'audio',
 			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
@@ -227,6 +245,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 				rtcpFeedback : []
 			}
 		]);
+
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -395,7 +414,7 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				[
 					{ type: 'nack' },
 					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'goog-remb' }
+					{ type: 'google-remb' }
 				]
 			},
 			{
@@ -409,7 +428,13 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				}
 			}
 		]);
-	expect(videoConsumer.rtpParameters.headerExtensions).toEqual([]);
+	expect(videoConsumer.rtpParameters.headerExtensions).toEqual(
+		[
+			{
+				uri : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id  : 4
+			}
+		]);
 	expect(videoConsumer.rtpParameters.encodings.length).toBe(1);
 	expect(videoConsumer.rtpParameters.encodings[0].ssrc).toBeType('number');
 	expect(videoConsumer.rtpParameters.encodings[0].rtx).toBeType('object');
