@@ -590,7 +590,7 @@ namespace RTC
 				}
 
 				// Tell the caller about the selected local DTLS role.
-				json data(json::object());
+				json data = json::object();
 
 				switch (this->dtlsRole)
 				{
@@ -645,7 +645,7 @@ namespace RTC
 				MS_DEBUG_DEV("WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id);
 
 				// Reply with the updated ICE local parameters.
-				json data(json::object());
+				json data = json::object();
 
 				data["iceParameters"]    = json::object();
 				auto jsonIceParametersIt = data.find("iceParameters");
@@ -1233,7 +1233,7 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE elected tuple");
 
 		// Notify the Node WebRtcTransport.
-		json data(json::object());
+		json data = json::object();
 
 		this->iceSelectedTuple->FillJson(data["iceSelectedTuple"]);
 
@@ -1247,7 +1247,7 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE connected");
 
 		// Notify the Node WebRtcTransport.
-		json data(json::object());
+		json data = json::object();
 
 		data["iceState"] = "connected";
 
@@ -1264,7 +1264,7 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE completed");
 
 		// Notify the Node WebRtcTransport.
-		json data(json::object());
+		json data = json::object();
 
 		data["iceState"] = "completed";
 
@@ -1284,7 +1284,7 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
 		// Notify the Node WebRtcTransport.
-		json data(json::object());
+		json data = json::object();
 
 		data["iceState"] = "disconnected";
 
@@ -1301,7 +1301,7 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
 		// Notify the Node WebRtcTransport.
-		json data(json::object());
+		json data = json::object();
 
 		data["dtlsState"] = "connecting";
 
@@ -1357,7 +1357,7 @@ namespace RTC
 		}
 
 		// Notify the Node WebRtcTransport.
-		json data(json::object());
+		json data = json::object();
 
 		data["dtlsState"]      = "connected";
 		data["dtlsRemoteCert"] = remoteCert;
@@ -1375,7 +1375,7 @@ namespace RTC
 		MS_WARN_TAG(dtls, "DTLS failed");
 
 		// Notify the Node WebRtcTransport.
-		json data(json::object());
+		json data = json::object();
 
 		data["dtlsState"] = "failed";
 
@@ -1389,7 +1389,7 @@ namespace RTC
 		MS_WARN_TAG(dtls, "DTLS remotely closed");
 
 		// Notify the Node WebRtcTransport.
-		json data(json::object());
+		json data = json::object();
 
 		data["dtlsState"] = "closed";
 

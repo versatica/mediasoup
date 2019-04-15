@@ -108,7 +108,7 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse(json::object());
+		json jsonResponse = json::object();
 
 		jsonResponse["id"]       = this->id;
 		jsonResponse["accepted"] = true;
@@ -124,7 +124,7 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse(json::object());
+		json jsonResponse = json::object();
 
 		jsonResponse["id"]       = this->id;
 		jsonResponse["accepted"] = true;
@@ -143,7 +143,7 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse(json::object());
+		json jsonResponse = json::object();
 
 		jsonResponse["id"]    = this->id;
 		jsonResponse["error"] = "Error";
@@ -162,7 +162,7 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse(json::object());
+		json jsonResponse = json::object();
 
 		jsonResponse["id"]    = this->id;
 		jsonResponse["error"] = "TypeError";

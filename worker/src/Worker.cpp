@@ -129,7 +129,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 	{
 		case Channel::Request::MethodId::WORKER_DUMP:
 		{
-			json data(json::object());
+			json data = json::object();
 
 			FillJson(data);
 

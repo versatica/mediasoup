@@ -50,6 +50,7 @@ namespace RTC
 		RTC::RtpParameters::Type GetType() const;
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
 		virtual bool IsActive() const;
+		virtual void SetBitrateExternallyManaged();
 		void TransportConnected();
 		void TransportDisconnected();
 		bool IsPaused() const;
@@ -61,6 +62,7 @@ namespace RTC
 		virtual void ProducerRtpStreamScore(
 		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) = 0;
 		void ProducerClosed();
+		virtual uint32_t UseBitrate(uint32_t bitrate);
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)                    = 0;
 		virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
@@ -135,6 +137,11 @@ namespace RTC
 		// not paused and the transport connected.
 		return (
 		  this->transportConnected && !this->paused && !this->producerPaused && !this->producerClosed);
+	}
+
+	inline void Consumer::SetBitrateExternallyManaged()
+	{
+		// Do nothing.
 	}
 
 	inline bool Consumer::IsPaused() const

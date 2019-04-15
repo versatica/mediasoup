@@ -144,7 +144,7 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::TRANSPORT_DUMP:
 			{
-				json data(json::object());
+				json data = json::object();
 
 				FillJson(data);
 
@@ -155,7 +155,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_GET_STATS:
 			{
-				json data(json::array());
+				json data = json::array();
 
 				FillJsonStats(data);
 
@@ -224,7 +224,7 @@ namespace RTC
 					this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
 
 				// Create status response.
-				json data(json::object());
+				json data = json::object();
 
 				data["type"] = RTC::RtpParameters::GetTypeString(producer->GetType());
 
@@ -326,7 +326,7 @@ namespace RTC
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
 				// Create status response.
-				json data(json::object());
+				json data = json::object();
 
 				data["paused"]         = consumer->IsPaused();
 				data["producerPaused"] = consumer->IsProducerPaused();

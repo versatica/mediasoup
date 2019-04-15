@@ -226,7 +226,7 @@ namespace RTC
 				}
 
 				// Tell the caller about the selected local DTLS role.
-				json data(json::object());
+				json data = json::object();
 
 				this->tuple->FillJson(data["tuple"]);
 

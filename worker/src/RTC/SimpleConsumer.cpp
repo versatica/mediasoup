@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/SimpleConsumer.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"

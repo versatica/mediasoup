@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "RTC/SimulcastConsumer.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
@@ -221,14 +222,20 @@ namespace RTC
 
 				request->Accept();
 
+				// clang-format off
 				if (
-				  IsActive() && (this->preferredSpatialLayer != previousPreferredSpatialLayer ||
-				                 this->preferredTemporalLayer != previousPreferredTemporalLayer))
+					IsActive() &&
+					(
+						this->preferredSpatialLayer != previousPreferredSpatialLayer ||
+						this->preferredTemporalLayer != previousPreferredTemporalLayer
+					)
+				)
+				// clang-format on
 				{
-					this->listener->OnConsumerNeedBitrateChange(this);
-
-					// TODO: No.
-					RecalculateTargetSpatialLayer();
+					if (this->bitrateExternallyManaged)
+						this->listener->OnConsumerNeedBitrateChange(this);
+					else
+						RecalculateAndApplyTargetLayers();
 				}
 
 				break;
@@ -269,12 +276,13 @@ namespace RTC
 
 		if (IsActive())
 		{
-			this->listener->OnConsumerNeedBitrateChange(this);
-
-			// TODO: No.
-			RecalculateTargetSpatialLayer();
+			if (this->bitrateExternallyManaged)
+				this->listener->OnConsumerNeedBitrateChange(this);
+			else
+				RecalculateAndApplyTargetLayers();
 		}
 
+		// TODO: Should just do it if the new stream has been selected.
 		// Emit the score event.
 		EmitScore();
 	}
@@ -292,12 +300,25 @@ namespace RTC
 			// redistribution.
 		}
 
-		// TODO: NO, we just can downgrade layers.
 		if (IsActive())
-			RecalculateTargetSpatialLayer();
+		{
+			if (this->bitrateExternallyManaged)
+				this->listener->OnConsumerNeedBitrateChange(this);
+			else
+				RecalculateAndApplyTargetLayers();
+		}
 
+		// TODO: Should just do it if the stream is the selected one.
 		// Emit the score event.
 		EmitScore();
+	}
+
+	uint32_t SimulcastConsumer::UseBitrate(uint32_t bitrate)
+	{
+		MS_TRACE();
+
+		// TODO.
+		return bitrate;
 	}
 
 	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -329,7 +350,20 @@ namespace RTC
 			if (this->keyFrameSupported && !packet->IsKeyFrame())
 				return;
 
-			// Change current spatial layer.
+			// If the new current spatial layer is the preferred one honor the preferred
+			// temporal layer.
+			if (this->targetSpatialLayer == this->preferredSpatialLayer)
+			{
+				this->targetTemporalLayer = this->preferredTemporalLayer;
+			}
+			// Otherwise, choose the highest temporal layer.
+			// TODO: No, target temporal layer could be less (as per BWE).
+			else
+			{
+				this->targetTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+			}
+
+			// Update current spatial and temporal layers.
 			UpdateCurrentLayers();
 
 			// Need to resync the stream.
@@ -383,7 +417,7 @@ namespace RTC
 			return;
 		}
 
-		// Update temporal layer only if we are sending the target spatial layer.
+		// Update current temporal layer if the packet honors the target temporal layer.
 		if (
 		  this->currentTemporalLayer != this->targetTemporalLayer &&
 		  packet->GetTemporalLayer() == this->targetTemporalLayer)
@@ -552,10 +586,11 @@ namespace RTC
 		if (IsActive())
 		{
 			this->rtpStream->Resume();
-			this->listener->OnConsumerNeedBitrateChange(this);
 
-			// TODO: No.
-			RecalculateTargetSpatialLayer();
+			if (this->bitrateExternallyManaged)
+				this->listener->OnConsumerNeedBitrateChange(this);
+			else
+				RecalculateAndApplyTargetLayers();
 		}
 	}
 
@@ -576,7 +611,7 @@ namespace RTC
 			this->encodingContext->preferences.temporalLayer = this->rtpStream->GetTemporalLayers() - 1;
 		}
 
-		// TODO: Emit JS event?
+		EmitLayersChange();
 	}
 
 	void SimulcastConsumer::UserOnPaused()
@@ -596,7 +631,7 @@ namespace RTC
 			this->encodingContext->preferences.temporalLayer = this->rtpStream->GetTemporalLayers() - 1;
 		}
 
-		// TODO: Emit JS event?
+		EmitLayersChange();
 	}
 
 	void SimulcastConsumer::UserOnResumed()
@@ -608,10 +643,11 @@ namespace RTC
 		if (IsActive())
 		{
 			this->rtpStream->Resume();
-			this->listener->OnConsumerNeedBitrateChange(this);
 
-			// TODO: No.
-			RecalculateTargetSpatialLayer();
+			if (this->bitrateExternallyManaged)
+				this->listener->OnConsumerNeedBitrateChange(this);
+			else
+				RecalculateAndApplyTargetLayers();
 		}
 	}
 
@@ -726,17 +762,6 @@ namespace RTC
 		}
 	}
 
-	inline void SimulcastConsumer::EmitScore() const
-	{
-		MS_TRACE();
-
-		json data = json::object();
-
-		FillJsonScore(data);
-
-		Channel::Notifier::Emit(this->id, "score", data);
-	}
-
 	void SimulcastConsumer::UpdateCurrentLayers()
 	{
 		MS_TRACE();
@@ -746,20 +771,14 @@ namespace RTC
 			return;
 		}
 
+		bool emitScore{ false };
+
 		// Reset the score of our RtpStream to 10 if spatial layer changed.
 		if (this->targetSpatialLayer != this->currentSpatialLayer)
+		{
 			this->rtpStream->ResetScore(10, false);
 
-		// If the new current spatial layer is the preferred one honor the preferred
-		// temporal layer.
-		if (this->targetSpatialLayer == this->preferredSpatialLayer)
-		{
-			this->targetTemporalLayer = this->preferredTemporalLayer;
-		}
-		// Otherwise, choose the highest temporal layer.
-		else
-		{
-			this->targetTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+			emitScore = true;
 		}
 
 		this->currentSpatialLayer  = this->targetSpatialLayer;
@@ -774,18 +793,15 @@ namespace RTC
 		  this->currentTemporalLayer,
 		  this->id.c_str());
 
-		json data(json::object());
+		// Emit the layersChange event.
+		EmitLayersChange();
 
-		data["spatialLayer"]  = this->currentSpatialLayer;
-		data["temporalLayer"] = this->currentTemporalLayer;
-
-		Channel::Notifier::Emit(this->id, "layerschange", data);
-
-		// Emit the score event.
-		EmitScore();
+		// Emit the score event (just if spatial layer changed).
+		if (emitScore)
+			EmitScore();
 	}
 
-	void SimulcastConsumer::RecalculateTargetSpatialLayer()
+	void SimulcastConsumer::RecalculateAndApplyTargetLayers()
 	{
 		MS_TRACE();
 
@@ -836,7 +852,7 @@ namespace RTC
 				this->encodingContext->preferences.temporalLayer = this->rtpStream->GetTemporalLayers() - 1;
 			}
 
-			// TODO: Emit JS event?
+			EmitLayersChange();
 
 			return;
 		}
@@ -858,6 +874,29 @@ namespace RTC
 			return;
 
 		RequestKeyFrame();
+	}
+
+	inline void SimulcastConsumer::EmitScore() const
+	{
+		MS_TRACE();
+
+		json data = json::object();
+
+		FillJsonScore(data);
+
+		Channel::Notifier::Emit(this->id, "score", data);
+	}
+
+	inline void SimulcastConsumer::EmitLayersChange() const
+	{
+		MS_TRACE();
+
+		json data = json::object();
+
+		data["spatialLayer"]  = this->currentSpatialLayer;
+		data["temporalLayer"] = this->currentTemporalLayer;
+
+		Channel::Notifier::Emit(this->id, "layerschange", data);
 	}
 
 	inline RTC::RtpStream* SimulcastConsumer::GetProducerCurrentRtpStream() const
@@ -887,9 +926,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: NO.
 		if (IsActive())
-			RecalculateTargetSpatialLayer();
+		{
+			if (this->bitrateExternallyManaged)
+				this->listener->OnConsumerNeedBitrateChange(this);
+			else
+				RecalculateAndApplyTargetLayers();
+		}
 
 		// Emit the score event.
 		EmitScore();

@@ -183,7 +183,7 @@ namespace RTC
 		{
 			case Channel::Request::MethodId::CONSUMER_DUMP:
 			{
-				json data(json::object());
+				json data = json::object();
 
 				FillJson(data);
 
@@ -194,7 +194,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::CONSUMER_GET_STATS:
 			{
-				json data(json::array());
+				json data = json::array();
 
 				FillJsonStats(data);
 
@@ -325,5 +325,14 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "producerclose");
 
 		this->listener->onConsumerProducerClosed(this);
+	}
+
+	uint32_t Consumer::UseBitrate(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// This method must be override by subclasses with layers. By default
+		// it just returns 0.
+		return 0;
 	}
 } // namespace RTC

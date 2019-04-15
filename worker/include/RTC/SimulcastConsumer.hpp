@@ -20,9 +20,11 @@ namespace RTC
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
 		bool IsActive() const override;
+		void SetBitrateExternallyManaged() override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		virtual uint32_t UseBitrate(uint32_t bitrate) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
@@ -40,9 +42,11 @@ namespace RTC
 		void CreateRtpStream();
 		void RequestKeyFrame();
 		void RetransmitRtpPacket(RTC::RtpPacket* packet);
-		void EmitScore() const;
 		void UpdateCurrentLayers();
-		void RecalculateTargetSpatialLayer();
+		void RecalculateTargetLayers();
+		void RecalculateAndApplyTargetLayers();
+		void EmitScore() const;
+		void EmitLayersChange() const;
 		RTC::RtpStream* GetProducerCurrentRtpStream() const;
 		RTC::RtpStream* GetProducerTargetRtpStream() const;
 
@@ -61,13 +65,14 @@ namespace RTC
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
-		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t preferredTemporalLayer{ -1 };
 		int16_t targetSpatialLayer{ -1 };
 		int16_t targetTemporalLayer{ -1 };
 		int16_t currentSpatialLayer{ -1 };
 		int16_t currentTemporalLayer{ -1 };
+		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+		bool bitrateExternallyManaged{ false };
 	};
 
 	/* Inline methods. */
@@ -84,6 +89,11 @@ namespace RTC
 			)
 		);
 		// clang-format on
+	}
+
+	inline void SimulcastConsumer::SetBitrateExternallyManaged()
+	{
+		this->bitrateExternallyManaged = false;
 	}
 } // namespace RTC
 

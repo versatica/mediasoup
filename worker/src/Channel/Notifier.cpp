@@ -25,7 +25,7 @@ namespace Channel
 
 		MS_ASSERT(Notifier::channel != nullptr, "channel unset");
 
-		json jsonNotification(json::object());
+		json jsonNotification = json::object();
 
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
@@ -39,7 +39,7 @@ namespace Channel
 
 		MS_ASSERT(Notifier::channel != nullptr, "channel unset");
 
-		json jsonNotification(json::object());
+		json jsonNotification = json::object();
 
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
