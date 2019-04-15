@@ -48,7 +48,7 @@ namespace RTC
 		jsonObject["roundTripTime"] = this->rtt;
 		jsonObject["packetCount"]   = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]     = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]       = this->transmissionCounter.GetRate(now);
+		jsonObject["bitrate"]       = this->transmissionCounter.GetBitrate(now);
 	}
 
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)

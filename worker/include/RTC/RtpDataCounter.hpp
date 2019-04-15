@@ -54,7 +54,7 @@ namespace RTC
 
 	public:
 		void Update(RTC::RtpPacket* packet);
-		uint32_t GetRate(uint64_t now);
+		uint32_t GetBitrate(uint64_t now);
 		size_t GetPacketCount() const;
 		size_t GetBytes() const;
 
@@ -87,7 +87,7 @@ namespace RTC
 		this->oldestTime  = now - this->windowSize;
 	}
 
-	inline uint32_t RtpDataCounter::GetRate(uint64_t now)
+	inline uint32_t RtpDataCounter::GetBitrate(uint64_t now)
 	{
 		return this->rate.GetRate(now);
 	}

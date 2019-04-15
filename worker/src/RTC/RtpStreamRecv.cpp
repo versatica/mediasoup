@@ -44,7 +44,7 @@ namespace RTC
 		counter.Update(packet);
 	}
 
-	uint32_t RtpStreamRecv::TransmissionCounter::GetRate(uint64_t now)
+	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(uint64_t now)
 	{
 		uint32_t rate{ 0u };
 
@@ -52,14 +52,14 @@ namespace RTC
 		{
 			for (auto& temporalLayerCounter : spatialLayerCounter)
 			{
-				rate += temporalLayerCounter.GetRate(now);
+				rate += temporalLayerCounter.GetBitrate(now);
 			}
 		}
 
 		return rate;
 	}
 
-	uint32_t RtpStreamRecv::TransmissionCounter::GetRate(
+	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(
 	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
 		uint32_t rate{ 0u };
@@ -70,7 +70,7 @@ namespace RTC
 		{
 			for (auto& temporalLayerCounter : spatialLayerCounter)
 			{
-				rate += temporalLayerCounter.GetRate(now);
+				rate += temporalLayerCounter.GetBitrate(now);
 
 				if (++temporalLayerIdx > temporalLayer)
 					break;
@@ -113,7 +113,7 @@ namespace RTC
 		return bytes;
 	}
 
-	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerRate(
+	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
 	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
 		// Sanity check. Do not allow spatial layers higher than defined.
@@ -126,7 +126,7 @@ namespace RTC
 
 		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
 
-		return counter.GetRate(now);
+		return counter.GetBitrate(now);
 	}
 
 	/* Instance methods. */
@@ -173,7 +173,22 @@ namespace RTC
 		jsonObject["jitter"]      = this->jitter;
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetRate(now);
+		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(now);
+
+		if (GetSpatialLayers() > 1 || GetTemporalLayers() > 1)
+		{
+			jsonObject["bitrateByLayer"] = json::object();
+			auto jsonLayerBitrateIt      = jsonObject.find("bitrateByLayer");
+
+			for (uint8_t sIdx = 0; sIdx < GetSpatialLayers(); ++sIdx)
+			{
+				for (uint8_t tIdx = 0; tIdx < GetTemporalLayers(); ++tIdx)
+				{
+					(*jsonLayerBitrateIt)[std::to_string(sIdx) + "." + std::to_string(tIdx)] =
+					  GetLayerBitrate(now, sIdx, tIdx);
+				}
+			}
+		}
 	}
 
 	bool RtpStreamRecv::ReceivePacket(RTC::RtpPacket* packet)
@@ -612,7 +627,7 @@ namespace RTC
 			auto now = DepLibUV::GetTime();
 
 			// If no RTP is being received reset the score.
-			if (this->transmissionCounter.GetRate(now) == 0)
+			if (this->transmissionCounter.GetBitrate(now) == 0)
 			{
 				this->inactive = true;
 				this->inactivityCheckPeriodicTimer->Stop();

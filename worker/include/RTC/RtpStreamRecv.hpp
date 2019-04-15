@@ -29,9 +29,9 @@ namespace RTC
 		public:
 			TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers);
 			void Update(RTC::RtpPacket* packet);
-			uint32_t GetRate(uint64_t now);
-			uint32_t GetRate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer);
-			uint32_t GetLayerRate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer);
+			uint32_t GetBitrate(uint64_t now);
+			uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer);
+			uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer);
 			size_t GetPacketCount() const;
 			size_t GetBytes() const;
 
@@ -46,7 +46,6 @@ namespace RTC
 		void FillJsonStats(json& jsonObject) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
-		uint32_t GetRate(uint64_t now);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void RequestKeyFrame();
@@ -90,17 +89,17 @@ namespace RTC
 
 	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t now)
 	{
-		return this->transmissionCounter.GetRate(now);
+		return this->transmissionCounter.GetBitrate(now);
 	}
 
 	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
-		return this->transmissionCounter.GetRate(now, spatialLayer, temporalLayer);
+		return this->transmissionCounter.GetBitrate(now, spatialLayer, temporalLayer);
 	}
 
 	inline uint32_t RtpStreamRecv::GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
-		return this->transmissionCounter.GetRate(now, spatialLayer, temporalLayer);
+		return this->transmissionCounter.GetLayerBitrate(now, spatialLayer, temporalLayer);
 	}
 } // namespace RTC
 

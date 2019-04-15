@@ -101,6 +101,33 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		auto now = DepLibUV::GetTime();
+
+		// TODO
+		for (auto* rtpStream : this->producerRtpStreams)
+		{
+			if (!rtpStream)
+				continue;
+
+			MS_ERROR("Producer RtpStream [total bitrate:%" PRIu32 "]", rtpStream->GetBitrate(now));
+
+			for (uint8_t sIdx = 0; sIdx < rtpStream->GetSpatialLayers(); ++sIdx)
+			{
+				for (uint8_t tIdx = 0; tIdx < rtpStream->GetTemporalLayers(); ++tIdx)
+				{
+					MS_ERROR(
+					  "- [spatial:%" PRIu8 ", temporal:%" PRIu8 ", layer bitrate:%" PRIu32
+					  ", total bitrate:%" PRIu32 "]",
+					  sIdx,
+					  tIdx,
+					  rtpStream->GetLayerBitrate(now, sIdx, tIdx),
+					  rtpStream->GetBitrate(now, sIdx, tIdx));
+				}
+			}
+
+			return;
+		}
+
 		// Call the parent method.
 		RTC::Consumer::FillJson(jsonObject);
 

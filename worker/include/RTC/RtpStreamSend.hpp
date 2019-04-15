@@ -82,7 +82,7 @@ namespace RTC
 
 	inline uint32_t RtpStreamSend::GetBitrate(uint64_t now)
 	{
-		return this->transmissionCounter.GetRate(now);
+		return this->transmissionCounter.GetBitrate(now);
 	}
 } // namespace RTC
 

@@ -63,7 +63,7 @@ namespace RTC
 
 		int64_t trend =
 		  static_cast<int64_t>(this->availableBitrate) - static_cast<int64_t>(previousAvailableBitrate);
-		uint32_t usedBitrate = this->transmissionCounter.GetRate(now);
+		uint32_t usedBitrate = this->transmissionCounter.GetBitrate(now);
 
 		if (this->availableBitrate >= usedBitrate)
 		{
