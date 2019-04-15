@@ -11,9 +11,9 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
+#include <uv.h>
 #include <cstdio>  // std::sprintf(), std::fopen()
 #include <cstring> // std::memcpy(), std::strcmp()
-#include <ctime>   // struct timeval
 
 #define LOG_OPENSSL_ERROR(desc)                                                                    \
 	do                                                                                               \
@@ -1011,10 +1011,7 @@ namespace RTC
 		  "invalid DTLS state");
 
 		int64_t ret;
-		struct timeval dtlsTimeout
-		{
-			0, 0
-		};
+		uv_timeval64_t dtlsTimeout{ 0, 0 };
 		uint64_t timeoutMs;
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
