@@ -178,13 +178,13 @@ namespace RTC
 		if (GetSpatialLayers() > 1 || GetTemporalLayers() > 1)
 		{
 			jsonObject["bitrateByLayer"] = json::object();
-			auto jsonLayerBitrateIt      = jsonObject.find("bitrateByLayer");
+			auto jsonBitrateByLayerIt    = jsonObject.find("bitrateByLayer");
 
 			for (uint8_t sIdx = 0; sIdx < GetSpatialLayers(); ++sIdx)
 			{
 				for (uint8_t tIdx = 0; tIdx < GetTemporalLayers(); ++tIdx)
 				{
-					(*jsonLayerBitrateIt)[std::to_string(sIdx) + "." + std::to_string(tIdx)] =
+					(*jsonBitrateByLayerIt)[std::to_string(sIdx) + "." + std::to_string(tIdx)] =
 					  GetLayerBitrate(now, sIdx, tIdx);
 				}
 			}
