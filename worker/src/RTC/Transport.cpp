@@ -871,7 +871,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Update http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+		// Update http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time if present.
 		{
 			uint8_t extenLen;
 			uint8_t* extenValue = packet->GetExtension(

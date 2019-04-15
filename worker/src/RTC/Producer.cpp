@@ -885,6 +885,8 @@ namespace RTC
 				}
 
 				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+				// NOTE: Just if this is simulcast or SVC.
+				if (this->type == RTC::RtpParameters::Type::SIMULCAST || this->type == RTC::RtpParameters::Type::SVC)
 				{
 					extenLen = 3u;
 

@@ -8,6 +8,7 @@
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
@@ -747,7 +748,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -770,12 +771,22 @@ namespace RTC
 
 		this->iceSelectedTuple->Send(data, len);
 
-		// Feed the REMB client.
-		if (this->rembClient)
+		// Feed the REMB client if this is a simulcast or SVC Consumer.
+		// clang-format off
+		if (
+			this->rembClient &&
+			(
+				consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+				consumer->GetType() == RTC::RtpParameters::Type::SVC
+			)
+		)
+		// clang-format on
 		{
-			static uint32_t absSendTime;
+			uint8_t extenLen;
+			uint8_t* extenValue = packet->GetExtension(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
 
-			if (packet->ReadAbsSendTime(absSendTime))
+			if (extenValue && extenLen == 3)
 				this->rembClient->ReceiveRtpPacket(packet);
 		}
 	}
@@ -1116,12 +1127,17 @@ namespace RTC
 
 		// Set REMB client bitrate estimator:
 		// - if not already set, and
+		// - Consumer is simulcast or SVC, and
 		// - there is abs-send-time RTP header extension, and
 		// - there is "remb" in codecs RTCP feedback.
 		//
 		// clang-format off
 		if (
 			!this->rembClient &&
+			(
+				consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+				consumer->GetType() == RTC::RtpParameters::Type::SVC
+			) &&
 			rtpHeaderExtensionIds.absSendTime != 0u &&
 			std::any_of(
 				codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
