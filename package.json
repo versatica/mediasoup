@@ -31,7 +31,7 @@
     "lint:worker": "make lint -C worker",
     "format:worker": "make format -C worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "make -C worker && DEBUG=* jest",
+    "test:node": "make -C worker && DEBUG=mediasoup* jest",
     "test:worker": "make test -C worker",
     "coverage:node": "make -C worker && jest --coverage && opn coverage/lcov-report/index.html",
     "postinstall": "make -C worker"
