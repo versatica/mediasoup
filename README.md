@@ -17,11 +17,11 @@
 
 * Be a WebRTC [SFU](https://webrtcglossary.com/sfu/) (Selective Forwarding Unit).
 * Be a Node.js module in server side.
-* Be a tiny SDK in client side.
+* Be a tiny JavaScript (and C++) library in client side.
 * Be minimalist: just handle the media layer.
-* Expose a modern ECMAScript 6 API in both client and server sides.
-* Support all the existing WebRTC and ORTC browsers.
-* Do not mandate a specific signaling protocol.
+* Be minimalist: just handle the media layer.
+* Support all the existing WebRTC endpoints.
+* Do not mandate a specific signaling protocol (be signaling agnostic).
 
 
 ## Demo online
@@ -50,7 +50,7 @@ You can support **mediasoup** by making a donation in [open collective][opencoll
 
 
 [mediasoup-banner]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup_banner.png
-[mediasoup-demo-screenshot]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup-opensips-summit-2017.jpg
+[mediasoup-demo-screenshot]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup-v3.png
 [mediasoup-website]: https://mediasoup.org
 [travis-ci-shield-mediasoup]: https://travis-ci.com/versatica/mediasoup.svg?branch=master
 [travis-ci-mediasoup]: https://travis-ci.com/versatica/mediasoup
