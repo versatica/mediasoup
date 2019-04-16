@@ -1,3 +1,5 @@
+# mediasoup v2
+
 [![][mediasoup-banner]][mediasoup-website]
 
 [![][npm-shield-mediasoup]][npm-mediasoup]
