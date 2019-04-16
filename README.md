@@ -48,8 +48,8 @@ You can support **mediasoup** by making a donation in [open collective][opencoll
 
 
 
-[mediasoup-banner]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup_banner.png
-[mediasoup-demo-screenshot]: https://raw.githubusercontent.com/versatica/mediasoup-website/master/_art/mediasoup-opensips-summit-2017.jpg
+[mediasoup-banner]: /art/mediasoup_banner.png
+[mediasoup-demo-screenshot]: /art/mediasoup-opensips-summit-2017.jpg
 [mediasoup-website]: https://mediasoup.org
 [travis-ci-shield-mediasoup]: https://travis-ci.com/versatica/mediasoup.svg?branch=master
 [travis-ci-mediasoup]: https://travis-ci.com/versatica/mediasoup
