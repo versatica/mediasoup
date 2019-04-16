@@ -2,7 +2,7 @@ branches:
   only:
   - v3
 
-dist: trusty
+dist: xenial
 
 language: node_js
 
@@ -35,12 +35,12 @@ matrix:
     addons:
       apt:
         sources:
-        - llvm-toolchain-trusty-5.0
+        - llvm-toolchain-trusty-7
         packages:
-        - clang-5.0
+        - clang-7
     env:
-    - CC="clang-5.0"
-    - CXX="clang++-5.0"
+    - CC="clang-7"
+    - CXX="clang++-7"
 
 install:
 - npm install
