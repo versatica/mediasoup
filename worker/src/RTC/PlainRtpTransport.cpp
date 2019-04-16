@@ -217,6 +217,15 @@ namespace RTC
 		// Add timestamp.
 		jsonObject["timestamp"] = DepLibUV::GetTime();
 
+		// Add rtcpMux.
+		jsonObject["rtcpMux"] = this->rtcpMux;
+
+		// Add comedia.
+		jsonObject["comedia"] = this->comedia;
+
+		// Add multiSource.
+		jsonObject["multiSource"] = this->multiSource;
+
 		if (this->tuple != nullptr)
 		{
 			// Add bytesReceived.
@@ -228,10 +237,31 @@ namespace RTC
 		}
 		else
 		{
+			size_t bytesReceived = this->udpSocket->GetRecvBytes();
+			size_t bytesSent     = this->udpSocket->GetSentBytes();
+			;
+
+			if (this->rtcpUdpSocket)
+			{
+				bytesReceived += this->rtcpUdpSocket->GetRecvBytes();
+				bytesSent += this->rtcpUdpSocket->GetSentBytes();
+			}
+
 			// Add bytesReceived.
-			jsonObject["bytesReceived"] = 0;
+			jsonObject["bytesReceived"] = bytesReceived;
 			// Add bytesSent.
-			jsonObject["bytesSent"] = 0;
+			jsonObject["bytesSent"] = bytesSent;
+			// Add tuple.
+			jsonObject["tuple"] = json::object();
+			auto jsonTupleIt    = jsonObject.find("tuple");
+
+			if (this->listenIp.announcedIp.empty())
+				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+			else
+				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
+
+			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
+			(*jsonTupleIt)["protocol"]  = "udp";
 		}
 
 		// Add rtcpTuple.

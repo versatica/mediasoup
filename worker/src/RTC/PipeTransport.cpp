@@ -131,9 +131,20 @@ namespace RTC
 		else
 		{
 			// Add bytesReceived.
-			jsonObject["bytesReceived"] = 0;
+			jsonObject["bytesReceived"] = this->udpSocket->GetRecvBytes();
 			// Add bytesSent.
-			jsonObject["bytesSent"] = 0;
+			jsonObject["bytesSent"] = this->udpSocket->GetSentBytes();
+			// Add tuple.
+			jsonObject["tuple"] = json::object();
+			auto jsonTupleIt    = jsonObject.find("tuple");
+
+			if (this->listenIp.announcedIp.empty())
+				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+			else
+				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
+
+			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
+			(*jsonTupleIt)["protocol"]  = "udp";
 		}
 	}
 
