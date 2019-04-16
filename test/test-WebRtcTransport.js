@@ -198,7 +198,7 @@ test('webRtcTransport.getStats() succeeds', async () =>
 
 	expect(data).toBeType('array');
 	expect(data.length).toBe(1);
-	expect(data[0].type).toBe('webrtctransport');
+	expect(data[0].type).toBe('webrtc-transport');
 	expect(data[0].transportId).toBeType('string');
 	expect(data[0].timestamp).toBeType('number');
 	expect(data[0].iceRole).toBe('controlled');

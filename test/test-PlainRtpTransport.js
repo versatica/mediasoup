@@ -167,7 +167,7 @@ test('plaintRtpTransport.getStats() succeeds', async () =>
 
 	expect(data).toBeType('array');
 	expect(data.length).toBe(1);
-	expect(data[0].type).toBe('plainrtptransport');
+	expect(data[0].type).toBe('plain-rtp-transport');
 	expect(data[0].transportId).toBeType('string');
 	expect(data[0].timestamp).toBeType('number');
 	expect(data[0].bytesReceived).toBe(0);
