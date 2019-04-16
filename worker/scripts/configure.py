@@ -84,6 +84,8 @@ if __name__ == '__main__':
     (major, minor), is_clang = compiler_version()
     args.append('-Dgcc_version=%d' % (10 * major + minor))
     args.append('-Dclang=%d' % int(is_clang))
+    if is_clang == False and major == 4 and minor <= 8:
+      raise RuntimeError('gcc <= 4.8 not supported, please upgrade your gcc')
 
   if not any(a.startswith('-Dhost_arch=') for a in args):
     args.append('-Dhost_arch=%s' % host_arch())
