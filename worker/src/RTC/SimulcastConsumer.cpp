@@ -177,12 +177,12 @@ namespace RTC
 
 		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
-		if (producerCurrentRtpStream)
-			jsonObject["producer"] = producerCurrentRtpStream->GetScore();
-		else
-			jsonObject["producer"] = 0;
+		jsonObject["score"] = this->rtpStream->GetScore();
 
-		jsonObject["consumer"] = this->rtpStream->GetScore();
+		if (producerCurrentRtpStream)
+			jsonObject["producerScore"] = producerCurrentRtpStream->GetScore();
+		else
+			jsonObject["producerScore"] = 0;
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::Request* request)

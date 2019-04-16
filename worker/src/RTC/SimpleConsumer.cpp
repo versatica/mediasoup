@@ -69,12 +69,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->producerRtpStream)
-			jsonObject["producer"] = this->producerRtpStream->GetScore();
-		else
-			jsonObject["producer"] = 0;
+		jsonObject["score"] = this->rtpStream->GetScore();
 
-		jsonObject["consumer"] = this->rtpStream->GetScore();
+		if (this->producerRtpStream)
+			jsonObject["producerScore"] = this->producerRtpStream->GetScore();
+		else
+			jsonObject["producerScore"] = 0;
 	}
 
 	void SimpleConsumer::HandleRequest(Channel::Request* request)

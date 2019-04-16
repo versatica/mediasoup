@@ -442,7 +442,7 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(false);
 	expect(videoConsumer.producerPaused).toBe(true);
-	expect(videoConsumer.score).toEqual({ producer: 0, consumer: 10 });
+	expect(videoConsumer.score).toEqual({ score: 10, producerScore: 0 });
 	expect(videoConsumer.appData).toEqual({});
 }, 2000);
 

@@ -308,7 +308,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.type).toBe('simple');
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
-	expect(audioConsumer.score).toEqual({ producer: 0, consumer: 10 });
+	expect(audioConsumer.score).toEqual({ score: 10, producerScore: 0 });
 	expect(audioConsumer.currentLayers).toBe(null);
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
 
@@ -387,7 +387,7 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(true);
 	expect(videoConsumer.producerPaused).toBe(true);
-	expect(videoConsumer.score).toEqual({ producer: 0, consumer: 10 });
+	expect(videoConsumer.score).toEqual({ score: 10, producerScore: 0 });
 	expect(videoConsumer.currentLayers).toBe(null);
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
 
