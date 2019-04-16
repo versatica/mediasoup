@@ -17,7 +17,6 @@ matrix:
         packages:
         - g++-4.9
     env:
-    - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
     - CC="gcc-4.9"
     - CXX="g++-4.9"
   - os: linux
@@ -29,7 +28,8 @@ matrix:
         packages:
         - g++-7
     env:
-    - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+    - CC="gcc-7"
+    - CXX="g++-7"
   - os: linux
     node_js: 8
     addons:
@@ -39,10 +39,8 @@ matrix:
         packages:
         - clang-5.0
     env:
-    - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-
-before_install:
-- eval "${MATRIX_EVAL}"
+    - CC="clang-5.0"
+    - CXX="clang++-5.0"
 
 install:
 - npm install
