@@ -20,9 +20,10 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			}
 		},
 		{
-			kind      : 'video',
-			mimeType  : 'video/VP8',
-			clockRate : 90000
+			kind                 : 'video',
+			preferredPayloadType : 125, // Let's force it.
+			mimeType             : 'video/VP8',
+			clockRate            : 90000
 		},
 		{
 			kind         : 'video',
@@ -47,7 +48,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		{
 			kind                 : 'audio',
 			mimeType             : 'audio/opus',
-			preferredPayloadType : 100, // 100 is the first PT chosen.
+			preferredPayloadType : 100, // 100 is the first available dynamic PT.
 			clockRate            : 48000,
 			channels             : 2,
 			rtcpFeedback         : [],
@@ -63,7 +64,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		{
 			kind                 : 'video',
 			mimeType             : 'video/VP8',
-			preferredPayloadType : 101,
+			preferredPayloadType : 125,
 			clockRate            : 90000,
 			rtcpFeedback         :
 			[
@@ -81,12 +82,12 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		{
 			kind                 : 'video',
 			mimeType             : 'video/rtx',
-			preferredPayloadType : 102,
+			preferredPayloadType : 101, // 101 is the second available dynamic PT.
 			clockRate            : 90000,
 			rtcpFeedback         : [],
 			parameters           :
 			{
-				apt : 101
+				apt : 125
 			}
 		});
 
@@ -95,7 +96,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		{
 			kind                 : 'video',
 			mimeType             : 'video/H264',
-			preferredPayloadType : 103,
+			preferredPayloadType : 102, // 102 is the second available dynamic PT.
 			clockRate            : 90000,
 			rtcpFeedback         :
 			[
@@ -120,12 +121,12 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		{
 			kind                 : 'video',
 			mimeType             : 'video/rtx',
-			preferredPayloadType : 104,
+			preferredPayloadType : 103,
 			clockRate            : 90000,
 			rtcpFeedback         : [],
 			parameters           :
 			{
-				apt : 103
+				apt : 102
 			}
 		});
 });
