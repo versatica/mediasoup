@@ -49,7 +49,7 @@ You can support **mediasoup** by making a donation in [open collective][opencoll
 
 
 
-[mediasoup-banner]: /art/mediasoup_banner.png
+[mediasoup-banner]: /art/mediasoup-banner.png
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png
 [mediasoup-website]: https://mediasoup.org
 [travis-ci-shield-mediasoup]: https://travis-ci.com/versatica/mediasoup.svg?branch=master
