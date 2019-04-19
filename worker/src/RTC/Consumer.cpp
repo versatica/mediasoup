@@ -327,6 +327,22 @@ namespace RTC
 		this->listener->onConsumerProducerClosed(this);
 	}
 
+	void Consumer::SetBitrateExternallyManaged()
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	int16_t Consumer::GetBitratePriority() const
+	{
+		MS_TRACE();
+
+		// This method must be override by subclasses with layers. By default
+		// it just returns 0.
+		return 0;
+	}
+
 	uint32_t Consumer::UseBitrate(uint32_t /*bitrate*/)
 	{
 		MS_TRACE();

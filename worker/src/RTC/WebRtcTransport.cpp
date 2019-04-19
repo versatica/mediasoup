@@ -1155,6 +1155,14 @@ namespace RTC
 
 			// TODO: Make this value configurable.
 			this->rembClient = new RTC::RembClient(this, 300000);
+
+			// Tell all the consumers that we are gonna manage their bitrate.
+			for (auto& kv : this->mapConsumers)
+			{
+				auto* consumer = kv.second;
+
+				consumer->SetBitrateExternallyManaged();
+			}
 		}
 	}
 
@@ -1172,7 +1180,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: Should call to a separate function (since it will ba called in
+		// other cases) that distributes available bitrate based on consumers'
+		// priority, etc.
+
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+			auto priority  = consumer->GetBitratePriority();
+			uint32_t bitrate{ 0 };
+
+			if (this->rembClient)
+				bitrate = this->rembClient->GetAvailableBitrate();
+
+			consumer->UseBitrate(bitrate);
+		}
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(

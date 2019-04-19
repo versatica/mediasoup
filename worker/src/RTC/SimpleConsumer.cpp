@@ -137,7 +137,6 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		// Map the payload type.
 		auto payloadType = packet->GetPayloadType();
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
