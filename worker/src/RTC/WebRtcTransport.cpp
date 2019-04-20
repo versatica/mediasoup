@@ -1187,7 +1187,7 @@ namespace RTC
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
-			auto priority  = consumer->GetBitratePriority();
+			// auto priority  = consumer->GetBitratePriority();
 			uint32_t bitrate{ 0 };
 
 			if (this->rembClient)

@@ -42,7 +42,7 @@ namespace RTC
 		void UserOnResumed() override;
 		void CreateRtpStream();
 		void RequestKeyFrame();
-		void RetransmitRtpPacket(RTC::RtpPacket* packet);
+		void MayChangeLayers();
 		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		void UpdateCurrentLayers();

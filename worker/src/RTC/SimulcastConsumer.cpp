@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SimulcastConsumer"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/SimulcastConsumer.hpp"
 #include "DepLibUV.hpp"
@@ -224,16 +224,7 @@ namespace RTC
 				)
 				// clang-format on
 				{
-					int16_t newTargetSpatialLayer;
-					int16_t newTargetTemporalLayer;
-
-					if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
-					{
-						if (this->bitrateExternallyManaged)
-							this->listener->OnConsumerNeedBitrateChange(this);
-						else
-							UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-					}
+					MayChangeLayers();
 				}
 
 				break;
@@ -273,18 +264,7 @@ namespace RTC
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
 		if (IsActive())
-		{
-			int16_t newTargetSpatialLayer;
-			int16_t newTargetTemporalLayer;
-
-			if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
-			{
-				if (this->bitrateExternallyManaged)
-					this->listener->OnConsumerNeedBitrateChange(this);
-				else
-					UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-			}
-		}
+			MayChangeLayers();
 	}
 
 	void SimulcastConsumer::ProducerRtpStreamScore(
@@ -293,22 +273,11 @@ namespace RTC
 		MS_TRACE();
 
 		if (IsActive())
-		{
-			int16_t newTargetSpatialLayer;
-			int16_t newTargetTemporalLayer;
+			MayChangeLayers();
 
-			if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
-			{
-				if (this->bitrateExternallyManaged)
-					this->listener->OnConsumerNeedBitrateChange(this);
-				else
-					UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-			}
-		}
-
-		// Emit score eventif the stream whose score changed is the current one.
-		// if (rtpStream == GetProducerCurrentRtpStream())
-		EmitScore();
+		// Emit score event only the stream whose score changed is the current one.
+		if (rtpStream == GetProducerCurrentRtpStream())
+			EmitScore();
 	}
 
 	void SimulcastConsumer::SetBitrateExternallyManaged()
@@ -621,20 +590,7 @@ namespace RTC
 		this->syncRequired = true;
 
 		if (IsActive())
-		{
-			this->rtpStream->Resume();
-
-			int16_t newTargetSpatialLayer;
-			int16_t newTargetTemporalLayer;
-
-			if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
-			{
-				if (this->bitrateExternallyManaged)
-					this->listener->OnConsumerNeedBitrateChange(this);
-				else
-					UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-			}
-		}
+			MayChangeLayers();
 	}
 
 	void SimulcastConsumer::UserOnTransportDisconnected()
@@ -662,20 +618,7 @@ namespace RTC
 		this->syncRequired = true;
 
 		if (IsActive())
-		{
-			this->rtpStream->Resume();
-
-			int16_t newTargetSpatialLayer;
-			int16_t newTargetTemporalLayer;
-
-			if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
-			{
-				if (this->bitrateExternallyManaged)
-					this->listener->OnConsumerNeedBitrateChange(this);
-				else
-					UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-			}
-		}
+			MayChangeLayers();
 	}
 
 	void SimulcastConsumer::CreateRtpStream()
@@ -786,6 +729,22 @@ namespace RTC
 			auto mappedSsrc = this->consumableRtpEncodings[this->currentSpatialLayer].ssrc;
 
 			this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
+		}
+	}
+
+	void SimulcastConsumer::MayChangeLayers()
+	{
+		MS_TRACE();
+
+		int16_t newTargetSpatialLayer;
+		int16_t newTargetTemporalLayer;
+
+		if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
+		{
+			if (this->bitrateExternallyManaged)
+				this->listener->OnConsumerNeedBitrateChange(this);
+			else
+				UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
 		}
 	}
 
@@ -974,18 +933,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (IsActive())
-		{
-			int16_t newTargetSpatialLayer;
-			int16_t newTargetTemporalLayer;
-
-			if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
-			{
-				if (this->bitrateExternallyManaged)
-					this->listener->OnConsumerNeedBitrateChange(this);
-				else
-					UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-			}
-		}
+			MayChangeLayers();
 
 		// Emit the score event.
 		EmitScore();
