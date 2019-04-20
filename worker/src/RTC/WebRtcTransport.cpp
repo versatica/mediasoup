@@ -127,6 +127,16 @@ namespace RTC
 			}
 		}
 
+		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
+
+		if (jsonInitialAvailableOutgoingBitrateIt != data.end())
+		{
+			if (!jsonInitialAvailableOutgoingBitrateIt->is_number_unsigned())
+				MS_THROW_TYPE_ERROR("wrong initialAvailableOutgoingBitrate (not a number)");
+
+			this->initialAvailableOutgoingBitrate = jsonInitialAvailableOutgoingBitrateIt->get<uint32_t>();
+		}
+
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement{ 0 };
@@ -1153,8 +1163,7 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(bwe, "enabling REMB client");
 
-			// TODO: Make this value configurable.
-			this->rembClient = new RTC::RembClient(this, 300000);
+			this->rembClient = new RTC::RembClient(this, this->initialAvailableOutgoingBitrate);
 
 			// Tell all the consumers that we are gonna manage their bitrate.
 			for (auto& kv : this->mapConsumers)

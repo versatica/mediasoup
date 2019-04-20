@@ -133,6 +133,7 @@ namespace RTC
 		std::vector<RTC::IceCandidate> iceCandidates;
 		RTC::TransportTuple* iceSelectedTuple{ nullptr };
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
+		uint32_t initialAvailableOutgoingBitrate{ 300000 };
 		uint32_t maxIncomingBitrate{ 0 };
 	};
 } // namespace RTC
