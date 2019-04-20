@@ -48,6 +48,7 @@ namespace RTC
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
+		void DistributeAvailableOutgoingBitrate();
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnDtlsDataRecv(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);

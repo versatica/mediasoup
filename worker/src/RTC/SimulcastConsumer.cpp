@@ -272,6 +272,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: Here it may happen that score is 0 and there is no other Producer stream
+		// with score > 0, so IsActive() will return false. We can live with that.
 		if (IsActive())
 			MayChangeLayers();
 
@@ -280,19 +282,18 @@ namespace RTC
 			EmitScore();
 	}
 
-	void SimulcastConsumer::SetBitrateExternallyManaged()
+	void SimulcastConsumer::SetExternallyManagedBitrate()
 	{
 		MS_TRACE();
 
-		this->bitrateExternallyManaged = true;
+		this->externallyManagedBitrate = true;
 	}
 
 	int16_t SimulcastConsumer::GetBitratePriority() const
 	{
 		MS_TRACE();
 
-		// If no spatial layer is being sent, return 0.
-		if (this->currentSpatialLayer == -1)
+		if (!IsActive())
 			return 0;
 
 		int16_t prioritySpatialLayer{ 0 };
@@ -326,15 +327,30 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: Do it.
+
+		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
+
+		if (!IsActive())
+			return 0;
 
 		int16_t newTargetSpatialLayer;
 		int16_t newTargetTemporalLayer;
+		uint32_t usedBitrate{ 0 };
 
-		RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-		UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
+		if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
+			UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
 
-		return bitrate;
+		usedBitrate = bitrate;
+
+		MS_DEBUG_TAG(
+		  simulcast,
+		  "[given:%" PRIu32 ", used:%" PRIu32 ", consumerId:%s]",
+		  bitrate,
+		  usedBitrate,
+		  this->id.c_str());
+
+		return usedBitrate;
 	}
 
 	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -609,6 +625,11 @@ namespace RTC
 		this->rtpStream->Pause();
 
 		UpdateTargetLayers(-1, -1);
+
+		// Tell the transport so it can distribute available bitrate into other
+		// consumers.
+		if (this->externallyManagedBitrate)
+			this->listener->OnConsumerNeedBitrateChange(this);
 	}
 
 	void SimulcastConsumer::UserOnResumed()
@@ -741,7 +762,7 @@ namespace RTC
 
 		if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
 		{
-			if (this->bitrateExternallyManaged)
+			if (this->externallyManagedBitrate)
 				this->listener->OnConsumerNeedBitrateChange(this);
 			else
 				UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
@@ -814,6 +835,13 @@ namespace RTC
 			{
 				this->encodingContext->preferences.temporalLayer = this->rtpStream->GetTemporalLayers() - 1;
 			}
+
+			MS_DEBUG_TAG(
+			  simulcast,
+			  "target layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
+			  this->targetSpatialLayer,
+			  this->targetTemporalLayer,
+			  this->id.c_str());
 
 			EmitLayersChange();
 

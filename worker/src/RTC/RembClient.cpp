@@ -93,7 +93,7 @@ namespace RTC
 		{
 			uint32_t exceedingBitrate = usedBitrate - this->availableBitrate;
 
-			MS_WARN_TAG(
+			MS_DEBUG_TAG(
 			  bwe,
 			  "exceeding bitrate [availableBitrate:%" PRIu32 " < usedBitrate:%" PRIu32
 			  ", exceedingBitrate:%" PRIu32 "]",

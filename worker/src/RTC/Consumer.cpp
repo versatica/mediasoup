@@ -327,7 +327,7 @@ namespace RTC
 		this->listener->onConsumerProducerClosed(this);
 	}
 
-	void Consumer::SetBitrateExternallyManaged()
+	void Consumer::SetExternallyManagedBitrate()
 	{
 		MS_TRACE();
 

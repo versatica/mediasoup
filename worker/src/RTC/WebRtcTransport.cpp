@@ -11,7 +11,8 @@
 #include "RTC/RtpDictionaries.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
+#include <map>
+#include <sstream> // std::ostringstream
 
 namespace RTC
 {
@@ -203,8 +204,6 @@ namespace RTC
 		}
 		catch (const MediaSoupError& error)
 		{
-			MS_ERROR("constructor failed: %s", error.what());
-
 			// Must delete everything since the destructor won't be called.
 
 			delete this->dtlsTransport;
@@ -825,6 +824,61 @@ namespace RTC
 		this->iceSelectedTuple->Send(data, len);
 	}
 
+	void WebRtcTransport::DistributeAvailableOutgoingBitrate()
+	{
+		MS_TRACE();
+
+		// TODO: Uncomment when Transport-CC is ready.
+		// MS_ASSERT(this->rembClient != nullptr || this->transportCcClient != nullptr, "no REMB client
+		// nor Transport-CC client");
+		MS_ASSERT(this->rembClient != nullptr, "no REMB client");
+
+		// TODO: The order in the map should be randomized for Consumers with same
+		// priority.
+
+		std::multimap<int16_t, RTC::Consumer*> multimapPriorityConsumer;
+		int16_t totalPriorities{ 0 };
+
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+			auto priority  = consumer->GetBitratePriority();
+
+			if (priority > 0)
+			{
+				multimapPriorityConsumer.emplace(priority, consumer);
+				totalPriorities += priority;
+			}
+		}
+
+		// Nobody wants bitrate. Exit.
+		if (totalPriorities == 0)
+			return;
+
+		uint32_t availableBitrate{ 0 };
+
+		if (this->rembClient)
+			availableBitrate = this->rembClient->GetAvailableBitrate();
+
+		MS_DEBUG_TAG(simulcast, "[available bitrate:%" PRIu32 "]", availableBitrate);
+
+		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+		{
+			auto priority    = it->first;
+			auto consumer    = it->second;
+			uint32_t bitrate = (availableBitrate * priority) / totalPriorities;
+
+			MS_DEBUG_TAG(
+			  simulcast,
+			  "bitrate for Consumer [priority:%" PRIi16 ", bitrate:%" PRIu32 ", consumerId:%s]",
+			  priority,
+			  bitrate,
+			  consumer->id.c_str());
+
+			consumer->UseBitrate(bitrate);
+		}
+	}
+
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();
@@ -1165,13 +1219,19 @@ namespace RTC
 
 			this->rembClient = new RTC::RembClient(this, this->initialAvailableOutgoingBitrate);
 
-			// Tell all the consumers that we are gonna manage their bitrate.
+			// Tell all the Consumers that we are gonna manage their bitrate.
 			for (auto& kv : this->mapConsumers)
 			{
 				auto* consumer = kv.second;
 
-				consumer->SetBitrateExternallyManaged();
+				consumer->SetExternallyManagedBitrate();
 			}
+		}
+		// Otherwise, if REMB client is set, tell the new Consumer that we are
+		// gonna manage its bitrate.
+		else if (this->rembClient)
+		{
+			consumer->SetExternallyManagedBitrate();
 		}
 	}
 
@@ -1189,21 +1249,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Should call to a separate function (since it will ba called in
-		// other cases) that distributes available bitrate based on consumers'
-		// priority, etc.
-
-		for (auto& kv : this->mapConsumers)
-		{
-			auto* consumer = kv.second;
-			// auto priority  = consumer->GetBitratePriority();
-			uint32_t bitrate{ 0 };
-
-			if (this->rembClient)
-				bitrate = this->rembClient->GetAvailableBitrate();
-
-			consumer->UseBitrate(bitrate);
-		}
+		DistributeAvailableOutgoingBitrate();
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(

@@ -53,8 +53,6 @@ namespace RTC
 		}
 		catch (const MediaSoupError& error)
 		{
-			MS_ERROR("constructor failed: %s", error.what());
-
 			// Must delete everything since the destructor won't be called.
 
 			delete this->udpSocket;

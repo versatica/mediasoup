@@ -23,7 +23,7 @@ namespace RTC
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void SetBitrateExternallyManaged() override;
+		void SetExternallyManagedBitrate() override;
 		int16_t GetBitratePriority() const override;
 		uint32_t UseBitrate(uint32_t bitrate) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
@@ -73,7 +73,7 @@ namespace RTC
 		int16_t currentSpatialLayer{ -1 };
 		int16_t currentTemporalLayer{ -1 };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		bool bitrateExternallyManaged{ false };
+		bool externallyManagedBitrate{ false };
 	};
 
 	/* Inline methods. */
@@ -86,7 +86,10 @@ namespace RTC
 			std::any_of(
 				this->producerRtpStreams.begin(),
 				this->producerRtpStreams.end(),
-				[](const RTC::RtpStream* rtpStream) { return rtpStream != nullptr; }
+				[](const RTC::RtpStream* rtpStream)
+				{
+					return (rtpStream != nullptr && rtpStream->GetScore() > 0);
+				}
 			)
 		);
 		// clang-format on
