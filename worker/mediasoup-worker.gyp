@@ -239,10 +239,7 @@
       }],
 
       [ 'OS in "linux freebsd"', {
-        'ldflags':
-        [
-          '-Wl,--whole-archive <(libopenssl) -Wl,--no-whole-archive'
-        ]
+        'ldflags': [ '-Wl,--whole-archive <(libopenssl) -Wl,--no-whole-archive' ]
       }],
 
       [ 'OS in "freebsd"', {
@@ -250,7 +247,7 @@
       }],
 
       [ 'OS != "win"', {
-        'cflags': [ '-std=c++11', '-Wall', '-Wextra', '-Wno-unused-parameter' ]
+        'cflags': [ '-std=c++11', '-Wall', '-Wextra', '-Wno-unused-parameter', '-Wno-implicit-fallthrough' ]
       }],
 
       [ 'OS == "mac"', {

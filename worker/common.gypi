@@ -21,12 +21,12 @@
     {
       'Release':
       {
-        'cflags': [ '-g' ]
+        'cflags': [ '-g', '-Wno-unknown-warning-option' ]
       },
       'Debug':
       {
         'defines': [ 'DEBUG', 'MS_LOG_TRACE', 'MS_LOG_FILE_LINE' ],
-        'cflags': [ '-g', '-O0', '-fwrapv', '-Wno-parentheses-equality' ],
+        'cflags': [ '-g', '-O0', '-fwrapv', '-Wno-parentheses-equality', '-Wno-unknown-warning-option' ],
         'xcode_settings':
         {
           'GCC_OPTIMIZATION_LEVEL': '0'
