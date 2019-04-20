@@ -9,10 +9,10 @@
 #include "Channel/Notifier.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <map>
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
+#include <map>
+#include <sstream> // std::ostringstream
 
 namespace RTC
 {
@@ -829,7 +829,8 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: Uncomment when Transport-CC is ready.
-		// MS_ASSERT(this->rembClient != nullptr || this->transportCcClient != nullptr, "no REMB client nor Transport-CC client");
+		// MS_ASSERT(this->rembClient != nullptr || this->transportCcClient != nullptr, "no REMB client
+		// nor Transport-CC client");
 		MS_ASSERT(this->rembClient != nullptr, "no REMB client");
 
 		// TODO: The order in the map should be randomized for Consumers with same
@@ -865,12 +866,14 @@ namespace RTC
 		{
 			auto priority    = it->first;
 			auto consumer    = it->second;
-			uint32_t bitrate = (availableBitrate * priority ) / totalPriorities;
+			uint32_t bitrate = (availableBitrate * priority) / totalPriorities;
 
 			MS_DEBUG_TAG(
-				simulcast,
-				"bitrate for Consumer [priority:%" PRIi16 ", bitrate:%" PRIu32 ", consumerId:%s]",
-				priority, bitrate, consumer->id.c_str());
+			  simulcast,
+			  "bitrate for Consumer [priority:%" PRIi16 ", bitrate:%" PRIu32 ", consumerId:%s]",
+			  priority,
+			  bitrate,
+			  consumer->id.c_str());
 
 			consumer->UseBitrate(bitrate);
 		}
