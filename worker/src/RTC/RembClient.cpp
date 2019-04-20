@@ -9,14 +9,14 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t EventInterval{ 1500 };    // In ms.
-	static constexpr uint64_t MaxEventInterval{ 3000 }; // In ms.
+	static constexpr uint64_t EventInterval{ 2500 };    // In ms.
+	static constexpr uint64_t MaxEventInterval{ 5000 }; // In ms.
 
 	/* Instance methods. */
 
 	RembClient::RembClient(RTC::RembClient::Listener* listener, uint32_t initialAvailableBitrate)
 	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate),
-	    availableBitrate(initialAvailableBitrate)
+	    availableBitrate(initialAvailableBitrate), lastEventAt(DepLibUV::GetTime())
 	{
 		MS_TRACE();
 	}
@@ -42,13 +42,13 @@ namespace RTC
 		// If we don't have recent data yet, start from here.
 		if (!CheckStatus())
 		{
-			// Update last event time.
-			this->lastEventAt = now;
+			// Update last event time and ensure next event is fired soon.
+			this->lastEventAt = now - (0.5 * EventInterval);
 
 			return;
 		}
 		// Otherwise ensure EventInterval has happened.
-		else if (this->lastEventAt != 0 && (now - this->lastEventAt) < EventInterval)
+		else if ((now - this->lastEventAt) < EventInterval)
 		{
 			return;
 		}
@@ -120,7 +120,7 @@ namespace RTC
 
 		uint64_t now = DepLibUV::GetTime();
 
-		if (this->lastEventAt != 0 && (now - this->lastEventAt) < MaxEventInterval)
+		if ((now - this->lastEventAt) < MaxEventInterval)
 		{
 			return true;
 		}

@@ -13,7 +13,6 @@ namespace RTC
 	{
 	public:
 		static constexpr float BpsScale{ 8000.0f };
-		static constexpr float BpsScale2{ 1000.0f };
 		static constexpr size_t DefaultWindowSize{ 1000 };
 
 	public:
@@ -81,7 +80,7 @@ namespace RTC
 
 	inline void RateCalculator::Reset(uint64_t now)
 	{
-		this->buffer.reset(new BufferItem[windowSize]);
+		this->buffer.reset(new BufferItem[this->windowSize]);
 		this->totalCount  = 0;
 		this->oldestIndex = 0;
 		this->oldestTime  = now - this->windowSize;

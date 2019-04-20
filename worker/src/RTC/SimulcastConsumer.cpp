@@ -343,12 +343,12 @@ namespace RTC
 
 		usedBitrate = bitrate;
 
-		MS_DEBUG_TAG(
-		  simulcast,
-		  "[given:%" PRIu32 ", used:%" PRIu32 ", consumerId:%s]",
-		  bitrate,
-		  usedBitrate,
-		  this->id.c_str());
+		// MS_DEBUG_TAG(
+		//   simulcast,
+		//   "[given:%" PRIu32 ", used:%" PRIu32 ", consumerId:%s]",
+		//   bitrate,
+		//   usedBitrate,
+		//   this->id.c_str());
 
 		return usedBitrate;
 	}
