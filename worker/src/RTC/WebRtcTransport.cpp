@@ -833,9 +833,6 @@ namespace RTC
 		// nor Transport-CC client");
 		MS_ASSERT(this->rembClient != nullptr, "no REMB client");
 
-		// TODO: The order in the map should be randomized for Consumers with same
-		// priority.
-
 		std::multimap<int16_t, RTC::Consumer*> multimapPriorityConsumer;
 		int16_t totalPriorities{ 0 };
 
@@ -860,7 +857,9 @@ namespace RTC
 		if (this->rembClient)
 			availableBitrate = this->rembClient->GetAvailableBitrate();
 
-		MS_DEBUG_TAG(simulcast, "[available bitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_TAG(bwe, "[availableBitrate:%" PRIu32 "]", availableBitrate);
+
+		uint32_t remainingBitrate = availableBitrate;
 
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 		{
@@ -869,14 +868,25 @@ namespace RTC
 			uint32_t bitrate = (availableBitrate * priority) / totalPriorities;
 
 			MS_DEBUG_TAG(
-			  simulcast,
+			  bwe,
 			  "bitrate for Consumer [priority:%" PRIi16 ", bitrate:%" PRIu32 ", consumerId:%s]",
 			  priority,
 			  bitrate,
 			  consumer->id.c_str());
 
-			consumer->UseBitrate(bitrate);
+			auto usedBitrate = consumer->UseBitrate(bitrate);
+
+			if (usedBitrate <= remainingBitrate)
+				remainingBitrate -= usedBitrate;
+			else
+				remainingBitrate = 0;
 		}
+
+		MS_DEBUG_TAG(bwe, "[remainingBitrate:%" PRIu32 "]", remainingBitrate);
+
+		// TODO: Redistribute the remaining bitrate (if > N). It should do the same
+		// as when OnRembClientIncreaseBitrate() is called, so we need a separate
+		// method.
 	}
 
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
