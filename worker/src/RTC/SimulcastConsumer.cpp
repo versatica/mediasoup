@@ -277,7 +277,7 @@ namespace RTC
 		if (IsActive())
 			MayChangeLayers();
 
-		// Emit score event only the stream whose score changed is the current one.
+		// Emit score event only if the stream whose score changed is the current one.
 		if (rtpStream == GetProducerCurrentRtpStream())
 			EmitScore();
 	}
