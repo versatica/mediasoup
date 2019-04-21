@@ -829,9 +829,8 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: Uncomment when Transport-CC is ready.
-		// MS_ASSERT(this->rembClient != nullptr || this->transportCcClient != nullptr, "no REMB client
-		// nor Transport-CC client");
-		MS_ASSERT(this->rembClient != nullptr, "no REMB client");
+		// MS_ASSERT(this->rembClient || this->transportCcClient, "no REMB client nor Transport-CC client");
+		MS_ASSERT(this->rembClient, "no REMB client");
 
 		std::multimap<int16_t, RTC::Consumer*> multimapPriorityConsumer;
 		int16_t totalPriorities{ 0 };
