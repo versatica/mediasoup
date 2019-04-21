@@ -26,6 +26,8 @@ namespace RTC
 		void SetExternallyManagedBitrate() override;
 		int16_t GetBitratePriority() const override;
 		uint32_t UseBitrate(uint32_t bitrate) override;
+		uint32_t IncreaseBitrate(uint32_t bitrate) override;
+		uint32_t DecreaseBitrate(uint32_t bitrate) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;

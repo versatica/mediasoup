@@ -67,17 +67,17 @@ namespace RTC
 
 		if (this->availableBitrate >= usedBitrate)
 		{
-			uint32_t usableBitrate = this->availableBitrate - usedBitrate;
+			uint32_t remainingBitrate = this->availableBitrate - usedBitrate;
 
 			MS_DEBUG_TAG(
 			  bwe,
 			  "usable bitrate [availableBitrate:%" PRIu32 " >= usedBitrate:%" PRIu32
-			  ", usableBitrate:%" PRIu32 "]",
+			  ", remainingBitrate:%" PRIu32 "]",
 			  this->availableBitrate,
 			  usedBitrate,
-			  usableBitrate);
+			  remainingBitrate);
 
-			this->listener->OnRembClientIncreaseBitrate(this, usableBitrate);
+			this->listener->OnRembClientRemainingBitrate(this, remainingBitrate);
 		}
 		else if (trend > 0)
 		{
@@ -101,7 +101,7 @@ namespace RTC
 			  usedBitrate,
 			  exceedingBitrate);
 
-			this->listener->OnRembClientDecreaseBitrate(this, exceedingBitrate);
+			this->listener->OnRembClientExceedingBitrate(this, exceedingBitrate);
 		}
 	}
 
@@ -112,6 +112,13 @@ namespace RTC
 		CheckStatus();
 
 		return this->availableBitrate;
+	}
+
+	void RembClient::ResecheduleNextEvent()
+	{
+		MS_TRACE();
+
+		this->lastEventAt = DepLibUV::GetTime();
 	}
 
 	inline bool RembClient::CheckStatus()

@@ -351,4 +351,22 @@ namespace RTC
 		// it just returns 0.
 		return 0;
 	}
+
+	uint32_t Consumer::IncreaseBitrate(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// This method must be override by subclasses with layers. By default
+		// it just returns 0.
+		return 0;
+	}
+
+	uint32_t Consumer::DecreaseBitrate(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// This method must be override by subclasses with layers. By default
+		// it just returns 0.
+		return 0;
+	}
 } // namespace RTC

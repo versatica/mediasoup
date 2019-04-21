@@ -855,7 +855,12 @@ namespace RTC
 		uint32_t availableBitrate{ 0 };
 
 		if (this->rembClient)
+		{
 			availableBitrate = this->rembClient->GetAvailableBitrate();
+
+			// Resechedule next REMB event.
+			this->rembClient->ResecheduleNextEvent();
+		}
 
 		MS_DEBUG_TAG(bwe, "[availableBitrate:%" PRIu32 "]", availableBitrate);
 
@@ -887,6 +892,38 @@ namespace RTC
 		// TODO: Redistribute the remaining bitrate (if > N). It should do the same
 		// as when OnRembClientIncreaseBitrate() is called, so we need a separate
 		// method.
+	}
+
+	void WebRtcTransport::DistributeRemainingOutgoingBitrate(uint32_t bitrate)
+	{
+		MS_TRACE();
+
+		// Ignore if remaining bitrate < 10000 bps.
+		if (bitrate < 10000)
+		{
+			MS_DEBUG_TAG(bwe, "remaining bitrate %" PRIu32 " less than 10000bps, ignoring", bitrate);
+
+			return;
+		}
+
+		// TODO: Temporal until done.
+		DistributeAvailableOutgoingBitrate();
+	}
+
+	void WebRtcTransport::DistributeExceedingOutgoingBitrate(uint32_t bitrate)
+	{
+		MS_TRACE();
+
+		// Ignore if exceeding bitrate < 10000 bps.
+		if (bitrate < 10000)
+		{
+			MS_DEBUG_TAG(bwe, "exceeding bitrate %" PRIu32 " less than 10000bps, ignoring", bitrate);
+
+			return;
+		}
+
+		// TODO: Temporal until done.
+		DistributeAvailableOutgoingBitrate();
 	}
 
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -1508,29 +1545,23 @@ namespace RTC
 
 		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
 
-		// NOTE: No DataChannel support, si just ignore it.
+		// NOTE: No DataChannel support, so just ignore it.
 	}
 
-	inline void WebRtcTransport::OnRembClientIncreaseBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t /*bitrate*/)
+	inline void WebRtcTransport::OnRembClientRemainingBitrate(
+	  RTC::RembClient* /*rembClient*/, uint32_t bitrate)
 	{
 		MS_TRACE();
 
-		// TODO: Instead of this we should use a different appraoch to just
-		// distribute the given "increseable" bitrate.
-
-		DistributeAvailableOutgoingBitrate();
+		DistributeRemainingOutgoingBitrate(bitrate);
 	}
 
-	inline void WebRtcTransport::OnRembClientDecreaseBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t /*bitrate*/)
+	inline void WebRtcTransport::OnRembClientExceedingBitrate(
+	  RTC::RembClient* /*rembClient*/, uint32_t bitrate)
 	{
 		MS_TRACE();
 
-		// TODO: Instead of this we should use a different appraoch to just
-		// distribute the given "decreseable" bitrate.
-
-		DistributeAvailableOutgoingBitrate();
+		DistributeExceedingOutgoingBitrate(bitrate);
 	}
 
 	inline void WebRtcTransport::OnRembServerAvailableBitrate(

@@ -353,6 +353,23 @@ namespace RTC
 		return usedBitrate;
 	}
 
+	uint32_t SimulcastConsumer::IncreaseBitrate(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// TODO: Do it.
+
+		return 0;
+	}
+
+	uint32_t SimulcastConsumer::DecreaseBitrate(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// TODO: Do it.
+		return 0;
+	}
+
 	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

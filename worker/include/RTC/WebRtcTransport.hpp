@@ -49,6 +49,8 @@ namespace RTC
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void DistributeAvailableOutgoingBitrate();
+		void DistributeRemainingOutgoingBitrate(uint32_t bitrate);
+		void DistributeExceedingOutgoingBitrate(uint32_t bitrate);
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnDtlsDataRecv(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
@@ -108,8 +110,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
 	public:
-		void OnRembClientIncreaseBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
-		void OnRembClientDecreaseBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
+		void OnRembClientRemainingBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
+		void OnRembClientExceedingBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
 
 		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:
