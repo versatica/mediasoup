@@ -224,7 +224,7 @@ namespace RTC
 				)
 				// clang-format on
 				{
-					MayChangeLayers();
+					MayChangeLayers(/*force*/ true);
 				}
 
 				break;
@@ -327,7 +327,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Do it.
+		// TODO: This method must compute new target layers taking into account the
+		// given available bitrate, and return the required bitrate.
 
 		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
 
@@ -338,10 +339,9 @@ namespace RTC
 		int16_t newTargetTemporalLayer;
 		uint32_t usedBitrate{ 0 };
 
+		// TODO: Just until done.
 		if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
 			UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-
-		usedBitrate = bitrate;
 
 		// MS_DEBUG_TAG(
 		//   simulcast,
@@ -357,7 +357,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Do it.
+		// TODO: Try to upgrade to the next available temporal layer (or spatial
+		// layer) without exceeding the preferred ones, and return the increased
+		// bitrate.
 
 		return 0;
 	}
@@ -366,7 +368,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Do it.
+		// TODO: Try to downgrade to the previous available temporal layer (or spatial
+		// layer) and return the decreased bitrate.
+
 		return 0;
 	}
 
@@ -770,7 +774,7 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::MayChangeLayers()
+	void SimulcastConsumer::MayChangeLayers(bool force)
 	{
 		MS_TRACE();
 
@@ -779,10 +783,20 @@ namespace RTC
 
 		if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
 		{
+			// If bitrate externally managed, don't bother the transport unless
+			// the newTargetSpatialLayer has changed (or force is true).
+			// This is because, if bitrate is externally managed, the traget temporal
+			// layer is managed by the available given bitrate so the transport
+			// will let us change it when it considers.
 			if (this->externallyManagedBitrate)
-				this->listener->OnConsumerNeedBitrateChange(this);
+			{
+				if (newTargetSpatialLayer != this->targetSpatialLayer || force)
+					this->listener->OnConsumerNeedBitrateChange(this);
+			}
 			else
+			{
 				UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
+			}
 		}
 	}
 

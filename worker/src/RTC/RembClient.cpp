@@ -9,7 +9,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t EventInterval{ 2500 };    // In ms.
+	static constexpr uint64_t EventInterval{ 3000 };    // In ms.
 	static constexpr uint64_t MaxEventInterval{ 5000 }; // In ms.
 
 	/* Instance methods. */
