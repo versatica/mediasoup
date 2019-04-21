@@ -888,9 +888,8 @@ namespace RTC
 
 		MS_DEBUG_TAG(bwe, "[remainingBitrate:%" PRIu32 "]", remainingBitrate);
 
-		// TODO: Redistribute the remaining bitrate (if > N). It should do the same
-		// as when OnRembClientIncreaseBitrate() is called, so we need a separate
-		// method.
+		// TODO: Redistribute the remaining bitrate (if > N). We may just call to
+		// DistributeRemainingOutgoingBitrate() method.
 	}
 
 	void WebRtcTransport::DistributeRemainingOutgoingBitrate(uint32_t bitrate)
@@ -906,7 +905,7 @@ namespace RTC
 		}
 
 		// TODO: Temporal until done.
-		DistributeAvailableOutgoingBitrate();
+		// DistributeAvailableOutgoingBitrate();
 	}
 
 	void WebRtcTransport::DistributeExceedingOutgoingBitrate(uint32_t bitrate)
@@ -922,7 +921,7 @@ namespace RTC
 		}
 
 		// TODO: Temporal until done.
-		DistributeAvailableOutgoingBitrate();
+		// DistributeAvailableOutgoingBitrate();
 	}
 
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
