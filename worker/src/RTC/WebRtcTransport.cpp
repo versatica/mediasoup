@@ -652,7 +652,8 @@ namespace RTC
 				this->iceServer->SetUsernameFragment(usernameFragment);
 				this->iceServer->SetPassword(password);
 
-				MS_DEBUG_DEV("WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id);
+				MS_DEBUG_DEV(
+				  "WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id.c_str());
 
 				// Reply with the updated ICE local parameters.
 				json data = json::object();
@@ -800,7 +801,7 @@ namespace RTC
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
 
 			if (extenValue && extenLen == 3)
-				this->rembClient->ReceiveRtpPacket(packet);
+				this->rembClient->SentRtpPacket(packet);
 		}
 	}
 
@@ -944,7 +945,7 @@ namespace RTC
 		// Ensure there is sending SRTP session.
 		if (this->srtpSendSession == nullptr)
 		{
-			MS_DEBUG_DEV("ignoring RTCP compound packet due to non sending SRTP session");
+			MS_WARN_TAG(rtcp, "ignoring RTCP compound packet due to non sending SRTP session");
 
 			return;
 		}
@@ -1138,11 +1139,11 @@ namespace RTC
 			return;
 		}
 
-		MS_DEBUG_DEV(
-		  "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producer:%" PRIu32 "]",
-		  packet->GetSsrc(),
-		  packet->GetPayloadType(),
-		  producer->producerId);
+		// MS_DEBUG_DEV(
+		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
+		//   packet->GetSsrc(),
+		//   packet->GetPayloadType(),
+		//   producer->id.c_str());
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
@@ -1565,20 +1566,14 @@ namespace RTC
 		// NOTE: No DataChannel support, so just ignore it.
 	}
 
-	inline void WebRtcTransport::OnRembClientRemainingBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t bitrate)
+	inline void WebRtcTransport::OnRembClientAvailableBitrate(
+	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate)
 	{
 		MS_TRACE();
 
-		DistributeRemainingOutgoingBitrate(bitrate);
-	}
+		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "bps]", availableBitrate);
 
-	inline void WebRtcTransport::OnRembClientExceedingBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t bitrate)
-	{
-		MS_TRACE();
-
-		DistributeExceedingOutgoingBitrate(bitrate);
+		DistributeRemainingOutgoingBitrate(availableBitrate);
 	}
 
 	inline void WebRtcTransport::OnRembServerAvailableBitrate(
@@ -1602,13 +1597,11 @@ namespace RTC
 				ssrcsStream << ssrcs.back();
 			}
 
-#ifdef MS_LOG_DEV
-			MS_DEBUG_TAG(
-			  bwe,
-			  "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
-			  availableBitrate,
-			  ssrcsStream.str().c_str());
-#endif
+			// MS_DEBUG_TAG(
+			//   bwe,
+			//   "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
+			//   availableBitrate,
+			//   ssrcsStream.str().c_str());
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);

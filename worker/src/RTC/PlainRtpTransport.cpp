@@ -603,11 +603,11 @@ namespace RTC
 			return;
 		}
 
-		MS_DEBUG_DEV(
-		  "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producer:%" PRIu32 "]",
-		  packet->GetSsrc(),
-		  packet->GetPayloadType(),
-		  producer->producerId);
+		// MS_DEBUG_DEV(
+		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
+		//   packet->GetSsrc(),
+		//   packet->GetPayloadType(),
+		//   producer->id.c_str());
 
 		// Pass the RTP packet to the corresponding Producer.
 		producer->ReceiveRtpPacket(packet);

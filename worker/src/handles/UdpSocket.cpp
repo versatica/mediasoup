@@ -318,12 +318,13 @@ inline void UdpSocket::OnUvRecv(
 	}
 }
 
-inline void UdpSocket::OnUvSendError(int /*error*/)
+inline void UdpSocket::OnUvSendError(int error)
 {
 	MS_TRACE();
 
 	if (this->closed)
 		return;
-
+#ifdef MS_LOG_DEV
 	MS_DEBUG_DEV("send error: %s", uv_strerror(error));
+#endif
 }

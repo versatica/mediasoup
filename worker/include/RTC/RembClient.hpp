@@ -15,8 +15,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRembClientRemainingBitrate(RTC::RembClient* rembClient, uint32_t bitrate) = 0;
-			virtual void OnRembClientExceedingBitrate(RTC::RembClient* rembClient, uint32_t bitrate) = 0;
+			virtual void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, uint32_t bitrate) = 0;
 		};
 
 	public:
@@ -24,20 +23,20 @@ namespace RTC
 		virtual ~RembClient();
 
 	public:
-		void ReceiveRtpPacket(RTC::RtpPacket* packet);
+		void SentRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb);
 		uint32_t GetAvailableBitrate();
 		void ResecheduleNextEvent();
 
 	private:
-		bool CheckStatus();
+		void CheckStatus(uint64_t now);
 
 	private:
 		Listener* listener;
 		RTC::RtpDataCounter transmissionCounter;
 		uint32_t initialAvailableBitrate{ 0 };
+		uint64_t initialAvailableBitrateAt{ 0 };
 		uint32_t availableBitrate{ 0 };
-		uint32_t rembBitrate{ 0 };
 		uint64_t lastEventAt{ 0 };
 	};
 } // namespace RTC
