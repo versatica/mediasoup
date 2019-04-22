@@ -56,14 +56,22 @@ namespace RTC
 		// Update last event time.
 		this->lastEventAt = now;
 
-		auto previousAvailableBitrate = this->availableBitrate;
+		auto previousRembBitrate = this->rembBitrate;
 
-		// Update available bitrate.
-		this->availableBitrate = static_cast<uint32_t>(remb->GetBitrate());
+		// Update rembBitrate.
+		this->rembBitrate = static_cast<uint32_t>(remb->GetBitrate());
 
 		int64_t trend =
-		  static_cast<int64_t>(this->availableBitrate) - static_cast<int64_t>(previousAvailableBitrate);
+		  static_cast<int64_t>(this->rembBitrate) - static_cast<int64_t>(previousRembBitrate);
 		uint32_t usedBitrate = this->transmissionCounter.GetBitrate(now);
+
+		// Update available bitrate.
+		this->availableBitrate = rembBitrate;
+
+		// If latest rembBitrate is less than initialAvailableBitrate but trend is
+		// positive, assume initialAvailableBitrate as available bitrate.
+		if (this->rembBitrate < initialAvailableBitrate && trend > 0)
+			this->availableBitrate = initialAvailableBitrate;
 
 		if (this->availableBitrate >= usedBitrate)
 		{
@@ -87,12 +95,16 @@ namespace RTC
 			  usedBitrate,
 			  trend);
 
-			// Assume that we can use more bitrate (the trend diff)
-			auto remainingBitrate = static_cast<uint32_t>(trend);
+			// Assume that we can use more bitrate (the trend diff) if rembBitrate is
+			// higher than initialAvailableBitrate.
+			if (this->rembBitrate > initialAvailableBitrate)
+			{
+				auto remainingBitrate = static_cast<uint32_t>(trend);
 
-			this->availableBitrate += remainingBitrate;
+				this->availableBitrate += remainingBitrate;
 
-			this->listener->OnRembClientRemainingBitrate(this, remainingBitrate);
+				this->listener->OnRembClientRemainingBitrate(this, remainingBitrate);
+			}
 		}
 		else
 		{
@@ -138,6 +150,7 @@ namespace RTC
 		else
 		{
 			this->availableBitrate = this->initialAvailableBitrate;
+			this->rembBitrate      = 0;
 
 			return false;
 		}

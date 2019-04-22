@@ -37,6 +37,7 @@ namespace RTC
 		RTC::RtpDataCounter transmissionCounter;
 		uint32_t initialAvailableBitrate{ 0 };
 		uint32_t availableBitrate{ 0 };
+		uint32_t rembBitrate{ 0 };
 		uint64_t lastEventAt{ 0 };
 	};
 } // namespace RTC
