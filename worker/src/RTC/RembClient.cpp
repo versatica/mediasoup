@@ -9,7 +9,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t EventInterval{ 3000 };    // In ms.
+	static constexpr uint64_t EventInterval{ 2000 };    // In ms.
 	static constexpr uint64_t MaxEventInterval{ 5000 }; // In ms.
 
 	/* Instance methods. */
@@ -69,8 +69,7 @@ namespace RTC
 		{
 			uint32_t remainingBitrate = this->availableBitrate - usedBitrate;
 
-			MS_DEBUG_TAG(
-			  bwe,
+			MS_DEBUG_DEV(
 			  "usable bitrate [availableBitrate:%" PRIu32 " >= usedBitrate:%" PRIu32
 			  ", remainingBitrate:%" PRIu32 "]",
 			  this->availableBitrate,
@@ -81,20 +80,25 @@ namespace RTC
 		}
 		else if (trend > 0)
 		{
-			MS_DEBUG_TAG(
-			  bwe,
+			MS_DEBUG_DEV(
 			  "positive REMB trend [availableBitrate:%" PRIu32 " < usedBitrate:%" PRIu32
 			  ", trend:%" PRIi64 "]",
 			  this->availableBitrate,
 			  usedBitrate,
 			  trend);
+
+			// Assume that we can use more bitrate (the trend diff)
+			auto remainingBitrate = static_cast<uint32_t>(trend);
+
+			this->availableBitrate += remainingBitrate;
+
+			this->listener->OnRembClientRemainingBitrate(this, remainingBitrate);
 		}
 		else
 		{
 			uint32_t exceedingBitrate = usedBitrate - this->availableBitrate;
 
-			MS_DEBUG_TAG(
-			  bwe,
+			MS_DEBUG_DEV(
 			  "exceeding bitrate [availableBitrate:%" PRIu32 " < usedBitrate:%" PRIu32
 			  ", exceedingBitrate:%" PRIu32 "]",
 			  this->availableBitrate,

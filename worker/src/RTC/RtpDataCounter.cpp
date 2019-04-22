@@ -15,6 +15,9 @@ namespace RTC
 		if (now < this->oldestTime)
 			return;
 
+		// Increase bytes.
+		this->bytes += size;
+
 		RemoveOldData(now);
 
 		// Set data in the index before the oldest index.
@@ -39,7 +42,7 @@ namespace RTC
 		return static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
 	}
 
-	void RateCalculator::RemoveOldData(uint64_t now)
+	inline void RateCalculator::RemoveOldData(uint64_t now)
 	{
 		MS_TRACE();
 
@@ -89,7 +92,6 @@ namespace RTC
 		uint64_t now = DepLibUV::GetTime();
 
 		this->packets++;
-		this->bytes += packet->GetSize();
 		this->rate.Update(packet->GetSize(), now);
 	}
 } // namespace RTC

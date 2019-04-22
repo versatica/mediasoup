@@ -199,7 +199,7 @@ namespace RTC
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
-	void PlainRtpTransport::FillJsonStats(json& jsonArray) const
+	void PlainRtpTransport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();
 
@@ -226,29 +226,11 @@ namespace RTC
 
 		if (this->tuple != nullptr)
 		{
-			// Add bytesReceived.
-			jsonObject["bytesReceived"] = this->tuple->GetRecvBytes();
-			// Add bytesSent.
-			jsonObject["bytesSent"] = this->tuple->GetSentBytes();
 			// Add tuple.
 			this->tuple->FillJson(jsonObject["tuple"]);
 		}
 		else
 		{
-			size_t bytesReceived = this->udpSocket->GetRecvBytes();
-			size_t bytesSent     = this->udpSocket->GetSentBytes();
-			;
-
-			if (this->rtcpUdpSocket)
-			{
-				bytesReceived += this->rtcpUdpSocket->GetRecvBytes();
-				bytesSent += this->rtcpUdpSocket->GetSentBytes();
-			}
-
-			// Add bytesReceived.
-			jsonObject["bytesReceived"] = bytesReceived;
-			// Add bytesSent.
-			jsonObject["bytesSent"] = bytesSent;
 			// Add tuple.
 			jsonObject["tuple"] = json::object();
 			auto jsonTupleIt    = jsonObject.find("tuple");
@@ -265,6 +247,18 @@ namespace RTC
 		// Add rtcpTuple.
 		if (!this->rtcpMux && this->rtcpTuple != nullptr)
 			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
+
+		// Add bytesReceived.
+		jsonObject["bytesReceived"] = RTC::Transport::GetReceivedBytes();
+
+		// Add bytesSent.
+		jsonObject["bytesSent"] = RTC::Transport::GetSentBytes();
+
+		// Add recvBitrate.
+		jsonObject["recvBitrate"] = RTC::Transport::GetRecvBitrate();
+
+		// Add sendBitrate.
+		jsonObject["sendBitrate"] = RTC::Transport::GetSendBitrate();
 	}
 
 	void PlainRtpTransport::HandleRequest(Channel::Request* request)
@@ -468,6 +462,9 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		this->tuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	void PlainRtpTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
@@ -484,6 +481,9 @@ namespace RTC
 			this->tuple->Send(data, len);
 		else if (this->rtcpTuple)
 			this->rtcpTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	void PlainRtpTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -500,11 +500,17 @@ namespace RTC
 			this->tuple->Send(data, len);
 		else if (this->rtcpTuple)
 			this->rtcpTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void PlainRtpTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		// Increase receive transmission.
+		RTC::Transport::DataReceived(len);
 
 		// Check if it's RTCP.
 		if (RTC::RTCP::Packet::IsRtcp(data, len))

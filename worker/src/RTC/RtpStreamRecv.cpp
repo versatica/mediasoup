@@ -185,7 +185,7 @@ namespace RTC
 				for (uint8_t tIdx = 0; tIdx < GetTemporalLayers(); ++tIdx)
 				{
 					(*jsonBitrateByLayerIt)[std::to_string(sIdx) + "." + std::to_string(tIdx)] =
-					  GetLayerBitrate(now, sIdx, tIdx);
+					  GetBitrate(now, sIdx, tIdx);
 				}
 			}
 		}

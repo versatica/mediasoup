@@ -9,6 +9,7 @@
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -67,7 +68,7 @@ namespace RTC
 		void CloseProducersAndConsumers();
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
-		virtual void FillJsonStats(json& jsonArray) const = 0;
+		virtual void FillJsonStats(json& jsonArray) = 0;
 		// Subclasses must implement this method and call the parent's one to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
@@ -75,8 +76,13 @@ namespace RTC
 	protected:
 		// Must be called from the subclass.
 		void Connected();
-		// Must be called from the subclass.
 		void Disconnected();
+		void DataReceived(size_t len);
+		void DataSent(size_t len);
+		size_t GetReceivedBytes() const;
+		size_t GetSentBytes() const;
+		uint32_t GetRecvBitrate();
+		uint32_t GetSendBitrate();
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 
 		/* Pure virtual methods that must be implemented by the subclass. */
@@ -133,6 +139,8 @@ namespace RTC
 		// Others.
 		RtpListener rtpListener;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
+		RateCalculator recvTransmission;
+		RateCalculator sendTransmission;
 
 	private:
 		// Passed by argument.
@@ -141,6 +149,38 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		Timer* rtcpTimer{ nullptr };
 	};
+
+	/* Inline instance methods. */
+
+	inline void Transport::DataReceived(size_t len)
+	{
+		this->recvTransmission.Update(len, DepLibUV::GetTime());
+	}
+
+	inline void Transport::DataSent(size_t len)
+	{
+		this->sendTransmission.Update(len, DepLibUV::GetTime());
+	}
+
+	inline size_t Transport::GetReceivedBytes() const
+	{
+		return this->recvTransmission.GetBytes();
+	}
+
+	inline size_t Transport::GetSentBytes() const
+	{
+		return this->sendTransmission.GetBytes();
+	}
+
+	inline uint32_t Transport::GetRecvBitrate()
+	{
+		return this->recvTransmission.GetRate(DepLibUV::GetTime());
+	}
+
+	inline uint32_t Transport::GetSendBitrate()
+	{
+		return this->sendTransmission.GetRate(DepLibUV::GetTime());
+	}
 } // namespace RTC
 
 #endif

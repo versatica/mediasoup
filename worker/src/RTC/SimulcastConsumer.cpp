@@ -300,7 +300,7 @@ namespace RTC
 
 		// Otherwise, take the maximum available spatial layer up to the preferred
 		// one.
-		for (size_t idx = 0; idx < this->producerRtpStreams.size(); ++idx)
+		for (size_t idx{ 0 }; idx < this->producerRtpStreams.size(); ++idx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(idx);
 			auto* producerRtpStream = this->producerRtpStreams[idx];
@@ -335,20 +335,103 @@ namespace RTC
 		if (!IsActive())
 			return 0;
 
-		int16_t newTargetSpatialLayer;
-		int16_t newTargetTemporalLayer;
+		int16_t newTargetSpatialLayer{ -1 };
+		int16_t newTargetTemporalLayer{ -1 };
 		uint32_t usedBitrate{ 0 };
+		uint8_t maxProducerScore{ 0 };
+		auto now = DepLibUV::GetTime();
+
+		for (size_t idx{ 0 }; idx < this->producerRtpStreams.size(); ++idx)
+		{
+			auto spatialLayer       = static_cast<int16_t>(idx);
+			auto* producerRtpStream = this->producerRtpStreams[idx];
+			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
+
+			// Ignore spatial layers for non existing Producer streams or for those
+			// with score 0.
+			if (producerScore == 0)
+				continue;
+
+			if (producerScore >= maxProducerScore || producerScore >= 7)
+			{
+				// NOTE: If this is the first valid spatial layer take it. This is because,
+				// even if there is no enough bitrate for it, we need to take something.
+				if (newTargetSpatialLayer == -1)
+				{
+					newTargetSpatialLayer  = spatialLayer;
+					newTargetTemporalLayer = 0;
+				}
+
+				int16_t temporalLayer{ 0 };
+
+				// Check bitrate of every layer.
+				for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+				{
+					auto requiredBitrate = producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+
+					MS_DEBUG_DEV(
+					  "testing layer %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", requiredBitrate:%" PRIu32
+					  "]",
+					  spatialLayer,
+					  temporalLayer,
+					  bitrate,
+					  requiredBitrate);
+
+					// If this layer requires more bitrate than the given one, abort the loop
+					// (so use the previous chosen layers if any).
+					if (requiredBitrate > bitrate)
+						goto done;
+
+					// Chose current layers and used bitrate.
+					newTargetSpatialLayer  = spatialLayer;
+					newTargetTemporalLayer = temporalLayer;
+					usedBitrate            = requiredBitrate;
+
+					// If this is the preferred spatial and temporal layer, exit the loops.
+					// clang-format off
+					if (
+						newTargetSpatialLayer == this->preferredSpatialLayer &&
+						newTargetTemporalLayer == this->preferredTemporalLayer &&
+						producerScore >= 7
+					)
+					// clang-format on
+					{
+						goto done;
+					}
+				}
+
+				// If this is the preferred or higher spatial layer and has good score,
+				// take it and exit.
+				if (spatialLayer >= this->preferredSpatialLayer && producerScore >= 7)
+					break;
+			}
+		}
+
+	done:
+
+		MS_DEBUG_2TAGS(
+		  bwe,
+		  simulcast,
+		  "[bitrate:%" PRIu32 ", usedBitrate:%" PRIu32 ", newLayers:%" PRIi16 ":%" PRIi16
+		  ", consumerId:%s]",
+		  bitrate,
+		  usedBitrate,
+		  newTargetSpatialLayer,
+		  newTargetTemporalLayer,
+		  this->id.c_str());
+
+		// clang-format off
+		if (
+			newTargetSpatialLayer != this->targetSpatialLayer ||
+			newTargetTemporalLayer != this->targetTemporalLayer
+		)
+		{
+			UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
+		}
 
 		// TODO: Just until done.
-		if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
-			UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-
-		// MS_DEBUG_TAG(
-		//   simulcast,
-		//   "[given:%" PRIu32 ", used:%" PRIu32 ", consumerId:%s]",
-		//   bitrate,
-		//   usedBitrate,
-		//   this->id.c_str());
+		// if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
+		// UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
 
 		return usedBitrate;
 	}
@@ -811,7 +894,7 @@ namespace RTC
 
 		uint8_t maxProducerScore{ 0 };
 
-		for (size_t idx = 0; idx < this->producerRtpStreams.size(); ++idx)
+		for (size_t idx{ 0 }; idx < this->producerRtpStreams.size(); ++idx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(idx);
 			auto* producerRtpStream = this->producerRtpStreams[idx];
@@ -824,8 +907,8 @@ namespace RTC
 
 			if (producerScore >= maxProducerScore || producerScore >= 7)
 			{
-				maxProducerScore      = producerScore;
 				newTargetSpatialLayer = spatialLayer;
+				maxProducerScore      = producerScore;
 
 				// If this is the preferred or higher spatial layer and has good score,
 				// take it and exit.
@@ -845,9 +928,12 @@ namespace RTC
 		}
 
 		// Return true if any target layer changed.
+		// clang-format off
 		return (
-		  newTargetSpatialLayer != this->targetSpatialLayer ||
-		  newTargetTemporalLayer != this->targetTemporalLayer);
+			newTargetSpatialLayer != this->targetSpatialLayer ||
+			newTargetTemporalLayer != this->targetTemporalLayer
+		);
+		// clang-format on
 	}
 
 	void SimulcastConsumer::UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer)

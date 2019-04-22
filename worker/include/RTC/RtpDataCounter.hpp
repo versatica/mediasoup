@@ -19,6 +19,7 @@ namespace RTC
 		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = BpsScale);
 		void Update(size_t size, uint64_t now);
 		uint32_t GetRate(uint64_t now);
+		size_t GetBytes() const;
 		void Reset();
 
 	private:
@@ -44,22 +45,7 @@ namespace RTC
 		size_t windowSize{ DefaultWindowSize };
 		// Scale in which the rate is represented.
 		const float scale{ BpsScale };
-	};
-
-	class RtpDataCounter
-	{
-	public:
-		RtpDataCounter() = default;
-
-	public:
-		void Update(RTC::RtpPacket* packet);
-		uint32_t GetBitrate(uint64_t now);
-		size_t GetPacketCount() const;
-		size_t GetBytes() const;
-
-	private:
-		RateCalculator rate;
-		size_t packets{ 0 };
+		// Total bytes transmitted.
 		size_t bytes{ 0 };
 	};
 
@@ -69,6 +55,11 @@ namespace RTC
 	  : windowSize(windowSize), scale(scale)
 	{
 		Reset();
+	}
+
+	inline size_t RateCalculator::GetBytes() const
+	{
+		return this->bytes;
 	}
 
 	inline void RateCalculator::Reset()
@@ -86,6 +77,24 @@ namespace RTC
 		this->oldestTime  = now - this->windowSize;
 	}
 
+	class RtpDataCounter
+	{
+	public:
+		RtpDataCounter() = default;
+
+	public:
+		void Update(RTC::RtpPacket* packet);
+		uint32_t GetBitrate(uint64_t now);
+		size_t GetPacketCount() const;
+		size_t GetBytes() const;
+
+	private:
+		RateCalculator rate;
+		size_t packets{ 0 };
+	};
+
+	/* Inline instance methods. */
+
 	inline uint32_t RtpDataCounter::GetBitrate(uint64_t now)
 	{
 		return this->rate.GetRate(now);
@@ -98,7 +107,7 @@ namespace RTC
 
 	inline size_t RtpDataCounter::GetBytes() const
 	{
-		return this->bytes;
+		return this->rate.GetBytes();
 	}
 } // namespace RTC
 

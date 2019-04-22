@@ -401,7 +401,7 @@ namespace RTC
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
-	void WebRtcTransport::FillJsonStats(json& jsonArray) const
+	void WebRtcTransport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();
 
@@ -459,20 +459,21 @@ namespace RTC
 
 		if (this->iceSelectedTuple != nullptr)
 		{
-			// Add bytesReceived.
-			jsonObject["bytesReceived"] = this->iceSelectedTuple->GetRecvBytes();
-			// Add bytesSent.
-			jsonObject["bytesSent"] = this->iceSelectedTuple->GetSentBytes();
 			// Add iceSelectedTuple.
 			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 		}
-		else
-		{
-			// Add bytesReceived.
-			jsonObject["bytesReceived"] = 0;
-			// Add bytesSent.
-			jsonObject["bytesSent"] = 0;
-		}
+
+		// Add bytesReceived.
+		jsonObject["bytesReceived"] = RTC::Transport::GetReceivedBytes();
+
+		// Add bytesSent.
+		jsonObject["bytesSent"] = RTC::Transport::GetSentBytes();
+
+		// Add recvBitrate.
+		jsonObject["recvBitrate"] = RTC::Transport::GetRecvBitrate();
+
+		// Add sendBitrate.
+		jsonObject["sendBitrate"] = RTC::Transport::GetSendBitrate();
 
 		// Add availableOutgoingBitrate.
 		if (this->rembClient)
@@ -780,6 +781,9 @@ namespace RTC
 
 		this->iceSelectedTuple->Send(data, len);
 
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
+
 		// Feed the REMB client if this is a simulcast or SVC Consumer.
 		// clang-format off
 		if (
@@ -822,6 +826,9 @@ namespace RTC
 			return;
 
 		this->iceSelectedTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	void WebRtcTransport::DistributeAvailableOutgoingBitrate()
@@ -896,32 +903,32 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Ignore if remaining bitrate < 10000 bps.
-		if (bitrate < 10000)
+		// Ignore if too low vlue.
+		if (bitrate < 5000)
 		{
-			MS_DEBUG_TAG(bwe, "remaining bitrate %" PRIu32 " less than 10000bps, ignoring", bitrate);
+			MS_DEBUG_TAG(bwe, "remaining bitrate %" PRIu32 " less than 5000 bps, ignoring", bitrate);
 
 			return;
 		}
 
 		// TODO: Temporal until done.
-		// DistributeAvailableOutgoingBitrate();
+		DistributeAvailableOutgoingBitrate();
 	}
 
 	void WebRtcTransport::DistributeExceedingOutgoingBitrate(uint32_t bitrate)
 	{
 		MS_TRACE();
 
-		// Ignore if exceeding bitrate < 10000 bps.
-		if (bitrate < 10000)
+		// Ignore if too low vlue.
+		if (bitrate < 5000)
 		{
-			MS_DEBUG_TAG(bwe, "exceeding bitrate %" PRIu32 " less than 10000bps, ignoring", bitrate);
+			MS_DEBUG_TAG(bwe, "exceeding bitrate %" PRIu32 " less than 5000 bps, ignoring", bitrate);
 
 			return;
 		}
 
 		// TODO: Temporal until done.
-		// DistributeAvailableOutgoingBitrate();
+		DistributeAvailableOutgoingBitrate();
 	}
 
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -946,11 +953,17 @@ namespace RTC
 			return;
 
 		this->iceSelectedTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		// Increase receive transmission.
+		RTC::Transport::DataReceived(len);
 
 		// Check if it's STUN.
 		if (RTC::StunMessage::IsStun(data, len))
@@ -1335,6 +1348,9 @@ namespace RTC
 
 		// Send the STUN response over the same transport tuple.
 		tuple->Send(msg->GetData(), msg->GetSize());
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(msg->GetSize());
 	}
 
 	inline void WebRtcTransport::OnIceSelectedTuple(
@@ -1534,6 +1550,9 @@ namespace RTC
 		}
 
 		this->iceSelectedTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void WebRtcTransport::OnDtlsApplicationData(
