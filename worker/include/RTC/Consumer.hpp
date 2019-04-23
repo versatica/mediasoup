@@ -73,7 +73,6 @@ namespace RTC
 		virtual void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) = 0;
 		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)           = 0;
 		virtual uint32_t GetTransmissionRate(uint64_t now)                                  = 0;
-		virtual float GetLossPercentage() const                                             = 0;
 
 	private:
 		virtual void UserOnTransportConnected()    = 0;

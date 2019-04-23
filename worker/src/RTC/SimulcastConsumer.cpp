@@ -684,25 +684,6 @@ namespace RTC
 		return this->rtpStream->GetBitrate(now);
 	}
 
-	float SimulcastConsumer::GetLossPercentage() const
-	{
-		MS_TRACE();
-
-		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
-
-		if (!IsActive() || !producerCurrentRtpStream)
-			return 0;
-
-		if (producerCurrentRtpStream->GetLossPercentage() >= this->rtpStream->GetLossPercentage())
-		{
-			return 0;
-		}
-		else
-		{
-			return this->rtpStream->GetLossPercentage() - producerCurrentRtpStream->GetLossPercentage();
-		}
-	}
-
 	void SimulcastConsumer::UserOnTransportConnected()
 	{
 		MS_TRACE();

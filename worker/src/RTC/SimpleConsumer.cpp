@@ -307,23 +307,6 @@ namespace RTC
 		return this->rtpStream->GetBitrate(now);
 	}
 
-	float SimpleConsumer::GetLossPercentage() const
-	{
-		MS_TRACE();
-
-		if (!IsActive())
-			return 0;
-
-		if (this->producerRtpStream->GetLossPercentage() >= this->rtpStream->GetLossPercentage())
-		{
-			return 0;
-		}
-		else
-		{
-			return this->rtpStream->GetLossPercentage() - this->producerRtpStream->GetLossPercentage();
-		}
-	}
-
 	void SimpleConsumer::UserOnTransportConnected()
 	{
 		MS_TRACE();

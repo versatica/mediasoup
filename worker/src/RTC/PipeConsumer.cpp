@@ -224,14 +224,6 @@ namespace RTC
 		return rate;
 	}
 
-	float PipeConsumer::GetLossPercentage() const
-	{
-		MS_TRACE();
-
-		// Do nothing.
-		return 0u;
-	}
-
 	void PipeConsumer::UserOnTransportConnected()
 	{
 		MS_TRACE();
