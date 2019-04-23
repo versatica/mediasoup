@@ -759,7 +759,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted)
 	{
 		MS_TRACE();
 
@@ -801,7 +801,7 @@ namespace RTC
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
 
 			if (extenValue && extenLen == 3)
-				this->rembClient->SentRtpPacket(packet);
+				this->rembClient->SentRtpPacket(packet, retransmitted);
 		}
 	}
 
@@ -1574,6 +1574,34 @@ namespace RTC
 		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "bps]", availableBitrate);
 
 		DistributeRemainingOutgoingBitrate(availableBitrate);
+	}
+
+	inline void WebRtcTransport::OnRembClientSendProbationRtpPacket(
+	  RTC::RembClient* /*rembClient*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (!IsConnected())
+			return;
+
+		// Ensure there is sending SRTP session.
+		if (this->srtpSendSession == nullptr)
+		{
+			MS_WARN_DEV("ignoring RTP packet due to non sending SRTP session");
+
+			return;
+		}
+
+		const uint8_t* data = packet->GetData();
+		size_t len          = packet->GetSize();
+
+		if (!this->srtpSendSession->EncryptRtp(&data, &len))
+			return;
+
+		this->iceSelectedTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void WebRtcTransport::OnRembServerAvailableBitrate(
