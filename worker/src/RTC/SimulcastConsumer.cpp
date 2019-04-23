@@ -268,18 +268,34 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::ProducerRtpStreamScore(
-	  RTC::RtpStream* rtpStream, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
-
-		// NOTE: Here it may happen that score is 0 and there is no other Producer stream
-		// with score > 0, so IsActive() will return false. We can live with that.
-		if (IsActive())
-			MayChangeLayers();
 
 		// Emit score event only if the stream whose score changed is the current one.
 		if (rtpStream == GetProducerCurrentRtpStream())
 			EmitScore();
+
+		// NOTE: Here it may happen that score is 0 and there is no other Producer stream
+		// with score > 0, so IsActive() will return false. We can live with that.
+		if (IsActive())
+		{
+			// Just check target layers:
+			// - if our bitrate is not externally managed, or
+			// - if this is the target spatial layer and it has died or reborned.
+			// clang-format off
+			if (
+				!this->externallyManagedBitrate ||
+				(
+					(score == 0 || previousScore == 0) &&
+					rtpStream == GetProducerTargetRtpStream()
+				)
+			)
+			// clang-format on
+			{
+				MayChangeLayers();
+			}
+		}
 	}
 
 	void SimulcastConsumer::SetExternallyManagedBitrate()
@@ -849,7 +865,7 @@ namespace RTC
 		{
 			// If bitrate externally managed, don't bother the transport unless
 			// the newTargetSpatialLayer has changed (or force is true).
-			// This is because, if bitrate is externally managed, the traget temporal
+			// This is because, if bitrate is externally managed, the target temporal
 			// layer is managed by the available given bitrate so the transport
 			// will let us change it when it considers.
 			if (this->externallyManagedBitrate)
@@ -1058,11 +1074,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (IsActive())
-			MayChangeLayers();
-
 		// Emit the score event.
 		EmitScore();
+
+		if (IsActive())
+		{
+			// Just check target layers if our bitrate is not externally managed.
+			if (!this->externallyManagedBitrate)
+				MayChangeLayers();
+		}
 	}
 
 	inline void SimulcastConsumer::OnRtpStreamRetransmitRtpPacket(
