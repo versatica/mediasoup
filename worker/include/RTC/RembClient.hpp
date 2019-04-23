@@ -4,11 +4,11 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RtpPacket.hpp"
-// #include "RTC/RtpProbator.hpp"
+#include "RTC/RtpProbator.hpp"
 
 namespace RTC
 {
-	class RembClient
+	class RembClient : public RTC::RtpProbator::Listener
 	{
 	public:
 		class Listener
@@ -33,11 +33,15 @@ namespace RTC
 		void CheckStatus(uint64_t now);
 
 		/* Pure virtual methods inherited from RTC::RtpProbator::Listener. */
-		// public:
-		// 	void OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator, RTC::RtpPacket* packet) override;
+	public:
+		void OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator, RTC::RtpPacket* packet) override;
 
 	private:
-		Listener* listener;
+		// Passed by argument.
+		Listener* listener{ nullptr };
+		// Allocated by this.
+		RTC::RtpProbator* rtpProbator{ nullptr };
+		// Others.
 		uint32_t initialAvailableBitrate{ 0 };
 		uint64_t initialAvailableBitrateAt{ 0 };
 		uint32_t availableBitrate{ 0 };

@@ -19,11 +19,15 @@ namespace RTC
 	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate)
 	{
 		MS_TRACE();
+
+		this->rtpProbator = new RTC::RtpProbator(this);
 	}
 
 	RembClient::~RembClient()
 	{
 		MS_TRACE();
+
+		delete this->rtpProbator;
 	}
 
 	void RembClient::ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
@@ -58,15 +62,15 @@ namespace RTC
 		}
 
 		// Pass available bitrate to the RtpProbator.
-		// this->rtpProbator->UpdateAvailableBitrate(this->availableBitrate);
+		this->rtpProbator->UpdateAvailableBitrate(this->availableBitrate);
 	}
 
-	void RembClient::SentRtpPacket(RTC::RtpPacket* /*packet*/, bool /*retransmitted*/)
+	void RembClient::SentRtpPacket(RTC::RtpPacket* packet, bool retransmitted)
 	{
 		MS_TRACE();
 
 		// Pass the packet to the RtpProbator.
-		// this->rtpProbator->ReceiveRtpPacket(packet, retransmitted);
+		this->rtpProbator->ReceiveRtpPacket(packet, retransmitted);
 	}
 
 	uint32_t RembClient::GetAvailableBitrate()
@@ -98,11 +102,11 @@ namespace RTC
 		}
 	}
 
-	// inline void RembClient::OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator,
-	// RTC::RtpPacket* packet)
-	// {
-	// 	MS_TRACE();
+	inline void RembClient::OnRtpProbatorSendRtpPacket(
+	  RTC::RtpProbator* /*rtpProbator*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
 
-	// 	this->OnRembClientSendProbationRtpPacket(this, packet);
-	// }
+		this->listener->OnRembClientSendProbationRtpPacket(this, packet);
+	}
 } // namespace RTC
