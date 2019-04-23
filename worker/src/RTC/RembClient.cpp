@@ -26,14 +26,6 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void RembClient::SentRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		// TODO: Uncomment when used.
-		// this->transmissionCounter.Update(packet);
-	}
-
 	void RembClient::ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
 	{
 		MS_TRACE();
@@ -57,19 +49,24 @@ namespace RTC
 			this->availableBitrate = this->initialAvailableBitrate;
 		}
 
-		// TODO: Let's see.
-		// int64_t trend =
-		//   static_cast<int64_t>(this->availableBitrate) - static_cast<int64_t>(previousAvailableBitrate);
-		// uint32_t usedBitrate = this->transmissionCounter.GetBitrate(now);
+		// Emit event if EventInterval elapsed.
+		if (now - this->lastEventAt >= EventInterval)
+		{
+			this->lastEventAt = now;
 
-		// Ensure EventInterval has happened.
-		if (now - this->lastEventAt < EventInterval)
-			return;
+			this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
+		}
 
-		// Update last event time.
-		this->lastEventAt = now;
+		// Pass available bitrate to the RtpProbator.
+		// this->rtpProbator->UpdateAvailableBitrate(this->availableBitrate);
+	}
 
-		this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
+	void RembClient::SentRtpPacket(RTC::RtpPacket* /*packet*/, bool /*retransmitted*/)
+	{
+		MS_TRACE();
+
+		// Pass the packet to the RtpProbator.
+		// this->rtpProbator->ReceiveRtpPacket(packet, retransmitted);
 	}
 
 	uint32_t RembClient::GetAvailableBitrate()
@@ -100,4 +97,12 @@ namespace RTC
 			this->availableBitrate          = this->initialAvailableBitrate;
 		}
 	}
+
+	// inline void RembClient::OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator,
+	// RTC::RtpPacket* packet)
+	// {
+	// 	MS_TRACE();
+
+	// 	this->OnRembClientSendProbationRtpPacket(this, packet);
+	// }
 } // namespace RTC
