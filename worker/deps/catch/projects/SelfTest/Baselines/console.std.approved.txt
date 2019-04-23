@@ -1,6 +1,4 @@
 Filters: ~[!nonportable]~[!benchmark]~[approvals]
-This would not be caught previously
-Nor would this
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <exe-name> is a <version> host application.
@@ -8,6 +6,18 @@ Run with -? for options
 
 Randomness seeded to: 1
 
+-------------------------------------------------------------------------------
+#1455 - INFO and WARN can start with a linebreak
+-------------------------------------------------------------------------------
+Message.tests.cpp:<line number>
+...............................................................................
+
+Message.tests.cpp:<line number>: warning:
+
+This warning message starts with a linebreak
+
+This would not be caught previously
+Nor would this
 -------------------------------------------------------------------------------
 #1514: stderr/stdout is not captured in tests aborted by an exception
 -------------------------------------------------------------------------------
@@ -852,6 +862,30 @@ due to unexpected exception with message:
   3.14
 
 -------------------------------------------------------------------------------
+Vector Approx matcher -- failing
+  Empty and non empty vectors are not approx equal
+-------------------------------------------------------------------------------
+Matchers.tests.cpp:<line number>
+...............................................................................
+
+Matchers.tests.cpp:<line number>: FAILED:
+  CHECK_THAT( empty, Approx(t1) )
+with expansion:
+  {  } is approx: { 1.0, 2.0 }
+
+-------------------------------------------------------------------------------
+Vector Approx matcher -- failing
+  Just different vectors
+-------------------------------------------------------------------------------
+Matchers.tests.cpp:<line number>
+...............................................................................
+
+Matchers.tests.cpp:<line number>: FAILED:
+  CHECK_THAT( v1, Approx(v2) )
+with expansion:
+  { 2.0, 4.0, 6.0 } is approx: { 1.0, 3.0, 5.0 }
+
+-------------------------------------------------------------------------------
 Vector matchers that fail
   Contains (element)
 -------------------------------------------------------------------------------
@@ -1265,6 +1299,6 @@ due to unexpected exception with message:
   Why would you throw a std::string?
 
 ===============================================================================
-test cases:  257 |  191 passed |  62 failed |  4 failed as expected
-assertions: 1419 | 1276 passed | 122 failed | 21 failed as expected
+test cases:  260 |  193 passed |  63 failed |  4 failed as expected
+assertions: 1428 | 1283 passed | 124 failed | 21 failed as expected
 
