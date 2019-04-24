@@ -511,8 +511,11 @@ namespace RTC
 			producerRtpStream = this->producerRtpStreams.at(++spatialLayer);
 
 			// Producer stream does not exist or it's dead. Exit.
-			if (!producerRtpStream || producerRtpStream->GetScore() == 0)
+			if (!producerRtpStream || producerRtpStream->GetScore() < 7)
 				return 0;
+
+			// Set temporal layer to 0.
+			temporalLayer = 0;
 		}
 
 		auto now             = DepLibUV::GetTime();
