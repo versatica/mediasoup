@@ -97,8 +97,14 @@ namespace RTC
 
 		if (now - this->lastEventAt > MaxElapsedTime)
 		{
+			MS_DEBUG_DEV(bwe, "resetting REMB client");
+
 			this->initialAvailableBitrateAt = now;
 			this->availableBitrate          = this->initialAvailableBitrate;
+
+			// Tell the RTP probator to start probing even before receiving REMB
+			// feedbacks.
+			this->rtpProbator->ForceStart(this->initialAvailableBitrate);
 		}
 	}
 

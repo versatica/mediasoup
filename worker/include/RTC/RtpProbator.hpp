@@ -21,6 +21,7 @@ namespace RTC
 		virtual ~RtpProbator();
 
 	public:
+		void ForceStart(uint32_t probationTargetBitrate);
 		void UpdateAvailableBitrate(uint32_t availableBitrate);
 		void ReceiveRtpPacket(RTC::RtpPacket* packet, bool retransmitted);
 
