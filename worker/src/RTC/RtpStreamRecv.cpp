@@ -62,6 +62,10 @@ namespace RTC
 	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(
 	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
+		MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
+		MS_ASSERT(
+		  temporalLayer < this->spatialLayerCounters.at(spatialLayer).size(), "temporalLayer too high");
+
 		uint32_t rate{ 0u };
 		uint8_t spatialLayerIdx{ 0u };
 		uint8_t temporalLayerIdx{ 0u };
@@ -81,6 +85,18 @@ namespace RTC
 		}
 
 		return rate;
+	}
+
+	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
+	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	{
+		MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
+		MS_ASSERT(
+		  temporalLayer < this->spatialLayerCounters.at(spatialLayer).size(), "temporalLayer too high");
+
+		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
+
+		return counter.GetBitrate(now);
 	}
 
 	size_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
@@ -111,22 +127,6 @@ namespace RTC
 		}
 
 		return bytes;
-	}
-
-	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
-	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
-	{
-		// Sanity check. Do not allow spatial layers higher than defined.
-		if (spatialLayer > this->spatialLayerCounters.size() - 1)
-			spatialLayer = this->spatialLayerCounters.size() - 1;
-
-		// Sanity check. Do not allow temporal layers higher than defined.
-		if (temporalLayer > this->spatialLayerCounters[0].size() - 1)
-			temporalLayer = this->spatialLayerCounters[0].size() - 1;
-
-		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
-
-		return counter.GetBitrate(now);
 	}
 
 	/* Instance methods. */
@@ -185,7 +185,7 @@ namespace RTC
 				for (uint8_t tIdx = 0; tIdx < GetTemporalLayers(); ++tIdx)
 				{
 					(*jsonBitrateByLayerIt)[std::to_string(sIdx) + "." + std::to_string(tIdx)] =
-					  GetLayerBitrate(now, sIdx, tIdx);
+					  GetBitrate(now, sIdx, tIdx);
 				}
 			}
 		}

@@ -14,6 +14,9 @@ Compilation.tests.cpp:<line number>: passed: std::memcmp(uarr, "123", sizeof(uar
 Compilation.tests.cpp:<line number>: passed: std::memcmp(sarr, "456", sizeof(sarr)) == 0 for: 0 == 0 with 2 messages: 'uarr := "123"' and 'sarr := "456"'
 Compilation.tests.cpp:<line number>: passed:
 Compilation.tests.cpp:<line number>: passed: h1 == h2 for: [1403 helper] == [1403 helper]
+Message.tests.cpp:<line number>: warning: '
+This info message starts with a linebreak' with 1 message: '
+This warning message starts with a linebreak'
 This would not be caught previously
 Nor would this
 Tricky.tests.cpp:<line number>: failed: explicitly with 1 message: '1514'
@@ -323,9 +326,9 @@ Matchers.tests.cpp:<line number>: passed: testStringForMatching(), Equals("this 
 Matchers.tests.cpp:<line number>: passed: testStringForMatching(), Equals("this string contains 'ABC' as a substring", Catch::CaseSensitive::No) for: "this string contains 'abc' as a substring" equals: "this string contains 'abc' as a substring" (case insensitive)
 Matchers.tests.cpp:<line number>: failed: testStringForMatching(), Equals("this string contains 'ABC' as a substring") for: "this string contains 'abc' as a substring" equals: "this string contains 'ABC' as a substring"
 Matchers.tests.cpp:<line number>: failed: testStringForMatching(), Equals("something else", Catch::CaseSensitive::No) for: "this string contains 'abc' as a substring" equals: "something else" (case insensitive)
-ToStringGeneral.tests.cpp:<line number>: passed: ::Catch::Detail::stringify(WhatException{}) == "This exception has overriden what() method" for: "This exception has overriden what() method"
+ToStringGeneral.tests.cpp:<line number>: passed: ::Catch::Detail::stringify(WhatException{}) == "This exception has overridden what() method" for: "This exception has overridden what() method"
 ==
-"This exception has overriden what() method"
+"This exception has overridden what() method"
 ToStringGeneral.tests.cpp:<line number>: passed: ::Catch::Detail::stringify(OperatorException{}) == "OperatorException" for: "OperatorException" == "OperatorException"
 ToStringGeneral.tests.cpp:<line number>: passed: ::Catch::Detail::stringify(StringMakerException{}) == "StringMakerException" for: "StringMakerException"
 ==
@@ -1186,6 +1189,15 @@ Approx.tests.cpp:<line number>: passed: approx( d ) == 1.22 for: Approx( 1.23 ) 
 Approx.tests.cpp:<line number>: passed: approx( d ) == 1.24 for: Approx( 1.23 ) == 1.24
 Approx.tests.cpp:<line number>: passed: approx( d ) != 1.25 for: Approx( 1.23 ) != 1.25
 VariadicMacros.tests.cpp:<line number>: passed: with 1 message: 'no assertions'
+Matchers.tests.cpp:<line number>: passed: empty, Approx(empty) for: {  } is approx: {  }
+Matchers.tests.cpp:<line number>: passed: v1, Approx(v1) for: { 1.0, 2.0, 3.0 } is approx: { 1.0, 2.0, 3.0 }
+Matchers.tests.cpp:<line number>: passed: v1, !Approx(temp) for: { 1.0, 2.0, 3.0 } not is approx: { 1.0, 2.0, 3.0, 4.0 }
+Matchers.tests.cpp:<line number>: passed: v1, !Approx(v2) for: { 1.0, 2.0, 3.0 } not is approx: { 1.5, 2.5, 3.5 }
+Matchers.tests.cpp:<line number>: passed: v1, Approx(v2).margin(0.5) for: { 1.0, 2.0, 3.0 } is approx: { 1.5, 2.5, 3.5 }
+Matchers.tests.cpp:<line number>: passed: v1, Approx(v2).epsilon(0.5) for: { 1.0, 2.0, 3.0 } is approx: { 1.5, 2.5, 3.5 }
+Matchers.tests.cpp:<line number>: passed: v1, Approx(v2).epsilon(0.1).scale(500) for: { 1.0, 2.0, 3.0 } is approx: { 1.5, 2.5, 3.5 }
+Matchers.tests.cpp:<line number>: failed: empty, Approx(t1) for: {  } is approx: { 1.0, 2.0 }
+Matchers.tests.cpp:<line number>: failed: v1, Approx(v2) for: { 2.0, 4.0, 6.0 } is approx: { 1.0, 3.0, 5.0 }
 Matchers.tests.cpp:<line number>: passed: v, VectorContains(1) for: { 1, 2, 3 } Contains: 1
 Matchers.tests.cpp:<line number>: passed: v, VectorContains(2) for: { 1, 2, 3 } Contains: 2
 Matchers.tests.cpp:<line number>: passed: v, Contains(v2) for: { 1, 2, 3 } Contains: { 1, 2 }
@@ -1502,5 +1514,5 @@ Misc.tests.cpp:<line number>: passed: v.size() == 5 for: 5 == 5
 Misc.tests.cpp:<line number>: passed: v.capacity() >= 5 for: 5 >= 5
 Misc.tests.cpp:<line number>: passed:
 Misc.tests.cpp:<line number>: passed:
-Failed 77 test cases, failed 138 assertions.
+Failed 79 test cases, failed 141 assertions.
 

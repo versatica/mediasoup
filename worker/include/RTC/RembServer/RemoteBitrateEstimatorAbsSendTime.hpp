@@ -57,7 +57,7 @@ namespace RTC
 			static void AddCluster(std::list<Cluster>* clusters, Cluster* cluster);
 
 		public:
-			explicit RemoteBitrateEstimatorAbsSendTime(Listener* observer);
+			explicit RemoteBitrateEstimatorAbsSendTime(Listener* listener);
 			~RemoteBitrateEstimatorAbsSendTime() override = default;
 
 			void IncomingPacket(
@@ -91,7 +91,7 @@ namespace RTC
 			void TimeoutStreams(int64_t nowMs);
 
 		private:
-			Listener* const observer{ nullptr };
+			Listener* listener{ nullptr };
 			std::unique_ptr<InterArrival> interArrival;
 			std::unique_ptr<OveruseEstimator> estimator;
 			OveruseDetector detector;
@@ -129,8 +129,8 @@ namespace RTC
 			return meanSize * 8 * 1000 / recvMeanMs;
 		}
 
-		inline RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(Listener* observer)
-		  : observer(observer), interArrival(), estimator(), detector(), incomingBitrate()
+		inline RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(Listener* listener)
+		  : listener(listener), interArrival(), estimator(), detector(), incomingBitrate()
 		{
 		}
 

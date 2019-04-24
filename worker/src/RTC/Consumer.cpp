@@ -170,9 +170,6 @@ namespace RTC
 
 		// Add producerPaused.
 		jsonObject["producerPaused"] = this->producerPaused;
-
-		// Add lossPercentage.
-		jsonObject["lossPercentage"] = GetLossPercentage();
 	}
 
 	void Consumer::HandleRequest(Channel::Request* request)
@@ -327,7 +324,7 @@ namespace RTC
 		this->listener->onConsumerProducerClosed(this);
 	}
 
-	void Consumer::SetBitrateExternallyManaged()
+	void Consumer::SetExternallyManagedBitrate()
 	{
 		MS_TRACE();
 
@@ -343,12 +340,29 @@ namespace RTC
 		return 0;
 	}
 
-	uint32_t Consumer::UseBitrate(uint32_t /*bitrate*/)
+	uint32_t Consumer::UseAvailableBitrate(uint32_t /*bitrate*/)
 	{
 		MS_TRACE();
 
 		// This method must be override by subclasses with layers. By default
 		// it just returns 0.
 		return 0;
+	}
+
+	uint32_t Consumer::IncreaseLayer(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// This method must be override by subclasses with layers. By default
+		// it just returns 0.
+		return 0;
+	}
+
+	void Consumer::ApplyLayers()
+	{
+		MS_TRACE();
+
+		// This method must be override by subclasses with layers. By default
+		// it does nothing.
 	}
 } // namespace RTC

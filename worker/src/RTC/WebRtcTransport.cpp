@@ -11,7 +11,8 @@
 #include "RTC/RtpDictionaries.hpp"
 #include <cmath>    // std::pow()
 #include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
+#include <map>
+#include <sstream> // std::ostringstream
 
 namespace RTC
 {
@@ -203,8 +204,6 @@ namespace RTC
 		}
 		catch (const MediaSoupError& error)
 		{
-			MS_ERROR("constructor failed: %s", error.what());
-
 			// Must delete everything since the destructor won't be called.
 
 			delete this->dtlsTransport;
@@ -402,7 +401,7 @@ namespace RTC
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
-	void WebRtcTransport::FillJsonStats(json& jsonArray) const
+	void WebRtcTransport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();
 
@@ -460,20 +459,21 @@ namespace RTC
 
 		if (this->iceSelectedTuple != nullptr)
 		{
-			// Add bytesReceived.
-			jsonObject["bytesReceived"] = this->iceSelectedTuple->GetRecvBytes();
-			// Add bytesSent.
-			jsonObject["bytesSent"] = this->iceSelectedTuple->GetSentBytes();
 			// Add iceSelectedTuple.
 			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
 		}
-		else
-		{
-			// Add bytesReceived.
-			jsonObject["bytesReceived"] = 0;
-			// Add bytesSent.
-			jsonObject["bytesSent"] = 0;
-		}
+
+		// Add bytesReceived.
+		jsonObject["bytesReceived"] = RTC::Transport::GetReceivedBytes();
+
+		// Add bytesSent.
+		jsonObject["bytesSent"] = RTC::Transport::GetSentBytes();
+
+		// Add recvBitrate.
+		jsonObject["recvBitrate"] = RTC::Transport::GetRecvBitrate();
+
+		// Add sendBitrate.
+		jsonObject["sendBitrate"] = RTC::Transport::GetSendBitrate();
 
 		// Add availableOutgoingBitrate.
 		if (this->rembClient)
@@ -652,7 +652,8 @@ namespace RTC
 				this->iceServer->SetUsernameFragment(usernameFragment);
 				this->iceServer->SetPassword(password);
 
-				MS_DEBUG_DEV("WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id);
+				MS_DEBUG_DEV(
+				  "WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id.c_str());
 
 				// Reply with the updated ICE local parameters.
 				json data = json::object();
@@ -758,7 +759,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted)
 	{
 		MS_TRACE();
 
@@ -781,6 +782,9 @@ namespace RTC
 
 		this->iceSelectedTuple->Send(data, len);
 
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
+
 		// Feed the REMB client if this is a simulcast or SVC Consumer.
 		// clang-format off
 		if (
@@ -797,7 +801,7 @@ namespace RTC
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
 
 			if (extenValue && extenLen == 3)
-				this->rembClient->ReceiveRtpPacket(packet);
+				this->rembClient->SentRtpPacket(packet, retransmitted);
 		}
 	}
 
@@ -823,6 +827,122 @@ namespace RTC
 			return;
 
 		this->iceSelectedTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
+	}
+
+	void WebRtcTransport::DistributeAvailableOutgoingBitrate()
+	{
+		MS_TRACE();
+
+		// TODO: Uncomment when Transport-CC is ready.
+		// MS_ASSERT(this->rembClient || this->transportCcClient, "no REMB client nor Transport-CC client");
+		MS_ASSERT(this->rembClient, "no REMB client");
+
+		std::multimap<int16_t, RTC::Consumer*> multimapPriorityConsumer;
+		int16_t totalPriorities{ 0 };
+
+		// Fill the map with Consumers and their priority (if > 0).
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+			auto priority  = consumer->GetBitratePriority();
+
+			if (priority > 0)
+			{
+				multimapPriorityConsumer.emplace(priority, consumer);
+				totalPriorities += priority;
+			}
+		}
+
+		// Nobody wants bitrate. Exit.
+		if (totalPriorities == 0)
+			return;
+
+		uint32_t availableBitrate{ 0 };
+
+		if (this->rembClient)
+		{
+			availableBitrate = this->rembClient->GetAvailableBitrate();
+
+			// Resechedule next REMB event.
+			this->rembClient->ResecheduleNextEvent();
+		}
+
+		MS_DEBUG_TAG(bwe, "before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+
+		uint32_t remainingBitrate = availableBitrate;
+
+		// First of all, redistribute the available bitrate by taking into account
+		// Consumers' priorities.
+		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+		{
+			auto priority    = it->first;
+			auto consumer    = it->second;
+			uint32_t bitrate = (availableBitrate * priority) / totalPriorities;
+
+			MS_DEBUG_TAG(
+			  bwe,
+			  "main bitrate for Consumer [priority:%" PRIi16 ", bitrate:%" PRIu32 ", consumerId:%s]",
+			  priority,
+			  bitrate,
+			  consumer->id.c_str());
+
+			auto usedBitrate = consumer->UseAvailableBitrate(bitrate);
+
+			if (usedBitrate <= remainingBitrate)
+				remainingBitrate -= usedBitrate;
+			else
+				remainingBitrate = 0;
+		}
+
+		MS_DEBUG_TAG(bwe, "after first main iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
+
+		// Then redistribute the remaining bitrate by allowing Consumers to increase
+		// layer by layer.
+		uint32_t previousRemainingBitrate;
+
+		while (remainingBitrate >= 5000)
+		{
+			previousRemainingBitrate = remainingBitrate;
+
+			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+			{
+				auto consumer = it->second;
+
+				MS_DEBUG_TAG(
+				  bwe,
+				  "layer bitrate for Consumer [bitrate:%" PRIu32 ", consumerId:%s]",
+				  remainingBitrate,
+				  consumer->id.c_str());
+
+				auto usedBitrate = consumer->IncreaseLayer(remainingBitrate);
+
+				MS_ASSERT(usedBitrate <= remainingBitrate, "Consumer used more layer bitrate than given");
+
+				remainingBitrate -= usedBitrate;
+
+				// No more.
+				if (remainingBitrate < 5000)
+					break;
+			}
+
+			// If no Consumer used bitrate, exit the loop.
+			if (remainingBitrate == previousRemainingBitrate)
+				break;
+		}
+
+		MS_DEBUG_TAG(
+		  bwe, "after layer-by-layer iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
+
+		// Finally instruct Consumers to apply their computed layers.
+		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+		{
+			auto consumer = it->second;
+
+			consumer->ApplyLayers();
+		}
 	}
 
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -838,7 +958,7 @@ namespace RTC
 		// Ensure there is sending SRTP session.
 		if (this->srtpSendSession == nullptr)
 		{
-			MS_DEBUG_DEV("ignoring RTCP compound packet due to non sending SRTP session");
+			MS_WARN_TAG(rtcp, "ignoring RTCP compound packet due to non sending SRTP session");
 
 			return;
 		}
@@ -847,11 +967,17 @@ namespace RTC
 			return;
 
 		this->iceSelectedTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		// Increase receive transmission.
+		RTC::Transport::DataReceived(len);
 
 		// Check if it's STUN.
 		if (RTC::StunMessage::IsStun(data, len))
@@ -1026,11 +1152,11 @@ namespace RTC
 			return;
 		}
 
-		MS_DEBUG_DEV(
-		  "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producer:%" PRIu32 "]",
-		  packet->GetSsrc(),
-		  packet->GetPayloadType(),
-		  producer->producerId);
+		// MS_DEBUG_DEV(
+		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
+		//   packet->GetSsrc(),
+		//   packet->GetPayloadType(),
+		//   producer->id.c_str());
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
 		this->iceServer->ForceSelectedTuple(tuple);
@@ -1165,13 +1291,19 @@ namespace RTC
 
 			this->rembClient = new RTC::RembClient(this, this->initialAvailableOutgoingBitrate);
 
-			// Tell all the consumers that we are gonna manage their bitrate.
+			// Tell all the Consumers that we are gonna manage their bitrate.
 			for (auto& kv : this->mapConsumers)
 			{
 				auto* consumer = kv.second;
 
-				consumer->SetBitrateExternallyManaged();
+				consumer->SetExternallyManagedBitrate();
 			}
+		}
+		// Otherwise, if REMB client is set, tell the new Consumer that we are
+		// gonna manage its bitrate.
+		else if (this->rembClient)
+		{
+			consumer->SetExternallyManagedBitrate();
 		}
 	}
 
@@ -1189,21 +1321,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Should call to a separate function (since it will ba called in
-		// other cases) that distributes available bitrate based on consumers'
-		// priority, etc.
-
-		for (auto& kv : this->mapConsumers)
-		{
-			auto* consumer = kv.second;
-			// auto priority  = consumer->GetBitratePriority();
-			uint32_t bitrate{ 0 };
-
-			if (this->rembClient)
-				bitrate = this->rembClient->GetAvailableBitrate();
-
-			consumer->UseBitrate(bitrate);
-		}
+		DistributeAvailableOutgoingBitrate();
 	}
 
 	inline void WebRtcTransport::OnPacketRecv(
@@ -1244,6 +1362,9 @@ namespace RTC
 
 		// Send the STUN response over the same transport tuple.
 		tuple->Send(msg->GetData(), msg->GetSize());
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(msg->GetSize());
 	}
 
 	inline void WebRtcTransport::OnIceSelectedTuple(
@@ -1443,6 +1564,9 @@ namespace RTC
 		}
 
 		this->iceSelectedTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void WebRtcTransport::OnDtlsApplicationData(
@@ -1452,23 +1576,45 @@ namespace RTC
 
 		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
 
-		// NOTE: No DataChannel support, si just ignore it.
+		// NOTE: No DataChannel support, so just ignore it.
 	}
 
-	inline void WebRtcTransport::OnRembClientIncreaseBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t /*bitrate*/)
+	inline void WebRtcTransport::OnRembClientAvailableBitrate(
+	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate)
 	{
 		MS_TRACE();
 
-		// TODO
+		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "bps]", availableBitrate);
+
+		DistributeAvailableOutgoingBitrate();
 	}
 
-	inline void WebRtcTransport::OnRembClientDecreaseBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t /*bitrate*/)
+	inline void WebRtcTransport::OnRembClientSendProbationRtpPacket(
+	  RTC::RembClient* /*rembClient*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		// TODO
+		if (!IsConnected())
+			return;
+
+		// Ensure there is sending SRTP session.
+		if (this->srtpSendSession == nullptr)
+		{
+			MS_WARN_DEV("ignoring RTP packet due to non sending SRTP session");
+
+			return;
+		}
+
+		const uint8_t* data = packet->GetData();
+		size_t len          = packet->GetSize();
+
+		if (!this->srtpSendSession->EncryptRtp(&data, &len))
+			return;
+
+		this->iceSelectedTuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void WebRtcTransport::OnRembServerAvailableBitrate(
@@ -1492,13 +1638,11 @@ namespace RTC
 				ssrcsStream << ssrcs.back();
 			}
 
-#ifdef MS_LOG_DEV
-			MS_DEBUG_TAG(
-			  bwe,
-			  "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
-			  availableBitrate,
-			  ssrcsStream.str().c_str());
-#endif
+			// MS_DEBUG_TAG(
+			//   bwe,
+			//   "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
+			//   availableBitrate,
+			//   ssrcsStream.str().c_str());
 		}
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);

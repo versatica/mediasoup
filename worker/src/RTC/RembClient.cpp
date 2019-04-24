@@ -9,28 +9,25 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t EventInterval{ 1500 };    // In ms.
-	static constexpr uint64_t MaxEventInterval{ 3000 }; // In ms.
+	static constexpr uint64_t EventInterval{ 2000 };                   // In ms.
+	static constexpr uint64_t MaxElapsedTime{ 5000 };                  // In ms.
+	static constexpr uint64_t InitialAvailableBitrateDuration{ 8000 }; // in ms.
 
 	/* Instance methods. */
 
 	RembClient::RembClient(RTC::RembClient::Listener* listener, uint32_t initialAvailableBitrate)
-	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate),
-	    availableBitrate(initialAvailableBitrate)
+	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate)
 	{
 		MS_TRACE();
+
+		this->rtpProbator = new RTC::RtpProbator(this);
 	}
 
 	RembClient::~RembClient()
 	{
 		MS_TRACE();
-	}
 
-	void RembClient::ReceiveRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		this->transmissionCounter.Update(packet);
+		delete this->rtpProbator;
 	}
 
 	void RembClient::ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
@@ -39,96 +36,83 @@ namespace RTC
 
 		uint64_t now = DepLibUV::GetTime();
 
-		// If we don't have recent data yet, start from here.
-		if (!CheckStatus())
-		{
-			// Update last event time.
-			this->lastEventAt = now;
+		CheckStatus(now);
 
-			return;
-		}
-		// Otherwise ensure EventInterval has happened.
-		else if (this->lastEventAt != 0 && (now - this->lastEventAt) < EventInterval)
-		{
-			return;
-		}
-
-		// Update last event time.
-		this->lastEventAt = now;
-
-		auto previousAvailableBitrate = this->availableBitrate;
-
-		// Update available bitrate.
+		// Update availableBitrate.
 		this->availableBitrate = static_cast<uint32_t>(remb->GetBitrate());
 
-		int64_t trend =
-		  static_cast<int64_t>(this->availableBitrate) - static_cast<int64_t>(previousAvailableBitrate);
-		uint32_t usedBitrate = this->transmissionCounter.GetBitrate(now);
-
-		if (this->availableBitrate >= usedBitrate)
+		// If REMB reports less than initialAvailableBitrate during
+		// InitialAvailableBitrateDuration, honor initialAvailableBitrate.
+		// clang-format off
+		if (
+			this->availableBitrate < this->initialAvailableBitrate &&
+			now - this->initialAvailableBitrateAt <= InitialAvailableBitrateDuration
+		)
+		// clang-format on
 		{
-			uint32_t usableBitrate = this->availableBitrate - usedBitrate;
-
-			MS_DEBUG_TAG(
-			  bwe,
-			  "usable bitrate [availableBitrate:%" PRIu32 " >= usedBitrate:%" PRIu32
-			  ", usableBitrate:%" PRIu32 "]",
-			  this->availableBitrate,
-			  usedBitrate,
-			  usableBitrate);
-
-			this->listener->OnRembClientIncreaseBitrate(this, usableBitrate);
+			this->availableBitrate = this->initialAvailableBitrate;
 		}
-		else if (trend > 0)
+
+		// Emit event if EventInterval elapsed.
+		if (now - this->lastEventAt >= EventInterval)
 		{
-			MS_DEBUG_TAG(
-			  bwe,
-			  "positive REMB trend [availableBitrate:%" PRIu32 " < usedBitrate:%" PRIu32
-			  ", trend:%" PRIi64 "]",
-			  this->availableBitrate,
-			  usedBitrate,
-			  trend);
-		}
-		else
-		{
-			uint32_t exceedingBitrate = usedBitrate - this->availableBitrate;
+			this->lastEventAt = now;
 
-			MS_WARN_TAG(
-			  bwe,
-			  "exceeding bitrate [availableBitrate:%" PRIu32 " < usedBitrate:%" PRIu32
-			  ", exceedingBitrate:%" PRIu32 "]",
-			  this->availableBitrate,
-			  usedBitrate,
-			  exceedingBitrate);
-
-			this->listener->OnRembClientDecreaseBitrate(this, exceedingBitrate);
+			this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
 		}
+
+		// Pass available bitrate to the RtpProbator.
+		this->rtpProbator->UpdateAvailableBitrate(this->availableBitrate);
+	}
+
+	void RembClient::SentRtpPacket(RTC::RtpPacket* packet, bool retransmitted)
+	{
+		MS_TRACE();
+
+		// Pass the packet to the RtpProbator.
+		this->rtpProbator->ReceiveRtpPacket(packet, retransmitted);
 	}
 
 	uint32_t RembClient::GetAvailableBitrate()
 	{
 		MS_TRACE();
 
-		CheckStatus();
+		uint64_t now = DepLibUV::GetTime();
+
+		CheckStatus(now);
 
 		return this->availableBitrate;
 	}
 
-	inline bool RembClient::CheckStatus()
+	void RembClient::ResecheduleNextEvent()
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
+		this->lastEventAt = DepLibUV::GetTime();
+	}
 
-		if (this->lastEventAt != 0 && (now - this->lastEventAt) < MaxEventInterval)
-		{
-			return true;
-		}
-		else
-		{
-			this->availableBitrate = this->initialAvailableBitrate;
+	inline void RembClient::CheckStatus(uint64_t now)
+	{
+		MS_TRACE();
 
-			return false;
+		if (now - this->lastEventAt > MaxElapsedTime)
+		{
+			MS_DEBUG_DEV(bwe, "resetting REMB client");
+
+			this->initialAvailableBitrateAt = now;
+			this->availableBitrate          = this->initialAvailableBitrate;
+
+			// Tell the RTP probator to start probing even before receiving REMB
+			// feedbacks.
+			this->rtpProbator->UpdateAvailableBitrate(this->initialAvailableBitrate);
 		}
+	}
+
+	inline void RembClient::OnRtpProbatorSendRtpPacket(
+	  RTC::RtpProbator* /*rtpProbator*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		this->listener->OnRembClientSendProbationRtpPacket(this, packet);
 	}
 } // namespace RTC

@@ -14,6 +14,13 @@ TEST_CASE( "INFO and WARN do not abort tests", "[messages][.]" ) {
     WARN( "this is a " << "warning" );    // This should always output the message but then continue
 }
 
+TEST_CASE( "#1455 - INFO and WARN can start with a linebreak", "[messages][.]" ) {
+    // Previously these would be hidden from the console reporter output,
+    // because it would fail at properly reflowing the text
+    INFO( "\nThis info message starts with a linebreak" );
+    WARN( "\nThis warning message starts with a linebreak" );
+}
+
 TEST_CASE( "SUCCEED counts as a test pass", "[messages]" ) {
     SUCCEED( "this is a " << "success" );
 }
@@ -220,9 +227,9 @@ TEST_CASE( "CAPTURE can deal with complex expressions", "[messages][capture]" ) 
 
 template <typename T1, typename T2>
 struct helper_1436 {
-    helper_1436(T1 t1, T2 t2):
-        t1{ t1 },
-        t2{ t2 }
+    helper_1436(T1 t1_, T2 t2_):
+        t1{ t1_ },
+        t2{ t2_ }
     {}
     T1 t1;
     T2 t2;

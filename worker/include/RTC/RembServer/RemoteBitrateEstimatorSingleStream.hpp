@@ -32,7 +32,7 @@ namespace RTC
 			static constexpr double TimestampToMs{ 1.0 / 90.0 };
 
 		public:
-			explicit RemoteBitrateEstimatorSingleStream(Listener* observer);
+			explicit RemoteBitrateEstimatorSingleStream(Listener* listener);
 			~RemoteBitrateEstimatorSingleStream() override;
 
 			void IncomingPacket(
@@ -79,7 +79,7 @@ namespace RTC
 			RTC::RateCalculator incomingBitrate;
 			uint32_t lastValidIncomingBitrate{ 0 };
 			std::unique_ptr<AimdRateControl> remoteRate;
-			Listener* observer{ nullptr };
+			Listener* listener{ nullptr };
 			int64_t lastProcessTime{ -1 };
 			int64_t processIntervalMs{ 500 };
 			bool umaRecorded{ false };
@@ -95,10 +95,9 @@ namespace RTC
 		{
 		}
 
-		inline RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* observer)
-		  : incomingBitrate(), remoteRate(new AimdRateControl()), observer(observer)
+		inline RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(Listener* listener)
+		  : incomingBitrate(), remoteRate(new AimdRateControl()), listener(listener)
 		{
-			// assert(this->observer);
 		}
 
 		inline RemoteBitrateEstimatorSingleStream::~RemoteBitrateEstimatorSingleStream()

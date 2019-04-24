@@ -29,7 +29,6 @@ namespace RTC
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
 		uint32_t GetTransmissionRate(uint64_t now) override;
-		float GetLossPercentage() const override;
 
 	private:
 		void UserOnTransportConnected() override;

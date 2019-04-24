@@ -6,7 +6,7 @@ if(NOT DEFINED PROJECT_NAME)
   set(NOT_SUBPROJECT ON)
 endif()
 
-project(Catch2 LANGUAGES CXX VERSION 2.7.1)
+project(Catch2 LANGUAGES CXX VERSION 2.7.2)
 
 # Provide path for scripts
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMake")
@@ -204,5 +204,16 @@ if (NOT_SUBPROJECT)
       DESTINATION
         ${PKGCONFIG_INSTALL_DIR}
     )
+
+    # CPack/CMake started taking the package version from project version 3.12
+    # So we need to set the version manually for older CMake versions
+    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+        set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+    endif()
+
+    set(CPACK_PACKAGE_CONTACT "https://github.com/catchorg/Catch2/")
+
+
+    include( CPack )
 
 endif(NOT_SUBPROJECT)

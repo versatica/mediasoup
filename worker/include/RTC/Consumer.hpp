@@ -61,9 +61,11 @@ namespace RTC
 		virtual void ProducerRtpStreamScore(
 		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) = 0;
 		void ProducerClosed();
-		virtual void SetBitrateExternallyManaged();
+		virtual void SetExternallyManagedBitrate();
 		virtual int16_t GetBitratePriority() const;
-		virtual uint32_t UseBitrate(uint32_t bitrate);
+		virtual uint32_t UseAvailableBitrate(uint32_t bitrate);
+		virtual uint32_t IncreaseLayer(uint32_t bitrate);
+		virtual void ApplyLayers();
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)                    = 0;
 		virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
@@ -71,7 +73,6 @@ namespace RTC
 		virtual void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) = 0;
 		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)           = 0;
 		virtual uint32_t GetTransmissionRate(uint64_t now)                                  = 0;
-		virtual float GetLossPercentage() const                                             = 0;
 
 	private:
 		virtual void UserOnTransportConnected()    = 0;

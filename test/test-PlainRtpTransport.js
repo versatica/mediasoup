@@ -177,6 +177,8 @@ test('plaintRtpTransport.getStats() succeeds', async () =>
 	expect(data[0].tuple.localPort).toBeType('number');
 	expect(data[0].tuple.protocol).toBe('udp');
 	expect(data[0].rtcpTuple).toBe(undefined);
+	expect(data[0].recvBitrate).toBe(0);
+	expect(data[0].sendBitrate).toBe(0);
 }, 2000);
 
 test('plaintRtpTransport.connect() succeeds', async () =>

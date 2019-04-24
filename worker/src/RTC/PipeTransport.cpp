@@ -53,8 +53,6 @@ namespace RTC
 		}
 		catch (const MediaSoupError& error)
 		{
-			MS_ERROR("constructor failed: %s", error.what());
-
 			// Must delete everything since the destructor won't be called.
 
 			delete this->udpSocket;
@@ -103,7 +101,7 @@ namespace RTC
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
-	void PipeTransport::FillJsonStats(json& jsonArray) const
+	void PipeTransport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();
 
@@ -121,19 +119,10 @@ namespace RTC
 
 		if (this->tuple != nullptr)
 		{
-			// Add bytesReceived.
-			jsonObject["bytesReceived"] = this->tuple->GetRecvBytes();
-			// Add bytesSent.
-			jsonObject["bytesSent"] = this->tuple->GetSentBytes();
-			// Add tuple.
 			this->tuple->FillJson(jsonObject["tuple"]);
 		}
 		else
 		{
-			// Add bytesReceived.
-			jsonObject["bytesReceived"] = this->udpSocket->GetRecvBytes();
-			// Add bytesSent.
-			jsonObject["bytesSent"] = this->udpSocket->GetSentBytes();
 			// Add tuple.
 			jsonObject["tuple"] = json::object();
 			auto jsonTupleIt    = jsonObject.find("tuple");
@@ -146,6 +135,18 @@ namespace RTC
 			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
 			(*jsonTupleIt)["protocol"]  = "udp";
 		}
+
+		// Add bytesReceived.
+		jsonObject["bytesReceived"] = RTC::Transport::GetReceivedBytes();
+
+		// Add bytesSent.
+		jsonObject["bytesSent"] = RTC::Transport::GetSentBytes();
+
+		// Add recvBitrate.
+		jsonObject["recvBitrate"] = RTC::Transport::GetRecvBitrate();
+
+		// Add sendBitrate.
+		jsonObject["sendBitrate"] = RTC::Transport::GetSendBitrate();
 	}
 
 	void PipeTransport::HandleRequest(Channel::Request* request)
@@ -263,7 +264,8 @@ namespace RTC
 		return this->tuple != nullptr;
 	}
 
-	void PipeTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/)
+	void PipeTransport::SendRtpPacket(
+	  RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/, bool /*retransmitted*/)
 	{
 		MS_TRACE();
 
@@ -274,6 +276,9 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		this->tuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	void PipeTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
@@ -287,6 +292,9 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		this->tuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	void PipeTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -300,11 +308,17 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		this->tuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void PipeTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		// Increase receive transmission.
+		RTC::Transport::DataReceived(len);
 
 		// Check if it's RTCP.
 		if (RTC::RTCP::Packet::IsRtcp(data, len))
@@ -362,11 +376,11 @@ namespace RTC
 			return;
 		}
 
-		MS_DEBUG_DEV(
-		  "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producer:%" PRIu32 "]",
-		  packet->GetSsrc(),
-		  packet->GetPayloadType(),
-		  producer->producerId);
+		// MS_DEBUG_DEV(
+		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
+		//   packet->GetSsrc(),
+		//   packet->GetPayloadType(),
+		//   producer->id.c_str());
 
 		// Pass the RTP packet to the corresponding Producer.
 		producer->ReceiveRtpPacket(packet);

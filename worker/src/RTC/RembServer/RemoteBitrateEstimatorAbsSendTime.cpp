@@ -378,7 +378,7 @@ namespace RTC
 				this->lastUpdateMs     = nowMs;
 				this->availableBitrate = targetBitrateBps;
 
-				this->observer->OnRembServerAvailableBitrate(this, ssrcs, targetBitrateBps);
+				this->listener->OnRembServerAvailableBitrate(this, ssrcs, targetBitrateBps);
 			}
 		}
 

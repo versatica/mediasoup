@@ -39,15 +39,17 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const override;
-		void FillJsonStats(json& jsonArray) const override;
+		void FillJsonStats(json& jsonArray) override;
 		void HandleRequest(Channel::Request* request) override;
 
 	private:
 		bool IsConnected() const override;
 		void MayRunDtlsTransport();
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer) override;
+		void SendRtpPacket(
+		  RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted = false) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
+		void DistributeAvailableOutgoingBitrate();
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnDtlsDataRecv(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
@@ -107,8 +109,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
 	public:
-		void OnRembClientIncreaseBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
-		void OnRembClientDecreaseBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
+		void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, uint32_t bitrate) override;
+		void OnRembClientSendProbationRtpPacket(RTC::RembClient* rembClient, RTC::RtpPacket* packet) override;
 
 		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:

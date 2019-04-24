@@ -23,9 +23,11 @@ namespace RTC
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void SetBitrateExternallyManaged() override;
+		void SetExternallyManagedBitrate() override;
 		int16_t GetBitratePriority() const override;
-		uint32_t UseBitrate(uint32_t bitrate) override;
+		uint32_t UseAvailableBitrate(uint32_t bitrate) override;
+		uint32_t IncreaseLayer(uint32_t bitrate) override;
+		void ApplyLayers() override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
@@ -33,7 +35,6 @@ namespace RTC
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
 		uint32_t GetTransmissionRate(uint64_t now) override;
-		float GetLossPercentage() const override;
 
 	private:
 		void UserOnTransportConnected() override;
@@ -42,7 +43,7 @@ namespace RTC
 		void UserOnResumed() override;
 		void CreateRtpStream();
 		void RequestKeyFrame();
-		void MayChangeLayers();
+		void MayChangeLayers(bool force = false);
 		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		void UpdateCurrentLayers();
@@ -68,12 +69,14 @@ namespace RTC
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t preferredTemporalLayer{ -1 };
+		int16_t provisionalTargetSpatialLayer{ -1 };
+		int16_t provisionalTargetTemporalLayer{ -1 };
 		int16_t targetSpatialLayer{ -1 };
 		int16_t targetTemporalLayer{ -1 };
 		int16_t currentSpatialLayer{ -1 };
 		int16_t currentTemporalLayer{ -1 };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		bool bitrateExternallyManaged{ false };
+		bool externallyManagedBitrate{ false };
 	};
 
 	/* Inline methods. */
@@ -86,7 +89,10 @@ namespace RTC
 			std::any_of(
 				this->producerRtpStreams.begin(),
 				this->producerRtpStreams.end(),
-				[](const RTC::RtpStream* rtpStream) { return rtpStream != nullptr; }
+				[](const RTC::RtpStream* rtpStream)
+				{
+					return (rtpStream != nullptr && rtpStream->GetScore() > 0);
+				}
 			)
 		);
 		// clang-format on

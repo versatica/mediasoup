@@ -836,52 +836,46 @@ namespace RTC
 			if (this->kind == RTC::Media::Kind::AUDIO)
 			{
 				// Proxy urn:ietf:params:rtp-hdrext:ssrc-audio-level.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
+
+				if (extenValue)
 				{
-					extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
+					std::memcpy(bufferPtr, extenValue, extenLen);
 
-					if (extenValue)
-					{
-						std::memcpy(bufferPtr, extenValue, extenLen);
-
-						extensions.emplace_back(
-						  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL),
-						  extenLen,
-						  bufferPtr);
-					}
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL),
+					  extenLen,
+					  bufferPtr);
 				}
 			}
 			else if (this->kind == RTC::Media::Kind::VIDEO)
 			{
 				// Proxy urn:3gpp:video-orientation.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
+
+				if (extenValue)
 				{
-					extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
+					std::memcpy(bufferPtr, extenValue, extenLen);
 
-					if (extenValue)
-					{
-						std::memcpy(bufferPtr, extenValue, extenLen);
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
+					  extenLen,
+					  bufferPtr);
 
-						extensions.emplace_back(
-						  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
-						  extenLen,
-						  bufferPtr);
-
-						bufferPtr += extenLen;
-					}
+					bufferPtr += extenLen;
 				}
 
 				// Proxy urn:ietf:params:rtp-hdrext:toffset.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.toffset, extenLen);
+
+				if (extenValue)
 				{
-					extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.toffset, extenLen);
+					std::memcpy(bufferPtr, extenValue, extenLen);
 
-					if (extenValue)
-					{
-						std::memcpy(bufferPtr, extenValue, extenLen);
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TOFFSET), extenLen, bufferPtr);
 
-						extensions.emplace_back(
-						  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TOFFSET), extenLen, bufferPtr);
-
-						bufferPtr += extenLen;
-					}
+					bufferPtr += extenLen;
 				}
 
 				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.

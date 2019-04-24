@@ -22,12 +22,13 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const override;
-		void FillJsonStats(json& jsonArray) const override;
+		void FillJsonStats(json& jsonArray) override;
 		void HandleRequest(Channel::Request* request) override;
 
 	private:
 		bool IsConnected() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer) override;
+		void SendRtpPacket(
+		  RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted = false) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);

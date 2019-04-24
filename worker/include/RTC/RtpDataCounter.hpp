@@ -13,13 +13,13 @@ namespace RTC
 	{
 	public:
 		static constexpr float BpsScale{ 8000.0f };
-		static constexpr float BpsScale2{ 1000.0f };
 		static constexpr size_t DefaultWindowSize{ 1000 };
 
 	public:
 		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = BpsScale);
 		void Update(size_t size, uint64_t now);
 		uint32_t GetRate(uint64_t now);
+		size_t GetBytes() const;
 		void Reset();
 
 	private:
@@ -45,7 +45,37 @@ namespace RTC
 		size_t windowSize{ DefaultWindowSize };
 		// Scale in which the rate is represented.
 		const float scale{ BpsScale };
+		// Total bytes transmitted.
+		size_t bytes{ 0 };
 	};
+
+	/* Inline instance methods. */
+
+	inline RateCalculator::RateCalculator(size_t windowSize, float scale)
+	  : windowSize(windowSize), scale(scale)
+	{
+		Reset();
+	}
+
+	inline size_t RateCalculator::GetBytes() const
+	{
+		return this->bytes;
+	}
+
+	inline void RateCalculator::Reset()
+	{
+		uint64_t now = DepLibUV::GetTime();
+
+		Reset(now);
+	}
+
+	inline void RateCalculator::Reset(uint64_t now)
+	{
+		this->buffer.reset(new BufferItem[this->windowSize]);
+		this->totalCount  = 0;
+		this->oldestIndex = 0;
+		this->oldestTime  = now - this->windowSize;
+	}
 
 	class RtpDataCounter
 	{
@@ -61,31 +91,9 @@ namespace RTC
 	private:
 		RateCalculator rate;
 		size_t packets{ 0 };
-		size_t bytes{ 0 };
 	};
 
 	/* Inline instance methods. */
-
-	inline RateCalculator::RateCalculator(size_t windowSize, float scale)
-	  : windowSize(windowSize), scale(scale)
-	{
-		Reset();
-	}
-
-	inline void RateCalculator::Reset()
-	{
-		uint64_t now = DepLibUV::GetTime();
-
-		Reset(now);
-	}
-
-	inline void RateCalculator::Reset(uint64_t now)
-	{
-		this->buffer.reset(new BufferItem[windowSize]);
-		this->totalCount  = 0;
-		this->oldestIndex = 0;
-		this->oldestTime  = now - this->windowSize;
-	}
 
 	inline uint32_t RtpDataCounter::GetBitrate(uint64_t now)
 	{
@@ -99,7 +107,7 @@ namespace RTC
 
 	inline size_t RtpDataCounter::GetBytes() const
 	{
-		return this->bytes;
+		return this->rate.GetBytes();
 	}
 } // namespace RTC
 
