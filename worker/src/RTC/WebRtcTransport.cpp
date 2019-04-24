@@ -901,11 +901,9 @@ namespace RTC
 
 		// Then redistribute the remaining bitrate by allowing Consumers to increase
 		// layer by layer.
-		uint32_t previousRemainingBitrate;
-
 		while (remainingBitrate >= 5000)
 		{
-			previousRemainingBitrate = remainingBitrate;
+			auto previousRemainingBitrate = remainingBitrate;
 
 			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 			{

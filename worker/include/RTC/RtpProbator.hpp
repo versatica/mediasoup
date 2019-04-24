@@ -17,7 +17,7 @@ namespace RTC
 		};
 
 	public:
-		RtpProbator(RTC::RtpProbator::Listener* listener);
+		explicit RtpProbator(RTC::RtpProbator::Listener* listener);
 		virtual ~RtpProbator();
 
 	public:
