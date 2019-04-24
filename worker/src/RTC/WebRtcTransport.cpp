@@ -903,7 +903,7 @@ namespace RTC
 		// layer by layer.
 		uint32_t previousRemainingBitrate;
 
-		while (remainingBitrate > 5000)
+		while (remainingBitrate >= 5000)
 		{
 			previousRemainingBitrate = remainingBitrate;
 
@@ -922,6 +922,10 @@ namespace RTC
 				MS_ASSERT(usedBitrate <= remainingBitrate, "Consumer used more layer bitrate than given");
 
 				remainingBitrate -= usedBitrate;
+
+				// No more.
+				if (remainingBitrate < 5000)
+					break;
 			}
 
 			// If no Consumer used bitrate, exit the loop.
