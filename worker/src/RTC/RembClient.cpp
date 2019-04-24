@@ -11,7 +11,7 @@ namespace RTC
 
 	static constexpr uint64_t EventInterval{ 2000 };                   // In ms.
 	static constexpr uint64_t MaxElapsedTime{ 5000 };                  // In ms.
-	static constexpr uint64_t InitialAvailableBitrateDuration{ 5000 }; // in ms.
+	static constexpr uint64_t InitialAvailableBitrateDuration{ 8000 }; // in ms.
 
 	/* Instance methods. */
 
@@ -104,7 +104,7 @@ namespace RTC
 
 			// Tell the RTP probator to start probing even before receiving REMB
 			// feedbacks.
-			this->rtpProbator->ForceStart(this->initialAvailableBitrate);
+			this->rtpProbator->UpdateAvailableBitrate(this->initialAvailableBitrate);
 		}
 	}
 

@@ -19,17 +19,6 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void RtpProbator::ForceStart(uint32_t probationTargetBitrate)
-	{
-		MS_TRACE();
-
-		// This method enables probing while there is no info about available
-		// bitrate.
-
-		this->enabled                = true;
-		this->probationTargetBitrate = probationTargetBitrate;
-	}
-
 	void RtpProbator::UpdateAvailableBitrate(uint32_t availableBitrate)
 	{
 		MS_TRACE();
@@ -43,11 +32,10 @@ namespace RTC
 		auto now                 = DepLibUV::GetTime();
 		auto transmissionBitrate = this->transmissionCounter.GetBitrate(now);
 
-		// If transmission bitrate is 0 (or available bitrate is 0, rare) abort.
-		if (transmissionBitrate == 0 || availableBitrate == 0)
+		if (availableBitrate == 0)
 		{
 			if (wasEnabled)
-				MS_DEBUG_DEV("probation disabled due no transmission");
+				MS_DEBUG_TAG(bwe, "probation disabled due zero available bitrate");
 
 			return;
 		}
@@ -64,8 +52,18 @@ namespace RTC
 				this->probationTargetBitrate = 2 * (availableBitrate - transmissionBitrate);
 			else
 				this->probationTargetBitrate = 0.5 * transmissionBitrate;
+		}
+		// If there is no bitrate, set available bitrate as probation target bitrate.
+		else if (factor == 0)
+		{
+			this->enabled                = true;
+			this->probationTargetBitrate = availableBitrate;
+		}
 
-			MS_DEBUG_DEV(
+		if (!wasEnabled && this->enabled)
+		{
+			MS_DEBUG_TAG(
+			  bwe,
 			  "probation enabled [bitrate:%" PRIu32 ", availableBitrate:%" PRIu32
 			  ", factor:%f, probationTargetBitrate:%" PRIu32 "]",
 			  transmissionBitrate,
@@ -73,10 +71,20 @@ namespace RTC
 			  factor,
 			  this->probationTargetBitrate);
 		}
-
-		if (wasEnabled && !this->enabled)
+		else if (wasEnabled && this->enabled)
 		{
 			MS_DEBUG_DEV(
+			  "probation updated [bitrate:%" PRIu32 ", availableBitrate:%" PRIu32
+			  ", factor:%f, probationTargetBitrate:%" PRIu32 "]",
+			  transmissionBitrate,
+			  availableBitrate,
+			  factor,
+			  this->probationTargetBitrate);
+		}
+		else if (wasEnabled && !this->enabled)
+		{
+			MS_DEBUG_TAG(
+			  bwe,
 			  "probation disabled [bitrate:%" PRIu32 ", availableBitrate:%" PRIu32 ", factor:%f]",
 			  transmissionBitrate,
 			  availableBitrate,
@@ -113,23 +121,24 @@ namespace RTC
 			// Send the probation packet.
 			this->listener->OnRtpProbatorSendRtpPacket(this, packet);
 
-			// May send it twice.
+			// Update probation bitrate.
 			probationTransmissionBitrate = this->probationTransmissionCounter.GetBitrate(now);
+		}
 
-			if (probationTransmissionBitrate <= this->probationTargetBitrate)
-			{
-				MS_DEBUG_DEV(
-				  "sending duplicated probation RTP packet [probationTargetBitrate:%" PRIu32
-				  ", probationTransmissionBitrate:%" PRIu32 "]",
-				  this->probationTargetBitrate,
-				  probationTransmissionBitrate);
+		// May send probation packet twice.
+		if (probationTransmissionBitrate <= this->probationTargetBitrate)
+		{
+			MS_DEBUG_DEV(
+			  "sending probation RTP packet twice [probationTargetBitrate:%" PRIu32
+			  ", probationTransmissionBitrate:%" PRIu32 "]",
+			  this->probationTargetBitrate,
+			  probationTransmissionBitrate);
 
-				// Increase probation transmission counter.
-				this->probationTransmissionCounter.Update(packet);
+			// Increase probation transmission counter.
+			this->probationTransmissionCounter.Update(packet);
 
-				// Send the probation packet.
-				this->listener->OnRtpProbatorSendRtpPacket(this, packet);
-			}
+			// Send the probation packet.
+			this->listener->OnRtpProbatorSendRtpPacket(this, packet);
 		}
 	}
 } // namespace RTC
