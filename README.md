@@ -37,6 +37,11 @@
 * José Luis Millán [[github](https://github.com/jmillan/)]
 
 
+## Sponsors
+
+* [46 Labs LLC](https://46labs.com): Special thanks to 46 Labs where we both, José Luis and Iñaki, develop a mediasoup based multiparty video conferencing app focused on the enterprise market for more than a year.
+
+
 ## Donate
 
 You can support **mediasoup** by making a donation in [open collective][opencollective-mediasoup]. Thanks!

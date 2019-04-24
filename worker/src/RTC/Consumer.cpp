@@ -340,7 +340,7 @@ namespace RTC
 		return 0;
 	}
 
-	uint32_t Consumer::UseBitrate(uint32_t /*bitrate*/)
+	uint32_t Consumer::UseAvailableBitrate(uint32_t /*bitrate*/)
 	{
 		MS_TRACE();
 
@@ -349,7 +349,7 @@ namespace RTC
 		return 0;
 	}
 
-	uint32_t Consumer::IncreaseBitrate(uint32_t /*bitrate*/)
+	uint32_t Consumer::IncreaseLayer(uint32_t /*bitrate*/)
 	{
 		MS_TRACE();
 
@@ -358,12 +358,11 @@ namespace RTC
 		return 0;
 	}
 
-	uint32_t Consumer::DecreaseBitrate(uint32_t /*bitrate*/)
+	void Consumer::ApplyLayers()
 	{
 		MS_TRACE();
 
 		// This method must be override by subclasses with layers. By default
-		// it just returns 0.
-		return 0;
+		// it does nothing.
 	}
 } // namespace RTC

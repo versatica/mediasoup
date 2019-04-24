@@ -339,20 +339,31 @@ namespace RTC
 		return prioritySpatialLayer + 1;
 	}
 
-	uint32_t SimulcastConsumer::UseBitrate(uint32_t bitrate)
+	uint32_t SimulcastConsumer::UseAvailableBitrate(uint32_t bitrate)
 	{
 		MS_TRACE();
-
-		// TODO: This method must compute new target layers taking into account the
-		// given available bitrate, and return the required bitrate.
 
 		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
 
 		if (!IsActive())
 			return 0;
 
-		int16_t newTargetSpatialLayer{ -1 };
-		int16_t newTargetTemporalLayer{ -1 };
+		// Calculate virtual available bitrate based on given bitrate and our
+		// packet lost fraction.
+		uint32_t virtualBitrate;
+		auto lossPercentage = this->rtpStream->GetLossPercentage();
+
+		// TODO: We may have to not consider fraction lost with Transport-CC.
+		if (lossPercentage < 2)
+			virtualBitrate = 1.08 * bitrate;
+		else if (lossPercentage > 10)
+			virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
+		else
+			virtualBitrate = bitrate;
+
+		this->provisionalTargetSpatialLayer  = -1;
+		this->provisionalTargetTemporalLayer = -1;
+
 		uint32_t usedBitrate{ 0 };
 		uint8_t maxProducerScore{ 0 };
 		auto now = DepLibUV::GetTime();
@@ -372,10 +383,10 @@ namespace RTC
 			{
 				// NOTE: If this is the first valid spatial layer take it. This is because,
 				// even if there is no enough bitrate for it, we need to take something.
-				if (newTargetSpatialLayer == -1)
+				if (this->provisionalTargetSpatialLayer == -1)
 				{
-					newTargetSpatialLayer  = spatialLayer;
-					newTargetTemporalLayer = 0;
+					this->provisionalTargetSpatialLayer  = spatialLayer;
+					this->provisionalTargetTemporalLayer = 0;
 				}
 
 				int16_t temporalLayer{ 0 };
@@ -383,31 +394,31 @@ namespace RTC
 				// Check bitrate of every layer.
 				for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 				{
-					auto requiredBitrate = producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+					auto requiredBitrate = producerRtpStream->GetBitrate(now, 0, temporalLayer);
 
 					MS_DEBUG_DEV(
-					  "testing layer %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", requiredBitrate:%" PRIu32
-					  "]",
+					  "testing layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
+					  ", requiredBitrate:%" PRIu32 "]",
 					  spatialLayer,
 					  temporalLayer,
-					  bitrate,
+					  virtualBitrate,
 					  requiredBitrate);
 
 					// If this layer requires more bitrate than the given one, abort the loop
 					// (so use the previous chosen layers if any).
-					if (requiredBitrate > bitrate)
+					if (requiredBitrate > virtualBitrate)
 						goto done;
 
-					// Chose current layers and used bitrate.
-					newTargetSpatialLayer  = spatialLayer;
-					newTargetTemporalLayer = temporalLayer;
-					usedBitrate            = requiredBitrate;
+					// Set provisional layers and used bitrate.
+					this->provisionalTargetSpatialLayer  = spatialLayer;
+					this->provisionalTargetTemporalLayer = temporalLayer;
+					usedBitrate                          = requiredBitrate;
 
 					// If this is the preferred spatial and temporal layer, exit the loops.
 					// clang-format off
 					if (
-						newTargetSpatialLayer == this->preferredSpatialLayer &&
-						newTargetTemporalLayer == this->preferredTemporalLayer &&
+						this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
+						this->provisionalTargetTemporalLayer == this->preferredTemporalLayer &&
 						producerScore >= 7
 					)
 					// clang-format on
@@ -428,49 +439,127 @@ namespace RTC
 		MS_DEBUG_2TAGS(
 		  bwe,
 		  simulcast,
-		  "[bitrate:%" PRIu32 ", usedBitrate:%" PRIu32 ", newLayers:%" PRIi16 ":%" PRIi16
-		  ", consumerId:%s]",
+		  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtualBitrate:%" PRIu32
+		  ", usedBitrate:%" PRIu32 ", consumerId:%s]",
+		  this->provisionalTargetSpatialLayer,
+		  this->provisionalTargetTemporalLayer,
 		  bitrate,
+		  virtualBitrate,
 		  usedBitrate,
-		  newTargetSpatialLayer,
-		  newTargetTemporalLayer,
 		  this->id.c_str());
+
+		// Must recompute usedBitrate based on given bitrate, virtualBitrate and
+		// usedBitrate.
+		if (usedBitrate <= bitrate)
+			return usedBitrate;
+		else if (usedBitrate <= virtualBitrate)
+			return bitrate;
+		else
+			return usedBitrate;
+	}
+
+	uint32_t SimulcastConsumer::IncreaseLayer(uint32_t bitrate)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
+
+		if (!IsActive())
+			return 0;
+
+		// If no target spatial layer is selected, do nothing.
+		if (this->provisionalTargetSpatialLayer == -1)
+		{
+			return 0;
+		}
+		// If already in the preferred layers, do nothing.
+		// clang-format off
+		else if (
+			this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
+			this->provisionalTargetTemporalLayer == this->preferredTemporalLayer
+		)
+		// clang-format on
+		{
+			return 0;
+		}
+
+		// Calculate virtual available bitrate based on given bitrate and our
+		// packet lost fraction.
+		uint32_t virtualBitrate;
+		auto lossPercentage = this->rtpStream->GetLossPercentage();
+
+		// TODO: We may have to not consider fraction lost with Transport-CC.
+		if (lossPercentage < 2)
+			virtualBitrate = 1.08 * bitrate;
+		else if (lossPercentage > 10)
+			virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
+		else
+			virtualBitrate = bitrate;
+
+		auto spatialLayer      = this->provisionalTargetSpatialLayer;
+		auto temporalLayer     = this->provisionalTargetTemporalLayer;
+		auto producerRtpStream = this->producerRtpStreams.at(spatialLayer);
+
+		// Can upgrade temporal layer.
+		if (temporalLayer < producerRtpStream->GetTemporalLayers() - 1)
+		{
+			++temporalLayer;
+		}
+		// Can upgrade spatial layer.
+		else if (static_cast<size_t>(spatialLayer) < this->producerRtpStreams.size() - 1)
+		{
+			producerRtpStream = this->producerRtpStreams.at(++spatialLayer);
+
+			// Producer stream does not exist or it's dead. Exit.
+			if (!producerRtpStream || producerRtpStream->GetScore() == 0)
+				return 0;
+		}
+
+		auto now             = DepLibUV::GetTime();
+		auto requiredBitrate = producerRtpStream->GetLayerBitrate(now, 0, temporalLayer);
+
+		// No luck.
+		if (requiredBitrate > virtualBitrate)
+			return 0;
+
+		// Set provisional layers.
+		this->provisionalTargetSpatialLayer  = spatialLayer;
+		this->provisionalTargetTemporalLayer = temporalLayer;
+
+		MS_DEBUG_DEV(
+		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
+		  ", requiredBitrate:%" PRIu32 "]",
+		  this->provisionalTargetSpatialLayer,
+		  this->provisionalTargetTemporalLayer,
+		  virtualBitrate,
+		  requiredBitrate);
+
+		if (requiredBitrate <= bitrate)
+			return requiredBitrate;
+		else if (requiredBitrate <= virtualBitrate)
+			return bitrate;
+		else
+			return requiredBitrate; // NOTE: This cannot happen.
+	}
+
+	void SimulcastConsumer::ApplyLayers()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
+
+		if (!IsActive())
+			return;
 
 		// clang-format off
 		if (
-			newTargetSpatialLayer != this->targetSpatialLayer ||
-			newTargetTemporalLayer != this->targetTemporalLayer
+			this->provisionalTargetSpatialLayer != this->targetSpatialLayer ||
+			this->provisionalTargetTemporalLayer != this->targetTemporalLayer
 		)
+		// clang-format on
 		{
-			UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
+			UpdateTargetLayers(this->provisionalTargetSpatialLayer, this->provisionalTargetTemporalLayer);
 		}
-
-		// TODO: Just until done.
-		// if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
-		// UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-
-		return usedBitrate;
-	}
-
-	uint32_t SimulcastConsumer::IncreaseBitrate(uint32_t /*bitrate*/)
-	{
-		MS_TRACE();
-
-		// TODO: Try to upgrade to the next available temporal layer (or spatial
-		// layer) without exceeding the preferred ones, and return the increased
-		// bitrate.
-
-		return 0;
-	}
-
-	uint32_t SimulcastConsumer::DecreaseBitrate(uint32_t /*bitrate*/)
-	{
-		MS_TRACE();
-
-		// TODO: Try to downgrade to the previous available temporal layer (or spatial
-		// layer) and return the decreased bitrate.
-
-		return 0;
 	}
 
 	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -941,8 +1030,8 @@ namespace RTC
 		{
 			// Unset current and target layers.
 			this->targetSpatialLayer   = -1;
-			this->currentSpatialLayer  = -1;
 			this->targetTemporalLayer  = -1;
+			this->currentSpatialLayer  = -1;
 			this->currentTemporalLayer = -1;
 
 			if (this->encodingContext)
@@ -968,7 +1057,9 @@ namespace RTC
 		// If the new target spatial layer matches the current one, apply the new
 		// target temporal layer now.
 		if (this->encodingContext && this->targetSpatialLayer == this->currentSpatialLayer)
+		{
 			this->encodingContext->preferences.temporalLayer = this->targetTemporalLayer;
+		}
 
 		MS_DEBUG_TAG(
 		  simulcast,
@@ -1080,6 +1171,8 @@ namespace RTC
 		if (IsActive())
 		{
 			// Just check target layers if our bitrate is not externally managed.
+			// NOTE: For now this is a bit useless since, when locally managed, we do
+			// not check the Consumer score at all.
 			if (!this->externallyManagedBitrate)
 				MayChangeLayers();
 		}

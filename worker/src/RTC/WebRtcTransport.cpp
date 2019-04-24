@@ -843,6 +843,7 @@ namespace RTC
 		std::multimap<int16_t, RTC::Consumer*> multimapPriorityConsumer;
 		int16_t totalPriorities{ 0 };
 
+		// Fill the map with Consumers and their priority (if > 0).
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
@@ -869,10 +870,12 @@ namespace RTC
 			this->rembClient->ResecheduleNextEvent();
 		}
 
-		MS_DEBUG_TAG(bwe, "[availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_TAG(bwe, "before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		uint32_t remainingBitrate = availableBitrate;
 
+		// First of all, redistribute the available bitrate by taking into account
+		// Consumers' priorities.
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 		{
 			auto priority    = it->first;
@@ -881,12 +884,12 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  bwe,
-			  "bitrate for Consumer [priority:%" PRIi16 ", bitrate:%" PRIu32 ", consumerId:%s]",
+			  "main bitrate for Consumer [priority:%" PRIi16 ", bitrate:%" PRIu32 ", consumerId:%s]",
 			  priority,
 			  bitrate,
 			  consumer->id.c_str());
 
-			auto usedBitrate = consumer->UseBitrate(bitrate);
+			auto usedBitrate = consumer->UseAvailableBitrate(bitrate);
 
 			if (usedBitrate <= remainingBitrate)
 				remainingBitrate -= usedBitrate;
@@ -894,42 +897,48 @@ namespace RTC
 				remainingBitrate = 0;
 		}
 
-		MS_DEBUG_TAG(bwe, "[remainingBitrate:%" PRIu32 "]", remainingBitrate);
+		MS_DEBUG_TAG(bwe, "after first main iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
 
-		// TODO: Redistribute the remaining bitrate (if > N). We may just call to
-		// DistributeRemainingOutgoingBitrate() method.
-	}
+		// Then redistribute the remaining bitrate by allowing Consumers to increase
+		// layer by layer.
+		uint32_t previousRemainingBitrate;
 
-	void WebRtcTransport::DistributeRemainingOutgoingBitrate(uint32_t bitrate)
-	{
-		MS_TRACE();
-
-		// Ignore if too low vlue.
-		if (bitrate < 5000)
+		while (remainingBitrate > 5000)
 		{
-			MS_DEBUG_TAG(bwe, "remaining bitrate %" PRIu32 " less than 5000 bps, ignoring", bitrate);
+			previousRemainingBitrate = remainingBitrate;
 
-			return;
+			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+			{
+				auto consumer = it->second;
+
+				MS_DEBUG_TAG(
+				  bwe,
+				  "layer bitrate for Consumer [bitrate:%" PRIu32 ", consumerId:%s]",
+				  remainingBitrate,
+				  consumer->id.c_str());
+
+				auto usedBitrate = consumer->IncreaseLayer(remainingBitrate);
+
+				MS_ASSERT(usedBitrate <= remainingBitrate, "Consumer used more layer bitrate than given");
+
+				remainingBitrate -= usedBitrate;
+			}
+
+			// If no Consumer used bitrate, exit the loop.
+			if (remainingBitrate == previousRemainingBitrate)
+				break;
 		}
 
-		// TODO: Temporal until done.
-		DistributeAvailableOutgoingBitrate();
-	}
+		MS_DEBUG_TAG(
+		  bwe, "after layer-by-layer iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
 
-	void WebRtcTransport::DistributeExceedingOutgoingBitrate(uint32_t bitrate)
-	{
-		MS_TRACE();
-
-		// Ignore if too low vlue.
-		if (bitrate < 5000)
+		// Finally instruct Consumers to apply their computed layers.
+		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 		{
-			MS_DEBUG_TAG(bwe, "exceeding bitrate %" PRIu32 " less than 5000 bps, ignoring", bitrate);
+			auto consumer = it->second;
 
-			return;
+			consumer->ApplyLayers();
 		}
-
-		// TODO: Temporal until done.
-		DistributeAvailableOutgoingBitrate();
 	}
 
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -1573,7 +1582,7 @@ namespace RTC
 
 		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "bps]", availableBitrate);
 
-		DistributeRemainingOutgoingBitrate(availableBitrate);
+		DistributeAvailableOutgoingBitrate();
 	}
 
 	inline void WebRtcTransport::OnRembClientSendProbationRtpPacket(

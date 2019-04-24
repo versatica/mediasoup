@@ -63,9 +63,9 @@ namespace RTC
 		void ProducerClosed();
 		virtual void SetExternallyManagedBitrate();
 		virtual int16_t GetBitratePriority() const;
-		virtual uint32_t UseBitrate(uint32_t bitrate);
-		virtual uint32_t IncreaseBitrate(uint32_t bitrate);
-		virtual uint32_t DecreaseBitrate(uint32_t bitrate);
+		virtual uint32_t UseAvailableBitrate(uint32_t bitrate);
+		virtual uint32_t IncreaseLayer(uint32_t bitrate);
+		virtual void ApplyLayers();
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)                    = 0;
 		virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
