@@ -19,7 +19,6 @@
 * Be a Node.js module in server side.
 * Be a tiny JavaScript (and C++) library in client side.
 * Be minimalist: just handle the media layer.
-* Be minimalist: just handle the media layer.
 * Support all the existing WebRTC endpoints.
 * Do not mandate a specific signaling protocol (be signaling agnostic).
 
@@ -44,7 +43,7 @@
 
 ## Donate
 
-You can support **mediasoup** by making a donation in [open collective][opencollective-mediasoup]. Thanks!
+You can support mediasoup by making a donation in [open collective][opencollective-mediasoup]. Thanks!
 
 
 ## License
