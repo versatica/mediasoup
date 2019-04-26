@@ -760,28 +760,30 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// - Create a CompoundPacket.
-		// - Request every Consumer and Producer their RTCP data.
-		// - Send the CompoundPacket.
-
-		std::unique_ptr<RTC::RTCP::CompoundPacket> packet(new RTC::RTCP::CompoundPacket());
+		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ nullptr };
 
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
 
-			consumer->GetRtcp(packet.get(), now);
-
-			// Send the RTCP compound packet if there is a sender report.
-			if (packet->HasSenderReport())
+			for (auto& rtpStream : consumer->GetRtpStreams())
 			{
-				packet->Serialize(RTC::RTCP::Buffer);
-				SendRtcpCompoundPacket(packet.get());
-
 				// Reset the Compound packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
+
+				consumer->GetRtcp(packet.get(), rtpStream, now);
+
+				// Send the RTCP compound packet if there is a sender report.
+				if (packet->HasSenderReport())
+				{
+					packet->Serialize(RTC::RTCP::Buffer);
+					SendRtcpCompoundPacket(packet.get());
+				}
 			}
 		}
+
+		// Reset the Compound packet.
+		packet.reset(new RTC::RTCP::CompoundPacket());
 
 		for (auto& kv : this->mapProducers)
 		{

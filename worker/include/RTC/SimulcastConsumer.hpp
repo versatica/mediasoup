@@ -29,7 +29,8 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate) override;
 		void ApplyLayers() override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) override;
+		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
+		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) override;
@@ -98,6 +99,11 @@ namespace RTC
 			)
 		);
 		// clang-format on
+	}
+
+	inline std::vector<RTC::RtpStreamSend*> SimulcastConsumer::GetRtpStreams()
+	{
+		return std::vector<RTC::RtpStreamSend*>{ this->rtpStream };
 	}
 } // namespace RTC
 

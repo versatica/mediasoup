@@ -12,6 +12,7 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
+#include "RTC/RtpStreamSend.hpp"
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -66,8 +67,10 @@ namespace RTC
 		virtual uint32_t UseAvailableBitrate(uint32_t bitrate);
 		virtual uint32_t IncreaseLayer(uint32_t bitrate);
 		virtual void ApplyLayers();
-		virtual void SendRtpPacket(RTC::RtpPacket* packet)                    = 0;
-		virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet)       = 0;
+		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams() = 0;
+		virtual void GetRtcp(
+		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
 		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)              = 0;
 		virtual void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) = 0;

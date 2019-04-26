@@ -587,10 +587,12 @@ namespace RTC
 			if (this->keyFrameSupported && !packet->IsKeyFrame())
 				return;
 
-			MS_ERROR("calling UpdateCurrentLayer [currentSpatialLayer:%" PRIu16 ", targetSpatialLayer:%" PRIu16 ", isKeyFrame:%s]",
-					this->currentSpatialLayer,
-					this->targetSpatialLayer,
-					packet->IsKeyFrame() ? "true" : "false");
+			MS_ERROR(
+			  "calling UpdateCurrentLayer [currentSpatialLayer:%" PRIu16 ", targetSpatialLayer:%" PRIu16
+			  ", isKeyFrame:%s]",
+			  this->currentSpatialLayer,
+			  this->targetSpatialLayer,
+			  packet->IsKeyFrame() ? "true" : "false");
 
 			// Update current spatial and temporal layers.
 			UpdateCurrentLayers();
@@ -717,9 +719,12 @@ namespace RTC
 			packet->RestorePayload();
 	}
 
-	void SimulcastConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
+	void SimulcastConsumer::GetRtcp(
+	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
 
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
@@ -952,7 +957,7 @@ namespace RTC
 		if (this->kind != RTC::Media::Kind::VIDEO)
 			return;
 
-		auto* producerTargetRtpStream  = GetProducerTargetRtpStream();
+		auto* producerTargetRtpStream = GetProducerTargetRtpStream();
 
 		if (!producerTargetRtpStream)
 			return;

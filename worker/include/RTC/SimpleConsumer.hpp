@@ -23,7 +23,8 @@ namespace RTC
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) override;
+		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
+		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) override;
@@ -60,6 +61,11 @@ namespace RTC
 	inline bool SimpleConsumer::IsActive() const
 	{
 		return (RTC::Consumer::IsActive() && this->producerRtpStream);
+	}
+
+	inline std::vector<RTC::RtpStreamSend*> SimpleConsumer::GetRtpStreams()
+	{
+		return std::vector<RTC::RtpStreamSend*>{ this->rtpStream };
 	}
 } // namespace RTC
 

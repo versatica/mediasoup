@@ -233,9 +233,12 @@ namespace RTC
 		packet->SetTimestamp(origTimestamp);
 	}
 
-	void SimpleConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
+	void SimpleConsumer::GetRtcp(
+	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
 
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;

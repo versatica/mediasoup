@@ -21,7 +21,8 @@ namespace RTC
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now) override;
+		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
+		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) override;
@@ -44,7 +45,16 @@ namespace RTC
 	private:
 		// Allocated by this.
 		std::unordered_map<uint32_t, RTC::RtpStreamSend*> mapMappedSsrcRtpStream;
+		// Others.
+		std::vector<RTC::RtpStreamSend*> rtpStreams;
 	};
+
+	// Inline methods.
+
+	inline std::vector<RTC::RtpStreamSend*> PipeConsumer::GetRtpStreams()
+	{
+		return this->rtpStreams;
+	}
 } // namespace RTC
 
 #endif

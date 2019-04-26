@@ -128,30 +128,31 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
+	void PipeConsumer::GetRtcp(
+	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(
+		  std::find(this->rtpStreams.begin(), this->rtpStreams.end(), rtpStream) != this->rtpStreams.end(),
+		  "RTP stream does exist");
 
 		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		for (auto& kv : this->mapMappedSsrcRtpStream)
-		{
-			auto& rtpStream = kv.second;
-			auto* report    = rtpStream->GetRtcpSenderReport(now);
+		auto* report = rtpStream->GetRtcpSenderReport(now);
 
-			if (!report)
-				continue;
+		if (!report)
+			return;
 
-			packet->AddSenderReport(report);
+		packet->AddSenderReport(report);
 
-			// Build SDES chunk for this sender.
-			auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
+		// Build SDES chunk for this sender.
+		auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
 
-			packet->AddSdesChunk(sdesChunk);
+		packet->AddSdesChunk(sdesChunk);
 
-			this->lastRtcpSentTime = now;
-		}
+		this->lastRtcpSentTime = now;
 	}
 
 	void PipeConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
@@ -363,6 +364,7 @@ namespace RTC
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
 			this->mapMappedSsrcRtpStream[encoding.ssrc] = rtpStream;
+			this->rtpStreams.push_back(rtpStream);
 		}
 	}
 
