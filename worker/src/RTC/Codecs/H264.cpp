@@ -28,6 +28,8 @@ namespace RTC
 				{
 					payloadDescriptor->isKeyFrame = true;
 
+					MS_ERROR("keyframe: nal = 7");
+
 					break;
 				}
 
@@ -49,6 +51,8 @@ namespace RTC
 						if (nal == 7)
 						{
 							payloadDescriptor->isKeyFrame = true;
+
+							MS_ERROR("keyframe: nal = 24 (STAP-A)");
 
 							break;
 						}
@@ -73,7 +77,11 @@ namespace RTC
 					uint8_t startBit = *(data + 1) & 0x80;
 
 					if (nal == 7 && startBit == 128)
+					{
 						payloadDescriptor->isKeyFrame = true;
+
+							MS_ERROR("keyframe: nal = 27|28  (STAP-A). startBit:%" PRIu8, startBit);
+					}
 
 					break;
 				}
