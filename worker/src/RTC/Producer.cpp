@@ -412,6 +412,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Reset current packet.
+		this->currentRtpPacket = nullptr;
+
+		// Count number of RTP streams.
+		auto numRtpStreamsBefore = this->mapSsrcRtpStream.size();
+
 		auto* rtpStream = GetRtpStream(packet);
 
 		if (rtpStream == nullptr)
@@ -426,7 +432,13 @@ namespace RTC
 		{
 			// Process the packet.
 			if (!rtpStream->ReceivePacket(packet))
+			{
+				// May have to announce a new RTP stream to the listener.
+				if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
+					NotifyNewRtpStream(rtpStream);
+
 				return;
+			}
 		}
 		// RTX packet.
 		else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
@@ -443,6 +455,12 @@ namespace RTC
 
 		if (packet->IsKeyFrame())
 		{
+				// TODO
+				MS_ERROR(
+				  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
+
 			MS_DEBUG_TAG(
 			  rtp,
 			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
@@ -452,6 +470,23 @@ namespace RTC
 			// Tell the keyFrameRequestManager.
 			if (this->keyFrameRequestManager)
 				this->keyFrameRequestManager->KeyFrameReceived(packet->GetSsrc());
+		}
+
+		// May have to announce a new RTP stream to the listener.
+		if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
+		{
+			// Request a key frame for this stream since we may have lost the first packets
+			// (do not do it if this is a key frame).
+			if (this->keyFrameRequestManager && !this->paused && !packet->IsKeyFrame())
+				this->keyFrameRequestManager->ForceKeyFrameNeeded(packet->GetSsrc());
+
+			// Update current packet.
+			this->currentRtpPacket = packet;
+
+			NotifyNewRtpStream(rtpStream);
+
+			// Reset current packet.
+			this->currentRtpPacket = nullptr;
 		}
 
 		// If paused stop here.
@@ -521,6 +556,26 @@ namespace RTC
 		}
 
 		uint32_t ssrc = it->second;
+
+		// If the current RTP packet is a key frame for the given mapped SSRC do
+		// nothing since we are gonna provide Consumers with the requested key frame
+		// right now.
+		//
+		// NOTE: We know that this may only happen before calling MangleRtpPacket()
+		// so the SSRC of the packet is still the original one and not the mapped one.
+		//
+		// clang-format off
+		if (
+			this->currentRtpPacket &&
+			this->currentRtpPacket->GetSsrc() == ssrc &&
+			this->currentRtpPacket->IsKeyFrame()
+		)
+		// clang-format on
+		{
+			  MS_ERROR("----- IGNORING BECAUSE CURRENT PACKET IS KEY FRAME [ssrc:%" PRIu32 "]", ssrc);
+
+			return;
+		}
 
 		this->keyFrameRequestManager->KeyFrameNeeded(ssrc);
 	}
@@ -775,19 +830,21 @@ namespace RTC
 		if (this->paused)
 			rtpStream->Pause();
 
-		// Notify to the listener.
-		this->listener->OnProducerNewRtpStream(
-		  this, static_cast<RTC::RtpStream*>(rtpStream), encodingMapping.mappedSsrc);
-
-		// Request a key frame for this stream since we may have lost the first packets
-		// (do not do it if this is a key frame).
-		if (this->keyFrameRequestManager && !this->paused && !packet->IsKeyFrame())
-			this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
-
 		// Emit the first score event right now.
 		EmitScore();
 
 		return rtpStream;
+	}
+
+	void Producer::NotifyNewRtpStream(RTC::RtpStreamRecv* rtpStream)
+	{
+		MS_TRACE();
+
+		auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+
+		// Notify the listener.
+		this->listener->OnProducerNewRtpStream(
+		  this, static_cast<RTC::RtpStream*>(rtpStream), mappedSsrc);
 	}
 
 	inline bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
@@ -1013,6 +1070,8 @@ namespace RTC
 		}
 
 		auto* rtpStream = it->second;
+
+		  MS_ERROR("----- sending PLI [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
 		rtpStream->RequestKeyFrame();
 	}
