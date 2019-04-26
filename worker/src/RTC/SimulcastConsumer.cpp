@@ -167,7 +167,7 @@ namespace RTC
 			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
-					RequestKeyFrame();
+					RequestKeyFrames();
 
 				request->Accept();
 
@@ -276,20 +276,14 @@ namespace RTC
 		if (rtpStream == GetProducerCurrentRtpStream())
 			EmitScore();
 
-		// NOTE: Here it may happen that score is 0 and there is no other Producer stream
-		// with score > 0, so IsActive() will return false. We can live with that.
-		if (IsActive())
+		if (RTC::Consumer::IsActive())
 		{
-			// Just check target layers:
-			// - if our bitrate is not externally managed, or
-			// - if this is the target spatial layer and it has died or reborned.
+			// Just check target layers if the stream has died or reborned.
+			//
 			// clang-format off
 			if (
 				!this->externallyManagedBitrate ||
-				(
-					(score == 0 || previousScore == 0) &&
-					rtpStream == GetProducerTargetRtpStream()
-				)
+				(score == 0 || previousScore == 0)
 			)
 			// clang-format on
 			{
@@ -309,7 +303,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive())
+		if (!RTC::Consumer::IsActive())
 			return 0;
 
 		int16_t prioritySpatialLayer{ 0 };
@@ -345,7 +339,7 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
 
-		if (!IsActive())
+		if (!RTC::Consumer::IsActive())
 			return 0;
 
 		// Calculate virtual available bitrate based on given bitrate and our
@@ -464,7 +458,7 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
 
-		if (!IsActive())
+		if (!RTC::Consumer::IsActive())
 			return 0;
 
 		// If no target spatial layer is selected, do nothing.
@@ -551,7 +545,7 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
 
-		if (!IsActive())
+		if (!RTC::Consumer::IsActive())
 			return;
 
 		// clang-format off
@@ -777,7 +771,7 @@ namespace RTC
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
-			RequestKeyFrame();
+			RequestKeyFrameForCurrentSpatialLayer();
 	}
 
 	void SimulcastConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -926,7 +920,7 @@ namespace RTC
 		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
 	}
 
-	void SimulcastConsumer::RequestKeyFrame()
+	void SimulcastConsumer::RequestKeyFrames()
 	{
 		MS_TRACE();
 
@@ -949,6 +943,40 @@ namespace RTC
 
 			this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 		}
+	}
+
+	void SimulcastConsumer::RequestKeyFrameForTargetSpatialLayer()
+	{
+		MS_TRACE();
+
+		if (this->kind != RTC::Media::Kind::VIDEO)
+			return;
+
+		auto* producerTargetRtpStream  = GetProducerTargetRtpStream();
+
+		if (!producerTargetRtpStream)
+			return;
+
+		auto mappedSsrc = this->consumableRtpEncodings[this->targetSpatialLayer].ssrc;
+
+		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
+	}
+
+	void SimulcastConsumer::RequestKeyFrameForCurrentSpatialLayer()
+	{
+		MS_TRACE();
+
+		if (this->kind != RTC::Media::Kind::VIDEO)
+			return;
+
+		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
+
+		if (!producerCurrentRtpStream)
+			return;
+
+		auto mappedSsrc = this->consumableRtpEncodings[this->currentSpatialLayer].ssrc;
+
+		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 	}
 
 	void SimulcastConsumer::MayChangeLayers(bool force)
@@ -1079,7 +1107,7 @@ namespace RTC
 		// If the target spatial layer is different than the current one, request
 		// a key frame.
 		if (this->targetSpatialLayer != this->currentSpatialLayer)
-			RequestKeyFrame();
+			RequestKeyFrameForTargetSpatialLayer();
 	}
 
 	void SimulcastConsumer::UpdateCurrentLayers()
