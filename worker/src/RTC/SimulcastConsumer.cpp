@@ -593,6 +593,11 @@ namespace RTC
 			if (this->keyFrameSupported && !packet->IsKeyFrame())
 				return;
 
+			MS_ERROR("calling UpdateCurrentLayer [currentSpatialLayer:%" PRIu16 ", targetSpatialLayer:%" PRIu16 ", isKeyFrame:%s]",
+					this->currentSpatialLayer,
+					this->targetSpatialLayer,
+					packet->IsKeyFrame() ? "true" : "false");
+
 			// Update current spatial and temporal layers.
 			UpdateCurrentLayers();
 
