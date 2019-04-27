@@ -230,6 +230,8 @@ namespace RTC
 		{
 			this->inactive = false;
 			this->inactivityCheckPeriodicTimer->Restart();
+
+			ResetScore(10, true);
 		}
 
 		// Calculate Jitter.
