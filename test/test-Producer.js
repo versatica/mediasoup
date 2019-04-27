@@ -99,7 +99,8 @@ test('webRtcTransport.produce() succeeds', async () =>
 						id  : 12
 					}
 				],
-				encodings : [ { ssrc: 11111111, dtx: true } ],
+				// Single encoding without ssrc and rid on purpose.
+				encodings : [ { dtx: true } ],
 				rtcp      :
 				{
 					cname : 'audio-1'
@@ -398,7 +399,7 @@ test('webRtcTransport.produce() with unsupported codecs rejects with Unsupported
 		.toThrow(UnsupportedError);
 }, 2000);
 
-test('webRtcTransport.produce() with already used MID or SSRC rejects with Error', async () =>
+test('transport.produce() with already used MID or SSRC rejects with Error', async () =>
 {
 	await expect(webRtcTransport.produce(
 		{
@@ -426,12 +427,53 @@ test('webRtcTransport.produce() with already used MID or SSRC rejects with Error
 		.rejects
 		.toThrow(Error);
 
+	await expect(plainRtpTransport.produce(
+		{
+			kind          : 'video',
+			rtpParameters :
+			{
+				mid    : 'VIDEO2',
+				codecs :
+				[
+					{
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
+						{
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
+						}
+					}
+				],
+				headerExtensions :
+				[
+					{
+						uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+						id  : 10
+					}
+				],
+				encodings :
+				[
+					{ ssrc: 22222222 }
+				],
+				rtcp :
+				{
+					cname : 'video-1'
+				}
+			}
+		}))
+		.rejects
+		.toThrow(Error);
+}, 2000);
+
+test('transport.produce() with no MID and with single encoding without RID or SSRC rejects with Error', async () =>
+{
 	await expect(webRtcTransport.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
 			{
-				mid    : 'AUDIO-2',
 				codecs :
 				[
 					{
@@ -441,9 +483,8 @@ test('webRtcTransport.produce() with already used MID or SSRC rejects with Error
 						channels    : 2
 					}
 				],
-				headerExtensions : [],
-				encodings        : [ { ssrc: 11111111 } ],
-				rtcp             :
+				encodings : [ { dtx: true } ],
+				rtcp      :
 				{
 					cname : 'audio-2'
 				}
@@ -498,7 +539,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.encodings.length).toBe(1);
 	expect(data.rtpParameters.encodings).toEqual(
 		[
-			{ codecPayloadType: 111, ssrc: 11111111, dtx: true }
+			{ codecPayloadType: 111, dtx: true }
 		]);
 	expect(data.type).toBe('simple');
 

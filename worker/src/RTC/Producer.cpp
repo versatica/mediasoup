@@ -58,12 +58,16 @@ namespace RTC
 			auto jsonPayloadTypeIt = codec.find("payloadType");
 
 			if (jsonPayloadTypeIt == codec.end() || !jsonPayloadTypeIt->is_number_unsigned())
+			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (missing payloadType)");
+			}
 
 			auto jsonMappedPayloadTypeIt = codec.find("mappedPayloadType");
 
 			if (jsonMappedPayloadTypeIt == codec.end() || !jsonMappedPayloadTypeIt->is_number_unsigned())
+			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (missing mappedPayloadType)");
+			}
 
 			this->rtpMapping.codecs[jsonPayloadTypeIt->get<uint8_t>()] =
 			  jsonMappedPayloadTypeIt->get<uint8_t>();
@@ -72,7 +76,9 @@ namespace RTC
 		auto jsonEncodingsIt = jsonRtpMappingIt->find("encodings");
 
 		if (jsonEncodingsIt == jsonRtpMappingIt->end() || !jsonEncodingsIt->is_array())
+		{
 			MS_THROW_TYPE_ERROR("missing rtpMapping.encodings");
+		}
 
 		this->rtpMapping.encodings.reserve(jsonEncodingsIt->size());
 
@@ -97,9 +103,25 @@ namespace RTC
 			if (jsonRidIt != encoding.end() && jsonRidIt->is_string())
 				encodingMapping.rid = jsonRidIt->get<std::string>();
 
-			// However ssrc or rid must be present.
-			if (jsonSsrcIt == encoding.end() && jsonRidIt == encoding.end())
+			// However ssrc or rid must be present (if more than 1 encoding).
+			if (jsonEncodingsIt->size() > 1 && jsonSsrcIt == encoding.end() && jsonRidIt == encoding.end())
+			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings (missing ssrc or rid)");
+			}
+
+			// If there is no mid and a single encoding, ssrc or rid must be present.
+			// clang-format off
+			if (
+				this->rtpParameters.mid.empty() &&
+				jsonEncodingsIt->size() == 1 &&
+				jsonSsrcIt == encoding.end() &&
+				jsonRidIt == encoding.end()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR(
+				  "wrong entry in rtpMapping.encodings (missing ssrc or rid, or rtpParameters.mid)");
+			}
 
 			// mappedSsrc is mandatory.
 			auto jsonMappedSsrcIt = encoding.find("mappedSsrc");
@@ -725,6 +747,71 @@ namespace RTC
 			MS_WARN_TAG(rtp, "ignoring packet with unknown RID (RID lookup)");
 
 			return nullptr;
+		}
+
+		// If not found, and there is a single encoding, this may be a media or RTX
+		// stream and the single encoding does not signal nor SSRC nor RID.
+		//
+		// clang-format off
+		if (
+			this->rtpParameters.encodings.size() == 1 &&
+			this->mapSsrcRtpStream.size() <= 1
+		)
+		// clang-format on
+		{
+			auto& encoding     = this->rtpParameters.encodings[0];
+			auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+			auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+			bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
+
+			if (isMediaPacket)
+			{
+				// Ensure there is no other RTP stream already.
+				if (!this->mapSsrcRtpStream.empty())
+				{
+					MS_WARN_TAG(
+					  rtp,
+					  "ignoring packet with unknown ssrc not matching the already existing stream (single RtpStream lookup)");
+
+					return nullptr;
+				}
+
+				auto* rtpStream = CreateRtpStream(packet, *mediaCodec, 0);
+
+				return rtpStream;
+			}
+			else if (isRtxPacket)
+			{
+				// There must be already a media RTP stream.
+				auto it = this->mapSsrcRtpStream.begin();
+
+				if (it == this->mapSsrcRtpStream.end())
+				{
+					MS_DEBUG_2TAGS(
+					  rtp, rtx, "ignoring RTX packet for not yet created RtpStream (single stream lookup)");
+
+					return nullptr;
+				}
+
+				auto* rtpStream = it->second;
+
+				// Ensure no RTX SSRC was previously detected.
+				if (rtpStream->HasRtx())
+				{
+					MS_DEBUG_2TAGS(rtp, rtx, "ignoring RTX packet with new SSRC (single stream lookup)");
+
+					return nullptr;
+				}
+
+				// Update the stream RTX data.
+				rtpStream->SetRtx(payloadType, ssrc);
+
+				// Insert the new RTX SSRC into the map.
+				this->mapRtxSsrcRtpStream[ssrc] = rtpStream;
+
+				return rtpStream;
+			}
 		}
 
 		return nullptr;
