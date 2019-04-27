@@ -21,12 +21,6 @@ namespace RTC
 		if (this->consumableRtpEncodings.size() != 1)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 
-		// Set the RTCP report generation interval.
-		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
-		else
-			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
-
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
 	}
@@ -432,7 +426,7 @@ namespace RTC
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
-		this->keyFrameSupported = Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
 	}
 
 	void SimpleConsumer::RequestKeyFrame()

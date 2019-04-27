@@ -125,6 +125,12 @@ namespace RTC
 		{
 			this->mediaSsrcs.push_back(encoding.ssrc);
 		}
+
+		// Set the RTCP report generation interval.
+		if (this->kind == RTC::Media::Kind::AUDIO)
+			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
+		else
+			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 	}
 
 	Consumer::~Consumer()

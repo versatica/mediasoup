@@ -80,12 +80,6 @@ namespace RTC
 		this->producerRtpStreams.insert(
 		  this->producerRtpStreams.begin(), this->consumableRtpEncodings.size(), nullptr);
 
-		// Set the RTCP report generation interval.
-		if (this->kind == RTC::Media::Kind::AUDIO)
-			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
-		else
-			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
-
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
 	}
@@ -914,7 +908,7 @@ namespace RTC
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
-		this->keyFrameSupported = Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
 
 		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
 	}

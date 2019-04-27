@@ -3,6 +3,7 @@
 
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {
@@ -47,6 +48,10 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::RtpStreamSend*> mapMappedSsrcRtpStream;
 		// Others.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
+		bool keyFrameSupported{ false };
+		std::unordered_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
+		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
+		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint32_t>> mapRtpStreamRtpTimestampManager;
 	};
 
 	// Inline methods.

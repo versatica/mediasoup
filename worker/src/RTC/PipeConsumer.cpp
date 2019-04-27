@@ -2,8 +2,10 @@
 // #define MS_LOG_DEV
 
 #include "RTC/PipeConsumer.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Codecs/Codecs.hpp"
 
 namespace RTC
 {
@@ -43,11 +45,18 @@ namespace RTC
 		RTC::Consumer::FillJson(jsonObject);
 	}
 
-	void PipeConsumer::FillJsonStats(json& /*jsonArray*/) const
+	void PipeConsumer::FillJsonStats(json& jsonArray) const
 	{
 		MS_TRACE();
 
-		// Do nothing.
+		// Add stats of our send streams.
+		for (auto& kv : this->mapMappedSsrcRtpStream)
+		{
+			auto* rtpStream = kv.second;
+
+			jsonArray.emplace_back(json::value_t::object);
+			rtpStream->FillJsonStats(jsonArray[jsonArray.size() - 1]);
+		}
 	}
 
 	void PipeConsumer::FillJsonScore(json& /*jsonObject*/) const
@@ -110,7 +119,83 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		auto* rtpStream = this->mapMappedSsrcRtpStream.at(packet->GetSsrc());
+		auto payloadType = packet->GetPayloadType();
+
+		// NOTE: This may happen if this Consumer supports just some codecs of those
+		// in the corresponding Producer.
+		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
+		{
+			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+
+			return;
+		}
+
+		auto* rtpStream           = this->mapMappedSsrcRtpStream.at(packet->GetSsrc());
+		auto& syncRequired        = this->mapRtpStreamSyncRequired.at(rtpStream);
+		auto& rtpSeqManager       = this->mapRtpStreamRtpSeqManager.at(rtpStream);
+		auto& rtpTimestampManager = this->mapRtpStreamRtpTimestampManager.at(rtpStream);
+
+		// If we need to sync, support key frames and this is not a key frame, ignore
+		// the packet.
+		if (syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
+			return;
+
+		// Whether this is the first packet after re-sync.
+		bool isSyncPacket = syncRequired;
+
+		// Sync sequence number and timestamp if required.
+		if (isSyncPacket)
+		{
+			if (packet->IsKeyFrame())
+				MS_DEBUG_TAG(rtp, "sync key frame received");
+
+			rtpSeqManager.Sync(packet->GetSequenceNumber());
+			rtpTimestampManager.Sync(packet->GetTimestamp());
+
+			// Calculate RTP timestamp diff between now and last sent RTP packet.
+			if (rtpStream->GetMaxPacketMs() != 0u)
+			{
+				auto now    = DepLibUV::GetTime();
+				auto diffMs = now - rtpStream->GetMaxPacketMs();
+				auto diffTs = diffMs * rtpStream->GetClockRate() / 1000;
+
+				rtpTimestampManager.Offset(diffTs);
+			}
+
+			// TODO: Is this correct? syncRequired is taken by reference from the map.
+			// I assume that changing its value here also modifies its value in the map.
+			syncRequired = false;
+		}
+
+		// Update RTP seq number and timestamp.
+		uint16_t seq;
+		uint32_t timestamp;
+
+		rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
+		rtpTimestampManager.Input(packet->GetTimestamp(), timestamp);
+
+		// Save original packet fields.
+		auto origSsrc      = packet->GetSsrc();
+		auto origSeq       = packet->GetSequenceNumber();
+		auto origTimestamp = packet->GetTimestamp();
+
+		// Rewrite packet.
+		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
+		packet->SetSequenceNumber(seq);
+		packet->SetTimestamp(timestamp);
+
+		if (isSyncPacket)
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			  "] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  origSeq,
+			  origTimestamp);
+		}
 
 		// Process the packet.
 		if (rtpStream->ReceivePacket(packet))
@@ -122,10 +207,19 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  rtp,
-			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			  "] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
 			  packet->GetSsrc(),
-			  packet->GetSequenceNumber());
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  origSeq,
+			  origTimestamp);
 		}
+
+		// Restore packet fields.
+		packet->SetSsrc(origSsrc);
+		packet->SetSequenceNumber(origSeq);
+		packet->SetTimestamp(origTimestamp);
 	}
 
 	void PipeConsumer::GetRtcp(
@@ -184,6 +278,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: Must get the associated RTP stream (based on the media ssrc of the
+		// feedback, and it may not exist so ignore it) and call:
+		// rtpStream->ReceiveKeyFrameRequest(messageType);
+		//
+		// NOTE: In order to match the ssrc take into account what is done below
+		// in ReceiveRtcpReceiverReport().
+		//
+		// TODO: This is impossible since this method does not receive the feedback
+		// message but just its messageType. The signature must be changed.
+
 		if (IsActive())
 			RequestKeyFrame();
 	}
@@ -192,17 +296,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapMappedSsrcRtpStream)
+		// TODO: Review this.
+
+		auto it = this->mapMappedSsrcRtpStream.find(report->GetSsrc());
+
+		if (it != this->mapMappedSsrcRtpStream.end())
 		{
-			auto ssrc       = kv.first;
-			auto& rtpStream = kv.second;
+			auto* rtpStream = it->second;
 
-			if (report->GetSsrc() == ssrc)
-			{
-				rtpStream->ReceiveRtcpReceiverReport(report);
-
-				break;
-			}
+			rtpStream->ReceiveRtcpReceiverReport(report);
 		}
 	}
 
@@ -228,6 +330,11 @@ namespace RTC
 	void PipeConsumer::UserOnTransportConnected()
 	{
 		MS_TRACE();
+
+		for (auto& kv : this->mapRtpStreamSyncRequired)
+		{
+			kv.second = true;
+		}
 
 		if (IsActive())
 		{
@@ -269,6 +376,11 @@ namespace RTC
 	void PipeConsumer::UserOnResumed()
 	{
 		MS_TRACE();
+
+		for (auto& kv : this->mapRtpStreamSyncRequired)
+		{
+			kv.second = true;
+		}
 
 		if (IsActive())
 		{
@@ -363,8 +475,13 @@ namespace RTC
 			if (rtxCodec && encoding.hasRtx)
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
+			this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+
 			this->mapMappedSsrcRtpStream[encoding.ssrc] = rtpStream;
 			this->rtpStreams.push_back(rtpStream);
+			this->mapRtpStreamSyncRequired[rtpStream] = false;
+			this->mapRtpStreamRtpSeqManager[rtpStream];
+			this->mapRtpStreamRtpTimestampManager[rtpStream];
 		}
 	}
 
@@ -375,9 +492,12 @@ namespace RTC
 		if (this->kind != RTC::Media::Kind::VIDEO)
 			return;
 
-		for (auto& encoding : this->rtpParameters.encodings)
+		// TODO: Review this (just call pipeConsumer.requestKeyFrame() in Node and
+		// verify that the sender browser receives a PLI for each simulcast stream).
+
+		for (auto& consumableRtpEncoding : this->consumableRtpEncodings)
 		{
-			auto mappedSsrc = encoding.ssrc;
+			auto mappedSsrc = consumableRtpEncoding.ssrc;
 
 			this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 		}
