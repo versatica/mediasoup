@@ -63,9 +63,10 @@ namespace RTC
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
-		std::unordered_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
-		std::vector<RTC::RtpStream*> producerRtpStreams; // Indexed by spatial layer.
 		// Others.
+		std::unordered_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
+		std::vector<RTC::RtpStreamSend*> rtpStreams;
+		std::vector<RTC::RtpStream*> producerRtpStreams; // Indexed by spatial layer.
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
@@ -103,7 +104,7 @@ namespace RTC
 
 	inline std::vector<RTC::RtpStreamSend*> SimulcastConsumer::GetRtpStreams()
 	{
-		return std::vector<RTC::RtpStreamSend*>{ this->rtpStream };
+		return this->rtpStreams;
 	}
 } // namespace RTC
 

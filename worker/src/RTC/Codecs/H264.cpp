@@ -26,8 +26,6 @@ namespace RTC
 				// IDR (instantaneous decoding picture).
 				case 7:
 				{
-					MS_ERROR("H264: ***KEYFRAME*** [nal:7]");
-
 					payloadDescriptor->isKeyFrame = true;
 
 					break;
@@ -47,10 +45,8 @@ namespace RTC
 						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
 						uint8_t subnal = *(data + offset + sizeof(naluSize)) & 0x1F;
 
-						if (subnal == 7 || subnal == 8)
+						if (subnal == 7)
 						{
-							MS_ERROR("H264: ***KEYFRAME*** [nal:24, subnal:%" PRIu8 "]", subnal);
-
 							payloadDescriptor->isKeyFrame = true;
 
 							break;
@@ -72,15 +68,11 @@ namespace RTC
 				case 28:
 				case 29:
 				{
-					uint8_t subnal  = *(data + 1) & 0x1F;
+					uint8_t subnal   = *(data + 1) & 0x1F;
 					uint8_t startBit = *(data + 1) & 0x80;
 
-					if ((subnal == 7 || subnal == 8) && startBit == 128)
-					{
-						MS_ERROR("H264: ***KEYFRAME*** [nal:%" PRIu8 ", subnal:%" PRIu8 ", startBit:%" PRIu8 "]", nal, subnal, startBit);
-
+					if (subnal == 7 && startBit == 128)
 						payloadDescriptor->isKeyFrame = true;
-					}
 
 					break;
 				}

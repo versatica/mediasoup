@@ -49,11 +49,12 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
+		std::vector<RTC::RtpStreamSend*> rtpStreams;
+		RTC::RtpStream* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		RTC::SeqManager<uint32_t> rtpTimestampManager;
-		RTC::RtpStream* producerRtpStream{ nullptr };
 	};
 
 	/* Inline methods. */
@@ -65,7 +66,7 @@ namespace RTC
 
 	inline std::vector<RTC::RtpStreamSend*> SimpleConsumer::GetRtpStreams()
 	{
-		return std::vector<RTC::RtpStreamSend*>{ this->rtpStream };
+		return this->rtpStreams;
 	}
 } // namespace RTC
 

@@ -455,12 +455,6 @@ namespace RTC
 
 		if (packet->IsKeyFrame())
 		{
-				// TODO
-				MS_ERROR(
-				  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber());
-
 			MS_DEBUG_TAG(
 			  rtp,
 			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
@@ -572,8 +566,6 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			  MS_ERROR("----- IGNORING BECAUSE CURRENT PACKET IS KEY FRAME [ssrc:%" PRIu32 "]", ssrc);
-
 			return;
 		}
 
@@ -843,8 +835,7 @@ namespace RTC
 		auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
 		// Notify the listener.
-		this->listener->OnProducerNewRtpStream(
-		  this, static_cast<RTC::RtpStream*>(rtpStream), mappedSsrc);
+		this->listener->OnProducerNewRtpStream(this, static_cast<RTC::RtpStream*>(rtpStream), mappedSsrc);
 	}
 
 	inline bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
@@ -1070,8 +1061,6 @@ namespace RTC
 		}
 
 		auto* rtpStream = it->second;
-
-		  MS_ERROR("----- sending PLI [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
 		rtpStream->RequestKeyFrame();
 	}

@@ -421,6 +421,7 @@ namespace RTC
 		size_t bufferSize = params.useNack ? 1500 : 0;
 
 		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.
 		if (IsPaused() || IsProducerPaused())
