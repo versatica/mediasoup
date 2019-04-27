@@ -287,8 +287,6 @@ namespace RTC
 			)
 			// clang-format on
 			{
-					MS_ERROR("--- MayChangeLayers() !!!");
-
 				MayChangeLayers();
 			}
 		}
@@ -588,11 +586,6 @@ namespace RTC
 			// Ignore if key frame is supported and this is not one.
 			if (this->keyFrameSupported && !packet->IsKeyFrame())
 				return;
-
-				MS_ERROR(
-				  "calling UpdateCurrentLayer [new spatial layer:%" PRIu16 ", isKeyFrame:%s]",
-				  spatialLayer,
-				  packet->IsKeyFrame() ? "true" : "false");
 
 			// Update current spatial and temporal layers.
 			UpdateCurrentLayers();
