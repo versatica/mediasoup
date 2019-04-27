@@ -286,7 +286,8 @@ namespace RTC
 		// in ReceiveRtcpReceiverReport().
 		//
 		// TODO: This is impossible since this method does not receive the feedback
-		// message but just its messageType. The signature must be changed.
+		// message but just its messageType. The signature must be changed. It may,
+		// for example, receive the media ssrc (the mapped ssrc) as second argument).
 
 		if (IsActive())
 			RequestKeyFrame();
