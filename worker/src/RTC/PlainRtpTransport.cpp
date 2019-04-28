@@ -722,12 +722,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// Do nothing.
 	}
 
 	inline void PlainRtpTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
+
+		// Do nothing.
 	}
 
 	inline void PlainRtpTransport::OnPacketRecv(

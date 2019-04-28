@@ -440,14 +440,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// Do nothing.
 	}
 
 	inline void PipeTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
 
-		// TODO
+		// Do nothing.
 	}
 
 	inline void PipeTransport::OnPacketRecv(
