@@ -656,7 +656,7 @@ namespace RTC
 
 				auto* rtpStream = it->second;
 
-				// Ensure no RTX SSRC was previously detected.
+				// Ensure no RTX ssrc was previously detected.
 				if (rtpStream->HasRtx())
 				{
 					MS_DEBUG_2TAGS(rtp, rtx, "ignoring RTX packet with new ssrc (ssrc lookup)");
@@ -667,7 +667,7 @@ namespace RTC
 				// Update the stream RTX data.
 				rtpStream->SetRtx(payloadType, ssrc);
 
-				// Insert the new RTX SSRC into the map.
+				// Insert the new RTX ssrc into the map.
 				this->mapRtxSsrcRtpStream[ssrc] = rtpStream;
 
 				return rtpStream;
@@ -720,7 +720,7 @@ namespace RTC
 
 						if (rtpStream->GetRid() == rid)
 						{
-							// Ensure no RTX SSRC was previously detected.
+							// Ensure no RTX ssrc was previously detected.
 							if (rtpStream->HasRtx())
 							{
 								MS_DEBUG_2TAGS(rtp, rtx, "ignoring RTX packet with new SSRC (RID lookup)");
@@ -731,7 +731,7 @@ namespace RTC
 							// Update the stream RTX data.
 							rtpStream->SetRtx(payloadType, ssrc);
 
-							// Insert the new RTX SSRC into the map.
+							// Insert the new RTX ssrc into the map.
 							this->mapRtxSsrcRtpStream[ssrc] = rtpStream;
 
 							return rtpStream;
@@ -749,13 +749,14 @@ namespace RTC
 			return nullptr;
 		}
 
-		// If not found, and there is a single encoding, this may be a media or RTX
-		// stream and the single encoding does not signal nor SSRC nor RID.
+		// If not found, and there is a single encoding without ssrc and RID, this
+		// may be the media or RTX stream.
 		//
 		// clang-format off
 		if (
 			this->rtpParameters.encodings.size() == 1 &&
-			this->mapSsrcRtpStream.size() <= 1
+			!this->rtpParameters.encodings[0].ssrc &&
+			this->rtpParameters.encodings[0].rid.empty()
 		)
 		// clang-format on
 		{

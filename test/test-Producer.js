@@ -99,9 +99,8 @@ test('webRtcTransport.produce() succeeds', async () =>
 						id  : 12
 					}
 				],
-				// Single encoding without ssrc and rid on purpose.
-				encodings : [ { dtx: true } ],
-				rtcp      :
+				// Missing encodings on purpose.
+				rtcp :
 				{
 					cname : 'audio-1'
 				}
@@ -483,7 +482,7 @@ test('transport.produce() with no MID and with single encoding without RID or SS
 						channels    : 2
 					}
 				],
-				encodings : [ { dtx: true } ],
+				encodings : [ {} ],
 				rtcp      :
 				{
 					cname : 'audio-2'
@@ -539,7 +538,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.encodings.length).toBe(1);
 	expect(data.rtpParameters.encodings).toEqual(
 		[
-			{ codecPayloadType: 111, dtx: true }
+			{ codecPayloadType: 111 }
 		]);
 	expect(data.type).toBe('simple');
 
