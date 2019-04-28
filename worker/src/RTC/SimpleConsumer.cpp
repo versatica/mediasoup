@@ -277,7 +277,8 @@ namespace RTC
 		this->rtpStream->ReceiveNack(nackPacket);
 	}
 
-	void SimpleConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
+	void SimpleConsumer::ReceiveKeyFrameRequest(
+	  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t /*ssrc*/)
 	{
 		MS_TRACE();
 

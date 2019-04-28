@@ -72,10 +72,11 @@ namespace RTC
 		virtual void GetRtcp(
 		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
-		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)              = 0;
-		virtual void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType) = 0;
-		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)           = 0;
-		virtual uint32_t GetTransmissionRate(uint64_t now)                                  = 0;
+		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) = 0;
+		virtual void ReceiveKeyFrameRequest(
+		  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)          = 0;
+		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) = 0;
+		virtual uint32_t GetTransmissionRate(uint64_t now)                        = 0;
 
 	private:
 		virtual void UserOnTransportConnected()    = 0;

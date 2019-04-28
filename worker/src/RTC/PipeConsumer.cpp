@@ -162,8 +162,6 @@ namespace RTC
 				rtpTimestampManager.Offset(diffTs);
 			}
 
-			// TODO: Is this correct? syncRequired is taken by reference from the map.
-			// I assume that changing its value here also modifies its value in the map.
 			syncRequired = false;
 		}
 
@@ -175,12 +173,11 @@ namespace RTC
 		rtpTimestampManager.Input(packet->GetTimestamp(), timestamp);
 
 		// Save original packet fields.
-		auto origSsrc      = packet->GetSsrc();
 		auto origSeq       = packet->GetSequenceNumber();
 		auto origTimestamp = packet->GetTimestamp();
 
 		// Rewrite packet.
-		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
+		// NOTE: Do not override the ssrc because we want to honor the consumable ssrcs.
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 
@@ -217,7 +214,6 @@ namespace RTC
 		}
 
 		// Restore packet fields.
-		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
 		packet->SetTimestamp(origTimestamp);
 	}
@@ -274,20 +270,13 @@ namespace RTC
 		// Do nothing since we do not enable NACK.
 	}
 
-	void PipeConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType /*messageType*/)
+	void PipeConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)
 	{
 		MS_TRACE();
 
-		// TODO: Must get the associated RTP stream (based on the media ssrc of the
-		// feedback, and it may not exist so ignore it) and call:
-		// rtpStream->ReceiveKeyFrameRequest(messageType);
-		//
-		// NOTE: In order to match the ssrc take into account what is done below
-		// in ReceiveRtcpReceiverReport().
-		//
-		// TODO: This is impossible since this method does not receive the feedback
-		// message but just its messageType. The signature must be changed. It may,
-		// for example, receive the media ssrc (the mapped ssrc) as second argument).
+		auto* rtpStream = this->mapMappedSsrcRtpStream.at(ssrc);
+
+		rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
 			RequestKeyFrame();
@@ -297,16 +286,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Review this.
+		auto* rtpStream = this->mapMappedSsrcRtpStream.at(report->GetSsrc());
 
-		auto it = this->mapMappedSsrcRtpStream.find(report->GetSsrc());
-
-		if (it != this->mapMappedSsrcRtpStream.end())
-		{
-			auto* rtpStream = it->second;
-
-			rtpStream->ReceiveRtcpReceiverReport(report);
-		}
+		rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
 	uint32_t PipeConsumer::GetTransmissionRate(uint64_t now)
@@ -492,9 +474,6 @@ namespace RTC
 
 		if (this->kind != RTC::Media::Kind::VIDEO)
 			return;
-
-		// TODO: Review this (just call pipeConsumer.requestKeyFrame() in Node and
-		// verify that the sender browser receives a PLI for each simulcast stream).
 
 		for (auto& consumableRtpEncoding : this->consumableRtpEncodings)
 		{

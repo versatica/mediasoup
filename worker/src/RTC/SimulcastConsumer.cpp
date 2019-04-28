@@ -756,7 +756,8 @@ namespace RTC
 		this->rtpStream->ReceiveNack(nackPacket);
 	}
 
-	void SimulcastConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
+	void SimulcastConsumer::ReceiveKeyFrameRequest(
+	  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t /*ssrc*/)
 	{
 		MS_TRACE();
 

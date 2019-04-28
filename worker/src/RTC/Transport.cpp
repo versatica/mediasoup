@@ -517,7 +517,7 @@ namespace RTC
 						  feedback->GetMediaSsrc(),
 						  feedback->GetMediaSsrc());
 
-						consumer->ReceiveKeyFrameRequest(feedback->GetMessageType());
+						consumer->ReceiveKeyFrameRequest(feedback->GetMessageType(), feedback->GetMediaSsrc());
 
 						break;
 					}
