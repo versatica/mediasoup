@@ -43,6 +43,20 @@ namespace RTC
 
 		// Call the parent method.
 		RTC::Consumer::FillJson(jsonObject);
+
+		// Add rtpStreams.
+		jsonObject["rtpStreams"] = json::array();
+		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
+
+		for (auto& kv : this->mapMappedSsrcRtpStream)
+		{
+			jsonRtpStreamsIt->emplace_back(json::value_t::object);
+
+			auto& jsonEntry = (*jsonRtpStreamsIt)[jsonRtpStreamsIt->size() - 1];
+			auto* rtpStream = kv.second;
+
+			rtpStream->FillJson(jsonEntry);
+		}
 	}
 
 	void PipeConsumer::FillJsonStats(json& jsonArray) const
