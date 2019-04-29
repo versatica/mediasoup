@@ -318,7 +318,7 @@ inline void UdpSocket::OnUvRecv(
 	}
 }
 
-inline void UdpSocket::OnUvSendError(int error)
+inline void UdpSocket::OnUvSendError(int error) // NOLINT(misc-unused-parameters)
 {
 	MS_TRACE();
 

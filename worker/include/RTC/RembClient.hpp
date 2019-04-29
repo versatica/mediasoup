@@ -14,7 +14,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, uint32_t bitrate) = 0;
+			virtual void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, uint32_t availableBitrate) = 0;
 			virtual void OnRembClientSendProbationRtpPacket(
 			  RTC::RembClient* rembClient, RTC::RtpPacket* packet) = 0;
 		};

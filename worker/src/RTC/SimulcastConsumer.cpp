@@ -331,7 +331,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
 		if (!RTC::Consumer::IsActive())
 			return 0;
@@ -450,7 +450,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
 		if (!RTC::Consumer::IsActive())
 			return 0;
@@ -537,7 +537,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate == true, "bitrate is not externally managed");
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
 		if (!RTC::Consumer::IsActive())
 			return;

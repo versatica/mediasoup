@@ -150,8 +150,7 @@ void IgnoreSignals()
 	};
 	// clang-format on
 
-	// Ignore clang-tidy cppcoreguidelines-pro-type-cstyle-cast.
-	act.sa_handler = SIG_IGN; // NOLINT
+	act.sa_handler = SIG_IGN; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
 	act.sa_flags   = 0;
 	err            = sigfillset(&act.sa_mask);
 
