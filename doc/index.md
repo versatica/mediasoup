@@ -7,6 +7,5 @@ Internal documentation for developming purposes. Get the **mediasoup** public do
 * [RTCP](RTCP.md)
 * [Consumer](Consumer.md)
 * [Packet Dump](PacketDump.md)
-* [ffmpeg](ffmpeg.md) - Usage of `ffmpeg` with mediasoup v3.
 * [Charts](Charts.md)
 

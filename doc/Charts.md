@@ -3,7 +3,7 @@
 
 ## Broadcasting
 
-`mediasoup` v2 (a room uses a single media worker subprocess by design, so a single CPU).
+mediasoup **v2** (a room uses a single media worker subprocess by design, so a single CPU).
 
 Charts provided by [CoSMo](https://www.cosmosoftware.io) team.
 
