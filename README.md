@@ -19,8 +19,10 @@
 * Be a Node.js module in server side.
 * Be a tiny JavaScript (and C++) library in client side.
 * Be minimalist: just handle the media layer.
-* Support all the existing WebRTC endpoints.
-* Do not mandate a specific signaling protocol (be signaling agnostic).
+* Be signaling agnostic: do not mandate any signaling protocol.
+* Be super low level API.
+* Support all existing WebRTC endpoints.
+* Enable integration with well known multimedia libraries/tools.
 
 
 ## Demo online
