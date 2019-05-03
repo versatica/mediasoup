@@ -79,8 +79,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ERROR("--begin--");
-
 		this->nackCount++;
 
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
@@ -93,8 +91,6 @@ namespace RTC
 
 			for (auto* bufferItem : RetransmissionContainer)
 			{
-				MS_ERROR("-- . --");
-
 				if (bufferItem == nullptr)
 					break;
 
@@ -116,8 +112,6 @@ namespace RTC
 					RTC::RtpStream::PacketRepaired(packet);
 			}
 		}
-
-		MS_ERROR("--end--");
 	}
 
 	void RtpStreamSend::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
@@ -238,8 +232,6 @@ namespace RTC
 	 */
 	inline void RtpStreamSend::UpdateBufferStartIdx()
 	{
-		MS_ERROR("------- start ------");
-
 		uint16_t seq = this->bufferStartIdx + 1;
 
 		for (uint32_t idx{ 0 }; idx < 65536; ++idx, ++seq)
@@ -255,8 +247,6 @@ namespace RTC
 				break;
 			}
 		}
-
-		MS_ERROR("------- end ------");
 	}
 
 	void RtpStreamSend::ClearRetransmissionBuffer()
@@ -334,7 +324,7 @@ namespace RTC
 				UpdateBufferStartIdx();
 		}
 		// Buffer not yet full, add an entry.
-		else if (this->bufferSize < this->storage.size() - 1)
+		else if (this->bufferSize < this->storage.size())
 		{
 			MS_ERROR("--3-- seq:%" PRIu16 ", buffer not full yet", packet->GetSequenceNumber());
 
@@ -366,6 +356,21 @@ namespace RTC
 		bufferItem.packet = packet->Clone(store);
 
 		MS_ERROR("--end-- seq:%" PRIu16, packet->GetSequenceNumber());
+
+		// TODO
+		MS_ERROR(
+			"<BUFFER DUMP> bufferStartIdx:%" PRIu16 ", bufferSize:%zu",
+			this->bufferStartIdx, this->bufferSize);
+
+		for (size_t seq{ 0 }; seq < this->buffer.size(); ++seq)
+		{
+			auto& bufferItem = this->buffer[seq];
+
+			if (bufferItem.packet)
+				MS_ERROR("  - item buffer with packet: seq:%zu", seq);
+		}
+
+		MS_ERROR("</BUFFER DUMP>");
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -376,8 +381,6 @@ namespace RTC
 	void RtpStreamSend::FillRetransmissionContainer(uint16_t seq, uint16_t bitmask)
 	{
 		MS_TRACE();
-
-		MS_ERROR("--begin-- seq:%" PRIu16, seq);
 
 		// Ensure the container's first element is 0.
 		RetransmissionContainer[0] = nullptr;
@@ -527,8 +530,6 @@ namespace RTC
 
 		// Set the next container element to null.
 		RetransmissionContainer[containerIdx] = nullptr;
-
-		MS_ERROR("--end-- seq:%" PRIu16, seq);
 	}
 
 	void RtpStreamSend::UpdateScore(RTC::RTCP::ReceiverReport* report)
