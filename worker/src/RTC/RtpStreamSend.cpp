@@ -350,7 +350,7 @@ namespace RTC
 			ResetBufferItem(firstBufferItem);
 		}
 
-		// Close the packet into the calculated store and reference it in the
+		// Clone the packet into the calculated store and reference it in the
 		// corresponding buffer item.
 		// Update the new buffer item so it points to the cloned packed.
 		bufferItem.packet = packet->Clone(store);
