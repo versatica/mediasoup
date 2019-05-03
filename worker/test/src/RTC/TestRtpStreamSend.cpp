@@ -94,7 +94,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		params.useNack   = true;
 
 		// Create a RtpStreamSend.
-		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, 5);
+		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, 3);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		stream->ReceivePacket(packet1);

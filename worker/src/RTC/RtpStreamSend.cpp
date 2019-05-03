@@ -22,7 +22,8 @@ namespace RTC
 
 	RtpStreamSend::RtpStreamSend(
 	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
-	  : RTC::RtpStream::RtpStream(listener, params, 10), buffer(bufferSize > 0 ? 65536 : 0), storage(bufferSize)
+	  : RTC::RtpStream::RtpStream(listener, params, 10), buffer(bufferSize > 0 ? 65536 : 0),
+	    storage(bufferSize)
 	{
 		MS_TRACE();
 	}
@@ -97,8 +98,6 @@ namespace RTC
 				// Note that this is an already RTX encoded packet if RTX is used
 				// (FillRetransmissionContainer() did it).
 				auto* packet = bufferItem->packet;
-
-				MS_ERROR("----- RETRANSMITTING PACKET seq:%" PRIu16, packet->GetSequenceNumber());
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
@@ -240,8 +239,6 @@ namespace RTC
 
 			if (bufferItem.packet)
 			{
-				MS_ERROR("new bufferStartIdx: %" PRIu16, seq);
-
 				this->bufferStartIdx = seq;
 
 				break;
@@ -268,8 +265,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ERROR("--begin-- seq:%" PRIu16, packet->GetSequenceNumber());
-
 		if (packet->GetSize() > RTC::MtuSize)
 		{
 			MS_WARN_TAG(
@@ -289,8 +284,6 @@ namespace RTC
 		// Buffer is empty.
 		if (this->bufferSize == 0)
 		{
-			MS_ERROR("--1-- seq:%" PRIu16 ", buffer empty, first item", packet->GetSequenceNumber());
-
 			// Take the first storage position.
 			store = this->storage[0].store;
 
@@ -301,16 +294,8 @@ namespace RTC
 		// the new packet or just ignore it (if duplicated packet).
 		else if (bufferItem.packet)
 		{
-			MS_ERROR("--2-- seq:%" PRIu16 ", bufferItem used", packet->GetSequenceNumber());
-
 			if (packet->GetTimestamp() == bufferItem.packet->GetTimestamp())
-			{
-				MS_ERROR("--2.1-- seq:%" PRIu16 ", duplicated packet, ignore", packet->GetSequenceNumber());
-
 				return;
-			}
-
-			MS_ERROR("--2.2-- seq:%" PRIu16 ", replacing stored packet", packet->GetSequenceNumber());
 
 			// Reuse the store used by the buffer item.
 			store = const_cast<uint8_t*>(bufferItem.packet->GetData());
@@ -326,8 +311,6 @@ namespace RTC
 		// Buffer not yet full, add an entry.
 		else if (this->bufferSize < this->storage.size())
 		{
-			MS_ERROR("--3-- seq:%" PRIu16 ", buffer not full yet", packet->GetSequenceNumber());
-
 			// Take the next storage position.
 			store = this->storage[this->bufferSize].store;
 
@@ -336,8 +319,6 @@ namespace RTC
 		// Buffer full, remove oldest entry and add new one.
 		else
 		{
-			MS_ERROR("--4-- seq:%" PRIu16 ", buffer full, removing oldest entry", packet->GetSequenceNumber());
-
 			auto& firstBufferItem = this->buffer[this->bufferStartIdx];
 
 			// Reuse the store used by the first buffer item.
@@ -354,23 +335,6 @@ namespace RTC
 		// corresponding buffer item.
 		// Update the new buffer item so it points to the cloned packed.
 		bufferItem.packet = packet->Clone(store);
-
-		MS_ERROR("--end-- seq:%" PRIu16, packet->GetSequenceNumber());
-
-		// TODO
-		MS_ERROR(
-			"<BUFFER DUMP> bufferStartIdx:%" PRIu16 ", bufferSize:%zu",
-			this->bufferStartIdx, this->bufferSize);
-
-		for (size_t seq{ 0 }; seq < this->buffer.size(); ++seq)
-		{
-			auto& bufferItem = this->buffer[seq];
-
-			if (bufferItem.packet)
-				MS_ERROR("  - item buffer with packet: seq:%zu", seq);
-		}
-
-		MS_ERROR("</BUFFER DUMP>");
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -399,7 +363,7 @@ namespace RTC
 		bool requested{ true };
 		size_t containerIdx{ 0 };
 
-		// Some variables for debugging.
+		// Variables for debugging.
 		uint16_t origBitmask = bitmask;
 		uint16_t sentBitmask{ 0b0000000000000000 };
 		bool isFirstPacket{ true };
@@ -413,8 +377,8 @@ namespace RTC
 
 			if (requested)
 			{
-				auto& bufferItem  = this->buffer[seq];
-				auto* packet      = bufferItem.packet;
+				auto& bufferItem = this->buffer[seq];
+				auto* packet     = bufferItem.packet;
 				uint32_t diffTs;
 				uint32_t diffMs;
 
@@ -469,8 +433,7 @@ namespace RTC
 					// now.
 					if (HasRtx() && !bufferItem.rtxEncoded)
 					{
-						packet->RtxEncode(
-						  this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
+						packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
 
 						bufferItem.rtxEncoded = true;
 					}
