@@ -4,7 +4,6 @@
 #include "Utils.hpp"
 #include "RTC/RtpDataCounter.hpp"
 #include "RTC/RtpStream.hpp"
-#include <list>
 #include <vector>
 
 namespace RTC
@@ -22,7 +21,6 @@ namespace RTC
 	public:
 		struct BufferItem
 		{
-			uint16_t seq{ 0 }; // RTP seq.
 			RTC::RtpPacket* packet{ nullptr };
 			uint64_t resentAtTime{ 0 }; // Last time this packet was resent.
 			uint8_t sentTimes{ 0 };     // Number of times this packet was resent.
@@ -57,6 +55,8 @@ namespace RTC
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
+		void ResetBufferItem(BufferItem& bufferItem);
+		void UpdateBufferStartIdx();
 		void ClearRetransmissionBuffer();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
@@ -64,8 +64,10 @@ namespace RTC
 	private:
 		uint32_t lostPrior{ 0 }; // Packets lost at last interval.
 		uint32_t sentPrior{ 0 }; // Packets sent at last interval.
+		std::vector<BufferItem> buffer;
+		uint16_t bufferStartIdx{ 0 };
+		size_t bufferSize{ 0 };
 		std::vector<StorageItem> storage;
-		std::list<BufferItem> buffer;
 		float rtt{ 0 };
 		uint16_t rtxSeq{ 0 };
 		RTC::RtpDataCounter transmissionCounter;
@@ -83,6 +85,16 @@ namespace RTC
 	inline uint32_t RtpStreamSend::GetBitrate(uint64_t now)
 	{
 		return this->transmissionCounter.GetBitrate(now);
+	}
+
+	inline void RtpStreamSend::ResetBufferItem(BufferItem& bufferItem)
+	{
+		delete bufferItem.packet;
+
+		bufferItem.packet       = nullptr;
+		bufferItem.resentAtTime = 0;
+		bufferItem.sentTimes    = 0;
+		bufferItem.rtxEncoded   = false;
 	}
 } // namespace RTC
 
