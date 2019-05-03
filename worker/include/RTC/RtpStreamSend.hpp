@@ -89,6 +89,9 @@ namespace RTC
 
 	inline void RtpStreamSend::ResetBufferItem(BufferItem& bufferItem)
 	{
+		if (!bufferItem.packet)
+			return;
+
 		delete bufferItem.packet;
 
 		bufferItem.packet       = nullptr;
