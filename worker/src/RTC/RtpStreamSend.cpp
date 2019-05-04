@@ -407,7 +407,6 @@ namespace RTC
 			{
 				auto* storageItem = this->buffer[seq];
 				RTC::RtpPacket* packet{ nullptr };
-				uint32_t diffTs;
 				uint32_t diffMs;
 
 				// Calculate how the elapsed time between the max timestampt seen and
@@ -415,7 +414,9 @@ namespace RTC
 				if (storageItem)
 				{
 					packet = storageItem->packet;
-					diffTs = this->maxPacketTs - packet->GetTimestamp();
+
+					uint32_t diffTs = this->maxPacketTs - packet->GetTimestamp();
+
 					diffMs = diffTs * 1000 / this->params.clockRate;
 				}
 
