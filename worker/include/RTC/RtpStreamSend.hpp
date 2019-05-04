@@ -19,19 +19,18 @@ namespace RTC
 		};
 
 	public:
-		struct BufferItem
-		{
-			RTC::RtpPacket* packet{ nullptr };
-			uint64_t resentAtTime{ 0 }; // Last time this packet was resent.
-			uint8_t sentTimes{ 0 };     // Number of times this packet was resent.
-			bool rtxEncoded{ false };   // Whether the packet has already been RTX encoded.
-		};
-
-	private:
 		struct StorageItem
 		{
-			// Allow some more space for RTX encoding.
-			uint8_t store[RTC::MtuSize + 200];
+			// Cloned packet.
+			RTC::RtpPacket* packet{ nullptr };
+			// Memory to hold the cloned packet (with extra space for RTX encoding).
+			uint8_t store[RTC::MtuSize + 100];
+			// Last time this packet was resent.
+			uint64_t resentAtTime{ 0 };
+			// Number of times this packet was resent.
+			uint8_t sentTimes{ 0 };
+			// Whether the packet has been already RTX encoded.
+			bool rtxEncoded{ false };
 		};
 
 	public:
@@ -55,16 +54,16 @@ namespace RTC
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
-		void ResetBufferItem(BufferItem& bufferItem);
+		void ClearBuffer();
+		void ResetStorageItem(StorageItem* storateItem);
 		void UpdateBufferStartIdx();
-		void ClearRetransmissionBuffer();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
 	private:
 		uint32_t lostPrior{ 0 }; // Packets lost at last interval.
 		uint32_t sentPrior{ 0 }; // Packets sent at last interval.
-		std::vector<BufferItem> buffer;
+		std::vector<StorageItem*> buffer;
 		uint16_t bufferStartIdx{ 0 };
 		size_t bufferSize{ 0 };
 		std::vector<StorageItem> storage;
@@ -85,19 +84,6 @@ namespace RTC
 	inline uint32_t RtpStreamSend::GetBitrate(uint64_t now)
 	{
 		return this->transmissionCounter.GetBitrate(now);
-	}
-
-	inline void RtpStreamSend::ResetBufferItem(BufferItem& bufferItem)
-	{
-		if (!bufferItem.packet)
-			return;
-
-		delete bufferItem.packet;
-
-		bufferItem.packet       = nullptr;
-		bufferItem.resentAtTime = 0;
-		bufferItem.sentTimes    = 0;
-		bufferItem.rtxEncoded   = false;
 	}
 } // namespace RTC
 

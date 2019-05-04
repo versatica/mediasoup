@@ -895,7 +895,7 @@ namespace RTC
 		}
 
 		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 1500 : 0;
+		size_t bufferSize = params.useNack ? 600 : 0;
 
 		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 		this->rtpStreams.push_back(this->rtpStream);
