@@ -420,7 +420,7 @@ namespace RTC
 				}
 
 				// Packet not found.
-				if (!packet)
+				if (!storageItem)
 				{
 					// Do nothing.
 				}
