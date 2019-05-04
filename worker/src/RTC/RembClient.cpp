@@ -38,7 +38,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
+		auto previousAvailableBitrate = this->availableBitrate;
+		uint64_t now                  = DepLibUV::GetTime();
+		bool notify{ false };
 
 		CheckStatus(now);
 
@@ -65,13 +67,30 @@ namespace RTC
 		// Emit event if EventInterval elapsed.
 		if (now - this->lastEventAt >= EventInterval)
 		{
-			this->lastEventAt = now;
+			notify = true;
+		}
+		// Also emit the event fast if we detect a high REMB value decrease.
+		else if (this->availableBitrate < previousAvailableBitrate * 0.75)
+		{
+			MS_WARN_TAG(
+			  bwe,
+			  "high REMB value decrease detected, notifying the listener [before:%" PRIu32
+			  ", now:%" PRIu32 "]",
+			  previousAvailableBitrate,
+			  this->availableBitrate);
 
-			this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
+			notify = true;
 		}
 
 		// Pass available bitrate to the RtpProbator.
 		this->rtpProbator->UpdateAvailableBitrate(this->availableBitrate);
+
+		if (notify)
+		{
+			this->lastEventAt = now;
+
+			this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
+		}
 	}
 
 	void RembClient::SentRtpPacket(RTC::RtpPacket* packet, bool retransmitted)
