@@ -99,8 +99,6 @@ namespace RTC
 				// (FillRetransmissionContainer() did it).
 				auto* packet = storageItem->packet;
 
-				MS_ERROR("----- RETRANSMITTING PACKET seq:%" PRIu16, packet->GetSequenceNumber());
-
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
 				  ->OnRtpStreamRetransmitRtpPacket(this, packet);
@@ -229,8 +227,6 @@ namespace RTC
 
 	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
 	{
-		MS_ERROR("<begin> seq:%" PRIu16, packet->GetSequenceNumber());
-
 		MS_TRACE();
 
 		if (packet->GetSize() > RTC::MtuSize)
@@ -251,11 +247,6 @@ namespace RTC
 		// Buffer is empty.
 		if (this->bufferSize == 0)
 		{
-			MS_ERROR("  --1-- seq:%" PRIu16 ", buffer empty, first item", packet->GetSequenceNumber());
-
-			MS_ASSERT(this->bufferStartIdx == 0, "bufferStartIdx be 0");
-			MS_ASSERT(storageItem == nullptr, "storageItem should be nullptr");
-
 			// Take the first storage position.
 			storageItem       = std::addressof(this->storage[0]);
 			this->buffer[seq] = storageItem;
@@ -268,18 +259,10 @@ namespace RTC
 		// storage with the new packet or just ignore it (if duplicated packet).
 		else if (storageItem)
 		{
-			MS_ERROR("  --2-- seq:%" PRIu16 ", buffer item used", packet->GetSequenceNumber());
-
 			auto* storedPacket = storageItem->packet;
 
 			if (packet->GetTimestamp() == storedPacket->GetTimestamp())
-			{
-				MS_ERROR("  --2.1-- seq:%" PRIu16 ", duplicated packet, ignore", packet->GetSequenceNumber());
-
 				return;
-			}
-
-			MS_ERROR("  --2.2-- seq:%" PRIu16 ", replacing stored packet", packet->GetSequenceNumber());
 
 			// Reset the storage item.
 			ResetStorageItem(storageItem);
@@ -292,8 +275,6 @@ namespace RTC
 		// Buffer not yet full, add an entry.
 		else if (this->bufferSize < this->storage.size())
 		{
-			MS_ERROR("  --3-- seq:%" PRIu16 ", buffer not full yet", packet->GetSequenceNumber());
-
 			// Take the next storage position.
 			storageItem       = std::addressof(this->storage[this->bufferSize]);
 			this->buffer[seq] = storageItem;
@@ -304,8 +285,6 @@ namespace RTC
 		// Buffer full, remove oldest entry and add new one.
 		else
 		{
-			MS_ERROR("  --4-- seq:%" PRIu16 ", buffer full, removing oldest entry", packet->GetSequenceNumber());
-
 			auto* firstStorageItem = this->buffer[this->bufferStartIdx];
 
 			// Reset the first storage item.
@@ -322,40 +301,8 @@ namespace RTC
 			this->buffer[seq] = storageItem;
 		}
 
-		// TODO: TMP
-		MS_ASSERT(storageItem, "upps 1");
-		MS_ASSERT(storageItem->packet == nullptr, "upps 2");
-		MS_ASSERT(storageItem->resentAtTime == 0, "upps 3");
-		MS_ASSERT(storageItem->sentTimes == 0, "upps 4");
-		MS_ASSERT(storageItem->rtxEncoded == false, "upps 5");
-
 		// Clone the packet into the retrieved storage item.
 		storageItem->packet = packet->Clone(storageItem->store);
-
-		// TODO
-		MS_ERROR(
-			"<BUFFER DUMP> bufferStartIdx:%" PRIu16 ", bufferSize:%zu",
-			this->bufferStartIdx, this->bufferSize);
-
-		size_t bufferItemCount{ 0 };
-
-		for (size_t seq{ 0 }; seq < this->buffer.size(); ++seq)
-		{
-			auto* storageItem = this->buffer[seq];
-
-			if (storageItem)
-			{
-				// MS_ERROR(
-				// 	"  - buffer item with storage item [seq:%zu, packet.seq:%" PRIu16 "]",
-				// 	seq, storageItem->packet->GetSequenceNumber());
-
-				bufferItemCount++;
-			}
-		}
-
-		MS_ERROR("</BUFFER DUMP> items:%zu", bufferItemCount);
-
-		MS_ERROR("<end> seq:%" PRIu16, packet->GetSequenceNumber());
 	}
 
 	void RtpStreamSend::ClearBuffer()
@@ -417,8 +364,6 @@ namespace RTC
 
 			if (storageItem)
 			{
-				MS_ERROR("new bufferStartIdx: %" PRIu16, seq);
-
 				this->bufferStartIdx = seq;
 
 				break;
