@@ -60,12 +60,6 @@ namespace RTC
 		if (!RtpStream::ReceivePacket(packet))
 			return false;
 
-		// If it's a key frame clear the RTP retransmission buffer to avoid
-		// congesting the receiver by sending useless retransmissions (now that we
-		// are sending a newer key frame).
-		if (packet->IsKeyFrame())
-			ClearBuffer();
-
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
 			StorePacket(packet);
