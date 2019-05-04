@@ -18,7 +18,8 @@ namespace RTC
 				~PayloadDescriptor() = default;
 				void Dump() const;
 
-				bool isKeyFrame = { false };
+				// Parsed values.
+				bool isKeyFrame{ false };
 			};
 
 		public:

@@ -46,29 +46,29 @@ namespace RTC
 				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
 				void Restore(uint8_t* data) const;
 
-				// mandatory fields.
+				// Mandatory fields.
 				uint8_t extended : 1;
 				uint8_t nonReference : 1;
 				uint8_t start : 1;
 				uint8_t partitionIndex : 4;
-				// optional field flags.
+				// Optional field flags.
 				uint8_t i : 1; // PictureID present.
 				uint8_t l : 1; // TL0PICIDX present.
 				uint8_t t : 1; // TID present.
 				uint8_t k : 1; // KEYIDX present.
-				// optional fields.
+				// Optional fields.
 				uint16_t pictureId;
 				uint8_t tl0PictureIndex;
 				uint8_t tlIndex : 2;
 				uint8_t y : 1;
 				uint8_t keyIndex : 5;
-
-				bool isKeyFrame           = { false };
-				bool hasPictureId         = { false };
-				bool hasOneBytePictureId  = { false };
-				bool hasTwoBytesPictureId = { false };
-				bool hasTl0PictureIndex   = { false };
-				bool hasTlIndex           = { false };
+				// Parsed values.
+				bool isKeyFrame{ false };
+				bool hasPictureId{ false };
+				bool hasOneBytePictureId{ false };
+				bool hasTwoBytesPictureId{ false };
+				bool hasTl0PictureIndex{ false };
+				bool hasTlIndex{ false };
 			};
 
 		public:

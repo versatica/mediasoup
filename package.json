@@ -23,7 +23,7 @@
     "!win32"
   ],
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=8.6.0"
   },
   "scripts": {
     "lint": "npm run lint:node && npm run lint:worker",
@@ -54,7 +54,7 @@
     "gulp": "^4.0.1",
     "gulp-clang-format": "^1.0.27",
     "jest": "^24.7.1",
-    "jest-tobetype": "^1.2.2",
+    "jest-tobetype": "^1.2.3",
     "opn-cli": "^4.1.0"
   },
   "optionalDependencies": {
