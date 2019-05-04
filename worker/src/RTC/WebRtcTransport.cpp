@@ -138,6 +138,22 @@ namespace RTC
 			this->initialAvailableOutgoingBitrate = jsonInitialAvailableOutgoingBitrateIt->get<uint32_t>();
 		}
 
+		auto jsonMinimumAvailableOutgoingBitrateIt = data.find("minimumAvailableOutgoingBitrate");
+
+		if (jsonMinimumAvailableOutgoingBitrateIt != data.end())
+		{
+			if (!jsonMinimumAvailableOutgoingBitrateIt->is_number_unsigned())
+				MS_THROW_TYPE_ERROR("wrong minimumAvailableOutgoingBitrate (not a number)");
+
+			this->minimumAvailableOutgoingBitrate = jsonMinimumAvailableOutgoingBitrateIt->get<uint32_t>();
+		}
+
+		if (this->minimumAvailableOutgoingBitrate > this->initialAvailableOutgoingBitrate)
+		{
+			MS_THROW_TYPE_ERROR(
+			  "minimumAvailableOutgoingBitrate bigger than initialAvailableOutgoingBitrate");
+		}
+
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement{ 0 };
@@ -1287,7 +1303,8 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(bwe, "enabling REMB client");
 
-			this->rembClient = new RTC::RembClient(this, this->initialAvailableOutgoingBitrate);
+			this->rembClient = new RTC::RembClient(
+			  this, this->initialAvailableOutgoingBitrate, this->minimumAvailableOutgoingBitrate);
 
 			// Tell all the Consumers that we are gonna manage their bitrate.
 			for (auto& kv : this->mapConsumers)

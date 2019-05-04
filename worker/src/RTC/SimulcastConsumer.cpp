@@ -307,7 +307,7 @@ namespace RTC
 		for (size_t idx{ 0 }; idx < this->producerRtpStreams.size(); ++idx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(idx);
-			auto* producerRtpStream = this->producerRtpStreams[idx];
+			auto* producerRtpStream = this->producerRtpStreams.at(idx);
 
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.
@@ -359,7 +359,7 @@ namespace RTC
 		for (size_t idx{ 0 }; idx < this->producerRtpStreams.size(); ++idx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(idx);
-			auto* producerRtpStream = this->producerRtpStreams[idx];
+			auto* producerRtpStream = this->producerRtpStreams.at(idx);
 			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
 
 			// Ignore spatial layers for non existing Producer streams or for those
@@ -369,14 +369,6 @@ namespace RTC
 
 			if (producerScore >= maxProducerScore || producerScore >= 7)
 			{
-				// NOTE: If this is the first valid spatial layer take it. This is because,
-				// even if there is no enough bitrate for it, we need to take something.
-				if (this->provisionalTargetSpatialLayer == -1)
-				{
-					this->provisionalTargetSpatialLayer  = spatialLayer;
-					this->provisionalTargetTemporalLayer = 0;
-				}
-
 				int16_t temporalLayer{ 0 };
 
 				// Check bitrate of every layer.
@@ -455,14 +447,9 @@ namespace RTC
 		if (!RTC::Consumer::IsActive())
 			return 0;
 
-		// If no target spatial layer is selected, do nothing.
-		if (this->provisionalTargetSpatialLayer == -1)
-		{
-			return 0;
-		}
 		// If already in the preferred layers, do nothing.
 		// clang-format off
-		else if (
+		if (
 			this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
 			this->provisionalTargetTemporalLayer == this->preferredTemporalLayer
 		)
@@ -484,13 +471,30 @@ namespace RTC
 		else
 			virtualBitrate = bitrate;
 
-		auto spatialLayer      = this->provisionalTargetSpatialLayer;
-		auto temporalLayer     = this->provisionalTargetTemporalLayer;
-		auto producerRtpStream = this->producerRtpStreams.at(spatialLayer);
+		auto spatialLayer  = this->provisionalTargetSpatialLayer;
+		auto temporalLayer = this->provisionalTargetTemporalLayer;
+		RTC::RtpStream* producerRtpStream{ nullptr };
 
-		// Can upgrade temporal layer.
-		if (temporalLayer < producerRtpStream->GetTemporalLayers() - 1)
+		// Can upgrade from no spatial layer to spatial layer 0.
+		if (spatialLayer == -1)
 		{
+			producerRtpStream = this->producerRtpStreams.at(0);
+
+			if (producerRtpStream && producerRtpStream->GetScore() > 0)
+			{
+				spatialLayer  = 0;
+				temporalLayer = 0;
+			}
+			else
+			{
+				// Must return now since we do not even have a producerRtpStream.
+				return 0;
+			}
+		}
+		// Can upgrade temporal layer.
+		else if (temporalLayer < this->producerRtpStreams.at(spatialLayer)->GetTemporalLayers() - 1)
+		{
+			producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 			++temporalLayer;
 		}
 		// Can upgrade spatial layer.
@@ -498,7 +502,7 @@ namespace RTC
 		{
 			producerRtpStream = this->producerRtpStreams.at(++spatialLayer);
 
-			// Producer stream does not exist or it's dead. Exit.
+			// Producer stream does not exist or it's not good. Exit.
 			if (!producerRtpStream || producerRtpStream->GetScore() < 7)
 				return 0;
 
@@ -1013,7 +1017,7 @@ namespace RTC
 		for (size_t idx{ 0 }; idx < this->producerRtpStreams.size(); ++idx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(idx);
-			auto* producerRtpStream = this->producerRtpStreams[idx];
+			auto* producerRtpStream = this->producerRtpStreams.at(idx);
 			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
 
 			// Ignore spatial layers for non existing Producer streams or for those

@@ -21,7 +21,10 @@ namespace RTC
 		};
 
 	public:
-		RembClient(RTC::RembClient::Listener* listener, uint32_t initialAvailableBitrate);
+		RembClient(
+		  RTC::RembClient::Listener* listener,
+		  uint32_t initialAvailableBitrate,
+		  uint32_t minimumAvailableBitrate);
 		virtual ~RembClient();
 
 	public:
@@ -44,6 +47,7 @@ namespace RTC
 		RTC::RtpProbator* rtpProbator{ nullptr };
 		// Others.
 		uint32_t initialAvailableBitrate{ 0 };
+		uint32_t minimumAvailableBitrate{ 0 };
 		uint64_t initialAvailableBitrateAt{ 0 };
 		uint32_t availableBitrate{ 0 };
 		uint64_t lastEventAt{ 0 };
