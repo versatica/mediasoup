@@ -36,9 +36,9 @@ mediasoup and its client side libraries make it possible to implement different 
 
 ## Demo Online
 
-![mediasoup-demo-screenshot]
+[![][mediasoup-demo-screenshot]][mediasoup-demo]
 
-* Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](https://github.com/versatica/mediasoup-demo)).
+Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](https://github.com/versatica/mediasoup-demo)).
 
 
 ## Authors
@@ -67,6 +67,7 @@ You can support mediasoup by making a donation in [open collective][opencollecti
 [mediasoup-banner]: /art/mediasoup-banner.png
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png
 [mediasoup-website]: https://mediasoup.org
+[mediasoup-demo]: https://v3demo.mediasoup.org
 [travis-ci-shield-mediasoup]: https://travis-ci.com/versatica/mediasoup.svg?branch=master
 [travis-ci-mediasoup]: https://travis-ci.com/versatica/mediasoup
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
