@@ -29,7 +29,7 @@
 
 ![mediasoup-demo-screenshot]
 
-* Try it at [demo.mediasoup.org](https://demo.mediasoup.org) ([source code](https://github.com/versatica/mediasoup-demo)).
+* Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](https://github.com/versatica/mediasoup-demo)).
 
 
 ## Authors
