@@ -15,8 +15,6 @@
 
 ## Use Cases
 
-mediasoup and its client side libraries make it possible to implement different multi-party scenarios:
-
 * Group video chat applications.
 * One-to-many (or few-to-many) broadcasting applications in real-time.
 * RTP streaming.
