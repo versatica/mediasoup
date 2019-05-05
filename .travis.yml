@@ -31,7 +31,7 @@ matrix:
     - CC="gcc-7"
     - CXX="g++-7"
   - os: linux
-    node_js: 8
+    node_js: 12
     addons:
       apt:
         sources:
