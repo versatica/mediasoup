@@ -8,12 +8,21 @@
 [![][opencollective-shield-mediasoup]][opencollective-mediasoup]
 
 
-## Website and documentation
+## Website and Documentation
 
 * [mediasoup.org][mediasoup-website]
 
 
-## Design goals
+## Use Cases
+
+mediasoup and its client side libraries make it possible to implement different multi-party scenarios:
+
+* Group video chat applications.
+* One-to-many (or few-to-many) broadcasting applications in real-time.
+* RTP streaming.
+
+
+## Design Goals
 
 * Be a WebRTC [SFU](https://webrtcglossary.com/sfu/) (Selective Forwarding Unit).
 * Be a Node.js module in server side.
@@ -25,7 +34,7 @@
 * Enable integration with well known multimedia libraries/tools.
 
 
-## Demo online
+## Demo Online
 
 ![mediasoup-demo-screenshot]
 
