@@ -76,7 +76,8 @@ namespace RTC
 			this->preferredTemporalLayer = encoding.temporalLayers - 1;
 		}
 
-		// Reserve space for the Producer RTP streams.
+		// Reserve space for the Producer RTP streams by filling all the possible
+		// entries with nullptr.
 		this->producerRtpStreams.insert(
 		  this->producerRtpStreams.begin(), this->consumableRtpEncodings.size(), nullptr);
 
@@ -500,6 +501,7 @@ namespace RTC
 		// Can upgrade spatial layer.
 		else if (static_cast<size_t>(spatialLayer) < this->producerRtpStreams.size() - 1)
 		{
+			// This could be null.
 			producerRtpStream = this->producerRtpStreams.at(++spatialLayer);
 
 			// Producer stream does not exist or it's not good. Exit.
@@ -508,6 +510,11 @@ namespace RTC
 
 			// Set temporal layer to 0.
 			temporalLayer = 0;
+		}
+		// Otherwise we cannot change anything.
+		else
+		{
+			return 0;
 		}
 
 		auto now             = DepLibUV::GetTime();
