@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.0
+
+* v3 is here!
+
+
 ### 2.6.10
 
 * `PlainRtpTransport.js`: Add missing methods and events.
