@@ -6,6 +6,17 @@
 * v3 is here!
 
 
+### 2.6.12
+
+* Fix RTCP Receiver Report handling.
+
+
+### 2.6.11
+
+* Update deps.
+* Simulcast: Increase profiles one by one unless explicitly forced (fixes #188).
+
+
 ### 2.6.10
 
 * `PlainRtpTransport.js`: Add missing methods and events.
