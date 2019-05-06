@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.1
+
+* Fix crash in `SimulcastConsumer::IncreaseLayer()` with Safari and H264 (#300).
+
+
 ### 3.0.0
 
 * v3 is here!
