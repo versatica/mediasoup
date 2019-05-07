@@ -476,11 +476,13 @@ namespace RTC
 		auto temporalLayer = this->provisionalTargetTemporalLayer;
 		RTC::RtpStream* producerRtpStream{ nullptr };
 
-		// Can upgrade from no spatial layer to spatial layer 0.
+		// May upgrade from no spatial layer to spatial layer 0.
 		if (spatialLayer == -1)
 		{
+			// This can be null.
 			producerRtpStream = this->producerRtpStreams.at(0);
 
+			// Take it even if it's bad.
 			if (producerRtpStream && producerRtpStream->GetScore() > 0)
 			{
 				spatialLayer  = 0;
@@ -492,16 +494,16 @@ namespace RTC
 				return 0;
 			}
 		}
-		// Can upgrade temporal layer.
+		// May upgrade temporal layer.
 		else if (temporalLayer < this->producerRtpStreams.at(spatialLayer)->GetTemporalLayers() - 1)
 		{
 			producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 			++temporalLayer;
 		}
-		// Can upgrade spatial layer.
+		// May upgrade spatial layer.
 		else if (static_cast<size_t>(spatialLayer) < this->producerRtpStreams.size() - 1)
 		{
-			// This could be null.
+			// This can be null.
 			producerRtpStream = this->producerRtpStreams.at(++spatialLayer);
 
 			// Producer stream does not exist or it's not good. Exit.
@@ -550,17 +552,24 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
+		auto provisionalTargetSpatialLayer  = this->provisionalTargetSpatialLayer;
+		auto provisionalTargetTemporalLayer = this->provisionalTargetTemporalLayer;
+
+		// Reset provisional target layers.
+		this->provisionalTargetSpatialLayer  = -1;
+		this->provisionalTargetTemporalLayer = -1;
+
 		if (!RTC::Consumer::IsActive())
 			return;
 
 		// clang-format off
 		if (
-			this->provisionalTargetSpatialLayer != this->targetSpatialLayer ||
-			this->provisionalTargetTemporalLayer != this->targetTemporalLayer
+			provisionalTargetSpatialLayer != this->targetSpatialLayer ||
+			provisionalTargetTemporalLayer != this->targetTemporalLayer
 		)
 		// clang-format on
 		{
-			UpdateTargetLayers(this->provisionalTargetSpatialLayer, this->provisionalTargetTemporalLayer);
+			UpdateTargetLayers(provisionalTargetSpatialLayer, provisionalTargetTemporalLayer);
 		}
 	}
 
