@@ -79,7 +79,7 @@ namespace RTC
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
-		uint64_t GetSenderReportNtp() const;
+		uint64_t GetSenderReportNtpMs() const;
 		uint32_t GetSenderReportTs() const;
 		uint8_t GetScore() const;
 
@@ -114,11 +114,11 @@ namespace RTC
 		size_t nackPacketCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t firCount{ 0 };
-		size_t repairedPrior{ 0 };         // Packets repaired at last interval.
-		size_t retransmittedPrior{ 0 };    // Packets retransmitted at last interval.
-		uint32_t expectedPrior{ 0 };       // Packets expected at last interval.
-		uint64_t lastSenderReportNtp{ 0 }; // NTP timestamp in last Sender Report.
-		uint32_t lastSenderReporTs{ 0 };   // RTP timestamp in last Sender Report.
+		size_t repairedPrior{ 0 };           // Packets repaired at last interval.
+		size_t retransmittedPrior{ 0 };      // Packets retransmitted at last interval.
+		uint32_t expectedPrior{ 0 };         // Packets expected at last interval.
+		uint64_t lastSenderReportNtpMs{ 0 }; // NTP timestamp in last Sender Report (in ms).
+		uint32_t lastSenderReporTs{ 0 };     // RTP timestamp in last Sender Report.
 
 	private:
 		// Score related.
@@ -210,9 +210,9 @@ namespace RTC
 		return this->maxPacketMs;
 	}
 
-	inline uint64_t RtpStream::GetSenderReportNtp() const
+	inline uint64_t RtpStream::GetSenderReportNtpMs() const
 	{
-		return this->lastSenderReportNtp;
+		return this->lastSenderReportNtpMs;
 	}
 
 	inline uint32_t RtpStream::GetSenderReportTs() const

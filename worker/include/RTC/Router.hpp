@@ -52,7 +52,7 @@ namespace RTC
 		  RTC::RtpStream* rtpStream,
 		  uint8_t score,
 		  uint8_t previousScore) override;
-		void OnTransportProducerSenderReport(
+		void OnTransportProducerRtcpSenderReport(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first) override;
 		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;

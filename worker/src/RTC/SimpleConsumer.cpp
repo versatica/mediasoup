@@ -124,7 +124,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimpleConsumer::ProducerSenderReport(RTC::RtpStream* /*rtpStream*/, bool /*first*/)
+	void SimpleConsumer::ProducerRtcpSenderReport(RTC::RtpStream* /*rtpStream*/, bool /*first*/)
 	{
 		MS_TRACE();
 

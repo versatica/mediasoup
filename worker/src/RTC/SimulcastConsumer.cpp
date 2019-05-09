@@ -287,19 +287,21 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::ProducerSenderReport(RTC::RtpStream* /*rtpStream*/, bool first)
+	void SimulcastConsumer::ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first)
 	{
 		MS_TRACE();
 
-		// Just interested if the first Sender Report for a RTP stream.
-		if (!first)
+		// Just interested if this is the first Sender Report for a RTP stream.
+		if (first)
+			MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		else
 			return;
 
 		// If our current selected RTP stream does not yet have SR, do nothing since
 		// we know we won't be able to switch.
 		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
-		if (!producerCurrentRtpStream || !producerCurrentRtpStream->GetSenderReportNtp())
+		if (!producerCurrentRtpStream || !producerCurrentRtpStream->GetSenderReportNtpMs())
 			return;
 
 		if (IsActive())
@@ -665,7 +667,7 @@ namespace RTC
 			// NOTE: If we are here is because we should be able to get those NTP and TS
 			// from current and target spatial layers, so we can add two MS_ASSERT() here
 			// verifying it for both current and target streams:
-			//   MS_ASSERT(rtpStream->GetSenderReportNtp(), "no Sender Report information");
+			//   MS_ASSERT(rtpStream->GetSenderReportNtpMs(), "no Sender Report information");
 
 			// Calculate RTP timestamp diff between now and last sent RTP packet.
 			if (this->rtpStream->GetMaxPacketMs() != 0u)
@@ -1213,18 +1215,26 @@ namespace RTC
 		// We can switch to the given spatial layer if:
 		// - we don't have any current spatial layer, or
 		// - our target spatial layer matches the given spatial layer, or
-		// - both our target spatial layer and the given spatial layer have Sender Report.
+		// - both our target spatial layer and the given spatial layer have
+		//   SenderReport.
 		//
 		// clang-format off
-		return (
+		bool canSwitch = (
 			this->currentSpatialLayer == -1 ||
 			this->targetSpatialLayer == spatialLayer ||
 			(
-				GetProducerTargetRtpStream()->GetSenderReportNtp() &&
-				this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtp()
+				GetProducerTargetRtpStream()->GetSenderReportNtpMs() &&
+				this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtpMs()
 			)
 		);
 		// clang-format on
+
+		if (!canSwitch)
+		{
+			MS_DEBUG_TAG(simulcast, "cannot switch to spatialLayer:%" PRIi16, spatialLayer);
+		}
+
+		return canSwitch;
 	}
 
 	inline void SimulcastConsumer::EmitScore() const

@@ -578,7 +578,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerSenderReport(
+	inline void Router::OnTransportProducerRtcpSenderReport(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first)
 	{
 		MS_TRACE();
@@ -587,7 +587,7 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
-			consumer->ProducerSenderReport(rtpStream, first);
+			consumer->ProducerRtcpSenderReport(rtpStream, first);
 		}
 	}
 
