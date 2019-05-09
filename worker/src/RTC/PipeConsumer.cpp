@@ -126,6 +126,13 @@ namespace RTC
 		// Do nothing.
 	}
 
+	void PipeConsumer::ProducerSenderReport(RTC::RtpStream* /*rtpStream*/, bool /*first*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
 	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

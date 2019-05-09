@@ -23,6 +23,7 @@ namespace RTC
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void ProducerSenderReport(RTC::RtpStream* rtpStream, bool first) override;
 		void SetExternallyManagedBitrate() override;
 		int16_t GetBitratePriority() const override;
 		uint32_t UseAvailableBitrate(uint32_t bitrate) override;
@@ -50,6 +51,7 @@ namespace RTC
 		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		void UpdateCurrentLayers();
+		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
 		void EmitLayersChange() const;
 		RTC::RtpStream* GetProducerCurrentRtpStream() const;

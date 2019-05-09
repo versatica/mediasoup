@@ -287,6 +287,25 @@ namespace RTC
 		}
 	}
 
+	void SimulcastConsumer::ProducerSenderReport(RTC::RtpStream* /*rtpStream*/, bool first)
+	{
+		MS_TRACE();
+
+		// Just interested if the first Sender Report for a RTP stream.
+		if (!first)
+			return;
+
+		// If our current selected RTP stream does not yet have SR, do nothing since
+		// we know we won't be able to switch.
+		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
+
+		if (!producerCurrentRtpStream || !producerCurrentRtpStream->GetSenderReportNtp())
+			return;
+
+		if (IsActive())
+			MayChangeLayers();
+	}
+
 	void SimulcastConsumer::SetExternallyManagedBitrate()
 	{
 		MS_TRACE();
@@ -366,6 +385,10 @@ namespace RTC
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.
 			if (producerScore == 0)
+				continue;
+
+			// We may not yet switch to a different spatial layer.
+			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
 			if (producerScore >= maxProducerScore || producerScore >= 7)
@@ -485,6 +508,10 @@ namespace RTC
 			// Take it even if it's bad.
 			if (producerRtpStream && producerRtpStream->GetScore() > 0)
 			{
+				// We may not yet switch to a different spatial layer.
+				if (!CanSwitchToSpatialLayer(0))
+					return 0;
+
 				spatialLayer  = 0;
 				temporalLayer = 0;
 			}
@@ -508,6 +535,10 @@ namespace RTC
 
 			// Producer stream does not exist or it's not good. Exit.
 			if (!producerRtpStream || producerRtpStream->GetScore() < 7)
+				return 0;
+
+			// We may not yet switch to a different spatial layer.
+			if (!CanSwitchToSpatialLayer(spatialLayer))
 				return 0;
 
 			// Set temporal layer to 0.
@@ -629,6 +660,12 @@ namespace RTC
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
 			this->rtpTimestampManager.Sync(packet->GetTimestamp());
+
+			// TODO: Refactor this to use Sender Reports' NTP and TS.
+			// NOTE: If we are here is because we should be able to get those NTP and TS
+			// from current and target spatial layers, so we can add two MS_ASSERT() here
+			// verifying it for both current and target streams:
+			//   MS_ASSERT(rtpStream->GetSenderReportNtp(), "no Sender Report information");
 
 			// Calculate RTP timestamp diff between now and last sent RTP packet.
 			if (this->rtpStream->GetMaxPacketMs() != 0u)
@@ -1041,6 +1078,10 @@ namespace RTC
 			if (producerScore == 0)
 				continue;
 
+			// We may not yet switch to a different spatial layer.
+			if (!CanSwitchToSpatialLayer(spatialLayer))
+				continue;
+
 			if (producerScore >= maxProducerScore || producerScore >= 7)
 			{
 				newTargetSpatialLayer = spatialLayer;
@@ -1156,6 +1197,34 @@ namespace RTC
 		// Emit the score event (just if spatial layer changed).
 		if (emitScore)
 			EmitScore();
+	}
+
+	inline bool SimulcastConsumer::CanSwitchToSpatialLayer(int16_t spatialLayer) const
+	{
+		MS_TRACE();
+
+		// This method assumes that the caller has verified that there is a valid
+		// Producer RtpStream for the given spatial layer.
+		MS_ASSERT(
+		  this->producerRtpStreams.at(spatialLayer),
+		  "no Producer RtpStream for the given spatialLayer:%" PRIi16,
+		  spatialLayer);
+
+		// We can switch to the given spatial layer if:
+		// - we don't have any current spatial layer, or
+		// - our target spatial layer matches the given spatial layer, or
+		// - both our target spatial layer and the given spatial layer have Sender Report.
+		//
+		// clang-format off
+		return (
+			this->currentSpatialLayer == -1 ||
+			this->targetSpatialLayer == spatialLayer ||
+			(
+				GetProducerTargetRtpStream()->GetSenderReportNtp() &&
+				this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtp()
+			)
+		);
+		// clang-format on
 	}
 
 	inline void SimulcastConsumer::EmitScore() const
