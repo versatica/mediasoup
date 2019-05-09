@@ -172,10 +172,14 @@ namespace RTC
 		auto ntp    = Utils::Time::TimeMs2Ntp(now);
 		auto report = new RTC::RTCP::SenderReport();
 
+		// Calculate TS difference between now and maxPacketMs.
+		auto diffMs = now - this->maxPacketMs;
+		auto diffTs = diffMs * this->GetClockRate() / 1000;
+
 		report->SetSsrc(GetSsrc());
 		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
-		report->SetRtpTs(this->maxPacketTs);
+		report->SetRtpTs(this->maxPacketTs + diffTs);
 		report->SetNtpSec(ntp.seconds);
 		report->SetNtpFrac(ntp.fractions);
 
