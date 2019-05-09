@@ -167,8 +167,8 @@ namespace RTC
 		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
-		auto origSsrc      = packet->GetSsrc();
-		auto origSeq       = packet->GetSequenceNumber();
+		auto origSsrc = packet->GetSsrc();
+		auto origSeq  = packet->GetSequenceNumber();
 
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);

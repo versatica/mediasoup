@@ -144,9 +144,9 @@ namespace RTC
 			return;
 		}
 
-		auto* rtpStream           = this->mapMappedSsrcRtpStream.at(packet->GetSsrc());
-		auto& syncRequired        = this->mapRtpStreamSyncRequired.at(rtpStream);
-		auto& rtpSeqManager       = this->mapRtpStreamRtpSeqManager.at(rtpStream);
+		auto* rtpStream     = this->mapMappedSsrcRtpStream.at(packet->GetSsrc());
+		auto& syncRequired  = this->mapRtpStreamSyncRequired.at(rtpStream);
+		auto& rtpSeqManager = this->mapRtpStreamRtpSeqManager.at(rtpStream);
 
 		// If we need to sync, support key frames and this is not a key frame, ignore
 		// the packet.
@@ -173,7 +173,7 @@ namespace RTC
 		rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
-		auto origSeq       = packet->GetSequenceNumber();
+		auto origSeq = packet->GetSequenceNumber();
 
 		// Rewrite packet.
 		// NOTE: Do not override the ssrc because we want to honor the consumable ssrcs.
