@@ -51,7 +51,6 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		std::unordered_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
 		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
-		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint32_t>> mapRtpStreamRtpTimestampManager;
 	};
 
 	// Inline methods.

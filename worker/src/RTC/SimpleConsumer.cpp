@@ -157,49 +157,33 @@ namespace RTC
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
-			this->rtpTimestampManager.Sync(packet->GetTimestamp());
-
-			// Calculate RTP timestamp diff between now and last sent RTP packet.
-			if (this->rtpStream->GetMaxPacketMs() != 0u)
-			{
-				auto now    = DepLibUV::GetTime();
-				auto diffMs = now - this->rtpStream->GetMaxPacketMs();
-				auto diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
-
-				this->rtpTimestampManager.Offset(diffTs);
-			}
 
 			this->syncRequired = false;
 		}
 
 		// Update RTP seq number and timestamp.
 		uint16_t seq;
-		uint32_t timestamp;
 
 		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
-		this->rtpTimestampManager.Input(packet->GetTimestamp(), timestamp);
 
 		// Save original packet fields.
 		auto origSsrc      = packet->GetSsrc();
 		auto origSeq       = packet->GetSequenceNumber();
-		auto origTimestamp = packet->GetTimestamp();
 
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
-		packet->SetTimestamp(timestamp);
 
 		if (isSyncPacket)
 		{
 			MS_DEBUG_TAG(
 			  rtp,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  "] from original [seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
-			  origSeq,
-			  origTimestamp);
+			  origSeq);
 		}
 
 		// Process the packet.
@@ -213,18 +197,16 @@ namespace RTC
 			MS_WARN_TAG(
 			  rtp,
 			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  "] from original [seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
-			  origSeq,
-			  origTimestamp);
+			  origSeq);
 		}
 
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
-		packet->SetTimestamp(origTimestamp);
 	}
 
 	void SimpleConsumer::GetRtcp(

@@ -147,7 +147,6 @@ namespace RTC
 		auto* rtpStream           = this->mapMappedSsrcRtpStream.at(packet->GetSsrc());
 		auto& syncRequired        = this->mapRtpStreamSyncRequired.at(rtpStream);
 		auto& rtpSeqManager       = this->mapRtpStreamRtpSeqManager.at(rtpStream);
-		auto& rtpTimestampManager = this->mapRtpStreamRtpTimestampManager.at(rtpStream);
 
 		// If we need to sync, support key frames and this is not a key frame, ignore
 		// the packet.
@@ -164,48 +163,32 @@ namespace RTC
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
 			rtpSeqManager.Sync(packet->GetSequenceNumber());
-			rtpTimestampManager.Sync(packet->GetTimestamp());
-
-			// Calculate RTP timestamp diff between now and last sent RTP packet.
-			if (rtpStream->GetMaxPacketMs() != 0u)
-			{
-				auto now    = DepLibUV::GetTime();
-				auto diffMs = now - rtpStream->GetMaxPacketMs();
-				auto diffTs = diffMs * rtpStream->GetClockRate() / 1000;
-
-				rtpTimestampManager.Offset(diffTs);
-			}
 
 			syncRequired = false;
 		}
 
 		// Update RTP seq number and timestamp.
 		uint16_t seq;
-		uint32_t timestamp;
 
 		rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
-		rtpTimestampManager.Input(packet->GetTimestamp(), timestamp);
 
 		// Save original packet fields.
 		auto origSeq       = packet->GetSequenceNumber();
-		auto origTimestamp = packet->GetTimestamp();
 
 		// Rewrite packet.
 		// NOTE: Do not override the ssrc because we want to honor the consumable ssrcs.
 		packet->SetSequenceNumber(seq);
-		packet->SetTimestamp(timestamp);
 
 		if (isSyncPacket)
 		{
 			MS_DEBUG_TAG(
 			  rtp,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  "] from original [seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
-			  origSeq,
-			  origTimestamp);
+			  origSeq);
 		}
 
 		// Process the packet.
@@ -219,17 +202,15 @@ namespace RTC
 			MS_WARN_TAG(
 			  rtp,
 			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  "] from original [seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
-			  origSeq,
-			  origTimestamp);
+			  origSeq);
 		}
 
 		// Restore packet fields.
 		packet->SetSequenceNumber(origSeq);
-		packet->SetTimestamp(origTimestamp);
 	}
 
 	void PipeConsumer::GetRtcp(
@@ -478,7 +459,6 @@ namespace RTC
 			this->rtpStreams.push_back(rtpStream);
 			this->mapRtpStreamSyncRequired[rtpStream] = false;
 			this->mapRtpStreamRtpSeqManager[rtpStream];
-			this->mapRtpStreamRtpTimestampManager[rtpStream];
 		}
 	}
 

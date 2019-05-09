@@ -54,7 +54,6 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
-		RTC::SeqManager<uint32_t> rtpTimestampManager;
 	};
 
 	/* Inline methods. */
