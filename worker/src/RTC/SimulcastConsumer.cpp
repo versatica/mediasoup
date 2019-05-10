@@ -714,8 +714,8 @@ namespace RTC
 				// sending RTP packet.
 				this->tsOffset = newTs2 - ts1;
 
-				// NOTE: Usually wehn switching to a higher spatial layer, the resulting TS for the
-				// this keyframe mathes the TS of the latest packet sent. This may due due the encoder
+				// NOTE: Usually when switching to a higher spatial layer, the resulting TS for this
+				// keyframe mathes the TS of the latest packet sent. This may happen due due the encoder
 				// and the generation of a keyframe. If so, decrement the offset in 1.
 				if (packet->GetTimestamp() - this->tsOffset == this->rtpStream->GetMaxPacketTs())
 				{
