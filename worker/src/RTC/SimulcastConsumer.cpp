@@ -700,13 +700,30 @@ namespace RTC
 					ntpMs2,
 					ts2);
 
-				int64_t diffMs  = ntpMs2 - ntpMs1;
+				int64_t diffMs;
+
+				if (ntpMs2 >= ntpMs1)
+					diffMs = ntpMs2 - ntpMs1;
+				else
+					diffMs = -1 * (ntpMs1 - ntpMs2);
+
 				int64_t diffTs  = diffMs * this->rtpStream->GetClockRate() / 1000;
 				uint32_t newTs2 = ts2 - diffTs;
 
 				// Apply offset. This is the difference that later must be removed from the
 				// sending RTP packet.
 				this->tsOffset = newTs2 - ts1;
+
+				// NOTE: Usually wehn switching to a higher spatial layer, the resulting TS for the
+				// this keyframe mathes the TS of the latest packet sent. This may due due the encoder
+				// and the generation of a keyframe. If so, decrement the offset in 1.
+				if (packet->GetTimestamp() - this->tsOffset == this->rtpStream->GetMaxPacketTs())
+				{
+					// TODO: REMOVE
+					MS_ERROR("**** sending === latest timestamp, doing tsOffset--");
+
+					this->tsOffset--;
+				}
 
 				// TODO
 				MS_ERROR("diffMs:%" PRIi64 ", diffTs:%" PRIi64 ", tsOffset:%" PRIu32,
