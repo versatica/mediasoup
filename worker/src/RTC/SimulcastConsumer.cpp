@@ -689,34 +689,30 @@ namespace RTC
 
 				// Calculate NTP and TS stuff.
 				auto ntpMs1 = producerTsReferenceRtpStream->GetSenderReportNtpMs();
-				auto ts1 = producerTsReferenceRtpStream->GetSenderReportTs();
-
+				auto ts1    = producerTsReferenceRtpStream->GetSenderReportTs();
 				auto ntpMs2 = producerCurrentRtpStream->GetSenderReportNtpMs();
-				auto ts2 = producerCurrentRtpStream->GetSenderReportTs();
+				auto ts2    = producerCurrentRtpStream->GetSenderReportTs();
 
+				// TODO
 				MS_ERROR("previous MS:%" PRIu64 ", TS:%" PRIu32 ". current MS:%" PRIu64 ", TS:%" PRIu32,
-						ntpMs1,
-						ts1,
-						ntpMs2,
-						ts2);
+					ntpMs1,
+					ts1,
+					ntpMs2,
+					ts2);
 
-				// PARECE QUE FUNCIONA PERO IBC NO SE FIA DE ESE diffMs absoluto a las bravas.
-				uint64_t diffMs;
+				int64_t diffMs  = ntpMs2 - ntpMs1;
+				int64_t diffTs  = diffMs * this->rtpStream->GetClockRate() / 1000;
+				uint32_t newTs2 = ts2 - diffTs;
 
-				if (ntpMs1 > ntpMs2)
-					diffMs = ntpMs1 - ntpMs2;
-				else
-					diffMs = ntpMs2 - ntpMs1;
+				// Apply offset. This is the difference that later must be removed from the
+				// sending RTP packet.
+				this->tsOffset = newTs2 - ts1;
 
-				uint32_t diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
-
-				// Apply offset.
-				this->tsOffset = ts1 - ts2 + diffTs;
-
-				MS_ERROR("diffMs:%" PRIu64 ", diffTs:%" PRIu32 ", tsOffset:%" PRIu32,
-						diffMs,
-						diffTs,
-						this->tsOffset);
+				// TODO
+				MS_ERROR("diffMs:%" PRIi64 ", diffTs:%" PRIi64 ", tsOffset:%" PRIu32,
+					diffMs,
+					diffTs,
+					this->tsOffset);
 			}
 
 			if (this->encodingContext)
@@ -756,7 +752,7 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
-		packet->SetTimestamp(packet->GetTimestamp() + this->tsOffset);
+		packet->SetTimestamp(packet->GetTimestamp() - this->tsOffset);
 
 		if (isSyncPacket)
 		{
@@ -771,6 +767,7 @@ namespace RTC
 			  origSeq,
 			  origTimestamp);
 
+			// TODO
 			MS_ERROR(
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
@@ -781,6 +778,7 @@ namespace RTC
 			  origSeq,
 			  origTimestamp);
 
+			// TODO
 			if (this->rtpStream->GetMaxPacketTs() == packet->GetTimestamp())
 			{
 				MS_ERROR("--------- OPPPS!!! sending === timestamp [rtpStream->GetMaxPacketTs:%" PRIu32 ", packet->GetTimestamp:%" PRIu32,
