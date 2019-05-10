@@ -79,6 +79,7 @@ namespace RTC
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
+		uint32_t GetMaxPacketTs() const;
 		uint64_t GetSenderReportNtpMs() const;
 		uint32_t GetSenderReportTs() const;
 		uint8_t GetScore() const;
@@ -208,6 +209,11 @@ namespace RTC
 	inline uint64_t RtpStream::GetMaxPacketMs() const
 	{
 		return this->maxPacketMs;
+	}
+
+	inline uint32_t RtpStream::GetMaxPacketTs() const
+	{
+		return this->maxPacketTs;
 	}
 
 	inline uint64_t RtpStream::GetSenderReportNtpMs() const

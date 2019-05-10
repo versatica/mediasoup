@@ -675,8 +675,8 @@ namespace RTC
 			if (!kk)
 			{
 				kk = true;
-				// this->rtpSeqManager.Offset(packet->GetSequenceNumber() - 1);
-				// this->rtpTimestampManager.Offset(packet->GetTimestamp());
+				this->rtpSeqManager.Offset(packet->GetSequenceNumber() - 1);
+				this->rtpTimestampManager.Offset(packet->GetTimestamp());
 			}
 
 			// If this is the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
@@ -734,6 +734,11 @@ namespace RTC
 							diffTs,
 							tsOffset);
 			}
+			// TMP.
+			else
+			{
+				MS_ERROR("sending reference Spatial layer!!");
+			}
 
 			if (this->encodingContext)
 				this->encodingContext->SyncRequired();
@@ -779,6 +784,13 @@ namespace RTC
 
 		if (isSyncPacket)
 		{
+			if (timestamp <= this->rtpStream->GetMaxPacketTs())
+			{
+				// TMP.
+				MS_ERROR("sending lower timestamp than before: timestamp:%" PRIu32 ", maxPacketTs:%" PRIu32,
+						timestamp, this->rtpStream->GetMaxPacketTs());
+			}
+
 			MS_DEBUG_TAG(
 			  rtp,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
