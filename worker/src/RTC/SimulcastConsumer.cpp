@@ -700,29 +700,23 @@ namespace RTC
 						ntpMs2,
 						ts2);
 
-					uint64_t diffMs;
-					uint32_t diffTs;
-					uint32_t newTs2;
+				// PARECE QUE FUNCIONA PERO IBC NO SE FIA DE ESE diffMs absoluto a las bravas.
+				uint64_t diffMs;
 
-					if (ntpMs1 > ntpMs2)
-						diffMs = ntpMs1 - ntpMs2;
-					else
-						diffMs = ntpMs2 - ntpMs1;
+				if (ntpMs1 > ntpMs2)
+					diffMs = ntpMs1 - ntpMs2;
+				else
+					diffMs = ntpMs2 - ntpMs1;
 
-					diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
+				uint32_t diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
 
-					if (ntpMs1 > ntpMs2)
-						newTs2 = ts2 + diffTs;
-					else
-						newTs2 = ts2 - diffTs;
+				// Apply offset.
+				this->tsOffset = ts1 - ts2 + diffTs;
 
-					// Apply offset.
-					this->tsOffset = packet->GetTimestamp() - newTs2;
-
-					MS_ERROR("diffMs:%" PRIu64 ", diffTs:%" PRIu32 ", tsOffset:%" PRIu32,
-							diffMs,
-							diffTs,
-							tsOffset);
+				MS_ERROR("diffMs:%" PRIu64 ", diffTs:%" PRIu32 ", tsOffset:%" PRIu32,
+						diffMs,
+						diffTs,
+						this->tsOffset);
 			}
 
 			if (this->encodingContext)
@@ -786,6 +780,17 @@ namespace RTC
 			  origSsrc,
 			  origSeq,
 			  origTimestamp);
+
+			if (this->rtpStream->GetMaxPacketTs() == packet->GetTimestamp())
+			{
+				MS_ERROR("--------- OPPPS!!! sending === timestamp [rtpStream->GetMaxPacketTs:%" PRIu32 ", packet->GetTimestamp:%" PRIu32,
+				this->rtpStream->GetMaxPacketTs(), packet->GetTimestamp());
+			}
+			else if (this->rtpStream->GetMaxPacketTs() > packet->GetTimestamp())
+			{
+				MS_ERROR("--------- OPPPS!!! sending OLDER timestamp [rtpStream->GetMaxPacketTs:%" PRIu32 ", packet->GetTimestamp:%" PRIu32,
+				this->rtpStream->GetMaxPacketTs(), packet->GetTimestamp());
+			}
 		}
 
 		// Process the packet.
