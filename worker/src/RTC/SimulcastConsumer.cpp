@@ -668,15 +668,8 @@ namespace RTC
 			// TODO: temporal. Remove.
 			MS_ASSERT(this->tsReferenceSpatialLayer != -1, "THIS CANNOT HHAPPEN!!");
 
-			// If this is the RTP stream we use as TS reference, just keep its RTP
-			// timestamp.
-			if (spatialLayer == this->tsReferenceSpatialLayer)
-			{
-				// TODO: Yes?
-				this->rtpTimestampManager.Sync(packet->GetTimestamp());
-			}
-			// Otherwise do NTP based RTP TS synchronization.
-			else
+			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
+			if (spatialLayer != this->tsReferenceSpatialLayer)
 			{
 				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
 				auto* producerCurrentRtpStream     = GetProducerCurrentRtpStream();
@@ -690,7 +683,50 @@ namespace RTC
 				  producerCurrentRtpStream->GetSenderReportNtpMs(),
 				  "no Sender Report for current RTP stream");
 
-				// TODO: Calculate NTP and TS stuff.
+				// Calculate NTP and TS stuff.
+				auto ntpMs1 = producerTsReferenceRtpStream->GetSenderReportNtpMs();
+				auto ts1 = producerTsReferenceRtpStream->GetSenderReportTs();
+
+				auto ntpMs2 = producerCurrentRtpStream->GetSenderReportNtpMs();
+				auto ts2 = producerCurrentRtpStream->GetSenderReportTs();
+
+				MS_ERROR("previous MS:%" PRIu64 ", TS:%" PRIu32 ". current MS:%" PRIu64 ", TS:%" PRIu32,
+						ntpMs1,
+						ts1,
+						ntpMs2,
+						ts2);
+
+					uint64_t diffMs;
+					uint32_t diffTs;
+					uint32_t newTs2;
+
+					if (ntpMs1 > ntpMs2)
+						diffMs = ntpMs1 - ntpMs2;
+					else
+						diffMs = ntpMs2 - ntpMs1;
+
+					diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
+
+					if (ntpMs1 > ntpMs2)
+						newTs2 = ts2 + diffTs;
+					else
+						newTs2 = ts2 - diffTs;
+
+					// Apply offset.
+					uint32_t tsOffset = packet->GetTimestamp() - newTs2;
+
+					this->rtpTimestampManager.Offset(tsOffset);
+
+					MS_ERROR("diffMs:%" PRIu64 ", diffTs:%" PRIu32 ", tsOffset:%" PRIu32,
+							diffMs,
+							diffTs,
+							tsOffset);
+			}
+			// TMP. First packet of the first stream.
+			if (this->rtpStream->GetBitrate(DepLibUV::GetTime()) == 0)
+			{
+				this->rtpSeqManager.Offset(packet->GetSequenceNumber() - 1);
+				this->rtpTimestampManager.Offset(packet->GetTimestamp() - 1);
 			}
 
 			if (this->encodingContext)
