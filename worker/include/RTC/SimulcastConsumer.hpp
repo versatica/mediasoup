@@ -56,6 +56,7 @@ namespace RTC
 		void EmitLayersChange() const;
 		RTC::RtpStream* GetProducerCurrentRtpStream() const;
 		RTC::RtpStream* GetProducerTargetRtpStream() const;
+		RTC::RtpStream* GetProducerTsReferenceRtpStream() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -81,6 +82,7 @@ namespace RTC
 		int16_t targetTemporalLayer{ -1 };
 		int16_t currentSpatialLayer{ -1 };
 		int16_t currentTemporalLayer{ -1 };
+		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		bool externallyManagedBitrate{ false };
 	};

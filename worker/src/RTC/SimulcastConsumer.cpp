@@ -660,23 +660,37 @@ namespace RTC
 			if (packet->IsKeyFrame())
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
+			// Sync our RTP stream's sequence number.
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
-			this->rtpTimestampManager.Sync(packet->GetTimestamp());
 
-			// TODO: Refactor this to use Sender Reports' NTP and TS.
-			// NOTE: If we are here is because we should be able to get those NTP and TS
-			// from current and target spatial layers, so we can add two MS_ASSERT() here
-			// verifying it for both current and target streams:
-			//   MS_ASSERT(rtpStream->GetSenderReportNtpMs(), "no Sender Report information");
+			// Sync our RTP stream's RTP timestamp.
 
-			// Calculate RTP timestamp diff between now and last sent RTP packet.
-			if (this->rtpStream->GetMaxPacketMs() != 0u)
+			// TODO: temporal. Remove.
+			MS_ASSERT(this->tsReferenceSpatialLayer != -1, "THIS CANNOT HHAPPEN!!");
+
+			// If this is the RTP stream we use as TS reference, just keep its RTP
+			// timestamp.
+			if (spatialLayer == this->tsReferenceSpatialLayer)
 			{
-				auto now    = DepLibUV::GetTime();
-				auto diffMs = now - this->rtpStream->GetMaxPacketMs();
-				auto diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
+				// TODO: Yes?
+				this->rtpTimestampManager.Sync(packet->GetTimestamp());
+			}
+			// Otherwise do NTP based RTP TS synchronization.
+			else
+			{
+				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+				auto* producerCurrentRtpStream     = GetProducerCurrentRtpStream();
 
-				this->rtpTimestampManager.Offset(diffTs);
+				// NOTE: If we are here is because we have Sender Reports for both the
+				// TS reference stream and the target one.
+				MS_ASSERT(
+				  producerTsReferenceRtpStream->GetSenderReportNtpMs(),
+				  "no Sender Report for TS reference RTP stream");
+				MS_ASSERT(
+				  producerCurrentRtpStream->GetSenderReportNtpMs(),
+				  "no Sender Report for current RTP stream");
+
+				// TODO: Calculate NTP and TS stuff.
 			}
 
 			if (this->encodingContext)
@@ -1119,6 +1133,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// If we don't have yet a RTP timestamp reference, set it now.
+		if (newTargetSpatialLayer != -1 && this->tsReferenceSpatialLayer == -1)
+		{
+			MS_DEBUG_TAG(
+			  simulcast, "using spatialLayer:%" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);
+
+			this->tsReferenceSpatialLayer = newTargetSpatialLayer;
+		}
+
 		if (newTargetSpatialLayer == -1)
 		{
 			// Unset current and target layers.
@@ -1213,26 +1236,24 @@ namespace RTC
 		  spatialLayer);
 
 		// We can switch to the given spatial layer if:
-		// - we don't have any current spatial layer, or
-		// - our target spatial layer matches the given spatial layer, or
-		// - both our target spatial layer and the given spatial layer have
-		//   SenderReport.
+		// - we don't have any TS reference spatial layer yet, or
+		// - the given spatial layer matches the TS reference spatial layer, or
+		// - both , the RTP streams of our TS reference spatial layer and the given
+		//   spatial layer, have Sender Report.
 		//
 		// clang-format off
 		bool canSwitch = (
-			this->currentSpatialLayer == -1 ||
-			this->targetSpatialLayer == spatialLayer ||
+			this->tsReferenceSpatialLayer == -1 ||
+			spatialLayer == this->tsReferenceSpatialLayer ||
 			(
-				GetProducerTargetRtpStream()->GetSenderReportNtpMs() &&
+				GetProducerTsReferenceRtpStream()->GetSenderReportNtpMs() &&
 				this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtpMs()
 			)
 		);
 		// clang-format on
 
 		if (!canSwitch)
-		{
 			MS_DEBUG_TAG(simulcast, "cannot switch to spatialLayer:%" PRIi16, spatialLayer);
-		}
 
 		return canSwitch;
 	}
@@ -1287,6 +1308,17 @@ namespace RTC
 
 		// This may return nullptr.
 		return this->producerRtpStreams.at(this->targetSpatialLayer);
+	}
+
+	inline RTC::RtpStream* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
+	{
+		MS_TRACE();
+
+		if (this->tsReferenceSpatialLayer == -1)
+			return nullptr;
+
+		// This may return nullptr.
+		return this->producerRtpStreams.at(this->tsReferenceSpatialLayer);
 	}
 
 	inline void SimulcastConsumer::OnRtpStreamScore(
