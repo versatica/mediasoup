@@ -42,7 +42,7 @@ namespace RTC
 	void SeqManager<T>::Sync(T input)
 	{
 		// Update base.
-		this->base = this->maxOutput - input + 1;
+		this->base = this->maxOutput - input;
 
 		// Update maxInput.
 		this->maxInput = input;

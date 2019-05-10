@@ -163,7 +163,7 @@ namespace RTC
 			if (packet->IsKeyFrame())
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
 			this->syncRequired = false;
 		}

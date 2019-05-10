@@ -661,7 +661,7 @@ namespace RTC
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
 			// Sync our RTP stream's sequence number.
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
 			// Sync our RTP stream's RTP timestamp.
 

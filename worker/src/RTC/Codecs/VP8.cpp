@@ -180,8 +180,8 @@ namespace RTC
 			// Check whether pictureId and tl0PictureIndex sync is required.
 			if (context->syncRequired)
 			{
-				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId);
-				context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0PictureIndex);
+				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId - 1);
+				context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0PictureIndex - 1);
 				context->syncRequired = false;
 			}
 
