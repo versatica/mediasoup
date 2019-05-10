@@ -73,7 +73,6 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
-		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t preferredTemporalLayer{ -1 };
 		int16_t provisionalTargetSpatialLayer{ -1 };
@@ -85,6 +84,7 @@ namespace RTC
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		bool externallyManagedBitrate{ false };
+		uint32_t tsOffset{ 0 }; // RTP Timestamp offset.
 	};
 
 	/* Inline methods. */

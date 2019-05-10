@@ -662,26 +662,18 @@ namespace RTC
 
 			// Sync our RTP stream's sequence number and timestamp.
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
-			this->rtpTimestampManager.Sync(packet->GetTimestamp());
 
 			// Sync our RTP stream's RTP timestamp.
 
 			// TODO: temporal. Remove.
 			MS_ASSERT(this->tsReferenceSpatialLayer != -1, "THIS CANNOT HHAPPEN!!");
 
-			// TODO. TMP. First packet of the first stream.
-			static bool kk = false;
-
-			if (!kk)
+			if (spatialLayer == this->tsReferenceSpatialLayer)
 			{
-				kk = true;
-				this->rtpSeqManager.Offset(packet->GetSequenceNumber() - 1);
-				this->rtpTimestampManager.Offset(packet->GetTimestamp());
+				this->tsOffset = 0;
 			}
-
-			// If this is the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
 			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
-			if (spatialLayer != this->tsReferenceSpatialLayer)
+			else
 			{
 				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
 				auto* producerCurrentRtpStream     = GetProducerCurrentRtpStream();
@@ -725,19 +717,12 @@ namespace RTC
 						newTs2 = ts2 - diffTs;
 
 					// Apply offset.
-					uint32_t tsOffset = packet->GetTimestamp() - newTs2;
-
-					this->rtpTimestampManager.Offset(tsOffset);
+					this->tsOffset = packet->GetTimestamp() - newTs2;
 
 					MS_ERROR("diffMs:%" PRIu64 ", diffTs:%" PRIu32 ", tsOffset:%" PRIu32,
 							diffMs,
 							diffTs,
 							tsOffset);
-			}
-			// TMP.
-			else
-			{
-				MS_ERROR("sending reference Spatial layer!!");
 			}
 
 			if (this->encodingContext)
@@ -750,7 +735,6 @@ namespace RTC
 		if (this->encodingContext && !packet->EncodePayload(this->encodingContext.get()))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
-			this->rtpTimestampManager.Drop(packet->GetTimestamp());
 
 			return;
 		}
@@ -767,10 +751,8 @@ namespace RTC
 
 		// Update RTP seq number and timestamp.
 		uint16_t seq;
-		uint32_t timestamp;
 
 		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
-		this->rtpTimestampManager.Input(packet->GetTimestamp(), timestamp);
 
 		// Save original packet fields.
 		auto origSsrc      = packet->GetSsrc();
@@ -780,17 +762,10 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
-		packet->SetTimestamp(timestamp);
+		packet->SetTimestamp(packet->GetTimestamp() + this->tsOffset);
 
 		if (isSyncPacket)
 		{
-			if (timestamp <= this->rtpStream->GetMaxPacketTs())
-			{
-				// TMP.
-				MS_ERROR("sending lower timestamp than before: timestamp:%" PRIu32 ", maxPacketTs:%" PRIu32,
-						timestamp, this->rtpStream->GetMaxPacketTs());
-			}
-
 			MS_DEBUG_TAG(
 			  rtp,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
