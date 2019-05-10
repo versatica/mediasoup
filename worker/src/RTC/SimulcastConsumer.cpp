@@ -660,14 +660,26 @@ namespace RTC
 			if (packet->IsKeyFrame())
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
-			// Sync our RTP stream's sequence number.
+			// Sync our RTP stream's sequence number and timestamp.
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+			this->rtpTimestampManager.Sync(packet->GetTimestamp());
 
 			// Sync our RTP stream's RTP timestamp.
 
 			// TODO: temporal. Remove.
 			MS_ASSERT(this->tsReferenceSpatialLayer != -1, "THIS CANNOT HHAPPEN!!");
 
+			// TODO. TMP. First packet of the first stream.
+			static bool kk = false;
+
+			if (!kk)
+			{
+				kk = true;
+				this->rtpSeqManager.Offset(packet->GetSequenceNumber() - 1);
+				this->rtpTimestampManager.Offset(packet->GetTimestamp() - 1);
+			}
+
+			// If this is the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
 			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
 			if (spatialLayer != this->tsReferenceSpatialLayer)
 			{
@@ -722,12 +734,6 @@ namespace RTC
 							diffTs,
 							tsOffset);
 			}
-			// TMP. First packet of the first stream.
-			if (this->rtpStream->GetBitrate(DepLibUV::GetTime()) == 0)
-			{
-				this->rtpSeqManager.Offset(packet->GetSequenceNumber() - 1);
-				this->rtpTimestampManager.Offset(packet->GetTimestamp() - 1);
-			}
 
 			if (this->encodingContext)
 				this->encodingContext->SyncRequired();
@@ -775,6 +781,16 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(
 			  rtp,
+			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  origSsrc,
+			  origSeq,
+			  origTimestamp);
+
+			MS_ERROR(
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 			  packet->GetSsrc(),
