@@ -675,8 +675,8 @@ namespace RTC
 			if (!kk)
 			{
 				kk = true;
-				this->rtpSeqManager.Offset(packet->GetSequenceNumber() - 1);
-				this->rtpTimestampManager.Offset(packet->GetTimestamp() - 1);
+				// this->rtpSeqManager.Offset(packet->GetSequenceNumber() - 1);
+				// this->rtpTimestampManager.Offset(packet->GetTimestamp());
 			}
 
 			// If this is the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
