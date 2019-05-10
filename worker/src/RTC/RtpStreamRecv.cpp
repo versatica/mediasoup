@@ -428,7 +428,7 @@ namespace RTC
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 
 		// Update info about last Sender Report.
-		Utils::Time::Ntp ntp;
+		Utils::Time::Ntp ntp; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		ntp.seconds   = report->GetNtpSec();
 		ntp.fractions = report->GetNtpFrac();

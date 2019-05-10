@@ -308,7 +308,7 @@ namespace Utils
 
 	inline Time::Ntp Time::TimeMs2Ntp(uint64_t ms)
 	{
-		Time::Ntp ntp;
+		Time::Ntp ntp; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		ntp.seconds = ms / 1000;
 		ntp.fractions =
