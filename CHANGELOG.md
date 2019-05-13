@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.3
+
+* Simulcast: Improve timestamps extra offset handling by having a map of extra offsets indexed by received timestamps. This helps in case of packet retransmission.
+
+
 ### 3.0.2
 
 * Simulcast: proper RTP stream switching by rewriting packet timestamp with a new timestamp calculated from the SenderReports' NTP relationship. 
