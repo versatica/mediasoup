@@ -664,10 +664,6 @@ namespace RTC
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
 			// Sync our RTP stream's RTP timestamp.
-
-			// TODO: temporal. Remove.
-			MS_ASSERT(this->tsReferenceSpatialLayer != -1, "THIS CANNOT HHAPPEN!!");
-
 			if (spatialLayer == this->tsReferenceSpatialLayer)
 			{
 				this->tsOffset = 0;
@@ -692,14 +688,6 @@ namespace RTC
 				auto ts1    = producerTsReferenceRtpStream->GetSenderReportTs();
 				auto ntpMs2 = producerCurrentRtpStream->GetSenderReportNtpMs();
 				auto ts2    = producerCurrentRtpStream->GetSenderReportTs();
-
-				// TODO
-				MS_ERROR("previous MS:%" PRIu64 ", TS:%" PRIu32 ". current MS:%" PRIu64 ", TS:%" PRIu32,
-					ntpMs1,
-					ts1,
-					ntpMs2,
-					ts2);
-
 				int64_t diffMs;
 
 				if (ntpMs2 >= ntpMs1)
@@ -713,23 +701,30 @@ namespace RTC
 				// Apply offset. This is the difference that later must be removed from the
 				// sending RTP packet.
 				this->tsOffset = newTs2 - ts1;
+			}
 
-				// NOTE: Usually when switching to a higher spatial layer, the resulting TS for this
-				// keyframe mathes the TS of the latest packet sent. This may happen due due the encoder
-				// and the generation of a keyframe. If so, decrement the offset in 1.
-				if (packet->GetTimestamp() - this->tsOffset == this->rtpStream->GetMaxPacketTs())
-				{
-					// TODO: REMOVE
-					MS_ERROR("**** sending === latest timestamp, doing tsOffset--");
+			// Reset tsExtraOffset and lastIncreasedOriginalTs.
+			this->tsExtraOffset           = 0;
+			this->lastIncreasedOriginalTs = 0;
 
-					this->tsOffset--;
-				}
+			// When switching to a new stream it may happen that the timestamp of this
+			// keyframe is lower than the last sent. If so, apply an extra offset to
+			// "fix" it gradually.
+			if (packet->GetTimestamp() - this->tsOffset <= this->rtpStream->GetMaxPacketTs())
+			{
+				this->tsExtraOffset =
+				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + this->tsOffset + 1;
+				this->lastIncreasedOriginalTs = packet->GetTimestamp();
 
-				// TODO
-				MS_ERROR("diffMs:%" PRIi64 ", diffTs:%" PRIi64 ", tsOffset:%" PRIu32,
-					diffMs,
-					diffTs,
-					this->tsOffset);
+				MS_DEBUG_TAG(
+				  simulcast,
+				  "ts extra offset needed [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts max out:%" PRIu32
+				  ", ts offset:%" PRIu32 ", ts extra offset:%" PRIu32 "]",
+				  packet->GetTimestamp(),
+				  packet->GetTimestamp() - this->tsOffset,
+				  this->rtpStream->GetMaxPacketTs(),
+				  this->tsOffset,
+				  this->tsExtraOffset);
 			}
 
 			if (this->encodingContext)
@@ -756,8 +751,50 @@ namespace RTC
 			UpdateCurrentLayers();
 		}
 
-		// Update RTP seq number and timestamp.
+		// Update RTP seq number and timestamp based on NTP offset.
 		uint16_t seq;
+		uint32_t timestamp = packet->GetTimestamp() - this->tsOffset;
+
+		if (this->tsExtraOffset)
+		{
+			if (timestamp > this->rtpStream->GetMaxPacketTs())
+			{
+				MS_DEBUG_TAG(
+				  simulcast,
+				  "ts extra offset done [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts offset:%" PRIu32
+				  ", ts extra offset:%" PRIu32 "]",
+				  packet->GetTimestamp(),
+				  timestamp,
+				  this->tsOffset,
+				  this->tsExtraOffset);
+
+				this->tsExtraOffset           = 0;
+				this->lastIncreasedOriginalTs = 0;
+			}
+			else if (packet->GetTimestamp() > this->lastIncreasedOriginalTs)
+			{
+				this->tsExtraOffset           = this->rtpStream->GetMaxPacketTs() - timestamp + 1;
+				this->lastIncreasedOriginalTs = packet->GetTimestamp();
+			}
+
+			if (this->tsExtraOffset)
+			{
+				timestamp += this->tsExtraOffset;
+
+				MS_DEBUG_TAG(
+				  simulcast,
+				  "ts extra offset applied [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts offset:%" PRIu32
+				  ", ts extra offset:%" PRIu32 "]",
+				  packet->GetTimestamp(),
+				  timestamp,
+				  this->tsOffset,
+				  this->tsExtraOffset);
+			}
+			else
+			{
+				this->lastIncreasedOriginalTs = 0;
+			}
+		}
 
 		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
@@ -769,7 +806,7 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
-		packet->SetTimestamp(packet->GetTimestamp() - this->tsOffset);
+		packet->SetTimestamp(timestamp);
 
 		if (isSyncPacket)
 		{
@@ -783,29 +820,6 @@ namespace RTC
 			  origSsrc,
 			  origSeq,
 			  origTimestamp);
-
-			// TODO
-			MS_ERROR(
-			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp(),
-			  origSsrc,
-			  origSeq,
-			  origTimestamp);
-
-			// TODO
-			if (this->rtpStream->GetMaxPacketTs() == packet->GetTimestamp())
-			{
-				MS_ERROR("--------- OPPPS!!! sending === timestamp [rtpStream->GetMaxPacketTs:%" PRIu32 ", packet->GetTimestamp:%" PRIu32,
-				this->rtpStream->GetMaxPacketTs(), packet->GetTimestamp());
-			}
-			else if (this->rtpStream->GetMaxPacketTs() > packet->GetTimestamp())
-			{
-				MS_ERROR("--------- OPPPS!!! sending OLDER timestamp [rtpStream->GetMaxPacketTs:%" PRIu32 ", packet->GetTimestamp:%" PRIu32,
-				this->rtpStream->GetMaxPacketTs(), packet->GetTimestamp());
-			}
 		}
 
 		// Process the packet.

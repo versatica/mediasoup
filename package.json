@@ -33,7 +33,7 @@
     "test": "npm run test:node && npm run test:worker",
     "test:node": "make -C worker && jest",
     "test:worker": "make test -C worker",
-    "coverage:node": "make -C worker && jest --coverage && opn coverage/lcov-report/index.html",
+    "coverage:node": "make -C worker && jest --coverage && open-cli coverage/lcov-report/index.html",
     "postinstall": "make -C worker"
   },
   "jest": {
@@ -55,7 +55,7 @@
     "gulp-clang-format": "^1.0.27",
     "jest": "^24.8.0",
     "jest-tobetype": "^1.2.3",
-    "opn-cli": "^4.1.0"
+    "open-cli": "^5.0.0"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
