@@ -703,28 +703,28 @@ namespace RTC
 				this->tsOffset = newTs2 - ts1;
 			}
 
-			// Reset tsExtraOffset and lastIncreasedOriginalTs.
-			this->tsExtraOffset           = 0;
-			this->lastIncreasedOriginalTs = 0;
+			// Reset tsExtraOffsets and tsExtraOffetPacketCount.
+			this->tsExtraOffsets.clear();
+			this->tsExtraOffetPacketCount = 0;
 
 			// When switching to a new stream it may happen that the timestamp of this
 			// keyframe is lower than the last sent. If so, apply an extra offset to
 			// "fix" it gradually.
 			if (packet->GetTimestamp() - this->tsOffset <= this->rtpStream->GetMaxPacketTs())
 			{
-				this->tsExtraOffset =
+				auto tsExtraOffset =
 				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + this->tsOffset + 1;
-				this->lastIncreasedOriginalTs = packet->GetTimestamp();
 
-				MS_DEBUG_TAG(
+				this->tsExtraOffsets[packet->GetTimestamp()] = tsExtraOffset;
+
+				MS_WARN_TAG(
 				  simulcast,
 				  "ts extra offset needed [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts max out:%" PRIu32
-				  ", ts offset:%" PRIu32 ", ts extra offset:%" PRIu32 "]",
+				  ", ts offset:%" PRIu32 "]",
 				  packet->GetTimestamp(),
 				  packet->GetTimestamp() - this->tsOffset,
 				  this->rtpStream->GetMaxPacketTs(),
-				  this->tsOffset,
-				  this->tsExtraOffset);
+				  this->tsOffset);
 			}
 
 			if (this->encodingContext)
@@ -755,44 +755,49 @@ namespace RTC
 		uint16_t seq;
 		uint32_t timestamp = packet->GetTimestamp() - this->tsOffset;
 
-		if (this->tsExtraOffset)
+		if (!this->tsExtraOffsets.empty())
 		{
-			if (timestamp > this->rtpStream->GetMaxPacketTs())
+			uint32_t tsExtraOffset{ 0 };
+			auto it = this->tsExtraOffsets.find(packet->GetTimestamp());
+
+			if (it != this->tsExtraOffsets.end())
 			{
-				MS_DEBUG_TAG(
-				  simulcast,
-				  "ts extra offset done [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts offset:%" PRIu32
+				tsExtraOffset = it->second;
+
+				MS_DEBUG_DEV(
+				  "ts extra offset mapping found [ts in:%" PRIu32 ", ts out:%" PRIu32
 				  ", ts extra offset:%" PRIu32 "]",
 				  packet->GetTimestamp(),
 				  timestamp,
-				  this->tsOffset,
-				  this->tsExtraOffset);
-
-				this->tsExtraOffset           = 0;
-				this->lastIncreasedOriginalTs = 0;
+				  tsExtraOffset);
 			}
-			else if (packet->GetTimestamp() > this->lastIncreasedOriginalTs)
+			else if (timestamp < this->rtpStream->GetMaxPacketTs())
 			{
-				this->tsExtraOffset           = this->rtpStream->GetMaxPacketTs() - timestamp + 1;
-				this->lastIncreasedOriginalTs = packet->GetTimestamp();
-			}
+				tsExtraOffset = this->rtpStream->GetMaxPacketTs() - timestamp + 1;
+				this->tsExtraOffsets[packet->GetTimestamp()] = tsExtraOffset;
 
-			if (this->tsExtraOffset)
-			{
-				timestamp += this->tsExtraOffset;
-
-				MS_DEBUG_TAG(
-				  simulcast,
-				  "ts extra offset applied [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts offset:%" PRIu32
+				MS_DEBUG_DEV(
+				  "ts extra offset generated [ts in:%" PRIu32 ", ts out:%" PRIu32
 				  ", ts extra offset:%" PRIu32 "]",
 				  packet->GetTimestamp(),
 				  timestamp,
-				  this->tsOffset,
-				  this->tsExtraOffset);
+				  tsExtraOffset);
 			}
-			else
+
+			timestamp += tsExtraOffset;
+
+			// Reset if more than N packets.
+			// clang-format off
+			if (
+				(tsExtraOffset && ++this->tsExtraOffetPacketCount > 200) ||
+				this->tsExtraOffetPacketCount > 500
+			)
+			// clang-format on
 			{
-				this->lastIncreasedOriginalTs = 0;
+				MS_DEBUG_DEV("cleaning ts extra map");
+
+				this->tsExtraOffsets.clear();
+				this->tsExtraOffetPacketCount = 0;
 			}
 		}
 

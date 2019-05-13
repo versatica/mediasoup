@@ -5,6 +5,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
+#include <map>
 
 namespace RTC
 {
@@ -85,8 +86,8 @@ namespace RTC
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		bool externallyManagedBitrate{ false };
 		uint32_t tsOffset{ 0 }; // RTP Timestamp offset.
-		uint32_t tsExtraOffset{ 0 };
-		uint32_t lastIncreasedOriginalTs{ 0 };
+		std::map<uint32_t, uint32_t> tsExtraOffsets;
+		uint16_t tsExtraOffetPacketCount{ 0 };
 	};
 
 	/* Inline methods. */
