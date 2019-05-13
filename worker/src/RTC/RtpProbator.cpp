@@ -107,13 +107,35 @@ namespace RTC
 
 		auto now                          = DepLibUV::GetTime();
 		auto probationTransmissionBitrate = this->probationTransmissionCounter.GetBitrate(now);
-		auto origSsrc                     = packet->GetSsrc();
-		auto origSeq                      = packet->GetSequenceNumber();
+
+		// First resend the original packet as a retranmission.
+		if (probationTransmissionBitrate >= this->probationTargetBitrate)
+			return;
+
+		MS_DEBUG_DEV(
+		  "sending probation RTP packet as retransmission [probationTargetBitrate:%" PRIu32
+		  ", probationTransmissionBitrate:%" PRIu32 "]",
+		  count,
+		  this->probationTargetBitrate,
+		  probationTransmissionBitrate);
+
+		// Increase probation transmission counter.
+		this->probationTransmissionCounter.Update(packet);
+
+		// Send the probation packet.
+		this->listener->OnRtpProbatorSendRtpPacket(this, packet);
+
+		// Then send the packet N times with different ssrc and increasing seq.
+		auto origSsrc = packet->GetSsrc();
+		auto origSeq  = packet->GetSequenceNumber();
 
 		packet->SetSsrc(this->ssrc);
 
-		for (int count{ 1 }; count <= 4; ++count)
+		for (int count{ 1 }; count <= 2; ++count)
 		{
+			// Update probation bitrate.
+			probationTransmissionBitrate = this->probationTransmissionCounter.GetBitrate(now);
+
 			if (probationTransmissionBitrate >= this->probationTargetBitrate)
 				break;
 
@@ -133,9 +155,6 @@ namespace RTC
 
 			// Send the probation packet.
 			this->listener->OnRtpProbatorSendRtpPacket(this, packet);
-
-			// Update probation bitrate.
-			probationTransmissionBitrate = this->probationTransmissionCounter.GetBitrate(now);
 		}
 
 		// Restore packet fields.
