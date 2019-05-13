@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.2
+
+* Simulcast: proper RTP stream switching by rewriting packet timestamp with a new timestamp calculated from the SenderReports' NTP relationship. 
+
+
 ### 3.0.1
 
 * Fix crash in `SimulcastConsumer::IncreaseLayer()` with Safari and H264 (#300).
