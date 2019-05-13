@@ -287,6 +287,27 @@ namespace RTC
 		}
 	}
 
+	void SimulcastConsumer::ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first)
+	{
+		MS_TRACE();
+
+		// Just interested if this is the first Sender Report for a RTP stream.
+		if (first)
+			MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		else
+			return;
+
+		// If our current selected RTP stream does not yet have SR, do nothing since
+		// we know we won't be able to switch.
+		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
+
+		if (!producerCurrentRtpStream || !producerCurrentRtpStream->GetSenderReportNtpMs())
+			return;
+
+		if (IsActive())
+			MayChangeLayers();
+	}
+
 	void SimulcastConsumer::SetExternallyManagedBitrate()
 	{
 		MS_TRACE();
@@ -366,6 +387,10 @@ namespace RTC
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.
 			if (producerScore == 0)
+				continue;
+
+			// We may not yet switch to a different spatial layer.
+			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
 			if (producerScore >= maxProducerScore || producerScore >= 7)
@@ -485,6 +510,10 @@ namespace RTC
 			// Take it even if it's bad.
 			if (producerRtpStream && producerRtpStream->GetScore() > 0)
 			{
+				// We may not yet switch to a different spatial layer.
+				if (!CanSwitchToSpatialLayer(0))
+					return 0;
+
 				spatialLayer  = 0;
 				temporalLayer = 0;
 			}
@@ -508,6 +537,10 @@ namespace RTC
 
 			// Producer stream does not exist or it's not good. Exit.
 			if (!producerRtpStream || producerRtpStream->GetScore() < 7)
+				return 0;
+
+			// We may not yet switch to a different spatial layer.
+			if (!CanSwitchToSpatialLayer(spatialLayer))
 				return 0;
 
 			// Set temporal layer to 0.
@@ -627,17 +660,71 @@ namespace RTC
 			if (packet->IsKeyFrame())
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber());
-			this->rtpTimestampManager.Sync(packet->GetTimestamp());
+			// Sync our RTP stream's sequence number and timestamp.
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
-			// Calculate RTP timestamp diff between now and last sent RTP packet.
-			if (this->rtpStream->GetMaxPacketMs() != 0u)
+			// Sync our RTP stream's RTP timestamp.
+			if (spatialLayer == this->tsReferenceSpatialLayer)
 			{
-				auto now    = DepLibUV::GetTime();
-				auto diffMs = now - this->rtpStream->GetMaxPacketMs();
-				auto diffTs = diffMs * this->rtpStream->GetClockRate() / 1000;
+				this->tsOffset = 0;
+			}
+			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
+			else
+			{
+				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+				auto* producerCurrentRtpStream     = GetProducerCurrentRtpStream();
 
-				this->rtpTimestampManager.Offset(diffTs);
+				// NOTE: If we are here is because we have Sender Reports for both the
+				// TS reference stream and the target one.
+				MS_ASSERT(
+				  producerTsReferenceRtpStream->GetSenderReportNtpMs(),
+				  "no Sender Report for TS reference RTP stream");
+				MS_ASSERT(
+				  producerCurrentRtpStream->GetSenderReportNtpMs(),
+				  "no Sender Report for current RTP stream");
+
+				// Calculate NTP and TS stuff.
+				auto ntpMs1 = producerTsReferenceRtpStream->GetSenderReportNtpMs();
+				auto ts1    = producerTsReferenceRtpStream->GetSenderReportTs();
+				auto ntpMs2 = producerCurrentRtpStream->GetSenderReportNtpMs();
+				auto ts2    = producerCurrentRtpStream->GetSenderReportTs();
+				int64_t diffMs;
+
+				if (ntpMs2 >= ntpMs1)
+					diffMs = ntpMs2 - ntpMs1;
+				else
+					diffMs = -1 * (ntpMs1 - ntpMs2);
+
+				int64_t diffTs  = diffMs * this->rtpStream->GetClockRate() / 1000;
+				uint32_t newTs2 = ts2 - diffTs;
+
+				// Apply offset. This is the difference that later must be removed from the
+				// sending RTP packet.
+				this->tsOffset = newTs2 - ts1;
+			}
+
+			// Reset tsExtraOffset and lastIncreasedOriginalTs.
+			this->tsExtraOffset           = 0;
+			this->lastIncreasedOriginalTs = 0;
+
+			// When switching to a new stream it may happen that the timestamp of this
+			// keyframe is lower than the last sent. If so, apply an extra offset to
+			// "fix" it gradually.
+			if (packet->GetTimestamp() - this->tsOffset <= this->rtpStream->GetMaxPacketTs())
+			{
+				this->tsExtraOffset =
+				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + this->tsOffset + 1;
+				this->lastIncreasedOriginalTs = packet->GetTimestamp();
+
+				MS_DEBUG_TAG(
+				  simulcast,
+				  "ts extra offset needed [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts max out:%" PRIu32
+				  ", ts offset:%" PRIu32 ", ts extra offset:%" PRIu32 "]",
+				  packet->GetTimestamp(),
+				  packet->GetTimestamp() - this->tsOffset,
+				  this->rtpStream->GetMaxPacketTs(),
+				  this->tsOffset,
+				  this->tsExtraOffset);
 			}
 
 			if (this->encodingContext)
@@ -650,7 +737,6 @@ namespace RTC
 		if (this->encodingContext && !packet->EncodePayload(this->encodingContext.get()))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
-			this->rtpTimestampManager.Drop(packet->GetTimestamp());
 
 			return;
 		}
@@ -665,12 +751,52 @@ namespace RTC
 			UpdateCurrentLayers();
 		}
 
-		// Update RTP seq number and timestamp.
+		// Update RTP seq number and timestamp based on NTP offset.
 		uint16_t seq;
-		uint32_t timestamp;
+		uint32_t timestamp = packet->GetTimestamp() - this->tsOffset;
+
+		if (this->tsExtraOffset)
+		{
+			if (timestamp > this->rtpStream->GetMaxPacketTs())
+			{
+				MS_DEBUG_TAG(
+				  simulcast,
+				  "ts extra offset done [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts offset:%" PRIu32
+				  ", ts extra offset:%" PRIu32 "]",
+				  packet->GetTimestamp(),
+				  timestamp,
+				  this->tsOffset,
+				  this->tsExtraOffset);
+
+				this->tsExtraOffset           = 0;
+				this->lastIncreasedOriginalTs = 0;
+			}
+			else if (packet->GetTimestamp() > this->lastIncreasedOriginalTs)
+			{
+				this->tsExtraOffset           = this->rtpStream->GetMaxPacketTs() - timestamp + 1;
+				this->lastIncreasedOriginalTs = packet->GetTimestamp();
+			}
+
+			if (this->tsExtraOffset)
+			{
+				timestamp += this->tsExtraOffset;
+
+				MS_DEBUG_TAG(
+				  simulcast,
+				  "ts extra offset applied [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts offset:%" PRIu32
+				  ", ts extra offset:%" PRIu32 "]",
+				  packet->GetTimestamp(),
+				  timestamp,
+				  this->tsOffset,
+				  this->tsExtraOffset);
+			}
+			else
+			{
+				this->lastIncreasedOriginalTs = 0;
+			}
+		}
 
 		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
-		this->rtpTimestampManager.Input(packet->GetTimestamp(), timestamp);
 
 		// Save original packet fields.
 		auto origSsrc      = packet->GetSsrc();
@@ -1041,6 +1167,10 @@ namespace RTC
 			if (producerScore == 0)
 				continue;
 
+			// We may not yet switch to a different spatial layer.
+			if (!CanSwitchToSpatialLayer(spatialLayer))
+				continue;
+
 			if (producerScore >= maxProducerScore || producerScore >= 7)
 			{
 				newTargetSpatialLayer = spatialLayer;
@@ -1075,6 +1205,15 @@ namespace RTC
 	void SimulcastConsumer::UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer)
 	{
 		MS_TRACE();
+
+		// If we don't have yet a RTP timestamp reference, set it now.
+		if (newTargetSpatialLayer != -1 && this->tsReferenceSpatialLayer == -1)
+		{
+			MS_DEBUG_TAG(
+			  simulcast, "using spatialLayer:%" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);
+
+			this->tsReferenceSpatialLayer = newTargetSpatialLayer;
+		}
 
 		if (newTargetSpatialLayer == -1)
 		{
@@ -1158,6 +1297,40 @@ namespace RTC
 			EmitScore();
 	}
 
+	inline bool SimulcastConsumer::CanSwitchToSpatialLayer(int16_t spatialLayer) const
+	{
+		MS_TRACE();
+
+		// This method assumes that the caller has verified that there is a valid
+		// Producer RtpStream for the given spatial layer.
+		MS_ASSERT(
+		  this->producerRtpStreams.at(spatialLayer),
+		  "no Producer RtpStream for the given spatialLayer:%" PRIi16,
+		  spatialLayer);
+
+		// We can switch to the given spatial layer if:
+		// - we don't have any TS reference spatial layer yet, or
+		// - the given spatial layer matches the TS reference spatial layer, or
+		// - both , the RTP streams of our TS reference spatial layer and the given
+		//   spatial layer, have Sender Report.
+		//
+		// clang-format off
+		bool canSwitch = (
+			this->tsReferenceSpatialLayer == -1 ||
+			spatialLayer == this->tsReferenceSpatialLayer ||
+			(
+				GetProducerTsReferenceRtpStream()->GetSenderReportNtpMs() &&
+				this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtpMs()
+			)
+		);
+		// clang-format on
+
+		if (!canSwitch)
+			MS_DEBUG_TAG(simulcast, "cannot switch to spatialLayer:%" PRIi16, spatialLayer);
+
+		return canSwitch;
+	}
+
 	inline void SimulcastConsumer::EmitScore() const
 	{
 		MS_TRACE();
@@ -1208,6 +1381,17 @@ namespace RTC
 
 		// This may return nullptr.
 		return this->producerRtpStreams.at(this->targetSpatialLayer);
+	}
+
+	inline RTC::RtpStream* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
+	{
+		MS_TRACE();
+
+		if (this->tsReferenceSpatialLayer == -1)
+			return nullptr;
+
+		// This may return nullptr.
+		return this->producerRtpStreams.at(this->tsReferenceSpatialLayer);
 	}
 
 	inline void SimulcastConsumer::OnRtpStreamScore(

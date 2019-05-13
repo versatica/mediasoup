@@ -839,6 +839,14 @@ namespace RTC
 		this->listener->OnTransportProducerRtpStreamScore(this, producer, rtpStream, score, previousScore);
 	}
 
+	inline void Transport::OnProducerRtcpSenderReport(
+	  RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportProducerRtcpSenderReport(this, producer, rtpStream, first);
+	}
+
 	inline void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

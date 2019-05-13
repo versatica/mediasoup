@@ -23,6 +23,7 @@ namespace RTC
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
 		void SetExternallyManagedBitrate() override;
 		int16_t GetBitratePriority() const override;
 		uint32_t UseAvailableBitrate(uint32_t bitrate) override;
@@ -50,10 +51,12 @@ namespace RTC
 		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		void UpdateCurrentLayers();
+		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
 		void EmitLayersChange() const;
 		RTC::RtpStream* GetProducerCurrentRtpStream() const;
 		RTC::RtpStream* GetProducerTargetRtpStream() const;
+		RTC::RtpStream* GetProducerTsReferenceRtpStream() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -70,7 +73,6 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
-		RTC::SeqManager<uint32_t> rtpTimestampManager;
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t preferredTemporalLayer{ -1 };
 		int16_t provisionalTargetSpatialLayer{ -1 };
@@ -79,8 +81,12 @@ namespace RTC
 		int16_t targetTemporalLayer{ -1 };
 		int16_t currentSpatialLayer{ -1 };
 		int16_t currentTemporalLayer{ -1 };
+		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		bool externallyManagedBitrate{ false };
+		uint32_t tsOffset{ 0 }; // RTP Timestamp offset.
+		uint32_t tsExtraOffset{ 0 };
+		uint32_t lastIncreasedOriginalTs{ 0 };
 	};
 
 	/* Inline methods. */

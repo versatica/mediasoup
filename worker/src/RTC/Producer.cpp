@@ -533,8 +533,11 @@ namespace RTC
 		}
 
 		auto* rtpStream = it->second;
+		bool first      = rtpStream->GetSenderReportNtpMs() == 0;
 
 		rtpStream->ReceiveRtcpSenderReport(report);
+
+		this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
 	}
 
 	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)

@@ -126,6 +126,13 @@ namespace RTC
 		// Do nothing.
 	}
 
+	void PipeConsumer::ProducerRtcpSenderReport(RTC::RtpStream* /*rtpStream*/, bool /*first*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
 	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -162,7 +169,7 @@ namespace RTC
 			if (packet->IsKeyFrame())
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
-			rtpSeqManager.Sync(packet->GetSequenceNumber());
+			rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
 			syncRequired = false;
 		}

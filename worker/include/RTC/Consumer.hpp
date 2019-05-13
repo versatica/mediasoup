@@ -60,7 +60,8 @@ namespace RTC
 		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
 		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
 		virtual void ProducerRtpStreamScore(
-		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) = 0;
+		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
+		virtual void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) = 0;
 		void ProducerClosed();
 		virtual void SetExternallyManagedBitrate();
 		virtual int16_t GetBitratePriority() const;

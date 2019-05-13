@@ -22,6 +22,7 @@ namespace RTC
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;

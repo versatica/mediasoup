@@ -4,6 +4,7 @@
 #include "RTC/RtpStreamRecv.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 #include "RTC/Codecs/Codecs.hpp"
 
 namespace RTC
@@ -425,6 +426,15 @@ namespace RTC
 		this->lastSrReceived  = DepLibUV::GetTime();
 		this->lastSrTimestamp = report->GetNtpSec() << 16;
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
+
+		// Update info about last Sender Report.
+		Utils::Time::Ntp ntp; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+		ntp.seconds   = report->GetNtpSec();
+		ntp.fractions = report->GetNtpFrac();
+
+		this->lastSenderReportNtpMs = Utils::Time::Ntp2TimeMs(ntp);
+		this->lastSenderReporTs     = report->GetRtpTs();
 
 		// Update the score with the current RR.
 		UpdateScore();

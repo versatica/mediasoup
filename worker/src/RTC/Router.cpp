@@ -578,6 +578,19 @@ namespace RTC
 		}
 	}
 
+	inline void Router::OnTransportProducerRtcpSenderReport(
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first)
+	{
+		MS_TRACE();
+
+		auto& consumers = this->mapProducerConsumers.at(producer);
+
+		for (auto* consumer : consumers)
+		{
+			consumer->ProducerRtcpSenderReport(rtpStream, first);
+		}
+	}
+
 	inline void Router::OnTransportProducerRtpPacketReceived(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpPacket* packet)
 	{

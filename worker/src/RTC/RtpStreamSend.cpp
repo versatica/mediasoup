@@ -174,14 +174,18 @@ namespace RTC
 
 		// Calculate TS difference between now and maxPacketMs.
 		auto diffMs = now - this->maxPacketMs;
-		auto diffTs = diffMs * this->GetClockRate() / 1000;
+		auto diffTs = diffMs * GetClockRate() / 1000;
 
 		report->SetSsrc(GetSsrc());
 		report->SetPacketCount(this->transmissionCounter.GetPacketCount());
 		report->SetOctetCount(this->transmissionCounter.GetBytes());
-		report->SetRtpTs(this->maxPacketTs + diffTs);
 		report->SetNtpSec(ntp.seconds);
 		report->SetNtpFrac(ntp.fractions);
+		report->SetRtpTs(this->maxPacketTs + diffTs);
+
+		// Update info about last Sender Report.
+		this->lastSenderReportNtpMs = now;
+		this->lastSenderReporTs     = this->maxPacketTs + diffTs;
 
 		return report;
 	}

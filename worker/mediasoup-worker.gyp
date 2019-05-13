@@ -308,6 +308,7 @@
         'test/src/Utils/TestBits.cpp',
         'test/src/Utils/TestIP.cpp',
         'test/src/Utils/TestString.cpp',
+        'test/src/Utils/TestTime.cpp',
         # C++ include files.
         'test/include/catch.hpp',
         'test/include/helpers.hpp'

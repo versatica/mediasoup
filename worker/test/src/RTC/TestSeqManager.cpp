@@ -25,7 +25,7 @@ void validate(SeqManager<uint16_t>& seqManager, std::vector<TestSeqManagerInput>
 	for (auto& element : inputs)
 	{
 		if (element.sync)
-			seqManager.Sync(element.input);
+			seqManager.Sync(element.input - 1);
 
 		if (element.offset)
 			seqManager.Offset(element.offset);

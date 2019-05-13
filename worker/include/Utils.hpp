@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include <openssl/hmac.h>
+#include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <string>
 
@@ -300,19 +301,30 @@ namespace Utils
 		};
 
 		static Time::Ntp TimeMs2Ntp(uint64_t ms);
+		static uint64_t Ntp2TimeMs(Time::Ntp ntp);
 		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp);
 		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2);
 	};
 
 	inline Time::Ntp Time::TimeMs2Ntp(uint64_t ms)
 	{
-		Ntp ntp;
+		Time::Ntp ntp; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		ntp.seconds = ms / 1000;
 		ntp.fractions =
-		  static_cast<uint32_t>(static_cast<double>(ms % 1000) / 1000 * Utils::Time::NtpFractionalUnit);
+		  static_cast<uint32_t>((static_cast<double>(ms % 1000) / 1000) * NtpFractionalUnit);
 
 		return ntp;
+	}
+
+	inline uint64_t Time::Ntp2TimeMs(Time::Ntp ntp)
+	{
+		// clang-format off
+		return (
+			static_cast<uint64_t>(ntp.seconds) * 1000 +
+			static_cast<uint64_t>(std::round((static_cast<double>(ntp.fractions) * 1000) / NtpFractionalUnit))
+		);
+		// clang-format on
 	}
 
 	inline bool Time::IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp)

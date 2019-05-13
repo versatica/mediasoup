@@ -79,6 +79,9 @@ namespace RTC
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
 		uint64_t GetMaxPacketMs() const;
+		uint32_t GetMaxPacketTs() const;
+		uint64_t GetSenderReportNtpMs() const;
+		uint32_t GetSenderReportTs() const;
 		uint8_t GetScore() const;
 
 	protected:
@@ -86,7 +89,7 @@ namespace RTC
 		void UpdateScore(uint8_t score);
 		void PacketRetransmitted(RTC::RtpPacket* packet);
 		void PacketRepaired(RTC::RtpPacket* packet);
-		uint32_t GetExpectedPackets();
+		uint32_t GetExpectedPackets() const;
 
 	private:
 		void InitSeq(uint16_t seq);
@@ -112,9 +115,11 @@ namespace RTC
 		size_t nackPacketCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t firCount{ 0 };
-		size_t repairedPrior{ 0 };      // Packets repaired at last interval.
-		size_t retransmittedPrior{ 0 }; // Packets retransmitted at last interval.
-		uint32_t expectedPrior{ 0 };    // Packets expected at last interval.
+		size_t repairedPrior{ 0 };           // Packets repaired at last interval.
+		size_t retransmittedPrior{ 0 };      // Packets retransmitted at last interval.
+		uint32_t expectedPrior{ 0 };         // Packets expected at last interval.
+		uint64_t lastSenderReportNtpMs{ 0 }; // NTP timestamp in last Sender Report (in ms).
+		uint32_t lastSenderReporTs{ 0 };     // RTP timestamp in last Sender Report.
 
 	private:
 		// Score related.
@@ -206,14 +211,29 @@ namespace RTC
 		return this->maxPacketMs;
 	}
 
-	inline uint32_t RtpStream::GetExpectedPackets()
+	inline uint32_t RtpStream::GetMaxPacketTs() const
 	{
-		return (this->cycles + this->maxSeq) - this->baseSeq + 1;
+		return this->maxPacketTs;
+	}
+
+	inline uint64_t RtpStream::GetSenderReportNtpMs() const
+	{
+		return this->lastSenderReportNtpMs;
+	}
+
+	inline uint32_t RtpStream::GetSenderReportTs() const
+	{
+		return this->lastSenderReporTs;
 	}
 
 	inline uint8_t RtpStream::GetScore() const
 	{
 		return this->score;
+	}
+
+	inline uint32_t RtpStream::GetExpectedPackets() const
+	{
+		return (this->cycles + this->maxSeq) - this->baseSeq + 1;
 	}
 } // namespace RTC
 
