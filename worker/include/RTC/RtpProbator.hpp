@@ -32,6 +32,8 @@ namespace RTC
 		uint32_t probationTargetBitrate{ 0 };
 		RTC::RtpDataCounter transmissionCounter;
 		RTC::RtpDataCounter probationTransmissionCounter;
+		uint32_t ssrc{ 0 };
+		uint16_t seq{ 0 };
 	};
 } // namespace RTC
 

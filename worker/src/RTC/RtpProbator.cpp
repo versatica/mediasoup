@@ -4,12 +4,14 @@
 #include "RTC/RtpProbator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	RtpProbator::RtpProbator(RTC::RtpProbator::Listener* listener) : listener(listener)
+	RtpProbator::RtpProbator(RTC::RtpProbator::Listener* listener)
+	  : listener(listener), ssrc(Utils::Crypto::GetRandomUInt(1000, 1999))
 	{
 		MS_TRACE();
 	}
@@ -105,15 +107,26 @@ namespace RTC
 
 		auto now                          = DepLibUV::GetTime();
 		auto probationTransmissionBitrate = this->probationTransmissionCounter.GetBitrate(now);
+		auto origSsrc                     = packet->GetSsrc();
+		auto origSeq                      = packet->GetSequenceNumber();
 
-		// Check whether we have to use this packet in probation.
-		if (probationTransmissionBitrate <= this->probationTargetBitrate)
+		packet->SetSsrc(this->ssrc);
+
+		for (int count{ 1 }; count <= 4; ++count)
 		{
+			if (probationTransmissionBitrate >= this->probationTargetBitrate)
+				break;
+
+			packet->SetSequenceNumber(this->seq++);
+
 			MS_DEBUG_DEV(
-			  "sending probation RTP packet [probationTargetBitrate:%" PRIu32
-			  ", probationTransmissionBitrate:%" PRIu32 "]",
+			  "sending probation RTP packet [count:%d, probationTargetBitrate:%" PRIu32
+			  ", probationTransmissionBitrate:%" PRIu32 ", ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			  count,
 			  this->probationTargetBitrate,
-			  probationTransmissionBitrate);
+			  probationTransmissionBitrate,
+			  this->ssrc,
+			  this->seq);
 
 			// Increase probation transmission counter.
 			this->probationTransmissionCounter.Update(packet);
@@ -125,20 +138,8 @@ namespace RTC
 			probationTransmissionBitrate = this->probationTransmissionCounter.GetBitrate(now);
 		}
 
-		// May send probation packet twice.
-		if (probationTransmissionBitrate <= this->probationTargetBitrate)
-		{
-			MS_DEBUG_DEV(
-			  "sending probation RTP packet twice [probationTargetBitrate:%" PRIu32
-			  ", probationTransmissionBitrate:%" PRIu32 "]",
-			  this->probationTargetBitrate,
-			  probationTransmissionBitrate);
-
-			// Increase probation transmission counter.
-			this->probationTransmissionCounter.Update(packet);
-
-			// Send the probation packet.
-			this->listener->OnRtpProbatorSendRtpPacket(this, packet);
-		}
+		// Restore packet fields.
+		packet->SetSsrc(origSsrc);
+		packet->SetSequenceNumber(origSeq);
 	}
 } // namespace RTC
