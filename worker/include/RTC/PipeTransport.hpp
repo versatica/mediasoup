@@ -28,7 +28,10 @@ namespace RTC
 	private:
 		bool IsConnected() const override;
 		void SendRtpPacket(
-		  RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted = false) override;
+		  RTC::RtpPacket* packet,
+		  RTC::Consumer* consumer,
+		  bool retransmitted = false,
+		  bool probation     = false) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);

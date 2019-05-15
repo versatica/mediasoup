@@ -877,7 +877,8 @@ namespace RTC
 		SendRtpPacket(packet, consumer);
 	}
 
-	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)
+	inline void Transport::OnConsumerRetransmitRtpPacket(
+	  RTC::Consumer* consumer, RTC::RtpPacket* packet, bool probation)
 	{
 		MS_TRACE();
 
@@ -896,7 +897,7 @@ namespace RTC
 			}
 		}
 
-		SendRtpPacket(packet, consumer);
+		SendRtpPacket(packet, consumer, true, probation);
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)

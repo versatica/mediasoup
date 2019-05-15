@@ -775,7 +775,8 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted)
+	void WebRtcTransport::SendRtpPacket(
+	  RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted, bool probation)
 	{
 		MS_TRACE();
 
@@ -790,6 +791,7 @@ namespace RTC
 			return;
 		}
 
+		auto seq            = packet->GetSequenceNumber();
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
@@ -812,12 +814,23 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			uint8_t extenLen;
-			uint8_t* extenValue = packet->GetExtension(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
-
-			if (extenValue && extenLen == 3)
+			if (!probation)
+			{
 				this->rembClient->SentRtpPacket(packet, retransmitted);
+
+				// May need to generate probation packets.
+				for (int count{ 1 }; count <= 3; ++count)
+				{
+					if (!this->rembClient->IsProbationNeeded())
+						break;
+
+					consumer->SendProbationRtpPacket(seq);
+				}
+			}
+			else
+			{
+				this->rembClient->SentProbationRtpPacket(packet);
+			}
 		}
 	}
 
@@ -1602,34 +1615,6 @@ namespace RTC
 		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "bps]", availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
-	}
-
-	inline void WebRtcTransport::OnRembClientSendProbationRtpPacket(
-	  RTC::RembClient* /*rembClient*/, RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		if (!IsConnected())
-			return;
-
-		// Ensure there is sending SRTP session.
-		if (this->srtpSendSession == nullptr)
-		{
-			MS_WARN_DEV("ignoring RTP packet due to non sending SRTP session");
-
-			return;
-		}
-
-		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
-
-		if (!this->srtpSendSession->EncryptRtp(&data, &len))
-			return;
-
-		this->iceSelectedTuple->Send(data, len);
-
-		// Increase send transmission.
-		RTC::Transport::DataSent(len);
 	}
 
 	inline void WebRtcTransport::OnRembServerAvailableBitrate(

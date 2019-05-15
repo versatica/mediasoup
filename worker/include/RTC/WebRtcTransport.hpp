@@ -46,7 +46,10 @@ namespace RTC
 		bool IsConnected() const override;
 		void MayRunDtlsTransport();
 		void SendRtpPacket(
-		  RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted = false) override;
+		  RTC::RtpPacket* packet,
+		  RTC::Consumer* consumer,
+		  bool retransmitted = false,
+		  bool probation     = false) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void DistributeAvailableOutgoingBitrate();
@@ -110,7 +113,6 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
 	public:
 		void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, uint32_t availableBitrate) override;
-		void OnRembClientSendProbationRtpPacket(RTC::RembClient* rembClient, RTC::RtpPacket* packet) override;
 
 		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
 	public:

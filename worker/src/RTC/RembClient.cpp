@@ -23,15 +23,11 @@ namespace RTC
 	    minimumAvailableBitrate(minimumAvailableBitrate)
 	{
 		MS_TRACE();
-
-		this->rtpProbator = new RTC::RtpProbator(this);
 	}
 
 	RembClient::~RembClient()
 	{
 		MS_TRACE();
-
-		delete this->rtpProbator;
 	}
 
 	void RembClient::ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
@@ -82,23 +78,32 @@ namespace RTC
 			notify = true;
 		}
 
-		// Pass available bitrate to the RtpProbator.
-		this->rtpProbator->UpdateAvailableBitrate(this->availableBitrate);
-
 		if (notify)
 		{
 			this->lastEventAt = now;
 
 			this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
 		}
+
+		CalculateProbationTargetBitrate();
 	}
 
-	void RembClient::SentRtpPacket(RTC::RtpPacket* packet, bool retransmitted)
+	void RembClient::SentRtpPacket(RTC::RtpPacket* packet, bool /*retransmitted*/)
 	{
 		MS_TRACE();
 
-		// Pass the packet to the RtpProbator.
-		this->rtpProbator->ReceiveRtpPacket(packet, retransmitted);
+		// Increase transmission counter.
+		this->transmissionCounter.Update(packet);
+	}
+
+	void RembClient::SentProbationRtpPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_DEV("[seq:%" PRIu16 ", size:%zu]", packet->GetSequenceNumber(), packet->GetSize());
+
+		// Increase probation transmission counter.
+		this->probationTransmissionCounter.Update(packet);
 	}
 
 	uint32_t RembClient::GetAvailableBitrate()
@@ -119,6 +124,19 @@ namespace RTC
 		this->lastEventAt = DepLibUV::GetTime();
 	}
 
+	bool RembClient::IsProbationNeeded()
+	{
+		MS_TRACE();
+
+		if (!this->probationTargetBitrate)
+			return false;
+
+		auto now                          = DepLibUV::GetTime();
+		auto probationTransmissionBitrate = this->probationTransmissionCounter.GetBitrate(now);
+
+		return (probationTransmissionBitrate <= this->probationTargetBitrate);
+	}
+
 	inline void RembClient::CheckStatus(uint64_t now)
 	{
 		MS_TRACE();
@@ -130,17 +148,52 @@ namespace RTC
 			this->initialAvailableBitrateAt = now;
 			this->availableBitrate          = this->initialAvailableBitrate;
 
-			// Tell the RTP probator to start probing even before receiving REMB
-			// feedbacks.
-			this->rtpProbator->UpdateAvailableBitrate(this->initialAvailableBitrate);
+			CalculateProbationTargetBitrate();
 		}
 	}
 
-	inline void RembClient::OnRtpProbatorSendRtpPacket(
-	  RTC::RtpProbator* /*rtpProbator*/, RTC::RtpPacket* packet)
+	inline void RembClient::CalculateProbationTargetBitrate()
 	{
 		MS_TRACE();
 
-		this->listener->OnRembClientSendProbationRtpPacket(this, packet);
+		auto previousProbationTargetBitrate = this->probationTargetBitrate;
+
+		this->probationTargetBitrate = 0;
+
+		if (this->availableBitrate == 0)
+			return;
+
+		uint64_t now             = DepLibUV::GetTime();
+		auto transmissionBitrate = this->transmissionCounter.GetBitrate(now);
+		auto factor =
+		  static_cast<float>(transmissionBitrate) / static_cast<float>(this->availableBitrate);
+
+		// Just consider probation if transmission bitrate is close to available bitrate
+		// (without exceeding it much).
+		if (factor >= 0.8 && factor <= 1.2)
+		{
+			if (this->availableBitrate > transmissionBitrate)
+				this->probationTargetBitrate = 2 * (this->availableBitrate - transmissionBitrate);
+			else
+				this->probationTargetBitrate = 0.5 * transmissionBitrate;
+		}
+		// If there is no bitrate, set available bitrate as probation target bitrate.
+		else if (factor == 0)
+		{
+			this->probationTargetBitrate = this->availableBitrate;
+		}
+
+		if (this->probationTargetBitrate != previousProbationTargetBitrate)
+		{
+			MS_DEBUG_TAG(
+			  bwe,
+			  "probation %s [bitrate:%" PRIu32 ", availableBitrate:%" PRIu32
+			  ", factor:%f, probationTargetBitrate:%" PRIu32 "]",
+			  this->probationTargetBitrate ? "enabled" : "disabled",
+			  transmissionBitrate,
+			  this->availableBitrate,
+			  factor,
+			  this->probationTargetBitrate);
+		}
 	}
 } // namespace RTC
