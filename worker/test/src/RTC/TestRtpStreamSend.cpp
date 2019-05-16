@@ -17,7 +17,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		{
 		}
 
-		void OnRtpStreamRetransmitRtpPacket(RtpStreamSend* /*rtpStream*/, RtpPacket* packet) override
+		void OnRtpStreamRetransmitRtpPacket(
+		  RtpStreamSend* /*rtpStream*/, RtpPacket* packet, bool /*probation*/) override
 		{
 			this->retransmittedPackets.push_back(packet);
 		}

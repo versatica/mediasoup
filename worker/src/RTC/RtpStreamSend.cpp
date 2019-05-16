@@ -216,6 +216,43 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	void RtpStreamSend::SendProbationRtpPacket(uint16_t seq)
+	{
+		MS_TRACE();
+
+		if (this->storage.empty())
+			return;
+
+		auto* storageItem = this->buffer[seq];
+
+		if (!storageItem)
+			return;
+
+		auto* packet = storageItem->packet;
+
+		// If we use RTX and the packet has not yet been resent, encode it now.
+		if (HasRtx())
+		{
+			// Increment RTX seq.
+			++this->rtxSeq;
+
+			if (!storageItem->rtxEncoded)
+			{
+				packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
+
+				storageItem->rtxEncoded = true;
+			}
+			else
+			{
+				packet->SetSequenceNumber(this->rtxSeq);
+			}
+		}
+
+		// Retransmit as probation packet.
+		static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
+		  ->OnRtpStreamRetransmitRtpPacket(this, packet, true);
+	}
+
 	uint32_t RtpStreamSend::GetBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 	{
 		MS_ABORT("invalid method call");
@@ -320,7 +357,6 @@ namespace RTC
 
 			if (!storageItem)
 			{
-				// TODO
 				MS_ASSERT(this->buffer[idx] == nullptr, "key should be NULL");
 
 				continue;
@@ -467,13 +503,22 @@ namespace RTC
 				// Stored packet is valid for retransmission. Resend it.
 				else
 				{
-					// If we use RTX and the packet has not yet been resent, encode it
-					// now.
-					if (HasRtx() && !storageItem->rtxEncoded)
+					// If we use RTX and the packet has not yet been resent, encode it now.
+					if (HasRtx())
 					{
-						packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, ++this->rtxSeq);
+						// Increment RTX seq.
+						++this->rtxSeq;
 
-						storageItem->rtxEncoded = true;
+						if (!storageItem->rtxEncoded)
+						{
+							packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
+
+							storageItem->rtxEncoded = true;
+						}
+						else
+						{
+							packet->SetSequenceNumber(this->rtxSeq);
+						}
 					}
 
 					// Save when this packet was resent.

@@ -15,7 +15,7 @@ namespace RTC
 		{
 		public:
 			virtual void OnRtpStreamRetransmitRtpPacket(
-			  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) = 0;
+			  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet, bool probation = false) = 0;
 		};
 
 	public:
@@ -48,6 +48,7 @@ namespace RTC
 		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 		void Pause() override;
 		void Resume() override;
+		void SendProbationRtpPacket(uint16_t seq);
 		uint32_t GetBitrate(uint64_t now) override;
 		uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
 		uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;

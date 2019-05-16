@@ -26,7 +26,8 @@ namespace RTC
 		{
 		public:
 			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
-			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
+			virtual void OnConsumerRetransmitRtpPacket(
+			  RTC::Consumer* consumer, RTC::RtpPacket* packet, bool probation = false)             = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
 			virtual void onConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
@@ -69,6 +70,7 @@ namespace RTC
 		virtual uint32_t IncreaseLayer(uint32_t bitrate);
 		virtual void ApplyLayers();
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)       = 0;
+		virtual void SendProbationRtpPacket(uint16_t seq)        = 0;
 		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams() = 0;
 		virtual void GetRtcp(
 		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) = 0;

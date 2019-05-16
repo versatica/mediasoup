@@ -857,6 +857,13 @@ namespace RTC
 			packet->RestorePayload();
 	}
 
+	void SimulcastConsumer::SendProbationRtpPacket(uint16_t seq)
+	{
+		MS_TRACE();
+
+		this->rtpStream->SendProbationRtpPacket(seq);
+	}
+
 	void SimulcastConsumer::GetRtcp(
 	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
@@ -1320,7 +1327,7 @@ namespace RTC
 		//   spatial layer, have Sender Report.
 		//
 		// clang-format off
-		bool canSwitch = (
+		return (
 			this->tsReferenceSpatialLayer == -1 ||
 			spatialLayer == this->tsReferenceSpatialLayer ||
 			(
@@ -1329,11 +1336,6 @@ namespace RTC
 			)
 		);
 		// clang-format on
-
-		if (!canSwitch)
-			MS_DEBUG_TAG(simulcast, "cannot switch to spatialLayer:%" PRIi16, spatialLayer);
-
-		return canSwitch;
 	}
 
 	inline void SimulcastConsumer::EmitScore() const
@@ -1418,10 +1420,10 @@ namespace RTC
 	}
 
 	inline void SimulcastConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
+	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet, bool probation)
 	{
 		MS_TRACE();
 
-		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
+		this->listener->OnConsumerRetransmitRtpPacket(this, packet, probation);
 	}
 } // namespace RTC

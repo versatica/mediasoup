@@ -1063,9 +1063,14 @@ namespace RTC
 			{
 				// If video orientation was not yet detected or any value has changed,
 				// emit event.
+				// clang-format off
 				if (
-				  !this->videoOrientationDetected || camera != this->videoOrientation.camera ||
-				  flip != this->videoOrientation.flip || rotation != this->videoOrientation.rotation)
+					!this->videoOrientationDetected ||
+					camera != this->videoOrientation.camera ||
+					flip != this->videoOrientation.flip ||
+					rotation != this->videoOrientation.rotation
+				)
+				// clang-format on
 				{
 					this->videoOrientationDetected  = true;
 					this->videoOrientation.camera   = camera;

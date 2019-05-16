@@ -24,6 +24,7 @@ namespace RTC
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendProbationRtpPacket(uint16_t seq) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
@@ -44,7 +45,8 @@ namespace RTC
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
+		void OnRtpStreamRetransmitRtpPacket(
+		  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet, bool probation = false) override;
 
 	private:
 		// Allocated by this.

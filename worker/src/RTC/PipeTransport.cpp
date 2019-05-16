@@ -265,7 +265,7 @@ namespace RTC
 	}
 
 	void PipeTransport::SendRtpPacket(
-	  RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/, bool /*retransmitted*/)
+	  RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/, bool /*retransmitted*/, bool /*probation*/)
 	{
 		MS_TRACE();
 

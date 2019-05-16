@@ -220,6 +220,13 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
+	void PipeConsumer::SendProbationRtpPacket(uint16_t /*seq*/)
+	{
+		MS_TRACE();
+
+		MS_ABORT("should not call this method");
+	}
+
 	void PipeConsumer::GetRtcp(
 	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
@@ -493,10 +500,10 @@ namespace RTC
 	}
 
 	inline void PipeConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
+	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet, bool probation)
 	{
 		MS_TRACE();
 
-		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
+		this->listener->OnConsumerRetransmitRtpPacket(this, packet, probation);
 	}
 } // namespace RTC
