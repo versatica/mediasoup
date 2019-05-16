@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.4
+
+* Improve RTP probation for simulcast/svc consumers by using proper RTP retransmission with increasing sequence number.
+
+
 ### 3.0.3
 
 * Simulcast: Improve timestamps extra offset handling by having a map of extra offsets indexed by received timestamps. This helps in case of packet retransmission.
