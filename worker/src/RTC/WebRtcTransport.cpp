@@ -1397,7 +1397,7 @@ namespace RTC
 		// Update the selected tuple.
 		this->iceSelectedTuple = tuple;
 
-		MS_DEBUG_TAG(ice, "ICE elected tuple");
+		MS_DEBUG_TAG(ice, "ICE selected tuple");
 
 		// Notify the Node WebRtcTransport.
 		json data = json::object();

@@ -76,6 +76,8 @@ namespace RTC
 		// Others.
 		std::string usernameFragment;
 		std::string password;
+		std::string oldUsernameFragment;
+		std::string oldPassword;
 		IceState state{ IceState::NEW };
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };
@@ -95,12 +97,14 @@ namespace RTC
 
 	inline void IceServer::SetUsernameFragment(const std::string& usernameFragment)
 	{
-		this->usernameFragment = usernameFragment;
+		this->oldUsernameFragment = this->usernameFragment;
+		this->usernameFragment    = usernameFragment;
 	}
 
 	inline void IceServer::SetPassword(const std::string& password)
 	{
-		this->password = password;
+		this->oldPassword = this->password;
+		this->password    = password;
 	}
 
 	inline IceServer::IceState IceServer::GetState() const

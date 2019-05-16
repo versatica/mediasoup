@@ -19,12 +19,6 @@ namespace RTC
 	  : listener(listener), usernameFragment(usernameFragment), password(password)
 	{
 		MS_TRACE();
-
-		MS_DEBUG_TAG(
-		  ice,
-		  "[usernameFragment:%s, password:%s]",
-		  this->usernameFragment.c_str(),
-		  this->password.c_str());
 	}
 
 	void IceServer::ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple)
@@ -104,10 +98,35 @@ namespace RTC
 				switch (msg->CheckAuthentication(this->usernameFragment, this->password))
 				{
 					case RTC::StunMessage::Authentication::OK:
+					{
+						if (!this->oldPassword.empty())
+						{
+							MS_DEBUG_TAG(ice, "new ICE credentials applied");
+
+							this->oldUsernameFragment.clear();
+							this->oldPassword.clear();
+						}
+
 						break;
+					}
 
 					case RTC::StunMessage::Authentication::UNAUTHORIZED:
 					{
+						// We may have changed our usernameFragment and password, so check
+						// the old ones.
+						// clang-format off
+						if (
+							!this->oldUsernameFragment.empty() &&
+							!this->oldPassword.empty() &&
+							msg->CheckAuthentication(this->oldUsernameFragment, this->oldPassword) == RTC::StunMessage::Authentication::OK
+						)
+						// clang-format on
+						{
+							MS_DEBUG_TAG(ice, "using old ICE credentials");
+
+							break;
+						}
+
 						MS_WARN_TAG(ice, "wrong authentication in STUN Binding Request => 401");
 
 						// Reply 401.
@@ -167,7 +186,10 @@ namespace RTC
 				response->SetXorMappedAddress(tuple->GetRemoteAddress());
 
 				// Authenticate the response.
-				response->Authenticate(this->password);
+				if (this->oldPassword.empty())
+					response->Authenticate(this->password);
+				else
+					response->Authenticate(this->oldPassword);
 
 				// Send back.
 				response->Serialize(StunSerializeBuffer);
