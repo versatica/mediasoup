@@ -231,6 +231,15 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("  absSendTime       : extId:%" PRIu8, this->absSendTimeExtensionId);
 		}
+		// Remove once it becomes RFC.
+		if (this->frameMarking07ExtensionId != 0u)
+		{
+			MS_DEBUG_DEV("  frameMarking07    : extId:%" PRIu8, this->frameMarking07ExtensionId);
+		}
+		if (this->frameMarkingExtensionId != 0u)
+		{
+			MS_DEBUG_DEV("  frameMarking      : extId:%" PRIu8, this->frameMarkingExtensionId);
+		}
 		if (this->ssrcAudioLevelExtensionId != 0u)
 		{
 			uint8_t volume;
@@ -281,6 +290,8 @@ namespace RTC
 		this->ridExtensionId              = 0;
 		this->rridExtensionId             = 0;
 		this->absSendTimeExtensionId      = 0;
+		this->frameMarking07ExtensionId   = 0;
+		this->frameMarkingExtensionId     = 0;
 		this->ssrcAudioLevelExtensionId   = 0;
 		this->videoOrientationExtensionId = 0;
 
@@ -498,6 +509,8 @@ namespace RTC
 		packet->ridExtensionId              = this->ridExtensionId;
 		packet->rridExtensionId             = this->rridExtensionId;
 		packet->absSendTimeExtensionId      = this->absSendTimeExtensionId;
+		packet->frameMarking07ExtensionId   = this->frameMarking07ExtensionId; // Remove once RFC.
+		packet->frameMarkingExtensionId     = this->frameMarkingExtensionId;
 		packet->ssrcAudioLevelExtensionId   = this->ssrcAudioLevelExtensionId;
 		packet->videoOrientationExtensionId = this->videoOrientationExtensionId;
 

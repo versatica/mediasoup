@@ -1036,7 +1036,7 @@ namespace RTC
 				}
 
 				// NOTE: Remove this once framemarking draft becomes RFC.
-				// Proxy urn:ietf:params:rtp-hdrext:framemarking.
+				// Proxy http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07.
 				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking07, extenLen);
 
 				if (extenValue)

@@ -354,14 +354,6 @@ namespace RTC
 		this->absSendTimeExtensionId = id;
 	}
 
-	inline void RtpPacket::SetFrameMarkingExtensionId(uint8_t id)
-	{
-		if (id == 0u)
-			return;
-
-		this->frameMarkingExtensionId = id;
-	}
-
 	// NOTE: Remove once RFC.
 	inline void RtpPacket::SetFrameMarking07ExtensionId(uint8_t id)
 	{
@@ -369,6 +361,14 @@ namespace RTC
 			return;
 
 		this->frameMarking07ExtensionId = id;
+	}
+
+	inline void RtpPacket::SetFrameMarkingExtensionId(uint8_t id)
+	{
+		if (id == 0u)
+			return;
+
+		this->frameMarkingExtensionId = id;
 	}
 
 	inline void RtpPacket::SetSsrcAudioLevelExtensionId(uint8_t id)
