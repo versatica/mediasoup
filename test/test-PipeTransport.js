@@ -337,6 +337,15 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		]);
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual(
 		[
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			{
+				uri : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id  : 6
+			},
+			{
+				uri : 'urn:ietf:params:rtp-hdrext:framemarking',
+				id  : 6
+			},
 			{
 				uri : 'urn:3gpp:video-orientation',
 				id  : 9
@@ -379,6 +388,15 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		]);
 	expect(pipeProducer.rtpParameters.headerExtensions).toEqual(
 		[
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			{
+				uri : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id  : 6
+			},
+			{
+				uri : 'urn:ietf:params:rtp-hdrext:framemarking',
+				id  : 6
+			},
 			{
 				uri : 'urn:3gpp:video-orientation',
 				id  : 9

@@ -109,16 +109,16 @@ namespace RTC
 					// NOTE: Caution, lid and tl0picidx values should NOT be read by the caller
 					// if frameMarkingLen is not 2 or 3 (in draft 07 it can be 1, 2 or 3).
 					MS_ERROR(
-						"framemarking [len:%u, start:%u, end:%u, independent:%u, discardable:%u, base:%u, tid:%u, lid:%u, tl0picidx:%u]",
-						frameMarkingLen,
-						frameMarking->start,
-						frameMarking->end,
-						frameMarking->independent,
-						frameMarking->discardable,
-						frameMarking->base,
-						frameMarking->tid,
-						frameMarking->lid,
-						frameMarking->tl0picidx);
+					  "framemarking [len:%u, start:%u, end:%u, independent:%u, discardable:%u, base:%u, tid:%u, lid:%u, tl0picidx:%u]",
+					  frameMarkingLen,
+					  frameMarking->start,
+					  frameMarking->end,
+					  frameMarking->independent,
+					  frameMarking->discardable,
+					  frameMarking->base,
+					  frameMarking->tid,
+					  frameMarking->lid,
+					  frameMarking->tl0picidx);
 				}
 			}
 

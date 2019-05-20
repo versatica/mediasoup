@@ -944,6 +944,28 @@ namespace RTC
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
 			packet->SetFrameMarkingExtensionId(this->rtpHeaderExtensionIds.frameMarking);
+
+#ifdef MS_LOG_DEV
+			RtpPacket::FrameMarking* frameMarking;
+			uint8_t frameMarkingLen;
+
+			if (packet->ReadFrameMarking(&frameMarking, frameMarkingLen))
+			{
+				// NOTE: Caution, lid and tl0picidx values should NOT be read by the caller
+				// if frameMarkingLen is not 2 or 3 (in draft 09 it can be 1, 2 or 3).
+				MS_ERROR(
+				  "framemarking [len:%u, start:%u, end:%u, independent:%u, discardable:%u, base:%u, tid:%u, lid:%u, tl0picidx:%u]",
+				  frameMarkingLen,
+				  frameMarking->start,
+				  frameMarking->end,
+				  frameMarking->independent,
+				  frameMarking->discardable,
+				  frameMarking->base,
+				  frameMarking->tid,
+				  frameMarkingLen >= 2 ? frameMarking->lid : 0,
+				  frameMarkingLen == 3 ? frameMarking->tl0picidx : 0);
+			}
+#endif
 		}
 	}
 
@@ -1007,6 +1029,34 @@ namespace RTC
 			}
 			else if (this->kind == RTC::Media::Kind::VIDEO)
 			{
+				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+				// NOTE: Just if this is simulcast or SVC.
+				if (this->type == RTC::RtpParameters::Type::SIMULCAST || this->type == RTC::RtpParameters::Type::SVC)
+				{
+					extenLen = 3u;
+
+					auto now         = DepLibUV::GetTime();
+					auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
+
+					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+				}
+
+				// Proxy urn:ietf:params:rtp-hdrext:framemarking.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING), extenLen, bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
 				// Proxy urn:3gpp:video-orientation.
 				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
 
@@ -1034,21 +1084,6 @@ namespace RTC
 
 					bufferPtr += extenLen;
 				}
-
-				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
-				// NOTE: Just if this is simulcast or SVC.
-				if (this->type == RTC::RtpParameters::Type::SIMULCAST || this->type == RTC::RtpParameters::Type::SVC)
-				{
-					extenLen = 3u;
-
-					auto now         = DepLibUV::GetTime();
-					auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
-
-					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
-
-					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
-				}
 			}
 
 			// Set the new extensions into the packet using One-Byte format.
@@ -1056,6 +1091,8 @@ namespace RTC
 
 			// Assign mediasoup RTP header extension ids (just those that mediasoup may
 			// be interested in after passing it to the Router).
+			packet->SetFrameMarkingExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING));
 			packet->SetAbsSendTimeExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
 			packet->SetSsrcAudioLevelExtensionId(
