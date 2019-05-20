@@ -1011,6 +1011,9 @@ namespace RTC
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL),
 					  extenLen,
 					  bufferPtr);
+
+					// Not needed since this is the latest added extension.
+					// bufferPtr += extenLen;
 				}
 			}
 			else if (this->kind == RTC::Media::Kind::VIDEO)
@@ -1028,6 +1031,8 @@ namespace RTC
 
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+
+					bufferPtr += extenLen;
 				}
 
 				// NOTE: Remove this once framemarking draft becomes RFC.
@@ -1084,7 +1089,8 @@ namespace RTC
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TOFFSET), extenLen, bufferPtr);
 
-					bufferPtr += extenLen;
+					// Not needed since this is the latest added extension.
+					// bufferPtr += extenLen;
 				}
 			}
 
