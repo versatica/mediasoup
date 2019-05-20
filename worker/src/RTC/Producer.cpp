@@ -171,6 +171,12 @@ namespace RTC
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			if (this->rtpHeaderExtensionIds.frameMarking07 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07)
+			{
+				this->rtpHeaderExtensionIds.frameMarking07 = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.frameMarking == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING)
 			{
 				this->rtpHeaderExtensionIds.frameMarking = exten.id;
@@ -943,6 +949,8 @@ namespace RTC
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			packet->SetFrameMarking07ExtensionId(this->rtpHeaderExtensionIds.frameMarking07);
 			packet->SetFrameMarkingExtensionId(this->rtpHeaderExtensionIds.frameMarking);
 
 #ifdef MS_LOG_DEV
@@ -1044,6 +1052,22 @@ namespace RTC
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
 				}
 
+				// NOTE: Remove this once framemarking draft becomes RFC.
+				// Proxy urn:ietf:params:rtp-hdrext:framemarking.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking07, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07),
+					  extenLen,
+					  bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
 				// Proxy urn:ietf:params:rtp-hdrext:framemarking.
 				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking, extenLen);
 
@@ -1091,6 +1115,10 @@ namespace RTC
 
 			// Assign mediasoup RTP header extension ids (just those that mediasoup may
 			// be interested in after passing it to the Router).
+			//
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			packet->SetFrameMarking07ExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07));
 			packet->SetFrameMarkingExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING));
 			packet->SetAbsSendTimeExtensionId(

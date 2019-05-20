@@ -149,6 +149,7 @@ namespace RTC
 		void SetRidExtensionId(uint8_t id);
 		void SetRepairedRidExtensionId(uint8_t id);
 		void SetAbsSendTimeExtensionId(uint8_t id);
+		void SetFrameMarking07ExtensionId(uint8_t id); // NOTE: Remove once RFC.
 		void SetFrameMarkingExtensionId(uint8_t id);
 		void SetSsrcAudioLevelExtensionId(uint8_t id);
 		void SetVideoOrientationExtensionId(uint8_t id);
@@ -187,6 +188,7 @@ namespace RTC
 		uint8_t ridExtensionId{ 0 };
 		uint8_t rridExtensionId{ 0 };
 		uint8_t absSendTimeExtensionId{ 0 };
+		uint8_t frameMarking07ExtensionId{ 0 }; // NOTE: Remove once RFC.
 		uint8_t frameMarkingExtensionId{ 0 };
 		uint8_t ssrcAudioLevelExtensionId{ 0 };
 		uint8_t videoOrientationExtensionId{ 0 };
@@ -360,6 +362,15 @@ namespace RTC
 		this->frameMarkingExtensionId = id;
 	}
 
+	// NOTE: Remove once RFC.
+	inline void RtpPacket::SetFrameMarking07ExtensionId(uint8_t id)
+	{
+		if (id == 0u)
+			return;
+
+		this->frameMarking07ExtensionId = id;
+	}
+
 	inline void RtpPacket::SetSsrcAudioLevelExtensionId(uint8_t id)
 	{
 		if (id == 0u)
@@ -431,6 +442,10 @@ namespace RTC
 	{
 		uint8_t extenLen;
 		uint8_t* extenValue = GetExtension(this->frameMarkingExtensionId, extenLen);
+
+		// NOTE: Remove this once framemarking draft becomes RFC.
+		if (!extenValue)
+			extenValue = GetExtension(this->frameMarking07ExtensionId, extenLen);
 
 		if (!extenValue || extenLen > 3)
 			return false;

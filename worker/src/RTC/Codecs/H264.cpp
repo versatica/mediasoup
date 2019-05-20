@@ -99,29 +99,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: TMP
-			{
-				RtpPacket::FrameMarking* frameMarking;
-				uint8_t frameMarkingLen;
-
-				if (packet->ReadFrameMarking(&frameMarking, frameMarkingLen))
-				{
-					// NOTE: Caution, lid and tl0picidx values should NOT be read by the caller
-					// if frameMarkingLen is not 2 or 3 (in draft 07 it can be 1, 2 or 3).
-					MS_ERROR(
-					  "framemarking [len:%u, start:%u, end:%u, independent:%u, discardable:%u, base:%u, tid:%u, lid:%u, tl0picidx:%u]",
-					  frameMarkingLen,
-					  frameMarking->start,
-					  frameMarking->end,
-					  frameMarking->independent,
-					  frameMarking->discardable,
-					  frameMarking->base,
-					  frameMarking->tid,
-					  frameMarking->lid,
-					  frameMarking->tl0picidx);
-				}
-			}
-
 			auto data = packet->GetPayload();
 			auto len  = packet->GetPayloadLength();
 
