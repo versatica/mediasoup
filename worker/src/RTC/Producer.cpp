@@ -171,6 +171,11 @@ namespace RTC
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
+			if (this->rtpHeaderExtensionIds.frameMarking == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING)
+			{
+				this->rtpHeaderExtensionIds.frameMarking = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
 				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
@@ -448,6 +453,9 @@ namespace RTC
 
 			return;
 		}
+
+		// Pre-process the packet.
+		PreProcessRtpPacket(packet);
 
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
@@ -927,6 +935,16 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnProducerNewRtpStream(this, static_cast<RTC::RtpStream*>(rtpStream), mappedSsrc);
+	}
+
+	inline void Producer::PreProcessRtpPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (this->kind == RTC::Media::Kind::VIDEO)
+		{
+			packet->SetFrameMarkingExtensionId(this->rtpHeaderExtensionIds.frameMarking);
+		}
 	}
 
 	inline bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const

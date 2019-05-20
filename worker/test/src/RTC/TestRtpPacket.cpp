@@ -222,6 +222,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetHeaderExtensionLength() == 12);
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
+		REQUIRE(packet->GetPayloadLength() == 0);
 
 		delete packet;
 	}
@@ -259,6 +260,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetHeaderExtensionLength() == 16);
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions());
+		REQUIRE(packet->GetPayloadLength() == 0);
 
 		extenValue = packet->GetExtension(1, extenLen);
 		REQUIRE(extenValue == nullptr);
@@ -721,6 +723,56 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetExtension(22, extenLen) == nullptr);
 		REQUIRE(packet->GetExtension(24, extenLen));
 		REQUIRE(extenLen == 4);
+
+		delete packet;
+	}
+
+	SECTION("read frame-marking extension")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0b10010000, 0b00000001, 0, 8,
+			0, 0, 0, 4,
+			0, 0, 0, 5,
+			0xBE, 0xDE, 0, 1, // Header Extension
+			0b00110010, 0b10101011, 1, 5,
+			1, 2, 3, 4
+		};
+		// clang-format on
+
+		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+
+		if (!packet)
+			FAIL("not a RTP packet");
+
+		REQUIRE(packet->HasMarker() == false);
+		REQUIRE(packet->HasHeaderExtension() == true);
+		REQUIRE(packet->GetPayloadType() == 1);
+		REQUIRE(packet->GetSequenceNumber() == 8);
+		REQUIRE(packet->GetTimestamp() == 4);
+		REQUIRE(packet->GetSsrc() == 5);
+		REQUIRE(packet->GetHeaderExtensionId() == 0xBEDE);
+		REQUIRE(packet->GetHeaderExtensionLength() == 4);
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
+		REQUIRE(packet->GetPayloadLength() == 4);
+
+		packet->SetFrameMarkingExtensionId(3);
+
+		RtpPacket::FrameMarking* frameMarking;
+		uint8_t frameMarkingLen;
+
+		REQUIRE(packet->ReadFrameMarking(&frameMarking, frameMarkingLen) == true);
+		REQUIRE(frameMarkingLen == 3);
+		REQUIRE(frameMarking->start == 1);
+		REQUIRE(frameMarking->end == 0);
+		REQUIRE(frameMarking->independent == 1);
+		REQUIRE(frameMarking->discardable == 0);
+		REQUIRE(frameMarking->base == 1);
+		REQUIRE(frameMarking->tid == 3);
+		REQUIRE(frameMarking->lid == 1);
+		REQUIRE(frameMarking->tl0picidx == 5);
 
 		delete packet;
 	}

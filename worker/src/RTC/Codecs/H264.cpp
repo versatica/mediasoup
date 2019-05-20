@@ -99,6 +99,27 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// TODO: TMP
+			{
+				RtpPacket::FrameMarking* frameMarking;
+				uint8_t frameMarkingLen;
+
+				if (packet->ReadFrameMarking(&frameMarking, frameMarkingLen))
+				{
+					MS_ERROR(
+						"framemarking [len:%u, start:%u, end:%u, independent:%u, discardable:%u, base:%u, tid:%u, lid:%u, tl0picidx:%u]",
+						frameMarkingLen,
+						frameMarking->start,
+						frameMarking->end,
+						frameMarking->independent,
+						frameMarking->discardable,
+						frameMarking->base,
+						frameMarking->tid,
+						frameMarking->lid,
+						frameMarking->tl0picidx);
+				}
+			}
+
 			auto data = packet->GetPayload();
 			auto len  = packet->GetPayloadLength();
 
