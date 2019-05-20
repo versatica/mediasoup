@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.5
+
+* Add support for frame-marking RTP extensions and use it to enable temporal layers switching in H264 codec (#305).
+
+
 ### 3.0.4
 
 * Improve RTP probation for simulcast/svc consumers by using proper RTP retransmission with increasing sequence number.
