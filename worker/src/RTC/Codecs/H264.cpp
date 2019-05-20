@@ -9,77 +9,120 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		H264::PayloadDescriptor* H264::Parse(uint8_t* data, size_t len)
+		/* Class methods. */
+
+		H264::PayloadDescriptor* H264::Parse(
+		  const uint8_t* data,
+		  size_t len,
+		  RTC::RtpPacket::FrameMarking* frameMarking,
+		  uint8_t /*frameMarkingLen*/)
 		{
 			MS_TRACE();
-
-			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
 			if (len < 2)
 				return nullptr;
 
-			uint8_t nal = *data & 0x1F;
+			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
-			switch (nal)
+			// Use frame-marking.
+			if (frameMarking)
 			{
-				// Single NAL unit packet.
-				// IDR (instantaneous decoding picture).
-				case 7:
-				{
+				// Detect key frame.
+				if (frameMarking->start && frameMarking->independent)
 					payloadDescriptor->isKeyFrame = true;
 
-					break;
-				}
+				// TODO: Read frameMarking->tid (temporal layer).
+			}
+			else
+			// Parse payload otherwise.
+			{
+				uint8_t nal = *data & 0x1F;
 
-				// Aggreation packet.
-				// STAP-A.
-				case 24:
+				switch (nal)
 				{
-					size_t offset{ 1 };
-
-					len -= 1;
-
-					// Iterate NAL units.
-					while (len >= 3)
+					// Single NAL unit packet.
+					// IDR (instantaneous decoding picture).
+					case 7:
 					{
-						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
-						uint8_t subnal = *(data + offset + sizeof(naluSize)) & 0x1F;
-
-						if (subnal == 7)
-						{
-							payloadDescriptor->isKeyFrame = true;
-
-							break;
-						}
-
-						// Check if there is room for the indicated NAL unit size.
-						if (len < (naluSize + sizeof(naluSize)))
-							break;
-
-						offset += naluSize + sizeof(naluSize);
-						len -= naluSize + sizeof(naluSize);
-					}
-
-					break;
-				}
-
-				// Aggreation packet.
-				// FU-A, FU-B.
-				case 28:
-				case 29:
-				{
-					uint8_t subnal   = *(data + 1) & 0x1F;
-					uint8_t startBit = *(data + 1) & 0x80;
-
-					if (subnal == 7 && startBit == 128)
 						payloadDescriptor->isKeyFrame = true;
 
-					break;
+						break;
+					}
+
+					// Aggreation packet.
+					// STAP-A.
+					case 24:
+					{
+						size_t offset{ 1 };
+
+						len -= 1;
+
+						// Iterate NAL units.
+						while (len >= 3)
+						{
+							auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
+							uint8_t subnal = *(data + offset + sizeof(naluSize)) & 0x1F;
+
+							if (subnal == 7)
+							{
+								payloadDescriptor->isKeyFrame = true;
+
+								break;
+							}
+
+							// Check if there is room for the indicated NAL unit size.
+							if (len < (naluSize + sizeof(naluSize)))
+								break;
+
+							offset += naluSize + sizeof(naluSize);
+							len -= naluSize + sizeof(naluSize);
+						}
+
+						break;
+					}
+
+					// Aggreation packet.
+					// FU-A, FU-B.
+					case 28:
+					case 29:
+					{
+						uint8_t subnal   = *(data + 1) & 0x1F;
+						uint8_t startBit = *(data + 1) & 0x80;
+
+						if (subnal == 7 && startBit == 128)
+							payloadDescriptor->isKeyFrame = true;
+
+						break;
+					}
 				}
 			}
 
 			return payloadDescriptor.release();
 		}
+
+		void H264::ProcessRtpPacket(RTC::RtpPacket* packet)
+		{
+			MS_TRACE();
+
+			auto* data = packet->GetPayload();
+			auto len   = packet->GetPayloadLength();
+			RtpPacket::FrameMarking* frameMarking{ nullptr };
+			uint8_t frameMarkingLen{ 0 };
+
+			// Read frame-marking.
+			packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
+
+			PayloadDescriptor* payloadDescriptor = H264::Parse(data, len, frameMarking, frameMarkingLen);
+
+			if (!payloadDescriptor)
+				return;
+
+			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
+
+			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+		}
+
+		/* Instance methods. */
 
 		void H264::PayloadDescriptor::Dump() const
 		{
@@ -93,23 +136,6 @@ namespace RTC
 		H264::PayloadDescriptorHandler::PayloadDescriptorHandler(H264::PayloadDescriptor* payloadDescriptor)
 		{
 			this->payloadDescriptor.reset(payloadDescriptor);
-		}
-
-		void H264::ProcessRtpPacket(RTC::RtpPacket* packet)
-		{
-			MS_TRACE();
-
-			auto data = packet->GetPayload();
-			auto len  = packet->GetPayloadLength();
-
-			PayloadDescriptor* payloadDescriptor = Parse(data, len);
-
-			if (!payloadDescriptor)
-				return;
-
-			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
-
-			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 		}
 	} // namespace Codecs
 } // namespace RTC

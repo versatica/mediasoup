@@ -8,14 +8,20 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		VP8::PayloadDescriptor* VP8::Parse(const uint8_t* data, size_t len)
+		/* Class methods. */
+
+		VP8::PayloadDescriptor* VP8::Parse(
+		  const uint8_t* data,
+		  size_t len,
+		  RTC::RtpPacket::FrameMarking* /*frameMarking*/,
+		  uint8_t /*frameMarkingLen*/)
 		{
 			MS_TRACE();
 
-			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
-
 			if (len < 1)
 				return nullptr;
+
+			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
 			size_t offset{ 0 };
 			uint8_t byte = data[offset];
@@ -98,6 +104,44 @@ namespace RTC
 
 			return payloadDescriptor.release();
 		}
+
+		void VP8::ProcessRtpPacket(RTC::RtpPacket* packet)
+		{
+			MS_TRACE();
+
+			auto* data = packet->GetPayload();
+			auto len   = packet->GetPayloadLength();
+			RtpPacket::FrameMarking* frameMarking{ nullptr };
+			uint8_t frameMarkingLen{ 0 };
+
+			// Read frame-marking.
+			packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
+
+			PayloadDescriptor* payloadDescriptor = VP8::Parse(data, len, frameMarking, frameMarkingLen);
+
+			if (!payloadDescriptor)
+				return;
+
+			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
+
+			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+
+			// Modify the RtpPacket payload in order to always have two byte pictureId.
+			if (payloadDescriptor->hasOneBytePictureId)
+			{
+				// Shift the RTP payload one byte from the begining of the pictureId field.
+				packet->ShiftPayload(2, 1, true /*expand*/);
+
+				// Set the two byte pictureId marker bit.
+				data[2] = 0x80;
+
+				// Update the payloadDescriptor.
+				payloadDescriptor->hasOneBytePictureId  = false;
+				payloadDescriptor->hasTwoBytesPictureId = true;
+			}
+		}
+
+		/* Instance methods. */
 
 		void VP8::PayloadDescriptor::Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const
 		{
@@ -247,37 +291,6 @@ namespace RTC
 		void VP8::PayloadDescriptorHandler::Restore(uint8_t* data)
 		{
 			this->payloadDescriptor->Restore(data);
-		}
-
-		void VP8::ProcessRtpPacket(RTC::RtpPacket* packet)
-		{
-			MS_TRACE();
-
-			auto data = packet->GetPayload();
-			auto len  = packet->GetPayloadLength();
-
-			PayloadDescriptor* payloadDescriptor = Parse(data, len);
-
-			if (!payloadDescriptor)
-				return;
-
-			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
-
-			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
-
-			// Modify the RtpPacket payload in order to always have two byte pictureId.
-			if (payloadDescriptor->hasOneBytePictureId)
-			{
-				// Shift the RTP payload one byte from the begining of the pictureId field.
-				packet->ShiftPayload(2, 1, true /*expand*/);
-
-				// Set the two byte pictureId marker bit.
-				data[2] = 0x80;
-
-				// Update the payloadDescriptor.
-				payloadDescriptor->hasOneBytePictureId  = false;
-				payloadDescriptor->hasTwoBytesPictureId = true;
-			}
 		}
 	} // namespace Codecs
 } // namespace RTC

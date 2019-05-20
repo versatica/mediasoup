@@ -23,7 +23,11 @@ namespace RTC
 			};
 
 		public:
-			static H264::PayloadDescriptor* Parse(uint8_t* data, size_t len);
+			static H264::PayloadDescriptor* Parse(
+			  const uint8_t* data,
+			  size_t len,
+			  RTC::RtpPacket::FrameMarking* frameMarking = nullptr,
+			  uint8_t frameMarkingLen                    = 0);
 			static void ProcessRtpPacket(RTC::RtpPacket* packet);
 
 		public:
