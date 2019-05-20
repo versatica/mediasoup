@@ -179,7 +179,9 @@ namespace RTC
 
 		void VP8::PayloadDescriptor::Restore(uint8_t* data) const
 		{
-			this->Encode(data, this->pictureId, this->tl0PictureIndex);
+			MS_TRACE();
+
+			Encode(data, this->pictureId, this->tl0PictureIndex);
 		}
 
 		void VP8::PayloadDescriptor::Dump() const
@@ -197,13 +199,13 @@ namespace RTC
 			  this->l,
 			  this->t,
 			  this->k);
-			MS_DEBUG_DEV("  pictureId       : %" PRIu16, this->pictureId);
-			MS_DEBUG_DEV("  tl0PictureIndex : %" PRIu8, this->tl0PictureIndex);
-			MS_DEBUG_DEV("  tlIndex         : %" PRIu8, this->tlIndex);
-			MS_DEBUG_DEV("  y               : %" PRIu8, this->y);
-			MS_DEBUG_DEV("  keyIndex        : %" PRIu8, this->keyIndex);
-			MS_DEBUG_DEV("  isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
-			MS_DEBUG_DEV("  hasPictureId    : %s", this->hasPictureId ? "true" : "false");
+			MS_DEBUG_DEV("  pictureId            : %" PRIu16, this->pictureId);
+			MS_DEBUG_DEV("  tl0PictureIndex      : %" PRIu8, this->tl0PictureIndex);
+			MS_DEBUG_DEV("  tlIndex              : %" PRIu8, this->tlIndex);
+			MS_DEBUG_DEV("  y                    : %" PRIu8, this->y);
+			MS_DEBUG_DEV("  keyIndex             : %" PRIu8, this->keyIndex);
+			MS_DEBUG_DEV("  isKeyFrame           : %s", this->isKeyFrame ? "true" : "false");
+			MS_DEBUG_DEV("  hasPictureId         : %s", this->hasPictureId ? "true" : "false");
 			MS_DEBUG_DEV("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
 			MS_DEBUG_DEV("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
 			MS_DEBUG_DEV("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
@@ -213,13 +215,17 @@ namespace RTC
 
 		VP8::PayloadDescriptorHandler::PayloadDescriptorHandler(VP8::PayloadDescriptor* payloadDescriptor)
 		{
+			MS_TRACE();
+
 			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
 		bool VP8::PayloadDescriptorHandler::Encode(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
 		{
-			auto* context = static_cast<EncodingContext*>(encodingContext);
+			MS_TRACE();
+
+			auto* context = static_cast<RTC::Codecs::VP8::EncodingContext*>(encodingContext);
 
 			// Check whether pictureId and tl0PictureIndex sync is required.
 			if (context->syncRequired)
@@ -230,40 +236,44 @@ namespace RTC
 			}
 
 			// Incremental pictureId. Check the temporal layer.
+			// clang-format off
 			if (
-			  this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTlIndex &&
-			  this->payloadDescriptor->hasTl0PictureIndex)
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTlIndex &&
+				this->payloadDescriptor->hasTl0PictureIndex &&
+				RTC::SeqManager<uint16_t>::IsSeqHigherThan(
+					this->payloadDescriptor->pictureId,
+					context->pictureIdManager.GetMaxInput())
+			)
+			// clang-format on
 			{
-				if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(
-				      this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()))
+				if (this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
 				{
-					if (this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
-					{
-						context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
-						context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
 
-						return false;
-					}
-					else if (context->currentTemporalLayer != context->preferences.temporalLayer)
+					return false;
+				}
+				else if (context->currentTemporalLayer != context->preferences.temporalLayer)
+				{
+					// Payload descriptor contains the target temporal layer.
+					if (this->payloadDescriptor->tlIndex == context->preferences.temporalLayer)
 					{
-						// Payload descriptor contains the target temporal layer.
-						if (this->payloadDescriptor->tlIndex == context->preferences.temporalLayer)
+						// Upgrade required. Drop current packet if sync flag is not set.
+						// clang-format off
+						if (
+							this->payloadDescriptor->tlIndex > context->currentTemporalLayer  &&
+							!this->payloadDescriptor->y
+						)
+						// clang-format on
 						{
-							// Upgrade required.
-							if (context->currentTemporalLayer < this->payloadDescriptor->tlIndex)
-							{
-								// Drop current packet if sync flag is not set.
-								if (this->payloadDescriptor->y != 1u)
-								{
-									context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
-									context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+							context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+							context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
 
-									return false;
-								}
-							}
-
-							context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
+							return false;
 						}
+
+						context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
 					}
 				}
 			}
@@ -290,6 +300,8 @@ namespace RTC
 
 		void VP8::PayloadDescriptorHandler::Restore(uint8_t* data)
 		{
+			MS_TRACE();
+
 			this->payloadDescriptor->Restore(data);
 		}
 	} // namespace Codecs
