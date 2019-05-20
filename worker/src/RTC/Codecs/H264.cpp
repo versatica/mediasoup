@@ -185,17 +185,20 @@ namespace RTC
 				if (this->payloadDescriptor->tid == context->preferences.temporalLayer)
 				{
 					// Upgrade required. Drop current packet if base flag is not set.
-					// NOTE: It seems that Base Layer Sync flag is not set when in tid 0.
+					// NOTE: It seems that Base Layer Sync flag is never set when in lowest
+					// simulcast stream. We may need to implement "The Layer Refresh Request
+					// (LRR) RTCP Feedback Message":
+					// https://tools.ietf.org/html/draft-ietf-avtext-lrr-07)
+					//
 					// clang-format off
-					if (
-						this->payloadDescriptor->tid > context->currentTemporalLayer &&
-						!this->payloadDescriptor->b &&
-						this->payloadDescriptor->tid == 0
-					)
-					// clang-format on
-					{
-						return false;
-					}
+					// if (
+					// 	this->payloadDescriptor->tid > context->currentTemporalLayer &&
+					// 	!this->payloadDescriptor->b
+					// )
+					// // clang-format on
+					// {
+					// 	return false;
+					// }
 
 					context->currentTemporalLayer = this->payloadDescriptor->tid;
 				}
