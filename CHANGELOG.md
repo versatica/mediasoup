@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.8
+
+* VP8 & H264: Improve temporal layer switching.
+
+
 ### 3.0.7
 
 * RTP frame-marking: Add some missing checks.
