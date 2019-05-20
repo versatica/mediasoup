@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.7
+
+* RTP frame-marking: Add some missing checks.
+
+
 ### 3.0.6
 
 * Fix regression in proxied RTP header extensions.
