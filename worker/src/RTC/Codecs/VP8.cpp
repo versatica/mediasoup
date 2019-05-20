@@ -232,8 +232,13 @@ namespace RTC
 			{
 				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId - 1);
 				context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0PictureIndex - 1);
+
 				context->syncRequired = false;
 			}
+
+			// If a key frame, update currentTemporalLayer.
+			if (this->payloadDescriptor->isKeyFrame)
+				context->currentTemporalLayer = std::numeric_limits<uint8_t>::max();
 
 			// Incremental pictureId. Check the temporal layer.
 			// clang-format off
@@ -254,27 +259,18 @@ namespace RTC
 
 					return false;
 				}
-				else if (context->currentTemporalLayer != context->preferences.temporalLayer)
+				// Upgrade required. Drop current packet if sync flag is not set.
+				// clang-format off
+				else if (
+					this->payloadDescriptor->tlIndex > context->currentTemporalLayer &&
+					!this->payloadDescriptor->y
+				)
+				// clang-format on
 				{
-					// Payload descriptor contains the target temporal layer.
-					if (this->payloadDescriptor->tlIndex == context->preferences.temporalLayer)
-					{
-						// Upgrade required. Drop current packet if sync flag is not set.
-						// clang-format off
-						if (
-							this->payloadDescriptor->tlIndex > context->currentTemporalLayer  &&
-							!this->payloadDescriptor->y
-						)
-						// clang-format on
-						{
-							context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
-							context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
 
-							return false;
-						}
-
-						context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
-					}
+					return false;
 				}
 			}
 
@@ -284,7 +280,9 @@ namespace RTC
 
 			// Do not send a dropped pictureId.
 			if (!context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId))
+			{
 				return false;
+			}
 
 			// Do not send a dropped tl0PicutreIndex.
 			if (!context->tl0PictureIndexManager.Input(
@@ -292,6 +290,12 @@ namespace RTC
 			{
 				return false;
 			}
+
+			// Update/fix currentTemporalLayer.
+			if (this->payloadDescriptor->tlIndex > context->currentTemporalLayer)
+				context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
+			else if (context->currentTemporalLayer > context->preferences.temporalLayer)
+				context->currentTemporalLayer = context->preferences.temporalLayer;
 
 			this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
 

@@ -172,37 +172,37 @@ namespace RTC
 
 			auto* context = static_cast<RTC::Codecs::H264::EncodingContext*>(encodingContext);
 
-			// Check temporal layer.
+			// If a key frame, update currentTemporalLayer.
+			if (this->payloadDescriptor->isKeyFrame)
+				context->currentTemporalLayer = std::numeric_limits<uint8_t>::max();
+
 			// TODO: We should check incremental picture id here somehow and let it pass
-			// if so.
+			// if older than highest seen.
+
+			// Check temporal layer.
 			if (this->payloadDescriptor->tid > context->preferences.temporalLayer)
 			{
 				return false;
 			}
-			else if (context->currentTemporalLayer != context->preferences.temporalLayer)
-			{
-				// Payload descriptor contains the target temporal layer.
-				if (this->payloadDescriptor->tid == context->preferences.temporalLayer)
-				{
-					// Upgrade required. Drop current packet if base flag is not set.
-					// NOTE: It seems that Base Layer Sync flag is never set when in lowest
-					// simulcast stream. We may need to implement "The Layer Refresh Request
-					// (LRR) RTCP Feedback Message":
-					// https://tools.ietf.org/html/draft-ietf-avtext-lrr-07)
-					//
-					// clang-format off
-					// if (
-					// 	this->payloadDescriptor->tid > context->currentTemporalLayer &&
-					// 	!this->payloadDescriptor->b
-					// )
-					// // clang-format on
-					// {
-					// 	return false;
-					// }
+			// Upgrade required. Drop current packet if base flag is not set.
+			// TODO: Cannot enable this until this issue is fixed (in libwebrtc?):
+			//   https://github.com/versatica/mediasoup/issues/306
+			//
+			// clang-format off
+			// else if (
+			// 	this->payloadDescriptor->tid > context->currentTemporalLayer &&
+			// 	!this->payloadDescriptor->b
+			// )
+			// // clang-format on
+			// {
+			// 	return false;
+			// }
 
-					context->currentTemporalLayer = this->payloadDescriptor->tid;
-				}
-			}
+			// Update/fix currentTemporalLayer.
+			if (this->payloadDescriptor->tid > context->currentTemporalLayer)
+				context->currentTemporalLayer = this->payloadDescriptor->tid;
+			else if (context->currentTemporalLayer > context->preferences.temporalLayer)
+				context->currentTemporalLayer = context->preferences.temporalLayer;
 
 			return true;
 		}

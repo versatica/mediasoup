@@ -15,7 +15,8 @@ namespace RTC
 			virtual void Dump() const    = 0;
 		};
 
-		// Encoding context used by PayloadDescriptorHandler to properly rewrite the PayloadDescriptor.
+		// Encoding context used by PayloadDescriptorHandler to properly rewrite the
+		// PayloadDescriptor.
 		class EncodingContext
 		{
 		public:
@@ -29,11 +30,10 @@ namespace RTC
 			};
 
 		public:
-			virtual void SyncRequired() = 0;
-			virtual void SetPreferences(Preferences preferences);
+			virtual ~EncodingContext() = default;
 
 		public:
-			virtual ~EncodingContext() = default;
+			virtual void SyncRequired() = 0;
 
 		public:
 			Preferences preferences;
@@ -42,21 +42,16 @@ namespace RTC
 		class PayloadDescriptorHandler
 		{
 		public:
+			virtual ~PayloadDescriptorHandler() = default;
+
+		public:
 			virtual void Dump() const                                                 = 0;
 			virtual bool Encode(RTC::Codecs::EncodingContext* context, uint8_t* data) = 0;
 			virtual void Restore(uint8_t* data)                                       = 0;
 			virtual uint8_t GetSpatialLayer() const                                   = 0;
 			virtual uint8_t GetTemporalLayer() const                                  = 0;
 			virtual bool IsKeyFrame() const                                           = 0;
-
-		public:
-			virtual ~PayloadDescriptorHandler() = default;
 		};
-
-		inline void EncodingContext::SetPreferences(Preferences preferences)
-		{
-			this->preferences = preferences;
-		}
 	} // namespace Codecs
 } // namespace RTC
 
