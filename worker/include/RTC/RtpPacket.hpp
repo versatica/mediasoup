@@ -85,6 +85,29 @@ namespace RTC
 		};
 
 	public:
+		/* Struct with frame-marking information. */
+		struct FrameMarking
+		{
+#if defined(MS_LITTLE_ENDIAN)
+			uint8_t tid : 3;
+			uint8_t base : 1;
+			uint8_t discardable : 1;
+			uint8_t independent : 1;
+			uint8_t end : 1;
+			uint8_t start : 1;
+#elif defined(MS_BIG_ENDIAN)
+			uint8_t start : 1;
+			uint8_t end : 1;
+			uint8_t independent : 1;
+			uint8_t discardable : 1;
+			uint8_t base : 1;
+			uint8_t tid : 3;
+#endif
+			uint8_t lid;
+			uint8_t tl0picidx;
+		};
+
+	public:
 		static bool IsRtp(const uint8_t* data, size_t len);
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
@@ -126,11 +149,14 @@ namespace RTC
 		void SetRidExtensionId(uint8_t id);
 		void SetRepairedRidExtensionId(uint8_t id);
 		void SetAbsSendTimeExtensionId(uint8_t id);
+		void SetFrameMarking07ExtensionId(uint8_t id); // NOTE: Remove once RFC.
+		void SetFrameMarkingExtensionId(uint8_t id);
 		void SetSsrcAudioLevelExtensionId(uint8_t id);
 		void SetVideoOrientationExtensionId(uint8_t id);
 		bool ReadMid(std::string& mid) const;
 		bool ReadRid(std::string& rid) const;
 		bool ReadAbsSendTime(uint32_t& time) const;
+		bool ReadFrameMarking(RtpPacket::FrameMarking** frameMarking, uint8_t& length) const;
 		bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
 		bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
 		uint8_t* GetExtension(uint8_t id, uint8_t& len) const;
@@ -162,6 +188,8 @@ namespace RTC
 		uint8_t ridExtensionId{ 0 };
 		uint8_t rridExtensionId{ 0 };
 		uint8_t absSendTimeExtensionId{ 0 };
+		uint8_t frameMarking07ExtensionId{ 0 }; // NOTE: Remove once RFC.
+		uint8_t frameMarkingExtensionId{ 0 };
 		uint8_t ssrcAudioLevelExtensionId{ 0 };
 		uint8_t videoOrientationExtensionId{ 0 };
 		uint8_t* payload{ nullptr };
@@ -326,6 +354,23 @@ namespace RTC
 		this->absSendTimeExtensionId = id;
 	}
 
+	inline void RtpPacket::SetFrameMarkingExtensionId(uint8_t id)
+	{
+		if (id == 0u)
+			return;
+
+		this->frameMarkingExtensionId = id;
+	}
+
+	// NOTE: Remove once RFC.
+	inline void RtpPacket::SetFrameMarking07ExtensionId(uint8_t id)
+	{
+		if (id == 0u)
+			return;
+
+		this->frameMarking07ExtensionId = id;
+	}
+
 	inline void RtpPacket::SetSsrcAudioLevelExtensionId(uint8_t id)
 	{
 		if (id == 0u)
@@ -389,6 +434,24 @@ namespace RTC
 			return false;
 
 		time = Utils::Byte::Get3Bytes(extenValue, 0);
+
+		return true;
+	}
+
+	inline bool RtpPacket::ReadFrameMarking(RtpPacket::FrameMarking** frameMarking, uint8_t& length) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue = GetExtension(this->frameMarkingExtensionId, extenLen);
+
+		// NOTE: Remove this once framemarking draft becomes RFC.
+		if (!extenValue)
+			extenValue = GetExtension(this->frameMarking07ExtensionId, extenLen);
+
+		if (!extenValue || extenLen > 3)
+			return false;
+
+		*frameMarking = reinterpret_cast<RtpPacket::FrameMarking*>(extenValue);
+		length        = extenLen;
 
 		return true;
 	}

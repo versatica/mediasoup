@@ -173,7 +173,7 @@ const consumerDeviceCapabilities =
 		{
 			kind             : 'audio',
 			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-			preferredId      : 8,
+			preferredId      : 10,
 			preferredEncrypt : false
 		}
 	]
@@ -250,7 +250,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 		[
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 8
+				id  : 10
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -287,7 +287,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 		[
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 8
+				id  : 10
 			}
 		]);
 	expect(pipeProducer.rtpParameters.encodings).toEqual(
@@ -337,13 +337,22 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		]);
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual(
 		[
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			{
+				uri : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id  : 6
+			},
+			{
+				uri : 'urn:ietf:params:rtp-hdrext:framemarking',
+				id  : 7
+			},
 			{
 				uri : 'urn:3gpp:video-orientation',
-				id  : 9
+				id  : 11
 			},
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 10
+				id  : 12
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -379,13 +388,22 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		]);
 	expect(pipeProducer.rtpParameters.headerExtensions).toEqual(
 		[
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			{
+				uri : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id  : 6
+			},
+			{
+				uri : 'urn:ietf:params:rtp-hdrext:framemarking',
+				id  : 7
+			},
 			{
 				uri : 'urn:3gpp:video-orientation',
-				id  : 9
+				id  : 11
 			},
 			{
 				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 10
+				id  : 12
 			}
 		]);
 	expect(pipeProducer.paused).toBe(true);

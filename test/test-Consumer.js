@@ -221,19 +221,19 @@ const consumerDeviceCapabilities =
 		{
 			kind             : 'audio',
 			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-			preferredId      : 8,
+			preferredId      : 10,
 			preferredEncrypt : false
 		},
 		{
 			kind             : 'video',
 			uri              : 'urn:3gpp:video-orientation',
-			preferredId      : 9,
+			preferredId      : 11,
 			preferredEncrypt : false
 		},
 		{
 			kind             : 'video',
 			uri              : 'urn:ietf:params:rtp-hdrext:toffset',
-			preferredId      : 10,
+			preferredId      : 12,
 			preferredEncrypt : false
 		}
 	],
@@ -503,7 +503,7 @@ test('consumer.dump() succeeds', async () =>
 			},
 			{
 				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id         : 8,
+				id         : 10,
 				parameters : {},
 				encrypt    : false
 			}
@@ -564,13 +564,13 @@ test('consumer.dump() succeeds', async () =>
 			},
 			{
 				uri        : 'urn:3gpp:video-orientation',
-				id         : 9,
+				id         : 11,
 				parameters : {},
 				encrypt    : false
 			},
 			{
 				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
-				id         : 10,
+				id         : 12,
 				parameters : {},
 				encrypt    : false
 			}

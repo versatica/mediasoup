@@ -171,6 +171,17 @@ namespace RTC
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			if (this->rtpHeaderExtensionIds.frameMarking07 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07)
+			{
+				this->rtpHeaderExtensionIds.frameMarking07 = exten.id;
+			}
+
+			if (this->rtpHeaderExtensionIds.frameMarking == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING)
+			{
+				this->rtpHeaderExtensionIds.frameMarking = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
 				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
@@ -448,6 +459,9 @@ namespace RTC
 
 			return;
 		}
+
+		// Pre-process the packet.
+		PreProcessRtpPacket(packet);
 
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
@@ -929,6 +943,18 @@ namespace RTC
 		this->listener->OnProducerNewRtpStream(this, static_cast<RTC::RtpStream*>(rtpStream), mappedSsrc);
 	}
 
+	inline void Producer::PreProcessRtpPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		if (this->kind == RTC::Media::Kind::VIDEO)
+		{
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			packet->SetFrameMarking07ExtensionId(this->rtpHeaderExtensionIds.frameMarking07);
+			packet->SetFrameMarkingExtensionId(this->rtpHeaderExtensionIds.frameMarking);
+		}
+	}
+
 	inline bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
@@ -989,6 +1015,50 @@ namespace RTC
 			}
 			else if (this->kind == RTC::Media::Kind::VIDEO)
 			{
+				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+				// NOTE: Just if this is simulcast or SVC.
+				if (this->type == RTC::RtpParameters::Type::SIMULCAST || this->type == RTC::RtpParameters::Type::SVC)
+				{
+					extenLen = 3u;
+
+					auto now         = DepLibUV::GetTime();
+					auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
+
+					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+				}
+
+				// NOTE: Remove this once framemarking draft becomes RFC.
+				// Proxy urn:ietf:params:rtp-hdrext:framemarking.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking07, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07),
+					  extenLen,
+					  bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
+				// Proxy urn:ietf:params:rtp-hdrext:framemarking.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING), extenLen, bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
 				// Proxy urn:3gpp:video-orientation.
 				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
 
@@ -1016,21 +1086,6 @@ namespace RTC
 
 					bufferPtr += extenLen;
 				}
-
-				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
-				// NOTE: Just if this is simulcast or SVC.
-				if (this->type == RTC::RtpParameters::Type::SIMULCAST || this->type == RTC::RtpParameters::Type::SVC)
-				{
-					extenLen = 3u;
-
-					auto now         = DepLibUV::GetTime();
-					auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
-
-					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
-
-					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
-				}
 			}
 
 			// Set the new extensions into the packet using One-Byte format.
@@ -1040,6 +1095,11 @@ namespace RTC
 			// be interested in after passing it to the Router).
 			packet->SetAbsSendTimeExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			packet->SetFrameMarking07ExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07));
+			packet->SetFrameMarkingExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING));
 			packet->SetSsrcAudioLevelExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL));
 			packet->SetVideoOrientationExtensionId(

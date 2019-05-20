@@ -7,13 +7,17 @@ namespace RTC
 	// the same Transport. Others are different for each Producer.
 	struct RtpHeaderExtensionIds
 	{
-		uint8_t mid{ 0u };              // 0 means no MID id.
-		uint8_t rid{ 0u };              // 0 means no RID id.
-		uint8_t rrid{ 0u };             // 0 means no RRID id.
-		uint8_t absSendTime{ 0u };      // 0 means no abs-send-time id.
-		uint8_t ssrcAudioLevel{ 0u };   // 0 means no ssrc-audio-level id.
-		uint8_t videoOrientation{ 0u }; // 0 means no video-orientation id.
-		uint8_t toffset{ 0u };          // 0 means no toffset id.
+		// 0 means no id.
+		uint8_t mid{ 0u };
+		uint8_t rid{ 0u };
+		uint8_t rrid{ 0u };
+		uint8_t absSendTime{ 0u };
+		uint8_t transportWideCC01{ 0u };
+		uint8_t frameMarking07{ 0u }; // NOTE: Remove once RFC.
+		uint8_t frameMarking{ 0u };
+		uint8_t ssrcAudioLevel{ 0u };
+		uint8_t videoOrientation{ 0u };
+		uint8_t toffset{ 0u };
 	};
 } // namespace RTC
 

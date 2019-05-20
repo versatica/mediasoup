@@ -8,14 +8,20 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		VP8::PayloadDescriptor* VP8::Parse(const uint8_t* data, size_t len)
+		/* Class methods. */
+
+		VP8::PayloadDescriptor* VP8::Parse(
+		  const uint8_t* data,
+		  size_t len,
+		  RTC::RtpPacket::FrameMarking* /*frameMarking*/,
+		  uint8_t /*frameMarkingLen*/)
 		{
 			MS_TRACE();
 
-			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
-
 			if (len < 1)
 				return nullptr;
+
+			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
 			size_t offset{ 0 };
 			uint8_t byte = data[offset];
@@ -99,6 +105,44 @@ namespace RTC
 			return payloadDescriptor.release();
 		}
 
+		void VP8::ProcessRtpPacket(RTC::RtpPacket* packet)
+		{
+			MS_TRACE();
+
+			auto* data = packet->GetPayload();
+			auto len   = packet->GetPayloadLength();
+			RtpPacket::FrameMarking* frameMarking{ nullptr };
+			uint8_t frameMarkingLen{ 0 };
+
+			// Read frame-marking.
+			packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
+
+			PayloadDescriptor* payloadDescriptor = VP8::Parse(data, len, frameMarking, frameMarkingLen);
+
+			if (!payloadDescriptor)
+				return;
+
+			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
+
+			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+
+			// Modify the RtpPacket payload in order to always have two byte pictureId.
+			if (payloadDescriptor->hasOneBytePictureId)
+			{
+				// Shift the RTP payload one byte from the begining of the pictureId field.
+				packet->ShiftPayload(2, 1, true /*expand*/);
+
+				// Set the two byte pictureId marker bit.
+				data[2] = 0x80;
+
+				// Update the payloadDescriptor.
+				payloadDescriptor->hasOneBytePictureId  = false;
+				payloadDescriptor->hasTwoBytesPictureId = true;
+			}
+		}
+
+		/* Instance methods. */
+
 		void VP8::PayloadDescriptor::Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const
 		{
 			MS_TRACE();
@@ -135,7 +179,9 @@ namespace RTC
 
 		void VP8::PayloadDescriptor::Restore(uint8_t* data) const
 		{
-			this->Encode(data, this->pictureId, this->tl0PictureIndex);
+			MS_TRACE();
+
+			Encode(data, this->pictureId, this->tl0PictureIndex);
 		}
 
 		void VP8::PayloadDescriptor::Dump() const
@@ -153,13 +199,13 @@ namespace RTC
 			  this->l,
 			  this->t,
 			  this->k);
-			MS_DEBUG_DEV("  pictureId       : %" PRIu16, this->pictureId);
-			MS_DEBUG_DEV("  tl0PictureIndex : %" PRIu8, this->tl0PictureIndex);
-			MS_DEBUG_DEV("  tlIndex         : %" PRIu8, this->tlIndex);
-			MS_DEBUG_DEV("  y               : %" PRIu8, this->y);
-			MS_DEBUG_DEV("  keyIndex        : %" PRIu8, this->keyIndex);
-			MS_DEBUG_DEV("  isKeyFrame      : %s", this->isKeyFrame ? "true" : "false");
-			MS_DEBUG_DEV("  hasPictureId    : %s", this->hasPictureId ? "true" : "false");
+			MS_DEBUG_DEV("  pictureId            : %" PRIu16, this->pictureId);
+			MS_DEBUG_DEV("  tl0PictureIndex      : %" PRIu8, this->tl0PictureIndex);
+			MS_DEBUG_DEV("  tlIndex              : %" PRIu8, this->tlIndex);
+			MS_DEBUG_DEV("  y                    : %" PRIu8, this->y);
+			MS_DEBUG_DEV("  keyIndex             : %" PRIu8, this->keyIndex);
+			MS_DEBUG_DEV("  isKeyFrame           : %s", this->isKeyFrame ? "true" : "false");
+			MS_DEBUG_DEV("  hasPictureId         : %s", this->hasPictureId ? "true" : "false");
 			MS_DEBUG_DEV("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
 			MS_DEBUG_DEV("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
 			MS_DEBUG_DEV("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
@@ -169,13 +215,17 @@ namespace RTC
 
 		VP8::PayloadDescriptorHandler::PayloadDescriptorHandler(VP8::PayloadDescriptor* payloadDescriptor)
 		{
+			MS_TRACE();
+
 			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
 		bool VP8::PayloadDescriptorHandler::Encode(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
 		{
-			auto* context = static_cast<EncodingContext*>(encodingContext);
+			MS_TRACE();
+
+			auto* context = static_cast<RTC::Codecs::VP8::EncodingContext*>(encodingContext);
 
 			// Check whether pictureId and tl0PictureIndex sync is required.
 			if (context->syncRequired)
@@ -186,40 +236,44 @@ namespace RTC
 			}
 
 			// Incremental pictureId. Check the temporal layer.
+			// clang-format off
 			if (
-			  this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTlIndex &&
-			  this->payloadDescriptor->hasTl0PictureIndex)
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTlIndex &&
+				this->payloadDescriptor->hasTl0PictureIndex &&
+				RTC::SeqManager<uint16_t>::IsSeqHigherThan(
+					this->payloadDescriptor->pictureId,
+					context->pictureIdManager.GetMaxInput())
+			)
+			// clang-format on
 			{
-				if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(
-				      this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()))
+				if (this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
 				{
-					if (this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
-					{
-						context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
-						context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
 
-						return false;
-					}
-					else if (context->currentTemporalLayer != context->preferences.temporalLayer)
+					return false;
+				}
+				else if (context->currentTemporalLayer != context->preferences.temporalLayer)
+				{
+					// Payload descriptor contains the target temporal layer.
+					if (this->payloadDescriptor->tlIndex == context->preferences.temporalLayer)
 					{
-						// Payload descriptor contains the target temporal layer.
-						if (this->payloadDescriptor->tlIndex == context->preferences.temporalLayer)
+						// Upgrade required. Drop current packet if sync flag is not set.
+						// clang-format off
+						if (
+							this->payloadDescriptor->tlIndex > context->currentTemporalLayer  &&
+							!this->payloadDescriptor->y
+						)
+						// clang-format on
 						{
-							// Upgrade required.
-							if (context->currentTemporalLayer < this->payloadDescriptor->tlIndex)
-							{
-								// Drop current packet if sync flag is not set.
-								if (this->payloadDescriptor->y != 1u)
-								{
-									context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
-									context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+							context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+							context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
 
-									return false;
-								}
-							}
-
-							context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
+							return false;
 						}
+
+						context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
 					}
 				}
 			}
@@ -246,38 +300,9 @@ namespace RTC
 
 		void VP8::PayloadDescriptorHandler::Restore(uint8_t* data)
 		{
-			this->payloadDescriptor->Restore(data);
-		}
-
-		void VP8::ProcessRtpPacket(RTC::RtpPacket* packet)
-		{
 			MS_TRACE();
 
-			auto data = packet->GetPayload();
-			auto len  = packet->GetPayloadLength();
-
-			PayloadDescriptor* payloadDescriptor = Parse(data, len);
-
-			if (!payloadDescriptor)
-				return;
-
-			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
-
-			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
-
-			// Modify the RtpPacket payload in order to always have two byte pictureId.
-			if (payloadDescriptor->hasOneBytePictureId)
-			{
-				// Shift the RTP payload one byte from the begining of the pictureId field.
-				packet->ShiftPayload(2, 1, true /*expand*/);
-
-				// Set the two byte pictureId marker bit.
-				data[2] = 0x80;
-
-				// Update the payloadDescriptor.
-				payloadDescriptor->hasOneBytePictureId  = false;
-				payloadDescriptor->hasTwoBytesPictureId = true;
-			}
+			this->payloadDescriptor->Restore(data);
 		}
 	} // namespace Codecs
 } // namespace RTC

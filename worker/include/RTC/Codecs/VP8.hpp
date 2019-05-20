@@ -40,7 +40,7 @@ namespace RTC
 			{
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() = default;
-				void Dump() const;
+				void Dump() const override;
 
 				// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
 				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
@@ -72,7 +72,11 @@ namespace RTC
 			};
 
 		public:
-			static VP8::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
+			static VP8::PayloadDescriptor* Parse(
+			  const uint8_t* data,
+			  size_t len,
+			  RTC::RtpPacket::FrameMarking* frameMarking = nullptr,
+			  uint8_t frameMarkingLen                    = 0);
 			static void ProcessRtpPacket(RTC::RtpPacket* packet);
 
 		public:
@@ -99,12 +103,12 @@ namespace RTC
 				~PayloadDescriptorHandler() = default;
 
 			public:
-				void Dump() const;
-				bool Encode(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data);
-				void Restore(uint8_t* data);
-				uint8_t GetSpatialLayer() const;
-				uint8_t GetTemporalLayer() const;
-				bool IsKeyFrame() const;
+				void Dump() const override;
+				bool Encode(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data) override;
+				void Restore(uint8_t* data) override;
+				uint8_t GetSpatialLayer() const override;
+				uint8_t GetTemporalLayer() const override;
+				bool IsKeyFrame() const override;
 
 			private:
 				std::unique_ptr<PayloadDescriptor> payloadDescriptor;
@@ -116,27 +120,24 @@ namespace RTC
 		inline void VP8::EncodingContext::SyncRequired()
 		{
 			this->syncRequired = true;
-		};
+		}
 
 		/* Inline PayloadDescriptorHandler methods */
 
 		inline uint8_t VP8::PayloadDescriptorHandler::GetSpatialLayer() const
 		{
 			return 0u;
-		};
+		}
 
 		inline uint8_t VP8::PayloadDescriptorHandler::GetTemporalLayer() const
 		{
-			if (this->payloadDescriptor->hasTlIndex)
-				return this->payloadDescriptor->tlIndex;
-			else
-				return 0u;
-		};
+			return this->payloadDescriptor->hasTlIndex ? this->payloadDescriptor->tlIndex : 0u;
+		}
 
 		inline bool VP8::PayloadDescriptorHandler::IsKeyFrame() const
 		{
 			return this->payloadDescriptor->isKeyFrame;
-		};
+		}
 
 		inline void VP8::PayloadDescriptorHandler::Dump() const
 		{
