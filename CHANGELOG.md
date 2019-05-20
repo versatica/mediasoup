@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.6
+
+* Fix regression in proxied RTP header extensions.
+
+
 ### 3.0.5
 
 * Add support for frame-marking RTP extensions and use it to enable temporal layers switching in H264 codec (#305).
