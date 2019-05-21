@@ -8,7 +8,7 @@
 /worker/out/
 /worker/**/*.xcodeproj/
 
-# clang+fuzzer stuff is too big.
+# clang-fuzzer stuff is too big.
 /worker/deps/clang-fuzzer
 
 # Ignore all fuzzer generated test inputs.
