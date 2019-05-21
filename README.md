@@ -28,6 +28,11 @@ mediasoup and its client side libraries are designed to accomplish with the foll
 * Enable integration with well known multimedia libraries/tools.
 
 
+## Architecture
+
+![][mediasoup-architecture]
+
+
 ## Use Cases
 
 mediasoup and its client side libraries provide a super low level API. They are intended to enable different use cases and scenarios, without any constraint or assumption. Some of these use cases are:
@@ -80,15 +85,20 @@ You can support mediasoup by making a donation in [open collective][opencollecti
 
 
 [mediasoup-banner]: /art/mediasoup-banner.png
-[mediasoup-demo-screenshot]: /art/mediasoup-v3.png
 [mediasoup-website]: https://mediasoup.org
-[mediasoup-demo]: https://v3demo.mediasoup.org
-[travis-ci-shield-mediasoup]: https://travis-ci.com/versatica/mediasoup.svg?branch=master
-[travis-ci-mediasoup]: https://travis-ci.com/versatica/mediasoup
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
+[travis-ci-shield-mediasoup]: https://travis-ci.com/versatica/mediasoup.svg?branch=master
+[travis-ci-mediasoup]: https://travis-ci.com/versatica/mediasoup
 [codacy-grade-shield-mediasoup]: https://img.shields.io/codacy/grade/3c8b9efc83674b6189707ab4188cfb2b.svg
 [codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
 [opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
 [opencollective-mediasoup]: https://opencollective.com/mediasoup/donate
+[mediasoup-architecture]: /art/mediasoup-v3-architecture-01.svg
+[mediasoup-demo-screenshot]: /art/mediasoup-v3.png
+[mediasoup-demo]: https://v3demo.mediasoup.org
+
+
+
+
 
