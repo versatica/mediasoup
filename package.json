@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "eslint": "^5.16.0",
-    "eslint-plugin-jest": "^22.5.1",
+    "eslint-plugin-jest": "^22.6.4",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
     "jest": "^24.8.0",
