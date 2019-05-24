@@ -473,7 +473,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(consumerRtpParameters.encodings[0].ssrc).toBeType('number');
 	expect(consumerRtpParameters.encodings[0].rtx).toBeType('object');
 	expect(consumerRtpParameters.encodings[0].rtx.ssrc).toBeType('number');
-	expect(consumerRtpParameters.encodings[0].scalabilityMode).toBe('L3T3');
+	expect(consumerRtpParameters.encodings[0].scalabilityMode).toBe('S3T3');
 
 	expect(consumerRtpParameters.headerExtensions).toEqual(
 		[

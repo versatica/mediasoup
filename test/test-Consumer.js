@@ -586,7 +586,7 @@ test('consumer.dump() succeeds', async () =>
 				{
 					ssrc : videoConsumer.rtpParameters.encodings[0].rtx.ssrc
 				},
-				scalabilityMode : 'L4T1',
+				scalabilityMode : 'S4T1',
 				spatialLayers   : 4,
 				temporalLayers  : 1
 			}

@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.10
+
+* `parseScalabilityMode()`: allow "S" as spatial layer (and not just "L"). "L" means "dependent spatial layer" while "S" means "independent spatial layer", which is used in K-SVC (VP9, AV1, etc).
+
+
 ### 3.0.9
 
 * `RtpStreamSend::ReceiveRtcpReceiverReport()`: improve `rtt` calculation if no Sender Report info is reported in received Received Report.
