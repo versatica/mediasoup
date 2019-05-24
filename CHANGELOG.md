@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.0.9 (in progress)
+### 3.0.9
 
 * `RtpStreamSend::ReceiveRtcpReceiverReport()`: improve `rtt` calculation if no Sender Report info is reported in received Received Report.
 * Update libuv to version 1.29.1.
