@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {
@@ -16,6 +17,7 @@ namespace RTC
 			{
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() = default;
+
 				void Dump() const override;
 
 				// Fields in frame-marking extension.
@@ -52,9 +54,12 @@ namespace RTC
 				void SyncRequired() override;
 
 			public:
+				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
+				bool syncRequired{ false };
 				uint8_t currentTemporalLayer{ std::numeric_limits<uint8_t>::max() };
 			};
 
+		public:
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
 			{
 			public:
@@ -78,9 +83,15 @@ namespace RTC
 
 		inline void H264::EncodingContext::SyncRequired()
 		{
+			this->syncRequired = true;
 		}
 
 		/* Inline PayloadDescriptorHandler methods */
+
+		inline void H264::PayloadDescriptorHandler::Dump() const
+		{
+			this->payloadDescriptor->Dump();
+		}
 
 		inline uint8_t H264::PayloadDescriptorHandler::GetSpatialLayer() const
 		{
@@ -95,11 +106,6 @@ namespace RTC
 		inline bool H264::PayloadDescriptorHandler::IsKeyFrame() const
 		{
 			return this->payloadDescriptor->isKeyFrame;
-		}
-
-		inline void H264::PayloadDescriptorHandler::Dump() const
-		{
-			this->payloadDescriptor->Dump();
 		}
 	} // namespace Codecs
 } // namespace RTC
