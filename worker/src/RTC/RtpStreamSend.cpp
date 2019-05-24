@@ -146,7 +146,11 @@ namespace RTC
 		// RTT in 1/2^16 second fractions.
 		uint32_t rtt{ 0 };
 
-		if (compactNtp > dlsr + lastSr)
+		// If no Sender Report was received by the remote endpoint yet, ignore lastSr
+		// and dlsr values in the Receiver Report.
+		if (!lastSr || !dlsr)
+			rtt = 0;
+		else if (compactNtp > dlsr + lastSr)
 			rtt = compactNtp - dlsr - lastSr;
 		else
 			rtt = 0;
