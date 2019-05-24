@@ -34,6 +34,7 @@ test('mediasoup.parseScalabilityMode() works', () =>
 {
 	expect(parseScalabilityMode('L1T3')).toEqual({ spatialLayers: 1, temporalLayers: 3 });
 	expect(parseScalabilityMode('L3T2_KEY')).toEqual({ spatialLayers: 3, temporalLayers: 2 });
+	expect(parseScalabilityMode('S2T3')).toEqual({ spatialLayers: 2, temporalLayers: 3 });
 	expect(parseScalabilityMode('foo')).toEqual({ spatialLayers: 1, temporalLayers: 1 });
 	expect(parseScalabilityMode(null)).toEqual({ spatialLayers: 1, temporalLayers: 1 });
 }, 500);
