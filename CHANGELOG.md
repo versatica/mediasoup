@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.0.9 (in progress)
+
+* `RtpStreamSend::ReceiveRtcpReceiverReport()`: improve `rtt` calculation if no Sender Report info is reported in received Received Report.
+* Update libuv to version 1.29.1.
+
+
 ### 3.0.8
 
 * VP8 & H264: Improve temporal layer switching.
