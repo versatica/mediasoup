@@ -603,7 +603,7 @@ namespace RTC
 		  retransmitted);
 #endif
 
-		float repairedRatio = static_cast<float>(repaired) / static_cast<float>(received);
+		auto repairedRatio  = static_cast<float>(repaired) / static_cast<float>(received);
 		auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
 
 		MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");
@@ -613,8 +613,8 @@ namespace RTC
 
 		lost -= repaired * repairedWeight;
 
-		float deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
-		auto score           = std::round(std::pow(deliveredRatio, 4) * 10);
+		auto deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
+		auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
 
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
