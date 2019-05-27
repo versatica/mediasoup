@@ -13,20 +13,28 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			switch (mimeType.subtype)
+			switch (mimeType.type)
 			{
-				case RTC::RtpCodecMimeType::Subtype::VP8:
+				case RTC::RtpCodecMimeType::Type::VIDEO:
 				{
-					VP8::ProcessRtpPacket(packet);
+					switch (mimeType.subtype)
+					{
+						case RTC::RtpCodecMimeType::Subtype::VP8:
+						{
+							RTC::Codecs::VP8::ProcessRtpPacket(packet);
 
-					break;
-				}
+							break;
+						}
 
-				case RTC::RtpCodecMimeType::Subtype::H264:
-				{
-					H264::ProcessRtpPacket(packet);
+						case RTC::RtpCodecMimeType::Subtype::H264:
+						{
+							RTC::Codecs::H264::ProcessRtpPacket(packet);
 
-					break;
+							break;
+						}
+
+						default:;
+					}
 				}
 
 				default:;
