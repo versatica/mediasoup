@@ -5,6 +5,7 @@
 #include "RTC/Codecs/H264.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Codecs/VP8.hpp"
+#include "RTC/Codecs/VP9.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 
@@ -26,6 +27,7 @@ namespace RTC
 			switch (mimeType.subtype)
 			{
 				case RTC::RtpCodecMimeType::Subtype::VP8:
+				case RTC::RtpCodecMimeType::Subtype::VP9:
 				case RTC::RtpCodecMimeType::Subtype::H264:
 					return true;
 				default:

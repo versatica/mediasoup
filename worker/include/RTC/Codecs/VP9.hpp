@@ -1,39 +1,60 @@
-#ifndef MS_RTC_CODECS_VP8_HPP
-#define MS_RTC_CODECS_VP8_HPP
+#ifndef MS_RTC_CODECS_VP9_HPP
+#define MS_RTC_CODECS_VP9_HPP
 
 #include "common.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/SeqManager.hpp"
 
-/* RFC 7741
- * VP8 Payload Descriptor
+/* https://tools.ietf.org/html/draft-ietf-payload-vp9-06
+ * VP9 Payload Descriptor
  *
 
-  Single octet PictureID (M = 0)        Dual octet PictureID (M = 1)
-  ==============================        ============================
+   Flexible mode (with the F bit below set to 1)
+   =============================================
 
-      0 1 2 3 4 5 6 7                       0 1 2 3 4 5 6 7
-     +-+-+-+-+-+-+-+-+                     +-+-+-+-+-+-+-+-+
-     |X|R|N|S|R| PID | (REQUIRED)          |X|R|N|S|R| PID | (REQUIRED)
-     +-+-+-+-+-+-+-+-+                     +-+-+-+-+-+-+-+-+
-X:   |I|L|T|K| RSV   | (OPTIONAL)       X: |I|L|T|K| RSV   | (OPTIONAL)
-     +-+-+-+-+-+-+-+-+                     +-+-+-+-+-+-+-+-+
-I:   |M| PictureID   | (OPTIONAL)       I: |M| PictureID   | (OPTIONAL)
-     +-+-+-+-+-+-+-+-+                     +-+-+-+-+-+-+-+-+
-L:   |   TL0PICIDX   | (OPTIONAL)          |   PictureID   |
-     +-+-+-+-+-+-+-+-+                     +-+-+-+-+-+-+-+-+
-T/K: |TID|Y| KEYIDX  | (OPTIONAL)       L: |   TL0PICIDX   | (OPTIONAL)
-     +-+-+-+-+-+-+-+-+                     +-+-+-+-+-+-+-+-+
-                                      T/K: |TID|Y| KEYIDX  | (OPTIONAL)
-                                           +-+-+-+-+-+-+-+-+
+      0 1 2 3 4 5 6 7
+     +-+-+-+-+-+-+-+-+
+     |I|P|L|F|B|E|V|-| (REQUIRED)
+     +-+-+-+-+-+-+-+-+
+I:   |M| PICTURE ID  | (REQUIRED)
+     +-+-+-+-+-+-+-+-+
+M:   | EXTENDED PID  | (RECOMMENDED)
+     +-+-+-+-+-+-+-+-+
+L:   | TID |U| SID |D| (CONDITIONALLY RECOMMENDED)
+     +-+-+-+-+-+-+-+-+                             -\
+P,F: | P_DIFF      |N| (CONDITIONALLY REQUIRED)    - up to 3 times
+     +-+-+-+-+-+-+-+-+                             -/
+V:   | SS            |
+     | ..            |
+     +-+-+-+-+-+-+-+-+
+
+   Non-flexible mode (with the F bit below set to 0)
+   =================================================
+
+      0 1 2 3 4 5 6 7
+     +-+-+-+-+-+-+-+-+
+     |I|P|L|F|B|E|V|-| (REQUIRED)
+     +-+-+-+-+-+-+-+-+
+I:   |M| PICTURE ID  | (RECOMMENDED)
+     +-+-+-+-+-+-+-+-+
+M:   | EXTENDED PID  | (RECOMMENDED)
+     +-+-+-+-+-+-+-+-+
+L:   | TID |U| SID |D| (CONDITIONALLY RECOMMENDED)
+     +-+-+-+-+-+-+-+-+
+     |   TL0PICIDX   | (CONDITIONALLY REQUIRED)
+     +-+-+-+-+-+-+-+-+
+V:   | SS            |
+     | ..            |
+     +-+-+-+-+-+-+-+-+
+
 */
 
 namespace RTC
 {
 	namespace Codecs
 	{
-		class VP8
+		class VP9
 		{
 		public:
 			struct PayloadDescriptor : public RTC::Codecs::PayloadDescriptor
@@ -46,22 +67,23 @@ namespace RTC
 				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
 				void Restore(uint8_t* data) const;
 
-				// Mandatory fields.
-				uint8_t extended : 1;
-				uint8_t nonReference : 1;
-				uint8_t start : 1;
-				uint8_t partitionIndex : 4;
-				// Optional field flags.
-				uint8_t i : 1; // PictureID present.
-				uint8_t l : 1; // TL0PICIDX present.
-				uint8_t t : 1; // TID present.
-				uint8_t k : 1; // KEYIDX present.
-				// Optional fields.
-				uint16_t pictureId;
+				// Header.
+				uint8_t i : 1; // I: Picture ID (PID) present.
+				uint8_t p : 1; // P: Inter-picture predicted layer frame.
+				uint8_t l : 1; // L: Layer indices present.
+				uint8_t f : 1; // F: Flexible mode.
+				uint8_t b : 1; // B: Start of a layer frame.
+				uint8_t e : 1; // E: End of a layer frame.
+				uint8_t v : 1; // V: Scalability structure (SS) data present.
+
+				// Extension fields.
+				uint16_t pictureId { 0 };
+				uint8_t tlIndex { 0 };
+				uint8_t slIndex { 0 };
 				uint8_t tl0PictureIndex;
-				uint8_t tlIndex : 2;
-				uint8_t y : 1;
-				uint8_t keyIndex : 5;
+				uint8_t switchingUpPoint : 1;
+				uint8_t interLayerDependency : 1;
+
 				// Parsed values.
 				bool isKeyFrame{ false };
 				bool hasPictureId{ false };
@@ -69,10 +91,11 @@ namespace RTC
 				bool hasTwoBytesPictureId{ false };
 				bool hasTl0PictureIndex{ false };
 				bool hasTlIndex{ false };
+				bool hasSlIndex{ false };
 			};
 
 		public:
-			static VP8::PayloadDescriptor* Parse(
+			static VP9::PayloadDescriptor* Parse(
 			  const uint8_t* data,
 			  size_t len,
 			  RTC::RtpPacket::FrameMarking* frameMarking = nullptr,
@@ -117,29 +140,29 @@ namespace RTC
 
 		/* Inline EncondingContext methods */
 
-		inline void VP8::EncodingContext::SyncRequired()
+		inline void VP9::EncodingContext::SyncRequired()
 		{
 			this->syncRequired = true;
 		}
 
 		/* Inline PayloadDescriptorHandler methods */
 
-		inline uint8_t VP8::PayloadDescriptorHandler::GetSpatialLayer() const
+		inline uint8_t VP9::PayloadDescriptorHandler::GetSpatialLayer() const
 		{
-			return 0u;
+			return this->payloadDescriptor->hasSlIndex ? this->payloadDescriptor->slIndex : 0u;
 		}
 
-		inline uint8_t VP8::PayloadDescriptorHandler::GetTemporalLayer() const
+		inline uint8_t VP9::PayloadDescriptorHandler::GetTemporalLayer() const
 		{
 			return this->payloadDescriptor->hasTlIndex ? this->payloadDescriptor->tlIndex : 0u;
 		}
 
-		inline bool VP8::PayloadDescriptorHandler::IsKeyFrame() const
+		inline bool VP9::PayloadDescriptorHandler::IsKeyFrame() const
 		{
 			return this->payloadDescriptor->isKeyFrame;
 		}
 
-		inline void VP8::PayloadDescriptorHandler::Dump() const
+		inline void VP9::PayloadDescriptorHandler::Dump() const
 		{
 			this->payloadDescriptor->Dump();
 		}

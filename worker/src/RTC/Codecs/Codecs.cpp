@@ -22,6 +22,13 @@ namespace RTC
 					break;
 				}
 
+				case RTC::RtpCodecMimeType::Subtype::VP9:
+				{
+					VP9::ProcessRtpPacket(packet);
+
+					break;
+				}
+
 				case RTC::RtpCodecMimeType::Subtype::H264:
 				{
 					H264::ProcessRtpPacket(packet);
