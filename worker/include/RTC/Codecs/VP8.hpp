@@ -40,8 +40,8 @@ namespace RTC
 			{
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() = default;
-				void Dump() const override;
 
+				void Dump() const override;
 				// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
 				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
 				void Restore(uint8_t* data) const;
@@ -93,9 +93,9 @@ namespace RTC
 				RTC::SeqManager<uint16_t> pictureIdManager;
 				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
 				bool syncRequired{ false };
-				uint8_t currentTemporalLayer{ std::numeric_limits<uint8_t>::max() };
 			};
 
+		public:
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
 			{
 			public:
@@ -104,7 +104,7 @@ namespace RTC
 
 			public:
 				void Dump() const override;
-				bool Encode(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data) override;
+				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data) override;
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override;
 				uint8_t GetTemporalLayer() const override;
@@ -115,14 +115,19 @@ namespace RTC
 			};
 		};
 
-		/* Inline EncondingContext methods */
+		/* Inline EncondingContext methods. */
 
 		inline void VP8::EncodingContext::SyncRequired()
 		{
 			this->syncRequired = true;
 		}
 
-		/* Inline PayloadDescriptorHandler methods */
+		/* Inline PayloadDescriptorHandler methods. */
+
+		inline void VP8::PayloadDescriptorHandler::Dump() const
+		{
+			this->payloadDescriptor->Dump();
+		}
 
 		inline uint8_t VP8::PayloadDescriptorHandler::GetSpatialLayer() const
 		{
@@ -137,11 +142,6 @@ namespace RTC
 		inline bool VP8::PayloadDescriptorHandler::IsKeyFrame() const
 		{
 			return this->payloadDescriptor->isKeyFrame;
-		}
-
-		inline void VP8::PayloadDescriptorHandler::Dump() const
-		{
-			this->payloadDescriptor->Dump();
 		}
 	} // namespace Codecs
 } // namespace RTC

@@ -151,8 +151,8 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// TODO: packet->RtxEncode(); // This cannot be tested this way.
 	// TODO: packet->RtxDecode(); // This cannot be tested this way.
 	// TODO: packet->SetPayloadDescriptorHandler();
-	// TODO: packet->EncodePayload();
-	// TODO: packet->EncodePayload();
+	// TODO: packet->ProcessPayload();
+	// TODO: packet->ProcessPayload();
 	// TODO: packet->ShiftPayload();
 
 	delete packet;

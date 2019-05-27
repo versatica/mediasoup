@@ -16,6 +16,7 @@ namespace RTC
 			{
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() = default;
+
 				void Dump() const override;
 
 				// Fields in frame-marking extension.
@@ -50,11 +51,9 @@ namespace RTC
 				/* Pure virtual methods inherited from RTC::Codecs::EncodingContext. */
 			public:
 				void SyncRequired() override;
-
-			public:
-				uint8_t currentTemporalLayer{ std::numeric_limits<uint8_t>::max() };
 			};
 
+		public:
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
 			{
 			public:
@@ -63,7 +62,7 @@ namespace RTC
 
 			public:
 				void Dump() const override;
-				bool Encode(RTC::Codecs::EncodingContext* context, uint8_t* data) override;
+				bool Process(RTC::Codecs::EncodingContext* context, uint8_t* data) override;
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override;
 				uint8_t GetTemporalLayer() const override;
@@ -74,13 +73,18 @@ namespace RTC
 			};
 		};
 
-		/* Inline EncondingContext methods */
+		/* Inline EncondingContext methods. */
 
 		inline void H264::EncodingContext::SyncRequired()
 		{
 		}
 
-		/* Inline PayloadDescriptorHandler methods */
+		/* Inline PayloadDescriptorHandler methods. */
+
+		inline void H264::PayloadDescriptorHandler::Dump() const
+		{
+			this->payloadDescriptor->Dump();
+		}
 
 		inline uint8_t H264::PayloadDescriptorHandler::GetSpatialLayer() const
 		{
@@ -95,11 +99,6 @@ namespace RTC
 		inline bool H264::PayloadDescriptorHandler::IsKeyFrame() const
 		{
 			return this->payloadDescriptor->isKeyFrame;
-		}
-
-		inline void H264::PayloadDescriptorHandler::Dump() const
-		{
-			this->payloadDescriptor->Dump();
 		}
 	} // namespace Codecs
 } // namespace RTC

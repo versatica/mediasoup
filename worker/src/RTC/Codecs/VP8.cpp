@@ -143,6 +143,35 @@ namespace RTC
 
 		/* Instance methods. */
 
+		void VP8::PayloadDescriptor::Dump() const
+		{
+			MS_TRACE();
+
+			MS_DEBUG_DEV("<PayloadDescriptor>");
+			MS_DEBUG_DEV("  extended        : %" PRIu8, this->extended);
+			MS_DEBUG_DEV("  nonReference    : %" PRIu8, this->nonReference);
+			MS_DEBUG_DEV("  start           : %" PRIu8, this->start);
+			MS_DEBUG_DEV("  partitionIndex  : %" PRIu8, this->partitionIndex);
+			MS_DEBUG_DEV(
+			  "  i|l|t|k         : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
+			  this->i,
+			  this->l,
+			  this->t,
+			  this->k);
+			MS_DEBUG_DEV("  pictureId            : %" PRIu16, this->pictureId);
+			MS_DEBUG_DEV("  tl0PictureIndex      : %" PRIu8, this->tl0PictureIndex);
+			MS_DEBUG_DEV("  tlIndex              : %" PRIu8, this->tlIndex);
+			MS_DEBUG_DEV("  y                    : %" PRIu8, this->y);
+			MS_DEBUG_DEV("  keyIndex             : %" PRIu8, this->keyIndex);
+			MS_DEBUG_DEV("  isKeyFrame           : %s", this->isKeyFrame ? "true" : "false");
+			MS_DEBUG_DEV("  hasPictureId         : %s", this->hasPictureId ? "true" : "false");
+			MS_DEBUG_DEV("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
+			MS_DEBUG_DEV("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
+			MS_DEBUG_DEV("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
+			MS_DEBUG_DEV("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
+			MS_DEBUG_DEV("</PayloadDescriptor>");
+		}
+
 		void VP8::PayloadDescriptor::Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const
 		{
 			MS_TRACE();
@@ -184,35 +213,6 @@ namespace RTC
 			Encode(data, this->pictureId, this->tl0PictureIndex);
 		}
 
-		void VP8::PayloadDescriptor::Dump() const
-		{
-			MS_TRACE();
-
-			MS_DEBUG_DEV("<PayloadDescriptor>");
-			MS_DEBUG_DEV("  extended        : %" PRIu8, this->extended);
-			MS_DEBUG_DEV("  nonReference    : %" PRIu8, this->nonReference);
-			MS_DEBUG_DEV("  start           : %" PRIu8, this->start);
-			MS_DEBUG_DEV("  partitionIndex  : %" PRIu8, this->partitionIndex);
-			MS_DEBUG_DEV(
-			  "  i|l|t|k         : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
-			  this->i,
-			  this->l,
-			  this->t,
-			  this->k);
-			MS_DEBUG_DEV("  pictureId            : %" PRIu16, this->pictureId);
-			MS_DEBUG_DEV("  tl0PictureIndex      : %" PRIu8, this->tl0PictureIndex);
-			MS_DEBUG_DEV("  tlIndex              : %" PRIu8, this->tlIndex);
-			MS_DEBUG_DEV("  y                    : %" PRIu8, this->y);
-			MS_DEBUG_DEV("  keyIndex             : %" PRIu8, this->keyIndex);
-			MS_DEBUG_DEV("  isKeyFrame           : %s", this->isKeyFrame ? "true" : "false");
-			MS_DEBUG_DEV("  hasPictureId         : %s", this->hasPictureId ? "true" : "false");
-			MS_DEBUG_DEV("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
-			MS_DEBUG_DEV("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
-			MS_DEBUG_DEV("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
-			MS_DEBUG_DEV("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
-			MS_DEBUG_DEV("</PayloadDescriptor>");
-		}
-
 		VP8::PayloadDescriptorHandler::PayloadDescriptorHandler(VP8::PayloadDescriptor* payloadDescriptor)
 		{
 			MS_TRACE();
@@ -220,15 +220,23 @@ namespace RTC
 			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
-		bool VP8::PayloadDescriptorHandler::Encode(
+		bool VP8::PayloadDescriptorHandler::Process(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
 		{
 			MS_TRACE();
 
 			auto* context = static_cast<RTC::Codecs::VP8::EncodingContext*>(encodingContext);
 
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
+
 			// Check whether pictureId and tl0PictureIndex sync is required.
-			if (context->syncRequired)
+			// clang-format off
+			if (
+				context->syncRequired &&
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTl0PictureIndex
+			)
+			// clang-format on
 			{
 				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId - 1);
 				context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0PictureIndex - 1);
@@ -236,9 +244,9 @@ namespace RTC
 				context->syncRequired = false;
 			}
 
-			// If a key frame, update currentTemporalLayer.
+			// If a key frame, update current temporal layer.
 			if (this->payloadDescriptor->isKeyFrame)
-				context->currentTemporalLayer = std::numeric_limits<uint8_t>::max();
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			// Incremental pictureId. Check the temporal layer.
 			// clang-format off
@@ -252,7 +260,7 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				if (this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
+				if (this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer())
 				{
 					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
 					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
@@ -262,7 +270,7 @@ namespace RTC
 				// Upgrade required. Drop current packet if sync flag is not set.
 				// clang-format off
 				else if (
-					this->payloadDescriptor->tlIndex > context->currentTemporalLayer &&
+					this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer() &&
 					!this->payloadDescriptor->y
 				)
 				// clang-format on
@@ -279,25 +287,44 @@ namespace RTC
 			uint8_t tl0PictureIndex;
 
 			// Do not send a dropped pictureId.
-			if (!context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId))
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasPictureId &&
+				!context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId)
+			)
+			// clang-format on
 			{
 				return false;
 			}
 
-			// Do not send a dropped tl0PicutreIndex.
-			if (!context->tl0PictureIndexManager.Input(
-			      this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex))
+			// Do not send a dropped tl0PictureIndex.
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasTl0PictureIndex &&
+				!context->tl0PictureIndexManager.Input(
+					this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex)
+			)
+			// clang-format on
 			{
 				return false;
 			}
 
-			// Update/fix currentTemporalLayer.
-			if (this->payloadDescriptor->tlIndex > context->currentTemporalLayer)
-				context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
-			else if (context->currentTemporalLayer > context->preferences.temporalLayer)
-				context->currentTemporalLayer = context->preferences.temporalLayer;
+			// Update/fix current temporal layer.
+			if (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer())
+				context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
 
-			this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
+			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
+
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTl0PictureIndex
+			)
+			// clang-format on
+			{
+				this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
+			}
 
 			return true;
 		};
@@ -306,7 +333,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->payloadDescriptor->Restore(data);
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTl0PictureIndex
+			)
+			// clang-format on
+			{
+				this->payloadDescriptor->Restore(data);
+			}
 		}
 	} // namespace Codecs
 } // namespace RTC
