@@ -170,7 +170,7 @@ namespace RTC
 		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
 		bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
 		void SetPayloadDescriptorHandler(RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
-		bool EncodePayload(RTC::Codecs::EncodingContext* context);
+		bool ProcessPayload(RTC::Codecs::EncodingContext* context);
 		void RestorePayload();
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
@@ -565,20 +565,20 @@ namespace RTC
 		return this->payloadPadding;
 	}
 
-	inline uint8_t RtpPacket::GetTemporalLayer() const
-	{
-		if (!this->payloadDescriptorHandler)
-			return 0u;
-
-		return this->payloadDescriptorHandler->GetTemporalLayer();
-	}
-
 	inline uint8_t RtpPacket::GetSpatialLayer() const
 	{
 		if (!this->payloadDescriptorHandler)
 			return 0u;
 
 		return this->payloadDescriptorHandler->GetSpatialLayer();
+	}
+
+	inline uint8_t RtpPacket::GetTemporalLayer() const
+	{
+		if (!this->payloadDescriptorHandler)
+			return 0u;
+
+		return this->payloadDescriptorHandler->GetTemporalLayer();
 	}
 
 	inline bool RtpPacket::IsKeyFrame() const

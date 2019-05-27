@@ -1180,6 +1180,102 @@ with expansion:
   0 == 0
 
 -------------------------------------------------------------------------------
+A TEMPLATE_PRODUCT_TEST_CASE_METHOD_SIG based test run that fails -
+Template_Foo_2<float, 6>
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: FAILED:
+  REQUIRE( Template_Fixture_2<TestType>{}.m_a.size() < 2 )
+with expansion:
+  6 < 2
+
+-------------------------------------------------------------------------------
+A TEMPLATE_PRODUCT_TEST_CASE_METHOD_SIG based test run that fails -
+Template_Foo_2<int, 2>
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: FAILED:
+  REQUIRE( Template_Fixture_2<TestType>{}.m_a.size() < 2 )
+with expansion:
+  2 < 2
+
+-------------------------------------------------------------------------------
+A TEMPLATE_PRODUCT_TEST_CASE_METHOD_SIG based test run that fails - std::array
+<float, 6>
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: FAILED:
+  REQUIRE( Template_Fixture_2<TestType>{}.m_a.size() < 2 )
+with expansion:
+  6 < 2
+
+-------------------------------------------------------------------------------
+A TEMPLATE_PRODUCT_TEST_CASE_METHOD_SIG based test run that fails - std::array
+<int, 2>
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: FAILED:
+  REQUIRE( Template_Fixture_2<TestType>{}.m_a.size() < 2 )
+with expansion:
+  2 < 2
+
+-------------------------------------------------------------------------------
+A TEMPLATE_PRODUCT_TEST_CASE_METHOD_SIG based test run that succeeds -
+Template_Foo_2<float,6>
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Template_Fixture_2<TestType>{}.m_a.size() >= 2 )
+with expansion:
+  6 >= 2
+
+-------------------------------------------------------------------------------
+A TEMPLATE_PRODUCT_TEST_CASE_METHOD_SIG based test run that succeeds -
+Template_Foo_2<int,2>
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Template_Fixture_2<TestType>{}.m_a.size() >= 2 )
+with expansion:
+  2 >= 2
+
+-------------------------------------------------------------------------------
+A TEMPLATE_PRODUCT_TEST_CASE_METHOD_SIG based test run that succeeds - std::
+array<float,6>
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Template_Fixture_2<TestType>{}.m_a.size() >= 2 )
+with expansion:
+  6 >= 2
+
+-------------------------------------------------------------------------------
+A TEMPLATE_PRODUCT_TEST_CASE_METHOD_SIG based test run that succeeds - std::
+array<int,2>
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Template_Fixture_2<TestType>{}.m_a.size() >= 2 )
+with expansion:
+  2 >= 2
+
+-------------------------------------------------------------------------------
 A TEMPLATE_TEST_CASE_METHOD based test run that fails - double
 -------------------------------------------------------------------------------
 Class.tests.cpp:<line number>
@@ -1246,6 +1342,72 @@ with expansion:
   1 == 1
 
 -------------------------------------------------------------------------------
+A TEMPLATE_TEST_CASE_METHOD_SIG based test run that fails - 1
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: FAILED:
+  REQUIRE( Nttp_Fixture<V>::value == 0 )
+with expansion:
+  1 == 0
+
+-------------------------------------------------------------------------------
+A TEMPLATE_TEST_CASE_METHOD_SIG based test run that fails - 3
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: FAILED:
+  REQUIRE( Nttp_Fixture<V>::value == 0 )
+with expansion:
+  3 == 0
+
+-------------------------------------------------------------------------------
+A TEMPLATE_TEST_CASE_METHOD_SIG based test run that fails - 6
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: FAILED:
+  REQUIRE( Nttp_Fixture<V>::value == 0 )
+with expansion:
+  6 == 0
+
+-------------------------------------------------------------------------------
+A TEMPLATE_TEST_CASE_METHOD_SIG based test run that succeeds - 1
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Nttp_Fixture<V>::value > 0 )
+with expansion:
+  1 > 0
+
+-------------------------------------------------------------------------------
+A TEMPLATE_TEST_CASE_METHOD_SIG based test run that succeeds - 3
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Nttp_Fixture<V>::value > 0 )
+with expansion:
+  3 > 0
+
+-------------------------------------------------------------------------------
+A TEMPLATE_TEST_CASE_METHOD_SIG based test run that succeeds - 6
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Nttp_Fixture<V>::value > 0 )
+with expansion:
+  6 > 0
+
+-------------------------------------------------------------------------------
 A TEST_CASE_METHOD based test run that fails
 -------------------------------------------------------------------------------
 Class.tests.cpp:<line number>
@@ -1310,6 +1472,50 @@ Misc.tests.cpp:<line number>: PASSED:
   REQUIRE( x.size() == 0 )
 with expansion:
   0 == 0
+
+-------------------------------------------------------------------------------
+A Template product test case with array signature - Bar<float, 42>
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( x.size() > 0 )
+with expansion:
+  42 > 0
+
+-------------------------------------------------------------------------------
+A Template product test case with array signature - Bar<int, 9>
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( x.size() > 0 )
+with expansion:
+  9 > 0
+
+-------------------------------------------------------------------------------
+A Template product test case with array signature - std::array<float, 42>
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( x.size() > 0 )
+with expansion:
+  42 > 0
+
+-------------------------------------------------------------------------------
+A Template product test case with array signature - std::array<int, 9>
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( x.size() > 0 )
+with expansion:
+  9 > 0
 
 -------------------------------------------------------------------------------
 A comparison that uses literals instead of the normal constructor
@@ -1787,6 +1993,27 @@ with messages:
   (2, 3) := 3
 
 -------------------------------------------------------------------------------
+CAPTURE parses string and character constants
+-------------------------------------------------------------------------------
+Message.tests.cpp:<line number>
+...............................................................................
+
+Message.tests.cpp:<line number>: PASSED:
+with messages:
+  ("comma, in string", "escaped, \", ") := "escaped, ", "
+  "single quote in string,'," := "single quote in string,',"
+  "some escapes, \\,\\\\" := "some escapes, \,\\"
+  "some, ), unmatched, } prenheses {[<" := "some, ), unmatched, } prenheses {[
+  <"
+  '"' := '"'
+  '\'' := '''
+  ',' := ','
+  '}' := '}'
+  ')' := ')'
+  '(' := '('
+  '{' := '{'
+
+-------------------------------------------------------------------------------
 Capture and info messages
   Capture should stringify like assertions
 -------------------------------------------------------------------------------
@@ -2224,6 +2451,29 @@ with expansion:
   0.00001 != Approx( 0.0000001 )
 
 -------------------------------------------------------------------------------
+Directly creating an EnumInfo
+-------------------------------------------------------------------------------
+ToString.tests.cpp:<line number>
+...............................................................................
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK( enumInfo->lookup(0) == "Value1" )
+with expansion:
+  Value1 == "Value1"
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK( enumInfo->lookup(1) == "Value2" )
+with expansion:
+  Value2 == "Value2"
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK( enumInfo->lookup(3) == "{** unexpected enum value **}" )
+with expansion:
+  {** unexpected enum value **}
+  ==
+  "{** unexpected enum value **}"
+
+-------------------------------------------------------------------------------
 EndsWith string matcher
 -------------------------------------------------------------------------------
 Matchers.tests.cpp:<line number>
@@ -2239,6 +2489,56 @@ Matchers.tests.cpp:<line number>: FAILED:
 with expansion:
   "this string contains 'abc' as a substring" ends with: "this" (case
   insensitive)
+
+-------------------------------------------------------------------------------
+Enums can quickly have stringification enabled using REGISTER_ENUM
+-------------------------------------------------------------------------------
+EnumToString.tests.cpp:<line number>
+...............................................................................
+
+EnumToString.tests.cpp:<line number>: PASSED:
+  REQUIRE( stringify( EnumClass3::Value1 ) == "Value1" )
+with expansion:
+  "Value1" == "Value1"
+
+EnumToString.tests.cpp:<line number>: PASSED:
+  REQUIRE( stringify( EnumClass3::Value2 ) == "Value2" )
+with expansion:
+  "Value2" == "Value2"
+
+EnumToString.tests.cpp:<line number>: PASSED:
+  REQUIRE( stringify( EnumClass3::Value3 ) == "Value3" )
+with expansion:
+  "Value3" == "Value3"
+
+EnumToString.tests.cpp:<line number>: PASSED:
+  REQUIRE( stringify( EnumClass3::Value4 ) == "{** unexpected enum value **}" )
+with expansion:
+  "{** unexpected enum value **}"
+  ==
+  "{** unexpected enum value **}"
+
+EnumToString.tests.cpp:<line number>: PASSED:
+  REQUIRE( stringify( ec3 ) == "Value2" )
+with expansion:
+  "Value2" == "Value2"
+
+-------------------------------------------------------------------------------
+Enums in namespaces can quickly have stringification enabled using
+REGISTER_ENUM
+-------------------------------------------------------------------------------
+EnumToString.tests.cpp:<line number>
+...............................................................................
+
+EnumToString.tests.cpp:<line number>: PASSED:
+  REQUIRE( stringify( Bikeshed::Colours::Red ) == "Red" )
+with expansion:
+  "Red" == "Red"
+
+EnumToString.tests.cpp:<line number>: PASSED:
+  REQUIRE( stringify( Bikeshed::Colours::Blue ) == "Blue" )
+with expansion:
+  "Blue" == "Blue"
 
 -------------------------------------------------------------------------------
 Epsilon only applies to Approx's value
@@ -6099,6 +6399,40 @@ with expansion:
   0 != 0x<hex digits>
 
 -------------------------------------------------------------------------------
+Precision of floating point stringification can be set
+  Floats
+-------------------------------------------------------------------------------
+ToStringGeneral.tests.cpp:<line number>
+...............................................................................
+
+ToStringGeneral.tests.cpp:<line number>: PASSED:
+  CHECK( str1.size() == 3 + 5 )
+with expansion:
+  8 == 8
+
+ToStringGeneral.tests.cpp:<line number>: PASSED:
+  REQUIRE( str2.size() == 3 + 10 )
+with expansion:
+  13 == 13
+
+-------------------------------------------------------------------------------
+Precision of floating point stringification can be set
+  Double
+-------------------------------------------------------------------------------
+ToStringGeneral.tests.cpp:<line number>
+...............................................................................
+
+ToStringGeneral.tests.cpp:<line number>: PASSED:
+  CHECK( str1.size() == 2 + 5 )
+with expansion:
+  7 == 7
+
+ToStringGeneral.tests.cpp:<line number>: PASSED:
+  REQUIRE( str2.size() == 2 + 15 )
+with expansion:
+  17 == 17
+
+-------------------------------------------------------------------------------
 Predicate matcher can accept const char*
 -------------------------------------------------------------------------------
 Matchers.tests.cpp:<line number>
@@ -7159,11 +7493,6 @@ with expansion:
   false == false
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isSubstring( original ) == false )
-with expansion:
-  false == false
-
-String.tests.cpp:<line number>: PASSED:
   REQUIRE( isOwned( original ) )
 with expansion:
   true
@@ -7225,19 +7554,33 @@ with expansion:
   "hello" != "hello world!"
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isSubstring( ss ) == false )
-with expansion:
-  false == false
-
-String.tests.cpp:<line number>: PASSED:
   REQUIRE( isOwned( ss ) )
 with expansion:
   true
 
+-------------------------------------------------------------------------------
+StringRef
+  Substrings
+  c_str() causes copy
+  Self-assignment after substring
+-------------------------------------------------------------------------------
+String.tests.cpp:<line number>
+...............................................................................
+
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( ss.currentData() != s.currentData() )
+  REQUIRE( isOwned(ss) == false )
 with expansion:
-  "hello" != "hello world!"
+  false == false
+
+String.tests.cpp:<line number>: PASSED:
+  REQUIRE( ss == "hello" )
+with expansion:
+  hello == "hello"
+
+String.tests.cpp:<line number>: PASSED:
+  REQUIRE( rawChars == ss.currentData() )
+with expansion:
+  "hello world!" == "hello world!"
 
 -------------------------------------------------------------------------------
 StringRef
@@ -8136,6 +8479,586 @@ Misc.tests.cpp:<line number>: PASSED:
   REQUIRE( v.capacity() >= 5 )
 with expansion:
   5 >= 5
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  6 == 6
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  6 >= 6
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+  resizing bigger changes size and capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == 2 * V )
+with expansion:
+  12 == 12
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= 2 * V )
+with expansion:
+  12 >= 12
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  6 == 6
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  6 >= 6
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+  resizing smaller changes size but not capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == 0 )
+with expansion:
+  0 == 0
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  6 >= 6
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+  resizing smaller changes size but not capacity
+  We can use the 'swap trick' to reset the capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() == 0 )
+with expansion:
+  0 == 0
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  6 == 6
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  6 >= 6
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+  reserving bigger changes capacity but not size
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  6 == 6
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= 2 * V )
+with expansion:
+  12 >= 12
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  6 == 6
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  6 >= 6
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - (std::tuple<int, float>), 6
+  reserving smaller does not change size or capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  6 == 6
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  6 >= 6
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  4 == 4
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  4 >= 4
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+  resizing bigger changes size and capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == 2 * V )
+with expansion:
+  8 == 8
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= 2 * V )
+with expansion:
+  8 >= 8
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  4 == 4
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  4 >= 4
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+  resizing smaller changes size but not capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == 0 )
+with expansion:
+  0 == 0
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  4 >= 4
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+  resizing smaller changes size but not capacity
+  We can use the 'swap trick' to reset the capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() == 0 )
+with expansion:
+  0 == 0
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  4 == 4
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  4 >= 4
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+  reserving bigger changes capacity but not size
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  4 == 4
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= 2 * V )
+with expansion:
+  8 >= 8
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  4 == 4
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  4 >= 4
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - float,4
+  reserving smaller does not change size or capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  4 == 4
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  4 >= 4
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  5 == 5
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  5 >= 5
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+  resizing bigger changes size and capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == 2 * V )
+with expansion:
+  10 == 10
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= 2 * V )
+with expansion:
+  10 >= 10
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  5 == 5
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  5 >= 5
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+  resizing smaller changes size but not capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == 0 )
+with expansion:
+  0 == 0
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  5 >= 5
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+  resizing smaller changes size but not capacity
+  We can use the 'swap trick' to reset the capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() == 0 )
+with expansion:
+  0 == 0
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  5 == 5
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  5 >= 5
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+  reserving bigger changes capacity but not size
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  5 == 5
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= 2 * V )
+with expansion:
+  10 >= 10
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  5 == 5
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  5 >= 5
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - int,5
+  reserving smaller does not change size or capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  5 == 5
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  5 >= 5
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  15 == 15
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  15 >= 15
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+  resizing bigger changes size and capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == 2 * V )
+with expansion:
+  30 == 30
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= 2 * V )
+with expansion:
+  30 >= 30
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  15 == 15
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  15 >= 15
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+  resizing smaller changes size but not capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == 0 )
+with expansion:
+  0 == 0
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  15 >= 15
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+  resizing smaller changes size but not capacity
+  We can use the 'swap trick' to reset the capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() == 0 )
+with expansion:
+  0 == 0
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  15 == 15
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  15 >= 15
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+  reserving bigger changes capacity but not size
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  15 == 15
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= 2 * V )
+with expansion:
+  30 >= 30
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  15 == 15
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  15 >= 15
+
+-------------------------------------------------------------------------------
+TemplateTestSig: vectors can be sized and resized - std::string,15
+  reserving smaller does not change size or capacity
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.size() == V )
+with expansion:
+  15 == 15
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( v.capacity() >= V )
+with expansion:
+  15 >= 15
 
 -------------------------------------------------------------------------------
 Test case with one argument
@@ -10131,6 +11054,62 @@ with expansion:
   "{ { 42, "Arthur" }, { "Ford", 24 } }"
 
 -------------------------------------------------------------------------------
+parseEnums
+  No enums
+-------------------------------------------------------------------------------
+ToString.tests.cpp:<line number>
+...............................................................................
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( parseEnums( "" ), Equals( std::vector<std::string>{} ) )
+with expansion:
+  {  } Equals: {  }
+
+-------------------------------------------------------------------------------
+parseEnums
+  One enum value
+-------------------------------------------------------------------------------
+ToString.tests.cpp:<line number>
+...............................................................................
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( parseEnums( "ClassName::EnumName::Value1" ), Equals(std::vector<std::string>{"Value1"} ) )
+with expansion:
+  { "Value1" } Equals: { "Value1" }
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( parseEnums( "Value1" ), Equals( std::vector<std::string>{"Value1"} ) )
+with expansion:
+  { "Value1" } Equals: { "Value1" }
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( parseEnums( "EnumName::Value1" ), Equals(std::vector<std::string>{"Value1"} ) )
+with expansion:
+  { "Value1" } Equals: { "Value1" }
+
+-------------------------------------------------------------------------------
+parseEnums
+  Multiple enum values
+-------------------------------------------------------------------------------
+ToString.tests.cpp:<line number>
+...............................................................................
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( parseEnums( "ClassName::EnumName::Value1, ClassName::EnumName::Value2" ), Equals( std::vector<std::string>{"Value1", "Value2"} ) )
+with expansion:
+  { "Value1", "Value2" } Equals: { "Value1", "Value2" }
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( parseEnums( "ClassName::EnumName::Value1, ClassName::EnumName::Value2, ClassName::EnumName::Value3" ), Equals( std::vector<std::string>{"Value1", "Value2", "Value3"} ) )
+with expansion:
+  { "Value1", "Value2", "Value3" } Equals: { "Value1", "Value2", "Value3" }
+
+ToString.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( parseEnums( "ClassName::EnumName::Value1,ClassName::EnumName::Value2 , ClassName::EnumName::Value3" ), Equals( std::vector<std::string>{"Value1", "Value2", "Value3"} ) )
+with expansion:
+  { "Value1", "Value2", "Value3" } Equals: { "Value1", "Value2", "Value3" }
+
+-------------------------------------------------------------------------------
 pointer to class
 -------------------------------------------------------------------------------
 Tricky.tests.cpp:<line number>
@@ -10376,6 +11355,27 @@ Tag.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( testcase.tags, Catch::VectorContains(std::string("magic-tag")) && Catch::VectorContains(std::string(".")) )
 with expansion:
   { ".", "magic-tag" } ( Contains: "magic-tag" and Contains: "." )
+
+-------------------------------------------------------------------------------
+splitString
+-------------------------------------------------------------------------------
+String.tests.cpp:<line number>
+...............................................................................
+
+String.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( splitStringRef("", ',' ), Equals(std::vector<StringRef>() ) )
+with expansion:
+  {  } Equals: {  }
+
+String.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( splitStringRef("abc", ',' ), Equals(std::vector<StringRef>{"abc"} ) )
+with expansion:
+  { abc } Equals: { abc }
+
+String.tests.cpp:<line number>: PASSED:
+  CHECK_THAT( splitStringRef("abc,def", ',' ), Equals(std::vector<StringRef>{"abc", "def"} ) )
+with expansion:
+  { abc, def } Equals: { abc, def }
 
 -------------------------------------------------------------------------------
 stacks unscoped info in loops
@@ -11218,6 +12218,6 @@ Misc.tests.cpp:<line number>
 Misc.tests.cpp:<line number>: PASSED:
 
 ===============================================================================
-test cases:  260 |  177 passed |  79 failed |  4 failed as expected
-assertions: 1445 | 1283 passed | 141 failed | 21 failed as expected
+test cases:  289 |  199 passed |  86 failed |  4 failed as expected
+assertions: 1556 | 1387 passed | 148 failed | 21 failed as expected
 

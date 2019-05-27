@@ -61,11 +61,8 @@ namespace RTC
 			{
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() = default;
-				void Dump() const override;
 
-				// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
-				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
-				void Restore(uint8_t* data) const;
+				void Dump() const override;
 
 				// Header.
 				uint8_t i : 1; // I: Picture ID (PID) present.
@@ -75,23 +72,21 @@ namespace RTC
 				uint8_t b : 1; // B: Start of a layer frame.
 				uint8_t e : 1; // E: End of a layer frame.
 				uint8_t v : 1; // V: Scalability structure (SS) data present.
-
 				// Extension fields.
-				uint16_t pictureId { 0 };
-				uint8_t tlIndex { 0 };
-				uint8_t slIndex { 0 };
+				uint16_t pictureId{ 0 };
+				uint8_t slIndex{ 0 };
+				uint8_t tlIndex{ 0 };
 				uint8_t tl0PictureIndex;
 				uint8_t switchingUpPoint : 1;
 				uint8_t interLayerDependency : 1;
-
 				// Parsed values.
 				bool isKeyFrame{ false };
 				bool hasPictureId{ false };
 				bool hasOneBytePictureId{ false };
 				bool hasTwoBytesPictureId{ false };
+				bool hasSlIndex{ false };
 				bool hasTl0PictureIndex{ false };
 				bool hasTlIndex{ false };
-				bool hasSlIndex{ false };
 			};
 
 		public:
@@ -115,8 +110,6 @@ namespace RTC
 			public:
 				RTC::SeqManager<uint16_t> pictureIdManager;
 				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
-				bool syncRequired{ false };
-				uint8_t currentTemporalLayer{ std::numeric_limits<uint8_t>::max() };
 			};
 
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
@@ -127,7 +120,7 @@ namespace RTC
 
 			public:
 				void Dump() const override;
-				bool Encode(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data) override;
+				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data) override;
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override;
 				uint8_t GetTemporalLayer() const override;
@@ -138,14 +131,18 @@ namespace RTC
 			};
 		};
 
-		/* Inline EncondingContext methods */
+		/* Inline EncondingContext methods. */
 
 		inline void VP9::EncodingContext::SyncRequired()
 		{
-			this->syncRequired = true;
 		}
 
-		/* Inline PayloadDescriptorHandler methods */
+		/* Inline PayloadDescriptorHandler methods. */
+
+		inline void VP9::PayloadDescriptorHandler::Dump() const
+		{
+			this->payloadDescriptor->Dump();
+		}
 
 		inline uint8_t VP9::PayloadDescriptorHandler::GetSpatialLayer() const
 		{
@@ -160,11 +157,6 @@ namespace RTC
 		inline bool VP9::PayloadDescriptorHandler::IsKeyFrame() const
 		{
 			return this->payloadDescriptor->isKeyFrame;
-		}
-
-		inline void VP9::PayloadDescriptorHandler::Dump() const
-		{
-			this->payloadDescriptor->Dump();
 		}
 	} // namespace Codecs
 } // namespace RTC

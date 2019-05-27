@@ -118,7 +118,10 @@ namespace RTC
 		jsonObject["targetTemporalLayer"] = this->targetTemporalLayer;
 
 		// Add currentTemporalLayer.
-		jsonObject["currentTemporalLayer"] = this->currentTemporalLayer;
+		if (this->encodingContext)
+		{
+			jsonObject["currentTemporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
+		}
 	}
 
 	void SimulcastConsumer::FillJsonStats(json& jsonArray) const
@@ -634,8 +637,24 @@ namespace RTC
 			if (this->keyFrameSupported && !packet->IsKeyFrame())
 				return;
 
-			// Update current spatial and temporal layers.
-			UpdateCurrentLayers();
+			// Update current spatial layer.
+			this->currentSpatialLayer = this->targetSpatialLayer;
+
+			// Update target and current temporal layer.
+			if (this->encodingContext)
+			{
+				this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
+				this->encodingContext->SetCurrentTemporalLayer(this->targetTemporalLayer);
+			}
+
+			// Reset the score of our RtpStream to 10.
+			this->rtpStream->ResetScore(10, false);
+
+			// Emit the layersChange event.
+			EmitLayersChange();
+
+			// Emit the score event.
+			EmitScore();
 
 			// Need to resync the stream.
 			this->syncRequired = true;
@@ -733,8 +752,13 @@ namespace RTC
 			this->syncRequired = false;
 		}
 
+		int16_t previousTemporalLayer{ 0 };
+
+		if (this->encodingContext)
+			previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
+
 		// Rewrite payload if needed. Drop packet if necessary.
-		if (this->encodingContext && !packet->EncodePayload(this->encodingContext.get()))
+		if (this->encodingContext && !packet->ProcessPayload(this->encodingContext.get()))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
@@ -743,12 +767,16 @@ namespace RTC
 
 		// Update current temporal layer if the packet honors the target temporal layer
 		// (just if this packet belongs to the target spatial layer).
+		// clang-format off
 		if (
-		  this->currentSpatialLayer == this->targetSpatialLayer &&
-		  this->currentTemporalLayer != this->targetTemporalLayer &&
-		  packet->GetTemporalLayer() == this->targetTemporalLayer)
+			this->encodingContext &&
+			this->currentSpatialLayer == this->targetSpatialLayer &&
+			previousTemporalLayer != this->targetTemporalLayer &&
+			this->encodingContext->GetCurrentTemporalLayer() == this->targetTemporalLayer
+		)
+		// clang-format on
 		{
-			UpdateCurrentLayers();
+			EmitLayersChange();
 		}
 
 		// Update RTP seq number and timestamp based on NTP offset.
@@ -1230,14 +1258,14 @@ namespace RTC
 		if (newTargetSpatialLayer == -1)
 		{
 			// Unset current and target layers.
-			this->targetSpatialLayer   = -1;
-			this->targetTemporalLayer  = -1;
-			this->currentSpatialLayer  = -1;
-			this->currentTemporalLayer = -1;
+			this->targetSpatialLayer  = -1;
+			this->targetTemporalLayer = -1;
+			this->currentSpatialLayer = -1;
 
 			if (this->encodingContext)
 			{
-				this->encodingContext->preferences.temporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+				this->encodingContext->SetTargetTemporalLayer(-1);
+				this->encodingContext->SetCurrentTemporalLayer(-1);
 			}
 
 			MS_DEBUG_TAG(
@@ -1258,9 +1286,7 @@ namespace RTC
 		// If the new target spatial layer matches the current one, apply the new
 		// target temporal layer now.
 		if (this->encodingContext && this->targetSpatialLayer == this->currentSpatialLayer)
-		{
-			this->encodingContext->preferences.temporalLayer = this->targetTemporalLayer;
-		}
+			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
 
 		MS_DEBUG_TAG(
 		  simulcast,
@@ -1273,40 +1299,6 @@ namespace RTC
 		// a key frame.
 		if (this->targetSpatialLayer != this->currentSpatialLayer)
 			RequestKeyFrameForTargetSpatialLayer();
-	}
-
-	void SimulcastConsumer::UpdateCurrentLayers()
-	{
-		MS_TRACE();
-
-		bool emitScore{ false };
-
-		// Reset the score of our RtpStream to 10 if spatial layer changed.
-		if (this->targetSpatialLayer != this->currentSpatialLayer)
-		{
-			this->rtpStream->ResetScore(10, false);
-
-			emitScore = true;
-		}
-
-		this->currentSpatialLayer  = this->targetSpatialLayer;
-		this->currentTemporalLayer = this->targetTemporalLayer;
-
-		if (this->encodingContext)
-			this->encodingContext->preferences.temporalLayer = this->targetTemporalLayer;
-
-		MS_DEBUG_DEV(
-		  "current layers changed to [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
-		  this->currentSpatialLayer,
-		  this->currentTemporalLayer,
-		  this->id.c_str());
-
-		// Emit the layersChange event.
-		EmitLayersChange();
-
-		// Emit the score event (just if spatial layer changed).
-		if (emitScore)
-			EmitScore();
 	}
 
 	inline bool SimulcastConsumer::CanSwitchToSpatialLayer(int16_t spatialLayer) const
@@ -1353,12 +1345,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_DEBUG_DEV(
+		  "current layers changed to [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
+		  this->currentSpatialLayer,
+		  this->encodingContext ? this->encodingContext->GetCurrentTemporalLayer()
+		                        : static_cast<int16_t>(0),
+		  this->id.c_str());
+
 		json data = json::object();
 
-		if (this->currentSpatialLayer >= 0 && this->currentTemporalLayer >= 0)
+		if (this->currentSpatialLayer >= 0)
 		{
-			data["spatialLayer"]  = this->currentSpatialLayer;
-			data["temporalLayer"] = this->currentTemporalLayer;
+			data["spatialLayer"] = this->currentSpatialLayer;
+
+			if (this->encodingContext)
+				data["temporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
 		}
 		else
 		{

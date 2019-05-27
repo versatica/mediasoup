@@ -18,6 +18,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// TODO: missing payloadDescriptor->isKeyFrame.
+
 			if (len < 1)
 				return nullptr;
 
@@ -46,15 +48,13 @@ namespace RTC
 					if (len < ++offset + 1)
 						return nullptr;
 
-					payloadDescriptor->pictureId  = (byte & 0x7f) << 8;
+					payloadDescriptor->pictureId = (byte & 0x7f) << 8;
 					payloadDescriptor->pictureId += data[offset];
-
 					payloadDescriptor->hasTwoBytesPictureId = true;
 				}
 				else
 				{
-					payloadDescriptor->pictureId = byte & 0x7f;
-
+					payloadDescriptor->pictureId           = byte & 0x7f;
 					payloadDescriptor->hasOneBytePictureId = true;
 				}
 
@@ -69,17 +69,16 @@ namespace RTC
 				byte = data[offset];
 
 				payloadDescriptor->interLayerDependency = byte & 0x01;
-				payloadDescriptor->switchingUpPoint = byte >> 4 & 0x01;
-				payloadDescriptor->slIndex = byte >> 1 & 0x07;
-				payloadDescriptor->tlIndex = byte >> 5 & 0x07;
-
-				payloadDescriptor->hasSlIndex = true;
-				payloadDescriptor->hasTlIndex = true;
+				payloadDescriptor->switchingUpPoint     = byte >> 4 & 0x01;
+				payloadDescriptor->slIndex              = byte >> 1 & 0x07;
+				payloadDescriptor->tlIndex              = byte >> 5 & 0x07;
+				payloadDescriptor->hasSlIndex           = true;
+				payloadDescriptor->hasTlIndex           = true;
 
 				if (len < ++offset + 1)
 					return nullptr;
 
-				payloadDescriptor->tl0PictureIndex = data[offset];
+				payloadDescriptor->tl0PictureIndex    = data[offset];
 				payloadDescriptor->hasTl0PictureIndex = true;
 			}
 
@@ -98,13 +97,20 @@ namespace RTC
 			// Read frame-marking.
 			packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
+			// TODO: TMP
+			if (frameMarking)
+			{
+				MS_ERROR("frameMarking in VP9!!!");
+			}
+
 			PayloadDescriptor* payloadDescriptor = VP9::Parse(data, len, frameMarking, frameMarkingLen);
 
 			if (!payloadDescriptor)
 				return;
 
-			// TMP.
-			payloadDescriptor->Dump();
+			// TODO: TMP
+			// if (payloadDescriptor->slIndex != 0)
+				payloadDescriptor->Dump();
 
 			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
@@ -113,23 +119,14 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void VP9::PayloadDescriptor::Encode(uint8_t* /*data*/, uint16_t /*pictureId*/, uint8_t /*tl0PictureIndex*/) const
-		{
-			MS_TRACE();
-		}
-
-		void VP9::PayloadDescriptor::Restore(uint8_t* /*data*/) const
-		{
-			MS_TRACE();
-		}
-
 		void VP9::PayloadDescriptor::Dump() const
 		{
 			MS_TRACE();
 
 			MS_DEBUG_DEV("<PayloadDescriptor>");
 			MS_DEBUG_DEV(
-			  "  i|p|l|f|b|e|v         : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
+			  "  i|p|l|f|b|e|v         : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8
+			  "|%" PRIu8,
 			  this->i,
 			  this->p,
 			  this->l,
@@ -160,19 +157,19 @@ namespace RTC
 			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
-		bool VP9::PayloadDescriptorHandler::Encode(
+		bool VP9::PayloadDescriptorHandler::Process(
 		  RTC::Codecs::EncodingContext* /*encodingContext*/, uint8_t* /*data*/)
 		{
 			MS_TRACE();
 
-			return true;
-		};
+			// TODO: ?
 
-		void VP9::PayloadDescriptorHandler::Restore(uint8_t* data)
+			return true;
+		}
+
+		void VP9::PayloadDescriptorHandler::Restore(uint8_t* /*data*/)
 		{
 			MS_TRACE();
-
-			this->payloadDescriptor->Restore(data);
 		}
 	} // namespace Codecs
 } // namespace RTC

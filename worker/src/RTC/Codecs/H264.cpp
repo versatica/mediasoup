@@ -144,11 +144,13 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_DEV("<PayloadDescriptor>");
-			MS_DEBUG_DEV("  s          : %s", this->s ? "true" : "false");
-			MS_DEBUG_DEV("  e          : %s", this->e ? "true" : "false");
-			MS_DEBUG_DEV("  i          : %s", this->i ? "true" : "false");
-			MS_DEBUG_DEV("  d          : %s", this->d ? "true" : "false");
-			MS_DEBUG_DEV("  b          : %s", this->b ? "true" : "false");
+			MS_DEBUG_DEV(
+			  "  s|e|i|d|b  : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
+			  this->s,
+			  this->e,
+			  this->i,
+			  this->d,
+			  this->b);
 			MS_DEBUG_DEV("  tid        : %" PRIu8, this->tid);
 			if (this->hasLid)
 				MS_DEBUG_DEV("  lid        : %" PRIu8, this->lid);
@@ -165,22 +167,20 @@ namespace RTC
 			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
-		bool H264::PayloadDescriptorHandler::Encode(
+		bool H264::PayloadDescriptorHandler::Process(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* /*data*/)
 		{
 			MS_TRACE();
 
 			auto* context = static_cast<RTC::Codecs::H264::EncodingContext*>(encodingContext);
 
-			// If a key frame, update currentTemporalLayer.
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
+
+			// If a key frame, update current temporal layer.
 			if (this->payloadDescriptor->isKeyFrame)
-				context->currentTemporalLayer = std::numeric_limits<uint8_t>::max();
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
-			// TODO: We should check incremental picture id here somehow and let it pass
-			// if older than highest seen.
-
-			// Check temporal layer.
-			if (this->payloadDescriptor->tid > context->preferences.temporalLayer)
+			if (this->payloadDescriptor->tid > context->GetTargetTemporalLayer())
 			{
 				return false;
 			}
@@ -190,7 +190,7 @@ namespace RTC
 			//
 			// clang-format off
 			// else if (
-			// 	this->payloadDescriptor->tid > context->currentTemporalLayer &&
+			// 	this->payloadDescriptor->tid > context->GetCurrentTemporalLayer() &&
 			// 	!this->payloadDescriptor->b
 			// )
 			// // clang-format on
@@ -198,11 +198,12 @@ namespace RTC
 			// 	return false;
 			// }
 
-			// Update/fix currentTemporalLayer.
-			if (this->payloadDescriptor->tid > context->currentTemporalLayer)
-				context->currentTemporalLayer = this->payloadDescriptor->tid;
-			else if (context->currentTemporalLayer > context->preferences.temporalLayer)
-				context->currentTemporalLayer = context->preferences.temporalLayer;
+			// Update/fix current temporal layer.
+			if (this->payloadDescriptor->tid > context->GetCurrentTemporalLayer())
+				context->SetCurrentTemporalLayer(this->payloadDescriptor->tid);
+
+			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			return true;
 		}
