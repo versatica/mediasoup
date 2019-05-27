@@ -13,18 +13,24 @@ MEDIASOUP_BUILDTYPE ?= Release
 	docker-build docker-run
 
 default:
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
-	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	ifeq ($(MEDIASOUP_WORKER_BIN),)
+		$(PYTHON) ./scripts/configure.py -R mediasoup-worker
+		$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	endif
 
 test:
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
-	./deps/lcov/bin/lcov --directory ./ --zerocounters
-	./out/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+	ifeq ($(MEDIASOUP_WORKER_BIN),)
+		$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
+		$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+		./deps/lcov/bin/lcov --directory ./ --zerocounters
+		./out/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+	endif
 
 fuzzer:
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
-	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	ifeq ($(MEDIASOUP_WORKER_BIN),)
+		$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
+		$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	endif
 
 xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
