@@ -19,6 +19,7 @@ namespace RTC
 		class EncodingContext
 		{
 		public:
+			EncodingContext()          = default;
 			virtual ~EncodingContext() = default;
 
 		public:
