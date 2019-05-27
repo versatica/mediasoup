@@ -4,6 +4,7 @@
 ### 3.0.11 (in progress)
 
 * Codecs: Improve temporal layer switching in VP8 and H264.
+* Skip worker compilation if `MEDIASOUP_WORKER_BIN` environment variable is given (#309). This makes it possible to install mediasoup in platforms in which, somehow, gcc > 4.8 is not available during `npm install mediasoup` but it's available later.
 
 
 ### 3.0.10
