@@ -734,7 +734,7 @@ namespace RTC
 		}
 
 		// Rewrite payload if needed. Drop packet if necessary.
-		if (this->encodingContext && !packet->EncodePayload(this->encodingContext.get()))
+		if (this->encodingContext && !packet->ProcessPayload(this->encodingContext.get()))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 

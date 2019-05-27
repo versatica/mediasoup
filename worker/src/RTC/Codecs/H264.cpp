@@ -165,7 +165,7 @@ namespace RTC
 			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
-		bool H264::PayloadDescriptorHandler::Encode(
+		bool H264::PayloadDescriptorHandler::Process(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* /*data*/)
 		{
 			MS_TRACE();

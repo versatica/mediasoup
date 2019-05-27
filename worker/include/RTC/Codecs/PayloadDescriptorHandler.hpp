@@ -45,12 +45,12 @@ namespace RTC
 			virtual ~PayloadDescriptorHandler() = default;
 
 		public:
-			virtual void Dump() const                                                 = 0;
-			virtual bool Encode(RTC::Codecs::EncodingContext* context, uint8_t* data) = 0;
-			virtual void Restore(uint8_t* data)                                       = 0;
-			virtual uint8_t GetSpatialLayer() const                                   = 0;
-			virtual uint8_t GetTemporalLayer() const                                  = 0;
-			virtual bool IsKeyFrame() const                                           = 0;
+			virtual void Dump() const                                                  = 0;
+			virtual bool Process(RTC::Codecs::EncodingContext* context, uint8_t* data) = 0;
+			virtual void Restore(uint8_t* data)                                        = 0;
+			virtual uint8_t GetSpatialLayer() const                                    = 0;
+			virtual uint8_t GetTemporalLayer() const                                   = 0;
+			virtual bool IsKeyFrame() const                                            = 0;
 		};
 	} // namespace Codecs
 } // namespace RTC

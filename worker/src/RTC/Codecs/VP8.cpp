@@ -220,7 +220,7 @@ namespace RTC
 			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
-		bool VP8::PayloadDescriptorHandler::Encode(
+		bool VP8::PayloadDescriptorHandler::Process(
 		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data)
 		{
 			MS_TRACE();

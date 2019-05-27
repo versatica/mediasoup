@@ -39,7 +39,7 @@ public:
 	{
 		return;
 	};
-	bool Encode(Codecs::EncodingContext* /*context*/, uint8_t* /*data*/)
+	bool Process(Codecs::EncodingContext* /*context*/, uint8_t* /*data*/)
 	{
 		return true;
 	};
