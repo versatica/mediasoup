@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {
@@ -52,11 +51,6 @@ namespace RTC
 				/* Pure virtual methods inherited from RTC::Codecs::EncodingContext. */
 			public:
 				void SyncRequired() override;
-
-			public:
-				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
-				bool syncRequired{ false };
-				uint8_t currentTemporalLayer{ std::numeric_limits<uint8_t>::max() };
 			};
 
 		public:
@@ -79,14 +73,13 @@ namespace RTC
 			};
 		};
 
-		/* Inline EncondingContext methods */
+		/* Inline EncondingContext methods. */
 
 		inline void H264::EncodingContext::SyncRequired()
 		{
-			this->syncRequired = true;
 		}
 
-		/* Inline PayloadDescriptorHandler methods */
+		/* Inline PayloadDescriptorHandler methods. */
 
 		inline void H264::PayloadDescriptorHandler::Dump() const
 		{

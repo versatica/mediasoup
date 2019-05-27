@@ -172,69 +172,36 @@ namespace RTC
 
 			auto* context = static_cast<RTC::Codecs::H264::EncodingContext*>(encodingContext);
 
-			// Check whether tl0PictureIndex sync is required.
-			if (context->syncRequired)
-			{
-				context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0picidx - 1);
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
-				context->syncRequired = false;
-			}
-
-			// If a key frame, update currentTemporalLayer.
+			// If a key frame, update current temporal layer.
 			if (this->payloadDescriptor->isKeyFrame)
-				context->currentTemporalLayer = std::numeric_limits<uint8_t>::max();
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
-			// Incremental pictureId. Check the temporal layer.
-			// clang-format off
-			if (
-				this->payloadDescriptor->hasTl0picidx &&
-				RTC::SeqManager<uint8_t>::IsSeqHigherThan(
-					this->payloadDescriptor->tl0picidx,
-					context->tl0PictureIndexManager.GetMaxInput())
-			)
-			// clang-format on
-			{
-				if (this->payloadDescriptor->tid > context->preferences.temporalLayer)
-				{
-					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0picidx);
-
-					return false;
-				}
-				// Upgrade required. Drop current packet if base flag is not set.
-				// TODO: Cannot enable this until this issue is fixed (in libwebrtc?):
-				//   https://github.com/versatica/mediasoup/issues/306
-				//
-				// clang-format off
-				// else if (
-				// 	this->payloadDescriptor->tid > context->currentTemporalLayer &&
-				// 	!this->payloadDescriptor->b
-				// )
-				// // clang-format on
-				// {
-				// 	context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0picidx);
-
-				// 	return false;
-				// }
-			}
-
-			uint8_t tl0picidx;
-
-			// Do not send a dropped tl0picidx.
-			if (
-				this->payloadDescriptor->hasTl0picidx &&
-				!context->tl0PictureIndexManager.Input(
-					this->payloadDescriptor->tl0picidx, tl0picidx)
-			)
-			// clang-format on
+			if (this->payloadDescriptor->tid > context->GetTargetTemporalLayer())
 			{
 				return false;
 			}
+			// Upgrade required. Drop current packet if base flag is not set.
+			// TODO: Cannot enable this until this issue is fixed (in libwebrtc?):
+			//   https://github.com/versatica/mediasoup/issues/306
+			//
+			// clang-format off
+			// else if (
+			// 	this->payloadDescriptor->tid > context->GetCurrentTemporalLayer() &&
+			// 	!this->payloadDescriptor->b
+			// )
+			// // clang-format on
+			// {
+			// 	return false;
+			// }
 
-			// Update/fix currentTemporalLayer.
-			if (this->payloadDescriptor->tid > context->currentTemporalLayer)
-				context->currentTemporalLayer = this->payloadDescriptor->tid;
-			else if (context->currentTemporalLayer > context->preferences.temporalLayer)
-				context->currentTemporalLayer = context->preferences.temporalLayer;
+			// Update/fix current temporal layer.
+			if (this->payloadDescriptor->tid > context->GetCurrentTemporalLayer())
+				context->SetCurrentTemporalLayer(this->payloadDescriptor->tid);
+
+			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			return true;
 		}

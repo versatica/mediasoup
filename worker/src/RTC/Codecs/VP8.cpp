@@ -227,6 +227,8 @@ namespace RTC
 
 			auto* context = static_cast<RTC::Codecs::VP8::EncodingContext*>(encodingContext);
 
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
+
 			// Check whether pictureId and tl0PictureIndex sync is required.
 			// clang-format off
 			if (
@@ -242,9 +244,9 @@ namespace RTC
 				context->syncRequired = false;
 			}
 
-			// If a key frame, update currentTemporalLayer.
+			// If a key frame, update current temporal layer.
 			if (this->payloadDescriptor->isKeyFrame)
-				context->currentTemporalLayer = std::numeric_limits<uint8_t>::max();
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			// Incremental pictureId. Check the temporal layer.
 			// clang-format off
@@ -258,7 +260,7 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				if (this->payloadDescriptor->tlIndex > context->preferences.temporalLayer)
+				if (this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer())
 				{
 					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
 					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
@@ -268,7 +270,7 @@ namespace RTC
 				// Upgrade required. Drop current packet if sync flag is not set.
 				// clang-format off
 				else if (
-					this->payloadDescriptor->tlIndex > context->currentTemporalLayer &&
+					this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer() &&
 					!this->payloadDescriptor->y
 				)
 				// clang-format on
@@ -307,11 +309,12 @@ namespace RTC
 				return false;
 			}
 
-			// Update/fix currentTemporalLayer.
-			if (this->payloadDescriptor->tlIndex > context->currentTemporalLayer)
-				context->currentTemporalLayer = this->payloadDescriptor->tlIndex;
-			else if (context->currentTemporalLayer > context->preferences.temporalLayer)
-				context->currentTemporalLayer = context->preferences.temporalLayer;
+			// Update/fix current temporal layer.
+			if (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer())
+				context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
+
+			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			// clang-format off
 			if (

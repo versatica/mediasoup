@@ -565,20 +565,20 @@ namespace RTC
 		return this->payloadPadding;
 	}
 
-	inline uint8_t RtpPacket::GetTemporalLayer() const
-	{
-		if (!this->payloadDescriptorHandler)
-			return 0u;
-
-		return this->payloadDescriptorHandler->GetTemporalLayer();
-	}
-
 	inline uint8_t RtpPacket::GetSpatialLayer() const
 	{
 		if (!this->payloadDescriptorHandler)
 			return 0u;
 
 		return this->payloadDescriptorHandler->GetSpatialLayer();
+	}
+
+	inline uint8_t RtpPacket::GetTemporalLayer() const
+	{
+		if (!this->payloadDescriptorHandler)
+			return 0u;
+
+		return this->payloadDescriptorHandler->GetTemporalLayer();
 	}
 
 	inline bool RtpPacket::IsKeyFrame() const

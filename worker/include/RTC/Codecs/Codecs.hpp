@@ -16,7 +16,7 @@ namespace RTC
 		void ProcessRtpPacket(RTC::RtpPacket* packet, const RTC::RtpCodecMimeType& mimeType);
 		EncodingContext* GetEncodingContext(const RTC::RtpCodecMimeType& mimeType);
 
-		// Inline namespace methods.
+		/* Inline namespace methods. */
 
 		inline bool CanBeKeyFrame(const RTC::RtpCodecMimeType& mimeType)
 		{

@@ -93,7 +93,6 @@ namespace RTC
 				RTC::SeqManager<uint16_t> pictureIdManager;
 				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
 				bool syncRequired{ false };
-				uint8_t currentTemporalLayer{ std::numeric_limits<uint8_t>::max() };
 			};
 
 		public:
@@ -116,14 +115,14 @@ namespace RTC
 			};
 		};
 
-		/* Inline EncondingContext methods */
+		/* Inline EncondingContext methods. */
 
 		inline void VP8::EncodingContext::SyncRequired()
 		{
 			this->syncRequired = true;
 		}
 
-		/* Inline PayloadDescriptorHandler methods */
+		/* Inline PayloadDescriptorHandler methods. */
 
 		inline void VP8::PayloadDescriptorHandler::Dump() const
 		{
