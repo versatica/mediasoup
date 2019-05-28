@@ -2,10 +2,13 @@
 # make tasks for mediasoup-worker.
 #
 
-# Best effort to get Python 2 executable and also allow custom PYTHON
-# environment variable set by the user.
-PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
+PYTHON ?= python
+LCOV = ./deps/lcov/bin/lcov
 GULP = ../node_modules/.bin/gulp
+BEAR ?= bear
+JQ ?= jq
+SED ?= sed
+DOCKER ?= docker
 MEDIASOUP_BUILDTYPE ?= Release
 
 .PHONY:	\
@@ -22,7 +25,7 @@ test:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
 	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
-	./deps/lcov/bin/lcov --directory ./ --zerocounters
+	$(LCOV) --directory ./ --zerocounters
 	./out/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 endif
 
@@ -43,13 +46,13 @@ format:
 
 bear:
 	$(MAKE) clean
-	bear -o compile_commands_template.tmp.json $(MAKE)
-	jq 'del(.[] | select(.file == "$(PWD)/src/Utils/IP.cpp"))' compile_commands_template.tmp.json > compile_commands_template.json
-	rm compile_commands_template.tmp.json
-	sed -i "s|$(PWD)|PATH|g" compile_commands_template.json
+	$(BEAR) -o compile_commands_template.tmp.json $(MAKE)
+	$(JQ) 'del(.[] | select(.file == "$(PWD)/src/Utils/IP.cpp"))' compile_commands_template.tmp.json > compile_commands_template.json
+	$(RM) -f compile_commands_template.tmp.json
+	$(SED) -i "s|$(PWD)|PATH|g" compile_commands_template.json
 
 tidy:
-	sed "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
+	$(SED) "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
 	$(PYTHON) ./scripts/clang-tidy.py \
 		-clang-tidy-binary=../node_modules/.bin/clang-tidy \
 		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
@@ -81,13 +84,13 @@ clean-all:
 
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
-	docker build -f Dockerfile --no-cache --tag mediasoup/docker:latest .
+	$(DOCKER) build -f Dockerfile --no-cache --tag mediasoup/docker:latest .
 else
-	docker build -f Dockerfile --tag mediasoup/docker:latest .
+	$(DOCKER) build -f Dockerfile --tag mediasoup/docker:latest .
 endif
 
 docker-run:
-	docker run \
+	$(DOCKER) run \
 		--name=mediasoupDocker -it --rm \
 		--cap-add SYS_PTRACE \
 		-v $(shell pwd)/../:/mediasoup \
