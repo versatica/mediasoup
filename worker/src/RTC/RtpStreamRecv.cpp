@@ -77,7 +77,9 @@ namespace RTC
 			{
 				rate += temporalLayerCounter.GetBitrate(now);
 
-				if (++temporalLayerIdx > temporalLayer)
+				// If we are in the given spatial layer, ignore temporal layers higher
+				// than the given one.
+				if (spatialLayerIdx == spatialLayer && ++temporalLayerIdx > temporalLayer)
 					break;
 			}
 
