@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-# File inspired in https://github.com/indutny/bud
+#
+# Script inspired in bud:
+#   https://github.com/indutny/bud
+#
 
 import platform
 import os
@@ -35,13 +38,13 @@ def host_arch():
 
 def compiler_version():
   proc = subprocess.Popen(CC.split() + ['--version'], stdout=subprocess.PIPE)
-  is_clang = 'clang' in proc.communicate()[0].split('\n')[0]
+  is_clang = b'clang' in proc.communicate()[0].split(b'\n')[0]
   proc = subprocess.Popen(CC.split() + ['-dumpversion'], stdout=subprocess.PIPE)
-  version = proc.communicate()[0].split('.')
+  version = proc.communicate()[0].split(b'.')
   mayor_version = int(version[:1][0])
   if is_clang == False and mayor_version >= 7:
     proc = subprocess.Popen(CC.split() + ['-dumpfullversion'], stdout=subprocess.PIPE)
-    version = proc.communicate()[0].split('.')
+    version = proc.communicate()[0].split(b'.')
   version = map(int, version[:2])
   version = tuple(version)
   return (version, is_clang)
