@@ -18,8 +18,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: missing payloadDescriptor->isKeyFrame.
-
 			if (len < 1)
 				return nullptr;
 
@@ -82,6 +80,13 @@ namespace RTC
 				payloadDescriptor->hasTl0PictureIndex = true;
 			}
 
+			if (!payloadDescriptor->p &&
+					payloadDescriptor->b &&
+					payloadDescriptor->slIndex == 0)
+			{
+				payloadDescriptor->isKeyFrame = true;
+			}
+
 			return payloadDescriptor.release();
 		}
 
@@ -111,6 +116,10 @@ namespace RTC
 			// TODO: TMP
 			if (payloadDescriptor->l)
 				payloadDescriptor->Dump();
+
+			// TODO: TMP
+			if (payloadDescriptor->isKeyFrame)
+				MS_ERROR("key frame!!");
 
 			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
