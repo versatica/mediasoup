@@ -145,7 +145,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("<PayloadDescriptor>");
 			MS_DEBUG_DEV(
-			  "  s|e|i|d|b  : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
+			  "  s:%" PRIu8 "|e:%" PRIu8 "|i:%" PRIu8 "|d:%" PRIu8 "|b:%" PRIu8,
 			  this->s,
 			  this->e,
 			  this->i,

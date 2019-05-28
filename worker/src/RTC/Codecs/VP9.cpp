@@ -109,7 +109,7 @@ namespace RTC
 				return;
 
 			// TODO: TMP
-			// if (payloadDescriptor->slIndex != 0)
+			if (payloadDescriptor->l)
 				payloadDescriptor->Dump();
 
 			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
@@ -125,8 +125,8 @@ namespace RTC
 
 			MS_DEBUG_DEV("<PayloadDescriptor>");
 			MS_DEBUG_DEV(
-			  "  i|p|l|f|b|e|v         : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8
-			  "|%" PRIu8,
+			  "  i:%" PRIu8 "|p:%" PRIu8 "|l:%" PRIu8 "|f:%" PRIu8 "|b:%" PRIu8 "|e:%" PRIu8
+			  "|v:%" PRIu8,
 			  this->i,
 			  this->p,
 			  this->l,

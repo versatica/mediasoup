@@ -153,16 +153,16 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_DEV("<PayloadDescriptor>");
-			MS_DEBUG_DEV("  extended             : %" PRIu8, this->extended);
-			MS_DEBUG_DEV("  nonReference         : %" PRIu8, this->nonReference);
-			MS_DEBUG_DEV("  start                : %" PRIu8, this->start);
-			MS_DEBUG_DEV("  partitionIndex       : %" PRIu8, this->partitionIndex);
 			MS_DEBUG_DEV(
-			  "  i|l|t|k              : %" PRIu8 "|%" PRIu8 "|%" PRIu8 "|%" PRIu8,
+			  "  i:%" PRIu8 "|l:%" PRIu8 "|t:%" PRIu8 "|k:%" PRIu8,
 			  this->i,
 			  this->l,
 			  this->t,
 			  this->k);
+			MS_DEBUG_DEV("  extended             : %" PRIu8, this->extended);
+			MS_DEBUG_DEV("  nonReference         : %" PRIu8, this->nonReference);
+			MS_DEBUG_DEV("  start                : %" PRIu8, this->start);
+			MS_DEBUG_DEV("  partitionIndex       : %" PRIu8, this->partitionIndex);
 			MS_DEBUG_DEV("  pictureId            : %" PRIu16, this->pictureId);
 			MS_DEBUG_DEV("  tl0PictureIndex      : %" PRIu8, this->tl0PictureIndex);
 			MS_DEBUG_DEV("  tlIndex              : %" PRIu8, this->tlIndex);
