@@ -95,7 +95,6 @@ Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
 Builds a Xcode project for the mediasoup-worker subproject.
 
 
-
 ### `make lint`
 
 Validates mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and rules in `worker/.clang-format`.

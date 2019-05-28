@@ -526,7 +526,7 @@ class XcodeSettings(object):
       XcodeSettings._sdk_path_cache[sdk_root] = sdk_path
       if sdk_root:
         XcodeSettings._sdk_root_cache[sdk_path] = sdk_root
-    return XcodeSettings._sdk_path_cache[sdk_root]
+    return XcodeSettings._sdk_path_cache[sdk_root].decode()
 
   def _AppendPlatformVersionMinFlags(self, lst):
     self._Appendf(lst, 'MACOSX_DEPLOYMENT_TARGET', '-mmacosx-version-min=%s')
@@ -1413,7 +1413,7 @@ def XcodeVersion():
   version = version_list[0]
   build = version_list[-1]
   # Be careful to convert "4.2" to "0420":
-  version = version.split()[-1].replace('.', '')
+  version = version.split()[-1].decode().replace('.', '')
   version = (version + '0' * (3 - len(version))).zfill(4)
   if build:
     build = build.split()[-1]
@@ -1450,9 +1450,9 @@ def GetStdout(cmdlist):
   job = subprocess.Popen(cmdlist, stdout=subprocess.PIPE)
   out = job.communicate()[0]
   if job.returncode != 0:
-    sys.stderr.write(out + '\n')
+    sys.stderr.write(out + b'\n')
     raise GypError('Error %d running %s' % (job.returncode, cmdlist[0]))
-  return out.rstrip('\n')
+  return out.rstrip(b'\n')
 
 
 def MergeGlobalXcodeSettingsToSpec(global_dict, spec):

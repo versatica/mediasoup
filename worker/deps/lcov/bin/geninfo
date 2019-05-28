@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 #   Copyright (c) International Business Machines  Corp., 2002,2012
 #
@@ -50,12 +50,18 @@
 #
 
 use strict;
+use warnings;
 use File::Basename; 
 use File::Spec::Functions qw /abs2rel catdir file_name_is_absolute splitdir
 			      splitpath catpath/;
+use File::Temp qw(tempfile tempdir);
+use File::Copy qw(copy);
 use Getopt::Long;
 use Digest::MD5 qw(md5_base64);
 use Cwd qw/abs_path/;
+use PerlIO::gzip;
+use JSON qw(decode_json);
+
 if( $^O eq "msys" )
 {
 	require File::Spec::Win32;
@@ -68,6 +74,7 @@ our $lcov_url		= "http://ltp.sourceforge.net/coverage/lcov.php";
 our $gcov_tool		= "gcov";
 our $tool_name		= basename($0);
 
+our $GCOV_VERSION_8_0_0	= 0x80000;
 our $GCOV_VERSION_4_7_0	= 0x40700;
 our $GCOV_VERSION_3_4_0	= 0x30400;
 our $GCOV_VERSION_3_3_0	= 0x30300;
@@ -161,13 +168,13 @@ sub solve_relative_path($$);
 sub read_gcov_header($);
 sub read_gcov_file($);
 sub info(@);
+sub process_intermediate($$$);
 sub map_llvm_version($);
 sub version_to_str($);
 sub get_gcov_version();
 sub system_no_output($@);
 sub read_config($);
 sub apply_config($);
-sub get_exclusion_data($);
 sub apply_exclusion_data($$);
 sub process_graphfile($$);
 sub filter_fn_name($);
@@ -182,7 +189,7 @@ sub sort_uniq(@);
 sub sort_uniq_lex(@);
 sub graph_cleanup($);
 sub graph_find_base($);
-sub graph_from_bb($$$);
+sub graph_from_bb($$$$);
 sub graph_add_order($$$);
 sub read_bb_word(*;$);
 sub read_bb_value(*;$);
@@ -262,6 +269,8 @@ our $gcno_split_crc;
 our $func_coverage = 1;
 our $br_coverage = 0;
 our $rc_auto_base = 1;
+our $rc_intermediate = "auto";
+our $intermediate;
 our $excl_line = "LCOV_EXCL_LINE";
 our $excl_br_line = "LCOV_EXCL_BR_LINE";
 
@@ -329,6 +338,7 @@ if ($config || %opt_rc)
 		"geninfo_compat"		=> \$opt_compat,
 		"geninfo_adjust_src_path"	=> \$rc_adjust_src_path,
 		"geninfo_auto_base"		=> \$rc_auto_base,
+		"geninfo_intermediate"		=> \$rc_intermediate,
 		"lcov_function_coverage"	=> \$func_coverage,
 		"lcov_branch_coverage"		=> \$br_coverage,
 		"lcov_excl_line"		=> \$excl_line,
@@ -458,16 +468,45 @@ if (system_no_output(3, $gcov_tool, "--help") == -1)
 }
 
 ($gcov_version, $gcov_version_string) = get_gcov_version();
+$gcov_caps = get_gcov_capabilities();
+
+# Determine intermediate mode
+if ($rc_intermediate eq "0") {
+	$intermediate = 0;
+} elsif ($rc_intermediate eq "1") {
+	$intermediate = 1;
+} elsif (lc($rc_intermediate) eq "auto") {
+	# Use intermediate format if supported by gcov
+	$intermediate = ($gcov_caps->{'intermediate-format'} ||
+			 $gcov_caps->{'json-format'}) ? 1 : 0;
+} else {
+	die("ERROR: invalid value for geninfo_intermediate: ".
+	    "'$rc_intermediate'\n");
+}
+
+if ($intermediate) {
+	info("Using intermediate gcov format\n");
+	if ($opt_derive_func_data) {
+		warn("WARNING: --derive-func-data is not compatible with ".
+		     "intermediate format - ignoring\n");
+		$opt_derive_func_data = 0;
+	}
+}
 
 # Determine gcov options
-$gcov_caps = get_gcov_capabilities();
 push(@gcov_options, "-b") if ($gcov_caps->{'branch-probabilities'} &&
 			      ($br_coverage || $func_coverage));
 push(@gcov_options, "-c") if ($gcov_caps->{'branch-counts'} &&
 			      $br_coverage);
 push(@gcov_options, "-a") if ($gcov_caps->{'all-blocks'} &&
-			      $opt_gcov_all_blocks && $br_coverage);
-push(@gcov_options, "-p") if ($gcov_caps->{'preserve-paths'});
+			      $opt_gcov_all_blocks && $br_coverage &&
+			      !$intermediate);
+if ($gcov_caps->{'hash-filenames'})
+{
+	push(@gcov_options, "-x");
+} else {
+	push(@gcov_options, "-p") if ($gcov_caps->{'preserve-paths'});
+}
 
 # Determine compatibility modes
 parse_compat_modes($opt_compat);
@@ -592,7 +631,7 @@ foreach my $entry (@data_directory) {
 	gen_info($entry);
 }
 
-if ($initial && $br_coverage) {
+if ($initial && $br_coverage && !$intermediate) {
 	warn("Note: --initial does not generate branch coverage ".
 	     "data\n");
 }
@@ -761,6 +800,7 @@ sub gen_info($)
 	my $prefix;
 	my $type;
 	my $ext;
+	my $tempdir;
 
 	if ($initial) {
 		$type = "graph";
@@ -791,15 +831,21 @@ sub gen_info($)
 		$prefix = "";
 	}
 
+	$tempdir = tempdir(CLEANUP => 1);
+
 	# Process all files in list
 	foreach $file (@file_list) {
 		# Process file
-		if ($initial) {
+		if ($intermediate) {
+			process_intermediate($file, $prefix, $tempdir);
+		} elsif ($initial) {
 			process_graphfile($file, $prefix);
 		} else {
 			process_dafile($file, $prefix);
 		}
 	}
+
+	unlink($tempdir);
 
 	# Report whether files were excluded.
 	if (%excluded_files) {
@@ -1051,10 +1097,12 @@ sub process_dafile($$)
 
 	# Try to find base directory automatically if requested by user
 	if ($rc_auto_base) {
-		$base_dir = find_base_from_graph($base_dir, $instr, $graph);
+		$base_dir = find_base_from_source($base_dir,
+			[ keys(%{$instr}), keys(%{$graph}) ]);
 	}
 
-	($instr, $graph) = adjust_graph_filenames($base_dir, $instr, $graph);
+	adjust_source_filenames($instr, $base_dir);
+	adjust_source_filenames($graph, $base_dir);
 
 	# Set $object_dir to real location of object files. This may differ
 	# from $da_dir if the graph file is just a link to the "real" object
@@ -1483,7 +1531,9 @@ sub solve_relative_path($$)
 	$result =~ s/\/\//\//g;
 
 	# Remove .
-	$result =~ s/\/\.\//\//g;
+	while ($result =~ s/\/\.\//\//g)
+	{
+	}
 	$result =~ s/\/\.$/\//g;
 
 	# Remove trailing /
@@ -1900,7 +1950,7 @@ sub read_gcov_file($)
 			# Also remove CR from line-end
 			s/\015$//;
 
-			if (/^\s*(\d+|\$+):\s*(\d+)-block\s+(\d+)\s*$/) {
+			if (/^\s*(\d+|\$+|\%+):\s*(\d+)-block\s+(\d+)\s*$/) {
 				# Block information - used to group related
 				# branches
 				$last_line = $2;
@@ -1934,6 +1984,9 @@ sub read_gcov_file($)
 			{
 				my ($count, $line, $code) = ($1, $2, $3);
 
+				# Skip instance-specific counts
+				next if ($line <= (scalar(@result) / 3));
+
 				$last_line = $line;
 				$last_block = $UNNAMED_BLOCK;
 				# Check for exclusion markers
@@ -1962,6 +2015,9 @@ sub read_gcov_file($)
 						$exclude_branch = 0;
 					}
 				}
+
+				# Strip unexecuted basic block marker
+				$count =~ s/\*$//;
 
 				# <exec count>:<line number>:<source code>
 				if ($line eq "0")
@@ -1999,6 +2055,453 @@ sub read_gcov_file($)
 		warn("WARNING: unterminated exclusion section in $filename\n");
 	}
 	return(\@result, $branches, \@functions);
+}
+
+
+#
+# read_intermediate_text(gcov_filename, data)
+#
+# Read gcov intermediate text format in GCOV_FILENAME and add the resulting
+# data to DATA in the following format:
+#
+# data:      source_filename -> file_data
+# file_data: concatenated lines of intermediate text data
+#
+
+sub read_intermediate_text($$)
+{
+	my ($gcov_filename, $data) = @_;
+	my $fd;
+	my $filename;
+
+	open($fd, "<", $gcov_filename) or
+		die("ERROR: Could not read $gcov_filename: $!\n");
+	while (my $line = <$fd>) {
+		if ($line =~ /^file:(.*)$/) {
+			$filename = $1;
+			chomp($filename);
+		} elsif (defined($filename)) {
+			$data->{$filename} .= $line;
+		}
+	}
+	close($fd);
+}
+
+
+#
+# read_intermediate_json(gcov_filename, data, basedir_ref)
+#
+# Read gcov intermediate JSON format in GCOV_FILENAME and add the resulting
+# data to DATA in the following format:
+#
+# data:      source_filename -> file_data
+# file_data: GCOV JSON data for file
+#
+# Also store the value for current_working_directory to BASEDIR_REF.
+#
+
+sub read_intermediate_json($$$)
+{
+	my ($gcov_filename, $data, $basedir_ref) = @_;
+	my $fd;
+	my $text;
+	my $json;
+
+	open($fd, "<:gzip", $gcov_filename) or
+		die("ERROR: Could not read $gcov_filename: $!\n");
+	local $/;
+	$text = <$fd>;
+	close($fd);
+
+	$json = decode_json($text);
+	if (!defined($json) || !exists($json->{"files"}) ||
+	    ref($json->{"files"} ne "ARRAY")) {
+		die("ERROR: Unrecognized JSON output format in ".
+		    "$gcov_filename\n");
+	}
+
+	$$basedir_ref = $json->{"current_working_directory"};
+
+	for my $file (@{$json->{"files"}}) {
+		my $filename = $file->{"file"};
+
+		$data->{$filename} = $file;
+	}
+}
+
+
+#
+# intermediate_text_to_info(fd, data, srcdata)
+#
+# Write DATA in info format to file descriptor FD.
+#
+# data:      filename -> file_data:
+# file_data: concatenated lines of intermediate text data
+#
+# srcdata:   filename -> [ excl, brexcl, checksums ]
+# excl:      lineno -> 1 for all lines for which to exclude all data
+# brexcl:    lineno -> 1 for all lines for which to exclude branch data
+# checksums: lineno -> source code checksum
+#
+# Note: To simplify processing, gcov data is not combined here, that is counts
+#       that appear multiple times for the same lines/branches are not added.
+#       This is done by lcov/genhtml when reading the data files.
+#
+
+sub intermediate_text_to_info($$$)
+{
+	my ($fd, $data, $srcdata) = @_;
+	my $branch_num = 0;
+	my $c;
+
+	return if (!%{$data});
+
+	print($fd "TN:$test_name\n");
+	for my $filename (keys(%{$data})) {
+		my ($excl, $brexcl, $checksums);
+
+		if (defined($srcdata->{$filename})) {
+			($excl, $brexcl, $checksums) = @{$srcdata->{$filename}};
+		}
+
+		print($fd "SF:$filename\n");
+		for my $line (split(/\n/, $data->{$filename})) {
+			if ($line =~ /^lcount:(\d+),(\d+),?/) {
+				# lcount:<line>,<count>
+				# lcount:<line>,<count>,<has_unexecuted_blocks>
+				if ($checksum && exists($checksums->{$1})) {
+					$c = ",".$checksums->{$1};
+				} else {
+					$c = "";
+				}
+				print($fd "DA:$1,$2$c\n") if (!$excl->{$1});
+
+				# Intermediate text format does not provide
+				# branch numbers, and the same branch may appear
+				# multiple times on the same line (e.g. in
+				# template instances). Synthesize a branch
+				# number based on the assumptions:
+				# a) the order of branches is fixed across
+				#    instances
+				# b) an instance starts with an lcount line
+				$branch_num = 0;
+			} elsif ($line =~ /^function:(\d+),(\d+),([^,]+)$/) {
+				next if (!$func_coverage || $excl->{$1});
+
+				# function:<line>,<count>,<name>
+				print($fd "FN:$1,$3\n");
+				print($fd "FNDA:$2,$3\n");
+			} elsif ($line =~ /^function:(\d+),\d+,(\d+),([^,]+)$/) {
+				next if (!$func_coverage || $excl->{$1});
+
+				# function:<start_line>,<end_line>,<count>,
+				#          <name>
+				print($fd "FN:$1,$3\n");
+				print($fd "FNDA:$2,$3\n");
+			} elsif ($line =~ /^branch:(\d+),(taken|nottaken|notexec)/) {
+				next if (!$br_coverage || $excl->{$1} ||
+					 $brexcl->{$1});
+
+				# branch:<line>,taken|nottaken|notexec
+				if ($2 eq "taken") {
+					$c = 1;
+				} elsif ($2 eq "nottaken") {
+					$c = 0;
+				} else {
+					$c = "-";
+				}
+				print($fd "BRDA:$1,0,$branch_num,$c\n");
+				$branch_num++;
+			}
+		}
+		print($fd "end_of_record\n");
+	}
+}
+
+
+#
+# intermediate_json_to_info(fd, data, srcdata)
+#
+# Write DATA in info format to file descriptor FD.
+#
+# data:      filename -> file_data:
+# file_data: GCOV JSON data for file
+#
+# srcdata:   filename -> [ excl, brexcl, checksums ]
+# excl:      lineno -> 1 for all lines for which to exclude all data
+# brexcl:    lineno -> 1 for all lines for which to exclude branch data
+# checksums: lineno -> source code checksum
+#
+# Note: To simplify processing, gcov data is not combined here, that is counts
+#       that appear multiple times for the same lines/branches are not added.
+#       This is done by lcov/genhtml when reading the data files.
+#
+
+sub intermediate_json_to_info($$$)
+{
+	my ($fd, $data, $srcdata) = @_;
+	my $branch_num = 0;
+
+	return if (!%{$data});
+
+	print($fd "TN:$test_name\n");
+	for my $filename (keys(%{$data})) {
+		my ($excl, $brexcl, $checksums);
+		my $file_data = $data->{$filename};
+
+		if (defined($srcdata->{$filename})) {
+			($excl, $brexcl, $checksums) = @{$srcdata->{$filename}};
+		}
+
+		print($fd "SF:$filename\n");
+
+		# Function data
+		if ($func_coverage) {
+			for my $d (@{$file_data->{"functions"}}) {
+				my $line = $d->{"start_line"};
+				my $count = $d->{"execution_count"};
+				my $name = $d->{"name"};
+
+				next if (!defined($line) || !defined($count) ||
+					 !defined($name) || $excl->{$line});
+
+				print($fd "FN:$line,$name\n");
+				print($fd "FNDA:$count,$name\n");
+			}
+		}
+
+		# Line data
+		for my $d (@{$file_data->{"lines"}}) {
+			my $line = $d->{"line_number"};
+			my $count = $d->{"count"};
+			my $c;
+			my $branches = $d->{"branches"};
+			my $unexec = $d->{"unexecuted_block"};
+
+			next if (!defined($line) || !defined($count) ||
+				 $excl->{$line});
+
+			if (defined($unexec) && $unexec && $count == 0) {
+				$unexec = 1;
+			} else {
+				$unexec = 0;
+			}
+
+			if ($checksum && exists($checksums->{$line})) {
+				$c = ",".$checksums->{$line};
+			} else {
+				$c = "";
+			}
+			print($fd "DA:$line,$count$c\n");
+
+			$branch_num = 0;
+			# Branch data
+			if ($br_coverage && !$brexcl->{$line}) {
+				for my $b (@$branches) {
+					my $brcount = $b->{"count"};
+
+					if (!defined($brcount) || $unexec) {
+						$brcount = "-";
+					}
+					print($fd "BRDA:$line,0,$branch_num,".
+					      "$brcount\n");
+
+					$branch_num++;
+				}
+			}
+
+		}
+
+		print($fd "end_of_record\n");
+	}
+}
+
+
+sub get_output_fd($$)
+{
+	my ($outfile, $file) = @_;
+	my $fd;
+
+	if (!defined($outfile)) {
+		open($fd, ">", "$file.info") or
+			die("ERROR: Cannot create file $file.info: $!\n");
+	} elsif ($outfile eq "-") {
+		open($fd, ">&STDOUT") or
+			die("ERROR: Cannot duplicate stdout: $!\n");
+	} else {
+		open($fd, ">>", $outfile) or
+			die("ERROR: Cannot write to file $outfile: $!\n");
+	}
+
+	return $fd;
+}
+
+
+#
+# print_gcov_warnings(stderr_file, is_graph, map)
+#
+# Print GCOV warnings in file STDERR_FILE to STDERR. If IS_GRAPH is non-zero,
+# suppress warnings about missing as these are expected. Replace keys found
+# in MAP with their values.
+#
+
+sub print_gcov_warnings($$$)
+{
+	my ($stderr_file, $is_graph, $map) = @_;
+	my $fd;
+
+	if (!open($fd, "<", $stderr_file)) {
+		warn("WARNING: Could not open GCOV stderr file ".
+		     "$stderr_file: $!\n");
+		return;
+	}
+	while (my $line = <$fd>) {
+		next if ($is_graph && $line =~ /cannot open data file/);
+
+		for my $key (keys(%{$map})) {
+			$line =~ s/\Q$key\E/$map->{$key}/g;
+		}
+
+		print(STDERR $line);
+	}
+	close($fd);
+}
+
+
+#
+# process_intermediate(file, dir, tempdir)
+#
+# Create output for a single file (either a data file or a graph file) using
+# gcov's intermediate option.
+#
+
+sub process_intermediate($$$)
+{
+	my ($file, $dir, $tempdir) = @_;
+	my ($fdir, $fbase, $fext);
+	my $data_file;
+	my $errmsg;
+	my %data;
+	my $fd;
+	my $base;
+	my $srcdata;
+	my $is_graph = 0;
+	my ($out, $err, $rc);
+	my $json_basedir;
+	my $json_format;
+
+	info("Processing %s\n", abs2rel($file, $dir));
+
+	$file = solve_relative_path($cwd, $file);
+	($fdir, $fbase, $fext) = split_filename($file);
+
+	$is_graph = 1 if (".$fext" eq $graph_file_extension);
+
+	if ($is_graph) {
+		# Process graph file - copy to temp directory to prevent
+		# accidental processing of associated data file
+		$data_file = "$tempdir/$fbase$graph_file_extension";
+		if (!copy($file, $data_file)) {
+			$errmsg = "ERROR: Could not copy file $file";
+			goto err;
+		}
+	} else {
+		# Process data file in place
+		$data_file = $file;
+	}
+
+	# Change directory
+	if (!chdir($tempdir)) {
+		$errmsg = "Could not change to directory $tempdir: $!";
+		goto err;
+	}
+
+	# Run gcov on data file
+	($out, $err, $rc) = system_no_output(1 + 2 + 4, $gcov_tool,
+					     $data_file, @gcov_options, "-i");
+	defined($out) && unlink($out);
+	if (defined($err)) {
+		print_gcov_warnings($err, $is_graph, {
+			$data_file => $file,
+		});
+		unlink($err);
+	}
+	if ($rc) {
+		$errmsg = "GCOV failed for $file";
+		goto err;
+	}
+
+	if ($is_graph) {
+		# Remove graph file copy
+		unlink($data_file);
+	}
+
+	# Parse resulting file(s)
+	for my $gcov_filename (glob("*.gcov")) {
+		read_intermediate_text($gcov_filename, \%data);
+		unlink($gcov_filename);
+	}
+
+	for my $gcov_filename (glob("*.gcov.json.gz")) {
+		read_intermediate_json($gcov_filename, \%data, \$json_basedir);
+		unlink($gcov_filename);
+		$json_format = 1;
+	}
+
+	if (!%data) {
+		warn("WARNING: GCOV did not produce any data for $file\n");
+		return;
+	}
+
+	# Determine base directory
+	if (defined($base_directory)) {
+		$base = $base_directory;
+	} elsif (defined($json_basedir)) {
+		$base = $json_basedir;
+	} else {
+		$base = $fdir;
+
+		if (is_compat($COMPAT_MODE_LIBTOOL)) {
+			# Avoid files from .libs dirs
+			$base =~ s/\.libs$//;
+		}
+
+		# Try to find base directory automatically if requested by user
+		if ($rc_auto_base) {
+			$base = find_base_from_source($base, [ keys(%data) ]);
+		}
+	}
+
+	# Apply base file name to relative source files
+	adjust_source_filenames(\%data, $base);
+
+	# Remove excluded source files
+	filter_source_files(\%data);
+
+	# Get data on exclusion markers and checksums if requested
+	if (!$no_markers || $checksum) {
+		$srcdata = get_all_source_data(keys(%data));
+	}
+
+	# Generate output
+	$fd = get_output_fd($output_filename, $file);
+	if ($json_format) {
+		intermediate_json_to_info($fd, \%data, $srcdata);
+	} else {
+		intermediate_text_to_info($fd, \%data, $srcdata);
+	}
+	close($fd);
+
+	chdir($cwd);
+
+	return;
+
+err:
+	if ($ignore[$ERROR_GCOV]) {
+		warn("WARNING: $errmsg!\n");
+	} else {
+		die("ERROR: $errmsg!\n")
+	}
 }
 
 
@@ -2136,8 +2639,12 @@ sub int_handler()
 #
 #   MODE & 1: suppress STDOUT
 #   MODE & 2: suppress STDERR
+#   MODE & 4: redirect to temporary files instead of suppressing
 #
-# Return 0 on success, non-zero otherwise.
+# Return (stdout, stderr, rc):
+#    stdout: path to tempfile containing stdout or undef
+#    stderr: path to tempfile containing stderr or undef
+#    0 on success, non-zero otherwise
 #
 
 sub system_no_output($@)
@@ -2146,14 +2653,31 @@ sub system_no_output($@)
 	my $result;
 	local *OLD_STDERR;
 	local *OLD_STDOUT;
+	my $stdout_file;
+	my $stderr_file;
+	my $fd;
 
 	# Save old stdout and stderr handles
 	($mode & 1) && open(OLD_STDOUT, ">>&", "STDOUT");
 	($mode & 2) && open(OLD_STDERR, ">>&", "STDERR");
 
-	# Redirect to /dev/null
-	($mode & 1) && open(STDOUT, ">", "/dev/null");
-	($mode & 2) && open(STDERR, ">", "/dev/null");
+	if ($mode & 4) {
+		# Redirect to temporary files
+		if ($mode & 1) {
+			($fd, $stdout_file) = tempfile(UNLINK => 1);
+			open(STDOUT, ">", $stdout_file) || warn("$!\n");
+			close($fd);
+		}
+		if ($mode & 2) {
+			($fd, $stderr_file) = tempfile(UNLINK => 1);
+			open(STDERR, ">", $stderr_file) || warn("$!\n");
+			close($fd);
+		}
+	} else {
+		# Redirect to /dev/null
+		($mode & 1) && open(STDOUT, ">", "/dev/null");
+		($mode & 2) && open(STDERR, ">", "/dev/null");
+	}
  
 	debug("system(".join(' ', @_).")\n");
 	system(@_);
@@ -2166,8 +2690,18 @@ sub system_no_output($@)
 	# Restore old handles
 	($mode & 1) && open(STDOUT, ">>&", "OLD_STDOUT");
 	($mode & 2) && open(STDERR, ">>&", "OLD_STDERR");
+
+	# Remove empty output files
+	if (defined($stdout_file) && -z $stdout_file) {
+		unlink($stdout_file);
+		$stdout_file = undef;
+	}
+	if (defined($stderr_file) && -z $stderr_file) {
+		unlink($stderr_file);
+		$stderr_file = undef;
+	}
  
-	return $result;
+	return ($stdout_file, $stderr_file, $result);
 }
 
 
@@ -2245,23 +2779,28 @@ sub apply_config($)
 
 
 #
-# get_exclusion_data(filename)
+# get_source_data(filename)
 #
-# Scan specified source code file for exclusion markers and return
-#   linenumber -> 1
-# for all lines which should be excluded.
+# Scan specified source code file for exclusion markers and checksums. Return
+#   ( excl, brexcl, checksums ) where
+#   excl:      lineno -> 1 for all lines for which to exclude all data
+#   brexcl:    lineno -> 1 for all lines for which to exclude branch data
+#   checksums: lineno -> source code checksum
 #
 
-sub get_exclusion_data($)
+sub get_source_data($)
 {
 	my ($filename) = @_;
 	my %list;
 	my $flag = 0;
+	my %brdata;
+	my $brflag = 0;
+	my %checksums;
 	local *HANDLE;
 
 	if (!open(HANDLE, "<", $filename)) {
 		warn("WARNING: could not open $filename\n");
-		return undef;
+		return;
 	}
 	while (<HANDLE>) {
 		if (/$EXCL_STOP/) {
@@ -2272,14 +2811,62 @@ sub get_exclusion_data($)
 		if (/$excl_line/ || $flag) {
 			$list{$.} = 1;
 		}
+		if (/$EXCL_BR_STOP/) {
+			$brflag = 0;
+		} elsif (/$EXCL_BR_START/) {
+			$brflag = 1;
+		}
+		if (/$excl_br_line/ || $brflag) {
+			$brdata{$.} = 1;
+		}
+		if ($checksum) {
+			chomp();
+			$checksums{$.} = md5_base64($_);
+		}
 	}
 	close(HANDLE);
 
-	if ($flag) {
+	if ($flag || $brflag) {
 		warn("WARNING: unterminated exclusion section in $filename\n");
 	}
 
-	return \%list;
+	return (\%list, \%brdata, \%checksums);
+}
+
+
+#
+# get_all_source_data(filenames)
+#
+# Scan specified source code files for exclusion markers and return
+#   filename -> [ excl, brexcl, checksums ]
+#   excl:      lineno -> 1 for all lines for which to exclude all data
+#   brexcl:    lineno -> 1 for all lines for which to exclude branch data
+#   checksums: lineno -> source code checksum
+#
+
+sub get_all_source_data(@)
+{
+	my @filenames = @_;
+	my %data;
+	my $failed = 0;
+
+	for my $filename (@filenames) {
+		my @d;
+		next if (exists($data{$filename}));
+
+		@d = get_source_data($filename);
+		if (@d) {
+			$data{$filename} = [ @d ];
+		} else {
+			$failed = 1;
+		}
+	}
+
+	if ($failed) {
+		warn("WARNING: some exclusion markers may be ignored\n");
+	}
+
+	return \%data;
 }
 
 
@@ -2303,35 +2890,17 @@ sub apply_exclusion_data($$)
 {
 	my ($instr, $graph) = @_;
 	my $filename;
-	my %excl_data;
-	my $excl_read_failed = 0;
+	my $excl_data;
 
-	# Collect exclusion marker data
-	foreach $filename (sort_uniq_lex(keys(%{$graph}), keys(%{$instr}))) {
-		my $excl = get_exclusion_data($filename);
-
-		# Skip and note if file could not be read
-		if (!defined($excl)) {
-			$excl_read_failed = 1;
-			next;
-		}
-
-		# Add to collection if there are markers
-		$excl_data{$filename} = $excl if (keys(%{$excl}) > 0);
-	}
-
-	# Warn if not all source files could be read
-	if ($excl_read_failed) {
-		warn("WARNING: some exclusion markers may be ignored\n");
-	}
+	($excl_data) = get_all_source_data(keys(%{$graph}), keys(%{$instr}));
 
 	# Skip if no markers were found
-	return ($instr, $graph) if (keys(%excl_data) == 0);
+	return ($instr, $graph) if (!%$excl_data);
 
 	# Apply exclusion marker data to graph
-	foreach $filename (keys(%excl_data)) {
+	foreach $filename (keys(%$excl_data)) {
 		my $function_data = $graph->{$filename};
-		my $excl = $excl_data{$filename};
+		my $excl = $excl_data->{$filename}->[0];
 		my $function;
 
 		next if (!defined($function_data));
@@ -2369,9 +2938,9 @@ sub apply_exclusion_data($$)
 	}
 
 	# Apply exclusion marker data to instr
-	foreach $filename (keys(%excl_data)) {
+	foreach $filename (keys(%$excl_data)) {
 		my $line_data = $instr->{$filename};
-		my $excl = $excl_data{$filename};
+		my $excl = $excl_data->{$filename}->[0];
 		my $line;
 		my @new_data;
 
@@ -2453,10 +3022,12 @@ sub process_graphfile($$)
 
 	# Try to find base directory automatically if requested by user
 	if ($rc_auto_base) {
-		$base_dir = find_base_from_graph($base_dir, $instr, $graph);
+		$base_dir = find_base_from_source($base_dir,
+			[ keys(%{$instr}), keys(%{$graph}) ]);
 	}
 
-	($instr, $graph) = adjust_graph_filenames($base_dir, $instr, $graph);
+	adjust_source_filenames($instr, $base_dir);
+	adjust_source_filenames($graph, $base_dir);
 
 	if (!$no_markers) {
 		# Apply exclusion marker data to graph file data
@@ -2752,11 +3323,11 @@ sub parent_dir($)
 }
 
 #
-# find_base_from_graph(base_dir, instr, graph)
+# find_base_from_source(base_dir, source_files)
 #
-# Try to determine the base directory of the graph file specified by INSTR
-# and GRAPH. The base directory is the base for all relative filenames in
-# the graph file. It is defined by the current working directory at time
+# Try to determine the base directory of the object file built from
+# SOURCE_FILES. The base directory is the base for all relative filenames in
+# the gcov data. It is defined by the current working directory at time
 # of compiling the source file.
 #
 # This function implements a heuristic which relies on the following
@@ -2766,16 +3337,16 @@ sub parent_dir($)
 # - files by the same name are not present in multiple parent directories
 #
 
-sub find_base_from_graph($$$)
+sub find_base_from_source($$)
 {
-	my ($base_dir, $instr, $graph) = @_;
+	my ($base_dir, $source_files) = @_;
 	my $old_base;
 	my $best_miss;
 	my $best_base;
 	my %rel_files;
 
 	# Determine list of relative paths
-	foreach my $filename (keys(%{$instr}), keys(%{$graph})) {
+	foreach my $filename (@$source_files) {
 		next if (file_name_is_absolute($filename));
 
 		$rel_files{$filename} = 1;
@@ -2814,17 +3385,17 @@ sub find_base_from_graph($$$)
 }
 
 #
-# adjust_graph_filenames(base_dir, instr, graph)
+# adjust_source_filenames(hash, base_dir)
 #
-# Make relative paths in INSTR and GRAPH absolute and apply
-# geninfo_adjust_src_path setting to graph file data.
+# Transform all keys of HASH to absolute form and apply requested
+# transformations.
 #
 
-sub adjust_graph_filenames($$$)
+sub adjust_source_filenames($$$)
 {
-	my ($base_dir, $instr, $graph) = @_;
+	my ($hash, $base_dir) = @_;
 
-	foreach my $filename (keys(%{$instr})) {
+	foreach my $filename (keys(%{$hash})) {
 		my $old_filename = $filename;
 
 		# Convert to absolute canonical form
@@ -2836,28 +3407,50 @@ sub adjust_graph_filenames($$$)
 		}
 
 		if ($filename ne $old_filename) {
-			$instr->{$filename} = delete($instr->{$old_filename});
+			$hash->{$filename} = delete($hash->{$old_filename});
 		}
 	}
+}
 
-	foreach my $filename (keys(%{$graph})) {
-		my $old_filename = $filename;
 
-		# Make absolute
-		# Convert to absolute canonical form
-		$filename = solve_relative_path($base_dir, $filename);
+#
+# filter_source_files(hash)
+#
+# Remove unwanted source file data from HASH.
+#
 
-		# Apply adjustment
-		if (defined($adjust_src_pattern)) {
-			$filename =~ s/$adjust_src_pattern/$adjust_src_replace/g;
+sub filter_source_files($)
+{
+	my ($hash) = @_;
+
+	foreach my $filename (keys(%{$hash})) {
+		# Skip external files if requested
+		goto del if (!$opt_external && is_external($filename));
+
+		# Apply include patterns
+		if (@include_patterns) {
+			my $keep;
+
+			foreach my $pattern (@include_patterns) {
+				if ($filename =~ (/^$pattern$/)) {
+					$keep = 1;
+					last;
+				}
+			}
+			goto del if (!$keep);
 		}
 
-		if ($filename ne $old_filename) {
-			$graph->{$filename} = delete($graph->{$old_filename});
+		# Apply exclude patterns
+		foreach my $pattern (@exclude_patterns) {
+			goto del if ($filename =~ (/^$pattern$/));
 		}
+		next;
+
+del:
+		# Remove file data
+		delete($hash->{$filename});
+		$excluded_files{$filename} = 1;
 	}
-
-	return ($instr, $graph);
 }
 
 #
@@ -2943,9 +3536,13 @@ sub graph_find_base($)
 }
 
 #
-# graph_from_bb(bb, fileorder, bb_filename)
+# graph_from_bb(bb, fileorder, bb_filename, fileorder_first)
 #
 # Convert data from bb to the graph format and list of instrumented lines.
+#
+# If FILEORDER_FIRST is set, use fileorder data to determine a functions
+# base source file.
+#
 # Returns (instr, graph).
 #
 # bb         : function name -> file data
@@ -2963,9 +3560,9 @@ sub graph_find_base($)
 # line data : [ line1, line2, ... ]
 #
 
-sub graph_from_bb($$$)
+sub graph_from_bb($$$$)
 {
-	my ($bb, $fileorder, $bb_filename) = @_;
+	my ($bb, $fileorder, $bb_filename, $fileorder_first) = @_;
 	my $graph = {};
 	my $instr = {};
 	my $basefile;
@@ -2982,7 +3579,8 @@ sub graph_from_bb($$$)
 		$order = $fileorder->{$func};
 
 		# Account for lines in functions
-		if (defined($basefile) && defined($filedata->{$basefile})) {
+		if (defined($basefile) && defined($filedata->{$basefile}) &&
+		    !$fileorder_first) {
 			# If the basefile contributes to this function,
 			# account this function to the basefile.
 			$graph->{$basefile}->{$func} = $filedata->{$basefile};
@@ -3144,7 +3742,8 @@ sub read_bb($)
 		}
 	}
 	close(HANDLE);
-	($instr, $graph) = graph_from_bb($bb, $fileorder, $bb_filename);
+
+	($instr, $graph) = graph_from_bb($bb, $fileorder, $bb_filename, 0);
 	graph_cleanup($graph);
 
 	return ($instr, $graph);
@@ -3332,7 +3931,8 @@ sub read_bbg($)
 		}
 	}
 	close(HANDLE);
-	($instr, $graph) = graph_from_bb($bb, $fileorder, $bbg_filename);
+	($instr, $graph) = graph_from_bb($bb, $fileorder, $bbg_filename, 0);
+
 	graph_cleanup($graph);
 
 	return ($instr, $graph);
@@ -3510,7 +4110,7 @@ sub determine_gcno_split_crc($$$$)
 # read_gcno_function_record(handle, graph, big_endian, rec_length, version)
 #
 # Read a gcno format function record from handle and add the relevant data
-# to graph. Return (filename, function) on success, undef on error. 
+# to graph. Return (filename, function, artificial) on success, undef on error.
 #
 
 sub read_gcno_function_record(*$$$$$)
@@ -3520,6 +4120,7 @@ sub read_gcno_function_record(*$$$$$)
 	my $function;
 	my $lineno;
 	my $lines;
+	my $artificial;
 
 	graph_expect("function record");
 	# Skip ident and checksum
@@ -3537,6 +4138,11 @@ sub read_gcno_function_record(*$$$$$)
 	graph_expect("function name");
 	$function = read_gcno_string($handle, $big_endian);
 	return undef if (!defined($function));
+	if ($version >= $GCOV_VERSION_8_0_0) {
+		$artificial = read_gcno_value($handle, $big_endian,
+					      "compiler-generated entity flag");
+		return undef if (!defined($artificial));
+	}
 	# Read filename
 	graph_expect("filename");
 	$filename = read_gcno_string($handle, $big_endian);
@@ -3544,11 +4150,16 @@ sub read_gcno_function_record(*$$$$$)
 	# Read first line number
 	$lineno = read_gcno_value($handle, $big_endian, "initial line number");
 	return undef if (!defined($lineno));
+	# Skip column and ending line number
+	if ($version >= $GCOV_VERSION_8_0_0) {
+		graph_skip($handle, 4, "column number") or return undef;
+		graph_skip($handle, 4, "ending line number") or return undef;
+	}
 	# Add to list
 	push(@{$bb->{$function}->{$filename}}, $lineno);
 	graph_add_order($fileorder, $function, $filename);
 
-	return ($filename, $function);
+	return ($filename, $function, $artificial);
 }
 
 #
@@ -3576,6 +4187,15 @@ sub map_gcno_version($)
 	}
 
 	return $major << 16 | $minor << 8;
+}
+
+sub remove_fn_from_hash($$)
+{
+	my ($hash, $fns) = @_;
+
+	foreach my $fn (@$fns) {
+		delete($hash->{$fn});
+	}
 }
 
 #
@@ -3609,6 +4229,8 @@ sub read_gcno($)
 	my $graph;
 	my $filelength;
 	my $version;
+	my $artificial;
+	my @artificial_fns;
 	local *HANDLE;
 
 	open(HANDLE, "<", $gcno_filename) or goto open_error;
@@ -3631,6 +4253,10 @@ sub read_gcno($)
 	debug(sprintf("found version 0x%08x\n", $version));
 	# Skip stamp
 	graph_skip(*HANDLE, 4, "file timestamp") or goto incomplete;
+	if ($version >= $GCOV_VERSION_8_0_0) {
+		graph_skip(*HANDLE, 4, "support unexecuted blocks flag")
+			or goto incomplete;
+	}
 	while (!eof(HANDLE)) {
 		my $next_pos;
 		my $curr_pos;
@@ -3658,16 +4284,17 @@ sub read_gcno($)
 		}
 		# Process record
 		if ($tag == $tag_function) {
-			($filename, $function) = read_gcno_function_record(
+			($filename, $function, $artificial) =
+				read_gcno_function_record(
 				*HANDLE, $bb, $fileorder, $big_endian,
 				$length, $version);
 			goto incomplete if (!defined($function));
+			push(@artificial_fns, $function) if ($artificial);
 		} elsif ($tag == $tag_lines) {
 			# Read lines record
 			$filename = read_gcno_lines_record(*HANDLE,
 					$gcno_filename, $bb, $fileorder,
-					$filename, $function,
-					$big_endian);
+					$filename, $function, $big_endian);
 			goto incomplete if (!defined($filename));
 		} else {
 			# Skip record contents
@@ -3684,7 +4311,12 @@ sub read_gcno($)
 			or goto incomplete;
 	}
 	close(HANDLE);
-	($instr, $graph) = graph_from_bb($bb, $fileorder, $gcno_filename);
+
+	# Remove artificial functions from result data
+	remove_fn_from_hash($bb, \@artificial_fns);
+	remove_fn_from_hash($fileorder, \@artificial_fns);
+
+	($instr, $graph) = graph_from_bb($bb, $fileorder, $gcno_filename, 1);
 	graph_cleanup($graph);
 
 	return ($instr, $graph);
@@ -3730,12 +4362,14 @@ sub get_gcov_capabilities()
 		'c' => 'branch-counts',
 		'f' => 'function-summaries',
 		'h' => 'help',
+		'i' => 'intermediate-format',
 		'l' => 'long-file-names',
 		'n' => 'no-output',
 		'o' => 'object-directory',
 		'p' => 'preserve-paths',
 		'u' => 'unconditional-branches',
 		'v' => 'version',
+		'x' => 'hash-filenames',
 	);
 
 	foreach (split(/\n/, $help)) {

@@ -96,6 +96,9 @@ genhtml_desc_html=0
 # Specify the precision for coverage rates
 #genhtml_precision=1
 
+# Show missed counts instead of hit counts
+#genhtml_missed=1
+
 # Demangle C++ symbols
 #genhtml_demangle_cpp=1
 
@@ -130,6 +133,9 @@ genhtml_desc_html=0
 # Specify if geninfo should try to automatically determine the base-directory
 # when collecting coverage data.
 geninfo_auto_base = 1
+
+# Use gcov intermediate format? Valid values are 0, 1, auto
+geninfo_intermediate = auto
 
 # Directory containing gcov kernel files
 # lcov_gcov_dir = /proc/gcov

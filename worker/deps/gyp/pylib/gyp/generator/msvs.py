@@ -2712,7 +2712,7 @@ def _GetMSBuildGlobalProperties(spec, version, guid, gyp_file_name):
 
   platform_name = None
   msvs_windows_sdk_version = None
-  for configuration in spec['configurations'].itervalues():
+  for configuration in spec['configurations'].values():
     platform_name = platform_name or _ConfigPlatform(configuration)
     msvs_windows_sdk_version = (msvs_windows_sdk_version or
                   _ConfigWindowsTargetPlatformVersion(configuration, version))

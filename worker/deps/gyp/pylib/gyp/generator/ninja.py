@@ -621,7 +621,7 @@ class NinjaWriter(object):
       args = action['action']
       depfile = action.get('depfile', None)
       if depfile:
-        depfile = self.ExpandSpecial(depfile, self.base_to_build)
+        depfile = self.ExpandSpecial(depfile)
       pool = 'console' if int(action.get('ninja_use_console', 0)) else None
       rule_name, _ = self.WriteNewNinjaRule(name, args, description,
                                             is_cygwin, env, pool,

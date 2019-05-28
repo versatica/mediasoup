@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.12
+
+* Do not require Python 2 to compile mediasoup worker (#207). Both Python 2 and 3 can now be used.
+
+
 ### 3.0.11
 
 * Codecs: Improve temporal layer switching in VP8 and H264.

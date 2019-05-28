@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 #   Copyright (c) International Business Machines  Corp., 2002
 #
@@ -36,6 +36,7 @@
 #
 
 use strict;
+use warnings;
 use File::Basename; 
 use Getopt::Long;
 use Cwd qw/abs_path/;

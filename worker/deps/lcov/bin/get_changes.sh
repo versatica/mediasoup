@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Usage: get_changes.sh
 #
 # Print lcov change log information as provided by Git
 
-TOOLDIR=$(cd $(dirname $0) ; pwd)
+TOOLDIR=$(cd $(dirname $0) >/dev/null ; pwd)
 
 cd $TOOLDIR
 

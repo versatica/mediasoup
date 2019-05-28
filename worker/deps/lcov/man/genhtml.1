@@ -1,4 +1,4 @@
-.TH genhtml 1 "LCOV 1.13" 2015\-10\-05 "User Manuals"
+.TH genhtml 1 "LCOV 1.14" 2018\-01\-30 "User Manuals"
 .SH NAME
 genhtml \- Generate HTML view from LCOV coverage data files
 .SH SYNOPSIS
@@ -66,6 +66,7 @@ genhtml \- Generate HTML view from LCOV coverage data files
 .br
 .RB [ \-\-precision
 .IR num ]
+.RB [ \-\-missed ]
 .br
 .IR tracefile(s)
 .RE
@@ -559,6 +560,21 @@ Default value is 1.
 This option can also be configured permanently using the configuration file
 option
 .IR genhtml_precision .
+.RE
+
+.B \-\-missed
+.RS
+Show counts of missed lines, functions, or branches
+
+Use this option to change overview pages to show the count of lines, functions,
+or branches that were not hit. These counts are represented by negative numbers.
+
+When specified together with \-\-sort, file and directory views will be sorted
+by missed counts.
+
+This option can also be configured permanently using the configuration file
+option
+.IR genhtml_missed .
 .RE
 
 .SH FILES
