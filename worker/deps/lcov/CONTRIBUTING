@@ -63,8 +63,9 @@ list [1].
 Contribution format
 ===================
 
-To contribute a change, please create a patch using the diff utility with the
-following command line options:
+To contribute a change, please create a patch using 'git format-patch'.
+Alternatively you can use the diff utility with the following command line
+options:
 
   diff -Naurp
 

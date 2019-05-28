@@ -1,4 +1,4 @@
-.TH lcovrc 5 "LCOV 1.13" 2015\-10\-05 "User Manuals"
+.TH lcovrc 5 "LCOV 1.14" 2018\-01\-30 "User Manuals"
 
 .SH NAME
 lcovrc \- lcov configuration file
@@ -159,6 +159,11 @@ genhtml_desc_html=0
 #genhtml_precision=1
 .br
 
+# Show missed counts instead of hit counts
+.br
+#genhtml_missed=1
+.br
+
 # Demangle C++ symbols
 .br
 #genhtml_demangle_cpp=1
@@ -216,6 +221,11 @@ geninfo_compat_libtool = 0
 # the base-directory when collecting coverage data.
 .br
 geninfo_auto_base = 1
+.br
+
+# Use gcov intermediate format? Valid values are 0, 1, auto
+.br
+geninfo_intermediate = auto
 .br
 
 # Directory containing gcov kernel files
@@ -604,6 +614,16 @@ displaying coverage rates.
 
 Default is 1.
 .PP
+.BR genhtml_missed " ="
+.IR  0 | 1
+.IP
+If non-zero, the count of missed lines, functions, or branches is shown
+as negative numbers in overview pages.
+.br
+
+Default is 0.
+.PP
+
 .
 .BR geninfo_gcov_tool " ="
 .I path_to_gcov
@@ -772,6 +792,25 @@ located, and in addition, is different between files of the same project.
 .br
 
 Default is 1.
+.PP
+
+.BR geninfo_intermediate " ="
+.IR 0 | 1 | auto
+.IP
+Specify whether to use gcov intermediate format
+.br
+
+Use this option to control whether geninfo should use the gcov intermediate
+format while collecting coverage data. The use of the gcov intermediate format
+should increase processing speed. It also provides branch coverage data when
+using the \-\-initial command line option.
+.br
+
+Valid values are 0 for off, 1 for on, and "auto" to let geninfo automatically
+use immediate format when supported by gcov.
+.br
+
+Default is "auto".
 .PP
 
 .BR lcov_gcov_dir " ="

@@ -5,6 +5,7 @@
 import re
 import os
 import locale
+import sys
 
 try:
   # reduce moved to functools in python3.
@@ -121,10 +122,12 @@ def WriteXmlIfChanged(content, path, encoding='utf-8', pretty=False,
   xml_string = XmlToString(content, encoding, pretty)
   if win32 and os.linesep != '\r\n':
     xml_string = xml_string.replace('\n', '\r\n')
-
-  default_encoding = locale.getdefaultlocale()[1]
-  if default_encoding and default_encoding.upper() != encoding.upper():
-    xml_string = xml_string.decode(default_encoding).encode(encoding)
+    default_encoding = locale.getdefaultlocale()[1]
+    if default_encoding and default_encoding.upper() != encoding.upper():
+      try:
+        xml_string = xml_string.decode(default_encoding).encode(encoding)
+      except AttributeError:
+        pass
 
   # Get the old content
   try:
