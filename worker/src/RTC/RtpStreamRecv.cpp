@@ -68,23 +68,33 @@ namespace RTC
 		  temporalLayer < this->spatialLayerCounters.at(spatialLayer).size(), "temporalLayer too high");
 
 		uint32_t rate{ 0u };
-		uint8_t spatialLayerIdx{ 0u };
-		uint8_t temporalLayerIdx{ 0u };
 
-		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		// clang-format off
+		for (
+			uint8_t spatialLayerIdx{ 0u };
+			(
+				spatialLayerIdx < this->spatialLayerCounters.size() &&
+				spatialLayerIdx <= spatialLayer
+			);
+			++spatialLayerIdx
+		)
+		// clang-format on
 		{
-			for (auto& temporalLayerCounter : spatialLayerCounter)
+			// clang-format off
+			for (
+				uint8_t temporalLayerIdx{ 0u };
+				(
+					temporalLayerIdx < this->spatialLayerCounters[spatialLayerIdx].size() &&
+					(spatialLayerIdx < spatialLayer || temporalLayerIdx <= temporalLayer)
+				);
+				++temporalLayerIdx
+			)
+			// clang-format on
 			{
+				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayerIdx][temporalLayerIdx];
+
 				rate += temporalLayerCounter.GetBitrate(now);
-
-				// If we are in the given spatial layer, ignore temporal layers higher
-				// than the given one.
-				if (++temporalLayerIdx > temporalLayer && spatialLayerIdx == spatialLayer)
-					break;
 			}
-
-			if (++spatialLayerIdx > spatialLayer)
-				break;
 		}
 
 		return rate;
@@ -97,7 +107,7 @@ namespace RTC
 		MS_ASSERT(
 		  temporalLayer < this->spatialLayerCounters.at(spatialLayer).size(), "temporalLayer too high");
 
-		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
+		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
 		return counter.GetBitrate(now);
 	}
