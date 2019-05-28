@@ -79,7 +79,7 @@ namespace RTC
 
 				// If we are in the given spatial layer, ignore temporal layers higher
 				// than the given one.
-				if (spatialLayerIdx == spatialLayer && ++temporalLayerIdx > temporalLayer)
+				if (++temporalLayerIdx > temporalLayer && spatialLayerIdx == spatialLayer)
 					break;
 			}
 
