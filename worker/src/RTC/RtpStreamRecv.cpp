@@ -69,16 +69,7 @@ namespace RTC
 
 		uint32_t rate{ 0u };
 
-		// clang-format off
-		for (
-			uint8_t sIdx{ 0u };
-			(
-				sIdx < this->spatialLayerCounters.size() &&
-				sIdx <= spatialLayer
-			);
-			++sIdx
-		)
-		// clang-format on
+		for (uint8_t sIdx{ 0u }; sIdx <= spatialLayer; ++sIdx)
 		{
 			// clang-format off
 			for (
