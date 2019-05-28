@@ -71,27 +71,27 @@ namespace RTC
 
 		// clang-format off
 		for (
-			uint8_t spatialLayerIdx{ 0u };
+			uint8_t sIdx{ 0u };
 			(
-				spatialLayerIdx < this->spatialLayerCounters.size() &&
-				spatialLayerIdx <= spatialLayer
+				sIdx < this->spatialLayerCounters.size() &&
+				sIdx <= spatialLayer
 			);
-			++spatialLayerIdx
+			++sIdx
 		)
 		// clang-format on
 		{
 			// clang-format off
 			for (
-				uint8_t temporalLayerIdx{ 0u };
+				uint8_t tIdx{ 0u };
 				(
-					temporalLayerIdx < this->spatialLayerCounters[spatialLayerIdx].size() &&
-					(spatialLayerIdx < spatialLayer || temporalLayerIdx <= temporalLayer)
+					tIdx < this->spatialLayerCounters[sIdx].size() &&
+					(sIdx < spatialLayer || tIdx <= temporalLayer)
 				);
-				++temporalLayerIdx
+				++tIdx
 			)
 			// clang-format on
 			{
-				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayerIdx][temporalLayerIdx];
+				auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
 				rate += temporalLayerCounter.GetBitrate(now);
 			}
