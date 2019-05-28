@@ -76,8 +76,12 @@ namespace RTC
 				if (len < ++offset + 1)
 					return nullptr;
 
-				payloadDescriptor->tl0PictureIndex    = data[offset];
-				payloadDescriptor->hasTl0PictureIndex = true;
+				// Read TL0PICIDX if flexible mode is unset.
+				if (!payloadDescriptor->f)
+				{
+					payloadDescriptor->tl0PictureIndex    = data[offset];
+					payloadDescriptor->hasTl0PictureIndex = true;
+				}
 			}
 
 			if (!payloadDescriptor->p && payloadDescriptor->b && payloadDescriptor->slIndex == 0)
