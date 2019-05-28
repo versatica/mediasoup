@@ -80,9 +80,7 @@ namespace RTC
 				payloadDescriptor->hasTl0PictureIndex = true;
 			}
 
-			if (!payloadDescriptor->p &&
-					payloadDescriptor->b &&
-					payloadDescriptor->slIndex == 0)
+			if (!payloadDescriptor->p && payloadDescriptor->b && payloadDescriptor->slIndex == 0)
 			{
 				payloadDescriptor->isKeyFrame = true;
 			}
@@ -134,8 +132,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("<PayloadDescriptor>");
 			MS_DEBUG_DEV(
-			  "  i:%" PRIu8 "|p:%" PRIu8 "|l:%" PRIu8 "|f:%" PRIu8 "|b:%" PRIu8 "|e:%" PRIu8
-			  "|v:%" PRIu8,
+			  "  i:%" PRIu8 "|p:%" PRIu8 "|l:%" PRIu8 "|f:%" PRIu8 "|b:%" PRIu8 "|e:%" PRIu8 "|v:%" PRIu8,
 			  this->i,
 			  this->p,
 			  this->l,

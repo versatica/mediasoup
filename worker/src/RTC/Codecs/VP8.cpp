@@ -102,7 +102,7 @@ namespace RTC
 				payloadDescriptor->partitionIndex == 0 &&
 				(!(data[offset] & 0x01))
 			)
-			 // clang-format on
+			// clang-format on
 			{
 				payloadDescriptor->isKeyFrame = true;
 			}
@@ -154,11 +154,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("<PayloadDescriptor>");
 			MS_DEBUG_DEV(
-			  "  i:%" PRIu8 "|l:%" PRIu8 "|t:%" PRIu8 "|k:%" PRIu8,
-			  this->i,
-			  this->l,
-			  this->t,
-			  this->k);
+			  "  i:%" PRIu8 "|l:%" PRIu8 "|t:%" PRIu8 "|k:%" PRIu8, this->i, this->l, this->t, this->k);
 			MS_DEBUG_DEV("  extended             : %" PRIu8, this->extended);
 			MS_DEBUG_DEV("  nonReference         : %" PRIu8, this->nonReference);
 			MS_DEBUG_DEV("  start                : %" PRIu8, this->start);
