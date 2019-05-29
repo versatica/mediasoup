@@ -68,7 +68,7 @@ namespace RTC
 			std::string scalabilityMode = jsonScalabilityModeIt->get<std::string>();
 
 			static const std::regex ScalabilityModeRegex(
-			  "^[LS](\\d+)T(\\d+).*", std::regex_constants::ECMAScript);
+			  "^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1}).*", std::regex_constants::ECMAScript);
 
 			std::smatch match;
 
