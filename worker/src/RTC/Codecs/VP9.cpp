@@ -116,8 +116,8 @@ namespace RTC
 				return;
 
 			// TODO: TMP
-			if (payloadDescriptor->l)
-				payloadDescriptor->Dump();
+			// if (payloadDescriptor->l)
+				// payloadDescriptor->Dump();
 
 			// TODO: TMP
 			if (payloadDescriptor->isKeyFrame)
