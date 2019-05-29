@@ -274,7 +274,7 @@ namespace RTC
 
 		// Just interested if this is the first Sender Report for a RTP stream.
 		if (first)
-			MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+			MS_DEBUG_TAG(svc, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 		else
 			return;
 
@@ -414,7 +414,7 @@ namespace RTC
 
 		MS_DEBUG_2TAGS(
 		  bwe,
-		  simulcast,
+		  svc,
 		  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtualBitrate:%" PRIu32
 		  ", usedBitrate:%" PRIu32 ", consumerId:%s]",
 		  this->provisionalTargetSpatialLayer,
@@ -984,7 +984,7 @@ namespace RTC
 			this->encodingContext->SetCurrentTemporalLayer(-1);
 
 			MS_DEBUG_TAG(
-			  simulcast, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
+			  svc, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
 
 			EmitLayersChange();
 
@@ -995,7 +995,7 @@ namespace RTC
 		this->encodingContext->SetTargetTemporalLayer(newTargetTemporalLayer);
 
 		MS_DEBUG_TAG(
-		  simulcast,
+		  svc,
 		  "target layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
 		  newTargetSpatialLayer,
 		  newTargetTemporalLayer,
