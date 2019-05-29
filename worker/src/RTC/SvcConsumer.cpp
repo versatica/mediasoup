@@ -605,11 +605,6 @@ namespace RTC
 				// Update current spatial layer.
 				this->currentSpatialLayer = this->encodingContext->GetCurrentSpatialLayer();
 
-				// Update target temporal layer.
-				// TODO: Enhance.
-				if (this->encodingContext)
-					this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
-
 				// Reset the score of our RtpStream to 10.
 				this->rtpStream->ResetScore(10, false);
 
@@ -1052,12 +1047,10 @@ namespace RTC
 		this->targetTemporalLayer = newTargetTemporalLayer;
 
 		if (this->encodingContext)
+		{
 			this->encodingContext->SetTargetSpatialLayer(this->targetSpatialLayer);
-
-		// If the new target spatial layer matches the current one, apply the new
-		// target temporal layer now.
-		if (this->encodingContext && this->targetSpatialLayer == this->currentSpatialLayer)
 			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
+		}
 
 		MS_DEBUG_TAG(
 		  simulcast,
