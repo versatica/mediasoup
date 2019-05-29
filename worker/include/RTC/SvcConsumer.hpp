@@ -46,13 +46,10 @@ namespace RTC
 		void UserOnPaused() override;
 		void UserOnResumed() override;
 		void CreateRtpStream();
-		void RequestKeyFrames();
-		void RequestKeyFrameForTargetSpatialLayer();
-		void RequestKeyFrameForCurrentSpatialLayer();
+		void RequestKeyFrame();
 		void MayChangeLayers(bool force = false);
 		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
-		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
 		void EmitLayersChange() const;
 
@@ -74,9 +71,6 @@ namespace RTC
 		int16_t preferredTemporalLayer{ -1 };
 		int16_t provisionalTargetSpatialLayer{ -1 };
 		int16_t provisionalTargetTemporalLayer{ -1 };
-		int16_t targetSpatialLayer{ -1 };
-		int16_t targetTemporalLayer{ -1 };
-		int16_t currentSpatialLayer{ -1 };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		bool externallyManagedBitrate{ false };
 	};

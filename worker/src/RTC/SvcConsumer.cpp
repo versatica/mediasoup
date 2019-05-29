@@ -24,7 +24,7 @@ namespace RTC
 		auto& encoding = this->rtpParameters.encodings[0];
 
 		// Ensure there are multiple spatial or temporal layers.
-		if (encoding.spatialLayers <= 1 && encoding.temporalLayers <= 1)
+		if (encoding.spatialLayers < 2 && encoding.temporalLayers < 2)
 			MS_THROW_TYPE_ERROR("invalid number of layers");
 
 		auto jsonPreferredLayersIt = data.find("preferredLayers");
@@ -90,22 +90,19 @@ namespace RTC
 		jsonObject["preferredSpatialLayer"] = this->preferredSpatialLayer;
 
 		// Add targetSpatialLayer.
-		jsonObject["targetSpatialLayer"] = this->targetSpatialLayer;
+		jsonObject["targetSpatialLayer"] = this->encodingContext->GetTargetSpatialLayer();
 
 		// Add currentSpatialLayer.
-		jsonObject["currentSpatialLayer"] = this->currentSpatialLayer;
+		jsonObject["currentSpatialLayer"]  = this->encodingContext->GetCurrentSpatialLayer();
 
 		// Add preferredTemporalLayer.
 		jsonObject["preferredTemporalLayer"] = this->preferredTemporalLayer;
 
 		// Add targetTemporalLayer.
-		jsonObject["targetTemporalLayer"] = this->targetTemporalLayer;
+		jsonObject["targetTemporalLayer"] = this->encodingContext->GetTargetTemporalLayer();
 
 		// Add currentTemporalLayer.
-		if (this->encodingContext)
-		{
-			jsonObject["currentTemporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
-		}
+		jsonObject["currentTemporalLayer"]  = this->encodingContext->GetCurrentTemporalLayer();
 	}
 
 	void SvcConsumer::FillJsonStats(json& jsonArray) const
@@ -145,7 +142,7 @@ namespace RTC
 			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
-					RequestKeyFrames();
+					RequestKeyFrame();
 
 				request->Accept();
 
@@ -301,10 +298,9 @@ namespace RTC
 			return 0;
 
 		int16_t prioritySpatialLayer{ 0 };
-		auto& encoding = this->rtpParameters.encodings[0];
 
 		// Otherwise, take the maximum spatial layer up to the preferred one.
-		for (size_t idx{ 0 }; idx < encoding.spatialLayers; ++idx)
+		for (size_t idx{ 0 }; idx < this->producerRtpStream->GetSpatialLayers(); ++idx)
 		{
 			auto spatialLayer = static_cast<int16_t>(idx);
 
@@ -349,7 +345,6 @@ namespace RTC
 
 		uint32_t usedBitrate{ 0 };
 		auto now       = DepLibUV::GetTime();
-		auto& encoding = this->rtpParameters.encodings[0];
 
 		if (!this->producerRtpStream)
 			goto done;
@@ -357,14 +352,9 @@ namespace RTC
 		if (this->producerRtpStream->GetScore() < 7)
 			goto done;
 
-		for (size_t idx{ 0 }; idx < encoding.spatialLayers; ++idx)
+		for (size_t idx{ 0 }; idx < this->producerRtpStream->GetSpatialLayers(); ++idx)
 		{
 			auto spatialLayer = static_cast<int16_t>(idx);
-
-			// We may not yet switch to a different spatial layer.
-			if (!CanSwitchToSpatialLayer(spatialLayer))
-				continue;
-
 			int16_t temporalLayer{ 0 };
 
 			// Check bitrate of every layer.
@@ -478,10 +468,6 @@ namespace RTC
 			// Take it even if it's bad.
 			if (this->producerRtpStream && this->producerRtpStream->GetScore() > 0)
 			{
-				// We may not yet switch to a different spatial layer.
-				if (!CanSwitchToSpatialLayer(0))
-					return 0;
-
 				spatialLayer  = 0;
 				temporalLayer = 0;
 			}
@@ -501,10 +487,6 @@ namespace RTC
 		{
 			// Producer stream does not exist or it's not good. Exit.
 			if (!this->producerRtpStream || this->producerRtpStream->GetScore() < 7)
-				return 0;
-
-			// We may not yet switch to a different spatial layer.
-			if (!CanSwitchToSpatialLayer(spatialLayer))
 				return 0;
 
 			// Set temporal layer to 0.
@@ -556,8 +538,8 @@ namespace RTC
 
 		// clang-format off
 		if (
-			provisionalTargetSpatialLayer != this->targetSpatialLayer ||
-			provisionalTargetTemporalLayer != this->targetTemporalLayer
+			provisionalTargetSpatialLayer != this->encodingContext->GetTargetSpatialLayer() ||
+			provisionalTargetTemporalLayer != this->encodingContext->GetTargetTemporalLayer()
 		)
 		// clang-format on
 		{
@@ -583,61 +565,50 @@ namespace RTC
 			return;
 		}
 
-		// TMP
-		// MS_ERROR(
-		// "spatialLayer:%d, this->currentSpatialLayer:%d, this->targetSpatialLayer:%d,
-		// this->targetTemporalLayer:%d", packet->GetSpatialLayer(), this->currentSpatialLayer,
-		// this->targetSpatialLayer,
-		// this->targetTemporalLayer);
+		// If we need to sync and this is not a key frame, ignore the packet.
+		if (this->syncRequired && !packet->IsKeyFrame())
+			return;
 
-		int16_t previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
-		if (this->encodingContext)
+		// Whether this is the first packet after re-sync.
+		bool isSyncPacket = this->syncRequired;
+
+		// Sync sequence number and timestamp if required.
+		if (isSyncPacket)
 		{
-			if (!packet->ProcessPayload(this->encodingContext.get()))
-			{
-				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+			if (packet->IsKeyFrame())
+				MS_DEBUG_TAG(rtp, "sync key frame received");
 
-				return;
-			}
-
-			if (this->currentSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
-			{
-				// Update current spatial layer.
-				this->currentSpatialLayer = this->encodingContext->GetCurrentSpatialLayer();
-
-				// Reset the score of our RtpStream to 10.
-				this->rtpStream->ResetScore(10, false);
-
-				// Emit the layersChange event.
-				EmitLayersChange();
-
-				// Emit the score event.
-				EmitScore();
-			}
-		}
-
-		if (this->encodingContext)
-		{
-			// Update current temporal layer if the packet honors the target temporal layer
-			// (just if this packet belongs to the target spatial layer).
-			// clang-format off
-			if (
-					this->currentSpatialLayer == this->targetSpatialLayer &&
-					previousTemporalLayer != this->targetTemporalLayer &&
-					this->encodingContext->GetCurrentTemporalLayer() == this->targetTemporalLayer
-				 )
-			// clang-format on
-			{
-				EmitLayersChange();
-			}
-		}
-
-		if (this->syncRequired)
-		{
-			// Sync our RTP stream's sequence number.
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
 			this->syncRequired = false;
+		}
+
+		// TMP
+		// MS_ERROR(
+		// "spatialLayer:%d, this->encodingContext->GetTargetSpatialLayer():%d,
+		// this->encodingContext->GetTargetTemporalLayer():%d", packet->GetSpatialLayer(),
+		// this->encodingContext->GetTargetSpatialLayer(),
+		// this->encodingContext->GetTargetTemporalLayer());
+
+		auto previousSpatialLayer  = this->encodingContext->GetCurrentSpatialLayer();
+		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
+
+		if (!packet->ProcessPayload(this->encodingContext.get()))
+		{
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+
+			return;
+		}
+
+		// clang-format off
+		if (
+			previousSpatialLayer != this->encodingContext->GetCurrentSpatialLayer() ||
+			previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer()
+		)
+		// clang-format on
+		{
+			// Emit the layersChange event.
+			EmitLayersChange();
 		}
 
 		// Update RTP seq number and timestamp based on NTP offset.
@@ -652,6 +623,18 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
+
+		if (isSyncPacket)
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			  "] from original [seq:%" PRIu16 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  origSeq);
+		}
 
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
@@ -744,7 +727,7 @@ namespace RTC
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
-			RequestKeyFrameForCurrentSpatialLayer();
+			RequestKeyFrame();
 	}
 
 	void SvcConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -892,31 +875,7 @@ namespace RTC
 		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
 	}
 
-	void SvcConsumer::RequestKeyFrames()
-	{
-		MS_TRACE();
-
-		if (this->kind != RTC::Media::Kind::VIDEO)
-			return;
-
-		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
-
-		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
-	}
-
-	void SvcConsumer::RequestKeyFrameForTargetSpatialLayer()
-	{
-		MS_TRACE();
-
-		if (this->kind != RTC::Media::Kind::VIDEO)
-			return;
-
-		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
-
-		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
-	}
-
-	void SvcConsumer::RequestKeyFrameForCurrentSpatialLayer()
+	void SvcConsumer::RequestKeyFrame()
 	{
 		MS_TRACE();
 
@@ -944,7 +903,7 @@ namespace RTC
 			// will let us change it when it considers.
 			if (this->externallyManagedBitrate)
 			{
-				if (newTargetSpatialLayer != this->targetSpatialLayer || force)
+				if (newTargetSpatialLayer != this->encodingContext->GetTargetSpatialLayer() || force)
 					this->listener->OnConsumerNeedBitrateChange(this);
 			}
 			else
@@ -963,8 +922,7 @@ namespace RTC
 		newTargetSpatialLayer  = -1;
 		newTargetTemporalLayer = -1;
 
-		auto& encoding = this->rtpParameters.encodings[0];
-		auto now       = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTime();
 
 		if (!this->producerRtpStream)
 			goto done;
@@ -972,13 +930,9 @@ namespace RTC
 		if (this->producerRtpStream->GetScore() == 0)
 			goto done;
 
-		for (size_t idx{ 0 }; idx < encoding.spatialLayers; ++idx)
+		for (size_t idx{ 0 }; idx < this->producerRtpStream->GetSpatialLayers(); ++idx)
 		{
 			auto spatialLayer = static_cast<int16_t>(idx);
-
-			// We may not yet switch to a different spatial layer.
-			if (!CanSwitchToSpatialLayer(spatialLayer))
-				continue;
 
 			if (producerRtpStream->GetBitrate(now, spatialLayer, 0))
 			{
@@ -1006,8 +960,8 @@ namespace RTC
 		// Return true if any target layer changed.
 		// clang-format off
 		return (
-			newTargetSpatialLayer != this->targetSpatialLayer ||
-			newTargetTemporalLayer != this->targetTemporalLayer
+			newTargetSpatialLayer != this->encodingContext->GetTargetSpatialLayer() ||
+			newTargetTemporalLayer != this->encodingContext->GetTargetTemporalLayer()
 		);
 		// clang-format on
 	}
@@ -1019,23 +973,14 @@ namespace RTC
 		if (newTargetSpatialLayer == -1)
 		{
 			// Unset current and target layers.
-			this->targetSpatialLayer  = -1;
-			this->targetTemporalLayer = -1;
-			this->currentSpatialLayer = -1;
-
-			if (this->encodingContext)
-			{
-				this->encodingContext->SetTargetTemporalLayer(-1);
-				this->encodingContext->SetCurrentTemporalLayer(-1);
-				this->encodingContext->SetTargetSpatialLayer(-1);
-				this->encodingContext->SetCurrentSpatialLayer(-1);
-			}
+			this->encodingContext->SetTargetSpatialLayer(-1);
+			this->encodingContext->SetCurrentSpatialLayer(-1);
+			this->encodingContext->SetTargetTemporalLayer(-1);
+			this->encodingContext->SetCurrentTemporalLayer(-1);
 
 			MS_DEBUG_TAG(
 			  simulcast,
-			  "target layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
-			  this->targetSpatialLayer,
-			  this->targetTemporalLayer,
+			  "target layers changed [spatial:-1, temporal:-1, consumerId:%s]",
 			  this->id.c_str());
 
 			EmitLayersChange();
@@ -1043,37 +988,22 @@ namespace RTC
 			return;
 		}
 
-		this->targetSpatialLayer  = newTargetSpatialLayer;
-		this->targetTemporalLayer = newTargetTemporalLayer;
-
-		if (this->encodingContext)
-		{
-			this->encodingContext->SetTargetSpatialLayer(this->targetSpatialLayer);
-			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
-		}
+		this->encodingContext->SetTargetSpatialLayer(newTargetSpatialLayer);
+		this->encodingContext->SetTargetTemporalLayer(newTargetTemporalLayer);
 
 		MS_DEBUG_TAG(
 		  simulcast,
 		  "target layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
-		  this->targetSpatialLayer,
-		  this->targetTemporalLayer,
+		  newTargetSpatialLayer,
+		  newTargetTemporalLayer,
 		  this->id.c_str());
 
-		// If the target spatial layer is different than the current one, request
+		// If the target spatial layer is higher than the current one, request
 		// a key frame.
-		if (this->targetSpatialLayer != this->currentSpatialLayer)
-			RequestKeyFrameForTargetSpatialLayer();
-	}
-
-	inline bool SvcConsumer::CanSwitchToSpatialLayer(int16_t /*spatialLayer*/) const
-	{
-		MS_TRACE();
-
-		// This method assumes that the caller has verified that there is a valid
-		// Producer RtpStream for the given spatial layer.
-		MS_ASSERT(this->producerRtpStream, "no Producer RtpStream");
-
-		return true;
+		if (this->encodingContext->GetTargetSpatialLayer() > this->encodingContext->GetCurrentSpatialLayer())
+		{
+			RequestKeyFrame();
+		}
 	}
 
 	inline void SvcConsumer::EmitScore() const
@@ -1093,19 +1023,16 @@ namespace RTC
 
 		MS_DEBUG_DEV(
 		  "current layers changed to [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
-		  this->currentSpatialLayer,
-		  this->encodingContext ? this->encodingContext->GetCurrentTemporalLayer()
-		                        : static_cast<int16_t>(0),
+		  this->encodingContext->GetCurrentSpatialLayer(),
+		  this->encodingContext->GetCurrentTemporalLayer(),
 		  this->id.c_str());
 
 		json data = json::object();
 
-		if (this->currentSpatialLayer >= 0)
+		if (this->encodingContext->GetCurrentSpatialLayer() >= 0)
 		{
-			data["spatialLayer"] = this->currentSpatialLayer;
-
-			if (this->encodingContext)
-				data["temporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
+			data["spatialLayer"]  = this->encodingContext->GetCurrentSpatialLayer();
+			data["temporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
 		}
 		else
 		{

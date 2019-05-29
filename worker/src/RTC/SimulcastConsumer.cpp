@@ -81,6 +81,10 @@ namespace RTC
 		this->producerRtpStreams.insert(
 		  this->producerRtpStreams.begin(), this->consumableRtpEncodings.size(), nullptr);
 
+		// TODO
+		// Create the encoding context (if not available for this media codec, throw).
+		// auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
 	}
@@ -765,14 +769,10 @@ namespace RTC
 			return;
 		}
 
-		// Update current temporal layer if the packet honors the target temporal layer
-		// (just if this packet belongs to the target spatial layer).
 		// clang-format off
 		if (
 			this->encodingContext &&
-			this->currentSpatialLayer == this->targetSpatialLayer &&
-			previousTemporalLayer != this->targetTemporalLayer &&
-			this->encodingContext->GetCurrentTemporalLayer() == this->targetTemporalLayer
+			previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer()
 		)
 		// clang-format on
 		{
@@ -1270,9 +1270,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  simulcast,
-			  "target layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
-			  this->targetSpatialLayer,
-			  this->targetTemporalLayer,
+			  "target layers changed [spatial:-1, temporal:-1, consumerId:%s]",
 			  this->id.c_str());
 
 			EmitLayersChange();
