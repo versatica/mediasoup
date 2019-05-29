@@ -69,6 +69,14 @@ namespace RTC
 
 		uint32_t rate{ 0u };
 
+		// Return 0 if specified layers are not being received.
+		{
+			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
+
+			if (counter.GetBitrate(now) == 0)
+				return rate;
+		}
+
 		for (uint8_t sIdx{ 0u }; sIdx <= spatialLayer; ++sIdx)
 		{
 			// clang-format off
