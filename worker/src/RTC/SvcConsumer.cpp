@@ -65,6 +65,14 @@ namespace RTC
 			this->preferredTemporalLayer = encoding.temporalLayers - 1;
 		}
 
+		// Create the encoding context (if not available for this media codec, throw).
+		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+
+		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
+
+		if (!this->encodingContext)
+			MS_THROW_TYPE_ERROR("media codec not supported with SVC");
+
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
 	}
@@ -93,7 +101,7 @@ namespace RTC
 		jsonObject["targetSpatialLayer"] = this->encodingContext->GetTargetSpatialLayer();
 
 		// Add currentSpatialLayer.
-		jsonObject["currentSpatialLayer"]  = this->encodingContext->GetCurrentSpatialLayer();
+		jsonObject["currentSpatialLayer"] = this->encodingContext->GetCurrentSpatialLayer();
 
 		// Add preferredTemporalLayer.
 		jsonObject["preferredTemporalLayer"] = this->preferredTemporalLayer;
@@ -102,7 +110,7 @@ namespace RTC
 		jsonObject["targetTemporalLayer"] = this->encodingContext->GetTargetTemporalLayer();
 
 		// Add currentTemporalLayer.
-		jsonObject["currentTemporalLayer"]  = this->encodingContext->GetCurrentTemporalLayer();
+		jsonObject["currentTemporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
 	}
 
 	void SvcConsumer::FillJsonStats(json& jsonArray) const
@@ -344,7 +352,7 @@ namespace RTC
 		this->provisionalTargetTemporalLayer = -1;
 
 		uint32_t usedBitrate{ 0 };
-		auto now       = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTime();
 
 		if (!this->producerRtpStream)
 			goto done;
@@ -660,8 +668,7 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 
 		// Restore the original payload if needed.
-		if (this->encodingContext)
-			packet->RestorePayload();
+		packet->RestorePayload();
 	}
 
 	void SvcConsumer::SendProbationRtpPacket(uint16_t seq)
@@ -871,8 +878,6 @@ namespace RTC
 
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
-
-		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
 	}
 
 	void SvcConsumer::RequestKeyFrame()
@@ -979,9 +984,7 @@ namespace RTC
 			this->encodingContext->SetCurrentTemporalLayer(-1);
 
 			MS_DEBUG_TAG(
-			  simulcast,
-			  "target layers changed [spatial:-1, temporal:-1, consumerId:%s]",
-			  this->id.c_str());
+			  simulcast, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
 
 			EmitLayersChange();
 

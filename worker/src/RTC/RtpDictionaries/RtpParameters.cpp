@@ -35,8 +35,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: This is very basic and must be updated to detect SVC and so on.
-
 		if (rtpParameters.encodings.size() == 1)
 		{
 			auto& encoding = rtpParameters.encodings[0];

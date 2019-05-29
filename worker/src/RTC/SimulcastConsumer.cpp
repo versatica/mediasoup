@@ -81,9 +81,13 @@ namespace RTC
 		this->producerRtpStreams.insert(
 		  this->producerRtpStreams.begin(), this->consumableRtpEncodings.size(), nullptr);
 
-		// TODO
 		// Create the encoding context (if not available for this media codec, throw).
-		// auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+
+		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
+
+		if (!this->encodingContext)
+			MS_THROW_TYPE_ERROR("media codec not supported with simulcast");
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
@@ -122,10 +126,7 @@ namespace RTC
 		jsonObject["targetTemporalLayer"] = this->targetTemporalLayer;
 
 		// Add currentTemporalLayer.
-		if (this->encodingContext)
-		{
-			jsonObject["currentTemporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
-		}
+		jsonObject["currentTemporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
 	}
 
 	void SimulcastConsumer::FillJsonStats(json& jsonArray) const
@@ -637,19 +638,18 @@ namespace RTC
 		// the current spatial layer.
 		if (this->currentSpatialLayer != this->targetSpatialLayer && spatialLayer == this->targetSpatialLayer)
 		{
-			// Ignore if key frame is supported and this is not one.
-			if (this->keyFrameSupported && !packet->IsKeyFrame())
+			// Ignore if not a key frame.
+			if (!packet->IsKeyFrame())
 				return;
 
 			// Update current spatial layer.
 			this->currentSpatialLayer = this->targetSpatialLayer;
 
 			// Update target and current temporal layer.
-			if (this->encodingContext)
-			{
-				this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
-				this->encodingContext->SetCurrentTemporalLayer(this->targetTemporalLayer);
-			}
+			// NOTE: This is a key frame so we know it covers our target temporal
+			// layer.
+			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
+			this->encodingContext->SetCurrentTemporalLayer(this->targetTemporalLayer);
 
 			// Reset the score of our RtpStream to 10.
 			this->rtpStream->ResetScore(10, false);
@@ -669,9 +669,8 @@ namespace RTC
 		if (spatialLayer != this->currentSpatialLayer)
 			return;
 
-		// If we need to sync, support key frames and this is not a key frame, ignore
-		// the packet.
-		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
+		// If we need to sync and this is not a key frame, ignore the packet.
+		if (this->syncRequired && !packet->IsKeyFrame())
 			return;
 
 		// Whether this is the first packet after re-sync.
@@ -750,34 +749,23 @@ namespace RTC
 				  this->tsOffset);
 			}
 
-			if (this->encodingContext)
-				this->encodingContext->SyncRequired();
+			this->encodingContext->SyncRequired();
 
 			this->syncRequired = false;
 		}
 
-		int16_t previousTemporalLayer{ 0 };
-
-		if (this->encodingContext)
-			previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
+		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
 		// Rewrite payload if needed. Drop packet if necessary.
-		if (this->encodingContext && !packet->ProcessPayload(this->encodingContext.get()))
+		if (!packet->ProcessPayload(this->encodingContext.get()))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
 
-		// clang-format off
-		if (
-			this->encodingContext &&
-			previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer()
-		)
-		// clang-format on
-		{
+		if (previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer())
 			EmitLayersChange();
-		}
 
 		// Update RTP seq number and timestamp based on NTP offset.
 		uint16_t seq;
@@ -881,8 +869,7 @@ namespace RTC
 		packet->SetTimestamp(origTimestamp);
 
 		// Restore the original payload if needed.
-		if (this->encodingContext)
-			packet->RestorePayload();
+		packet->RestorePayload();
 	}
 
 	void SimulcastConsumer::SendProbationRtpPacket(uint16_t seq)
@@ -1094,10 +1081,6 @@ namespace RTC
 
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
-
-		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
-
-		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
 	}
 
 	void SimulcastConsumer::RequestKeyFrames()
@@ -1262,16 +1245,11 @@ namespace RTC
 			this->targetTemporalLayer = -1;
 			this->currentSpatialLayer = -1;
 
-			if (this->encodingContext)
-			{
-				this->encodingContext->SetTargetTemporalLayer(-1);
-				this->encodingContext->SetCurrentTemporalLayer(-1);
-			}
+			this->encodingContext->SetTargetTemporalLayer(-1);
+			this->encodingContext->SetCurrentTemporalLayer(-1);
 
 			MS_DEBUG_TAG(
-			  simulcast,
-			  "target layers changed [spatial:-1, temporal:-1, consumerId:%s]",
-			  this->id.c_str());
+			  simulcast, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
 
 			EmitLayersChange();
 
@@ -1283,7 +1261,7 @@ namespace RTC
 
 		// If the new target spatial layer matches the current one, apply the new
 		// target temporal layer now.
-		if (this->encodingContext && this->targetSpatialLayer == this->currentSpatialLayer)
+		if (this->targetSpatialLayer == this->currentSpatialLayer)
 			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
 
 		MS_DEBUG_TAG(
@@ -1346,18 +1324,15 @@ namespace RTC
 		MS_DEBUG_DEV(
 		  "current layers changed to [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
 		  this->currentSpatialLayer,
-		  this->encodingContext ? this->encodingContext->GetCurrentTemporalLayer()
-		                        : static_cast<int16_t>(0),
+		  this->encodingContext->GetCurrentTemporalLayer(),
 		  this->id.c_str());
 
 		json data = json::object();
 
 		if (this->currentSpatialLayer >= 0)
 		{
-			data["spatialLayer"] = this->currentSpatialLayer;
-
-			if (this->encodingContext)
-				data["temporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
+			data["spatialLayer"]  = this->currentSpatialLayer;
+			data["temporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
 		}
 		else
 		{
