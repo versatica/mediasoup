@@ -70,7 +70,7 @@ namespace RTC
 		}
 		else
 		{
-			// Initially set preferreSpatialLayer and preferredTemporalLayer to the
+			// Initially set preferredSpatialLayer and preferredTemporalLayer to the
 			// maximum value.
 			this->preferredSpatialLayer  = encoding.spatialLayers - 1;
 			this->preferredTemporalLayer = encoding.temporalLayers - 1;
@@ -679,7 +679,7 @@ namespace RTC
 			if (packet->IsKeyFrame())
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
-			// Sync our RTP stream's sequence number and timestamp.
+			// Sync our RTP stream's sequence number.
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
 			// Sync our RTP stream's RTP timestamp.

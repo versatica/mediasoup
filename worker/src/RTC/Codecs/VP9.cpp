@@ -117,7 +117,7 @@ namespace RTC
 
 			// TODO: TMP
 			// if (payloadDescriptor->l)
-				// payloadDescriptor->Dump();
+			// payloadDescriptor->Dump();
 
 			// TODO: TMP
 			if (payloadDescriptor->isKeyFrame)
@@ -168,13 +168,72 @@ namespace RTC
 		}
 
 		bool VP9::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* /*encodingContext*/, uint8_t* /*data*/)
+		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* /*data*/)
 		{
 			MS_TRACE();
 
-			// TODO: ?
+			auto* context = static_cast<RTC::Codecs::VP9::EncodingContext*>(encodingContext);
 
-			return true;
+			// MS_ERROR(
+			// "this->GetSpatialLayer():%d, context->GetCurrentSpatialLayer():%d,
+			// context->GetTargetSpatialLayer():%d, this->GetTemporalLayer():%d,
+			// context->GetCurrentTemporalLayer():%d, context->GetTargetTemporalLayer():%d",
+			// this->GetSpatialLayer(),
+			// context->GetCurrentSpatialLayer(),
+			// context->GetTargetSpatialLayer(),
+			// this->GetTemporalLayer(),
+			// context->GetCurrentTemporalLayer(),
+			// context->GetTargetTemporalLayer());
+
+			// Do we need to change the spatial layer now?
+			if (
+			  this->GetSpatialLayer() != context->GetCurrentSpatialLayer() &&
+			  this->GetSpatialLayer() == context->GetTargetSpatialLayer())
+			{
+				// TODO: Do it.
+				context->SetCurrentSpatialLayer(this->GetSpatialLayer());
+			}
+			// Drop spatial layers higher than current if we are already sending
+			// the target spatial layer.
+			else if (
+			  context->GetCurrentSpatialLayer() == context->GetTargetSpatialLayer() &&
+			  this->GetSpatialLayer() > context->GetCurrentSpatialLayer())
+			{
+				return false;
+			}
+
+			// Update temporal layer if needed.
+			if (this->GetSpatialLayer() == context->GetTargetSpatialLayer())
+			{
+				// Target temporal layer not yet specificed.
+				// TODO: Fix it.
+				if (context->GetTargetTemporalLayer() == -1)
+				{
+					return true;
+				}
+				// Filter temporal layers higher than the targeted one.
+				else if (this->GetTemporalLayer() > context->GetTargetTemporalLayer())
+				{
+					return false;
+				}
+				else
+				{
+					// Update current temporal layer if needed.
+					if (
+					  this->GetTemporalLayer() != context->GetCurrentTemporalLayer() &&
+					  this->GetTemporalLayer() == context->GetTargetTemporalLayer())
+					{
+						// TODO: Do it.
+						context->SetCurrentTemporalLayer(this->GetTemporalLayer());
+					}
+
+					return true;
+				}
+			}
+			else
+			{
+				return true;
+			}
 		}
 
 		void VP9::PayloadDescriptorHandler::Restore(uint8_t* /*data*/)

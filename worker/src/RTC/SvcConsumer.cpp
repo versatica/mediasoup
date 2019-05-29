@@ -12,8 +12,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	SvcConsumer::SvcConsumer(
-	  const std::string& id, RTC::Consumer::Listener* listener, json& data)
+	SvcConsumer::SvcConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data)
 	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SVC)
 	{
 		MS_TRACE();
@@ -60,7 +59,7 @@ namespace RTC
 		}
 		else
 		{
-			// Initially set preferreSpatialLayer and preferredTemporalLayer to the
+			// Initially set preferredSpatialLayer and preferredTemporalLayer to the
 			// maximum value.
 			this->preferredSpatialLayer  = encoding.spatialLayers - 1;
 			this->preferredTemporalLayer = encoding.temporalLayers - 1;
@@ -349,12 +348,13 @@ namespace RTC
 		this->provisionalTargetTemporalLayer = -1;
 
 		uint32_t usedBitrate{ 0 };
-		auto now = DepLibUV::GetTime();
-
-		auto producerScore = this->producerRtpStream ? this->producerRtpStream->GetScore() : 0;
+		auto now       = DepLibUV::GetTime();
 		auto& encoding = this->rtpParameters.encodings[0];
 
-		if (producerScore < 7)
+		if (!this->producerRtpStream)
+			goto done;
+
+		if (this->producerRtpStream->GetScore() < 7)
 			goto done;
 
 		for (size_t idx{ 0 }; idx < encoding.spatialLayers; ++idx)
@@ -379,6 +379,10 @@ namespace RTC
 				  temporalLayer,
 				  virtualBitrate,
 				  requiredBitrate);
+
+				// If layer is not being received, continue.
+				if (requiredBitrate == 0)
+					goto done;
 
 				// If this layer requires more bitrate than the given one, abort the loop
 				// (so use the previous chosen layers if any).
@@ -579,17 +583,16 @@ namespace RTC
 			return;
 		}
 
-		auto spatialLayer = packet->GetSpatialLayer();
-
 		// TMP
-		MS_ERROR("spatialLayer:%d, this->currentSpatialLayer:%d, this->targetSpatialLayer:%d",
-				spatialLayer, this->currentSpatialLayer, this->targetSpatialLayer);
+		// MS_ERROR(
+		// "spatialLayer:%d, this->currentSpatialLayer:%d, this->targetSpatialLayer:%d,
+		// this->targetTemporalLayer:%d", packet->GetSpatialLayer(), this->currentSpatialLayer,
+		// this->targetSpatialLayer,
+		// this->targetTemporalLayer);
 
-		// Check whether this is the packet we are waiting for in order to update
-		// the current spatial layer.
-		if (this->currentSpatialLayer != this->targetSpatialLayer && spatialLayer == this->targetSpatialLayer)
+		int16_t previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
+		if (this->encodingContext)
 		{
-			// This is not the packet upgrading the spatial layer.
 			if (!packet->ProcessPayload(this->encodingContext.get()))
 			{
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
@@ -597,56 +600,49 @@ namespace RTC
 				return;
 			}
 
-			// Update current spatial layer.
-			this->currentSpatialLayer = this->targetSpatialLayer;
-
-			// Update target and current temporal layer.
-			if (this->encodingContext)
+			if (this->currentSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
 			{
-				this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
-				this->encodingContext->SetCurrentTemporalLayer(this->targetTemporalLayer);
+				// Update current spatial layer.
+				this->currentSpatialLayer = this->encodingContext->GetCurrentSpatialLayer();
+
+				// Update target temporal layer.
+				// TODO: Enhance.
+				if (this->encodingContext)
+					this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
+
+				// Reset the score of our RtpStream to 10.
+				this->rtpStream->ResetScore(10, false);
+
+				// Emit the layersChange event.
+				EmitLayersChange();
+
+				// Emit the score event.
+				EmitScore();
 			}
-
-			// Reset the score of our RtpStream to 10.
-			this->rtpStream->ResetScore(10, false);
-
-			// Emit the layersChange event.
-			EmitLayersChange();
-
-			// Emit the score event.
-			EmitScore();
 		}
-		// If the packet belongs to a higher spatial layer than the one being sent,
-		// drop it.
-		else if (spatialLayer > this->currentSpatialLayer)
-		{
-			return;
-		}
-		// Rewrite payload if needed. Drop packet if necessary.
-		else if (this->encodingContext && !packet->ProcessPayload(this->encodingContext.get()))
-		{
-			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
-
-			return;
-		}
-
-		int16_t previousTemporalLayer{ 0 };
 
 		if (this->encodingContext)
-			previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
-
-		// Update current temporal layer if the packet honors the target temporal layer
-		// (just if this packet belongs to the target spatial layer).
-		// clang-format off
-		if (
-			this->encodingContext &&
-			this->currentSpatialLayer == this->targetSpatialLayer &&
-			previousTemporalLayer != this->targetTemporalLayer &&
-			this->encodingContext->GetCurrentTemporalLayer() == this->targetTemporalLayer
-		)
-		// clang-format on
 		{
-			EmitLayersChange();
+			// Update current temporal layer if the packet honors the target temporal layer
+			// (just if this packet belongs to the target spatial layer).
+			// clang-format off
+			if (
+					this->currentSpatialLayer == this->targetSpatialLayer &&
+					previousTemporalLayer != this->targetTemporalLayer &&
+					this->encodingContext->GetCurrentTemporalLayer() == this->targetTemporalLayer
+				 )
+			// clang-format on
+			{
+				EmitLayersChange();
+			}
+		}
+
+		if (this->syncRequired)
+		{
+			// Sync our RTP stream's sequence number.
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+
+			this->syncRequired = false;
 		}
 
 		// Update RTP seq number and timestamp based on NTP offset.
@@ -655,8 +651,8 @@ namespace RTC
 		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
-		auto origSsrc      = packet->GetSsrc();
-		auto origSeq       = packet->GetSequenceNumber();
+		auto origSsrc = packet->GetSsrc();
+		auto origSeq  = packet->GetSequenceNumber();
 
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
@@ -688,8 +684,6 @@ namespace RTC
 		// Restore the original payload if needed.
 		if (this->encodingContext)
 			packet->RestorePayload();
-
-		MS_ERROR("...");
 	}
 
 	void SvcConsumer::SendProbationRtpPacket(uint16_t seq)
@@ -699,8 +693,7 @@ namespace RTC
 		this->rtpStream->SendProbationRtpPacket(seq);
 	}
 
-	void SvcConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
+	void SvcConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
 		MS_TRACE();
 
@@ -724,8 +717,7 @@ namespace RTC
 		this->lastRtcpSentTime = now;
 	}
 
-	void SvcConsumer::NeedWorstRemoteFractionLost(
-	  uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
+	void SvcConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
 	{
 		MS_TRACE();
 
@@ -781,6 +773,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->syncRequired = true;
+
 		if (IsActive())
 			MayChangeLayers();
 	}
@@ -811,6 +805,8 @@ namespace RTC
 	void SvcConsumer::UserOnResumed()
 	{
 		MS_TRACE();
+
+		this->syncRequired = true;
 
 		if (IsActive())
 			MayChangeLayers();
@@ -941,9 +937,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TMP.
-		MS_ERROR("MayChangeLayers");
-
 		int16_t newTargetSpatialLayer;
 		int16_t newTargetTemporalLayer;
 
@@ -971,36 +964,34 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TMP.
-		MS_ERROR("RecalculateTargetLayers");
-
 		// Start with no layers.
 		newTargetSpatialLayer  = -1;
 		newTargetTemporalLayer = -1;
 
-		auto producerScore = this->producerRtpStream ? this->producerRtpStream->GetScore() : 0;
 		auto& encoding = this->rtpParameters.encodings[0];
+		auto now       = DepLibUV::GetTime();
+
+		if (!this->producerRtpStream)
+			goto done;
+
+		if (this->producerRtpStream->GetScore() == 0)
+			goto done;
 
 		for (size_t idx{ 0 }; idx < encoding.spatialLayers; ++idx)
 		{
 			auto spatialLayer = static_cast<int16_t>(idx);
 
-			// Ignore spatial layers for non existing Producer streams or for those
-			// with score 0.
-			if (producerScore == 0)
-				continue;
-
 			// We may not yet switch to a different spatial layer.
 			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
-			if (producerScore >= 7)
+			if (producerRtpStream->GetBitrate(now, spatialLayer, 0))
 			{
 				newTargetSpatialLayer = spatialLayer;
 
-				// If this is the preferred or higher spatial layer and has good score,
+				// If this is the preferred or higher spatial layer and has bitrate,
 				// take it and exit.
-				if (spatialLayer >= this->preferredSpatialLayer && producerScore >= 7)
+				if (spatialLayer >= this->preferredSpatialLayer)
 					break;
 			}
 		}
@@ -1015,6 +1006,8 @@ namespace RTC
 				newTargetTemporalLayer = 0;
 		}
 
+	done:
+
 		// Return true if any target layer changed.
 		// clang-format off
 		return (
@@ -1028,9 +1021,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TMP
-		MS_ERROR("UpdateTargetLayers");
-
 		if (newTargetSpatialLayer == -1)
 		{
 			// Unset current and target layers.
@@ -1042,6 +1032,8 @@ namespace RTC
 			{
 				this->encodingContext->SetTargetTemporalLayer(-1);
 				this->encodingContext->SetCurrentTemporalLayer(-1);
+				this->encodingContext->SetTargetSpatialLayer(-1);
+				this->encodingContext->SetCurrentSpatialLayer(-1);
 			}
 
 			MS_DEBUG_TAG(
@@ -1059,10 +1051,8 @@ namespace RTC
 		this->targetSpatialLayer  = newTargetSpatialLayer;
 		this->targetTemporalLayer = newTargetTemporalLayer;
 
-		// TMP
-		MS_ERROR("this->targetSpatialLayer:%d, this->targetTemporalLayer:%d",
-				this->targetSpatialLayer,
-				this->targetTemporalLayer);
+		if (this->encodingContext)
+			this->encodingContext->SetTargetSpatialLayer(this->targetSpatialLayer);
 
 		// If the new target spatial layer matches the current one, apply the new
 		// target temporal layer now.
@@ -1088,7 +1078,7 @@ namespace RTC
 
 		// This method assumes that the caller has verified that there is a valid
 		// Producer RtpStream for the given spatial layer.
-		MS_ASSERT( this->producerRtpStream, "no Producer RtpStream");
+		MS_ASSERT(this->producerRtpStream, "no Producer RtpStream");
 
 		return true;
 	}
