@@ -308,11 +308,7 @@ namespace RTC
 		this->syncRequired = true;
 
 		if (IsActive())
-		{
-			this->rtpStream->Resume();
-
 			RequestKeyFrame();
-		}
 	}
 
 	void SimpleConsumer::UserOnTransportDisconnected()
@@ -336,11 +332,7 @@ namespace RTC
 		this->syncRequired = true;
 
 		if (IsActive())
-		{
-			this->rtpStream->Resume();
-
 			RequestKeyFrame();
-		}
 	}
 
 	void SimpleConsumer::CreateRtpStream()
