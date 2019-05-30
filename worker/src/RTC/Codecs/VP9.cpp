@@ -174,30 +174,25 @@ namespace RTC
 
 			auto* context = static_cast<RTC::Codecs::VP9::EncodingContext*>(encodingContext);
 
-			// MS_ERROR(
-			// "this->GetSpatialLayer():%d, context->GetCurrentSpatialLayer():%d,
-			// context->GetTargetSpatialLayer():%d, this->GetTemporalLayer():%d,
-			// context->GetCurrentTemporalLayer():%d, context->GetTargetTemporalLayer():%d",
-			// this->GetSpatialLayer(),
-			// context->GetCurrentSpatialLayer(),
-			// context->GetTargetSpatialLayer(),
-			// this->GetTemporalLayer(),
-			// context->GetCurrentTemporalLayer(),
-			// context->GetTargetTemporalLayer());
+			MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
-			// Do we need to change the spatial layer now?
-			if (
-			  this->GetSpatialLayer() != context->GetCurrentSpatialLayer() &&
+			// Filter spatial layers higher than targeted one.
+			if (this->GetSpatialLayer() > context->GetTargetSpatialLayer())
+			{
+				return false;
+			}
+			// Update current spatial layer if needed.
+			else if (
+			  context->GetCurrentSpatialLayer() != context->GetTargetSpatialLayer() &&
 			  this->GetSpatialLayer() == context->GetTargetSpatialLayer())
 			{
 				// TODO: Do it.
 				context->SetCurrentSpatialLayer(this->GetSpatialLayer());
 			}
-			// Drop spatial layers higher than current if we are already sending
-			// the target spatial layer.
-			else if (
-			  context->GetCurrentSpatialLayer() == context->GetTargetSpatialLayer() &&
-			  this->GetSpatialLayer() > context->GetCurrentSpatialLayer())
+
+			// Filter spatial layers higher than the current one.
+			if (this->GetSpatialLayer() > context->GetCurrentSpatialLayer())
 			{
 				return false;
 			}
@@ -205,35 +200,37 @@ namespace RTC
 			// Update temporal layer if needed.
 			if (this->GetSpatialLayer() == context->GetTargetSpatialLayer())
 			{
-				// Target temporal layer not yet specificed.
-				// TODO: Fix it.
-				if (context->GetTargetTemporalLayer() == -1)
-				{
-					return true;
-				}
 				// Filter temporal layers higher than the targeted one.
-				else if (this->GetTemporalLayer() > context->GetTargetTemporalLayer())
+				if (this->GetTemporalLayer() > context->GetTargetTemporalLayer())
 				{
 					return false;
 				}
-				else
+				// Update current temporal layer if needed.
+				else if (
+				  context->GetCurrentTemporalLayer() != context->GetTargetTemporalLayer() &&
+				  this->GetTemporalLayer() == context->GetTargetTemporalLayer())
 				{
-					// Update current temporal layer if needed.
-					if (
-					  this->GetTemporalLayer() != context->GetCurrentTemporalLayer() &&
-					  this->GetTemporalLayer() == context->GetTargetTemporalLayer())
+					// Temporal layer lower than current, downgrade.
+					if (this->GetTemporalLayer() < context->GetCurrentTemporalLayer())
 					{
-						// TODO: Do it.
 						context->SetCurrentTemporalLayer(this->GetTemporalLayer());
+						return true;
 					}
-
-					return true;
+					// Temporal layer higher than current,
+					// upgrade if 'Switching up point' bit is set.
+					else if (this->payloadDescriptor->switchingUpPoint)
+					{
+						context->SetCurrentTemporalLayer(this->GetTemporalLayer());
+						return true;
+					}
+					else
+					{
+						return false;
+					}
 				}
 			}
-			else
-			{
-				return true;
-			}
+
+			return true;
 		}
 
 		void VP9::PayloadDescriptorHandler::Restore(uint8_t* /*data*/)
