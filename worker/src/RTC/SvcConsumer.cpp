@@ -65,13 +65,17 @@ namespace RTC
 			this->preferredTemporalLayer = encoding.temporalLayers - 1;
 		}
 
-		// Create the encoding context (if not available for this media codec, throw).
+		// Create the encoding context.
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+
+		if (!RTC::Codecs::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
+		{
+			MS_THROW_TYPE_ERROR("%s codec not supported for svc", mediaCodec->mimeType.ToString().c_str());
+		}
 
 		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
 
-		if (!this->encodingContext)
-			MS_THROW_TYPE_ERROR("media codec not supported with SVC");
+		MS_ASSERT(this->encodingContext, "no encoding context for this codec");
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
