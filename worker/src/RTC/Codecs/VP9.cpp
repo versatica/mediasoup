@@ -178,49 +178,49 @@ namespace RTC
 			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
 			// Filter spatial layers higher than targeted one.
-			if (this->GetSpatialLayer() > context->GetTargetSpatialLayer())
+			if (GetSpatialLayer() > context->GetTargetSpatialLayer())
 			{
 				return false;
 			}
 			// Update current spatial layer if needed.
 			else if (
 			  context->GetCurrentSpatialLayer() != context->GetTargetSpatialLayer() &&
-			  this->GetSpatialLayer() == context->GetTargetSpatialLayer())
+			  GetSpatialLayer() == context->GetTargetSpatialLayer())
 			{
 				// TODO: Do it.
-				context->SetCurrentSpatialLayer(this->GetSpatialLayer());
+				context->SetCurrentSpatialLayer(GetSpatialLayer());
 			}
 
 			// Filter spatial layers higher than the current one.
-			if (this->GetSpatialLayer() > context->GetCurrentSpatialLayer())
+			if (GetSpatialLayer() > context->GetCurrentSpatialLayer())
 			{
 				return false;
 			}
 
 			// Update temporal layer if needed.
-			if (this->GetSpatialLayer() == context->GetTargetSpatialLayer())
+			if (GetSpatialLayer() == context->GetTargetSpatialLayer())
 			{
 				// Filter temporal layers higher than the targeted one.
-				if (this->GetTemporalLayer() > context->GetTargetTemporalLayer())
+				if (GetTemporalLayer() > context->GetTargetTemporalLayer())
 				{
 					return false;
 				}
 				// Update current temporal layer if needed.
 				else if (
 				  context->GetCurrentTemporalLayer() != context->GetTargetTemporalLayer() &&
-				  this->GetTemporalLayer() == context->GetTargetTemporalLayer())
+				  GetTemporalLayer() == context->GetTargetTemporalLayer())
 				{
 					// Temporal layer lower than current, downgrade.
-					if (this->GetTemporalLayer() < context->GetCurrentTemporalLayer())
+					if (GetTemporalLayer() < context->GetCurrentTemporalLayer())
 					{
-						context->SetCurrentTemporalLayer(this->GetTemporalLayer());
+						context->SetCurrentTemporalLayer(GetTemporalLayer());
 						return true;
 					}
 					// Temporal layer higher than current,
 					// upgrade if 'Switching up point' bit is set.
 					else if (this->payloadDescriptor->switchingUpPoint)
 					{
-						context->SetCurrentTemporalLayer(this->GetTemporalLayer());
+						context->SetCurrentTemporalLayer(GetTemporalLayer());
 						return true;
 					}
 					else
