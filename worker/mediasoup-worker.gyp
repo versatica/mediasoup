@@ -62,6 +62,7 @@
       'src/RTC/UdpSocket.cpp',
       'src/RTC/WebRtcTransport.cpp',
       'src/RTC/Codecs/Codecs.cpp',
+      'src/RTC/Codecs/PayloadDescriptorHandler.cpp',
       'src/RTC/Codecs/H264.cpp',
       'src/RTC/Codecs/VP8.cpp',
       'src/RTC/Codecs/VP9.cpp',

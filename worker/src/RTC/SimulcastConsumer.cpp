@@ -654,8 +654,8 @@ namespace RTC
 			// Update target and current temporal layer.
 			// NOTE: This is a key frame so we know it covers our target temporal
 			// layer.
-			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
-			this->encodingContext->SetCurrentTemporalLayer(this->targetTemporalLayer);
+			this->encodingContext->SetTargetLayers(-1, this->targetTemporalLayer);
+			this->encodingContext->SetCurrentLayers(-1, this->targetTemporalLayer);
 
 			// Reset the score of our RtpStream to 10.
 			this->rtpStream->ResetScore(10, false);
@@ -770,7 +770,7 @@ namespace RTC
 			return;
 		}
 
-		if (previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer())
+		if (this->encodingContext->GetCurrentTemporalLayer() != previousTemporalLayer)
 			EmitLayersChange();
 
 		// Update RTP seq number and timestamp based on NTP offset.
@@ -1251,8 +1251,7 @@ namespace RTC
 			this->targetTemporalLayer = -1;
 			this->currentSpatialLayer = -1;
 
-			this->encodingContext->SetTargetTemporalLayer(-1);
-			this->encodingContext->SetCurrentTemporalLayer(-1);
+			this->encodingContext->SetTargetLayers(-1, -1);
 
 			MS_DEBUG_TAG(
 			  simulcast, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
@@ -1267,8 +1266,16 @@ namespace RTC
 
 		// If the new target spatial layer matches the current one, apply the new
 		// target temporal layer now.
+		// Also check if the current temporal layer changes after this.
 		if (this->targetSpatialLayer == this->currentSpatialLayer)
-			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
+		{
+			auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
+
+			this->encodingContext->SetTargetLayers(-1, this->targetTemporalLayer);
+
+			if (this->encodingContext->GetCurrentTemporalLayer() != previousTemporalLayer)
+				EmitLayersChange();
+		}
 
 		MS_DEBUG_TAG(
 		  simulcast,
