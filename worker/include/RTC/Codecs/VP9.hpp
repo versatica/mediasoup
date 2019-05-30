@@ -101,6 +101,7 @@ namespace RTC
 			class EncodingContext : public RTC::Codecs::EncodingContext
 			{
 			public:
+				EncodingContext(uint8_t spatialLayers = 0, uint8_t temporalLayers = 0);
 				~EncodingContext() = default;
 
 				/* Pure virtual methods inherited from RTC::Codecs::EncodingContext. */
@@ -132,6 +133,11 @@ namespace RTC
 		};
 
 		/* Inline EncondingContext methods. */
+
+		inline VP9::EncodingContext::EncodingContext(uint8_t spatialLayers, uint8_t temporalLayers)
+		  : RTC::Codecs::EncodingContext(spatialLayers, temporalLayers)
+		{
+		}
 
 		inline void VP9::EncodingContext::SyncRequired()
 		{

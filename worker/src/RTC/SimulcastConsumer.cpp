@@ -90,7 +90,8 @@ namespace RTC
 			  "%s codec not supported for simulcast", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
+		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(
+		  mediaCodec->mimeType, encoding.spatialLayers, encoding.temporalLayers));
 
 		MS_ASSERT(this->encodingContext, "no encoding context for this codec");
 

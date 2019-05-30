@@ -73,7 +73,8 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("%s codec not supported for svc", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType));
+		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(
+		  mediaCodec->mimeType, encoding.spatialLayers, encoding.temporalLayers));
 
 		MS_ASSERT(this->encodingContext, "no encoding context for this codec");
 
@@ -375,15 +376,16 @@ namespace RTC
 				// Check bitrate of every layer.
 				for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 				{
-					auto requiredBitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+					auto requiredBitrate =
+					  this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
 
 					MS_DEBUG_DEV(
-							"testing layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
-							", requiredBitrate:%" PRIu32 "]",
-							spatialLayer,
-							temporalLayer,
-							virtualBitrate,
-							requiredBitrate);
+					  "testing layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
+					  ", requiredBitrate:%" PRIu32 "]",
+					  spatialLayer,
+					  temporalLayer,
+					  virtualBitrate,
+					  requiredBitrate);
 
 					// If layer is not being received, continue.
 					if (requiredBitrate == 0)
@@ -395,9 +397,9 @@ namespace RTC
 						goto done;
 
 					// Set provisional layers and used bitrate.
-					this->provisionalTargetSpatialLayer	= spatialLayer;
+					this->provisionalTargetSpatialLayer  = spatialLayer;
 					this->provisionalTargetTemporalLayer = temporalLayer;
-					usedBitrate													= requiredBitrate;
+					usedBitrate                          = requiredBitrate;
 
 					// If this is the preferred spatial and temporal layer, exit the loops.
 					// clang-format off
@@ -405,7 +407,7 @@ namespace RTC
 							this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
 							this->provisionalTargetTemporalLayer == this->preferredTemporalLayer
 						 )
-						// clang-format on
+					// clang-format on
 					{
 						goto done;
 					}

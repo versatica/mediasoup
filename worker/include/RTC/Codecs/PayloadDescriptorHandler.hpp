@@ -19,10 +19,12 @@ namespace RTC
 		class EncodingContext
 		{
 		public:
-			EncodingContext()          = default;
+			EncodingContext(uint8_t spatialLayers, uint8_t temporalLayers);
 			virtual ~EncodingContext() = default;
 
 		public:
+			uint8_t GetSpatialLayers() const;
+			uint8_t GetTemporalLayers() const;
 			int16_t GetTargetSpatialLayer() const;
 			int16_t GetTargetTemporalLayer() const;
 			int16_t GetCurrentSpatialLayer() const;
@@ -34,6 +36,8 @@ namespace RTC
 			virtual void SyncRequired() = 0;
 
 		private:
+			uint8_t spatialLayers;
+			uint8_t temporalLayers;
 			int16_t targetSpatialLayer{ -1 };
 			int16_t targetTemporalLayer{ -1 };
 			int16_t currentSpatialLayer{ -1 };
@@ -41,6 +45,21 @@ namespace RTC
 		};
 
 		/* Inline instance methods. */
+
+		inline EncodingContext::EncodingContext(uint8_t spatialLayers, uint8_t temporalLayers)
+		  : spatialLayers(spatialLayers), temporalLayers(temporalLayers)
+		{
+		}
+
+		inline uint8_t EncodingContext::GetSpatialLayers() const
+		{
+			return this->spatialLayers;
+		}
+
+		inline uint8_t EncodingContext::GetTemporalLayers() const
+		{
+			return this->temporalLayers;
+		}
 
 		inline int16_t EncodingContext::GetTargetSpatialLayer() const
 		{
