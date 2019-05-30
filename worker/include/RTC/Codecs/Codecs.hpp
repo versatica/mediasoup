@@ -15,7 +15,7 @@ namespace RTC
 	{
 		bool CanBeKeyFrame(const RTC::RtpCodecMimeType& mimeType);
 		void ProcessRtpPacket(RTC::RtpPacket* packet, const RTC::RtpCodecMimeType& mimeType);
-		bool HasEncodingContext(const RTC::RtpCodecMimeType& mimeType);
+		bool IsValidTypeForCodec(RTC::RtpParameters::Type type, const RTC::RtpCodecMimeType& mimeType);
 		EncodingContext* GetEncodingContext(const RTC::RtpCodecMimeType& mimeType);
 
 		/* Inline namespace methods. */
@@ -44,26 +44,68 @@ namespace RTC
 			}
 		}
 
-		inline bool HasEncodingContext(const RTC::RtpCodecMimeType& mimeType)
+		inline bool IsValidTypeForCodec(RTC::RtpParameters::Type type, const RTC::RtpCodecMimeType& mimeType)
 		{
-			switch (mimeType.type)
+			switch (type)
 			{
-				case RTC::RtpCodecMimeType::Type::VIDEO:
+				case RTC::RtpParameters::Type::NONE:
 				{
-					switch (mimeType.subtype)
+					return false;
+				}
+
+				case RTC::RtpParameters::Type::SIMPLE:
+				{
+					return true;
+				}
+
+				case RTC::RtpParameters::Type::SIMULCAST:
+				{
+					switch (mimeType.type)
 					{
-						case RTC::RtpCodecMimeType::Subtype::VP8:
-						case RTC::RtpCodecMimeType::Subtype::VP9:
-						case RTC::RtpCodecMimeType::Subtype::H264:
-							return true;
+						case RTC::RtpCodecMimeType::Type::VIDEO:
+						{
+							switch (mimeType.subtype)
+							{
+								case RTC::RtpCodecMimeType::Subtype::VP8:
+								case RTC::RtpCodecMimeType::Subtype::H264:
+									return true;
+								default:
+									return false;
+							}
+						}
+
 						default:
+						{
 							return false;
+						}
 					}
 				}
 
-				default:
+				case RTC::RtpParameters::Type::SVC:
 				{
-					return false;
+					switch (mimeType.type)
+					{
+						case RTC::RtpCodecMimeType::Type::VIDEO:
+						{
+							switch (mimeType.subtype)
+							{
+								case RTC::RtpCodecMimeType::Subtype::VP9:
+									return true;
+								default:
+									return false;
+							}
+						}
+
+						default:
+						{
+							return false;
+						}
+					}
+				}
+
+				case RTC::RtpParameters::Type::PIPE:
+				{
+					return true;
 				}
 			}
 		}
