@@ -197,8 +197,8 @@ namespace RTC
 				return false;
 			}
 
-			// Update temporal layer if needed.
-			if (GetSpatialLayer() == context->GetTargetSpatialLayer())
+			// Current spatial layer equals target spatial layer.
+			if (context->GetCurrentSpatialLayer() == context->GetTargetSpatialLayer())
 			{
 				// Filter temporal layers higher than the targeted one.
 				if (GetTemporalLayer() > context->GetTargetTemporalLayer())
@@ -227,6 +227,26 @@ namespace RTC
 					{
 						return false;
 					}
+				}
+			}
+			// Current spatial layer is lower than target spatial layer.
+			else if (context->GetCurrentSpatialLayer() < context->GetTargetSpatialLayer())
+			{
+				// Temporal layer lower than or equal to current.
+				if (GetTemporalLayer() <= context->GetCurrentTemporalLayer())
+				{
+					return true;
+				}
+				// Temporal layer higher than current,
+				// upgrade if 'Switching up point' bit is set.
+				else if (this->payloadDescriptor->switchingUpPoint)
+				{
+					context->SetCurrentTemporalLayer(GetTemporalLayer());
+					return true;
+				}
+				else
+				{
+					return false;
 				}
 			}
 
