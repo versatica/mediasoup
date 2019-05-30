@@ -367,51 +367,55 @@ namespace RTC
 		for (size_t idx{ 0 }; idx < this->producerRtpStream->GetSpatialLayers(); ++idx)
 		{
 			auto spatialLayer = static_cast<int16_t>(idx);
-			int16_t temporalLayer{ 0 };
 
-			// Check bitrate of every layer.
-			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+			if (this->producerRtpStream->GetLayerBitrate(now, spatialLayer, 0))
 			{
-				auto requiredBitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+				int16_t temporalLayer{ 0 };
 
-				MS_DEBUG_DEV(
-				  "testing layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
-				  ", requiredBitrate:%" PRIu32 "]",
-				  spatialLayer,
-				  temporalLayer,
-				  virtualBitrate,
-				  requiredBitrate);
-
-				// If layer is not being received, continue.
-				if (requiredBitrate == 0)
-					goto done;
-
-				// If this layer requires more bitrate than the given one, abort the loop
-				// (so use the previous chosen layers if any).
-				if (requiredBitrate > virtualBitrate)
-					goto done;
-
-				// Set provisional layers and used bitrate.
-				this->provisionalTargetSpatialLayer  = spatialLayer;
-				this->provisionalTargetTemporalLayer = temporalLayer;
-				usedBitrate                          = requiredBitrate;
-
-				// If this is the preferred spatial and temporal layer, exit the loops.
-				// clang-format off
-				if (
-					this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
-					this->provisionalTargetTemporalLayer == this->preferredTemporalLayer
-				)
-				// clang-format on
+				// Check bitrate of every layer.
+				for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 				{
-					goto done;
-				}
-			}
+					auto requiredBitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
 
-			// If this is the preferred or higher spatial layer and has good score,
-			// take it and exit.
-			if (spatialLayer >= this->preferredSpatialLayer)
-				break;
+					MS_DEBUG_DEV(
+							"testing layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
+							", requiredBitrate:%" PRIu32 "]",
+							spatialLayer,
+							temporalLayer,
+							virtualBitrate,
+							requiredBitrate);
+
+					// If layer is not being received, continue.
+					if (requiredBitrate == 0)
+						goto done;
+
+					// If this layer requires more bitrate than the given one, abort the loop
+					// (so use the previous chosen layers if any).
+					if (requiredBitrate > virtualBitrate)
+						goto done;
+
+					// Set provisional layers and used bitrate.
+					this->provisionalTargetSpatialLayer	= spatialLayer;
+					this->provisionalTargetTemporalLayer = temporalLayer;
+					usedBitrate													= requiredBitrate;
+
+					// If this is the preferred spatial and temporal layer, exit the loops.
+					// clang-format off
+					if (
+							this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
+							this->provisionalTargetTemporalLayer == this->preferredTemporalLayer
+						 )
+						// clang-format on
+					{
+						goto done;
+					}
+				}
+
+				// If this is the preferred or higher spatial layer and has good score,
+				// take it and exit.
+				if (spatialLayer >= this->preferredSpatialLayer)
+					break;
+			}
 		}
 
 	done:
