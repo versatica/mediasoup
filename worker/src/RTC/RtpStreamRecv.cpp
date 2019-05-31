@@ -74,7 +74,7 @@ namespace RTC
 			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
 			if (counter.GetBitrate(now) == 0)
-				return rate;
+				return 0u;
 		}
 
 		for (uint8_t sIdx{ 0u }; sIdx <= spatialLayer; ++sIdx)
