@@ -193,64 +193,114 @@ namespace RTC
 				return false;
 			}
 
-			// Filter spatial layers higher than targeted one.
-			if (GetSpatialLayer() > context->GetTargetSpatialLayer())
-				return false;
+			// Upgrade current spatial layer if needed.
+			// clang-format off
+			if (
+				context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer() &&
+				GetSpatialLayer() > context->GetCurrentSpatialLayer() &&
+				GetSpatialLayer() <= context->GetTargetSpatialLayer()
+			)
+			// clang-format on
+			{
+				/*
+				 * Upgrade spatial layer if:
+				 *
+				 * Inter-picture predicted frame equals zero.
+				 * Beginning of a frame.
+				 */
+				// clang-format off
+				if (
+					!this->payloadDescriptor->interLayerDependency &&
+					this->payloadDescriptor->b
+				)
+				// clang-format on
+				{
+					// Update current spatial layer.
+					context->SetCurrentSpatialLayer(GetSpatialLayer());
+				}
+			}
 
-			// Update current spatial layer if needed.
+			// Downgrade current spatial layer if needed.
+			// clang-format off
+			if (
+				context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer() &&
+				GetSpatialLayer() < context->GetCurrentSpatialLayer() &&
+				GetSpatialLayer() >= context->GetTargetSpatialLayer()
+			)
+			// clang-format on
+			{
+				/*
+				 * Downgrade spatial layer if:
+				 *
+				 * End of a frame.
+				 */
+				if (this->payloadDescriptor->e)
+					context->SetCurrentSpatialLayer(GetSpatialLayer());
+			}
+
+			// Filter spatial layers higher than current one.
 			if (GetSpatialLayer() > context->GetCurrentSpatialLayer())
 			{
-				// TODO: Check if we can upgrade spatial layer.
-
-				if (GetSpatialLayer() == context->GetTargetSpatialLayer())
-				{
-					// NOTE: This may be wrong since packet may have temporal layer 1 while
-					// target temporal may be 2, so we are setting current temporal layer to
-					// 2 instead of 1. However, if we are here it may mean that the packet
-					// satisfies "any" temporal layer so we are done. Who knows.
-					context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
-				}
-				else
-				{
-					context->SetCurrentTemporalLayer(context->GetTemporalLayers() - 1);
-				}
-
-				return true;
-			}
-
-			// If packet spatial layer equals target spatial layer and packet temporal
-			// layer higher than target, drop the packet.
-			// clang-format off
-			if (
-				GetSpatialLayer() == context->GetTargetSpatialLayer() &&
-				GetTemporalLayer() > context->GetTargetTemporalLayer()
-			)
-			// clang-format on
-			{
 				return false;
 			}
 
-			// Packet temporal layer higher than current, update current temporal
-			// layer if needed (just if the packet spatial layer equals current spatial
-			// layer).
-			// clang-format off
-			if (
-				GetSpatialLayer() == context->GetCurrentSpatialLayer() &&
-				GetTemporalLayer() > context->GetCurrentTemporalLayer()
-			)
-			// clang-format on
+			// Update current temporal layer if needed.
+			// (just if the packet spatial layer equals current spatial layer).
+			if (GetSpatialLayer() == context->GetCurrentSpatialLayer())
 			{
-				// Upgrade if 'Switching up point' bit is set.
-				if (this->payloadDescriptor->switchingUpPoint)
+				// Upgrade current temporal layer if needed.
+				// clang-format off
+				if (
+						context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer() &&
+						GetTemporalLayer() > context->GetCurrentTemporalLayer() &&
+						GetTemporalLayer() <= context->GetTargetTemporalLayer()
+				)
+				// clang-format on
 				{
-					context->SetCurrentTemporalLayer(GetTemporalLayer());
+					/*
+					 * Upgrade temporal layer if:
+					 *
+					 * 'Switching up point' bit is set.
+					 * Beginning of a frame.
+					 */
+					// clang-format off
+					if (
+							this->payloadDescriptor->switchingUpPoint &&
+							this->payloadDescriptor->b
+						 )
+					// clang-format on
+					{
+						// Update current temporal layer.
+						context->SetCurrentTemporalLayer(GetTemporalLayer());
+					}
+				}
 
-					return true;
-				}
-				else
+				// Downgrade current temporal layer if needed.
+				// clang-format off
+				if (
+						context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer() &&
+						GetTemporalLayer() < context->GetCurrentTemporalLayer() &&
+						GetTemporalLayer() >= context->GetTargetTemporalLayer()
+				)
+				// clang-format on
 				{
-					return false;
+					/*
+					 * Downgrade temporal layer if:
+					 *
+					 * End of a frame.
+					 */
+					if (this->payloadDescriptor->e)
+					{
+						// Update current temporal layer.
+						context->SetCurrentTemporalLayer(GetTemporalLayer());
+					}
 				}
+			}
+
+			// Filter temporal layers higher than current one.
+			if (GetTemporalLayer() > context->GetCurrentTemporalLayer())
+			{
+				return false;
 			}
 
 			return true;
