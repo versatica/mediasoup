@@ -1013,10 +1013,11 @@ namespace RTC
 
 		// If the target spatial layer is higher than the current one, request
 		// a key frame.
-		if (this->encodingContext->GetTargetSpatialLayer() > this->encodingContext->GetCurrentSpatialLayer())
-		{
-			RequestKeyFrame();
-		}
+		// TMP.
+		// if (this->encodingContext->GetTargetSpatialLayer() > this->encodingContext->GetCurrentSpatialLayer())
+		// {
+			// RequestKeyFrame();
+		// }
 	}
 
 	inline void SvcConsumer::EmitScore() const
