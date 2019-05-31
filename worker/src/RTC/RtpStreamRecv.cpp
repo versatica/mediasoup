@@ -83,8 +83,7 @@ namespace RTC
 			for (
 				uint8_t tIdx{ 0u };
 				(
-					tIdx < this->spatialLayerCounters[sIdx].size() &&
-					(sIdx < spatialLayer || tIdx <= temporalLayer)
+					(sIdx <= spatialLayer && tIdx <= temporalLayer)
 				);
 				++tIdx
 			)
