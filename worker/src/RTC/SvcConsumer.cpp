@@ -512,7 +512,7 @@ namespace RTC
 		}
 
 		auto now             = DepLibUV::GetTime();
-		auto requiredBitrate = this->producerRtpStream->GetLayerBitrate(now, 0, temporalLayer);
+		auto requiredBitrate = this->producerRtpStream->GetLayerBitrate(now, spatialLayer, temporalLayer);
 
 		// No luck.
 		if (requiredBitrate > virtualBitrate)
