@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.0.13 (work in progress)
+
+* Prefer Python 2 (if available) over Python 3. This is because there are yet pending issues with gyp + Python 3.
+
+
 ### 3.0.12
 
 * Do not require Python 2 to compile mediasoup worker (#207). Both Python 2 and 3 can now be used.
