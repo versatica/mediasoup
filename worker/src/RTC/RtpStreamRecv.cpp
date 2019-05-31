@@ -79,15 +79,7 @@ namespace RTC
 
 		for (uint8_t sIdx{ 0u }; sIdx <= spatialLayer; ++sIdx)
 		{
-			// clang-format off
-			for (
-				uint8_t tIdx{ 0u };
-				(
-					(sIdx <= spatialLayer && tIdx <= temporalLayer)
-				);
-				++tIdx
-			)
-			// clang-format on
+			for (uint8_t tIdx{ 0u }; tIdx <= temporalLayer; ++tIdx)
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
