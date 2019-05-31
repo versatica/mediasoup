@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::VP9"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/Codecs/VP9.hpp"
 #include "Logger.hpp"
@@ -177,79 +177,59 @@ namespace RTC
 			MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
 			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
-			// If the flag L is not set, drop the packet.
-			if (!this->payloadDescriptor->l)
-				return false;
-
-			// If packet spatial or temporal layer is higher than maximum
-			// announced one, drop the packet.
-			// clang-format off
-			if (
-				GetSpatialLayer() >= context->GetSpatialLayers() ||
-				GetTemporalLayer() >= context->GetTemporalLayers()
-			)
-			// clang-format on
-			{
-				return false;
-			}
-
 			// Filter spatial layers higher than targeted one.
 			if (GetSpatialLayer() > context->GetTargetSpatialLayer())
+			{
 				return false;
-
+			}
 			// Update current spatial layer if needed.
-			if (GetSpatialLayer() > context->GetCurrentSpatialLayer())
+			else if (GetSpatialLayer() > context->GetCurrentSpatialLayer())
 			{
-				// TODO: Check if we can upgrade spatial layer.
-
-				if (GetSpatialLayer() == context->GetTargetSpatialLayer())
-				{
-					// NOTE: This may be wrong since packet may have temporal layer 1 while
-					// target temporal may be 2, so we are setting current temporal layer to
-					// 2 instead of 1. However, if we are here it may mean that the packet
-					// satisfies "any" temporal layer so we are done. Who knows.
-					context->SetCurrentLayers(GetSpatialLayer(), context->GetTargetTemporalLayer());
-				}
-				else
-				{
-					context->SetCurrentLayers(GetSpatialLayer(), context->GetTemporalLayers() - 1);
-				}
-
-				return true;
+				// TODO: Do it.
+				context->SetCurrentSpatialLayer(GetSpatialLayer());
 			}
 
-			// If packet spatial layer equals target spatial layer and packet temporal
-			// layer higher than target, drop the packet.
-			// clang-format off
-			if (
-				GetSpatialLayer() == context->GetTargetSpatialLayer() &&
-				GetTemporalLayer() > context->GetTargetTemporalLayer()
-			)
-			// clang-format on
+			// Current spatial layer equals target spatial layer.
+			if (GetSpatialLayer() == context->GetTargetSpatialLayer())
 			{
-				return false;
-			}
-
-			// Packet temporal layer higher than current, update current temporal
-			// layer if needed (just if the packet spatial layer equals current spatial
-			// layer).
-			// clang-format off
-			if (
-				GetSpatialLayer() == context->GetCurrentSpatialLayer() &&
-				GetTemporalLayer() > context->GetCurrentTemporalLayer()
-			)
-			// clang-format on
-			{
-				// Upgrade if 'Switching up point' bit is set.
-				if (this->payloadDescriptor->switchingUpPoint)
-				{
-					context->SetCurrentLayers(context->GetCurrentSpatialLayer(), GetTemporalLayer());
-
-					return true;
-				}
-				else
+				// Temporal layer higher than target, filter.
+				if (GetTemporalLayer() > context->GetTargetTemporalLayer())
 				{
 					return false;
+				}
+				// Temporal layer higher than current,
+				// update current temporal layer if needed.
+				else if (GetTemporalLayer() > context->GetCurrentTemporalLayer())
+				{
+					// Upgrade if 'Switching up point' bit is set.
+					if (this->payloadDescriptor->switchingUpPoint)
+					{
+						context->SetCurrentTemporalLayer(GetTemporalLayer());
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+			}
+			// Current spatial layer is lower than target spatial layer.
+			else if (GetSpatialLayer() < context->GetTargetSpatialLayer())
+			{
+				// Temporal layer lower than or equal to current.
+				if (GetTemporalLayer() > context->GetCurrentTemporalLayer())
+				{
+					// Temporal layer higher than current,
+					// upgrade if 'Switching up point' bit is set.
+					if (this->payloadDescriptor->switchingUpPoint)
+					{
+						context->SetCurrentTemporalLayer(GetTemporalLayer());
+						return true;
+					}
+					else
+					{
+						return false;
+					}
 				}
 			}
 

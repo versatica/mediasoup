@@ -29,8 +29,10 @@ namespace RTC
 			int16_t GetTargetTemporalLayer() const;
 			int16_t GetCurrentSpatialLayer() const;
 			int16_t GetCurrentTemporalLayer() const;
-			void SetTargetLayers(int16_t spatialLayer, int16_t temporalLayer);
-			void SetCurrentLayers(int16_t spatialLayer, int16_t temporalLayer);
+			void SetTargetSpatialLayer(int16_t spatialLayer);
+			void SetTargetTemporalLayer(int16_t temporalLayer);
+			void SetCurrentSpatialLayer(int16_t spatialLayer);
+			void SetCurrentTemporalLayer(int16_t temporalLayer);
 			virtual void SyncRequired() = 0;
 
 		private:
@@ -79,9 +81,23 @@ namespace RTC
 			return this->currentTemporalLayer;
 		}
 
-		inline void EncodingContext::SetCurrentLayers(int16_t spatialLayer, int16_t temporalLayer)
+		inline void EncodingContext::SetTargetSpatialLayer(int16_t spatialLayer)
 		{
-			this->currentSpatialLayer  = spatialLayer;
+			this->targetSpatialLayer = spatialLayer;
+		}
+
+		inline void EncodingContext::SetTargetTemporalLayer(int16_t temporalLayer)
+		{
+			this->targetTemporalLayer = temporalLayer;
+		}
+
+		inline void EncodingContext::SetCurrentSpatialLayer(int16_t spatialLayer)
+		{
+			this->currentSpatialLayer = spatialLayer;
+		}
+
+		inline void EncodingContext::SetCurrentTemporalLayer(int16_t temporalLayer)
+		{
 			this->currentTemporalLayer = temporalLayer;
 		}
 

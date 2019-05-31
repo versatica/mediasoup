@@ -178,9 +178,7 @@ namespace RTC
 
 			// If a key frame, update current temporal layer.
 			if (this->payloadDescriptor->isKeyFrame)
-			{
-				context->SetCurrentLayers(context->GetCurrentSpatialLayer(), context->GetTargetTemporalLayer());
-			}
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			if (this->payloadDescriptor->tid > context->GetTargetTemporalLayer())
 			{
@@ -200,11 +198,12 @@ namespace RTC
 			// 	return false;
 			// }
 
-			// Update current temporal layer.
+			// Update/fix current temporal layer.
 			if (this->payloadDescriptor->tid > context->GetCurrentTemporalLayer())
-			{
-				context->SetCurrentLayers(context->GetCurrentSpatialLayer(), this->payloadDescriptor->tid);
-			}
+				context->SetCurrentTemporalLayer(this->payloadDescriptor->tid);
+
+			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			return true;
 		}

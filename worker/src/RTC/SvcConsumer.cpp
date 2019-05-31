@@ -988,7 +988,10 @@ namespace RTC
 		if (newTargetSpatialLayer == -1)
 		{
 			// Unset current and target layers.
-			this->encodingContext->SetTargetLayers(-1, -1);
+			this->encodingContext->SetTargetSpatialLayer(-1);
+			this->encodingContext->SetCurrentSpatialLayer(-1);
+			this->encodingContext->SetTargetTemporalLayer(-1);
+			this->encodingContext->SetCurrentTemporalLayer(-1);
 
 			MS_DEBUG_TAG(
 			  svc, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
@@ -998,21 +1001,8 @@ namespace RTC
 			return;
 		}
 
-		auto previousSpatialLayer  = this->encodingContext->GetCurrentSpatialLayer();
-		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
-
-		this->encodingContext->SetTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-
-		// clang-format off
-		if (
-			previousSpatialLayer != this->encodingContext->GetCurrentSpatialLayer() ||
-			previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer()
-		)
-		// clang-format on
-		{
-			// Emit the layersChange event.
-			EmitLayersChange();
-		}
+		this->encodingContext->SetTargetSpatialLayer(newTargetSpatialLayer);
+		this->encodingContext->SetTargetTemporalLayer(newTargetTemporalLayer);
 
 		MS_DEBUG_TAG(
 		  svc,

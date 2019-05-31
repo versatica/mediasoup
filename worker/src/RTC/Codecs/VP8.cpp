@@ -247,9 +247,7 @@ namespace RTC
 
 			// If a key frame, update current temporal layer.
 			if (this->payloadDescriptor->isKeyFrame)
-			{
-				context->SetCurrentLayers(context->GetCurrentSpatialLayer(), context->GetTargetTemporalLayer());
-			}
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			// Incremental pictureId. Check the temporal layer.
 			// clang-format off
@@ -312,11 +310,12 @@ namespace RTC
 				return false;
 			}
 
-			// Update current temporal layer.
+			// Update/fix current temporal layer.
 			if (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer())
-			{
-				context->SetCurrentLayers(context->GetCurrentSpatialLayer(), this->payloadDescriptor->tlIndex);
-			}
+				context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
+
+			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
 			// clang-format off
 			if (
