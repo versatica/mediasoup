@@ -225,6 +225,10 @@ namespace RTC
 					// Update current spatial layer.
 					currentSpatialLayer = GetSpatialLayer();
 				}
+				else
+				{
+					return false;
+				}
 			}
 
 			// Downgrade current spatial layer if needed.
