@@ -251,7 +251,7 @@ namespace RTC
 
 			// Update current temporal layer if needed.
 			// (just if the packet spatial layer equals current spatial layer).
-			if (GetSpatialLayer() == currentSpatialLayer)
+			if (GetSpatialLayer() == context->GetTargetSpatialLayer())
 			{
 				// Upgrade current temporal layer if needed.
 				// clang-format off
