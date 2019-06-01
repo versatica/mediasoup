@@ -479,6 +479,7 @@ namespace RTC
 
 		auto spatialLayer  = this->provisionalTargetSpatialLayer;
 		auto temporalLayer = this->provisionalTargetTemporalLayer;
+		auto now           = DepLibUV::GetTime();
 
 		// May upgrade from no spatial layer to spatial layer 0.
 		if (spatialLayer == -1)
@@ -498,20 +499,30 @@ namespace RTC
 		// May upgrade temporal layer.
 		else if (temporalLayer < this->producerRtpStream->GetTemporalLayers() - 1)
 		{
+			// Next temporal layer is not being received.
+			if (this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer + 1) == 0)
+				return 0;
+
 			++temporalLayer;
 		}
 		// May upgrade spatial layer.
-		else
+		else if (spatialLayer < this->producerRtpStream->GetSpatialLayers() - 1)
 		{
-			// Producer stream does not exist or it's not good. Exit.
-			if (!this->producerRtpStream || this->producerRtpStream->GetScore() < 7)
+			// Next spatial layer is not being received.
+			if (this->producerRtpStream->GetBitrate(now, spatialLayer + 1, 0) == 0)
 				return 0;
+
+			++spatialLayer;
 
 			// Set temporal layer to 0.
 			temporalLayer = 0;
 		}
+		// Otherwise we cannot change anything.
+		else
+		{
+			return 0;
+		}
 
-		auto now             = DepLibUV::GetTime();
 		auto requiredBitrate = this->producerRtpStream->GetLayerBitrate(now, spatialLayer, temporalLayer);
 
 		// No luck.
