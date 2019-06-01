@@ -242,6 +242,9 @@ namespace RTC
 
 		this->producerRtpStream = rtpStream;
 
+		// Request a key frame.
+		RequestKeyFrame();
+
 		// Emit the score event.
 		EmitScore();
 

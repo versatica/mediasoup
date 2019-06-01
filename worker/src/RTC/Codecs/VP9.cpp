@@ -196,6 +196,15 @@ namespace RTC
 			auto currentSpatialLayer  = context->GetCurrentSpatialLayer();
 			auto currentTemporalLayer = context->GetCurrentTemporalLayer();
 
+			// MS_ERROR("GetSpatialLayer():%d, context->GetCurrentSpatialLayer():%d, context->GetTargetSpatialLayer:%d"
+				 // ", GetTemporalLayer():%d, context->GetCurrentTemporalLayer():%d, context->GetTargetTemporalLayer:%d",
+				// GetSpatialLayer(), context->GetCurrentSpatialLayer(), context->GetTargetSpatialLayer(),
+				// GetTemporalLayer(), context->GetCurrentTemporalLayer(), context->GetTargetTemporalLayer());
+
+			// MS_ERROR("p:%d|b:%d",
+					// this->payloadDescriptor->p,
+					// this->payloadDescriptor->b);
+
 			// Upgrade current spatial layer if needed.
 			// clang-format off
 			if (
@@ -211,12 +220,7 @@ namespace RTC
 				 * Inter-picture predicted frame equals zero.
 				 * Beginning of a frame.
 				 */
-				// clang-format off
-				if (
-					!this->payloadDescriptor->interLayerDependency &&
-					this->payloadDescriptor->b
-				)
-				// clang-format on
+				if (!this->payloadDescriptor->p && this->payloadDescriptor->b)
 				{
 					// Update current spatial layer.
 					currentSpatialLayer = GetSpatialLayer();
@@ -262,7 +266,10 @@ namespace RTC
 					 */
 					// clang-format off
 					if (
-							this->payloadDescriptor->switchingUpPoint &&
+							(
+							 context->GetCurrentTemporalLayer() == -1 ||
+							 this->payloadDescriptor->switchingUpPoint
+							) &&
 							this->payloadDescriptor->b
 						 )
 					// clang-format on
