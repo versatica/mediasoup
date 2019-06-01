@@ -168,7 +168,7 @@ namespace RTC
 		}
 
 		bool VP9::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* /*data*/)
+		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* /*data*/, bool& marker)
 		{
 			MS_TRACE();
 
@@ -301,6 +301,18 @@ namespace RTC
 			// Filter temporal layers higher than current one.
 			if (GetTemporalLayer() > currentTemporalLayer)
 				return false;
+
+			// Set marker bit if needed.
+			// clang-format off
+			if (
+				GetSpatialLayer() == currentSpatialLayer &&
+				this->payloadDescriptor->e
+			)
+			// clang-format on
+			{
+				// Set RTP marker bit.
+				marker = true;
+			}
 
 			// Update current spatial layer if needed.
 			if (currentSpatialLayer != context->GetCurrentSpatialLayer())

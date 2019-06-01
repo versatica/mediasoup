@@ -636,6 +636,9 @@ namespace RTC
 		)
 		// clang-format on
 		{
+			// Request a key frame.
+			RequestKeyFrame();
+
 			// Emit the layersChange event.
 			EmitLayersChange();
 		}

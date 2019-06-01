@@ -598,7 +598,19 @@ namespace RTC
 		if (!this->payloadDescriptorHandler)
 			return true;
 
-		return this->payloadDescriptorHandler->Process(context, this->payload);
+		bool marker{ false };
+
+		if (this->payloadDescriptorHandler->Process(context, this->payload, marker))
+		{
+			if (marker)
+				SetMarker(true);
+
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	void RtpPacket::RestorePayload()

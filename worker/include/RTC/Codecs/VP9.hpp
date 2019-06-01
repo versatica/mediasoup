@@ -121,7 +121,7 @@ namespace RTC
 
 			public:
 				void Dump() const override;
-				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data) override;
+				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override;
 				uint8_t GetTemporalLayer() const override;
