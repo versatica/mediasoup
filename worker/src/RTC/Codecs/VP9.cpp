@@ -257,7 +257,7 @@ namespace RTC
 			}
 
 			// Update current temporal layer if needed.
-			// (just if the packet spatial layer equals current spatial layer).
+			// (just if the packet spatial layer equals target spatial layer).
 			if (GetSpatialLayer() == context->GetTargetSpatialLayer())
 			{
 				// Upgrade current temporal layer if needed.
