@@ -174,6 +174,13 @@ namespace RTC
 
 			auto* context = static_cast<RTC::Codecs::VP9::EncodingContext*>(encodingContext);
 
+			// TODO: targetSpatialLayer can be -1 if the Producer uses simulcast with VP9,
+			// so this MUST NOT abort.
+
+			// TODO: Similar use case: the Producer has simulcast with VP9 (via ffmpeg) and
+			// the packets do not have layers info (so flag L is not set). It cannot return
+			// false!
+
 			MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
 			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
