@@ -311,8 +311,15 @@ namespace RTC
 			}
 
 			// Update/fix current temporal layer.
-			if (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer())
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasTlIndex &&
+				this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer()
+			)
+			// clang-format on
+			{
 				context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
+			}
 
 			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
 				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
