@@ -187,7 +187,12 @@ namespace RTC
 			if (this->payloadDescriptor->isKeyFrame)
 				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 
-			if (this->payloadDescriptor->tid > context->GetTargetTemporalLayer())
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasTid &&
+				this->payloadDescriptor->tid > context->GetTargetTemporalLayer()
+			)
+			// clang-format on
 			{
 				return false;
 			}
@@ -197,6 +202,7 @@ namespace RTC
 			//
 			// clang-format off
 			// else if (
+			// 	this->payloadDescriptor->hasTid &&
 			// 	this->payloadDescriptor->tid > context->GetCurrentTemporalLayer() &&
 			// 	!this->payloadDescriptor->b
 			// )
