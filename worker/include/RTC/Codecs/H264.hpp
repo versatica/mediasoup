@@ -30,6 +30,7 @@ namespace RTC
 				uint8_t tl0picidx{ 0 }; // TL0PICIDX
 				// Parsed values.
 				bool hasLid{ false };
+				bool hasTid{ false };
 				bool hasTl0picidx{ false };
 				bool isKeyFrame{ false };
 			};

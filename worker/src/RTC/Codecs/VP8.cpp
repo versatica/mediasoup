@@ -230,6 +230,10 @@ namespace RTC
 
 			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
+			// Check if the payload should contain temporal layer info.
+			if (context->GetTemporalLayers() > 1 && !this->payloadDescriptor->hasTlIndex)
+				return false;
+
 			// Check whether pictureId and tl0PictureIndex sync is required.
 			// clang-format off
 			if (

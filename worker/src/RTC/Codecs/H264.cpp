@@ -32,6 +32,8 @@ namespace RTC
 				payloadDescriptor->b   = frameMarking->base;
 				payloadDescriptor->tid = frameMarking->tid;
 
+				payloadDescriptor->hasTid = true;
+
 				if (frameMarkingLen >= 2)
 				{
 					payloadDescriptor->hasLid = true;
@@ -151,7 +153,8 @@ namespace RTC
 			  this->i,
 			  this->d,
 			  this->b);
-			MS_DEBUG_DEV("  tid        : %" PRIu8, this->tid);
+			if (this->hasTid)
+				MS_DEBUG_DEV("  tid        : %" PRIu8, this->tid);
 			if (this->hasLid)
 				MS_DEBUG_DEV("  lid        : %" PRIu8, this->lid);
 			if (this->hasTl0picidx)
@@ -176,6 +179,10 @@ namespace RTC
 
 			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
+			// Check if the payload should contain temporal layer info.
+			if (context->GetTemporalLayers() > 1 && !this->payloadDescriptor->hasTid)
+				return false;
+
 			// If a key frame, update current temporal layer.
 			if (this->payloadDescriptor->isKeyFrame)
 				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
@@ -199,8 +206,15 @@ namespace RTC
 			// }
 
 			// Update/fix current temporal layer.
-			if (this->payloadDescriptor->tid > context->GetCurrentTemporalLayer())
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasTid &&
+				this->payloadDescriptor->tid > context->GetCurrentTemporalLayer()
+			)
+			// clang-format on
+			{
 				context->SetCurrentTemporalLayer(this->payloadDescriptor->tid);
+			}
 
 			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
 				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
