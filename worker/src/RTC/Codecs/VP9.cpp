@@ -181,8 +181,8 @@ namespace RTC
 			if (!this->payloadDescriptor->l)
 				return false;
 
-			// If packet spatial or temporal layer is higher than maximum
-			// announced one, drop the packet.
+			// If packet spatial or temporal layer is higher than maximum announced
+			// one, drop the packet.
 			// clang-format off
 			if (
 				GetSpatialLayer() >= context->GetSpatialLayers() ||
@@ -214,21 +214,13 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				/*
-				 * Upgrade spatial layer if:
-				 *
-				 * Inter-picture predicted frame equals zero.
-				 * Beginning of a frame.
-				 */
+				// Upgrade spatial layer if:
+				// - inter-picture predicted frame equals zero, and
+				// - it's beginning of a frame.
 				if (!this->payloadDescriptor->p && this->payloadDescriptor->b)
-				{
-					// Update current spatial layer.
 					currentSpatialLayer = GetSpatialLayer();
-				}
 				else
-				{
 					return false;
-				}
 			}
 
 			// Downgrade current spatial layer if needed.
@@ -240,11 +232,8 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				/*
-				 * Downgrade spatial layer if:
-				 *
-				 * End of a frame.
-				 */
+				// Downgrade spatial layer if:
+				// - it's end of frame.
 				if (this->payloadDescriptor->e)
 					currentSpatialLayer = GetSpatialLayer();
 			}
@@ -262,12 +251,9 @@ namespace RTC
 				)
 				// clang-format on
 				{
-					/*
-					 * Upgrade temporal layer if:
-					 *
-					 * 'Switching up point' bit is set.
-					 * Beginning of a frame.
-					 */
+					// Upgrade temporal layer if:
+					// - 'switching up point' bit is set, and
+					// - it's beginning of a frame.
 					// clang-format off
 					if (
 							(
@@ -292,16 +278,10 @@ namespace RTC
 				)
 				// clang-format on
 				{
-					/*
-					 * Downgrade temporal layer if:
-					 *
-					 * End of a frame.
-					 */
+					// Downgrade spatial layer if:
+					// - it's end of frame.
 					if (this->payloadDescriptor->e)
-					{
-						// Update current temporal layer.
 						currentTemporalLayer = GetTemporalLayer();
-					}
 				}
 			}
 
@@ -321,7 +301,6 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				// Set RTP marker bit.
 				marker = true;
 			}
 
