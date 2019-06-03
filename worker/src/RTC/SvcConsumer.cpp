@@ -1053,23 +1053,23 @@ namespace RTC
 		//
 		// Request a key frame if we were in spatial layer -1.
 		// clang-format off
-		// if (
-		// 	this->encodingContext->GetCurrentSpatialLayer() == -1 &&
-		// 	newTargetSpatialLayer >= 0
-		// )
-		// // clang-format on
-		// {
-		// 	RequestKeyFrame();
-		// }
-
-		// TODO: Testing stuff.
-		if (newTargetSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
+		if (
+			this->encodingContext->GetCurrentSpatialLayer() == -1 &&
+			newTargetSpatialLayer >= 0
+		)
+		// clang-format on
 		{
-			// TODO
-			MS_ERROR("--- requesting keyframe since new spatial is != current spatial");
-
 			RequestKeyFrame();
 		}
+
+		// TODO: Testing stuff.
+		// if (newTargetSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
+		// {
+		// 	// TODO
+		// 	MS_ERROR("--- requesting keyframe since new spatial is != current spatial");
+
+		// 	RequestKeyFrame();
+		// }
 	}
 
 	inline void SvcConsumer::EmitScore() const

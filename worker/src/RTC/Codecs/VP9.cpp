@@ -183,14 +183,6 @@ namespace RTC
 			MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
 			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
-			// TODO: TMP
-			if (this->payloadDescriptor->isKeyFrame)
-			{
-				MS_ERROR("KEY FRAME:");
-
-				this->payloadDescriptor->Dump();
-			}
-
 			auto packetSpatialLayer  = GetSpatialLayer();
 			auto packetTemporalLayer = GetTemporalLayer();
 			auto tmpSpatialLayer     = context->GetCurrentSpatialLayer();
@@ -206,7 +198,7 @@ namespace RTC
 			// clang-format on
 			{
 				MS_ERROR(
-					"DROP 1 [ps:%d, pt:%d, cs:%d, ct:%d, ts:%d, tt:%d]",
+					"DROP 1 [packet:%d:%d, current:%d:%d, target:%d:%d]",
 					packetSpatialLayer,
 					packetTemporalLayer,
 					context->GetCurrentSpatialLayer(),
@@ -248,7 +240,7 @@ namespace RTC
 				else
 				{
 					MS_ERROR(
-						"DROP 2 [ps:%d, pt:%d, cs:%d, ct:%d, ts:%d, tt:%d]",
+						"DROP 2 [packet:%d:%d, current:%d:%d, target:%d:%d]",
 						packetSpatialLayer,
 						packetTemporalLayer,
 						context->GetCurrentSpatialLayer(),
@@ -314,7 +306,7 @@ namespace RTC
 				else
 				{
 					MS_ERROR(
-						"DROP 3 [ps:%d, pt:%d, cs:%d, ct:%d, ts:%d, tt:%d]",
+						"DROP 3 [packet:%d:%d, current:%d:%d, target:%d:%d]",
 						packetSpatialLayer,
 						packetTemporalLayer,
 						context->GetCurrentSpatialLayer(),
