@@ -593,6 +593,9 @@ namespace RTC
 		)
 		// clang-format on
 		{
+				// TODO: REMOVE
+				MS_ERROR("OHHHH!!!! ts:%d, tt:%d", this->encodingContext->GetTargetSpatialLayer(), this->encodingContext->GetTargetTemporalLayer());
+
 			return;
 		}
 
@@ -635,8 +638,14 @@ namespace RTC
 		auto previousSpatialLayer  = this->encodingContext->GetCurrentSpatialLayer();
 		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
+			// TODO: TMP
+			bool fooKeyFrame = packet->IsKeyFrame();
+
 		if (!packet->ProcessPayload(this->encodingContext.get()))
 		{
+			if (fooKeyFrame)
+				MS_ERROR("--- DROPPING A KEY FRAME !!!!!");
+
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
@@ -768,7 +777,12 @@ namespace RTC
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
+		{
+				// TODO
+				MS_ERROR("--- requesting keyframe due to PLI!");
+
 			RequestKeyFrame();
+		}
 	}
 
 	void SvcConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -1035,14 +1049,25 @@ namespace RTC
 		  newTargetTemporalLayer,
 		  this->id.c_str());
 
-		// Request a keyframe if we were in spatial layer -1.
+		// TODO: Uncomment this if finally it makes sense.
+		//
+		// Request a key frame if we were in spatial layer -1.
 		// clang-format off
-		if (
-			newTargetSpatialLayer != -1 &&
-			this->encodingContext->GetCurrentSpatialLayer() == -1
-		)
-		// clang-format on
+		// if (
+		// 	this->encodingContext->GetCurrentSpatialLayer() == -1 &&
+		// 	newTargetSpatialLayer >= 0
+		// )
+		// // clang-format on
+		// {
+		// 	RequestKeyFrame();
+		// }
+
+		// TODO: Testing stuff.
+		if (newTargetSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
 		{
+			// TODO
+			MS_ERROR("--- requesting keyframe since new spatial is != current spatial");
+
 			RequestKeyFrame();
 		}
 	}

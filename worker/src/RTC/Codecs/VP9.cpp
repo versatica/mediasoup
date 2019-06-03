@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::VP9"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/Codecs/VP9.hpp"
 #include "Logger.hpp"
@@ -84,7 +84,13 @@ namespace RTC
 				}
 			}
 
-			if (!payloadDescriptor->p && payloadDescriptor->b && payloadDescriptor->slIndex == 0)
+			// clang-format off
+			if (
+				!payloadDescriptor->p &&
+				payloadDescriptor->b &&
+				(payloadDescriptor->slIndex == 0 || payloadDescriptor->interLayerDependency == 0)
+			)
+			// clang-format on
 			{
 				payloadDescriptor->isKeyFrame = true;
 			}
@@ -177,9 +183,12 @@ namespace RTC
 			MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
 			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
-			// If the flag L is not set, drop the packet.
-			if (!this->payloadDescriptor->l)
-				return false;
+			if (this->payloadDescriptor->isKeyFrame)
+			{
+				MS_ERROR("KEY FRAME:");
+
+				this->payloadDescriptor->Dump();
+			}
 
 			// If packet spatial or temporal layer is higher than maximum announced
 			// one, drop the packet.
@@ -190,44 +199,60 @@ namespace RTC
 			)
 			// clang-format on
 			{
+				MS_ERROR(
+					"DROP 1 [ps:%d, pt:%d, cs:%d, ct:%d, ts:%d, tt:%d]",
+					GetSpatialLayer(),
+					GetTemporalLayer(),
+					context->GetCurrentSpatialLayer(),
+					context->GetCurrentTemporalLayer(),
+					context->GetTargetSpatialLayer(),
+					context->GetTargetTemporalLayer());
+
 				return false;
 			}
 
 			auto tmpSpatialLayer  = context->GetCurrentSpatialLayer();
 			auto tmpTemporalLayer = context->GetCurrentTemporalLayer();
-			bool setMarkerBit     = false;
-
-			// MS_ERROR("GetSpatialLayer():%d, context->GetCurrentSpatialLayer():%d, context->GetTargetSpatialLayer:%d"
-				 // ", GetTemporalLayer():%d, context->GetCurrentTemporalLayer():%d, context->GetTargetTemporalLayer:%d",
-				// GetSpatialLayer(), context->GetCurrentSpatialLayer(), context->GetTargetSpatialLayer(),
-				// GetTemporalLayer(), context->GetCurrentTemporalLayer(), context->GetTargetTemporalLayer());
-
-			// MS_ERROR("p:%d|b:%d",
-					// this->payloadDescriptor->p,
-					// this->payloadDescriptor->b);
 
 			// Upgrade current spatial layer if needed.
 			// clang-format off
 			if (
-				context->GetTargetSpatialLayer() == context->GetCurrentSpatialLayer() + 1 &&
-				GetSpatialLayer() == context->GetTargetSpatialLayer()
+				context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer() &&
+				GetSpatialLayer() > context->GetCurrentSpatialLayer()
 			)
 			// clang-format on
 			{
 				// Upgrade spatial layer if:
+				// - packet's spatial layer is current spatial + 1, and
 				// - inter-picture predicted frame equals zero, and
 				// - it's beginning of a frame.
-				if (!this->payloadDescriptor->p && this->payloadDescriptor->b)
+				//
+				// clang-format off
+				if (
+					GetSpatialLayer() == context->GetCurrentSpatialLayer() + 1 &&
+					!this->payloadDescriptor->p &&
+					this->payloadDescriptor->b
+				)
+				// clang-format on
 				{
 					MS_ERROR(
 						"--- upgrading tmpSpatialLayer from %d to %d (P=0, B=1)",
 						context->GetCurrentSpatialLayer(),
-						context->GetTargetSpatialLayer());
+						GetSpatialLayer());
 
-					tmpSpatialLayer = context->GetTargetSpatialLayer();
+					tmpSpatialLayer = GetSpatialLayer();
 				}
 				else
 				{
+					MS_ERROR(
+						"DROP 2 [ps:%d, pt:%d, cs:%d, ct:%d, ts:%d, tt:%d]",
+						GetSpatialLayer(),
+						GetTemporalLayer(),
+						context->GetCurrentSpatialLayer(),
+						context->GetCurrentTemporalLayer(),
+						context->GetTargetSpatialLayer(),
+						context->GetTargetTemporalLayer());
+
 					return false;
 				}
 			}
@@ -246,26 +271,28 @@ namespace RTC
 					MS_ERROR(
 						"--- downgrading tmpSpatialLayer from %d to %d (E=1)",
 						context->GetCurrentSpatialLayer(),
-						context->GetTargetSpatialLayer());
+						GetSpatialLayer());
 
-					tmpSpatialLayer = context->GetTargetSpatialLayer();
-					setMarkerBit    = true;
+					tmpSpatialLayer = GetSpatialLayer();
 				}
 			}
 
 			// Upgrade current temporal layer if needed.
 			// clang-format off
 			if (
-					context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer() &&
-					GetTemporalLayer() == context->GetTargetTemporalLayer()
+				context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer() &&
+				GetTemporalLayer() > context->GetCurrentTemporalLayer()
 			)
 			// clang-format on
 			{
 				// Upgrade temporal layer if:
+				// - packet's temporal layer is current temporal + 1, and
 				// - 'switching up point' bit is set, and
 				// - it's beginning of a frame.
+				//
 				// clang-format off
 				if (
+					GetTemporalLayer() == context->GetCurrentTemporalLayer() + 1 &&
 					(
 						context->GetCurrentTemporalLayer() == -1 ||
 						this->payloadDescriptor->switchingUpPoint
@@ -277,20 +304,29 @@ namespace RTC
 					MS_ERROR(
 						"--- upgrading tmpTemporalLayer from %d to %d (B=1)",
 						context->GetCurrentTemporalLayer(),
-						context->GetTargetTemporalLayer());
+						GetTemporalLayer());
 
-					tmpTemporalLayer = context->GetTargetTemporalLayer();
+					tmpTemporalLayer = GetTemporalLayer();
 				}
 				else
 				{
+					MS_ERROR(
+						"DROP 3 [ps:%d, pt:%d, cs:%d, ct:%d, ts:%d, tt:%d]",
+						GetSpatialLayer(),
+						GetTemporalLayer(),
+						context->GetCurrentSpatialLayer(),
+						context->GetCurrentTemporalLayer(),
+						context->GetTargetSpatialLayer(),
+						context->GetTargetTemporalLayer());
+
 					return false;
 				}
 			}
 			// Downgrade current temporal layer if needed.
 			// clang-format off
 			else if (
-					context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer() &&
-					GetTemporalLayer() == context->GetTargetTemporalLayer()
+				context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer() &&
+				GetTemporalLayer() == context->GetTargetTemporalLayer()
 			)
 			// clang-format on
 			{
@@ -301,9 +337,9 @@ namespace RTC
 					MS_ERROR(
 						"--- downgrading tmpTemporalLayer from %d to %d (E=1)",
 						context->GetCurrentTemporalLayer(),
-						context->GetTargetTemporalLayer());
+						GetTemporalLayer());
 
-					tmpTemporalLayer = context->GetTargetTemporalLayer();
+					tmpTemporalLayer = GetTemporalLayer();
 				}
 			}
 
@@ -327,7 +363,7 @@ namespace RTC
 				return false;
 
 			// Set marker bit if needed.
-			if (setMarkerBit)
+			if (GetSpatialLayer() == tmpSpatialLayer && this->payloadDescriptor->e)
 				marker = true;
 
 			// Update current spatial layer if needed.
