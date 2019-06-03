@@ -586,6 +586,16 @@ namespace RTC
 		if (!IsActive())
 			return;
 
+		// clang-format off
+		if (
+				this->encodingContext->GetTargetSpatialLayer() == -1 ||
+				this->encodingContext->GetTargetTemporalLayer() == -1
+		)
+		// clang-format on
+		{
+			return;
+		}
+
 		auto payloadType = packet->GetPayloadType();
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those

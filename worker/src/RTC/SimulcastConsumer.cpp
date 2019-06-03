@@ -627,6 +627,9 @@ namespace RTC
 		if (!IsActive())
 			return;
 
+		if (this->targetTemporalLayer == -1)
+			return;
+
 		auto payloadType = packet->GetPayloadType();
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
