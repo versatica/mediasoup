@@ -649,9 +649,6 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			// Request a key frame.
-			RequestKeyFrame();
-
 			// Emit the layersChange event.
 			EmitLayersChange();
 		}
@@ -1038,9 +1035,13 @@ namespace RTC
 		  newTargetTemporalLayer,
 		  this->id.c_str());
 
-		// If the target spatial layer is higher than the current one, request
-		// a key frame.
-		if (this->encodingContext->GetTargetSpatialLayer() > this->encodingContext->GetCurrentSpatialLayer())
+		// Request a keyframe if we were in spatial layer -1.
+		// clang-format off
+		if (
+			newTargetSpatialLayer != -1 &&
+			this->encodingContext->GetCurrentSpatialLayer() == -1
+		)
+		// clang-format on
 		{
 			RequestKeyFrame();
 		}

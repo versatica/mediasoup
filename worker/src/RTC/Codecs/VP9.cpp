@@ -193,8 +193,8 @@ namespace RTC
 				return false;
 			}
 
-			auto currentSpatialLayer  = context->GetCurrentSpatialLayer();
-			auto currentTemporalLayer = context->GetCurrentTemporalLayer();
+			auto tmpSpatialLayer  = context->GetCurrentSpatialLayer();
+			auto tmpTemporalLayer = context->GetCurrentTemporalLayer();
 
 			// MS_ERROR("GetSpatialLayer():%d, context->GetCurrentSpatialLayer():%d, context->GetTargetSpatialLayer:%d"
 				 // ", GetTemporalLayer():%d, context->GetCurrentTemporalLayer():%d, context->GetTargetTemporalLayer:%d",
@@ -218,7 +218,7 @@ namespace RTC
 				// - inter-picture predicted frame equals zero, and
 				// - it's beginning of a frame.
 				if (!this->payloadDescriptor->p && this->payloadDescriptor->b)
-					currentSpatialLayer = GetSpatialLayer();
+					tmpSpatialLayer = GetSpatialLayer();
 				else
 					return false;
 			}
@@ -235,7 +235,7 @@ namespace RTC
 				// Downgrade spatial layer if:
 				// - it's end of frame.
 				if (this->payloadDescriptor->e)
-					currentSpatialLayer = GetSpatialLayer();
+					tmpSpatialLayer = GetSpatialLayer();
 			}
 
 			// Update current temporal layer if needed.
@@ -265,7 +265,7 @@ namespace RTC
 					// clang-format on
 					{
 						// Update current temporal layer.
-						currentTemporalLayer = GetTemporalLayer();
+						tmpTemporalLayer = GetTemporalLayer();
 					}
 				}
 
@@ -281,22 +281,22 @@ namespace RTC
 					// Downgrade spatial layer if:
 					// - it's end of frame.
 					if (this->payloadDescriptor->e)
-						currentTemporalLayer = GetTemporalLayer();
+						tmpTemporalLayer = GetTemporalLayer();
 				}
 			}
 
 			// Filter spatial layers higher than current one.
-			if (GetSpatialLayer() > currentSpatialLayer)
+			if (GetSpatialLayer() > tmpSpatialLayer)
 				return false;
 
 			// Filter temporal layers higher than current one.
-			if (GetTemporalLayer() > currentTemporalLayer)
+			if (GetTemporalLayer() > tmpTemporalLayer)
 				return false;
 
 			// Set marker bit if needed.
 			// clang-format off
 			if (
-				GetSpatialLayer() == currentSpatialLayer &&
+				GetSpatialLayer() == tmpSpatialLayer &&
 				this->payloadDescriptor->e
 			)
 			// clang-format on
@@ -305,12 +305,12 @@ namespace RTC
 			}
 
 			// Update current spatial layer if needed.
-			if (currentSpatialLayer != context->GetCurrentSpatialLayer())
-				context->SetCurrentSpatialLayer(currentSpatialLayer);
+			if (tmpSpatialLayer != context->GetCurrentSpatialLayer())
+				context->SetCurrentSpatialLayer(tmpSpatialLayer);
 
 			// Update current temporal layer if needed.
-			if (currentTemporalLayer != context->GetCurrentTemporalLayer())
-				context->SetCurrentTemporalLayer(currentTemporalLayer);
+			if (tmpTemporalLayer != context->GetCurrentTemporalLayer())
+				context->SetCurrentTemporalLayer(tmpTemporalLayer);
 
 			return true;
 		}
