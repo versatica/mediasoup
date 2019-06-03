@@ -588,8 +588,8 @@ namespace RTC
 
 		// clang-format off
 		if (
-				this->encodingContext->GetTargetSpatialLayer() == -1 ||
-				this->encodingContext->GetTargetTemporalLayer() == -1
+			this->encodingContext->GetTargetSpatialLayer() == -1 ||
+			this->encodingContext->GetTargetTemporalLayer() == -1
 		)
 		// clang-format on
 		{
