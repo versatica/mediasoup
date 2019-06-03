@@ -195,6 +195,7 @@ namespace RTC
 
 			auto tmpSpatialLayer  = context->GetCurrentSpatialLayer();
 			auto tmpTemporalLayer = context->GetCurrentTemporalLayer();
+			bool setMarkerBit     = false;
 
 			// MS_ERROR("GetSpatialLayer():%d, context->GetCurrentSpatialLayer():%d, context->GetTargetSpatialLayer:%d"
 				 // ", GetTemporalLayer():%d, context->GetCurrentTemporalLayer():%d, context->GetTargetTemporalLayer:%d",
@@ -208,9 +209,8 @@ namespace RTC
 			// Upgrade current spatial layer if needed.
 			// clang-format off
 			if (
-				context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer() &&
-				GetSpatialLayer() > context->GetCurrentSpatialLayer() &&
-				GetSpatialLayer() <= context->GetTargetSpatialLayer()
+				context->GetTargetSpatialLayer() == context->GetCurrentSpatialLayer() + 1 &&
+				GetSpatialLayer() == context->GetTargetSpatialLayer()
 			)
 			// clang-format on
 			{
@@ -218,71 +218,104 @@ namespace RTC
 				// - inter-picture predicted frame equals zero, and
 				// - it's beginning of a frame.
 				if (!this->payloadDescriptor->p && this->payloadDescriptor->b)
-					tmpSpatialLayer = GetSpatialLayer();
-				else
-					return false;
-			}
+				{
+					MS_ERROR(
+						"--- upgrading tmpSpatialLayer from %d to %d (P=0, B=1)",
+						context->GetCurrentSpatialLayer(),
+						context->GetTargetSpatialLayer());
 
+					tmpSpatialLayer = context->GetTargetSpatialLayer();
+				}
+				else
+				{
+					return false;
+				}
+			}
 			// Downgrade current spatial layer if needed.
 			// clang-format off
 			else if (
 				context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer() &&
-				GetSpatialLayer() < context->GetCurrentSpatialLayer() &&
-				GetSpatialLayer() >= context->GetTargetSpatialLayer()
+				GetSpatialLayer() == context->GetTargetSpatialLayer()
 			)
 			// clang-format on
 			{
 				// Downgrade spatial layer if:
 				// - it's end of frame.
 				if (this->payloadDescriptor->e)
-					tmpSpatialLayer = GetSpatialLayer();
+				{
+					MS_ERROR(
+						"--- downgrading tmpSpatialLayer from %d to %d (E=1)",
+						context->GetCurrentSpatialLayer(),
+						context->GetTargetSpatialLayer());
+
+					tmpSpatialLayer = context->GetTargetSpatialLayer();
+					setMarkerBit    = true;
+				}
 			}
 
-			// Update current temporal layer if needed.
-			// (just if the packet spatial layer equals target spatial layer).
-			if (GetSpatialLayer() == context->GetTargetSpatialLayer())
+			// Upgrade current temporal layer if needed.
+			// clang-format off
+			if (
+					context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer() &&
+					GetTemporalLayer() == context->GetTargetTemporalLayer()
+			)
+			// clang-format on
 			{
-				// Upgrade current temporal layer if needed.
+				// Upgrade temporal layer if:
+				// - 'switching up point' bit is set, and
+				// - it's beginning of a frame.
 				// clang-format off
 				if (
-						context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer() &&
-						GetTemporalLayer() > context->GetCurrentTemporalLayer() &&
-						GetTemporalLayer() <= context->GetTargetTemporalLayer()
+					(
+						context->GetCurrentTemporalLayer() == -1 ||
+						this->payloadDescriptor->switchingUpPoint
+					) &&
+					this->payloadDescriptor->b
 				)
 				// clang-format on
 				{
-					// Upgrade temporal layer if:
-					// - 'switching up point' bit is set, and
-					// - it's beginning of a frame.
-					// clang-format off
-					if (
-							(
-							 context->GetCurrentTemporalLayer() == -1 ||
-							 this->payloadDescriptor->switchingUpPoint
-							) &&
-							this->payloadDescriptor->b
-						 )
-					// clang-format on
-					{
-						// Update current temporal layer.
-						tmpTemporalLayer = GetTemporalLayer();
-					}
-				}
+					MS_ERROR(
+						"--- upgrading tmpTemporalLayer from %d to %d (B=1)",
+						context->GetCurrentTemporalLayer(),
+						context->GetTargetTemporalLayer());
 
-				// Downgrade current temporal layer if needed.
-				// clang-format off
-				else if (
-						context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer() &&
-						GetTemporalLayer() < context->GetCurrentTemporalLayer() &&
-						GetTemporalLayer() >= context->GetTargetTemporalLayer()
-				)
-				// clang-format on
-				{
-					// Downgrade spatial layer if:
-					// - it's end of frame.
-					if (this->payloadDescriptor->e)
-						tmpTemporalLayer = GetTemporalLayer();
+					tmpTemporalLayer = context->GetTargetTemporalLayer();
 				}
+				else
+				{
+					return false;
+				}
+			}
+			// Downgrade current temporal layer if needed.
+			// clang-format off
+			else if (
+					context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer() &&
+					GetTemporalLayer() == context->GetTargetTemporalLayer()
+			)
+			// clang-format on
+			{
+				// Downgrade spatial layer if:
+				// - it's end of frame.
+				if (this->payloadDescriptor->e)
+				{
+					MS_ERROR(
+						"--- downgrading tmpTemporalLayer from %d to %d (E=1)",
+						context->GetCurrentTemporalLayer(),
+						context->GetTargetTemporalLayer());
+
+					tmpTemporalLayer = context->GetTargetTemporalLayer();
+				}
+			}
+
+			// Filter if neither spatial nor temporal layer is set.
+			if (tmpSpatialLayer == -1 || tmpTemporalLayer == -1)
+			{
+				if (tmpSpatialLayer == -1)
+					MS_ERROR("tmpSpatialLayer == -1 => DISCARD");
+				else
+					MS_ERROR("tmpTemporalLayer == -1 => DISCARD");
+
+				return false;
 			}
 
 			// Filter spatial layers higher than current one.
@@ -294,15 +327,8 @@ namespace RTC
 				return false;
 
 			// Set marker bit if needed.
-			// clang-format off
-			if (
-				GetSpatialLayer() == tmpSpatialLayer &&
-				this->payloadDescriptor->e
-			)
-			// clang-format on
-			{
+			if (setMarkerBit)
 				marker = true;
-			}
 
 			// Update current spatial layer if needed.
 			if (tmpSpatialLayer != context->GetCurrentSpatialLayer())
