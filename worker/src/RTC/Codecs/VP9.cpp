@@ -46,13 +46,13 @@ namespace RTC
 					if (len < ++offset + 1)
 						return nullptr;
 
-					payloadDescriptor->pictureId = (byte & 0x7f) << 8;
+					payloadDescriptor->pictureId = (byte & 0x7F) << 8;
 					payloadDescriptor->pictureId += data[offset];
 					payloadDescriptor->hasTwoBytesPictureId = true;
 				}
 				else
 				{
-					payloadDescriptor->pictureId           = byte & 0x7f;
+					payloadDescriptor->pictureId           = byte & 0x7F;
 					payloadDescriptor->hasOneBytePictureId = true;
 				}
 
@@ -198,7 +198,7 @@ namespace RTC
 			// clang-format on
 			{
 				MS_ERROR(
-					"DROP 1 [packet:%d:%d, current:%d:%d, target:%d:%d]",
+					"DROP 1, too high packet layers! [packet:%d:%d, current:%d:%d, target:%d:%d]",
 					packetSpatialLayer,
 					packetTemporalLayer,
 					context->GetCurrentSpatialLayer(),
@@ -231,22 +231,25 @@ namespace RTC
 				// clang-format on
 				{
 					MS_ERROR(
-						"--- upgrading tmpSpatialLayer from %d to %d (P=0, B=1)",
+						"--- upgrading tmpSpatialLayer from %d to %d (P=0, B=1, sip:%d, tid:%d)",
 						context->GetCurrentSpatialLayer(),
-						packetSpatialLayer);
+						packetSpatialLayer,
+						packetSpatialLayer,
+						packetTemporalLayer);
 
 					tmpSpatialLayer = packetSpatialLayer;
+
 				}
 				else
 				{
-					MS_ERROR(
-						"DROP 2 [packet:%d:%d, current:%d:%d, target:%d:%d]",
-						packetSpatialLayer,
-						packetTemporalLayer,
-						context->GetCurrentSpatialLayer(),
-						context->GetCurrentTemporalLayer(),
-						context->GetTargetSpatialLayer(),
-						context->GetTargetTemporalLayer());
+					// MS_ERROR(
+					// 	"DROP 2 [packet:%d:%d, current:%d:%d, target:%d:%d]",
+					// 	packetSpatialLayer,
+					// 	packetTemporalLayer,
+					// 	context->GetCurrentSpatialLayer(),
+					// 	context->GetCurrentTemporalLayer(),
+					// 	context->GetTargetSpatialLayer(),
+					// 	context->GetTargetTemporalLayer());
 
 					return false;
 				}
@@ -264,9 +267,11 @@ namespace RTC
 				if (this->payloadDescriptor->e)
 				{
 					MS_ERROR(
-						"--- downgrading tmpSpatialLayer from %d to %d (E=1)",
+						"--- downgrading tmpSpatialLayer from %d to %d (E=11, sip:%d, tid:%d)",
 						context->GetCurrentSpatialLayer(),
-						packetSpatialLayer);
+						packetSpatialLayer,
+						packetSpatialLayer,
+						packetTemporalLayer);
 
 					tmpSpatialLayer = packetSpatialLayer;
 				}
