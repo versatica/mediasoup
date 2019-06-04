@@ -655,10 +655,8 @@ namespace RTC
 			this->currentSpatialLayer = this->targetSpatialLayer;
 
 			// Update target and current temporal layer.
-			// NOTE: This is a key frame so we know it covers our target temporal
-			// layer.
 			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
-			this->encodingContext->SetCurrentTemporalLayer(this->targetTemporalLayer);
+			this->encodingContext->SetCurrentTemporalLayer(packet->GetTemporalLayer());
 
 			// Reset the score of our RtpStream to 10.
 			this->rtpStream->ResetScore(10, false);
