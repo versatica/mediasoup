@@ -140,8 +140,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<PayloadDescriptor>");
-			MS_DEBUG_DEV(
+			MS_DUMP("<PayloadDescriptor>");
+			MS_DUMP(
 			  "  i:%" PRIu8 "|p:%" PRIu8 "|l:%" PRIu8 "|f:%" PRIu8 "|b:%" PRIu8 "|e:%" PRIu8 "|v:%" PRIu8,
 			  this->i,
 			  this->p,
@@ -150,20 +150,20 @@ namespace RTC
 			  this->b,
 			  this->e,
 			  this->v);
-			MS_DEBUG_DEV("  pictureId            : %" PRIu16, this->pictureId);
-			MS_DEBUG_DEV("  slIndex              : %" PRIu8, this->slIndex);
-			MS_DEBUG_DEV("  tlIndex              : %" PRIu8, this->tlIndex);
-			MS_DEBUG_DEV("  tl0PictureIndex      : %" PRIu8, this->tl0PictureIndex);
-			MS_DEBUG_DEV("  interLayerDependency : %" PRIu8, this->interLayerDependency);
-			MS_DEBUG_DEV("  switchingUpPoint     : %" PRIu8, this->switchingUpPoint);
-			MS_DEBUG_DEV("  isKeyFrame           : %s", this->isKeyFrame ? "true" : "false");
-			MS_DEBUG_DEV("  hasPictureId         : %s", this->hasPictureId ? "true" : "false");
-			MS_DEBUG_DEV("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
-			MS_DEBUG_DEV("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
-			MS_DEBUG_DEV("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
-			MS_DEBUG_DEV("  hasSlIndex           : %s", this->hasSlIndex ? "true" : "false");
-			MS_DEBUG_DEV("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
-			MS_DEBUG_DEV("</PayloadDescriptor>");
+			MS_DUMP("  pictureId            : %" PRIu16, this->pictureId);
+			MS_DUMP("  slIndex              : %" PRIu8, this->slIndex);
+			MS_DUMP("  tlIndex              : %" PRIu8, this->tlIndex);
+			MS_DUMP("  tl0PictureIndex      : %" PRIu8, this->tl0PictureIndex);
+			MS_DUMP("  interLayerDependency : %" PRIu8, this->interLayerDependency);
+			MS_DUMP("  switchingUpPoint     : %" PRIu8, this->switchingUpPoint);
+			MS_DUMP("  isKeyFrame           : %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP("  hasPictureId         : %s", this->hasPictureId ? "true" : "false");
+			MS_DUMP("  hasOneBytePictureId  : %s", this->hasOneBytePictureId ? "true" : "false");
+			MS_DUMP("  hasTwoBytesPictureId : %s", this->hasTwoBytesPictureId ? "true" : "false");
+			MS_DUMP("  hasTl0PictureIndex   : %s", this->hasTl0PictureIndex ? "true" : "false");
+			MS_DUMP("  hasSlIndex           : %s", this->hasSlIndex ? "true" : "false");
+			MS_DUMP("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
+			MS_DUMP("</PayloadDescriptor>");
 		}
 
 		VP9::PayloadDescriptorHandler::PayloadDescriptorHandler(VP9::PayloadDescriptor* payloadDescriptor)
@@ -198,13 +198,13 @@ namespace RTC
 			// clang-format on
 			{
 				MS_ERROR(
-					"DROP 1, too high packet layers! [packet:%d:%d, current:%d:%d, target:%d:%d]",
-					packetSpatialLayer,
-					packetTemporalLayer,
-					context->GetCurrentSpatialLayer(),
-					context->GetCurrentTemporalLayer(),
-					context->GetTargetSpatialLayer(),
-					context->GetTargetTemporalLayer());
+				  "DROP 1, too high packet layers! [packet:%d:%d, current:%d:%d, target:%d:%d]",
+				  packetSpatialLayer,
+				  packetTemporalLayer,
+				  context->GetCurrentSpatialLayer(),
+				  context->GetCurrentTemporalLayer(),
+				  context->GetTargetSpatialLayer(),
+				  context->GetTargetTemporalLayer());
 
 				return false;
 			}
@@ -231,14 +231,13 @@ namespace RTC
 				// clang-format on
 				{
 					MS_ERROR(
-						"--- upgrading tmpSpatialLayer from %d to %d (P=0, B=1, sip:%d, tid:%d)",
-						context->GetCurrentSpatialLayer(),
-						packetSpatialLayer,
-						packetSpatialLayer,
-						packetTemporalLayer);
+					  "--- upgrading tmpSpatialLayer from %d to %d (P=0, B=1, sip:%d, tid:%d)",
+					  context->GetCurrentSpatialLayer(),
+					  packetSpatialLayer,
+					  packetSpatialLayer,
+					  packetTemporalLayer);
 
 					tmpSpatialLayer = packetSpatialLayer;
-
 				}
 				else
 				{
@@ -267,11 +266,11 @@ namespace RTC
 				if (this->payloadDescriptor->e)
 				{
 					MS_ERROR(
-						"--- downgrading tmpSpatialLayer from %d to %d (E=11, sip:%d, tid:%d)",
-						context->GetCurrentSpatialLayer(),
-						packetSpatialLayer,
-						packetSpatialLayer,
-						packetTemporalLayer);
+					  "--- downgrading tmpSpatialLayer from %d to %d (E=11, sip:%d, tid:%d)",
+					  context->GetCurrentSpatialLayer(),
+					  packetSpatialLayer,
+					  packetSpatialLayer,
+					  packetTemporalLayer);
 
 					tmpSpatialLayer = packetSpatialLayer;
 				}
@@ -290,10 +289,11 @@ namespace RTC
 
 			// Upgrade current temporal layer if needed.
 			// clang-format off
-			if (
-				context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer() &&
-				packetTemporalLayer > context->GetCurrentTemporalLayer()
-			)
+			// if (
+			// 	context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer() &&
+			// 	packetTemporalLayer > context->GetCurrentTemporalLayer()
+			// )
+			if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
 			// clang-format on
 			{
 				// Upgrade temporal layer if:
@@ -302,35 +302,37 @@ namespace RTC
 				// - it's beginning of a frame.
 				//
 				// clang-format off
+				// if (
+				// 	packetTemporalLayer == context->GetCurrentTemporalLayer() + 1 &&
+				// 	(
+				// 		context->GetCurrentTemporalLayer() == -1 ||
+				// 		this->payloadDescriptor->switchingUpPoint
+				// 	) &&
+				// 	this->payloadDescriptor->b
+				// )
 				if (
-					packetTemporalLayer == context->GetCurrentTemporalLayer() + 1 &&
-					(
-						context->GetCurrentTemporalLayer() == -1 ||
-						this->payloadDescriptor->switchingUpPoint
-					) &&
+					context->GetCurrentTemporalLayer() == -1 &&
+					packetTemporalLayer == 0u &&
 					this->payloadDescriptor->b
 				)
-				// clang-format on
 				{
-					MS_ERROR(
-						"--- upgrading tmpTemporalLayer from %d to %d (B=1)",
-						context->GetCurrentTemporalLayer(),
-						packetTemporalLayer);
+					MS_ERROR("--- upgrading tmpTemporalLayer from -1 to 0 (B=1)");
 
-					tmpTemporalLayer = packetTemporalLayer;
+					tmpTemporalLayer = 0;
 				}
-				else
+				else if (
+					context->GetCurrentTemporalLayer() != -1 &&
+					packetTemporalLayer == context->GetCurrentTemporalLayer() &&
+					this->payloadDescriptor->switchingUpPoint &&
+					this->payloadDescriptor->b
+				)
 				{
 					MS_ERROR(
-						"DROP 3 [packet:%d:%d, current:%d:%d, target:%d:%d]",
-						packetSpatialLayer,
-						packetTemporalLayer,
-						context->GetCurrentSpatialLayer(),
-						context->GetCurrentTemporalLayer(),
-						context->GetTargetSpatialLayer(),
-						context->GetTargetTemporalLayer());
+					  "--- upgrading tmpTemporalLayer from %d to %d (B=1)",
+					  context->GetCurrentTemporalLayer(),
+					  context->GetTargetTemporalLayer());
 
-					return false;
+					tmpTemporalLayer = context->GetTargetTemporalLayer();
 				}
 			}
 			// Downgrade current temporal layer if needed.
@@ -346,9 +348,9 @@ namespace RTC
 				if (this->payloadDescriptor->e)
 				{
 					MS_ERROR(
-						"--- downgrading tmpTemporalLayer from %d to %d (E=1)",
-						context->GetCurrentTemporalLayer(),
-						packetTemporalLayer);
+					  "--- downgrading tmpTemporalLayer from %d to %d (E=1)",
+					  context->GetCurrentTemporalLayer(),
+					  packetTemporalLayer);
 
 					tmpTemporalLayer = packetTemporalLayer;
 				}
