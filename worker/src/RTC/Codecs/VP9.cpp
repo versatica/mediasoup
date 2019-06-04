@@ -272,6 +272,17 @@ namespace RTC
 				}
 			}
 
+			// TODO: switchingUpPoint usage below is wrong. The bit must be present in a packet
+			// of the current temporal layer, and it means that we can *already* increase the
+			// current temporal layer to any higher value.
+			//
+			// U: Switching up point.  If this bit is set to 1 for the current
+			//    picture with temporal layer ID equal to TID, then "switch up"
+			//    to a higher frame rate is possible as subsequent higher
+			//    temporal layer pictures will not depend on any picture before
+			//    the current picture (in coding order) with temporal layer ID
+			//    greater than TID
+
 			// Upgrade current temporal layer if needed.
 			// clang-format off
 			if (
