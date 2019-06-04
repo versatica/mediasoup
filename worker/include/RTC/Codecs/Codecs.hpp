@@ -108,6 +108,11 @@ namespace RTC
 				{
 					return true;
 				}
+
+				default:
+				{
+					return false;
+				}
 			}
 		}
 
