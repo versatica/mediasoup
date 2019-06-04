@@ -137,16 +137,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<FeedbackPsRembPacket>");
+			MS_DUMP("<FeedbackPsRembPacket>");
 			FeedbackPsPacket::Dump();
-			MS_DEBUG_DEV("  bitrate (bps): %" PRIu64, this->bitrate);
-#ifdef MS_LOG_DEV
+			MS_DUMP("  bitrate (bps): %" PRIu64, this->bitrate);
 			for (auto ssrc : this->ssrcs)
 			{
-				MS_DEBUG_DEV("  ssrc: %" PRIu32, ssrc);
+				MS_DUMP("  ssrc: %" PRIu32, ssrc);
 			}
-#endif
-			MS_DEBUG_DEV("</FeedbackPsRembPacket>");
+			MS_DUMP("</FeedbackPsRembPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

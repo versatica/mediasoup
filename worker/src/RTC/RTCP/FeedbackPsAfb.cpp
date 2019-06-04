@@ -60,9 +60,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<FeedbackPsAfbPacket>");
+			MS_DUMP("<FeedbackPsAfbPacket>");
 			FeedbackPsPacket::Dump();
-			MS_DEBUG_DEV("</FeedbackPsAfbPacket>");
+			MS_DUMP("</FeedbackPsAfbPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

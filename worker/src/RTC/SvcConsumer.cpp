@@ -593,8 +593,11 @@ namespace RTC
 		)
 		// clang-format on
 		{
-				// TODO: REMOVE
-				MS_ERROR("OHHHH!!!! ts:%d, tt:%d", this->encodingContext->GetTargetSpatialLayer(), this->encodingContext->GetTargetTemporalLayer());
+			// TODO: REMOVE
+			MS_ERROR(
+			  "OHHHH!!!! ts:%d, tt:%d",
+			  this->encodingContext->GetTargetSpatialLayer(),
+			  this->encodingContext->GetTargetTemporalLayer());
 
 			return;
 		}
@@ -638,8 +641,8 @@ namespace RTC
 		auto previousSpatialLayer  = this->encodingContext->GetCurrentSpatialLayer();
 		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
-			// TODO: TMP
-			bool fooKeyFrame = packet->IsKeyFrame();
+		// TODO: TMP
+		bool fooKeyFrame = packet->IsKeyFrame();
 
 		if (!packet->ProcessPayload(this->encodingContext.get()))
 		{
@@ -778,8 +781,8 @@ namespace RTC
 
 		if (IsActive())
 		{
-				// TODO
-				MS_ERROR("--- requesting keyframe due to PLI!");
+			// TODO
+			MS_ERROR("--- requesting keyframe due to PLI!");
 
 			RequestKeyFrame();
 		}

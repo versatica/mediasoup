@@ -30,9 +30,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<FeedbackRtpSrReqPacket>");
+			MS_DUMP("<FeedbackRtpSrReqPacket>");
 			FeedbackRtpPacket::Dump();
-			MS_DEBUG_DEV("</FeedbackRtpSrReqPacket>");
+			MS_DUMP("</FeedbackRtpSrReqPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

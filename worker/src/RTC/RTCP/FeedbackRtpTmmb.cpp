@@ -68,11 +68,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<FeedbackRtpTmmbItem>");
-			MS_DEBUG_DEV("  ssrc     : %" PRIu32, this->GetSsrc());
-			MS_DEBUG_DEV("  bitrate  : %" PRIu64, this->GetBitrate());
-			MS_DEBUG_DEV("  overhead : %" PRIu16, this->GetOverhead());
-			MS_DEBUG_DEV("</FeedbackRtpTmmbItem>");
+			MS_DUMP("<FeedbackRtpTmmbItem>");
+			MS_DUMP("  ssrc     : %" PRIu32, this->GetSsrc());
+			MS_DUMP("  bitrate  : %" PRIu64, this->GetBitrate());
+			MS_DUMP("  overhead : %" PRIu16, this->GetOverhead());
+			MS_DUMP("</FeedbackRtpTmmbItem>");
 		}
 
 		/* Specialization for Tmmbr class. */
