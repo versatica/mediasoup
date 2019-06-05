@@ -930,7 +930,7 @@ namespace RTC
 
 		// Then redistribute the remaining bitrate by allowing Consumers to increase
 		// layer by layer.
-		while (remainingBitrate >= 5000)
+		while (remainingBitrate >= 2000)
 		{
 			auto previousRemainingBitrate = remainingBitrate;
 
@@ -951,7 +951,7 @@ namespace RTC
 				remainingBitrate -= usedBitrate;
 
 				// No more.
-				if (remainingBitrate < 5000)
+				if (remainingBitrate < 2000)
 					break;
 			}
 

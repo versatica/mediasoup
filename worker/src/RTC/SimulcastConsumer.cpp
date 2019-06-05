@@ -679,7 +679,7 @@ namespace RTC
 			this->encodingContext->SetCurrentTemporalLayer(packet->GetTemporalLayer());
 
 			// Reset the score of our RtpStream to 10.
-			this->rtpStream->ResetScore(10, false);
+			this->rtpStream->ResetScore(10, /*notify*/ false);
 
 			// Emit the layersChange event.
 			EmitLayersChange();

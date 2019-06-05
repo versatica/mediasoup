@@ -9,10 +9,6 @@
 
 namespace RTC
 {
-	/* Static. */
-
-	static constexpr uint16_t InactivityCheckPeriod{ 250 };
-
 	/* TransmissionCounter methods. */
 
 	RtpStreamRecv::TransmissionCounter::TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers)
@@ -144,14 +140,14 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		// Set the RTP inactivity check periodic timer.
-		this->inactivityCheckPeriodicTimer = new Timer(this);
-
-		// Run the RTP inactivity periodic timer (unless DTX is enabled).
+		// Run the RTP inactivity periodic timer
 		if (!this->params.useDtx)
 		{
-			this->inactive = false;
-			this->inactivityCheckPeriodicTimer->Start(InactivityCheckPeriod, InactivityCheckPeriod);
+			this->inactivityCheckPeriodicTimer = new Timer(this);
+
+			this->inactivityCheckPeriodicTimer->Start(150, 150);
+			this->inactive     = false;
+			this->lastPacketAt = DepLibUV::GetTime();
 		}
 	}
 
@@ -228,14 +224,16 @@ namespace RTC
 			}
 		}
 
-		// Ensure the inactivityCheckPeriodicTimer runs (unless DTX is enabled).
-		if (!this->params.useDtx && !this->inactivityCheckPeriodicTimer->IsActive())
+		// Ensure the inactivityCheckPeriodicTimer runs.
+		if (this->inactivityCheckPeriodicTimer && this->inactive)
 		{
-			this->inactive = false;
 			this->inactivityCheckPeriodicTimer->Restart();
+			this->inactive = false;
 
-			ResetScore(10, true);
+			ResetScore(10, /*notify*/ true);
 		}
+
+		this->lastPacketAt = DepLibUV::GetTime();
 
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
@@ -488,19 +486,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->inactive = true;
-		this->inactivityCheckPeriodicTimer->Stop();
+		if (this->inactivityCheckPeriodicTimer)
+			this->inactivityCheckPeriodicTimer->Stop();
 	}
 
 	void RtpStreamRecv::Resume()
 	{
 		MS_TRACE();
 
-		// Restart the RTP inactivity periodic timer (unless DTX is enabled).
-		if (!this->params.useDtx)
+		if (this->inactivityCheckPeriodicTimer && !this->inactive)
 		{
-			this->inactive = false;
 			this->inactivityCheckPeriodicTimer->Restart();
+			this->lastPacketAt = DepLibUV::GetTime();
 		}
 	}
 
@@ -638,18 +635,17 @@ namespace RTC
 
 		if (timer == this->inactivityCheckPeriodicTimer)
 		{
-			auto now = DepLibUV::GetTime();
+			auto diff = DepLibUV::GetTime() - this->lastPacketAt;
 
-			// If no RTP is being received reset the score.
-			if (this->transmissionCounter.GetBitrate(now) == 0)
+			if (diff > 400)
 			{
-				this->inactive = true;
 				this->inactivityCheckPeriodicTimer->Stop();
+				this->inactive = true;
 
 				if (GetScore() != 0)
 					MS_WARN_2TAGS(rtp, score, "RTP inactivity detected, resetting score to 0");
 
-				ResetScore(0, true);
+				ResetScore(0, /*notify*/ true);
 			}
 		}
 	}
