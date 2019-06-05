@@ -374,10 +374,8 @@ namespace RTC
 
 			if (this->producerRtpStream->GetLayerBitrate(now, spatialLayer, 0))
 			{
-				int16_t temporalLayer{ 0 };
-
-				// Check bitrate of every layer.
-				for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+				// Check bitrate of every temporal layer.
+				for (int16_t temporalLayer{ 0 }; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 				{
 					auto requiredBitrate =
 					  this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
@@ -392,7 +390,7 @@ namespace RTC
 
 					// If layer is not being received, continue.
 					if (requiredBitrate == 0)
-						goto done;
+						continue;
 
 					// If this layer requires more bitrate than the given one, abort the loop
 					// (so use the previous chosen layers if any).
@@ -416,8 +414,7 @@ namespace RTC
 					}
 				}
 
-				// If this is the preferred or higher spatial layer and has good score,
-				// take it and exit.
+				// If this is the preferred or higher spatial layer, take it and exit.
 				if (spatialLayer >= this->preferredSpatialLayer)
 					break;
 			}
@@ -447,6 +444,10 @@ namespace RTC
 			return usedBitrate;
 	}
 
+	// TODO: This is wrong since, if the browser sends less temporal layers than the
+	// announced ones, this method will see layer bitrate 0 and will return 0 (instead
+	// of moving to the next spatial layer and see if it can upgrade with the given
+	// bitrate).
 	uint32_t SvcConsumer::IncreaseLayer(uint32_t bitrate)
 	{
 		MS_TRACE();
@@ -1052,27 +1053,19 @@ namespace RTC
 		  newTargetTemporalLayer,
 		  this->id.c_str());
 
-		// TODO: Uncomment this if finally it makes sense.
+		// TODO: This is for full SVC.
 		//
-		// Request a key frame if we were in spatial layer -1.
-		// clang-format off
-		if (
-			this->encodingContext->GetCurrentSpatialLayer() == -1 &&
-			newTargetSpatialLayer >= 0
-		)
-		// clang-format on
-		{
+		// Request a key frame if target spatial layer increases.
+		// Keyframe is required when upgrading because
+		// there is no LRR support.
+		if (newTargetSpatialLayer > this->encodingContext->GetCurrentSpatialLayer())
 			RequestKeyFrame();
-		}
 
-		// TODO: Testing stuff.
-		// if (newTargetSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
-		// {
-		// 	// TODO
-		// 	MS_ERROR("--- requesting keyframe since new spatial is != current spatial");
-
-		// 	RequestKeyFrame();
-		// }
+		// TODO: This is for K-SVC.
+		//
+		// Request a key frame if target spatial layer changes.
+		if (newTargetSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
+			RequestKeyFrame();
 	}
 
 	inline void SvcConsumer::EmitScore() const
