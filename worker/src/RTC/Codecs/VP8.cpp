@@ -233,7 +233,8 @@ namespace RTC
 			// Check if the payload should contain temporal layer info.
 			if (context->GetTemporalLayers() > 1 && !this->payloadDescriptor->hasTlIndex)
 			{
-				MS_WARN_TAG(rtp, "stream is supposed to have >1 temporal layers but does not have TlIndex field");
+				MS_WARN_TAG(
+				  rtp, "stream is supposed to have >1 temporal layers but does not have TlIndex field");
 
 				return false;
 			}

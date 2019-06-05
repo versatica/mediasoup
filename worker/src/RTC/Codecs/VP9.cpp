@@ -131,8 +131,9 @@ namespace RTC
 			if (payloadDescriptor->isKeyFrame)
 			{
 				MS_ERROR(
-					"key frame!! [spatialLayer:%u, temporalLayer:%u]",
-					packet->GetSpatialLayer(), packet->GetTemporalLayer());
+				  "key frame!! [spatialLayer:%u, temporalLayer:%u]",
+				  packet->GetSpatialLayer(),
+				  packet->GetTemporalLayer());
 			}
 
 			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);

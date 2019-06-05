@@ -374,8 +374,10 @@ namespace RTC
 
 			if (this->producerRtpStream->GetLayerBitrate(now, spatialLayer, 0))
 			{
+				int16_t temporalLayer{ 0 };
+
 				// Check bitrate of every temporal layer.
-				for (int16_t temporalLayer{ 0 }; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+				for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 				{
 					auto requiredBitrate =
 					  this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
@@ -405,9 +407,9 @@ namespace RTC
 					// If this is the preferred spatial and temporal layer, exit the loops.
 					// clang-format off
 					if (
-							this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
-							this->provisionalTargetTemporalLayer == this->preferredTemporalLayer
-						 )
+						this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
+						this->provisionalTargetTemporalLayer == this->preferredTemporalLayer
+					)
 					// clang-format on
 					{
 						goto done;

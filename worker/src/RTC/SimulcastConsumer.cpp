@@ -424,6 +424,10 @@ namespace RTC
 					  virtualBitrate,
 					  requiredBitrate);
 
+					// If layer is not being received, continue.
+					if (requiredBitrate == 0)
+						continue;
+
 					// If this layer requires more bitrate than the given one, abort the loop
 					// (so use the previous chosen layers if any).
 					if (requiredBitrate > virtualBitrate)
