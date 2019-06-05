@@ -211,6 +211,7 @@ namespace RTC
 		std::string scalabilityMode;
 		uint8_t spatialLayers{ 1 };
 		uint8_t temporalLayers{ 1 };
+		bool ksvc{ false };
 	};
 
 	class RtpHeaderExtensionParameters

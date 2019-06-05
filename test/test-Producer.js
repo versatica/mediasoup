@@ -599,7 +599,8 @@ test('producer.dump() succeeds', async () =>
 				rtx              : { ssrc: 22222223 },
 				scalabilityMode  : 'L1T3',
 				spatialLayers    : 1,
-				temporalLayers   : 3
+				temporalLayers   : 3,
+				ksvc             : false
 			},
 			{ codecPayloadType: 112, ssrc: 22222224, rtx: { ssrc: 22222225 } },
 			{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },

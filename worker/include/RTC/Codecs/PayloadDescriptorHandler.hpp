@@ -19,12 +19,21 @@ namespace RTC
 		class EncodingContext
 		{
 		public:
-			EncodingContext(uint8_t spatialLayers, uint8_t temporalLayers);
+			struct Params
+			{
+				uint8_t spatialLayers{ 1u };
+				uint8_t temporalLayers{ 1u };
+				bool ksvc{ false };
+			};
+
+		public:
+			EncodingContext(RTC::Codecs::EncodingContext::Params& params);
 			virtual ~EncodingContext() = default;
 
 		public:
 			uint8_t GetSpatialLayers() const;
 			uint8_t GetTemporalLayers() const;
+			bool IsKSvc() const;
 			int16_t GetTargetSpatialLayer() const;
 			int16_t GetTargetTemporalLayer() const;
 			int16_t GetCurrentSpatialLayer() const;
@@ -36,8 +45,7 @@ namespace RTC
 			virtual void SyncRequired() = 0;
 
 		private:
-			uint8_t spatialLayers;
-			uint8_t temporalLayers;
+			Params params;
 			int16_t targetSpatialLayer{ -1 };
 			int16_t targetTemporalLayer{ -1 };
 			int16_t currentSpatialLayer{ -1 };
@@ -46,19 +54,24 @@ namespace RTC
 
 		/* Inline instance methods. */
 
-		inline EncodingContext::EncodingContext(uint8_t spatialLayers, uint8_t temporalLayers)
-		  : spatialLayers(spatialLayers), temporalLayers(temporalLayers)
+		inline EncodingContext::EncodingContext(RTC::Codecs::EncodingContext::Params& params)
+		  : params(params)
 		{
 		}
 
 		inline uint8_t EncodingContext::GetSpatialLayers() const
 		{
-			return this->spatialLayers;
+			return this->params.spatialLayers;
 		}
 
 		inline uint8_t EncodingContext::GetTemporalLayers() const
 		{
-			return this->temporalLayers;
+			return this->params.temporalLayers;
+		}
+
+		inline bool EncodingContext::IsKSvc() const
+		{
+			return this->params.ksvc;
 		}
 
 		inline int16_t EncodingContext::GetTargetSpatialLayer() const

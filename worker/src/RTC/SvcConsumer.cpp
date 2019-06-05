@@ -73,8 +73,13 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("%s codec not supported for svc", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(
-		  mediaCodec->mimeType, encoding.spatialLayers, encoding.temporalLayers));
+		RTC::Codecs::EncodingContext::Params params;
+
+		params.spatialLayers  = encoding.spatialLayers;
+		params.temporalLayers = encoding.temporalLayers;
+		params.ksvc           = encoding.ksvc;
+
+		this->encodingContext.reset(RTC::Codecs::GetEncodingContext(mediaCodec->mimeType, params));
 
 		MS_ASSERT(this->encodingContext, "no encoding context for this codec");
 
@@ -373,8 +378,7 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				auto requiredBitrate =
-				  this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+				auto requiredBitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
 
 				MS_DEBUG_DEV(
 				  "testing layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
@@ -1040,6 +1044,29 @@ namespace RTC
 		  newTargetSpatialLayer,
 		  newTargetTemporalLayer,
 		  this->id.c_str());
+
+		// Target spatial layer has changed.
+		if (newTargetSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
+		{
+			// In K-SVC always ask for a keyframe when changing target spatial layer.
+			if (this->encodingContext->IsKSvc())
+			{
+				MS_ERROR("***** KSVC: REQUESTING KEYFRAME due to target spatial change");
+
+				RequestKeyFrame();
+			}
+			// In full SVC just  for a keyframe when upgrading target spatial layer.
+			// NOTE: This is because nobody implements RTCP LRR.
+			else
+			{
+				if (newTargetSpatialLayer > this->encodingContext->GetCurrentSpatialLayer())
+				{
+					MS_ERROR("***** FULL SVC: REQUESTING KEYFRAME due to target spatial upgrade");
+
+					RequestKeyFrame();
+				}
+			}
+		}
 
 		// TODO: This is for K-SVC. However it also works for full SVC.
 		//

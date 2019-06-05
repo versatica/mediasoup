@@ -276,18 +276,43 @@ namespace RTC
 			// NOTE: This is for K-SVC.
 			else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 			{
-				if (this->payloadDescriptor->isKeyFrame)
-				// clang-format on
+				// In K-SVC we must wait for a keyframe.
+				if (context->IsKSvc())
 				{
-					MS_ERROR(
-					  "--- downgrading tmpSpatialLayer from %d to %d (packet:%d:%d)",
-					  context->GetCurrentSpatialLayer(),
-					  context->GetTargetSpatialLayer(),
-					  packetSpatialLayer,
-					  packetTemporalLayer);
+					if (this->payloadDescriptor->isKeyFrame)
+					// clang-format on
+					{
+						MS_ERROR(
+						  "--- downgrading tmpSpatialLayer from %d to %d (packet:%d:%d) after keyframe (K-SVC)",
+						  context->GetCurrentSpatialLayer(),
+						  context->GetTargetSpatialLayer(),
+						  packetSpatialLayer,
+						  packetTemporalLayer);
 
-					tmpSpatialLayer  = context->GetTargetSpatialLayer();
-					tmpTemporalLayer = 0; // Just in case.
+						tmpSpatialLayer  = context->GetTargetSpatialLayer();
+						tmpTemporalLayer = 0; // Just in case.
+					}
+				}
+				// In full SVC we do not need a keyframe.
+				else
+				{
+					// clang-format off
+					if (
+						packetSpatialLayer == context->GetTargetSpatialLayer() &&
+						this->payloadDescriptor->e
+					)
+					// clang-format on
+					{
+						MS_ERROR(
+						  "--- downgrading tmpSpatialLayer from %d to %d (packet:%d:%d) without keyframe (full SVC)",
+						  context->GetCurrentSpatialLayer(),
+						  context->GetTargetSpatialLayer(),
+						  packetSpatialLayer,
+						  packetTemporalLayer);
+
+						tmpSpatialLayer  = context->GetTargetSpatialLayer();
+						tmpTemporalLayer = 0; // Just in case.
+					}
 				}
 			}
 

@@ -588,7 +588,8 @@ test('consumer.dump() succeeds', async () =>
 				},
 				scalabilityMode : 'S4T1',
 				spatialLayers   : 4,
-				temporalLayers  : 1
+				temporalLayers  : 1,
+				ksvc            : false
 			}
 		]);
 	expect(data.consumableRtpEncodings).toBeType('array');

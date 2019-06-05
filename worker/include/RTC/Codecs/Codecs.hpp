@@ -117,7 +117,7 @@ namespace RTC
 		}
 
 		inline EncodingContext* GetEncodingContext(
-		  const RTC::RtpCodecMimeType& mimeType, uint8_t spatialLayers, uint8_t temporalLayers)
+		  const RTC::RtpCodecMimeType& mimeType, RTC::Codecs::EncodingContext::Params& params)
 		{
 			switch (mimeType.type)
 			{
@@ -126,11 +126,11 @@ namespace RTC
 					switch (mimeType.subtype)
 					{
 						case RTC::RtpCodecMimeType::Subtype::VP8:
-							return new RTC::Codecs::VP8::EncodingContext(spatialLayers, temporalLayers);
+							return new RTC::Codecs::VP8::EncodingContext(params);
 						case RTC::RtpCodecMimeType::Subtype::VP9:
-							return new RTC::Codecs::VP9::EncodingContext(spatialLayers, temporalLayers);
+							return new RTC::Codecs::VP9::EncodingContext(params);
 						case RTC::RtpCodecMimeType::Subtype::H264:
-							return new RTC::Codecs::H264::EncodingContext(spatialLayers, temporalLayers);
+							return new RTC::Codecs::H264::EncodingContext(params);
 						default:
 							return nullptr;
 					}

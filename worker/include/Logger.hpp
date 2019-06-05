@@ -316,7 +316,7 @@ public:
 #define MS_DUMP(desc, ...) \
 	do \
 	{ \
-		int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+		int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "X" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
 		Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 	} \
 	while (false)
@@ -324,8 +324,8 @@ public:
 #define MS_DUMP_STD(desc, ...) \
 	do \
 	{ \
-		std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
-		std::fflush(stderr); \
+		std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+		std::fflush(stdout); \
 	} \
 	while (false)
 
