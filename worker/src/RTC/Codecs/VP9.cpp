@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::VP9"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/Codecs/VP9.hpp"
 #include "Logger.hpp"
@@ -85,14 +85,6 @@ namespace RTC
 			}
 
 			// clang-format off
-			// if (
-			// 	!payloadDescriptor->p &&
-			// 	payloadDescriptor->b &&
-			// 	(payloadDescriptor->slIndex == 0 || payloadDescriptor->interLayerDependency == 0)
-			// )
-
-			// TODO: Let's change this for testing.
-			// And it works fine.
 			if (
 				!payloadDescriptor->p &&
 				payloadDescriptor->b &&
@@ -216,6 +208,32 @@ namespace RTC
 				return false;
 			}
 
+			// Check whether pictureId sync is required.
+			// clang-format off
+			if (
+				context->syncRequired &&
+				this->payloadDescriptor->hasPictureId
+			)
+			// clang-format on
+			{
+				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId - 1);
+
+				context->syncRequired = false;
+			}
+
+			// clang-format off
+			bool isOldPacket = (
+				this->payloadDescriptor->hasPictureId &&
+				RTC::SeqManager<uint16_t>::IsSeqLowerThan(
+					this->payloadDescriptor->pictureId,
+					context->pictureIdManager.GetMaxInput())
+			);
+			// clang-format on
+
+			// TODO
+			if (isOldPacket)
+				MS_ERROR("OLD PACKET !!!!!!!!!");
+
 			// Upgrade current spatial layer if needed.
 			if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
 			{
@@ -228,17 +246,37 @@ namespace RTC
 					  packetSpatialLayer,
 					  packetTemporalLayer);
 
-					tmpSpatialLayer = context->GetTargetSpatialLayer();
+					tmpSpatialLayer  = context->GetTargetSpatialLayer();
+					tmpTemporalLayer = 0; // Just in case.
 				}
 			}
 			// Downgrade current spatial layer if needed.
+			// NOTE: This is for full SVC.
+			// else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
+			// {
+			// 	// clang-format off
+			// 	if (
+			// 		packetSpatialLayer == context->GetTargetSpatialLayer() &&
+			// 		this->payloadDescriptor->e
+			// 	)
+			// 	// clang-format on
+			// 	{
+			// 		MS_ERROR(
+			// 		  "--- downgrading tmpSpatialLayer from %d to %d (packet:%d:%d)",
+			// 		  context->GetCurrentSpatialLayer(),
+			// 		  context->GetTargetSpatialLayer(),
+			// 		  packetSpatialLayer,
+			// 		  packetTemporalLayer);
+
+			// 		tmpSpatialLayer  = context->GetTargetSpatialLayer();
+			// 		tmpTemporalLayer = 0; // Just in case.
+			// 	}
+			// }
+			// Downgrade current spatial layer if needed.
+			// NOTE: This is for K-SVC.
 			else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 			{
-				// clang-format off
-				if (
-					packetSpatialLayer == context->GetTargetSpatialLayer() &&
-					this->payloadDescriptor->e
-				)
+				if (this->payloadDescriptor->isKeyFrame)
 				// clang-format on
 				{
 					MS_ERROR(
@@ -248,69 +286,79 @@ namespace RTC
 					  packetSpatialLayer,
 					  packetTemporalLayer);
 
-					tmpSpatialLayer = context->GetTargetSpatialLayer();
+					tmpSpatialLayer  = context->GetTargetSpatialLayer();
+					tmpTemporalLayer = 0; // Just in case.
 				}
 			}
 
-			// Filter spatial layers higher than current one.
-			if (packetSpatialLayer > tmpSpatialLayer)
+			// Filter spatial layers higher than current one (unless old packet).
+			if (packetSpatialLayer > tmpSpatialLayer && !isOldPacket)
 				return false;
 
-			// Upgrade current temporal layer if needed.
-			if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
+			// Check and handle temporal layer (unless old packet).
+			if (!isOldPacket)
 			{
-				// TODO: This is supposed to be wrong but it works (and the theorical rules
-				// fail...).
-				//
-				// clang-format off
-				if (
-					packetTemporalLayer == context->GetCurrentTemporalLayer() + 1 &&
-					(
-						context->GetCurrentTemporalLayer() == -1 ||
-						this->payloadDescriptor->switchingUpPoint
-					) &&
-					this->payloadDescriptor->b
-				)
-				// clang-format on
+				// Upgrade current temporal layer if needed.
+				if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
 				{
-					MS_ERROR(
-					  "--- upgrading tmpTemporalLayer from %d to %d (packet:%d:%d)",
-					  context->GetCurrentTemporalLayer(),
-					  packetTemporalLayer,
-					  packetSpatialLayer,
-					  packetTemporalLayer);
+					// clang-format off
+					if (
+						packetTemporalLayer >= context->GetCurrentTemporalLayer() + 1 &&
+						(
+							context->GetCurrentTemporalLayer() == -1 ||
+							this->payloadDescriptor->switchingUpPoint
+						) &&
+						this->payloadDescriptor->b
+					)
+					// clang-format on
+					{
+						MS_ERROR(
+						  "--- upgrading tmpTemporalLayer from %d to %d (packet:%d:%d)",
+						  context->GetCurrentTemporalLayer(),
+						  packetTemporalLayer,
+						  packetSpatialLayer,
+						  packetTemporalLayer);
 
-					tmpTemporalLayer = packetTemporalLayer;
+						tmpTemporalLayer = packetTemporalLayer;
+					}
 				}
-			}
-			// Downgrade current temporal layer if needed.
-			else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
-			{
-				// clang-format off
-				if (
-					packetTemporalLayer == context->GetTargetTemporalLayer() &&
-					this->payloadDescriptor->e
-				)
-				// clang-format on
+				// Downgrade current temporal layer if needed.
+				else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
 				{
-					MS_ERROR(
-					  "--- downgrading tmpTemporalLayer from %d to %d (packet:%d:%d)",
-					  context->GetCurrentTemporalLayer(),
-					  context->GetTargetTemporalLayer(),
-					  packetSpatialLayer,
-					  packetTemporalLayer);
+					// clang-format off
+					if (
+						packetTemporalLayer == context->GetTargetTemporalLayer() &&
+						this->payloadDescriptor->e
+					)
+					// clang-format on
+					{
+						MS_ERROR(
+						  "--- downgrading tmpTemporalLayer from %d to %d (packet:%d:%d)",
+						  context->GetCurrentTemporalLayer(),
+						  context->GetTargetTemporalLayer(),
+						  packetSpatialLayer,
+						  packetTemporalLayer);
 
-					tmpTemporalLayer = context->GetTargetTemporalLayer();
+						tmpTemporalLayer = context->GetTargetTemporalLayer();
+					}
 				}
-			}
 
-			// Filter temporal layers higher than current one.
-			if (packetTemporalLayer > tmpTemporalLayer)
-				return false;
+				// Filter temporal layers higher than current one.
+				if (packetTemporalLayer > tmpTemporalLayer)
+					return false;
+			}
 
 			// Set marker bit if needed.
 			if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
 				marker = true;
+
+			// Update the pictureId manager.
+			if (this->payloadDescriptor->hasPictureId)
+			{
+				uint16_t pictureId;
+
+				context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId);
+			}
 
 			// Update current spatial layer if needed.
 			if (tmpSpatialLayer != context->GetCurrentSpatialLayer())

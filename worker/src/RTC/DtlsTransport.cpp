@@ -278,6 +278,7 @@ namespace RTC
 		return;
 
 	error:
+
 		if (bne != nullptr)
 			BN_free(bne);
 
@@ -338,6 +339,7 @@ namespace RTC
 		return;
 
 	error:
+
 		MS_THROW_ERROR("error reading DTLS certificate and private key PEM files");
 	}
 
@@ -479,6 +481,7 @@ namespace RTC
 		return;
 
 	error:
+
 		if (DtlsTransport::sslCtx != nullptr)
 		{
 			SSL_CTX_free(DtlsTransport::sslCtx);
@@ -611,6 +614,7 @@ namespace RTC
 		return;
 
 	error:
+
 		// NOTE: At this point SSL_set_bio() was not called so we must free BIOs as
 		// well.
 		if (this->sslBioFromNetwork != nullptr)

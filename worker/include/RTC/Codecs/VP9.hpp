@@ -110,7 +110,7 @@ namespace RTC
 
 			public:
 				RTC::SeqManager<uint16_t> pictureIdManager;
-				RTC::SeqManager<uint8_t> tl0PictureIndexManager;
+				bool syncRequired{ false };
 			};
 
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
@@ -141,6 +141,7 @@ namespace RTC
 
 		inline void VP9::EncodingContext::SyncRequired()
 		{
+			this->syncRequired = true;
 		}
 
 		/* Inline PayloadDescriptorHandler methods. */
