@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.1.0 (work in progress)
+### 3.1.0
 
 * Add SVC support. It includes VP9 full SVC and VP9 K-SVC as implemented by libwebrtc.
 * Prefer Python 2 (if available) over Python 3. This is because there are yet pending issues with gyp + Python 3.
