@@ -243,11 +243,13 @@ namespace RTC
 			bool voice;
 
 			if (ReadSsrcAudioLevel(volume, voice))
+			{
 				MS_DUMP(
 				  "  ssrcAudioLevel    : extId:%" PRIu8 ",volume:%" PRIu8 ",voice:%s",
 				  this->ssrcAudioLevelExtensionId,
 				  volume,
 				  voice ? "true" : "false");
+			}
 		}
 		if (this->videoOrientationExtensionId != 0u)
 		{
@@ -256,12 +258,14 @@ namespace RTC
 			uint16_t rotation;
 
 			if (ReadVideoOrientation(camera, flip, rotation))
+			{
 				MS_DUMP(
 				  "  videoOrientation  : extId:%" PRIu8 ",camera:%s,flip:%s,rotation:%" PRIu16,
 				  this->videoOrientationExtensionId,
 				  camera ? "true" : "false",
 				  flip ? "true" : "false",
 				  rotation);
+			}
 		}
 		MS_DUMP("  csrc count        : %" PRIu8, this->header->csrcCount);
 		MS_DUMP("  marker            : %s", HasMarker() ? "true" : "false");
