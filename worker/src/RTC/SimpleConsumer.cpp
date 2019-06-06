@@ -21,6 +21,11 @@ namespace RTC
 		if (this->consumableRtpEncodings.size() != 1)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 
+		auto& encoding   = this->rtpParameters.encodings[0];
+		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+
+		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
 	}
@@ -308,11 +313,7 @@ namespace RTC
 		this->syncRequired = true;
 
 		if (IsActive())
-		{
-			this->rtpStream->Resume();
-
 			RequestKeyFrame();
-		}
 	}
 
 	void SimpleConsumer::UserOnTransportDisconnected()
@@ -336,11 +337,7 @@ namespace RTC
 		this->syncRequired = true;
 
 		if (IsActive())
-		{
-			this->rtpStream->Resume();
-
 			RequestKeyFrame();
-		}
 	}
 
 	void SimpleConsumer::CreateRtpStream()
@@ -422,8 +419,6 @@ namespace RTC
 
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
-
-		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
 	}
 
 	void SimpleConsumer::RequestKeyFrame()

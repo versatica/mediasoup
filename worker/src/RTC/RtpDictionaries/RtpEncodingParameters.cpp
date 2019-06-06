@@ -68,7 +68,7 @@ namespace RTC
 			std::string scalabilityMode = jsonScalabilityModeIt->get<std::string>();
 
 			static const std::regex ScalabilityModeRegex(
-			  "^[LS](\\d+)T(\\d+).*", std::regex_constants::ECMAScript);
+			  "^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1})(_KEY)?.*", std::regex_constants::ECMAScript);
 
 			std::smatch match;
 
@@ -82,6 +82,7 @@ namespace RTC
 				{
 					this->spatialLayers  = std::stoul(match[1].str());
 					this->temporalLayers = std::stoul(match[2].str());
+					this->ksvc           = match.size() >= 4 && match[3].str() == "_KEY";
 				}
 				catch (std::exception& e)
 				{
@@ -132,6 +133,7 @@ namespace RTC
 			jsonObject["scalabilityMode"] = this->scalabilityMode;
 			jsonObject["spatialLayers"]   = this->spatialLayers;
 			jsonObject["temporalLayers"]  = this->temporalLayers;
+			jsonObject["ksvc"]            = this->ksvc;
 		}
 	}
 } // namespace RTC

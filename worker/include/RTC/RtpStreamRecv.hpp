@@ -79,9 +79,10 @@ namespace RTC
 		uint32_t jitter{ 0 };
 		uint8_t firSeqNumber{ 0 };
 		uint32_t reportedPacketLost{ 0 };
-		bool inactive{ false }; // Stream is inactive.
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		Timer* inactivityCheckPeriodicTimer{ nullptr };
+		bool inactive{ false };     // Stream is inactive.
+		uint64_t lastPacketAt{ 0 }; // Time last valid packet arrived.
 		TransmissionCounter transmissionCounter;
 	};
 

@@ -19,10 +19,21 @@ namespace RTC
 		class EncodingContext
 		{
 		public:
-			EncodingContext()          = default;
+			struct Params
+			{
+				uint8_t spatialLayers{ 1u };
+				uint8_t temporalLayers{ 1u };
+				bool ksvc{ false };
+			};
+
+		public:
+			EncodingContext(RTC::Codecs::EncodingContext::Params& params);
 			virtual ~EncodingContext() = default;
 
 		public:
+			uint8_t GetSpatialLayers() const;
+			uint8_t GetTemporalLayers() const;
+			bool IsKSvc() const;
 			int16_t GetTargetSpatialLayer() const;
 			int16_t GetTargetTemporalLayer() const;
 			int16_t GetCurrentSpatialLayer() const;
@@ -34,6 +45,7 @@ namespace RTC
 			virtual void SyncRequired() = 0;
 
 		private:
+			Params params;
 			int16_t targetSpatialLayer{ -1 };
 			int16_t targetTemporalLayer{ -1 };
 			int16_t currentSpatialLayer{ -1 };
@@ -41,6 +53,26 @@ namespace RTC
 		};
 
 		/* Inline instance methods. */
+
+		inline EncodingContext::EncodingContext(RTC::Codecs::EncodingContext::Params& params)
+		  : params(params)
+		{
+		}
+
+		inline uint8_t EncodingContext::GetSpatialLayers() const
+		{
+			return this->params.spatialLayers;
+		}
+
+		inline uint8_t EncodingContext::GetTemporalLayers() const
+		{
+			return this->params.temporalLayers;
+		}
+
+		inline bool EncodingContext::IsKSvc() const
+		{
+			return this->params.ksvc;
+		}
 
 		inline int16_t EncodingContext::GetTargetSpatialLayer() const
 		{
@@ -88,12 +120,12 @@ namespace RTC
 			virtual ~PayloadDescriptorHandler() = default;
 
 		public:
-			virtual void Dump() const                                                  = 0;
-			virtual bool Process(RTC::Codecs::EncodingContext* context, uint8_t* data) = 0;
-			virtual void Restore(uint8_t* data)                                        = 0;
-			virtual uint8_t GetSpatialLayer() const                                    = 0;
-			virtual uint8_t GetTemporalLayer() const                                   = 0;
-			virtual bool IsKeyFrame() const                                            = 0;
+			virtual void Dump() const                                                                = 0;
+			virtual bool Process(RTC::Codecs::EncodingContext* context, uint8_t* data, bool& marker) = 0;
+			virtual void Restore(uint8_t* data)                                                      = 0;
+			virtual uint8_t GetSpatialLayer() const                                                  = 0;
+			virtual uint8_t GetTemporalLayer() const                                                 = 0;
+			virtual bool IsKeyFrame() const                                                          = 0;
 		};
 	} // namespace Codecs
 } // namespace RTC

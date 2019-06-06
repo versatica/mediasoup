@@ -7,6 +7,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
+#include "RTC/Codecs/Codecs.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -39,6 +40,17 @@ namespace RTC
 
 		// Evaluate type.
 		this->type = RTC::RtpParameters::GetType(this->rtpParameters);
+
+		auto& encoding   = this->rtpParameters.encodings[0];
+		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+
+		if (!RTC::Codecs::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
+		{
+			MS_THROW_TYPE_ERROR(
+			  "%s codec not supported for %s",
+			  mediaCodec->mimeType.ToString().c_str(),
+			  RTC::RtpParameters::GetTypeString(this->type).c_str());
+		}
 
 		auto jsonRtpMappingIt = data.find("rtpMapping");
 

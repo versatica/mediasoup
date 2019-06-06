@@ -50,6 +50,13 @@
  * 	 Example:
  * 	   MS_DEBUG_DEV("Producer closed [producerId:%" PRIu32 "]", producerId);
  *
+ * MS_DUMP(...)
+ *
+ * 	 Logs always. Useful for Dump() methods.
+ *
+ * 	 Example:
+ * 	   MS_DUMP("foo");
+ *
  * MS_ERROR(...)
  *
  *   Logs an error if the current log level is satisfied (or if the current
@@ -306,6 +313,22 @@ public:
 	#define MS_WARN_DEV_STD(desc, ...) {}
 #endif
 
+#define MS_DUMP(desc, ...) \
+	do \
+	{ \
+		int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "X" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+		Logger::channel->SendLog(Logger::buffer, loggerWritten); \
+	} \
+	while (false)
+
+#define MS_DUMP_STD(desc, ...) \
+	do \
+	{ \
+		std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+		std::fflush(stdout); \
+	} \
+	while (false)
+
 #define MS_ERROR(desc, ...) \
 	do \
 	{ \
@@ -358,6 +381,8 @@ public:
 	#define MS_DEBUG_DEV MS_DEBUG_DEV_STD
 	#undef MS_WARN_DEV
 	#define MS_WARN_DEV MS_WARN_DEV_STD
+	#undef MS_DUMP
+	#define MS_DUMP MS_DUMP_STD
 	#undef MS_ERROR
 	#define MS_ERROR MS_ERROR_STD
 #endif

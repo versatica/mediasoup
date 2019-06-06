@@ -87,11 +87,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<SdesItem>");
-			MS_DEBUG_DEV("  type   : %s", SdesItem::Type2String(this->GetType()).c_str());
-			MS_DEBUG_DEV("  length : %" PRIu8, this->header->length);
-			MS_DEBUG_DEV("  value  : %.*s", this->header->length, this->header->value);
-			MS_DEBUG_DEV("</SdesItem>");
+			MS_DUMP("<SdesItem>");
+			MS_DUMP("  type   : %s", SdesItem::Type2String(this->GetType()).c_str());
+			MS_DUMP("  length : %" PRIu8, this->header->length);
+			MS_DUMP("  value  : %.*s", this->header->length, this->header->value);
+			MS_DUMP("</SdesItem>");
 		}
 
 		size_t SdesItem::Serialize(uint8_t* buffer)
@@ -169,13 +169,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<SdesChunk>");
-			MS_DEBUG_DEV("  ssrc : %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
+			MS_DUMP("<SdesChunk>");
+			MS_DUMP("  ssrc : %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
 			for (auto* item : this->items)
 			{
 				item->Dump();
 			}
-			MS_DEBUG_DEV("</SdesChunk>");
+			MS_DUMP("</SdesChunk>");
 		}
 
 		/* Class methods. */
@@ -228,12 +228,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<SdesPacket>");
+			MS_DUMP("<SdesPacket>");
 			for (auto* chunk : this->chunks)
 			{
 				chunk->Dump();
 			}
-			MS_DEBUG_DEV("</SdesPacket>");
+			MS_DUMP("</SdesPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

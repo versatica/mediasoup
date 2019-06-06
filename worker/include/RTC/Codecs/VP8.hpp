@@ -11,7 +11,7 @@
  *
 
   Single octet PictureID (M = 0)        Dual octet PictureID (M = 1)
- ===============================        ============================
+  ==============================        ============================
 
       0 1 2 3 4 5 6 7                       0 1 2 3 4 5 6 7
      +-+-+-+-+-+-+-+-+                     +-+-+-+-+-+-+-+-+
@@ -83,6 +83,7 @@ namespace RTC
 			class EncodingContext : public RTC::Codecs::EncodingContext
 			{
 			public:
+				EncodingContext(RTC::Codecs::EncodingContext::Params& params);
 				~EncodingContext() = default;
 
 				/* Pure virtual methods inherited from RTC::Codecs::EncodingContext. */
@@ -104,7 +105,7 @@ namespace RTC
 
 			public:
 				void Dump() const override;
-				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data) override;
+				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override;
 				uint8_t GetTemporalLayer() const override;
@@ -116,6 +117,11 @@ namespace RTC
 		};
 
 		/* Inline EncondingContext methods. */
+
+		inline VP8::EncodingContext::EncodingContext(RTC::Codecs::EncodingContext::Params& params)
+		  : RTC::Codecs::EncodingContext(params)
+		{
+		}
 
 		inline void VP8::EncodingContext::SyncRequired()
 		{

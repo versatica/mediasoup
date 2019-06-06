@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SIMULCAST_CONSUMER_HPP
-#define MS_RTC_SIMULCAST_CONSUMER_HPP
+#ifndef MS_RTC_SVC_CONSUMER_HPP
+#define MS_RTC_SVC_CONSUMER_HPP
 
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
@@ -9,11 +9,11 @@
 
 namespace RTC
 {
-	class SimulcastConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
+	class SvcConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
-		SimulcastConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data);
-		~SimulcastConsumer() override;
+		SvcConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data);
+		~SvcConsumer() override;
 
 	public:
 		void FillJson(json& jsonObject) const override;
@@ -46,18 +46,12 @@ namespace RTC
 		void UserOnPaused() override;
 		void UserOnResumed() override;
 		void CreateRtpStream();
-		void RequestKeyFrames();
-		void RequestKeyFrameForTargetSpatialLayer();
-		void RequestKeyFrameForCurrentSpatialLayer();
+		void RequestKeyFrame();
 		void MayChangeLayers(bool force = false);
 		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
-		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
 		void EmitLayersChange() const;
-		RTC::RtpStream* GetProducerCurrentRtpStream() const;
-		RTC::RtpStream* GetProducerTargetRtpStream() const;
-		RTC::RtpStream* GetProducerTsReferenceRtpStream() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -69,46 +63,26 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
-		std::unordered_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
-		std::vector<RTC::RtpStream*> producerRtpStreams; // Indexed by spatial layer.
+		RTC::RtpStream* producerRtpStream{ nullptr };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t preferredTemporalLayer{ -1 };
 		int16_t provisionalTargetSpatialLayer{ -1 };
 		int16_t provisionalTargetTemporalLayer{ -1 };
-		int16_t targetSpatialLayer{ -1 };
-		int16_t targetTemporalLayer{ -1 };
-		int16_t currentSpatialLayer{ -1 };
-		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		bool externallyManagedBitrate{ false };
-		uint32_t tsOffset{ 0 }; // RTP Timestamp offset.
-		std::map<uint32_t, uint32_t> tsExtraOffsets;
-		uint16_t tsExtraOffetPacketCount{ 0 };
 	};
 
 	/* Inline methods. */
 
-	inline bool SimulcastConsumer::IsActive() const
+	inline bool SvcConsumer::IsActive() const
 	{
-		// clang-format off
-		return (
-			RTC::Consumer::IsActive() &&
-			std::any_of(
-				this->producerRtpStreams.begin(),
-				this->producerRtpStreams.end(),
-				[](const RTC::RtpStream* rtpStream)
-				{
-					return (rtpStream != nullptr && rtpStream->GetScore() > 0);
-				}
-			)
-		);
-		// clang-format on
+		return (RTC::Consumer::IsActive() && this->producerRtpStream);
 	}
 
-	inline std::vector<RTC::RtpStreamSend*> SimulcastConsumer::GetRtpStreams()
+	inline std::vector<RTC::RtpStreamSend*> SvcConsumer::GetRtpStreams()
 	{
 		return this->rtpStreams;
 	}

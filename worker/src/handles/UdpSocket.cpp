@@ -117,13 +117,13 @@ void UdpSocket::Close()
 
 void UdpSocket::Dump() const
 {
-	MS_DEBUG_DEV("<UdpSocket>");
-	MS_DEBUG_DEV(
+	MS_DUMP("<UdpSocket>");
+	MS_DUMP(
 	  "  [UDP, local:%s :%" PRIu16 ", status:%s]",
 	  this->localIp.c_str(),
 	  static_cast<uint16_t>(this->localPort),
 	  (!this->closed) ? "open" : "closed");
-	MS_DEBUG_DEV("</UdpSocket>");
+	MS_DUMP("</UdpSocket>");
 }
 
 void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr)
@@ -324,6 +324,7 @@ inline void UdpSocket::OnUvSendError(int error) // NOLINT(misc-unused-parameters
 
 	if (this->closed)
 		return;
+
 #ifdef MS_LOG_DEV
 	MS_DEBUG_DEV("send error: %s", uv_strerror(error));
 #endif

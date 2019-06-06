@@ -16,6 +16,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
+#include "RTC/SvcConsumer.hpp"
 
 namespace RTC
 {
@@ -287,7 +288,8 @@ namespace RTC
 
 					case RTC::RtpParameters::Type::SVC:
 					{
-						MS_THROW_TYPE_ERROR("not yet implemented type 'svc'");
+						// This may throw.
+						consumer = new RTC::SvcConsumer(consumerId, this, request->data);
 
 						break;
 					}

@@ -35,12 +35,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: This is very basic and must be updated to detect SVC and so on.
-
 		if (rtpParameters.encodings.size() == 1)
-			return RtpParameters::Type::SIMPLE;
+		{
+			auto& encoding = rtpParameters.encodings[0];
+
+			if (encoding.spatialLayers > 1 || encoding.temporalLayers > 1)
+				return RtpParameters::Type::SVC;
+			else
+				return RtpParameters::Type::SIMPLE;
+		}
 		else if (rtpParameters.encodings.size() > 1)
+		{
 			return RtpParameters::Type::SIMULCAST;
+		}
 
 		return RtpParameters::Type::NONE;
 	}

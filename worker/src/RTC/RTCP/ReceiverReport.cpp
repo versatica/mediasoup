@@ -36,15 +36,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<ReceiverReport>");
-			MS_DEBUG_DEV("  ssrc          : %" PRIu32, GetSsrc());
-			MS_DEBUG_DEV("  fraction lost : %" PRIu8, GetFractionLost());
-			MS_DEBUG_DEV("  total lost    : %" PRIu32, GetTotalLost());
-			MS_DEBUG_DEV("  last seq      : %" PRIu32, GetLastSeq());
-			MS_DEBUG_DEV("  jitter        : %" PRIu32, GetJitter());
-			MS_DEBUG_DEV("  lsr           : %" PRIu32, GetLastSenderReport());
-			MS_DEBUG_DEV("  dlsr          : %" PRIu32, GetDelaySinceLastSenderReport());
-			MS_DEBUG_DEV("</ReceiverReport>");
+			MS_DUMP("<ReceiverReport>");
+			MS_DUMP("  ssrc          : %" PRIu32, GetSsrc());
+			MS_DUMP("  fraction lost : %" PRIu8, GetFractionLost());
+			MS_DUMP("  total lost    : %" PRIu32, GetTotalLost());
+			MS_DUMP("  last seq      : %" PRIu32, GetLastSeq());
+			MS_DUMP("  jitter        : %" PRIu32, GetJitter());
+			MS_DUMP("  lsr           : %" PRIu32, GetLastSenderReport());
+			MS_DUMP("  dlsr          : %" PRIu32, GetDelaySinceLastSenderReport());
+			MS_DUMP("</ReceiverReport>");
 		}
 
 		size_t ReceiverReport::Serialize(uint8_t* buffer)
@@ -133,13 +133,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<ReceiverReportPacket>");
-			MS_DEBUG_DEV("  ssrc: %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
+			MS_DUMP("<ReceiverReportPacket>");
+			MS_DUMP("  ssrc: %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
 			for (auto* report : this->reports)
 			{
 				report->Dump();
 			}
-			MS_DEBUG_DEV("</ReceiverReportPacket>");
+			MS_DUMP("</ReceiverReportPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

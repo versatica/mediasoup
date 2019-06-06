@@ -82,7 +82,7 @@ namespace RTC
 
 			if (it != this->dropped.end())
 			{
-				MS_WARN_TAG(rtp, "trying to send a dropped input");
+				MS_DEBUG_DEV("trying to send a dropped input");
 
 				return false;
 			}

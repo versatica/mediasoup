@@ -30,11 +30,35 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 	expect(rtpCapabilities2).not.toEqual(rtpCapabilities);
 }, 500);
 
-test('mediasoup.parseScalabilityMode() works', () =>
+test('parseScalabilityMode() works', () =>
 {
-	expect(parseScalabilityMode('L1T3')).toEqual({ spatialLayers: 1, temporalLayers: 3 });
-	expect(parseScalabilityMode('L3T2_KEY')).toEqual({ spatialLayers: 3, temporalLayers: 2 });
-	expect(parseScalabilityMode('S2T3')).toEqual({ spatialLayers: 2, temporalLayers: 3 });
-	expect(parseScalabilityMode('foo')).toEqual({ spatialLayers: 1, temporalLayers: 1 });
-	expect(parseScalabilityMode(null)).toEqual({ spatialLayers: 1, temporalLayers: 1 });
+	expect(parseScalabilityMode('L1T3'))
+		.toEqual({ spatialLayers: 1, temporalLayers: 3, ksvc: false });
+
+	expect(parseScalabilityMode('L3T2_KEY'))
+		.toEqual({ spatialLayers: 3, temporalLayers: 2, ksvc: true });
+
+	expect(parseScalabilityMode('S2T3'))
+		.toEqual({ spatialLayers: 2, temporalLayers: 3, ksvc: false });
+
+	expect(parseScalabilityMode('foo'))
+		.toEqual({ spatialLayers: 1, temporalLayers: 1, ksvc: false });
+
+	expect(parseScalabilityMode(null))
+		.toEqual({ spatialLayers: 1, temporalLayers: 1, ksvc: false });
+
+	expect(parseScalabilityMode('S0T3'))
+		.toEqual({ spatialLayers: 1, temporalLayers: 1, ksvc: false });
+
+	expect(parseScalabilityMode('S1T0'))
+		.toEqual({ spatialLayers: 1, temporalLayers: 1, ksvc: false });
+
+	expect(parseScalabilityMode('L20T3'))
+		.toEqual({ spatialLayers: 20, temporalLayers: 3, ksvc: false });
+
+	expect(parseScalabilityMode('S200T3'))
+		.toEqual({ spatialLayers: 1, temporalLayers: 1, ksvc: false });
+
+	expect(parseScalabilityMode('L4T7_KEY_SHIFT'))
+		.toEqual({ spatialLayers: 4, temporalLayers: 7, ksvc: true });
 }, 500);

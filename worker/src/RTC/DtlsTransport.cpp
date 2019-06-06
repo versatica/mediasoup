@@ -278,6 +278,7 @@ namespace RTC
 		return;
 
 	error:
+
 		if (bne != nullptr)
 			BN_free(bne);
 
@@ -338,6 +339,7 @@ namespace RTC
 		return;
 
 	error:
+
 		MS_THROW_ERROR("error reading DTLS certificate and private key PEM files");
 	}
 
@@ -479,6 +481,7 @@ namespace RTC
 		return;
 
 	error:
+
 		if (DtlsTransport::sslCtx != nullptr)
 		{
 			SSL_CTX_free(DtlsTransport::sslCtx);
@@ -611,6 +614,7 @@ namespace RTC
 		return;
 
 	error:
+
 		// NOTE: At this point SSL_set_bio() was not called so we must free BIOs as
 		// well.
 		if (this->sslBioFromNetwork != nullptr)
@@ -655,15 +659,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("<DtlsTransport>");
-		MS_DEBUG_DEV(
+		MS_DUMP("<DtlsTransport>");
+		MS_DUMP(
 		  "  [role:%s, running:%s, handshake done:%s, connected:%s]",
 		  (this->localRole == Role::SERVER ? "server"
 		                                   : (this->localRole == Role::CLIENT ? "client" : "none")),
 		  IsRunning() ? "yes" : "no",
 		  this->handshakeDone ? "yes" : "no",
 		  this->state == DtlsState::CONNECTED ? "yes" : "no");
-		MS_DEBUG_DEV("</DtlsTransport>");
+		MS_DUMP("</DtlsTransport>");
 	}
 
 	void DtlsTransport::Run(Role localRole)

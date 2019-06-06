@@ -30,6 +30,7 @@ namespace RTC
 				uint8_t tl0picidx{ 0 }; // TL0PICIDX
 				// Parsed values.
 				bool hasLid{ false };
+				bool hasTid{ false };
 				bool hasTl0picidx{ false };
 				bool isKeyFrame{ false };
 			};
@@ -46,6 +47,7 @@ namespace RTC
 			class EncodingContext : public RTC::Codecs::EncodingContext
 			{
 			public:
+				EncodingContext(RTC::Codecs::EncodingContext::Params& params);
 				~EncodingContext() = default;
 
 				/* Pure virtual methods inherited from RTC::Codecs::EncodingContext. */
@@ -62,7 +64,7 @@ namespace RTC
 
 			public:
 				void Dump() const override;
-				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data) override;
+				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override;
 				uint8_t GetTemporalLayer() const override;
@@ -74,6 +76,11 @@ namespace RTC
 		};
 
 		/* Inline EncondingContext methods. */
+
+		inline H264::EncodingContext::EncodingContext(RTC::Codecs::EncodingContext::Params& params)
+		  : RTC::Codecs::EncodingContext(params)
+		{
+		}
 
 		inline void H264::EncodingContext::SyncRequired()
 		{

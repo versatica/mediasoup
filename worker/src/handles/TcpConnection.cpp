@@ -131,15 +131,15 @@ void TcpConnection::Close()
 
 void TcpConnection::Dump() const
 {
-	MS_DEBUG_DEV("<TcpConnection>");
-	MS_DEBUG_DEV(
+	MS_DUMP("<TcpConnection>");
+	MS_DUMP(
 	  "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
 	  this->localIp.c_str(),
 	  static_cast<uint16_t>(this->localPort),
 	  this->peerIp.c_str(),
 	  static_cast<uint16_t>(this->peerPort),
 	  (!this->closed) ? "open" : "closed");
-	MS_DEBUG_DEV("</TcpConnection>");
+	MS_DUMP("</TcpConnection>");
 }
 
 void TcpConnection::Setup(

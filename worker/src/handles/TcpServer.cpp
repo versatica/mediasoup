@@ -90,14 +90,14 @@ void TcpServer::Close()
 
 void TcpServer::Dump() const
 {
-	MS_DEBUG_DEV("<TcpServer>");
-	MS_DEBUG_DEV(
+	MS_DUMP("<TcpServer>");
+	MS_DUMP(
 	  "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
 	  this->localIp.c_str(),
 	  static_cast<uint16_t>(this->localPort),
 	  (!this->closed) ? "open" : "closed",
 	  this->connections.size());
-	MS_DEBUG_DEV("</TcpServer>");
+	MS_DUMP("</TcpServer>");
 }
 
 bool TcpServer::SetLocalAddress()

@@ -20,6 +20,11 @@ namespace RTC
 		if (this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
 			MS_THROW_TYPE_ERROR("number of rtpParameters.encodings and consumableRtpEncodings do not match");
 
+		auto& encoding   = this->rtpParameters.encodings[0];
+		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+
+		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+
 		// Create RtpStreamSend instances.
 		CreateRtpStreams();
 	}
@@ -466,8 +471,6 @@ namespace RTC
 
 			if (rtxCodec && encoding.hasRtx)
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
-
-			this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
 
 			this->mapMappedSsrcRtpStream[encoding.ssrc] = rtpStream;
 			this->rtpStreams.push_back(rtpStream);
