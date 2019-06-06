@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.1.0 (work in progress)
+
+* Add SVC support. It includes VP9 full SVC and VP9 K-SVC as implemented by libwebrtc.
+
+
 ### 3.0.12
 
 * Do not require Python 2 to compile mediasoup worker (#207). Both Python 2 and 3 can now be used.
