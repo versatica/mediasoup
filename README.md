@@ -13,6 +13,11 @@
 * [mediasoup.org][mediasoup-website]
 
 
+## Support Forum
+
+* [mediasoup.discourse.group][mediasoup-discourse]
+
+
 ## Design Goals
 
 mediasoup and its client side libraries are designed to accomplish with the following goals:
@@ -86,6 +91,7 @@ You can support mediasoup by making a donation in [open collective][opencollecti
 
 [mediasoup-banner]: /art/mediasoup-banner.png
 [mediasoup-website]: https://mediasoup.org
+[mediasoup-discourse]: https://mediasoup.discourse.group
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
 [travis-ci-shield-mediasoup]: https://travis-ci.com/versatica/mediasoup.svg?branch=master
