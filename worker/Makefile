@@ -2,7 +2,9 @@
 # make tasks for mediasoup-worker.
 #
 
-PYTHON ?= python
+# Best effort to prefer Python 2 executable since there are yet pending issues
+# with gyp and Python3.
+PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 LCOV = ./deps/lcov/bin/lcov
 GULP = ../node_modules/.bin/gulp
 BEAR ?= bear
