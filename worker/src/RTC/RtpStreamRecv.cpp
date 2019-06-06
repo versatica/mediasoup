@@ -140,12 +140,13 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		// Run the RTP inactivity periodic timer
+		// Run the RTP inactivity periodic timer (unless DTX is enabled).
 		if (!this->params.useDtx)
 		{
 			this->inactivityCheckPeriodicTimer = new Timer(this);
 
-			this->inactivityCheckPeriodicTimer->Start(150, 150);
+			// First check on 2 seconds, then every 150 ms.
+			this->inactivityCheckPeriodicTimer->Start(2000, 150);
 			this->inactive     = false;
 			this->lastPacketAt = DepLibUV::GetTime();
 		}
@@ -224,6 +225,12 @@ namespace RTC
 			}
 		}
 
+		// Calculate Jitter.
+		CalculateJitter(packet->GetTimestamp());
+
+		// Increase transmission counter.
+		this->transmissionCounter.Update(packet);
+
 		// Ensure the inactivityCheckPeriodicTimer runs.
 		if (this->inactivityCheckPeriodicTimer && this->inactive)
 		{
@@ -233,13 +240,8 @@ namespace RTC
 			ResetScore(10, /*notify*/ true);
 		}
 
+		// Update last packet arrival.
 		this->lastPacketAt = DepLibUV::GetTime();
-
-		// Calculate Jitter.
-		CalculateJitter(packet->GetTimestamp());
-
-		// Increase transmission counter.
-		this->transmissionCounter.Update(packet);
 
 		return true;
 	}
@@ -324,6 +326,18 @@ namespace RTC
 
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
+
+			// Ensure the inactivityCheckPeriodicTimer runs.
+			if (this->inactivityCheckPeriodicTimer && this->inactive)
+			{
+				this->inactivityCheckPeriodicTimer->Restart();
+				this->inactive = false;
+
+				ResetScore(10, /*notify*/ true);
+			}
+
+			// Update last packet arrival.
+			this->lastPacketAt = DepLibUV::GetTime();
 
 			return true;
 		}

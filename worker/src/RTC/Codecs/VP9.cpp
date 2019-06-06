@@ -110,20 +110,15 @@ namespace RTC
 			// Read frame-marking.
 			packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-			// TODO: TMP
-			if (frameMarking)
-				MS_ERROR("frameMarking in VP9!!!");
-
 			PayloadDescriptor* payloadDescriptor = VP9::Parse(data, len, frameMarking, frameMarkingLen);
 
 			if (!payloadDescriptor)
 				return;
 
-			// TODO: TMP
 			if (payloadDescriptor->isKeyFrame)
 			{
-				MS_ERROR(
-				  "key frame!! [spatialLayer:%u, temporalLayer:%u]",
+				MS_DEBUG_DEV(
+				  "key frame [spatialLayer:%" PRIu8 ", temporalLayer:%" PRIu8 "]",
 				  packet->GetSpatialLayer(),
 				  packet->GetTemporalLayer());
 			}
@@ -196,14 +191,8 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				MS_ERROR(
-				  "DROP 1, too high packet layers! [packet:%d:%d, current:%d:%d, target:%d:%d]",
-				  packetSpatialLayer,
-				  packetTemporalLayer,
-				  context->GetCurrentSpatialLayer(),
-				  context->GetCurrentTemporalLayer(),
-				  context->GetTargetSpatialLayer(),
-				  context->GetTargetTemporalLayer());
+				MS_WARN_TAG(
+				  rtp, "too high packet layers %" PRIu8 ":%" PRIu8, packetSpatialLayer, packetTemporalLayer);
 
 				return false;
 			}
@@ -230,17 +219,14 @@ namespace RTC
 			);
 			// clang-format on
 
-			// TODO
-			if (isOldPacket)
-				MS_ERROR("OLD PACKET !!!!!!!!!");
-
 			// Upgrade current spatial layer if needed.
 			if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
 			{
 				if (this->payloadDescriptor->isKeyFrame)
 				{
-					MS_ERROR(
-					  "--- upgrading tmpSpatialLayer from %d to %d (packet:%d:%d)",
+					MS_DEBUG_DEV(
+					  "upgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8 ":%" PRIu8
+					  ")",
 					  context->GetCurrentSpatialLayer(),
 					  context->GetTargetSpatialLayer(),
 					  packetSpatialLayer,
@@ -251,29 +237,6 @@ namespace RTC
 				}
 			}
 			// Downgrade current spatial layer if needed.
-			// NOTE: This is for full SVC.
-			// else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
-			// {
-			// 	// clang-format off
-			// 	if (
-			// 		packetSpatialLayer == context->GetTargetSpatialLayer() &&
-			// 		this->payloadDescriptor->e
-			// 	)
-			// 	// clang-format on
-			// 	{
-			// 		MS_ERROR(
-			// 		  "--- downgrading tmpSpatialLayer from %d to %d (packet:%d:%d)",
-			// 		  context->GetCurrentSpatialLayer(),
-			// 		  context->GetTargetSpatialLayer(),
-			// 		  packetSpatialLayer,
-			// 		  packetTemporalLayer);
-
-			// 		tmpSpatialLayer  = context->GetTargetSpatialLayer();
-			// 		tmpTemporalLayer = 0; // Just in case.
-			// 	}
-			// }
-			// Downgrade current spatial layer if needed.
-			// NOTE: This is for K-SVC.
 			else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 			{
 				// In K-SVC we must wait for a keyframe.
@@ -282,8 +245,9 @@ namespace RTC
 					if (this->payloadDescriptor->isKeyFrame)
 					// clang-format on
 					{
-						MS_ERROR(
-						  "--- downgrading tmpSpatialLayer from %d to %d (packet:%d:%d) after keyframe (K-SVC)",
+						MS_DEBUG_DEV(
+						  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+						  ":%" PRIu8 ") after keyframe (K-SVC)",
 						  context->GetCurrentSpatialLayer(),
 						  context->GetTargetSpatialLayer(),
 						  packetSpatialLayer,
@@ -303,8 +267,9 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_ERROR(
-						  "--- downgrading tmpSpatialLayer from %d to %d (packet:%d:%d) without keyframe (full SVC)",
+						MS_DEBUG_DEV(
+						  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+						  ":%" PRIu8 ") without keyframe (full SVC)",
 						  context->GetCurrentSpatialLayer(),
 						  context->GetTargetSpatialLayer(),
 						  packetSpatialLayer,
@@ -337,8 +302,9 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_ERROR(
-						  "--- upgrading tmpTemporalLayer from %d to %d (packet:%d:%d)",
+						MS_DEBUG_DEV(
+						  "upgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu8 " (packet:%" PRIu8 ":%" PRIu8
+						  ")",
 						  context->GetCurrentTemporalLayer(),
 						  packetTemporalLayer,
 						  packetSpatialLayer,
@@ -357,8 +323,9 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_ERROR(
-						  "--- downgrading tmpTemporalLayer from %d to %d (packet:%d:%d)",
+						MS_DEBUG_DEV(
+						  "downgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+						  ":%" PRIu8 ")",
 						  context->GetCurrentTemporalLayer(),
 						  context->GetTargetTemporalLayer(),
 						  packetSpatialLayer,
