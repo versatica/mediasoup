@@ -774,12 +774,7 @@ namespace RTC
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
-		{
-			// TODO
-			MS_ERROR("--- requesting keyframe due to PLI!");
-
 			RequestKeyFrame();
-		}
 	}
 
 	void SvcConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -1051,28 +1046,19 @@ namespace RTC
 			// In K-SVC always ask for a keyframe when changing target spatial layer.
 			if (this->encodingContext->IsKSvc())
 			{
-				MS_ERROR("***** KSVC: REQUESTING KEYFRAME due to target spatial change");
+				MS_DEBUG_DEV("K-SVC: requesting keyframe to target spatial change");
 
 				RequestKeyFrame();
 			}
 			// In full SVC just  for a keyframe when upgrading target spatial layer.
-			// NOTE: This is because nobody implements RTCP LRR.
-			else
+			// NOTE: This is because nobody implements RTCP LRR yet.
+			else if (newTargetSpatialLayer > this->encodingContext->GetCurrentSpatialLayer())
 			{
-				if (newTargetSpatialLayer > this->encodingContext->GetCurrentSpatialLayer())
-				{
-					MS_ERROR("***** FULL SVC: REQUESTING KEYFRAME due to target spatial upgrade");
+				MS_DEBUG_DEV("full SVC: requesting keyframe to target spatial upgrade");
 
-					RequestKeyFrame();
-				}
+				RequestKeyFrame();
 			}
 		}
-
-		// TODO: This is for K-SVC. However it also works for full SVC.
-		//
-		// Request a key frame if target spatial layer changes.
-		if (newTargetSpatialLayer != this->encodingContext->GetCurrentSpatialLayer())
-			RequestKeyFrame();
 	}
 
 	inline void SvcConsumer::EmitScore() const
