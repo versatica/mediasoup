@@ -349,7 +349,7 @@ namespace RTC
 
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.
-			if (!producerRtpStream || !producerRtpStream->GetScore())
+			if (!producerRtpStream || producerRtpStream->GetScore() == 0)
 				continue;
 
 			// Do not choose a layer greater than the preferred one if we already found
@@ -400,7 +400,7 @@ namespace RTC
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
 
-			// Ignore spatial layers for non existing Producer streams or for those
+			// Ignore spatial layers for non existing producer streams or for those
 			// with score 0.
 			if (producerScore == 0)
 				continue;

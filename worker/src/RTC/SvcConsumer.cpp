@@ -315,7 +315,7 @@ namespace RTC
 			return 0;
 
 		// Return a 0 priority if score of Producer stream is 0.
-		if (!this->producerRtpStream || !this->producerRtpStream->GetScore())
+		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0)
 			return 0;
 
 		int16_t spatialLayer{ 0 };
@@ -368,7 +368,7 @@ namespace RTC
 		if (!this->producerRtpStream)
 			goto done;
 
-		if (!this->producerRtpStream->GetScore())
+		if (this->producerRtpStream->GetScore() == 0)
 			goto done;
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
@@ -455,7 +455,7 @@ namespace RTC
 		if (!this->producerRtpStream)
 			return 0u;
 
-		if (!this->producerRtpStream->GetScore())
+		if (this->producerRtpStream->GetScore() == 0)
 			return 0u;
 
 		// If already in the preferred layers, do nothing.
@@ -973,7 +973,7 @@ namespace RTC
 		if (!this->producerRtpStream)
 			goto done;
 
-		if (!this->producerRtpStream->GetScore())
+		if (this->producerRtpStream->GetScore() == 0)
 			goto done;
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
