@@ -333,18 +333,24 @@ namespace RTC
 		this->externallyManagedBitrate = true;
 	}
 
-	int16_t SimulcastConsumer::GetBitratePriority() const
+	uint16_t SimulcastConsumer::GetBitratePriority() const
 	{
 		MS_TRACE();
 
 		if (!RTC::Consumer::IsActive())
-			return 0;
+			return 0u;
 
-		int16_t prioritySpatialLayer{ 0 };
+		int16_t prioritySpatialLayer{ -1 };
 
 		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
-			auto spatialLayer       = static_cast<int16_t>(sIdx);
+			auto spatialLayer = static_cast<int16_t>(sIdx);
+
+			// Do not choose a layer greater than the preferred one if we already found
+			// an available layer equal or less than the preferred one.
+			if (spatialLayer > this->preferredSpatialLayer && prioritySpatialLayer != -1)
+				break;
+
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 
 			// Ignore spatial layers for non existing Producer streams or for those
@@ -352,17 +358,18 @@ namespace RTC
 			if (!producerRtpStream || producerRtpStream->GetScore() == 0)
 				continue;
 
-			// Do not choose a layer greater than the preferred one if we already found
-			// an available layer equal or less than the preferred one.
-			if (spatialLayer > this->preferredSpatialLayer && prioritySpatialLayer >= -1)
-				break;
-
 			// Choose this layer for now.
 			prioritySpatialLayer = spatialLayer;
 		}
 
+		// If no spatial layer was chosen (because all producer streams were inactive),
+		// we have to return >0 anyway. Otherwise UseAvailableBitrate() won't be called
+		// and we could never switch to target & current spatial -1.
+		if (prioritySpatialLayer == -1)
+			return 1u;
+
 		// Return the choosen spatial layer plus one.
-		return prioritySpatialLayer + 1;
+		return static_cast<uint16_t>(prioritySpatialLayer + 1);
 	}
 
 	uint32_t SimulcastConsumer::UseAvailableBitrate(uint32_t bitrate)

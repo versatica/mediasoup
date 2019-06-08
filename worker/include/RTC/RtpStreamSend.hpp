@@ -51,6 +51,7 @@ namespace RTC
 		void SendProbationRtpPacket(uint16_t seq);
 		uint32_t GetBitrate(uint64_t now) override;
 		uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
+		uint32_t GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer) override;
 		uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:

@@ -259,12 +259,23 @@ namespace RTC
 
 	uint32_t RtpStreamSend::GetBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 	{
+		MS_TRACE();
+
+		MS_ABORT("invalid method call");
+	}
+
+	uint32_t RtpStreamSend::GetSpatialLayerBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/)
+	{
+		MS_TRACE();
+
 		MS_ABORT("invalid method call");
 	}
 
 	uint32_t RtpStreamSend::GetLayerBitrate(
 	  uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 	{
+		MS_TRACE();
+
 		MS_ABORT("invalid method call");
 	}
 

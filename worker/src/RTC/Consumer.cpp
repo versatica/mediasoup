@@ -337,13 +337,13 @@ namespace RTC
 		// Do nothing.
 	}
 
-	int16_t Consumer::GetBitratePriority() const
+	uint16_t Consumer::GetBitratePriority() const
 	{
 		MS_TRACE();
 
 		// This method must be override by subclasses with layers. By default
 		// it just returns 0.
-		return 0;
+		return 0u;
 	}
 
 	uint32_t Consumer::UseAvailableBitrate(uint32_t /*bitrate*/)

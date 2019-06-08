@@ -13,6 +13,8 @@ namespace RTC
 
 	RtpStreamRecv::TransmissionCounter::TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers)
 	{
+		MS_TRACE();
+
 		// Reserve vectors capacity.
 		this->spatialLayerCounters = std::vector<std::vector<RTC::RtpDataCounter>>(spatialLayers);
 		;
@@ -25,6 +27,8 @@ namespace RTC
 
 	void RtpStreamRecv::TransmissionCounter::Update(RTC::RtpPacket* packet)
 	{
+		MS_TRACE();
+
 		auto spatialLayer  = packet->GetSpatialLayer();
 		auto temporalLayer = packet->GetTemporalLayer();
 
@@ -36,13 +40,15 @@ namespace RTC
 		if (temporalLayer > this->spatialLayerCounters[0].size() - 1)
 			temporalLayer = this->spatialLayerCounters[0].size() - 1;
 
-		auto& counter = this->spatialLayerCounters.at(spatialLayer).at(temporalLayer);
+		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
 		counter.Update(packet);
 	}
 
 	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(uint64_t now)
 	{
+		MS_TRACE();
+
 		uint32_t rate{ 0u };
 
 		for (auto& spatialLayerCounter : this->spatialLayerCounters)
@@ -59,9 +65,11 @@ namespace RTC
 	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(
 	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
+		MS_TRACE();
+
 		MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
 		MS_ASSERT(
-		  temporalLayer < this->spatialLayerCounters.at(spatialLayer).size(), "temporalLayer too high");
+		  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
 
 		uint32_t rate{ 0u };
 
@@ -86,12 +94,38 @@ namespace RTC
 		return rate;
 	}
 
+	uint32_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
+
+		uint32_t rate{ 0u };
+
+		// clang-format off
+		for (
+			uint8_t tIdx{ 0u };
+			tIdx < this->spatialLayerCounters[spatialLayer].size();
+			++tIdx
+		)
+		// clang-format on
+		{
+			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
+
+			rate += temporalLayerCounter.GetBitrate(now);
+		}
+
+		return rate;
+	}
+
 	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
 	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
+		MS_TRACE();
+
 		MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
 		MS_ASSERT(
-		  temporalLayer < this->spatialLayerCounters.at(spatialLayer).size(), "temporalLayer too high");
+		  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
 
 		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
@@ -100,6 +134,8 @@ namespace RTC
 
 	size_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
 	{
+		MS_TRACE();
+
 		size_t packetCount{ 0u };
 
 		for (auto& spatialLayerCounter : this->spatialLayerCounters)
@@ -115,6 +151,8 @@ namespace RTC
 
 	size_t RtpStreamRecv::TransmissionCounter::GetBytes() const
 	{
+		MS_TRACE();
+
 		size_t bytes{ 0u };
 
 		for (auto& spatialLayerCounter : this->spatialLayerCounters)

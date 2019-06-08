@@ -74,6 +74,7 @@ namespace RTC
 		virtual void Resume()                                                                       = 0;
 		virtual uint32_t GetBitrate(uint64_t now)                                                   = 0;
 		virtual uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)      = 0;
+		virtual uint32_t GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer)                 = 0;
 		virtual uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 		void ResetScore(uint8_t score, bool notify);
 		uint8_t GetFractionLost() const;

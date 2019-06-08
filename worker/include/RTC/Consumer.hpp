@@ -65,7 +65,7 @@ namespace RTC
 		virtual void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) = 0;
 		void ProducerClosed();
 		virtual void SetExternallyManagedBitrate();
-		virtual int16_t GetBitratePriority() const;
+		virtual uint16_t GetBitratePriority() const;
 		virtual uint32_t UseAvailableBitrate(uint32_t bitrate);
 		virtual uint32_t IncreaseLayer(uint32_t bitrate);
 		virtual void ApplyLayers();

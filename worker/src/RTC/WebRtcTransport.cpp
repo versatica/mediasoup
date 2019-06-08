@@ -869,8 +869,8 @@ namespace RTC
 		// MS_ASSERT(this->rembClient || this->transportCcClient, "no REMB client nor Transport-CC client");
 		MS_ASSERT(this->rembClient, "no REMB client");
 
-		std::multimap<int16_t, RTC::Consumer*> multimapPriorityConsumer;
-		int16_t totalPriorities{ 0 };
+		std::multimap<uint16_t, RTC::Consumer*> multimapPriorityConsumer;
+		uint16_t totalPriorities{ 0 };
 
 		// Fill the map with Consumers and their priority (if > 0).
 		for (auto& kv : this->mapConsumers)
@@ -913,7 +913,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  bwe,
-			  "main bitrate for Consumer [priority:%" PRIi16 ", bitrate:%" PRIu32 ", consumerId:%s]",
+			  "main bitrate for Consumer [priority:%" PRIu16 ", bitrate:%" PRIu32 ", consumerId:%s]",
 			  priority,
 			  bitrate,
 			  consumer->id.c_str());
