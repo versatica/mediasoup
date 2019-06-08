@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.1.1
+
+* Improve `GetBitratePriority()` method in `SimulcastConsumer` and `SvcConsumer` by checking the total bitrate of all temporal layers in a given producer stream or spatial layer.
+
+
 ### 3.1.0
 
 * Add SVC support. It includes VP9 full SVC and VP9 K-SVC as implemented by libwebrtc.
