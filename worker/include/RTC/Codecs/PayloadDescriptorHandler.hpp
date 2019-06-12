@@ -27,7 +27,7 @@ namespace RTC
 			};
 
 		public:
-			EncodingContext(RTC::Codecs::EncodingContext::Params& params);
+			explicit EncodingContext(RTC::Codecs::EncodingContext::Params& params);
 			virtual ~EncodingContext() = default;
 
 		public:
