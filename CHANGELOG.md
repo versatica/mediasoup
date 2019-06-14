@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.1.2
+
+* Workaround to detect H264 key frames when Chrome uses external encoder (related [issue](https://bugs.chromium.org/p/webrtc/issues/detail?id=10746)). Fixes #313.
+
+
 ### 3.1.1
 
 * Improve `GetBitratePriority()` method in `SimulcastConsumer` and `SvcConsumer` by checking the total bitrate of all temporal layers in a given producer stream or spatial layer.
