@@ -566,6 +566,24 @@ namespace RTC
 		this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
 	}
 
+	void Producer::ReceiveRtcpSenderExtendedReport(RTC::RTCP::SenderExtendedReport* report)
+	{
+		MS_TRACE();
+
+		auto it = this->mapSsrcRtpStream.find(report->GetSsrc());
+
+		if (it == this->mapSsrcRtpStream.end())
+		{
+			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
+
+			return;
+		}
+
+		auto* rtpStream = it->second;
+
+		rtpStream->ReceiveRtcpSenderExtendedReport(report);
+	}
+
 	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
 	{
 		MS_TRACE();
@@ -579,6 +597,20 @@ namespace RTC
 			auto* report    = rtpStream->GetRtcpReceiverReport();
 
 			packet->AddReceiverReport(report);
+		}
+
+		if (true)
+		{
+			auto ntp    = Utils::Time::TimeMs2Ntp(now);
+			auto report = new RTC::RTCP::ReceiverExtendedReport();
+
+			report->SetBlockType(4);
+			report->SetReserved(0);
+			report->SetBlockLength(2);
+			report->SetNtpSec(ntp.seconds);
+			report->SetNtpFrac(ntp.fractions);
+
+			packet->AddReceiverExtendedReport(report);
 		}
 
 		this->lastRtcpSentTime = now;
