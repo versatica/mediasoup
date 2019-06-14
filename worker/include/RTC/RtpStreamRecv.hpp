@@ -49,6 +49,7 @@ namespace RTC
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
+		void ReceiveRtcpSenderExtendedReport(RTC::RTCP::SenderExtendedReport* report);
 		void RequestKeyFrame();
 		void Pause() override;
 		void Resume() override;
@@ -79,6 +80,7 @@ namespace RTC
 		                               // sender report arrival.
 		uint32_t transit{ 0 };         // Relative transit time for prev packet.
 		uint32_t jitter{ 0 };
+		float rtt{ 0 };
 		uint8_t firSeqNumber{ 0 };
 		uint32_t reportedPacketLost{ 0 };
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;

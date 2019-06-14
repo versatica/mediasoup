@@ -1058,6 +1058,34 @@ namespace RTC
 				break;
 			}
 
+			case RTC::RTCP::Type::XR:
+			{
+				auto* ser = static_cast<RTC::RTCP::SenderExtendedReportPacket*>(packet);
+
+				for (auto it = ser->Begin(); it != ser->End(); ++it)
+				{
+					auto& report = (*it);
+					if (report->GetSsrc() == 0)
+						report->SetSsrc(ser->GetSsrc());
+
+					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
+
+					if (producer == nullptr)
+					{
+						MS_WARN_TAG(
+						  rtcp,
+						  "no Producer found for received Sender Extended Report [ssrc:%" PRIu32 "]",
+						  report->GetSsrc());
+
+						continue;
+					}
+
+					producer->ReceiveRtcpSenderExtendedReport(report);
+				}
+
+				break;
+			}
+
 			default:
 			{
 				MS_DEBUG_TAG(

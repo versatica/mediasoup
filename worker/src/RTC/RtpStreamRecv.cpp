@@ -206,12 +206,13 @@ namespace RTC
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["timestamp"]   = now;
-		jsonObject["type"]        = "inbound-rtp";
-		jsonObject["jitter"]      = this->jitter;
-		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(now);
+		jsonObject["timestamp"]     = now;
+		jsonObject["type"]          = "inbound-rtp";
+		jsonObject["jitter"]        = this->jitter;
+		jsonObject["roundTripTime"] = this->rtt;
+		jsonObject["packetCount"]   = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"]     = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"]       = this->transmissionCounter.GetBitrate(now);
 
 		if (GetSpatialLayers() > 1 || GetTemporalLayers() > 1)
 		{
@@ -490,6 +491,41 @@ namespace RTC
 
 		// Update the score with the current RR.
 		UpdateScore();
+	}
+
+	void RtpStreamRecv::ReceiveRtcpSenderExtendedReport(RTC::RTCP::SenderExtendedReport* report)
+	{
+		/* Calculate RTT. */
+
+		// Get the NTP representation of the current timestamp.
+		uint64_t now = DepLibUV::GetTime();
+		auto ntp     = Utils::Time::TimeMs2Ntp(now);
+
+		// Get the compact NTP representation of the current timestamp.
+		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
+
+		compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
+
+		uint32_t lastRr = report->GetLastReceiverReport();
+		uint32_t dlrr   = report->GetDelaySinceLastReceiverReport();
+
+		// RTT in 1/2^16 second fractions.
+		uint32_t rtt{ 0 };
+
+		// If no Sender Report was received by the remote endpoint yet, ignore lastRr
+		// and dlrr values in the Receiver Report.
+		if (!lastRr || !dlrr)
+			rtt = 0;
+		else if (compactNtp > dlrr + lastRr)
+			rtt = compactNtp - dlrr - lastRr;
+		else
+			rtt = 0;
+
+		// RTT in milliseconds.
+		this->rtt = (rtt >> 16) * 1000;
+		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+
+		MS_TRACE();
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
