@@ -14,21 +14,27 @@ namespace RTC
 		class SenderExtendedReport
 		{
 		public:
-			struct Header
+			struct BlockHeader
 			{
 				uint8_t blockType;
 				uint8_t reserved;
 				uint16_t blockLength;
+			};
+
+		public:
+			struct BlockBody
+			{
 				uint32_t ssrc;
 				uint32_t lrr;
 				uint32_t dlrr;
 			};
 
 		public:
+			static BlockHeader* ParseBlockHeader(const uint8_t* data, size_t len);
 			static SenderExtendedReport* Parse(const uint8_t* data, size_t len);
 
 		public:
-			explicit SenderExtendedReport(Header* header);
+			explicit SenderExtendedReport(BlockBody* body);
 			explicit SenderExtendedReport(SenderExtendedReport* report);
 
 			SenderExtendedReport();
@@ -44,8 +50,8 @@ namespace RTC
 			void SetDelaySinceLastReceiverReport(uint32_t dlrr);
 
 		private:
-			Header* header{ nullptr };
-			uint8_t raw[sizeof(Header)]{ 0 };
+			BlockBody* body{ nullptr };
+			uint8_t raw[sizeof(BlockBody)]{ 0 };
 		};
 
 		class SenderExtendedReportPacket : public Packet
@@ -54,7 +60,7 @@ namespace RTC
 			using Iterator = std::vector<SenderExtendedReport*>::iterator;
 
 		public:
-			static SenderExtendedReportPacket* Parse(const uint8_t* data, size_t len, size_t offset = 0);
+			static SenderExtendedReportPacket* Parse(const uint8_t* data, size_t len);
 
 		public:
 			SenderExtendedReportPacket();
@@ -74,67 +80,67 @@ namespace RTC
 
 		private:
 			uint32_t ssrc{ 0 };
+			SenderExtendedReport::BlockHeader* header;
 			std::vector<SenderExtendedReport*> reports;
 		};
 
 		inline SenderExtendedReport::SenderExtendedReport()
 		{
-			this->header              = reinterpret_cast<Header*>(this->raw);
-			this->header->blockType   = 5;
-			this->header->reserved    = 0;
-			this->header->blockLength = uint16_t{ ntohs(3) };
+			this->body = reinterpret_cast<BlockBody*>(this->raw);
 		}
 
-		inline SenderExtendedReport::SenderExtendedReport(Header* header) : header(header)
+		inline SenderExtendedReport::SenderExtendedReport(BlockBody* body) : body(body)
 		{
 		}
 
 		inline SenderExtendedReport::SenderExtendedReport(SenderExtendedReport* report)
-		  : header(report->header)
+		  : body(report->body)
 		{
 		}
 
 		inline size_t SenderExtendedReport::GetSize() const
 		{
-			return sizeof(Header);
+			return sizeof(BlockBody);
 		}
 
 		inline uint32_t SenderExtendedReport::GetSsrc() const
 		{
-			return uint32_t{ ntohl(this->header->ssrc) };
+			return uint32_t{ ntohl(this->body->ssrc) };
 		}
 
 		inline void SenderExtendedReport::SetSsrc(uint32_t ssrc)
 		{
-			this->header->ssrc = uint32_t{ htonl(ssrc) };
+			this->body->ssrc = uint32_t{ htonl(ssrc) };
 		}
 
 		inline uint32_t SenderExtendedReport::GetLastReceiverReport() const
 		{
-			return uint32_t{ ntohl(this->header->lrr) };
+			return uint32_t{ ntohl(this->body->lrr) };
 		}
 
 		inline void SenderExtendedReport::SetLastReceiverReport(uint32_t lrr)
 		{
-			this->header->lrr = uint32_t{ htonl(lrr) };
+			this->body->lrr = uint32_t{ htonl(lrr) };
 		}
 
 		inline uint32_t SenderExtendedReport::GetDelaySinceLastReceiverReport() const
 		{
-			return uint32_t{ ntohl(this->header->dlrr) };
+			return uint32_t{ ntohl(this->body->dlrr) };
 		}
 
 		inline void SenderExtendedReport::SetDelaySinceLastReceiverReport(uint32_t dlrr)
 		{
-			this->header->dlrr = uint32_t{ htonl(dlrr) };
+			this->body->dlrr = uint32_t{ htonl(dlrr) };
 		}
 
 		inline SenderExtendedReportPacket::SenderExtendedReportPacket() : Packet(Type::XR)
 		{
+			this->header = new SenderExtendedReport::BlockHeader{ 5, 0, 0 };
 		}
 
 		inline SenderExtendedReportPacket::~SenderExtendedReportPacket()
 		{
+			delete this->header;
 			for (auto* report : this->reports)
 			{
 				delete report;
@@ -148,7 +154,8 @@ namespace RTC
 
 		inline size_t SenderExtendedReportPacket::GetSize() const
 		{
-			size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc);
+			size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc) +
+			              sizeof(SenderExtendedReport::BlockHeader);
 
 			for (auto* report : this->reports)
 			{
@@ -170,8 +177,8 @@ namespace RTC
 
 		inline void SenderExtendedReportPacket::AddReport(SenderExtendedReport* report)
 		{
-			this->reports.clear();
 			this->reports.push_back(report);
+			this->header->blockLength = uint16_t{ ntohs(this->reports.size() * 3) };
 		}
 
 		inline SenderExtendedReportPacket::Iterator SenderExtendedReportPacket::Begin()
