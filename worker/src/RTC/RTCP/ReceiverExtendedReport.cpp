@@ -11,32 +11,41 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		ReceiverExtendedReport* ReceiverExtendedReport::Parse(const uint8_t* data, size_t len)
+		ReceiverExtendedReport::BlockHeader* ReceiverExtendedReport::ParseBlockHeader(
+		  const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
 			// Get the header.
-			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
-
-			if (header->blockType != 4)
-			{
-				MS_WARN_TAG(
-				  rtcp,
-				  "only support 4(Receiver Reference Time Report Block), current is %" PRIu8,
-				  header->blockType);
-
-				return nullptr;
-			}
+			auto* header = const_cast<BlockHeader*>(reinterpret_cast<const BlockHeader*>(data));
 
 			// Packet size must be >= header size.
-			if (sizeof(Header) > len)
+			if (sizeof(BlockHeader) > len)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for receiver extended report, packet discarded");
 
 				return nullptr;
 			}
 
-			return new ReceiverExtendedReport(header);
+			return header;
+		}
+
+		ReceiverExtendedReport* ReceiverExtendedReport::Parse(const uint8_t* data, size_t len)
+		{
+			MS_TRACE();
+
+			// Get the body.
+			auto* body = const_cast<BlockBody*>(reinterpret_cast<const BlockBody*>(data));
+
+			// Packet size must be >= body size.
+			if (sizeof(BlockBody) > len)
+			{
+				MS_WARN_TAG(rtcp, "not enough space for receiver extended report, packet discarded");
+
+				return nullptr;
+			}
+
+			return new ReceiverExtendedReport(body);
 		}
 
 		/* Instance methods. */
@@ -55,29 +64,22 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Copy the header.
-			std::memcpy(buffer, this->header, sizeof(Header));
+			// Copy the body.
+			std::memcpy(buffer, this->body, sizeof(BlockBody));
 
-			return sizeof(Header);
+			return sizeof(BlockBody);
 		}
 
 		/* Class methods. */
 
-		/**
-		 * ReceiverExtendedReportPacket::Parse()
-		 * @param  data   - Points to the begining of the incoming RTCP packet.
-		 * @param  len    - Total length of the packet.
-		 * @param  offset - points to the first Receiver Extended Report if the incoming packet.
-		 */
-		ReceiverExtendedReportPacket* ReceiverExtendedReportPacket::Parse(
-		  const uint8_t* data, size_t len, size_t offset)
+		ReceiverExtendedReportPacket* ReceiverExtendedReportPacket::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
-			// Get the header.
-			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+			// Get the body.
+			auto* body = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			// Ensure there is space for the common header and the SSRC of packet receiver.
+			// Ensure there is space for the common body and the SSRC of packet receiver.
 			if (sizeof(CommonHeader) + sizeof(uint32_t) > len)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for receiver extended report packet, packet discarded");
@@ -87,22 +89,36 @@ namespace RTC
 
 			std::unique_ptr<ReceiverExtendedReportPacket> packet(new ReceiverExtendedReportPacket());
 
-			packet->SetSsrc(
-			  Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(header), sizeof(CommonHeader)));
+			packet->SetSsrc(Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(body), sizeof(CommonHeader)));
 
-			if (offset == 0)
-				offset = sizeof(Packet::CommonHeader) + sizeof(uint32_t) /* ssrc */;
+			auto offset = sizeof(Packet::CommonHeader) + sizeof(uint32_t) /* ssrc */;
 
-			uint8_t count = header->count;
-
-			if ((count == 0u) && (len > offset))
+			while (len > offset)
 			{
-				ReceiverExtendedReport* report = ReceiverExtendedReport::Parse(data + offset, len - offset);
-
-				if (report != nullptr)
+				// Get the header.
+				auto header = ReceiverExtendedReport::ParseBlockHeader(data + offset, len - offset);
+				if (header != nullptr)
 				{
-					packet->AddReport(report);
-					offset += report->GetSize();
+					offset += sizeof(ReceiverExtendedReport::BlockHeader) /* header */;
+					if (header->blockType == 4)
+					{
+						// Get the body.
+						ReceiverExtendedReport* report =
+						  ReceiverExtendedReport::Parse(data + offset, len - offset);
+						if (report != nullptr && len > offset)
+						{
+							packet->AddReport(report);
+							offset += uint16_t{ ntohs(header->blockLength) } * 32 /* body */;
+						}
+						else
+						{
+							return packet.release();
+						}
+					}
+					else
+					{
+						offset += uint16_t{ ntohs(header->blockLength) } * 32 /* body */;
+					}
 				}
 				else
 				{
@@ -125,10 +141,17 @@ namespace RTC
 			std::memcpy(buffer + sizeof(Packet::CommonHeader), &this->ssrc, sizeof(this->ssrc));
 			offset += sizeof(this->ssrc);
 
-			// Serialize reports.
-			for (auto* report : this->reports)
+			// Serialize header.
+			if (this->GetCount())
 			{
-				offset += report->Serialize(buffer + offset);
+				std::memcpy(buffer + offset, this->header, sizeof(ReceiverExtendedReport::BlockHeader));
+				offset += sizeof(ReceiverExtendedReport::BlockHeader);
+			}
+
+			// Serialize report.
+			if (this->report != nullptr)
+			{
+				offset += this->report->Serialize(buffer + offset);
 			}
 
 			return offset;
@@ -140,9 +163,9 @@ namespace RTC
 
 			MS_DUMP("<ReceiverExtendedReportPacket>");
 			MS_DUMP("  ssrc: %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
-			for (auto* report : this->reports)
+			if (this->report != nullptr)
 			{
-				report->Dump();
+				this->report->Dump();
 			}
 			MS_DUMP("</ReceiverExtendedReportPacket>");
 		}

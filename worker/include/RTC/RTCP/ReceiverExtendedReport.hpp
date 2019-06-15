@@ -14,20 +14,26 @@ namespace RTC
 		class ReceiverExtendedReport
 		{
 		public:
-			struct Header
+			struct BlockHeader
 			{
 				uint8_t blockType;
 				uint8_t reserved;
 				uint16_t blockLength;
+			};
+
+		public:
+			struct BlockBody
+			{
 				uint32_t ntpSec;
 				uint32_t ntpFrac;
 			};
 
 		public:
+			static BlockHeader* ParseBlockHeader(const uint8_t* data, size_t len);
 			static ReceiverExtendedReport* Parse(const uint8_t* data, size_t len);
 
 		public:
-			explicit ReceiverExtendedReport(Header* header);
+			explicit ReceiverExtendedReport(BlockBody* body);
 			explicit ReceiverExtendedReport(ReceiverExtendedReport* report);
 
 			ReceiverExtendedReport();
@@ -41,17 +47,14 @@ namespace RTC
 			void SetNtpFrac(uint32_t ntpFrac);
 
 		private:
-			Header* header{ nullptr };
-			uint8_t raw[sizeof(Header)]{ 0 };
+			BlockBody* body{ nullptr };
+			uint8_t raw[sizeof(BlockBody)]{ 0 };
 		};
 
 		class ReceiverExtendedReportPacket : public Packet
 		{
 		public:
-			using Iterator = std::vector<ReceiverExtendedReport*>::iterator;
-
-		public:
-			static ReceiverExtendedReportPacket* Parse(const uint8_t* data, size_t len, size_t offset = 0);
+			static ReceiverExtendedReportPacket* Parse(const uint8_t* data, size_t len);
 
 		public:
 			ReceiverExtendedReportPacket();
@@ -60,8 +63,6 @@ namespace RTC
 			uint32_t GetSsrc() const;
 			void SetSsrc(uint32_t ssrc);
 			void AddReport(ReceiverExtendedReport* report);
-			Iterator Begin();
-			Iterator End();
 
 		public:
 			void Dump() const override;
@@ -71,73 +72,78 @@ namespace RTC
 
 		private:
 			uint32_t ssrc{ 0 };
-			std::vector<ReceiverExtendedReport*> reports;
+			ReceiverExtendedReport::BlockHeader* header;
+			ReceiverExtendedReport* report;
 		};
 
 		inline ReceiverExtendedReport::ReceiverExtendedReport()
 		{
-			this->header              = reinterpret_cast<Header*>(this->raw);
-			this->header->blockType   = 4;
-			this->header->reserved    = 0;
-			this->header->blockLength = uint16_t{ ntohs(2) };
+			this->body = reinterpret_cast<BlockBody*>(this->raw);
 		}
 
-		inline ReceiverExtendedReport::ReceiverExtendedReport(Header* header) : header(header)
+		inline ReceiverExtendedReport::ReceiverExtendedReport(BlockBody* body) : body(body)
 		{
 		}
 
 		inline ReceiverExtendedReport::ReceiverExtendedReport(ReceiverExtendedReport* report)
-		  : header(report->header)
+		  : body(report->body)
 		{
 		}
 
 		inline size_t ReceiverExtendedReport::GetSize() const
 		{
-			return sizeof(Header);
+			return sizeof(BlockBody);
 		}
 
 		inline uint32_t ReceiverExtendedReport::GetNtpSec() const
 		{
-			return uint32_t{ ntohl(this->header->ntpSec) };
+			return uint32_t{ ntohl(this->body->ntpSec) };
 		}
 
 		inline void ReceiverExtendedReport::SetNtpSec(uint32_t ntpSec)
 		{
-			this->header->ntpSec = uint32_t{ htonl(ntpSec) };
+			this->body->ntpSec = uint32_t{ htonl(ntpSec) };
 		}
 
 		inline uint32_t ReceiverExtendedReport::GetNtpFrac() const
 		{
-			return uint32_t{ ntohl(this->header->ntpFrac) };
+			return uint32_t{ ntohl(this->body->ntpFrac) };
 		}
 
 		inline void ReceiverExtendedReport::SetNtpFrac(uint32_t ntpFrac)
 		{
-			this->header->ntpFrac = uint32_t{ htonl(ntpFrac) };
+			this->body->ntpFrac = uint32_t{ htonl(ntpFrac) };
 		}
 
 		inline ReceiverExtendedReportPacket::ReceiverExtendedReportPacket() : Packet(Type::XR)
 		{
+			this->header = new ReceiverExtendedReport::BlockHeader{ 4, 0, uint16_t{ ntohs(2) } };
 		}
 
 		inline ReceiverExtendedReportPacket::~ReceiverExtendedReportPacket()
 		{
-			for (auto* report : this->reports)
-			{
-				delete report;
-			}
+			delete this->header;
+			delete this->report;
 		}
 
 		inline size_t ReceiverExtendedReportPacket::GetCount() const
 		{
-			return this->reports.size();
+			if (this->report != nullptr)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
 		}
 
 		inline size_t ReceiverExtendedReportPacket::GetSize() const
 		{
-			size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc);
+			size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc) +
+			              sizeof(ReceiverExtendedReport::BlockHeader);
 
-			for (auto* report : this->reports)
+			if (this->report != nullptr)
 			{
 				size += report->GetSize();
 			}
@@ -157,18 +163,8 @@ namespace RTC
 
 		inline void ReceiverExtendedReportPacket::AddReport(ReceiverExtendedReport* report)
 		{
-			this->reports.clear();
-			this->reports.push_back(report);
-		}
-
-		inline ReceiverExtendedReportPacket::Iterator ReceiverExtendedReportPacket::Begin()
-		{
-			return this->reports.begin();
-		}
-
-		inline ReceiverExtendedReportPacket::Iterator ReceiverExtendedReportPacket::End()
-		{
-			return this->reports.end();
+			delete this->report;
+			this->report = report;
 		}
 	} // namespace RTCP
 } // namespace RTC
