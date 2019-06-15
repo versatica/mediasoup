@@ -35,12 +35,6 @@ namespace RTC
 			void Dump() const;
 			size_t Serialize(uint8_t* buffer);
 			size_t GetSize() const;
-			uint8_t GetBlockType() const;
-			void SetBlockType(uint8_t blockType);
-			uint8_t GetReserved() const;
-			void SetReserved(uint8_t reserved);
-			uint16_t GetBlockLength() const;
-			void SetBlockLength(uint16_t blockLength);
 			uint32_t GetNtpSec() const;
 			void SetNtpSec(uint32_t ntpSec);
 			uint32_t GetNtpFrac() const;
@@ -82,7 +76,10 @@ namespace RTC
 
 		inline ReceiverExtendedReport::ReceiverExtendedReport()
 		{
-			this->header = reinterpret_cast<Header*>(this->raw);
+			this->header              = reinterpret_cast<Header*>(this->raw);
+			this->header->blockType   = 4;
+			this->header->reserved    = 0;
+			this->header->blockLength = uint16_t{ ntohs(2) };
 		}
 
 		inline ReceiverExtendedReport::ReceiverExtendedReport(Header* header) : header(header)
@@ -97,36 +94,6 @@ namespace RTC
 		inline size_t ReceiverExtendedReport::GetSize() const
 		{
 			return sizeof(Header);
-		}
-
-		inline uint8_t ReceiverExtendedReport::GetBlockType() const
-		{
-			return this->header->blockType;
-		}
-
-		inline void ReceiverExtendedReport::SetBlockType(uint8_t blockType)
-		{
-			this->header->blockType = blockType;
-		}
-
-		inline uint8_t ReceiverExtendedReport::GetReserved() const
-		{
-			return this->header->reserved;
-		}
-
-		inline void ReceiverExtendedReport::SetReserved(uint8_t reserved)
-		{
-			this->header->reserved = reserved;
-		}
-
-		inline uint16_t ReceiverExtendedReport::GetBlockLength() const
-		{
-			return uint16_t{ ntohs(this->header->blockLength) };
-		}
-
-		inline void ReceiverExtendedReport::SetBlockLength(uint16_t blockLength)
-		{
-			this->header->blockLength = uint16_t{ ntohs(blockLength) };
 		}
 
 		inline uint32_t ReceiverExtendedReport::GetNtpSec() const

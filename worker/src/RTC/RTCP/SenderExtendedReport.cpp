@@ -20,7 +20,7 @@ namespace RTC
 
 			if (header->blockType != 5)
 			{
-				MS_WARN_TAG(rtcp, "only support 5(DLRR Report Block), current is %hhu", header->blockType);
+				MS_WARN_TAG(rtcp, "only support 5(DLRR Report Block), current is %" PRIu8, header->blockType);
 
 				return nullptr;
 			}
@@ -43,9 +43,6 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<SenderExtendedReport>");
-			MS_DUMP("  block type   : %" PRIu8, GetBlockType());
-			MS_DUMP("  reserved     : %" PRIu8, GetReserved());
-			MS_DUMP("  block length : %" PRIu16, GetBlockLength());
 			MS_DUMP("  ssrc         : %" PRIu32, GetSsrc());
 			MS_DUMP("  lrr          : %" PRIu32, GetLastReceiverReport());
 			MS_DUMP("  dlrr         : %" PRIu32, GetDelaySinceLastReceiverReport());

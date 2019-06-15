@@ -22,7 +22,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  rtcp,
-				  "only support 4(Receiver Reference Time Report Block), current is %hhu",
+				  "only support 4(Receiver Reference Time Report Block), current is %" PRIu8,
 				  header->blockType);
 
 				return nullptr;
@@ -46,9 +46,6 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<ReceiverExtendedReport>");
-			MS_DUMP("  block type   : %" PRIu8, GetBlockType());
-			MS_DUMP("  reserved     : %" PRIu8, GetReserved());
-			MS_DUMP("  block length : %" PRIu16, GetBlockLength());
 			MS_DUMP("  ntp sec      : %" PRIu32, GetNtpSec());
 			MS_DUMP("  ntp frac     : %" PRIu32, GetNtpFrac());
 			MS_DUMP("</ReceiverExtendedReport>");
