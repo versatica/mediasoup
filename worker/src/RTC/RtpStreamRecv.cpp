@@ -495,6 +495,8 @@ namespace RTC
 
 	void RtpStreamRecv::ReceiveRtcpSenderExtendedReport(RTC::RTCP::SenderExtendedReport* report)
 	{
+		MS_TRACE();
+
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
@@ -512,8 +514,8 @@ namespace RTC
 		// RTT in 1/2^16 second fractions.
 		uint32_t rtt{ 0 };
 
-		// If no Sender Report was received by the remote endpoint yet, ignore lastRr
-		// and dlrr values in the Receiver Report.
+		// If no Receiver Extended Report was received by the remote endpoint yet, ignore lastRr
+		// and dlrr values in the Sender Extended Report.
 		if (!lastRr || !dlrr)
 			rtt = 0;
 		else if (compactNtp > dlrr + lastRr)
@@ -524,8 +526,6 @@ namespace RTC
 		// RTT in milliseconds.
 		this->rtt = (rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
-
-		MS_TRACE();
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
