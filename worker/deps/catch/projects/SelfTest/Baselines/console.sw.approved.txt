@@ -2950,11 +2950,6 @@ with expansion:
   0.0 not is within 0.99 of 1.0
 
 Matchers.tests.cpp:<line number>: PASSED:
-  REQUIRE_THAT( NAN, !WithinAbs(NAN, 0) )
-with expansion:
-  nanf not is within 0.0 of nan
-
-Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 11., !WithinAbs(10., 0.5) )
 with expansion:
   11.0 not is within 0.5 of 10.0
@@ -2984,37 +2979,32 @@ Matchers.tests.cpp:<line number>
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 1., WithinULP(1., 0) )
 with expansion:
-  1.0 is within 0 ULPs of 1.0
+  1.0 is within 0 ULPs of 1.0 ([1.00000000000000000, 1.00000000000000000])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( nextafter(1., 2.), WithinULP(1., 1) )
 with expansion:
-  1.0 is within 1 ULPs of 1.0
+  1.0 is within 1 ULPs of 1.0 ([0.99999999999999989, 1.00000000000000022])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( nextafter(1., 0.), WithinULP(1., 1) )
 with expansion:
-  1.0 is within 1 ULPs of 1.0
+  1.0 is within 1 ULPs of 1.0 ([0.99999999999999989, 1.00000000000000022])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( nextafter(1., 2.), !WithinULP(1., 0) )
 with expansion:
-  1.0 not is within 0 ULPs of 1.0
+  1.0 not is within 0 ULPs of 1.0 ([1.00000000000000000, 1.00000000000000000])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 1., WithinULP(1., 0) )
 with expansion:
-  1.0 is within 0 ULPs of 1.0
+  1.0 is within 0 ULPs of 1.0 ([1.00000000000000000, 1.00000000000000000])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( -0., WithinULP(0., 0) )
 with expansion:
-  -0.0 is within 0 ULPs of 0.0
-
-Matchers.tests.cpp:<line number>: PASSED:
-  REQUIRE_THAT( NAN, !WithinULP(NAN, 123) )
-with expansion:
-  nanf not is within 123 ULPs of nanf
+  -0.0 is within 0 ULPs of 0.0 ([0.00000000000000000, 0.00000000000000000])
 
 -------------------------------------------------------------------------------
 Floating point matchers: double
@@ -3026,17 +3016,14 @@ Matchers.tests.cpp:<line number>
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 1., WithinAbs(1., 0.5) || WithinULP(2., 1) )
 with expansion:
-  1.0 ( is within 0.5 of 1.0 or is within 1 ULPs of 2.0 )
+  1.0 ( is within 0.5 of 1.0 or is within 1 ULPs of 2.0 ([1.99999999999999978,
+  2.00000000000000044]) )
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 1., WithinAbs(2., 0.5) || WithinULP(1., 0) )
 with expansion:
-  1.0 ( is within 0.5 of 2.0 or is within 0 ULPs of 1.0 )
-
-Matchers.tests.cpp:<line number>: PASSED:
-  REQUIRE_THAT( NAN, !(WithinAbs(NAN, 100) || WithinULP(NAN, 123)) )
-with expansion:
-  nanf not ( is within 100.0 of nan or is within 123 ULPs of nanf )
+  1.0 ( is within 0.5 of 2.0 or is within 0 ULPs of 1.0 ([1.00000000000000000,
+  1.00000000000000000]) )
 
 -------------------------------------------------------------------------------
 Floating point matchers: double
@@ -3090,11 +3077,6 @@ with expansion:
   0.0f is within 0.0 of -0.0
 
 Matchers.tests.cpp:<line number>: PASSED:
-  REQUIRE_THAT( NAN, !WithinAbs(NAN, 0) )
-with expansion:
-  nanf not is within 0.0 of nan
-
-Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 11.f, !WithinAbs(10.f, 0.5f) )
 with expansion:
   11.0f not is within 0.5 of 10.0
@@ -3124,37 +3106,33 @@ Matchers.tests.cpp:<line number>
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 1.f, WithinULP(1.f, 0) )
 with expansion:
-  1.0f is within 0 ULPs of 1.0f
+  1.0f is within 0 ULPs of 1.0f ([1.00000000000000000, 1.00000000000000000])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( nextafter(1.f, 2.f), WithinULP(1.f, 1) )
 with expansion:
-  1.0f is within 1 ULPs of 1.0f
+  1.0f is within 1 ULPs of 1.0f ([0.99999994039535522, 1.00000011920928955])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( nextafter(1.f, 0.f), WithinULP(1.f, 1) )
 with expansion:
-  1.0f is within 1 ULPs of 1.0f
+  1.0f is within 1 ULPs of 1.0f ([0.99999994039535522, 1.00000011920928955])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( nextafter(1.f, 2.f), !WithinULP(1.f, 0) )
 with expansion:
-  1.0f not is within 0 ULPs of 1.0f
+  1.0f not is within 0 ULPs of 1.0f ([1.00000000000000000, 1.00000000000000000]
+  )
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 1.f, WithinULP(1.f, 0) )
 with expansion:
-  1.0f is within 0 ULPs of 1.0f
+  1.0f is within 0 ULPs of 1.0f ([1.00000000000000000, 1.00000000000000000])
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( -0.f, WithinULP(0.f, 0) )
 with expansion:
-  -0.0f is within 0 ULPs of 0.0f
-
-Matchers.tests.cpp:<line number>: PASSED:
-  REQUIRE_THAT( NAN, !WithinULP(NAN, 123) )
-with expansion:
-  nanf not is within 123 ULPs of nanf
+  -0.0f is within 0 ULPs of 0.0f ([0.00000000000000000, 0.00000000000000000])
 
 -------------------------------------------------------------------------------
 Floating point matchers: float
@@ -3166,17 +3144,14 @@ Matchers.tests.cpp:<line number>
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 1.f, WithinAbs(1.f, 0.5) || WithinULP(1.f, 1) )
 with expansion:
-  1.0f ( is within 0.5 of 1.0 or is within 1 ULPs of 1.0f )
+  1.0f ( is within 0.5 of 1.0 or is within 1 ULPs of 1.0f ([0.
+  99999994039535522, 1.00000011920928955]) )
 
 Matchers.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( 1.f, WithinAbs(2.f, 0.5) || WithinULP(1.f, 0) )
 with expansion:
-  1.0f ( is within 0.5 of 2.0 or is within 0 ULPs of 1.0f )
-
-Matchers.tests.cpp:<line number>: PASSED:
-  REQUIRE_THAT( NAN, !(WithinAbs(NAN, 100) || WithinULP(NAN, 123)) )
-with expansion:
-  nanf not ( is within 100.0 of nan or is within 123 ULPs of nanf )
+  1.0f ( is within 0.5 of 2.0 or is within 0 ULPs of 1.0f ([1.
+  00000000000000000, 1.00000000000000000]) )
 
 -------------------------------------------------------------------------------
 Floating point matchers: float
@@ -6955,6 +6930,78 @@ with expansion:
   contains: "colour mode must be one of"
 
 -------------------------------------------------------------------------------
+Process can be configured on command line
+  Benchmark options
+  samples
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({ "test", "--benchmark-samples=200" }) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.benchmarkSamples == 200 )
+with expansion:
+  200 == 200
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
+  Benchmark options
+  resamples
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({ "test", "--benchmark-resamples=20000" }) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.benchmarkResamples == 20000 )
+with expansion:
+  20000 (0x<hex digits>) == 20000 (0x<hex digits>)
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
+  Benchmark options
+  resamples
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({ "test", "--benchmark-confidence-interval=0.99" }) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.benchmarkConfidenceInterval == Catch::Detail::Approx(0.99) )
+with expansion:
+  0.99 == Approx( 0.99 )
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
+  Benchmark options
+  resamples
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({ "test", "--benchmark-no-analysis" }) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.benchmarkNoAnalysis )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
 Product with differing arities - std::tuple<int, double, float>
 -------------------------------------------------------------------------------
 Misc.tests.cpp:<line number>
@@ -7899,6 +7946,75 @@ Tag.tests.cpp:<line number>: PASSED:
 
 Tag.tests.cpp:<line number>: PASSED:
   CHECK_THROWS( registry.add( "[@no square bracket at end", "", Catch::SourceLineInfo( "file", 3 ) ) )
+
+-------------------------------------------------------------------------------
+Template test case method with test types specified inside std::tuple - MyTypes
+- 0
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Template_Fixture<TestType>::m_a == 1 )
+with expansion:
+  1 == 1
+
+-------------------------------------------------------------------------------
+Template test case method with test types specified inside std::tuple - MyTypes
+- 1
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Template_Fixture<TestType>::m_a == 1 )
+with expansion:
+  1 == 1
+
+-------------------------------------------------------------------------------
+Template test case method with test types specified inside std::tuple - MyTypes
+- 2
+-------------------------------------------------------------------------------
+Class.tests.cpp:<line number>
+...............................................................................
+
+Class.tests.cpp:<line number>: PASSED:
+  REQUIRE( Template_Fixture<TestType>::m_a == 1 )
+with expansion:
+  1.0 == 1
+
+-------------------------------------------------------------------------------
+Template test case with test types specified inside std::tuple - MyTypes - 0
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( sizeof(TestType) > 0 )
+with expansion:
+  4 > 0
+
+-------------------------------------------------------------------------------
+Template test case with test types specified inside std::tuple - MyTypes - 1
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( sizeof(TestType) > 0 )
+with expansion:
+  1 > 0
+
+-------------------------------------------------------------------------------
+Template test case with test types specified inside std::tuple - MyTypes - 2
+-------------------------------------------------------------------------------
+Misc.tests.cpp:<line number>
+...............................................................................
+
+Misc.tests.cpp:<line number>: PASSED:
+  REQUIRE( sizeof(TestType) > 0 )
+with expansion:
+  4 > 0
 
 -------------------------------------------------------------------------------
 TemplateTest: vectors can be sized and resized - float
@@ -12218,6 +12334,6 @@ Misc.tests.cpp:<line number>
 Misc.tests.cpp:<line number>: PASSED:
 
 ===============================================================================
-test cases:  289 |  199 passed |  86 failed |  4 failed as expected
-assertions: 1556 | 1387 passed | 148 failed | 21 failed as expected
+test cases:  295 |  205 passed |  86 failed |  4 failed as expected
+assertions: 1564 | 1395 passed | 148 failed | 21 failed as expected
 

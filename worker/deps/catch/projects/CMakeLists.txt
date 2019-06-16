@@ -18,6 +18,7 @@ set(TEST_SOURCES
         ${SELF_TEST_DIR}/TestMain.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/CmdLine.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/GeneratorsImpl.tests.cpp
+        ${SELF_TEST_DIR}/IntrospectiveTests/InternalBenchmark.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/PartTracker.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/Tag.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/String.tests.cpp
@@ -79,6 +80,33 @@ CheckFileList(EXTERNAL_HEADERS ${HEADER_DIR}/external)
 
 
 # Please keep these ordered alphabetically
+set(BENCHMARK_HEADERS
+		${HEADER_DIR}/internal/benchmark/catch_benchmark.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_chronometer.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_clock.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_constructor.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_environment.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_estimate.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_execution_plan.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_optimizer.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_outlier_classification.hpp
+        ${HEADER_DIR}/internal/benchmark/catch_sample_analysis.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_analyse.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_benchmark_function.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_complete_invoke.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_estimate_clock.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_measure.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_repeat.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_run_for_at_least.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_stats.hpp
+        ${HEADER_DIR}/internal/benchmark/detail/catch_timing.hpp
+)
+set(BENCHMARK_SOURCES
+    ${HEADER_DIR}/internal/benchmark/detail/catch_stats.cpp
+)
+
+SOURCE_GROUP("benchmark" FILES ${BENCHMARK_HEADERS} ${BENCHMARK_SOURCES})
+
 set(INTERNAL_HEADERS
         ${HEADER_DIR}/internal/catch_approx.h
         ${HEADER_DIR}/internal/catch_assertionhandler.h
@@ -138,7 +166,6 @@ set(INTERNAL_HEADERS
         ${HEADER_DIR}/internal/catch_reporter_registry.h
         ${HEADER_DIR}/internal/catch_result_type.h
         ${HEADER_DIR}/internal/catch_run_context.h
-        ${HEADER_DIR}/internal/catch_benchmark.h
         ${HEADER_DIR}/internal/catch_section.h
         ${HEADER_DIR}/internal/catch_section_info.h
         ${HEADER_DIR}/internal/catch_session.h
@@ -174,7 +201,6 @@ set(IMPL_SOURCES
         ${HEADER_DIR}/internal/catch_approx.cpp
         ${HEADER_DIR}/internal/catch_assertionhandler.cpp
         ${HEADER_DIR}/internal/catch_assertionresult.cpp
-        ${HEADER_DIR}/internal/catch_benchmark.cpp
         ${HEADER_DIR}/internal/catch_capture_matchers.cpp
         ${HEADER_DIR}/internal/catch_commandline.cpp
         ${HEADER_DIR}/internal/catch_common.cpp
@@ -269,7 +295,9 @@ set(HEADERS
         ${EXTERNAL_HEADERS}
         ${INTERNAL_HEADERS}
         ${REPORTER_HEADERS}
-        )
+		${BENCHMARK_HEADERS}
+        ${BENCHMARK_SOURCES}
+)
 
 # Provide some groupings for IDEs
 SOURCE_GROUP("Tests" FILES ${TEST_SOURCES})
@@ -279,20 +307,6 @@ include(CTest)
 
 add_executable(SelfTest ${TEST_SOURCES} ${IMPL_SOURCES} ${REPORTER_SOURCES} ${SURROGATE_SOURCES} ${HEADERS})
 target_include_directories(SelfTest PRIVATE ${HEADER_DIR})
-
-if(USE_CPP17)
-    message(STATUS "Enabling C++17")
-    set_property(TARGET SelfTest PROPERTY CXX_STANDARD 17)
-elseif(USE_CPP14)
-    message(STATUS "Enabling C++14")
-    set_property(TARGET SelfTest PROPERTY CXX_STANDARD 14)
-else()
-    message(STATUS "Enabling C++11")
-    set_property(TARGET SelfTest PROPERTY CXX_STANDARD 11)
-endif()
-
-set_property(TARGET SelfTest PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET SelfTest PROPERTY CXX_EXTENSIONS OFF)
 
 if (CATCH_ENABLE_COVERAGE)
     set(ENABLE_COVERAGE ON CACHE BOOL "Enable coverage build." FORCE)
@@ -306,7 +320,7 @@ endif()
 if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU" )
     target_compile_options( SelfTest PRIVATE -Wall -Wextra -Wunreachable-code -Wpedantic -Wmissing-declarations )
     if (CATCH_ENABLE_WERROR)
-        target_compile_options( SelfTest PRIVATE -Werror)
+        target_compile_options( SelfTest PRIVATE -Werror )
     endif()
 endif()
 # Clang specific options go here
