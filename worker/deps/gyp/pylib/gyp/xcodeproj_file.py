@@ -137,6 +137,7 @@ Strings of class unicode are handled properly and encoded in UTF-8 when
 a project file is output.
 """
 
+import functools
 import gyp.common
 import posixpath
 import re
@@ -430,7 +431,7 @@ class XCObject(object):
       """
 
       hash.update(struct.pack('>i', len(data)))
-      hash.update(data)
+      hash.update(data.encode('utf-8'))
 
     if seed_hash is None:
       seed_hash = _new_sha1()
@@ -1417,7 +1418,8 @@ class PBXGroup(XCHierarchicalElement):
 
   def SortGroup(self):
     self._properties['children'] = \
-        sorted(self._properties['children'], cmp=lambda x,y: x.Compare(y))
+        sorted(self._properties['children'],
+               key=functools.cmp_to_key(XCHierarchicalElement.Compare))
 
     # Recurse.
     for child in self._properties['children']:
@@ -2721,7 +2723,7 @@ class PBXProject(XCContainerPortal):
     # according to their defined order.
     self._properties['mainGroup']._properties['children'] = \
         sorted(self._properties['mainGroup']._properties['children'],
-               cmp=lambda x,y: x.CompareRootGroup(y))
+               key=functools.cmp_to_key(XCHierarchicalElement.CompareRootGroup))
 
     # Sort everything else by putting group before files, and going
     # alphabetically by name within sections of groups and files.  SortGroup
@@ -2812,9 +2814,8 @@ class PBXProject(XCContainerPortal):
 
       # Xcode seems to sort this list case-insensitively
       self._properties['projectReferences'] = \
-          sorted(self._properties['projectReferences'], cmp=lambda x,y:
-                 cmp(x['ProjectRef'].Name().lower(),
-                     y['ProjectRef'].Name().lower()))
+          sorted(self._properties['projectReferences'],
+                 key=lambda x: x['ProjectRef'].Name().lower())
     else:
       # The link already exists.  Pull out the relevnt data.
       project_ref_dict = self._other_pbxprojects[other_pbxproject]
@@ -2911,19 +2912,6 @@ class PBXProject(XCContainerPortal):
     # same order that the targets are sorted in the remote project file.  This
     # is the sort order used by Xcode.
 
-    def CompareProducts(x, y, remote_products):
-      # x and y are PBXReferenceProxy objects.  Go through their associated
-      # PBXContainerItem to get the remote PBXFileReference, which will be
-      # present in the remote_products list.
-      x_remote = x._properties['remoteRef']._properties['remoteGlobalIDString']
-      y_remote = y._properties['remoteRef']._properties['remoteGlobalIDString']
-      x_index = remote_products.index(x_remote)
-      y_index = remote_products.index(y_remote)
-
-      # Use the order of each remote PBXFileReference in remote_products to
-      # determine the sort order.
-      return cmp(x_index, y_index)
-
     for other_pbxproject, ref_dict in self._other_pbxprojects.items():
       # Build up a list of products in the remote project file, ordered the
       # same as the targets that produce them.
@@ -2938,7 +2926,7 @@ class PBXProject(XCContainerPortal):
       product_group = ref_dict['ProductGroup']
       product_group._properties['children'] = sorted(
           product_group._properties['children'],
-          cmp=lambda x, y, rp=remote_products: CompareProducts(x, y, rp))
+          key=lambda x: remote_products.index(x._properties['remoteRef']._properties['remoteGlobalIDString']))
 
 
 class XCProjectFile(XCObject):
@@ -2969,8 +2957,7 @@ class XCProjectFile(XCObject):
       self._XCPrint(file, 0, '{ ')
     else:
       self._XCPrint(file, 0, '{\n')
-    for property, value in sorted(self._properties.iteritems(),
-                                  cmp=lambda x, y: cmp(x, y)):
+    for property, value in sorted(self._properties.items()):
       if property == 'objects':
         self._PrintObjects(file)
       else:
@@ -2997,7 +2984,7 @@ class XCProjectFile(XCObject):
       self._XCPrint(file, 0, '\n')
       self._XCPrint(file, 0, '/* Begin ' + class_name + ' section */\n')
       for object in sorted(objects_by_class[class_name],
-                           cmp=lambda x, y: cmp(x.id, y.id)):
+                           key=lambda x: x.id):
         object.Print(file)
       self._XCPrint(file, 0, '/* End ' + class_name + ' section */\n')
 

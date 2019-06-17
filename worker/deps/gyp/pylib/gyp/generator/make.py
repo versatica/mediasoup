@@ -1773,7 +1773,8 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
       # - The multi-output rule will have an do-nothing recipe.
 
       # Hash the target name to avoid generating overlong filenames.
-      cmddigest = hashlib.sha1(command if command else self.target).hexdigest()
+      cmdstring = (command if command else self.target).encode('utf-8')
+      cmddigest = hashlib.sha1(cmdstring).hexdigest()
       intermediate = "%s.intermediate" % (cmddigest)
       self.WriteLn('%s: %s' % (' '.join(outputs), intermediate))
       self.WriteLn('\t%s' % '@:');
