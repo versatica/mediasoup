@@ -11,7 +11,7 @@
 
 #define CATCH_VERSION_MAJOR 2
 #define CATCH_VERSION_MINOR 9
-#define CATCH_VERSION_PATCH 0
+#define CATCH_VERSION_PATCH 1
 
 #ifdef __clang__
 #    pragma clang system_header
@@ -74,7 +74,8 @@
 #include "internal/catch_objc.hpp"
 #endif
 
-#ifdef CATCH_CONFIG_EXTERNAL_INTERFACES
+// Benchmarking needs the externally-facing parts of reporters to work
+#if defined(CATCH_CONFIG_EXTERNAL_INTERFACES) || defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
 #include "internal/catch_external_interfaces.h"
 #endif
 
