@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.1.3
+
+* Set the sender SSRC on PLI and FIR requests [related thread](https://mediasoup.discourse.group/t/broadcasting-a-vp8-rtp-stream-from-gstreamer/93).
+
+
 ### 3.1.2
 
 * Workaround to detect H264 key frames when Chrome uses external encoder (related [issue](https://bugs.chromium.org/p/webrtc/issues/detail?id=10746)). Fixes #313.
