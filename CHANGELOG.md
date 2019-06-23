@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.1.4
+
+* Add `-fPIC` in `cflags` to compile in x86-64. Fixes #315.
+
+
 ### 3.1.3
 
 * Set the sender SSRC on PLI and FIR requests [related thread](https://mediasoup.discourse.group/t/broadcasting-a-vp8-rtp-stream-from-gstreamer/93).
