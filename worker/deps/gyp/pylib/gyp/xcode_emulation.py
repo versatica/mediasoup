@@ -526,7 +526,7 @@ class XcodeSettings(object):
       XcodeSettings._sdk_path_cache[sdk_root] = sdk_path
       if sdk_root:
         XcodeSettings._sdk_root_cache[sdk_path] = sdk_root
-    return XcodeSettings._sdk_path_cache[sdk_root].decode()
+    return XcodeSettings._sdk_path_cache[sdk_root]
 
   def _AppendPlatformVersionMinFlags(self, lst):
     self._Appendf(lst, 'MACOSX_DEPLOYMENT_TARGET', '-mmacosx-version-min=%s')
@@ -926,7 +926,7 @@ class XcodeSettings(object):
       # extensions and provide loader and main function.
       # These flags reflect the compilation options used by xcode to compile
       # extensions.
-      if XcodeVersion() < '0900':
+      if XcodeVersion()[0] < '0900':
         ldflags.append('-lpkstart')
         ldflags.append(sdk_root +
             '/System/Library/PrivateFrameworks/PlugInKit.framework/PlugInKit')
@@ -1133,8 +1133,9 @@ class XcodeSettings(object):
       output = subprocess.check_output(
           ['security', 'find-identity', '-p', 'codesigning', '-v'])
       for line in output.splitlines():
-        if identity in line:
-          fingerprint = line.split()[1]
+        line_decoded = line.decode('utf-8')
+        if identity in line_decoded:
+          fingerprint = line_decoded.split()[1]
           cache = XcodeSettings._codesigning_key_cache
           assert identity not in cache or fingerprint == cache[identity], (
               "Multiple codesigning fingerprints for identity: %s" % identity)
@@ -1413,7 +1414,7 @@ def XcodeVersion():
   version = version_list[0]
   build = version_list[-1]
   # Be careful to convert "4.2" to "0420":
-  version = version.split()[-1].decode().replace('.', '')
+  version = version.split()[-1].replace('.', '')
   version = (version + '0' * (3 - len(version))).zfill(4)
   if build:
     build = build.split()[-1]
@@ -1452,7 +1453,7 @@ def GetStdout(cmdlist):
   if job.returncode != 0:
     sys.stderr.write(out + b'\n')
     raise GypError('Error %d running %s' % (job.returncode, cmdlist[0]))
-  return out.rstrip(b'\n')
+  return out.rstrip(b'\n').decode('utf-8')
 
 
 def MergeGlobalXcodeSettingsToSpec(global_dict, spec):
@@ -1660,7 +1661,7 @@ def _GetXcodeEnv(xcode_settings, built_products_dir, srcroot, configuration,
   install_name_base = xcode_settings.GetInstallNameBase()
   if install_name_base:
     env['DYLIB_INSTALL_NAME_BASE'] = install_name_base
-  if XcodeVersion() >= '0500' and not env.get('SDKROOT'):
+  if XcodeVersion()[0] >= '0500' and not env.get('SDKROOT'):
     sdk_root = xcode_settings._SdkRoot(configuration)
     if not sdk_root:
       sdk_root = xcode_settings._XcodeSdkPath('')

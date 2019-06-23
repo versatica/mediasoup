@@ -28,6 +28,7 @@ test('createWorker() succeeds', async () =>
 	worker.close();
 	expect(worker.closed).toBe(true);
 
+	// eslint-disable-next-line require-atomic-updates
 	worker = await createWorker(
 		{
 			logLevel            : 'debug',
@@ -158,6 +159,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker.closed).toBe(true);
 
+	// eslint-disable-next-line require-atomic-updates
 	worker = await createWorker({ logLevel: 'warn' });
 	onObserverClose = jest.fn();
 
@@ -173,6 +175,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker.closed).toBe(true);
 
+	// eslint-disable-next-line require-atomic-updates
 	worker = await createWorker({ logLevel: 'warn' });
 	onObserverClose = jest.fn();
 

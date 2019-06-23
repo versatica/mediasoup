@@ -504,7 +504,9 @@ namespace RTC
 
 			MS_DEBUG_2TAGS(rtcp, rtx, "sending PLI [ssrc:%" PRIu32 "]", GetSsrc());
 
-			RTC::RTCP::FeedbackPsPliPacket packet(0, GetSsrc());
+			// Sender SSRC should be 0 since there is no media sender involved, but
+			// some implementations like gstreamer will fail to process it otherwise.
+			RTC::RTCP::FeedbackPsPliPacket packet(GetSsrc(), GetSsrc());
 
 			packet.Serialize(RTC::RTCP::Buffer);
 
@@ -521,7 +523,9 @@ namespace RTC
 
 			MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", GetSsrc());
 
-			RTC::RTCP::FeedbackPsFirPacket packet(0, GetSsrc());
+			// Sender SSRC should be 0 since there is no media sender involved, but
+			// some implementations like gstreamer will fail to process it otherwise.
+			RTC::RTCP::FeedbackPsFirPacket packet(GetSsrc(), GetSsrc());
 			auto* item = new RTC::RTCP::FeedbackPsFirItem(GetSsrc(), ++this->firSeqNumber);
 
 			packet.AddItem(item);

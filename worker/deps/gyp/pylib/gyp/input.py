@@ -902,7 +902,8 @@ def ExpandVariables(input, phase, variables, build_file):
           p_stdout, p_stderr = p.communicate('')
 
           if p.wait() != 0 or p_stderr:
-            sys.stderr.write(p_stderr)
+            p_stderr_decoded = p_stderr.decode('utf-8')
+            sys.stderr.write(p_stderr_decoded)
             # Simulate check_call behavior, since check_call only exists
             # in python 2.5 and later.
             raise GypError("Call to '%s' returned exit status %d while in %s." %
@@ -948,7 +949,7 @@ def ExpandVariables(input, phase, variables, build_file):
       ProcessVariablesAndConditionsInList(replacement, phase, variables,
                                           build_file)
     elif type(replacement) not in (str, int):
-          raise GypError('Variable ' + contents +
+          raise GypError('Variable ' + str(contents) +
                          ' must expand to a string or list of strings; ' +
                          'found a ' + replacement.__class__.__name__)
 

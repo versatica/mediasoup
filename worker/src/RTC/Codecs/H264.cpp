@@ -50,8 +50,14 @@ namespace RTC
 				if (frameMarking->start && frameMarking->independent)
 					payloadDescriptor->isKeyFrame = true;
 			}
-			else
-			// Parse payload otherwise.
+
+			// NOTE: Unfortunately libwebrtc produces wrong Frame-Marking (without i=1 in
+			// keyframes) when it uses H264 hardware encoder (at least in Mac):
+			//   https://bugs.chromium.org/p/webrtc/issues/detail?id=10746
+			//
+			// As a temporal workaround, always do payload parsing to detect keyframes if
+			// there is no frame-marking or if there is but keyframe was not detected above.
+			if (!frameMarking || !payloadDescriptor->isKeyFrame)
 			{
 				uint8_t nal = *data & 0x1F;
 

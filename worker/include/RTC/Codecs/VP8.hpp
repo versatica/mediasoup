@@ -83,7 +83,7 @@ namespace RTC
 			class EncodingContext : public RTC::Codecs::EncodingContext
 			{
 			public:
-				EncodingContext(RTC::Codecs::EncodingContext::Params& params);
+				explicit EncodingContext(RTC::Codecs::EncodingContext::Params& params);
 				~EncodingContext() = default;
 
 				/* Pure virtual methods inherited from RTC::Codecs::EncodingContext. */

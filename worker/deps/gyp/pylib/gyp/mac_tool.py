@@ -113,13 +113,14 @@ class MacTool(object):
       raise
     current_section_header = None
     for line in stdout.splitlines():
-      if ibtool_section_re.match(line):
-        current_section_header = line
-      elif not ibtool_re.match(line):
+      line_decoded = line.decode('utf-8')
+      if ibtool_section_re.match(line_decoded):
+        current_section_header = line_decoded
+      elif not ibtool_re.match(line_decoded):
         if current_section_header:
           print(current_section_header)
           current_section_header = None
-        print(line)
+        print(line_decoded)
     return 0
 
   def _ConvertToBinary(self, dest):
@@ -270,7 +271,7 @@ class MacTool(object):
     libtoolout = subprocess.Popen(cmd_list, stderr=subprocess.PIPE, env=env)
     _, err = libtoolout.communicate()
     for line in err.splitlines():
-      line_decoded = line.decode("utf-8")
+      line_decoded = line.decode('utf-8')
       if not libtool_re.match(line_decoded) and not libtool_re5.match(line_decoded):
         print(line_decoded, file=sys.stderr)
     # Unconditionally touch the output .a file on the command line if present

@@ -79,7 +79,7 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 
 ## Donate
 
-You can support mediasoup by making a donation in [open collective][opencollective-mediasoup]. Thanks!
+You can support mediasoup by becoming a [sponsor][donate] or making a [donation][donate]. Thanks!
 
 
 ## License
@@ -99,12 +99,8 @@ You can support mediasoup by making a donation in [open collective][opencollecti
 [codacy-grade-shield-mediasoup]: https://img.shields.io/codacy/grade/3c8b9efc83674b6189707ab4188cfb2b.svg
 [codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
 [opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
-[opencollective-mediasoup]: https://opencollective.com/mediasoup/donate
+[opencollective-mediasoup]: https://opencollective.com/mediasoup/
+[donate]: https://mediasoup.org/sponsors/#become-a-sponsor
 [mediasoup-architecture]: /art/mediasoup-v3-architecture-01.svg
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png
 [mediasoup-demo]: https://v3demo.mediasoup.org
-
-
-
-
-
