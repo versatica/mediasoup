@@ -138,7 +138,7 @@ namespace RTC
 		RTC::TransportTuple* iceSelectedTuple{ nullptr };
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
 		uint32_t initialAvailableOutgoingBitrate{ 600000 };
-		uint32_t minimumAvailableOutgoingBitrate{ 100000 };
+		uint32_t minimumAvailableOutgoingBitrate{ 300000 };
 		uint32_t maxIncomingBitrate{ 0 };
 	};
 } // namespace RTC
