@@ -49,8 +49,8 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-plugin-jest": "^22.6.4",
+    "eslint": "^6.0.0",
+    "eslint-plugin-jest": "^22.7.1",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
     "jest": "^24.8.0",
