@@ -188,9 +188,7 @@ namespace RTC
 			// Check if the payload should contain temporal layer info.
 			if (context->GetTemporalLayers() > 1 && !this->payloadDescriptor->hasTid)
 			{
-				MS_WARN_TAG(rtp, "stream is supposed to have >1 temporal layers but does not have tid field");
-
-				return false;
+				MS_WARN_DEV(rtp, "stream is supposed to have >1 temporal layers but does not have tid field");
 			}
 
 			// clang-format off
@@ -226,6 +224,10 @@ namespace RTC
 			// clang-format on
 			{
 				context->SetCurrentTemporalLayer(this->payloadDescriptor->tid);
+			}
+			else
+			{
+				context->SetCurrentTemporalLayer(0);
 			}
 
 			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
