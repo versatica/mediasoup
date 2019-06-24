@@ -40,10 +40,6 @@ namespace RTC
 		MS_TRACE();
 
 		bool enableUdp{ true };
-		bool enableTcp{ false };
-		bool preferUdp{ false };
-		bool preferTcp{ false };
-
 		auto jsonEnableUdpIt = data.find("enableUdp");
 
 		if (jsonEnableUdpIt != data.end())
@@ -54,6 +50,7 @@ namespace RTC
 			enableUdp = jsonEnableUdpIt->get<bool>();
 		}
 
+		bool enableTcp{ false };
 		auto jsonEnableTcpIt = data.find("enableTcp");
 
 		if (jsonEnableTcpIt != data.end())
@@ -64,6 +61,7 @@ namespace RTC
 			enableTcp = jsonEnableTcpIt->get<bool>();
 		}
 
+		bool preferUdp{ false };
 		auto jsonPreferUdpIt = data.find("preferUdp");
 
 		if (jsonPreferUdpIt != data.end())
@@ -74,6 +72,7 @@ namespace RTC
 			preferUdp = jsonPreferUdpIt->get<bool>();
 		}
 
+		bool preferTcp{ false };
 		auto jsonPreferTcpIt = data.find("preferTcp");
 
 		if (jsonPreferTcpIt != data.end())
@@ -154,6 +153,36 @@ namespace RTC
 			  "minimumAvailableOutgoingBitrate bigger than initialAvailableOutgoingBitrate");
 		}
 
+		bool enableSctp{ false };
+		auto jsonEnableSctpIt = data.find("enableSctp");
+
+		if (jsonEnableSctpIt != data.end())
+		{
+			if (!jsonEnableSctpIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong enableSctp (not a boolean)");
+
+			enableSctp = jsonEnableSctpIt->get<bool>();
+		}
+
+		if (enableSctp)
+		{
+			auto jsonSctpMaxMessageSizeIt = data.find("sctpMaxMessageSize");
+
+			// clang-format off
+			if (
+				jsonSctpMaxMessageSizeIt == data.end() ||
+				!jsonSctpMaxMessageSizeIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong sctpMaxMessageSize (not a number)");
+			}
+
+			uint32_t sctpMaxMessageSize = jsonSctpMaxMessageSizeIt->get<uint32_t>();
+
+			this->sctpAssociation = new RTC::SctpAssociation(this, sctpMaxMessageSize);
+		}
+
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement{ 0 };
@@ -222,6 +251,9 @@ namespace RTC
 		{
 			// Must delete everything since the destructor won't be called.
 
+			delete this->sctpAssociation;
+			this->sctpAssociation = nullptr;
+
 			delete this->dtlsTransport;
 			this->dtlsTransport = nullptr;
 
@@ -253,6 +285,8 @@ namespace RTC
 	WebRtcTransport::~WebRtcTransport()
 	{
 		MS_TRACE();
+
+		delete this->sctpAssociation;
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
@@ -415,6 +449,10 @@ namespace RTC
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
+
+		// Add sctpParameters.
+		if (this->sctpAssociation)
+			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
 	}
 
 	void WebRtcTransport::FillJsonStats(json& jsonArray)

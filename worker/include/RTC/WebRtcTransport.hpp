@@ -6,6 +6,7 @@
 #include "RTC/IceServer.hpp"
 #include "RTC/RembClient.hpp"
 #include "RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp"
+#include "RTC/SctpAssociation.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunMessage.hpp"
 #include "RTC/TcpConnection.hpp"
@@ -24,7 +25,8 @@ namespace RTC
 	                        public RTC::IceServer::Listener,
 	                        public RTC::DtlsTransport::Listener,
 	                        public RTC::RembClient::Listener,
-	                        public RTC::RembServer::RemoteBitrateEstimator::Listener
+	                        public RTC::RembServer::RemoteBitrateEstimator::Listener,
+	                        public RTC::SctpAssociation::Listener
 	{
 	private:
 		struct ListenIp
@@ -121,6 +123,8 @@ namespace RTC
 		  const std::vector<uint32_t>& ssrcs,
 		  uint32_t availableBitrate) override;
 
+		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
+	public:
 	private:
 		// Allocated by this.
 		RTC::IceServer* iceServer{ nullptr };
@@ -132,6 +136,7 @@ namespace RTC
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		RTC::RembClient* rembClient{ nullptr };
 		RTC::RembServer::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
+		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		// Others.
 		bool connected{ false }; // Whether connect() was succesfully called.
 		std::vector<RTC::IceCandidate> iceCandidates;
