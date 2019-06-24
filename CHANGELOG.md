@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.1.5
+
+* VP8 and H264: Allow packets without temporal layer information even if N temporal layers were announced.
+
+
 ### 3.1.4
 
 * Add `-fPIC` in `cflags` to compile in x86-64. Fixes #315.
