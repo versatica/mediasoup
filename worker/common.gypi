@@ -21,12 +21,12 @@
     {
       'Release':
       {
-        'cflags': [ '-g', '-Wno-unknown-warning-option' ]
+        'cflags': [ '-g', '-Wno-unknown-warning-option', '-fPIC' ]
       },
       'Debug':
       {
         'defines': [ 'DEBUG', 'MS_LOG_TRACE', 'MS_LOG_FILE_LINE' ],
-        'cflags': [ '-g', '-O0', '-fwrapv', '-Wno-parentheses-equality', '-Wno-unknown-warning-option' ],
+        'cflags': [ '-g', '-O0', '-fwrapv', '-Wno-parentheses-equality', '-Wno-unknown-warning-option', '-fPIC' ],
         'xcode_settings':
         {
           'GCC_OPTIMIZATION_LEVEL': '0'
@@ -42,7 +42,8 @@
       'OTHER_CFLAGS':
       [
         '-fstrict-aliasing',
-        '-g'
+        '-g',
+        '-fPIC'
       ],
       'WARNING_CFLAGS':
       [
