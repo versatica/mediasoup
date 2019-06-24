@@ -233,10 +233,7 @@ namespace RTC
 			// Check if the payload should contain temporal layer info.
 			if (context->GetTemporalLayers() > 1 && !this->payloadDescriptor->hasTlIndex)
 			{
-				MS_WARN_TAG(
-				  rtp, "stream is supposed to have >1 temporal layers but does not have TlIndex field");
-
-				return false;
+				MS_WARN_DEV("stream is supposed to have >1 temporal layers but does not have TlIndex field");
 			}
 
 			// Check whether pictureId and tl0PictureIndex sync is required.
@@ -324,6 +321,10 @@ namespace RTC
 			// clang-format on
 			{
 				context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
+			}
+			else
+			{
+				context->SetCurrentTemporalLayer(0);
 			}
 
 			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
