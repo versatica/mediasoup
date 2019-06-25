@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_STREAM_RECV_HPP
 
 #include "RTC/NackGenerator.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
 #include "handles/Timer.hpp"
@@ -49,7 +50,7 @@ namespace RTC
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
-		void ReceiveRtcpSenderExtendedReport(RTC::RTCP::SenderExtendedReport* report);
+		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
 		void RequestKeyFrame();
 		void Pause() override;
 		void Resume() override;

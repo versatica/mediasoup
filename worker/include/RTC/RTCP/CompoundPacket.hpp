@@ -2,10 +2,10 @@
 #define MS_RTC_RTCP_COMPOUND_PACKET_HPP
 
 #include "common.hpp"
-#include "RTC/RTCP/ReceiverExtendedReport.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <vector>
 
 namespace RTC
@@ -26,7 +26,7 @@ namespace RTC
 			void AddSenderReport(SenderReport* report);
 			void AddReceiverReport(ReceiverReport* report);
 			void AddSdesChunk(SdesChunk* chunk);
-			void AddReceiverExtendedReport(ReceiverExtendedReport* report);
+			void AddReceiverReferenceTime(ReceiverReferenceTime* report);
 			bool HasSenderReport();
 			void Serialize(uint8_t* data);
 
@@ -36,7 +36,7 @@ namespace RTC
 			SenderReportPacket senderReportPacket;
 			ReceiverReportPacket receiverReportPacket;
 			SdesPacket sdesPacket;
-			ReceiverExtendedReportPacket receiverExtendedReportPacket;
+			ExtendedReportPacket xrPacket;
 		};
 
 		/* Inline methods. */
@@ -71,9 +71,9 @@ namespace RTC
 			this->sdesPacket.AddChunk(chunk);
 		}
 
-		inline void CompoundPacket::AddReceiverExtendedReport(ReceiverExtendedReport* report)
+		inline void CompoundPacket::AddReceiverReferenceTime(ReceiverReferenceTime* report)
 		{
-			this->receiverExtendedReportPacket.AddReport(report);
+			this->xrPacket.AddReport(report);
 		}
 
 		inline bool CompoundPacket::HasSenderReport()

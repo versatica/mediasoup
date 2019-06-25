@@ -36,8 +36,8 @@ namespace RTC
 			if (this->sdesPacket.GetCount() != 0u)
 				this->size += this->sdesPacket.GetSize();
 
-			if (this->receiverExtendedReportPacket.GetCount() != 0u)
-				this->size += this->receiverExtendedReportPacket.GetSize();
+			if (this->xrPacket.Begin() != this->xrPacket.End())
+				this->size += this->xrPacket.GetSize();
 
 			// Fill it.
 			size_t offset{ 0 };
@@ -85,8 +85,8 @@ namespace RTC
 			if (this->sdesPacket.GetCount() != 0u)
 				offset += this->sdesPacket.Serialize(this->header + offset);
 
-			if (this->receiverExtendedReportPacket.GetCount() != 0u)
-				offset += this->receiverExtendedReportPacket.Serialize(this->header + offset);
+			if (this->xrPacket.Begin() != this->xrPacket.End())
+				offset += this->xrPacket.Serialize(this->header + offset);
 		}
 
 		void CompoundPacket::Dump()
@@ -109,6 +109,9 @@ namespace RTC
 
 			if (this->sdesPacket.GetCount() != 0u)
 				this->sdesPacket.Dump();
+
+			if (this->xrPacket.Begin() != this->xrPacket.End())
+				this->xrPacket.Dump();
 
 			MS_DUMP("</CompoundPacket>");
 		}

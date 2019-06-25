@@ -13,6 +13,7 @@
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
@@ -1060,27 +1061,47 @@ namespace RTC
 
 			case RTC::RTCP::Type::XR:
 			{
-				auto* ser = static_cast<RTC::RTCP::SenderExtendedReportPacket*>(packet);
+				auto* xr = static_cast<RTC::RTCP::ExtendedReportPacket*>(packet);
 
-				for (auto it = ser->Begin(); it != ser->End(); ++it)
+				for (auto it = xr->Begin(); it != xr->End(); ++it)
 				{
 					auto& report = (*it);
-					if (report->GetSsrc() == 0)
-						report->SetSsrc(ser->GetSsrc());
 
-					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
-
-					if (producer == nullptr)
+					switch (report->GetType())
 					{
-						MS_WARN_TAG(
-						  rtcp,
-						  "no Producer found for received Sender Extended Report [ssrc:%" PRIu32 "]",
-						  report->GetSsrc());
+						case RTC::RTCP::ExtendedReportBlock::Type::DLRR:
+						{
+							auto* dlrr = static_cast<RTC::RTCP::DelaySinceLastRr*>(report);
 
-						continue;
+							for (auto it2 = dlrr->Begin(); it2 != dlrr->End(); ++it2)
+							{
+								auto& ssrcInfo = (*it2);
+
+								// SSRC should be filled in the sub-block.
+								if (ssrcInfo->GetSsrc() == 0)
+									ssrcInfo->SetSsrc(xr->GetSsrc());
+
+								auto* producer = this->rtpListener.GetProducer(ssrcInfo->GetSsrc());
+
+								if (producer == nullptr)
+								{
+									MS_WARN_TAG(
+									  rtcp,
+									  "no Producer found for received Sender Extended Report [ssrc:%" PRIu32 "]",
+									  ssrcInfo->GetSsrc());
+
+									continue;
+								}
+
+								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
+							}
+
+							break;
+						}
+
+						default:
+							break;
 					}
-
-					producer->ReceiveRtcpSenderExtendedReport(report);
 				}
 
 				break;

@@ -493,7 +493,7 @@ namespace RTC
 		UpdateScore();
 	}
 
-	void RtpStreamRecv::ReceiveRtcpSenderExtendedReport(RTC::RTCP::SenderExtendedReport* report)
+	void RtpStreamRecv::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo)
 	{
 		MS_TRACE();
 
@@ -508,8 +508,8 @@ namespace RTC
 
 		compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
 
-		uint32_t lastRr = report->GetLastReceiverReport();
-		uint32_t dlrr   = report->GetDelaySinceLastReceiverReport();
+		uint32_t lastRr = ssrcInfo->GetLastReceiverReport();
+		uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
 
 		// RTT in 1/2^16 second fractions.
 		uint32_t rtt{ 0 };
