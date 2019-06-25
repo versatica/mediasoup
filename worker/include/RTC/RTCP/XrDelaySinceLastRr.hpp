@@ -45,7 +45,7 @@ namespace RTC
 
 			public:
 				// Parsed Report. Points to an external data.
-				SsrcInfo(Body* body);
+				explicit SsrcInfo(Body* body);
 
 				// Locally generated Report. Holds the data internally.
 				SsrcInfo();
@@ -73,7 +73,7 @@ namespace RTC
 			static DelaySinceLastRr* Parse(const uint8_t* data, size_t len);
 
 		public:
-			DelaySinceLastRr(CommonHeader* header);
+			explicit DelaySinceLastRr(CommonHeader* header);
 			DelaySinceLastRr();
 			~DelaySinceLastRr();
 
