@@ -57,6 +57,10 @@
  * 	 Example:
  * 	   MS_DUMP("foo");
  *
+ * MS_DUMP_DATA(const uint8_t* data, size_t len)
+ *
+ *   Logs always. Prints the given data in hexadecimal format (Wireshark friendly).
+ *
  * MS_ERROR(...)
  *
  *   Logs an error if the current log level is satisfied (or if the current
@@ -329,6 +333,62 @@ public:
 	} \
 	while (false)
 
+#define MS_DUMP_DATA(data, len) \
+	do \
+	{ \
+		int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "X(data) " _MS_LOG_STR, _MS_LOG_ARG); \
+		Logger::channel->SendLog(Logger::buffer, loggerWritten); \
+		size_t bufferDataLen{ 0 }; \
+		for (size_t i{0}; i < len; ++i) \
+		{ \
+		  if (i % 8 == 0) \
+		  { \
+		  	if (bufferDataLen != 0) \
+		  	{ \
+		  		Logger::channel->SendLog(Logger::buffer, bufferDataLen); \
+		  		bufferDataLen = 0; \
+		  	} \
+		    int loggerWritten = std::snprintf(Logger::buffer + bufferDataLen, Logger::bufferSize, "X%06X ", static_cast<unsigned int>(i)); \
+		    bufferDataLen += loggerWritten; \
+		  } \
+		  int loggerWritten = std::snprintf(Logger::buffer + bufferDataLen, Logger::bufferSize, "%02X ", static_cast<unsigned char>(data[i])); \
+		  bufferDataLen += loggerWritten; \
+		} \
+		if (bufferDataLen != 0) \
+			Logger::channel->SendLog(Logger::buffer, bufferDataLen); \
+	} \
+	while (false)
+
+#define MS_DUMP_DATA_STD(data, len) \
+	do \
+	{ \
+		std::fprintf(stdout, "(data) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG); \
+		size_t bufferDataLen{ 0 }; \
+		for (size_t i{0}; i < len; ++i) \
+		{ \
+		  if (i % 8 == 0) \
+		  { \
+		  	if (bufferDataLen != 0) \
+		  	{ \
+		  		Logger::buffer[bufferDataLen] = '\0'; \
+		  		std::fprintf(stdout, "%s", Logger::buffer); \
+		  		bufferDataLen = 0; \
+		  	} \
+		    int loggerWritten = std::snprintf(Logger::buffer + bufferDataLen, Logger::bufferSize, "\n%06X ", static_cast<unsigned int>(i)); \
+		    bufferDataLen += loggerWritten; \
+		  } \
+		  int loggerWritten = std::snprintf(Logger::buffer + bufferDataLen, Logger::bufferSize, "%02X ", static_cast<unsigned char>(data[i])); \
+		  bufferDataLen += loggerWritten; \
+		} \
+		if (bufferDataLen != 0) \
+		{ \
+			Logger::buffer[bufferDataLen] = '\0'; \
+			std::fprintf(stdout, "%s", Logger::buffer); \
+		} \
+		std::fflush(stdout); \
+	} \
+	while (false)
+
 #define MS_ERROR(desc, ...) \
 	do \
 	{ \
@@ -383,6 +443,8 @@ public:
 	#define MS_WARN_DEV MS_WARN_DEV_STD
 	#undef MS_DUMP
 	#define MS_DUMP MS_DUMP_STD
+	#undef MS_DUMP_DATA
+	#define MS_DUMP_DATA MS_DUMP_DATA_STD
 	#undef MS_ERROR
 	#define MS_ERROR MS_ERROR_STD
 #endif
