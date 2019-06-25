@@ -13,6 +13,7 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/SctpAssociation.hpp"
 #include "handles/Timer.hpp"
 #include <string>
 #include <unordered_map>
@@ -23,7 +24,8 @@ namespace RTC
 {
 	class Transport : public RTC::Producer::Listener,
 	                  public RTC::Consumer::Listener,
-	                  public Timer::Listener
+	                  public Timer::Listener,
+	                  public RTC::SctpAssociation::Listener
 	{
 	public:
 		class Listener
@@ -63,7 +65,7 @@ namespace RTC
 		};
 
 	public:
-		Transport(const std::string& id, Listener* listener);
+		Transport(const std::string& id, Listener* listener, json& data);
 		virtual ~Transport();
 
 	public:
@@ -133,6 +135,8 @@ namespace RTC
 		virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override = 0;
 		void onConsumerProducerClosed(RTC::Consumer* consumer) override;
 
+		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
+	public:
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
 		void OnTimer(Timer* timer) override;
@@ -145,11 +149,12 @@ namespace RTC
 		// Allocated by this.
 		std::unordered_map<std::string, RTC::Producer*> mapProducers;
 		std::unordered_map<std::string, RTC::Consumer*> mapConsumers;
+		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		// Others.
 		RtpListener rtpListener;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
-		RateCalculator recvTransmission;
-		RateCalculator sendTransmission;
+		RTC::RateCalculator recvTransmission;
+		RTC::RateCalculator sendTransmission;
 
 	private:
 		// Passed by argument.

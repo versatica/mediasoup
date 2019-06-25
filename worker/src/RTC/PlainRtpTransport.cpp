@@ -14,7 +14,7 @@ namespace RTC
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PlainRtpTransport::PlainRtpTransport(
 	  const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener)
+	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
 

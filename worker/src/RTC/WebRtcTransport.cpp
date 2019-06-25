@@ -35,7 +35,7 @@ namespace RTC
 	/* Instance methods. */
 
 	WebRtcTransport::WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener)
+	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
 
@@ -153,36 +153,6 @@ namespace RTC
 			  "minimumAvailableOutgoingBitrate bigger than initialAvailableOutgoingBitrate");
 		}
 
-		bool enableSctp{ false };
-		auto jsonEnableSctpIt = data.find("enableSctp");
-
-		if (jsonEnableSctpIt != data.end())
-		{
-			if (!jsonEnableSctpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong enableSctp (not a boolean)");
-
-			enableSctp = jsonEnableSctpIt->get<bool>();
-		}
-
-		if (enableSctp)
-		{
-			auto jsonSctpMaxMessageSizeIt = data.find("sctpMaxMessageSize");
-
-			// clang-format off
-			if (
-				jsonSctpMaxMessageSizeIt == data.end() ||
-				!jsonSctpMaxMessageSizeIt->is_number_unsigned()
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong sctpMaxMessageSize (not a number)");
-			}
-
-			uint32_t sctpMaxMessageSize = jsonSctpMaxMessageSizeIt->get<uint32_t>();
-
-			this->sctpAssociation = new RTC::SctpAssociation(this, sctpMaxMessageSize);
-		}
-
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement{ 0 };
@@ -251,9 +221,6 @@ namespace RTC
 		{
 			// Must delete everything since the destructor won't be called.
 
-			delete this->sctpAssociation;
-			this->sctpAssociation = nullptr;
-
 			delete this->dtlsTransport;
 			this->dtlsTransport = nullptr;
 
@@ -285,8 +252,6 @@ namespace RTC
 	WebRtcTransport::~WebRtcTransport()
 	{
 		MS_TRACE();
-
-		delete this->sctpAssociation;
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
@@ -449,10 +414,6 @@ namespace RTC
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
-
-		// Add sctpParameters.
-		if (this->sctpAssociation)
-			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
 	}
 
 	void WebRtcTransport::FillJsonStats(json& jsonArray)

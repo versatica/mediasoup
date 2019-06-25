@@ -22,9 +22,34 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(const std::string& id, Listener* listener) : id(id), listener(listener)
+	Transport::Transport(const std::string& id, Listener* listener, json& data)
+	  : id(id), listener(listener)
 	{
 		MS_TRACE();
+
+		auto jsonEnableSctpIt = data.find("enableSctp");
+
+		if (jsonEnableSctpIt != data.end())
+		{
+			if (!jsonEnableSctpIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong enableSctp (not a boolean)");
+
+			auto jsonSctpMaxMessageSizeIt = data.find("sctpMaxMessageSize");
+
+			// clang-format off
+			if (
+				jsonSctpMaxMessageSizeIt == data.end() ||
+				!jsonSctpMaxMessageSizeIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong sctpMaxMessageSize (not a number)");
+			}
+
+			uint32_t sctpMaxMessageSize = jsonSctpMaxMessageSizeIt->get<uint32_t>();
+
+			this->sctpAssociation = new RTC::SctpAssociation(this, sctpMaxMessageSize);
+		}
 
 		// Create the RTCP timer.
 		this->rtcpTimer = new Timer(this);
@@ -54,6 +79,9 @@ namespace RTC
 		}
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
+
+		// Delete SctpAssociation.
+		delete this->sctpAssociation;
 
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
@@ -135,6 +163,10 @@ namespace RTC
 
 			(*jsonMapSsrcConsumerId)[std::to_string(ssrc)] = consumer->id;
 		}
+
+		// Add sctpParameters.
+		if (this->sctpAssociation)
+			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
 	}
 
 	void Transport::HandleRequest(Channel::Request* request)
