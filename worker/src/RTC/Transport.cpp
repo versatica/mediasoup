@@ -29,11 +29,14 @@ namespace RTC
 
 		auto jsonEnableSctpIt = data.find("enableSctp");
 
-		if (jsonEnableSctpIt != data.end())
+		// clang-format off
+		if (
+			jsonEnableSctpIt != data.end() &&
+			jsonEnableSctpIt->is_boolean() &&
+			jsonEnableSctpIt->get<bool>()
+		)
+		// clang-format on
 		{
-			if (!jsonEnableSctpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong enableSctp (not a boolean)");
-
 			auto jsonSctpMaxMessageSizeIt = data.find("sctpMaxMessageSize");
 
 			// clang-format off
