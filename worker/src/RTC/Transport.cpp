@@ -83,6 +83,24 @@ namespace RTC
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
 
+		// Delete all DataProducers.
+		for (auto& kv : this->mapDataProducers)
+		{
+			auto* dataProducer = kv.second;
+
+			delete dataProducer;
+		}
+		this->mapDataProducers.clear();
+
+		// Delete all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			delete dataConsumer;
+		}
+		this->mapDataConsumers.clear();
+
 		// Delete SctpAssociation.
 		delete this->sctpAssociation;
 
@@ -124,6 +142,30 @@ namespace RTC
 		}
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
+
+		// Delete all DataProducers.
+		for (auto& kv : this->mapDataProducers)
+		{
+			auto* dataProducer = kv.second;
+
+			// Notify the listener.
+			this->listener->OnTransportDataProducerClosed(this, dataProducer);
+
+			delete dataProducer;
+		}
+		this->mapDataProducers.clear();
+
+		// Delete all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			// Notify the listener.
+			this->listener->OnTransportDataConsumerClosed(this, dataConsumer);
+
+			delete dataConsumer;
+		}
+		this->mapDataConsumers.clear();
 	}
 
 	void Transport::FillJson(json& jsonObject) const
@@ -165,6 +207,28 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			(*jsonMapSsrcConsumerId)[std::to_string(ssrc)] = consumer->id;
+		}
+
+		// Add dataProducerIds.
+		jsonObject["dataProducerIds"] = json::array();
+		auto jsonDataProducerIdsIt    = jsonObject.find("dataProducerIds");
+
+		for (auto& kv : this->mapDataProducers)
+		{
+			auto& dataProducerId = kv.first;
+
+			jsonDataProducerIdsIt->emplace_back(dataProducerId);
+		}
+
+		// Add dataConsumerIds.
+		jsonObject["dataConsumerIds"] = json::array();
+		auto jsonDataConsumerIdsIt    = jsonObject.find("dataConsumerIds");
+
+		for (auto& kv : this->mapConsumers)
+		{
+			auto& dataConsumerId = kv.first;
+
+			jsonDataConsumerIdsIt->emplace_back(dataConsumerId);
 		}
 
 		// Add sctpParameters.
@@ -381,6 +445,20 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
+			{
+				// TODO
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
+			{
+				// TODO
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_CLOSE:
 			{
 				// This may throw.
@@ -455,6 +533,46 @@ namespace RTC
 				RTC::Consumer* consumer = GetConsumerFromRequest(request);
 
 				consumer->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::DATA_PRODUCER_CLOSE:
+			{
+				// TODO
+
+				break;
+			}
+
+			case Channel::Request::MethodId::DATA_CONSUMER_CLOSE:
+			{
+				// TODO
+
+				break;
+			}
+
+			case Channel::Request::MethodId::DATA_PRODUCER_DUMP:
+			case Channel::Request::MethodId::DATA_PRODUCER_GET_STATS:
+			{
+				// TODO
+
+				// This may throw.
+				// RTC::DataProducer* dataProducer = GetDataProducerFromRequest(request);
+
+				// dataProducer->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::DATA_CONSUMER_DUMP:
+			case Channel::Request::MethodId::DATA_CONSUMER_GET_STATS:
+			{
+				// TODO
+
+				// This may throw.
+				// RTC::DataConsumer* dataConsumer = GetDataConsumerFromRequest(request);
+
+				// dataConsumer->HandleRequest(request);
 
 				break;
 			}
@@ -791,6 +909,74 @@ namespace RTC
 		auto* consumer = mapSsrcConsumerIt->second;
 
 		return consumer;
+	}
+
+	void Transport::SetNewDataProducerIdFromRequest(Channel::Request* request, std::string& dataProducerId) const
+	{
+		MS_TRACE();
+
+		auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+
+		if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.dataProducerId");
+
+		dataProducerId.assign(jsonDataProducerIdIt->get<std::string>());
+
+		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
+			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
+	}
+
+	RTC::DataProducer* Transport::GetDataProducerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+
+		if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.dataProducerId");
+
+		auto it = this->mapDataProducers.find(jsonDataProducerIdIt->get<std::string>());
+
+		if (it == this->mapDataProducers.end())
+			MS_THROW_ERROR("DataProducer not found");
+
+		RTC::DataProducer* dataProducer = it->second;
+
+		return dataProducer;
+	}
+
+	void Transport::SetNewDataConsumerIdFromRequest(Channel::Request* request, std::string& dataConsumerId) const
+	{
+		MS_TRACE();
+
+		auto jsonDataConsumerIdIt = request->internal.find("dataConsumerId");
+
+		if (jsonDataConsumerIdIt == request->internal.end() || !jsonDataConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.dataConsumerId");
+
+		dataConsumerId.assign(jsonDataConsumerIdIt->get<std::string>());
+
+		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
+			MS_THROW_ERROR("a DataConsumer with same dataConsumerId already exists");
+	}
+
+	RTC::DataConsumer* Transport::GetDataConsumerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonDataConsumerIdIt = request->internal.find("dataConsumerId");
+
+		if (jsonDataConsumerIdIt == request->internal.end() || !jsonDataConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.dataConsumerId");
+
+		auto it = this->mapDataConsumers.find(jsonDataConsumerIdIt->get<std::string>());
+
+		if (it == this->mapDataConsumers.end())
+			MS_THROW_ERROR("DataConsumer not found");
+
+		RTC::DataConsumer* dataConsumer = it->second;
+
+		return dataConsumer;
 	}
 
 	void Transport::SendRtcp(uint64_t now)

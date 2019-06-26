@@ -5,6 +5,7 @@
 #include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
+#include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -102,6 +103,7 @@ int main(int argc, char* argv[])
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
+		DepUsrSCTP::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
@@ -118,6 +120,7 @@ int main(int argc, char* argv[])
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
 		RTC::DtlsTransport::ClassDestroy();
+		DepUsrSCTP::ClassDestroy();
 
 		// Wait a bit so peding messages to stdout/Channel arrive to the Node
 		// process.
