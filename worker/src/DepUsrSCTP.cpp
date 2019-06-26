@@ -40,8 +40,8 @@ void DepUsrSCTP::ClassInit()
 
 	MS_DEBUG_TAG(info, "usrsctp");
 
-	// TODO: Initialize usrsctp and pass the global and annoying outgoing packet callback.
-	// usrsctp_init(0, FOOOOO, nullptr);
+	// TODO
+	// usrsctp_init(0, onSendSctpData, nullptr);
 
 	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
 }

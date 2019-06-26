@@ -45,11 +45,12 @@ namespace RTC
 		// TODO: Consume it using usrsctp_conninput() and so on.
 	}
 
-	void SctpAssociation::SendSctpMessage(const uint8_t* msg, size_t len)
+	void SctpAssociation::SendSctpMessage(RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
-		// TODO: send it using usrsctp_sendv() and so on.
+		// TODO: send it using usrsctp_sendv() by reading dataConsumer->GetSctpStreamParameters()
+		// and so on.
 	}
 
 	void SctpAssociation::OnUsrSctpSendSctpData(void* buffer, size_t len)
