@@ -35,7 +35,6 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<ReceiverReferenceTime>");
-
 			MS_DUMP("  block type : %" PRIu8, this->type);
 			MS_DUMP("  reserved   : 0");
 			MS_DUMP("  length     : 2");
