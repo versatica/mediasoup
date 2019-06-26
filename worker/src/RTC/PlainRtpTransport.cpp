@@ -725,6 +725,13 @@ namespace RTC
 		// Do nothing.
 	}
 
+	void PlainRtpTransport::UserOnSendSctpData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
 	inline void PlainRtpTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();

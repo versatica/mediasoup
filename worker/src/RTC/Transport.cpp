@@ -446,6 +446,9 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
 			{
+				if (!this->sctpAssociation)
+					MS_THROW_ERROR("SCTP not enabled");
+
 				std::string dataProducerId;
 
 				// This may throw.
@@ -492,6 +495,9 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
 			{
+				if (!this->sctpAssociation)
+					MS_THROW_ERROR("SCTP not enabled");
+
 				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
 
 				if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
@@ -1261,22 +1267,23 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
-		// this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, msg, len);
+		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, msg, len);
 	}
 
 	inline void Transport::OnDataProducerSendSctpData(RTC::DataProducer* dataProducer, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		// TODO: Must call somehow to the child class.
+		// Pass it to the subclass.
+		UserOnSendSctpData(data, len);
 	}
 
 	inline void Transport::OnDataConsumerSendSctpData(RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		// TODO: Must call somehow to the child class.
+		// Pass it to the subclass.
+		UserOnSendSctpData(data, len);
 	}
 
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)

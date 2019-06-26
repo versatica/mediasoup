@@ -32,6 +32,7 @@ namespace RTC
 		void TransportConnected();
 		void TransportDisconnected();
 		void DataProducerClosed();
+		void SendSctpMessage(const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.

@@ -84,7 +84,7 @@ namespace RTC
 			// The DTLS connection has been closed due to receipt of a close_notify alert.
 			virtual void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
-			virtual void OnOutgoingDtlsData(
+			virtual void OnSendDtlsData(
 			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
 			virtual void OnDtlsApplicationData(

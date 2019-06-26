@@ -33,4 +33,11 @@ namespace RTC
 		// Add maxMessageSize.
 		jsonObject["maxMessageSize"] = this->sctpMaxMessageSize;
 	}
+
+	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
 } // namespace RTC

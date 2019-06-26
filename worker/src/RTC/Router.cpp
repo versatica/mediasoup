@@ -802,19 +802,31 @@ namespace RTC
 
 		// NOTE: While iterating the set of DataConsumers, we call DataProducerClosed() on each
 		// one, which will end calling Router::OnTransportDataConsumerDataProducerClosed(),
-		// which will remove the DataConsumer from mapDataConsumerDataProducer but won't remove the
-		// closed DataConsumer from the set of DataConsumers in mapDataProducerDataConsumers (here will
-		// erase the complete entry in that map).
+		// which will remove the DataConsumer from mapDataConsumerDataProducer but won't remove
+		// the closed DataConsumer from the set of DataConsumers in mapDataProducerDataConsumers
+		// (here will erase the complete entry in that map).
 		for (auto* dataConsumer : dataConsumers)
 		{
-			// Call dataConsumer->DataProducerClosed() so the DataConsumer will notify the Node process,
-			// will notify its Transport, and its Transport will delete the DataConsumer.
+			// Call dataConsumer->DataProducerClosed() so the DataConsumer will notify the Node
+			// process, will notify its Transport, and its Transport will delete the DataConsumer.
 			dataConsumer->DataProducerClosed();
 		}
 
 		// Remove the DataProducer from the maps.
 		this->mapDataProducers.erase(mapDataProducersIt);
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
+	}
+
+	inline void Router::OnTransportDataProducerSctpMessageReceived(RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
+	{
+		MS_TRACE();
+
+		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+
+		for (auto* consumer : dataConsumers)
+		{
+			consumer->SendSctpMessage(msg, len);
+		}
 	}
 
 	inline void Router::OnTransportNewDataConsumer(

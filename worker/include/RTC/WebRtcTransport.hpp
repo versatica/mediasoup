@@ -64,6 +64,7 @@ namespace RTC
 		void UserOnNewProducer(RTC::Producer* producer) override;
 		void UserOnNewConsumer(RTC::Consumer* consumer) override;
 		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
+		void UserOnSendSctpData(const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
@@ -105,7 +106,7 @@ namespace RTC
 		  std::string& remoteCert) override;
 		void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnOutgoingDtlsData(
+		void OnSendDtlsData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		void OnDtlsApplicationData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;

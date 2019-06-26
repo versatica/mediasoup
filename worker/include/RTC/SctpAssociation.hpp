@@ -14,14 +14,16 @@ namespace RTC
 	public:
 		class Listener
 		{
+			// TODO
 		};
 
 	public:
 		SctpAssociation(Listener* listener, uint32_t sctpMaxMessageSize);
-		virtual ~SctpAssociation();
+		~SctpAssociation();
 
 	public:
-		virtual void FillJson(json& jsonObject) const;
+		void FillJson(json& jsonObject) const;
+		void ProcessSctpData(const uint8_t* data, size_t len);
 
 	private:
 		// Passed by argument.

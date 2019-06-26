@@ -24,6 +24,7 @@ public:
 		bool score{ false };
 		bool simulcast{ false };
 		bool svc{ false };
+		bool sctp{ false };
 	};
 
 public:

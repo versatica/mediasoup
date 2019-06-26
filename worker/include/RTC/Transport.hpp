@@ -69,6 +69,7 @@ namespace RTC
 			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnTransportNewDataProducer(RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
 			virtual void OnTransportDataProducerClosed(RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
+			virtual void OnTransportDataProducerSctpMessageReceived(RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) = 0;
 			virtual void OnTransportNewDataConsumer(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) = 0;
 			virtual void OnTransportDataConsumerClosed(
@@ -107,6 +108,7 @@ namespace RTC
 		virtual void UserOnNewProducer(RTC::Producer* producer)                = 0;
 		virtual void UserOnNewConsumer(RTC::Consumer* consumer)                = 0;
 		virtual void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) = 0;
+		virtual void UserOnSendSctpData(const uint8_t* data, size_t len)       = 0;
 
 	private:
 		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;

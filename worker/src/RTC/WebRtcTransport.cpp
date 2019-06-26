@@ -1344,6 +1344,20 @@ namespace RTC
 		this->rembClient->ReceiveRembFeedback(remb);
 	}
 
+	void WebRtcTransport::UserOnSendSctpData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
+		{
+			MS_WARN_TAG(sctp, "cannot send SCTP data (DTLS not connected");
+
+			return;
+		}
+
+		this->dtlsTransport->SendApplicationData(data, len);
+	}
+
 	inline void WebRtcTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
@@ -1578,7 +1592,7 @@ namespace RTC
 		RTC::Transport::Disconnected();
 	}
 
-	inline void WebRtcTransport::OnOutgoingDtlsData(
+	inline void WebRtcTransport::OnSendDtlsData(
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -1597,13 +1611,21 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnDtlsApplicationData(
-	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t len)
+	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
 		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
 
-		// NOTE: No DataChannel support, so just ignore it.
+		if (!this->sctpAssociation)
+		{
+			MS_DEBUG_TAG(sctp, "ignoring DTLS application data (SCTP not enabled)");
+
+			return;
+		}
+
+		// Pass it to the SctpAssociation.
+		this->sctpAssociation->ProcessSctpData(data, len);
 	}
 
 	inline void WebRtcTransport::OnRembClientAvailableBitrate(
