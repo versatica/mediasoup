@@ -1100,7 +1100,9 @@ namespace RTC
 						}
 
 						default:
+						{
 							break;
+						}
 					}
 				}
 

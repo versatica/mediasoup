@@ -53,7 +53,6 @@ namespace RTC
 				void Dump() const;
 				size_t Serialize(uint8_t* buffer);
 				size_t GetSize() const;
-
 				uint32_t GetSsrc() const;
 				void SetSsrc(uint32_t ssrc);
 				uint32_t GetLastReceiverReport() const;
@@ -63,7 +62,7 @@ namespace RTC
 
 			private:
 				Body* body{ nullptr };
-				uint8_t raw[sizeof(Body)]{ 0 };
+				uint8_t raw[sizeof(Body)];
 			};
 
 		public:

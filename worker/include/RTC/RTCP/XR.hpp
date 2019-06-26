@@ -64,7 +64,7 @@ namespace RTC
 			CommonHeader* header{ nullptr };
 
 		private:
-			uint8_t raw[sizeof(CommonHeader)]{ 0 };
+			uint8_t raw[sizeof(CommonHeader)];
 		};
 
 		class ExtendedReportPacket : public Packet
@@ -82,7 +82,6 @@ namespace RTC
 			void AddReport(ExtendedReportBlock* report);
 			uint32_t GetSsrc() const;
 			void SetSsrc(uint32_t ssrc);
-
 			Iterator Begin();
 			Iterator End();
 
@@ -103,7 +102,6 @@ namespace RTC
 		inline ExtendedReportBlock::ExtendedReportBlock(Type type) : type(type)
 		{
 			this->header = reinterpret_cast<CommonHeader*>(this->raw);
-			;
 
 			this->header->reserved = 0;
 		}
@@ -154,7 +152,9 @@ namespace RTC
 			size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc);
 
 			for (auto* report : this->reports)
+			{
 				size += report->GetSize();
+			}
 
 			return size;
 		}
