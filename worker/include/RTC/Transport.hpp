@@ -27,8 +27,10 @@ namespace RTC
 {
 	class Transport : public RTC::Producer::Listener,
 	                  public RTC::Consumer::Listener,
-	                  public Timer::Listener,
-	                  public RTC::SctpAssociation::Listener
+	                  public RTC::DataProducer::Listener,
+	                  public RTC::DataConsumer::Listener,
+	                  public RTC::SctpAssociation::Listener,
+	                  public Timer::Listener
 	{
 	public:
 		class Listener
@@ -148,7 +150,17 @@ namespace RTC
 		  RTC::Consumer* consumer, RTC::RtpPacket* packet, bool probation) override;
 		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 		virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override = 0;
-		void onConsumerProducerClosed(RTC::Consumer* consumer) override;
+		void OnConsumerProducerClosed(RTC::Consumer* consumer) override;
+
+		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
+	public:
+		void OnDataProducerSctpMessageReceived(RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) override;
+		void OnDataProducerSendSctpData(RTC::DataProducer* dataProducer, const uint8_t* data, size_t len) override;
+
+		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
+	public:
+		void OnDataConsumerSendSctpData(RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len) override;
+		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
 	public:

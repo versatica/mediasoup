@@ -6,7 +6,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Consumer.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
@@ -447,14 +446,89 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
 			{
-				// TODO
+				std::string dataProducerId;
+
+				// This may throw.
+				SetNewDataProducerIdFromRequest(request, dataProducerId);
+
+				// This may throw.
+				auto* dataProducer = new RTC::DataProducer(dataProducerId, this, request->data);
+
+				// Insert the DataProducer into the SctpListener.
+				// This may throw. If so, delete the DataProducer and throw.
+				try
+				{
+					this->sctpListener.AddDataProducer(dataProducer);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete dataProducer;
+
+					throw;
+				}
+
+				// Notify the listener.
+				// This may throw if a DataProducer with same id already exists.
+				try
+				{
+					this->listener->OnTransportNewDataProducer(this, dataProducer);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete dataProducer;
+
+					throw;
+				}
+
+				// Insert into the map.
+				this->mapDataProducers[dataProducerId] = dataProducer;
+
+				MS_DEBUG_DEV("Producer created [dataProducerId:%s]", dataProducerId.c_str());
+
+				request->Accept();
 
 				break;
 			}
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
 			{
-				// TODO
+				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+
+				if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
+					MS_THROW_ERROR("request has no internal.dataProducerId");
+
+				std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();
+				std::string dataConsumerId;
+
+				// This may throw.
+				SetNewDataConsumerIdFromRequest(request, dataConsumerId);
+
+				// This may throw.
+				auto* dataConsumer = new RTC::DataConsumer(dataConsumerId, this, request->data);
+
+				// Notify the listener.
+				// This may throw if no DataProducer is found.
+				try
+				{
+					this->listener->OnTransportNewDataConsumer(this, dataConsumer, dataProducerId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete dataConsumer;
+
+					throw;
+				}
+
+				// Insert into the maps.
+				this->mapDataConsumers[dataConsumerId] = dataConsumer;
+
+				MS_DEBUG_DEV(
+				  "DataConsumer created [dataConsumerId:%s, dataProducerId:%s]", dataConsumerId.c_str(), dataProducerId.c_str());
+
+				request->Accept();
+
+				if (IsConnected())
+					dataConsumer->TransportConnected();
 
 				break;
 			}
@@ -539,14 +613,45 @@ namespace RTC
 
 			case Channel::Request::MethodId::DATA_PRODUCER_CLOSE:
 			{
-				// TODO
+				// This may throw.
+				RTC::DataProducer* dataProducer = GetDataProducerFromRequest(request);
+
+				// Remove it from the SctpListener.
+				this->sctpListener.RemoveDataProducer(dataProducer);
+
+				// Remove it from the map.
+				this->mapDataProducers.erase(dataProducer->id);
+
+				// Notify the listener.
+				this->listener->OnTransportDataProducerClosed(this, dataProducer);
+
+				MS_DEBUG_DEV("DataProducer closed [dataProducerId:%s]", dataProducer->id.c_str());
+
+				// Delete it.
+				delete dataProducer;
+
+				request->Accept();
 
 				break;
 			}
 
 			case Channel::Request::MethodId::DATA_CONSUMER_CLOSE:
 			{
-				// TODO
+				// This may throw.
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromRequest(request);
+
+				// Remove it from the maps.
+				this->mapDataConsumers.erase(dataConsumer->id);
+
+				// Notify the listener.
+				this->listener->OnTransportDataConsumerClosed(this, dataConsumer);
+
+				MS_DEBUG_DEV("DataConsumer closed [dataConsumerId:%s]", dataConsumer->id.c_str());
+
+				// Delete it.
+				delete dataConsumer;
+
+				request->Accept();
 
 				break;
 			}
@@ -554,12 +659,10 @@ namespace RTC
 			case Channel::Request::MethodId::DATA_PRODUCER_DUMP:
 			case Channel::Request::MethodId::DATA_PRODUCER_GET_STATS:
 			{
-				// TODO
-
 				// This may throw.
-				// RTC::DataProducer* dataProducer = GetDataProducerFromRequest(request);
+				RTC::DataProducer* dataProducer = GetDataProducerFromRequest(request);
 
-				// dataProducer->HandleRequest(request);
+				dataProducer->HandleRequest(request);
 
 				break;
 			}
@@ -567,12 +670,10 @@ namespace RTC
 			case Channel::Request::MethodId::DATA_CONSUMER_DUMP:
 			case Channel::Request::MethodId::DATA_CONSUMER_GET_STATS:
 			{
-				// TODO
-
 				// This may throw.
-				// RTC::DataConsumer* dataConsumer = GetDataConsumerFromRequest(request);
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromRequest(request);
 
-				// dataConsumer->HandleRequest(request);
+				dataConsumer->HandleRequest(request);
 
 				break;
 			}
@@ -1137,7 +1238,7 @@ namespace RTC
 		this->listener->OnTransportConsumerKeyFrameRequested(this, consumer, mappedSsrc);
 	}
 
-	inline void Transport::onConsumerProducerClosed(RTC::Consumer* consumer)
+	inline void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -1154,6 +1255,42 @@ namespace RTC
 
 		// Delete it.
 		delete consumer;
+	}
+
+	inline void Transport::OnDataProducerSctpMessageReceived(RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO
+		// this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, msg, len);
+	}
+
+	inline void Transport::OnDataProducerSendSctpData(RTC::DataProducer* dataProducer, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO: Must call somehow to the child class.
+	}
+
+	inline void Transport::OnDataConsumerSendSctpData(RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO: Must call somehow to the child class.
+	}
+
+	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
+	{
+		MS_TRACE();
+
+		// Remove it from the maps.
+		this->mapDataConsumers.erase(dataConsumer->id);
+
+		// Notify the listener.
+		this->listener->OnTransportDataConsumerDataProducerClosed(this, dataConsumer);
+
+		// Delete it.
+		delete dataConsumer;
 	}
 
 	inline void Transport::OnTimer(Timer* timer)

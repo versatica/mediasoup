@@ -30,7 +30,7 @@ namespace RTC
 			  RTC::Consumer* consumer, RTC::RtpPacket* packet, bool probation = false)             = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
-			virtual void onConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
+			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
 		};
 
 	public:
