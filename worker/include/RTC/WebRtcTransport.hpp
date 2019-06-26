@@ -106,8 +106,7 @@ namespace RTC
 		  std::string& remoteCert) override;
 		void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnSendDtlsData(
-		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		void OnSendDtlsData(const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		void OnDtlsApplicationData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 

@@ -130,7 +130,7 @@ namespace RTC
 
 		// Add mapDataProducerIdDataConsumerIds.
 		jsonObject["mapDataProducerIdDataConsumerIds"] = json::object();
-		auto jsonMapDataProducerDataConsumersIt        = jsonObject.find("mapDataProducerIdDataConsumerIds");
+		auto jsonMapDataProducerDataConsumersIt = jsonObject.find("mapDataProducerIdDataConsumerIds");
 
 		for (auto& kv : this->mapDataProducerDataConsumers)
 		{
@@ -138,8 +138,7 @@ namespace RTC
 			auto& dataConsumers = kv.second;
 
 			(*jsonMapDataProducerDataConsumersIt)[dataProducer->id] = json::array();
-			auto jsonDataProducerIdIt =
-				jsonMapDataProducerDataConsumersIt->find(dataProducer->id);
+			auto jsonDataProducerIdIt = jsonMapDataProducerDataConsumersIt->find(dataProducer->id);
 
 			for (auto* dataConsumer : dataConsumers)
 			{
@@ -149,7 +148,7 @@ namespace RTC
 
 		// Add mapDataConsumerIdDataProducerId.
 		jsonObject["mapDataConsumerIdDataProducerId"] = json::object();
-		auto jsonMapDataConsumerDataProducerIt        = jsonObject.find("mapDataConsumerIdDataProducerId");
+		auto jsonMapDataConsumerDataProducerIt = jsonObject.find("mapDataConsumerIdDataProducerId");
 
 		for (auto& kv : this->mapDataConsumerDataProducer)
 		{
@@ -767,17 +766,21 @@ namespace RTC
 		producer->RequestKeyFrame(mappedSsrc);
 	}
 
-	inline void Router::OnTransportNewDataProducer(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	inline void Router::OnTransportNewDataProducer(
+	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(
-		  this->mapDataProducerDataConsumers.find(dataProducer) == this->mapDataProducerDataConsumers.end(),
+		  this->mapDataProducerDataConsumers.find(dataProducer) ==
+		    this->mapDataProducerDataConsumers.end(),
 		  "DataProducer already present in mapDataProducerDataConsumers");
 
 		if (this->mapDataProducers.find(dataProducer->id) != this->mapDataProducers.end())
 		{
-			MS_THROW_ERROR("DataProducer already present in mapDataProducers [dataProducerId:%s]", dataProducer->id.c_str());
+			MS_THROW_ERROR(
+			  "DataProducer already present in mapDataProducers [dataProducerId:%s]",
+			  dataProducer->id.c_str());
 		}
 
 		// Insert the DataProducer in the maps.
@@ -785,17 +788,20 @@ namespace RTC
 		this->mapDataProducerDataConsumers[dataProducer];
 	}
 
-	inline void Router::OnTransportDataProducerClosed(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	inline void Router::OnTransportDataProducerClosed(
+	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
-		auto mapDataProducerDataConsumersIt    = this->mapDataProducerDataConsumers.find(dataProducer);
-		auto mapDataProducersIt            = this->mapDataProducers.find(dataProducer->id);
+		auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
+		auto mapDataProducersIt             = this->mapDataProducers.find(dataProducer->id);
 
 		MS_ASSERT(
 		  mapDataProducerDataConsumersIt != this->mapDataProducerDataConsumers.end(),
 		  "DataProducer not present in mapDataProducerDataConsumers");
-		MS_ASSERT(mapDataProducersIt != this->mapDataProducers.end(), "DataProducer not present in mapDataProducers");
+		MS_ASSERT(
+		  mapDataProducersIt != this->mapDataProducers.end(),
+		  "DataProducer not present in mapDataProducers");
 
 		// Close all DataConsumers associated to the closed DataProducer.
 		auto& dataConsumers = mapDataProducerDataConsumersIt->second;
@@ -817,7 +823,8 @@ namespace RTC
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
 	}
 
-	inline void Router::OnTransportDataProducerSctpMessageReceived(RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
+	inline void Router::OnTransportDataProducerSctpMessageReceived(
+	  RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
@@ -856,7 +863,8 @@ namespace RTC
 		this->mapDataConsumerDataProducer[dataConsumer] = dataProducer;
 	}
 
-	inline void Router::OnTransportDataConsumerClosed(RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer)
+	inline void Router::OnTransportDataConsumerClosed(
+	  RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer)
 	{
 		MS_TRACE();
 
@@ -875,7 +883,8 @@ namespace RTC
 		auto* dataProducer = mapDataConsumerDataProducerIt->second;
 
 		MS_ASSERT(
-		  this->mapDataProducerDataConsumers.find(dataProducer) != this->mapDataProducerDataConsumers.end(),
+		  this->mapDataProducerDataConsumers.find(dataProducer) !=
+		    this->mapDataProducerDataConsumers.end(),
 		  "DataProducer not present in mapDataProducerDataConsumers");
 
 		// Remove the DataConsumer from the set of DataConsumers of the DataProducer.
@@ -887,7 +896,8 @@ namespace RTC
 		this->mapDataConsumerDataProducer.erase(mapDataConsumerDataProducerIt);
 	}
 
-	inline void Router::OnTransportDataConsumerDataProducerClosed(RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer)
+	inline void Router::OnTransportDataConsumerDataProducerClosed(
+	  RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer)
 	{
 		MS_TRACE();
 

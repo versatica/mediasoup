@@ -5,9 +5,9 @@
 #include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/Consumer.hpp"
-#include "RTC/Producer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
+#include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/Packet.hpp"
@@ -67,9 +67,12 @@ namespace RTC
 			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerKeyFrameRequested(
 			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
-			virtual void OnTransportNewDataProducer(RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
-			virtual void OnTransportDataProducerClosed(RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
-			virtual void OnTransportDataProducerSctpMessageReceived(RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) = 0;
+			virtual void OnTransportNewDataProducer(
+			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
+			virtual void OnTransportDataProducerClosed(
+			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
+			virtual void OnTransportDataProducerSctpMessageReceived(
+			  RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) = 0;
 			virtual void OnTransportNewDataConsumer(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) = 0;
 			virtual void OnTransportDataConsumerClosed(
@@ -156,12 +159,15 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
 	public:
-		void OnDataProducerSctpMessageReceived(RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) override;
-		void OnDataProducerSendSctpData(RTC::DataProducer* dataProducer, const uint8_t* data, size_t len) override;
+		void OnDataProducerSctpMessageReceived(
+		  RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) override;
+		void OnDataProducerSendSctpData(
+		  RTC::DataProducer* dataProducer, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
-		void OnDataConsumerSendSctpData(RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len) override;
+		void OnDataConsumerSendSctpData(
+		  RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */

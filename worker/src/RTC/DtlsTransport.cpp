@@ -998,8 +998,7 @@ namespace RTC
 		MS_DEBUG_DEV("%" PRIu64 " bytes of DTLS data ready to sent to the peer", read);
 
 		// Notify the listener.
-		this->listener->OnSendDtlsData(
-		  this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(read));
+		this->listener->OnSendDtlsData(this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(read));
 
 		// Clear the BIO buffer.
 		// NOTE: the (void) avoids the -Wunused-value warning.

@@ -529,7 +529,9 @@ namespace RTC
 				this->mapDataConsumers[dataConsumerId] = dataConsumer;
 
 				MS_DEBUG_DEV(
-				  "DataConsumer created [dataConsumerId:%s, dataProducerId:%s]", dataConsumerId.c_str(), dataProducerId.c_str());
+				  "DataConsumer created [dataConsumerId:%s, dataProducerId:%s]",
+				  dataConsumerId.c_str(),
+				  dataProducerId.c_str());
 
 				request->Accept();
 
@@ -1018,7 +1020,8 @@ namespace RTC
 		return consumer;
 	}
 
-	void Transport::SetNewDataProducerIdFromRequest(Channel::Request* request, std::string& dataProducerId) const
+	void Transport::SetNewDataProducerIdFromRequest(
+	  Channel::Request* request, std::string& dataProducerId) const
 	{
 		MS_TRACE();
 
@@ -1052,7 +1055,8 @@ namespace RTC
 		return dataProducer;
 	}
 
-	void Transport::SetNewDataConsumerIdFromRequest(Channel::Request* request, std::string& dataConsumerId) const
+	void Transport::SetNewDataConsumerIdFromRequest(
+	  Channel::Request* request, std::string& dataConsumerId) const
 	{
 		MS_TRACE();
 
@@ -1263,14 +1267,16 @@ namespace RTC
 		delete consumer;
 	}
 
-	inline void Transport::OnDataProducerSctpMessageReceived(RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
+	inline void Transport::OnDataProducerSctpMessageReceived(
+	  RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, msg, len);
 	}
 
-	inline void Transport::OnDataProducerSendSctpData(RTC::DataProducer* dataProducer, const uint8_t* data, size_t len)
+	inline void Transport::OnDataProducerSendSctpData(
+	  RTC::DataProducer* dataProducer, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1278,7 +1284,8 @@ namespace RTC
 		UserOnSendSctpData(data, len);
 	}
 
-	inline void Transport::OnDataConsumerSendSctpData(RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len)
+	inline void Transport::OnDataConsumerSendSctpData(
+	  RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1309,9 +1316,7 @@ namespace RTC
 		if (dataProducer == nullptr)
 		{
 			MS_WARN_TAG(
-			  sctp,
-			  "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]",
-			  streamId);
+			  sctp, "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]", streamId);
 
 			return;
 		}

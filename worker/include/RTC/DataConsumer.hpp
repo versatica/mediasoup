@@ -15,7 +15,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnDataConsumerSendSctpData(RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len) = 0;
+			virtual void OnDataConsumerSendSctpData(
+			  RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len)            = 0;
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
 		};
 
