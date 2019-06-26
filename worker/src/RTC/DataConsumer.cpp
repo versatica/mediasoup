@@ -100,7 +100,7 @@ namespace RTC
 		MS_DEBUG_DEV("Transport disconnected [dataConsumerId:%s]", this->id.c_str());
 	}
 
-	// The caller (Router) is supposed to produce the delete of this DataConsumer
+	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
 	// right after calling this method. Otherwise ugly things may happen.
 	void DataConsumer::DataProducerClosed()
 	{
@@ -112,6 +112,6 @@ namespace RTC
 
 		Channel::Notifier::Emit(this->id, "dataproducerclose");
 
-		this->listener->onDataConsumerDataProducerClosed(this);
+		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 } // namespace RTC
