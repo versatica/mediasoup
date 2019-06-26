@@ -64,7 +64,7 @@ namespace RTC
 			CommonHeader* header{ nullptr };
 
 		private:
-			uint8_t raw[sizeof(CommonHeader)];
+			uint8_t raw[sizeof(CommonHeader)] = { 0 };
 		};
 
 		class ExtendedReportPacket : public Packet
