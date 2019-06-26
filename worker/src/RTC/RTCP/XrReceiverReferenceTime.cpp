@@ -39,9 +39,8 @@ namespace RTC
 			MS_DUMP("  block type : %" PRIu8, this->type);
 			MS_DUMP("  reserved   : 0");
 			MS_DUMP("  length     : 2");
-
-			MS_DUMP("  ntp sec      : %" PRIu32, GetNtpSec());
-			MS_DUMP("  ntp frac     : %" PRIu32, GetNtpFrac());
+			MS_DUMP("  ntp sec    : %" PRIu32, GetNtpSec());
+			MS_DUMP("  ntp frac   : %" PRIu32, GetNtpFrac());
 			MS_DUMP("</ReceiverReferenceTime>");
 		}
 

@@ -29,7 +29,6 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		auto report2 = ReceiverReferenceTime::Parse(bufferReport1, report1->GetSize());
 
 		REQUIRE(report1->GetType() == report2->GetType());
-
 		REQUIRE(report1->GetNtpSec() == report2->GetNtpSec());
 		REQUIRE(report1->GetNtpFrac() == report2->GetNtpFrac());
 
@@ -44,12 +43,11 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		REQUIRE(packet1->GetCount() == 0);
 		REQUIRE(packet1->GetSsrc() == 2222);
 
-		/* Total size:
-		 * -  RTCP common header
-		 * -  SSRC
-		 * -  block 1
-		 * -  block 2
-		 */
+		// Total size:
+		// -  RTCP common header
+		// -  SSRC
+		// -  block 1
+		// -  block 2
 		REQUIRE(packet1->GetSize() == 4 + 4 + 12 + 12);
 
 		// Serialize the packet into an external buffer.
@@ -118,12 +116,11 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		REQUIRE(packet1->GetCount() == 0);
 		REQUIRE(packet1->GetSsrc() == 2222);
 
-		/* Total size:
-		 * -  RTCP common header
-		 * -  SSRC
-		 * -  block 1
-		 * -  block 2
-		 */
+		// Total size:
+		// -  RTCP common header
+		// -  SSRC
+		// -  block 1
+		// -  block 2
 		REQUIRE(packet1->GetSize() == 4 + 4 + 16 + 16);
 
 		// Serialize the packet into an external buffer.

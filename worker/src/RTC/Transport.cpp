@@ -708,7 +708,9 @@ namespace RTC
 						}
 
 						default:
+						{
 							break;
+						}
 					}
 				}
 

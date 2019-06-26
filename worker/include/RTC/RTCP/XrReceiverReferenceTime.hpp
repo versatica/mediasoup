@@ -53,7 +53,7 @@ namespace RTC
 
 		private:
 			Body* body{ nullptr };
-			uint8_t raw[sizeof(Body)]{ 0 };
+			uint8_t raw[sizeof(Body)];
 		};
 
 		/* Inline instance methods. */
