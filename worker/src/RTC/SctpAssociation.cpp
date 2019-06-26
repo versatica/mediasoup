@@ -2,8 +2,8 @@
 // #define MS_LOG_DEV
 
 #include "RTC/SctpAssociation.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "DepUsrSCTP.hpp"
 // #include "MediaSoupErrors.hpp"
 // #include "Utils.hpp"
 // #include "Channel/Notifier.hpp"
@@ -16,11 +16,15 @@ namespace RTC
 	  : listener(listener), sctpMaxMessageSize(sctpMaxMessageSize)
 	{
 		MS_TRACE();
+
+		DepUsrSCTP::IncreaseSctpAssociations();
 	}
 
 	SctpAssociation::~SctpAssociation()
 	{
 		MS_TRACE();
+
+		DepUsrSCTP::DecreaseSctpAssociations();
 	}
 
 	void SctpAssociation::FillJson(json& jsonObject) const
