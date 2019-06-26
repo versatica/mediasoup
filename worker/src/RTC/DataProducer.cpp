@@ -80,4 +80,15 @@ namespace RTC
 			}
 		}
 	}
+
+	void DataProducer::ReceiveSctpMessage(const uint8_t* msg, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO: account it for stats. Not sure if something
+		// else must be done.
+
+		// Pass it back to the transport.
+		this->listener->OnDataProducerSctpMessageReceived(this, msg, len);
+	}
 } // namespace RTC

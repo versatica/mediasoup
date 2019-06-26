@@ -28,6 +28,7 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
 		const RTC::SctpStreamParameters& GetSctpStreamParameters() const;
+		void ReceiveSctpMessage(const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.

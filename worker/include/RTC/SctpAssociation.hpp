@@ -14,7 +14,7 @@ namespace RTC
 	public:
 		class Listener
 		{
-			// TODO
+			virtual void OnSctpMessageReceived(uint16_t streamId, const uint8_t* msg, size_t len) = 0;
 		};
 
 	public:

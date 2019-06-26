@@ -166,6 +166,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
 	public:
+		void OnSctpMessageReceived(uint16_t streamId, const uint8_t* msg, size_t len) override;
+
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
 		void OnTimer(Timer* timer) override;

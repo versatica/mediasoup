@@ -1300,6 +1300,26 @@ namespace RTC
 		delete dataConsumer;
 	}
 
+	inline void Transport::OnSctpMessageReceived(uint16_t streamId, const uint8_t* msg, size_t len)
+	{
+		MS_TRACE();
+
+		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(streamId);
+
+		if (dataProducer == nullptr)
+		{
+			MS_WARN_TAG(
+			  sctp,
+			  "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]",
+			  streamId);
+
+			return;
+		}
+
+		// Pass the SCTP message to the corresponding DataProducer.
+		dataProducer->ReceiveSctpMessage(msg, len);
+	}
+
 	inline void Transport::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
