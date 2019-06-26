@@ -65,7 +65,6 @@ namespace RTC
 			std::unique_ptr<DelaySinceLastRr> report(new DelaySinceLastRr(header));
 
 			size_t offset{ sizeof(ExtendedReportBlock::CommonHeader) };
-
 			uint16_t reportLength = ntohs(header->length) * 4;
 
 			while (len > offset && reportLength >= sizeof(DelaySinceLastRr::SsrcInfo::Body))
@@ -121,18 +120,15 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<DelaySinceLastRr>");
-
 			MS_DUMP("  block type : %" PRIu8, this->type);
 			MS_DUMP("  reserved   : 0");
 			MS_DUMP(
 			  "  length     : %" PRIu16,
 			  static_cast<uint16_t>((sizeof(SsrcInfo::Body) * this->ssrcInfos.size() / 4)));
-
 			for (auto* ssrcInfo : this->ssrcInfos)
 			{
 				ssrcInfo->Dump();
 			}
-
 			MS_DUMP("</DelaySinceLastRr>");
 		}
 	} // namespace RTCP

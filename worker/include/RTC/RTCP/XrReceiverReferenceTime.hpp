@@ -36,10 +36,10 @@ namespace RTC
 		public:
 			// Parsed Report. Points to an external data.
 			explicit ReceiverReferenceTime(CommonHeader* header);
-
 			// Locally generated Report. Holds the data internally.
 			ReceiverReferenceTime();
 
+		public:
 			uint32_t GetNtpSec() const;
 			void SetNtpSec(uint32_t ntpSec);
 			uint32_t GetNtpFrac() const;
@@ -56,7 +56,7 @@ namespace RTC
 			uint8_t raw[sizeof(Body)] = { 0 };
 		};
 
-		/* Inline instance methods. */
+		/* Inline ReceiverReferenceTime instance methods. */
 
 		inline ReceiverReferenceTime::ReceiverReferenceTime()
 		  : ExtendedReportBlock(RTCP::ExtendedReportBlock::Type::RRT)

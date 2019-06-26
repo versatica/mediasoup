@@ -30,8 +30,14 @@ namespace RTC
 		class DelaySinceLastRr : public ExtendedReportBlock
 		{
 		public:
+			static DelaySinceLastRr* Parse(const uint8_t* data, size_t len);
+
+		public:
 			class SsrcInfo
 			{
+			public:
+				static SsrcInfo* Parse(const uint8_t* data, size_t len);
+
 			public:
 				struct Body
 				{
@@ -39,9 +45,6 @@ namespace RTC
 					uint32_t lrr;
 					uint32_t dlrr;
 				};
-
-			public:
-				static SsrcInfo* Parse(const uint8_t* data, size_t len);
 
 			public:
 				// Parsed Report. Points to an external data.
@@ -69,18 +72,14 @@ namespace RTC
 			using Iterator = std::vector<SsrcInfo*>::iterator;
 
 		public:
-			static DelaySinceLastRr* Parse(const uint8_t* data, size_t len);
-
-		public:
 			explicit DelaySinceLastRr(CommonHeader* header);
 			DelaySinceLastRr();
 			~DelaySinceLastRr();
 
-			Iterator Begin();
-			Iterator End();
-
 		public:
 			void AddSsrcInfo(SsrcInfo* ssrcInfo);
+			Iterator Begin();
+			Iterator End();
 
 			/* Pure virtual methods inherited from ExtendedReportBlock. */
 		public:

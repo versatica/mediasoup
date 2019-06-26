@@ -52,12 +52,11 @@ namespace RTC
 			ExtendedReportBlock(Type type);
 			virtual ~ExtendedReportBlock() = default;
 
-			ExtendedReportBlock::Type GetType() const;
-
 		public:
 			virtual void Dump() const                 = 0;
 			virtual size_t Serialize(uint8_t* buffer) = 0;
 			virtual size_t GetSize() const            = 0;
+			ExtendedReportBlock::Type GetType() const;
 
 		protected:
 			Type type;
@@ -97,7 +96,7 @@ namespace RTC
 			std::vector<ExtendedReportBlock*> reports;
 		};
 
-		// Inline ExtendedReportBlock methods.
+		/* Inline ExtendedReportBlock instance methods. */
 
 		inline ExtendedReportBlock::ExtendedReportBlock(Type type) : type(type)
 		{
@@ -126,7 +125,7 @@ namespace RTC
 			this->ssrc = uint32_t{ htonl(ssrc) };
 		}
 
-		// Inline ExtendedReportPacket methods.
+		/* Inline ExtendedReportPacket instance methods. */
 
 		inline ExtendedReportPacket::ExtendedReportPacket() : Packet(Type::XR)
 		{
