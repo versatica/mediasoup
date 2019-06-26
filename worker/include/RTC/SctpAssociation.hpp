@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "json.hpp"
-#include "handles/Timer.hpp"
+// #include <usrsctp.h>
 
 using json = nlohmann::json;
 
@@ -14,7 +14,11 @@ namespace RTC
 	public:
 		class Listener
 		{
-			virtual void OnSctpMessageReceived(uint16_t streamId, const uint8_t* msg, size_t len) = 0;
+		public:
+			virtual void OnSctpAssociationSendData(
+			  RTC::SctpAssociation* sctpAssociation, const uint8_t* data, size_t len) = 0;
+			virtual void OnSctpAssociationMessageReceived(
+			  RTC::SctpAssociation* sctpAssociation, uint16_t streamId, const uint8_t* msg, size_t len) = 0;
 		};
 
 	public:
@@ -24,6 +28,11 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void ProcessSctpData(const uint8_t* data, size_t len);
+		void SendSctpMessage(const uint8_t* msg, size_t len);
+
+		/* Callbacks fired by usrsctp events. */
+	public:
+		void OnUsrSctpSendSctpData(void* buffer, size_t len);
 
 	private:
 		// Passed by argument.

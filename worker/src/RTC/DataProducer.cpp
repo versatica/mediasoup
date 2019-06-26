@@ -85,10 +85,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: account it for stats. Not sure if something
-		// else must be done.
+		// TODO: account it for msg stats.
 
-		// Pass it back to the transport.
 		this->listener->OnDataProducerSctpMessageReceived(this, msg, len);
 	}
 } // namespace RTC

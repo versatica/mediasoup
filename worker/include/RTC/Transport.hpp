@@ -161,18 +161,19 @@ namespace RTC
 	public:
 		void OnDataProducerSctpMessageReceived(
 		  RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) override;
-		void OnDataProducerSendSctpData(
-		  RTC::DataProducer* dataProducer, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
-		void OnDataConsumerSendSctpData(
-		  RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len) override;
+		void OnDataConsumerSendSctpMessage(
+		  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
 	public:
-		void OnSctpMessageReceived(uint16_t streamId, const uint8_t* msg, size_t len) override;
+		void OnSctpAssociationSendData(
+		  RTC::SctpAssociation* sctpAssociation, const uint8_t* data, size_t len) override;
+		void OnSctpAssociationMessageReceived(
+		  RTC::SctpAssociation* sctpAssociation, uint16_t streamId, const uint8_t* msg, size_t len) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:

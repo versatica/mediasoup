@@ -119,6 +119,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: account it for msg stats.
+
+		this->listener->OnDataConsumerSendSctpMessage(this, msg, len);
 	}
 } // namespace RTC

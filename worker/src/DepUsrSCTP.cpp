@@ -4,10 +4,28 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SctpAssociation.hpp"
+// #include <usrsctp.h>
 
 /* Static. */
 
 static constexpr size_t CheckerInterval{ 10 }; // In ms.
+
+/* Static methods for usrsctp global callbacks. */
+
+inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t tos, uint8_t setDf)
+{
+	// TODO: Ensure that this is feasible and we can associate a specific RTC::SctpAssociation
+	// into the addr argument somehow.
+	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(addr);
+
+	if (sctpAssociation == nullptr)
+		return -1;
+
+	sctpAssociation->OnUsrSctpSendSctpData(buffer, len);
+
+	return 0;
+}
 
 /* Static variables. */
 
@@ -23,6 +41,7 @@ void DepUsrSCTP::ClassInit()
 	MS_DEBUG_TAG(info, "usrsctp");
 
 	// TODO: Initialize usrsctp and pass the global and annoying outgoing packet callback.
+	// usrsctp_init(0, FOOOOO, nullptr);
 
 	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
 }
@@ -31,7 +50,8 @@ void DepUsrSCTP::ClassDestroy()
 {
 	MS_TRACE();
 
-	// TODO: Release usrsctp.
+	// TODO
+	// usrsctp_finish();
 
 	delete DepUsrSCTP::checker;
 }

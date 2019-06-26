@@ -1275,22 +1275,12 @@ namespace RTC
 		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, msg, len);
 	}
 
-	inline void Transport::OnDataProducerSendSctpData(
-	  RTC::DataProducer* dataProducer, const uint8_t* data, size_t len)
+	inline void Transport::OnDataConsumerSendSctpMessage(
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
-		// Pass it to the subclass.
-		UserOnSendSctpData(data, len);
-	}
-
-	inline void Transport::OnDataConsumerSendSctpData(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		// Pass it to the subclass.
-		UserOnSendSctpData(data, len);
+		this->sctpAssociation->SendSctpMessage(msg, len);
 	}
 
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
@@ -1307,7 +1297,17 @@ namespace RTC
 		delete dataConsumer;
 	}
 
-	inline void Transport::OnSctpMessageReceived(uint16_t streamId, const uint8_t* msg, size_t len)
+	inline void Transport::OnSctpAssociationSendData(
+	  RTC::SctpAssociation* /*sctpAssociation*/, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// Pass it to the subclass.
+		UserOnSendSctpData(data, len);
+	}
+
+	inline void Transport::OnSctpAssociationMessageReceived(
+	  RTC::SctpAssociation* /*sctpAssociation*/, uint16_t streamId, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 

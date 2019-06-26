@@ -17,8 +17,6 @@ namespace RTC
 		public:
 			virtual void OnDataProducerSctpMessageReceived(
 			  RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) = 0;
-			virtual void OnDataProducerSendSctpData(
-			  RTC::DataProducer* dataProducer, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:
