@@ -16,7 +16,10 @@ namespace RTC
 		if (!data.is_object())
 			MS_THROW_TYPE_ERROR("data is not an object");
 
-		auto jsonStreamIdIt = data.find("streamId");
+		auto jsonStreamIdIt          = data.find("streamId");
+		auto jsonOrderedIdIt         = data.find("ordered");
+		auto jsonMaxPacketLifeTimeIt = data.find("maxPacketLifeTime");
+		auto jsonMaxRetransmitsIt    = data.find("maxRetransmits");
 
 		// streamId is mandatory.
 		if (jsonStreamIdIt == data.end() || !jsonStreamIdIt->is_number_unsigned())
@@ -24,9 +27,17 @@ namespace RTC
 
 		this->streamId = jsonStreamIdIt->get<uint16_t>();
 
-		// TODO: Validate streamId range.
+		// ordered is optional.
+		if (jsonOrderedIdIt != data.end() && jsonOrderedIdIt->is_number_unsigned())
+			this->ordered = jsonOrderedIdIt->get<bool>();
 
-		// TODO: More.
+		// maxPacketLifeTime is optional.
+		if (jsonMaxPacketLifeTimeIt != data.end() && jsonMaxPacketLifeTimeIt->is_number_unsigned())
+			this->maxPacketLifeTime = jsonMaxPacketLifeTimeIt->get<uint32_t>();
+
+		// maxRetransmits is optional.
+		if (jsonMaxRetransmitsIt != data.end() && jsonMaxRetransmitsIt->is_number_unsigned())
+			this->maxRetransmits = jsonMaxRetransmitsIt->get<uint32_t>();
 	}
 
 	void SctpStreamParameters::FillJson(json& jsonObject) const
@@ -36,6 +47,13 @@ namespace RTC
 		// Add streamId.
 		jsonObject["streamId"] = this->streamId;
 
-		// TODO: More.
+		// Add ordered.
+		jsonObject["ordered"] = this->ordered;
+
+		// Add maxPacketLifeTime.
+		jsonObject["maxPacketLifeTime"] = this->maxPacketLifeTime;
+
+		// Add maxRetransmits.
+		jsonObject["maxRetransmits"] = this->maxRetransmits;
 	}
 } // namespace RTC

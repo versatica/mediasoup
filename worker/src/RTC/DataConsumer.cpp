@@ -53,7 +53,7 @@ namespace RTC
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::DATA_PRODUCER_DUMP:
+			case Channel::Request::MethodId::DATA_CONSUMER_DUMP:
 			{
 				json data = json::object();
 

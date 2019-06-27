@@ -23,7 +23,7 @@ namespace RTC
 		};
 
 	public:
-		SctpAssociation(Listener* listener, uint32_t sctpMaxMessageSize);
+		SctpAssociation(Listener* listener, uint16_t numSctpStreams, uint32_t maxSctpMessageSize);
 		~SctpAssociation();
 
 	public:
@@ -38,7 +38,8 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		uint32_t sctpMaxMessageSize{ 0 };
+		uint16_t numSctpStreams{ 65535 };
+		uint32_t maxSctpMessageSize{ 262144 };
 	};
 } // namespace RTC
 

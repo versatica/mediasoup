@@ -36,21 +36,36 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			auto jsonSctpMaxMessageSizeIt = data.find("sctpMaxMessageSize");
+			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
+			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
 
+			// numSctpStreams is mandatory.
 			// clang-format off
 			if (
-				jsonSctpMaxMessageSizeIt == data.end() ||
-				!jsonSctpMaxMessageSizeIt->is_number_unsigned()
+				jsonNumSctpStreamsIt == data.end() ||
+				!jsonNumSctpStreamsIt->is_number_unsigned()
 			)
 			// clang-format on
 			{
-				MS_THROW_TYPE_ERROR("wrong sctpMaxMessageSize (not a number)");
+				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not a number)");
 			}
 
-			uint32_t sctpMaxMessageSize = jsonSctpMaxMessageSizeIt->get<uint32_t>();
+			uint16_t numSctpStreams = jsonNumSctpStreamsIt->get<uint16_t>();
 
-			this->sctpAssociation = new RTC::SctpAssociation(this, sctpMaxMessageSize);
+			// maxSctpMessageSize is mandatory.
+			// clang-format off
+			if (
+				jsonMaxSctpMessageSizeIt == data.end() ||
+				!jsonMaxSctpMessageSizeIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
+			}
+
+			uint32_t maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<uint32_t>();
+
+			this->sctpAssociation = new RTC::SctpAssociation(this, numSctpStreams, maxSctpMessageSize);
 		}
 
 		// Create the RTCP timer.
