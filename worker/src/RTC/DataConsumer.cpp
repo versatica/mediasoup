@@ -44,7 +44,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		jsonArray.emplace_back(json::value_t::object);
+		auto& jsonObject = jsonArray[0];
+
+		// Add type.
+		jsonObject["type"] = "data-consumer";
+
+		// Add messagesSent.
+		jsonObject["messagesSent"] = this->messagesSent;
+
+		// Add bytesSent.
+		jsonObject["bytesSent"] = this->bytesSent;
 	}
 
 	void DataConsumer::HandleRequest(Channel::Request* request)
@@ -119,7 +129,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: account it for msg stats.
+		this->messagesSent++;
+		this->bytesSent += 1;
 
 		this->listener->OnDataConsumerSendSctpMessage(this, msg, len);
 	}

@@ -46,6 +46,10 @@ namespace RTC
 		RTC::SctpStreamParameters sctpStreamParameters;
 		bool transportConnected{ false };
 		bool dataProducerClosed{ false };
+		size_t messagesSent{ 0 };
+		size_t messagesReceived{ 0 };
+		size_t bytesSent{ 0 };
+		size_t bytesReceived{ 0 };
 	};
 
 	/* Inline methods. */

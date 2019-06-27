@@ -43,7 +43,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		jsonArray.emplace_back(json::value_t::object);
+		auto& jsonObject = jsonArray[0];
+
+		// Add type.
+		jsonObject["type"] = "data-producer";
+
+		// Add messagesReceived.
+		jsonObject["messagesReceived"] = this->messagesReceived;
+
+		// Add bytesReceived.
+		jsonObject["bytesReceived"] = this->bytesReceived;
 	}
 
 	void DataProducer::HandleRequest(Channel::Request* request)
@@ -85,7 +95,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: account it for msg stats.
+		this->messagesReceived++;
+		this->bytesReceived += 1;
 
 		this->listener->OnDataProducerSctpMessageReceived(this, msg, len);
 	}
