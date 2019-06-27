@@ -875,13 +875,6 @@ struct sctp_prstatus {
 /* First-come, first-serve */
 #define SCTP_SS_FIRST_COME          0x00000005
 
-/*
- * Socket event flags
- */
-#define SCTP_EVENT_READ		0x00000001
-#define SCTP_EVENT_WRITE	0x00000002
-#define SCTP_EVENT_ERROR	0x00000004
-
 /******************** System calls *************/
 
 struct socket;

@@ -14,6 +14,12 @@
 
       #SCTP_DEBUG", # Uncomment for SCTP debugging.
     ],
+    'direct_dependent_settings': {
+      'include_dirs': [
+      'usrsctplib',
+      'usrsctplib/netinet',
+      ],
+    },
     'include_dirs': [
       'usrsctplib',
       'usrsctplib/netinet',
