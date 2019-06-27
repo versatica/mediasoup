@@ -39,6 +39,7 @@
 #include <netinet/sctp_sysctl.h>
 #include <netinet/sctp_input.h>
 #include <netinet/sctp_peeloff.h>
+#include <netinet/sctp_callout.h>
 #include <netinet/sctp_crc32.h>
 #ifdef INET6
 #include <netinet6/sctp6_var.h>
@@ -3518,6 +3519,11 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 		sctp_m_freem(m);
 	}
 	return;
+}
+
+void usrsctp_fire_timer(int delta)
+{
+	sctp_handle_tick(delta);
 }
 
 int

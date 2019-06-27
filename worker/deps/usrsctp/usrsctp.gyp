@@ -19,6 +19,12 @@
       '__Userspace__',
       # 'SCTP_DEBUG', # Uncomment for SCTP debugging.
     ],
+    'direct_dependent_settings': {
+      'include_dirs': [
+        'usrsctplib',
+        'usrsctplib/netinet',
+      ],
+    },
     'include_dirs': [
       'usrsctp/usrsctplib',
       # 'usrsctp/usrsctplib/netinet', # Not needed (it seems).
@@ -38,7 +44,7 @@
         'defines': [
           '__Userspace_os_Linux',
           '_GNU_SOURCE',
-        ]
+        ],
       }],
       ['OS in "mac ios"', {
         'defines': [

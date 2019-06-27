@@ -49,6 +49,7 @@
 #include <ws2tcpip.h>
 #endif
 #include <usrsctp.h>
+#include "programs_helper.h"
 
 #define MAX_PACKET_SIZE (1<<16)
 #define BUFFER_SIZE 80
@@ -223,16 +224,6 @@ conn_output(void *addr, void *buf, size_t length, uint8_t tos, uint8_t set_df)
 	}
 }
 
-void
-debug_printf(const char *format, ...)
-{
-	va_list ap;
-
-	va_start(ap, format);
-	vprintf(format, ap);
-	va_end(ap);
-}
-
 /* Usage: st_client local_addr local_port remote_addr remote_port remote_sctp_port */
 int
 main(int argc, char *argv[])
@@ -356,7 +347,9 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-    connecting = 1;
+	connecting = 1;
 
-	return handle_packets(fd, s, sconn.sconn_addr);
+	handle_packets(fd, s, sconn.sconn_addr);
+
+	return 0;
 }

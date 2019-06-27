@@ -141,7 +141,7 @@ http_client_upcall:
 
 st_client:
 	$(CC) $(CFLAGS) $(CVARSDLL) -c st_client.c
-	link -out:st_client.exe st_client.obj $(LINKFLAGS)
+	link -out:st_client.exe st_client.obj programs_helper.obj $(LINKFLAGS)
 
 clean:
 	del /F client.exe

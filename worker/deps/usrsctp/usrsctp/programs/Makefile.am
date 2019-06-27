@@ -122,5 +122,5 @@ http_client_SOURCES = programs_helper.c http_client.c
 http_client_LDADD = ../usrsctplib/libusrsctp.la
 http_client_upcall_SOURCES = programs_helper.c http_client_upcall.c
 http_client_upcall_LDADD = ../usrsctplib/libusrsctp.la
-st_client_SOURCES = st_client.c
+st_client_SOURCES = programs_helper.c st_client.c
 st_client_LDADD = ../usrsctplib/libusrsctp.la
