@@ -52,6 +52,9 @@ namespace RTC
 
 			uint16_t numSctpStreams = jsonNumSctpStreamsIt->get<uint16_t>();
 
+			if (numSctpStreams > 65535)
+				MS_THROW_TYPE_ERROR("numSctpStreams must not be greater than 65535");
+
 			// maxSctpMessageSize is mandatory.
 			// clang-format off
 			if (
