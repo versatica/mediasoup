@@ -74,7 +74,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_PRODUCER_GET_STATS:
+			case Channel::Request::MethodId::DATA_CONSUMER_GET_STATS:
 			{
 				json data = json::array();
 
