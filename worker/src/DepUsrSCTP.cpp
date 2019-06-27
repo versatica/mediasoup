@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/SctpAssociation.hpp"
-// #include <usrsctp.h>
+#include <usrsctp.h>
 
 /* Static. */
 
@@ -40,8 +40,7 @@ void DepUsrSCTP::ClassInit()
 
 	MS_DEBUG_TAG(info, "usrsctp");
 
-	// TODO
-	// usrsctp_init(0, onSendSctpData, nullptr);
+	usrsctp_init_nothreads(0, onSendSctpData, nullptr);
 
 	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
 }
@@ -50,8 +49,7 @@ void DepUsrSCTP::ClassDestroy()
 {
 	MS_TRACE();
 
-	// TODO
-	// usrsctp_finish();
+	usrsctp_finish();
 
 	delete DepUsrSCTP::checker;
 }
