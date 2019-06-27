@@ -6,7 +6,8 @@
       'deps/netstring/netstring.gyp:netstring',
       'deps/libuv/uv.gyp:libuv',
       'deps/openssl/openssl.gyp:openssl',
-      'deps/libsrtp/libsrtp.gyp:libsrtp'
+      'deps/libsrtp/libsrtp.gyp:libsrtp',
+      'deps/usrsctp/usrsctp.gyp:usrsctp'
     ],
     'sources':
     [

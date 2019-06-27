@@ -97,6 +97,15 @@ function get_libsrtp()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
+function get_usrsctp()
+{
+	GIT_REPO="https://github.com/versatica/usrsctp.git"
+	GIT_TAG="master"
+	DEST="deps/usrsctp"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 function get_catch()
 {
 	GIT_REPO="https://github.com/catchorg/Catch2.git"
@@ -172,6 +181,9 @@ case "${DEP}" in
 		;;
 	libsrtp)
 		get_libsrtp
+		;;
+	usrsctp)
+		get_usrsctp
 		;;
 	catch)
 		get_catch
