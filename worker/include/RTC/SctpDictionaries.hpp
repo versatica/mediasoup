@@ -20,8 +20,8 @@ namespace RTC
 	public:
 		uint16_t streamId{ 0 };
 		bool ordered{ true };
-		uint32_t maxPacketLifeTime{ 65535 };
-		uint32_t maxRetransmits{ 0 };
+		uint16_t maxPacketLifeTime{ 0 };
+		uint16_t maxRetransmits{ 0 };
 	};
 } // namespace RTC
 

@@ -33,11 +33,11 @@ namespace RTC
 
 		// maxPacketLifeTime is optional.
 		if (jsonMaxPacketLifeTimeIt != data.end() && jsonMaxPacketLifeTimeIt->is_number_unsigned())
-			this->maxPacketLifeTime = jsonMaxPacketLifeTimeIt->get<uint32_t>();
+			this->maxPacketLifeTime = jsonMaxPacketLifeTimeIt->get<uint16_t>();
 
 		// maxRetransmits is optional.
 		if (jsonMaxRetransmitsIt != data.end() && jsonMaxRetransmitsIt->is_number_unsigned())
-			this->maxRetransmits = jsonMaxRetransmitsIt->get<uint32_t>();
+			this->maxRetransmits = jsonMaxRetransmitsIt->get<uint16_t>();
 	}
 
 	void SctpStreamParameters::FillJson(json& jsonObject) const
@@ -51,9 +51,14 @@ namespace RTC
 		jsonObject["ordered"] = this->ordered;
 
 		// Add maxPacketLifeTime.
-		jsonObject["maxPacketLifeTime"] = this->maxPacketLifeTime;
+		if (this->maxPacketLifeTime)
+			jsonObject["maxPacketLifeTime"] = this->maxPacketLifeTime;
 
 		// Add maxRetransmits.
-		jsonObject["maxRetransmits"] = this->maxRetransmits;
+		if (this->maxRetransmits)
+			jsonObject["maxRetransmits"] = this->maxRetransmits;
+
+		// Add reliable.
+		jsonObject["reliable"] = !this->maxPacketLifeTime && !this->maxRetransmits;
 	}
 } // namespace RTC
