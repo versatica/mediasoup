@@ -3,7 +3,6 @@
 
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include <usrsctp.h>
 
