@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
 #include "Utils.hpp"
-#include "RTC/RtpDataCounter.hpp"
+#include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
 #include <vector>
 

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTP_DATA_COUNTER_HPP
-#define MS_RTC_RTP_DATA_COUNTER_HPP
+#ifndef MS_RTC_RATE_CALCULATOR_HPP
+#define MS_RTC_RATE_CALCULATOR_HPP
 
 #include "common.hpp"
 #include "DepLibUV.hpp"

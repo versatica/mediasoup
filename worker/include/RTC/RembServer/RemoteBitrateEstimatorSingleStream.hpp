@@ -12,11 +12,11 @@
 #define MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_HPP
 
 #include "common.hpp"
+#include "RTC/RateCalculator.hpp"
 #include "RTC/RembServer/AimdRateControl.hpp"
 #include "RTC/RembServer/InterArrival.hpp"
 #include "RTC/RembServer/OveruseEstimator.hpp"
 #include "RTC/RembServer/RemoteBitrateEstimator.hpp"
-#include "RTC/RtpDataCounter.hpp"
 #include <cassert>
 #include <map>
 #include <memory>
