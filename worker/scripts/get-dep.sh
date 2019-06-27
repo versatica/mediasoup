@@ -101,7 +101,7 @@ function get_usrsctp()
 {
 	GIT_REPO="https://github.com/versatica/usrsctp.git"
 	GIT_TAG="master"
-	DEST="deps/usrsctp"
+	DEST="deps/usrsctp/usrsctp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
