@@ -199,11 +199,14 @@ namespace RTC
 
 	inline bool DtlsTransport::IsDtls(const uint8_t* data, size_t len)
 	{
+		// clang-format off
 		return (
-		  // Minimum DTLS record length is 13 bytes.
-		  (len >= 13) &&
-		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		  (data[0] > 19 && data[0] < 64));
+			// Minimum DTLS record length is 13 bytes.
+			(len >= 13) &&
+			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+			(data[0] > 19 && data[0] < 64)
+		);
+		// clang-format on
 	}
 
 	/* Inline instance methods. */

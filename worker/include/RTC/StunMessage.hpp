@@ -117,14 +117,17 @@ namespace RTC
 
 	inline bool StunMessage::IsStun(const uint8_t* data, size_t len)
 	{
+		// clang-format off
 		return (
-		  // STUN headers are 20 bytes.
-		  (len >= 20) &&
-		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		  (data[0] < 3) &&
-		  // Magic cookie must match.
-		  (data[4] == StunMessage::magicCookie[0]) && (data[5] == StunMessage::magicCookie[1]) &&
-		  (data[6] == StunMessage::magicCookie[2]) && (data[7] == StunMessage::magicCookie[3]));
+			// STUN headers are 20 bytes.
+			(len >= 20) &&
+			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+			(data[0] < 3) &&
+			// Magic cookie must match.
+			(data[4] == StunMessage::magicCookie[0]) && (data[5] == StunMessage::magicCookie[1]) &&
+			(data[6] == StunMessage::magicCookie[2]) && (data[7] == StunMessage::magicCookie[3])
+		);
+		// clang-format on
 	}
 
 	/* Inline instance methods. */

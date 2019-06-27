@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
+#include "Utils.hpp"
 #include "json.hpp"
 #include "RTC/DataConsumer.hpp"
 // #include <usrsctp.h>
@@ -23,6 +24,9 @@ namespace RTC
 		};
 
 	public:
+		static bool IsSctp(const uint8_t* data, size_t len);
+
+	public:
 		SctpAssociation(Listener* listener, uint16_t numSctpStreams, uint32_t maxSctpMessageSize);
 		~SctpAssociation();
 
@@ -41,6 +45,20 @@ namespace RTC
 		uint16_t numSctpStreams{ 65535 };
 		uint32_t maxSctpMessageSize{ 262144 };
 	};
+
+	/* Inline static methods. */
+
+	inline bool SctpAssociation::IsSctp(const uint8_t* data, size_t len)
+	{
+		// clang-format off
+		return (
+			(len >= 12) &&
+			// Must have Source Port Number and Destination Port Number set to 5000 (hack).
+			(Utils::Byte::Get2Bytes(data, 0) == 5000) &&
+			(Utils::Byte::Get2Bytes(data, 2) == 5000)
+		);
+		// clang-format on
+	}
 } // namespace RTC
 
 #endif

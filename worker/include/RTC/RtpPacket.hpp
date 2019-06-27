@@ -208,12 +208,15 @@ namespace RTC
 
 		auto header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
+		// clang-format off
 		return (
-		  (len >= sizeof(Header)) &&
-		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		  (data[0] > 127 && data[0] < 192) &&
-		  // RTP Version must be 2.
-		  (header->version == 2));
+			(len >= sizeof(Header)) &&
+			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+			(data[0] > 127 && data[0] < 192) &&
+			// RTP Version must be 2.
+			(header->version == 2)
+		);
+		// clang-format on
 	}
 
 	/* Inline instance methods. */

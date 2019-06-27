@@ -1615,8 +1615,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
-
 		if (!this->sctpAssociation)
 		{
 			MS_DEBUG_TAG(sctp, "ignoring DTLS application data (SCTP not enabled)");

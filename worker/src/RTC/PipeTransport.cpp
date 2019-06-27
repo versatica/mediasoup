@@ -330,6 +330,19 @@ namespace RTC
 		{
 			OnRtpDataRecv(tuple, data, len);
 		}
+		// Check if it's SCTP.
+		else if (RTC::SctpAssociation::IsSctp(data, len))
+		{
+			if (!this->sctpAssociation)
+			{
+				MS_DEBUG_TAG(sctp, "ignoring SCTP packet (SCTP not enabled)");
+
+				return;
+			}
+
+			// Pass it to the SctpAssociation.
+			this->sctpAssociation->ProcessSctpData(data, len);
+		}
 		else
 		{
 			MS_WARN_DEV("ignoring received packet of unknown type");
