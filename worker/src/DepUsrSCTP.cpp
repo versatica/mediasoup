@@ -109,5 +109,6 @@ void DepUsrSCTP::Checker::OnTimer(Timer* timer)
 {
 	MS_TRACE();
 
-	// TODO: Call the usrctp special function to blablabla.
+	// TODO: what is delta???
+	// usrsctp_fire_timer(int delta);
 }
