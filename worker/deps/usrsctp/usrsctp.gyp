@@ -10,15 +10,14 @@
       'SCTP_PROCESS_LEVEL_LOCKS',
       'SCTP_SIMPLE_ALLOCATOR',
       'SCTP_USE_OPENSSL_SHA1',
-      "__Userspace__",
-
-      #SCTP_DEBUG", # Uncomment for SCTP debugging.
+      '__Userspace__',
+      #SCTP_DEBUG', # Uncomment for SCTP debugging.
     ],
     'direct_dependent_settings': {
       'include_dirs': [
       'usrsctplib',
       'usrsctplib/netinet',
-      ],
+      ]
     },
     'include_dirs': [
       'usrsctplib',
@@ -32,7 +31,7 @@
       'OTHER_CFLAGS': [
         '-UINET',
         '-UINET6',
-      ],
+      ]
     },
     'conditions': [
       ['OS in "linux android"', {
@@ -57,23 +56,23 @@
           ],
           'OTHER_CFLAGS': [
             '-U__APPLE__',
-            "-Wno-deprecated-declarations",
+            '-Wno-deprecated-declarations',
             # atomic_init in user_atomic.h is a static function in a header.
-            "-Wno-unused-function",
-          ],
+            '-Wno-unused-function',
+          ]
         }
       }],
       ['OS=="win"', {
         'defines': [
           '__Userspace_os_Windows'
-        ],
+        ]
       }],
       ['OS!="win"', {
         'defines': [
           'NON_WINDOWS_DEFINE'
-        ],
-      }],
-    ],
+        ]
+      }]
+    ]
   },
   'targets': [
     {
