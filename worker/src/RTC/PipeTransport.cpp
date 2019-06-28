@@ -13,7 +13,7 @@ namespace RTC
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PipeTransport::PipeTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener, data)
+	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
 
@@ -50,10 +50,15 @@ namespace RTC
 		{
 			// This may throw.
 			this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+
+			// May create SCTP association.
+			CreateSctpAssociation(data);
 		}
 		catch (const MediaSoupError& error)
 		{
 			// Must delete everything since the destructor won't be called.
+
+			DestroySctpAssociation();
 
 			delete this->udpSocket;
 			this->udpSocket = nullptr;
@@ -65,6 +70,9 @@ namespace RTC
 	PipeTransport::~PipeTransport()
 	{
 		MS_TRACE();
+
+		// Must delete the SCTP association first since it will generate SCTP packets.
+		DestroySctpAssociation();
 
 		delete this->udpSocket;
 
@@ -96,9 +104,6 @@ namespace RTC
 			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
 			(*jsonTupleIt)["protocol"]  = "udp";
 		}
-
-		// Add rtpListener.
-		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
 	void PipeTransport::FillJsonStats(json& jsonArray)

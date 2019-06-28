@@ -35,7 +35,7 @@ namespace RTC
 	/* Instance methods. */
 
 	WebRtcTransport::WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener, data)
+	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
 
@@ -216,10 +216,15 @@ namespace RTC
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
+
+			// May create SCTP association.
+			CreateSctpAssociation(data);
 		}
 		catch (const MediaSoupError& error)
 		{
 			// Must delete everything since the destructor won't be called.
+
+			DestroySctpAssociation();
 
 			delete this->dtlsTransport;
 			this->dtlsTransport = nullptr;
@@ -252,6 +257,9 @@ namespace RTC
 	WebRtcTransport::~WebRtcTransport()
 	{
 		MS_TRACE();
+
+		// Must delete the SCTP association first since it will generate SCTP packets.
+		DestroySctpAssociation();
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
@@ -411,9 +419,6 @@ namespace RTC
 
 		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
 			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
-
-		// Add rtpListener.
-		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
 	void WebRtcTransport::FillJsonStats(json& jsonArray)

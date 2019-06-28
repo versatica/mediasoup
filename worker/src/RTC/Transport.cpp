@@ -21,52 +21,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(const std::string& id, Listener* listener, json& data)
-	  : id(id), listener(listener)
+	Transport::Transport(const std::string& id, Listener* listener) : id(id), listener(listener)
 	{
 		MS_TRACE();
-
-		auto jsonEnableSctpIt = data.find("enableSctp");
-
-		// clang-format off
-		if (
-			jsonEnableSctpIt != data.end() &&
-			jsonEnableSctpIt->is_boolean() &&
-			jsonEnableSctpIt->get<bool>()
-		)
-		// clang-format on
-		{
-			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
-			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
-
-			// numSctpStreams is mandatory.
-			// clang-format off
-			if (
-				jsonNumSctpStreamsIt == data.end() ||
-				!jsonNumSctpStreamsIt->is_number_unsigned()
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not a number)");
-			}
-
-			uint16_t numSctpStreams = jsonNumSctpStreamsIt->get<uint16_t>();
-
-			// maxSctpMessageSize is mandatory.
-			// clang-format off
-			if (
-				jsonMaxSctpMessageSizeIt == data.end() ||
-				!jsonMaxSctpMessageSizeIt->is_number_unsigned()
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
-			}
-
-			uint32_t maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<uint32_t>();
-
-			this->sctpAssociation = new RTC::SctpAssociation(this, numSctpStreams, maxSctpMessageSize);
-		}
 
 		// Create the RTCP timer.
 		this->rtcpTimer = new Timer(this);
@@ -114,9 +71,6 @@ namespace RTC
 			delete dataConsumer;
 		}
 		this->mapDataConsumers.clear();
-
-		// Delete SctpAssociation.
-		delete this->sctpAssociation;
 
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
@@ -245,9 +199,16 @@ namespace RTC
 			jsonDataConsumerIdsIt->emplace_back(dataConsumerId);
 		}
 
+		// Add rtpListener.
+		this->rtpListener.FillJson(jsonObject["rtpListener"]);
+
 		// Add sctpParameters.
 		if (this->sctpAssociation)
 			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
+
+		// Add sctpListener.
+		if (this->sctpAssociation)
+			this->sctpListener.FillJson(jsonObject["sctpListener"]);
 	}
 
 	void Transport::HandleRequest(Channel::Request* request)
@@ -708,6 +669,61 @@ namespace RTC
 		}
 	}
 
+	void Transport::CreateSctpAssociation(json& data)
+	{
+		MS_TRACE();
+
+		auto jsonEnableSctpIt = data.find("enableSctp");
+
+		// clang-format off
+		if (
+			jsonEnableSctpIt != data.end() &&
+			jsonEnableSctpIt->is_boolean() &&
+			jsonEnableSctpIt->get<bool>()
+		)
+		// clang-format on
+		{
+			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
+			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
+
+			// numSctpStreams is mandatory.
+			// clang-format off
+			if (
+				jsonNumSctpStreamsIt == data.end() ||
+				!jsonNumSctpStreamsIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not a number)");
+			}
+
+			uint16_t numSctpStreams = jsonNumSctpStreamsIt->get<uint16_t>();
+
+			// maxSctpMessageSize is mandatory.
+			// clang-format off
+			if (
+				jsonMaxSctpMessageSizeIt == data.end() ||
+				!jsonMaxSctpMessageSizeIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
+			}
+
+			uint32_t maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<uint32_t>();
+
+			this->sctpAssociation = new RTC::SctpAssociation(this, numSctpStreams, maxSctpMessageSize);
+		}
+	}
+
+	void Transport::DestroySctpAssociation()
+	{
+		MS_TRACE();
+
+		if (this->sctpAssociation)
+			delete this->sctpAssociation;
+	}
+
 	void Transport::Connected()
 	{
 		MS_TRACE();
@@ -731,9 +747,10 @@ namespace RTC
 			dataConsumer->TransportConnected();
 		}
 
+		// TODO: Enable it.
 		// Tell the SctpAssociation.
-		if (this->sctpAssociation)
-			this->sctpAssociation->Run();
+		// if (this->sctpAssociation)
+		// 	this->sctpAssociation->Run();
 	}
 
 	void Transport::Disconnected()

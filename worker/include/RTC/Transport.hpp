@@ -82,7 +82,7 @@ namespace RTC
 		};
 
 	public:
-		Transport(const std::string& id, Listener* listener, json& data);
+		Transport(const std::string& id, Listener* listener);
 		virtual ~Transport();
 
 	public:
@@ -96,6 +96,8 @@ namespace RTC
 
 	protected:
 		// Must be called from the subclass.
+		void CreateSctpAssociation(json& data);
+		void DestroySctpAssociation();
 		void Connected();
 		void Disconnected();
 		void DataReceived(size_t len);
