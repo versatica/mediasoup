@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "DepUsrSCTP.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include <usrsctp.h>
@@ -93,6 +94,8 @@ void DepUsrSCTP::Checker::Start()
 
 	MS_DEBUG_TAG(sctp, "usrsctp periodic checker started");
 
+	this->lastCalledAt = 0;
+
 	this->timer->Start(CheckerInterval, CheckerInterval);
 }
 
@@ -102,6 +105,8 @@ void DepUsrSCTP::Checker::Stop()
 
 	MS_DEBUG_TAG(sctp, "usrsctp periodic checker stopped");
 
+	this->lastCalledAt = 0;
+
 	this->timer->Stop();
 }
 
@@ -109,6 +114,10 @@ void DepUsrSCTP::Checker::OnTimer(Timer* timer)
 {
 	MS_TRACE();
 
-	// TODO: what is delta???
-	// usrsctp_fire_timer(int delta);
+	auto now  = DepLibUV::GetTime();
+	int delta = this->lastCalledAt ? static_cast<int>(now - this->lastCalledAt) : 0;
+
+	usrsctp_fire_timer(delta);
+
+	this->lastCalledAt = now;
 }

@@ -23,6 +23,7 @@ private:
 
 	private:
 		Timer* timer{ nullptr };
+		uint64_t lastCalledAt{ 0 };
 	};
 
 public:
