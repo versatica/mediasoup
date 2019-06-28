@@ -238,7 +238,7 @@ namespace RTC
 		jsonObject["dataConsumerIds"] = json::array();
 		auto jsonDataConsumerIdsIt    = jsonObject.find("dataConsumerIds");
 
-		for (auto& kv : this->mapConsumers)
+		for (auto& kv : this->mapDataConsumers)
 		{
 			auto& dataConsumerId = kv.first;
 
@@ -730,6 +730,10 @@ namespace RTC
 
 			dataConsumer->TransportConnected();
 		}
+
+		// Tell the SctpAssociation.
+		if (this->sctpAssociation)
+			this->sctpAssociation->Run();
 	}
 
 	void Transport::Disconnected()
