@@ -80,7 +80,6 @@ test('router.createWebRtcTransport() succeeds', async () =>
 			],
 			enableTcp          : true,
 			preferUdp          : true,
-			enableTcp          : true,
 			enableSctp         : true,
 			numSctpStreams     : 2048,
 			maxSctpMessageSize : 1000000,
