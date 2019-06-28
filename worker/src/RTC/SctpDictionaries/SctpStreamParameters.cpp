@@ -31,7 +31,7 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("streamId must not be greater than 65534");
 
 		// ordered is optional.
-		if (jsonOrderedIdIt != data.end() && jsonOrderedIdIt->is_number_unsigned())
+		if (jsonOrderedIdIt != data.end() && jsonOrderedIdIt->is_boolean())
 			this->ordered = jsonOrderedIdIt->get<bool>();
 
 		// maxPacketLifeTime is optional.

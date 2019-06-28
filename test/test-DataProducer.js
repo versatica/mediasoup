@@ -6,8 +6,8 @@ expect.extend({ toBeType });
 
 let worker;
 let router;
-let webRtcTransport;
-let plainRtpTransport;
+let transport1;
+let transport2;
 let dataProducer1;
 let dataProducer2;
 
@@ -15,12 +15,12 @@ beforeAll(async () =>
 {
 	worker = await createWorker();
 	router = await worker.createRouter();
-	webRtcTransport = await router.createWebRtcTransport(
+	transport1 = await router.createWebRtcTransport(
 		{
 			listenIps  : [ '127.0.0.1' ],
 			enableSctp : true
 		});
-	plainRtpTransport = await router.createPlainRtpTransport(
+	transport2 = await router.createPlainRtpTransport(
 		{
 			listenIp   : '127.0.0.1',
 			enableSctp : true
@@ -29,13 +29,13 @@ beforeAll(async () =>
 
 afterAll(() => worker.close());
 
-test('webRtcTransport.produceData() succeeds', async () =>
+test('transport1.produceData() succeeds', async () =>
 {
 	const onObserverNewDataProducer = jest.fn();
 
-	webRtcTransport.observer.once('newdataproducer', onObserverNewDataProducer);
+	transport1.observer.once('newdataproducer', onObserverNewDataProducer);
 
-	dataProducer1 = await webRtcTransport.produceData(
+	dataProducer1 = await transport1.produceData(
 		{
 			sctpStreamParameters :
 			{
@@ -69,23 +69,23 @@ test('webRtcTransport.produceData() succeeds', async () =>
 				mapDataConsumerIdDataProducerId  : {}
 			});
 
-	await expect(webRtcTransport.dump())
+	await expect(transport1.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : webRtcTransport.id,
+				id              : transport1.id,
 				dataProducerIds : [ dataProducer1.id ],
 				dataConsumerIds : []
 			});
 }, 2000);
 
-test('plainRtpTransport.produceData() succeeds', async () =>
+test('transport2.produceData() succeeds', async () =>
 {
 	const onObserverNewDataProducer = jest.fn();
 
-	plainRtpTransport.observer.once('newdataproducer', onObserverNewDataProducer);
+	transport2.observer.once('newdataproducer', onObserverNewDataProducer);
 
-	dataProducer2 = await plainRtpTransport.produceData(
+	dataProducer2 = await transport2.produceData(
 		{
 			sctpStreamParameters :
 			{
@@ -119,24 +119,24 @@ test('plainRtpTransport.produceData() succeeds', async () =>
 				mapDataConsumerIdDataProducerId  : {}
 			});
 
-	await expect(plainRtpTransport.dump())
+	await expect(transport2.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : plainRtpTransport.id,
+				id              : transport2.id,
 				dataProducerIds : [ dataProducer2.id ],
 				dataConsumerIds : []
 			});
 }, 2000);
 
-test('webRtcTransport.produceData() with wrong arguments rejects with TypeError', async () =>
+test('transport1.produceData() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(webRtcTransport.produceData({}))
+	await expect(transport1.produceData({}))
 		.rejects
 		.toThrow(TypeError);
 
 	// Missing or empty sctpStreamParameters.streamId.
-	await expect(webRtcTransport.produceData(
+	await expect(transport1.produceData(
 		{
 			sctpStreamParameters : { foo: 'foo' }
 		}))
@@ -146,7 +146,7 @@ test('webRtcTransport.produceData() with wrong arguments rejects with TypeError'
 
 test('transport.produceData() with already used streamId rejects with Error', async () =>
 {
-	await expect(webRtcTransport.produceData(
+	await expect(transport1.produceData(
 		{
 			sctpStreamParameters :
 			{
@@ -232,11 +232,11 @@ test('dataProducer.close() succeeds', async () =>
 				mapDataConsumerIdDataProducerId  : {}
 			});
 
-	await expect(webRtcTransport.dump())
+	await expect(transport1.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : webRtcTransport.id,
+				id              : transport1.id,
 				dataProducerIds : [],
 				dataConsumerIds : []
 			});
@@ -262,7 +262,7 @@ test('DataProducer emits "transportclose" if Transport is closed', async () =>
 	await new Promise((resolve) =>
 	{
 		dataProducer2.on('transportclose', resolve);
-		plainRtpTransport.close();
+		transport2.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
