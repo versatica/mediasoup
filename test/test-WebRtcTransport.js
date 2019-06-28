@@ -78,9 +78,13 @@ test('router.createWebRtcTransport() succeeds', async () =>
 				{ ip: '0.0.0.0', announcedIp: '9.9.9.2' },
 				{ ip: '127.0.0.1', announcedIp: null }
 			],
-			enableTcp : true,
-			preferUdp : true,
-			appData   : { foo: 'bar' }
+			enableTcp          : true,
+			preferUdp          : true,
+			enableTcp          : true,
+			enableSctp         : true,
+			numSctpStreams     : 2048,
+			maxSctpMessageSize : 1000000,
+			appData            : { foo: 'bar' }
 		});
 
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
@@ -93,6 +97,8 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(transport1.iceParameters.iceLite).toBe(true);
 	expect(transport1.iceParameters.usernameFragment).toBeType('string');
 	expect(transport1.iceParameters.password).toBeType('string');
+	expect(transport1.sctpParameters).toStrictEqual(
+		{ maxMessageSize: 1000000, numStreams: 2048, port: 5000 });
 	expect(transport1.iceCandidates).toBeType('array');
 	expect(transport1.iceCandidates.length).toBe(6);
 
@@ -147,6 +153,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(data1.iceSelectedTuple).toEqual(transport1.iceSelectedTuple);
 	expect(data1.dtlsParameters).toEqual(transport1.dtlsParameters);
 	expect(data1.dtlsState).toBe(transport1.dtlsState);
+	expect(data1.sctpParameters).toEqual(transport1.sctpParameters);
 	expect(data1.rtpHeaderExtensions).toBeType('object');
 	expect(data1.rtpListener).toBeType('object');
 
@@ -180,6 +187,15 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 		{
 			listenIps : [ '127.0.0.1' ],
 			appData   : 'NOT-AN-OBJECT'
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(router.createWebRtcTransport(
+		{
+			listenIps      : [ '127.0.0.1' ],
+			enableSctp     : true,
+			numSctpStreams : 'foo'
 		}))
 		.rejects
 		.toThrow(TypeError);

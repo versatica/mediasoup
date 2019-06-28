@@ -73,9 +73,10 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	// Create a separate transport here.
 	const transport1 = await router.createPlainRtpTransport(
 		{
-			listenIp : { ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-			rtcpMux  : true,
-			appData  : { foo: 'bar' }
+			listenIp   : { ip: '127.0.0.1', announcedIp: '9.9.9.1' },
+			rtcpMux    : true,
+			enableSctp : true,
+			appData    : { foo: 'bar' }
 		});
 
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
@@ -88,6 +89,8 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(transport1.tuple.localPort).toBeType('number');
 	expect(transport1.tuple.protocol).toBe('udp');
 	expect(transport1.rtcpTuple).toBe(undefined);
+	expect(transport1.sctpParameters).toStrictEqual(
+		{ maxMessageSize: 262144, numStreams: 65535, port: 5000 });
 
 	const data1 = await transport1.dump();
 
@@ -96,6 +99,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(data1.consumerIds).toEqual([]);
 	expect(data1.tuple).toEqual(transport1.tuple);
 	expect(data1.rtcpTuple).toEqual(transport1.rtcpTuple);
+	expect(data1.sctpParameters).toEqual(transport1.sctpParameters);
 	expect(data1.rtpHeaderExtensions).toBeType('object');
 	expect(data1.rtpListener).toBeType('object');
 
@@ -123,6 +127,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(transport2.rtcpTuple.localIp).toBe('127.0.0.1');
 	expect(transport2.rtcpTuple.localPort).toBeType('number');
 	expect(transport2.rtcpTuple.protocol).toBe('udp');
+	expect(transport2.sctpParameters).toBe(undefined);
 
 	const data2 = await transport2.dump();
 

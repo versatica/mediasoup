@@ -69,12 +69,14 @@ test('worker.createRouter() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
-				transportIds             : [],
-				rtpObserverIds           : [],
-				mapProducerIdConsumerIds : {},
-				mapConsumerIdProducerId  : {},
-				mapProducerIdObserverIds : {}
+				id                               : router.id,
+				transportIds                     : [],
+				rtpObserverIds                   : [],
+				mapProducerIdConsumerIds         : {},
+				mapConsumerIdProducerId          : {},
+				mapProducerIdObserverIds         : {},
+				mapDataProducerIdDataConsumerIds : {},
+				mapDataConsumerIdDataProducerId  : {}
 			});
 
 	// Private API.
