@@ -722,6 +722,14 @@ namespace RTC
 
 			consumer->TransportConnected();
 		}
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->TransportConnected();
+		}
 	}
 
 	void Transport::Disconnected()
@@ -730,6 +738,22 @@ namespace RTC
 
 		// Stop the RTCP timer.
 		this->rtcpTimer->Stop();
+
+		// Tell all Consumers.
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+
+			consumer->TransportDisconnected();
+		}
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->TransportDisconnected();
+		}
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)

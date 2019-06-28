@@ -151,6 +151,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (!IsActive())
+			return;
+
 		this->messagesSent++;
 		this->bytesSent += 1;
 
