@@ -15,12 +15,22 @@ namespace RTC
 		MS_TRACE();
 
 		auto jsonSctpStreamParametersIt = data.find("sctpStreamParameters");
+		auto jsonLabelIt                = data.find("label");
+		auto jsonProtocolIt             = data.find("protocol");
 
 		if (jsonSctpStreamParametersIt == data.end() || !jsonSctpStreamParametersIt->is_object())
+		{
 			MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
+		}
 
 		// This may throw.
 		this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+
+		if (jsonLabelIt != data.end() && jsonLabelIt->is_string())
+			this->label = jsonLabelIt->get<std::string>();
+
+		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
+			this->protocol = jsonProtocolIt->get<std::string>();
 	}
 
 	DataProducer::~DataProducer()
@@ -37,6 +47,12 @@ namespace RTC
 
 		// Add sctpStreamParameters.
 		this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+
+		// Add label.
+		jsonObject["label"] = this->label;
+
+		// Add protocol.
+		jsonObject["protocol"] = this->protocol;
 	}
 
 	void DataProducer::FillJsonStats(json& jsonArray) const
@@ -48,6 +64,12 @@ namespace RTC
 
 		// Add type.
 		jsonObject["type"] = "data-producer";
+
+		// Add label.
+		jsonObject["label"] = this->label;
+
+		// Add protocol.
+		jsonObject["protocol"] = this->protocol;
 
 		// Add messagesReceived.
 		jsonObject["messagesReceived"] = this->messagesReceived;

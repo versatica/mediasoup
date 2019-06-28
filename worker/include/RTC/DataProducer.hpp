@@ -39,6 +39,8 @@ namespace RTC
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.
 		RTC::SctpStreamParameters sctpStreamParameters;
+		std::string label;
+		std::string protocol;
 		size_t messagesReceived{ 0 };
 		size_t bytesReceived{ 0 };
 	};
