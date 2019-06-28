@@ -1350,7 +1350,7 @@ namespace RTC
 
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
-			MS_WARN_TAG(sctp, "cannot send SCTP data (DTLS not connected");
+			MS_WARN_TAG(sctp, "DTLS not connected, cannot send SCTP data");
 
 			return;
 		}

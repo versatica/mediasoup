@@ -460,7 +460,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		if (!IsConnected())
+			return;
+
+		this->tuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
 	}
 
 	inline void PipeTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
