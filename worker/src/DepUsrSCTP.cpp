@@ -11,8 +11,22 @@
 
 static constexpr size_t CheckerInterval{ 10 }; // In ms.
 
-/* Static method for printing usrsctp debug. */
-static void sctpDebug(const char* format, ...)
+/* Static methods for usrsctp global callbacks. */
+
+inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t tos, uint8_t setDf)
+{
+	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(addr);
+
+	if (sctpAssociation == nullptr)
+		return -1;
+
+	sctpAssociation->OnUsrSctpSendSctpData(buffer, len);
+
+	return 0;
+}
+
+// Static method for printing usrsctp debug.
+inline static void sctpDebug(const char* format, ...)
 {
 	char buffer[10000];
 	va_list ap;
@@ -26,20 +40,6 @@ static void sctpDebug(const char* format, ...)
 	MS_ERROR("%s", buffer);
 
 	va_end(ap);
-}
-
-/* Static methods for usrsctp global callbacks. */
-
-inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t tos, uint8_t setDf)
-{
-	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(addr);
-
-	if (sctpAssociation == nullptr)
-		return -1;
-
-	sctpAssociation->OnUsrSctpSendSctpData(buffer, len);
-
-	return 0;
 }
 
 /* Static variables. */
