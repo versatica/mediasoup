@@ -32,6 +32,8 @@ namespace RTC
 		bool IsActive() const;
 		void TransportConnected();
 		void TransportDisconnected();
+		void SctpAssociationConnected();
+		void SctpAssociationClosed();
 		void DataProducerClosed();
 		void SendSctpMessage(const uint8_t* msg, size_t len);
 
@@ -47,6 +49,7 @@ namespace RTC
 		std::string label;
 		std::string protocol;
 		bool transportConnected{ false };
+		bool sctpAssociationConnected{ false };
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0 };
 		size_t bytesSent{ 0 };
@@ -61,7 +64,13 @@ namespace RTC
 
 	inline bool DataConsumer::IsActive() const
 	{
-		return (this->transportConnected && !this->dataProducerClosed);
+		// clang-format off
+		return (
+			this->transportConnected &&
+			this->sctpAssociationConnected &&
+			!this->dataProducerClosed
+		);
+		// clang-format on
 	}
 } // namespace RTC
 

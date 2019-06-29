@@ -1492,7 +1492,7 @@ namespace RTC
 		RTC::Transport::Disconnected();
 	}
 
-	inline void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsTransportConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1506,7 +1506,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
-	inline void WebRtcTransport::OnDtlsConnected(
+	inline void WebRtcTransport::OnDtlsTransportConnected(
 	  const RTC::DtlsTransport* /*dtlsTransport*/,
 	  RTC::SrtpSession::Profile srtpProfile,
 	  uint8_t* srtpLocalKey,
@@ -1566,7 +1566,7 @@ namespace RTC
 		RTC::Transport::Connected();
 	}
 
-	inline void WebRtcTransport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsTransportFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1580,7 +1580,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
-	inline void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsTransportClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1597,7 +1597,7 @@ namespace RTC
 		RTC::Transport::Disconnected();
 	}
 
-	inline void WebRtcTransport::OnSendDtlsData(
+	inline void WebRtcTransport::OnDtlsTransportSendData(
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -1615,7 +1615,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	inline void WebRtcTransport::OnDtlsApplicationData(
+	inline void WebRtcTransport::OnDtlsTransportApplicationDataReceived(
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();

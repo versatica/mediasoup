@@ -95,8 +95,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::DtlsTransport::Listener. */
 	public:
-		void OnDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnDtlsConnected(
+		void OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportConnected(
 		  const RTC::DtlsTransport* dtlsTransport,
 		  RTC::SrtpSession::Profile srtpProfile,
 		  uint8_t* srtpLocalKey,
@@ -104,10 +104,11 @@ namespace RTC
 		  uint8_t* srtpRemoteKey,
 		  size_t srtpRemoteKeyLen,
 		  std::string& remoteCert) override;
-		void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnSendDtlsData(const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
-		void OnDtlsApplicationData(
+		void OnDtlsTransportFailed(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportClosed(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportSendData(
+		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		void OnDtlsTransportApplicationDataReceived(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */

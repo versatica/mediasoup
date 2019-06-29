@@ -514,6 +514,9 @@ namespace RTC
 				if (IsConnected())
 					dataConsumer->TransportConnected();
 
+				if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+					dataConsumer->SctpAssociationConnected();
+
 				break;
 			}
 
@@ -1355,6 +1358,32 @@ namespace RTC
 
 		// Delete it.
 		delete dataConsumer;
+	}
+
+	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->SctpAssociationConnected();
+		}
+	}
+
+	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->SctpAssociationClosed();
+		}
 	}
 
 	inline void Transport::OnSctpAssociationSendData(

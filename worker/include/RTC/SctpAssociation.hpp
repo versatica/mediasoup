@@ -14,9 +14,22 @@ namespace RTC
 	class SctpAssociation
 	{
 	public:
+		// TODO: Let's see which states are needed.
+		enum class SctpState
+		{
+			NEW = 1,
+			CONNECTING,
+			CONNECTED,
+			FAILED,
+			CLOSED
+		};
+
+	public:
 		class Listener
 		{
 		public:
+			virtual void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) = 0;
+			virtual void OnSctpAssociationClosed(RTC::SctpAssociation* sctpAssociation)    = 0;
 			virtual void OnSctpAssociationSendData(
 			  RTC::SctpAssociation* sctpAssociation, const uint8_t* data, size_t len) = 0;
 			virtual void OnSctpAssociationMessageReceived(
@@ -33,6 +46,7 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void ProcessSctpData(const uint8_t* data, size_t len);
+		SctpState GetState() const;
 		void SendSctpMessage(RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len);
 
 		/* Callbacks fired by usrsctp events. */
@@ -44,6 +58,8 @@ namespace RTC
 		Listener* listener{ nullptr };
 		uint16_t numSctpStreams{ 65535 };
 		uint32_t maxSctpMessageSize{ 262144 };
+		// Others.
+		SctpState state{ SctpState::CONNECTED }; // TODO: Must be NEW.
 	};
 
 	/* Inline static methods. */
@@ -58,6 +74,12 @@ namespace RTC
 			(Utils::Byte::Get2Bytes(data, 2) == 5000)
 		);
 		// clang-format on
+	}
+
+	/* Inline instance methods. */
+	inline SctpAssociation::SctpState SctpAssociation::GetState() const
+	{
+		return this->state;
 	}
 } // namespace RTC
 
