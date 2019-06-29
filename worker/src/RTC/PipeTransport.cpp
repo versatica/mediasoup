@@ -341,7 +341,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	inline void PipeTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void PipeTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -351,12 +351,12 @@ namespace RTC
 		// Check if it's RTCP.
 		if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
-			OnRtcpDataRecv(tuple, data, len);
+			OnRtcpDataReceived(tuple, data, len);
 		}
 		// Check if it's RTP.
 		else if (RTC::RtpPacket::IsRtp(data, len))
 		{
-			OnRtpDataRecv(tuple, data, len);
+			OnRtpDataReceived(tuple, data, len);
 		}
 		// Check if it's SCTP.
 		else if (RTC::SctpAssociation::IsSctp(data, len))
@@ -377,7 +377,7 @@ namespace RTC
 		}
 	}
 
-	inline void PipeTransport::OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void PipeTransport::OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -429,7 +429,8 @@ namespace RTC
 		delete packet;
 	}
 
-	inline void PipeTransport::OnRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void PipeTransport::OnRtcpDataReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -504,13 +505,13 @@ namespace RTC
 		// Do nothing.
 	}
 
-	inline void PipeTransport::OnPacketRecv(
+	inline void PipeTransport::OnUdpSocketPacketReceived(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketRecv(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len);
 	}
 } // namespace RTC

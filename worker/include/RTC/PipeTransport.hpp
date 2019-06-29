@@ -34,9 +34,9 @@ namespace RTC
 		  bool probation     = false) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
-		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from RTC::Transport. */
 	private:
@@ -51,7 +51,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
-		void OnPacketRecv(
+		void OnUdpSocketPacketReceived(
 		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
 
 	private:

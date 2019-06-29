@@ -12,7 +12,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
+			virtual void OnTcpConnectionPacketReceived(
+			  RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
 		};
 
 	public:

@@ -21,23 +21,25 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void IceServer::ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple)
+	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
 		// Must be a Binding method.
-		if (msg->GetMethod() != RTC::StunMessage::Method::BINDING)
+		if (packet->GetMethod() != RTC::StunPacket::Method::BINDING)
 		{
-			if (msg->GetClass() == RTC::StunMessage::Class::REQUEST)
+			if (packet->GetClass() == RTC::StunPacket::Class::REQUEST)
 			{
 				MS_WARN_TAG(
-				  ice, "unknown method %#.3x in STUN Request => 400", (unsigned int)msg->GetMethod());
+				  ice,
+				  "unknown method %#.3x in STUN Request => 400",
+				  static_cast<unsigned int>(packet->GetMethod()));
 
 				// Reply 400.
-				RTC::StunMessage* response = msg->CreateErrorResponse(400);
+				RTC::StunPacket* response = packet->CreateErrorResponse(400);
 
 				response->Serialize(StunSerializeBuffer);
-				this->listener->OnOutgoingStunMessage(this, response, tuple);
+				this->listener->OnIceServerSendStunPacket(this, response, tuple);
 				delete response;
 			}
 			else
@@ -45,24 +47,24 @@ namespace RTC
 				MS_WARN_TAG(
 				  ice,
 				  "ignoring STUN Indication or Response with unknown method %#.3x",
-				  (unsigned int)msg->GetMethod());
+				  static_cast<unsigned int>(packet->GetMethod()));
 			}
 
 			return;
 		}
 
 		// Must use FINGERPRINT (optional for ICE STUN indications).
-		if (!msg->HasFingerprint() && msg->GetClass() != RTC::StunMessage::Class::INDICATION)
+		if (!packet->HasFingerprint() && packet->GetClass() != RTC::StunPacket::Class::INDICATION)
 		{
-			if (msg->GetClass() == RTC::StunMessage::Class::REQUEST)
+			if (packet->GetClass() == RTC::StunPacket::Class::REQUEST)
 			{
 				MS_WARN_TAG(ice, "STUN Binding Request without FINGERPRINT => 400");
 
 				// Reply 400.
-				RTC::StunMessage* response = msg->CreateErrorResponse(400);
+				RTC::StunPacket* response = packet->CreateErrorResponse(400);
 
 				response->Serialize(StunSerializeBuffer);
-				this->listener->OnOutgoingStunMessage(this, response, tuple);
+				this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 				delete response;
 			}
@@ -74,20 +76,20 @@ namespace RTC
 			return;
 		}
 
-		switch (msg->GetClass())
+		switch (packet->GetClass())
 		{
-			case RTC::StunMessage::Class::REQUEST:
+			case RTC::StunPacket::Class::REQUEST:
 			{
 				// USERNAME, MESSAGE-INTEGRITY and PRIORITY are required.
-				if (!msg->HasMessageIntegrity() || (msg->GetPriority() == 0u) || msg->GetUsername().empty())
+				if (!packet->HasMessageIntegrity() || (packet->GetPriority() == 0u) || packet->GetUsername().empty())
 				{
 					MS_WARN_TAG(ice, "mising required attributes in STUN Binding Request => 400");
 
 					// Reply 400.
-					RTC::StunMessage* response = msg->CreateErrorResponse(400);
+					RTC::StunPacket* response = packet->CreateErrorResponse(400);
 
 					response->Serialize(StunSerializeBuffer);
-					this->listener->OnOutgoingStunMessage(this, response, tuple);
+					this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 					delete response;
 
@@ -95,9 +97,9 @@ namespace RTC
 				}
 
 				// Check authentication.
-				switch (msg->CheckAuthentication(this->usernameFragment, this->password))
+				switch (packet->CheckAuthentication(this->usernameFragment, this->password))
 				{
-					case RTC::StunMessage::Authentication::OK:
+					case RTC::StunPacket::Authentication::OK:
 					{
 						if (!this->oldPassword.empty())
 						{
@@ -110,7 +112,7 @@ namespace RTC
 						break;
 					}
 
-					case RTC::StunMessage::Authentication::UNAUTHORIZED:
+					case RTC::StunPacket::Authentication::UNAUTHORIZED:
 					{
 						// We may have changed our usernameFragment and password, so check
 						// the old ones.
@@ -118,7 +120,7 @@ namespace RTC
 						if (
 							!this->oldUsernameFragment.empty() &&
 							!this->oldPassword.empty() &&
-							msg->CheckAuthentication(this->oldUsernameFragment, this->oldPassword) == RTC::StunMessage::Authentication::OK
+							packet->CheckAuthentication(this->oldUsernameFragment, this->oldPassword) == RTC::StunPacket::Authentication::OK
 						)
 						// clang-format on
 						{
@@ -130,25 +132,25 @@ namespace RTC
 						MS_WARN_TAG(ice, "wrong authentication in STUN Binding Request => 401");
 
 						// Reply 401.
-						RTC::StunMessage* response = msg->CreateErrorResponse(401);
+						RTC::StunPacket* response = packet->CreateErrorResponse(401);
 
 						response->Serialize(StunSerializeBuffer);
-						this->listener->OnOutgoingStunMessage(this, response, tuple);
+						this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 						delete response;
 
 						return;
 					}
 
-					case RTC::StunMessage::Authentication::BAD_REQUEST:
+					case RTC::StunPacket::Authentication::BAD_REQUEST:
 					{
 						MS_WARN_TAG(ice, "cannot check authentication in STUN Binding Request => 400");
 
 						// Reply 400.
-						RTC::StunMessage* response = msg->CreateErrorResponse(400);
+						RTC::StunPacket* response = packet->CreateErrorResponse(400);
 
 						response->Serialize(StunSerializeBuffer);
-						this->listener->OnOutgoingStunMessage(this, response, tuple);
+						this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 						delete response;
 
@@ -159,15 +161,15 @@ namespace RTC
 				// NOTE: Should be rejected with 487, but this makes Chrome happy:
 				//   https://bugs.chromium.org/p/webrtc/issues/detail?id=7478
 				// The remote peer must be ICE controlling.
-				// if (msg->GetIceControlled())
+				// if (packet->GetIceControlled())
 				// {
 				// 	MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
 				//
 				// 	// Reply 487 (Role Conflict).
-				// 	RTC::StunMessage* response = msg->CreateErrorResponse(487);
+				// 	RTC::StunPacket* response = packet->CreateErrorResponse(487);
 				//
 				// 	response->Serialize(StunSerializeBuffer);
-				// 	this->listener->OnOutgoingStunMessage(this, response, tuple);
+				// 	this->listener->OnIceServerSendStunPacket(this, response, tuple);
 				//
 				// 	delete response;
 				//
@@ -176,11 +178,11 @@ namespace RTC
 
 				MS_DEBUG_DEV(
 				  "processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]",
-				  static_cast<uint32_t>(msg->GetPriority()),
-				  msg->HasUseCandidate() ? "true" : "false");
+				  static_cast<uint32_t>(packet->GetPriority()),
+				  packet->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
-				RTC::StunMessage* response = msg->CreateSuccessResponse();
+				RTC::StunPacket* response = packet->CreateSuccessResponse();
 
 				// Add XOR-MAPPED-ADDRESS.
 				response->SetXorMappedAddress(tuple->GetRemoteAddress());
@@ -193,31 +195,31 @@ namespace RTC
 
 				// Send back.
 				response->Serialize(StunSerializeBuffer);
-				this->listener->OnOutgoingStunMessage(this, response, tuple);
+				this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 				delete response;
 
 				// Handle the tuple.
-				HandleTuple(tuple, msg->HasUseCandidate());
+				HandleTuple(tuple, packet->HasUseCandidate());
 
 				break;
 			}
 
-			case RTC::StunMessage::Class::INDICATION:
+			case RTC::StunPacket::Class::INDICATION:
 			{
 				MS_DEBUG_TAG(ice, "STUN Binding Indication processed");
 
 				break;
 			}
 
-			case RTC::StunMessage::Class::SUCCESS_RESPONSE:
+			case RTC::StunPacket::Class::SUCCESS_RESPONSE:
 			{
 				MS_DEBUG_TAG(ice, "STUN Binding Success Response processed");
 
 				break;
 			}
 
-			case RTC::StunMessage::Class::ERROR_RESPONSE:
+			case RTC::StunPacket::Class::ERROR_RESPONSE:
 			{
 				MS_DEBUG_TAG(ice, "STUN Binding Error Response processed");
 
@@ -278,7 +280,7 @@ namespace RTC
 			// Update state.
 			this->state = IceState::DISCONNECTED;
 			// Notify the listener.
-			this->listener->OnIceDisconnected(this);
+			this->listener->OnIceServerDisconnected(this);
 		}
 	}
 
@@ -327,7 +329,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::CONNECTED;
 					// Notify the listener.
-					this->listener->OnIceConnected(this);
+					this->listener->OnIceServerConnected(this);
 				}
 				else
 				{
@@ -341,7 +343,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::COMPLETED;
 					// Notify the listener.
-					this->listener->OnIceCompleted(this);
+					this->listener->OnIceServerCompleted(this);
 				}
 
 				break;
@@ -371,7 +373,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::CONNECTED;
 					// Notify the listener.
-					this->listener->OnIceConnected(this);
+					this->listener->OnIceServerConnected(this);
 				}
 				else
 				{
@@ -385,7 +387,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::COMPLETED;
 					// Notify the listener.
-					this->listener->OnIceCompleted(this);
+					this->listener->OnIceServerCompleted(this);
 				}
 
 				break;
@@ -421,7 +423,7 @@ namespace RTC
 					// Update state.
 					this->state = IceState::COMPLETED;
 					// Notify the listener.
-					this->listener->OnIceCompleted(this);
+					this->listener->OnIceServerCompleted(this);
 				}
 
 				break;
@@ -513,6 +515,6 @@ namespace RTC
 		this->selectedTuple = storedTuple;
 
 		// Notify the listener.
-		this->listener->OnIceSelectedTuple(this, this->selectedTuple);
+		this->listener->OnIceServerSelectedTuple(this, this->selectedTuple);
 	}
 } // namespace RTC

@@ -6,7 +6,7 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
-#include "RTC/FuzzerStunMessage.hpp"
+#include "RTC/FuzzerStunPacket.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>
@@ -25,7 +25,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	static int unused = Init();
 
 	if (fuzzStun)
-		Fuzzer::RTC::StunMessage::Fuzz(data, len);
+		Fuzzer::RTC::StunPacket::Fuzz(data, len);
 
 	if (fuzzRtp)
 		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
