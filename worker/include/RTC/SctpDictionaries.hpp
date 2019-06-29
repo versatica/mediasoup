@@ -9,6 +9,18 @@ using json = nlohmann::json;
 
 namespace RTC
 {
+	class Data
+	{
+	public:
+		enum class Type : uint8_t
+		{
+			STRING = 51,
+			BINARY = 53,
+			STRING_EMPTY = 56,
+			BINARY_EMPTY = 57
+		};
+	};
+
 	class SctpStreamParameters
 	{
 	public:
