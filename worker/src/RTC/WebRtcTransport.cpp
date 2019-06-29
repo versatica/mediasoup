@@ -1353,6 +1353,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ERROR("WebRtcTransport::UserOnSendSctpData, len:%zu", len);
+
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
 			MS_WARN_TAG(sctp, "DTLS not connected, cannot send SCTP data");

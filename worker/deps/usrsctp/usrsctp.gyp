@@ -17,7 +17,7 @@
       'SCTP_SIMPLE_ALLOCATOR',
       'SCTP_USE_OPENSSL_SHA1',
       '__Userspace__',
-      # 'SCTP_DEBUG', # Uncomment for SCTP debugging.
+      'SCTP_DEBUG', # Uncomment for SCTP debugging.
     ],
     'direct_dependent_settings': {
       'include_dirs': [

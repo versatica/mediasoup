@@ -824,7 +824,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportDataProducerSctpMessageReceived(
-	  RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
+	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 

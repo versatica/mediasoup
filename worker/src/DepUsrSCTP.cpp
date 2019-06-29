@@ -11,6 +11,22 @@
 
 static constexpr size_t CheckerInterval{ 10 }; // In ms.
 
+/* Static method for printing usrsctp debug. */
+static void sctpDebug(const char* format, ...)
+{
+	char buffer[10000];
+	va_list ap;
+
+	va_start(ap, format);
+	vsprintf(buffer, format, ap);
+
+	// Remove the artificial carriage return set by usrsctp.
+	buffer[std::strlen(buffer) - 1] = '\0';
+
+	MS_ERROR("%s", buffer);
+	va_end(ap);
+}
+
 /* Static methods for usrsctp global callbacks. */
 
 inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t tos, uint8_t setDf)
@@ -40,7 +56,11 @@ void DepUsrSCTP::ClassInit()
 
 	MS_DEBUG_TAG(info, "usrsctp");
 
-	usrsctp_init_nothreads(0, onSendSctpData, nullptr);
+	usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
+
+#ifdef SCTP_DEBUG
+	usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
+#endif
 
 	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
 }

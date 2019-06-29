@@ -155,7 +155,7 @@ namespace RTC
 			return;
 
 		this->messagesSent++;
-		this->bytesSent += 1;
+		this->bytesSent += len;
 
 		this->listener->OnDataConsumerSendSctpMessage(this, msg, len);
 	}

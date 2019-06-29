@@ -747,10 +747,21 @@ namespace RTC
 			dataConsumer->TransportConnected();
 		}
 
-		// TODO: Enable it.
 		// Tell the SctpAssociation.
-		// if (this->sctpAssociation)
-		// 	this->sctpAssociation->Run();
+		if (this->sctpAssociation)
+		{
+			try
+			{
+				this->sctpAssociation->Run();
+			}
+			catch (const MediaSoupError& error)
+			{
+				delete this->sctpAssociation;
+
+				// TODO: Notify about the error.
+				throw;
+			}
+		}
 	}
 
 	void Transport::Disconnected()

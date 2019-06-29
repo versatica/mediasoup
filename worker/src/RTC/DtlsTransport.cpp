@@ -815,6 +815,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_DUMP_DATA(data, len);
+
 		// We cannot send data to the peer if its remote fingerprint is not validated.
 		if (this->state != DtlsState::CONNECTED)
 		{
