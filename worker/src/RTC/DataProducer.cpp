@@ -117,8 +117,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ERROR("DataProducer::ReceiveSctpMessage");
+
 		this->messagesReceived++;
-		this->bytesReceived += 1;
+		this->bytesReceived += len;
 
 		this->listener->OnDataProducerSctpMessageReceived(this, msg, len);
 	}

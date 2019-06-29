@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
@@ -202,13 +203,34 @@ namespace RTC
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 
-		// Add sctpParameters.
 		if (this->sctpAssociation)
+		{
+			// Add sctpParameters.
 			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
 
-		// Add sctpListener.
-		if (this->sctpAssociation)
+			// Add sctpState.
+			switch (this->sctpAssociation->GetState())
+			{
+				case RTC::SctpAssociation::SctpState::NEW:
+					jsonObject["sctpState"] = "new";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTING:
+					jsonObject["sctpState"] = "connecting";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTED:
+					jsonObject["sctpState"] = "connected";
+					break;
+				case RTC::SctpAssociation::SctpState::FAILED:
+					jsonObject["sctpState"] = "failed";
+					break;
+				case RTC::SctpAssociation::SctpState::CLOSED:
+					jsonObject["sctpState"] = "closed";
+					break;
+			}
+
+			// Add sctpListener.
 			this->sctpListener.FillJson(jsonObject["sctpListener"]);
+		}
 	}
 
 	void Transport::HandleRequest(Channel::Request* request)
@@ -750,10 +772,22 @@ namespace RTC
 			dataConsumer->TransportConnected();
 		}
 
-		// TODO: Enable it.
 		// Tell the SctpAssociation.
-		// if (this->sctpAssociation)
-		// 	this->sctpAssociation->Run();
+		if (this->sctpAssociation)
+		{
+			try
+			{
+				this->sctpAssociation->Run();
+			}
+			catch (const MediaSoupError& error)
+			{
+				delete this->sctpAssociation;
+				this->sctpAssociation = nullptr;
+
+				// TODO: Notify about the error.
+				throw;
+			}
+		}
 	}
 
 	void Transport::Disconnected()
@@ -1371,6 +1405,13 @@ namespace RTC
 
 			dataConsumer->SctpAssociationConnected();
 		}
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "connected";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -1384,6 +1425,13 @@ namespace RTC
 
 			dataConsumer->SctpAssociationClosed();
 		}
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "closed";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationSendData(

@@ -91,6 +91,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(transport1.rtcpTuple).toBe(undefined);
 	expect(transport1.sctpParameters).toStrictEqual(
 		{ maxMessageSize: 262144, numStreams: 65535, port: 5000 });
+	expect(transport1.sctpState).toBe('new');
 
 	const data1 = await transport1.dump();
 
@@ -100,6 +101,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(data1.tuple).toEqual(transport1.tuple);
 	expect(data1.rtcpTuple).toEqual(transport1.rtcpTuple);
 	expect(data1.sctpParameters).toEqual(transport1.sctpParameters);
+	expect(data1.sctpState).toBe('new');
 	expect(data1.rtpHeaderExtensions).toBeType('object');
 	expect(data1.rtpListener).toBeType('object');
 
@@ -128,12 +130,14 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(transport2.rtcpTuple.localPort).toBeType('number');
 	expect(transport2.rtcpTuple.protocol).toBe('udp');
 	expect(transport2.sctpParameters).toBe(undefined);
+	expect(transport2.sctpState).toBe(undefined);
 
 	const data2 = await transport2.dump();
 
 	expect(data2.id).toBe(transport2.id);
 	expect(data2.tuple).toEqual(transport2.tuple);
 	expect(data2.rtcpTuple).toEqual(transport2.rtcpTuple);
+	expect(data2.sctpState).toBe(undefined);
 }, 2000);
 
 test('router.createPlainRtpTransport() with wrong arguments rejects with TypeError', async () =>

@@ -141,6 +141,29 @@ namespace RTC
 			(*jsonTupleIt)["protocol"]  = "udp";
 		}
 
+		if (this->sctpAssociation)
+		{
+			// Add sctpState.
+			switch (this->sctpAssociation->GetState())
+			{
+				case RTC::SctpAssociation::SctpState::NEW:
+					jsonObject["sctpState"] = "new";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTING:
+					jsonObject["sctpState"] = "connecting";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTED:
+					jsonObject["sctpState"] = "connected";
+					break;
+				case RTC::SctpAssociation::SctpState::FAILED:
+					jsonObject["sctpState"] = "failed";
+					break;
+				case RTC::SctpAssociation::SctpState::CLOSED:
+					jsonObject["sctpState"] = "closed";
+					break;
+			}
+		}
+
 		// Add bytesReceived.
 		jsonObject["bytesReceived"] = RTC::Transport::GetReceivedBytes();
 

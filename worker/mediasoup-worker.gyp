@@ -9,6 +9,7 @@
       'deps/libsrtp/libsrtp.gyp:libsrtp',
       'deps/usrsctp/usrsctp.gyp:usrsctp'
     ],
+    'defines': [ 'SCTP_DEBUG' ],
     'sources':
     [
       # C++ source files.

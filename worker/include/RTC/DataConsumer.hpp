@@ -49,7 +49,7 @@ namespace RTC
 		std::string label;
 		std::string protocol;
 		bool transportConnected{ false };
-		bool sctpAssociationConnected{ false };
+		bool sctpAssociationConnected{ true }; // TODO: Must be false.
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0 };
 		size_t bytesSent{ 0 };
