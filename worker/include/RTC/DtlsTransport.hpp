@@ -66,11 +66,11 @@ namespace RTC
 			// DTLS is in the process of negotiating a secure connection. Incoming
 			// media can flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void OnDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// DTLS has completed negotiation of a secure connection (including DTLS-SRTP
 			// and remote fingerprint verification). Outgoing media can now flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.
-			virtual void OnDtlsConnected(
+			virtual void OnDtlsTransportConnected(
 			  const RTC::DtlsTransport* dtlsTransport,
 			  RTC::SrtpSession::Profile srtpProfile,
 			  uint8_t* srtpLocalKey,
@@ -80,14 +80,14 @@ namespace RTC
 			  std::string& remoteCert) = 0;
 			// The DTLS connection has been closed as the result of an error (such as a
 			// DTLS alert or a failure to validate the remote fingerprint).
-			virtual void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsTransportFailed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// The DTLS connection has been closed due to receipt of a close_notify alert.
-			virtual void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
+			virtual void OnDtlsTransportClosed(const RTC::DtlsTransport* dtlsTransport) = 0;
 			// Need to send DTLS data to the peer.
-			virtual void OnSendDtlsData(
+			virtual void OnDtlsTransportSendData(
 			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
-			virtual void OnDtlsApplicationData(
+			virtual void OnDtlsTransportApplicationDataReceived(
 			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 		};
 

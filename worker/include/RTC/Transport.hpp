@@ -172,6 +172,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
 	public:
+		void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) override;
+		void OnSctpAssociationClosed(RTC::SctpAssociation* sctpAssociation) override;
 		void OnSctpAssociationSendData(
 		  RTC::SctpAssociation* sctpAssociation, const uint8_t* data, size_t len) override;
 		void OnSctpAssociationMessageReceived(

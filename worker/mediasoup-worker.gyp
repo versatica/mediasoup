@@ -60,7 +60,7 @@
       'src/RTC/SimpleConsumer.cpp',
       'src/RTC/SimulcastConsumer.cpp',
       'src/RTC/SrtpSession.cpp',
-      'src/RTC/StunMessage.cpp',
+      'src/RTC/StunPacket.cpp',
       'src/RTC/SvcConsumer.cpp',
       'src/RTC/TcpConnection.cpp',
       'src/RTC/TcpServer.cpp',
@@ -167,7 +167,7 @@
       'include/RTC/SimpleConsumer.hpp',
       'include/RTC/SimulcastConsumer.hpp',
       'include/RTC/SrtpSession.hpp',
-      'include/RTC/StunMessage.hpp',
+      'include/RTC/StunPacket.hpp',
       'include/RTC/SvcConsumer.hpp',
       'include/RTC/TcpConnection.hpp',
       'include/RTC/TcpServer.hpp',
@@ -351,7 +351,7 @@
       [
         # C++ source files.
         'fuzzer/src/fuzzer.cpp',
-        'fuzzer/src/RTC/FuzzerStunMessage.cpp',
+        'fuzzer/src/RTC/FuzzerStunPacket.cpp',
         'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',

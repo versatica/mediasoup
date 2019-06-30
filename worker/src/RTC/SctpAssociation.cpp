@@ -5,8 +5,9 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-// #include "Utils.hpp"
 // #include "Channel/Notifier.hpp"
+
+/* SCTP events to which we are subscribing. */
 
 /* clang-format off */
 uint16_t event_types[] =
@@ -22,6 +23,8 @@ uint16_t event_types[] =
 	SCTP_STREAM_CHANGE_EVENT
 };
 /* clang-format on */
+
+/* Static methods for usrsctp callbacks. */
 
 inline static int onRecvSctpData(
   struct socket* /*sock*/,
@@ -65,20 +68,36 @@ namespace RTC
 	  : listener(listener), numSctpStreams(numSctpStreams), maxSctpMessageSize(maxSctpMessageSize)
 	{
 		MS_TRACE();
+
+		DepUsrSCTP::IncreaseSctpAssociations();
+	}
+
+	SctpAssociation::~SctpAssociation()
+	{
+		MS_TRACE();
+
+		if (this->socket)
+			usrsctp_close(this->socket);
+
+		DepUsrSCTP::DecreaseSctpAssociations();
 	}
 
 	bool SctpAssociation::Run()
 	{
+		MS_TRACE();
+
 		int ret;
 
 		// Without this function call usrsctp_bind will fail as follows:
 		// "usrsctp_bind() failed: Can't assign requested address"
 		// TODO: should we unregister on destructor?
+		// TODO: Let's use static_cast instead.
 		usrsctp_register_address((void*)this);
 
 		// Disable explicit congestion notifications (ecn).
 		usrsctp_sysctl_set_sctp_ecn_enable(0);
 
+		// TODO: Let's use static_cast instead.
 		this->socket =
 		  usrsctp_socket(AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, (void*)this);
 
@@ -89,21 +108,26 @@ namespace RTC
 
 		// Make the socket non-blocking.
 		ret = usrsctp_set_non_blocking(this->socket, 1);
+
 		if (ret < 0)
 			MS_THROW_ERROR("usrsctp_set_non_blocking() failed: %s", std::strerror(errno));
 
 		// Set SO_LINGER.
 		struct linger linger_opt;
+
 		linger_opt.l_onoff  = 1;
 		linger_opt.l_linger = 0;
 
 		ret = usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_LINGER, &linger_opt, sizeof(linger_opt));
+
 		if (ret < 0)
 			MS_THROW_ERROR("usrsctp_setsockopt(SO_LINGER) failed: %s", std::strerror(errno));
 
 		// Set SCTP_NODELAY.
 		uint32_t noDelay = 1;
+
 		ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_NODELAY, &noDelay, sizeof(noDelay));
+
 		if (ret < 0)
 			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_NODELAY) failed: %s", std::strerror(errno));
 
@@ -122,6 +146,7 @@ namespace RTC
 
 		// Init message.
 		struct sctp_initmsg initmsg;
+
 		memset(&initmsg, 0, sizeof(struct sctp_initmsg));
 		// TODO: Set proper values.
 		initmsg.sinit_num_ostreams  = 1023;
@@ -129,15 +154,17 @@ namespace RTC
 
 		ret = usrsctp_setsockopt(
 		  this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(struct sctp_initmsg));
+
 		if (ret < 0)
 			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_INITMSG) failed: %s", std::strerror(errno));
 
 		// Server side.
 		struct sockaddr_conn sconn;
+
 		memset(&sconn, 0, sizeof(struct sockaddr_conn));
 		sconn.sconn_family = AF_CONN;
 		sconn.sconn_port   = htons(5000);
-		sconn.sconn_addr   = (void*)this;
+		sconn.sconn_addr   = (void*)this; // TODO: Let's use static_cast instead.
 #ifdef HAVE_SCONN_LEN
 		rconn.sconn_len = sizeof(struct sockaddr_conn);
 #endif
@@ -149,30 +176,21 @@ namespace RTC
 
 		// Client side.
 		struct sockaddr_conn rconn;
+
 		memset(&rconn, 0, sizeof(struct sockaddr_conn));
 		rconn.sconn_family = AF_CONN;
 		rconn.sconn_port   = htons(5000);
 		rconn.sconn_addr   = (void*)this;
 		rconn.sconn_len    = sizeof(struct sockaddr_conn);
 
+		// TODO: Let's use static_cast or reinterpret_cast instead.
 		ret = usrsctp_connect(this->socket, (struct sockaddr*)&rconn, sizeof(struct sockaddr_conn));
 
 		if (ret < 0 && errno != EINPROGRESS)
 			MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
 
-		DepUsrSCTP::IncreaseSctpAssociations();
-
 		// TMP.
 		return true;
-	}
-
-	SctpAssociation::~SctpAssociation()
-	{
-		MS_TRACE();
-
-		usrsctp_close(this->socket);
-
-		DepUsrSCTP::DecreaseSctpAssociations();
 	}
 
 	void SctpAssociation::FillJson(json& jsonObject) const
@@ -196,6 +214,7 @@ namespace RTC
 		if (len > this->maxSctpMessageSize)
 		{
 			MS_WARN_TAG(sctp, "incoming data size exceeds maxSctpMessageSize value");
+
 			return;
 		}
 
@@ -209,6 +228,7 @@ namespace RTC
 		if (len > this->maxSctpMessageSize)
 		{
 			MS_WARN_TAG(sctp, "outgoing message size exceeds maxSctpMessageSize value");
+
 			return;
 		}
 
@@ -232,6 +252,7 @@ namespace RTC
 		// spa.sendv_prinfo.pr_policy.
 		// spa.sendv_prinfo.pr_value.
 
+		// TODO: Let's use static_cast or reinterpret_cast instead.
 		int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, (socklen_t)sizeof(struct sctp_sendv_spa), SCTP_SENDV_SPA, 0);
 

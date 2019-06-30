@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
@@ -202,13 +203,34 @@ namespace RTC
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 
-		// Add sctpParameters.
 		if (this->sctpAssociation)
+		{
+			// Add sctpParameters.
 			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
 
-		// Add sctpListener.
-		if (this->sctpAssociation)
+			// Add sctpState.
+			switch (this->sctpAssociation->GetState())
+			{
+				case RTC::SctpAssociation::SctpState::NEW:
+					jsonObject["sctpState"] = "new";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTING:
+					jsonObject["sctpState"] = "connecting";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTED:
+					jsonObject["sctpState"] = "connected";
+					break;
+				case RTC::SctpAssociation::SctpState::FAILED:
+					jsonObject["sctpState"] = "failed";
+					break;
+				case RTC::SctpAssociation::SctpState::CLOSED:
+					jsonObject["sctpState"] = "closed";
+					break;
+			}
+
+			// Add sctpListener.
 			this->sctpListener.FillJson(jsonObject["sctpListener"]);
+		}
 	}
 
 	void Transport::HandleRequest(Channel::Request* request)
@@ -514,6 +536,9 @@ namespace RTC
 				if (IsConnected())
 					dataConsumer->TransportConnected();
 
+				if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+					dataConsumer->SctpAssociationConnected();
+
 				break;
 			}
 
@@ -757,6 +782,7 @@ namespace RTC
 			catch (const MediaSoupError& error)
 			{
 				delete this->sctpAssociation;
+				this->sctpAssociation = nullptr;
 
 				// TODO: Notify about the error.
 				throw;
@@ -1366,6 +1392,46 @@ namespace RTC
 
 		// Delete it.
 		delete dataConsumer;
+	}
+
+	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->SctpAssociationConnected();
+		}
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "connected";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+	}
+
+	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->SctpAssociationClosed();
+		}
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "closed";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationSendData(

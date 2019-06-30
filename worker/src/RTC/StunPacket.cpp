@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::StunMessage"
+#define MS_CLASS "RTC::StunPacket"
 // #define MS_LOG_DEV
 
-#include "RTC/StunMessage.hpp"
+#include "RTC/StunPacket.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include <cstdio>  // std::snprintf()
@@ -11,15 +11,15 @@ namespace RTC
 {
 	/* Class variables. */
 
-	const uint8_t StunMessage::magicCookie[] = { 0x21, 0x12, 0xA4, 0x42 };
+	const uint8_t StunPacket::magicCookie[] = { 0x21, 0x12, 0xA4, 0x42 };
 
 	/* Class methods. */
 
-	StunMessage* StunMessage::Parse(const uint8_t* data, size_t len)
+	StunPacket* StunPacket::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		if (!StunMessage::IsStun(data, len))
+		if (!StunPacket::IsStun(data, len))
 			return nullptr;
 
 		/*
@@ -53,7 +53,7 @@ namespace RTC
 			MS_WARN_TAG(
 			  ice,
 			  "length field + 20 does not match total size (or it is not multiple of 4 bytes), "
-			  "message discarded");
+			  "packet discarded");
 
 			return nullptr;
 		}
@@ -64,8 +64,8 @@ namespace RTC
 		// Get STUN class.
 		uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
-		// Create a new StunMessage (data + 8 points to the received TransactionID field).
-		auto msg = new StunMessage(
+		// Create a new StunPacket (data + 8 points to the received TransactionID field).
+		auto packet = new StunPacket(
 		  static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
 
 		/*
@@ -106,18 +106,18 @@ namespace RTC
 			// Ensure the attribute length is not greater than the remaining size.
 			if ((pos + 4 + attrLength) > len)
 			{
-				MS_WARN_TAG(ice, "the attribute length exceeds the remaining size, message discarded");
+				MS_WARN_TAG(ice, "the attribute length exceeds the remaining size, packet discarded");
 
-				delete msg;
+				delete packet;
 				return nullptr;
 			}
 
 			// FINGERPRINT must be the last attribute.
 			if (hasFingerprint)
 			{
-				MS_WARN_TAG(ice, "attribute after FINGERPRINT is not allowed, message discarded");
+				MS_WARN_TAG(ice, "attribute after FINGERPRINT is not allowed, packet discarded");
 
-				delete msg;
+				delete packet;
 				return nullptr;
 			}
 
@@ -127,9 +127,9 @@ namespace RTC
 				MS_WARN_TAG(
 				  ice,
 				  "attribute after MESSAGE-INTEGRITY other than FINGERPRINT is not allowed, "
-				  "message discarded");
+				  "packet discarded");
 
-				delete msg;
+				delete packet;
 				return nullptr;
 			}
 
@@ -139,7 +139,7 @@ namespace RTC
 			{
 				case Attribute::USERNAME:
 				{
-					msg->SetUsername(
+					packet->SetUsername(
 					  reinterpret_cast<const char*>(attrValuePos), static_cast<size_t>(attrLength));
 
 					break;
@@ -150,13 +150,13 @@ namespace RTC
 					// Ensure attribute length is 4 bytes.
 					if (attrLength != 4)
 					{
-						MS_WARN_TAG(ice, "attribute PRIORITY must be 4 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute PRIORITY must be 4 bytes length, packet discarded");
 
-						delete msg;
+						delete packet;
 						return nullptr;
 					}
 
-					msg->SetPriority(Utils::Byte::Get4Bytes(attrValuePos, 0));
+					packet->SetPriority(Utils::Byte::Get4Bytes(attrValuePos, 0));
 
 					break;
 				}
@@ -166,13 +166,13 @@ namespace RTC
 					// Ensure attribute length is 8 bytes.
 					if (attrLength != 8)
 					{
-						MS_WARN_TAG(ice, "attribute ICE-CONTROLLING must be 8 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute ICE-CONTROLLING must be 8 bytes length, packet discarded");
 
-						delete msg;
+						delete packet;
 						return nullptr;
 					}
 
-					msg->SetIceControlling(Utils::Byte::Get8Bytes(attrValuePos, 0));
+					packet->SetIceControlling(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
@@ -182,13 +182,13 @@ namespace RTC
 					// Ensure attribute length is 8 bytes.
 					if (attrLength != 8)
 					{
-						MS_WARN_TAG(ice, "attribute ICE-CONTROLLED must be 8 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute ICE-CONTROLLED must be 8 bytes length, packet discarded");
 
-						delete msg;
+						delete packet;
 						return nullptr;
 					}
 
-					msg->SetIceControlled(Utils::Byte::Get8Bytes(attrValuePos, 0));
+					packet->SetIceControlled(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
@@ -198,13 +198,13 @@ namespace RTC
 					// Ensure attribute length is 0 bytes.
 					if (attrLength != 0)
 					{
-						MS_WARN_TAG(ice, "attribute USE-CANDIDATE must be 0 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute USE-CANDIDATE must be 0 bytes length, packet discarded");
 
-						delete msg;
+						delete packet;
 						return nullptr;
 					}
 
-					msg->SetUseCandidate();
+					packet->SetUseCandidate();
 
 					break;
 				}
@@ -214,14 +214,14 @@ namespace RTC
 					// Ensure attribute length is 20 bytes.
 					if (attrLength != 20)
 					{
-						MS_WARN_TAG(ice, "attribute MESSAGE-INTEGRITY must be 20 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute MESSAGE-INTEGRITY must be 20 bytes length, packet discarded");
 
-						delete msg;
+						delete packet;
 						return nullptr;
 					}
 
 					hasMessageIntegrity = true;
-					msg->SetMessageIntegrity(attrValuePos);
+					packet->SetMessageIntegrity(attrValuePos);
 
 					break;
 				}
@@ -231,16 +231,16 @@ namespace RTC
 					// Ensure attribute length is 4 bytes.
 					if (attrLength != 4)
 					{
-						MS_WARN_TAG(ice, "attribute FINGERPRINT must be 4 bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute FINGERPRINT must be 4 bytes length, packet discarded");
 
-						delete msg;
+						delete packet;
 						return nullptr;
 					}
 
 					hasFingerprint     = true;
 					fingerprintAttrPos = pos;
 					fingerprint        = Utils::Byte::Get4Bytes(attrValuePos, 0);
-					msg->SetFingerprint();
+					packet->SetFingerprint();
 
 					break;
 				}
@@ -250,9 +250,9 @@ namespace RTC
 					// Ensure attribute length >= 4bytes.
 					if (attrLength < 4)
 					{
-						MS_WARN_TAG(ice, "attribute ERROR-CODE must be >= 4bytes length, message discarded");
+						MS_WARN_TAG(ice, "attribute ERROR-CODE must be >= 4bytes length, packet discarded");
 
-						delete msg;
+						delete packet;
 						return nullptr;
 					}
 
@@ -260,7 +260,7 @@ namespace RTC
 					uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
 					auto errorCode      = static_cast<uint16_t>(errorClass * 100 + errorNumber);
 
-					msg->SetErrorCode(errorCode);
+					packet->SetErrorCode(errorCode);
 
 					break;
 				}
@@ -276,38 +276,38 @@ namespace RTC
 		// Ensure current position matches the total length.
 		if (pos != len)
 		{
-			MS_WARN_TAG(ice, "computed message size does not match total size, message discarded");
+			MS_WARN_TAG(ice, "computed packet size does not match total size, packet discarded");
 
-			delete msg;
+			delete packet;
 			return nullptr;
 		}
 
 		// If it has FINGERPRINT attribute then verify it.
 		if (hasFingerprint)
 		{
-			// Compute the CRC32 of the received message up to (but excluding) the
+			// Compute the CRC32 of the received packet up to (but excluding) the
 			// FINGERPRINT attribute and XOR it with 0x5354554e.
 			uint32_t computedFingerprint = Utils::Crypto::GetCRC32(data, fingerprintAttrPos) ^ 0x5354554e;
 
-			// Compare with the FINGERPRINT value in the message.
+			// Compare with the FINGERPRINT value in the packet.
 			if (fingerprint != computedFingerprint)
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "computed FINGERPRINT value does not match the value in the message, "
-				  "message discarded");
+				  "computed FINGERPRINT value does not match the value in the packet, "
+				  "packet discarded");
 
-				delete msg;
+				delete packet;
 				return nullptr;
 			}
 		}
 
-		return msg;
+		return packet;
 	}
 
 	/* Instance methods. */
 
-	StunMessage::StunMessage(
+	StunPacket::StunPacket(
 	  Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size)
 	  : klass(klass), method(method), transactionId(transactionId), data(const_cast<uint8_t*>(data)),
 	    size(size)
@@ -315,16 +315,16 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	StunMessage::~StunMessage()
+	StunPacket::~StunPacket()
 	{
 		MS_TRACE();
 	}
 
-	void StunMessage::Dump() const
+	void StunPacket::Dump() const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<StunMessage>");
+		MS_DUMP("<StunPacket>");
 
 		std::string klass;
 		switch (this->klass)
@@ -397,10 +397,10 @@ namespace RTC
 		if (this->hasFingerprint)
 			MS_DUMP("  has fingerprint");
 
-		MS_DUMP("</StunMessage>");
+		MS_DUMP("</StunPacket>");
 	}
 
-	StunMessage::Authentication StunMessage::CheckAuthentication(
+	StunPacket::Authentication StunPacket::CheckAuthentication(
 	  const std::string& localUsername, const std::string& localPassword)
 	{
 		MS_TRACE();
@@ -449,7 +449,7 @@ namespace RTC
 
 		Authentication result;
 
-		// Compare the computed HMAC-SHA1 with the MESSAGE-INTEGRITY in the message.
+		// Compare the computed HMAC-SHA1 with the MESSAGE-INTEGRITY in the packet.
 		if (std::memcmp(this->messageIntegrity, computedMessageIntegrity, 20) == 0)
 			result = Authentication::OK;
 		else
@@ -462,34 +462,34 @@ namespace RTC
 		return result;
 	}
 
-	StunMessage* StunMessage::CreateSuccessResponse()
+	StunPacket* StunPacket::CreateSuccessResponse()
 	{
 		MS_TRACE();
 
 		MS_ASSERT(
 		  this->klass == Class::REQUEST,
-		  "attempt to create a success response for a non Request STUN message");
+		  "attempt to create a success response for a non Request STUN packet");
 
-		return new StunMessage(Class::SUCCESS_RESPONSE, this->method, this->transactionId, nullptr, 0);
+		return new StunPacket(Class::SUCCESS_RESPONSE, this->method, this->transactionId, nullptr, 0);
 	}
 
-	StunMessage* StunMessage::CreateErrorResponse(uint16_t errorCode)
+	StunPacket* StunPacket::CreateErrorResponse(uint16_t errorCode)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(
 		  this->klass == Class::REQUEST,
-		  "attempt to create an error response for a non Request STUN message");
+		  "attempt to create an error response for a non Request STUN packet");
 
 		auto response =
-		  new StunMessage(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
+		  new StunPacket(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
 
 		response->SetErrorCode(errorCode);
 
 		return response;
 	}
 
-	void StunMessage::Authenticate(const std::string& password)
+	void StunPacket::Authenticate(const std::string& password)
 	{
 		// Just for Request, Indication and SuccessResponse messages.
 		if (this->klass == Class::ERROR_RESPONSE)
@@ -502,7 +502,7 @@ namespace RTC
 		this->password = password;
 	}
 
-	void StunMessage::Serialize(uint8_t* buffer)
+	void StunPacket::Serialize(uint8_t* buffer)
 	{
 		MS_TRACE();
 
@@ -510,7 +510,7 @@ namespace RTC
 		uint16_t usernamePaddedLen{ 0 };
 		uint16_t xorMappedAddressPaddedLen{ 0 };
 		bool addXorMappedAddress =
-		  ((this->xorMappedAddress != nullptr) && this->method == StunMessage::Method::BINDING &&
+		  ((this->xorMappedAddress != nullptr) && this->method == StunPacket::Method::BINDING &&
 		   this->klass == Class::SUCCESS_RESPONSE);
 		bool addErrorCode        = ((this->errorCode != 0u) && this->klass == Class::ERROR_RESPONSE);
 		bool addMessageIntegrity = (this->klass != Class::ERROR_RESPONSE && !this->password.empty());
@@ -519,7 +519,7 @@ namespace RTC
 		// Update data pointer.
 		this->data = buffer;
 
-		// First calculate the total required size for the entire message.
+		// First calculate the total required size for the entire packet.
 		this->size = 20; // Header.
 
 		if (!this->username.empty())
@@ -591,7 +591,7 @@ namespace RTC
 		// Set length field.
 		Utils::Byte::Set2Bytes(buffer, 2, static_cast<uint16_t>(this->size) - 20);
 		// Set magic cookie.
-		std::memcpy(buffer + 4, StunMessage::magicCookie, 4);
+		std::memcpy(buffer + 4, StunPacket::magicCookie, 4);
 		// Set TransactionId field.
 		std::memcpy(buffer + 8, this->transactionId, 12);
 		// Update the transaction ID pointer.
@@ -664,17 +664,17 @@ namespace RTC
 					  attrValue + 2,
 					  &(reinterpret_cast<const sockaddr_in*>(this->xorMappedAddress))->sin_port,
 					  2);
-					attrValue[2] ^= StunMessage::magicCookie[0];
-					attrValue[3] ^= StunMessage::magicCookie[1];
+					attrValue[2] ^= StunPacket::magicCookie[0];
+					attrValue[3] ^= StunPacket::magicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  attrValue + 4,
 					  &(reinterpret_cast<const sockaddr_in*>(this->xorMappedAddress))->sin_addr.s_addr,
 					  4);
-					attrValue[4] ^= StunMessage::magicCookie[0];
-					attrValue[5] ^= StunMessage::magicCookie[1];
-					attrValue[6] ^= StunMessage::magicCookie[2];
-					attrValue[7] ^= StunMessage::magicCookie[3];
+					attrValue[4] ^= StunPacket::magicCookie[0];
+					attrValue[5] ^= StunPacket::magicCookie[1];
+					attrValue[6] ^= StunPacket::magicCookie[2];
+					attrValue[7] ^= StunPacket::magicCookie[3];
 
 					pos += 4 + 8;
 
@@ -692,17 +692,17 @@ namespace RTC
 					  attrValue + 2,
 					  &(reinterpret_cast<const sockaddr_in6*>(this->xorMappedAddress))->sin6_port,
 					  2);
-					attrValue[2] ^= StunMessage::magicCookie[0];
-					attrValue[3] ^= StunMessage::magicCookie[1];
+					attrValue[2] ^= StunPacket::magicCookie[0];
+					attrValue[3] ^= StunPacket::magicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  attrValue + 4,
 					  &(reinterpret_cast<const sockaddr_in6*>(this->xorMappedAddress))->sin6_addr.s6_addr,
 					  16);
-					attrValue[4] ^= StunMessage::magicCookie[0];
-					attrValue[5] ^= StunMessage::magicCookie[1];
-					attrValue[6] ^= StunMessage::magicCookie[2];
-					attrValue[7] ^= StunMessage::magicCookie[3];
+					attrValue[4] ^= StunPacket::magicCookie[0];
+					attrValue[5] ^= StunPacket::magicCookie[1];
+					attrValue[6] ^= StunPacket::magicCookie[2];
+					attrValue[7] ^= StunPacket::magicCookie[3];
 					attrValue[8] ^= this->transactionId[0];
 					attrValue[9] ^= this->transactionId[1];
 					attrValue[10] ^= this->transactionId[2];
@@ -745,7 +745,7 @@ namespace RTC
 			if (addFingerprint)
 				Utils::Byte::Set2Bytes(buffer, 2, static_cast<uint16_t>(this->size - 20 - 8));
 
-			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
+			// Calculate the HMAC-SHA1 of the packet according to MESSAGE-INTEGRITY rules.
 			const uint8_t* computedMessageIntegrity =
 			  Utils::Crypto::GetHmacShA1(this->password, buffer, pos);
 
@@ -770,7 +770,7 @@ namespace RTC
 		// Add FINGERPRINT.
 		if (addFingerprint)
 		{
-			// Compute the CRC32 of the message up to (but excluding) the FINGERPRINT
+			// Compute the CRC32 of the packet up to (but excluding) the FINGERPRINT
 			// attribute and XOR it with 0x5354554e.
 			uint32_t computedFingerprint = Utils::Crypto::GetCRC32(buffer, pos) ^ 0x5354554e;
 

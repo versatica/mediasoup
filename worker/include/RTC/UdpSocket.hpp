@@ -13,7 +13,7 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnPacketRecv(
+			virtual void OnUdpSocketPacketReceived(
 			  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) = 0;
 		};
 
@@ -23,7 +23,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from ::UdpSocket. */
 	public:
-		void UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
+		void UserOnUdpDatagramReceived(const uint8_t* data, size_t len, const struct sockaddr* addr) override;
 
 	private:
 		// Passed by argument.

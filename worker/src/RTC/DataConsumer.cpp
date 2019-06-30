@@ -132,6 +132,24 @@ namespace RTC
 		MS_DEBUG_DEV("Transport disconnected [dataConsumerId:%s]", this->id.c_str());
 	}
 
+	void DataConsumer::SctpAssociationConnected()
+	{
+		MS_TRACE();
+
+		this->sctpAssociationConnected = true;
+
+		MS_DEBUG_DEV("SctpAssociation connected [dataConsumerId:%s]", this->id.c_str());
+	}
+
+	void DataConsumer::SctpAssociationClosed()
+	{
+		MS_TRACE();
+
+		this->sctpAssociationConnected = false;
+
+		MS_DEBUG_DEV("SctpAssociation disconnected [dataConsumerId:%s]", this->id.c_str());
+	}
+
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
 	// right after calling this method. Otherwise ugly things may happen.
 	void DataConsumer::DataProducerClosed()
