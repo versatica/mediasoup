@@ -223,7 +223,7 @@ namespace RTC
 			return;
 		}
 
-		usrsctp_conninput((void*)this, data, len, 0);
+		usrsctp_conninput(static_cast<void*>(this), data, len, 0);
 	}
 
 	void SctpAssociation::SendSctpMessage(RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len)
