@@ -84,7 +84,10 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->socket)
+		{
 			usrsctp_close(this->socket);
+			usrsctp_set_ulpinfo(this->socket, nullptr);
+		}
 
 		// Deregister ourselves from usrsctp.
 		usrsctp_deregister_address(static_cast<void*>(this));
