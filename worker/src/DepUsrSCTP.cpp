@@ -13,7 +13,7 @@ static constexpr size_t CheckerInterval{ 10 }; // In ms.
 
 /* Static methods for usrsctp global callbacks. */
 
-inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t tos, uint8_t setDf)
+inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
 {
 	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(addr);
 
