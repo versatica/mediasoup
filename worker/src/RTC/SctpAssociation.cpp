@@ -15,7 +15,6 @@ uint16_t event_types[] =
 	SCTP_ADAPTATION_INDICATION,
 	SCTP_ASSOC_CHANGE,
 	SCTP_ASSOC_RESET_EVENT,
-	SCTP_PEER_ADDR_CHANGE,
 	SCTP_REMOTE_ERROR,
 	SCTP_SHUTDOWN_EVENT,
 	SCTP_SEND_FAILED_EVENT,
@@ -394,13 +393,6 @@ namespace RTC
 
 				break;
 			}
-			// https://tools.ietf.org/html/rfc6458#section-6.1.2.
-			// Only applicable to multi-homed associations.
-			case SCTP_PEER_ADDR_CHANGE:
-			{
-				break;
-			}
-
 			// An Operation Error is not considered fatal in and of itself, but may be
 			// used with an ABORT chunk to report a fatal condition.
 			case SCTP_REMOTE_ERROR:
