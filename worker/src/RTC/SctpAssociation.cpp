@@ -147,9 +147,8 @@ namespace RTC
 		struct sctp_initmsg initmsg;
 
 		memset(&initmsg, 0, sizeof(struct sctp_initmsg));
-		// TODO: Set proper values.
-		initmsg.sinit_num_ostreams  = 1023;
-		initmsg.sinit_max_instreams = 1023;
+		initmsg.sinit_num_ostreams  = this->numSctpStreams;
+		initmsg.sinit_max_instreams = this->numSctpStreams;
 
 		ret = usrsctp_setsockopt(
 		  this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(struct sctp_initmsg));
