@@ -16,7 +16,7 @@ namespace RTC
 		{
 		public:
 			virtual void OnDataProducerSctpMessageReceived(
-			  RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) = 0;
+			  RTC::DataProducer* dataProducer, uint8_t ppid, const uint8_t* msg, size_t len) = 0;
 		};
 
 	public:
@@ -28,7 +28,7 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
 		const RTC::SctpStreamParameters& GetSctpStreamParameters() const;
-		void ReceiveSctpMessage(const uint8_t* msg, size_t len);
+		void ReceiveSctpMessage(uint8_t ppid, const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.

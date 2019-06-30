@@ -9,7 +9,8 @@
       'deps/libsrtp/libsrtp.gyp:libsrtp',
       'deps/usrsctp/usrsctp.gyp:usrsctp'
     ],
-    'defines': [ 'SCTP_DEBUG' ],
+    # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
+    # 'defines': [ 'SCTP_DEBUG' ],
     'sources':
     [
       # C++ source files.

@@ -16,12 +16,16 @@ namespace RTC
 		{
 		public:
 			virtual void OnDataConsumerSendSctpMessage(
-			  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len)             = 0;
-			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
+			  RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len) = 0;
+			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)   = 0;
 		};
 
 	public:
-		DataConsumer(const std::string& id, RTC::DataConsumer::Listener* listener, json& data);
+		DataConsumer(
+		  const std::string& id,
+		  RTC::DataConsumer::Listener* listener,
+		  json& data,
+		  size_t maxSctpMessageSize);
 		virtual ~DataConsumer();
 
 	public:
@@ -35,7 +39,7 @@ namespace RTC
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
 		void DataProducerClosed();
-		void SendSctpMessage(const uint8_t* msg, size_t len);
+		void SendSctpMessage(uint8_t ppid, const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.
@@ -44,6 +48,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		RTC::DataConsumer::Listener* listener{ nullptr };
+		size_t maxSctpMessageSize{ 0 };
 		// Others.
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;

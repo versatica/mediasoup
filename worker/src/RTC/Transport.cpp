@@ -508,7 +508,8 @@ namespace RTC
 				SetNewDataConsumerIdFromRequest(request, dataConsumerId);
 
 				// This may throw.
-				auto* dataConsumer = new RTC::DataConsumer(dataConsumerId, this, request->data);
+				auto* dataConsumer = new RTC::DataConsumer(
+				  dataConsumerId, this, request->data, this->sctpAssociation->GetMaxSctpMessageSize());
 
 				// Notify the listener.
 				// This may throw if no DataProducer is found.
@@ -735,7 +736,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
 			}
 
-			uint32_t maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<uint32_t>();
+			size_t maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
 
 			this->sctpAssociation = new RTC::SctpAssociation(this, numSctpStreams, maxSctpMessageSize);
 		}
@@ -774,20 +775,7 @@ namespace RTC
 
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
-		{
-			try
-			{
-				this->sctpAssociation->Run();
-			}
-			catch (const MediaSoupError& error)
-			{
-				delete this->sctpAssociation;
-				this->sctpAssociation = nullptr;
-
-				// TODO: Notify about the error.
-				throw;
-			}
-		}
+			this->sctpAssociation->Run();
 	}
 
 	void Transport::Disconnected()
@@ -1365,19 +1353,19 @@ namespace RTC
 	}
 
 	inline void Transport::OnDataProducerSctpMessageReceived(
-	  RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
+	  RTC::DataProducer* dataProducer, uint8_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, msg, len);
+		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, ppid, msg, len);
 	}
 
 	inline void Transport::OnDataConsumerSendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len)
+	  RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
-		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len);
+		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
 	}
 
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
@@ -1392,6 +1380,18 @@ namespace RTC
 
 		// Delete it.
 		delete dataConsumer;
+	}
+
+	inline void Transport::OnSctpAssociationConnecting(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "connecting";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -1410,6 +1410,26 @@ namespace RTC
 		json data = json::object();
 
 		data["sctpState"] = "connected";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+	}
+
+	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->SctpAssociationClosed();
+		}
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "failed";
 
 		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
 	}
@@ -1444,7 +1464,11 @@ namespace RTC
 	}
 
 	inline void Transport::OnSctpAssociationMessageReceived(
-	  RTC::SctpAssociation* /*sctpAssociation*/, uint16_t streamId, const uint8_t* msg, size_t len)
+	  RTC::SctpAssociation* /*sctpAssociation*/,
+	  uint16_t streamId,
+	  uint8_t ppid,
+	  const uint8_t* msg,
+	  size_t len)
 	{
 		MS_TRACE();
 
@@ -1459,7 +1483,7 @@ namespace RTC
 		}
 
 		// Pass the SCTP message to the corresponding DataProducer.
-		dataProducer->ReceiveSctpMessage(msg, len);
+		dataProducer->ReceiveSctpMessage(ppid, msg, len);
 	}
 
 	inline void Transport::OnTimer(Timer* timer)

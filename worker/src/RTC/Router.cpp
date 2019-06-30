@@ -824,7 +824,11 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportDataProducerSctpMessageReceived(
-	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len)
+	  RTC::Transport* /*transport*/,
+	  RTC::DataProducer* dataProducer,
+	  uint8_t ppid,
+	  const uint8_t* msg,
+	  size_t len)
 	{
 		MS_TRACE();
 
@@ -832,7 +836,7 @@ namespace RTC
 
 		for (auto* consumer : dataConsumers)
 		{
-			consumer->SendSctpMessage(msg, len);
+			consumer->SendSctpMessage(ppid, msg, len);
 		}
 	}
 

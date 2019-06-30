@@ -72,7 +72,11 @@ namespace RTC
 		void OnTransportNewDataProducer(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
 		void OnTransportDataProducerClosed(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
 		void OnTransportDataProducerSctpMessageReceived(
-		  RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) override;
+		  RTC::Transport* transport,
+		  RTC::DataProducer* dataProducer,
+		  uint8_t ppid,
+		  const uint8_t* msg,
+		  size_t len) override;
 		void OnTransportNewDataConsumer(
 		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) override;
 		void OnTransportDataConsumerClosed(RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;

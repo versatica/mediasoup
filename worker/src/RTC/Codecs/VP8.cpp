@@ -3,6 +3,7 @@
 
 #include "RTC/Codecs/VP8.hpp"
 #include "Logger.hpp"
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {

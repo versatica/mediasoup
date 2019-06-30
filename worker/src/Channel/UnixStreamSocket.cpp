@@ -6,7 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include <cmath>   // std::ceil()
 #include <cstdio>  // sprintf()
-#include <cstring> // std::memmove()
+#include <cstring> // std::memcpy(), std::memmove()
 extern "C" {
 #include <netstring.h>
 }

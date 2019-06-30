@@ -28,42 +28,52 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) = 0;
-			virtual void OnSctpAssociationClosed(RTC::SctpAssociation* sctpAssociation)    = 0;
+			virtual void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) = 0;
+			virtual void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation)  = 0;
+			virtual void OnSctpAssociationFailed(RTC::SctpAssociation* sctpAssociation)     = 0;
+			virtual void OnSctpAssociationClosed(RTC::SctpAssociation* sctpAssociation)     = 0;
 			virtual void OnSctpAssociationSendData(
 			  RTC::SctpAssociation* sctpAssociation, const uint8_t* data, size_t len) = 0;
 			virtual void OnSctpAssociationMessageReceived(
-			  RTC::SctpAssociation* sctpAssociation, uint16_t streamId, const uint8_t* msg, size_t len) = 0;
+			  RTC::SctpAssociation* sctpAssociation,
+			  uint16_t streamId,
+			  uint8_t ppid,
+			  const uint8_t* msg,
+			  size_t len) = 0;
 		};
 
 	public:
 		static bool IsSctp(const uint8_t* data, size_t len);
 
 	public:
-		SctpAssociation(Listener* listener, uint16_t numSctpStreams, uint32_t maxSctpMessageSize);
+		SctpAssociation(Listener* listener, uint16_t numSctpStreams, size_t maxSctpMessageSize);
 		~SctpAssociation();
 
 	public:
 		void FillJson(json& jsonObject) const;
 		void Run();
+		size_t GetMaxSctpMessageSize() const;
 		SctpState GetState() const;
 		void ProcessSctpData(const uint8_t* data, size_t len);
-		void SendSctpMessage(RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len);
+		void SendSctpMessage(RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len);
 
 		/* Callbacks fired by usrsctp events. */
 	public:
 		void OnUsrSctpSendSctpData(void* buffer, size_t len);
-		void OnUsrSctpReceiveSctpData(uint16_t streamId, const uint8_t* msg, size_t len);
+		void OnUsrSctpReceiveSctpData(
+		  uint16_t streamId, uint8_t ppid, int flags, const uint8_t* data, size_t len);
 		void OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len);
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		uint16_t numSctpStreams{ 65535 };
-		uint32_t maxSctpMessageSize{ 262144 };
+		size_t maxSctpMessageSize{ 262144 };
 		// Others.
 		SctpState state{ SctpState::NEW };
 		struct socket* socket{ nullptr };
+		uint8_t* messageBuffer{ nullptr };
+		size_t messageBufferLen{ 0 };
 	};
 
 	/* Inline static methods. */
@@ -81,6 +91,12 @@ namespace RTC
 	}
 
 	/* Inline instance methods. */
+
+	inline size_t SctpAssociation::GetMaxSctpMessageSize() const
+	{
+		return this->maxSctpMessageSize;
+	}
+
 	inline SctpAssociation::SctpState SctpAssociation::GetState() const
 	{
 		return this->state;

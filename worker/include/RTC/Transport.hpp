@@ -72,7 +72,11 @@ namespace RTC
 			virtual void OnTransportDataProducerClosed(
 			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
 			virtual void OnTransportDataProducerSctpMessageReceived(
-			  RTC::Transport* transport, RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) = 0;
+			  RTC::Transport* transport,
+			  RTC::DataProducer* dataProducer,
+			  uint8_t ppid,
+			  const uint8_t* msg,
+			  size_t len) = 0;
 			virtual void OnTransportNewDataConsumer(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) = 0;
 			virtual void OnTransportDataConsumerClosed(
@@ -162,22 +166,28 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
 	public:
 		void OnDataProducerSctpMessageReceived(
-		  RTC::DataProducer* dataProducer, const uint8_t* msg, size_t len) override;
+		  RTC::DataProducer* dataProducer, uint8_t ppid, const uint8_t* msg, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
 		void OnDataConsumerSendSctpMessage(
-		  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len) override;
+		  RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
 	public:
+		void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) override;
 		void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) override;
+		void OnSctpAssociationFailed(RTC::SctpAssociation* sctpAssociation) override;
 		void OnSctpAssociationClosed(RTC::SctpAssociation* sctpAssociation) override;
 		void OnSctpAssociationSendData(
 		  RTC::SctpAssociation* sctpAssociation, const uint8_t* data, size_t len) override;
 		void OnSctpAssociationMessageReceived(
-		  RTC::SctpAssociation* sctpAssociation, uint16_t streamId, const uint8_t* msg, size_t len) override;
+		  RTC::SctpAssociation* sctpAssociation,
+		  uint16_t streamId,
+		  uint8_t ppid,
+		  const uint8_t* msg,
+		  size_t len) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:

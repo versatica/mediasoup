@@ -10,8 +10,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	DataConsumer::DataConsumer(const std::string& id, RTC::DataConsumer::Listener* listener, json& data)
-	  : id(id), listener(listener)
+	DataConsumer::DataConsumer(
+	  const std::string& id, RTC::DataConsumer::Listener* listener, json& data, size_t maxSctpMessageSize)
+	  : id(id), listener(listener), maxSctpMessageSize(maxSctpMessageSize)
 	{
 		MS_TRACE();
 
@@ -147,7 +148,7 @@ namespace RTC
 
 		this->sctpAssociationConnected = false;
 
-		MS_DEBUG_DEV("SctpAssociation disconnected [dataConsumerId:%s]", this->id.c_str());
+		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
 	}
 
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
@@ -165,16 +166,27 @@ namespace RTC
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 
-	void DataConsumer::SendSctpMessage(const uint8_t* msg, size_t len)
+	void DataConsumer::SendSctpMessage(uint8_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
 		if (!IsActive())
 			return;
 
+		if (len > this->maxSctpMessageSize)
+		{
+			MS_WARN_TAG(
+			  sctp,
+			  "given message exceeds maxSctpMessageSize value [maxSctpMessageSize:%zu, len:%zu]",
+			  len,
+			  this->maxSctpMessageSize);
+
+			return;
+		}
+
 		this->messagesSent++;
 		this->bytesSent += len;
 
-		this->listener->OnDataConsumerSendSctpMessage(this, msg, len);
+		this->listener->OnDataConsumerSendSctpMessage(this, ppid, msg, len);
 	}
 } // namespace RTC

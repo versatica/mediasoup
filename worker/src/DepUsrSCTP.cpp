@@ -28,6 +28,8 @@ inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t /
 // Static method for printing usrsctp debug.
 inline static void sctpDebug(const char* format, ...)
 {
+	return;
+
 	char buffer[10000];
 	va_list ap;
 

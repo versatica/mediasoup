@@ -113,15 +113,13 @@ namespace RTC
 		}
 	}
 
-	void DataProducer::ReceiveSctpMessage(const uint8_t* msg, size_t len)
+	void DataProducer::ReceiveSctpMessage(uint8_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
-
-		MS_ERROR("DataProducer::ReceiveSctpMessage");
 
 		this->messagesReceived++;
 		this->bytesReceived += len;
 
-		this->listener->OnDataProducerSctpMessageReceived(this, msg, len);
+		this->listener->OnDataProducerSctpMessageReceived(this, ppid, msg, len);
 	}
 } // namespace RTC
