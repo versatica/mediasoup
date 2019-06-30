@@ -38,20 +38,6 @@ inline static int onRecvSctpData(
 	if (sctpAssociation == nullptr)
 		return 0;
 
-	// TODO: If it's an association, what is "streamId"?
-
-	uint16_t streamId = rcv.rcv_sid;
-
-	MS_DEBUG_DEV(
-	  "message received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
-	  ", PPID:%" PRIu32 ", context:%" PRIu32 "]",
-	  dataLen,
-	  rcv.rcv_sid,
-	  rcv.rcv_ssn,
-	  rcv.rcv_tsn,
-	  ntohl(rcv.rcv_ppid),
-	  rcv.rcv_context);
-
 	if (flags & MSG_NOTIFICATION)
 	{
 		sctpAssociation->OnUsrSctpReceiveSctpNotification(
@@ -59,6 +45,18 @@ inline static int onRecvSctpData(
 	}
 	else
 	{
+		uint16_t streamId = rcv.rcv_sid;
+
+		MS_DEBUG_DEV(
+		  "message received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
+		  ", PPID:%" PRIu32 ", context:%" PRIu32 "]",
+		  dataLen,
+		  rcv.rcv_sid,
+		  rcv.rcv_ssn,
+		  rcv.rcv_tsn,
+		  ntohl(rcv.rcv_ppid),
+		  rcv.rcv_context);
+
 		sctpAssociation->OnUsrSctpReceiveSctpData(streamId, static_cast<uint8_t*>(data), dataLen);
 	}
 
