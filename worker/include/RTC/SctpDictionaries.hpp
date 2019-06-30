@@ -9,10 +9,10 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Data
+	class DataChannel
 	{
 	public:
-		enum class Type : uint8_t
+		enum class PayloadProtocolIdentifier : uint8_t
 		{
 			STRING       = 51,
 			BINARY       = 53,

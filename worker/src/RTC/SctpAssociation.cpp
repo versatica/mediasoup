@@ -243,7 +243,7 @@ namespace RTC
 		else
 			spa.sendv_sndinfo.snd_flags = SCTP_EOR | SCTP_UNORDERED;
 
-		spa.sendv_sndinfo.snd_ppid = htonl((uint8_t)RTC::Data::Type::STRING);
+		spa.sendv_sndinfo.snd_ppid = htonl((uint8_t)RTC::DataChannel::PayloadProtocolIdentifier::STRING);
 		spa.sendv_flags            = SCTP_SEND_SNDINFO_VALID;
 
 		// TODO.
