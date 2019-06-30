@@ -68,6 +68,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Register ourselves in usrsctp, otherwise usrsctp_bind() will fail as follows:
+		// "usrsctp_bind() failed: Can't assign requested address"
+		usrsctp_register_address(static_cast<void*>(this));
+
 		DepUsrSCTP::IncreaseSctpAssociations();
 	}
 
@@ -78,6 +82,9 @@ namespace RTC
 		if (this->socket)
 			usrsctp_close(this->socket);
 
+		// Register ourselves from usrsctp.
+		usrsctp_deregister_address(static_cast<void*>(this));
+
 		DepUsrSCTP::DecreaseSctpAssociations();
 	}
 
@@ -86,11 +93,6 @@ namespace RTC
 		MS_TRACE();
 
 		int ret;
-
-		// Without this function call usrsctp_bind will fail as follows:
-		// "usrsctp_bind() failed: Can't assign requested address"
-		// TODO: should we unregister on destructor?
-		usrsctp_register_address(static_cast<void*>(this));
 
 		// Disable explicit congestion notifications (ecn).
 		usrsctp_sysctl_set_sctp_ecn_enable(0);
