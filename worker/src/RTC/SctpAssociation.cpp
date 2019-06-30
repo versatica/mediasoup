@@ -97,8 +97,8 @@ namespace RTC
 		// Disable explicit congestion notifications (ecn).
 		usrsctp_sysctl_set_sctp_ecn_enable(0);
 
-		this->socket =
-		  usrsctp_socket(AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, static_cast<void*>(this));
+		this->socket = usrsctp_socket(
+		  AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, static_cast<void*>(this));
 
 		if (this->socket == nullptr)
 			MS_THROW_ERROR("usrsctp_socket() failed: %s", std::strerror(errno));
@@ -181,7 +181,8 @@ namespace RTC
 		rconn.sconn_addr   = (void*)this;
 		rconn.sconn_len    = sizeof(struct sockaddr_conn);
 
-		ret = usrsctp_connect(this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(struct sockaddr_conn));
+		ret = usrsctp_connect(
+		  this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(struct sockaddr_conn));
 
 		if (ret < 0 && errno != EINPROGRESS)
 			MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
@@ -250,7 +251,15 @@ namespace RTC
 		spa.sendv_prinfo.pr_value  = 0;
 
 		int ret = usrsctp_sendv(
-		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(struct sctp_sendv_spa)), SCTP_SENDV_SPA, 0);
+		  this->socket,
+		  msg,
+		  len,
+		  nullptr,
+		  0,
+		  &spa,
+		  static_cast<socklen_t>(sizeof(struct sctp_sendv_spa)),
+		  SCTP_SENDV_SPA,
+		  0);
 
 		if (ret < 0)
 			MS_ERROR("error sending usctp data: %s", std::strerror(errno));
