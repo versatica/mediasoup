@@ -14,6 +14,15 @@ namespace RTC
 	class SctpAssociation
 	{
 	public:
+		enum class SctpState
+		{
+			NEW = 1,
+			CONNECTING,
+			CONNECTED,
+			FAILED,
+			CLOSED
+		};
+
 		class Listener
 		{
 		public:
@@ -34,19 +43,24 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void ProcessSctpData(const uint8_t* data, size_t len);
 		bool Run();
+		SctpState GetState() const;
 		void SendSctpMessage(RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len);
 
 		/* Callbacks fired by usrsctp events. */
 	public:
 		void OnUsrSctpSendSctpData(void* buffer, size_t len);
 		void OnUsrSctpReceiveSctpData(uint16_t streamId, const uint8_t* msg, size_t len);
+		void OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len);
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		// Allocated by usrsctp.
 		struct socket* socket{ nullptr };
+		// Others.
 		uint16_t numSctpStreams{ 65535 };
 		uint32_t maxSctpMessageSize{ 262144 };
+		SctpState state{ SctpState::NEW };
 	};
 
 	/* Inline static methods. */
