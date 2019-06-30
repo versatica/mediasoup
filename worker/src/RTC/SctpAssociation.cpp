@@ -90,15 +90,13 @@ namespace RTC
 		// Without this function call usrsctp_bind will fail as follows:
 		// "usrsctp_bind() failed: Can't assign requested address"
 		// TODO: should we unregister on destructor?
-		// TODO: Let's use static_cast instead.
-		usrsctp_register_address((void*)this);
+		usrsctp_register_address(static_cast<void*>(this));
 
 		// Disable explicit congestion notifications (ecn).
 		usrsctp_sysctl_set_sctp_ecn_enable(0);
 
-		// TODO: Let's use static_cast instead.
 		this->socket =
-		  usrsctp_socket(AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, (void*)this);
+		  usrsctp_socket(AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, static_cast<void*>(this));
 
 		if (this->socket == nullptr)
 			MS_THROW_ERROR("usrsctp_socket() failed: %s", std::strerror(errno));
@@ -163,7 +161,7 @@ namespace RTC
 		memset(&sconn, 0, sizeof(struct sockaddr_conn));
 		sconn.sconn_family = AF_CONN;
 		sconn.sconn_port   = htons(5000);
-		sconn.sconn_addr   = (void*)this; // TODO: Let's use static_cast instead.
+		sconn.sconn_addr   = static_cast<void*>(this);
 #ifdef HAVE_SCONN_LEN
 		rconn.sconn_len = sizeof(struct sockaddr_conn);
 #endif
@@ -182,8 +180,7 @@ namespace RTC
 		rconn.sconn_addr   = (void*)this;
 		rconn.sconn_len    = sizeof(struct sockaddr_conn);
 
-		// TODO: Let's use static_cast or reinterpret_cast instead.
-		ret = usrsctp_connect(this->socket, (struct sockaddr*)&rconn, sizeof(struct sockaddr_conn));
+		ret = usrsctp_connect(this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(struct sockaddr_conn));
 
 		if (ret < 0 && errno != EINPROGRESS)
 			MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
@@ -250,9 +247,8 @@ namespace RTC
 		// spa.sendv_prinfo.pr_policy.
 		// spa.sendv_prinfo.pr_value.
 
-		// TODO: Let's use static_cast or reinterpret_cast instead.
 		int ret = usrsctp_sendv(
-		  this->socket, msg, len, nullptr, 0, &spa, (socklen_t)sizeof(struct sctp_sendv_spa), SCTP_SENDV_SPA, 0);
+		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(struct sctp_sendv_spa)), SCTP_SENDV_SPA, 0);
 
 		if (ret < 0)
 			MS_ERROR("error sending usctp data: %s", std::strerror(errno));
