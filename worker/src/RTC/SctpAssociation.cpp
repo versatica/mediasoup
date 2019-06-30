@@ -244,9 +244,10 @@ namespace RTC
 		spa.sendv_sndinfo.snd_ppid = htonl((uint8_t)RTC::DataChannel::PayloadProtocolIdentifier::STRING);
 		spa.sendv_flags            = SCTP_SEND_SNDINFO_VALID;
 
-		// TODO.
-		// spa.sendv_prinfo.pr_policy.
-		// spa.sendv_prinfo.pr_value.
+		// TODO: use SctpStreamParameters to indicate reliability:
+		// https://tools.ietf.org/html/rfc3758
+		spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_NONE;
+		spa.sendv_prinfo.pr_value  = 0;
 
 		int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(struct sctp_sendv_spa)), SCTP_SENDV_SPA, 0);
