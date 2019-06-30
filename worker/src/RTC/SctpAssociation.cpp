@@ -198,7 +198,9 @@ namespace RTC
 			rconn.sconn_family = AF_CONN;
 			rconn.sconn_port   = htons(5000);
 			rconn.sconn_addr   = static_cast<void*>(this);
-			rconn.sconn_len    = sizeof(struct sockaddr_conn);
+#ifdef HAVE_SCONN_LEN
+			rconn.sconn_len = sizeof(struct sockaddr_conn);
+#endif
 
 			ret = usrsctp_connect(
 			  this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(struct sockaddr_conn));
