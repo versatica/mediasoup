@@ -81,7 +81,7 @@ namespace RTC
 		DepUsrSCTP::DecreaseSctpAssociations();
 	}
 
-	bool SctpAssociation::Run()
+	void SctpAssociation::Run()
 	{
 		MS_TRACE();
 
@@ -188,8 +188,7 @@ namespace RTC
 		if (ret < 0 && errno != EINPROGRESS)
 			MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
 
-		// TMP.
-		return true;
+		this->state = SctpState::CONNECTING;
 	}
 
 	void SctpAssociation::FillJson(json& jsonObject) const
@@ -299,21 +298,20 @@ namespace RTC
 				{
 					case SCTP_COMM_UP:
 					{
-						this->state = SctpState::CONNECTED;
-
 						MS_DEBUG_TAG(
 						  sctp,
 						  "sctp association connected, streams [in:%" PRIu16 " , out:%" PRIu16 "]",
 						  notification->sn_assoc_change.sac_inbound_streams,
 						  notification->sn_assoc_change.sac_outbound_streams);
 
+						this->state = SctpState::CONNECTED;
+						this->listener->OnSctpAssociationConnected(this);
+
 						break;
 					}
 
 					case SCTP_COMM_LOST:
 					{
-						this->state = SctpState::CLOSED;
-
 						if (notification->sn_header.sn_length > 0)
 						{
 							static const size_t bufferSize{ 1024 };
@@ -326,40 +324,45 @@ namespace RTC
 								  buffer, bufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
 							}
 
-							MS_WARN_TAG(sctp, "stcp communication lost");
+							MS_DEBUG_TAG(sctp, "stcp communication lost [info:%s]", buffer);
+						}
+						else
+						{
+							MS_DEBUG_TAG(sctp, "stcp communication lost");
 						}
 
-						MS_DEBUG_TAG(sctp, "sctp association disconnected");
+						this->state = SctpState::CLOSED;
+						this->listener->OnSctpAssociationClosed(this);
 
 						break;
 					}
 
 					case SCTP_RESTART:
 					{
-						this->state = SctpState::CONNECTED;
-
 						MS_DEBUG_TAG(
 						  sctp,
 						  "sctp remote association restarted, streams [in:%" PRIu16 " , out:%" PRIu16 "]",
 						  notification->sn_assoc_change.sac_inbound_streams,
 						  notification->sn_assoc_change.sac_outbound_streams);
 
+						this->state = SctpState::CONNECTED;
+						this->listener->OnSctpAssociationConnected(this);
+
 						break;
 					}
 
 					case SCTP_SHUTDOWN_COMP:
 					{
-						this->state = SctpState::CLOSED;
-
 						MS_DEBUG_TAG(sctp, "sctp association gracefully closed");
+
+						this->state = SctpState::CLOSED;
+						this->listener->OnSctpAssociationClosed(this);
 
 						break;
 					}
 
 					case SCTP_CANT_STR_ASSOC:
 					{
-						this->state = SctpState::CLOSED;
-
 						if (notification->sn_header.sn_length > 0)
 						{
 							static const size_t bufferSize{ 1024 };
@@ -374,6 +377,9 @@ namespace RTC
 
 							MS_WARN_TAG(sctp, "stcp setup failed: '%s'", buffer);
 						}
+
+						this->state = SctpState::FAILED;
+						this->listener->OnSctpAssociationClosed(this);
 
 						break;
 					}
@@ -422,7 +428,8 @@ namespace RTC
 			{
 				MS_DEBUG_TAG(sctp, "remote association shutdown");
 
-				// TODO: Change the state and notify?
+				this->state = SctpState::CLOSED;
+				this->listener->OnSctpAssociationClosed(this);
 
 				break;
 			}

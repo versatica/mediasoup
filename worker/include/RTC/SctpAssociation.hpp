@@ -45,7 +45,7 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
-		bool Run();
+		void Run();
 		SctpState GetState() const;
 		void ProcessSctpData(const uint8_t* data, size_t len);
 		void SendSctpMessage(RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len);
