@@ -368,6 +368,7 @@ namespace RTC
 						  notification->sn_assoc_change.sac_inbound_streams,
 						  notification->sn_assoc_change.sac_outbound_streams);
 
+						// TODO: Not if we are already connected.
 						this->state = SctpState::CONNECTED;
 						this->listener->OnSctpAssociationConnected(this);
 
@@ -378,6 +379,7 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(sctp, "SCTP association gracefully closed");
 
+						// TODO: Not if we are already closed.
 						this->state = SctpState::CLOSED;
 						this->listener->OnSctpAssociationClosed(this);
 
@@ -401,6 +403,7 @@ namespace RTC
 							MS_WARN_TAG(sctp, "SCTP setup failed: '%s'", buffer);
 						}
 
+						// TODO: emit listener->OnSctpAssociationFailed.
 						this->state = SctpState::FAILED;
 						this->listener->OnSctpAssociationClosed(this);
 
