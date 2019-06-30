@@ -1,11 +1,10 @@
 #define MS_CLASS "RTC::SctpAssociation"
-#define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "RTC/SctpAssociation.hpp"
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-// #include "Channel/Notifier.hpp"
 
 /* SCTP events to which we are subscribing. */
 
@@ -29,7 +28,7 @@ inline static int onRecvSctpData(
   struct socket* /*sock*/,
   union sctp_sockstore /*addr*/,
   void* data,
-  size_t datalen,
+  size_t dataLen,
   struct sctp_rcvinfo rcv,
   int flags,
   void* ulp_info)
@@ -39,12 +38,14 @@ inline static int onRecvSctpData(
 	if (sctpAssociation == nullptr)
 		return 0;
 
+	// TODO: If it's an association, what is "streamId"?
+
 	uint16_t streamId = rcv.rcv_sid;
 
 	MS_DEBUG_DEV(
-	  "Message received: [length:%zu, stream:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
-	  ", PPID:%" PRIu32 ", context:%" PRIu32,
-	  datalen,
+	  "message received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
+	  ", PPID:%" PRIu32 ", context:%" PRIu32 "]",
+	  dataLen,
 	  rcv.rcv_sid,
 	  rcv.rcv_ssn,
 	  rcv.rcv_tsn,
@@ -52,9 +53,14 @@ inline static int onRecvSctpData(
 	  rcv.rcv_context);
 
 	if (flags & MSG_NOTIFICATION)
-		sctpAssociation->OnUsrSctpReceiveSctpNotification((union sctp_notification*)data, datalen);
+	{
+		sctpAssociation->OnUsrSctpReceiveSctpNotification(
+		  static_cast<union sctp_notification*>(data), dataLen);
+	}
 	else
-		sctpAssociation->OnUsrSctpReceiveSctpData(streamId, (uint8_t*)data, datalen);
+	{
+		sctpAssociation->OnUsrSctpReceiveSctpData(streamId, static_cast<uint8_t*>(data), dataLen);
+	}
 
 	return 1;
 }
@@ -69,7 +75,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Register ourselves in usrsctp, otherwise usrsctp_bind() will fail as follows:
-		// "usrsctp_bind() failed: Can't assign requested address"
+		//   "usrsctp_bind() failed: Can't assign requested address"
 		usrsctp_register_address(static_cast<void*>(this));
 
 		DepUsrSCTP::IncreaseSctpAssociations();
@@ -82,7 +88,7 @@ namespace RTC
 		if (this->socket)
 			usrsctp_close(this->socket);
 
-		// Register ourselves from usrsctp.
+		// Deregister ourselves from usrsctp.
 		usrsctp_deregister_address(static_cast<void*>(this));
 
 		DepUsrSCTP::DecreaseSctpAssociations();
@@ -103,7 +109,7 @@ namespace RTC
 		if (this->socket == nullptr)
 			MS_THROW_ERROR("usrsctp_socket() failed: %s", std::strerror(errno));
 
-		usrsctp_set_ulpinfo(this->socket, (void*)this);
+		usrsctp_set_ulpinfo(this->socket, static_cast<void*>(this));
 
 		// Make the socket non-blocking.
 		ret = usrsctp_set_non_blocking(this->socket, 1);
@@ -135,10 +141,13 @@ namespace RTC
 		memset(&event, 0, sizeof(event));
 		event.se_assoc_id = SCTP_ALL_ASSOC;
 		event.se_on       = 1;
-		for (size_t i = 0; i < sizeof(event_types) / sizeof(uint16_t); i++)
+
+		for (size_t i{ 0 }; i < sizeof(event_types) / sizeof(uint16_t); ++i)
 		{
 			event.se_type = event_types[i];
+
 			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_EVENT, &event, sizeof(event));
+
 			if (ret < 0)
 				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_EVENT) failed: %s", std::strerror(errno));
 		}
@@ -167,7 +176,8 @@ namespace RTC
 		rconn.sconn_len = sizeof(struct sockaddr_conn);
 #endif
 
-		ret = usrsctp_bind(this->socket, (struct sockaddr*)&sconn, sizeof(struct sockaddr_conn));
+		ret = usrsctp_bind(
+		  this->socket, reinterpret_cast<struct sockaddr*>(&sconn), sizeof(struct sockaddr_conn));
 
 		if (ret < 0)
 			MS_THROW_ERROR("usrsctp_bind() failed: %s", std::strerror(errno));
@@ -178,7 +188,7 @@ namespace RTC
 		memset(&rconn, 0, sizeof(struct sockaddr_conn));
 		rconn.sconn_family = AF_CONN;
 		rconn.sconn_port   = htons(5000);
-		rconn.sconn_addr   = (void*)this;
+		rconn.sconn_addr   = static_cast<void*>(this);
 		rconn.sconn_len    = sizeof(struct sockaddr_conn);
 
 		ret = usrsctp_connect(
@@ -262,7 +272,7 @@ namespace RTC
 		  0);
 
 		if (ret < 0)
-			MS_ERROR("error sending usctp data: %s", std::strerror(errno));
+			MS_ERROR("error sending SCTP message: %s", std::strerror(errno));
 	}
 
 	void SctpAssociation::OnUsrSctpSendSctpData(void* buffer, size_t len)
@@ -272,6 +282,7 @@ namespace RTC
 		const uint8_t* data = static_cast<uint8_t*>(buffer);
 
 		// TODO: accounting, rate, etc?
+		// TODO: If so, also when receiving.
 
 		this->listener->OnSctpAssociationSendData(this, data, len);
 	}
@@ -279,6 +290,8 @@ namespace RTC
 	void SctpAssociation::OnUsrSctpReceiveSctpData(uint16_t streamId, const uint8_t* msg, size_t len)
 	{
 		MS_DUMP_DATA(msg, len);
+
+		// TODO: This may be a partial message so must not emit it.
 
 		this->listener->OnSctpAssociationMessageReceived(this, streamId, msg, len);
 	}
@@ -294,11 +307,12 @@ namespace RTC
 			{
 				MS_DEBUG_TAG(
 				  sctp,
-				  "sctp adaptation indication [%x]",
+				  "SCTP adaptation indication [%x]",
 				  notification->sn_adaptation_event.sai_adaptation_ind);
 
 				break;
 			}
+
 			case SCTP_ASSOC_CHANGE:
 			{
 				switch (notification->sn_assoc_change.sac_state)
@@ -307,7 +321,7 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(
 						  sctp,
-						  "sctp association connected, streams [in:%" PRIu16 " , out:%" PRIu16 "]",
+						  "SCTP association connected, streams [in:%" PRIu16 ", out:%" PRIu16 "]",
 						  notification->sn_assoc_change.sac_inbound_streams,
 						  notification->sn_assoc_change.sac_outbound_streams);
 
@@ -323,19 +337,20 @@ namespace RTC
 						{
 							static const size_t bufferSize{ 1024 };
 							static char buffer[bufferSize];
+
 							uint32_t len = notification->sn_header.sn_length;
 
-							for (uint32_t i{ 0 }; i < len; i++)
+							for (uint32_t i{ 0 }; i < len; ++i)
 							{
 								std::snprintf(
 								  buffer, bufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
 							}
 
-							MS_DEBUG_TAG(sctp, "stcp communication lost [info:%s]", buffer);
+							MS_DEBUG_TAG(sctp, "SCTP communication lost [info:%s]", buffer);
 						}
 						else
 						{
-							MS_DEBUG_TAG(sctp, "stcp communication lost");
+							MS_DEBUG_TAG(sctp, "SCTP communication lost");
 						}
 
 						this->state = SctpState::CLOSED;
@@ -348,7 +363,7 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(
 						  sctp,
-						  "sctp remote association restarted, streams [in:%" PRIu16 " , out:%" PRIu16 "]",
+						  "SCTP remote association restarted, streams [in:%" PRIu16 ", out:%" PRIu16 "]",
 						  notification->sn_assoc_change.sac_inbound_streams,
 						  notification->sn_assoc_change.sac_outbound_streams);
 
@@ -360,7 +375,7 @@ namespace RTC
 
 					case SCTP_SHUTDOWN_COMP:
 					{
-						MS_DEBUG_TAG(sctp, "sctp association gracefully closed");
+						MS_DEBUG_TAG(sctp, "SCTP association gracefully closed");
 
 						this->state = SctpState::CLOSED;
 						this->listener->OnSctpAssociationClosed(this);
@@ -382,7 +397,7 @@ namespace RTC
 								  buffer, bufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
 							}
 
-							MS_WARN_TAG(sctp, "stcp setup failed: '%s'", buffer);
+							MS_WARN_TAG(sctp, "SCTP setup failed: '%s'", buffer);
 						}
 
 						this->state = SctpState::FAILED;
@@ -402,7 +417,7 @@ namespace RTC
 			// https://tools.ietf.org/html/rfc6525#section-6.1.2.
 			case SCTP_ASSOC_RESET_EVENT:
 			{
-				MS_DEBUG_TAG(sctp, "association reset event received");
+				MS_DEBUG_TAG(sctp, "SCTP association reset event received");
 
 				break;
 			}
@@ -422,7 +437,7 @@ namespace RTC
 
 				MS_WARN_TAG(
 				  sctp,
-				  "remote association error [type:0x%04x, data:%s]",
+				  "remote SCTP association error [type:0x%04x, data:%s]",
 				  notification->sn_remote_error.sre_error,
 				  buffer);
 
@@ -433,7 +448,7 @@ namespace RTC
 			// inform the application that it should cease sending data.
 			case SCTP_SHUTDOWN_EVENT:
 			{
-				MS_DEBUG_TAG(sctp, "remote association shutdown");
+				MS_DEBUG_TAG(sctp, "remote SCTP association shutdown");
 
 				this->state = SctpState::CLOSED;
 				this->listener->OnSctpAssociationClosed(this);
@@ -455,7 +470,7 @@ namespace RTC
 
 				MS_WARN_TAG(
 				  sctp,
-				  "sctp message sent failure [streamId:%" PRIu16 " ,ppid:%" PRIu32
+				  "SCTP message sent failure [streamId:%" PRIu16 ", ppid:%" PRIu32
 				  ", sent:%s, error:0x%08x, info:%s]",
 				  notification->sn_send_failed_event.ssfe_info.snd_sid,
 				  ntohl(notification->sn_send_failed_event.ssfe_info.snd_ppid),
@@ -477,7 +492,7 @@ namespace RTC
 			{
 				MS_DEBUG_TAG(
 				  sctp,
-				  "sctp stream changed, streams [in:%" PRIu16 " , out:%" PRIu16 ", flags:%x]",
+				  "SCTP stream changed, streams [in:%" PRIu16 ", out:%" PRIu16 ", flags:%x]",
 				  notification->sn_strchange_event.strchange_instrms,
 				  notification->sn_strchange_event.strchange_outstrms,
 				  notification->sn_strchange_event.strchange_flags);
@@ -487,8 +502,9 @@ namespace RTC
 
 			default:
 			{
-				MS_DEBUG_TAG(
-				  sctp, "unhandled sctp event received [type:%" PRIu16 "]", notification->sn_header.sn_type);
+				// TODO: Move to MS_DEBUG_TAG once we know which the cases are.
+				MS_WARN_TAG(
+				  sctp, "unhandled SCTP event received [type:%" PRIu16 "]", notification->sn_header.sn_type);
 
 				break;
 			}
