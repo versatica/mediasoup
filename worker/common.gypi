@@ -8,6 +8,8 @@
     'openssl_fips%': '',
     'openssl_no_asm%': 1, # Must be defined in OpenSSL >= 1.1.0g.
     'libopenssl': '<(PRODUCT_DIR)/libopenssl.a',
+    # usrsctp variables.
+    'sctp_debug%': 'false',
     # Others.
     'clang%': 0,
     'mediasoup_asan%': 'false'

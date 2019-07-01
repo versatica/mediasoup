@@ -28,8 +28,6 @@ inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t /
 // Static method for printing usrsctp debug.
 inline static void sctpDebug(const char* format, ...)
 {
-	return;
-
 	char buffer[10000];
 	va_list ap;
 
@@ -39,7 +37,7 @@ inline static void sctpDebug(const char* format, ...)
 	// Remove the artificial carriage return set by usrsctp.
 	buffer[std::strlen(buffer) - 1] = '\0';
 
-	MS_ERROR("%s", buffer);
+	MS_DEBUG_TAG(sctp, "%s", buffer);
 
 	va_end(ap);
 }

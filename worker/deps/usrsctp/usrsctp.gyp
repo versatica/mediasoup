@@ -78,6 +78,9 @@
           'NON_WINDOWS_DEFINE'
         ],
       }],
+      [ 'sctp_debug == "true"', {
+        'defines': [ 'SCTP_DEBUG' ]
+      }]
     ],
   },
   'targets': [
