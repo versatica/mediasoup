@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SctpAssociation"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/SctpAssociation.hpp"
 #include "DepUsrSCTP.hpp"
@@ -49,7 +49,7 @@ inline static int onRecvSctpData(
 		uint8_t ppid      = ntohl(rcv.rcv_ppid);
 
 		MS_DEBUG_DEV(
-		  "message received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
+		  "data chunk received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
 		  ", PPID:%" PRIu32 ", context:%" PRIu32 ", flags:%d]",
 		  dataLen,
 		  rcv.rcv_sid,
@@ -472,7 +472,7 @@ namespace RTC
 								  buffer, BufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
 							}
 
-							MS_WARN_TAG(sctp, "SCTP setup failed: '%s'", buffer);
+							MS_WARN_TAG(sctp, "SCTP setup failed: %s", buffer);
 						}
 
 						if (this->state != SctpState::FAILED)
@@ -489,6 +489,7 @@ namespace RTC
 
 				break;
 			}
+
 			// https://tools.ietf.org/html/rfc6525#section-6.1.2.
 			case SCTP_ASSOC_RESET_EVENT:
 			{
@@ -496,6 +497,7 @@ namespace RTC
 
 				break;
 			}
+
 			// An Operation Error is not considered fatal in and of itself, but may be
 			// used with an ABORT chunk to report a fatal condition.
 			case SCTP_REMOTE_ERROR:
@@ -541,6 +543,7 @@ namespace RTC
 
 				uint32_t len =
 				  notification->sn_send_failed_event.ssfe_length - sizeof(struct sctp_send_failed_event);
+
 				for (uint32_t i{ 0 }; i < len; i++)
 				{
 					std::snprintf(buffer, BufferSize, "0x%02x", notification->sn_send_failed_event.ssfe_data[i]);
