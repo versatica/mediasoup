@@ -275,9 +275,15 @@
           'WARNING_CFLAGS': [ '-Wall', '-Wextra', '-Wno-unused-parameter' ],
           'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++11' ]
         }
+      }],
+
+      # Dependency-specifics.
+
+      [ 'sctp_debug == "true"', {
+        'defines': [ 'SCTP_DEBUG' ]
       }]
     ]
-	},
+  },
   'targets':
   [
     {
