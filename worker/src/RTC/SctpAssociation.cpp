@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SctpAssociation"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/SctpAssociation.hpp"
 #include "DepUsrSCTP.hpp"
