@@ -553,7 +553,7 @@ namespace RTC
 
 		if (it == this->mapSsrcRtpStream.end())
 		{
-			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
+			MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
 
 			return;
 		}
