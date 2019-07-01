@@ -48,7 +48,9 @@ inline static int onRecvSctpData(
 		uint16_t streamId = rcv.rcv_sid;
 		uint8_t ppid      = ntohl(rcv.rcv_ppid);
 
-		MS_DEBUG_DEV(
+		// TODO: Convert this to MS_DEBUG_DEV.
+		MS_DEBUG_TAG(
+		  sctp,
 		  "data chunk received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
 		  ", PPID:%" PRIu32 ", context:%" PRIu32 ", flags:%d]",
 		  dataLen,
