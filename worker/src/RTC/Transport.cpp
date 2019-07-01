@@ -723,7 +723,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not a number)");
 			}
 
-			uint16_t numSctpStreams = jsonNumSctpStreamsIt->get<uint16_t>();
+			auto numSctpStreams = jsonNumSctpStreamsIt->get<uint16_t>();
 
 			// maxSctpMessageSize is mandatory.
 			// clang-format off
@@ -736,7 +736,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
 			}
 
-			size_t maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
+			auto maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
 
 			this->sctpAssociation = new RTC::SctpAssociation(this, numSctpStreams, maxSctpMessageSize);
 		}
@@ -746,8 +746,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->sctpAssociation)
-			delete this->sctpAssociation;
+		delete this->sctpAssociation;
 	}
 
 	void Transport::Connected()

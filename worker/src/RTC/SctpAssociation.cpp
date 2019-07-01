@@ -9,7 +9,7 @@
 /* SCTP events to which we are subscribing. */
 
 /* clang-format off */
-uint16_t eventTypes[] =
+uint16_t EventTypes[] =
 {
 	SCTP_ADAPTATION_INDICATION,
 	SCTP_ASSOC_CHANGE,
@@ -31,9 +31,9 @@ inline static int onRecvSctpData(
   size_t dataLen,
   struct sctp_rcvinfo rcv,
   int flags,
-  void* ulp_info)
+  void* ulpInfo)
 {
-	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(ulp_info);
+	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(ulpInfo);
 
 	if (sctpAssociation == nullptr)
 		return 0;
@@ -127,12 +127,12 @@ namespace RTC
 				MS_THROW_ERROR("usrsctp_set_non_blocking() failed: %s", std::strerror(errno));
 
 			// Set SO_LINGER.
-			struct linger linger_opt;
+			struct linger lingerOpt; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			linger_opt.l_onoff  = 1;
-			linger_opt.l_linger = 0;
+			lingerOpt.l_onoff  = 1;
+			lingerOpt.l_linger = 0;
 
-			ret = usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_LINGER, &linger_opt, sizeof(linger_opt));
+			ret = usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_LINGER, &lingerOpt, sizeof(lingerOpt));
 
 			if (ret < 0)
 				MS_THROW_ERROR("usrsctp_setsockopt(SO_LINGER) failed: %s", std::strerror(errno));
@@ -146,14 +146,14 @@ namespace RTC
 				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_NODELAY) failed: %s", std::strerror(errno));
 
 			// Enable events.
-			struct sctp_event event;
+			struct sctp_event event; // NOLINT(cppcoreguidelines-pro-type-member-init)
 			memset(&event, 0, sizeof(event));
 			event.se_assoc_id = SCTP_ALL_ASSOC;
 			event.se_on       = 1;
 
-			for (size_t i{ 0 }; i < sizeof(eventTypes) / sizeof(uint16_t); ++i)
+			for (size_t i{ 0 }; i < sizeof(EventTypes) / sizeof(uint16_t); ++i)
 			{
-				event.se_type = eventTypes[i];
+				event.se_type = EventTypes[i];
 
 				ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_EVENT, &event, sizeof(event));
 
@@ -162,7 +162,7 @@ namespace RTC
 			}
 
 			// Init message.
-			struct sctp_initmsg initmsg;
+			struct sctp_initmsg initmsg; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			memset(&initmsg, 0, sizeof(struct sctp_initmsg));
 			initmsg.sinit_num_ostreams  = this->numSctpStreams;
@@ -175,7 +175,7 @@ namespace RTC
 				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_INITMSG) failed: %s", std::strerror(errno));
 
 			// Server side.
-			struct sockaddr_conn sconn;
+			struct sockaddr_conn sconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			memset(&sconn, 0, sizeof(struct sockaddr_conn));
 			sconn.sconn_family = AF_CONN;
@@ -192,7 +192,7 @@ namespace RTC
 				MS_THROW_ERROR("usrsctp_bind() failed: %s", std::strerror(errno));
 
 			// Client side.
-			struct sockaddr_conn rconn;
+			struct sockaddr_conn rconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			memset(&rconn, 0, sizeof(struct sockaddr_conn));
 			rconn.sconn_family = AF_CONN;
@@ -251,10 +251,10 @@ namespace RTC
 		  len,
 		  this->maxSctpMessageSize);
 
-		auto parameters = dataConsumer->GetSctpStreamParameters();
+		auto& parameters = dataConsumer->GetSctpStreamParameters();
 
 		// Fill stcp_sendv_spa.
-		struct sctp_sendv_spa spa;
+		struct sctp_sendv_spa spa; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		memset(&spa, 0, sizeof(struct sctp_sendv_spa));
 		spa.sendv_sndinfo.snd_sid = parameters.streamId;
@@ -400,15 +400,15 @@ namespace RTC
 					{
 						if (notification->sn_header.sn_length > 0)
 						{
-							static const size_t bufferSize{ 1024 };
-							static char buffer[bufferSize];
+							static const size_t BufferSize{ 1024 };
+							static char buffer[BufferSize];
 
 							uint32_t len = notification->sn_header.sn_length;
 
 							for (uint32_t i{ 0 }; i < len; ++i)
 							{
 								std::snprintf(
-								  buffer, bufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
+								  buffer, BufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
 							}
 
 							MS_DEBUG_TAG(sctp, "SCTP communication lost [info:%s]", buffer);
@@ -461,14 +461,15 @@ namespace RTC
 					{
 						if (notification->sn_header.sn_length > 0)
 						{
-							static const size_t bufferSize{ 1024 };
-							static char buffer[bufferSize];
+							static const size_t BufferSize{ 1024 };
+							static char buffer[BufferSize];
+
 							uint32_t len = notification->sn_header.sn_length;
 
 							for (uint32_t i{ 0 }; i < len; i++)
 							{
 								std::snprintf(
-								  buffer, bufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
+								  buffer, BufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
 							}
 
 							MS_WARN_TAG(sctp, "SCTP setup failed: '%s'", buffer);
@@ -499,14 +500,14 @@ namespace RTC
 			// used with an ABORT chunk to report a fatal condition.
 			case SCTP_REMOTE_ERROR:
 			{
-				static const size_t bufferSize{ 1024 };
-				static char buffer[bufferSize];
+				static const size_t BufferSize{ 1024 };
+				static char buffer[BufferSize];
 
 				uint32_t len = notification->sn_remote_error.sre_length - sizeof(struct sctp_remote_error);
 
 				for (uint32_t i{ 0 }; i < len; i++)
 				{
-					std::snprintf(buffer, bufferSize, "0x%02x", notification->sn_remote_error.sre_data[i]);
+					std::snprintf(buffer, BufferSize, "0x%02x", notification->sn_remote_error.sre_data[i]);
 				}
 
 				MS_WARN_TAG(
@@ -535,14 +536,14 @@ namespace RTC
 
 			case SCTP_SEND_FAILED_EVENT:
 			{
-				static const size_t bufferSize{ 1024 };
-				static char buffer[bufferSize];
+				static const size_t BufferSize{ 1024 };
+				static char buffer[BufferSize];
 
 				uint32_t len =
 				  notification->sn_send_failed_event.ssfe_length - sizeof(struct sctp_send_failed_event);
 				for (uint32_t i{ 0 }; i < len; i++)
 				{
-					std::snprintf(buffer, bufferSize, "0x%02x", notification->sn_send_failed_event.ssfe_data[i]);
+					std::snprintf(buffer, BufferSize, "0x%02x", notification->sn_send_failed_event.ssfe_data[i]);
 				}
 
 				MS_WARN_TAG(

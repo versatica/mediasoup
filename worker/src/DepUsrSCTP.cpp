@@ -113,7 +113,7 @@ void DepUsrSCTP::Checker::Start()
 {
 	MS_TRACE();
 
-	MS_DEBUG_TAG(sctp, "usrsctp periodic checker started");
+	MS_DEBUG_TAG(sctp, "usrsctp periodic check started");
 
 	this->lastCalledAt = 0;
 
@@ -124,14 +124,14 @@ void DepUsrSCTP::Checker::Stop()
 {
 	MS_TRACE();
 
-	MS_DEBUG_TAG(sctp, "usrsctp periodic checker stopped");
+	MS_DEBUG_TAG(sctp, "usrsctp periodic check stopped");
 
 	this->lastCalledAt = 0;
 
 	this->timer->Stop();
 }
 
-void DepUsrSCTP::Checker::OnTimer(Timer* timer)
+void DepUsrSCTP::Checker::OnTimer(Timer* /*timer*/)
 {
 	MS_TRACE();
 
