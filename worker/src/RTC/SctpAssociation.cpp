@@ -236,6 +236,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+			// TODO
+			MS_DUMP_DATA(data, len);
+
 		usrsctp_conninput(static_cast<void*>(this), data, len, 0);
 	}
 
