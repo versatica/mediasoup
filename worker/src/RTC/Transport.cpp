@@ -292,6 +292,8 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
+					this->rtpListener.RemoveProducer(producer);
+
 					delete producer;
 
 					throw;
@@ -476,6 +478,8 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
+					this->sctpListener.RemoveDataProducer(dataProducer);
+
 					delete dataProducer;
 
 					throw;
