@@ -182,8 +182,7 @@ namespace RTC
 			initmsg.sinit_num_ostreams  = this->numSctpStreams;
 			initmsg.sinit_max_instreams = this->numSctpStreams;
 
-			ret = usrsctp_setsockopt(
-			  this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(struct sctp_initmsg));
+			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
 
 			if (ret < 0)
 				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_INITMSG) failed: %s", std::strerror(errno));
@@ -330,8 +329,8 @@ namespace RTC
 		MS_TRACE();
 
 		// As per spec: https://tools.ietf.org/html/rfc6525#section-4.1
-		size_t paramLen = sizeof(sctp_assoc_t) + (2 + 1) * sizeof(uint16_t);
-		auto* srs       = static_cast<struct sctp_reset_streams*>(std::malloc(paramLen));
+		socklen_t paramLen = sizeof(sctp_assoc_t) + (2 + 1) * sizeof(uint16_t);
+		auto* srs          = static_cast<struct sctp_reset_streams*>(std::malloc(paramLen));
 
 		srs->srs_flags          = SCTP_STREAM_RESET_OUTGOING;
 		srs->srs_number_streams = 1;
