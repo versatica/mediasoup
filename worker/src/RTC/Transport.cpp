@@ -715,7 +715,7 @@ namespace RTC
 		if (
 			jsonEnableSctpIt != data.end() &&
 			jsonEnableSctpIt->is_boolean() &&
-			jsonEnableSctpIt->get<bool>()
+			jsonEnableSctpIt->get<bool>() == true
 		)
 		// clang-format on
 		{

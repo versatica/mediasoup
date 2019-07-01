@@ -37,6 +37,7 @@ namespace RTC
 		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnSctpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from RTC::Transport. */
 	private:

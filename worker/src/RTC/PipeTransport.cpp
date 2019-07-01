@@ -361,15 +361,7 @@ namespace RTC
 		// Check if it's SCTP.
 		else if (RTC::SctpAssociation::IsSctp(data, len))
 		{
-			if (!this->sctpAssociation)
-			{
-				MS_DEBUG_TAG(sctp, "ignoring SCTP packet (SCTP not enabled)");
-
-				return;
-			}
-
-			// Pass it to the SctpAssociation.
-			this->sctpAssociation->ProcessSctpData(data, len);
+			OnSctpDataReceived(tuple, data, len);
 		}
 		else
 		{
@@ -464,6 +456,33 @@ namespace RTC
 			packet = packet->GetNext();
 			delete previousPacket;
 		}
+	}
+
+	inline void PipeTransport::OnSctpDataReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!IsConnected())
+			return;
+
+		if (!this->sctpAssociation)
+		{
+			MS_DEBUG_TAG(sctp, "ignoring SCTP packet (SCTP not enabled)");
+
+			return;
+		}
+
+		// Verify that the packet's tuple matches our tuple.
+		if (!this->tuple->Compare(tuple))
+		{
+			MS_DEBUG_TAG(sctp, "ignoring SCTP packet from unknown IP:port");
+
+			return;
+		}
+
+		// Pass it to the SctpAssociation.
+		this->sctpAssociation->ProcessSctpData(data, len);
 	}
 
 	void PipeTransport::UserOnNewProducer(RTC::Producer* /*producer*/)
