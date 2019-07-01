@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SctpAssociation"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/SctpAssociation.hpp"
 #include "DepUsrSCTP.hpp"
@@ -140,13 +140,14 @@ namespace RTC
 			// Set SCTP_ENABLE_STREAM_RESET.
 			struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			av.assoc_id = SCTP_ALL_ASSOC;
+			av.assoc_id    = SCTP_ALL_ASSOC;
 			av.assoc_value = 1;
 
 			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_ENABLE_STREAM_RESET, &av, sizeof(av));
 
 			if (ret < 0)
-				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_ENABLE_STREAM_RESET) failed: %s", std::strerror(errno));
+				MS_THROW_ERROR(
+				  "usrsctp_setsockopt(SCTP_ENABLE_STREAM_RESET) failed: %s", std::strerror(errno));
 
 			// Set SCTP_NODELAY.
 			uint32_t noDelay = 1;
@@ -247,8 +248,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-			// TODO
-			MS_DUMP_DATA(data, len);
+		// TODO
+#ifdef MS_LOG_DEV
+		MS_DUMP_DATA(data, len);
+#endif
 
 		usrsctp_conninput(static_cast<void*>(this), data, len, 0);
 	}
@@ -307,8 +310,10 @@ namespace RTC
 
 		const uint8_t* data = static_cast<uint8_t*>(buffer);
 
-			// TODO
-			MS_DUMP_DATA(data, len);
+		// TODO
+#ifdef MS_LOG_DEV
+		MS_DUMP_DATA(data, len);
+#endif
 
 		this->listener->OnSctpAssociationSendData(this, data, len);
 	}
