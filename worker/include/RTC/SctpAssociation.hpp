@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 #include "json.hpp"
 #include "RTC/DataConsumer.hpp"
+#include "RTC/DataProducer.hpp"
 #include <usrsctp.h>
 
 using json = nlohmann::json;
@@ -56,6 +57,8 @@ namespace RTC
 		SctpState GetState() const;
 		void ProcessSctpData(const uint8_t* data, size_t len);
 		void SendSctpMessage(RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len);
+		void DataProducerClosed(RTC::DataProducer* dataProducer);
+		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
 
 		/* Callbacks fired by usrsctp events. */
 	public:

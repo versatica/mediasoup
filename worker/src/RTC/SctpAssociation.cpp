@@ -304,6 +304,24 @@ namespace RTC
 			MS_ERROR("error sending SCTP message: %s", std::strerror(errno));
 	}
 
+	void SctpAssociation::DataProducerClosed(RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		auto streamId = dataProducer->GetSctpStreamParameters().streamId;
+
+		// TODO: Must reset its streamId and so on.
+	}
+
+	void SctpAssociation::DataConsumerClosed(RTC::DataConsumer* dataConsumer)
+	{
+		MS_TRACE();
+
+		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
+
+		// TODO: Must reset its streamId and so on.
+	}
+
 	void SctpAssociation::OnUsrSctpSendSctpData(void* buffer, size_t len)
 	{
 		MS_TRACE();

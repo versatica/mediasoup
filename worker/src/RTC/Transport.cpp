@@ -641,6 +641,9 @@ namespace RTC
 
 				MS_DEBUG_DEV("DataProducer closed [dataProducerId:%s]", dataProducer->id.c_str());
 
+				// Tell the SctpAssociation so it can reset the SCTP stream.
+				this->sctpAssociation->DataProducerClosed(dataProducer);
+
 				// Delete it.
 				delete dataProducer;
 
@@ -661,6 +664,9 @@ namespace RTC
 				this->listener->OnTransportDataConsumerClosed(this, dataConsumer);
 
 				MS_DEBUG_DEV("DataConsumer closed [dataConsumerId:%s]", dataConsumer->id.c_str());
+
+				// Tell the SctpAssociation so it can reset the SCTP stream.
+				this->sctpAssociation->DataConsumerClosed(dataConsumer);
 
 				// Delete it.
 				delete dataConsumer;
@@ -1380,6 +1386,9 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnTransportDataConsumerDataProducerClosed(this, dataConsumer);
+
+		// Tell the SctpAssociation so it can reset the SCTP stream.
+		this->sctpAssociation->DataConsumerClosed(dataConsumer);
 
 		// Delete it.
 		delete dataConsumer;
