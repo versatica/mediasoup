@@ -137,6 +137,17 @@ namespace RTC
 			if (ret < 0)
 				MS_THROW_ERROR("usrsctp_setsockopt(SO_LINGER) failed: %s", std::strerror(errno));
 
+			// Set SCTP_ENABLE_STREAM_RESET.
+			struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+			av.assoc_id = SCTP_ALL_ASSOC;
+			av.assoc_value = 1;
+
+			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_ENABLE_STREAM_RESET, &av, sizeof(av));
+
+			if (ret < 0)
+				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_ENABLE_STREAM_RESET) failed: %s", std::strerror(errno));
+
 			// Set SCTP_NODELAY.
 			uint32_t noDelay = 1;
 
@@ -296,8 +307,8 @@ namespace RTC
 
 		const uint8_t* data = static_cast<uint8_t*>(buffer);
 
-		// TODO: accounting, rate, etc?
-		// TODO: If so, also when receiving.
+			// TODO
+			MS_DUMP_DATA(data, len);
 
 		this->listener->OnSctpAssociationSendData(this, data, len);
 	}
