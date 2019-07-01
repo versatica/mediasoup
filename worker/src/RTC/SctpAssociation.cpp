@@ -310,7 +310,8 @@ namespace RTC
 
 		auto streamId = dataProducer->GetSctpStreamParameters().streamId;
 
-		// TODO: Must reset its streamId and so on.
+		// Send SCTP STREAM RESET to the remote.
+		ResetOutgoingSctpStream(streamId);
 	}
 
 	void SctpAssociation::DataConsumerClosed(RTC::DataConsumer* dataConsumer)
@@ -319,7 +320,30 @@ namespace RTC
 
 		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
 
-		// TODO: Must reset its streamId and so on.
+		// Send SCTP STREAM RESET to the remote.
+		ResetOutgoingSctpStream(streamId);
+	}
+
+	void SctpAssociation::ResetOutgoingSctpStream(uint16_t streamId)
+	{
+		MS_TRACE();
+
+		// As per spec: https://tools.ietf.org/html/rfc6525#section-4.1
+		size_t paramLen = sizeof(sctp_assoc_t) + (2 + 1) * sizeof(uint16_t);
+		auto* srs       = static_cast<struct sctp_reset_streams*>(std::malloc(paramLen));
+
+		srs->srs_flags          = SCTP_STREAM_RESET_OUTGOING;
+		srs->srs_number_streams = 1;
+		srs->srs_stream_list[0] = streamId; // No need for htonl().
+
+		int ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_RESET_STREAMS, srs, paramLen);
+
+		if (ret < 0)
+		{
+			MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_RESET_STREAMS) failed: %s", std::strerror(errno));
+		}
+
+		std::free(srs);
 	}
 
 	void SctpAssociation::OnUsrSctpSendSctpData(void* buffer, size_t len)
@@ -602,6 +626,10 @@ namespace RTC
 			case SCTP_STREAM_RESET_EVENT:
 			{
 				MS_DEBUG_TAG(sctp, "stream reset event received");
+
+				// NOTE: We may honor it and reply the remote with our own SCTP_RESET_STREAMS
+				// notification. However we rely on signaling so our reset will be sent when
+				// the corresponding DataProducer or DataConsumer is closed.
 
 				break;
 			}

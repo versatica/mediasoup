@@ -60,6 +60,9 @@ namespace RTC
 		void DataProducerClosed(RTC::DataProducer* dataProducer);
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
 
+	private:
+		void ResetOutgoingSctpStream(uint16_t streamId);
+
 		/* Callbacks fired by usrsctp events. */
 	public:
 		void OnUsrSctpSendSctpData(void* buffer, size_t len);
