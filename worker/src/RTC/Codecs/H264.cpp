@@ -225,7 +225,7 @@ namespace RTC
 			{
 				context->SetCurrentTemporalLayer(this->payloadDescriptor->tid);
 			}
-			else
+			else if (!this->payloadDescriptor->hasTid)
 			{
 				context->SetCurrentTemporalLayer(0);
 			}
