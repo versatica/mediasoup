@@ -527,7 +527,7 @@ namespace RTC
 
 							uint32_t len = notification->sn_header.sn_length;
 
-							for (uint32_t i{ 0 }; i < len; i++)
+							for (uint32_t i{ 0 }; i < len; ++i)
 							{
 								std::snprintf(
 								  buffer, BufferSize, " 0x%02x", notification->sn_assoc_change.sac_info[i]);
@@ -605,7 +605,7 @@ namespace RTC
 				uint32_t len =
 				  notification->sn_send_failed_event.ssfe_length - sizeof(struct sctp_send_failed_event);
 
-				for (uint32_t i{ 0 }; i < len; i++)
+				for (uint32_t i{ 0 }; i < len; ++i)
 				{
 					std::snprintf(buffer, BufferSize, "0x%02x", notification->sn_send_failed_event.ssfe_data[i]);
 				}
@@ -638,24 +638,26 @@ namespace RTC
 				if (notification->sn_strreset_event.strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN)
 					outgoing = true;
 
-				for (uint16_t i{ 0 }; i < numStreams; i++)
+				for (uint16_t i{ 0 }; i < numStreams; ++i)
 				{
 					if (i > 0)
 						streamIds.append(", ");
 
 					auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
+
 					streamIds.append(std::to_string(streamId));
 
-					MS_ERROR(
-					  "stream reset event: [flags:%x, i|o:%s|%s, stream ids:%s]",
+					MS_DEBUG_TAG(
+					  sctp,
+					  "SCTP stream reset event [flags:%x, i|o:%s|%s, stream ids:%s]",
 					  notification->sn_strreset_event.strreset_flags,
 					  incoming ? "true" : "false",
 					  outgoing ? "true" : "false",
 					  streamIds.c_str());
 
-					// TODO: Should we do the same for outgoing?
-					if (incoming)
-						ResetOutgoingSctpStream(streamId);
+					// This can happen for inbound and outbound SCTP streams. Since
+					// DataChannels use both with same streamId, send a reset in any case.
+					ResetOutgoingSctpStream(streamId);
 				}
 
 				break;
