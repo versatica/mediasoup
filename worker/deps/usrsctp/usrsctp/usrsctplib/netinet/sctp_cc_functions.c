@@ -2410,7 +2410,7 @@ sctp_htcp_cwnd_update_after_ecn_echo(struct sctp_tcb *stcb,
 
 const struct sctp_cc_functions sctp_cc_functions[] = {
 {
-#if defined(__Windows__) || defined(__Userspace_os_Windows)
+#if (defined(__Windows__) || defined(__Userspace_os_Windows)) && !defined(__MINGW32__)
 	sctp_set_initial_cc_param,
 	sctp_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,
@@ -2431,7 +2431,7 @@ const struct sctp_cc_functions sctp_cc_functions[] = {
 #endif
 },
 {
-#if defined(__Windows__) || defined(__Userspace_os_Windows)
+#if (defined(__Windows__) || defined(__Userspace_os_Windows)) && !defined(__MINGW32__)
 	sctp_set_initial_cc_param,
 	sctp_hs_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,
@@ -2452,7 +2452,7 @@ const struct sctp_cc_functions sctp_cc_functions[] = {
 #endif
 },
 {
-#if defined(__Windows__) || defined(__Userspace_os_Windows)
+#if (defined(__Windows__) || defined(__Userspace_os_Windows)) && !defined(__MINGW32__)
 	sctp_htcp_set_initial_cc_param,
 	sctp_htcp_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,

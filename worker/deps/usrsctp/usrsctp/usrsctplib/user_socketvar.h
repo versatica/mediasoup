@@ -102,7 +102,9 @@ struct uio {
  */
 #if defined (__Userspace_os_Windows)
 #define AF_ROUTE  17
+#if !defined(__MINGW32__)
 typedef __int32 pid_t;
+#endif
 typedef unsigned __int32 uid_t;
 enum sigType {
 	SIGNAL = 0,

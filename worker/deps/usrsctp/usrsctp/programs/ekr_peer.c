@@ -283,7 +283,7 @@ main(int argc, char *argv[])
 		perror("usrsctp_connect");
 	}
 	for (;;) {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
 		if (gets_s(line, LINE_LENGTH) == NULL) {
 #else
 		if (fgets(line, LINE_LENGTH, stdin) == NULL) {

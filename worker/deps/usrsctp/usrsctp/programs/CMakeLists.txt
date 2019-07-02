@@ -56,6 +56,17 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	add_definitions(-D__APPLE_USE_RFC_2292)
 endif ()
 
+if (MSYS)
+	message(STATUS "MSYS")
+	add_definitions(-D__USE_MINGW_ANSI_STDIO)
+
+	if (CMAKE_C_COMPILER_ID MATCHES "GNU")
+		message(STATUS "MYSYS + GCC")
+		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wno-format")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-format")
+	endif ()
+endif ()
+
 
 #################################################
 # MISC

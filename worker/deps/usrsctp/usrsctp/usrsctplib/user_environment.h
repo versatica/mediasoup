@@ -62,7 +62,7 @@ extern int ipport_firstauto, ipport_lastauto;
  */
 extern int nmbclusters;
 
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
 #define min(a,b) ((a)>(b)?(b):(a))
 #define max(a,b) ((a)>(b)?(a):(b))
 #endif

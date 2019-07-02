@@ -173,8 +173,8 @@ add_library(usrsctp-static STATIC ${usrsctp_sources} ${usrsctp_headers})
 
 if (WIN32)
 	message(STATUS "link library: ws2_32")
-	target_link_libraries(usrsctp ws2_32)
-	target_link_libraries(usrsctp-static ws2_32)
+	target_link_libraries(usrsctp ws2_32 Iphlpapi.lib)
+	target_link_libraries(usrsctp-static ws2_32 Iphlpapi.lib)
 endif ()
 
 set_target_properties(usrsctp-static PROPERTIES OUTPUT_NAME "usrsctp")

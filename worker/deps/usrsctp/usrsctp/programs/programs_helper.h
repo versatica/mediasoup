@@ -42,4 +42,4 @@ void handle_notification(union sctp_notification *notif, size_t n);
 	} while (0)
 #endif
 
-#endif // __PROGRAMS_HELPER_H__
+#endif /* __PROGRAMS_HELPER_H__ */ 

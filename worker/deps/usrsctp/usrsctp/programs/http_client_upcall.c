@@ -204,7 +204,7 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	//usrsctp_set_non_blocking(sock, 1);
+	/* usrsctp_set_non_blocking(sock, 1); */
 
 	rtoinfo.srto_assoc_id = 0;
 	rtoinfo.srto_initial = 1000;

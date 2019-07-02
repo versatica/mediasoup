@@ -84,7 +84,7 @@ handle_packets(void *arg)
 		length = recv(*fdp, buffer, MAX_PACKET_SIZE, 0);
 		if (length > 0) {
 			if ((dump_buffer = usrsctp_dumppacket(buffer, (size_t)length, SCTP_DUMP_INBOUND)) != NULL) {
-				//fprintf(stderr, "%s", dump_buffer);
+				/* fprintf(stderr, "%s", dump_buffer); */
 				usrsctp_freedumpbuffer(dump_buffer);
 			}
 			if ((size_t)length >= sizeof(struct sctp_common_header)) {
@@ -132,7 +132,7 @@ conn_output(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df
 		hdr->crc32c = usrsctp_crc32c(buffer, (size_t)length);
 	}
 	if ((dump_buffer = usrsctp_dumppacket(buffer, length, SCTP_DUMP_OUTBOUND)) != NULL) {
-		//fprintf(stderr, "%s", dump_buffer);
+		/* fprintf(stderr, "%s", dump_buffer); */
 		usrsctp_freedumpbuffer(dump_buffer);
 	}
 #ifdef _WIN32
