@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.1.6
+
+* VP8 and H264: Fix regression in 3.1.5 that produces lot of changes in current temporal layer detection.
+
+
 ### 3.1.5
 
 * VP8 and H264: Allow packets without temporal layer information even if N temporal layers were announced.

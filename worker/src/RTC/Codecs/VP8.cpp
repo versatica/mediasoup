@@ -323,7 +323,7 @@ namespace RTC
 			{
 				context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
 			}
-			else
+			else if (!this->payloadDescriptor->hasTlIndex)
 			{
 				context->SetCurrentTemporalLayer(0);
 			}
