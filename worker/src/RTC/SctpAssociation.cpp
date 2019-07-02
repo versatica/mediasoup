@@ -639,25 +639,28 @@ namespace RTC
 
 				for (uint16_t i{ 0 }; i < numStreams; ++i)
 				{
-					if (i > 0)
-						streamIds.append(", ");
-
 					auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
 
-					streamIds.append(std::to_string(streamId));
+					if (MS_HAS_DEBUG_TAG(sctp))
+					{
+						if (i > 0)
+							streamIds.append(", ");
 
-					MS_DEBUG_TAG(
-					  sctp,
-					  "SCTP stream reset event [flags:%x, i|o:%s|%s, stream ids:%s]",
-					  notification->sn_strreset_event.strreset_flags,
-					  incoming ? "true" : "false",
-					  outgoing ? "true" : "false",
-					  streamIds.c_str());
+						streamIds.append(std::to_string(streamId));
+					}
 
 					// This can happen for inbound and outbound SCTP streams. Since
 					// DataChannels use both with same streamId, send a reset in any case.
 					ResetOutgoingSctpStream(streamId);
 				}
+
+				MS_DEBUG_TAG(
+				  sctp,
+				  "SCTP stream reset event [flags:%x, i|o:%s|%s, stream ids:%s]",
+				  notification->sn_strreset_event.strreset_flags,
+				  incoming ? "true" : "false",
+				  outgoing ? "true" : "false",
+				  streamIds.c_str());
 
 				break;
 			}
