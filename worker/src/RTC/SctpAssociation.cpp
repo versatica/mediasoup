@@ -144,7 +144,8 @@ namespace RTC
 			// Set SCTP_ENABLE_STREAM_RESET.
 			struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			av.assoc_value = SCTP_ENABLE_RESET_STREAM_REQ;
+			av.assoc_value =
+			  SCTP_ENABLE_RESET_STREAM_REQ | SCTP_ENABLE_RESET_ASSOC_REQ | SCTP_ENABLE_CHANGE_ASSOC_REQ;
 
 			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_ENABLE_STREAM_RESET, &av, sizeof(av));
 
