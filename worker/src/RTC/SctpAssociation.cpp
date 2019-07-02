@@ -5,6 +5,7 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <string>
 
 /* SCTP events to which we are subscribing. */
 
@@ -624,11 +625,38 @@ namespace RTC
 
 			case SCTP_STREAM_RESET_EVENT:
 			{
-				MS_DEBUG_TAG(sctp, "stream reset event received");
+				bool incoming{ false };
+				bool outgoing{ false };
+				std::string streamIds;
+				uint16_t numStreams =
+				  (notification->sn_strreset_event.strreset_length - sizeof(struct sctp_stream_reset_event)) /
+				  sizeof(uint16_t);
 
-				// NOTE: We may honor it and reply the remote with our own SCTP_RESET_STREAMS
-				// notification. However we rely on signaling so our reset will be sent when
-				// the corresponding DataProducer or DataConsumer is closed.
+				if (notification->sn_strreset_event.strreset_flags & SCTP_STREAM_RESET_INCOMING_SSN)
+					incoming = true;
+
+				if (notification->sn_strreset_event.strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN)
+					outgoing = true;
+
+				for (uint16_t i{ 0 }; i < numStreams; i++)
+				{
+					if (i > 0)
+						streamIds.append(", ");
+
+					auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
+					streamIds.append(std::to_string(streamId));
+
+					MS_ERROR(
+					  "stream reset event: [flags:%x, i|o:%s|%s, stream ids:%s]",
+					  notification->sn_strreset_event.strreset_flags,
+					  incoming ? "true" : "false",
+					  outgoing ? "true" : "false",
+					  streamIds.c_str());
+
+					// TODO: Should we do the same for outgoing?
+					if (incoming)
+						ResetOutgoingSctpStream(streamId);
+				}
 
 				break;
 			}
