@@ -5,6 +5,7 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <cstring> // std::memset(), std::memcpy()
 #include <string>
 
 /* SCTP events to which we are subscribing. */
@@ -143,8 +144,7 @@ namespace RTC
 			// Set SCTP_ENABLE_STREAM_RESET.
 			struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			av.assoc_id    = SCTP_ALL_ASSOC;
-			av.assoc_value = 1;
+			av.assoc_value = SCTP_ENABLE_RESET_STREAM_REQ;
 
 			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_ENABLE_STREAM_RESET, &av, sizeof(av));
 
@@ -162,9 +162,8 @@ namespace RTC
 
 			// Enable events.
 			struct sctp_event event; // NOLINT(cppcoreguidelines-pro-type-member-init)
-			memset(&event, 0, sizeof(event));
-			event.se_assoc_id = SCTP_ALL_ASSOC;
-			event.se_on       = 1;
+			std::memset(&event, 0, sizeof(event));
+			event.se_on = 1;
 
 			for (size_t i{ 0 }; i < sizeof(EventTypes) / sizeof(uint16_t); ++i)
 			{
@@ -179,7 +178,7 @@ namespace RTC
 			// Init message.
 			struct sctp_initmsg initmsg; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			memset(&initmsg, 0, sizeof(struct sctp_initmsg));
+			std::memset(&initmsg, 0, sizeof(struct sctp_initmsg));
 			initmsg.sinit_num_ostreams  = this->numSctpStreams;
 			initmsg.sinit_max_instreams = this->numSctpStreams;
 
@@ -191,7 +190,7 @@ namespace RTC
 			// Server side.
 			struct sockaddr_conn sconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			memset(&sconn, 0, sizeof(struct sockaddr_conn));
+			std::memset(&sconn, 0, sizeof(struct sockaddr_conn));
 			sconn.sconn_family = AF_CONN;
 			sconn.sconn_port   = htons(5000);
 			sconn.sconn_addr   = static_cast<void*>(this);
@@ -208,7 +207,7 @@ namespace RTC
 			// Client side.
 			struct sockaddr_conn rconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			memset(&rconn, 0, sizeof(struct sockaddr_conn));
+			std::memset(&rconn, 0, sizeof(struct sockaddr_conn));
 			rconn.sconn_family = AF_CONN;
 			rconn.sconn_port   = htons(5000);
 			rconn.sconn_addr   = static_cast<void*>(this);
@@ -274,7 +273,7 @@ namespace RTC
 		// Fill stcp_sendv_spa.
 		struct sctp_sendv_spa spa; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-		memset(&spa, 0, sizeof(struct sctp_sendv_spa));
+		std::memset(&spa, 0, sizeof(struct sctp_sendv_spa));
 		spa.sendv_sndinfo.snd_sid = parameters.streamId;
 
 		if (parameters.ordered)
@@ -330,14 +329,14 @@ namespace RTC
 		MS_TRACE();
 
 		// As per spec: https://tools.ietf.org/html/rfc6525#section-4.1
-		socklen_t paramLen = sizeof(sctp_assoc_t) + (2 + 1) * sizeof(uint16_t);
-		auto* srs          = static_cast<struct sctp_reset_streams*>(std::malloc(paramLen));
+		socklen_t len = sizeof(sctp_assoc_t) + (2 + 1) * sizeof(uint16_t);
+		auto* srs     = static_cast<struct sctp_reset_streams*>(std::malloc(len));
 
 		srs->srs_flags          = SCTP_STREAM_RESET_OUTGOING;
 		srs->srs_number_streams = 1;
 		srs->srs_stream_list[0] = streamId; // No need for htonl().
 
-		int ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_RESET_STREAMS, srs, paramLen);
+		int ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_RESET_STREAMS, srs, len);
 
 		if (ret < 0)
 		{
