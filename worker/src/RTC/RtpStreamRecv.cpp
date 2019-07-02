@@ -406,7 +406,7 @@ namespace RTC
 		uint32_t prevPacketsLost = this->packetsLost;
 
 		// Calculate Packets Expected and Lost.
-		auto expected = this->GetExpectedPackets();
+		auto expected = GetExpectedPackets();
 
 		this->packetsLost = expected - this->transmissionCounter.GetPacketCount();
 
