@@ -328,17 +328,47 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		int ret;
+		struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		socklen_t len = sizeof(av);
+
+		ret = usrsctp_getsockopt(this->socket, IPPROTO_SCTP, SCTP_RECONFIG_SUPPORTED, &av, &len);
+
+		if (ret == 0)
+		{
+			if (av.assoc_value != 1)
+			{
+				MS_DEBUG_TAG(sctp, "stream reconfiguration not negotiated");
+
+				return;
+			}
+		}
+		else
+		{
+			MS_WARN_TAG(
+			  sctp,
+			  "could not retrieve whether stream reconfiguration has been negotiated: %s\n",
+			  std::strerror(errno));
+
+			return;
+		}
+
 		// As per spec: https://tools.ietf.org/html/rfc6525#section-4.1
-		socklen_t len = sizeof(sctp_assoc_t) + (2 + 1) * sizeof(uint16_t);
-		auto* srs     = static_cast<struct sctp_reset_streams*>(std::malloc(len));
+		len = sizeof(sctp_assoc_t) + (2 + 1) * sizeof(uint16_t);
+
+		auto* srs = static_cast<struct sctp_reset_streams*>(std::malloc(len));
 
 		srs->srs_flags          = SCTP_STREAM_RESET_OUTGOING;
 		srs->srs_number_streams = 1;
 		srs->srs_stream_list[0] = streamId; // No need for htonl().
 
-		int ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_RESET_STREAMS, srs, len);
+		ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_RESET_STREAMS, srs, len);
 
-		if (ret < 0)
+		if (ret == 0)
+		{
+			MS_DEBUG_TAG(sctp, "SCTP_STREAM_RESET_OUTGOING sent [streamId:%" PRIu16 "]", streamId);
+		}
+		else
 		{
 			MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_RESET_STREAMS) failed: %s", std::strerror(errno));
 		}
@@ -626,7 +656,6 @@ namespace RTC
 			{
 				bool incoming{ false };
 				bool outgoing{ false };
-				std::string streamIds;
 				uint16_t numStreams =
 				  (notification->sn_strreset_event.strreset_length - sizeof(struct sctp_stream_reset_event)) /
 				  sizeof(uint16_t);
@@ -637,30 +666,37 @@ namespace RTC
 				if (notification->sn_strreset_event.strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN)
 					outgoing = true;
 
-				for (uint16_t i{ 0 }; i < numStreams; ++i)
+				if (MS_HAS_DEBUG_TAG(sctp))
 				{
-					auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
+					std::string streamIds;
 
-					if (MS_HAS_DEBUG_TAG(sctp))
+					for (uint16_t i{ 0 }; i < numStreams; ++i)
 					{
+						auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
+
 						if (i > 0)
 							streamIds.append(", ");
 
 						streamIds.append(std::to_string(streamId));
 					}
 
+					MS_DEBUG_TAG(
+					  sctp,
+					  "SCTP stream reset event [flags:%x, i|o:%s|%s, stream ids:%s]",
+					  notification->sn_strreset_event.strreset_flags,
+					  incoming ? "true" : "false",
+					  outgoing ? "true" : "false",
+					  streamIds.c_str());
+				}
+
+				for (uint16_t i{ 0 }; i < numStreams; ++i)
+				{
+					auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
+
 					// This can happen for inbound and outbound SCTP streams. Since
 					// DataChannels use both with same streamId, send a reset in any case.
 					ResetOutgoingSctpStream(streamId);
 				}
-
-				MS_DEBUG_TAG(
-				  sctp,
-				  "SCTP stream reset event [flags:%x, i|o:%s|%s, stream ids:%s]",
-				  notification->sn_strreset_event.strreset_flags,
-				  incoming ? "true" : "false",
-				  outgoing ? "true" : "false",
-				  streamIds.c_str());
 
 				break;
 			}
