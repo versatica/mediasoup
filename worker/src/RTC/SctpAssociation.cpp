@@ -653,13 +653,10 @@ namespace RTC
 					  outgoing ? "true" : "false",
 					  streamIds.c_str());
 
+					// TODO: Should we do the same for outgoing?
 					if (incoming)
 						ResetOutgoingSctpStream(streamId);
 				}
-
-				// NOTE: We may honor it and reply the remote with our own SCTP_RESET_STREAMS
-				// notification. However we rely on signaling so our reset will be sent when
-				// the corresponding DataProducer or DataConsumer is closed.
 
 				break;
 			}
