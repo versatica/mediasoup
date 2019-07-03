@@ -285,10 +285,22 @@ namespace RTC
 		spa.sendv_sndinfo.snd_ppid = htonl(ppid);
 		spa.sendv_flags            = SCTP_SEND_SNDINFO_VALID;
 
-		// TODO: use SctpStreamParameters to indicate reliability:
-		// https://tools.ietf.org/html/rfc3758
-		spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_NONE;
-		spa.sendv_prinfo.pr_value  = 0;
+		// Configure reliability. https://tools.ietf.org/html/rfc3758
+		if (parameters.maxPacketLifeTime != 0)
+		{
+			spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
+			spa.sendv_prinfo.pr_value  = parameters.maxPacketLifeTime;
+		}
+		else if (parameters.maxRetransmits != 0)
+		{
+			spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_RTX;
+			spa.sendv_prinfo.pr_value  = parameters.maxRetransmits;
+		}
+		else
+		{
+			spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_NONE;
+			spa.sendv_prinfo.pr_value  = 0;
+		}
 
 		int ret = usrsctp_sendv(
 		  this->socket,
