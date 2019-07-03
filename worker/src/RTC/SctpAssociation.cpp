@@ -312,7 +312,11 @@ namespace RTC
 		auto streamId = dataProducer->GetSctpStreamParameters().streamId;
 
 		// Send SCTP STREAM RESET to the remote.
-		ResetOutgoingSctpStream(streamId);
+		// https://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-13#section-6.7
+		if (this->isDataChannel)
+			ResetSctpStream(streamId, StreamDirection::OUTGOING);
+		else
+			ResetSctpStream(streamId, StreamDirection::INCOMING);
 	}
 
 	void SctpAssociation::DataConsumerClosed(RTC::DataConsumer* dataConsumer)
@@ -322,10 +326,10 @@ namespace RTC
 		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
 
 		// Send SCTP STREAM RESET to the remote.
-		ResetOutgoingSctpStream(streamId);
+		ResetSctpStream(streamId, StreamDirection::OUTGOING);
 	}
 
-	void SctpAssociation::ResetOutgoingSctpStream(uint16_t streamId)
+	void SctpAssociation::ResetSctpStream(uint16_t streamId, StreamDirection direction)
 	{
 		MS_TRACE();
 
@@ -359,7 +363,21 @@ namespace RTC
 
 		auto* srs = static_cast<struct sctp_reset_streams*>(std::malloc(len));
 
-		srs->srs_flags          = SCTP_STREAM_RESET_OUTGOING;
+		switch (direction)
+		{
+			case StreamDirection::INCOMING:
+			{
+				srs->srs_flags = SCTP_STREAM_RESET_INCOMING;
+				break;
+			}
+
+			case StreamDirection::OUTGOING:
+			{
+				srs->srs_flags = SCTP_STREAM_RESET_OUTGOING;
+				break;
+			}
+		}
+
 		srs->srs_number_streams = 1;
 		srs->srs_stream_list[0] = streamId; // No need for htonl().
 
@@ -690,13 +708,13 @@ namespace RTC
 					  streamIds.c_str());
 				}
 
-				for (uint16_t i{ 0 }; i < numStreams; ++i)
+				if (incoming && !outgoing && this->isDataChannel)
 				{
-					auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
-
-					// This can happen for inbound and outbound SCTP streams. Since
-					// DataChannels use both with same streamId, send a reset in any case.
-					ResetOutgoingSctpStream(streamId);
+					for (uint16_t i{ 0 }; i < numStreams; ++i)
+					{
+						auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
+						ResetSctpStream(streamId, StreamDirection::OUTGOING);
+					}
 				}
 
 				break;

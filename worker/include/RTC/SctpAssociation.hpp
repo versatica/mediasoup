@@ -25,6 +25,12 @@ namespace RTC
 			CLOSED
 		};
 
+		enum class StreamDirection
+		{
+			INCOMING = 1,
+			OUTGOING
+		};
+
 	public:
 		class Listener
 		{
@@ -61,7 +67,7 @@ namespace RTC
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
 
 	private:
-		void ResetOutgoingSctpStream(uint16_t streamId);
+		void ResetSctpStream(uint16_t streamId, StreamDirection);
 
 		/* Callbacks fired by usrsctp events. */
 	public:
@@ -75,6 +81,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		uint16_t numSctpStreams{ 65535 };
 		size_t maxSctpMessageSize{ 262144 };
+		bool isDataChannel{ true };
 		// Others.
 		SctpState state{ SctpState::NEW };
 		struct socket* socket{ nullptr };
