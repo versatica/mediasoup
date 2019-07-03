@@ -74,8 +74,10 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	SctpAssociation::SctpAssociation(Listener* listener, uint16_t numSctpStreams, size_t maxSctpMessageSize)
-	  : listener(listener), numSctpStreams(numSctpStreams), maxSctpMessageSize(maxSctpMessageSize)
+	SctpAssociation::SctpAssociation(
+	  Listener* listener, uint16_t numSctpStreams, size_t maxSctpMessageSize, bool isDataChannel)
+	  : listener(listener), numSctpStreams(numSctpStreams), maxSctpMessageSize(maxSctpMessageSize),
+	    isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
 
@@ -244,6 +246,9 @@ namespace RTC
 
 		// Add maxMessageSize.
 		jsonObject["maxMessageSize"] = this->maxSctpMessageSize;
+
+		// Add isDataChannel.
+		jsonObject["isDataChannel"] = this->isDataChannel;
 	}
 
 	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)
@@ -314,7 +319,7 @@ namespace RTC
 		  0);
 
 		if (ret < 0)
-			MS_ERROR("error sending SCTP message: %s", std::strerror(errno));
+			MS_WARN_TAG(sctp, "error sending SCTP message: %s", std::strerror(errno));
 	}
 
 	void SctpAssociation::DataProducerClosed(RTC::DataProducer* dataProducer)
@@ -323,7 +328,7 @@ namespace RTC
 
 		auto streamId = dataProducer->GetSctpStreamParameters().streamId;
 
-		// Send SCTP STREAM RESET to the remote.
+		// Send SCTP_RESET_STREAMS to the remote.
 		// https://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-13#section-6.7
 		if (this->isDataChannel)
 			ResetSctpStream(streamId, StreamDirection::OUTGOING);
@@ -337,7 +342,7 @@ namespace RTC
 
 		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
 
-		// Send SCTP STREAM RESET to the remote.
+		// Send SCTP_RESET_STREAMS to the remote.
 		ResetSctpStream(streamId, StreamDirection::OUTGOING);
 	}
 
@@ -378,16 +383,12 @@ namespace RTC
 		switch (direction)
 		{
 			case StreamDirection::INCOMING:
-			{
 				srs->srs_flags = SCTP_STREAM_RESET_INCOMING;
 				break;
-			}
 
 			case StreamDirection::OUTGOING:
-			{
 				srs->srs_flags = SCTP_STREAM_RESET_OUTGOING;
 				break;
-			}
 		}
 
 		srs->srs_number_streams = 1;
@@ -397,7 +398,7 @@ namespace RTC
 
 		if (ret == 0)
 		{
-			MS_DEBUG_TAG(sctp, "SCTP_STREAM_RESET_OUTGOING sent [streamId:%" PRIu16 "]", streamId);
+			MS_DEBUG_TAG(sctp, "SCTP_RESET_STREAMS sent [streamId:%" PRIu16 "]", streamId);
 		}
 		else
 		{
@@ -720,11 +721,14 @@ namespace RTC
 					  streamIds.c_str());
 				}
 
+				// Special case for WebRTC DataChannels in which we must also reset our
+				// outgoing SCTP stream.
 				if (incoming && !outgoing && this->isDataChannel)
 				{
 					for (uint16_t i{ 0 }; i < numStreams; ++i)
 					{
 						auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
+
 						ResetSctpStream(streamId, StreamDirection::OUTGOING);
 					}
 				}

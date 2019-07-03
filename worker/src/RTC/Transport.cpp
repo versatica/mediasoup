@@ -721,6 +721,7 @@ namespace RTC
 		{
 			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
 			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
+			auto jsonIsDataChannelIt      = data.find("isDataChannel");
 
 			// numSctpStreams is mandatory.
 			// clang-format off
@@ -748,7 +749,14 @@ namespace RTC
 
 			auto maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
 
-			this->sctpAssociation = new RTC::SctpAssociation(this, numSctpStreams, maxSctpMessageSize);
+			// isDataChannel is optional.
+			bool isDataChannel{ false };
+
+			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
+				isDataChannel = jsonIsDataChannelIt->get<bool>();
+
+			this->sctpAssociation =
+			  new RTC::SctpAssociation(this, numSctpStreams, maxSctpMessageSize, isDataChannel);
 		}
 	}
 

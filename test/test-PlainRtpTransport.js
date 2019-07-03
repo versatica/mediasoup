@@ -90,7 +90,12 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(transport1.tuple.protocol).toBe('udp');
 	expect(transport1.rtcpTuple).toBe(undefined);
 	expect(transport1.sctpParameters).toStrictEqual(
-		{ maxMessageSize: 262144, numStreams: 65535, port: 5000 });
+		{
+			port           : 5000,
+			numStreams     : 65535,
+			maxMessageSize : 262144,
+			isDataChannel  : false
+		});
 	expect(transport1.sctpState).toBe('new');
 
 	const data1 = await transport1.dump();

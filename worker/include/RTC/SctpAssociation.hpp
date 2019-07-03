@@ -25,6 +25,7 @@ namespace RTC
 			CLOSED
 		};
 
+	private:
 		enum class StreamDirection
 		{
 			INCOMING = 1,
@@ -53,7 +54,8 @@ namespace RTC
 		static bool IsSctp(const uint8_t* data, size_t len);
 
 	public:
-		SctpAssociation(Listener* listener, uint16_t numSctpStreams, size_t maxSctpMessageSize);
+		SctpAssociation(
+		  Listener* listener, uint16_t numSctpStreams, size_t maxSctpMessageSize, bool isDataChannel);
 		~SctpAssociation();
 
 	public:
@@ -81,7 +83,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		uint16_t numSctpStreams{ 65535 };
 		size_t maxSctpMessageSize{ 262144 };
-		bool isDataChannel{ true };
+		bool isDataChannel{ false };
 		// Others.
 		SctpState state{ SctpState::NEW };
 		struct socket* socket{ nullptr };
