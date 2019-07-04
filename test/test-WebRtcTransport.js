@@ -81,7 +81,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 			enableTcp          : true,
 			preferUdp          : true,
 			enableSctp         : true,
-			numSctpStreams     : 2048,
+			numSctpStreams     : { OS: 2048, MIS: 2048 },
 			maxSctpMessageSize : 1000000,
 			appData            : { foo: 'bar' }
 		});
@@ -99,7 +99,8 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(transport1.sctpParameters).toStrictEqual(
 		{
 			port           : 5000,
-			numStreams     : 2048,
+			OS             : 2048,
+			MIS            : 2048,
 			maxMessageSize : 1000000,
 			isDataChannel  : true
 		});

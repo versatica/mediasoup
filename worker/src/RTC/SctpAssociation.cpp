@@ -50,7 +50,6 @@ inline static int onRecvSctpData(
 		uint16_t streamId = rcv.rcv_sid;
 		uint8_t ppid      = ntohl(rcv.rcv_ppid);
 
-		// TODO: Convert this to MS_DEBUG_DEV.
 		MS_DEBUG_TAG(
 		  sctp,
 		  "data chunk received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
@@ -75,8 +74,8 @@ namespace RTC
 	/* Instance methods. */
 
 	SctpAssociation::SctpAssociation(
-	  Listener* listener, uint16_t numSctpStreams, size_t maxSctpMessageSize, bool isDataChannel)
-	  : listener(listener), numSctpStreams(numSctpStreams), maxSctpMessageSize(maxSctpMessageSize),
+	  Listener* listener, uint16_t OS, uint16_t MIS, size_t maxSctpMessageSize, bool isDataChannel)
+	  : listener(listener), OS(OS), MIS(MIS), maxSctpMessageSize(maxSctpMessageSize),
 	    isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
@@ -182,8 +181,8 @@ namespace RTC
 			struct sctp_initmsg initmsg; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			std::memset(&initmsg, 0, sizeof(struct sctp_initmsg));
-			initmsg.sinit_num_ostreams  = this->numSctpStreams;
-			initmsg.sinit_max_instreams = this->numSctpStreams;
+			initmsg.sinit_num_ostreams  = this->OS;
+			initmsg.sinit_max_instreams = this->MIS;
 
 			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
 
@@ -241,8 +240,11 @@ namespace RTC
 		// Add port (always 5000).
 		jsonObject["port"] = 5000;
 
-		// Add numStreams.
-		jsonObject["numStreams"] = this->numSctpStreams;
+		// Add OS.
+		jsonObject["OS"] = this->OS;
+
+		// Add MIS.
+		jsonObject["MIS"] = this->MIS;
 
 		// Add maxMessageSize.
 		jsonObject["maxMessageSize"] = this->maxSctpMessageSize;
@@ -706,6 +708,14 @@ namespace RTC
 					{
 						auto streamId = notification->sn_strreset_event.strreset_stream_list[i];
 
+						// Don't log more than 5 stream ids.
+						if (i > 4)
+						{
+							streamIds.append("...");
+
+							break;
+						}
+
 						if (i > 0)
 							streamIds.append(", ");
 
@@ -714,10 +724,11 @@ namespace RTC
 
 					MS_DEBUG_TAG(
 					  sctp,
-					  "SCTP stream reset event [flags:%x, i|o:%s|%s, stream ids:%s]",
+					  "SCTP stream reset event [flags:%x, i|o:%s|%s, num streams:%" PRIu16 ", stream ids:%s]",
 					  notification->sn_strreset_event.strreset_flags,
 					  incoming ? "true" : "false",
 					  outgoing ? "true" : "false",
+					  numStreams,
 					  streamIds.c_str());
 				}
 

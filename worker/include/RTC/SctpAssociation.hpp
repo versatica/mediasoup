@@ -55,7 +55,7 @@ namespace RTC
 
 	public:
 		SctpAssociation(
-		  Listener* listener, uint16_t numSctpStreams, size_t maxSctpMessageSize, bool isDataChannel);
+		  Listener* listener, uint16_t OS, uint16_t MIS, size_t maxSctpMessageSize, bool isDataChannel);
 		~SctpAssociation();
 
 	public:
@@ -81,7 +81,8 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		uint16_t numSctpStreams{ 65535 };
+		uint16_t OS{ 65535 };
+		uint16_t MIS{ 65535 };
 		size_t maxSctpMessageSize{ 262144 };
 		bool isDataChannel{ false };
 		// Others.

@@ -92,7 +92,8 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(transport1.sctpParameters).toStrictEqual(
 		{
 			port           : 5000,
-			numStreams     : 65535,
+			OS             : 1024,
+			MIS            : 1024,
 			maxMessageSize : 262144,
 			isDataChannel  : false
 		});

@@ -727,14 +727,31 @@ namespace RTC
 			// clang-format off
 			if (
 				jsonNumSctpStreamsIt == data.end() ||
-				!jsonNumSctpStreamsIt->is_number_unsigned()
+				!jsonNumSctpStreamsIt->is_object()
 			)
 			// clang-format on
 			{
-				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not a number)");
+				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not an object)");
 			}
 
-			auto numSctpStreams = jsonNumSctpStreamsIt->get<uint16_t>();
+			auto jsonOSIt  = jsonNumSctpStreamsIt->find("OS");
+			auto jsonMISIt = jsonNumSctpStreamsIt->find("MIS");
+
+			// numSctpStreams.OS and numSctpStreams.MIS are mandatory.
+			// clang-format off
+			if (
+				jsonOSIt == jsonNumSctpStreamsIt->end() ||
+				!jsonOSIt->is_number_unsigned() ||
+				jsonMISIt == jsonNumSctpStreamsIt->end() ||
+				!jsonMISIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong numSctpStreams.OS and/or numSctpStreams.MIS (not a number)");
+			}
+
+			auto OS  = jsonOSIt->get<uint16_t>();
+			auto MIS = jsonMISIt->get<uint16_t>();
 
 			// maxSctpMessageSize is mandatory.
 			// clang-format off
@@ -756,7 +773,7 @@ namespace RTC
 				isDataChannel = jsonIsDataChannelIt->get<bool>();
 
 			this->sctpAssociation =
-			  new RTC::SctpAssociation(this, numSctpStreams, maxSctpMessageSize, isDataChannel);
+			  new RTC::SctpAssociation(this, OS, MIS, maxSctpMessageSize, isDataChannel);
 		}
 	}
 
