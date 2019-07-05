@@ -321,7 +321,13 @@ namespace RTC
 		  0);
 
 		if (ret < 0)
-			MS_WARN_TAG(sctp, "error sending SCTP message: %s", std::strerror(errno));
+			MS_WARN_TAG(
+			  sctp,
+			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", len:%zu]: %s",
+			  parameters.streamId,
+			  ppid,
+			  len,
+			  std::strerror(errno));
 	}
 
 	void SctpAssociation::DataProducerClosed(RTC::DataProducer* dataProducer)
@@ -755,6 +761,59 @@ namespace RTC
 				  notification->sn_strchange_event.strchange_instrms,
 				  notification->sn_strchange_event.strchange_outstrms,
 				  notification->sn_strchange_event.strchange_flags);
+
+				// Retrieve current input and output streams.
+				int ret;
+				struct sctp_status status; // NOLINT(cppcoreguidelines-pro-type-member-init)
+				socklen_t len = static_cast<socklen_t>(sizeof(struct sctp_status));
+
+				ret = usrsctp_getsockopt(this->socket, IPPROTO_SCTP, SCTP_STATUS, &status, &len);
+				if (ret < 0)
+				{
+					MS_WARN_TAG(sctp, "usrsctp_getsockopt(SCTP_STATUS) failed: %s", std::strerror(errno));
+					break;
+				}
+
+				MS_ASSERT(this->OS == status.sstat_outstrms, "OS must equal status.sstat_outstrms");
+
+				if (status.sstat_instrms < status.sstat_outstrms)
+				{
+					MS_WARN_TAG(sctp, "number of incoming stream lower than outgoing steams");
+					break;
+				}
+
+				struct sctp_add_streams sas; // NOLINT(cppcoreguidelines-pro-type-member-init)
+				uint16_t streams = status.sstat_instrms - status.sstat_outstrms;
+
+				// Same number of ncoming and outgoing streams.
+				if (streams == 0)
+					break;
+
+				if (this->OS + streams > this->MIS)
+					streams = this->MIS - this->OS;
+
+				std::memset(&sas, 0, sizeof(struct sctp_add_streams));
+				sas.sas_instrms  = 0;
+				sas.sas_outstrms = streams;
+
+#ifdef MS_LOG_DEV
+				MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", streams);
+#endif
+
+				ret = usrsctp_setsockopt(
+				  this->socket,
+				  IPPROTO_SCTP,
+				  SCTP_ADD_STREAMS,
+				  &sas,
+				  static_cast<socklen_t>(sizeof(struct sctp_add_streams)));
+
+				if (ret < 0)
+				{
+					MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_ADD_STREAMS) failed: %s", std::strerror(errno));
+					break;
+				}
+
+				this->OS += streams;
 
 				break;
 			}
