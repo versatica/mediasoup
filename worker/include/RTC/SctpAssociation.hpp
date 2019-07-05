@@ -65,11 +65,13 @@ namespace RTC
 		SctpState GetState() const;
 		void ProcessSctpData(const uint8_t* data, size_t len);
 		void SendSctpMessage(RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len);
+		void HandleDataConsumer(RTC::DataConsumer* dataConsumer);
 		void DataProducerClosed(RTC::DataProducer* dataProducer);
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
 
 	private:
 		void ResetSctpStream(uint16_t streamId, StreamDirection);
+		void AddOutgoingStreams();
 
 		/* Callbacks fired by usrsctp events. */
 	public:
@@ -81,8 +83,9 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		uint16_t OS{ 65535 };
-		uint16_t MIS{ 65535 };
+		uint16_t OS{ 0 };
+		uint16_t desiredOS{ 0 };
+		uint16_t MIS{ 0 };
 		size_t maxSctpMessageSize{ 262144 };
 		bool isDataChannel{ false };
 		// Others.

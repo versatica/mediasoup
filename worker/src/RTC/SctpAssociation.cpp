@@ -355,6 +355,17 @@ namespace RTC
 			  std::strerror(errno));
 	}
 
+	void SctpAssociation::HandleDataConsumer(RTC::DataConsumer* dataConsumer)
+	{
+		MS_TRACE();
+
+		auto streamId = dataProducer->GetSctpStreamParameters().streamId;
+
+		// We need more OS.
+		if (streamId > this->OS - 1)
+			AddOutgoingStreams();
+	}
+
 	void SctpAssociation::DataProducerClosed(RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
@@ -439,6 +450,17 @@ namespace RTC
 		}
 
 		std::free(srs);
+	}
+
+	void SctpAssociation::AddOutgoingStreams()
+	{
+		MS_TRACE();
+
+		// If in progress do nothing.
+		if (this->desiredOS > this->OS)
+			return;
+
+
 	}
 
 	void SctpAssociation::OnUsrSctpSendSctpData(void* buffer, size_t len)
@@ -555,9 +577,12 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(
 						  sctp,
-						  "SCTP association connected, streams [in:%" PRIu16 ", out:%" PRIu16 "]",
-						  notification->sn_assoc_change.sac_inbound_streams,
-						  notification->sn_assoc_change.sac_outbound_streams);
+						  "SCTP association connected, streams [out:%" PRIu16 ", in:%" PRIu16 "]",
+						  notification->sn_assoc_change.sac_outbound_streams,
+						  notification->sn_assoc_change.sac_inbound_streams);
+
+						// Update our OS.
+						this->OS = notification->sn_assoc_change.sac_outbound_streams;
 
 						if (this->state != SctpState::CONNECTED)
 						{
@@ -603,9 +628,12 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(
 						  sctp,
-						  "SCTP remote association restarted, streams [in:%" PRIu16 ", out:%" PRIu16 "]",
-						  notification->sn_assoc_change.sac_inbound_streams,
-						  notification->sn_assoc_change.sac_outbound_streams);
+						  "SCTP remote association restarted, streams [out:%" PRIu16 ", int:%" PRIu16 "]",
+						  notification->sn_assoc_change.sac_outbound_streams,
+						  notification->sn_assoc_change.sac_inbound_streams);
+
+						// Update our OS.
+						this->OS = notification->sn_assoc_change.sac_outbound_streams;
 
 						if (this->state != SctpState::CONNECTED)
 						{
