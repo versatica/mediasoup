@@ -75,7 +75,7 @@ namespace RTC
 	public:
 		void OnUsrSctpSendSctpData(void* buffer, size_t len);
 		void OnUsrSctpReceiveSctpData(
-		  uint16_t streamId, uint8_t ppid, int flags, const uint8_t* data, size_t len);
+		  uint16_t streamId, uint16_t ssn, uint8_t ppid, int flags, const uint8_t* data, size_t len);
 		void OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len);
 
 	private:
@@ -90,6 +90,7 @@ namespace RTC
 		struct socket* socket{ nullptr };
 		uint8_t* messageBuffer{ nullptr };
 		size_t messageBufferLen{ 0 };
+		uint16_t lastSsnReceived{ 0 }; // Valid for us since no SCTP I-DATA support.
 	};
 
 	/* Inline static methods. */

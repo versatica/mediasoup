@@ -49,6 +49,7 @@ inline static int onRecvSctpData(
 	{
 		uint16_t streamId = rcv.rcv_sid;
 		uint8_t ppid      = ntohl(rcv.rcv_ppid);
+		uint16_t ssn      = rcv.rcv_ssn;
 
 		MS_DEBUG_TAG(
 		  sctp,
@@ -63,7 +64,7 @@ inline static int onRecvSctpData(
 		  flags);
 
 		sctpAssociation->OnUsrSctpReceiveSctpData(
-		  streamId, ppid, flags, static_cast<uint8_t*>(data), dataLen);
+		  streamId, ssn, ppid, flags, static_cast<uint8_t*>(data), dataLen);
 	}
 
 	return 1;
@@ -430,7 +431,7 @@ namespace RTC
 	}
 
 	void SctpAssociation::OnUsrSctpReceiveSctpData(
-	  uint16_t streamId, uint8_t ppid, int flags, const uint8_t* data, size_t len)
+	  uint16_t streamId, uint16_t ssn, uint8_t ppid, int flags, const uint8_t* data, size_t len)
 	{
 		// Ignore WebRTC DataChannel Control DATA chunks.
 		if (ppid == 50)
@@ -451,8 +452,25 @@ namespace RTC
 			  this->maxSctpMessageSize,
 			  eor ? 1 : 0);
 
+			this->lastSsnReceived = 0;
+
 			return;
 		}
+
+		if (this->messageBufferLen != 0 && ssn != this->lastSsnReceived)
+		{
+			MS_WARN_TAG(
+			  sctp,
+			  "received different SSN while buffer not empty, buffer discarded [SSN:%" PRIu16
+			  ", lastSsnReceived:%" PRIu16 "]",
+			  ssn,
+			  this->lastSsnReceived);
+
+			this->messageBufferLen = 0;
+		}
+
+		// Update last SSN received.
+		this->lastSsnReceived = ssn;
 
 		// If end of message and there is no buffered data, notify it directly.
 		if (eor && this->messageBufferLen == 0)
