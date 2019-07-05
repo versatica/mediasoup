@@ -241,8 +241,17 @@ namespace RTC
 		  std::find(this->rtpStreams.begin(), this->rtpStreams.end(), rtpStream) != this->rtpStreams.end(),
 		  "RTP stream does exist");
 
-		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+		// Special condition for PipeConsumer since this method will be called in a loop for
+		// each stream in this PipeConsumer.
+		// clang-format off
+		if (
+			now != this->lastRtcpSentTime &&
+			static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval
+		)
+		// clang-format on
+		{
 			return;
+		}
 
 		auto* report = rtpStream->GetRtcpSenderReport(now);
 

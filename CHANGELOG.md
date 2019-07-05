@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.1.7
+
+* `PipeConsumer.cpp`: Fix RTCP generation (thanks @vpalmisano).
+
+
 ### 3.1.6
 
 * VP8 and H264: Fix regression in 3.1.5 that produces lot of changes in current temporal layer detection.
