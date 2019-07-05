@@ -771,6 +771,7 @@ namespace RTC
 				if (iStreams < oStreams)
 				{
 					MS_WARN_TAG(sctp, "number of incoming stream lower than outgoing steams");
+
 					break;
 				}
 
@@ -788,9 +789,7 @@ namespace RTC
 				sas.sas_instrms  = 0;
 				sas.sas_outstrms = additionalOStreams;
 
-#ifdef MS_LOG_DEV
 				MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", additionalOStreams);
-#endif
 
 				int ret = usrsctp_setsockopt(
 				  this->socket,
@@ -802,6 +801,7 @@ namespace RTC
 				if (ret < 0)
 				{
 					MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_ADD_STREAMS) failed: %s", std::strerror(errno));
+
 					break;
 				}
 
