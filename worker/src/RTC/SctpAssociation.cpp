@@ -782,7 +782,7 @@ namespace RTC
 
 				if (iStreams < oStreams)
 				{
-					MS_DEBUG_TAG(sctp, "number of incoming streams lower than outgoing steams, do nothing");
+					MS_DEBUG_TAG(sctp, "number of incoming streams lower than outgoing streams, do nothing");
 
 					break;
 				}
