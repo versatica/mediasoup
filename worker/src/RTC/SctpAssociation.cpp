@@ -30,7 +30,7 @@ inline static int onRecvSctpData(
   struct socket* /*sock*/,
   union sctp_sockstore /*addr*/,
   void* data,
-  size_t dataLen,
+  size_t len,
   struct sctp_rcvinfo rcv,
   int flags,
   void* ulpInfo)
@@ -38,12 +38,16 @@ inline static int onRecvSctpData(
 	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(ulpInfo);
 
 	if (sctpAssociation == nullptr)
+	{
+		std::free(data);
+
 		return 0;
+	}
 
 	if (flags & MSG_NOTIFICATION)
 	{
 		sctpAssociation->OnUsrSctpReceiveSctpNotification(
-		  static_cast<union sctp_notification*>(data), dataLen);
+		  static_cast<union sctp_notification*>(data), len);
 	}
 	else
 	{
@@ -55,7 +59,7 @@ inline static int onRecvSctpData(
 		  sctp,
 		  "data chunk received [length:%zu, streamId:%" PRIu16 ", SSN:%" PRIu16 ", TSN:%" PRIu32
 		  ", PPID:%" PRIu32 ", context:%" PRIu32 ", flags:%d]",
-		  dataLen,
+		  len,
 		  rcv.rcv_sid,
 		  rcv.rcv_ssn,
 		  rcv.rcv_tsn,
@@ -64,14 +68,20 @@ inline static int onRecvSctpData(
 		  flags);
 
 		sctpAssociation->OnUsrSctpReceiveSctpData(
-		  streamId, ssn, ppid, flags, static_cast<uint8_t*>(data), dataLen);
+		  streamId, ssn, ppid, flags, static_cast<uint8_t*>(data), len);
 	}
+
+	std::free(data);
 
 	return 1;
 }
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr size_t SctpMtu{ 1200 };
+
 	/* Instance methods. */
 
 	SctpAssociation::SctpAssociation(
@@ -133,6 +143,9 @@ namespace RTC
 				MS_THROW_ERROR("usrsctp_set_non_blocking() failed: %s", std::strerror(errno));
 
 			// Set SO_LINGER.
+			// This ensures that the usrsctp close call deletes the association. This
+			// prevents usrsctp from calling the global send callback with references to
+			// this class as the address.
 			struct linger lingerOpt; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			lingerOpt.l_onoff  = 1;
@@ -165,6 +178,7 @@ namespace RTC
 
 			// Enable events.
 			struct sctp_event event; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
 			std::memset(&event, 0, sizeof(event));
 			event.se_on = 1;
 
@@ -222,6 +236,24 @@ namespace RTC
 			if (ret < 0 && errno != EINPROGRESS)
 				MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
 
+			// Disable MTU discovery.
+			sctp_paddrparams peerAddrParams; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+			std::memset(&peerAddrParams, 0, sizeof(peerAddrParams));
+			std::memcpy(&peerAddrParams.spp_address, &rconn, sizeof(rconn));
+			peerAddrParams.spp_flags = SPP_PMTUD_DISABLE;
+
+			// The MTU value provided specifies the space available for chunks in the
+			// packet, so let's subtract the SCTP header size.
+			peerAddrParams.spp_pathmtu = SctpMtu - sizeof(struct sctp_common_header);
+
+			ret = usrsctp_setsockopt(
+			  this->socket, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerAddrParams, sizeof(peerAddrParams));
+
+			if (ret < 0)
+				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_PEER_ADDR_PARAMS) failed: %s", std::strerror(errno));
+
+			// Announce connecting state.
 			this->state = SctpState::CONNECTING;
 			this->listener->OnSctpAssociationConnecting(this);
 		}
@@ -279,32 +311,35 @@ namespace RTC
 
 		// Fill stcp_sendv_spa.
 		struct sctp_sendv_spa spa; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
 		std::memset(&spa, 0, sizeof(spa));
-		spa.sendv_sndinfo.snd_sid = parameters.streamId;
+		spa.sendv_flags             = SCTP_SEND_SNDINFO_VALID;
+		spa.sendv_sndinfo.snd_sid   = parameters.streamId;
+		spa.sendv_sndinfo.snd_ppid  = htonl(ppid);
+		spa.sendv_sndinfo.snd_flags = SCTP_EOR;
 
+		// If ordered it must be reliable.
 		if (parameters.ordered)
-			spa.sendv_sndinfo.snd_flags = SCTP_EOR;
-		else
-			spa.sendv_sndinfo.snd_flags = SCTP_EOR | SCTP_UNORDERED;
-
-		spa.sendv_sndinfo.snd_ppid = htonl(ppid);
-		spa.sendv_flags            = SCTP_SEND_SNDINFO_VALID;
-
-		// Configure reliability. https://tools.ietf.org/html/rfc3758
-		if (parameters.maxPacketLifeTime != 0)
-		{
-			spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
-			spa.sendv_prinfo.pr_value  = parameters.maxPacketLifeTime;
-		}
-		else if (parameters.maxRetransmits != 0)
-		{
-			spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_RTX;
-			spa.sendv_prinfo.pr_value  = parameters.maxRetransmits;
-		}
-		else
 		{
 			spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_NONE;
 			spa.sendv_prinfo.pr_value  = 0;
+		}
+		// Configure reliability: https://tools.ietf.org/html/rfc3758
+		else
+		{
+			spa.sendv_flags |= SCTP_SEND_PRINFO_VALID;
+			spa.sendv_sndinfo.snd_flags |= SCTP_UNORDERED;
+
+			if (parameters.maxPacketLifeTime != 0)
+			{
+				spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
+				spa.sendv_prinfo.pr_value  = parameters.maxPacketLifeTime;
+			}
+			else if (parameters.maxRetransmits != 0)
+			{
+				spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_RTX;
+				spa.sendv_prinfo.pr_value  = parameters.maxRetransmits;
+			}
 		}
 
 		int ret = usrsctp_sendv(
@@ -797,6 +832,7 @@ namespace RTC
 					additionalOStreams = this->MIS - this->OS;
 
 				struct sctp_add_streams sas; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
 				std::memset(&sas, 0, sizeof(sas));
 				sas.sas_instrms  = 0;
 				sas.sas_outstrms = additionalOStreams;

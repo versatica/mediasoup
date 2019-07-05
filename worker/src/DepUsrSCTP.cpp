@@ -13,14 +13,16 @@ static constexpr size_t CheckerInterval{ 10 }; // In ms.
 
 /* Static methods for usrsctp global callbacks. */
 
-inline static int onSendSctpData(void* addr, void* buffer, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
+inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
 {
 	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(addr);
 
 	if (sctpAssociation == nullptr)
 		return -1;
 
-	sctpAssociation->OnUsrSctpSendSctpData(buffer, len);
+	sctpAssociation->OnUsrSctpSendSctpData(data, len);
+
+	// NOTE: Must not free data, usrsctp lib does it.
 
 	return 0;
 }
@@ -56,6 +58,7 @@ void DepUsrSCTP::ClassInit()
 	MS_DEBUG_TAG(info, "usrsctp");
 
 	usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
+	usrsctp_sysctl_set_sctp_ecn_enable(0);
 
 #ifdef SCTP_DEBUG
 	usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
