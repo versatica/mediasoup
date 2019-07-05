@@ -181,7 +181,7 @@ namespace RTC
 			// Init message.
 			struct sctp_initmsg initmsg; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			std::memset(&initmsg, 0, sizeof(struct sctp_initmsg));
+			std::memset(&initmsg, 0, sizeof(initmsg));
 			initmsg.sinit_num_ostreams  = this->OS;
 			initmsg.sinit_max_instreams = this->MIS;
 
@@ -193,16 +193,15 @@ namespace RTC
 			// Server side.
 			struct sockaddr_conn sconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			std::memset(&sconn, 0, sizeof(struct sockaddr_conn));
+			std::memset(&sconn, 0, sizeof(sconn));
 			sconn.sconn_family = AF_CONN;
 			sconn.sconn_port   = htons(5000);
 			sconn.sconn_addr   = static_cast<void*>(this);
 #ifdef HAVE_SCONN_LEN
-			rconn.sconn_len = sizeof(struct sockaddr_conn);
+			rconn.sconn_len = sizeof(sconn);
 #endif
 
-			ret = usrsctp_bind(
-			  this->socket, reinterpret_cast<struct sockaddr*>(&sconn), sizeof(struct sockaddr_conn));
+			ret = usrsctp_bind(this->socket, reinterpret_cast<struct sockaddr*>(&sconn), sizeof(sconn));
 
 			if (ret < 0)
 				MS_THROW_ERROR("usrsctp_bind() failed: %s", std::strerror(errno));
@@ -210,16 +209,15 @@ namespace RTC
 			// Client side.
 			struct sockaddr_conn rconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
-			std::memset(&rconn, 0, sizeof(struct sockaddr_conn));
+			std::memset(&rconn, 0, sizeof(rconn));
 			rconn.sconn_family = AF_CONN;
 			rconn.sconn_port   = htons(5000);
 			rconn.sconn_addr   = static_cast<void*>(this);
 #ifdef HAVE_SCONN_LEN
-			rconn.sconn_len = sizeof(struct sockaddr_conn);
+			rconn.sconn_len = sizeof(rconn);
 #endif
 
-			ret = usrsctp_connect(
-			  this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(struct sockaddr_conn));
+			ret = usrsctp_connect(this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(rconn));
 
 			if (ret < 0 && errno != EINPROGRESS)
 				MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
@@ -281,8 +279,7 @@ namespace RTC
 
 		// Fill stcp_sendv_spa.
 		struct sctp_sendv_spa spa; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-		std::memset(&spa, 0, sizeof(struct sctp_sendv_spa));
+		std::memset(&spa, 0, sizeof(spa));
 		spa.sendv_sndinfo.snd_sid = parameters.streamId;
 
 		if (parameters.ordered)
@@ -311,15 +308,7 @@ namespace RTC
 		}
 
 		int ret = usrsctp_sendv(
-		  this->socket,
-		  msg,
-		  len,
-		  nullptr,
-		  0,
-		  &spa,
-		  static_cast<socklen_t>(sizeof(struct sctp_sendv_spa)),
-		  SCTP_SENDV_SPA,
-		  0);
+		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
 		if (ret < 0)
 			MS_WARN_TAG(
@@ -780,6 +769,11 @@ namespace RTC
 				  notification->sn_strchange_event.strchange_outstrms,
 				  notification->sn_strchange_event.strchange_flags);
 
+				// Stuf below is just for WebRTC DataChannels where both endpoints need to upgrade their
+				// OS (a DataChannel is a pair of SCTP streams in both directions with same id).
+				if (!this->isDataChannel)
+					return;
+
 				uint16_t iStreams = notification->sn_strchange_event.strchange_instrms;
 				uint16_t oStreams = notification->sn_strchange_event.strchange_outstrms;
 
@@ -788,12 +782,11 @@ namespace RTC
 
 				if (iStreams < oStreams)
 				{
-					MS_WARN_TAG(sctp, "number of incoming stream lower than outgoing steams");
+					MS_DEBUG_TAG(sctp, "number of incoming streams lower than outgoing steams, do nothing");
 
 					break;
 				}
 
-				struct sctp_add_streams sas; // NOLINT(cppcoreguidelines-pro-type-member-init)
 				uint16_t additionalOStreams = iStreams - oStreams;
 
 				// Same number of incoming and outgoing streams.
@@ -803,18 +796,15 @@ namespace RTC
 				if (this->OS + additionalOStreams > this->MIS)
 					additionalOStreams = this->MIS - this->OS;
 
-				std::memset(&sas, 0, sizeof(struct sctp_add_streams));
+				struct sctp_add_streams sas; // NOLINT(cppcoreguidelines-pro-type-member-init)
+				std::memset(&sas, 0, sizeof(sas));
 				sas.sas_instrms  = 0;
 				sas.sas_outstrms = additionalOStreams;
 
 				MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", additionalOStreams);
 
 				int ret = usrsctp_setsockopt(
-				  this->socket,
-				  IPPROTO_SCTP,
-				  SCTP_ADD_STREAMS,
-				  &sas,
-				  static_cast<socklen_t>(sizeof(struct sctp_add_streams)));
+				  this->socket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas, static_cast<socklen_t>(sizeof(sas)));
 
 				if (ret < 0)
 				{
