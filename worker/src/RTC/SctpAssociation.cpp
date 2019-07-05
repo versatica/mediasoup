@@ -465,6 +465,21 @@ namespace RTC
 			return;
 		}
 
+		if (this->messageBufferLen != 0 && ssn != this->lastSsnReceived)
+		{
+			MS_WARN_TAG(
+			  sctp,
+			  "received different SSN while buffer not empty, buffer discarded [SSN:%" PRIu16
+			  ", lastSsnReceived:%" PRIu16 "]",
+			  ssn,
+			  this->lastSsnReceived);
+
+			this->messageBufferLen = 0;
+		}
+
+		// Update last SSN received.
+		this->lastSsnReceived = ssn;
+
 		auto eor = static_cast<bool>(flags & MSG_EOR);
 
 		if (this->messageBufferLen + len > this->maxSctpMessageSize)
@@ -480,21 +495,6 @@ namespace RTC
 
 			return;
 		}
-
-		if (this->messageBufferLen != 0 && ssn != this->lastSsnReceived)
-		{
-			MS_WARN_TAG(
-			  sctp,
-			  "received different SSN while buffer not empty, buffer discarded [SSN:%" PRIu16
-			  ", lastSsnReceived:%" PRIu16 "]",
-			  ssn,
-			  this->lastSsnReceived);
-
-			this->messageBufferLen = 0;
-		}
-
-		// Update last SSN received.
-		this->lastSsnReceived = ssn;
 
 		// If end of message and there is no buffered data, notify it directly.
 		if (eor && this->messageBufferLen == 0)
