@@ -15,7 +15,6 @@ namespace RTC
 	class SctpAssociation
 	{
 	public:
-		// TODO: Let's see which states are needed.
 		enum class SctpState
 		{
 			NEW = 1,
@@ -55,7 +54,7 @@ namespace RTC
 
 	public:
 		SctpAssociation(
-		  Listener* listener, uint16_t OS, uint16_t MIS, size_t maxSctpMessageSize, bool isDataChannel);
+		  Listener* listener, uint16_t os, uint16_t mis, size_t maxSctpMessageSize, bool isDataChannel);
 		~SctpAssociation();
 
 	public:
@@ -83,14 +82,14 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		uint16_t OS{ 0 };
-		uint16_t desiredOS{ 0 };
-		uint16_t MIS{ 0 };
+		uint16_t os{ 1024 };
+		uint16_t mis{ 1024 };
 		size_t maxSctpMessageSize{ 262144 };
 		bool isDataChannel{ false };
 		// Others.
 		SctpState state{ SctpState::NEW };
 		struct socket* socket{ nullptr };
+		uint16_t desiredOs{ 0 };
 		uint8_t* messageBuffer{ nullptr };
 		size_t messageBufferLen{ 0 };
 		uint16_t lastSsnReceived{ 0 }; // Valid for us since no SCTP I-DATA support.

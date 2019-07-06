@@ -86,8 +86,8 @@ namespace RTC
 	/* Instance methods. */
 
 	SctpAssociation::SctpAssociation(
-	  Listener* listener, uint16_t OS, uint16_t MIS, size_t maxSctpMessageSize, bool isDataChannel)
-	  : listener(listener), OS(OS), MIS(MIS), maxSctpMessageSize(maxSctpMessageSize),
+	  Listener* listener, uint16_t os, uint16_t mis, size_t maxSctpMessageSize, bool isDataChannel)
+	  : listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
 	    isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
@@ -197,8 +197,8 @@ namespace RTC
 			struct sctp_initmsg initmsg; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			std::memset(&initmsg, 0, sizeof(initmsg));
-			initmsg.sinit_num_ostreams  = this->OS;
-			initmsg.sinit_max_instreams = this->MIS;
+			initmsg.sinit_num_ostreams  = this->os;
+			initmsg.sinit_max_instreams = this->mis;
 
 			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
 
@@ -273,10 +273,10 @@ namespace RTC
 		jsonObject["port"] = 5000;
 
 		// Add OS.
-		jsonObject["OS"] = this->OS;
+		jsonObject["OS"] = this->os;
 
 		// Add MIS.
-		jsonObject["MIS"] = this->MIS;
+		jsonObject["MIS"] = this->mis;
 
 		// Add maxMessageSize.
 		jsonObject["maxMessageSize"] = this->maxSctpMessageSize;
@@ -347,6 +347,7 @@ namespace RTC
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
 		if (ret < 0)
+		{
 			MS_WARN_TAG(
 			  sctp,
 			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", len:%zu]: %s",
@@ -354,6 +355,7 @@ namespace RTC
 			  ppid,
 			  len,
 			  std::strerror(errno));
+		}
 	}
 
 	void SctpAssociation::HandleDataConsumer(RTC::DataConsumer* dataConsumer)
@@ -363,7 +365,7 @@ namespace RTC
 		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
 
 		// We need more OS.
-		if (streamId > this->OS - 1)
+		if (streamId > this->os - 1)
 			AddOutgoingStreams();
 	}
 
@@ -396,7 +398,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Do nothing if an outgoing stream that could not be allocated by us.
-		if (direction == StreamDirection::OUTGOING && streamId > this->OS - 1)
+		if (direction == StreamDirection::OUTGOING && streamId > this->os - 1)
 			return;
 
 		int ret;
@@ -461,28 +463,28 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t additionalOStreams{ 0 };
+		uint16_t additionalOs{ 0 };
 
-		if (MaxSctpStreams - this->OS >= 32)
-			additionalOStreams = 32;
+		if (MaxSctpStreams - this->os >= 32)
+			additionalOs = 32;
 		else
-			additionalOStreams = MaxSctpStreams - this->OS;
+			additionalOs = MaxSctpStreams - this->os;
 
-		if (additionalOStreams == 0)
+		if (additionalOs == 0)
 		{
-			MS_WARN_TAG(sctp, "cannot add more outgoing streams, [OS:%" PRIu16 "]", this->OS);
+			MS_WARN_TAG(sctp, "cannot add more outgoing streams, [OS:%" PRIu16 "]", this->os);
 
 			return;
 		}
 
-		auto nextDesiredOS = this->OS + additionalOStreams;
+		auto nextDesiredOs = this->os + additionalOs;
 
 		// Already in progress, ignore.
-		if (nextDesiredOS == this->desiredOS)
+		if (nextDesiredOs == this->desiredOs)
 			return;
 
 		// Update desired value.
-		this->desiredOS = nextDesiredOS;
+		this->desiredOs = nextDesiredOs;
 
 		// If not connected, defer it.
 		if (this->state != SctpState::CONNECTED)
@@ -496,9 +498,9 @@ namespace RTC
 
 		std::memset(&sas, 0, sizeof(sas));
 		sas.sas_instrms  = 0;
-		sas.sas_outstrms = additionalOStreams;
+		sas.sas_outstrms = additionalOs;
 
-		MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", additionalOStreams);
+		MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", additionalOs);
 
 		int ret = usrsctp_setsockopt(
 		  this->socket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas, static_cast<socklen_t>(sizeof(sas)));
@@ -626,9 +628,10 @@ namespace RTC
 						  notification->sn_assoc_change.sac_inbound_streams);
 
 						// Update our OS.
-						this->OS = notification->sn_assoc_change.sac_outbound_streams;
+						this->os = notification->sn_assoc_change.sac_outbound_streams;
 
-						if (this->desiredOS > this->OS)
+						// Increase if requested before connected.
+						if (this->desiredOs > this->os)
 							AddOutgoingStreams();
 
 						if (this->state != SctpState::CONNECTED)
@@ -680,9 +683,10 @@ namespace RTC
 						  notification->sn_assoc_change.sac_inbound_streams);
 
 						// Update our OS.
-						this->OS = notification->sn_assoc_change.sac_outbound_streams;
+						this->os = notification->sn_assoc_change.sac_outbound_streams;
 
-						if (this->desiredOS > this->OS)
+						// Increase if requested before connected.
+						if (this->desiredOs > this->os)
 							AddOutgoingStreams();
 
 						if (this->state != SctpState::CONNECTED)
@@ -907,7 +911,8 @@ namespace RTC
 					break;
 				}
 
-				this->OS = notification->sn_strchange_event.strchange_outstrms;
+				// Update OS.
+				this->os = notification->sn_strchange_event.strchange_outstrms;
 
 				break;
 			}
