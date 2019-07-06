@@ -542,12 +542,10 @@ namespace RTC
 					dataConsumer->TransportConnected();
 
 				if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
-				{
 					dataConsumer->SctpAssociationConnected();
 
-					// Tell to the SCTP association.
-					this->sctpAssociation->HandleDataConsumer(dataConsumer);
-				}
+				// Tell to the SCTP association.
+				this->sctpAssociation->HandleDataConsumer(dataConsumer);
 
 				break;
 			}

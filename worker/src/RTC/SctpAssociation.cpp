@@ -81,6 +81,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t SctpMtu{ 1200 };
+	static constexpr uint16_t MaxSctpStreams{ 65535 };
 
 	/* Instance methods. */
 
@@ -359,7 +360,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto streamId = dataProducer->GetSctpStreamParameters().streamId;
+		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
 
 		// We need more OS.
 		if (streamId > this->OS - 1)
@@ -393,6 +394,10 @@ namespace RTC
 	void SctpAssociation::ResetSctpStream(uint16_t streamId, StreamDirection direction)
 	{
 		MS_TRACE();
+
+		// Do nothing if an outgoing stream that could not be allocated by us.
+		if (direction == StreamDirection::OUTGOING && streamId > this->OS - 1)
+			return;
 
 		int ret;
 		struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -456,11 +461,50 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// If in progress do nothing.
-		if (this->desiredOS > this->OS)
+		uint16_t additionalOStreams{ 0 };
+
+		if (MaxSctpStreams - this->OS >= 32)
+			additionalOStreams = 32;
+		else
+			additionalOStreams = MaxSctpStreams - this->OS;
+
+		if (additionalOStreams == 0)
+		{
+			MS_WARN_TAG(sctp, "cannot add more outgoing streams, [OS:%" PRIu16 "]", this->OS);
+
+			return;
+		}
+
+		auto nextDesiredOS = this->OS + additionalOStreams;
+
+		// Already in progress, ignore.
+		if (nextDesiredOS == this->desiredOS)
 			return;
 
+		// Update desired value.
+		this->desiredOS = nextDesiredOS;
 
+		// If not connected, defer it.
+		if (this->state != SctpState::CONNECTED)
+		{
+			MS_DEBUG_TAG(sctp, "SCTP not connected, deferring OS increase");
+
+			return;
+		}
+
+		struct sctp_add_streams sas; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+		std::memset(&sas, 0, sizeof(sas));
+		sas.sas_instrms  = 0;
+		sas.sas_outstrms = additionalOStreams;
+
+		MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", additionalOStreams);
+
+		int ret = usrsctp_setsockopt(
+		  this->socket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas, static_cast<socklen_t>(sizeof(sas)));
+
+		if (ret < 0)
+			MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_ADD_STREAMS) failed: %s", std::strerror(errno));
 	}
 
 	void SctpAssociation::OnUsrSctpSendSctpData(void* buffer, size_t len)
@@ -584,6 +628,9 @@ namespace RTC
 						// Update our OS.
 						this->OS = notification->sn_assoc_change.sac_outbound_streams;
 
+						if (this->desiredOS > this->OS)
+							AddOutgoingStreams();
+
 						if (this->state != SctpState::CONNECTED)
 						{
 							this->state = SctpState::CONNECTED;
@@ -634,6 +681,9 @@ namespace RTC
 
 						// Update our OS.
 						this->OS = notification->sn_assoc_change.sac_outbound_streams;
+
+						if (this->desiredOS > this->OS)
+							AddOutgoingStreams();
 
 						if (this->state != SctpState::CONNECTED)
 						{
@@ -793,7 +843,7 @@ namespace RTC
 						}
 
 						if (i > 0)
-							streamIds.append(", ");
+							streamIds.append(",");
 
 						streamIds.append(std::to_string(streamId));
 					}
@@ -825,12 +875,43 @@ namespace RTC
 
 			case SCTP_STREAM_CHANGE_EVENT:
 			{
-				MS_DEBUG_TAG(
-				  sctp,
-				  "SCTP stream changed, streams [in:%" PRIu16 ", out:%" PRIu16 ", flags:%x]",
-				  notification->sn_strchange_event.strchange_instrms,
-				  notification->sn_strchange_event.strchange_outstrms,
-				  notification->sn_strchange_event.strchange_flags);
+				if (notification->sn_strchange_event.strchange_flags == 0)
+				{
+					MS_DEBUG_TAG(
+					  sctp,
+					  "SCTP stream changed, streams [out:%" PRIu16 ", in:%" PRIu16 ", flags:%x]",
+					  notification->sn_strchange_event.strchange_outstrms,
+					  notification->sn_strchange_event.strchange_instrms,
+					  notification->sn_strchange_event.strchange_flags);
+				}
+				else if (notification->sn_strchange_event.strchange_flags & SCTP_STREAM_RESET_DENIED)
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "SCTP stream change denied, streams [out:%" PRIu16 ", in:%" PRIu16 ", flags:%x]",
+					  notification->sn_strchange_event.strchange_outstrms,
+					  notification->sn_strchange_event.strchange_instrms,
+					  notification->sn_strchange_event.strchange_flags);
+
+					return;
+				}
+				else if (notification->sn_strchange_event.strchange_flags & SCTP_STREAM_RESET_FAILED)
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "SCTP stream change failed, streams [out:%" PRIu16 ", in:%" PRIu16 ", flags:%x]",
+					  notification->sn_strchange_event.strchange_outstrms,
+					  notification->sn_strchange_event.strchange_instrms,
+					  notification->sn_strchange_event.strchange_flags);
+
+					return;
+				}
+
+				this->OS = notification->sn_strchange_event.strchange_outstrms;
+
+				break;
+
+				// TODO: REMOVE EVERYTHING BELOW
 
 				// Stuf below is just for WebRTC DataChannels where both endpoints need to upgrade their
 				// OS (a DataChannel is a pair of SCTP streams in both directions with same id).
