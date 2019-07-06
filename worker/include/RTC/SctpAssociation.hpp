@@ -70,7 +70,7 @@ namespace RTC
 
 	private:
 		void ResetSctpStream(uint16_t streamId, StreamDirection);
-		void AddOutgoingStreams();
+		void AddOutgoingStreams(bool force = false);
 
 		/* Callbacks fired by usrsctp events. */
 	public:

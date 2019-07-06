@@ -58,6 +58,8 @@ void DepUsrSCTP::ClassInit()
 	MS_DEBUG_TAG(info, "usrsctp");
 
 	usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
+
+	// Disable explicit congestion notifications (ecn).
 	usrsctp_sysctl_set_sctp_ecn_enable(0);
 
 #ifdef SCTP_DEBUG

@@ -490,7 +490,11 @@ namespace RTC
 
 				MS_DEBUG_DEV("Producer created [dataProducerId:%s]", dataProducerId.c_str());
 
-				request->Accept();
+				json data = json::object();
+
+				dataProducer->FillJson(data);
+
+				request->Accept(data);
 
 				break;
 			}
@@ -536,7 +540,11 @@ namespace RTC
 				  dataConsumerId.c_str(),
 				  dataProducerId.c_str());
 
-				request->Accept();
+				json data = json::object();
+
+				dataConsumer->FillJson(data);
+
+				request->Accept(data);
 
 				if (IsConnected())
 					dataConsumer->TransportConnected();

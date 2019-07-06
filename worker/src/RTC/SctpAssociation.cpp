@@ -126,9 +126,6 @@ namespace RTC
 		{
 			int ret;
 
-			// Disable explicit congestion notifications (ecn).
-			usrsctp_sysctl_set_sctp_ecn_enable(0);
-
 			this->socket = usrsctp_socket(
 			  AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, static_cast<void*>(this));
 
@@ -366,7 +363,7 @@ namespace RTC
 
 		// We need more OS.
 		if (streamId > this->os - 1)
-			AddOutgoingStreams();
+			AddOutgoingStreams(/*force*/ false);
 	}
 
 	void SctpAssociation::DataProducerClosed(RTC::DataProducer* dataProducer)
@@ -459,7 +456,7 @@ namespace RTC
 		std::free(srs);
 	}
 
-	void SctpAssociation::AddOutgoingStreams()
+	void SctpAssociation::AddOutgoingStreams(bool force)
 	{
 		MS_TRACE();
 
@@ -479,8 +476,8 @@ namespace RTC
 
 		auto nextDesiredOs = this->os + additionalOs;
 
-		// Already in progress, ignore.
-		if (nextDesiredOs == this->desiredOs)
+		// Already in progress, ignore (unless forced).
+		if (!force && nextDesiredOs == this->desiredOs)
 			return;
 
 		// Update desired value.
@@ -632,7 +629,7 @@ namespace RTC
 
 						// Increase if requested before connected.
 						if (this->desiredOs > this->os)
-							AddOutgoingStreams();
+							AddOutgoingStreams(/*force*/ true);
 
 						if (this->state != SctpState::CONNECTED)
 						{
@@ -687,7 +684,7 @@ namespace RTC
 
 						// Increase if requested before connected.
 						if (this->desiredOs > this->os)
-							AddOutgoingStreams();
+							AddOutgoingStreams(/*force*/ true);
 
 						if (this->state != SctpState::CONNECTED)
 						{

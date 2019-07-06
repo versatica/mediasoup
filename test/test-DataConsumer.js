@@ -15,8 +15,9 @@ const dataProducerParameters =
 {
 	sctpStreamParameters :
 	{
-		streamId : 12345,
-		ordered  : false
+		streamId          : 12345,
+		ordered           : false,
+		maxPacketLifeTime : 5000
 	},
 	label    : 'foo',
 	protocol : 'bar'
@@ -61,7 +62,7 @@ test('transport.consumeData() succeeds', async () =>
 	expect(dataConsumer.sctpStreamParameters).toBeType('object');
 	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
-	expect(dataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
+	expect(dataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
 	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
 	expect(dataConsumer.label).toBe('foo');
 	expect(dataConsumer.protocol).toBe('bar');
@@ -94,9 +95,8 @@ test('dataConsumer.dump() succeeds', async () =>
 	expect(data.sctpStreamParameters.streamId)
 		.toBe(dataConsumer.sctpStreamParameters.streamId);
 	expect(data.sctpStreamParameters.ordered).toBe(false);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
+	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
 	expect(data.sctpStreamParameters.maxRetransmits).toBe(undefined);
-	expect(data.sctpStreamParameters.reliable).toBe(true);
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 }, 2000);

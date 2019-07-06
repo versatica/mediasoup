@@ -126,7 +126,7 @@ const dataProducerParameters =
 	sctpStreamParameters :
 	{
 		streamId          : 666,
-		ordered           : true,
+		ordered           : false,
 		maxPacketLifeTime : 5000
 	},
 	label    : 'foo',
@@ -548,7 +548,7 @@ test('router.pipeToRouter() succeeds with data', async () =>
 	expect(pipeDataConsumer.closed).toBe(false);
 	expect(pipeDataConsumer.sctpStreamParameters).toBeType('object');
 	expect(pipeDataConsumer.sctpStreamParameters.streamId).toBeType('number');
-	expect(pipeDataConsumer.sctpStreamParameters.ordered).toBe(true);
+	expect(pipeDataConsumer.sctpStreamParameters.ordered).toBe(false);
 	expect(pipeDataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
 	expect(pipeDataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
 	expect(pipeDataConsumer.label).toBe('foo');
@@ -558,7 +558,7 @@ test('router.pipeToRouter() succeeds with data', async () =>
 	expect(pipeDataProducer.closed).toBe(false);
 	expect(pipeDataProducer.sctpStreamParameters).toBeType('object');
 	expect(pipeDataProducer.sctpStreamParameters.streamId).toBeType('number');
-	expect(pipeDataProducer.sctpStreamParameters.ordered).toBe(true);
+	expect(pipeDataProducer.sctpStreamParameters.ordered).toBe(false);
 	expect(pipeDataProducer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
 	expect(pipeDataProducer.sctpStreamParameters.maxRetransmits).toBe(undefined);
 	expect(pipeDataProducer.label).toBe('foo');
@@ -576,7 +576,7 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () =>
 	expect(dataConsumer.closed).toBe(false);
 	expect(dataConsumer.sctpStreamParameters).toBeType('object');
 	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
-	expect(dataConsumer.sctpStreamParameters.ordered).toBe(true);
+	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
 	expect(dataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
 	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
 	expect(dataConsumer.label).toBe('foo');

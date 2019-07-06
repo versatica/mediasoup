@@ -31,8 +31,13 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("streamId must not be greater than 65534");
 
 		// ordered is optional.
+		bool orderedGiven = false;
+
 		if (jsonOrderedIdIt != data.end() && jsonOrderedIdIt->is_boolean())
+		{
+			orderedGiven  = true;
 			this->ordered = jsonOrderedIdIt->get<bool>();
+		}
 
 		// maxPacketLifeTime is optional.
 		if (jsonMaxPacketLifeTimeIt != data.end() && jsonMaxPacketLifeTimeIt->is_number_unsigned())
@@ -44,6 +49,21 @@ namespace RTC
 
 		if (this->maxPacketLifeTime && this->maxRetransmits)
 			MS_THROW_TYPE_ERROR("cannot provide both maxPacketLifeTime and maxRetransmits");
+
+		// clang-format off
+		if (
+			orderedGiven &&
+			this->ordered &&
+			(this->maxPacketLifeTime || this->maxRetransmits)
+		)
+		// clang-format on
+		{
+			MS_THROW_TYPE_ERROR("cannot be ordered with maxPacketLifeTime or maxRetransmits");
+		}
+		else if (!orderedGiven && (this->maxPacketLifeTime || this->maxRetransmits))
+		{
+			this->ordered = false;
+		}
 	}
 
 	void SctpStreamParameters::FillJson(json& jsonObject) const
@@ -63,8 +83,5 @@ namespace RTC
 		// Add maxRetransmits.
 		if (this->maxRetransmits)
 			jsonObject["maxRetransmits"] = this->maxRetransmits;
-
-		// Add reliable.
-		jsonObject["reliable"] = !this->maxPacketLifeTime && !this->maxRetransmits;
 	}
 } // namespace RTC

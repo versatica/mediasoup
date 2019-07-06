@@ -39,9 +39,7 @@ test('transport1.produceData() succeeds', async () =>
 		{
 			sctpStreamParameters :
 			{
-				streamId          : 666,
-				ordered           : true,
-				maxPacketLifeTime : 5000
+				streamId : 666
 			},
 			label    : 'foo',
 			protocol : 'bar',
@@ -55,7 +53,7 @@ test('transport1.produceData() succeeds', async () =>
 	expect(dataProducer1.sctpStreamParameters).toBeType('object');
 	expect(dataProducer1.sctpStreamParameters.streamId).toBe(666);
 	expect(dataProducer1.sctpStreamParameters.ordered).toBe(true);
-	expect(dataProducer1.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
+	expect(dataProducer1.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
 	expect(dataProducer1.sctpStreamParameters.maxRetransmits).toBe(undefined);
 	expect(dataProducer1.label).toBe('foo');
 	expect(dataProducer1.protocol).toBe('bar');
@@ -89,9 +87,8 @@ test('transport2.produceData() succeeds', async () =>
 		{
 			sctpStreamParameters :
 			{
-				streamId          : 6666,
-				ordered           : true,
-				maxPacketLifeTime : 50000
+				streamId       : 777,
+				maxRetransmits : 3
 			},
 			label    : 'foo',
 			protocol : 'bar',
@@ -103,10 +100,10 @@ test('transport2.produceData() succeeds', async () =>
 	expect(dataProducer2.id).toBeType('string');
 	expect(dataProducer2.closed).toBe(false);
 	expect(dataProducer2.sctpStreamParameters).toBeType('object');
-	expect(dataProducer2.sctpStreamParameters.streamId).toBe(6666);
-	expect(dataProducer2.sctpStreamParameters.ordered).toBe(true);
-	expect(dataProducer2.sctpStreamParameters.maxPacketLifeTime).toBe(50000);
-	expect(dataProducer2.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(dataProducer2.sctpStreamParameters.streamId).toBe(777);
+	expect(dataProducer2.sctpStreamParameters.ordered).toBe(false);
+	expect(dataProducer2.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
+	expect(dataProducer2.sctpStreamParameters.maxRetransmits).toBe(3);
 	expect(dataProducer2.label).toBe('foo');
 	expect(dataProducer2.protocol).toBe('bar');
 	expect(dataProducer2.appData).toEqual({ foo: 1, bar: '2' });
@@ -157,6 +154,21 @@ test('transport.produceData() with already used streamId rejects with Error', as
 		.toThrow(Error);
 }, 2000);
 
+test('transport.produceData() with ordered and maxPacketLifeTime rejects with TypeError', async () =>
+{
+	await expect(transport1.produceData(
+		{
+			sctpStreamParameters :
+			{
+				streamId          : 999,
+				ordered           : true,
+				maxPacketLifeTime : 4000
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+}, 2000);
+
 test('dataProducer.dump() succeeds', async () =>
 {
 	let data;
@@ -167,9 +179,8 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(data.sctpStreamParameters).toBeType('object');
 	expect(data.sctpStreamParameters.streamId).toBe(666);
 	expect(data.sctpStreamParameters.ordered).toBe(true);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
+	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
 	expect(data.sctpStreamParameters.maxRetransmits).toBe(undefined);
-	expect(data.sctpStreamParameters.reliable).toBe(false);
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 
@@ -177,10 +188,10 @@ test('dataProducer.dump() succeeds', async () =>
 
 	expect(data.id).toBe(dataProducer2.id);
 	expect(data.sctpStreamParameters).toBeType('object');
-	expect(data.sctpStreamParameters.streamId).toBe(6666);
-	expect(data.sctpStreamParameters.ordered).toBe(true);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(50000);
-	expect(data.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(data.sctpStreamParameters.streamId).toBe(777);
+	expect(data.sctpStreamParameters.ordered).toBe(false);
+	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
+	expect(data.sctpStreamParameters.maxRetransmits).toBe(3);
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 }, 2000);
