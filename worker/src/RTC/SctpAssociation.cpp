@@ -893,7 +893,7 @@ namespace RTC
 					  notification->sn_strchange_event.strchange_instrms,
 					  notification->sn_strchange_event.strchange_flags);
 
-					return;
+					break;
 				}
 				else if (notification->sn_strchange_event.strchange_flags & SCTP_STREAM_RESET_FAILED)
 				{
@@ -904,59 +904,10 @@ namespace RTC
 					  notification->sn_strchange_event.strchange_instrms,
 					  notification->sn_strchange_event.strchange_flags);
 
-					return;
+					break;
 				}
 
 				this->OS = notification->sn_strchange_event.strchange_outstrms;
-
-				break;
-
-				// TODO: REMOVE EVERYTHING BELOW
-
-				// Stuf below is just for WebRTC DataChannels where both endpoints need to upgrade their
-				// OS (a DataChannel is a pair of SCTP streams in both directions with same id).
-				if (!this->isDataChannel)
-					return;
-
-				uint16_t iStreams = notification->sn_strchange_event.strchange_instrms;
-				uint16_t oStreams = notification->sn_strchange_event.strchange_outstrms;
-
-				// Update our OS.
-				this->OS = oStreams;
-
-				if (iStreams < oStreams)
-				{
-					MS_DEBUG_TAG(sctp, "number of incoming streams lower than outgoing streams, do nothing");
-
-					break;
-				}
-
-				uint16_t additionalOStreams = iStreams - oStreams;
-
-				// Same number of incoming and outgoing streams.
-				if (additionalOStreams == 0)
-					break;
-
-				if (this->OS + additionalOStreams > this->MIS)
-					additionalOStreams = this->MIS - this->OS;
-
-				struct sctp_add_streams sas; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-				std::memset(&sas, 0, sizeof(sas));
-				sas.sas_instrms  = 0;
-				sas.sas_outstrms = additionalOStreams;
-
-				MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", additionalOStreams);
-
-				int ret = usrsctp_setsockopt(
-				  this->socket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas, static_cast<socklen_t>(sizeof(sas)));
-
-				if (ret < 0)
-				{
-					MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_ADD_STREAMS) failed: %s", std::strerror(errno));
-
-					break;
-				}
 
 				break;
 			}
