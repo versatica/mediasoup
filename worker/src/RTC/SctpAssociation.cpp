@@ -52,7 +52,7 @@ inline static int onRecvSctpData(
 	else
 	{
 		uint16_t streamId = rcv.rcv_sid;
-		uint8_t ppid      = ntohl(rcv.rcv_ppid);
+		uint8_t ppid      = rcv.rcv_ppid;
 		uint16_t ssn      = rcv.rcv_ssn;
 
 		MS_DEBUG_TAG(
