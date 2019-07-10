@@ -63,7 +63,7 @@ inline static int onRecvSctpData(
 		  rcv.rcv_sid,
 		  rcv.rcv_ssn,
 		  rcv.rcv_tsn,
-		  ntohl(rcv.rcv_ppid),
+		  rcv.rcv_ppid,
 		  rcv.rcv_context,
 		  flags);
 
@@ -313,7 +313,7 @@ namespace RTC
 		std::memset(&spa, 0, sizeof(spa));
 		spa.sendv_flags             = SCTP_SEND_SNDINFO_VALID;
 		spa.sendv_sndinfo.snd_sid   = parameters.streamId;
-		spa.sendv_sndinfo.snd_ppid  = htonl(ppid);
+		spa.sendv_sndinfo.snd_ppid  = ppid;
 		spa.sendv_sndinfo.snd_flags = SCTP_EOR;
 
 		// If ordered it must be reliable.
@@ -805,7 +805,7 @@ namespace RTC
 				  "SCTP message sent failure [streamId:%" PRIu16 ", ppid:%" PRIu32
 				  ", sent:%s, error:0x%08x, info:%s]",
 				  notification->sn_send_failed_event.ssfe_info.snd_sid,
-				  ntohl(notification->sn_send_failed_event.ssfe_info.snd_ppid),
+				  notification->sn_send_failed_event.ssfe_info.snd_ppid,
 				  notification->sn_send_failed_event.ssfe_flags & SCTP_DATA_SENT ? "yes" : "no",
 				  notification->sn_send_failed_event.ssfe_error,
 				  buffer);
