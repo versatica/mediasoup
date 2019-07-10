@@ -1398,7 +1398,7 @@ namespace RTC
 	}
 
 	inline void Transport::OnDataProducerSctpMessageReceived(
-	  RTC::DataProducer* dataProducer, uint8_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
@@ -1406,7 +1406,7 @@ namespace RTC
 	}
 
 	inline void Transport::OnDataConsumerSendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
@@ -1514,7 +1514,7 @@ namespace RTC
 	inline void Transport::OnSctpAssociationMessageReceived(
 	  RTC::SctpAssociation* /*sctpAssociation*/,
 	  uint16_t streamId,
-	  uint8_t ppid,
+	  uint32_t ppid,
 	  const uint8_t* msg,
 	  size_t len)
 	{

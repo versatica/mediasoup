@@ -44,7 +44,7 @@ namespace RTC
 			virtual void OnSctpAssociationMessageReceived(
 			  RTC::SctpAssociation* sctpAssociation,
 			  uint16_t streamId,
-			  uint8_t ppid,
+			  uint32_t ppid,
 			  const uint8_t* msg,
 			  size_t len) = 0;
 		};
@@ -63,7 +63,7 @@ namespace RTC
 		size_t GetMaxSctpMessageSize() const;
 		SctpState GetState() const;
 		void ProcessSctpData(const uint8_t* data, size_t len);
-		void SendSctpMessage(RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len);
+		void SendSctpMessage(RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len);
 		void HandleDataConsumer(RTC::DataConsumer* dataConsumer);
 		void DataProducerClosed(RTC::DataProducer* dataProducer);
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
@@ -76,7 +76,7 @@ namespace RTC
 	public:
 		void OnUsrSctpSendSctpData(void* buffer, size_t len);
 		void OnUsrSctpReceiveSctpData(
-		  uint16_t streamId, uint16_t ssn, uint8_t ppid, int flags, const uint8_t* data, size_t len);
+		  uint16_t streamId, uint16_t ssn, uint32_t ppid, int flags, const uint8_t* data, size_t len);
 		void OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len);
 
 	private:

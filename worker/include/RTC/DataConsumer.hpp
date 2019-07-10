@@ -16,8 +16,8 @@ namespace RTC
 		{
 		public:
 			virtual void OnDataConsumerSendSctpMessage(
-			  RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len) = 0;
-			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)   = 0;
+			  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
+			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)    = 0;
 		};
 
 	public:
@@ -39,7 +39,7 @@ namespace RTC
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
 		void DataProducerClosed();
-		void SendSctpMessage(uint8_t ppid, const uint8_t* msg, size_t len);
+		void SendSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.

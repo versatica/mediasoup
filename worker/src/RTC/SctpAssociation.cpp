@@ -52,7 +52,7 @@ inline static int onRecvSctpData(
 	else
 	{
 		uint16_t streamId = rcv.rcv_sid;
-		uint8_t ppid      = ntohl(rcv.rcv_ppid);
+		uint32_t ppid     = ntohl(rcv.rcv_ppid);
 		uint16_t ssn      = rcv.rcv_ssn;
 
 		MS_DEBUG_TAG(
@@ -294,7 +294,7 @@ namespace RTC
 	}
 
 	void SctpAssociation::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
@@ -520,7 +520,7 @@ namespace RTC
 	}
 
 	void SctpAssociation::OnUsrSctpReceiveSctpData(
-	  uint16_t streamId, uint16_t ssn, uint8_t ppid, int flags, const uint8_t* data, size_t len)
+	  uint16_t streamId, uint16_t ssn, uint32_t ppid, int flags, const uint8_t* data, size_t len)
 	{
 		// Ignore WebRTC DataChannel Control DATA chunks.
 		if (ppid == 50)

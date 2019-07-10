@@ -74,7 +74,7 @@ namespace RTC
 			virtual void OnTransportDataProducerSctpMessageReceived(
 			  RTC::Transport* transport,
 			  RTC::DataProducer* dataProducer,
-			  uint8_t ppid,
+			  uint32_t ppid,
 			  const uint8_t* msg,
 			  size_t len) = 0;
 			virtual void OnTransportNewDataConsumer(
@@ -166,12 +166,12 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
 	public:
 		void OnDataProducerSctpMessageReceived(
-		  RTC::DataProducer* dataProducer, uint8_t ppid, const uint8_t* msg, size_t len) override;
+		  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
 		void OnDataConsumerSendSctpMessage(
-		  RTC::DataConsumer* dataConsumer, uint8_t ppid, const uint8_t* msg, size_t len) override;
+		  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
@@ -185,7 +185,7 @@ namespace RTC
 		void OnSctpAssociationMessageReceived(
 		  RTC::SctpAssociation* sctpAssociation,
 		  uint16_t streamId,
-		  uint8_t ppid,
+		  uint32_t ppid,
 		  const uint8_t* msg,
 		  size_t len) override;
 

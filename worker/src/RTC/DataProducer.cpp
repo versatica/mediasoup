@@ -113,7 +113,7 @@ namespace RTC
 		}
 	}
 
-	void DataProducer::ReceiveSctpMessage(uint8_t ppid, const uint8_t* msg, size_t len)
+	void DataProducer::ReceiveSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 

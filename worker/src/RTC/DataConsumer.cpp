@@ -166,7 +166,7 @@ namespace RTC
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 
-	void DataConsumer::SendSctpMessage(uint8_t ppid, const uint8_t* msg, size_t len)
+	void DataConsumer::SendSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 

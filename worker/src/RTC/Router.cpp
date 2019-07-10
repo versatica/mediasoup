@@ -826,7 +826,7 @@ namespace RTC
 	inline void Router::OnTransportDataProducerSctpMessageReceived(
 	  RTC::Transport* /*transport*/,
 	  RTC::DataProducer* dataProducer,
-	  uint8_t ppid,
+	  uint32_t ppid,
 	  const uint8_t* msg,
 	  size_t len)
 	{
