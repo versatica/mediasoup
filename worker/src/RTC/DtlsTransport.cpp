@@ -60,13 +60,21 @@ namespace RTC
 {
 	/* Static. */
 
+	// clang-format off
 	static constexpr int DtlsMtu{ 1350 };
 	static constexpr int SslReadBufferSize{ 65536 };
-	// NOTE: Those values are hardcoded as we just use AES_CM_128_HMAC_SHA1_80 and
-	// AES_CM_128_HMAC_SHA1_32 which share same length values for key and salt.
+	// AES-HMAC: http://tools.ietf.org/html/rfc3711
 	static constexpr size_t SrtpMasterKeyLength{ 16 };
 	static constexpr size_t SrtpMasterSaltLength{ 14 };
 	static constexpr size_t SrtpMasterLength{ SrtpMasterKeyLength + SrtpMasterSaltLength };
+	// AES-GCM: http://tools.ietf.org/html/rfc7714
+	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32 };
+	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12 };
+	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength + SrtpAesGcm256MasterSaltLength };
+	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16 };
+	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12 };
+	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength + SrtpAesGcm128MasterSaltLength };
+	// clang-format on
 
 	/* Class variables. */
 
@@ -102,6 +110,8 @@ namespace RTC
 	// clang-format off
 	std::vector<DtlsTransport::SrtpProfileMapEntry> DtlsTransport::srtpProfiles =
 	{
+		{ RTC::SrtpSession::Profile::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
+		{ RTC::SrtpSession::Profile::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },
 		{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
 		{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
@@ -1226,17 +1236,57 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint8_t srtpMaterial[SrtpMasterLength * 2];
+		size_t srtpKeyLength{ 0 };
+		size_t srtpSaltLength{ 0 };
+		size_t srtpMasterLength{ 0 };
+
+		switch (srtpProfile)
+		{
+			case RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80:
+			case RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_32:
+			{
+				srtpKeyLength    = SrtpMasterKeyLength;
+				srtpSaltLength   = SrtpMasterSaltLength;
+				srtpMasterLength = SrtpMasterLength;
+
+				break;
+			}
+
+			case RTC::SrtpSession::Profile::AEAD_AES_256_GCM:
+			{
+				srtpKeyLength    = SrtpAesGcm256MasterKeyLength;
+				srtpSaltLength   = SrtpAesGcm256MasterSaltLength;
+				srtpMasterLength = SrtpAesGcm256MasterLength;
+
+				break;
+			}
+
+			case RTC::SrtpSession::Profile::AEAD_AES_128_GCM:
+			{
+				srtpKeyLength    = SrtpAesGcm128MasterKeyLength;
+				srtpSaltLength   = SrtpAesGcm128MasterSaltLength;
+				srtpMasterLength = SrtpAesGcm128MasterLength;
+
+				break;
+			}
+
+			default:
+			{
+				MS_ABORT("unknown SRTP profile");
+			}
+		}
+
+		uint8_t srtpMaterial[srtpMasterLength * 2];
 		uint8_t* srtpLocalKey;
 		uint8_t* srtpLocalSalt;
 		uint8_t* srtpRemoteKey;
 		uint8_t* srtpRemoteSalt;
-		uint8_t srtpLocalMasterKey[SrtpMasterLength];
-		uint8_t srtpRemoteMasterKey[SrtpMasterLength];
+		uint8_t srtpLocalMasterKey[srtpMasterLength];
+		uint8_t srtpRemoteMasterKey[srtpMasterLength];
 		int ret;
 
 		ret = SSL_export_keying_material(
-		  this->ssl, srtpMaterial, SrtpMasterLength * 2, "EXTRACTOR-dtls_srtp", 19, nullptr, 0, 0);
+		  this->ssl, srtpMaterial, srtpMasterLength * 2, "EXTRACTOR-dtls_srtp", 19, nullptr, 0, 0);
 
 		MS_ASSERT(ret != 0, "SSL_export_keying_material() failed");
 
@@ -1245,9 +1295,9 @@ namespace RTC
 			case Role::SERVER:
 			{
 				srtpRemoteKey  = srtpMaterial;
-				srtpLocalKey   = srtpRemoteKey + SrtpMasterKeyLength;
-				srtpRemoteSalt = srtpLocalKey + SrtpMasterKeyLength;
-				srtpLocalSalt  = srtpRemoteSalt + SrtpMasterSaltLength;
+				srtpLocalKey   = srtpRemoteKey + srtpKeyLength;
+				srtpRemoteSalt = srtpLocalKey + srtpKeyLength;
+				srtpLocalSalt  = srtpRemoteSalt + srtpSaltLength;
 
 				break;
 			}
@@ -1255,9 +1305,9 @@ namespace RTC
 			case Role::CLIENT:
 			{
 				srtpLocalKey   = srtpMaterial;
-				srtpRemoteKey  = srtpLocalKey + SrtpMasterKeyLength;
-				srtpLocalSalt  = srtpRemoteKey + SrtpMasterKeyLength;
-				srtpRemoteSalt = srtpLocalSalt + SrtpMasterSaltLength;
+				srtpRemoteKey  = srtpLocalKey + srtpKeyLength;
+				srtpLocalSalt  = srtpRemoteKey + srtpKeyLength;
+				srtpRemoteSalt = srtpLocalSalt + srtpSaltLength;
 
 				break;
 			}
@@ -1269,11 +1319,11 @@ namespace RTC
 		}
 
 		// Create the SRTP local master key.
-		std::memcpy(srtpLocalMasterKey, srtpLocalKey, SrtpMasterKeyLength);
-		std::memcpy(srtpLocalMasterKey + SrtpMasterKeyLength, srtpLocalSalt, SrtpMasterSaltLength);
+		std::memcpy(srtpLocalMasterKey, srtpLocalKey, srtpKeyLength);
+		std::memcpy(srtpLocalMasterKey + srtpKeyLength, srtpLocalSalt, srtpSaltLength);
 		// Create the SRTP remote master key.
-		std::memcpy(srtpRemoteMasterKey, srtpRemoteKey, SrtpMasterKeyLength);
-		std::memcpy(srtpRemoteMasterKey + SrtpMasterKeyLength, srtpRemoteSalt, SrtpMasterSaltLength);
+		std::memcpy(srtpRemoteMasterKey, srtpRemoteKey, srtpKeyLength);
+		std::memcpy(srtpRemoteMasterKey + srtpKeyLength, srtpRemoteSalt, srtpSaltLength);
 
 		// Set state and notify the listener.
 		this->state = DtlsState::CONNECTED;
@@ -1281,9 +1331,9 @@ namespace RTC
 		  this,
 		  srtpProfile,
 		  srtpLocalMasterKey,
-		  SrtpMasterLength,
+		  srtpMasterLength,
 		  srtpRemoteMasterKey,
-		  SrtpMasterLength,
+		  srtpMasterLength,
 		  this->remoteCert);
 	}
 

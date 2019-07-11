@@ -13,7 +13,9 @@ namespace RTC
 		{
 			NONE                    = 0,
 			AES_CM_128_HMAC_SHA1_80 = 1,
-			AES_CM_128_HMAC_SHA1_32
+			AES_CM_128_HMAC_SHA1_32,
+			AEAD_AES_256_GCM,
+			AEAD_AES_128_GCM
 		};
 
 	public:
