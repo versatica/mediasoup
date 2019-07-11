@@ -66,17 +66,42 @@ namespace RTC
 		switch (profile)
 		{
 			case Profile::AES_CM_128_HMAC_SHA1_80:
+			{
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
+
 				break;
+			}
 
 			case Profile::AES_CM_128_HMAC_SHA1_32:
+			{
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
-				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp); // NOTE: Must be 80 for RTCP!.
+				// NOTE: Must be 80 for RTCP.
+				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
+
 				break;
+			}
+
+			case Profile::AEAD_AES_256_GCM:
+			{
+				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
+				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtcp);
+
+				break;
+			}
+
+			case Profile::AEAD_AES_128_GCM:
+			{
+				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
+				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtcp);
+
+				break;
+			}
 
 			default:
-				MS_ABORT("unknown SRTP suite");
+			{
+				MS_ABORT("unknown SRTP profile");
+			}
 		}
 
 		MS_ASSERT(
