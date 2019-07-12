@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.2.0 (coming soon)
+
+* Add DataChannel support via DataProducers and DataConsumers.
+* SRTP: Add support for AEAD GCM (#320).
+
+
 ### 3.1.7
 
 * `PipeConsumer.cpp`: Fix RTCP generation (thanks @vpalmisano).
