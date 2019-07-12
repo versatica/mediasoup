@@ -806,7 +806,7 @@ namespace RTC
 				  ", sent:%s, error:0x%08x, info:%s]",
 				  notification->sn_send_failed_event.ssfe_info.snd_sid,
 				  ntohl(notification->sn_send_failed_event.ssfe_info.snd_ppid),
-				  notification->sn_send_failed_event.ssfe_flags & SCTP_DATA_SENT ? "yes" : "no",
+				  (notification->sn_send_failed_event.ssfe_flags & SCTP_DATA_SENT) ? "yes" : "no",
 				  notification->sn_send_failed_event.ssfe_error,
 				  buffer);
 
