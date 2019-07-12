@@ -7,8 +7,8 @@ expect.extend({ toBeType });
 
 let worker;
 let router;
-let webRtcTransport;
-let plainRtpTransport;
+let transport1;
+let transport2;
 let audioProducer;
 let videoProducer;
 
@@ -48,11 +48,11 @@ beforeAll(async () =>
 {
 	worker = await createWorker();
 	router = await worker.createRouter({ mediaCodecs });
-	webRtcTransport = await router.createWebRtcTransport(
+	transport1 = await router.createWebRtcTransport(
 		{
 			listenIps : [ '127.0.0.1' ]
 		});
-	plainRtpTransport = await router.createPlainRtpTransport(
+	transport2 = await router.createPlainRtpTransport(
 		{
 			listenIp : '127.0.0.1'
 		});
@@ -60,13 +60,13 @@ beforeAll(async () =>
 
 afterAll(() => worker.close());
 
-test('webRtcTransport.produce() succeeds', async () =>
+test('transport1.produce() succeeds', async () =>
 {
 	const onObserverNewProducer = jest.fn();
 
-	webRtcTransport.observer.once('newproducer', onObserverNewProducer);
+	transport1.observer.once('newproducer', onObserverNewProducer);
 
-	audioProducer = await webRtcTransport.produce(
+	audioProducer = await transport1.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -129,23 +129,23 @@ test('webRtcTransport.produce() succeeds', async () =>
 				mapConsumerIdProducerId  : {}
 			});
 
-	await expect(webRtcTransport.dump())
+	await expect(transport1.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : webRtcTransport.id,
+				id          : transport1.id,
 				producerIds : [ audioProducer.id ],
 				consumerIds : []
 			});
 }, 2000);
 
-test('plainRtpTransport.produce() succeeds', async () =>
+test('transport2.produce() succeeds', async () =>
 {
 	const onObserverNewProducer = jest.fn();
 
-	plainRtpTransport.observer.once('newproducer', onObserverNewProducer);
+	transport2.observer.once('newproducer', onObserverNewProducer);
 
-	videoProducer = await plainRtpTransport.produce(
+	videoProducer = await transport2.produce(
 		{
 			kind          : 'video',
 			rtpParameters :
@@ -223,19 +223,19 @@ test('plainRtpTransport.produce() succeeds', async () =>
 				mapConsumerIdProducerId  : {}
 			});
 
-	await expect(plainRtpTransport.dump())
+	await expect(transport2.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : plainRtpTransport.id,
+				id          : transport2.id,
 				producerIds : [ videoProducer.id ],
 				consumerIds : []
 			});
 }, 2000);
 
-test('webRtcTransport.produce() with wrong arguments rejects with TypeError', async () =>
+test('transport1.produce() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'chicken',
 			rtpParameters : {}
@@ -243,7 +243,7 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'audio',
 			rtpParameters : {}
@@ -252,7 +252,7 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 		.toThrow(TypeError);
 
 	// Missing or empty rtpParameters.codecs.
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -267,7 +267,7 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 		.toThrow(TypeError);
 
 	// Missing or empty rtpParameters.encodings.
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'video',
 			rtpParameters :
@@ -300,7 +300,7 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 		.toThrow(TypeError);
 
 	// Wrong apt in RTX codec.
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -339,9 +339,9 @@ test('webRtcTransport.produce() with wrong arguments rejects with TypeError', as
 		.toThrow(TypeError);
 }, 2000);
 
-test('webRtcTransport.produce() with unsupported codecs rejects with UnsupportedError', async () =>
+test('transport1.produce() with unsupported codecs rejects with UnsupportedError', async () =>
 {
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -363,7 +363,7 @@ test('webRtcTransport.produce() with unsupported codecs rejects with Unsupported
 		.toThrow(UnsupportedError);
 
 	// Invalid H264 profile-level-id.
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'video',
 			rtpParameters :
@@ -400,7 +400,7 @@ test('webRtcTransport.produce() with unsupported codecs rejects with Unsupported
 
 test('transport.produce() with already used MID or SSRC rejects with Error', async () =>
 {
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -426,7 +426,7 @@ test('transport.produce() with already used MID or SSRC rejects with Error', asy
 		.rejects
 		.toThrow(Error);
 
-	await expect(plainRtpTransport.produce(
+	await expect(transport2.produce(
 		{
 			kind          : 'video',
 			rtpParameters :
@@ -468,7 +468,7 @@ test('transport.produce() with already used MID or SSRC rejects with Error', asy
 
 test('transport.produce() with no MID and with single encoding without RID or SSRC rejects with Error', async () =>
 {
-	await expect(webRtcTransport.produce(
+	await expect(transport1.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -671,11 +671,11 @@ test('producer.close() succeeds', async () =>
 				mapConsumerIdProducerId  : {}
 			});
 
-	await expect(webRtcTransport.dump())
+	await expect(transport1.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : webRtcTransport.id,
+				id          : transport1.id,
 				producerIds : [],
 				consumerIds : []
 			});
@@ -709,7 +709,7 @@ test('Producer emits "transportclose" if Transport is closed', async () =>
 	await new Promise((resolve) =>
 	{
 		videoProducer.on('transportclose', resolve);
-		plainRtpTransport.close();
+		transport2.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);

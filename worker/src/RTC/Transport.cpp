@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Consumer.hpp"
+#include "Channel/Notifier.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
@@ -55,6 +55,24 @@ namespace RTC
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
 
+		// Delete all DataProducers.
+		for (auto& kv : this->mapDataProducers)
+		{
+			auto* dataProducer = kv.second;
+
+			delete dataProducer;
+		}
+		this->mapDataProducers.clear();
+
+		// Delete all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			delete dataConsumer;
+		}
+		this->mapDataConsumers.clear();
+
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
 	}
@@ -93,6 +111,30 @@ namespace RTC
 		}
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
+
+		// Delete all DataProducers.
+		for (auto& kv : this->mapDataProducers)
+		{
+			auto* dataProducer = kv.second;
+
+			// Notify the listener.
+			this->listener->OnTransportDataProducerClosed(this, dataProducer);
+
+			delete dataProducer;
+		}
+		this->mapDataProducers.clear();
+
+		// Delete all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			// Notify the listener.
+			this->listener->OnTransportDataConsumerClosed(this, dataConsumer);
+
+			delete dataConsumer;
+		}
+		this->mapDataConsumers.clear();
 	}
 
 	void Transport::FillJson(json& jsonObject) const
@@ -134,6 +176,60 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			(*jsonMapSsrcConsumerId)[std::to_string(ssrc)] = consumer->id;
+		}
+
+		// Add dataProducerIds.
+		jsonObject["dataProducerIds"] = json::array();
+		auto jsonDataProducerIdsIt    = jsonObject.find("dataProducerIds");
+
+		for (auto& kv : this->mapDataProducers)
+		{
+			auto& dataProducerId = kv.first;
+
+			jsonDataProducerIdsIt->emplace_back(dataProducerId);
+		}
+
+		// Add dataConsumerIds.
+		jsonObject["dataConsumerIds"] = json::array();
+		auto jsonDataConsumerIdsIt    = jsonObject.find("dataConsumerIds");
+
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto& dataConsumerId = kv.first;
+
+			jsonDataConsumerIdsIt->emplace_back(dataConsumerId);
+		}
+
+		// Add rtpListener.
+		this->rtpListener.FillJson(jsonObject["rtpListener"]);
+
+		if (this->sctpAssociation)
+		{
+			// Add sctpParameters.
+			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
+
+			// Add sctpState.
+			switch (this->sctpAssociation->GetState())
+			{
+				case RTC::SctpAssociation::SctpState::NEW:
+					jsonObject["sctpState"] = "new";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTING:
+					jsonObject["sctpState"] = "connecting";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTED:
+					jsonObject["sctpState"] = "connected";
+					break;
+				case RTC::SctpAssociation::SctpState::FAILED:
+					jsonObject["sctpState"] = "failed";
+					break;
+				case RTC::SctpAssociation::SctpState::CLOSED:
+					jsonObject["sctpState"] = "closed";
+					break;
+			}
+
+			// Add sctpListener.
+			this->sctpListener.FillJson(jsonObject["sctpListener"]);
 		}
 	}
 
@@ -196,6 +292,8 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
+					this->rtpListener.RemoveProducer(producer);
+
 					delete producer;
 
 					throw;
@@ -346,6 +444,120 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
+			{
+				if (!this->sctpAssociation)
+					MS_THROW_ERROR("SCTP not enabled");
+
+				std::string dataProducerId;
+
+				// This may throw.
+				SetNewDataProducerIdFromRequest(request, dataProducerId);
+
+				// This may throw.
+				auto* dataProducer = new RTC::DataProducer(dataProducerId, this, request->data);
+
+				// Insert the DataProducer into the SctpListener.
+				// This may throw. If so, delete the DataProducer and throw.
+				try
+				{
+					this->sctpListener.AddDataProducer(dataProducer);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete dataProducer;
+
+					throw;
+				}
+
+				// Notify the listener.
+				// This may throw if a DataProducer with same id already exists.
+				try
+				{
+					this->listener->OnTransportNewDataProducer(this, dataProducer);
+				}
+				catch (const MediaSoupError& error)
+				{
+					this->sctpListener.RemoveDataProducer(dataProducer);
+
+					delete dataProducer;
+
+					throw;
+				}
+
+				// Insert into the map.
+				this->mapDataProducers[dataProducerId] = dataProducer;
+
+				MS_DEBUG_DEV("Producer created [dataProducerId:%s]", dataProducerId.c_str());
+
+				json data = json::object();
+
+				dataProducer->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
+			{
+				if (!this->sctpAssociation)
+					MS_THROW_ERROR("SCTP not enabled");
+
+				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+
+				if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
+					MS_THROW_ERROR("request has no internal.dataProducerId");
+
+				std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();
+				std::string dataConsumerId;
+
+				// This may throw.
+				SetNewDataConsumerIdFromRequest(request, dataConsumerId);
+
+				// This may throw.
+				auto* dataConsumer = new RTC::DataConsumer(
+				  dataConsumerId, this, request->data, this->sctpAssociation->GetMaxSctpMessageSize());
+
+				// Notify the listener.
+				// This may throw if no DataProducer is found.
+				try
+				{
+					this->listener->OnTransportNewDataConsumer(this, dataConsumer, dataProducerId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete dataConsumer;
+
+					throw;
+				}
+
+				// Insert into the maps.
+				this->mapDataConsumers[dataConsumerId] = dataConsumer;
+
+				MS_DEBUG_DEV(
+				  "DataConsumer created [dataConsumerId:%s, dataProducerId:%s]",
+				  dataConsumerId.c_str(),
+				  dataProducerId.c_str());
+
+				json data = json::object();
+
+				dataConsumer->FillJson(data);
+
+				request->Accept(data);
+
+				if (IsConnected())
+					dataConsumer->TransportConnected();
+
+				if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+					dataConsumer->SctpAssociationConnected();
+
+				// Tell to the SCTP association.
+				this->sctpAssociation->HandleDataConsumer(dataConsumer);
+
+				break;
+			}
+
 			case Channel::Request::MethodId::PRODUCER_CLOSE:
 			{
 				// This may throw.
@@ -424,11 +636,163 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::DATA_PRODUCER_CLOSE:
+			{
+				// This may throw.
+				RTC::DataProducer* dataProducer = GetDataProducerFromRequest(request);
+
+				// Remove it from the SctpListener.
+				this->sctpListener.RemoveDataProducer(dataProducer);
+
+				// Remove it from the map.
+				this->mapDataProducers.erase(dataProducer->id);
+
+				// Notify the listener.
+				this->listener->OnTransportDataProducerClosed(this, dataProducer);
+
+				MS_DEBUG_DEV("DataProducer closed [dataProducerId:%s]", dataProducer->id.c_str());
+
+				// Tell the SctpAssociation so it can reset the SCTP stream.
+				this->sctpAssociation->DataProducerClosed(dataProducer);
+
+				// Delete it.
+				delete dataProducer;
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::DATA_CONSUMER_CLOSE:
+			{
+				// This may throw.
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromRequest(request);
+
+				// Remove it from the maps.
+				this->mapDataConsumers.erase(dataConsumer->id);
+
+				// Notify the listener.
+				this->listener->OnTransportDataConsumerClosed(this, dataConsumer);
+
+				MS_DEBUG_DEV("DataConsumer closed [dataConsumerId:%s]", dataConsumer->id.c_str());
+
+				// Tell the SctpAssociation so it can reset the SCTP stream.
+				this->sctpAssociation->DataConsumerClosed(dataConsumer);
+
+				// Delete it.
+				delete dataConsumer;
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::DATA_PRODUCER_DUMP:
+			case Channel::Request::MethodId::DATA_PRODUCER_GET_STATS:
+			{
+				// This may throw.
+				RTC::DataProducer* dataProducer = GetDataProducerFromRequest(request);
+
+				dataProducer->HandleRequest(request);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::DATA_CONSUMER_DUMP:
+			case Channel::Request::MethodId::DATA_CONSUMER_GET_STATS:
+			{
+				// This may throw.
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromRequest(request);
+
+				dataConsumer->HandleRequest(request);
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 			}
 		}
+	}
+
+	void Transport::CreateSctpAssociation(json& data)
+	{
+		MS_TRACE();
+
+		auto jsonEnableSctpIt = data.find("enableSctp");
+
+		// clang-format off
+		if (
+			jsonEnableSctpIt != data.end() &&
+			jsonEnableSctpIt->is_boolean() &&
+			jsonEnableSctpIt->get<bool>() == true
+		)
+		// clang-format on
+		{
+			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
+			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
+			auto jsonIsDataChannelIt      = data.find("isDataChannel");
+
+			// numSctpStreams is mandatory.
+			// clang-format off
+			if (
+				jsonNumSctpStreamsIt == data.end() ||
+				!jsonNumSctpStreamsIt->is_object()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not an object)");
+			}
+
+			auto jsonOSIt  = jsonNumSctpStreamsIt->find("OS");
+			auto jsonMISIt = jsonNumSctpStreamsIt->find("MIS");
+
+			// numSctpStreams.OS and numSctpStreams.MIS are mandatory.
+			// clang-format off
+			if (
+				jsonOSIt == jsonNumSctpStreamsIt->end() ||
+				!jsonOSIt->is_number_unsigned() ||
+				jsonMISIt == jsonNumSctpStreamsIt->end() ||
+				!jsonMISIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong numSctpStreams.OS and/or numSctpStreams.MIS (not a number)");
+			}
+
+			auto OS  = jsonOSIt->get<uint16_t>();
+			auto MIS = jsonMISIt->get<uint16_t>();
+
+			// maxSctpMessageSize is mandatory.
+			// clang-format off
+			if (
+				jsonMaxSctpMessageSizeIt == data.end() ||
+				!jsonMaxSctpMessageSizeIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
+			}
+
+			auto maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
+
+			// isDataChannel is optional.
+			bool isDataChannel{ false };
+
+			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
+				isDataChannel = jsonIsDataChannelIt->get<bool>();
+
+			this->sctpAssociation =
+			  new RTC::SctpAssociation(this, OS, MIS, maxSctpMessageSize, isDataChannel);
+		}
+	}
+
+	void Transport::DestroySctpAssociation()
+	{
+		MS_TRACE();
+
+		delete this->sctpAssociation;
 	}
 
 	void Transport::Connected()
@@ -445,6 +809,18 @@ namespace RTC
 
 			consumer->TransportConnected();
 		}
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->TransportConnected();
+		}
+
+		// Tell the SctpAssociation.
+		if (this->sctpAssociation)
+			this->sctpAssociation->Run();
 	}
 
 	void Transport::Disconnected()
@@ -453,6 +829,22 @@ namespace RTC
 
 		// Stop the RTCP timer.
 		this->rtcpTimer->Stop();
+
+		// Tell all Consumers.
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+
+			consumer->TransportDisconnected();
+		}
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->TransportDisconnected();
+		}
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
@@ -758,6 +1150,76 @@ namespace RTC
 		return consumer;
 	}
 
+	void Transport::SetNewDataProducerIdFromRequest(
+	  Channel::Request* request, std::string& dataProducerId) const
+	{
+		MS_TRACE();
+
+		auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+
+		if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.dataProducerId");
+
+		dataProducerId.assign(jsonDataProducerIdIt->get<std::string>());
+
+		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
+			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
+	}
+
+	RTC::DataProducer* Transport::GetDataProducerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+
+		if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.dataProducerId");
+
+		auto it = this->mapDataProducers.find(jsonDataProducerIdIt->get<std::string>());
+
+		if (it == this->mapDataProducers.end())
+			MS_THROW_ERROR("DataProducer not found");
+
+		RTC::DataProducer* dataProducer = it->second;
+
+		return dataProducer;
+	}
+
+	void Transport::SetNewDataConsumerIdFromRequest(
+	  Channel::Request* request, std::string& dataConsumerId) const
+	{
+		MS_TRACE();
+
+		auto jsonDataConsumerIdIt = request->internal.find("dataConsumerId");
+
+		if (jsonDataConsumerIdIt == request->internal.end() || !jsonDataConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.dataConsumerId");
+
+		dataConsumerId.assign(jsonDataConsumerIdIt->get<std::string>());
+
+		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
+			MS_THROW_ERROR("a DataConsumer with same dataConsumerId already exists");
+	}
+
+	RTC::DataConsumer* Transport::GetDataConsumerFromRequest(Channel::Request* request) const
+	{
+		MS_TRACE();
+
+		auto jsonDataConsumerIdIt = request->internal.find("dataConsumerId");
+
+		if (jsonDataConsumerIdIt == request->internal.end() || !jsonDataConsumerIdIt->is_string())
+			MS_THROW_ERROR("request has no internal.dataConsumerId");
+
+		auto it = this->mapDataConsumers.find(jsonDataConsumerIdIt->get<std::string>());
+
+		if (it == this->mapDataConsumers.end())
+			MS_THROW_ERROR("DataConsumer not found");
+
+		RTC::DataConsumer* dataConsumer = it->second;
+
+		return dataConsumer;
+	}
+
 	void Transport::SendRtcp(uint64_t now)
 	{
 		MS_TRACE();
@@ -916,7 +1378,7 @@ namespace RTC
 		this->listener->OnTransportConsumerKeyFrameRequested(this, consumer, mappedSsrc);
 	}
 
-	inline void Transport::onConsumerProducerClosed(RTC::Consumer* consumer)
+	inline void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -933,6 +1395,143 @@ namespace RTC
 
 		// Delete it.
 		delete consumer;
+	}
+
+	inline void Transport::OnDataProducerSctpMessageReceived(
+	  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, ppid, msg, len);
+	}
+
+	inline void Transport::OnDataConsumerSendSctpMessage(
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
+	{
+		MS_TRACE();
+
+		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
+	}
+
+	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
+	{
+		MS_TRACE();
+
+		// Remove it from the maps.
+		this->mapDataConsumers.erase(dataConsumer->id);
+
+		// Notify the listener.
+		this->listener->OnTransportDataConsumerDataProducerClosed(this, dataConsumer);
+
+		// Tell the SctpAssociation so it can reset the SCTP stream.
+		this->sctpAssociation->DataConsumerClosed(dataConsumer);
+
+		// Delete it.
+		delete dataConsumer;
+	}
+
+	inline void Transport::OnSctpAssociationConnecting(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "connecting";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+	}
+
+	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->SctpAssociationConnected();
+		}
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "connected";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+	}
+
+	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->SctpAssociationClosed();
+		}
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "failed";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+	}
+
+	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
+	{
+		MS_TRACE();
+
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			dataConsumer->SctpAssociationClosed();
+		}
+
+		// Notify the Node Transport.
+		json data = json::object();
+
+		data["sctpState"] = "closed";
+
+		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+	}
+
+	inline void Transport::OnSctpAssociationSendData(
+	  RTC::SctpAssociation* /*sctpAssociation*/, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// Pass it to the subclass.
+		UserOnSendSctpData(data, len);
+	}
+
+	inline void Transport::OnSctpAssociationMessageReceived(
+	  RTC::SctpAssociation* /*sctpAssociation*/,
+	  uint16_t streamId,
+	  uint32_t ppid,
+	  const uint8_t* msg,
+	  size_t len)
+	{
+		MS_TRACE();
+
+		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(streamId);
+
+		if (dataProducer == nullptr)
+		{
+			MS_WARN_TAG(
+			  sctp, "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]", streamId);
+
+			return;
+		}
+
+		// Pass the SCTP message to the corresponding DataProducer.
+		dataProducer->ReceiveSctpMessage(ppid, msg, len);
 	}
 
 	inline void Transport::OnTimer(Timer* timer)

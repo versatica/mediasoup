@@ -49,7 +49,8 @@ public:
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnUdpDatagramRecv(const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
+	virtual void UserOnUdpDatagramReceived(
+	  const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
 
 protected:
 	struct sockaddr_storage localAddr;

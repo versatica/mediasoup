@@ -2,7 +2,7 @@
 #define MS_RTC_ICE_SERVER_HPP
 
 #include "common.hpp"
-#include "RTC/StunMessage.hpp"
+#include "RTC/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
 #include <list>
 #include <string>
@@ -28,21 +28,22 @@ namespace RTC
 
 		public:
 			/**
-			 * These callbacks are guaranteed to be called before ProcessStunMessage()
+			 * These callbacks are guaranteed to be called before ProcessStunPacket()
 			 * returns, so the given pointers are still usable.
 			 */
-			virtual void OnOutgoingStunMessage(
-			  const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) = 0;
-			virtual void OnIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
-			virtual void OnIceConnected(const RTC::IceServer* iceServer)    = 0;
-			virtual void OnIceCompleted(const RTC::IceServer* iceServer)    = 0;
-			virtual void OnIceDisconnected(const RTC::IceServer* iceServer) = 0;
+			virtual void OnIceServerSendStunPacket(
+			  const RTC::IceServer* iceServer, const RTC::StunPacket* packet, RTC::TransportTuple* tuple) = 0;
+			virtual void OnIceServerSelectedTuple(
+			  const RTC::IceServer* iceServer, RTC::TransportTuple* tuple)        = 0;
+			virtual void OnIceServerConnected(const RTC::IceServer* iceServer)    = 0;
+			virtual void OnIceServerCompleted(const RTC::IceServer* iceServer)    = 0;
+			virtual void OnIceServerDisconnected(const RTC::IceServer* iceServer) = 0;
 		};
 
 	public:
 		IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password);
 
-		void ProcessStunMessage(RTC::StunMessage* msg, RTC::TransportTuple* tuple);
+		void ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple);
 		const std::string& GetUsernameFragment() const;
 		const std::string& GetPassword() const;
 		void SetUsernameFragment(const std::string& usernameFragment);

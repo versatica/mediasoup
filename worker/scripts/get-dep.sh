@@ -76,7 +76,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.29.1"
+	GIT_TAG="v1.30.1"
 	DEST="deps/libuv"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -93,6 +93,15 @@ function get_libsrtp()
 	GIT_REPO="https://github.com/cisco/libsrtp.git"
 	GIT_TAG="v2.2.0"
 	DEST="deps/libsrtp/srtp"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
+function get_usrsctp()
+{
+	GIT_REPO="https://github.com/versatica/usrsctp.git"
+	GIT_TAG="master"
+	DEST="deps/usrsctp/usrsctp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
@@ -172,6 +181,9 @@ case "${DEP}" in
 		;;
 	libsrtp)
 		get_libsrtp
+		;;
+	usrsctp)
+		get_usrsctp
 		;;
 	catch)
 		get_catch

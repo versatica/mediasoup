@@ -77,7 +77,7 @@ namespace RTC
 					// later.
 					std::memcpy(ReadBuffer, packet, packetLen);
 
-					this->listener->OnPacketRecv(this, ReadBuffer, packetLen);
+					this->listener->OnTcpConnectionPacketReceived(this, ReadBuffer, packetLen);
 				}
 
 				// If there is no more space available in the buffer and that is because

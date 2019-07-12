@@ -40,10 +40,6 @@ namespace RTC
 		MS_TRACE();
 
 		bool enableUdp{ true };
-		bool enableTcp{ false };
-		bool preferUdp{ false };
-		bool preferTcp{ false };
-
 		auto jsonEnableUdpIt = data.find("enableUdp");
 
 		if (jsonEnableUdpIt != data.end())
@@ -54,6 +50,7 @@ namespace RTC
 			enableUdp = jsonEnableUdpIt->get<bool>();
 		}
 
+		bool enableTcp{ false };
 		auto jsonEnableTcpIt = data.find("enableTcp");
 
 		if (jsonEnableTcpIt != data.end())
@@ -64,6 +61,7 @@ namespace RTC
 			enableTcp = jsonEnableTcpIt->get<bool>();
 		}
 
+		bool preferUdp{ false };
 		auto jsonPreferUdpIt = data.find("preferUdp");
 
 		if (jsonPreferUdpIt != data.end())
@@ -74,6 +72,7 @@ namespace RTC
 			preferUdp = jsonPreferUdpIt->get<bool>();
 		}
 
+		bool preferTcp{ false };
 		auto jsonPreferTcpIt = data.find("preferTcp");
 
 		if (jsonPreferTcpIt != data.end())
@@ -217,10 +216,15 @@ namespace RTC
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
+
+			// May create SCTP association.
+			CreateSctpAssociation(data);
 		}
 		catch (const MediaSoupError& error)
 		{
 			// Must delete everything since the destructor won't be called.
+
+			DestroySctpAssociation();
 
 			delete this->dtlsTransport;
 			this->dtlsTransport = nullptr;
@@ -253,6 +257,9 @@ namespace RTC
 	WebRtcTransport::~WebRtcTransport()
 	{
 		MS_TRACE();
+
+		// Must delete the SCTP association first since it will generate SCTP packets.
+		DestroySctpAssociation();
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
@@ -412,9 +419,6 @@ namespace RTC
 
 		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
 			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
-
-		// Add rtpListener.
-		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 	}
 
 	void WebRtcTransport::FillJsonStats(json& jsonArray)
@@ -453,6 +457,12 @@ namespace RTC
 				break;
 		}
 
+		if (this->iceSelectedTuple != nullptr)
+		{
+			// Add iceSelectedTuple.
+			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
+		}
+
 		// Add dtlsState.
 		switch (this->dtlsTransport->GetState())
 		{
@@ -473,10 +483,27 @@ namespace RTC
 				break;
 		}
 
-		if (this->iceSelectedTuple != nullptr)
+		if (this->sctpAssociation)
 		{
-			// Add iceSelectedTuple.
-			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
+			// Add sctpState.
+			switch (this->sctpAssociation->GetState())
+			{
+				case RTC::SctpAssociation::SctpState::NEW:
+					jsonObject["sctpState"] = "new";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTING:
+					jsonObject["sctpState"] = "connecting";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTED:
+					jsonObject["sctpState"] = "connected";
+					break;
+				case RTC::SctpAssociation::SctpState::FAILED:
+					jsonObject["sctpState"] = "failed";
+					break;
+				case RTC::SctpAssociation::SctpState::CLOSED:
+					jsonObject["sctpState"] = "closed";
+					break;
+			}
 		}
 
 		// Add bytesReceived.
@@ -999,7 +1026,8 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	inline void WebRtcTransport::OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void WebRtcTransport::OnPacketReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1007,24 +1035,24 @@ namespace RTC
 		RTC::Transport::DataReceived(len);
 
 		// Check if it's STUN.
-		if (RTC::StunMessage::IsStun(data, len))
+		if (RTC::StunPacket::IsStun(data, len))
 		{
-			OnStunDataRecv(tuple, data, len);
+			OnStunDataReceived(tuple, data, len);
 		}
 		// Check if it's RTCP.
 		else if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
-			OnRtcpDataRecv(tuple, data, len);
+			OnRtcpDataReceived(tuple, data, len);
 		}
 		// Check if it's RTP.
 		else if (RTC::RtpPacket::IsRtp(data, len))
 		{
-			OnRtpDataRecv(tuple, data, len);
+			OnRtpDataReceived(tuple, data, len);
 		}
 		// Check if it's DTLS.
 		else if (RTC::DtlsTransport::IsDtls(data, len))
 		{
-			OnDtlsDataRecv(tuple, data, len);
+			OnDtlsDataReceived(tuple, data, len);
 		}
 		else
 		{
@@ -1032,26 +1060,27 @@ namespace RTC
 		}
 	}
 
-	inline void WebRtcTransport::OnStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void WebRtcTransport::OnStunDataReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		RTC::StunMessage* msg = RTC::StunMessage::Parse(data, len);
+		RTC::StunPacket* packet = RTC::StunPacket::Parse(data, len);
 
-		if (msg == nullptr)
+		if (packet == nullptr)
 		{
-			MS_WARN_DEV("ignoring wrong STUN message received");
+			MS_WARN_DEV("ignoring wrong STUN packet received");
 
 			return;
 		}
 
 		// Pass it to the IceServer.
-		this->iceServer->ProcessStunMessage(msg, tuple);
+		this->iceServer->ProcessStunPacket(packet, tuple);
 
-		delete msg;
+		delete packet;
 	}
 
-	inline void WebRtcTransport::OnDtlsDataRecv(
+	inline void WebRtcTransport::OnDtlsDataReceived(
 	  const RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -1084,7 +1113,8 @@ namespace RTC
 		}
 	}
 
-	inline void WebRtcTransport::OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void WebRtcTransport::OnRtpDataReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1194,7 +1224,8 @@ namespace RTC
 		delete packet;
 	}
 
-	inline void WebRtcTransport::OnRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void WebRtcTransport::OnRtcpDataReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1345,6 +1376,20 @@ namespace RTC
 		this->rembClient->ReceiveRembFeedback(remb);
 	}
 
+	void WebRtcTransport::UserOnSendSctpData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
+		{
+			MS_WARN_TAG(sctp, "DTLS not connected, cannot send SCTP data");
+
+			return;
+		}
+
+		this->dtlsTransport->SendApplicationData(data, len);
+	}
+
 	inline void WebRtcTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
@@ -1352,14 +1397,14 @@ namespace RTC
 		DistributeAvailableOutgoingBitrate();
 	}
 
-	inline void WebRtcTransport::OnPacketRecv(
+	inline void WebRtcTransport::OnUdpSocketPacketReceived(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketRecv(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len);
 	}
 
 	inline void WebRtcTransport::OnRtcTcpConnectionClosed(
@@ -1373,29 +1418,29 @@ namespace RTC
 			this->iceServer->RemoveTuple(&tuple);
 	}
 
-	inline void WebRtcTransport::OnPacketRecv(
+	inline void WebRtcTransport::OnTcpConnectionPacketReceived(
 	  RTC::TcpConnection* connection, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketRecv(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len);
 	}
 
-	inline void WebRtcTransport::OnOutgoingStunMessage(
-	  const RTC::IceServer* /*iceServer*/, const RTC::StunMessage* msg, RTC::TransportTuple* tuple)
+	inline void WebRtcTransport::OnIceServerSendStunPacket(
+	  const RTC::IceServer* /*iceServer*/, const RTC::StunPacket* packet, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
 		// Send the STUN response over the same transport tuple.
-		tuple->Send(msg->GetData(), msg->GetSize());
+		tuple->Send(packet->GetData(), packet->GetSize());
 
 		// Increase send transmission.
-		RTC::Transport::DataSent(msg->GetSize());
+		RTC::Transport::DataSent(packet->GetSize());
 	}
 
-	inline void WebRtcTransport::OnIceSelectedTuple(
+	inline void WebRtcTransport::OnIceServerSelectedTuple(
 	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
@@ -1420,7 +1465,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "iceselectedtuplechange", data);
 	}
 
-	inline void WebRtcTransport::OnIceConnected(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceServerConnected(const RTC::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1437,7 +1482,7 @@ namespace RTC
 		MayRunDtlsTransport();
 	}
 
-	inline void WebRtcTransport::OnIceCompleted(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceServerCompleted(const RTC::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1454,7 +1499,7 @@ namespace RTC
 		MayRunDtlsTransport();
 	}
 
-	inline void WebRtcTransport::OnIceDisconnected(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceServerDisconnected(const RTC::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1474,7 +1519,7 @@ namespace RTC
 		RTC::Transport::Disconnected();
 	}
 
-	inline void WebRtcTransport::OnDtlsConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsTransportConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1488,7 +1533,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
-	inline void WebRtcTransport::OnDtlsConnected(
+	inline void WebRtcTransport::OnDtlsTransportConnected(
 	  const RTC::DtlsTransport* /*dtlsTransport*/,
 	  RTC::SrtpSession::Profile srtpProfile,
 	  uint8_t* srtpLocalKey,
@@ -1548,7 +1593,7 @@ namespace RTC
 		RTC::Transport::Connected();
 	}
 
-	inline void WebRtcTransport::OnDtlsFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsTransportFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1562,7 +1607,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
-	inline void WebRtcTransport::OnDtlsClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
+	inline void WebRtcTransport::OnDtlsTransportClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
 
@@ -1579,7 +1624,7 @@ namespace RTC
 		RTC::Transport::Disconnected();
 	}
 
-	inline void WebRtcTransport::OnOutgoingDtlsData(
+	inline void WebRtcTransport::OnDtlsTransportSendData(
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -1597,14 +1642,20 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	inline void WebRtcTransport::OnDtlsApplicationData(
-	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t len)
+	inline void WebRtcTransport::OnDtlsTransportApplicationDataReceived(
+	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(dtls, "DTLS application data received [size:%zu]", len);
+		if (!this->sctpAssociation)
+		{
+			MS_DEBUG_TAG(sctp, "ignoring DTLS application data (SCTP not enabled)");
 
-		// NOTE: No DataChannel support, so just ignore it.
+			return;
+		}
+
+		// Pass it to the SctpAssociation.
+		this->sctpAssociation->ProcessSctpData(data, len);
 	}
 
 	inline void WebRtcTransport::OnRembClientAvailableBitrate(

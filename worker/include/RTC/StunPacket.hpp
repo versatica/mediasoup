@@ -1,12 +1,12 @@
-#ifndef MS_RTC_STUN_MESSAGE_HPP
-#define MS_RTC_STUN_MESSAGE_HPP
+#ifndef MS_RTC_STUN_PACKET_HPP
+#define MS_RTC_STUN_PACKET_HPP
 
 #include "common.hpp"
 #include <string>
 
 namespace RTC
 {
-	class StunMessage
+	class StunPacket
 	{
 	public:
 		// STUN message class.
@@ -54,15 +54,15 @@ namespace RTC
 
 	public:
 		static bool IsStun(const uint8_t* data, size_t len);
-		static StunMessage* Parse(const uint8_t* data, size_t len);
+		static StunPacket* Parse(const uint8_t* data, size_t len);
 
 	private:
 		static const uint8_t magicCookie[];
 
 	public:
-		StunMessage(
+		StunPacket(
 		  Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size);
-		~StunMessage();
+		~StunPacket();
 
 		void Dump() const;
 		Class GetClass() const;
@@ -88,8 +88,8 @@ namespace RTC
 		bool HasFingerprint() const;
 		Authentication CheckAuthentication(
 		  const std::string& localUsername, const std::string& localPassword);
-		StunMessage* CreateSuccessResponse();
-		StunMessage* CreateErrorResponse(uint16_t errorCode);
+		StunPacket* CreateSuccessResponse();
+		StunPacket* CreateErrorResponse(uint16_t errorCode);
 		void Authenticate(const std::string& password);
 		void Serialize(uint8_t* buffer);
 
@@ -115,121 +115,124 @@ namespace RTC
 
 	/* Inline class methods. */
 
-	inline bool StunMessage::IsStun(const uint8_t* data, size_t len)
+	inline bool StunPacket::IsStun(const uint8_t* data, size_t len)
 	{
+		// clang-format off
 		return (
-		  // STUN headers are 20 bytes.
-		  (len >= 20) &&
-		  // DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-		  (data[0] < 3) &&
-		  // Magic cookie must match.
-		  (data[4] == StunMessage::magicCookie[0]) && (data[5] == StunMessage::magicCookie[1]) &&
-		  (data[6] == StunMessage::magicCookie[2]) && (data[7] == StunMessage::magicCookie[3]));
+			// STUN headers are 20 bytes.
+			(len >= 20) &&
+			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+			(data[0] < 3) &&
+			// Magic cookie must match.
+			(data[4] == StunPacket::magicCookie[0]) && (data[5] == StunPacket::magicCookie[1]) &&
+			(data[6] == StunPacket::magicCookie[2]) && (data[7] == StunPacket::magicCookie[3])
+		);
+		// clang-format on
 	}
 
 	/* Inline instance methods. */
 
-	inline StunMessage::Class StunMessage::GetClass() const
+	inline StunPacket::Class StunPacket::GetClass() const
 	{
 		return this->klass;
 	}
 
-	inline StunMessage::Method StunMessage::GetMethod() const
+	inline StunPacket::Method StunPacket::GetMethod() const
 	{
 		return this->method;
 	}
 
-	inline const uint8_t* StunMessage::GetData() const
+	inline const uint8_t* StunPacket::GetData() const
 	{
 		return this->data;
 	}
 
-	inline size_t StunMessage::GetSize() const
+	inline size_t StunPacket::GetSize() const
 	{
 		return this->size;
 	}
 
-	inline void StunMessage::SetUsername(const char* username, size_t len)
+	inline void StunPacket::SetUsername(const char* username, size_t len)
 	{
 		this->username.assign(username, len);
 	}
 
-	inline void StunMessage::SetPriority(const uint32_t priority)
+	inline void StunPacket::SetPriority(const uint32_t priority)
 	{
 		this->priority = priority;
 	}
 
-	inline void StunMessage::SetIceControlling(const uint64_t iceControlling)
+	inline void StunPacket::SetIceControlling(const uint64_t iceControlling)
 	{
 		this->iceControlling = iceControlling;
 	}
 
-	inline void StunMessage::SetIceControlled(const uint64_t iceControlled)
+	inline void StunPacket::SetIceControlled(const uint64_t iceControlled)
 	{
 		this->iceControlled = iceControlled;
 	}
 
-	inline void StunMessage::SetUseCandidate()
+	inline void StunPacket::SetUseCandidate()
 	{
 		this->hasUseCandidate = true;
 	}
 
-	inline void StunMessage::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
+	inline void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
 	{
 		this->xorMappedAddress = xorMappedAddress;
 	}
 
-	inline void StunMessage::SetErrorCode(uint16_t errorCode)
+	inline void StunPacket::SetErrorCode(uint16_t errorCode)
 	{
 		this->errorCode = errorCode;
 	}
 
-	inline void StunMessage::SetMessageIntegrity(const uint8_t* messageIntegrity)
+	inline void StunPacket::SetMessageIntegrity(const uint8_t* messageIntegrity)
 	{
 		this->messageIntegrity = messageIntegrity;
 	}
 
-	inline void StunMessage::SetFingerprint()
+	inline void StunPacket::SetFingerprint()
 	{
 		this->hasFingerprint = true;
 	}
 
-	inline const std::string& StunMessage::GetUsername() const
+	inline const std::string& StunPacket::GetUsername() const
 	{
 		return this->username;
 	}
 
-	inline uint32_t StunMessage::GetPriority() const
+	inline uint32_t StunPacket::GetPriority() const
 	{
 		return this->priority;
 	}
 
-	inline uint64_t StunMessage::GetIceControlling() const
+	inline uint64_t StunPacket::GetIceControlling() const
 	{
 		return this->iceControlling;
 	}
 
-	inline uint64_t StunMessage::GetIceControlled() const
+	inline uint64_t StunPacket::GetIceControlled() const
 	{
 		return this->iceControlled;
 	}
 
-	inline bool StunMessage::HasUseCandidate() const
+	inline bool StunPacket::HasUseCandidate() const
 	{
 		return this->hasUseCandidate;
 	}
 
-	inline uint16_t StunMessage::GetErrorCode() const
+	inline uint16_t StunPacket::GetErrorCode() const
 	{
 		return this->errorCode;
 	}
 
-	inline bool StunMessage::HasMessageIntegrity() const
+	inline bool StunPacket::HasMessageIntegrity() const
 	{
 		return (this->messageIntegrity ? true : false);
 	}
 
-	inline bool StunMessage::HasFingerprint() const
+	inline bool StunPacket::HasFingerprint() const
 	{
 		return this->hasFingerprint;
 	}

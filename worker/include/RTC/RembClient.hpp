@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RtpDataCounter.hpp"
+#include "RTC/RateCalculator.hpp"
 #include "RTC/RtpPacket.hpp"
 
 namespace RTC

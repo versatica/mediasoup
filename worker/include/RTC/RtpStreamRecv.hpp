@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_STREAM_RECV_HPP
 
 #include "RTC/NackGenerator.hpp"
-#include "RTC/RtpDataCounter.hpp"
+#include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
 #include "handles/Timer.hpp"
 #include <vector>

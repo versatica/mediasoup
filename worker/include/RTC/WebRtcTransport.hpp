@@ -7,7 +7,7 @@
 #include "RTC/RembClient.hpp"
 #include "RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/SrtpSession.hpp"
-#include "RTC/StunMessage.hpp"
+#include "RTC/StunPacket.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/Transport.hpp"
@@ -53,17 +53,18 @@ namespace RTC
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void DistributeAvailableOutgoingBitrate();
-		void OnPacketRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnStunDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnDtlsDataRecv(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtcpDataRecv(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnDtlsDataReceived(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from RTC::Transport. */
 	private:
 		void UserOnNewProducer(RTC::Producer* producer) override;
 		void UserOnNewConsumer(RTC::Consumer* consumer) override;
 		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
+		void UserOnSendSctpData(const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
@@ -71,7 +72,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
-		void OnPacketRecv(
+		void OnUdpSocketPacketReceived(
 		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
@@ -81,21 +82,24 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
-		void OnPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
+		void OnTcpConnectionPacketReceived(
+		  RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:
-		void OnOutgoingStunMessage(
-		  const RTC::IceServer* iceServer, const RTC::StunMessage* msg, RTC::TransportTuple* tuple) override;
-		void OnIceSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
-		void OnIceConnected(const RTC::IceServer* iceServer) override;
-		void OnIceCompleted(const RTC::IceServer* iceServer) override;
-		void OnIceDisconnected(const RTC::IceServer* iceServer) override;
+		void OnIceServerSendStunPacket(
+		  const RTC::IceServer* iceServer,
+		  const RTC::StunPacket* packet,
+		  RTC::TransportTuple* tuple) override;
+		void OnIceServerSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		void OnIceServerConnected(const RTC::IceServer* iceServer) override;
+		void OnIceServerCompleted(const RTC::IceServer* iceServer) override;
+		void OnIceServerDisconnected(const RTC::IceServer* iceServer) override;
 
 		/* Pure virtual methods inherited from RTC::DtlsTransport::Listener. */
 	public:
-		void OnDtlsConnecting(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnDtlsConnected(
+		void OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportConnected(
 		  const RTC::DtlsTransport* dtlsTransport,
 		  RTC::SrtpSession::Profile srtpProfile,
 		  uint8_t* srtpLocalKey,
@@ -103,11 +107,11 @@ namespace RTC
 		  uint8_t* srtpRemoteKey,
 		  size_t srtpRemoteKeyLen,
 		  std::string& remoteCert) override;
-		void OnDtlsFailed(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnDtlsClosed(const RTC::DtlsTransport* dtlsTransport) override;
-		void OnOutgoingDtlsData(
+		void OnDtlsTransportFailed(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportClosed(const RTC::DtlsTransport* dtlsTransport) override;
+		void OnDtlsTransportSendData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
-		void OnDtlsApplicationData(
+		void OnDtlsTransportApplicationDataReceived(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::RembClient::Listener. */

@@ -5,6 +5,8 @@
 #include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/Consumer.hpp"
+#include "RTC/DataConsumer.hpp"
+#include "RTC/DataProducer.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -67,6 +69,19 @@ namespace RTC
 		void OnTransportConsumerProducerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(
 		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) override;
+		void OnTransportNewDataProducer(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
+		void OnTransportDataProducerClosed(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
+		void OnTransportDataProducerSctpMessageReceived(
+		  RTC::Transport* transport,
+		  RTC::DataProducer* dataProducer,
+		  uint32_t ppid,
+		  const uint8_t* msg,
+		  size_t len) override;
+		void OnTransportNewDataConsumer(
+		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) override;
+		void OnTransportDataConsumerClosed(RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
+		void OnTransportDataConsumerDataProducerClosed(
+		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
 
 	public:
 		// Passed by argument.
@@ -81,6 +96,9 @@ namespace RTC
 		std::unordered_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
 		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::RtpObserver*>> mapProducerRtpObservers;
 		std::unordered_map<std::string, RTC::Producer*> mapProducers;
+		std::unordered_map<RTC::DataProducer*, std::unordered_set<RTC::DataConsumer*>> mapDataProducerDataConsumers;
+		std::unordered_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
+		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;
 	};
 } // namespace RTC
 

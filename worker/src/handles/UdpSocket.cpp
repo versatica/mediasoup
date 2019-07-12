@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <cstring> // std::memcpy()
 
 /* Static. */
 
@@ -309,7 +310,7 @@ inline void UdpSocket::OnUvRecv(
 		this->recvBytes += nread;
 
 		// Notify the subclass.
-		UserOnUdpDatagramRecv(reinterpret_cast<uint8_t*>(buf->base), nread, addr);
+		UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*>(buf->base), nread, addr);
 	}
 	// Some error.
 	else

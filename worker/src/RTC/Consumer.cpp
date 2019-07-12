@@ -315,7 +315,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "producerresume");
 	}
 
-	// The caller (Router) is supposed to produce the delete of this Consumer
+	// The caller (Router) is supposed to proceed with the deletion of this Consumer
 	// right after calling this method. Otherwise ugly things may happen.
 	void Consumer::ProducerClosed()
 	{
@@ -327,7 +327,7 @@ namespace RTC
 
 		Channel::Notifier::Emit(this->id, "producerclose");
 
-		this->listener->onConsumerProducerClosed(this);
+		this->listener->OnConsumerProducerClosed(this);
 	}
 
 	void Consumer::SetExternallyManagedBitrate()

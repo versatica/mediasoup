@@ -69,12 +69,14 @@ test('worker.createRouter() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                       : router.id,
-				transportIds             : [],
-				rtpObserverIds           : [],
-				mapProducerIdConsumerIds : {},
-				mapConsumerIdProducerId  : {},
-				mapProducerIdObserverIds : {}
+				id                               : router.id,
+				transportIds                     : [],
+				rtpObserverIds                   : [],
+				mapProducerIdConsumerIds         : {},
+				mapConsumerIdProducerId          : {},
+				mapProducerIdObserverIds         : {},
+				mapDataProducerIdDataConsumerIds : {},
+				mapDataConsumerIdDataProducerId  : {}
 			});
 
 	// Private API.
@@ -88,11 +90,11 @@ test('worker.createRouter() succeeds', async () =>
 	expect(worker._routers.size).toBe(0);
 }, 2000);
 
-test('worker.createRouter() without mediaCodecs rejects with TypeError', async () =>
+test('worker.createRouter() with wrong mediaCodecs rejects with TypeError', async () =>
 {
 	worker = await createWorker();
 
-	await expect(worker.createRouter())
+	await expect(worker.createRouter({ mediaCodecs: {} }))
 		.rejects
 		.toThrow(TypeError);
 

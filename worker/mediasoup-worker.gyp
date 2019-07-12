@@ -6,14 +6,18 @@
       'deps/netstring/netstring.gyp:netstring',
       'deps/libuv/uv.gyp:libuv',
       'deps/openssl/openssl.gyp:openssl',
-      'deps/libsrtp/libsrtp.gyp:libsrtp'
+      'deps/libsrtp/libsrtp.gyp:libsrtp',
+      'deps/usrsctp/usrsctp.gyp:usrsctp'
     ],
+    # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
+    # 'defines': [ 'SCTP_DEBUG' ],
     'sources':
     [
       # C++ source files.
       'src/DepLibSRTP.cpp',
       'src/DepLibUV.cpp',
       'src/DepOpenSSL.cpp',
+      'src/DepUsrSCTP.cpp',
       'src/Logger.cpp',
       'src/Settings.cpp',
       'src/Worker.cpp',
@@ -31,6 +35,8 @@
       'src/Channel/UnixStreamSocket.cpp',
       'src/RTC/AudioLevelObserver.cpp',
       'src/RTC/Consumer.cpp',
+      'src/RTC/DataConsumer.cpp',
+      'src/RTC/DataProducer.cpp',
       'src/RTC/DtlsTransport.cpp',
       'src/RTC/IceCandidate.cpp',
       'src/RTC/IceServer.cpp',
@@ -41,6 +47,7 @@
       'src/RTC/PlainRtpTransport.cpp',
       'src/RTC/PortManager.cpp',
       'src/RTC/Producer.cpp',
+      'src/RTC/RateCalculator.cpp',
       'src/RTC/Router.cpp',
       'src/RTC/RtpListener.cpp',
       'src/RTC/RtpObserver.cpp',
@@ -48,12 +55,13 @@
       'src/RTC/RtpStream.cpp',
       'src/RTC/RtpStreamRecv.cpp',
       'src/RTC/RtpStreamSend.cpp',
-      'src/RTC/RtpDataCounter.cpp',
+      'src/RTC/SctpAssociation.cpp',
+      'src/RTC/SctpListener.cpp',
       'src/RTC/SeqManager.cpp',
       'src/RTC/SimpleConsumer.cpp',
       'src/RTC/SimulcastConsumer.cpp',
       'src/RTC/SrtpSession.cpp',
-      'src/RTC/StunMessage.cpp',
+      'src/RTC/StunPacket.cpp',
       'src/RTC/SvcConsumer.cpp',
       'src/RTC/TcpConnection.cpp',
       'src/RTC/TcpServer.cpp',
@@ -76,6 +84,7 @@
       'src/RTC/RtpDictionaries/RtpHeaderExtensionUri.cpp',
       'src/RTC/RtpDictionaries/RtpParameters.cpp',
       'src/RTC/RtpDictionaries/RtpRtxParameters.cpp',
+      'src/RTC/SctpDictionaries/SctpStreamParameters.cpp',
       'src/RTC/RTCP/Packet.cpp',
       'src/RTC/RTCP/CompoundPacket.cpp',
       'src/RTC/RTCP/SenderReport.cpp',
@@ -110,6 +119,7 @@
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
       'include/DepOpenSSL.hpp',
+      'include/DepUsrSCTP.hpp',
       'include/LogLevel.hpp',
       'include/Logger.hpp',
       'include/MediaSoupErrors.hpp',
@@ -128,6 +138,8 @@
       'include/Channel/UnixStreamSocket.hpp',
       'include/RTC/AudioLevelObserver.hpp',
       'include/RTC/Consumer.hpp',
+      'include/RTC/DataConsumer.hpp',
+      'include/RTC/DataProducer.hpp',
       'include/RTC/DtlsTransport.hpp',
       'include/RTC/IceCandidate.hpp',
       'include/RTC/IceServer.hpp',
@@ -139,6 +151,7 @@
       'include/RTC/PlainRtpTransport.hpp',
       'include/RTC/PortManager.hpp',
       'include/RTC/Producer.hpp',
+      'include/RTC/RateCalculator.hpp',
       'include/RTC/Router.hpp',
       'include/RTC/RtpDictionaries.hpp',
       'include/RTC/RtpHeaderExtensionIds.hpp',
@@ -148,12 +161,14 @@
       'include/RTC/RtpStream.hpp',
       'include/RTC/RtpStreamRecv.hpp',
       'include/RTC/RtpStreamSend.hpp',
-      'include/RTC/RtpDataCounter.hpp',
+      'include/RTC/SctpAssociation.hpp',
+      'include/RTC/SctpDictionaries.hpp',
+      'include/RTC/SctpListener.hpp',
       'include/RTC/SeqManager.hpp',
       'include/RTC/SimpleConsumer.hpp',
       'include/RTC/SimulcastConsumer.hpp',
       'include/RTC/SrtpSession.hpp',
-      'include/RTC/StunMessage.hpp',
+      'include/RTC/StunPacket.hpp',
       'include/RTC/SvcConsumer.hpp',
       'include/RTC/TcpConnection.hpp',
       'include/RTC/TcpServer.hpp',
@@ -260,9 +275,15 @@
           'WARNING_CFLAGS': [ '-Wall', '-Wextra', '-Wno-unused-parameter' ],
           'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++11' ]
         }
+      }],
+
+      # Dependency-specifics.
+
+      [ 'sctp_debug == "true"', {
+        'defines': [ 'SCTP_DEBUG' ]
       }]
     ]
-	},
+  },
   'targets':
   [
     {
@@ -282,8 +303,8 @@
         'test/src/tests.cpp',
         'test/src/RTC/TestKeyFrameRequestManager.cpp',
         'test/src/RTC/TestNackGenerator.cpp',
+        'test/src/RTC/TestRateCalculator.cpp',
         'test/src/RTC/TestRtpPacket.cpp',
-        'test/src/RTC/TestRtpDataCounter.cpp',
         'test/src/RTC/TestRtpStreamSend.cpp',
         'test/src/RTC/TestRtpStreamRecv.cpp',
         'test/src/RTC/TestSeqManager.cpp',
@@ -337,7 +358,7 @@
       [
         # C++ source files.
         'fuzzer/src/fuzzer.cpp',
-        'fuzzer/src/RTC/FuzzerStunMessage.cpp',
+        'fuzzer/src/RTC/FuzzerStunPacket.cpp',
         'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',

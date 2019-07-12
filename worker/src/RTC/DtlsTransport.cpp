@@ -710,7 +710,7 @@ namespace RTC
 
 		// Set state and notify the listener.
 		this->state = DtlsState::CONNECTING;
-		this->listener->OnDtlsConnecting(this);
+		this->listener->OnDtlsTransportConnecting(this);
 
 		switch (this->localRole)
 		{
@@ -816,7 +816,7 @@ namespace RTC
 			}
 
 			// Notify the listener.
-			this->listener->OnDtlsApplicationData(
+			this->listener->OnDtlsTransportApplicationDataReceived(
 			  this, (uint8_t*)DtlsTransport::sslReadBuffer, static_cast<size_t>(read));
 		}
 	}
@@ -969,7 +969,7 @@ namespace RTC
 
 				// Set state and notify the listener.
 				this->state = DtlsState::CLOSED;
-				this->listener->OnDtlsClosed(this);
+				this->listener->OnDtlsTransportClosed(this);
 			}
 			else
 			{
@@ -979,7 +979,7 @@ namespace RTC
 
 				// Set state and notify the listener.
 				this->state = DtlsState::FAILED;
-				this->listener->OnDtlsFailed(this);
+				this->listener->OnDtlsTransportFailed(this);
 			}
 
 			return false;
@@ -1008,7 +1008,7 @@ namespace RTC
 		MS_DEBUG_DEV("%" PRIu64 " bytes of DTLS data ready to sent to the peer", read);
 
 		// Notify the listener.
-		this->listener->OnOutgoingDtlsData(
+		this->listener->OnDtlsTransportSendData(
 		  this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(read));
 
 		// Clear the BIO buffer.
@@ -1057,7 +1057,7 @@ namespace RTC
 
 		// Set state and notify the listener.
 		this->state = DtlsState::FAILED;
-		this->listener->OnDtlsFailed(this);
+		this->listener->OnDtlsTransportFailed(this);
 
 		return false;
 	}
@@ -1077,7 +1077,7 @@ namespace RTC
 
 			// Set state and notify the listener.
 			this->state = DtlsState::FAILED;
-			this->listener->OnDtlsFailed(this);
+			this->listener->OnDtlsTransportFailed(this);
 
 			return false;
 		}
@@ -1101,7 +1101,7 @@ namespace RTC
 
 		// Set state and notify the listener.
 		this->state = DtlsState::FAILED;
-		this->listener->OnDtlsFailed(this);
+		this->listener->OnDtlsTransportFailed(this);
 
 		return false;
 	}
@@ -1327,7 +1327,7 @@ namespace RTC
 
 		// Set state and notify the listener.
 		this->state = DtlsState::CONNECTED;
-		this->listener->OnDtlsConnected(
+		this->listener->OnDtlsTransportConnected(
 		  this,
 		  srtpProfile,
 		  srtpLocalMasterKey,

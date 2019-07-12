@@ -195,6 +195,8 @@ void Settings::PrintConfiguration()
 		logTags.emplace_back("simulcast");
 	if (Settings::configuration.logTags.svc)
 		logTags.emplace_back("svc");
+	if (Settings::configuration.logTags.sctp)
+		logTags.emplace_back("sctp");
 
 	if (!logTags.empty())
 	{
@@ -316,6 +318,8 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 			newLogTags.simulcast = true;
 		else if (tag == "svc")
 			newLogTags.svc = true;
+		else if (tag == "sctp")
+			newLogTags.sctp = true;
 	}
 
 	Settings::configuration.logTags = newLogTags;

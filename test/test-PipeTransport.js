@@ -12,6 +12,8 @@ let audioProducer;
 let videoProducer;
 let transport2;
 let videoConsumer;
+let dataProducer;
+let dataConsumer;
 
 const mediaCodecs =
 [
@@ -119,6 +121,18 @@ const videoProducerParameters =
 	appData : { foo: 'bar2' }
 };
 
+const dataProducerParameters =
+{
+	sctpStreamParameters :
+	{
+		streamId          : 666,
+		ordered           : false,
+		maxPacketLifeTime : 5000
+	},
+	label    : 'foo',
+	protocol : 'bar'
+};
+
 const consumerDeviceCapabilities =
 {
 	codecs :
@@ -176,7 +190,11 @@ const consumerDeviceCapabilities =
 			preferredId      : 10,
 			preferredEncrypt : false
 		}
-	]
+	],
+	sctpCapabilities :
+	{
+		numSctpStreams : 2048
+	}
 };
 
 beforeAll(async () =>
@@ -186,14 +204,17 @@ beforeAll(async () =>
 	router2 = await worker.createRouter({ mediaCodecs });
 	transport1 = await router1.createWebRtcTransport(
 		{
-			listenIps : [ '127.0.0.1' ]
+			listenIps  : [ '127.0.0.1' ],
+			enableSctp : true
 		});
 	transport2 = await router2.createWebRtcTransport(
 		{
-			listenIps : [ '127.0.0.1' ]
+			listenIps  : [ '127.0.0.1' ],
+			enableSctp : true
 		});
 	audioProducer = await transport1.produce(audioProducerParameters);
 	videoProducer = await transport1.produce(videoProducerParameters);
+	dataProducer = await transport1.produceData(dataProducerParameters);
 
 	// Pause the videoProducer.
 	await videoProducer.pause();
@@ -213,14 +234,14 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 
 	dump = await router1.dump();
 
-	// There shoud should be two Transports in router1:
+	// There shoud be two Transports in router1:
 	// - WebRtcTransport for audioProducer and videoProducer.
 	// - PipeTransport between router1 and router2.
 	expect(dump.transportIds.length).toBe(2);
 
 	dump = await router2.dump();
 
-	// There shoud should be two Transports in router2:
+	// There shoud be two Transports in router2:
 	// - WebRtcTransport for audioConsumer and videoConsumer.
 	// - pipeTransport between router2 and router1.
 	expect(dump.transportIds.length).toBe(2);
@@ -497,4 +518,79 @@ test('producer.close() is transmitted to pipe Consumer', async () =>
 		await new Promise((resolve) => videoConsumer.once('producerclose', resolve));
 
 	expect(videoConsumer.closed).toBe(true);
+}, 2000);
+
+test('router.pipeToRouter() succeeds with data', async () =>
+{
+	let dump;
+
+	const { pipeDataConsumer, pipeDataProducer } = await router1.pipeToRouter(
+		{
+			dataProducerId : dataProducer.id,
+			router         : router2
+		});
+
+	dump = await router1.dump();
+
+	// There shoud be two Transports in router1:
+	// - WebRtcTransport for audioProducer, videoProducer and dataProducer.
+	// - PipeTransport between router1 and router2.
+	expect(dump.transportIds.length).toBe(2);
+
+	dump = await router2.dump();
+
+	// There shoud be two Transports in router2:
+	// - WebRtcTransport for audioConsumer, videoConsumer and dataConsumer.
+	// - pipeTransport between router2 and router1.
+	expect(dump.transportIds.length).toBe(2);
+
+	expect(pipeDataConsumer.id).toBeType('string');
+	expect(pipeDataConsumer.closed).toBe(false);
+	expect(pipeDataConsumer.sctpStreamParameters).toBeType('object');
+	expect(pipeDataConsumer.sctpStreamParameters.streamId).toBeType('number');
+	expect(pipeDataConsumer.sctpStreamParameters.ordered).toBe(false);
+	expect(pipeDataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
+	expect(pipeDataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(pipeDataConsumer.label).toBe('foo');
+	expect(pipeDataConsumer.protocol).toBe('bar');
+
+	expect(pipeDataProducer.id).toBe(dataProducer.id);
+	expect(pipeDataProducer.closed).toBe(false);
+	expect(pipeDataProducer.sctpStreamParameters).toBeType('object');
+	expect(pipeDataProducer.sctpStreamParameters.streamId).toBeType('number');
+	expect(pipeDataProducer.sctpStreamParameters.ordered).toBe(false);
+	expect(pipeDataProducer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
+	expect(pipeDataProducer.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(pipeDataProducer.label).toBe('foo');
+	expect(pipeDataProducer.protocol).toBe('bar');
+}, 2000);
+
+test('transport.dataConsume() for a pipe DataProducer succeeds', async () =>
+{
+	dataConsumer = await transport2.consumeData(
+		{
+			dataProducerId : dataProducer.id
+		});
+
+	expect(dataConsumer.id).toBeType('string');
+	expect(dataConsumer.closed).toBe(false);
+	expect(dataConsumer.sctpStreamParameters).toBeType('object');
+	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
+	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
+	expect(dataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
+	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(dataConsumer.label).toBe('foo');
+	expect(dataConsumer.protocol).toBe('bar');
+}, 2000);
+
+test('dataProducer.close() is transmitted to pipe DataConsumer', async () =>
+{
+	await dataProducer.close();
+
+	expect(dataProducer.closed).toBe(true);
+
+	if (!dataConsumer.closed)
+		await new Promise((resolve) => dataConsumer.once('dataproducerclose', resolve));
+
+	expect(dataConsumer.closed).toBe(true);
 }, 2000);
