@@ -476,7 +476,7 @@ namespace RTC
 			dtlsSrtpProfiles += profileEntry->name;
 		}
 
-		MS_DEBUG_TAG(dtls, "setting SRTP profiles for DTLS: %s", dtlsSrtpProfiles.c_str());
+		MS_DEBUG_2TAGS(dtls, srtp, "setting SRTP profiles for DTLS: %s", dtlsSrtpProfiles.c_str());
 
 		// NOTE: This function returns 0 on success.
 		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, dtlsSrtpProfiles.c_str());
@@ -1095,7 +1095,7 @@ namespace RTC
 
 		// NOTE: We assume that "use_srtp" DTLS extension is required even if
 		// there is no audio/video.
-		MS_WARN_TAG(dtls, "SRTP profile not negotiated");
+		MS_WARN_2TAGS(dtls, srtp, "SRTP profile not negotiated");
 
 		Reset();
 
@@ -1356,7 +1356,7 @@ namespace RTC
 
 			if (std::strcmp(sslSrtpProfile->name, profileEntry->name) == 0)
 			{
-				MS_DEBUG_TAG(dtls, "chosen SRTP profile: %s", profileEntry->name);
+				MS_DEBUG_2TAGS(dtls, srtp, "chosen SRTP profile: %s", profileEntry->name);
 
 				negotiatedSrtpProfile = profileEntry->profile;
 			}
