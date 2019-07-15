@@ -1,9 +1,9 @@
 # Changelog
 
 
-### 3.2.0 (coming soon)
+### 3.2.0
 
-* Add DataChannel support via DataProducers and DataConsumers.
+* Add DataChannel support via DataProducers and DataConsumers (#10).
 * SRTP: Add support for AEAD GCM (#320).
 
 

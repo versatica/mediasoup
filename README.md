@@ -56,6 +56,7 @@ mediasoup and its client side libraries provide a super low level API. They are 
 * Simulcast and SVC support.
 * Congestion control.
 * Sender and receiver bandwidth estimation with spatial/temporal layers distribution algorithm.
+* SCTP support (WebRTC DataChannels and SCTP over plain UDP).
 * Extremely powerful (media worker subprocess coded in C++ on top of [libuv](https://libuv.org)).
 
 
