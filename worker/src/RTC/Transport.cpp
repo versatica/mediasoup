@@ -726,7 +726,7 @@ namespace RTC
 		if (
 			jsonEnableSctpIt != data.end() &&
 			jsonEnableSctpIt->is_boolean() &&
-			jsonEnableSctpIt->get<bool>() == true
+			jsonEnableSctpIt->get<bool>()
 		)
 		// clang-format on
 		{
@@ -761,8 +761,8 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("wrong numSctpStreams.OS and/or numSctpStreams.MIS (not a number)");
 			}
 
-			auto OS  = jsonOSIt->get<uint16_t>();
-			auto MIS = jsonMISIt->get<uint16_t>();
+			auto os  = jsonOSIt->get<uint16_t>();
+			auto mis = jsonMISIt->get<uint16_t>();
 
 			// maxSctpMessageSize is mandatory.
 			// clang-format off
@@ -784,7 +784,7 @@ namespace RTC
 				isDataChannel = jsonIsDataChannelIt->get<bool>();
 
 			this->sctpAssociation =
-			  new RTC::SctpAssociation(this, OS, MIS, maxSctpMessageSize, isDataChannel);
+			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
 		}
 	}
 
