@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 2.6.13 (COMING SOON)
+
+* Make it compile it Armbian Debian Buster (thanks @krishisola, fixes #321).
+* Update deps.
+
+
 ### 2.6.12
 
 * Fix RTCP Receiver Report handling.
