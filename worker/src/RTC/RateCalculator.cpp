@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RtpDataCounter"
+#define MS_CLASS "RTC::RateCalculator"
 // #define MS_LOG_DEV
 
 #include "RTC/RateCalculator.hpp"
