@@ -3,7 +3,8 @@
 
 ### 3.2.1 (COMING SOON)
 
-* Add RTCP Extended Reports for RTT calculation on receiver RTP stream (Thanks @yangjinechofor for initial pull request) .
+* Add RTCP Extended Reports for RTT calculation on receiver RTP stream (thanks @yangjinechofor for initial pull request #314).
+* Make it compile it Armbian Debian Buster (thanks @krishisola, fixes #321).
 
 
 ### 3.2.0
@@ -119,6 +120,12 @@
 ### 3.0.0
 
 * v3 is here!
+
+
+### 2.6.13 (COMING SOON)
+
+* Make it compile it Armbian Debian Buster (thanks @krishisola, fixes #321).
+* Update deps.
 
 
 ### 2.6.12

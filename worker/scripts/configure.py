@@ -27,6 +27,7 @@ def host_arch():
   machine = platform.machine()
   if machine == 'i386': return 'ia32'
   if machine == 'x86_64': return 'x64'
+  if machine == 'aarch64': return 'arm64'
   if machine.startswith('arm'): return 'arm'
   if machine.startswith('mips'): return 'mips'
   return machine  # Return as-is and hope for the best.
