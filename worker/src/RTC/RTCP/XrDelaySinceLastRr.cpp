@@ -120,7 +120,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<DelaySinceLastRr>");
-			MS_DUMP("  block type : %" PRIu8, this->type);
+			MS_DUMP("  block type : %" PRIu8, (uint8_t)this->type);
 			MS_DUMP("  reserved   : 0");
 			MS_DUMP(
 			  "  length     : %" PRIu16,
