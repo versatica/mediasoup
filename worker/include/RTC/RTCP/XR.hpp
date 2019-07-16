@@ -76,7 +76,7 @@ namespace RTC
 
 		public:
 			ExtendedReportPacket();
-			~ExtendedReportPacket() override = default;
+			~ExtendedReportPacket() override;
 
 			void AddReport(ExtendedReportBlock* report);
 			uint32_t GetSsrc() const;
@@ -129,6 +129,14 @@ namespace RTC
 
 		inline ExtendedReportPacket::ExtendedReportPacket() : Packet(Type::XR)
 		{
+		}
+
+		inline ExtendedReportPacket::~ExtendedReportPacket()
+		{
+			for (auto* report : this->reports)
+			{
+				delete report;
+			}
 		}
 
 		inline ExtendedReportPacket::Iterator ExtendedReportPacket::Begin()
