@@ -388,6 +388,7 @@
         'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
         # C++ include files.
         'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
@@ -412,6 +413,7 @@
         'fuzzer/include/RTC/RTCP/FuzzerReceiverReport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerSdesReport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerSenderReport.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerXr.hpp',
       ],
       'include_dirs':
       [
