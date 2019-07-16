@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 2.6.13 (COMING SOON)
+### 2.6.13
 
 * Make it compile it Armbian Debian Buster (thanks @krishisola, fixes #321).
 * Update deps.
