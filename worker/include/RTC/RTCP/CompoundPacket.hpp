@@ -5,6 +5,7 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <vector>
 
 namespace RTC
@@ -25,7 +26,9 @@ namespace RTC
 			void AddSenderReport(SenderReport* report);
 			void AddReceiverReport(ReceiverReport* report);
 			void AddSdesChunk(SdesChunk* chunk);
+			void AddReceiverReferenceTime(ReceiverReferenceTime* report);
 			bool HasSenderReport();
+			bool HasReceiverReferenceTime();
 			void Serialize(uint8_t* data);
 
 		private:
@@ -34,6 +37,7 @@ namespace RTC
 			SenderReportPacket senderReportPacket;
 			ReceiverReportPacket receiverReportPacket;
 			SdesPacket sdesPacket;
+			ExtendedReportPacket xrPacket;
 		};
 
 		/* Inline methods. */
@@ -68,9 +72,22 @@ namespace RTC
 			this->sdesPacket.AddChunk(chunk);
 		}
 
+		inline void CompoundPacket::AddReceiverReferenceTime(ReceiverReferenceTime* report)
+		{
+			this->xrPacket.AddReport(report);
+		}
+
 		inline bool CompoundPacket::HasSenderReport()
 		{
 			return this->senderReportPacket.Begin() != this->senderReportPacket.End();
+		}
+
+		inline bool CompoundPacket::HasReceiverReferenceTime()
+		{
+			return std::any_of(
+			  this->xrPacket.Begin(), this->xrPacket.End(), [](const ExtendedReportBlock* report) {
+				  return report->GetType() == ExtendedReportBlock::Type::RRT;
+			  });
 		}
 	} // namespace RTCP
 } // namespace RTC

@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.2.1 (COMING SOON)
+
+* Add RTCP Extended Reports for RTT calculation on receiver RTP stream (Thanks @yangjinechofor for initial pull request) .
+
+
 ### 3.2.0
 
 * Add DataChannel support via DataProducers and DataConsumers (#10).

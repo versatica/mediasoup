@@ -108,6 +108,9 @@
       'src/RTC/RTCP/FeedbackPsLei.cpp',
       'src/RTC/RTCP/FeedbackPsAfb.cpp',
       'src/RTC/RTCP/FeedbackPsRemb.cpp',
+      'src/RTC/RTCP/XR.cpp',
+      'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
+      'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
       'src/RTC/RembClient.cpp',
       'src/RTC/RembServer/AimdRateControl.cpp',
       'src/RTC/RembServer/InterArrival.cpp',
@@ -205,6 +208,9 @@
       'include/RTC/RTCP/FeedbackPsLei.hpp',
       'include/RTC/RTCP/FeedbackPsAfb.hpp',
       'include/RTC/RTCP/FeedbackPsRemb.hpp',
+      'include/RTC/RTCP/XR.hpp',
+      'include/RTC/RTCP/XrDelaySinceLastRr.hpp',
+      'include/RTC/RTCP/XrReceiverReferenceTime.hpp',
       'include/RTC/RembClient.hpp',
       'include/RTC/RembServer/AimdRateControl.hpp',
       'include/RTC/RembServer/InterArrival.hpp',
@@ -328,6 +334,7 @@
         'test/src/RTC/RTCP/TestSdes.cpp',
         'test/src/RTC/RTCP/TestSenderReport.cpp',
         'test/src/RTC/RTCP/TestPacket.cpp',
+        'test/src/RTC/RTCP/TestXr.cpp',
         'test/src/Utils/TestBits.cpp',
         'test/src/Utils/TestIP.cpp',
         'test/src/Utils/TestString.cpp',
@@ -381,6 +388,7 @@
         'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
         # C++ include files.
         'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
@@ -405,6 +413,7 @@
         'fuzzer/include/RTC/RTCP/FuzzerReceiverReport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerSdesReport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerSenderReport.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerXr.hpp',
       ],
       'include_dirs':
       [

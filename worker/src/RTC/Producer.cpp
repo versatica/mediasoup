@@ -8,6 +8,7 @@
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -566,6 +567,24 @@ namespace RTC
 		this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
 	}
 
+	void Producer::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo)
+	{
+		MS_TRACE();
+
+		auto it = this->mapSsrcRtpStream.find(ssrcInfo->GetSsrc());
+
+		if (it == this->mapSsrcRtpStream.end())
+		{
+			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", ssrcInfo->GetSsrc());
+
+			return;
+		}
+
+		auto* rtpStream = it->second;
+
+		rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
+	}
+
 	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
 	{
 		MS_TRACE();
@@ -579,6 +598,17 @@ namespace RTC
 			auto* report    = rtpStream->GetRtcpReceiverReport();
 
 			packet->AddReceiverReport(report);
+		}
+
+		// Add a receiver reference time report if no present in the packet.
+		if (!packet->HasReceiverReferenceTime())
+		{
+			auto ntp    = Utils::Time::TimeMs2Ntp(now);
+			auto report = new RTC::RTCP::ReceiverReferenceTime();
+
+			report->SetNtpSec(ntp.seconds);
+			report->SetNtpFrac(ntp.fractions);
+			packet->AddReceiverReferenceTime(report);
 		}
 
 		this->lastRtcpSentTime = now;

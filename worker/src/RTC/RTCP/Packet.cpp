@@ -8,6 +8,7 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/XR.hpp"
 
 namespace RTC
 {
@@ -136,7 +137,7 @@ namespace RTC
 
 					case Type::XR:
 					{
-						current = nullptr;
+						current = ExtendedReportPacket::Parse(data, packetLen);
 
 						break;
 					}
