@@ -226,7 +226,7 @@
       }],
 
       # Endianness.
-      [ 'node_byteorder=="big"', {
+      [ 'node_byteorder == "big"', {
           # Define Big Endian.
           'defines': [ 'MS_BIG_ENDIAN' ]
         }, {
