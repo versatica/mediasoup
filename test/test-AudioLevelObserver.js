@@ -66,7 +66,7 @@ test('router.createAudioLevelObserver() with wrong arguments rejects with TypeEr
 		.toThrow(TypeError);
 }, 2000);
 
-test('audioLevelObserver.pause() and resume() succeeds', async () =>
+test('audioLevelObserver.pause() and resume() succeed', async () =>
 {
 	await audioLevelObserver.pause();
 

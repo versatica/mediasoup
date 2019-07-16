@@ -1,10 +1,10 @@
 # Changelog
 
 
-### 3.2.1 (COMING SOON)
+### 3.2.1
 
 * Add RTCP Extended Reports for RTT calculation on receiver RTP stream (thanks @yangjinechofor for initial pull request #314).
-* Make it compile it Armbian Debian Buster (thanks @krishisola, fixes #321).
+* Make mediasoup-worker compile in Armbian Debian Buster (thanks @krishisola, fixes #321).
 
 
 ### 3.2.0
@@ -122,9 +122,9 @@
 * v3 is here!
 
 
-### 2.6.13 (COMING SOON)
+### 2.6.13
 
-* Make it compile it Armbian Debian Buster (thanks @krishisola, fixes #321).
+* Make mediasoup-worker compile in Armbian Debian Buster (thanks @krishisola, fixes #321).
 * Update deps.
 
 

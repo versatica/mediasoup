@@ -109,7 +109,9 @@ Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/
 
 Generates the `worker/compile_commands_template.json` file which is a ["Clang compilation database"](https://clang.llvm.org/docs/JSONCompilationDatabase.html).
 
-It requires [jq](https://stedolan.github.io/jq/) command-line JSON processor. Install it in Debian/Ubuntu via `apt install jq` and in OSX via `brew install jq`.
+It requires [Bear](https://github.com/rizsotto/Bear) and [jq](https://stedolan.github.io/jq/) command-line JSON processor. Install them in Debian/Ubuntu via `apt install bear jq` and in OSX via `brew install bear jq`.
+
+**NOTE:** For now, Bear version must be 2.1.X.
 
 **NOTE:** Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean-all && make` before running `make bear`.
 
