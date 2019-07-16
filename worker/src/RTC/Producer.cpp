@@ -600,12 +600,16 @@ namespace RTC
 			packet->AddReceiverReport(report);
 		}
 
-		auto ntp    = Utils::Time::TimeMs2Ntp(now);
-		auto report = new RTC::RTCP::ReceiverReferenceTime();
+		// Add a receiver reference time report if no present in the packet.
+		if (!packet->HasReceiverReferenceTime())
+		{
+			auto ntp    = Utils::Time::TimeMs2Ntp(now);
+			auto report = new RTC::RTCP::ReceiverReferenceTime();
 
-		report->SetNtpSec(ntp.seconds);
-		report->SetNtpFrac(ntp.fractions);
-		packet->AddReceiverReferenceTime(report);
+			report->SetNtpSec(ntp.seconds);
+			report->SetNtpFrac(ntp.fractions);
+			packet->AddReceiverReferenceTime(report);
+		}
 
 		this->lastRtcpSentTime = now;
 	}
