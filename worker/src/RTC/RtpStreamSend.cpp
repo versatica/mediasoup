@@ -44,12 +44,14 @@ namespace RTC
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["timestamp"]     = now;
-		jsonObject["type"]          = "outbound-rtp";
-		jsonObject["roundTripTime"] = this->rtt;
-		jsonObject["packetCount"]   = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"]     = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]       = this->transmissionCounter.GetBitrate(now);
+		jsonObject["timestamp"]   = now;
+		jsonObject["type"]        = "outbound-rtp";
+		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
+		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
+		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(now);
+
+		if (this->rtt != 0.0f)
+			jsonObject["roundTripTime"] = this->rtt;
 	}
 
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
