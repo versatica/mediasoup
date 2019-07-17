@@ -35,18 +35,22 @@ namespace RTC
 	private:
 		std::unique_ptr<BufferItem[]> buffer;
 
+		// Window Size (in milliseconds).
+		size_t windowSize{ DefaultWindowSize };
+		// Scale in which the rate is represented.
+		float scale{ DefaultBpsScale };
 		// Time (in milliseconds) for oldest item in the time window.
 		uint64_t oldestTime{ 0 };
 		// Index for the oldest item in the time window.
 		uint32_t oldestIndex{ 0 };
 		// Total count in the time window.
 		size_t totalCount{ 0 };
-		// Window Size (in milliseconds).
-		size_t windowSize{ DefaultWindowSize };
-		// Scale in which the rate is represented.
-		const float scale{ DefaultBpsScale };
 		// Total bytes transmitted.
 		size_t bytes{ 0 };
+		// Last value calculated by GetRate().
+		uint32_t lastRate{ 0 };
+		// Last time GetRate() was called.
+		uint64_t lastTime{ 0 };
 	};
 
 	/* Inline instance methods. */
@@ -75,6 +79,8 @@ namespace RTC
 		this->totalCount  = 0;
 		this->oldestIndex = 0;
 		this->oldestTime  = now - this->windowSize;
+		this->lastRate    = 0;
+		this->lastTime    = 0;
 	}
 
 	class RtpDataCounter

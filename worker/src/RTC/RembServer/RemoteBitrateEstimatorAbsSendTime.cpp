@@ -268,6 +268,9 @@ namespace RTC
 
 			this->incomingBitrate.Update(payloadSize, arrivalTimeMs);
 
+			// Update incoming bitrate.
+			incomingBitrate = this->incomingBitrate.GetRate(arrivalTimeMs);
+
 			if (this->firstPacketTimeMs == -1)
 				this->firstPacketTimeMs = nowMs;
 
@@ -349,9 +352,7 @@ namespace RTC
 					}
 					else if (this->detector.State() == BW_OVERUSING)
 					{
-						uint32_t incomingRate = this->incomingBitrate.GetRate(arrivalTimeMs);
-
-						if ((incomingRate != 0u) && this->remoteRate.TimeToReduceFurther(nowMs, incomingRate))
+						if ((incomingBitrate != 0u) && this->remoteRate.TimeToReduceFurther(nowMs, incomingBitrate))
 							updateEstimate = true;
 					}
 				}
@@ -362,9 +363,7 @@ namespace RTC
 					// We also have to update the estimate immediately if we are overusing
 					// and the target bitrate is too high compared to what we are receiving.
 					const RateControlInput input(
-					  this->detector.State(),
-					  this->incomingBitrate.GetRate(arrivalTimeMs),
-					  this->estimator->GetVarNoise());
+					  this->detector.State(), incomingBitrate, this->estimator->GetVarNoise());
 
 					this->remoteRate.Update(&input, nowMs);
 					targetBitrateBps = this->remoteRate.UpdateBandwidthEstimate(nowMs);
