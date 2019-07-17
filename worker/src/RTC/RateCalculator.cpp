@@ -31,7 +31,7 @@ namespace RTC
 		this->totalCount += size;
 
 		// Reset lastRate and lastTime so GetRate() will calculate rate again even
-		// if caller with same now.
+		// if called with same now in the same loop iteration.
 		this->lastRate = 0;
 		this->lastTime = 0;
 	}
