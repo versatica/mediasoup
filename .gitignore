@@ -1,5 +1,6 @@
 /node_modules/
 /coverage/
+/NO_GIT/
 
 # clang-tidy stuff.
 /worker/compile_commands.json
