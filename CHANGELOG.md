@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.2.2
+
+* `RtpDataCounter`: use window size of 2500 ms instead of 1000 ms.
+  - Fixes false "lack of RTP" detection in some screen sharing usages with simulcast.
+  - Fixes #312.
+
+
 ### 3.2.1
 
 * Add RTCP Extended Reports for RTT calculation on receiver RTP stream (thanks @yangjinechofor for initial pull request #314).
