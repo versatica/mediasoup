@@ -12,11 +12,11 @@ namespace RTC
 	class RateCalculator
 	{
 	public:
-		static constexpr float BpsScale{ 8000.0f };
 		static constexpr size_t DefaultWindowSize{ 1000 };
+		static constexpr float DefaultBpsScale{ 8000.0f };
 
 	public:
-		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = BpsScale);
+		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = DefaultBpsScale);
 		void Update(size_t size, uint64_t now);
 		uint32_t GetRate(uint64_t now);
 		size_t GetBytes() const;
@@ -44,7 +44,7 @@ namespace RTC
 		// Window Size (in milliseconds).
 		size_t windowSize{ DefaultWindowSize };
 		// Scale in which the rate is represented.
-		const float scale{ BpsScale };
+		const float scale{ DefaultBpsScale };
 		// Total bytes transmitted.
 		size_t bytes{ 0 };
 	};
@@ -89,7 +89,7 @@ namespace RTC
 		size_t GetBytes() const;
 
 	private:
-		RateCalculator rate;
+		RateCalculator rate{ /*windowSize*/ 2500 };
 		size_t packets{ 0 };
 	};
 
