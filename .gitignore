@@ -19,3 +19,6 @@
 # Vim temporal files.
 *.swp
 *.swo
+
+# Mac Stuff.
+.DS_Store
