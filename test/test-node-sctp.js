@@ -118,7 +118,7 @@ afterAll(() =>
 
 test('ordered DataProducer delivers all messages to the DataConsumer', async () =>
 {
-	const numMessages = 50;
+	const numMessages = 200;
 	let sentMessageBytes = 0;
 	let recvMessageBytes = 0;
 	let lastSentMessageId = 0;
@@ -190,4 +190,4 @@ test('ordered DataProducer delivers all messages to the DataConsumer', async () 
 					bytesSent    : recvMessageBytes
 				}
 			]);
-}, 2000);
+}, 8000);
