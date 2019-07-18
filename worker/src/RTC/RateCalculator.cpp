@@ -29,17 +29,28 @@ namespace RTC
 
 		this->buffer[index].count += size;
 		this->totalCount += size;
+
+		// Reset lastRate and lastTime so GetRate() will calculate rate again even
+		// if called with same now in the same loop iteration.
+		this->lastRate = 0;
+		this->lastTime = 0;
 	}
 
 	uint32_t RateCalculator::GetRate(uint64_t now)
 	{
 		MS_TRACE();
 
+		if (now == this->lastTime)
+			return this->lastRate;
+
 		RemoveOldData(now);
 
 		float scale = this->scale / this->windowSize;
 
-		return static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
+		this->lastTime = now;
+		this->lastRate = static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
+
+		return this->lastRate;
 	}
 
 	inline void RateCalculator::RemoveOldData(uint64_t now)
