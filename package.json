@@ -55,7 +55,8 @@
     "gulp-clang-format": "^1.0.27",
     "jest": "^24.8.0",
     "jest-tobetype": "^1.2.3",
-    "open-cli": "^5.0.0"
+    "open-cli": "^5.0.0",
+    "sctp": "0.0.17"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
