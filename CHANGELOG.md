@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.2.3
+
+* `RateCalculator`: improve efficiency in `GetRate()` method (#324).
+
+
 ### 3.2.2
 
 * `RtpDataCounter`: use window size of 2500 ms instead of 1000 ms.
