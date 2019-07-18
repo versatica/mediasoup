@@ -33,12 +33,12 @@ namespace RTC
 		};
 
 	private:
-		std::unique_ptr<BufferItem[]> buffer;
-
 		// Window Size (in milliseconds).
 		size_t windowSize{ DefaultWindowSize };
 		// Scale in which the rate is represented.
 		float scale{ DefaultBpsScale };
+		// Buffer to keep data.
+		std::unique_ptr<BufferItem[]> buffer;
 		// Time (in milliseconds) for oldest item in the time window.
 		uint64_t oldestTime{ 0 };
 		// Index for the oldest item in the time window.
@@ -76,9 +76,9 @@ namespace RTC
 	inline void RateCalculator::Reset(uint64_t now)
 	{
 		this->buffer.reset(new BufferItem[this->windowSize]);
-		this->totalCount  = 0;
-		this->oldestIndex = 0;
 		this->oldestTime  = now - this->windowSize;
+		this->oldestIndex = 0;
+		this->totalCount  = 0;
 		this->lastRate    = 0;
 		this->lastTime    = 0;
 	}
