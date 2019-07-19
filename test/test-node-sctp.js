@@ -101,7 +101,9 @@ beforeAll(async () =>
 			{
 				streamId : sendStreamId,
 				ordered  : true
-			}
+			},
+			label    : 'node-sctp',
+			protocol : 'foo & bar 😀😀😀'
 		});
 
 	// Create a DataConsumer to receive messages from the DataProducer over the
