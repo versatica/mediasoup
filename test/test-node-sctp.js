@@ -16,7 +16,7 @@ let dataProducer;
 let dataConsumer;
 let udpSocket;
 let sctpSocket;
-let sendStreamId;
+let sctpSendStreamId;
 let sctpSendStream;
 
 beforeAll(async () =>
@@ -91,15 +91,15 @@ beforeAll(async () =>
 
 	// Create an explicit SCTP outgoing stream with id 123 (id 0 is already used
 	// by the implicit SCTP outgoing stream built-in the SCTP socket).
-	sendStreamId = 123;
-	sctpSendStream = sctpSocket.createStream(sendStreamId);
+	sctpSendStreamId = 123;
+	sctpSendStream = sctpSocket.createStream(sctpSendStreamId);
 
 	// Create a DataProducer with the corresponding SCTP stream id.
 	dataProducer = await transport.produceData(
 		{
 			sctpStreamParameters :
 			{
-				streamId : sendStreamId,
+				streamId : sctpSendStreamId,
 				ordered  : true
 			},
 			label    : 'node-sctp',
