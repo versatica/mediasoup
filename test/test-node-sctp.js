@@ -129,7 +129,7 @@ test('ordered DataProducer delivers all messages to the DataConsumer', async () 
 		const interval = setInterval(() =>
 		{
 			const id = ++lastSentMessageId;
-			const data = Buffer.from(`${id}`);
+			const data = Buffer.from(String(id));
 
 			// Set ppid of type WebRTC DataChannel string.
 			data.ppid = sctp.PPID.WEBRTC_STRING;
