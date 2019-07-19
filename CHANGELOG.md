@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.2.4
+
+* `PlainRtpTransport`: Fix comedia mode.
+
+
 ### 3.2.3
 
 * `RateCalculator`: improve efficiency in `GetRate()` method (#324).
