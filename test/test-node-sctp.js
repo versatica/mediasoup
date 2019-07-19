@@ -120,14 +120,19 @@ afterAll(() =>
 
 test('ordered DataProducer delivers all messages to the DataConsumer', async () =>
 {
+	const onStream = jest.fn();
 	const numMessages = 200;
 	let sentMessageBytes = 0;
 	let recvMessageBytes = 0;
 	let lastSentMessageId = 0;
 	let lastRecvMessageId = 0;
 
+	// It must be zero because it's the first DataConsumer on the transport.
+	expect(dataConsumer.sctpStreamParameters.streamId).toBe(0);
+
 	await new Promise((resolve) =>
 	{
+		// Send SCTP messages over the sctpSendStream created above.
 		const interval = setInterval(() =>
 		{
 			const id = ++lastSentMessageId;
@@ -143,8 +148,15 @@ test('ordered DataProducer delivers all messages to the DataConsumer', async () 
 				clearInterval(interval);
 		}, 10);
 
-		sctpSocket.on('stream', (stream) =>
+		sctpSocket.on('stream', onStream);
+
+		// Handle the generated SCTP incoming stream and SCTP messages receives on it.
+		sctpSocket.on('stream', (stream, streamId) =>
 		{
+			// It must be zero because it's the first SCTP incoming stream (so first
+			// DataConsumer).
+			expect(streamId).toBe(0);
+
 			stream.on('data', (data) =>
 			{
 				recvMessageBytes += data.byteLength;
@@ -163,6 +175,7 @@ test('ordered DataProducer delivers all messages to the DataConsumer', async () 
 		});
 	});
 
+	expect(onStream).toHaveBeenCalledTimes(1);
 	expect(lastSentMessageId).toBe(numMessages);
 	expect(lastRecvMessageId).toBe(numMessages);
 	expect(recvMessageBytes).toBe(sentMessageBytes);
