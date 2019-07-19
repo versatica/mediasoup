@@ -589,13 +589,15 @@ namespace RTC
 
 				MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
 
+				auto wasConnected = IsConnected();
+
 				this->tuple = new RTC::TransportTuple(tuple);
 
 				if (!this->listenIp.announcedIp.empty())
 					this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
 
 				// If not yet connected do it now.
-				if (!IsConnected())
+				if (!wasConnected)
 					RTC::Transport::Connected();
 			}
 
@@ -677,13 +679,15 @@ namespace RTC
 
 				MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
 
+				auto wasConnected = IsConnected();
+
 				this->tuple = new RTC::TransportTuple(tuple);
 
 				if (!this->listenIp.announcedIp.empty())
 					this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
 
 				// If not yet connected do it now.
-				if (!IsConnected())
+				if (!wasConnected)
 					RTC::Transport::Connected();
 			}
 			// If no RTCP-mux and RTCP tuple is unset, set it if we are in comedia mode.
@@ -772,7 +776,9 @@ namespace RTC
 				return;
 			}
 
-			MS_DEBUG_TAG(sctp, "setting RTP tuple (comedia mode enabled)");
+			MS_DEBUG_TAG(sctp, "setting RTP/SCTP tuple (comedia mode enabled)");
+
+			auto wasConnected = IsConnected();
 
 			this->tuple = new RTC::TransportTuple(tuple);
 
@@ -780,7 +786,7 @@ namespace RTC
 				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
 
 			// If not yet connected do it now.
-			if (!IsConnected())
+			if (!wasConnected)
 				RTC::Transport::Connected();
 		}
 
