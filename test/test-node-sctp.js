@@ -89,12 +89,12 @@ beforeAll(async () =>
 			});
 	}
 
-	// Create a explicit SCTP outgoing stream with id 123 (id 0 is already used
+	// Create an explicit SCTP outgoing stream with id 123 (id 0 is already used
 	// by the implicit SCTP outgoing stream built-in the SCTP socket).
 	sendStreamId = 123;
 	sctpSendStream = sctpSocket.createStream(sendStreamId);
 
-	// Create DataProducer with the corresponding SCTP stream id.
+	// Create a DataProducer with the corresponding SCTP stream id.
 	dataProducer = await transport.produceData(
 		{
 			sctpStreamParameters :
@@ -118,7 +118,7 @@ afterAll(() =>
 	worker.close();
 });
 
-test('ordered DataProducer delivers all messages to the DataConsumer', async () =>
+test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () =>
 {
 	const onStream = jest.fn();
 	const numMessages = 200;
