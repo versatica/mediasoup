@@ -200,7 +200,7 @@ namespace RTC
 				}
 
 				MS_DEBUG_DEV(
-				  "preferred layers changed to [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
+				  "preferred layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
 				  this->preferredSpatialLayer,
 				  this->preferredTemporalLayer,
 				  this->id.c_str());
@@ -311,6 +311,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+
 		if (!RTC::Consumer::IsActive())
 			return 0u;
 
@@ -392,8 +394,8 @@ namespace RTC
 				auto requiredBitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
 
 				MS_DEBUG_DEV(
-				  "testing layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
-				  ", requiredBitrate:%" PRIu32 "]",
+				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
+				  ", required bitrate:%" PRIu32 "]",
 				  spatialLayer,
 				  temporalLayer,
 				  virtualBitrate,
@@ -435,8 +437,8 @@ namespace RTC
 		MS_DEBUG_2TAGS(
 		  bwe,
 		  svc,
-		  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtualBitrate:%" PRIu32
-		  ", usedBitrate:%" PRIu32 ", consumerId:%s]",
+		  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtual bitrate:%" PRIu32
+		  ", used bitrate:%" PRIu32 ", consumerId:%s]",
 		  this->provisionalTargetSpatialLayer,
 		  this->provisionalTargetTemporalLayer,
 		  bitrate,
@@ -561,8 +563,8 @@ namespace RTC
 		this->provisionalTargetTemporalLayer = temporalLayer;
 
 		MS_DEBUG_DEV(
-		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [virtualBitrate:%" PRIu32
-		  ", requiredBitrate:%" PRIu32 "]",
+		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
+		  ", required bitrate:%" PRIu32 "]",
 		  this->provisionalTargetSpatialLayer,
 		  this->provisionalTargetTemporalLayer,
 		  virtualBitrate,
@@ -601,6 +603,104 @@ namespace RTC
 		{
 			UpdateTargetLayers(provisionalTargetSpatialLayer, provisionalTargetTemporalLayer);
 		}
+	}
+
+	uint32_t SvcConsumer::GetProbationBitrate() const
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+
+		if (!RTC::Consumer::IsActive())
+			return 0u;
+
+		if (!this->producerRtpStream)
+			return 0u;
+
+		if (this->producerRtpStream->GetScore() == 0)
+			return 0u;
+
+		int16_t desiredTargetSpatialLayer{ -1 };
+		int16_t desiredTargetTemporalLayer{ -1 };
+		uint32_t desiredBitrate{ 0 };
+		auto now = DepLibUV::GetTime();
+		int16_t spatialLayer{ 0 };
+
+		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
+		{
+			int16_t temporalLayer{ 0 };
+
+			// Check bitrate of every temporal layer.
+			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+			{
+				desiredBitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+
+				// If layer is not active move to next spatial layer.
+				if (desiredBitrate == 0)
+					break;
+
+				// Set desired target layers.
+				desiredTargetSpatialLayer  = spatialLayer;
+				desiredTargetTemporalLayer = temporalLayer;
+
+				// If this is the preferred spatial and temporal layer, exit the loops.
+				// clang-format off
+				if (
+					desiredTargetSpatialLayer == this->preferredSpatialLayer &&
+					desiredTargetTemporalLayer == this->preferredTemporalLayer
+				)
+				// clang-format on
+				{
+					goto done;
+				}
+			}
+
+			// If this is the preferred or higher spatial layer, take it and exit.
+			if (spatialLayer >= this->preferredSpatialLayer)
+				break;
+		}
+
+	done:
+
+		// No luck.
+		if (desiredTargetSpatialLayer == -1)
+			return 0u;
+
+		// No change.
+		// clang-format off
+		if (
+			desiredTargetSpatialLayer == this->encodingContext->GetTargetSpatialLayer() &&
+			desiredTargetTemporalLayer == this->encodingContext->GetTargetTemporalLayer()
+		)
+		// clang-format on
+		{
+			return 0u;
+		}
+
+		// Take the current bitrate from the sending RTP stream.
+		auto currentBitrate = this->rtpStream->GetBitrate(now);
+
+		if (currentBitrate >= desiredBitrate)
+			return 0u;
+
+		uint32_t probationBitrate = desiredBitrate - currentBitrate;
+
+		MS_DEBUG_2TAGS(
+		  bwe,
+		  svc,
+		  "target layers %" PRIi16 ":%" PRIi16 ", desired layers %" PRIi16 ":%" PRIi16
+		  " [current bitrate:%" PRIu32 ", desired bitrate:%" PRIu32 ", probation bitrate:%" PRIu32
+		  ", consumerId:%s]",
+		  this->encodingContext->GetTargetSpatialLayer(),
+		  this->encodingContext->GetTargetTemporalLayer(),
+		  desiredTargetSpatialLayer,
+		  desiredTargetTemporalLayer,
+		  currentBitrate,
+		  desiredBitrate,
+		  probationBitrate,
+		  this->id.c_str());
+
+		return probationBitrate;
 	}
 
 	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet)

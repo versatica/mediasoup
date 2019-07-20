@@ -371,4 +371,13 @@ namespace RTC
 		// This method must be override by subclasses with layers. By default
 		// it does nothing.
 	}
+
+	uint32_t Consumer::GetProbationBitrate() const
+	{
+		MS_TRACE();
+
+		// This method must be override by subclasses with layers. By default
+		// it just returns 0.
+		return 0u;
+	}
 } // namespace RTC
