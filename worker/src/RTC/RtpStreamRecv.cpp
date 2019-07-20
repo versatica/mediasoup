@@ -71,24 +71,31 @@ namespace RTC
 		MS_ASSERT(
 		  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
 
+		// Return 0 if specified layers are not being received.
+		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
+
+		if (counter.GetBitrate(now) == 0)
+			return 0u;
+
 		uint32_t rate{ 0u };
 
-		// Return 0 if specified layers are not being received.
+		// Iterate all temporal layers of spatial layers previous to the given one.
+		for (uint8_t sIdx{ 0u }; sIdx < spatialLayer; ++sIdx)
 		{
-			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
-
-			if (counter.GetBitrate(now) == 0)
-				return 0u;
-		}
-
-		for (uint8_t sIdx{ 0u }; sIdx <= spatialLayer; ++sIdx)
-		{
-			for (uint8_t tIdx{ 0u }; tIdx <= temporalLayer; ++tIdx)
+			for (uint8_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
 				rate += temporalLayerCounter.GetBitrate(now);
 			}
+		}
+
+		// Add the given spatial layer with up to the given temporal layer.
+		for (uint8_t tIdx{ 0u }; tIdx <= temporalLayer; ++tIdx)
+		{
+			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
+
+			rate += temporalLayerCounter.GetBitrate(now);
 		}
 
 		return rate;
