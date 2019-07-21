@@ -15,12 +15,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RembClient::RembClient(
-	  RTC::RembClient::Listener* listener,
-	  uint32_t initialAvailableBitrate,
-	  uint32_t minimumAvailableBitrate)
-	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate),
-	    minimumAvailableBitrate(minimumAvailableBitrate)
+	RembClient::RembClient(RTC::RembClient::Listener* listener, uint32_t initialAvailableBitrate)
+	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate)
 	{
 		MS_TRACE();
 
@@ -60,11 +56,6 @@ namespace RTC
 		// clang-format on
 		{
 			this->availableBitrate = this->initialAvailableBitrate;
-		}
-		// Otherwise if REMB reports less than minimumAvailableBitrate, honor it.
-		else if (this->availableBitrate < this->minimumAvailableBitrate)
-		{
-			this->availableBitrate = this->minimumAvailableBitrate;
 		}
 
 		// Emit event if EventInterval elapsed.
@@ -206,6 +197,13 @@ namespace RTC
 
 	inline void RembClient::OnRtpProbatorSendRtpPacket(
 	  RTC::RtpProbator* /*rtpProbator*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	inline void RembClient::OnTimer(Timer* /*timer*/)
 	{
 		MS_TRACE();
 

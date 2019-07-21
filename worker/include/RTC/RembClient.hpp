@@ -9,7 +9,7 @@
 
 namespace RTC
 {
-	class RembClient : public RTC::RtpProbator::Listener
+	class RembClient : public RTC::RtpProbator::Listener, public Timer::Listener
 	{
 	public:
 		class Listener
@@ -20,10 +20,7 @@ namespace RTC
 		};
 
 	public:
-		RembClient(
-		  RTC::RembClient::Listener* listener,
-		  uint32_t initialAvailableBitrate,
-		  uint32_t minimumAvailableBitrate);
+		RembClient(RTC::RembClient::Listener* listener, uint32_t initialAvailableBitrate);
 		virtual ~RembClient();
 
 	public:
@@ -42,6 +39,10 @@ namespace RTC
 	public:
 		void OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator, RTC::RtpPacket* packet) override;
 
+		/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		void OnTimer(Timer* timer) override;
+
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
@@ -49,7 +50,6 @@ namespace RTC
 		RTC::RtpProbator* rtpProbator{ nullptr };
 		// Others.
 		uint32_t initialAvailableBitrate{ 0 };
-		uint32_t minimumAvailableBitrate{ 0 };
 		uint64_t initialAvailableBitrateAt{ 0 };
 		uint32_t availableBitrate{ 0 };
 		uint64_t lastEventAt{ 0 };
