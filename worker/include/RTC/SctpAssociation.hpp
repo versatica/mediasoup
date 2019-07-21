@@ -86,11 +86,12 @@ namespace RTC
 		uint16_t mis{ 1024 };
 		size_t maxSctpMessageSize{ 262144 };
 		bool isDataChannel{ false };
+		// Allocated by this.
+		uint8_t* messageBuffer{ nullptr };
 		// Others.
 		SctpState state{ SctpState::NEW };
 		struct socket* socket{ nullptr };
 		uint16_t desiredOs{ 0 };
-		uint8_t* messageBuffer{ nullptr };
 		size_t messageBufferLen{ 0 };
 		uint16_t lastSsnReceived{ 0 }; // Valid for us since no SCTP I-DATA support.
 	};

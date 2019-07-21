@@ -5,10 +5,11 @@
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpProbator.hpp"
 
 namespace RTC
 {
-	class RembClient
+	class RembClient : public RTC::RtpProbator::Listener
 	{
 	public:
 		class Listener
@@ -37,9 +38,15 @@ namespace RTC
 		void CheckStatus(uint64_t now);
 		void CalculateProbationTargetBitrate();
 
+		/* Pure virtual methods inherited from RTC::RtpProbator. */
+	public:
+		void OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator, RTC::RtpPacket* packet) override;
+
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		// Allocated by this.
+		RTC::RtpProbator* rtpProbator{ nullptr };
 		// Others.
 		uint32_t initialAvailableBitrate{ 0 };
 		uint32_t minimumAvailableBitrate{ 0 };

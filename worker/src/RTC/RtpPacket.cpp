@@ -158,7 +158,7 @@ namespace RTC
 		if (HasHeaderExtension())
 		{
 			MS_DUMP(
-			  "  header extension  : id:%" PRIu16 ",length:%zu",
+			  "  header extension  : id:%" PRIu16 ", length:%zu",
 			  GetHeaderExtensionId(),
 			  GetHeaderExtensionLength());
 		}
@@ -208,21 +208,22 @@ namespace RTC
 			std::string mid;
 
 			if (ReadMid(mid))
-				MS_DUMP("  mid               : extId:%" PRIu8 ",value:%s", this->midExtensionId, mid.c_str());
+				MS_DUMP("  mid               : extId:%" PRIu8 ", value:%s", this->midExtensionId, mid.c_str());
 		}
 		if (this->ridExtensionId != 0u)
 		{
 			std::string rid;
 
 			if (ReadRid(rid))
-				MS_DUMP("  rid               : extId:%" PRIu8 ",value:%s", this->ridExtensionId, rid.c_str());
+				MS_DUMP("  rid               : extId:%" PRIu8 ", value:%s", this->ridExtensionId, rid.c_str());
 		}
 		if (this->rridExtensionId != 0u)
 		{
 			std::string rid;
 
 			if (ReadRid(rid))
-				MS_DUMP("  rrid              : extId:%" PRIu8 ",value:%s", this->rridExtensionId, rid.c_str());
+				MS_DUMP(
+				  "  rrid              : extId:%" PRIu8 ", value:%s", this->rridExtensionId, rid.c_str());
 		}
 		if (this->absSendTimeExtensionId != 0u)
 		{
@@ -245,7 +246,7 @@ namespace RTC
 			if (ReadSsrcAudioLevel(volume, voice))
 			{
 				MS_DUMP(
-				  "  ssrcAudioLevel    : extId:%" PRIu8 ",volume:%" PRIu8 ",voice:%s",
+				  "  ssrcAudioLevel    : extId:%" PRIu8 ", volume:%" PRIu8 ", voice:%s",
 				  this->ssrcAudioLevelExtensionId,
 				  volume,
 				  voice ? "true" : "false");
@@ -260,7 +261,7 @@ namespace RTC
 			if (ReadVideoOrientation(camera, flip, rotation))
 			{
 				MS_DUMP(
-				  "  videoOrientation  : extId:%" PRIu8 ",camera:%s,flip:%s,rotation:%" PRIu16,
+				  "  videoOrientation  : extId:%" PRIu8 ", camera:%s, flip:%s, rotation:%" PRIu16,
 				  this->videoOrientationExtensionId,
 				  camera ? "true" : "false",
 				  flip ? "true" : "false",

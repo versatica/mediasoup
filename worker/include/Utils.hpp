@@ -241,6 +241,13 @@ namespace Utils
 		// This seems to produce better results.
 		Crypto::seed = uint32_t{ ((214013 * Crypto::seed) + 2531011) };
 
+		// Special case.
+		if (max == 4294967295)
+			--max;
+
+		if (min > max)
+			min = max;
+
 		return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
 	}
 

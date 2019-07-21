@@ -23,11 +23,18 @@ namespace RTC
 	    minimumAvailableBitrate(minimumAvailableBitrate)
 	{
 		MS_TRACE();
+
+		// Create a RTP probator.
+		// TODO: Set proper provation packet size.
+		this->rtpProbator = new RTC::RtpProbator(this, 1000);
 	}
 
 	RembClient::~RembClient()
 	{
 		MS_TRACE();
+
+		// Destroy the RTP probator.
+		delete this->rtpProbator;
 	}
 
 	void RembClient::ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
@@ -195,5 +202,13 @@ namespace RTC
 			  factor,
 			  this->probationTargetBitrate);
 		}
+	}
+
+	inline void RembClient::OnRtpProbatorSendRtpPacket(
+	  RTC::RtpProbator* /*rtpProbator*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// TODO
 	}
 } // namespace RTC
