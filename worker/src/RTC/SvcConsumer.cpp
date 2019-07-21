@@ -511,17 +511,6 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				// If this is the preferred spatial and temporal layer, exit the loops.
-				// clang-format off
-				if (
-					spatialLayer == this->preferredSpatialLayer &&
-					temporalLayer == this->preferredTemporalLayer
-				)
-				// clang-format on
-				{
-					goto done;
-				}
-
 				// Ignore temporal layers lower than the one we already have (taking into account
 				// the spatial layer too).
 				// clang-format off
@@ -534,6 +523,17 @@ namespace RTC
 					continue;
 				}
 
+				// If this is higher than preferred layers, exit the loops.
+				// clang-format off
+				if (
+					spatialLayer == this->preferredSpatialLayer &&
+					temporalLayer > this->preferredTemporalLayer
+				)
+				// clang-format on
+				{
+					goto done;
+				}
+
 				requiredBitrate = this->producerRtpStream->GetLayerBitrate(now, spatialLayer, temporalLayer);
 
 				// If active layer, end iterations here. Otherwise move to next spatial layer.
@@ -543,7 +543,7 @@ namespace RTC
 					break;
 			}
 
-			// If this is the preferred or higher spatial layer, take it and exit.
+			// If this is the preferred or higher spatial layer, exit.
 			if (spatialLayer >= this->preferredSpatialLayer)
 				break;
 		}
@@ -683,19 +683,33 @@ namespace RTC
 		if (currentBitrate >= desiredBitrate)
 			return 0u;
 
-		uint32_t probationBitrate = desiredBitrate - currentBitrate;
+		// Take the current target bitrate.
+		uint32_t targetBitrate{ 0u };
+
+		if (this->encodingContext->GetTargetSpatialLayer() > -1)
+		{
+			targetBitrate = this->producerRtpStream->GetBitrate(
+			  now,
+			  this->encodingContext->GetTargetSpatialLayer(),
+			  this->encodingContext->GetTargetTemporalLayer());
+		}
+
+		if (desiredBitrate < targetBitrate)
+			return 0u;
+
+		uint32_t probationBitrate = desiredBitrate - targetBitrate;
 
 		MS_DEBUG_2TAGS(
 		  bwe,
 		  svc,
-		  "target layers %" PRIi16 ":%" PRIi16 ", desired layers %" PRIi16 ":%" PRIi16
-		  " [current bitrate:%" PRIu32 ", desired bitrate:%" PRIu32 ", probation bitrate:%" PRIu32
+		  "[target layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
+		  ", target bitrate:%" PRIu32 ", desired bitrate:%" PRIu32 ", probation bitrate:%" PRIu32
 		  ", consumerId:%s]",
 		  this->encodingContext->GetTargetSpatialLayer(),
 		  this->encodingContext->GetTargetTemporalLayer(),
 		  desiredTargetSpatialLayer,
 		  desiredTargetTemporalLayer,
-		  currentBitrate,
+		  targetBitrate,
 		  desiredBitrate,
 		  probationBitrate,
 		  this->id.c_str());
