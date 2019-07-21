@@ -479,8 +479,7 @@ namespace RTC
 		return this->tuple != nullptr;
 	}
 
-	void PlainRtpTransport::SendRtpPacket(
-	  RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/, bool /*retransmitted*/, bool /*probation*/)
+	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 

@@ -20,6 +20,8 @@ namespace RTC
 			  RTC::RembClient* rembClient, uint32_t availableBitrate) = 0;
 			virtual void OnRembClientNeedProbationBitrate(
 			  RTC::RembClient* rembClient, uint32_t& probationBitrate) = 0;
+			virtual void OnRembClientSendProbationRtpPacket(
+			  RTC::RembClient* rembClient, RTC::RtpPacket* probationPacket) = 0;
 		};
 
 	public:
@@ -28,8 +30,8 @@ namespace RTC
 
 	public:
 		void ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb);
-		void SentRtpPacket(RTC::RtpPacket* packet, bool retransmitted);
-		void SentProbationRtpPacket(RTC::RtpPacket* packet); // TODO
+		void SentRtpPacket(RTC::RtpPacket* packet, bool retransmitted); // TODO
+		void SentProbationRtpPacket(RTC::RtpPacket* packet);            // TODO
 		uint32_t GetAvailableBitrate();
 		void ResecheduleNextAvailableBitrateEvent();
 		bool IsProbationNeeded(); // TODO

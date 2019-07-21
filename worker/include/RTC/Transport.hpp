@@ -129,12 +129,8 @@ namespace RTC
 		RTC::DataProducer* GetDataProducerFromRequest(Channel::Request* request) const;
 		void SetNewDataConsumerIdFromRequest(Channel::Request* request, std::string& dataConsumerId) const;
 		RTC::DataConsumer* GetDataConsumerFromRequest(Channel::Request* request) const;
-		virtual bool IsConnected() const = 0;
-		virtual void SendRtpPacket(
-		  RTC::RtpPacket* packet,
-		  RTC::Consumer* consumer,
-		  bool retransmitted = false,
-		  bool probation     = false) = 0;
+		virtual bool IsConnected() const                   = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet) = 0;
 		void SendRtcp(uint64_t now);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
@@ -157,8 +153,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
 		void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) override;
-		void OnConsumerRetransmitRtpPacket(
-		  RTC::Consumer* consumer, RTC::RtpPacket* packet, bool probation) override;
+		void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) override;
 		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 		virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override = 0;
 		void OnConsumerProducerClosed(RTC::Consumer* consumer) override;

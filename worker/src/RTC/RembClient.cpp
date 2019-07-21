@@ -28,7 +28,7 @@ namespace RTC
 		this->rtpProbationTimer = new Timer(this);
 
 		// TODO: Let's see how to do this.
-		this->rtpProbationTimer->Start(2000, 2000);
+		this->rtpProbationTimer->Start(2000, 0);
 	}
 
 	RembClient::~RembClient()

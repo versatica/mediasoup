@@ -786,8 +786,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(
-	  RTC::RtpPacket* packet, RTC::Consumer* consumer, bool retransmitted, bool probation)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -802,7 +801,6 @@ namespace RTC
 			return;
 		}
 
-		auto seq            = packet->GetSequenceNumber();
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
@@ -813,36 +811,6 @@ namespace RTC
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
-
-		// Feed the REMB client if this is a simulcast or SVC Consumer.
-		// clang-format off
-		if (
-			this->rembClient &&
-			(
-				consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-				consumer->GetType() == RTC::RtpParameters::Type::SVC
-			)
-		)
-		// clang-format on
-		{
-			if (!probation)
-			{
-				this->rembClient->SentRtpPacket(packet, retransmitted);
-
-				// May need to generate probation packets.
-				for (int count{ 1 }; count <= 3; ++count)
-				{
-					if (!this->rembClient->IsProbationNeeded())
-						break;
-
-					consumer->SendProbationRtpPacket(seq);
-				}
-			}
-			else
-			{
-				this->rembClient->SentProbationRtpPacket(packet);
-			}
-		}
 	}
 
 	void WebRtcTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
@@ -1663,6 +1631,14 @@ namespace RTC
 
 			probationBitrate += consumer->GetProbationBitrate();
 		}
+	}
+
+	inline void WebRtcTransport::OnRembClientSendProbationRtpPacket(
+	  RTC::RembClient* /*rembClient*/, RTC::RtpPacket* probationPacket)
+	{
+		MS_TRACE();
+
+		// TODO
 	}
 
 	inline void WebRtcTransport::OnRembServerAvailableBitrate(

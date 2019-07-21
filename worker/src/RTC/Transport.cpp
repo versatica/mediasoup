@@ -1389,11 +1389,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		SendRtpPacket(packet, consumer);
+		SendRtpPacket(packet);
 	}
 
-	inline void Transport::OnConsumerRetransmitRtpPacket(
-	  RTC::Consumer* consumer, RTC::RtpPacket* packet, bool probation)
+	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -1412,7 +1411,7 @@ namespace RTC
 			}
 		}
 
-		SendRtpPacket(packet, consumer, true, probation);
+		SendRtpPacket(packet);
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)

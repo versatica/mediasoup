@@ -81,7 +81,7 @@ namespace RTC
 
 		MS_DEBUG_TAG(bwe, "[packetsPerSecond:%f, interval:%" PRIu64 "]", packetsPerSecond, interval);
 
-		this->rtpPeriodicTimer->Start(interval, interval);
+		this->rtpPeriodicTimer->Start(0, interval);
 	}
 
 	void RtpProbator::Stop()
