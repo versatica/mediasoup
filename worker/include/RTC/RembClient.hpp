@@ -21,7 +21,7 @@ namespace RTC
 			virtual void OnRembClientNeedProbationBitrate(
 			  RTC::RembClient* rembClient, uint32_t& probationBitrate) = 0;
 			virtual void OnRembClientSendProbationRtpPacket(
-			  RTC::RembClient* rembClient, RTC::RtpPacket* probationPacket) = 0;
+			  RTC::RembClient* rembClient, RTC::RtpPacket* packet) = 0;
 		};
 
 	public:

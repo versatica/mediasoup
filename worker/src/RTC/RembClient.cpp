@@ -28,7 +28,7 @@ namespace RTC
 		this->rtpProbationTimer = new Timer(this);
 
 		// TODO: Let's see how to do this.
-		this->rtpProbationTimer->Start(2000, 0);
+		// this->rtpProbationTimer->Start(2000, 0);
 	}
 
 	RembClient::~RembClient()
@@ -209,7 +209,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: account it or something, or may be not.
+
+		// Notify the listener.
+		this->listener->OnRembClientSendProbationRtpPacket(this, packet);
 	}
 
 	inline void RembClient::OnTimer(Timer* timer)
@@ -218,7 +221,9 @@ namespace RTC
 
 		if (timer == this->rtpProbationTimer)
 		{
-			// TODO
+			// TODO: TMP
+			if (!this->rtpProbator->IsActive())
+				this->rtpProbator->Start(200000);
 		}
 	}
 } // namespace RTC

@@ -1634,11 +1634,43 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnRembClientSendProbationRtpPacket(
-	  RTC::RembClient* /*rembClient*/, RTC::RtpPacket* probationPacket)
+	  RTC::RembClient* /*rembClient*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		// TODO
+		static uint8_t buffer[4096];
+		static std::vector<RTC::RtpPacket::GenericExtension> extensions;
+
+		// This happens just once.
+		if (extensions.capacity() != 24)
+			extensions.reserve(24);
+
+		extensions.clear();
+
+		uint8_t extenLen;
+		uint8_t* bufferPtr{ buffer };
+
+		// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+		{
+			extenLen = 3u;
+
+			auto now         = DepLibUV::GetTime();
+			auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
+
+			Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
+
+			extensions.emplace_back(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+		}
+
+		// Set the new extensions into the packet using One-Byte format.
+		packet->SetExtensions(1, extensions);
+
+		// Not needed but useful if we want to dump the packet.
+		packet->SetAbsSendTimeExtensionId(
+		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
+
+		SendRtpPacket(packet);
 	}
 
 	inline void WebRtcTransport::OnRembServerAvailableBitrate(
