@@ -23,14 +23,23 @@ namespace RTC
 		// Create a RTP probator.
 		// TODO: Set proper provation packet size.
 		this->rtpProbator = new RTC::RtpProbator(this, 1000);
+
+		// Create the RTP probation timer.
+		this->rtpProbationTimer = new Timer(this);
+
+		// TODO: Let's see how to do this.
+		this->rtpProbationTimer->Start(2000, 2000);
 	}
 
 	RembClient::~RembClient()
 	{
 		MS_TRACE();
 
-		// Destroy the RTP probator.
+		// Delete the RTP probator.
 		delete this->rtpProbator;
+
+		// Delete the RTP probation timer.
+		delete this->rtpProbationTimer;
 	}
 
 	void RembClient::ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
@@ -115,7 +124,7 @@ namespace RTC
 		return this->availableBitrate;
 	}
 
-	void RembClient::ResecheduleNextEvent()
+	void RembClient::ResecheduleNextAvailableBitrateEvent()
 	{
 		MS_TRACE();
 
@@ -203,10 +212,13 @@ namespace RTC
 		// TODO
 	}
 
-	inline void RembClient::OnTimer(Timer* /*timer*/)
+	inline void RembClient::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
 
-		// TODO
+		if (timer == this->rtpProbationTimer)
+		{
+			// TODO
+		}
 	}
 } // namespace RTC

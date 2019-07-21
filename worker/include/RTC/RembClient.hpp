@@ -6,6 +6,7 @@
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpProbator.hpp"
+#include "handles/Timer.hpp"
 
 namespace RTC
 {
@@ -17,6 +18,8 @@ namespace RTC
 		public:
 			virtual void OnRembClientAvailableBitrate(
 			  RTC::RembClient* rembClient, uint32_t availableBitrate) = 0;
+			virtual void OnRembClientNeedProbationBitrate(
+			  RTC::RembClient* rembClient, uint32_t& probationBitrate) = 0;
 		};
 
 	public:
@@ -26,10 +29,10 @@ namespace RTC
 	public:
 		void ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb);
 		void SentRtpPacket(RTC::RtpPacket* packet, bool retransmitted);
-		void SentProbationRtpPacket(RTC::RtpPacket* packet);
+		void SentProbationRtpPacket(RTC::RtpPacket* packet); // TODO
 		uint32_t GetAvailableBitrate();
-		void ResecheduleNextEvent();
-		bool IsProbationNeeded();
+		void ResecheduleNextAvailableBitrateEvent();
+		bool IsProbationNeeded(); // TODO
 
 	private:
 		void CheckStatus(uint64_t now);
@@ -48,6 +51,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		// Allocated by this.
 		RTC::RtpProbator* rtpProbator{ nullptr };
+		Timer* rtpProbationTimer{ nullptr };
 		// Others.
 		uint32_t initialAvailableBitrate{ 0 };
 		uint64_t initialAvailableBitrateAt{ 0 };

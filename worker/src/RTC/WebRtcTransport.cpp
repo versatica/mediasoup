@@ -907,7 +907,7 @@ namespace RTC
 			availableBitrate = this->rembClient->GetAvailableBitrate();
 
 			// Resechedule next REMB event.
-			this->rembClient->ResecheduleNextEvent();
+			this->rembClient->ResecheduleNextAvailableBitrateEvent();
 		}
 
 		MS_DEBUG_TAG(bwe, "before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
@@ -1649,6 +1649,20 @@ namespace RTC
 		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "bps]", availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
+	}
+
+	inline void WebRtcTransport::OnRembClientNeedProbationBitrate(
+	  RTC::RembClient* /*rembClient*/, uint32_t& probationBitrate)
+	{
+		MS_TRACE();
+
+		// Ask all the Consumers for the probation bitrate they need.
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+
+			probationBitrate += consumer->GetProbationBitrate();
+		}
 	}
 
 	inline void WebRtcTransport::OnRembServerAvailableBitrate(

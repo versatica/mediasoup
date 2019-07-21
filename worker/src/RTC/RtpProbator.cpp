@@ -48,8 +48,8 @@ namespace RTC
 		  static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0, 65535)));
 		this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt(0, 4294967295));
 
-		// Create the RTP sending timer.
-		this->sendPeriodicTimer = new Timer(this);
+		// Create the RTP periodic timer.
+		this->rtpPeriodicTimer = new Timer(this);
 	}
 
 	RtpProbator::~RtpProbator()
@@ -62,15 +62,15 @@ namespace RTC
 		// Delete the probation RTP packet.
 		delete this->probationPacket;
 
-		// Delete the RTP send timer.
-		delete this->sendPeriodicTimer;
+		// Delete the RTP periodic timer.
+		delete this->rtpPeriodicTimer;
 	}
 
 	void RtpProbator::Start(uint32_t bitrate)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(!this->sendPeriodicTimer->IsActive(), "already started");
+		MS_ASSERT(!this->rtpPeriodicTimer->IsActive(), "already started");
 
 		// Calculate a proper interval for sending RTP packets of size
 		// RTC::RtpProbator::ProbationRtpPacketSize bytes in order to produce the
@@ -81,14 +81,14 @@ namespace RTC
 
 		MS_DEBUG_TAG(bwe, "[packetsPerSecond:%f, interval:%" PRIu64 "]", packetsPerSecond, interval);
 
-		this->sendPeriodicTimer->Start(interval, interval);
+		this->rtpPeriodicTimer->Start(interval, interval);
 	}
 
 	void RtpProbator::Stop()
 	{
 		MS_TRACE();
 
-		this->sendPeriodicTimer->Stop();
+		this->rtpPeriodicTimer->Stop();
 	}
 
 	inline void RtpProbator::OnTimer(Timer* /*timer*/)
@@ -100,7 +100,7 @@ namespace RTC
 		auto timestamp = this->probationPacket->GetTimestamp();
 
 		// TODO: Properly increment timestamp. We know the interval (ms) via
-		// this->sendPeriodicTimer->GetRepeat().
+		// this->rtpPeriodicTimer->GetRepeat().
 		// NOTE: Is it worth it?
 		++seq;
 		timestamp += 20u;

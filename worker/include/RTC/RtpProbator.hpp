@@ -26,6 +26,7 @@ namespace RTC
 	public:
 		void Start(uint32_t bitrate);
 		void Stop();
+		bool IsActive() const;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -38,8 +39,15 @@ namespace RTC
 		// Allocated by this.
 		uint8_t* probationPacketBuffer{ nullptr };
 		RTC::RtpPacket* probationPacket{ nullptr };
-		Timer* sendPeriodicTimer{ nullptr };
+		Timer* rtpPeriodicTimer{ nullptr };
 	}; // namespace RTC
+
+	/* Inline methods. */
+
+	inline bool RtpProbator::IsActive() const
+	{
+		return this->rtpPeriodicTimer->IsActive();
+	}
 } // namespace RTC
 
 #endif
