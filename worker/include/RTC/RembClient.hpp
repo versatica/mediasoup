@@ -33,7 +33,7 @@ namespace RTC
 		void TransportDisconnected();
 		void ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb);
 		uint32_t GetAvailableBitrate();
-		void ResecheduleNextAvailableBitrateEvent();
+		void RescheduleNextAvailableBitrateEvent();
 
 	private:
 		void CheckStatus(uint64_t now);

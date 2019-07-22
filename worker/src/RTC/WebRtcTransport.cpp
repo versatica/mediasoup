@@ -871,7 +871,7 @@ namespace RTC
 		uint32_t availableBitrate = this->rembClient->GetAvailableBitrate();
 
 		// Resechedule next REMB event.
-		this->rembClient->ResecheduleNextAvailableBitrateEvent();
+		this->rembClient->RescheduleNextAvailableBitrateEvent();
 
 		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 

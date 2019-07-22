@@ -125,7 +125,7 @@ namespace RTC
 		return this->availableBitrate;
 	}
 
-	void RembClient::ResecheduleNextAvailableBitrateEvent()
+	void RembClient::RescheduleNextAvailableBitrateEvent()
 	{
 		MS_TRACE();
 
