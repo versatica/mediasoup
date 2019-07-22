@@ -664,7 +664,7 @@ namespace RTC
 
 				this->maxIncomingBitrate = bitrate;
 
-				MS_DEBUG_TAG(bwe, "WebRtcTransport maximum incoming bitrate set to %" PRIu32 "bps", bitrate);
+				MS_DEBUG_TAG(bwe, "WebRtcTransport maximum incoming bitrate set to %" PRIu32, bitrate);
 
 				request->Accept();
 
@@ -1624,7 +1624,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "bps]", availableBitrate);
+		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "]", availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 	}
@@ -1716,7 +1716,7 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV(
-		  "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
+		  "sending RTCP REMB packet [bitrate:%" PRIu32 ", ssrcs:%s]",
 		  availableBitrate,
 		  ssrcsStream.str().c_str());
 #endif
