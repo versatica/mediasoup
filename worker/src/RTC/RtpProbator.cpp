@@ -223,7 +223,7 @@ namespace RTC
 				return;
 			}
 
-			if (this->currentStep % 2 == 0)
+			if (this->currentStep >= 1)
 			{
 				this->listener->OnRtpProbatorStep(this);
 
