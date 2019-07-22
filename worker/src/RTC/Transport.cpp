@@ -1396,19 +1396,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		uint8_t extenLen;
+		uint8_t* extenValue;
+
 		// Update http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time if present.
+		extenValue = packet->GetExtension(
+		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
+
+		if (extenValue && extenLen == 3)
 		{
-			uint8_t extenLen;
-			uint8_t* extenValue = packet->GetExtension(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
+			auto now         = DepLibUV::GetTime();
+			auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
 
-			if (extenValue && extenLen == 3)
-			{
-				auto now         = DepLibUV::GetTime();
-				auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
-
-				Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
-			}
+			Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
 		}
 
 		SendRtpPacket(packet);

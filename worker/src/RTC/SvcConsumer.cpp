@@ -434,17 +434,37 @@ namespace RTC
 
 	done:
 
-		MS_DEBUG_2TAGS(
-		  bwe,
-		  svc,
-		  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtual bitrate:%" PRIu32
-		  ", used bitrate:%" PRIu32 ", consumerId:%s]",
-		  this->provisionalTargetSpatialLayer,
-		  this->provisionalTargetTemporalLayer,
-		  bitrate,
-		  virtualBitrate,
-		  usedBitrate,
-		  this->id.c_str());
+		// clang-format off
+		if (
+			this->provisionalTargetSpatialLayer != this->encodingContext->GetTargetSpatialLayer() ||
+			this->provisionalTargetTemporalLayer != this->encodingContext->GetTargetTemporalLayer()
+		)
+		// clang-format on
+		{
+			MS_DEBUG_2TAGS(
+			  bwe,
+			  svc,
+			  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtual bitrate:%" PRIu32
+			  ", used bitrate:%" PRIu32 ", consumerId:%s]",
+			  this->provisionalTargetSpatialLayer,
+			  this->provisionalTargetTemporalLayer,
+			  bitrate,
+			  virtualBitrate,
+			  usedBitrate,
+			  this->id.c_str());
+		}
+		else
+		{
+			MS_DEBUG_DEV(
+			  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtual bitrate:%" PRIu32
+			  ", used bitrate:%" PRIu32 ", consumerId:%s]",
+			  this->provisionalTargetSpatialLayer,
+			  this->provisionalTargetTemporalLayer,
+			  bitrate,
+			  virtualBitrate,
+			  usedBitrate,
+			  this->id.c_str());
+		}
 
 		// Must recompute usedBitrate based on given bitrate, virtualBitrate and
 		// usedBitrate.
@@ -562,7 +582,9 @@ namespace RTC
 		this->provisionalTargetSpatialLayer  = spatialLayer;
 		this->provisionalTargetTemporalLayer = temporalLayer;
 
-		MS_DEBUG_DEV(
+		MS_DEBUG_2TAGS(
+		  bwe,
+		  simulcast,
 		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
 		  ", required bitrate:%" PRIu32 "]",
 		  this->provisionalTargetSpatialLayer,

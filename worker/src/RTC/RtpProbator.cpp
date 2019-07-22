@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpProbator"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/RtpProbator.hpp"
 #include "Logger.hpp"
@@ -10,6 +10,7 @@ namespace RTC
 {
 	/* Static. */
 
+	static constexpr uint64_t MinProbationInterval{ 1u }; // In ms.
 	// clang-format off
 	static uint8_t ProbationPacketHeader[] =
 	{
@@ -19,7 +20,7 @@ namespace RTC
 		0xBE, 0xDE, 0, 1,             // Header Extension (One-Byte Extensions)
 		0, 0, 0, 0                    // Space for abs-send-time extension.
 		// TODO: Add space for Transport-CC extension once implemented
-		// (this will make RtpPacket::SetExtensions() not have to shift the payload)
+		// (this will make RtpPacket::SetExtensions() not have to shift the payload).
 	};
 	// clang-format on
 
@@ -71,6 +72,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(!this->rtpPeriodicTimer->IsActive(), "already started");
+		MS_ASSERT(bitrate != 0u, "bitrate cannot be 0");
 
 		// Calculate a proper interval for sending RTP packets of size
 		// RTC::RtpProbator::ProbationRtpPacketSize bytes in order to produce the
@@ -79,16 +81,29 @@ namespace RTC
 		  static_cast<double>(bitrate / (RTC::RtpProbator::ProbationRtpPacketSize * 8.0f));
 		auto interval = static_cast<uint64_t>(1000.0f / packetsPerSecond);
 
-		MS_DEBUG_TAG(bwe, "[packetsPerSecond:%f, interval:%" PRIu64 "]", packetsPerSecond, interval);
+		if (interval < MinProbationInterval)
+			interval = MinProbationInterval;
 
-		this->rtpPeriodicTimer->Start(0, interval);
+		MS_DEBUG_TAG(
+		  bwe,
+		  "probation started [bitrate:%" PRIu32 ", packetsPerSecond:%f, interval:%" PRIu64 "]",
+		  bitrate,
+		  packetsPerSecond,
+		  interval);
+
+		this->rtpPeriodicTimer->Start(interval, interval);
 	}
 
 	void RtpProbator::Stop()
 	{
 		MS_TRACE();
 
+		if (!this->rtpPeriodicTimer->IsActive())
+			return;
+
 		this->rtpPeriodicTimer->Stop();
+
+		MS_DEBUG_TAG(bwe, "probation stopped");
 	}
 
 	inline void RtpProbator::OnTimer(Timer* /*timer*/)
@@ -107,6 +122,10 @@ namespace RTC
 
 		this->probationPacket->SetSequenceNumber(seq);
 		this->probationPacket->SetTimestamp(timestamp);
+
+		// TODO
+		if (seq % 500 == 0)
+			MS_DEBUG_DEV("sending RTP probation packet [seq:%" PRIu16 "]", seq);
 
 		// Notify the listener.
 		this->listener->OnRtpProbatorSendRtpPacket(this, this->probationPacket);

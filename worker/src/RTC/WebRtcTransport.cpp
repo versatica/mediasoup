@@ -524,7 +524,7 @@ namespace RTC
 			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
-				if (this->connected)
+				if (this->connectCalled)
 					MS_THROW_ERROR("connect() already called");
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
@@ -617,7 +617,7 @@ namespace RTC
 					}
 				}
 
-				this->connected = true;
+				this->connectCalled = true;
 
 				// Pass the remote fingerprint to the DTLS transport.
 				if (this->dtlsTransport->SetRemoteFingerprint(dtlsRemoteFingerprint))
@@ -868,17 +868,12 @@ namespace RTC
 		if (totalPriorities == 0)
 			return;
 
-		uint32_t availableBitrate{ 0 };
+		uint32_t availableBitrate = this->rembClient->GetAvailableBitrate();
 
-		if (this->rembClient)
-		{
-			availableBitrate = this->rembClient->GetAvailableBitrate();
+		// Resechedule next REMB event.
+		this->rembClient->ResecheduleNextAvailableBitrateEvent();
 
-			// Resechedule next REMB event.
-			this->rembClient->ResecheduleNextAvailableBitrateEvent();
-		}
-
-		MS_DEBUG_TAG(bwe, "before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		uint32_t remainingBitrate = availableBitrate;
 
@@ -890,8 +885,7 @@ namespace RTC
 			auto consumer    = it->second;
 			uint32_t bitrate = (availableBitrate * priority) / totalPriorities;
 
-			MS_DEBUG_TAG(
-			  bwe,
+			MS_DEBUG_DEV(
 			  "main bitrate for Consumer [priority:%" PRIu16 ", bitrate:%" PRIu32 ", consumerId:%s]",
 			  priority,
 			  bitrate,
@@ -905,7 +899,7 @@ namespace RTC
 				remainingBitrate = 0;
 		}
 
-		MS_DEBUG_TAG(bwe, "after first main iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
+		MS_DEBUG_DEV("after first main iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
 
 		// Then redistribute the remaining bitrate by allowing Consumers to increase
 		// layer by layer.
@@ -917,8 +911,7 @@ namespace RTC
 			{
 				auto consumer = it->second;
 
-				MS_DEBUG_TAG(
-				  bwe,
+				MS_DEBUG_DEV(
 				  "layer bitrate for Consumer [bitrate:%" PRIu32 ", consumerId:%s]",
 				  remainingBitrate,
 				  consumer->id.c_str());
@@ -939,8 +932,7 @@ namespace RTC
 				break;
 		}
 
-		MS_DEBUG_TAG(
-		  bwe, "after layer-by-layer iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
+		MS_DEBUG_DEV("after layer-by-layer iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
 
 		// Finally instruct Consumers to apply their computed layers.
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
@@ -1308,6 +1300,12 @@ namespace RTC
 
 				consumer->SetExternallyManagedBitrate();
 			}
+
+			// If the transport is connected, tell the REMB client.
+			// NOTE: Must be done after calling SetExternallyManagedBitrate() in
+			// Consumers.
+			if (IsConnected())
+				this->rembClient->TransportConnected();
 		}
 		// Otherwise, if REMB client is set, tell the new Consumer that we are
 		// gonna manage its bitrate.
@@ -1468,6 +1466,10 @@ namespace RTC
 
 		// Tell the parent class.
 		RTC::Transport::Disconnected();
+
+		// Also tell the REMB client.
+		if (this->rembClient)
+			this->rembClient->TransportDisconnected();
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1542,6 +1544,10 @@ namespace RTC
 
 		// Tell the parent class.
 		RTC::Transport::Connected();
+
+		// Also tell the REMB client.
+		if (this->rembClient)
+			this->rembClient->TransportConnected();
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportFailed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1573,6 +1579,10 @@ namespace RTC
 
 		// Tell the parent class.
 		RTC::Transport::Disconnected();
+
+		// Also tell the REMB client.
+		if (this->rembClient)
+			this->rembClient->TransportDisconnected();
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportSendData(
@@ -1648,27 +1658,39 @@ namespace RTC
 		extensions.clear();
 
 		uint8_t extenLen;
+		uint8_t* extenValue;
 		uint8_t* bufferPtr{ buffer };
+		auto now         = DepLibUV::GetTime();
+		auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
 
-		// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+		// If this is the first probation packet we must manually add the required
+		// RTP header extensions. Otherwise we just need to override it. Let check
+		// it by looking for the abs-send-time extension.
+		extenValue = packet->GetExtension(
+		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
+
+		if (extenValue && extenLen == 3)
 		{
+			// Update http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+			Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
+		}
+		else
+		{
+			// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
 			extenLen = 3u;
-
-			auto now         = DepLibUV::GetTime();
-			auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
 
 			Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
 
 			extensions.emplace_back(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+
+			// Set the new extensions into the packet using One-Byte format.
+			packet->SetExtensions(1, extensions);
+
+			// Needed to detect it in next probation packet.
+			packet->SetAbsSendTimeExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
 		}
-
-		// Set the new extensions into the packet using One-Byte format.
-		packet->SetExtensions(1, extensions);
-
-		// Not needed but useful if we want to dump the packet.
-		packet->SetAbsSendTimeExtensionId(
-		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
 
 		SendRtpPacket(packet);
 	}
@@ -1684,22 +1706,20 @@ namespace RTC
 		if (this->maxIncomingBitrate != 0u)
 			availableBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
 
-		if (MS_HAS_DEBUG_TAG(bwe))
+#ifdef MS_LOG_DEV
+		std::ostringstream ssrcsStream;
+
+		if (!ssrcs.empty())
 		{
-			std::ostringstream ssrcsStream;
-
-			if (!ssrcs.empty())
-			{
-				std::copy(ssrcs.begin(), ssrcs.end() - 1, std::ostream_iterator<uint32_t>(ssrcsStream, ","));
-				ssrcsStream << ssrcs.back();
-			}
-
-			// MS_DEBUG_TAG(
-			//   bwe,
-			//   "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
-			//   availableBitrate,
-			//   ssrcsStream.str().c_str());
+			std::copy(ssrcs.begin(), ssrcs.end() - 1, std::ostream_iterator<uint32_t>(ssrcsStream, ","));
+			ssrcsStream << ssrcs.back();
 		}
+
+		MS_DEBUG_DEV(
+		  "sending RTCP REMB packet [bitrate:%" PRIu32 "bps, ssrcs:%s]",
+		  availableBitrate,
+		  ssrcsStream.str().c_str());
+#endif
 
 		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
 

@@ -29,16 +29,15 @@ namespace RTC
 		virtual ~RembClient();
 
 	public:
+		void TransportConnected();
+		void TransportDisconnected();
 		void ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb);
-		void SentRtpPacket(RTC::RtpPacket* packet, bool retransmitted); // TODO
-		void SentProbationRtpPacket(RTC::RtpPacket* packet);            // TODO
 		uint32_t GetAvailableBitrate();
 		void ResecheduleNextAvailableBitrateEvent();
-		bool IsProbationNeeded(); // TODO
 
 	private:
 		void CheckStatus(uint64_t now);
-		void CalculateProbationTargetBitrate();
+		void CalculateProbationTargetBitrate(); // TODO
 
 		/* Pure virtual methods inherited from RTC::RtpProbator. */
 	public:

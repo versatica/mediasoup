@@ -22,13 +22,10 @@ namespace RTC
 
 		// Create a RTP probator.
 		// TODO: Set proper provation packet size.
-		this->rtpProbator = new RTC::RtpProbator(this, 1000);
+		this->rtpProbator = new RTC::RtpProbator(this, 1100);
 
 		// Create the RTP probation timer.
 		this->rtpProbationTimer = new Timer(this);
-
-		// TODO: Let's see how to do this.
-		// this->rtpProbationTimer->Start(2000, 0);
 	}
 
 	RembClient::~RembClient()
@@ -40,6 +37,28 @@ namespace RTC
 
 		// Delete the RTP probation timer.
 		delete this->rtpProbationTimer;
+	}
+
+	void RembClient::TransportConnected()
+	{
+		MS_TRACE();
+
+		if (this->availableBitrate < this->initialAvailableBitrate)
+			this->availableBitrate = this->initialAvailableBitrate;
+
+		// Emit the available bitrate event fast.
+		if (this->availableBitrate > 0)
+			this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
+
+		// TODO: Let's see how to do this.
+		this->rtpProbationTimer->Start(0, 5000);
+	}
+
+	void RembClient::TransportDisconnected()
+	{
+		MS_TRACE();
+
+		this->rtpProbationTimer->Stop();
 	}
 
 	void RembClient::ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
@@ -95,24 +114,6 @@ namespace RTC
 		CalculateProbationTargetBitrate();
 	}
 
-	void RembClient::SentRtpPacket(RTC::RtpPacket* packet, bool /*retransmitted*/)
-	{
-		MS_TRACE();
-
-		// Increase transmission counter.
-		this->transmissionCounter.Update(packet);
-	}
-
-	void RembClient::SentProbationRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		MS_DEBUG_DEV("[seq:%" PRIu16 ", size:%zu]", packet->GetSequenceNumber(), packet->GetSize());
-
-		// Increase probation transmission counter.
-		this->probationTransmissionCounter.Update(packet);
-	}
-
 	uint32_t RembClient::GetAvailableBitrate()
 	{
 		MS_TRACE();
@@ -131,19 +132,6 @@ namespace RTC
 		this->lastEventAt = DepLibUV::GetTime();
 	}
 
-	bool RembClient::IsProbationNeeded()
-	{
-		MS_TRACE();
-
-		if (!this->probationTargetBitrate)
-			return false;
-
-		auto now                          = DepLibUV::GetTime();
-		auto probationTransmissionBitrate = this->probationTransmissionCounter.GetBitrate(now);
-
-		return (probationTransmissionBitrate <= this->probationTargetBitrate);
-	}
-
 	inline void RembClient::CheckStatus(uint64_t now)
 	{
 		MS_TRACE();
@@ -159,9 +147,13 @@ namespace RTC
 		}
 	}
 
+	// TODO: Remove.
 	inline void RembClient::CalculateProbationTargetBitrate()
 	{
 		MS_TRACE();
+
+		// NOTE: avoid this doing anything until method is deleted.
+		return;
 
 		auto previousProbationTargetBitrate = this->probationTargetBitrate;
 
@@ -222,8 +214,15 @@ namespace RTC
 		if (timer == this->rtpProbationTimer)
 		{
 			// TODO: TMP
-			if (!this->rtpProbator->IsActive())
-				this->rtpProbator->Start(200000);
+
+			this->rtpProbator->Stop();
+
+			uint32_t probationBitrate{ 0u };
+
+			this->listener->OnRembClientNeedProbationBitrate(this, probationBitrate);
+
+			if (probationBitrate != 0u)
+				this->rtpProbator->Start(probationBitrate);
 		}
 	}
 } // namespace RTC
