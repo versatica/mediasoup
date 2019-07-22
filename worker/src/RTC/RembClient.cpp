@@ -202,7 +202,6 @@ namespace RTC
 				// TODO: Let's see.
 				this->rtpProbationScheduleTimer->Start(2000, 0);
 			}
-
 		}
 	}
 } // namespace RTC

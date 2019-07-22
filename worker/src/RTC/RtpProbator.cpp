@@ -188,10 +188,6 @@ namespace RTC
 		this->probationPacket->SetSequenceNumber(seq);
 		this->probationPacket->SetTimestamp(timestamp);
 
-		// TODO
-		if (seq % 500 == 0)
-			MS_DUMP("sending RTP probation packet [seq:%" PRIu16 "]", seq);
-
 		// Notify the listener.
 		this->listener->OnRtpProbatorSendRtpPacket(this, this->probationPacket);
 
