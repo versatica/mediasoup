@@ -43,13 +43,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->availableBitrate < this->initialAvailableBitrate)
-			this->availableBitrate = this->initialAvailableBitrate;
-
-		// Emit the available bitrate event fast.
-		if (this->availableBitrate > 0)
-			this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
-
 		// TODO: Let's see how to do this.
 		this->rtpProbationTimer->Start(0, 5000);
 	}
