@@ -1,17 +1,27 @@
 #define MS_CLASS "RTC::RtpProbator"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/RtpProbator.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <cmath>   // std::ceil(), std::round(), std::floor()
 #include <cstring> // std::memcpy()
 
 namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t MinProbationInterval{ 1u }; // In ms.
 	// clang-format off
+	// Minimum target bitrate desired.
+	static constexpr uint32_t MinBitrate{ 100000u };
+	// Minimum probation interval (in ms).
+	static constexpr uint64_t MinProbationInterval{ 1u };
+	// Duration of each probation step (in ms).
+	static constexpr uint64_t StepDuration{ 750u };
+	// Bitrate jump between steps (in bps).
+	static constexpr uint32_t StepBitrateJump{ 150000u };
+	// Probation RTP header.
 	static uint8_t ProbationPacketHeader[] =
 	{
 		0b10010000, 0b01111111, 0, 0, // PayloadType: 127, Sequence Number: 0
@@ -72,24 +82,36 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(!this->rtpPeriodicTimer->IsActive(), "already started");
-		MS_ASSERT(bitrate != 0u, "bitrate cannot be 0");
 
-		// Calculate a proper interval for sending RTP packets of give sizein order
-		// to produce the given bitrate.
-		auto packetsPerSecond = static_cast<double>(bitrate / (probationPacketLen * 8.0f));
-		auto interval         = static_cast<uint64_t>(1000.0f / packetsPerSecond);
+		if (bitrate < MinBitrate)
+		{
+			MS_WARN_TAG(
+			  bwe, "too low bitrate:%" PRIu32 ", using minimum bitrate:%" PRIu32, bitrate, MinBitrate);
 
-		if (interval < MinProbationInterval)
-			interval = MinProbationInterval;
+			bitrate = MinBitrate;
+		}
+
+		this->targetBitrate = bitrate;
+		this->numSteps = static_cast<uint16_t>(std::ceil(bitrate / static_cast<float>(StepBitrateJump)));
+		this->currentStep = 0; // Begin with 0 on purpose.
+
+		double targetPacketsPerSecond = bitrate / (this->probationPacketLen * 8.0f);
+
+		this->targetRtpInterval = static_cast<uint64_t>(std::floor(1000.0f / targetPacketsPerSecond));
+
+		if (this->targetRtpInterval < MinProbationInterval)
+			this->targetRtpInterval = MinProbationInterval;
 
 		MS_DEBUG_TAG(
 		  bwe,
-		  "probation started [bitrate:%" PRIu32 ", packetsPerSecond:%f, interval:%" PRIu64 "]",
-		  bitrate,
-		  packetsPerSecond,
-		  interval);
+		  "probation started [targetBitrate:%" PRIu32 ", numSteps:%" PRIu16
+		  ", targetPacketsPerSecond:%f, targetRtpInterval:%" PRIu64 "]",
+		  this->targetBitrate,
+		  this->numSteps,
+		  targetPacketsPerSecond,
+		  this->targetRtpInterval);
 
-		this->rtpPeriodicTimer->Start(interval, interval);
+		ReloadProbation();
 	}
 
 	void RtpProbator::Stop()
@@ -101,7 +123,52 @@ namespace RTC
 
 		this->rtpPeriodicTimer->Stop();
 
+		this->targetBitrate     = 0;
+		this->numSteps          = 0;
+		this->currentStep       = 0;
+		this->stepStartedAt     = 0;
+		this->targetRtpInterval = 0;
+
 		MS_DEBUG_TAG(bwe, "probation stopped");
+	}
+
+	void RtpProbator::ReloadProbation()
+	{
+		MS_TRACE();
+
+		uint64_t rtpInterval;
+		uint32_t bitrate;
+
+		if (this->currentStep == 0)
+		{
+			bitrate = MinBitrate;
+
+			double targetPacketsPerSecond = bitrate / (this->probationPacketLen * 8.0f);
+
+			rtpInterval = static_cast<uint64_t>(std::floor(1000.0f / targetPacketsPerSecond));
+		}
+		else
+		{
+			rtpInterval = static_cast<uint64_t>(std::floor(
+			  this->targetRtpInterval *
+			  static_cast<float>(this->numSteps / static_cast<float>(this->currentStep))));
+
+			bitrate = static_cast<uint32_t>(std::round(
+			  this->targetBitrate *
+			  static_cast<float>(this->targetRtpInterval / static_cast<float>(rtpInterval))));
+		}
+
+		MS_DEBUG_TAG(
+		  bwe,
+		  "[currentStep:%" PRIu16 "/%" PRIu16 ", bitrate:%" PRIu32 ", rtpInterval:%" PRIu64 "]",
+		  this->currentStep,
+		  this->numSteps,
+		  bitrate,
+		  rtpInterval);
+
+		this->stepStartedAt = DepLibUV::GetTime();
+
+		this->rtpPeriodicTimer->Start(rtpInterval, rtpInterval);
 	}
 
 	inline void RtpProbator::OnTimer(Timer* /*timer*/)
@@ -123,9 +190,58 @@ namespace RTC
 
 		// TODO
 		if (seq % 500 == 0)
-			MS_DEBUG_DEV("sending RTP probation packet [seq:%" PRIu16 "]", seq);
+			MS_DUMP("sending RTP probation packet [seq:%" PRIu16 "]", seq);
 
 		// Notify the listener.
 		this->listener->OnRtpProbatorSendRtpPacket(this, this->probationPacket);
+
+		uint64_t now = DepLibUV::GetTime();
+
+		// clang-format off
+		if (
+			(this->currentStep == 0) &&
+			(now - this->stepStartedAt >= 2 * StepDuration)
+		)
+		// clang-format on
+		{
+			++this->currentStep;
+
+			ReloadProbation();
+		}
+		// clang-format off
+		else if (
+			(this->currentStep > 0) &&
+			(now - this->stepStartedAt >= StepDuration)
+		)
+		// clang-format on
+		{
+			if (this->currentStep + 1 > this->numSteps)
+			{
+				Stop();
+
+				// TODO
+				MS_DUMP("calling notifier->OnRtpProbatorEnded()");
+
+				this->listener->OnRtpProbatorEnded(this);
+
+				return;
+			}
+
+			if (this->currentStep % 2 == 0)
+			{
+				// TODO
+				MS_DUMP("calling notifier->OnRtpProbatorStep()");
+
+				this->listener->OnRtpProbatorStep(this);
+
+				// If the listener stopped us, exit.
+				if (!IsActive())
+					return;
+			}
+
+			++this->currentStep;
+
+			ReloadProbation();
+		}
 	}
 } // namespace RTC

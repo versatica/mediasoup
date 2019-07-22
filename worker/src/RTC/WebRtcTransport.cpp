@@ -1624,7 +1624,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(bwe, "outgoing available bitrate [bitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV("outgoing available bitrate [bitrate:%" PRIu32 "]", availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 	}

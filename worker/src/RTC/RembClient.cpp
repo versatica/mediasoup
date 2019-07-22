@@ -25,7 +25,7 @@ namespace RTC
 		this->rtpProbator = new RTC::RtpProbator(this, 1100);
 
 		// Create the RTP probation timer.
-		this->rtpProbationTimer = new Timer(this);
+		this->rtpProbationScheduleTimer = new Timer(this);
 	}
 
 	RembClient::~RembClient()
@@ -36,22 +36,21 @@ namespace RTC
 		delete this->rtpProbator;
 
 		// Delete the RTP probation timer.
-		delete this->rtpProbationTimer;
+		delete this->rtpProbationScheduleTimer;
 	}
 
 	void RembClient::TransportConnected()
 	{
 		MS_TRACE();
 
-		// TODO: Let's see how to do this.
-		this->rtpProbationTimer->Start(0, 5000);
+		this->rtpProbationScheduleTimer->Start(0, 0);
 	}
 
 	void RembClient::TransportDisconnected()
 	{
 		MS_TRACE();
 
-		this->rtpProbationTimer->Stop();
+		this->rtpProbationScheduleTimer->Stop();
 	}
 
 	void RembClient::ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)
@@ -95,6 +94,13 @@ namespace RTC
 			  this->availableBitrate);
 
 			notify = true;
+
+			// TODO: Let's see.
+			if (this->rtpProbator->IsActive())
+			{
+				this->rtpProbator->Stop();
+				this->rtpProbationScheduleTimer->Start(10000, 0);
+			}
 		}
 
 		if (notify)
@@ -103,8 +109,6 @@ namespace RTC
 
 			this->listener->OnRembClientAvailableBitrate(this, this->availableBitrate);
 		}
-
-		CalculateProbationTargetBitrate();
 	}
 
 	uint32_t RembClient::GetAvailableBitrate()
@@ -135,57 +139,6 @@ namespace RTC
 
 			this->initialAvailableBitrateAt = now;
 			this->availableBitrate          = this->initialAvailableBitrate;
-
-			CalculateProbationTargetBitrate();
-		}
-	}
-
-	// TODO: Remove.
-	inline void RembClient::CalculateProbationTargetBitrate()
-	{
-		MS_TRACE();
-
-		// NOTE: avoid this doing anything until method is deleted.
-		return;
-
-		auto previousProbationTargetBitrate = this->probationTargetBitrate;
-
-		this->probationTargetBitrate = 0;
-
-		if (this->availableBitrate == 0)
-			return;
-
-		uint64_t now             = DepLibUV::GetTime();
-		auto transmissionBitrate = this->transmissionCounter.GetBitrate(now);
-		auto factor =
-		  static_cast<float>(transmissionBitrate) / static_cast<float>(this->availableBitrate);
-
-		// Just consider probation if transmission bitrate is close to available bitrate
-		// (without exceeding it much).
-		if (factor >= 0.8 && factor <= 1.2)
-		{
-			if (this->availableBitrate > transmissionBitrate)
-				this->probationTargetBitrate = 2 * (this->availableBitrate - transmissionBitrate);
-			else
-				this->probationTargetBitrate = 0.5 * transmissionBitrate;
-		}
-		// If there is no bitrate, set available bitrate as probation target bitrate.
-		else if (factor == 0)
-		{
-			this->probationTargetBitrate = this->availableBitrate;
-		}
-
-		if (this->probationTargetBitrate != previousProbationTargetBitrate)
-		{
-			MS_DEBUG_TAG(
-			  bwe,
-			  "probation %s [bitrate:%" PRIu32 ", availableBitrate:%" PRIu32
-			  ", factor:%f, probationTargetBitrate:%" PRIu32 "]",
-			  this->probationTargetBitrate ? "enabled" : "disabled",
-			  transmissionBitrate,
-			  this->availableBitrate,
-			  factor,
-			  this->probationTargetBitrate);
 		}
 	}
 
@@ -194,17 +147,43 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: account it or something, or may be not.
-
 		// Notify the listener.
 		this->listener->OnRembClientSendProbationRtpPacket(this, packet);
+	}
+
+	inline void RembClient::OnRtpProbatorStep(RTC::RtpProbator* /*rtpProbator*/)
+	{
+		MS_TRACE();
+
+		uint32_t probationBitrate{ 0u };
+
+		this->listener->OnRembClientNeedProbationBitrate(this, probationBitrate);
+
+		if (probationBitrate == 0u)
+		{
+			// TODO
+			MS_DUMP("probation bitrate is now 0, stopping RTP probator!!!");
+
+			this->rtpProbator->Stop();
+
+			// TODO: Let's see.
+			this->rtpProbationScheduleTimer->Start(2000, 0);
+		}
+	}
+
+	inline void RembClient::OnRtpProbatorEnded(RTC::RtpProbator* /*rtpProbator*/)
+	{
+		MS_TRACE();
+
+		// TODO: Let's see.
+		this->rtpProbationScheduleTimer->Start(5000, 0);
 	}
 
 	inline void RembClient::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
 
-		if (timer == this->rtpProbationTimer)
+		if (timer == this->rtpProbationScheduleTimer)
 		{
 			// TODO: TMP
 
@@ -215,7 +194,15 @@ namespace RTC
 			this->listener->OnRembClientNeedProbationBitrate(this, probationBitrate);
 
 			if (probationBitrate != 0u)
+			{
 				this->rtpProbator->Start(probationBitrate);
+			}
+			else
+			{
+				// TODO: Let's see.
+				this->rtpProbationScheduleTimer->Start(2000, 0);
+			}
+
 		}
 	}
 } // namespace RTC

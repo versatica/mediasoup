@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RateCalculator.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpProbator.hpp"
 #include "handles/Timer.hpp"
@@ -37,11 +36,12 @@ namespace RTC
 
 	private:
 		void CheckStatus(uint64_t now);
-		void CalculateProbationTargetBitrate(); // TODO
 
 		/* Pure virtual methods inherited from RTC::RtpProbator. */
 	public:
 		void OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator, RTC::RtpPacket* packet) override;
+		void OnRtpProbatorStep(RTC::RtpProbator* rtpProbator) override;
+		void OnRtpProbatorEnded(RTC::RtpProbator* rtpProbator) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -52,15 +52,12 @@ namespace RTC
 		Listener* listener{ nullptr };
 		// Allocated by this.
 		RTC::RtpProbator* rtpProbator{ nullptr };
-		Timer* rtpProbationTimer{ nullptr };
+		Timer* rtpProbationScheduleTimer{ nullptr };
 		// Others.
 		uint32_t initialAvailableBitrate{ 0 };
 		uint64_t initialAvailableBitrateAt{ 0 };
 		uint32_t availableBitrate{ 0 };
 		uint64_t lastEventAt{ 0 };
-		uint32_t probationTargetBitrate{ 0 };
-		RTC::RtpDataCounter transmissionCounter;
-		RTC::RtpDataCounter probationTransmissionCounter;
 	};
 } // namespace RTC
 

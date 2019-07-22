@@ -14,6 +14,8 @@ namespace RTC
 		{
 		public:
 			virtual void OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator, RTC::RtpPacket* packet) = 0;
+			virtual void OnRtpProbatorStep(RTC::RtpProbator* rtpProbator)  = 0;
+			virtual void OnRtpProbatorEnded(RTC::RtpProbator* rtpProbator) = 0;
 		};
 
 	public:
@@ -24,6 +26,9 @@ namespace RTC
 		void Start(uint32_t bitrate);
 		void Stop();
 		bool IsActive() const;
+
+	private:
+		void ReloadProbation();
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -37,6 +42,12 @@ namespace RTC
 		uint8_t* probationPacketBuffer{ nullptr };
 		RTC::RtpPacket* probationPacket{ nullptr };
 		Timer* rtpPeriodicTimer{ nullptr };
+		// Others.
+		uint32_t targetBitrate{ 0u };
+		uint16_t numSteps{ 0u };
+		uint16_t currentStep{ 0u };
+		uint64_t stepStartedAt{ 0u };
+		uint64_t targetRtpInterval{ 0u };
 	}; // namespace RTC
 
 	/* Inline methods. */
