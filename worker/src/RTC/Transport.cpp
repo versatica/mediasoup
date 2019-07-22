@@ -12,9 +12,9 @@
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpProbator.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
@@ -865,6 +865,14 @@ namespace RTC
 
 					if (consumer == nullptr)
 					{
+						// Special case for the RTP probator.
+						if (report->GetSsrc() == RTC::RtpProbatorSsrc)
+						{
+							UserOnRtpProbatorReceiverReport(report);
+
+							continue;
+						}
+
 						MS_DEBUG_TAG(
 						  rtcp,
 						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
@@ -892,6 +900,10 @@ namespace RTC
 
 						if (consumer == nullptr)
 						{
+							// Special case for the RTP probator.
+							if (feedback->GetMediaSsrc() == RTC::RtpProbatorSsrc)
+								break;
+
 							MS_DEBUG_TAG(
 							  rtcp,
 							  "no Consumer found for received %s Feedback packet "
@@ -967,6 +979,10 @@ namespace RTC
 
 				if (consumer == nullptr)
 				{
+					// Special case for the RTP probator.
+					if (feedback->GetMediaSsrc() == RTC::RtpProbatorSsrc)
+						break;
+
 					MS_DEBUG_TAG(
 					  rtcp,
 					  "no Consumer found for received Feedback packet "
@@ -1007,7 +1023,7 @@ namespace RTC
 			{
 				auto* sr = static_cast<RTC::RTCP::SenderReportPacket*>(packet);
 
-				// Even if Sender Report packet can only contains one report...
+				// Even if Sender Report packet can only contains one report.
 				for (auto it = sr->Begin(); it != sr->End(); ++it)
 				{
 					auto& report = (*it);

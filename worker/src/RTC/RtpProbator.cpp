@@ -26,7 +26,7 @@ namespace RTC
 	{
 		0b10010000, 0b01111111, 0, 0, // PayloadType: 127, Sequence Number: 0
 		0, 0, 0, 0,                   // Timestamp: 0
-		0, 0, 0x04, 0xD2,             // SSRC: 1234
+		0, 0, 0, 0,                   // SSRC: 0
 		0xBE, 0xDE, 0, 1,             // Header Extension (One-Byte Extensions)
 		0, 0, 0, 0                    // Space for abs-send-time extension.
 		// TODO: Add space for Transport-CC extension once implemented (this will
@@ -53,6 +53,9 @@ namespace RTC
 		// Create the probation RTP packet.
 		this->probationPacket =
 		  RTC::RtpPacket::Parse(this->probationPacketBuffer, this->probationPacketLen);
+
+		// Set fixed SSRC.
+		this->probationPacket->SetSsrc(RTC::RtpProbatorSsrc);
 
 		// Set random initial RTP seq number and timestamp.
 		this->probationPacket->SetSequenceNumber(
@@ -195,8 +198,8 @@ namespace RTC
 
 		// clang-format off
 		if (
-			(this->currentStep == 0) &&
-			(now - this->stepStartedAt >= 2 * StepDuration)
+			this->currentStep == 0 &&
+			now - this->stepStartedAt >= 2 * StepDuration
 		)
 		// clang-format on
 		{
@@ -206,17 +209,14 @@ namespace RTC
 		}
 		// clang-format off
 		else if (
-			(this->currentStep > 0) &&
-			(now - this->stepStartedAt >= StepDuration)
+			this->currentStep > 0 &&
+			now - this->stepStartedAt >= StepDuration
 		)
 		// clang-format on
 		{
 			if (this->currentStep + 1 > this->numSteps)
 			{
 				Stop();
-
-				// TODO
-				MS_DUMP("calling notifier->OnRtpProbatorEnded()");
 
 				this->listener->OnRtpProbatorEnded(this);
 
@@ -225,9 +225,6 @@ namespace RTC
 
 			if (this->currentStep % 2 == 0)
 			{
-				// TODO
-				MS_DUMP("calling notifier->OnRtpProbatorStep()");
-
 				this->listener->OnRtpProbatorStep(this);
 
 				// If the listener stopped us, exit.

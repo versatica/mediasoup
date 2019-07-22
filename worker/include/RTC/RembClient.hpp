@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpProbator.hpp"
 #include "handles/Timer.hpp"
@@ -31,6 +32,7 @@ namespace RTC
 		void TransportConnected();
 		void TransportDisconnected();
 		void ReceiveRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb);
+		void ReceiveRtpProbatorReceiverReport(RTC::RTCP::ReceiverReport* report);
 		uint32_t GetAvailableBitrate();
 		void RescheduleNextAvailableBitrateEvent();
 
@@ -57,7 +59,7 @@ namespace RTC
 		uint32_t initialAvailableBitrate{ 0 };
 		uint64_t initialAvailableBitrateAt{ 0 };
 		uint32_t availableBitrate{ 0 };
-		uint64_t lastEventAt{ 0 };
+		uint64_t lastAvailableBitrateEventAt{ 0 };
 	};
 } // namespace RTC
 

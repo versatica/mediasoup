@@ -1325,6 +1325,16 @@ namespace RTC
 		this->rembClient->ReceiveRembFeedback(remb);
 	}
 
+	void WebRtcTransport::UserOnRtpProbatorReceiverReport(RTC::RTCP::ReceiverReport* report)
+	{
+		MS_TRACE();
+
+		if (!this->rembClient)
+			return;
+
+		this->rembClient->ReceiveRtpProbatorReceiverReport(report);
+	}
+
 	void WebRtcTransport::UserOnSendSctpData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();

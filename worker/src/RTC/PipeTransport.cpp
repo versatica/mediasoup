@@ -503,6 +503,13 @@ namespace RTC
 		// Do nothing.
 	}
 
+	void PipeTransport::UserOnRtpProbatorReceiverReport(RTC::RTCP::ReceiverReport* /*report*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
 	void PipeTransport::UserOnSendSctpData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();

@@ -11,6 +11,7 @@
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
@@ -114,10 +115,11 @@ namespace RTC
 
 		/* Pure virtual methods that must be implemented by the subclass. */
 	protected:
-		virtual void UserOnNewProducer(RTC::Producer* producer)                = 0;
-		virtual void UserOnNewConsumer(RTC::Consumer* consumer)                = 0;
-		virtual void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) = 0;
-		virtual void UserOnSendSctpData(const uint8_t* data, size_t len)       = 0;
+		virtual void UserOnNewProducer(RTC::Producer* producer)                         = 0;
+		virtual void UserOnNewConsumer(RTC::Consumer* consumer)                         = 0;
+		virtual void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb)          = 0;
+		virtual void UserOnRtpProbatorReceiverReport(RTC::RTCP::ReceiverReport* report) = 0;
+		virtual void UserOnSendSctpData(const uint8_t* data, size_t len)                = 0;
 
 	private:
 		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;

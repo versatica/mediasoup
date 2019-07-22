@@ -7,6 +7,9 @@
 
 namespace RTC
 {
+	// Max RTP length.
+	constexpr uint32_t RtpProbatorSsrc{ 1234u };
+
 	class RtpProbator : public Timer::Listener
 	{
 	public:
