@@ -10,9 +10,6 @@ namespace RTC
 	class RtpProbator : public Timer::Listener
 	{
 	public:
-		static constexpr size_t ProbationRtpPacketSize{ 1000 };
-
-	public:
 		class Listener
 		{
 		public:

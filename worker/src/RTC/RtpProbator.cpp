@@ -74,12 +74,10 @@ namespace RTC
 		MS_ASSERT(!this->rtpPeriodicTimer->IsActive(), "already started");
 		MS_ASSERT(bitrate != 0u, "bitrate cannot be 0");
 
-		// Calculate a proper interval for sending RTP packets of size
-		// RTC::RtpProbator::ProbationRtpPacketSize bytes in order to produce the
-		// given bitrate.
-		auto packetsPerSecond =
-		  static_cast<double>(bitrate / (RTC::RtpProbator::ProbationRtpPacketSize * 8.0f));
-		auto interval = static_cast<uint64_t>(1000.0f / packetsPerSecond);
+		// Calculate a proper interval for sending RTP packets of give sizein order
+		// to produce the given bitrate.
+		auto packetsPerSecond = static_cast<double>(bitrate / (probationPacketLen * 8.0f));
+		auto interval         = static_cast<uint64_t>(1000.0f / packetsPerSecond);
 
 		if (interval < MinProbationInterval)
 			interval = MinProbationInterval;
