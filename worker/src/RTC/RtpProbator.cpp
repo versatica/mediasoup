@@ -19,8 +19,8 @@ namespace RTC
 		0, 0, 0x04, 0xD2,             // SSRC: 1234
 		0xBE, 0xDE, 0, 1,             // Header Extension (One-Byte Extensions)
 		0, 0, 0, 0                    // Space for abs-send-time extension.
-		// TODO: Add space for Transport-CC extension once implemented
-		// (this will make RtpPacket::SetExtensions() not have to shift the payload).
+		// TODO: Add space for Transport-CC extension once implemented (this will
+		// make RtpPacket::SetExtensions() not have to shift the payload).
 	};
 	// clang-format on
 
