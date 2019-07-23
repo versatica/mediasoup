@@ -493,7 +493,7 @@ namespace RTC
 		if (this->producerRtpStream->GetScore() == 0)
 			return 0u;
 
-		if (!this->provisionalTargetSpatialLayer)
+		if (this->provisionalTargetSpatialLayer == -1)
 			return 0u;
 
 		// If already in the preferred layers, do nothing.
