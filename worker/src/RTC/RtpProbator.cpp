@@ -14,7 +14,7 @@ namespace RTC
 
 	// clang-format off
 	// Minimum target bitrate desired.
-	static constexpr uint32_t MinBitrate{ 100000u };
+	static constexpr uint32_t MinBitrate{ 50000u };
 	// Minimum probation interval (in ms).
 	static constexpr uint64_t MinProbationInterval{ 1u };
 	// Duration of each probation step (in ms).
@@ -88,7 +88,7 @@ namespace RTC
 
 		if (bitrate < MinBitrate)
 		{
-			MS_WARN_TAG(
+			MS_WARN_DEBUG(
 			  bwe, "too low bitrate:%" PRIu32 ", using minimum bitrate:%" PRIu32, bitrate, MinBitrate);
 
 			bitrate = MinBitrate;
