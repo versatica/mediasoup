@@ -661,8 +661,8 @@ namespace RTC
 			return 0u;
 		}
 
-		int16_t desiredTargetSpatialLayer{ -1 };
-		int16_t desiredTargetTemporalLayer{ -1 };
+		int16_t desiredSpatialLayer{ -1 };
+		int16_t desiredTemporalLayer{ -1 };
 		uint32_t desiredBitrate{ 0 };
 		uint8_t maxProducerScore{ 0 };
 		auto now = DepLibUV::GetTime();
@@ -699,14 +699,14 @@ namespace RTC
 					break;
 
 				// Set desired target layers.
-				desiredTargetSpatialLayer  = spatialLayer;
-				desiredTargetTemporalLayer = temporalLayer;
+				desiredSpatialLayer  = spatialLayer;
+				desiredTemporalLayer = temporalLayer;
 
 				// If this is the preferred spatial and temporal layer, exit the loops.
 				// clang-format off
 				if (
-					desiredTargetSpatialLayer == this->preferredSpatialLayer &&
-					desiredTargetTemporalLayer == this->preferredTemporalLayer &&
+					desiredSpatialLayer == this->preferredSpatialLayer &&
+					desiredTemporalLayer == this->preferredTemporalLayer &&
 					producerScore >= GoodScore
 				)
 				// clang-format on
@@ -715,66 +715,56 @@ namespace RTC
 				}
 			}
 
+			// TODO: Or this instead?
 			// If this is the preferred or higher spatial layer and has good score,
 			// take it and exit.
-			if (desiredTargetSpatialLayer >= this->preferredSpatialLayer && producerScore >= GoodScore)
-			{
-				break;
-			}
-
-			// TODO: Or this instead?
-			// If this is higher than the current target spatial layer and has good score,
-			// take it and exit.
-			// if (desiredTargetSpatialLayer > this->targetSpatialLayer && producerScore >= GoodScore)
+			// if (desiredSpatialLayer >= this->preferredSpatialLayer && producerScore >= GoodScore)
 			// {
 			// 	break;
 			// }
+
+			// If this is higher than the current spatial layer and has good score,
+			// take it and exit.
+			if (desiredSpatialLayer > this->currentSpatialLayer && producerScore >= GoodScore)
+			{
+				break;
+			}
 		}
 
 	done:
 
 		// No luck.
-		if (desiredTargetSpatialLayer == -1)
+		if (desiredSpatialLayer == -1)
 			return 0u;
 
 		// No change.
 		// clang-format off
 		if (
-			desiredTargetSpatialLayer == this->targetSpatialLayer &&
-			desiredTargetTemporalLayer == this->targetTemporalLayer
+			desiredSpatialLayer == this->currentSpatialLayer &&
+			desiredTemporalLayer == this->encodingContext->GetCurrentTemporalLayer()
 		)
 		// clang-format on
 		{
 			return 0u;
 		}
 
-		// Take the current target bitrate.
-		uint32_t targetBitrate{ 0u };
+		// Get the current bitrate from our own RTP stream.
+		uint32_t currentBitrate = this->rtpStream->GetBitrate(now);
 
-		if (this->targetSpatialLayer > -1)
-		{
-			auto* producerRtpStream = this->producerRtpStreams.at(this->targetSpatialLayer);
-
-			targetBitrate = producerRtpStream->GetBitrate(now, 0, this->targetTemporalLayer);
-		}
-
-		if (desiredBitrate < targetBitrate)
+		if (desiredBitrate < currentBitrate)
 			return 0u;
 
-		uint32_t probationBitrate = desiredBitrate - targetBitrate;
+		uint32_t probationBitrate = desiredBitrate - currentBitrate;
 
 		MS_DEBUG_2TAGS(
 		  bwe,
-		  svc,
-		  "[target layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
-		  ", target bitrate:%" PRIu32 ", desired bitrate:%" PRIu32 ", probation bitrate:%" PRIu32
-		  ", consumerId:%s]",
-		  this->targetSpatialLayer,
-		  this->targetTemporalLayer,
-		  desiredTargetSpatialLayer,
-		  desiredTargetTemporalLayer,
-		  targetBitrate,
-		  desiredBitrate,
+		  simulcast,
+		  "[current layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
+		  ", probation bitrate:%" PRIu32 ", consumerId:%s]",
+		  this->currentSpatialLayer,
+		  this->encodingContext->GetCurrentTemporalLayer(),
+		  desiredSpatialLayer,
+		  desiredTemporalLayer,
 		  probationBitrate,
 		  this->id.c_str());
 

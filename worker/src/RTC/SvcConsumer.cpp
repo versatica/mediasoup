@@ -558,7 +558,7 @@ namespace RTC
 
 		MS_DEBUG_2TAGS(
 		  bwe,
-		  simulcast,
+		  svc,
 		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
 		  ", required bitrate:%" PRIu32 "]",
 		  this->provisionalTargetSpatialLayer,
@@ -628,8 +628,8 @@ namespace RTC
 			return 0u;
 		}
 
-		int16_t desiredTargetSpatialLayer{ -1 };
-		int16_t desiredTargetTemporalLayer{ -1 };
+		int16_t desiredSpatialLayer{ -1 };
+		int16_t desiredTemporalLayer{ -1 };
 		uint32_t desiredBitrate{ 0 };
 		auto now = DepLibUV::GetTime();
 		int16_t spatialLayer{ 0 };
@@ -648,14 +648,14 @@ namespace RTC
 					break;
 
 				// Set desired target layers.
-				desiredTargetSpatialLayer  = spatialLayer;
-				desiredTargetTemporalLayer = temporalLayer;
+				desiredSpatialLayer  = spatialLayer;
+				desiredTemporalLayer = temporalLayer;
 
 				// If this is the preferred spatial and temporal layer, exit the loops.
 				// clang-format off
 				if (
-					desiredTargetSpatialLayer == this->preferredSpatialLayer &&
-					desiredTargetTemporalLayer == this->preferredTemporalLayer
+					desiredSpatialLayer == this->preferredSpatialLayer &&
+					desiredTemporalLayer == this->preferredTemporalLayer
 				)
 				// clang-format on
 				{
@@ -663,70 +663,53 @@ namespace RTC
 				}
 			}
 
-			// If this is the preferred or higher spatial layer, take it and exit.
-			if (desiredTargetSpatialLayer >= this->preferredSpatialLayer)
-				break;
-
 			// TODO: Or this instead?
-			// If this is higher than the current target spatial layer, take it and
-			// exit.
-			// if (desiredTargetSpatialLayer > this->encodingContext->GetTargetSpatialLayer())
-			// {
+			// If this is the preferred or higher spatial layer, take it and exit.
+			// if (desiredSpatialLayer >= this->preferredSpatialLayer)
 			// 	break;
-			// }
+
+			// If this is higher than the current spatial layer, take it and
+			// exit.
+			if (desiredSpatialLayer > this->encodingContext->GetCurrentSpatialLayer())
+			{
+				break;
+			}
 		}
 
 	done:
 
 		// No luck.
-		if (desiredTargetSpatialLayer == -1)
+		if (desiredSpatialLayer == -1)
 			return 0u;
 
 		// No change.
 		// clang-format off
 		if (
-			desiredTargetSpatialLayer == this->encodingContext->GetTargetSpatialLayer() &&
-			desiredTargetTemporalLayer == this->encodingContext->GetTargetTemporalLayer()
+			desiredSpatialLayer == this->encodingContext->GetCurrentSpatialLayer() &&
+			desiredTemporalLayer == this->encodingContext->GetCurrentTemporalLayer()
 		)
 		// clang-format on
 		{
 			return 0u;
 		}
 
-		// Take the current bitrate from the sending RTP stream.
-		auto currentBitrate = this->rtpStream->GetBitrate(now);
+		// Get the current bitrate from our own RTP stream.
+		uint32_t currentBitrate = this->rtpStream->GetBitrate(now);
 
-		if (currentBitrate >= desiredBitrate)
+		if (desiredBitrate < currentBitrate)
 			return 0u;
 
-		// Take the current target bitrate.
-		uint32_t targetBitrate{ 0u };
-
-		if (this->encodingContext->GetTargetSpatialLayer() > -1)
-		{
-			targetBitrate = this->producerRtpStream->GetBitrate(
-			  now,
-			  this->encodingContext->GetTargetSpatialLayer(),
-			  this->encodingContext->GetTargetTemporalLayer());
-		}
-
-		if (desiredBitrate < targetBitrate)
-			return 0u;
-
-		uint32_t probationBitrate = desiredBitrate - targetBitrate;
+		uint32_t probationBitrate = desiredBitrate - currentBitrate;
 
 		MS_DEBUG_2TAGS(
 		  bwe,
 		  svc,
-		  "[target layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
-		  ", target bitrate:%" PRIu32 ", desired bitrate:%" PRIu32 ", probation bitrate:%" PRIu32
-		  ", consumerId:%s]",
-		  this->encodingContext->GetTargetSpatialLayer(),
-		  this->encodingContext->GetTargetTemporalLayer(),
-		  desiredTargetSpatialLayer,
-		  desiredTargetTemporalLayer,
-		  targetBitrate,
-		  desiredBitrate,
+		  "[current layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
+		  ", probation bitrate:%" PRIu32 ", consumerId:%s]",
+		  this->encodingContext->GetCurrentSpatialLayer(),
+		  this->encodingContext->GetCurrentTemporalLayer(),
+		  desiredSpatialLayer,
+		  desiredTemporalLayer,
 		  probationBitrate,
 		  this->id.c_str());
 

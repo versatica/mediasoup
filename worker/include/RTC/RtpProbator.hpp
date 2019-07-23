@@ -28,7 +28,7 @@ namespace RTC
 	public:
 		void Start(uint32_t bitrate);
 		void Stop();
-		bool IsActive() const;
+		bool IsRunning() const;
 		uint32_t GetTargetBitrate() const;
 
 	private:
@@ -47,18 +47,20 @@ namespace RTC
 		RTC::RtpPacket* probationPacket{ nullptr };
 		Timer* rtpPeriodicTimer{ nullptr };
 		// Others.
+		bool running{ false };
 		uint32_t targetBitrate{ 0u };
 		uint16_t numSteps{ 0u };
 		uint16_t currentStep{ 0u };
 		uint64_t stepStartedAt{ 0u };
+		uint32_t stepNumPacket{ 0u };
 		uint64_t targetRtpInterval{ 0u };
 	}; // namespace RTC
 
 	/* Inline methods. */
 
-	inline bool RtpProbator::IsActive() const
+	inline bool RtpProbator::IsRunning() const
 	{
-		return this->rtpPeriodicTimer->IsActive();
+		return this->running;
 	}
 
 	inline uint32_t RtpProbator::GetTargetBitrate() const

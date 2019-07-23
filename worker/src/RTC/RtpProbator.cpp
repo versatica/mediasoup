@@ -19,6 +19,8 @@ namespace RTC
 	static constexpr uint64_t MinProbationInterval{ 1u };
 	// Duration of each probation step (in ms).
 	static constexpr uint64_t StepDuration{ 500u };
+	// Number of RTP packets to send in each step at the calculated bitrate.
+	static constexpr uint32_t StepNumPackets{ 50u };
 	// Bitrate jump between steps (in bps).
 	static constexpr uint32_t StepBitrateJump{ 150000u };
 	// Probation RTP header.
@@ -84,7 +86,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(!this->rtpPeriodicTimer->IsActive(), "already started");
+		MS_ASSERT(!this->running, "already running");
+
+		this->running = true;
 
 		if (bitrate < MinBitrate)
 		{
@@ -96,7 +100,7 @@ namespace RTC
 
 		this->targetBitrate = bitrate;
 		this->numSteps = static_cast<uint16_t>(std::ceil(bitrate / static_cast<float>(StepBitrateJump)));
-		this->currentStep = 0; // Begin with 0 on purpose.
+		this->currentStep = 0u; // Begin with 0 on purpose.
 
 		double targetPacketsPerSecond = bitrate / (this->probationPacketLen * 8.0f);
 
@@ -121,16 +125,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->rtpPeriodicTimer->IsActive())
+		if (!this->running)
 			return;
+
+		this->running = false;
 
 		this->rtpPeriodicTimer->Stop();
 
-		this->targetBitrate     = 0;
-		this->numSteps          = 0;
-		this->currentStep       = 0;
-		this->stepStartedAt     = 0;
-		this->targetRtpInterval = 0;
+		this->targetBitrate     = 0u;
+		this->numSteps          = 0u;
+		this->currentStep       = 0u;
+		this->stepStartedAt     = 0u;
+		this->stepNumPacket     = 0u;
+		this->targetRtpInterval = 0u;
 
 		MS_DEBUG_TAG(bwe, "probation stopped");
 	}
@@ -142,7 +149,7 @@ namespace RTC
 		uint64_t rtpInterval;
 		uint32_t bitrate;
 
-		if (this->currentStep == 0)
+		if (this->currentStep == 0u)
 		{
 			bitrate = MinBitrate;
 
@@ -170,6 +177,7 @@ namespace RTC
 		  rtpInterval);
 
 		this->stepStartedAt = DepLibUV::GetTime();
+		this->stepNumPacket = 0u;
 
 		this->rtpPeriodicTimer->Start(rtpInterval, rtpInterval);
 	}
@@ -178,63 +186,87 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Increase RTP seq number and timestamp.
-		auto seq       = this->probationPacket->GetSequenceNumber();
-		auto timestamp = this->probationPacket->GetTimestamp();
-
-		// TODO: Properly increment timestamp. We know the interval (ms) via
-		// this->rtpPeriodicTimer->GetRepeat().
-		// NOTE: Is it worth it?
-		++seq;
-		timestamp += 20u;
-
-		this->probationPacket->SetSequenceNumber(seq);
-		this->probationPacket->SetTimestamp(timestamp);
-
-		// Notify the listener.
-		this->listener->OnRtpProbatorSendRtpPacket(this, this->probationPacket);
-
 		uint64_t now = DepLibUV::GetTime();
 
-		// clang-format off
-		if (
-			this->currentStep == 0 &&
-			now - this->stepStartedAt >= 2 * StepDuration
-		)
-		// clang-format on
+		// Just send up to StepNumPackets per step.
+		if (++this->stepNumPacket <= StepNumPackets)
 		{
-			++this->currentStep;
+			// Increase RTP seq number and timestamp.
+			auto seq       = this->probationPacket->GetSequenceNumber();
+			auto timestamp = this->probationPacket->GetTimestamp();
 
-			ReloadProbation();
+			// TODO: Properly increment timestamp. We know the interval (ms) via
+			// this->rtpPeriodicTimer->GetRepeat().
+			// NOTE: Is it worth it?
+			++seq;
+			timestamp += 20u;
+
+			this->probationPacket->SetSequenceNumber(seq);
+			this->probationPacket->SetTimestamp(timestamp);
+
+			// Notify the listener.
+			this->listener->OnRtpProbatorSendRtpPacket(this, this->probationPacket);
 		}
-		// clang-format off
-		else if (
-			this->currentStep > 0 &&
-			now - this->stepStartedAt >= StepDuration
-		)
-		// clang-format on
+		else if (this->stepNumPacket == StepNumPackets + 1)
 		{
-			if (this->currentStep + 1 > this->numSteps)
-			{
-				Stop();
+			// This is to avoid entering this condition again.
+			++this->stepNumPacket;
 
-				this->listener->OnRtpProbatorEnded(this);
+			uint64_t elapsedStepTime = now - this->stepStartedAt;
+
+			if (elapsedStepTime < StepDuration)
+			{
+				uint64_t remainingStepDuration = StepDuration - (now - this->stepStartedAt);
+
+				this->rtpPeriodicTimer->Start(remainingStepDuration, 0);
+
+				// TODO: REMOVE
+				// MS_DUMP(
+				// 	"no more packets sent on this step [currentStep:%" PRIu16 ", remainingStepDuration:%"
+				// PRIu64 "]", 	this->currentStep, 	remainingStepDuration);
 
 				return;
 			}
+		}
 
-			if (this->currentStep >= 1)
+		// If step duration elapsed or the timer does not currently have 'repeat', move to
+		// next step or end.
+		// NOTE: In theory the second condition should never happen, but just in case.
+		if (now - this->stepStartedAt >= StepDuration || !this->rtpPeriodicTimer->GetRepeat())
+		{
+			// TODO: REMOVE
+			// if (now - this->stepStartedAt >= StepDuration)
+			// 	MS_DUMP("----------------------- now - this->stepStartedAt >= StepDuration");
+			// else
+			// 	MS_DUMP("----------------------------------------------- GET_REPEAT = 0 !!!");
+
+			if (this->currentStep == 0u)
 			{
+				++this->currentStep;
+
+				ReloadProbation();
+			}
+			else
+			{
+				if (this->currentStep + 1 > this->numSteps)
+				{
+					Stop();
+
+					this->listener->OnRtpProbatorEnded(this);
+
+					return;
+				}
+
 				this->listener->OnRtpProbatorStep(this);
 
 				// If the listener stopped us, exit.
-				if (!IsActive())
+				if (!IsRunning())
 					return;
+
+				++this->currentStep;
+
+				ReloadProbation();
 			}
-
-			++this->currentStep;
-
-			ReloadProbation();
 		}
 	}
 } // namespace RTC

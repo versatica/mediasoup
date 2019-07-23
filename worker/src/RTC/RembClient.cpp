@@ -118,7 +118,7 @@ namespace RTC
 
 		auto fractionLost = report->GetFractionLost();
 
-		if (this->rtpProbator->IsActive() && fractionLost >= RtpProbationMaxFractionLost)
+		if (this->rtpProbator->IsRunning() && fractionLost >= RtpProbationMaxFractionLost)
 		{
 			MS_DEBUG_TAG(bwe, "stopping RTP probator due to probation fraction lost:%" PRIu8, fractionLost);
 
