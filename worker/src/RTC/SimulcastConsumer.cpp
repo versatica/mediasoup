@@ -649,6 +649,18 @@ namespace RTC
 		if (!RTC::Consumer::IsActive())
 			return 0u;
 
+		// If target layers are different than current layers then we are in upgrade
+		// progress, so don't request probation bitrate.
+		// clang-format off
+		if (
+			this->targetSpatialLayer != this->currentSpatialLayer ||
+			this->targetTemporalLayer != this->encodingContext->GetCurrentTemporalLayer()
+		)
+		// clang-format on
+		{
+			return 0u;
+		}
+
 		int16_t desiredTargetSpatialLayer{ -1 };
 		int16_t desiredTargetTemporalLayer{ -1 };
 		uint32_t desiredBitrate{ 0 };
