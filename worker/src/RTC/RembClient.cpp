@@ -99,13 +99,9 @@ namespace RTC
 
 			notify = true;
 
-			if (this->rtpProbator->IsActive())
-			{
-				this->rtpProbator->Stop();
-
-				// Try again after RtpProbationScheduleFailureTimeout.
-				this->rtpProbationScheduleTimer->Start(RtpProbationScheduleFailureTimeout, 0);
-			}
+			// Reset the RTP probator to the worst case no matter it's running or not.
+			this->rtpProbator->Stop();
+			this->rtpProbationScheduleTimer->Start(RtpProbationScheduleFailureTimeout, 0);
 		}
 
 		if (notify)

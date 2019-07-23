@@ -721,9 +721,7 @@ namespace RTC
 
 		uint32_t probationBitrate = desiredBitrate - targetBitrate;
 
-		MS_DEBUG_2TAGS(
-		  bwe,
-		  svc,
+		MS_DEBUG_DEV(
 		  "[target layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
 		  ", target bitrate:%" PRIu32 ", desired bitrate:%" PRIu32 ", probation bitrate:%" PRIu32
 		  ", consumerId:%s]",
