@@ -428,8 +428,10 @@ namespace RTC
 			}
 
 			// If this is the preferred or higher spatial layer, take it and exit.
-			if (spatialLayer >= this->preferredSpatialLayer)
+			if (this->provisionalTargetSpatialLayer >= this->preferredSpatialLayer)
+			{
 				break;
+			}
 		}
 
 	done:
@@ -678,8 +680,16 @@ namespace RTC
 			}
 
 			// If this is the preferred or higher spatial layer, take it and exit.
-			if (spatialLayer >= this->preferredSpatialLayer)
+			if (desiredTargetSpatialLayer >= this->preferredSpatialLayer)
 				break;
+
+			// TODO: Or this instead?
+			// If this is higher than the current target spatial layer, take it and
+			// exit.
+			// if (desiredTargetSpatialLayer > this->encodingContext->GetTargetSpatialLayer())
+			// {
+			// 	break;
+			// }
 		}
 
 	done:
@@ -721,7 +731,9 @@ namespace RTC
 
 		uint32_t probationBitrate = desiredBitrate - targetBitrate;
 
-		MS_DEBUG_DEV(
+		MS_DEBUG_2TAGS(
+		  bwe,
+		  svc,
 		  "[target layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
 		  ", target bitrate:%" PRIu32 ", desired bitrate:%" PRIu32 ", probation bitrate:%" PRIu32
 		  ", consumerId:%s]",

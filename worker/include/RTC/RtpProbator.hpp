@@ -29,6 +29,7 @@ namespace RTC
 		void Start(uint32_t bitrate);
 		void Stop();
 		bool IsActive() const;
+		uint32_t GetTargetBitrate() const;
 
 	private:
 		void ReloadProbation();
@@ -58,6 +59,11 @@ namespace RTC
 	inline bool RtpProbator::IsActive() const
 	{
 		return this->rtpPeriodicTimer->IsActive();
+	}
+
+	inline uint32_t RtpProbator::GetTargetBitrate() const
+	{
+		return this->targetBitrate;
 	}
 } // namespace RTC
 

@@ -18,7 +18,7 @@ namespace RTC
 	// Minimum probation interval (in ms).
 	static constexpr uint64_t MinProbationInterval{ 1u };
 	// Duration of each probation step (in ms).
-	static constexpr uint64_t StepDuration{ 750u };
+	static constexpr uint64_t StepDuration{ 500u };
 	// Bitrate jump between steps (in bps).
 	static constexpr uint32_t StepBitrateJump{ 150000u };
 	// Probation RTP header.

@@ -177,9 +177,13 @@ namespace RTC
 
 		this->listener->OnRembClientNeedProbationBitrate(this, probationBitrate);
 
-		if (probationBitrate == 0u)
+		if (probationBitrate < this->rtpProbator->GetTargetBitrate())
 		{
-			MS_DEBUG_TAG(bwe, "needed probation bitrate is now 0, stopping RTP probator");
+			MS_DEBUG_TAG(
+			  bwe,
+			  "needed probation bitrate decreased from %" PRIu32 " to %" PRIu32 ", stopping RTP probator",
+			  this->rtpProbator->GetTargetBitrate(),
+			  probationBitrate);
 
 			this->rtpProbator->Stop();
 
