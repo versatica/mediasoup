@@ -66,7 +66,7 @@ namespace RTC
 		virtual void SetExternallyManagedBitrate();
 		virtual uint16_t GetBitratePriority() const;
 		virtual uint32_t UseAvailableBitrate(uint32_t bitrate);
-		virtual uint32_t IncreaseLayer(uint32_t bitrate);
+		virtual uint32_t IncreaseTemporalLayer(uint32_t bitrate);
 		virtual void ApplyLayers();
 		virtual uint32_t GetProbationBitrate() const;
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)       = 0;

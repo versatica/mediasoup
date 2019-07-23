@@ -916,7 +916,7 @@ namespace RTC
 				  remainingBitrate,
 				  consumer->id.c_str());
 
-				auto usedBitrate = consumer->IncreaseLayer(remainingBitrate);
+				auto usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate);
 
 				MS_ASSERT(usedBitrate <= remainingBitrate, "Consumer used more layer bitrate than given");
 

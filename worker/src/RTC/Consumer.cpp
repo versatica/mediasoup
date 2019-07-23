@@ -355,7 +355,7 @@ namespace RTC
 		return 0;
 	}
 
-	uint32_t Consumer::IncreaseLayer(uint32_t /*bitrate*/)
+	uint32_t Consumer::IncreaseTemporalLayer(uint32_t /*bitrate*/)
 	{
 		MS_TRACE();
 
