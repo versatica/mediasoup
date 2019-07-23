@@ -13,8 +13,8 @@ namespace RTC
 	static constexpr uint64_t MaxElapsedTime{ 5000u };                      // In ms.
 	static constexpr uint64_t InitialAvailableBitrateDuration{ 8000u };     // in ms.
 	static constexpr size_t RtpProbationPacketLen{ 1100u };                 // in bytes.
-	static constexpr uint64_t RtpProbationScheduleSuccessTimeout{ 2000u };  // In ms.
-	static constexpr uint64_t RtpProbationScheduleFailureTimeout{ 10000u }; // In ms.
+	static constexpr uint64_t RtpProbationScheduleSuccessTimeout{ 4000u };  // In ms.
+	static constexpr uint64_t RtpProbationScheduleFailureTimeout{ 12000u }; // In ms.
 	static constexpr uint8_t RtpProbationMaxFractionLost{ 10u };
 
 	/* Instance methods. */
