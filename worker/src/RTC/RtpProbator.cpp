@@ -88,7 +88,7 @@ namespace RTC
 
 		if (bitrate < MinBitrate)
 		{
-			MS_WARN_DEBUG(
+			MS_DEBUG_TAG(
 			  bwe, "too low bitrate:%" PRIu32 ", using minimum bitrate:%" PRIu32, bitrate, MinBitrate);
 
 			bitrate = MinBitrate;
