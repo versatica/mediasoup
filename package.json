@@ -45,18 +45,18 @@
     "debug": "^4.1.1",
     "h264-profile-level-id": "^1.0.0",
     "netstring": "^0.3.0",
-    "random-number": "0.0.9",
+    "random-number": "^0.0.9",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "eslint": "^6.0.1",
-    "eslint-plugin-jest": "^22.12.0",
+    "eslint": "^6.1.0",
+    "eslint-plugin-jest": "^22.13.6",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
     "jest": "^24.8.0",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^5.0.0",
-    "sctp": "0.0.17"
+    "sctp": "^0.0.18"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
