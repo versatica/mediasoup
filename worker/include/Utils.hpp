@@ -311,6 +311,7 @@ namespace Utils
 		static uint64_t Ntp2TimeMs(Time::Ntp ntp);
 		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp);
 		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2);
+		static uint32_t TimeMsToAbsSendTime(uint64_t ms);
 	};
 
 	inline Time::Ntp Time::TimeMs2Ntp(uint64_t ms)
@@ -350,6 +351,11 @@ namespace Utils
 	inline uint32_t Time::LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2)
 	{
 		return IsNewerTimestamp(timestamp1, timestamp2) ? timestamp1 : timestamp2;
+	}
+
+	inline uint32_t Time::TimeMsToAbsSendTime(uint64_t ms)
+	{
+		return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
 	}
 } // namespace Utils
 

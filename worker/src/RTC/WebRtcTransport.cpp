@@ -1658,50 +1658,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static uint8_t buffer[4096];
-		static std::vector<RTC::RtpPacket::GenericExtension> extensions;
+		// Update abs-send-time if present.
+		auto now = DepLibUV::GetTime();
 
-		// This happens just once.
-		if (extensions.capacity() != 24)
-			extensions.reserve(24);
+		packet->UpdateAbsSendTime(now);
 
-		extensions.clear();
-
-		uint8_t extenLen;
-		uint8_t* extenValue;
-		uint8_t* bufferPtr{ buffer };
-		auto now         = DepLibUV::GetTime();
-		auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
-
-		// If this is the first probation packet we must manually add the required
-		// RTP header extensions. Otherwise we just need to override it. Let check
-		// it by looking for the abs-send-time extension.
-		extenValue = packet->GetExtension(
-		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
-
-		if (extenValue && extenLen == 3)
-		{
-			// Update http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
-			Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
-		}
-		else
-		{
-			// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
-			extenLen = 3u;
-
-			Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
-
-			extensions.emplace_back(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
-
-			// Set the new extensions into the packet using One-Byte format.
-			packet->SetExtensions(1, extensions);
-
-			// Needed to detect it in next probation packet.
-			packet->SetAbsSendTimeExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
-		}
-
+		// Send the packet.
 		SendRtpPacket(packet);
 	}
 

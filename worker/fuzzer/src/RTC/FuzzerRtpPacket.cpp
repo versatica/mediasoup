@@ -64,6 +64,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->SetAbsSendTimeExtensionId(3);
 	packet->GetExtension(3, extenLen);
 	packet->ReadAbsSendTime(absSendTime);
+	packet->UpdateAbsSendTime(12345678);
 
 	packet->SetSsrcAudioLevelExtensionId(1);
 	packet->GetExtension(1, extenLen);
@@ -129,6 +130,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->SetAbsSendTimeExtensionId(13);
 	packet->GetExtension(13, extenLen);
 	packet->ReadAbsSendTime(absSendTime);
+	packet->UpdateAbsSendTime(12345678);
 
 	packet->SetSsrcAudioLevelExtensionId(11);
 	packet->GetExtension(11, extenLen);

@@ -1067,7 +1067,7 @@ namespace RTC
 					extenLen = 3u;
 
 					auto now         = DepLibUV::GetTime();
-					auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
+					auto absSendTime = Utils::Time::TimeMsToAbsSendTime(now);
 
 					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
 

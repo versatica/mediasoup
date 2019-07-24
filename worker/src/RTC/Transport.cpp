@@ -13,7 +13,6 @@
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpProbator.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
@@ -1412,21 +1411,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint8_t extenLen;
-		uint8_t* extenValue;
+		// Update abs-send-time if present.
+		auto now = DepLibUV::GetTime();
 
-		// Update http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time if present.
-		extenValue = packet->GetExtension(
-		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
+		packet->UpdateAbsSendTime(now);
 
-		if (extenValue && extenLen == 3)
-		{
-			auto now         = DepLibUV::GetTime();
-			auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
-
-			Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
-		}
-
+		// Send the packet.
 		SendRtpPacket(packet);
 	}
 

@@ -5,8 +5,10 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <cmath>   // std::ceil(), std::round(), std::floor()
 #include <cstring> // std::memcpy()
+#include <vector>
 
 namespace RTC
 {
@@ -63,6 +65,32 @@ namespace RTC
 		this->probationPacket->SetSequenceNumber(
 		  static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0, 65535)));
 		this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt(0, 4294967295));
+
+		// Add BWE related RTP header extensions.
+		static uint8_t buffer[4096];
+
+		std::vector<RTC::RtpPacket::GenericExtension> extensions;
+		uint8_t extenLen;
+		uint8_t* bufferPtr{ buffer };
+
+		// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+		// NOTE: Just the corresponding id and space for its value.
+		{
+			extenLen = 3u;
+
+			extensions.emplace_back(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+
+			// Not needed since this is the latest added extension.
+			// bufferPtr += extenLen;
+		}
+
+		// Set the extensions into the packet using One-Byte format.
+		this->probationPacket->SetExtensions(1, extensions);
+
+		// Set our abs-send-time extension id.
+		this->probationPacket->SetAbsSendTimeExtensionId(
+		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
 
 		// Create the RTP periodic timer.
 		this->rtpPeriodicTimer = new Timer(this);

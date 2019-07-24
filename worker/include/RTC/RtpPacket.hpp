@@ -155,7 +155,8 @@ namespace RTC
 		void SetVideoOrientationExtensionId(uint8_t id);
 		bool ReadMid(std::string& mid) const;
 		bool ReadRid(std::string& rid) const;
-		bool ReadAbsSendTime(uint32_t& time) const;
+		bool ReadAbsSendTime(uint32_t& absSendtime) const;
+		bool UpdateAbsSendTime(uint64_t ms);
 		bool ReadFrameMarking(RtpPacket::FrameMarking** frameMarking, uint8_t& length) const;
 		bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
 		bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
@@ -428,7 +429,7 @@ namespace RTC
 		return false;
 	}
 
-	inline bool RtpPacket::ReadAbsSendTime(uint32_t& time) const
+	inline bool RtpPacket::ReadAbsSendTime(uint32_t& absSendtime) const
 	{
 		uint8_t extenLen;
 		uint8_t* extenValue = GetExtension(this->absSendTimeExtensionId, extenLen);
@@ -436,7 +437,22 @@ namespace RTC
 		if (!extenValue || extenLen != 3)
 			return false;
 
-		time = Utils::Byte::Get3Bytes(extenValue, 0);
+		absSendtime = Utils::Byte::Get3Bytes(extenValue, 0);
+
+		return true;
+	}
+
+	inline bool RtpPacket::UpdateAbsSendTime(uint64_t ms)
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue = GetExtension(this->absSendTimeExtensionId, extenLen);
+
+		if (!extenValue || extenLen != 3)
+			return false;
+
+		auto absSendTime = Utils::Time::TimeMsToAbsSendTime(ms);
+
+		Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
 
 		return true;
 	}
