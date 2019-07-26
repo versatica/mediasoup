@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_STREAM_HPP
 
 #include "common.hpp"
+#include "DepLibUV.hpp"
 #include "json.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
@@ -84,6 +85,7 @@ namespace RTC
 		uint64_t GetSenderReportNtpMs() const;
 		uint32_t GetSenderReportTs() const;
 		uint8_t GetScore() const;
+		uint64_t GetActiveTime() const;
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -124,7 +126,7 @@ namespace RTC
 
 	private:
 		// Score related.
-		uint8_t score{ 0 };
+		uint8_t score{ 0u };
 		std::vector<uint8_t> scores;
 		// RTP stream data information for score calculation.
 		int32_t totalSourceLoss{ 0 };
@@ -132,6 +134,8 @@ namespace RTC
 		size_t totalSentPackets{ 0 };
 		// Whether at least a RTP packet has been received.
 		bool started{ false };
+		// Last time since the stream is active.
+		uint64_t activeSince{ 0u };
 	}; // namespace RTC
 
 	/* Inline instance methods. */
@@ -230,6 +234,11 @@ namespace RTC
 	inline uint8_t RtpStream::GetScore() const
 	{
 		return this->score;
+	}
+
+	inline uint64_t RtpStream::GetActiveTime() const
+	{
+		return DepLibUV::GetTime() - this->activeSince;
 	}
 
 	inline uint32_t RtpStream::GetExpectedPackets() const

@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpStreamRecv.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Codecs.hpp"

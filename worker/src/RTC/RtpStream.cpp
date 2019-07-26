@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpStream.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/SeqManager.hpp"
 
@@ -19,7 +18,7 @@ namespace RTC
 
 	RtpStream::RtpStream(
 	  RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, uint8_t initialScore)
-	  : listener(listener), params(params), score(initialScore)
+	  : listener(listener), params(params), score(initialScore), activeSince(DepLibUV::GetTime())
 	{
 		MS_TRACE();
 	}
@@ -125,6 +124,10 @@ namespace RTC
 			auto previousScore = this->score;
 
 			this->score = score;
+
+			// If previous score was 0 (and new one is not 0) then update activeSince.
+			if (previousScore == 0u)
+				this->activeSince = DepLibUV::GetTime();
 
 			// Notify the listener.
 			if (notify)
@@ -251,6 +254,10 @@ namespace RTC
 			  score,
 			  previousScore,
 			  this->score);
+
+			// If previous score was 0 (and new one is not 0) then update activeSince.
+			if (previousScore == 0u)
+				this->activeSince = DepLibUV::GetTime();
 
 			this->listener->OnRtpStreamScore(this, this->score, previousScore);
 		}
