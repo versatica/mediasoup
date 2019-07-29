@@ -1533,6 +1533,7 @@ class PBXFileReference(XCFileLikeElement, XCContainerPortal, XCRemoteObject):
         'xcdatamodeld':'wrapper.xcdatamodeld',
         'xib':         'file.xib',
         'y':           'sourcecode.yacc',
+        'tbd':         'sourcecode.text-based-dylib-definition',
       }
 
       prop_map = {
