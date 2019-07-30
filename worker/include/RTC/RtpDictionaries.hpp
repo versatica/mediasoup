@@ -79,7 +79,7 @@ namespace RTC
 		static std::map<Subtype, std::string> subtype2String;
 
 	public:
-		RtpCodecMimeType(){};
+		RtpCodecMimeType() = default;
 
 		bool operator==(const RtpCodecMimeType& other) const
 		{
@@ -149,6 +149,7 @@ namespace RTC
 	class RtcpFeedback
 	{
 	public:
+		RtcpFeedback() = default;
 		explicit RtcpFeedback(json& data);
 
 		void FillJson(json& jsonObject) const;
@@ -161,7 +162,7 @@ namespace RTC
 	class RtpCodecParameters
 	{
 	public:
-		RtpCodecParameters(){};
+		RtpCodecParameters() = default;
 		explicit RtpCodecParameters(json& data);
 
 		void FillJson(json& jsonObject) const;
@@ -181,7 +182,7 @@ namespace RTC
 	class RtpRtxParameters
 	{
 	public:
-		RtpRtxParameters(){};
+		RtpRtxParameters() = default;
 		explicit RtpRtxParameters(json& data);
 
 		void FillJson(json& jsonObject) const;
@@ -193,7 +194,7 @@ namespace RTC
 	class RtpEncodingParameters
 	{
 	public:
-		RtpEncodingParameters(){};
+		RtpEncodingParameters() = default;
 		explicit RtpEncodingParameters(json& data);
 
 		void FillJson(json& jsonObject) const;
@@ -217,6 +218,7 @@ namespace RTC
 	class RtpHeaderExtensionParameters
 	{
 	public:
+		RtpHeaderExtensionParameters() = default;
 		explicit RtpHeaderExtensionParameters(json& data);
 
 		void FillJson(json& jsonObject) const;
@@ -232,7 +234,7 @@ namespace RTC
 	class RtcpParameters
 	{
 	public:
-		RtcpParameters(){};
+		RtcpParameters() = default;
 		explicit RtcpParameters(json& data);
 
 		void FillJson(json& jsonObject) const;
@@ -266,7 +268,7 @@ namespace RTC
 		static std::map<Type, std::string> type2String;
 
 	public:
-		RtpParameters(){};
+		RtpParameters() = default;
 		explicit RtpParameters(json& data);
 
 		void FillJson(json& jsonObject) const;

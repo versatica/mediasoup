@@ -12,7 +12,7 @@ namespace RTC
 	class SctpStreamParameters
 	{
 	public:
-		SctpStreamParameters(){};
+		SctpStreamParameters() = default;
 		explicit SctpStreamParameters(json& data);
 
 		void FillJson(json& jsonObject) const;

@@ -24,7 +24,7 @@ namespace RTC
 	private:
 		struct NackInfo
 		{
-			NackInfo(){};
+			NackInfo() = default;
 			explicit NackInfo(uint16_t seq, uint16_t sendAtSeq);
 
 			uint16_t seq{ 0 };
