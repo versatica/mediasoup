@@ -59,7 +59,7 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void Run();
+		void TransportConnected();
 		size_t GetMaxSctpMessageSize() const;
 		SctpState GetState() const;
 		void ProcessSctpData(const uint8_t* data, size_t len);

@@ -116,11 +116,13 @@ namespace RTC
 		delete[] this->messageBuffer;
 	}
 
-	void SctpAssociation::Run()
+	void SctpAssociation::TransportConnected()
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->state == SctpState::NEW, "not in new SCTP state");
+		// Just run the SCTP stack if our state is 'new'.
+		if (this->state != SctpState::NEW)
+			return;
 
 		try
 		{
