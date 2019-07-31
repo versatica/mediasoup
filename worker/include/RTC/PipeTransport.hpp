@@ -30,22 +30,11 @@ namespace RTC
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
+		void SendSctpData(const uint8_t* data, size_t len) override;
 		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnSctpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-
-		/* Pure virtual methods inherited from RTC::Transport. */
-	private:
-		void UserOnNewProducer(RTC::Producer* producer) override;
-		void UserOnNewConsumer(RTC::Consumer* consumer) override;
-		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
-		void UserOnRtpProbatorReceiverReport(RTC::RTCP::ReceiverReport* report) override;
-		void UserOnSendSctpData(const uint8_t* data, size_t len) override;
-
-		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
-	public:
-		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:

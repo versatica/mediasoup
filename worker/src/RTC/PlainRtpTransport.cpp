@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/PlainRtpTransport.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -14,7 +13,7 @@ namespace RTC
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PlainRtpTransport::PlainRtpTransport(
 	  const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener)
+	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
 
@@ -94,16 +93,9 @@ namespace RTC
 				// This may throw.
 				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 			}
-
-			// May create SCTP association.
-			CreateSctpAssociation(data);
 		}
 		catch (const MediaSoupError& error)
 		{
-			// Must delete everything since the destructor won't be called.
-
-			DestroySctpAssociation();
-
 			delete this->udpSocket;
 			this->udpSocket = nullptr;
 
@@ -118,16 +110,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Must delete the SCTP association first since it will generate SCTP packets.
-		DestroySctpAssociation();
-
 		delete this->udpSocket;
+		this->udpSocket = nullptr;
 
 		delete this->rtcpUdpSocket;
+		this->rtcpUdpSocket = nullptr;
 
 		delete this->tuple;
+		this->tuple = nullptr;
 
 		delete this->rtcpTuple;
+		this->rtcpTuple = nullptr;
 	}
 
 	void PlainRtpTransport::FillJson(json& jsonObject) const
@@ -186,39 +179,19 @@ namespace RTC
 				(*jsonRtcpTupleIt)["protocol"]  = "udp";
 			}
 		}
-
-		// Add headerExtensionIds.
-		jsonObject["rtpHeaderExtensions"] = json::object();
-		auto jsonRtpHeaderExtensionsIt    = jsonObject.find("rtpHeaderExtensions");
-
-		if (this->rtpHeaderExtensionIds.mid != 0u)
-			(*jsonRtpHeaderExtensionsIt)["mid"] = this->rtpHeaderExtensionIds.mid;
-
-		if (this->rtpHeaderExtensionIds.rid != 0u)
-			(*jsonRtpHeaderExtensionsIt)["rid"] = this->rtpHeaderExtensionIds.rid;
-
-		if (this->rtpHeaderExtensionIds.rrid != 0u)
-			(*jsonRtpHeaderExtensionsIt)["rrid"] = this->rtpHeaderExtensionIds.rrid;
-
-		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
-			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
 	}
 
 	void PlainRtpTransport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();
 
-		jsonArray.emplace_back(json::value_t::object);
+		// Call the parent method.
+		RTC::Transport::FillJsonStats(jsonArray);
+
 		auto& jsonObject = jsonArray[0];
 
 		// Add type.
 		jsonObject["type"] = "plain-rtp-transport";
-
-		// Add transportId.
-		jsonObject["transportId"] = this->id;
-
-		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTime();
 
 		// Add rtcpMux.
 		jsonObject["rtcpMux"] = this->rtcpMux;
@@ -252,41 +225,6 @@ namespace RTC
 		// Add rtcpTuple.
 		if (!this->rtcpMux && this->rtcpTuple != nullptr)
 			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
-
-		if (this->sctpAssociation)
-		{
-			// Add sctpState.
-			switch (this->sctpAssociation->GetState())
-			{
-				case RTC::SctpAssociation::SctpState::NEW:
-					jsonObject["sctpState"] = "new";
-					break;
-				case RTC::SctpAssociation::SctpState::CONNECTING:
-					jsonObject["sctpState"] = "connecting";
-					break;
-				case RTC::SctpAssociation::SctpState::CONNECTED:
-					jsonObject["sctpState"] = "connected";
-					break;
-				case RTC::SctpAssociation::SctpState::FAILED:
-					jsonObject["sctpState"] = "failed";
-					break;
-				case RTC::SctpAssociation::SctpState::CLOSED:
-					jsonObject["sctpState"] = "closed";
-					break;
-			}
-		}
-
-		// Add bytesReceived.
-		jsonObject["bytesReceived"] = RTC::Transport::GetReceivedBytes();
-
-		// Add bytesSent.
-		jsonObject["bytesSent"] = RTC::Transport::GetSentBytes();
-
-		// Add recvBitrate.
-		jsonObject["recvBitrate"] = RTC::Transport::GetRecvBitrate();
-
-		// Add sendBitrate.
-		jsonObject["sendBitrate"] = RTC::Transport::GetSendBitrate();
 	}
 
 	void PlainRtpTransport::HandleRequest(Channel::Request* request)
@@ -533,6 +471,19 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
+	void PlainRtpTransport::SendSctpData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!IsConnected())
+			return;
+
+		this->tuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
+	}
+
 	inline void PlainRtpTransport::OnPacketReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
@@ -618,38 +569,8 @@ namespace RTC
 			return;
 		}
 
-		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-		packet->SetMidExtensionId(this->rtpHeaderExtensionIds.mid);
-		packet->SetRidExtensionId(this->rtpHeaderExtensionIds.rid);
-		packet->SetRepairedRidExtensionId(this->rtpHeaderExtensionIds.rrid);
-		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
-
-		// Get the associated Producer.
-		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
-
-		if (producer == nullptr)
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
-			  packet->GetSsrc(),
-			  packet->GetPayloadType());
-
-			delete packet;
-
-			return;
-		}
-
-		// MS_DEBUG_DEV(
-		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
-		//   packet->GetSsrc(),
-		//   packet->GetPayloadType(),
-		//   producer->id.c_str());
-
-		// Pass the RTP packet to the corresponding Producer.
-		producer->ReceiveRtpPacket(packet);
-
-		delete packet;
+		// Pass the packet to the parent transport.
+		RTC::Transport::ReceiveRtpPacket(packet);
 	}
 
 	inline void PlainRtpTransport::OnRtcpDataReceived(
@@ -732,16 +653,8 @@ namespace RTC
 			return;
 		}
 
-		// Handle each RTCP packet.
-		while (packet != nullptr)
-		{
-			ReceiveRtcpPacket(packet);
-
-			RTC::RTCP::Packet* previousPacket = packet;
-
-			packet = packet->GetNext();
-			delete previousPacket;
-		}
+		// Pass the packet to the parent transport.
+		RTC::Transport::ReceiveRtcpPacket(packet);
 	}
 
 	inline void PlainRtpTransport::OnSctpDataReceived(
@@ -753,13 +666,6 @@ namespace RTC
 		if (this->multiSource)
 		{
 			MS_DEBUG_TAG(sctp, "ignoring SCTP packet in multiSource mode");
-
-			return;
-		}
-
-		if (!this->sctpAssociation)
-		{
-			MS_DEBUG_TAG(sctp, "ignoring SCTP packet (SCTP not enabled)");
 
 			return;
 		}
@@ -797,54 +703,8 @@ namespace RTC
 			return;
 		}
 
-		// Pass it to the SctpAssociation.
-		this->sctpAssociation->ProcessSctpData(data, len);
-	}
-
-	void PlainRtpTransport::UserOnNewProducer(RTC::Producer* /*producer*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
-	}
-
-	void PlainRtpTransport::UserOnNewConsumer(RTC::Consumer* /*consumer*/)
-	{
-		MS_TRACE();
-	}
-
-	void PlainRtpTransport::UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* /*remb*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
-	}
-
-	void PlainRtpTransport::UserOnRtpProbatorReceiverReport(RTC::RTCP::ReceiverReport* /*report*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
-	}
-
-	void PlainRtpTransport::UserOnSendSctpData(const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		if (!IsConnected())
-			return;
-
-		this->tuple->Send(data, len);
-
-		// Increase send transmission.
-		RTC::Transport::DataSent(len);
-	}
-
-	inline void PlainRtpTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
+		// Pass it to the parent transport.
+		RTC::Transport::ReceiveSctpData(data, len);
 	}
 
 	inline void PlainRtpTransport::OnUdpSocketPacketReceived(
