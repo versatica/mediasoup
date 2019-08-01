@@ -58,7 +58,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
-		void OnRtcTcpConnectionClosed(
+		void OnTcpConnectionClosed(
 		  RTC::TcpServer* tcpServer, RTC::TcpConnection* connection, bool isClosedByPeer) override;
 
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */

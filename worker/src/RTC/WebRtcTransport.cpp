@@ -983,7 +983,7 @@ namespace RTC
 		OnPacketReceived(&tuple, data, len);
 	}
 
-	inline void WebRtcTransport::OnRtcTcpConnectionClosed(
+	inline void WebRtcTransport::OnTcpConnectionClosed(
 	  RTC::TcpServer* /*tcpServer*/, RTC::TcpConnection* connection, bool isClosedByPeer)
 	{
 		MS_TRACE();
