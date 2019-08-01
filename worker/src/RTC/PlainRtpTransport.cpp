@@ -523,41 +523,37 @@ namespace RTC
 		{
 			// Do nothing.
 		}
-		// If multiSource is not set, check whether we have RTP tuple or whether
-		// comedia mode is set.
-		else
+		// Otherwise, if we don't have a RTP tuple yet, check whether comedia mode
+		// is set,
+		else if (!this->tuple)
 		{
-			// If RTP tuple is unset, set it if we are in comedia mode.
-			if (!this->tuple)
+			if (!this->comedia)
 			{
-				if (!this->comedia)
-				{
-					MS_DEBUG_TAG(rtp, "ignoring RTP packet while not connected");
-
-					return;
-				}
-
-				MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
-
-				auto wasConnected = IsConnected();
-
-				this->tuple = new RTC::TransportTuple(tuple);
-
-				if (!this->listenIp.announcedIp.empty())
-					this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
-
-				// If not yet connected do it now.
-				if (!wasConnected)
-					RTC::Transport::Connected();
-			}
-
-			// Verify that the packet's tuple matches our RTP tuple.
-			if (!this->tuple->Compare(tuple))
-			{
-				MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
+				MS_DEBUG_TAG(rtp, "ignoring RTP packet while not connected");
 
 				return;
 			}
+
+			MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
+
+			auto wasConnected = IsConnected();
+
+			this->tuple = new RTC::TransportTuple(tuple);
+
+			if (!this->listenIp.announcedIp.empty())
+				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+
+			// If not yet connected do it now.
+			if (!wasConnected)
+				RTC::Transport::Connected();
+		}
+		// Otherwise, if RTP tuple is set, verify that it matches the origin
+		// of the packet.
+		else if (!this->tuple->Compare(tuple))
+		{
+			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
+
+			return;
 		}
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
@@ -583,65 +579,61 @@ namespace RTC
 		{
 			// Just allow it.
 		}
-		// If multiSource is not set, check whether we have RTP tuple (if RTCP-mux)
-		// or RTCP tuple or whether comedia mode is set.
-		else
+		// Otherwise, if we don't have a RTP tuple yet, check whether RTCP-mux
+		// and comedia mode are set.
+		else if (this->rtcpMux && !this->tuple)
 		{
-			// If RTCP-mux and RTP tuple is unset, set it if we are in comedia mode.
-			if (this->rtcpMux && !this->tuple)
+			if (!this->comedia)
 			{
-				if (!this->comedia)
-				{
-					MS_DEBUG_TAG(rtcp, "ignoring RTCP packet while not connected");
-
-					return;
-				}
-
-				MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
-
-				auto wasConnected = IsConnected();
-
-				this->tuple = new RTC::TransportTuple(tuple);
-
-				if (!this->listenIp.announcedIp.empty())
-					this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
-
-				// If not yet connected do it now.
-				if (!wasConnected)
-					RTC::Transport::Connected();
-			}
-			// If no RTCP-mux and RTCP tuple is unset, set it if we are in comedia mode.
-			else if (!this->rtcpMux && !this->rtcpTuple)
-			{
-				if (!this->comedia)
-				{
-					MS_DEBUG_TAG(rtcp, "ignoring RTCP packet while not connected");
-
-					return;
-				}
-
-				MS_DEBUG_TAG(rtcp, "setting RTCP tuple (comedia mode enabled)");
-
-				this->rtcpTuple = new RTC::TransportTuple(tuple);
-
-				if (!this->listenIp.announcedIp.empty())
-					this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
-			}
-
-			// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
-			if (this->rtcpMux && !this->tuple->Compare(tuple))
-			{
-				MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+				MS_DEBUG_TAG(rtcp, "ignoring RTCP packet while not connected");
 
 				return;
 			}
-			// If no RTCP-mux verify that the packet's tuple matches our RTCP tuple.
-			else if (!this->rtcpMux && !this->rtcpTuple->Compare(tuple))
+
+			MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
+
+			auto wasConnected = IsConnected();
+
+			this->tuple = new RTC::TransportTuple(tuple);
+
+			if (!this->listenIp.announcedIp.empty())
+				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+
+			// If not yet connected do it now.
+			if (!wasConnected)
+				RTC::Transport::Connected();
+		}
+		// Otherwise, if RTCP-mux is unset and RTCP tuple is unset, set it if we
+		// are in comedia mode.
+		else if (!this->rtcpMux && !this->rtcpTuple)
+		{
+			if (!this->comedia)
 			{
-				MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+				MS_DEBUG_TAG(rtcp, "ignoring RTCP packet while not connected");
 
 				return;
 			}
+
+			MS_DEBUG_TAG(rtcp, "setting RTCP tuple (comedia mode enabled)");
+
+			this->rtcpTuple = new RTC::TransportTuple(tuple);
+
+			if (!this->listenIp.announcedIp.empty())
+				this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+		}
+		// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
+		else if (this->rtcpMux && !this->tuple->Compare(tuple))
+		{
+			MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+
+			return;
+		}
+		// If no RTCP-mux verify that the packet's tuple matches our RTCP tuple.
+		else if (!this->rtcpMux && !this->rtcpTuple->Compare(tuple))
+		{
+			MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+
+			return;
 		}
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
@@ -669,10 +661,9 @@ namespace RTC
 
 			return;
 		}
-
-		// Check whether we have RTP tuple or whether comedia mode is set.
-		// If RTP tuple is unset, set it if we are in comedia mode.
-		if (!this->tuple)
+		// Otherwise, if we don't have a RTP tuple yet, check whether comedia mode
+		// is set,
+		else if (!this->tuple)
 		{
 			if (!this->comedia)
 			{
@@ -694,8 +685,8 @@ namespace RTC
 			if (!wasConnected)
 				RTC::Transport::Connected();
 		}
-
-		// Verify that the packet's tuple matches our RTP tuple.
+		// Otherwise, if RTP tuple is set, verify that it matches the origin
+		// of the packet.
 		if (!this->tuple->Compare(tuple))
 		{
 			MS_DEBUG_TAG(sctp, "ignoring SCTP packet from unknown IP:port");
