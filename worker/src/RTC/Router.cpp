@@ -271,7 +271,7 @@ namespace RTC
 				RTC::Transport* transport = GetTransportFromRequest(request);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
-				// notify us about their closured.
+				// notify us about their closures.
 				transport->CloseProducersAndConsumers();
 
 				// Remove it from the map and delete it.
