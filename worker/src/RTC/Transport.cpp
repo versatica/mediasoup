@@ -1118,9 +1118,10 @@ namespace RTC
 		{
 			HandleRtcpPacket(packet);
 
-			RTC::RTCP::Packet* previousPacket = packet;
+			auto* previousPacket = packet;
 
 			packet = packet->GetNext();
+
 			delete previousPacket;
 		}
 	}

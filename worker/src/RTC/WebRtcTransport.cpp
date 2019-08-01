@@ -592,11 +592,13 @@ namespace RTC
 
 	inline bool WebRtcTransport::IsConnected() const
 	{
-		// clang-formar off
+		// clang-format off
 		return (
-		  this->iceSelectedTuple != nullptr && this->dtlsTransport != nullptr &&
-		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
-		// clang-formar on
+			this->iceSelectedTuple != nullptr &&
+			this->dtlsTransport != nullptr &&
+			this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED
+		);
+		// clang-format on
 	}
 
 	void WebRtcTransport::MayRunDtlsTransport()
@@ -758,7 +760,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// clang-formar on
+		// clang-format on
 		if (!IsConnected())
 		{
 			MS_WARN_TAG(sctp, "DTLS not connected, cannot send SCTP data");
