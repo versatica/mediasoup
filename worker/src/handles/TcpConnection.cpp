@@ -261,7 +261,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, const std::function<v
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(writeData);
-
 		onDone(false);
 	}
 }
@@ -319,7 +318,7 @@ void TcpConnection::Write(
 	{
 		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
-		onDone(true);
+		onDone(false);
 		Close();
 
 		return;
@@ -364,7 +363,6 @@ void TcpConnection::Write(
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(writeData);
-
 		onDone(false);
 	}
 }

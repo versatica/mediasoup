@@ -208,7 +208,6 @@ void UdpSocket::Send(
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(sendData);
-
 		onDone(false);
 	}
 	else
