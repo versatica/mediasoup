@@ -1800,14 +1800,14 @@ namespace RTC
 		  this, producer, mappedSsrc, worstRemoteFractionLost);
 	}
 
-	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)
+	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
 		SendRtpPacket(packet);
 	}
 
-	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)
+	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -2005,7 +2005,7 @@ namespace RTC
 	}
 
 	inline void Transport::OnRembClientAvailableBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate)
+	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate) // NOLINT(misc-unused-parameters)
 	{
 		MS_TRACE();
 
