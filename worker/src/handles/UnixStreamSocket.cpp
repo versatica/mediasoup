@@ -215,7 +215,12 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	  static_cast<uv_write_cb>(onWrite));
 
 	if (err != 0)
-		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
+	{
+		MS_ERROR_STD("uv_write() failed: %s", uv_strerror(err));
+
+		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
+		std::free(writeData);
+	}
 }
 
 inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)

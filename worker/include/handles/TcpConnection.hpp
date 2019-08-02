@@ -26,6 +26,7 @@ public:
 	struct UvWriteData
 	{
 		uv_write_t req;
+		const std::function<void(bool sent)>* onDone{ nullptr };
 		uint8_t store[1];
 	};
 
@@ -49,8 +50,13 @@ public:
 	bool IsClosed() const;
 	uv_tcp_t* GetUvHandle() const;
 	void Start();
-	void Write(const uint8_t* data, size_t len);
-	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2);
+	void Write(const uint8_t* data, size_t len, const std::function<void(bool sent)>& onDone);
+	void Write(
+	  const uint8_t* data1,
+	  size_t len1,
+	  const uint8_t* data2,
+	  size_t len2,
+	  const std::function<void(bool sent)>& onDone);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIp() const;
@@ -66,7 +72,7 @@ private:
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-	void OnUvWriteError(int error);
+	void OnUvWrite(int status, const std::function<void(bool sent)>& onDone);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

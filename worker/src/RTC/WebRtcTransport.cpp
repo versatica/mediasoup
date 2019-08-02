@@ -696,7 +696,18 @@ namespace RTC
 		if (!this->srtpSendSession->EncryptRtp(&data, &len))
 			return;
 
-		this->iceSelectedTuple->Send(data, len);
+		// TODO: Uncomment this when we need it for Transport-CC client.
+		auto seq = packet->GetSequenceNumber();
+
+		this->iceSelectedTuple->Send(data, len, [seq](bool sent) {
+			if (sent)
+				MS_DUMP("RTP packet sent! [seq:%" PRIu16 "]", seq);
+			else
+				MS_DUMP("RTP packet NOT sent! [seq:%" PRIu16 "]", seq);
+		});
+
+		// TODO: Remove this when the above code is uncommented.
+		// this->iceSelectedTuple->Send(data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
