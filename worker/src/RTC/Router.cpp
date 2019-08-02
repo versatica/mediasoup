@@ -806,10 +806,11 @@ namespace RTC
 		// Close all DataConsumers associated to the closed DataProducer.
 		auto& dataConsumers = mapDataProducerDataConsumersIt->second;
 
-		// NOTE: While iterating the set of DataConsumers, we call DataProducerClosed() on each
-		// one, which will end calling Router::OnTransportDataConsumerDataProducerClosed(),
-		// which will remove the DataConsumer from mapDataConsumerDataProducer but won't remove
-		// the closed DataConsumer from the set of DataConsumers in mapDataProducerDataConsumers
+		// NOTE: While iterating the set of DataConsumers, we call DataProducerClosed()
+		// on each one, which will end calling
+		// Router::OnTransportDataConsumerDataProducerClosed(), which will remove the
+		// DataConsumer from mapDataConsumerDataProducer but won't remove the closed
+		// DataConsumer from the set of DataConsumers in mapDataProducerDataConsumers
 		// (here will erase the complete entry in that map).
 		for (auto* dataConsumer : dataConsumers)
 		{

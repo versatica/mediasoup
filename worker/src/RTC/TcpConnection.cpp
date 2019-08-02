@@ -54,7 +54,7 @@ namespace RTC
 			// We may receive multiple packets in the same TCP chunk. If one of them is
 			// a DTLS Close Alert this would be closed (Close() called) so we cannot call
 			// our listeners anymore.
-			if (IsClosed())
+			if (::TcpConnection::IsClosed())
 				return;
 
 			size_t dataLen = this->bufferDataLen - this->frameStart;
@@ -135,7 +135,7 @@ namespace RTC
 					  "connection");
 
 					// Close the socket.
-					Close();
+					::TcpConnection::Close();
 				}
 			}
 			// The buffer is not full.
@@ -161,6 +161,6 @@ namespace RTC
 		uint8_t frameLen[2];
 
 		Utils::Byte::Set2Bytes(frameLen, 0, len);
-		Write(frameLen, 2, data, len);
+		::TcpConnection::Write(frameLen, 2, data, len);
 	}
 } // namespace RTC

@@ -28,9 +28,6 @@ public:
 	void Close();
 	virtual void Dump() const;
 	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr);
-	void Send(const std::string& data, const struct sockaddr* addr);
-	void Send(const uint8_t* data, size_t len, const std::string& ip, uint16_t port);
-	void Send(const std::string& data, const std::string& ip, uint16_t port);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIp() const;
@@ -67,16 +64,6 @@ private:
 };
 
 /* Inline methods. */
-
-inline void UdpSocket::Send(const std::string& data, const struct sockaddr* addr)
-{
-	Send(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(), addr);
-}
-
-inline void UdpSocket::Send(const std::string& data, const std::string& ip, uint16_t port)
-{
-	Send(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(), ip, port);
-}
 
 inline const struct sockaddr* UdpSocket::GetLocalAddress() const
 {

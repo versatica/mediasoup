@@ -51,7 +51,6 @@ public:
 	void Start();
 	void Write(const uint8_t* data, size_t len);
 	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2);
-	void Write(const std::string& data);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIp() const;
@@ -108,11 +107,6 @@ inline bool TcpConnection::IsClosed() const
 inline uv_tcp_t* TcpConnection::GetUvHandle() const
 {
 	return this->uvHandle;
-}
-
-inline void TcpConnection::Write(const std::string& data)
-{
-	Write(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 }
 
 inline const struct sockaddr* TcpConnection::GetLocalAddress() const

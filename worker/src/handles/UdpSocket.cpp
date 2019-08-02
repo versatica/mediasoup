@@ -198,55 +198,6 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	}
 }
 
-void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uint16_t port)
-{
-	MS_TRACE();
-
-	if (this->closed)
-		return;
-
-	int err;
-
-	if (len == 0)
-		return;
-
-	struct sockaddr_storage addr; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-	switch (Utils::IP::GetFamily(ip))
-	{
-		case AF_INET:
-		{
-			err = uv_ip4_addr(
-			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&addr));
-
-			if (err != 0)
-				MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
-
-			break;
-		}
-
-		case AF_INET6:
-		{
-			err = uv_ip6_addr(
-			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&addr));
-
-			if (err != 0)
-				MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
-
-			break;
-		}
-
-		default:
-		{
-			MS_ERROR("invalid destination IP '%s'", ip.c_str());
-
-			return;
-		}
-	}
-
-	Send(data, len, reinterpret_cast<struct sockaddr*>(&addr));
-}
-
 bool UdpSocket::SetLocalAddress()
 {
 	MS_TRACE();
