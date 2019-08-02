@@ -69,7 +69,7 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		::UnixStreamSocket::Write(WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
@@ -106,7 +106,7 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		::UnixStreamSocket::Write(WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
@@ -141,7 +141,7 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		::UnixStreamSocket::Write(WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::UserOnUnixStreamRead()
