@@ -126,11 +126,7 @@ void UdpSocket::Dump() const
 	MS_DUMP("</UdpSocket>");
 }
 
-void UdpSocket::Send(
-  const uint8_t* data,
-  size_t len,
-  const struct sockaddr* addr,
-  const std::function<void(bool sent)>& onDone)
+void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendHandler& onDone)
 {
 	MS_TRACE();
 
@@ -289,7 +285,7 @@ inline void UdpSocket::OnUvRecv(
 	}
 }
 
-inline void UdpSocket::OnUvSend(int status, const std::function<void(bool sent)>& onDone)
+inline void UdpSocket::OnUvSend(int status, onSendHandler& onDone)
 {
 	MS_TRACE();
 

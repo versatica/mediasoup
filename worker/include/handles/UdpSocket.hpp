@@ -25,14 +25,13 @@ public:
 	UdpSocket(const UdpSocket&)            = delete;
 	virtual ~UdpSocket();
 
+protected:
+	using onSendHandler = const std::function<void(bool sent)>;
+
 public:
 	void Close();
 	virtual void Dump() const;
-	void Send(
-	  const uint8_t* data,
-	  size_t len,
-	  const struct sockaddr* addr,
-	  const std::function<void(bool sent)>& onDone);
+	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendHandler& onDone);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIp() const;
@@ -47,7 +46,7 @@ private:
 public:
 	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
-	void OnUvSend(int status, const std::function<void(bool sent)>& onDone);
+	void OnUvSend(int status, onSendHandler& onDone);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

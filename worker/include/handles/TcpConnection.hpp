@@ -39,6 +39,9 @@ public:
 	TcpConnection(const TcpConnection&)            = delete;
 	virtual ~TcpConnection();
 
+protected:
+	using onSendHandler = const std::function<void(bool sent)>;
+
 public:
 	void Close();
 	virtual void Dump() const;
@@ -50,13 +53,8 @@ public:
 	bool IsClosed() const;
 	uv_tcp_t* GetUvHandle() const;
 	void Start();
-	void Write(const uint8_t* data, size_t len, const std::function<void(bool sent)>& onDone);
-	void Write(
-	  const uint8_t* data1,
-	  size_t len1,
-	  const uint8_t* data2,
-	  size_t len2,
-	  const std::function<void(bool sent)>& onDone);
+	void Write(const uint8_t* data, size_t len, onSendHandler& onDone);
+	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendHandler& onDone);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIp() const;
@@ -72,7 +70,7 @@ private:
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-	void OnUvWrite(int status, const std::function<void(bool sent)>& onDone);
+	void OnUvWrite(int status, onSendHandler& onDone);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

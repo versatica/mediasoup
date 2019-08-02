@@ -19,8 +19,11 @@ namespace RTC
 	public:
 		TcpConnection(Listener* listener, size_t bufferSize);
 
+	protected:
+		using onSendHandler = const std::function<void(bool sent)>;
+
 	public:
-		void Send(const uint8_t* data, size_t len, const std::function<void(bool sent)>& onDone);
+		void Send(const uint8_t* data, size_t len, onSendHandler& onDone);
 		size_t GetRecvBytes() const;
 		size_t GetSentBytes() const;
 

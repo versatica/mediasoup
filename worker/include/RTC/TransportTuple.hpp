@@ -26,12 +26,15 @@ namespace RTC
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
 		explicit TransportTuple(const TransportTuple* tuple);
 
+	protected:
+		using onSendHandler = const std::function<void(bool sent)>;
+
+	public:
 		void FillJson(json& jsonObject) const;
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
 		void SetLocalAnnouncedIp(std::string& localAnnouncedIp);
-		void Send(const uint8_t* data, size_t len, const std::function<void(bool sent)>& onDone = [](bool) {
-		});
+		void Send(const uint8_t* data, size_t len, onSendHandler& onDone = [](bool) {});
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
 		const struct sockaddr* GetRemoteAddress() const;

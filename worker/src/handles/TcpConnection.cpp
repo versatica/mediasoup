@@ -186,7 +186,7 @@ void TcpConnection::Start()
 		MS_THROW_ERROR("error setting peer IP and port");
 }
 
-void TcpConnection::Write(const uint8_t* data, size_t len, const std::function<void(bool sent)>& onDone)
+void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone)
 {
 	MS_TRACE();
 
@@ -266,11 +266,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len, const std::function<v
 }
 
 void TcpConnection::Write(
-  const uint8_t* data1,
-  size_t len1,
-  const uint8_t* data2,
-  size_t len2,
-  const std::function<void(bool sent)>& onDone)
+  const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendHandler& onDone)
 {
 	MS_TRACE();
 
@@ -459,7 +455,7 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 	}
 }
 
-inline void TcpConnection::OnUvWrite(int status, const std::function<void(bool sent)>& onDone)
+inline void TcpConnection::OnUvWrite(int status, onSendHandler& onDone)
 {
 	MS_TRACE();
 

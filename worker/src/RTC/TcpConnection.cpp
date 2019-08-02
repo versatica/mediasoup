@@ -149,7 +149,7 @@ namespace RTC
 		}
 	}
 
-	void TcpConnection::Send(const uint8_t* data, size_t len, const std::function<void(bool sent)>& onDone)
+	void TcpConnection::Send(const uint8_t* data, size_t len, onSendHandler& onDone)
 	{
 		MS_TRACE();
 
