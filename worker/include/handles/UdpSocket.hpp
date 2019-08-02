@@ -7,12 +7,15 @@
 
 class UdpSocket
 {
+protected:
+	using onSendHandler = const std::function<void(bool sent)>;
+
 public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
 	{
 		uv_udp_send_t req;
-		const std::function<void(bool sent)>* onDone{ nullptr };
+		onSendHandler* onDone;
 		uint8_t store[1];
 	};
 
@@ -24,9 +27,6 @@ public:
 	UdpSocket& operator=(const UdpSocket&) = delete;
 	UdpSocket(const UdpSocket&)            = delete;
 	virtual ~UdpSocket();
-
-protected:
-	using onSendHandler = const std::function<void(bool sent)>;
 
 public:
 	void Close();

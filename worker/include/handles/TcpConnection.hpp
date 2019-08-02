@@ -5,10 +5,6 @@
 #include <uv.h>
 #include <string>
 
-// Avoid cyclic #include problem by declaring classes instead of including
-// the corresponding header files.
-class TcpServer;
-
 class TcpConnection
 {
 public:
@@ -21,26 +17,23 @@ public:
 		virtual void OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
 	};
 
+protected:
+	using onSendHandler = const std::function<void(bool sent)>;
+
 public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
 	struct UvWriteData
 	{
 		uv_write_t req;
-		const std::function<void(bool sent)>* onDone{ nullptr };
+		onSendHandler* onDone;
 		uint8_t store[1];
 	};
-
-	// Let the TcpServer class directly call the destructor of TcpConnection.
-	friend class TcpServer;
 
 public:
 	explicit TcpConnection(size_t bufferSize);
 	TcpConnection& operator=(const TcpConnection&) = delete;
 	TcpConnection(const TcpConnection&)            = delete;
 	virtual ~TcpConnection();
-
-protected:
-	using onSendHandler = const std::function<void(bool sent)>;
 
 public:
 	void Close();
