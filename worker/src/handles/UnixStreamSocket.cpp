@@ -194,6 +194,9 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 
 		Close();
 
+		// Notify the subclass.
+		UserOnUnixStreamSocketClosed(this->isClosedByPeer);
+
 		return;
 	}
 
