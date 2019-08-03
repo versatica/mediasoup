@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.2.5
+
+* Fix TCP leak (#325).
+
+
 ### 3.2.4
 
 * `PlainRtpTransport`: Fix comedia mode.
@@ -137,6 +142,11 @@
 ### 3.0.0
 
 * v3 is here!
+
+
+### 2.6.14
+
+* Fix TCP leak (#325).
 
 
 ### 2.6.13
