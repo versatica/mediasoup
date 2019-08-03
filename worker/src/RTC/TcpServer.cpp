@@ -3,6 +3,7 @@
 
 #include "RTC/TcpServer.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include "RTC/PortManager.hpp"
 #include <string>
 
@@ -16,7 +17,7 @@ namespace RTC
 
 	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
 	  : // This may throw.
-	    ::TcpServer::TcpServer(PortManager::BindTcp(ip), 256), listener(listener),
+	    ::TcpServer::TcpServer(RTC::PortManager::BindTcp(ip), 256), listener(listener),
 	    connListener(connListener)
 	{
 		MS_TRACE();
@@ -26,7 +27,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		PortManager::UnbindTcp(this->localIp, this->localPort);
+		RTC::PortManager::UnbindTcp(this->localIp, this->localPort);
 	}
 
 	void TcpServer::UserOnTcpConnectionAlloc(::TcpConnection** connection)
@@ -43,7 +44,7 @@ namespace RTC
 
 		// Allow just MaxTcpConnectionsPerServer.
 		if (GetNumConnections() > MaxTcpConnectionsPerServer)
-			delete connection;
+			MS_THROW_ERROR("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);
 	}
 
 	void TcpServer::UserOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer)

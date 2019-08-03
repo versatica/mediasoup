@@ -14,7 +14,7 @@ public:
 		virtual ~Listener() = default;
 
 	public:
-		virtual void OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
+		virtual void OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer = false) = 0;
 	};
 
 protected:

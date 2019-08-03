@@ -21,13 +21,13 @@ namespace RTC
 			TCP
 		};
 
+	protected:
+		using onSendHandler = const std::function<void(bool sent)>;
+
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
 		explicit TransportTuple(const TransportTuple* tuple);
-
-	protected:
-		using onSendHandler = const std::function<void(bool sent)>;
 
 	public:
 		void FillJson(json& jsonObject) const;

@@ -1,5 +1,5 @@
 #define MS_CLASS "TcpServer"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "handles/TcpServer.hpp"
 #include "Logger.hpp"
@@ -166,21 +166,20 @@ inline void TcpServer::OnUvConnection(int status)
 	if (err != 0)
 		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
 
-	// Insert the TcpConnection in the set.
-	this->connections.insert(connection);
-
 	// Start receiving data.
 	try
 	{
 		connection->Start();
 
 		// Notify the subclass.
+		// NOTE: This may throw.
 		UserOnNewTcpConnection(connection);
+
+		// Insert the TcpConnection in the set.
+		this->connections.insert(connection);
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_ERROR("cannot start the TCP connection, closing the connection: %s", error.what());
-
 		delete connection;
 	}
 }
@@ -192,12 +191,11 @@ inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection, bool isC
 	MS_DEBUG_DEV("TCP connection closed");
 
 	// Remove the TcpConnection from the set.
-	size_t numErased = this->connections.erase(connection);
-
-	// If the closed connection was not present in the set, do nothing else.
-	if (numErased == 0)
-		return;
+	this->connections.erase(connection);
 
 	// Notify the subclass.
 	UserOnTcpConnectionClosed(connection, isClosedByPeer);
+
+	// Delete it.
+	delete connection;
 }

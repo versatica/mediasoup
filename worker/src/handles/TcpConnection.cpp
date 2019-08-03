@@ -1,5 +1,5 @@
 #define MS_CLASS "TcpConnection"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "handles/TcpConnection.hpp"
 #include "DepLibUV.hpp"
@@ -62,6 +62,8 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 	delete req;
 
+		MS_ERROR(">>> num_tcp_connections: %zu (calling uv_close())", num_tcp_connections);
+
 	// Now do close the handle.
 	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onClose));
 }
@@ -118,6 +120,8 @@ void TcpConnection::Close()
 	// If there is no error and the peer didn't close its connection side then close gracefully.
 	if (!this->hasError && !this->isClosedByPeer)
 	{
+			MS_ERROR(">>> num_tcp_connections: %zu (calling uv_shutdown())", num_tcp_connections);
+
 		// Use uv_shutdown() so pending data to be written will be sent to the peer
 		// before closing.
 		auto req  = new uv_shutdown_t;
@@ -131,11 +135,10 @@ void TcpConnection::Close()
 	// Otherwise directly close the socket.
 	else
 	{
+		MS_ERROR(">>> num_tcp_connections: %zu (calling uv_close())", num_tcp_connections);
+
 		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 	}
-
-	// Notify the listener.
-	this->listener->OnTcpConnectionClosed(this, this->isClosedByPeer);
 }
 
 void TcpConnection::Dump() const
@@ -241,6 +244,9 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 		onDone(false);
 		Close();
 
+		// Notify the listener.
+		this->listener->OnTcpConnectionClosed(this);
+
 		return;
 	}
 
@@ -326,6 +332,9 @@ void TcpConnection::Write(
 
 		onDone(false);
 		Close();
+
+		// Notify the listener.
+		this->listener->OnTcpConnectionClosed(this);
 
 		return;
 	}
@@ -452,6 +461,9 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 
 		// Close server side of the connection.
 		Close();
+
+		// Notify the listener.
+		this->listener->OnTcpConnectionClosed(this, /*isClosedByPeer*/ true);
 	}
 	// Some error.
 	else
@@ -462,6 +474,9 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 
 		// Close server side of the connection.
 		Close();
+
+		// Notify the listener.
+		this->listener->OnTcpConnectionClosed(this);
 	}
 }
 
@@ -489,5 +504,8 @@ inline void TcpConnection::OnUvWrite(int status, onSendHandler& onDone)
 
 		onDone(false);
 		Close();
+
+		// Notify the listener.
+		this->listener->OnTcpConnectionClosed(this);
 	}
 }
