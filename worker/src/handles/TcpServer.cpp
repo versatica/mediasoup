@@ -172,6 +172,8 @@ inline void TcpServer::OnUvConnection(int status)
 	catch (const MediaSoupError& error)
 	{
 		delete connection;
+
+		return;
 	}
 
 	// Notify the subclass and delete the connection if not accepted by the subclass.
