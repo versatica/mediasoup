@@ -37,20 +37,24 @@ namespace RTC
 		*connection = new RTC::TcpConnection(this->connListener, 65536);
 	}
 
-	void TcpServer::UserOnNewTcpConnection(::TcpConnection* connection)
+	bool TcpServer::UserOnNewTcpConnection(::TcpConnection* connection)
 	{
 		MS_TRACE();
 
-		// Allow just MaxTcpConnectionsPerServer.
-		if (GetNumConnections() > MaxTcpConnectionsPerServer)
-			delete connection;
+		if (GetNumConnections() >= MaxTcpConnectionsPerServer)
+		{
+			MS_ERROR("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);
+
+			return false;
+		}
+
+		return true;
 	}
 
-	void TcpServer::UserOnTcpConnectionClosed(::TcpConnection* connection, bool isClosedByPeer)
+	void TcpServer::UserOnTcpConnectionClosed(::TcpConnection* connection)
 	{
 		MS_TRACE();
 
-		this->listener->OnRtcTcpConnectionClosed(
-		  this, static_cast<RTC::TcpConnection*>(connection), isClosedByPeer);
+		this->listener->OnRtcTcpConnectionClosed(this, static_cast<RTC::TcpConnection*>(connection));
 	}
 } // namespace RTC

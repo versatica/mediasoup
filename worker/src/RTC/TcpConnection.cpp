@@ -21,6 +21,11 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	TcpConnection::~TcpConnection()
+	{
+		MS_TRACE();
+	}
+
 	void TcpConnection::UserOnTcpConnectionRead()
 	{
 		MS_TRACE();
@@ -135,7 +140,7 @@ namespace RTC
 					  "connection");
 
 					// Close the socket.
-					Close();
+					::TcpConnection::ErrorReceiving();
 				}
 			}
 			// The buffer is not full.
@@ -161,6 +166,6 @@ namespace RTC
 		uint8_t frameLen[2];
 
 		Utils::Byte::Set2Bytes(frameLen, 0, len);
-		Write(frameLen, 2, data, len);
+		::TcpConnection::Write(frameLen, 2, data, len);
 	}
 } // namespace RTC
