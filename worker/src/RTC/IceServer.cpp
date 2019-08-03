@@ -40,6 +40,7 @@ namespace RTC
 
 				response->Serialize(StunSerializeBuffer);
 				this->listener->OnIceServerSendStunPacket(this, response, tuple);
+
 				delete response;
 			}
 			else

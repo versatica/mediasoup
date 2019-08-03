@@ -21,6 +21,11 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	TcpConnection::~TcpConnection()
+	{
+		MS_TRACE();
+	}
+
 	void TcpConnection::UserOnTcpConnectionRead()
 	{
 		MS_TRACE();
@@ -135,7 +140,7 @@ namespace RTC
 					  "connection");
 
 					// Close the socket.
-					::TcpConnection::Close();
+					::TcpConnection::ErrorReceiving();
 				}
 			}
 			// The buffer is not full.
