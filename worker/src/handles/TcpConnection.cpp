@@ -121,9 +121,6 @@ void TcpConnection::Close()
 	{
 		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 	}
-
-	// Notify the listener.
-	this->listener->OnTcpConnectionClosed(this, this->isClosedByPeer);
 }
 
 void TcpConnection::Dump() const
@@ -224,6 +221,8 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 
 		Close();
 
+		this->listener->OnTcpConnectionClosed(this);
+
 		return;
 	}
 
@@ -290,6 +289,8 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 
 		Close();
 
+		this->listener->OnTcpConnectionClosed(this);
+
 		return;
 	}
 
@@ -329,6 +330,15 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 	  static_cast<uv_write_cb>(onWrite));
 	if (err != 0)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
+}
+
+void TcpConnection::ErrorReceiving()
+{
+	MS_ERROR();
+
+	Close();
+
+	this->listener->OnTcpConnectionClosed(this);
 }
 
 bool TcpConnection::SetPeerAddress()
@@ -407,6 +417,8 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 
 		// Close server side of the connection.
 		Close();
+
+		this->listener->OnTcpConnectionClosed(this);
 	}
 	// Some error.
 	else
@@ -417,6 +429,8 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 
 		// Close server side of the connection.
 		Close();
+
+		this->listener->OnTcpConnectionClosed(this);
 	}
 }
 
@@ -433,4 +447,6 @@ inline void TcpConnection::OnUvWriteError(int error)
 	MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(error));
 
 	Close();
+
+	this->listener->OnTcpConnectionClosed(this);
 }

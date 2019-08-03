@@ -31,9 +31,9 @@ private:
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnTcpConnectionAlloc(TcpConnection** connection)                      = 0;
-	virtual void UserOnNewTcpConnection(TcpConnection* connection)                         = 0;
-	virtual void UserOnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) = 0;
+	virtual void UserOnTcpConnectionAlloc(TcpConnection** connection) = 0;
+	virtual bool UserOnNewTcpConnection(TcpConnection* connection)    = 0;
+	virtual void UserOnTcpConnectionClosed(TcpConnection* connection) = 0;
 
 	/* Callbacks fired by UV events. */
 public:
@@ -41,7 +41,7 @@ public:
 
 	/* Methods inherited from TcpConnection::Listener. */
 public:
-	void OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer) override;
+	void OnTcpConnectionClosed(TcpConnection* connection) override;
 
 private:
 	// Allocated by this (may be passed by argument).

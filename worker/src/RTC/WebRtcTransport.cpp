@@ -974,14 +974,13 @@ namespace RTC
 	}
 
 	void WebRtcTransport::OnRtcTcpConnectionClosed(
-	  RTC::TcpServer* /*tcpServer*/, RTC::TcpConnection* connection, bool isClosedByPeer)
+	  RTC::TcpServer* /*tcpServer*/, RTC::TcpConnection* connection)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(connection);
 
-		if (isClosedByPeer)
-			this->iceServer->RemoveTuple(&tuple);
+		this->iceServer->RemoveTuple(&tuple);
 	}
 
 	void WebRtcTransport::OnPacketRecv(RTC::TcpConnection* connection, const uint8_t* data, size_t len)
