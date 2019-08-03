@@ -18,6 +18,7 @@ namespace RTC
 
 	public:
 		TcpConnection(Listener* listener, size_t bufferSize);
+		~TcpConnection() override;
 
 	protected:
 		using onSendHandler = const std::function<void(bool sent)>;

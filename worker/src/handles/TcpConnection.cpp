@@ -9,6 +9,8 @@
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memcpy()
 
+	static size_t num_tcp_connections{ 0u };
+
 /* Static methods for UV callbacks. */
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
@@ -49,6 +51,8 @@ inline static void onWrite(uv_write_t* req, int status)
 
 inline static void onClose(uv_handle_t* handle)
 {
+		MS_DUMP(">>> num_tcp_connections: %zu", num_tcp_connections);
+
 	delete handle;
 }
 
@@ -73,6 +77,9 @@ TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
 	this->uvHandle->data = (void*)this;
 
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
+
+		num_tcp_connections++;
+		MS_DUMP(">>> num_tcp_connections: %zu", num_tcp_connections);
 }
 
 TcpConnection::~TcpConnection()
@@ -83,6 +90,9 @@ TcpConnection::~TcpConnection()
 		Close();
 
 	delete[] this->buffer;
+
+		num_tcp_connections--;
+		MS_DUMP(">>> num_tcp_connections: %zu", num_tcp_connections);
 }
 
 void TcpConnection::Close()
