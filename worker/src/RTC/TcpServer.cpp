@@ -3,7 +3,6 @@
 
 #include "RTC/TcpServer.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/PortManager.hpp"
 #include <string>
 
