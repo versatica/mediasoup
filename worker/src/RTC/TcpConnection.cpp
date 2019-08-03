@@ -6,8 +6,6 @@
 #include "Utils.hpp"
 #include <cstring> // std::memmove(), std::memcpy()
 
-	static size_t num_rtc_tcp_connections{ 0u };
-
 namespace RTC
 {
 	/* Static. */
@@ -21,17 +19,11 @@ namespace RTC
 	  : ::TcpConnection::TcpConnection(bufferSize), listener(listener)
 	{
 		MS_TRACE();
-
-			num_rtc_tcp_connections++;
-			MS_ERROR(">>> num_rtc_tcp_connections: %zu", num_rtc_tcp_connections);
 	}
 
 	TcpConnection::~TcpConnection()
 	{
 		MS_TRACE();
-
-			num_rtc_tcp_connections--;
-			MS_ERROR(">>> num_rtc_tcp_connections: %zu", num_rtc_tcp_connections);
 	}
 
 	void TcpConnection::UserOnTcpConnectionRead()
@@ -148,7 +140,7 @@ namespace RTC
 					  "connection");
 
 					// Close the socket.
-					::TcpConnection::Close();
+					::TcpConnection::ErrorReceiving();
 				}
 			}
 			// The buffer is not full.

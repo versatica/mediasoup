@@ -14,7 +14,7 @@ public:
 		virtual ~Listener() = default;
 
 	public:
-		virtual void OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer = false) = 0;
+		virtual void OnTcpConnectionClosed(TcpConnection* connection) = 0;
 	};
 
 protected:
@@ -48,6 +48,7 @@ public:
 	void Start();
 	void Write(const uint8_t* data, size_t len, onSendHandler& onDone);
 	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendHandler& onDone);
+	void ErrorReceiving();
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIp() const;

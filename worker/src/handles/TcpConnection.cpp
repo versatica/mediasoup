@@ -1,5 +1,5 @@
 #define MS_CLASS "TcpConnection"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "handles/TcpConnection.hpp"
 #include "DepLibUV.hpp"
@@ -8,8 +8,6 @@
 #include "Utils.hpp"
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memcpy()
-
-	static size_t num_tcp_connections{ 0u };
 
 /* Static methods for UV callbacks. */
 
@@ -51,8 +49,6 @@ inline static void onWrite(uv_write_t* req, int status)
 
 inline static void onClose(uv_handle_t* handle)
 {
-		MS_ERROR(">>> num_tcp_connections: %zu", num_tcp_connections);
-
 	delete handle;
 }
 
@@ -61,8 +57,6 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 	auto* handle = req->handle;
 
 	delete req;
-
-		MS_ERROR(">>> num_tcp_connections: %zu (calling uv_close())", num_tcp_connections);
 
 	// Now do close the handle.
 	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onClose));
@@ -79,9 +73,6 @@ TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
 	this->uvHandle->data = (void*)this;
 
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
-
-		num_tcp_connections++;
-		MS_ERROR(">>> num_tcp_connections: %zu", num_tcp_connections);
 }
 
 TcpConnection::~TcpConnection()
@@ -92,9 +83,6 @@ TcpConnection::~TcpConnection()
 		Close();
 
 	delete[] this->buffer;
-
-		num_tcp_connections--;
-		MS_ERROR(">>> num_tcp_connections: %zu", num_tcp_connections);
 }
 
 void TcpConnection::Close()
@@ -120,8 +108,6 @@ void TcpConnection::Close()
 	// If there is no error and the peer didn't close its connection side then close gracefully.
 	if (!this->hasError && !this->isClosedByPeer)
 	{
-			MS_ERROR(">>> num_tcp_connections: %zu (calling uv_shutdown())", num_tcp_connections);
-
 		// Use uv_shutdown() so pending data to be written will be sent to the peer
 		// before closing.
 		auto req  = new uv_shutdown_t;
@@ -135,8 +121,6 @@ void TcpConnection::Close()
 	// Otherwise directly close the socket.
 	else
 	{
-		MS_ERROR(">>> num_tcp_connections: %zu (calling uv_close())", num_tcp_connections);
-
 		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 	}
 }
@@ -244,7 +228,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 		onDone(false);
 		Close();
 
-		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
 
 		return;
@@ -333,7 +316,6 @@ void TcpConnection::Write(
 		onDone(false);
 		Close();
 
-		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
 
 		return;
@@ -380,6 +362,15 @@ void TcpConnection::Write(
 		std::free(writeData);
 		onDone(false);
 	}
+}
+
+void TcpConnection::ErrorReceiving()
+{
+	MS_ERROR();
+
+	Close();
+
+	this->listener->OnTcpConnectionClosed(this);
 }
 
 bool TcpConnection::SetPeerAddress()
@@ -462,8 +453,7 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		// Close server side of the connection.
 		Close();
 
-		// Notify the listener.
-		this->listener->OnTcpConnectionClosed(this, /*isClosedByPeer*/ true);
+		this->listener->OnTcpConnectionClosed(this);
 	}
 	// Some error.
 	else
@@ -475,7 +465,6 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		// Close server side of the connection.
 		Close();
 
-		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
 	}
 }
@@ -505,7 +494,6 @@ inline void TcpConnection::OnUvWrite(int status, onSendHandler& onDone)
 		onDone(false);
 		Close();
 
-		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
 	}
 }

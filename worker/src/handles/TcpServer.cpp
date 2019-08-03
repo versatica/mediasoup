@@ -1,5 +1,5 @@
 #define MS_CLASS "TcpServer"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "handles/TcpServer.hpp"
 #include "Logger.hpp"
@@ -77,11 +77,8 @@ void TcpServer::Close()
 
 	MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
 
-	for (auto it = this->connections.begin(); it != this->connections.end();)
+	for (auto* connection : this->connections)
 	{
-		auto* connection = *it;
-
-		it = this->connections.erase(it);
 		delete connection;
 	}
 
@@ -169,22 +166,24 @@ inline void TcpServer::OnUvConnection(int status)
 	// Start receiving data.
 	try
 	{
-		connection->Start();
-
-		// Notify the subclass.
 		// NOTE: This may throw.
-		UserOnNewTcpConnection(connection);
-
-		// Insert the TcpConnection in the set.
-		this->connections.insert(connection);
+		connection->Start();
 	}
 	catch (const MediaSoupError& error)
 	{
 		delete connection;
+
+		return;
 	}
+
+	// Notify the subclass and delete the connection if not accepted by the subclass.
+	if (UserOnNewTcpConnection(connection))
+		this->connections.insert(connection);
+	else
+		delete connection;
 }
 
-inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection, bool isClosedByPeer)
+inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection)
 {
 	MS_TRACE();
 
@@ -194,7 +193,7 @@ inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection, bool isC
 	this->connections.erase(connection);
 
 	// Notify the subclass.
-	UserOnTcpConnectionClosed(connection, isClosedByPeer);
+	UserOnTcpConnectionClosed(connection);
 
 	// Delete it.
 	delete connection;
