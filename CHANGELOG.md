@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.14
+
+* Fix TCP leak (#325).
+
+
 ### 2.6.13
 
 * Make it compile it Armbian Debian Buster (thanks @krishisola, fixes #321).
