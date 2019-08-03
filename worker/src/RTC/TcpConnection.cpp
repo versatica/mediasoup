@@ -23,7 +23,7 @@ namespace RTC
 		MS_TRACE();
 
 			num_rtc_tcp_connections++;
-			MS_DUMP(">>> num_rtc_tcp_connections: %zu", num_rtc_tcp_connections);
+			MS_ERROR(">>> num_rtc_tcp_connections: %zu", num_rtc_tcp_connections);
 	}
 
 	TcpConnection::~TcpConnection()
@@ -31,7 +31,7 @@ namespace RTC
 		MS_TRACE();
 
 			num_rtc_tcp_connections--;
-			MS_DUMP(">>> num_rtc_tcp_connections: %zu", num_rtc_tcp_connections);
+			MS_ERROR(">>> num_rtc_tcp_connections: %zu", num_rtc_tcp_connections);
 	}
 
 	void TcpConnection::UserOnTcpConnectionRead()

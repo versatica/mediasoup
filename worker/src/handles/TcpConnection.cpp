@@ -51,7 +51,7 @@ inline static void onWrite(uv_write_t* req, int status)
 
 inline static void onClose(uv_handle_t* handle)
 {
-		MS_DUMP(">>> num_tcp_connections: %zu", num_tcp_connections);
+		MS_ERROR(">>> num_tcp_connections: %zu", num_tcp_connections);
 
 	delete handle;
 }
@@ -79,7 +79,7 @@ TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
 
 		num_tcp_connections++;
-		MS_DUMP(">>> num_tcp_connections: %zu", num_tcp_connections);
+		MS_ERROR(">>> num_tcp_connections: %zu", num_tcp_connections);
 }
 
 TcpConnection::~TcpConnection()
@@ -92,7 +92,7 @@ TcpConnection::~TcpConnection()
 	delete[] this->buffer;
 
 		num_tcp_connections--;
-		MS_DUMP(">>> num_tcp_connections: %zu", num_tcp_connections);
+		MS_ERROR(">>> num_tcp_connections: %zu", num_tcp_connections);
 }
 
 void TcpConnection::Close()
