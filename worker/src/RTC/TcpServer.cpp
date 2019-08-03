@@ -56,6 +56,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->listener->OnTcpConnectionClosed(this, static_cast<RTC::TcpConnection*>(connection));
+		this->listener->OnRtcTcpConnectionClosed(this, static_cast<RTC::TcpConnection*>(connection));
 	}
 } // namespace RTC

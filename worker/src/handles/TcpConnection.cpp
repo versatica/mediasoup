@@ -228,6 +228,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 		onDone(false);
 		Close();
 
+		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
 
 		return;
@@ -316,6 +317,7 @@ void TcpConnection::Write(
 		onDone(false);
 		Close();
 
+		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
 
 		return;
@@ -453,6 +455,7 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		// Close server side of the connection.
 		Close();
 
+		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
 	}
 	// Some error.
@@ -465,6 +468,7 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		// Close server side of the connection.
 		Close();
 
+		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
 	}
 }

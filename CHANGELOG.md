@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.2.5 (in progress)
+### 3.2.5
 
 * Fix TCP leak (#325).
 

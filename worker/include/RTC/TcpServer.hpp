@@ -15,7 +15,8 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnTcpConnectionClosed(RTC::TcpServer* tcpServer, RTC::TcpConnection* connection) = 0;
+			virtual void OnRtcTcpConnectionClosed(
+			  RTC::TcpServer* tcpServer, RTC::TcpConnection* connection) = 0;
 		};
 
 	public:

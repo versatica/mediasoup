@@ -994,7 +994,7 @@ namespace RTC
 		OnPacketReceived(&tuple, data, len);
 	}
 
-	inline void WebRtcTransport::OnTcpConnectionClosed(
+	inline void WebRtcTransport::OnRtcTcpConnectionClosed(
 	  RTC::TcpServer* /*tcpServer*/, RTC::TcpConnection* connection)
 	{
 		MS_TRACE();
