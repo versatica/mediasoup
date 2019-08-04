@@ -27,7 +27,7 @@ namespace RTC
 		void IncomingPacket(int64_t arrivalTimeMs, uint16_t wideSeqNumber);
 
 	private:
-		void SendFeedback();
+		void SendAndResetFeedback();
 
 	private:
 		// Passed by argument.

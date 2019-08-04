@@ -64,7 +64,7 @@ namespace RTC
 		// {
 		// 	MS_DEBUG_DEV("RTP packet cannot be added into the feedback packet, sending feedback now");
 
-		// 	SendFeedback();
+		// 	SendAndResetFeedback();
 
 		// 	this->transportPacket->AddPacket(wideSeqNumber, timestamp);
 		// }
@@ -74,11 +74,11 @@ namespace RTC
 		// {
 		// 	MS_DEBUG_DEV("feedback packet is full, sending feedback now");
 
-		// 	SendFeedback();
+		// 	SendAndResetFeedback();
 		// }
 	}
 
-	void TransportCongestionControlServer::SendFeedback()
+	inline void TransportCongestionControlServer::SendAndResetFeedback()
 	{
 		MS_TRACE();
 
