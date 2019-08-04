@@ -170,6 +170,10 @@ namespace RTC
 		delete this->rembServer;
 		this->rembServer = nullptr;
 
+		// Delete Transport-CC server.
+		delete this->tccServer;
+		this->tccServer = nullptr;
+
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
 		this->rtcpTimer = nullptr;
@@ -313,6 +317,10 @@ namespace RTC
 
 		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
 			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
+
+		if (this->rtpHeaderExtensionIds.transportWideCc01 != 0u)
+			(*jsonRtpHeaderExtensionsIt)["transportWideCc01"] =
+			  this->rtpHeaderExtensionIds.transportWideCc01;
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
@@ -520,6 +528,10 @@ namespace RTC
 				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
 					this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
 
+				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
+					this->rtpHeaderExtensionIds.transportWideCc01 =
+					  producerRtpHeaderExtensionIds.transportWideCc01;
+
 				// Create status response.
 				json data = json::object();
 
@@ -527,19 +539,49 @@ namespace RTC
 
 				request->Accept(data);
 
-				// Check if REMB server must be created.
-				// TODO: Extend this for Transport-CC and so on.
+				// Check if TransportCongestionControl server or REMB server must be
+				// created.
 				{
 					auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 					auto& codecs                = producer->GetRtpParameters().codecs;
 
-					// Set REMB server bitrate estimator:
+					// Set TransportCongestionControl server:
+					// - if there it not REMB server, and
+					// - if not already set, and
+					// - there is transport-wide-cc-01 RTP header extension, and
+					// - there is "transport-cc" in codecs RTCP feedback.
+					//
+					// clang-format off
+					if (
+						!this->tccServer &&
+						!this->rembServer &&
+						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RtcpFeedback& fb)
+									{
+										return fb.type == "transport-cc";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControl server");
+
+						this->tccServer = new RTC::TransportCongestionControlServer(this);
+					}
+
+					// Set REMB server:
+					// - if there it not TransportCongestionControl server, and
 					// - if not already set, and
 					// - there is abs-send-time RTP header extension, and
 					// - there is "remb" in codecs RTCP feedback.
 					//
 					// clang-format off
 					if (
+						!this->tccServer &&
 						!this->rembServer &&
 						rtpHeaderExtensionIds.absSendTime != 0u &&
 						std::any_of(
@@ -1068,6 +1110,9 @@ namespace RTC
 		packet->SetRidExtensionId(this->rtpHeaderExtensionIds.rid);
 		packet->SetRepairedRidExtensionId(this->rtpHeaderExtensionIds.rrid);
 		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
+		packet->SetTransportWideCc01ExtensionId(this->rtpHeaderExtensionIds.transportWideCc01);
+
+		auto now = DepLibUV::GetTime();
 
 		// Feed the REMB server.
 		if (this->rembServer)
@@ -1076,9 +1121,17 @@ namespace RTC
 
 			if (packet->ReadAbsSendTime(absSendTime))
 			{
-				this->rembServer->IncomingPacket(
-				  DepLibUV::GetTime(), packet->GetPayloadLength(), *packet, absSendTime);
+				this->rembServer->IncomingPacket(now, packet->GetPayloadLength(), *packet, absSendTime);
 			}
+		}
+
+		// Feed the TransportCongestionControl server.
+		if (this->tccServer)
+		{
+			uint16_t wideSeqNumber;
+
+			if (packet->ReadTransportWideCc01(wideSeqNumber))
+				this->tccServer->IncomingPacket(now, wideSeqNumber);
 		}
 
 		// Get the associated Producer.
@@ -1816,6 +1869,8 @@ namespace RTC
 
 		packet->UpdateAbsSendTime(now);
 
+		// TODO: Update wide sequence number if present.
+
 		// Send the packet.
 		SendRtpPacket(packet);
 	}
@@ -2004,6 +2059,18 @@ namespace RTC
 		dataProducer->ReceiveSctpMessage(ppid, msg, len);
 	}
 
+	// TODO
+	// inline void Transport::OnTransportCongestionControlServerSendFeedback(
+	//   RTC::TransportCongestionControlServer* /*tccServer*/,
+	//   RTC::RTCP::FeedbackRtpTransport* packet)
+	// {
+	// 	MS_TRACE();
+
+	// 	packet->Serialize(RTC::RTCP::Buffer, RTC::MtuSize, []() {
+	// 		SendRtcpPacket(packet);
+	// 	});
+	// }
+
 	inline void Transport::OnRembClientAvailableBitrate(
 	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate) // NOLINT(misc-unused-parameters)
 	{
@@ -2037,6 +2104,8 @@ namespace RTC
 		auto now = DepLibUV::GetTime();
 
 		packet->UpdateAbsSendTime(now);
+
+		// TODO: Update wide sequence number if present.
 
 		// Send the packet.
 		SendRtpPacket(packet);

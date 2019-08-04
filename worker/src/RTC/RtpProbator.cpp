@@ -31,10 +31,9 @@ namespace RTC
 		0b10010000, 0b01111111, 0, 0, // PayloadType: 127, Sequence Number: 0
 		0, 0, 0, 0,                   // Timestamp: 0
 		0, 0, 0, 0,                   // SSRC: 0
-		0xBE, 0xDE, 0, 1,             // Header Extension (One-Byte Extensions)
-		0, 0, 0, 0                    // Space for abs-send-time extension.
-		// TODO: Add space for Transport-CC extension once implemented (this will
-		// make RtpPacket::SetExtensions() not have to shift the payload).
+		0xBE, 0xDE, 0, 2,             // Header Extension (One-Byte Extensions)
+		0, 0, 0, 0,                   // Space for abs-send-time extension.
+		0, 0, 0, 0                    // Space for transport-wide-cc-01 extension.
 	};
 	// clang-format on
 
@@ -81,6 +80,19 @@ namespace RTC
 			extensions.emplace_back(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
 
+			bufferPtr += extenLen;
+		}
+
+		// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
+		// NOTE: Just the corresponding id and space for its value.
+		{
+			extenLen = 2u;
+
+			extensions.emplace_back(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
+			  extenLen,
+			  bufferPtr);
+
 			// Not needed since this is the latest added extension.
 			// bufferPtr += extenLen;
 		}
@@ -91,6 +103,10 @@ namespace RTC
 		// Set our abs-send-time extension id.
 		this->probationPacket->SetAbsSendTimeExtensionId(
 		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
+
+		// Set our transport-wide-cc-01 extension id.
+		this->probationPacket->SetTransportWideCc01ExtensionId(
+		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01));
 
 		// Create the RTP periodic timer.
 		this->rtpPeriodicTimer = new Timer(this);

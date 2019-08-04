@@ -229,6 +229,10 @@ namespace RTC
 		{
 			MS_DUMP("  absSendTime       : extId:%" PRIu8, this->absSendTimeExtensionId);
 		}
+		if (this->transportWideCc01ExtensionId != 0u)
+		{
+			MS_DUMP("  transportWideCc01 : extId:%" PRIu8, this->transportWideCc01ExtensionId);
+		}
 		// Remove once it becomes RFC.
 		if (this->frameMarking07ExtensionId != 0u)
 		{
@@ -290,14 +294,15 @@ namespace RTC
 		MS_ASSERT(type == 1u || type == 2u, "type must be 1 or 2");
 
 		// Reset extension ids.
-		this->midExtensionId              = 0;
-		this->ridExtensionId              = 0;
-		this->rridExtensionId             = 0;
-		this->absSendTimeExtensionId      = 0;
-		this->frameMarking07ExtensionId   = 0;
-		this->frameMarkingExtensionId     = 0;
-		this->ssrcAudioLevelExtensionId   = 0;
-		this->videoOrientationExtensionId = 0;
+		this->midExtensionId               = 0u;
+		this->ridExtensionId               = 0u;
+		this->rridExtensionId              = 0u;
+		this->absSendTimeExtensionId       = 0u;
+		this->transportWideCc01ExtensionId = 0u;
+		this->frameMarking07ExtensionId    = 0u;
+		this->frameMarkingExtensionId      = 0u;
+		this->ssrcAudioLevelExtensionId    = 0u;
+		this->videoOrientationExtensionId  = 0u;
 
 		// Clear the One-Byte and Two-Bytes extension elements maps.
 		this->mapOneByteExtensions.clear();
@@ -509,14 +514,15 @@ namespace RTC
 		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Keep already set extension ids.
-		packet->midExtensionId              = this->midExtensionId;
-		packet->ridExtensionId              = this->ridExtensionId;
-		packet->rridExtensionId             = this->rridExtensionId;
-		packet->absSendTimeExtensionId      = this->absSendTimeExtensionId;
-		packet->frameMarking07ExtensionId   = this->frameMarking07ExtensionId; // Remove once RFC.
-		packet->frameMarkingExtensionId     = this->frameMarkingExtensionId;
-		packet->ssrcAudioLevelExtensionId   = this->ssrcAudioLevelExtensionId;
-		packet->videoOrientationExtensionId = this->videoOrientationExtensionId;
+		packet->midExtensionId               = this->midExtensionId;
+		packet->ridExtensionId               = this->ridExtensionId;
+		packet->rridExtensionId              = this->rridExtensionId;
+		packet->absSendTimeExtensionId       = this->absSendTimeExtensionId;
+		packet->transportWideCc01ExtensionId = this->transportWideCc01ExtensionId;
+		packet->frameMarking07ExtensionId    = this->frameMarking07ExtensionId; // Remove once RFC.
+		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
+		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
+		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
 
 		return packet;
 	}

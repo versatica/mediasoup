@@ -131,7 +131,7 @@ namespace RTC
 			RTP_STREAM_ID          = 2,
 			REPAIRED_RTP_STREAM_ID = 3,
 			ABS_SEND_TIME          = 4,
-			TRANSPORT_CC_01        = 5,
+			TRANSPORT_WIDE_CC_01   = 5,
 			FRAME_MARKING_07       = 6, // NOTE: Remove once RFC.
 			FRAME_MARKING          = 7,
 			SSRC_AUDIO_LEVEL       = 10,

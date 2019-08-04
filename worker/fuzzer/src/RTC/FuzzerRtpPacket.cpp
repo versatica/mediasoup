@@ -21,6 +21,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	bool flip;
 	uint16_t rotation;
 	uint32_t absSendTime;
+	uint16_t wideSeqNumber;
 	std::string mid;
 	std::string rid;
 	std::vector<::RTC::RtpPacket::GenericExtension> extensions;
@@ -64,7 +65,12 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->SetAbsSendTimeExtensionId(3);
 	packet->GetExtension(3, extenLen);
 	packet->ReadAbsSendTime(absSendTime);
-	packet->UpdateAbsSendTime(12345678);
+	packet->UpdateAbsSendTime(12345678u);
+
+	packet->SetTransportWideCc01ExtensionId(4);
+	packet->GetExtension(4, extenLen);
+	packet->ReadTransportWideCc01(wideSeqNumber);
+	packet->UpdateTransportWideCc01(12345u);
 
 	packet->SetSsrcAudioLevelExtensionId(1);
 	packet->GetExtension(1, extenLen);
@@ -130,7 +136,12 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->SetAbsSendTimeExtensionId(13);
 	packet->GetExtension(13, extenLen);
 	packet->ReadAbsSendTime(absSendTime);
-	packet->UpdateAbsSendTime(12345678);
+	packet->UpdateAbsSendTime(12345678u);
+
+	packet->SetTransportWideCc01ExtensionId(14);
+	packet->GetExtension(14, extenLen);
+	packet->ReadTransportWideCc01(wideSeqNumber);
+	packet->UpdateTransportWideCc01(12345u);
 
 	packet->SetSsrcAudioLevelExtensionId(11);
 	packet->GetExtension(11, extenLen);

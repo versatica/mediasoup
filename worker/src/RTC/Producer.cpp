@@ -184,6 +184,11 @@ namespace RTC
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
+			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			{
+				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
+			}
+
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			if (this->rtpHeaderExtensionIds.frameMarking07 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07)
 			{
@@ -1077,6 +1082,25 @@ namespace RTC
 					bufferPtr += extenLen;
 				}
 
+				// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
+				// NOTE: Just if this is simulcast or SVC.
+				if (this->type == RTC::RtpParameters::Type::SIMULCAST || this->type == RTC::RtpParameters::Type::SVC)
+				{
+					extenLen = 2u;
+
+					// NOTE: Add value 0. The sending Transport will update it.
+					uint16_t wideSeqNumber = 0u;
+
+					Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
+					  extenLen,
+					  bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
 				// NOTE: Remove this once framemarking draft becomes RFC.
 				// Proxy http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07.
 				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking07, extenLen);
@@ -1143,6 +1167,8 @@ namespace RTC
 			// be interested in after passing it to the Router).
 			packet->SetAbsSendTimeExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
+			packet->SetTransportWideCc01ExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01));
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			packet->SetFrameMarking07ExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07));
