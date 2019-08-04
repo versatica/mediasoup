@@ -27,7 +27,7 @@ private:
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:
 	void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) override;
-	void OnChannelRemotelyClosed(Channel::UnixStreamSocket* channel) override;
+	void OnChannelClosed(Channel::UnixStreamSocket* channel) override;
 
 	/* Methods inherited from SignalsHandler::Listener. */
 public:

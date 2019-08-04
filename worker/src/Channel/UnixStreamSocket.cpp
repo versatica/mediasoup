@@ -307,12 +307,11 @@ namespace Channel
 		}
 	}
 
-	void UnixStreamSocket::UserOnUnixStreamSocketClosed(bool isClosedByPeer)
+	void UnixStreamSocket::UserOnUnixStreamSocketClosed()
 	{
 		MS_TRACE_STD();
 
 		// Notify the listener.
-		if (isClosedByPeer)
-			this->listener->OnChannelRemotelyClosed(this);
+		this->listener->OnChannelClosed(this);
 	}
 } // namespace Channel
