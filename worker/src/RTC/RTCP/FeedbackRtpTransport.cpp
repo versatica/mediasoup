@@ -101,9 +101,10 @@ namespace RTC
 				if (!CheckDelta(this->preReferenceTimeMs, timestamp))
 				{
 					MS_DEBUG_DEV(
-						"RTP packet delta exceeded, not valid as base, resetting pre base [preReferenceTimeMs:%" PRIu64 ", timestamp:%" PRIu64 "]",
-						this->preReferenceTimeMs,
-						timestamp);
+					  "RTP packet delta exceeded, not valid as base, resetting pre base [preReferenceTimeMs:%" PRIu64
+					  ", timestamp:%" PRIu64 "]",
+					  this->preReferenceTimeMs,
+					  timestamp);
 
 					this->preBaseSequenceNumber = wideSeqNumber;
 					this->preReferenceTimeMs    = timestamp;
@@ -128,9 +129,7 @@ namespace RTC
 				// ignore it.
 				// NOTE: Not very spec compliant but libwebrtc does it.
 				if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(wideSeqNumber, lastSequenceNumber))
-				{
 					return true;
-				}
 
 				if (!CheckMissingPackets(lastSequenceNumber, wideSeqNumber))
 				{
@@ -142,9 +141,9 @@ namespace RTC
 				if (!CheckDelta(this->lastTimestamp, timestamp))
 				{
 					MS_DEBUG_DEV(
-						"RTP packet delta exceeded [lastTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
-						this->lastTimestamp,
-						timestamp);
+					  "RTP packet delta exceeded [lastTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
+					  this->lastTimestamp,
+					  timestamp);
 
 					return false;
 				}

@@ -85,8 +85,7 @@ namespace RTC
 		auto lastTimestamp     = this->feedbackPacket->GetLastTimestamp();
 
 		// Notify the listener.
-		this->listener->OnTransportCongestionControlServerSendRtcpPacket(
-		  this, this->feedbackPacket.get());
+		this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket.get());
 
 		// Create a new feedback packet.
 		this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
