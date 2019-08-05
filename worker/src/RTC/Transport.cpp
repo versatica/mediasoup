@@ -570,7 +570,7 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControl server");
 
-						this->tccServer = new RTC::TransportCongestionControlServer(this);
+						this->tccServer = new RTC::TransportCongestionControlServer(this, RTC::MtuSize);
 					}
 
 					// Set REMB server:
@@ -706,7 +706,7 @@ namespace RTC
 				request->Accept(data);
 
 				// Check if REMB client must be created.
-				// TODO: Extend this for Transport-CC and so on.
+				// TODO: Extend this for Transport-CC client when done.
 				{
 					auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
 					auto& codecs                = consumer->GetRtpParameters().codecs;
@@ -1693,7 +1693,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Uncomment when Transport-CC is ready.
+		// TODO: Uncomment when Transport-CC client is done.
 		// MS_ASSERT(this->rembClient || this->transportCcClient, "no REMB client nor Transport-CC client");
 		MS_ASSERT(this->rembClient, "no REMB client");
 
@@ -1869,7 +1869,7 @@ namespace RTC
 
 		packet->UpdateAbsSendTime(now);
 
-		// TODO: Update wide sequence number if present.
+		// TODO: Update wide sequence number if present when Transport-CC client is done.
 
 		// Send the packet.
 		SendRtpPacket(packet);
@@ -2059,18 +2059,6 @@ namespace RTC
 		dataProducer->ReceiveSctpMessage(ppid, msg, len);
 	}
 
-	// TODO
-	// inline void Transport::OnTransportCongestionControlServerSendFeedback(
-	//   RTC::TransportCongestionControlServer* /*tccServer*/,
-	//   RTC::RTCP::FeedbackRtpTransport* packet)
-	// {
-	// 	MS_TRACE();
-
-	// 	packet->Serialize(RTC::RTCP::Buffer, RTC::MtuSize, []() {
-	// 		SendRtcpPacket(packet);
-	// 	});
-	// }
-
 	inline void Transport::OnRembClientAvailableBitrate(
 	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate) // NOLINT(misc-unused-parameters)
 	{
@@ -2105,7 +2093,7 @@ namespace RTC
 
 		packet->UpdateAbsSendTime(now);
 
-		// TODO: Update wide sequence number if present.
+		// TODO: Update wide sequence number if present when Transport-CC client is done.
 
 		// Send the packet.
 		SendRtpPacket(packet);
@@ -2143,6 +2131,15 @@ namespace RTC
 		packet.SetSsrcs(ssrcs);
 		packet.Serialize(RTC::RTCP::Buffer);
 		SendRtcpPacket(&packet);
+	}
+
+	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(
+	  RTC::TransportCongestionControlServer* /*tccServer*/, RTC::RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		packet->Serialize(RTC::RTCP::Buffer);
+		SendRtcpPacket(packet);
 	}
 
 	inline void Transport::OnTimer(Timer* timer)
