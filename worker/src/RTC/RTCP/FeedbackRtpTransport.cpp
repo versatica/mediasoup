@@ -73,6 +73,7 @@ namespace RTC
 			{
 				this->referenceTimeMs    = timestamp;
 				this->baseSequenceNumber = wideSeqNumber;
+				this->packetStatusCount++;
 			}
 			else
 			{
