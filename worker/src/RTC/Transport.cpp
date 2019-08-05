@@ -1836,11 +1836,16 @@ namespace RTC
 		if (this->rembLimiterTimer->IsActive())
 			return;
 
+		if (this->rembServer)
+			return;
+
 		if (this->rtpHeaderExtensionIds.absSendTime == 0u)
 			return;
 
 		if (this->maxIncomingBitrate == 0u)
 			return;
+
+		MS_DEBUG_DEV("running REMB limiter timer");
 
 		this->rembLimiterTimer->Start(RembLimiterInterval, RembLimiterInterval);
 	}
