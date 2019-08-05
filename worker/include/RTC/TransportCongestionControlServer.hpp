@@ -29,7 +29,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		// std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> feedbackPacket;
+		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> feedbackPacket;
 		// Others.
 		size_t maxRtcpPacketLen{ 0u };
 		uint8_t feedbackPacketCount{ 0u };
