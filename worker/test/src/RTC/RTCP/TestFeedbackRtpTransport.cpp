@@ -50,7 +50,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				auto packet2 = FeedbackRtpTransportPacket::Parse(buffer, len);
 
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
-				REQUIRE(packet2->GetPacketStatusCount() == 14);
+				REQUIRE(packet2->GetPacketStatusCount() == 15);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
 
 				delete packet2;
@@ -88,7 +88,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				auto packet2 = FeedbackRtpTransportPacket::Parse(buffer, len);
 
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
-				REQUIRE(packet2->GetPacketStatusCount() == 1014);
+				REQUIRE(packet2->GetPacketStatusCount() == 1015);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
 
 				delete packet2;
