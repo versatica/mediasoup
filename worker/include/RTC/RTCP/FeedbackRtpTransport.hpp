@@ -156,7 +156,6 @@ namespace RTC
 			std::vector<ReceivedPacket> receivedPackets;
 			std::vector<Chunk*> chunks;
 			std::vector<uint16_t> deltas;
-			uint16_t lastSequenceNumber{ 0u };
 			uint64_t lastTimestamp{ 0u };
 			Context context;
 			size_t size{ 0u };
