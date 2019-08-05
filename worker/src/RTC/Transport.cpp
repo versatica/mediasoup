@@ -116,8 +116,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Set the closing flag.
-		this->closing = true;
+		// Set the destroying flag.
+		this->destroying = true;
 
 		// The destructor must delete and clear everything silently.
 
@@ -2025,11 +2025,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Ignore if closing.
+		// Ignore if destroying.
 		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
 		// its destructor is called first and then the parent Transport's destructor,
 		// and we would end here calling SendSctpData() which is an abstract method.
-		if (this->closing)
+		if (this->destroying)
 			return;
 
 		if (this->sctpAssociation)

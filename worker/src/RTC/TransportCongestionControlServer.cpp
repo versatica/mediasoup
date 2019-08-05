@@ -48,11 +48,7 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("too much time between RTP packets, resetting feedback packet");
 
-			// TODO
-			// delete this->feedbackPacket;
-
-			// TODO
-			// this->feedbackPacket = new RTC::RTCP::FeedbackRtpTransportPacket();
+			ResetFeedback();
 		}
 
 		this->lastRtpPacketReceivedAt = arrivalTimeMs;
@@ -64,29 +60,36 @@ namespace RTC
 		// {
 		// 	MS_DEBUG_DEV("RTP packet cannot be added into the feedback packet, sending feedback now");
 
-		// 	SendAndResetFeedback();
+		// 	SendFeedback();
+		// 	ResetFeedback();
 
 		// 	this->feedbackPacket->AddPacket(wideSeqNumber, timestamp);
 		// }
 
 		// If the feedback packet is full, send it now.
+		// TODO
 		// if (this->feedbackPacket->IsFull())
 		// {
 		// 	MS_DEBUG_DEV("feedback packet is full, sending feedback now");
 
-		// 	SendAndResetFeedback();
+		// 	SendFeedback();
+		// 	ResetFeedback();
 		// }
 	}
 
-	inline void TransportCongestionControlServer::SendAndResetFeedback()
+	inline void TransportCongestionControlServer::SendFeedback()
 	{
 		MS_TRACE();
 
 		// Notify the listener.
 		// TODO
 		// this->listener->OnTransportCongestionControlServerSendFeedback(this, this->feedbackPacket);
+	}
 
-		// Create a new feedback packet.
+	inline void TransportCongestionControlServer::ResetFeedback()
+	{
+		MS_TRACE();
+
 		// TODO
 		// delete this->feedbackPacket;
 

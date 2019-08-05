@@ -228,7 +228,7 @@ namespace RTC
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
 		Timer* rtcpTimer{ nullptr };
 		// Others.
-		bool closing{ false };
+		bool destroying{ false };
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;
 		RTC::SctpListener sctpListener;
