@@ -2,9 +2,7 @@
 #define MS_RTC_RTCP_FEEDBACK_RTP_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
-#include "RTC/SeqManager.hpp"
 #include <vector>
 
 /* RTP Extensions for Transport-wide Congestion Control
@@ -35,7 +33,6 @@
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   |           recv delta          |  recv delta   | zero padding  |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
  */
 
 namespace RTC
@@ -63,7 +60,6 @@ namespace RTC
 			bool AddPacket(uint16_t wideSeqNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			bool IsFull();
 			bool IsSerializationCompleted();
-
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
 			uint32_t GetReferenceTime() const;
@@ -89,8 +85,7 @@ namespace RTC
 			struct ReceivedPacket
 			{
 				ReceivedPacket(uint16_t sequenceNumber, uint16_t delta)
-				  : sequenceNumber(sequenceNumber),
-					  delta(delta)
+				  : sequenceNumber(sequenceNumber), delta(delta)
 				{
 				}
 
@@ -100,8 +95,8 @@ namespace RTC
 
 			struct Context
 			{
-				bool allSameStatus              = true;
-				Status currentStatus            = Status::None;
+				bool allSameStatus{ true };
+				Status currentStatus{ Status::None };
 				std::vector<Status> statuses;
 			};
 
@@ -127,15 +122,14 @@ namespace RTC
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
-				Status status;
-				uint16_t count;
+				Status status{ Status::None };
+				uint16_t count{ 0u };
 			};
 
 			class TwoBitVectorChunk : public Chunk
 			{
 			public:
-				TwoBitVectorChunk(std::vector<Status> statuses)
-					: statuses(statuses)
+				TwoBitVectorChunk(std::vector<Status> statuses) : statuses(statuses)
 				{
 				}
 				TwoBitVectorChunk(uint16_t buffer);
@@ -156,28 +150,29 @@ namespace RTC
 			bool CheckSize(size_t maxRtcpPacketLen);
 
 		private:
-			uint16_t baseSequenceNumber{ 0 };
-			uint16_t packetStatusCount{ 0 };
-			uint32_t referenceTimeMs{ 0 };
-			uint8_t feedbackPacketCount{ 0 };
+			uint16_t baseSequenceNumber{ 0u };
+			uint16_t packetStatusCount{ 0u };
+			uint32_t referenceTimeMs{ 0u };
+			uint8_t feedbackPacketCount{ 0u };
 			std::vector<ReceivedPacket> receivedPackets;
 			std::vector<Chunk*> chunks;
 			std::vector<uint16_t> deltas;
-			uint16_t lastSequenceNumber{ 0 };
-			uint64_t lastTimestamp{ 0 };
+			uint16_t lastSequenceNumber{ 0u };
+			uint64_t lastTimestamp{ 0u };
 			Context context;
-			size_t size{ 0 };
+			size_t size{ 0u };
 		};
 
 		/* Inline instance methods. */
+
 		inline FeedbackRtpTransportPacket::FeedbackRtpTransportPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
-		  : FeedbackRtpPacket(RTCP::FeedbackRtp::MessageType::TCC, senderSsrc, mediaSsrc)
+		  : FeedbackRtpPacket(RTC::RTCP::FeedbackRtp::MessageType::TCC, senderSsrc, mediaSsrc)
 		{
 		}
 
 		inline bool FeedbackRtpTransportPacket::IsFull()
 		{
-			return this->packetStatusCount == maxPacketStatusCount;
+			return this->packetStatusCount == FeedbackRtpTransportPacket::maxPacketStatusCount;
 		}
 
 		inline uint16_t FeedbackRtpTransportPacket::GetBaseSequenceNumber() const
@@ -222,7 +217,7 @@ namespace RTC
 			// Fixed packet size.
 			size_t size = FeedbackRtpPacket::GetSize();
 
-			size += fixedHeaderSize;
+			size += FeedbackRtpTransportPacket::fixedHeaderSize;
 
 			// Size chunks and deltas represented in this packet.
 			size += this->size;

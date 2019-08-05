@@ -63,13 +63,17 @@ namespace RTC
 			MS_DEBUG_DEV("RTP packet cannot be added into the feedback packet, sending feedback now");
 
 			// Notify the listener.
-			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket.get());
+			this->listener->OnTransportCongestionControlServerSendRtcpPacket(
+			  this, this->feedbackPacket.get());
 
 			// Create a new feedback packet.
 			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
 
 			// Increment packet count.
 			this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
+
+			// Pass the packet info to the new feedback packet.
+			this->feedbackPacket->AddPacket(wideSeqNumber, arrivalTimeMs, this->maxRtcpPacketLen);
 		}
 
 		// If the feedback packet is full, send it now.
@@ -78,7 +82,8 @@ namespace RTC
 			MS_DEBUG_DEV("feedback packet is full, sending feedback now");
 
 			// Notify the listener.
-			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket.get());
+			this->listener->OnTransportCongestionControlServerSendRtcpPacket(
+			  this, this->feedbackPacket.get());
 
 			// Create a new feedback packet.
 			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));

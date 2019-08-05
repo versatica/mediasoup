@@ -3,8 +3,6 @@
 #include "catch.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 
-// #define MS_CLASS "TEST::RTCP::FEEDBACK"
-
 using namespace RTC::RTCP;
 
 SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
@@ -68,6 +66,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		uint32_t mediaSsrc  = 2222;
 
 		FeedbackRtpTransportPacket* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
+
 		packet->SetFeedbackPacketCount(1);
 		packet->AddPacket(1000, 10000000, RtcpMtu);
 		packet->AddPacket(2015, 10000000, RtcpMtu);
