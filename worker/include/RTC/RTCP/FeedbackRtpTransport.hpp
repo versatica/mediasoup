@@ -59,7 +59,6 @@ namespace RTC
 		public:
 			bool AddPacket(uint16_t wideSeqNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			bool IsFull();
-			bool IsSerializationCompleted();
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
 			uint32_t GetReferenceTime() const;
