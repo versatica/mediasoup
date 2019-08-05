@@ -98,7 +98,7 @@ namespace RTC
 
 		if (timer == this->feedbackSendPeriodicTimer)
 		{
-			if (feedbackPacket->GetPacketStatusCount() == 0u)
+			if (feedbackPacket->GetPacketStatusCount() <= 1u)
 				return;
 
 			// Notify the listener.
