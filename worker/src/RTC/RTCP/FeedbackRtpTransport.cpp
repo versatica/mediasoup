@@ -209,17 +209,16 @@ namespace RTC
 			MS_TRACE();
 
 			uint16_t previousSequenceNumber = this->receivedPackets.back().sequenceNumber;
-
 			auto missingPackets = static_cast<uint16_t>(sequenceNumber - (previousSequenceNumber + 1));
 			Status status;
 
-			MS_DEBUG_DEV(
-			  "[sequenceNumber:%" PRIu16 ", delta:%" PRIu16 ", missingPackets:%" PRIu16
-			  ", packetStatusCount:%" PRIu16 "]",
-			  sequenceNumber,
-			  delta,
-			  missingPackets,
-			  this->packetStatusCount);
+			// MS_DEBUG_DEV(
+			//   "[sequenceNumber:%" PRIu16 ", delta:%" PRIu16 ", missingPackets:%" PRIu16
+			//   ", packetStatusCount:%" PRIu16 "]",
+			//   sequenceNumber,
+			//   delta,
+			//   missingPackets,
+			//   this->packetStatusCount);
 
 			// Beginning of a block and more than 7 missing RTP packets.
 			if (this->context.statuses.empty() && missingPackets > 7)
