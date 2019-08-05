@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpTransportPacket"
-#define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "Logger.hpp"
@@ -203,7 +203,7 @@ namespace RTC
 			offset += 1;
 
 			// Serialize chunks.
-			for (auto* chunk : chunks)
+			for (auto* chunk : this->chunks)
 			{
 				offset += chunk->Serialize(buffer + offset);
 			}
@@ -305,7 +305,7 @@ namespace RTC
 				}
 
 				// Fill status vector.
-				for (uint8_t i{ 0u }; i < missingPackets || this->context.statuses.size() < 7; ++i)
+				for (uint8_t i{ 0u }; i < missingPackets && this->context.statuses.size() < 7; ++i)
 				{
 					this->context.statuses.emplace_back(Status::NotReceived);
 				}
@@ -455,7 +455,7 @@ namespace RTC
 
 			uint8_t i{ 12u };
 
-			for (auto& status : this->statuses)
+			for (auto status : this->statuses)
 			{
 				bytes |= status << i;
 				i -= 2;
