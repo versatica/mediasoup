@@ -58,8 +58,8 @@ namespace RTC
 
 		public:
 			bool AddPacket(uint16_t wideSeqNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
-			bool IsEmpty();
 			bool IsFull();
+			bool IsSerializationCompleted();
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
 			uint32_t GetReferenceTime() const;
@@ -168,11 +168,6 @@ namespace RTC
 		inline FeedbackRtpTransportPacket::FeedbackRtpTransportPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
 		  : FeedbackRtpPacket(RTC::RTCP::FeedbackRtp::MessageType::TCC, senderSsrc, mediaSsrc)
 		{
-		}
-
-		inline bool FeedbackRtpTransportPacket::IsEmpty()
-		{
-			return this->packetStatusCount == 0;
 		}
 
 		inline bool FeedbackRtpTransportPacket::IsFull()
