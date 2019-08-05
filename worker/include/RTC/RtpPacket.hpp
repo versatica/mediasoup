@@ -332,74 +332,47 @@ namespace RTC
 
 	inline void RtpPacket::SetMidExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->midExtensionId = id;
 	}
 
 	inline void RtpPacket::SetRidExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->ridExtensionId = id;
 	}
 
 	inline void RtpPacket::SetRepairedRidExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->rridExtensionId = id;
 	}
 
 	inline void RtpPacket::SetAbsSendTimeExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->absSendTimeExtensionId = id;
 	}
 
 	inline void RtpPacket::SetTransportWideCc01ExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->transportWideCc01ExtensionId = id;
 	}
 
 	// NOTE: Remove once RFC.
 	inline void RtpPacket::SetFrameMarking07ExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->frameMarking07ExtensionId = id;
 	}
 
 	inline void RtpPacket::SetFrameMarkingExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->frameMarkingExtensionId = id;
 	}
 
 	inline void RtpPacket::SetSsrcAudioLevelExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->ssrcAudioLevelExtensionId = id;
 	}
 
 	inline void RtpPacket::SetVideoOrientationExtensionId(uint8_t id)
 	{
-		if (id == 0u)
-			return;
-
 		this->videoOrientationExtensionId = id;
 	}
 
