@@ -112,7 +112,7 @@ namespace RTC
 				// Deltas are represented as multiples of 250us.
 				else
 				{
-					delta = (this->lastTimestamp - timestamp) * 1000 / 250;
+					delta = (timestamp - this->lastTimestamp) * 1000 / 250;
 				}
 
 				if (!FillChunk(wideSeqNumber, delta))
