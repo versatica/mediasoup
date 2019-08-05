@@ -37,7 +37,7 @@ namespace RTC
 		*connection = new RTC::TcpConnection(this->connListener, 65536);
 	}
 
-	bool TcpServer::UserOnNewTcpConnection(::TcpConnection* connection)
+	bool TcpServer::UserOnNewTcpConnection(::TcpConnection* /*connection*/)
 	{
 		MS_TRACE();
 
