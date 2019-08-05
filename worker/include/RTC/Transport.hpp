@@ -133,6 +133,7 @@ namespace RTC
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendSctpData(const uint8_t* data, size_t len)             = 0;
 		void DistributeAvailableOutgoingBitrate();
+		void MayRunRembLimiterTimer();
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
@@ -223,6 +224,7 @@ namespace RTC
 		RTC::RembServer::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
 		Timer* rtcpTimer{ nullptr };
+		Timer* rembLimiterTimer{ nullptr };
 		// Others.
 		bool destroying{ false };
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;

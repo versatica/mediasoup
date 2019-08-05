@@ -24,6 +24,10 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint64_t RembLimiterInterval{ 2000 }; // In ms,
+
 	/* Instance methods. */
 
 	Transport::Transport(const std::string& id, Listener* listener, json& data)
@@ -110,6 +114,9 @@ namespace RTC
 
 		// Create the RTCP timer.
 		this->rtcpTimer = new Timer(this);
+
+		// Create the REMB limiter timer.
+		this->rembLimiterTimer = new Timer(this);
 	}
 
 	Transport::~Transport()
@@ -177,6 +184,10 @@ namespace RTC
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
 		this->rtcpTimer = nullptr;
+
+		// Delete the REMB limiter timer.
+		delete this->rembLimiterTimer;
+		this->rembLimiterTimer = nullptr;
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -446,23 +457,27 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE:
 			{
-				static constexpr uint32_t MinBitrate{ 10000 };
+				static constexpr uint32_t MinBitrate{ 100000 };
 
 				auto jsonBitrateIt = request->data.find("bitrate");
 
 				if (jsonBitrateIt == request->data.end() || !jsonBitrateIt->is_number_unsigned())
 					MS_THROW_TYPE_ERROR("missing bitrate");
 
-				auto bitrate = jsonBitrateIt->get<uint32_t>();
+				this->maxIncomingBitrate = jsonBitrateIt->get<uint32_t>();
 
-				if (bitrate < MinBitrate)
-					bitrate = MinBitrate;
+				if (this->maxIncomingBitrate != 0u && this->maxIncomingBitrate < MinBitrate)
+					this->maxIncomingBitrate = MinBitrate;
 
-				this->maxIncomingBitrate = bitrate;
-
-				MS_DEBUG_TAG(bwe, "WebRtcTransport maximum incoming bitrate set to %" PRIu32, bitrate);
+				MS_DEBUG_TAG(
+				  bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
 
 				request->Accept();
+
+				if (this->maxIncomingBitrate > 0u)
+					MayRunRembLimiterTimer();
+				else
+					this->rembLimiterTimer->Stop();
 
 				break;
 			}
@@ -605,6 +620,10 @@ namespace RTC
 						this->rembServer = new RTC::RembServer::RemoteBitrateEstimatorAbsSendTime(this);
 					}
 				}
+
+				// May start the REMB limiter timer.
+				if (producer->GetKind() == RTC::Media::Kind::VIDEO)
+					MayRunRembLimiterTimer();
 
 				break;
 			}
@@ -817,7 +836,7 @@ namespace RTC
 				// Insert into the map.
 				this->mapDataProducers[dataProducerId] = dataProducer;
 
-				MS_DEBUG_DEV("Producer created [dataProducerId:%s]", dataProducerId.c_str());
+				MS_DEBUG_DEV("DataProducer created [dataProducerId:%s]", dataProducerId.c_str());
 
 				json data = json::object();
 
@@ -1052,6 +1071,9 @@ namespace RTC
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
+		// May start the REMB limiter timer.
+		MayRunRembLimiterTimer();
+
 		// Tell all Consumers.
 		for (auto& kv : this->mapConsumers)
 		{
@@ -1087,6 +1109,9 @@ namespace RTC
 
 		// Stop the RTCP timer.
 		this->rtcpTimer->Stop();
+
+		// Stop the REMB limiter timer.
+		this->rembLimiterTimer->Stop();
 
 		// Tell all Consumers.
 		for (auto& kv : this->mapConsumers)
@@ -1658,7 +1683,7 @@ namespace RTC
 		{
 			auto* consumer = kv.second;
 
-			for (auto& rtpStream : consumer->GetRtpStreams())
+			for (auto* rtpStream : consumer->GetRtpStreams())
 			{
 				// Reset the Compound packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
@@ -1802,6 +1827,22 @@ namespace RTC
 
 			consumer->ApplyLayers();
 		}
+	}
+
+	void Transport::MayRunRembLimiterTimer()
+	{
+		MS_TRACE();
+
+		if (this->rembLimiterTimer->IsActive())
+			return;
+
+		if (this->rtpHeaderExtensionIds.absSendTime == 0u)
+			return;
+
+		if (this->maxIncomingBitrate == 0u)
+			return;
+
+		this->rembLimiterTimer->Start(RembLimiterInterval, RembLimiterInterval);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2201,7 +2242,42 @@ namespace RTC
 			 * of all participants.
 			 */
 			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
+
 			this->rtcpTimer->Start(interval);
+		}
+		else if (timer == this->rembLimiterTimer)
+		{
+			std::vector<uint32_t> ssrcs;
+
+			for (auto& kv : this->mapProducers)
+			{
+				auto* producer = kv.second;
+
+				// Do this just for video.
+				if (producer->GetKind() != RTC::Media::Kind::VIDEO)
+					continue;
+
+				for (auto& kv2 : producer->GetRtpStreams())
+				{
+					auto* rtpStream = kv2.first;
+
+					ssrcs.push_back(rtpStream->GetSsrc());
+				}
+			}
+
+			if (!ssrcs.empty())
+			{
+				RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+
+				packet.SetBitrate(this->maxIncomingBitrate);
+				packet.SetSsrcs(ssrcs);
+				packet.Serialize(RTC::RTCP::Buffer);
+				SendRtcpPacket(&packet);
+			}
+			else
+			{
+				this->rembLimiterTimer->Stop();
+			}
 		}
 	}
 } // namespace RTC
