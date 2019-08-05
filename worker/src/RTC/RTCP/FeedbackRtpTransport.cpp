@@ -196,13 +196,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("<FeedbackRtpTransportPacket>");
-			MS_DEBUG_DEV("  base sequence         : %" PRIu16, this->baseSequenceNumber);
-			MS_DEBUG_DEV("  packet status count   : %" PRIu16, this->packetStatusCount);
-			MS_DEBUG_DEV("  reference time        : %" PRIu32, this->referenceTimeMs);
-			MS_DEBUG_DEV("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
-			MS_DEBUG_DEV("  size                  : %zu", GetSize());
-			MS_DEBUG_DEV("</FeedbackRtpTransportPacket>");
+			MS_DUMP("<FeedbackRtpTransportPacket>");
+			MS_DUMP("  base sequence         : %" PRIu16, this->baseSequenceNumber);
+			MS_DUMP("  packet status count   : %" PRIu16, this->packetStatusCount);
+			MS_DUMP("  reference time        : %" PRIu32, this->referenceTimeMs);
+			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
+			MS_DUMP("  size                  : %zu", GetSize());
+			MS_DUMP("</FeedbackRtpTransportPacket>");
 		}
 
 		bool FeedbackRtpTransportPacket::FillChunk(uint16_t sequenceNumber, uint16_t delta)

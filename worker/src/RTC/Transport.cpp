@@ -571,6 +571,10 @@ namespace RTC
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControl server");
 
 						this->tccServer = new RTC::TransportCongestionControlServer(this, RTC::MtuSize);
+
+						// If the transport is connected, tell the Transport-CC server.
+						if (IsConnected())
+							this->tccServer->TransportConnected();
 					}
 
 					// Set REMB server:
@@ -1071,6 +1075,10 @@ namespace RTC
 		// Tell the REMB client.
 		if (this->rembClient)
 			this->rembClient->TransportConnected();
+
+		// Tell the Transport-CC server.
+		if (this->tccServer)
+			this->tccServer->TransportConnected();
 	}
 
 	void Transport::Disconnected()
@@ -1099,6 +1107,10 @@ namespace RTC
 		// Tell the REMB client.
 		if (this->rembClient)
 			this->rembClient->TransportDisconnected();
+
+		// Tell the Transport-CC server.
+		if (this->tccServer)
+			this->tccServer->TransportDisconnected();
 	}
 
 	void Transport::ReceiveRtpPacket(RTC::RtpPacket* packet)

@@ -8,7 +8,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t MaxElapsedTimeBetweenRtpPackets{ 5000u }; // In ms.
+	static constexpr uint64_t FeedbackSendInterval{ 100u }; // In ms.
 
 	/* Instance methods. */
 
@@ -23,11 +23,30 @@ namespace RTC
 
 		// Set initial packet count.
 		this->feedbackPacket->SetFeedbackPacketCount(this->feedbackPacketCount);
+
+		// Create the feedback send periodic timer.
+		this->feedbackSendPeriodicTimer = new Timer(this);
 	}
 
 	TransportCongestionControlServer::~TransportCongestionControlServer()
 	{
 		MS_TRACE();
+
+		delete this->feedbackSendPeriodicTimer;
+	}
+
+	void TransportCongestionControlServer::TransportConnected()
+	{
+		MS_TRACE();
+
+		this->feedbackSendPeriodicTimer->Start(FeedbackSendInterval, FeedbackSendInterval);
+	}
+
+	void TransportCongestionControlServer::TransportDisconnected()
+	{
+		MS_TRACE();
+
+		this->feedbackSendPeriodicTimer->Stop();
 	}
 
 	void TransportCongestionControlServer::IncomingPacket(int64_t arrivalTimeMs, uint16_t wideSeqNumber)
@@ -35,26 +54,6 @@ namespace RTC
 		MS_TRACE();
 
 		// MS_DEBUG_DEV("[arrivalTimeMs:%" PRIu64 ", wideSeqNumber:%" PRIu16 "]", arrivalTimeMs, wideSeqNumber);
-
-		// If this RTP packet arrives after more than MaxElapsedTimeBetweenRtpPackets
-		// reset our feedback packet.
-		// clang-format off
-		if (
-			this->lastRtpPacketReceivedAt != 0u &&
-			arrivalTimeMs - this->lastRtpPacketReceivedAt > MaxElapsedTimeBetweenRtpPackets
-		)
-		// clang-format on
-		{
-			MS_DEBUG_DEV("too much time between RTP packets, resetting feedback packet");
-
-			// Create a new feedback packet.
-			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
-
-			// Keep the previous packet count.
-			this->feedbackPacket->SetFeedbackPacketCount(this->feedbackPacketCount);
-		}
-
-		this->lastRtpPacketReceivedAt = arrivalTimeMs;
 
 		// Provide the feedback packet with the RTP packet info. If it fails, send
 		// current feedback and add the RTP packet to a new one.
@@ -80,6 +79,27 @@ namespace RTC
 		if (this->feedbackPacket->IsFull())
 		{
 			MS_DEBUG_DEV("feedback packet is full, sending feedback now");
+
+			// Notify the listener.
+			this->listener->OnTransportCongestionControlServerSendRtcpPacket(
+			  this, this->feedbackPacket.get());
+
+			// Create a new feedback packet.
+			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
+
+			// Increment packet count.
+			this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
+		}
+	}
+
+	inline void TransportCongestionControlServer::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->feedbackSendPeriodicTimer)
+		{
+			if (feedbackPacket->GetPacketStatusCount() == 0u)
+				return;
 
 			// Notify the listener.
 			this->listener->OnTransportCongestionControlServerSendRtcpPacket(
