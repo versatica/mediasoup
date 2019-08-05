@@ -19,7 +19,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Create a feedback packet.
-		this->feedbackPacket = packet.reset(new RTC::RTCP::FeedbackRtpTransportPacket());
+		this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
 
 		// Set initial packet count.
 		this->feedbackPacket->SetFeedbackPacketCount(this->feedbackPacketCount);
@@ -48,7 +48,7 @@ namespace RTC
 			MS_DEBUG_DEV("too much time between RTP packets, resetting feedback packet");
 
 			// Create a new feedback packet.
-			this->feedbackPacket = packet.reset(new RTC::RTCP::FeedbackRtpTransportPacket());
+			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
 
 			// Keep the previous packet count.
 			this->feedbackPacket->SetFeedbackPacketCount(this->feedbackPacketCount);
@@ -58,15 +58,15 @@ namespace RTC
 
 		// Provide the feedback packet with the RTP packet info. If it fails, send
 		// current feedback and add the RTP packet to a new one.
-		if (!this->feedbackPacket->AddPacket(wideSeqNumber, timestamp, this->maxRtcpPacketLen))
+		if (!this->feedbackPacket->AddPacket(wideSeqNumber, arrivalTimeMs, this->maxRtcpPacketLen))
 		{
 			MS_DEBUG_DEV("RTP packet cannot be added into the feedback packet, sending feedback now");
 
 			// Notify the listener.
-			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket);
+			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket.get());
 
 			// Create a new feedback packet.
-			this->feedbackPacket = packet.reset(new RTC::RTCP::FeedbackRtpTransportPacket());
+			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
 
 			// Increment packet count.
 			this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
@@ -78,10 +78,10 @@ namespace RTC
 			MS_DEBUG_DEV("feedback packet is full, sending feedback now");
 
 			// Notify the listener.
-			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket);
+			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket.get());
 
 			// Create a new feedback packet.
-			this->feedbackPacket = packet.reset(new RTC::RTCP::FeedbackRtpTransportPacket());
+			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
 
 			// Increment packet count.
 			this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
