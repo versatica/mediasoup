@@ -34,7 +34,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		// Alloated by this.
 		// TODO
-		// RTC::RTCP::FeedbackRtpTransportPacket* transportPacket{ nullptr };
+		// RTC::RTCP::FeedbackRtpTransportPacket* feedbackPacket{ nullptr };
 		// Others.
 		uint64_t lastRtpPacketReceivedAt{ 0u };
 	};

@@ -20,7 +20,7 @@ namespace RTC
 
 		// Create a TransportCongestionControl feedback packet.
 		// TODO
-		// this->transportPacket = new RTC::RTCP::FeedbackRtpTransportPacket();
+		// this->feedbackPacket = new RTC::RTCP::FeedbackRtpTransportPacket();
 	}
 
 	TransportCongestionControlServer::~TransportCongestionControlServer()
@@ -28,7 +28,7 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO
-		// delete this->transportPacket;
+		// delete this->feedbackPacket;
 	}
 
 	void TransportCongestionControlServer::IncomingPacket(int64_t arrivalTimeMs, uint16_t wideSeqNumber)
@@ -49,10 +49,10 @@ namespace RTC
 			MS_DEBUG_DEV("too much time between RTP packets, resetting feedback packet");
 
 			// TODO
-			// delete this->transportPacket;
+			// delete this->feedbackPacket;
 
 			// TODO
-			// this->transportPacket = new RTC::RTCP::FeedbackRtpTransportPacket();
+			// this->feedbackPacket = new RTC::RTCP::FeedbackRtpTransportPacket();
 		}
 
 		this->lastRtpPacketReceivedAt = arrivalTimeMs;
@@ -60,17 +60,17 @@ namespace RTC
 		// Provide the feedback packet with the RTP packet info. If it fails, send
 		// current feedback and add the RTP packet to a new one.
 		// TODO
-		// if (!this->transportPacket->AddPacket(wideSeqNumber, timestamp))
+		// if (!this->feedbackPacket->AddPacket(wideSeqNumber, timestamp))
 		// {
 		// 	MS_DEBUG_DEV("RTP packet cannot be added into the feedback packet, sending feedback now");
 
 		// 	SendAndResetFeedback();
 
-		// 	this->transportPacket->AddPacket(wideSeqNumber, timestamp);
+		// 	this->feedbackPacket->AddPacket(wideSeqNumber, timestamp);
 		// }
 
 		// If the feedback packet is full, send it now.
-		// if (this->transportPacket->IsFull())
+		// if (this->feedbackPacket->IsFull())
 		// {
 		// 	MS_DEBUG_DEV("feedback packet is full, sending feedback now");
 
@@ -84,13 +84,13 @@ namespace RTC
 
 		// Notify the listener.
 		// TODO
-		// this->listener->OnTransportCongestionControlServerSendFeedback(this, this->transportPacket);
+		// this->listener->OnTransportCongestionControlServerSendFeedback(this, this->feedbackPacket);
 
 		// Create a new feedback packet.
 		// TODO
-		// delete this->transportPacket;
+		// delete this->feedbackPacket;
 
 		// TODO
-		// this->transportPacket = new RTC::RTCP::FeedbackRtpTransportPacket();
+		// this->feedbackPacket = new RTC::RTCP::FeedbackRtpTransportPacket();
 	}
 } // namespace RTC
