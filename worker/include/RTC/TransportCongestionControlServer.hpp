@@ -28,6 +28,9 @@ namespace RTC
 		void TransportDisconnected();
 		void IncomingPacket(int64_t arrivalTimeMs, uint16_t wideSeqNumber);
 
+	private:
+		void SendFeedback();
+
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
 		void OnTimer(Timer* timer) override;

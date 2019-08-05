@@ -53,23 +53,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// MS_DEBUG_DEV("[arrivalTimeMs:%" PRIu64 ", wideSeqNumber:%" PRIu16 "]", arrivalTimeMs, wideSeqNumber);
-
 		// Provide the feedback packet with the RTP packet info. If it fails, send
 		// current feedback and add the RTP packet to a new one.
 		if (!this->feedbackPacket->AddPacket(wideSeqNumber, arrivalTimeMs, this->maxRtcpPacketLen))
 		{
 			MS_DEBUG_DEV("RTP packet cannot be added into the feedback packet, sending feedback now");
 
-			// Notify the listener.
-			this->listener->OnTransportCongestionControlServerSendRtcpPacket(
-			  this, this->feedbackPacket.get());
-
-			// Create a new feedback packet.
-			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
-
-			// Increment packet count.
-			this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
+			SendFeedback();
 
 			// Pass the packet info to the new feedback packet.
 			this->feedbackPacket->AddPacket(wideSeqNumber, arrivalTimeMs, this->maxRtcpPacketLen);
@@ -80,16 +70,32 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("feedback packet is full, sending feedback now");
 
-			// Notify the listener.
-			this->listener->OnTransportCongestionControlServerSendRtcpPacket(
-			  this, this->feedbackPacket.get());
-
-			// Create a new feedback packet.
-			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
-
-			// Increment packet count.
-			this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
+			SendFeedback();
 		}
+	}
+
+	inline void TransportCongestionControlServer::SendFeedback()
+	{
+		MS_TRACE();
+
+		if (this->feedbackPacket->GetPacketStatusCount() == 0u)
+			return;
+
+		auto lastWideSeqNumber = this->feedbackPacket->GetLastSequenceNumber();
+		auto lastTimestamp     = this->feedbackPacket->GetLastTimestamp();
+
+		// Notify the listener.
+		this->listener->OnTransportCongestionControlServerSendRtcpPacket(
+		  this, this->feedbackPacket.get());
+
+		// Create a new feedback packet.
+		this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
+
+		// Increment packet count.
+		this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
+
+		// Pass the last packet info as pre base for the new feedback packet.
+		this->feedbackPacket->AddPacket(lastWideSeqNumber, lastTimestamp, this->maxRtcpPacketLen);
 	}
 
 	inline void TransportCongestionControlServer::OnTimer(Timer* timer)
@@ -97,19 +103,6 @@ namespace RTC
 		MS_TRACE();
 
 		if (timer == this->feedbackSendPeriodicTimer)
-		{
-			if (feedbackPacket->GetPacketStatusCount() <= 1u)
-				return;
-
-			// Notify the listener.
-			this->listener->OnTransportCongestionControlServerSendRtcpPacket(
-			  this, this->feedbackPacket.get());
-
-			// Create a new feedback packet.
-			this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
-
-			// Increment packet count.
-			this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
-		}
+			SendFeedback();
 	}
 } // namespace RTC

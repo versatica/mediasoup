@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpTransportPacket"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "Logger.hpp"
@@ -68,17 +68,65 @@ namespace RTC
 
 			uint16_t delta = 0;
 
-			// This is the first packet info.
-			if (this->receivedPackets.empty())
+			// Let's see if we must update our pre base.
+			if (!hasPreBase)
 			{
+				MS_DEBUG_DEV("setting pre base");
+
+				this->hasPreBase            = true;
+				this->preBaseSequenceNumber = wideSeqNumber;
+				this->preReferenceTimeMs    = timestamp;
+
+				return true;
+			}
+			// Ensure this can be the base. Update base otherwise.
+			// clang-format off
+			else if (
+				this->receivedPackets.empty() &&
+				wideSeqNumber != this->preBaseSequenceNumber + 1
+			)
+			// clang-format on
+			{
+				MS_DEBUG_DEV("not valid as base, resetting pre base");
+
+				this->preBaseSequenceNumber = wideSeqNumber;
+				this->preReferenceTimeMs    = timestamp;
+
+				return true;
+			}
+			// This is the base (but let's see).
+			else if (this->receivedPackets.empty())
+			{
+				// Not a valid base. Use it as pre base.
+				if (!CheckDelta(this->preReferenceTimeMs, timestamp))
+				{
+					MS_DEBUG_DEV(
+						"RTP packet delta exceeded, not valid as base, resetting pre base [preReferenceTimeMs:%" PRIu64 ", timestamp:%" PRIu64 "]",
+						this->preReferenceTimeMs,
+						timestamp);
+
+					this->preBaseSequenceNumber = wideSeqNumber;
+					this->preReferenceTimeMs    = timestamp;
+
+					return true;
+				}
+
+				MS_DEBUG_DEV("setting base");
+
 				this->referenceTimeMs    = timestamp;
 				this->baseSequenceNumber = wideSeqNumber;
-				this->packetStatusCount++;
+
+				delta = (timestamp - this->preReferenceTimeMs) * 1000 / 250;
+
+				FillChunk(this->preBaseSequenceNumber, wideSeqNumber, delta);
 			}
 			else
 			{
 				auto lastSequenceNumber = this->receivedPackets.back().sequenceNumber;
 
+				// If the wide sequence number of the new packet is lower than the highest seen,
+				// ignore it.
+				// NOTE: Not very spec compliant but libwebrtc does it.
 				if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(wideSeqNumber, lastSequenceNumber))
 				{
 					return true;
@@ -93,7 +141,10 @@ namespace RTC
 
 				if (!CheckDelta(this->lastTimestamp, timestamp))
 				{
-					MS_DEBUG_DEV("RTP packet delta exceeded");
+					MS_DEBUG_DEV(
+						"RTP packet delta exceeded [lastTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
+						this->lastTimestamp,
+						timestamp);
 
 					return false;
 				}
@@ -115,12 +166,9 @@ namespace RTC
 					delta = (timestamp - this->lastTimestamp) * 1000 / 250;
 				}
 
-				if (!FillChunk(wideSeqNumber, delta))
-				{
-					MS_DEBUG_DEV("packet size exceeded");
+				uint16_t previousSequenceNumber = this->receivedPackets.back().sequenceNumber;
 
-					return false;
-				}
+				FillChunk(previousSequenceNumber, wideSeqNumber, delta);
 			}
 
 			// Store last timestamp.
@@ -197,19 +245,20 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<FeedbackRtpTransportPacket>");
+			MS_DUMP("  pre base sequence     : %" PRIu16, this->preBaseSequenceNumber);
 			MS_DUMP("  base sequence         : %" PRIu16, this->baseSequenceNumber);
 			MS_DUMP("  packet status count   : %" PRIu16, this->packetStatusCount);
-			MS_DUMP("  reference time        : %" PRIu32, this->referenceTimeMs);
+			MS_DUMP("  reference time        : %" PRIu64, this->referenceTimeMs);
 			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
 			MS_DUMP("  size                  : %zu", GetSize());
 			MS_DUMP("</FeedbackRtpTransportPacket>");
 		}
 
-		bool FeedbackRtpTransportPacket::FillChunk(uint16_t sequenceNumber, uint16_t delta)
+		void FeedbackRtpTransportPacket::FillChunk(
+		  uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta)
 		{
 			MS_TRACE();
 
-			uint16_t previousSequenceNumber = this->receivedPackets.back().sequenceNumber;
 			auto missingPackets = static_cast<uint16_t>(sequenceNumber - (previousSequenceNumber + 1));
 			Status status;
 
@@ -296,7 +345,7 @@ namespace RTC
 			// Not enough packet infos for creating a chunk.
 			if (this->context.statuses.size() < 7)
 			{
-				return true;
+				return;
 			}
 			// 7 packet infos with heterogeneous status, create the chunk.
 			else if (this->context.statuses.size() == 7 && !this->context.allSameStatus)
@@ -312,28 +361,26 @@ namespace RTC
 				this->size += sizeof(uint16_t);
 				this->context.statuses.clear();
 			}
-
-			return true;
 		}
 
 		bool FeedbackRtpTransportPacket::CheckMissingPackets(
-		  uint16_t anteriorSequenceNumber, uint16_t posteriorSecuenceNumber)
+		  uint16_t previousSequenceNumber, uint16_t nextSecuenceNumber)
 		{
 			MS_TRACE();
 
 			// Check missing packet limits.
-			auto missingPackets = posteriorSecuenceNumber - (anteriorSequenceNumber + 1);
+			auto missingPackets = nextSecuenceNumber - (previousSequenceNumber + 1);
 
 			// Check if there are too many missing packets.
 			return (missingPackets <= FeedbackRtpTransportPacket::maxMissingPackets);
 		}
 
-		bool FeedbackRtpTransportPacket::CheckDelta(uint16_t anteriorTimestamp, uint16_t posteriorTimestamp)
+		bool FeedbackRtpTransportPacket::CheckDelta(uint16_t previousTimestamp, uint16_t nextTimestamp)
 		{
 			MS_TRACE();
 
 			// Delta since last received RTP packet in milliseconds.
-			auto deltaMs = posteriorTimestamp - anteriorTimestamp;
+			auto deltaMs = nextTimestamp - previousTimestamp;
 
 			// Deltas are represented as multiples of 250us.
 			auto delta = deltaMs * 1000 / 250;

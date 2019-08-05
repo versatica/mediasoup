@@ -63,6 +63,8 @@ namespace RTC
 			uint16_t GetPacketStatusCount() const;
 			uint32_t GetReferenceTime() const;
 			uint8_t GetFeedbackPacketCount() const;
+			uint16_t GetLastSequenceNumber() const;
+			uint64_t GetLastTimestamp() const;
 			void SetFeedbackPacketCount(uint8_t count);
 
 			/* Pure virtual methods inherited from Packet. */
@@ -141,17 +143,20 @@ namespace RTC
 			};
 
 		private:
-			bool FillChunk(uint16_t sequenceNumber, uint16_t delta);
+			void FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta);
 			RunLengthChunk* CreateRunLengthChunk(Status status, uint16_t missingPackets);
 			TwoBitVectorChunk* CreateTwoBitVectorChunk(std::vector<Status>& statuses);
-			bool CheckMissingPackets(uint16_t anteriorSequenceNumber, uint16_t posteriorSecuenceNumber);
-			bool CheckDelta(uint16_t anteriorTimestamp, uint16_t posteriorTimestamp);
+			bool CheckMissingPackets(uint16_t previousSequenceNumber, uint16_t nextSecuenceNumber);
+			bool CheckDelta(uint16_t previousTimestamp, uint16_t nextTimestamp);
 			bool CheckSize(size_t maxRtcpPacketLen);
 
 		private:
+			bool hasPreBase{ false };
+			uint16_t preBaseSequenceNumber{ 0u };
+			uint64_t preReferenceTimeMs{ 0u };
 			uint16_t baseSequenceNumber{ 0u };
+			uint64_t referenceTimeMs{ 0u };
 			uint16_t packetStatusCount{ 0u };
-			uint32_t referenceTimeMs{ 0u };
 			uint8_t feedbackPacketCount{ 0u };
 			std::vector<ReceivedPacket> receivedPackets;
 			std::vector<Chunk*> chunks;
@@ -191,6 +196,19 @@ namespace RTC
 		inline uint8_t FeedbackRtpTransportPacket::GetFeedbackPacketCount() const
 		{
 			return this->feedbackPacketCount;
+		}
+
+		inline uint16_t FeedbackRtpTransportPacket::GetLastSequenceNumber() const
+		{
+			if (this->receivedPackets.empty())
+				return 0u;
+
+			return this->receivedPackets.back().sequenceNumber;
+		}
+
+		inline uint64_t FeedbackRtpTransportPacket::GetLastTimestamp() const
+		{
+			return this->lastTimestamp;
 		}
 
 		inline void FeedbackRtpTransportPacket::SetFeedbackPacketCount(uint8_t count)
