@@ -203,6 +203,52 @@ namespace RTC
 			Utils::Byte::Set1Byte(buffer, offset, this->feedbackPacketCount);
 			offset += 1;
 
+			// Check if there are pending status packets.
+			if (this->context.statuses.size() > 0)
+			{
+				if (this->context.allSameStatus)
+				{
+					auto chunk =
+					  CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
+
+					this->chunks.push_back(chunk);
+					this->packetStatusCount += this->context.statuses.size();
+					this->size += sizeof(uint16_t);
+					this->context.statuses.clear();
+				}
+				else
+				{
+					Status currentStatus = this->context.statuses.front();
+					size_t count         = 0;
+
+					for (auto status : this->context.statuses)
+					{
+						if (status == currentStatus)
+						{
+							count++;
+						}
+						else
+						{
+							auto chunk = CreateRunLengthChunk(currentStatus, count);
+
+							this->chunks.push_back(chunk);
+							this->packetStatusCount += count;
+							this->size += sizeof(uint16_t);
+
+							currentStatus = status;
+							count = 1;
+						}
+					}
+
+					auto chunk = CreateRunLengthChunk(currentStatus, count);
+
+					this->chunks.push_back(chunk);
+					this->packetStatusCount += count;
+					this->size += sizeof(uint16_t);
+					this->context.statuses.clear();
+				}
+			}
+
 			// Serialize chunks.
 			for (auto* chunk : this->chunks)
 			{
@@ -270,18 +316,7 @@ namespace RTC
 			//   missingPackets,
 			//   this->packetStatusCount);
 
-			// Beginning of a block and more than 7 missing RTP packets.
-			if (this->context.statuses.empty() && missingPackets > 7)
-			{
-				// Fill a long run chunk with all the missing packets.
-				auto chunk = CreateRunLengthChunk(Status::NotReceived, missingPackets);
-
-				this->chunks.push_back(chunk);
-				this->packetStatusCount += missingPackets;
-				this->size += sizeof(uint16_t);
-				this->context.statuses.clear();
-			}
-			else if (missingPackets > 1)
+			if (missingPackets > 0)
 			{
 				status = Status::NotReceived;
 
@@ -305,10 +340,36 @@ namespace RTC
 					this->context.statuses.clear();
 				}
 
+				size_t representedPackets = 0;
+
 				// Fill status vector.
 				for (uint8_t i{ 0u }; i < missingPackets && this->context.statuses.size() < 7; ++i)
 				{
 					this->context.statuses.emplace_back(Status::NotReceived);
+					representedPackets++;
+				}
+
+				missingPackets -= representedPackets;
+
+				// Not all missing packets have been represented.
+				if (missingPackets != 0)
+				{
+					// Fill a vector chunk.
+					auto vectorChunk = CreateTwoBitVectorChunk(this->context.statuses);
+
+					this->chunks.push_back(vectorChunk);
+					this->packetStatusCount += 7;
+					this->size += sizeof(uint16_t);
+					this->context.statuses.clear();
+
+					// Fill a run length chunk with the remaining missing packets.
+					auto runLengthChunk = CreateRunLengthChunk(Status::NotReceived, missingPackets);
+
+					this->chunks.push_back(runLengthChunk);
+					this->packetStatusCount += missingPackets;
+					this->size += sizeof(uint16_t);
+					this->context.statuses.clear();
+					this->context.currentStatus = Status::None;
 				}
 			}
 			else
