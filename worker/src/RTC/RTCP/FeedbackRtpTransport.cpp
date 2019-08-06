@@ -87,7 +87,7 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				MS_DEBUG_DEV("not valid as base, resetting pre base");
+				MS_WARN_DEV("not valid as base, resetting pre base");
 
 				this->preBaseSequenceNumber = wideSeqNumber;
 				this->preReferenceTimeMs    = timestamp;
@@ -100,7 +100,7 @@ namespace RTC
 				// Not a valid base. Use it as pre base.
 				if (!CheckDelta(this->preReferenceTimeMs, timestamp))
 				{
-					MS_DEBUG_DEV(
+					MS_WARN_DEV(
 					  "RTP packet delta exceeded, not valid as base, resetting pre base [preReferenceTimeMs:%" PRIu64
 					  ", timestamp:%" PRIu64 "]",
 					  this->preReferenceTimeMs,
@@ -133,14 +133,14 @@ namespace RTC
 
 				if (!CheckMissingPackets(lastSequenceNumber, wideSeqNumber))
 				{
-					MS_DEBUG_DEV("RTP missing packet number exceeded");
+					MS_WARN_DEV("RTP missing packet number exceeded");
 
 					return false;
 				}
 
 				if (!CheckDelta(this->lastTimestamp, timestamp))
 				{
-					MS_DEBUG_DEV(
+					MS_WARN_DEV(
 					  "RTP packet delta exceeded [lastTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
 					  this->lastTimestamp,
 					  timestamp);
@@ -150,7 +150,7 @@ namespace RTC
 
 				if (!CheckSize(maxRtcpPacketLen))
 				{
-					MS_DEBUG_DEV("maximum packet size exceeded");
+					MS_WARN_DEV("maximum packet size exceeded");
 
 					return false;
 				}
