@@ -98,8 +98,6 @@ public:
 	{
 		REQUIRE(this->nackRequiredTriggered == static_cast<bool>(this->currentInput.numNacked));
 		REQUIRE(this->keyFrameRequiredTriggered == this->currentInput.keyFrameRequired);
-
-		REQUIRE(nackGenerator.GetNackListLength() == this->currentInput.nackListSize);
 	}
 
 private:
@@ -133,7 +131,7 @@ void validate(std::vector<TestNackGeneratorInput>& inputs)
 
 		packet->SetPayloadDescriptorHandler(tpdh);
 		packet->SetSequenceNumber(input.seq);
-		nackGenerator.ReceivePacket(packet);
+		nackGenerator.ReceivePacket(packet, /*isRecovered*/ false);
 
 		listener.Check(nackGenerator);
 	}

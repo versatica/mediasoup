@@ -260,11 +260,11 @@ namespace RTC
 			// If there is RTX just provide the NackGenerator with the packet.
 			if (HasRtx())
 			{
-				this->nackGenerator->ReceivePacket(packet);
+				this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ false);
 			}
 			// If there is no RTX and NackGenerator returns true it means that it
 			// was a NACKed packet.
-			else if (this->nackGenerator->ReceivePacket(packet))
+			else if (this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ false))
 			{
 				// Mark the packet as retransmitted and repaired.
 				RTC::RtpStream::PacketRetransmitted(packet);
@@ -366,7 +366,7 @@ namespace RTC
 
 		// Pass the packet to the NackGenerator and return true just if this was a
 		// NACKed packet.
-		if (this->nackGenerator->ReceivePacket(packet))
+		if (this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true))
 		{
 			// Mark the packet as repaired.
 			RTC::RtpStream::PacketRepaired(packet);
@@ -525,8 +525,8 @@ namespace RTC
 		// RTT in 1/2^16 second fractions.
 		uint32_t rtt{ 0 };
 
-		// If no Receiver Extended Report was received by the remote endpoint yet, ignore lastRr
-		// and dlrr values in the Sender Extended Report.
+		// If no Receiver Extended Report was received by the remote endpoint yet,
+		// ignore lastRr and dlrr values in the Sender Extended Report.
 		if (!lastRr || !dlrr)
 			rtt = 0;
 		else if (compactNtp > dlrr + lastRr)
@@ -537,6 +537,10 @@ namespace RTC
 		// RTT in milliseconds.
 		this->rtt = (rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+
+		// Tell it to the NackGenerator.
+		if (this->params.useNack)
+			this->nackGenerator->UpdateRtt(static_cast<uint32_t>(this->rtt));
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
@@ -545,10 +549,6 @@ namespace RTC
 
 		if (this->params.usePli)
 		{
-			// Reset NackGenerator.
-			if (this->params.useNack)
-				this->nackGenerator->Reset();
-
 			MS_DEBUG_2TAGS(rtcp, rtx, "sending PLI [ssrc:%" PRIu32 "]", GetSsrc());
 
 			// Sender SSRC should be 0 since there is no media sender involved, but
@@ -564,10 +564,6 @@ namespace RTC
 		}
 		else if (this->params.useFir)
 		{
-			// Reset NackGenerator.
-			if (this->params.useNack)
-				this->nackGenerator->Reset();
-
 			MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", GetSsrc());
 
 			// Sender SSRC should be 0 since there is no media sender involved, but
