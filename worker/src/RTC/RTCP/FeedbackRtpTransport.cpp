@@ -203,6 +203,51 @@ namespace RTC
 			Utils::Byte::Set1Byte(buffer, offset, this->feedbackPacketCount);
 			offset += 1;
 
+			// Check if there are pending status packets.
+			if (this->context.statuses.size() > 0)
+			{
+				if (this->context.allSameStatus)
+				{
+					auto chunk = CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
+
+					this->chunks.push_back(chunk);
+					this->packetStatusCount += this->context.statuses.size();
+					this->size += sizeof(uint16_t);
+					this->context.statuses.clear();
+				}
+				else
+				{
+					Status currentStatus = this->context.statuses.front();
+					size_t count = 0;
+
+					for (auto status : this->context.statuses)
+					{
+						if (status == currentStatus)
+						{
+							count++;
+						}
+						else
+						{
+							auto chunk = CreateRunLengthChunk(currentStatus, count);
+
+							this->chunks.push_back(chunk);
+							this->packetStatusCount += count;
+							this->size += sizeof(uint16_t);
+
+							currentStatus = status;
+							count = 1;
+						}
+					}
+
+					auto chunk = CreateRunLengthChunk(currentStatus, count);
+
+					this->chunks.push_back(chunk);
+					this->packetStatusCount += count;
+					this->size += sizeof(uint16_t);
+					this->context.statuses.clear();
+				}
+			}
+
 			// Serialize chunks.
 			for (auto* chunk : this->chunks)
 			{
