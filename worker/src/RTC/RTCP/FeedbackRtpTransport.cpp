@@ -184,7 +184,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t offset = FeedbackPacket::Serialize(buffer);
+			// Leave the necessary offset for the common header.
+			size_t offset = 12;
 
 			Utils::Byte::Set2Bytes(buffer, offset, this->baseSequenceNumber);
 			offset += 2;
@@ -248,6 +249,9 @@ namespace RTC
 					this->context.statuses.clear();
 				}
 			}
+
+			// Now we have the final size, serialize the common header.
+			FeedbackPacket::Serialize(buffer);
 
 			// Serialize chunks.
 			for (auto* chunk : this->chunks)
