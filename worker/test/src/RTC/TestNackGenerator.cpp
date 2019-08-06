@@ -72,8 +72,7 @@ class TestNackGeneratorListener : public NackGenerator::Listener
 
 		auto it          = seqNumbers.begin();
 		auto firstNacked = *it;
-
-		auto numNacked = seqNumbers.size();
+		auto numNacked   = seqNumbers.size();
 
 		REQUIRE(this->currentInput.firstNacked == firstNacked);
 		REQUIRE(this->currentInput.numNacked == numNacked);
@@ -102,8 +101,8 @@ public:
 
 private:
 	TestNackGeneratorInput currentInput{};
-	bool nackRequiredTriggered     = false;
-	bool keyFrameRequiredTriggered = false;
+	bool nackRequiredTriggered{ false };
+	bool keyFrameRequiredTriggered{ false };
 };
 
 // clang-format off
