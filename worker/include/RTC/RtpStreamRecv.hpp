@@ -88,10 +88,7 @@ namespace RTC
 		Timer* inactivityCheckPeriodicTimer{ nullptr };
 		bool inactive{ false };     // Stream is inactive.
 		uint64_t lastPacketAt{ 0 }; // Time last valid packet arrived.
-		// Counts media and valid RTX packets.
 		TransmissionCounter transmissionCounter;
-		// Counts just media packets.
-		RTC::RtpDataCounter mediaTransmissionCounter;
 	};
 
 	/* Inline instance methods */

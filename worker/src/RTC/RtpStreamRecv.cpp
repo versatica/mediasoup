@@ -278,9 +278,6 @@ namespace RTC
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
 
-		// Increase media transmission counter.
-		this->mediaTransmissionCounter.Update(packet);
-
 		// Ensure the inactivityCheckPeriodicTimer runs.
 		if (this->inactivityCheckPeriodicTimer && this->inactive)
 		{
@@ -418,19 +415,16 @@ namespace RTC
 		// Calculate Packets Expected and Lost.
 		auto expected = GetExpectedPackets();
 
-		if (expected > this->mediaTransmissionCounter.GetPacketCount())
-			this->packetsLost = expected - this->mediaTransmissionCounter.GetPacketCount();
-		else
-			this->packetsLost = 0u;
+		this->packetsLost = expected - this->transmissionCounter.GetPacketCount();
 
 		// Calculate Fraction Lost.
 		uint32_t expectedInterval = expected - this->expectedPrior;
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior;
+		uint32_t receivedInterval = this->transmissionCounter.GetPacketCount() - this->receivedPrior;
 
-		this->receivedPrior = this->mediaTransmissionCounter.GetPacketCount();
+		this->receivedPrior = transmissionCounter.GetPacketCount();
 
 		int32_t lostInterval = expectedInterval - receivedInterval;
 
@@ -635,7 +629,7 @@ namespace RTC
 		this->expectedPrior = totalExpected;
 
 		// Calculate number of packets received in this interval.
-		auto totalReceived = this->mediaTransmissionCounter.GetPacketCount();
+		auto totalReceived = this->transmissionCounter.GetPacketCount();
 		uint32_t received  = totalReceived - this->receivedPrior;
 
 		this->receivedPrior = totalReceived;
