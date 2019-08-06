@@ -114,8 +114,8 @@ namespace RTC
 
 				MS_DEBUG_DEV("setting base");
 
-				this->referenceTimeMs    = timestamp;
 				this->baseSequenceNumber = wideSeqNumber;
+				this->referenceTimeMs    = timestamp;
 
 				delta = (timestamp - this->preReferenceTimeMs) * 1000 / 250;
 
