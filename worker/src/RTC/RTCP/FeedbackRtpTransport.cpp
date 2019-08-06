@@ -155,6 +155,7 @@ namespace RTC
 					return false;
 				}
 
+				// TODO: This is really necessary?
 				if (this->lastTimestamp == timestamp)
 				{
 					delta = 0u;
