@@ -237,7 +237,7 @@ namespace RTC
 							this->size += sizeof(uint16_t);
 
 							currentStatus = status;
-							count = 1;
+							count         = 1;
 						}
 					}
 
