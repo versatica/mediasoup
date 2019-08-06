@@ -320,8 +320,10 @@ namespace RTC
 			return false;
 		}
 
+#ifdef MS_LOG_DEV
 		// Get the RTX packet sequence number for logging purposes.
 		auto rtxSeq = packet->GetSequenceNumber();
+#endif
 
 		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
@@ -415,7 +417,10 @@ namespace RTC
 		// Calculate Packets Expected and Lost.
 		auto expected = GetExpectedPackets();
 
-		this->packetsLost = expected - this->transmissionCounter.GetPacketCount();
+		if (expected > this->transmissionCounter.GetPacketCount())
+			this->packetsLost = expected - this->transmissionCounter.GetPacketCount();
+		else
+			this->packetsLost = 0u;
 
 		// Calculate Fraction Lost.
 		uint32_t expectedInterval = expected - this->expectedPrior;
