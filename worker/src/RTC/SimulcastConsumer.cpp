@@ -12,7 +12,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint8_t GoodScore{ 7u };
+	static constexpr uint8_t GoodScore{ 5u };
 
 	/* Instance methods. */
 

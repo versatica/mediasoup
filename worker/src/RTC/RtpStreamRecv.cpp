@@ -329,8 +329,7 @@ namespace RTC
 		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
-			MS_DEBUG_TAG(
-			  rtx,
+			MS_DEBUG_DEV(
 			  "ignoring empty RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", pt:%" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
@@ -339,8 +338,7 @@ namespace RTC
 			return false;
 		}
 
-		MS_DEBUG_TAG(
-		  rtx,
+		MS_DEBUG_DEV(
 		  "received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
 		  ", seq:%" PRIu16 "]",
 		  this->params.rtxSsrc,

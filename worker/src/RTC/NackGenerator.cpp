@@ -10,10 +10,10 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr size_t MaxPacketAge{ 5000 };
+	constexpr size_t MaxPacketAge{ 10000 };
 	constexpr size_t MaxNackPackets{ 1000 };
-	constexpr uint32_t DefaultRtt{ 100 };
-	constexpr uint8_t MaxNackRetries{ 8 };
+	constexpr uint32_t DefaultRtt{ 350 }; // TODO
+	constexpr uint8_t MaxNackRetries{ 10 };
 	constexpr uint64_t TimerInterval{ 50 };
 
 	/* Instance methods. */
@@ -228,7 +228,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  rtx,
-					  "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
+					  "sequence number removed from the NACK list due to max retries [filter:seq, seq:%" PRIu16 "]",
 					  seq);
 
 					it = this->nackList.erase(it);
@@ -251,7 +251,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  rtx,
-					  "sequence number removed from the NACK list due to max retries [seq:%" PRIu16 "]",
+					  "sequence number removed from the NACK list due to max retries [filter:time, seq:%" PRIu16 "]",
 					  seq);
 
 					it = this->nackList.erase(it);
