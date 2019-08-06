@@ -79,7 +79,7 @@ namespace RTC
 
 				return true;
 			}
-			// Ensure this can be the base. Update base otherwise.
+			// Ensure this can be the base. Update pre base otherwise.
 			// clang-format off
 			else if (
 				this->receivedPackets.empty() &&
