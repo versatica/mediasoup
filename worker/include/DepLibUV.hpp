@@ -13,6 +13,7 @@ public:
 	static void RunLoop();
 	static uv_loop_t* GetLoop();
 	static uint64_t GetTime();
+	static void UpdateTime();
 
 private:
 	static uv_loop_t* loop;
@@ -28,6 +29,11 @@ inline uv_loop_t* DepLibUV::GetLoop()
 inline uint64_t DepLibUV::GetTime()
 {
 	return uv_now(DepLibUV::loop);
+}
+
+inline void DepLibUV::UpdateTime()
+{
+	uv_update_time(DepLibUV::loop);
 }
 
 #endif
