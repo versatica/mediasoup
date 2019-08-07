@@ -251,7 +251,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "packet discarded");
 
-					MS_DUMP("*** RTP packet discarded by RtpStream::ReceivePacket() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetPayloadLength(), GetScore());
+					MS_DUMP("*** RTP packet discarded by RtpStream::ReceivePacket() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 			return false;
 		}
@@ -299,7 +299,7 @@ namespace RTC
 		// Update last packet arrival.
 		this->lastPacketAt = DepLibUV::GetTime();
 
-				MS_DUMP("--- RTP packet valid [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetPayloadLength(), GetScore());
+				MS_DUMP("--- RTP packet valid [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 		return true;
 	}
@@ -349,7 +349,7 @@ namespace RTC
 			  packet->GetSequenceNumber(),
 			  packet->GetPayloadType());
 
-					MS_DUMP("*** RTX packet discarded (empty) [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetPayloadLength(), GetScore());
+					MS_DUMP("*** RTX packet discarded (empty) [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 			return false;
 		}
@@ -371,7 +371,7 @@ namespace RTC
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber());
 
-					MS_DUMP("*** RTX packet discarded by RtpStream::UpdateSeq() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetPayloadLength(), GetScore());
+					MS_DUMP("*** RTX packet discarded by RtpStream::UpdateSeq() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 			return false;
 		}
@@ -387,7 +387,7 @@ namespace RTC
 		// NACKed packet.
 		if (this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true))
 		{
-					MS_DUMP("--- RTX packet valid by NackGenerator [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetPayloadLength(), GetScore());
+					MS_DUMP("--- RTX packet valid by NackGenerator [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 			// Mark the packet as repaired.
 			RTC::RtpStream::PacketRepaired(packet);
@@ -410,7 +410,7 @@ namespace RTC
 			return true;
 		}
 
-				MS_DUMP("*** RTP packet discarded by NackGenerator() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetPayloadLength(), GetScore());
+				MS_DUMP("*** RTP packet discarded by NackGenerator() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 		return false;
 	}

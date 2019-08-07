@@ -1149,6 +1149,9 @@ namespace RTC
 		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
 		packet->SetTransportWideCc01ExtensionId(this->rtpHeaderExtensionIds.transportWideCc01);
 
+			// TODO: Remove
+			DepLibUV::UpdateTime();
+
 		auto now = DepLibUV::GetTime();
 
 		// Feed the REMB server.
@@ -2203,7 +2206,7 @@ namespace RTC
 		SendRtcpPacket(packet);
 
 		// TODO
-		// packet->Dump();
+		packet->Dump();
 		// MS_DUMP_DATA(packet->GetData(), packet->GetSize());
 	}
 
