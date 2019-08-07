@@ -143,6 +143,7 @@ namespace RTC
 			};
 
 		private:
+			void AddPendingChunks();
 			void FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta);
 			void CreateRunLengthChunk(Status status, uint16_t count);
 			void CreateTwoBitVectorChunk(std::vector<Status>& statuses);

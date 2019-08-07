@@ -184,15 +184,17 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Leave the necessary offset for the common header.
-			size_t offset = 12;
+			// Add chunks for status packets that may not be represented yet.
+			AddPendingChunks();
 
+			size_t offset = FeedbackPacket::Serialize(buffer);
+
+			// Base sequence number.
 			Utils::Byte::Set2Bytes(buffer, offset, this->baseSequenceNumber);
 			offset += 2;
 
-			// We don't know the packet status count yet.
-			size_t packetStatusCountOffset = offset;
-
+			// Packet status count.
+			Utils::Byte::Set2Bytes(buffer, offset, this->packetStatusCount);
 			offset += 2;
 
 			// Reference time is represented in multiples of 64ms.
@@ -201,46 +203,9 @@ namespace RTC
 			Utils::Byte::Set3Bytes(buffer, offset, referenceTime);
 			offset += 3;
 
+			// Feedback packet count.
 			Utils::Byte::Set1Byte(buffer, offset, this->feedbackPacketCount);
 			offset += 1;
-
-			// Check if there are pending status packets.
-			if (this->context.statuses.size() > 0)
-			{
-				if (this->context.allSameStatus)
-				{
-					CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
-
-					this->context.statuses.clear();
-				}
-				else
-				{
-					Status currentStatus = this->context.statuses.front();
-					size_t count         = 0;
-
-					for (auto status : this->context.statuses)
-					{
-						if (status == currentStatus)
-						{
-							count++;
-						}
-						else
-						{
-							CreateRunLengthChunk(currentStatus, count);
-
-							currentStatus = status;
-							count         = 1;
-						}
-					}
-
-					CreateRunLengthChunk(currentStatus, count);
-
-					this->context.statuses.clear();
-				}
-			}
-
-			// Now we have the final size, serialize the common header.
-			FeedbackPacket::Serialize(buffer);
 
 			// Serialize chunks.
 			for (auto* chunk : this->chunks)
@@ -262,9 +227,6 @@ namespace RTC
 					offset += sizeof(uint16_t);
 				}
 			}
-
-			// Write the packet count.
-			Utils::Byte::Set2Bytes(buffer, packetStatusCountOffset, this->packetStatusCount);
 
 			// 32 bits padding.
 			size_t padding = (-offset) & 3;
@@ -291,6 +253,44 @@ namespace RTC
 			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
 			MS_DUMP("  size                  : %zu", GetSize());
 			MS_DUMP("</FeedbackRtpTransportPacket>");
+		}
+
+		void FeedbackRtpTransportPacket::AddPendingChunks()
+		{
+			// No pending status packets.
+			if (this->context.statuses.size() == 0)
+				return;
+
+			if (this->context.allSameStatus)
+			{
+				CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
+
+				this->context.statuses.clear();
+			}
+			else
+			{
+				Status currentStatus = this->context.statuses.front();
+				size_t count         = 0;
+
+				for (auto status : this->context.statuses)
+				{
+					if (status == currentStatus)
+					{
+						count++;
+					}
+					else
+					{
+						CreateRunLengthChunk(currentStatus, count);
+
+						currentStatus = status;
+						count = 1;
+					}
+				}
+
+				CreateRunLengthChunk(currentStatus, count);
+
+				this->context.statuses.clear();
+			}
 		}
 
 		void FeedbackRtpTransportPacket::FillChunk(
