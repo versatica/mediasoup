@@ -299,7 +299,6 @@ namespace RTC
 			MS_TRACE();
 
 			auto missingPackets = static_cast<uint16_t>(sequenceNumber - (previousSequenceNumber + 1));
-			Status status;
 
 			// MS_DEBUG_DEV(
 			//   "[sequenceNumber:%" PRIu16 ", delta:%" PRIu16 ", missingPackets:%" PRIu16
@@ -311,14 +310,12 @@ namespace RTC
 
 			if (missingPackets > 0)
 			{
-				status = Status::NotReceived;
-
 				// Create a long run chunk before processing this packet, if needed.
 				// clang-format off
 				if (
 					this->context.statuses.size() >= 7 &&
 					this->context.allSameStatus
-					&& status != this->context.currentStatus
+					&& Status::NotReceived != this->context.currentStatus
 				)
 				// clang-format on
 				{
@@ -355,29 +352,27 @@ namespace RTC
 					this->context.currentStatus = Status::None;
 				}
 			}
-			else
+
+			Status status = (delta <= 255) ? Status::SmallDelta : Status::LargeDelta;
+
+			// Create a long run chunk before processing this packet, if needed.
+			// clang-format off
+			if (
+				this->context.statuses.size() >= 7 &&
+				this->context.allSameStatus &&
+				status != this->context.currentStatus
+			)
+			// clang-format on
 			{
-				status = (delta <= 255) ? Status::SmallDelta : Status::LargeDelta;
+				CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
-				// Create a long run chunk before processing this packet, if needed.
-				// clang-format off
-				if (
-					this->context.statuses.size() >= 7 &&
-					this->context.allSameStatus &&
-					status != this->context.currentStatus
-				)
-				// clang-format on
-				{
-					CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
-
-					this->context.statuses.clear();
-					this->context.currentStatus = Status::None;
-				}
-
-				this->context.statuses.emplace_back(status);
-				this->deltas.emplace_back(delta);
-				this->size += (status == Status::SmallDelta) ? sizeof(uint8_t) : sizeof(uint16_t);
+				this->context.statuses.clear();
+				this->context.currentStatus = Status::None;
 			}
+
+			this->context.statuses.emplace_back(status);
+			this->deltas.emplace_back(delta);
+			this->size += (status == Status::SmallDelta) ? sizeof(uint8_t) : sizeof(uint16_t);
 
 			// Update context info.
 			this->context.allSameStatus = (this->context.currentStatus == this->context.allSameStatus);
