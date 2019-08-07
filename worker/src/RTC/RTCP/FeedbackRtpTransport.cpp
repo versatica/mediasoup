@@ -67,6 +67,17 @@ namespace RTC
 			// TODO: Parse.
 		}
 
+		FeedbackRtpTransportPacket::~FeedbackRtpTransportPacket()
+		{
+			MS_TRACE();
+
+			for (auto* chunk : this->chunks)
+			{
+				delete chunk;
+			}
+			this->chunks.clear();
+		}
+
 		bool FeedbackRtpTransportPacket::AddPacket(
 		  uint16_t wideSeqNumber, uint64_t timestamp, size_t maxRtcpPacketLen)
 		{
@@ -529,7 +540,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("  <FeedbackRtpTransportPacket::RunLengthChunk>");
-			MS_DUMP("    status : %s", Status2String[this->status].c_str());
+			MS_DUMP("    status : %s", FeedbackRtpTransportPacket::Status2String[this->status].c_str());
 			MS_DUMP("    count  : %" PRIu16, this->count);
 			MS_DUMP("  </FeedbackRtpTransportPacket::RunLengthChunk>");
 		}
@@ -555,7 +566,7 @@ namespace RTC
 			std::ostringstream out;
 
 			for (auto status : this->statuses)
-				out << "|" << Status2String[status];
+				out << "|" << FeedbackRtpTransportPacket::Status2String[status];
 
 			out << "|";
 
@@ -585,10 +596,9 @@ namespace RTC
 			MS_ASSERT(this->statuses.size() == 7, "packet info size must be 7");
 
 			uint16_t bytes{ 0x8000 };
+			uint8_t i{ 12u };
 
 			bytes |= 0x01 << 14;
-
-			uint8_t i{ 12u };
 
 			for (auto status : this->statuses)
 			{

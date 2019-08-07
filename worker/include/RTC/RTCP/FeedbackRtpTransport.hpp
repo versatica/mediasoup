@@ -54,7 +54,7 @@ namespace RTC
 		public:
 			FeedbackRtpTransportPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
 			FeedbackRtpTransportPacket(CommonHeader* commonHeader);
-			~FeedbackRtpTransportPacket() override = default;
+			~FeedbackRtpTransportPacket();
 
 		public:
 			bool AddPacket(uint16_t wideSeqNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
