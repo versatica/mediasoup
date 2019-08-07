@@ -361,24 +361,32 @@ namespace RTC
 				if (
 					this->context.statuses.size() >= 7 &&
 					this->context.allSameStatus
-					&& Status::NotReceived != this->context.currentStatus
 				)
 				// clang-format on
 				{
-					this->context.currentStatus = Status::None;
-
 					CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
 					this->context.statuses.clear();
+					this->context.currentStatus = Status::None;
 				}
 
 				size_t representedPackets = 0;
 
-				// Fill status vector.
+				// Fill statuses vector.
 				for (uint8_t i{ 0u }; i < missingPackets && this->context.statuses.size() < 7; ++i)
 				{
 					this->context.statuses.emplace_back(Status::NotReceived);
 					representedPackets++;
+				}
+
+				// Create a two bit vector if needed.
+				if (this->context.statuses.size() == 7)
+				{
+					// Fill a vector chunk.
+					CreateTwoBitVectorChunk(this->context.statuses);
+
+					this->context.statuses.clear();
+					this->context.currentStatus = Status::None;
 				}
 
 				missingPackets -= representedPackets;
@@ -386,11 +394,6 @@ namespace RTC
 				// Not all missing packets have been represented.
 				if (missingPackets != 0)
 				{
-					// Fill a vector chunk.
-					CreateTwoBitVectorChunk(this->context.statuses);
-
-					this->context.statuses.clear();
-
 					// Fill a run length chunk with the remaining missing packets.
 					CreateRunLengthChunk(Status::NotReceived, missingPackets);
 
@@ -413,7 +416,6 @@ namespace RTC
 				CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
 				this->context.statuses.clear();
-				this->context.currentStatus = Status::None;
 			}
 
 			this->context.statuses.emplace_back(status);
@@ -421,7 +423,18 @@ namespace RTC
 			this->size += (status == Status::SmallDelta) ? sizeof(uint8_t) : sizeof(uint16_t);
 
 			// Update context info.
-			this->context.allSameStatus = (this->context.currentStatus == this->context.allSameStatus);
+
+			// clang-format off
+			if (
+					this->context.currentStatus == Status::None ||
+					(this->context.allSameStatus && this->context.currentStatus == status)
+			)
+			// clang-format on
+				this->context.allSameStatus = true;
+			else
+				this->context.allSameStatus = false;
+
+			this->context.currentStatus = status;
 
 			// Not enough packet infos for creating a chunk.
 			if (this->context.statuses.size() < 7)

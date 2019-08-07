@@ -102,4 +102,46 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		delete packet;
 	}
+
+	SECTION("create FeedbackRtpTransportPacketPacket (3)")
+	{
+		uint32_t senderSsrc{ 1111u };
+		uint32_t mediaSsrc{ 2222u };
+
+		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
+
+		packet->SetFeedbackPacketCount(1);
+		packet->AddPacket(999, 10000000, RtcpMtu);  // Pre base.
+		packet->AddPacket(1000, 10000000, RtcpMtu); // Base.
+		packet->AddPacket(1001, 10000000, RtcpMtu);
+		packet->AddPacket(1002, 10000000, RtcpMtu);
+		packet->AddPacket(1015, 10000000, RtcpMtu);
+		packet->AddPacket(1016, 10000000, RtcpMtu);
+		packet->AddPacket(1017, 10000000, RtcpMtu);
+
+		SECTION("serialize packet instance")
+		{
+			uint8_t buffer[1024];
+			auto len = packet->Serialize(buffer);
+
+			// TODO: Remove.
+			MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
+			packet->Dump();
+			MS_DUMP_DATA(buffer, len);
+
+			SECTION("parse serialized buffer")
+			{
+				auto* packet2 = FeedbackRtpTransportPacket::Parse(buffer, len);
+
+				REQUIRE(packet2);
+				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
+				REQUIRE(packet2->GetPacketStatusCount() == 18);
+				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
+
+				delete packet2;
+			}
+		}
+
+		delete packet;
+	}
 }
