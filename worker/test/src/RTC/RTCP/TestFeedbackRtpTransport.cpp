@@ -3,6 +3,9 @@
 #include "catch.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 
+// TODO: Remove.
+#define MS_CLASS "TestFeedbackTransport"
+
 using namespace RTC::RTCP;
 
 SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
@@ -42,9 +45,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			auto len = packet->Serialize(buffer);
 
 			// TODO: Remove.
-			// MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
-			// packet->Dump();
-			// MS_DUMP_DATA(buffer, len);
+			MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
+			packet->Dump();
+			MS_DUMP_DATA(buffer, len);
 
 			SECTION("parse serialized buffer")
 			{
@@ -80,9 +83,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			auto len = packet->Serialize(buffer);
 
 			// TODO: Remove.
-			// MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
-			// packet->Dump();
-			// MS_DUMP_DATA(buffer, len);
+			MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
+			packet->Dump();
+			MS_DUMP_DATA(buffer, len);
 
 			SECTION("parse serialized buffer")
 			{
@@ -90,7 +93,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 				REQUIRE(packet2);
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
-				REQUIRE(packet2->GetPacketStatusCount() == 1015);
+				REQUIRE(packet2->GetPacketStatusCount() == 1016);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
 
 				delete packet2;

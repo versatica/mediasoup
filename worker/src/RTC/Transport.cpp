@@ -1917,6 +1917,7 @@ namespace RTC
 
 		// TODO: Update wide sequence number if present when Transport-CC client is done.
 
+		// packet->updateTransportWideCseq-1(wideSeqNumber++);
 		SendRtpPacket(packet);
 	}
 

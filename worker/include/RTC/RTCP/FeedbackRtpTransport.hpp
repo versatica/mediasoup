@@ -101,46 +101,40 @@ namespace RTC
 				std::vector<Status> statuses;
 			};
 
-			class Chunk
+			struct Chunk
 			{
-			public:
 				Chunk()          = default;
 				virtual ~Chunk() = default;
 
-			public:
+				virtual void Dump() = 0;
 				virtual size_t Serialize(uint8_t* buffer) = 0;
 			};
 
-			class RunLengthChunk : public Chunk
+			struct RunLengthChunk : public Chunk
 			{
-			public:
-				RunLengthChunk(Status status, uint16_t count) : status(status), count(count)
-				{
-				}
+				RunLengthChunk(Status status, uint16_t count);
 				RunLengthChunk(uint16_t buffer);
 
-			public:
+				void Dump() override;
 				size_t Serialize(uint8_t* buffer) override;
 
-			private:
 				Status status{ Status::None };
 				uint16_t count{ 0u };
 			};
 
-			class TwoBitVectorChunk : public Chunk
+			struct TwoBitVectorChunk : public Chunk
 			{
-			public:
-				TwoBitVectorChunk(std::vector<Status> statuses) : statuses(statuses)
-				{
-				}
+				TwoBitVectorChunk(std::vector<Status> statuses);
 				TwoBitVectorChunk(uint16_t buffer);
 
-			public:
+				void Dump() override;
 				size_t Serialize(uint8_t* buffer) override;
 
-			private:
 				std::vector<Status> statuses;
 			};
+
+		private:
+			static std::map<Status, std::string> Status2String;
 
 		private:
 			void AddPendingChunks();
@@ -231,6 +225,17 @@ namespace RTC
 			size += (-size) & 3;
 
 			return size;
+		}
+
+		inline FeedbackRtpTransportPacket::RunLengthChunk::RunLengthChunk(Status status, uint16_t count)
+			: status(status),
+			  count(count)
+		{
+		}
+
+		inline FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(std::vector<Status> statuses)
+			: statuses(statuses)
+		{
 		}
 	} // namespace RTCP
 } // namespace RTC

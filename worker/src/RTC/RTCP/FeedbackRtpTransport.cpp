@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
+#include <sstream>
 
 namespace RTC
 {
@@ -16,6 +17,13 @@ namespace RTC
 		uint16_t FeedbackRtpTransportPacket::maxMissingPackets{ (1 << 13) - 1 };
 		uint16_t FeedbackRtpTransportPacket::maxPacketStatusCount{ (1 << 16) - 1 };
 		uint16_t FeedbackRtpTransportPacket::maxPacketDelta{ (1 << 16) - 1 };
+
+		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
+		{
+			{ FeedbackRtpTransportPacket::Status::NotReceived, "NR" },
+			{ FeedbackRtpTransportPacket::Status::SmallDelta,  "SD" },
+			{ FeedbackRtpTransportPacket::Status::LargeDelta,  "LD" }
+		};
 
 		/* Class methods. */
 
@@ -252,6 +260,44 @@ namespace RTC
 			MS_DUMP("  reference time        : %" PRIu64, this->referenceTimeMs);
 			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
 			MS_DUMP("  size                  : %zu", GetSize());
+
+			for (auto* chunk : this->chunks)
+			{
+				chunk->Dump();
+			}
+
+			if (this->receivedPackets.size() != this->deltas.size())
+			{
+				MS_ERROR("received packets and number of deltas mismatch [packets:%zu,deltas:%zu]",
+					this->receivedPackets.size(),
+					this->deltas.size());
+
+				for (auto& packet : this->receivedPackets)
+				{
+					MS_DUMP("seqNumber: %d, delta: %d", packet.sequenceNumber, packet.delta);
+				}
+			}
+			else
+			{
+				auto receivedPacketIt = this->receivedPackets.begin();
+				auto deltaIt = this->deltas.begin();
+
+				while (receivedPacketIt != this->receivedPackets.end())
+				{
+					MS_DUMP("wideSeqNumber:%" PRIu16 ", delta:%" PRIu16,
+							receivedPacketIt->sequenceNumber,
+							receivedPacketIt->delta);
+
+					if (receivedPacketIt->delta != *deltaIt)
+					{
+						MS_ERROR("delta block does not coincide with the received value");
+					}
+
+					receivedPacketIt++;
+					deltaIt++;
+				}
+			}
+
 			MS_DUMP("</FeedbackRtpTransportPacket>");
 		}
 
@@ -466,6 +512,16 @@ namespace RTC
 			this->count  = buffer & 0x1FFF;
 		}
 
+		void FeedbackRtpTransportPacket::RunLengthChunk::Dump()
+		{
+			MS_TRACE();
+
+			MS_DUMP("<FeedbackRtpTransportPacket::RunLengthChunk>");
+			MS_DUMP("  status     : %s", Status2String[this->status].c_str());
+			MS_DUMP("  count      : %" PRIu16, this->count);
+			MS_DUMP("</FeedbackRtpTransportPacket::RunLengthChunk>");
+		}
+
 		size_t FeedbackRtpTransportPacket::RunLengthChunk::Serialize(uint8_t* buffer)
 		{
 			MS_TRACE();
@@ -478,6 +534,22 @@ namespace RTC
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);
 
 			return sizeof(uint16_t);
+		}
+
+		void FeedbackRtpTransportPacket::TwoBitVectorChunk::Dump()
+		{
+			MS_TRACE();
+
+			std::ostringstream out;
+
+			for (auto status : this->statuses)
+				out << "|" << Status2String[status];
+
+			out << "|";
+
+			MS_DUMP("<FeedbackRtpTransportPacket::TwoBitVectorChunk>");
+			MS_DUMP("%s", out.str().c_str());
+			MS_DUMP("</FeedbackRtpTransportPacket::TwoBitVectorChunk>");
 		}
 
 		FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(uint16_t buffer)
