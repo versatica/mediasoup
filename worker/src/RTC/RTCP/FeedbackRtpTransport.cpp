@@ -16,7 +16,7 @@ namespace RTC
 		size_t FeedbackRtpTransportPacket::fixedHeaderSize{ 8u };
 		uint16_t FeedbackRtpTransportPacket::maxMissingPackets{ (1 << 13) - 1 };
 		uint16_t FeedbackRtpTransportPacket::maxPacketStatusCount{ (1 << 16) - 1 };
-		uint16_t FeedbackRtpTransportPacket::maxPacketDelta{ (1 << 16) - 1 };
+		uint16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFC };
 
 		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
 		{
@@ -218,12 +218,12 @@ namespace RTC
 			{
 				if (delta <= 255)
 				{
-					std::memcpy(buffer + offset, &delta, sizeof(uint8_t));
+					Utils::Byte::Set1Byte(buffer, offset, delta);
 					offset += sizeof(uint8_t);
 				}
 				else
 				{
-					std::memcpy(buffer + offset, &delta, sizeof(uint16_t));
+					Utils::Byte::Set2Bytes(buffer, offset, delta);
 					offset += sizeof(uint16_t);
 				}
 			}
