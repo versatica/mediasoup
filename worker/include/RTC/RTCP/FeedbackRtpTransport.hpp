@@ -144,8 +144,8 @@ namespace RTC
 
 		private:
 			void FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta);
-			RunLengthChunk* CreateRunLengthChunk(Status status, uint16_t missingPackets);
-			TwoBitVectorChunk* CreateTwoBitVectorChunk(std::vector<Status>& statuses);
+			void CreateRunLengthChunk(Status status, uint16_t count);
+			void CreateTwoBitVectorChunk(std::vector<Status>& statuses);
 			bool CheckMissingPackets(uint16_t previousSequenceNumber, uint16_t nextSecuenceNumber);
 			bool CheckDelta(uint16_t previousTimestamp, uint16_t nextTimestamp);
 			bool CheckSize(size_t maxRtcpPacketLen);
@@ -214,18 +214,6 @@ namespace RTC
 		inline void FeedbackRtpTransportPacket::SetFeedbackPacketCount(uint8_t count)
 		{
 			this->feedbackPacketCount = count;
-		}
-
-		inline FeedbackRtpTransportPacket::RunLengthChunk* FeedbackRtpTransportPacket::CreateRunLengthChunk(
-		  Status status, uint16_t missingPackets)
-		{
-			return new RunLengthChunk(status, missingPackets);
-		}
-
-		inline FeedbackRtpTransportPacket::TwoBitVectorChunk* FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(
-		  std::vector<Status>& statuses)
-		{
-			return new TwoBitVectorChunk(statuses);
 		}
 
 		inline size_t FeedbackRtpTransportPacket::GetSize() const

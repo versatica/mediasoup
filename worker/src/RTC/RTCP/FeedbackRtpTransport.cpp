@@ -209,12 +209,8 @@ namespace RTC
 			{
 				if (this->context.allSameStatus)
 				{
-					auto chunk =
-					  CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
+					CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
-					this->chunks.push_back(chunk);
-					this->packetStatusCount += this->context.statuses.size();
-					this->size += sizeof(uint16_t);
 					this->context.statuses.clear();
 				}
 				else
@@ -230,22 +226,15 @@ namespace RTC
 						}
 						else
 						{
-							auto chunk = CreateRunLengthChunk(currentStatus, count);
-
-							this->chunks.push_back(chunk);
-							this->packetStatusCount += count;
-							this->size += sizeof(uint16_t);
+							CreateRunLengthChunk(currentStatus, count);
 
 							currentStatus = status;
 							count         = 1;
 						}
 					}
 
-					auto chunk = CreateRunLengthChunk(currentStatus, count);
+					CreateRunLengthChunk(currentStatus, count);
 
-					this->chunks.push_back(chunk);
-					this->packetStatusCount += count;
-					this->size += sizeof(uint16_t);
 					this->context.statuses.clear();
 				}
 			}
@@ -335,12 +324,8 @@ namespace RTC
 				{
 					this->context.currentStatus = Status::None;
 
-					auto chunk =
-					  CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
+					CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
-					this->chunks.push_back(chunk);
-					this->packetStatusCount += this->context.statuses.size();
-					this->size += sizeof(uint16_t);
 					this->context.statuses.clear();
 				}
 
@@ -359,19 +344,13 @@ namespace RTC
 				if (missingPackets != 0)
 				{
 					// Fill a vector chunk.
-					auto vectorChunk = CreateTwoBitVectorChunk(this->context.statuses);
+					CreateTwoBitVectorChunk(this->context.statuses);
 
-					this->chunks.push_back(vectorChunk);
-					this->packetStatusCount += 7;
-					this->size += sizeof(uint16_t);
 					this->context.statuses.clear();
 
 					// Fill a run length chunk with the remaining missing packets.
-					auto runLengthChunk = CreateRunLengthChunk(Status::NotReceived, missingPackets);
+					CreateRunLengthChunk(Status::NotReceived, missingPackets);
 
-					this->chunks.push_back(runLengthChunk);
-					this->packetStatusCount += missingPackets;
-					this->size += sizeof(uint16_t);
 					this->context.statuses.clear();
 					this->context.currentStatus = Status::None;
 				}
@@ -389,12 +368,8 @@ namespace RTC
 				)
 				// clang-format on
 				{
-					auto chunk =
-					  CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
+					CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
-					this->chunks.push_back(chunk);
-					this->packetStatusCount += this->context.statuses.size();
-					this->size += sizeof(uint16_t);
 					this->context.statuses.clear();
 					this->context.currentStatus = Status::None;
 				}
@@ -419,13 +394,28 @@ namespace RTC
 				this->context.currentStatus = Status::None;
 
 				// Fill a vector chunk and return.
-				auto chunk = CreateTwoBitVectorChunk(this->context.statuses);
+				CreateTwoBitVectorChunk(this->context.statuses);
 
-				this->chunks.push_back(chunk);
-				this->packetStatusCount += 7;
-				this->size += sizeof(uint16_t);
 				this->context.statuses.clear();
 			}
+		}
+
+		void FeedbackRtpTransportPacket::CreateRunLengthChunk(
+		  Status status, uint16_t count)
+		{
+			auto chunk = new RunLengthChunk(status, count);
+			this->chunks.push_back(chunk);
+			this->packetStatusCount += count;
+			this->size += sizeof(uint16_t);
+		}
+
+		void FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(
+		  std::vector<Status>& statuses)
+		{
+			auto chunk = new TwoBitVectorChunk(statuses);
+			this->chunks.push_back(chunk);
+			this->packetStatusCount += 7;
+			this->size += sizeof(uint16_t);
 		}
 
 		bool FeedbackRtpTransportPacket::CheckMissingPackets(
