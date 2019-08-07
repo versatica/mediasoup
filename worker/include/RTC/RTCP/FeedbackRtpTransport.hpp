@@ -59,6 +59,7 @@ namespace RTC
 		public:
 			bool AddPacket(uint16_t wideSeqNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			bool IsFull();
+			bool IsSerializable();
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
 			uint32_t GetReferenceTime() const;
@@ -171,6 +172,11 @@ namespace RTC
 		inline bool FeedbackRtpTransportPacket::IsFull()
 		{
 			return this->packetStatusCount == FeedbackRtpTransportPacket::maxPacketStatusCount;
+		}
+
+		inline bool FeedbackRtpTransportPacket::IsSerializable()
+		{
+			return this->receivedPackets.size() > 0;
 		}
 
 		inline uint16_t FeedbackRtpTransportPacket::GetBaseSequenceNumber() const

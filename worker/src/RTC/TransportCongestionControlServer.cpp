@@ -78,7 +78,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->feedbackPacket->GetPacketStatusCount() == 0u)
+		if (!this->feedbackPacket->IsSerializable())
 			return;
 
 		auto lastWideSeqNumber = this->feedbackPacket->GetLastSequenceNumber();

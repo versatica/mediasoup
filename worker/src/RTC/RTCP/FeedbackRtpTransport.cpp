@@ -274,7 +274,8 @@ namespace RTC
 
 				for (auto& packet : this->receivedPackets)
 				{
-					MS_DUMP("seqNumber: %d, delta: %d", packet.sequenceNumber, packet.delta);
+					// TODO.
+					MS_DUMP("seqNumber: %d, delta(ms): %d", packet.sequenceNumber, packet.delta/4);
 				}
 			}
 			else
@@ -284,9 +285,9 @@ namespace RTC
 
 				while (receivedPacketIt != this->receivedPackets.end())
 				{
-					MS_DUMP("wideSeqNumber:%" PRIu16 ", delta:%" PRIu16,
+					MS_DUMP("seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
 							receivedPacketIt->sequenceNumber,
-							receivedPacketIt->delta);
+							static_cast<uint16_t>(receivedPacketIt->delta/4));
 
 					if (receivedPacketIt->delta != *deltaIt)
 					{

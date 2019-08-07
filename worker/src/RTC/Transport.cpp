@@ -2199,14 +2199,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-			// TODO
-			// packet->Dump();
-
 		packet->Serialize(RTC::RTCP::Buffer);
 		SendRtcpPacket(packet);
 
-			// TODO
-			// MS_DUMP_DATA(packet->GetData(), packet->GetSize());
+		// TODO
+		packet->Dump();
+		MS_DUMP_DATA(packet->GetData(), packet->GetSize());
 	}
 
 	inline void Transport::OnTimer(Timer* timer)
