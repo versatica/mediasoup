@@ -74,7 +74,7 @@ namespace RTC
 
 			MS_ASSERT(!IsFull(), "packet is full");
 
-			uint16_t delta = 0;
+			uint16_t delta{ 0u };
 
 			// Let's see if we must update our pre base.
 			if (!hasPreBase)
@@ -163,16 +163,8 @@ namespace RTC
 					return false;
 				}
 
-				// TODO: This is really necessary?
-				if (this->lastTimestamp == timestamp)
-				{
-					delta = 0u;
-				}
 				// Deltas are represented as multiples of 250us.
-				else
-				{
-					delta = (timestamp - this->lastTimestamp) * 1000 / 250;
-				}
+				delta = (timestamp - this->lastTimestamp) * 1000 / 250;
 
 				uint16_t previousSequenceNumber = this->receivedPackets.back().sequenceNumber;
 
@@ -268,31 +260,30 @@ namespace RTC
 
 			if (this->receivedPackets.size() != this->deltas.size())
 			{
-				MS_ERROR("received packets and number of deltas mismatch [packets:%zu,deltas:%zu]",
+				MS_ERROR("received packets and number of deltas mismatch [packets:%zu, deltas:%zu]",
 					this->receivedPackets.size(),
 					this->deltas.size());
 
 				for (auto& packet : this->receivedPackets)
 				{
 					// TODO.
-					MS_DUMP("seqNumber: %d, delta(ms): %d", packet.sequenceNumber, packet.delta/4);
+					MS_DUMP("  seqNumber:%d, delta(ms):%d", packet.sequenceNumber, packet.delta / 4);
 				}
 			}
 			else
 			{
 				auto receivedPacketIt = this->receivedPackets.begin();
-				auto deltaIt = this->deltas.begin();
+				auto deltaIt          = this->deltas.begin();
 
 				while (receivedPacketIt != this->receivedPackets.end())
 				{
-					MS_DUMP("seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
-							receivedPacketIt->sequenceNumber,
-							static_cast<uint16_t>(receivedPacketIt->delta/4));
+					MS_DUMP(
+					  "seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
+					  receivedPacketIt->sequenceNumber,
+					  static_cast<uint16_t>(receivedPacketIt->delta/4));
 
 					if (receivedPacketIt->delta != *deltaIt)
-					{
 						MS_ERROR("delta block does not coincide with the received value");
-					}
 
 					receivedPacketIt++;
 					deltaIt++;
@@ -317,7 +308,7 @@ namespace RTC
 			else
 			{
 				Status currentStatus = this->context.statuses.front();
-				size_t count         = 0;
+				size_t count{ 0u };
 
 				for (auto status : this->context.statuses)
 				{
@@ -371,7 +362,7 @@ namespace RTC
 					this->context.currentStatus = Status::None;
 				}
 
-				size_t representedPackets = 0;
+				size_t representedPackets{ 0u };
 
 				// Fill statuses vector.
 				for (uint8_t i{ 0u }; i < missingPackets && this->context.statuses.size() < 7; ++i)
@@ -427,13 +418,17 @@ namespace RTC
 
 			// clang-format off
 			if (
-					this->context.currentStatus == Status::None ||
-					(this->context.allSameStatus && this->context.currentStatus == status)
+				this->context.currentStatus == Status::None ||
+				(this->context.allSameStatus && this->context.currentStatus == status)
 			)
 			// clang-format on
+			{
 				this->context.allSameStatus = true;
+			}
 			else
+			{
 				this->context.allSameStatus = false;
+			}
 
 			this->context.currentStatus = status;
 
@@ -458,7 +453,8 @@ namespace RTC
 		void FeedbackRtpTransportPacket::CreateRunLengthChunk(
 		  Status status, uint16_t count)
 		{
-			auto chunk = new RunLengthChunk(status, count);
+			auto* chunk = new RunLengthChunk(status, count);
+
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += count;
 			this->size += sizeof(uint16_t);
@@ -467,7 +463,8 @@ namespace RTC
 		void FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(
 		  std::vector<Status>& statuses)
 		{
-			auto chunk = new TwoBitVectorChunk(statuses);
+			auto* chunk = new TwoBitVectorChunk(statuses);
+
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += 7;
 			this->size += sizeof(uint16_t);
@@ -530,10 +527,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackRtpTransportPacket::RunLengthChunk>");
-			MS_DUMP("  status     : %s", Status2String[this->status].c_str());
-			MS_DUMP("  count      : %" PRIu16, this->count);
-			MS_DUMP("</FeedbackRtpTransportPacket::RunLengthChunk>");
+			MS_DUMP("  <FeedbackRtpTransportPacket::RunLengthChunk>");
+			MS_DUMP("    status : %s", Status2String[this->status].c_str());
+			MS_DUMP("    count  : %" PRIu16, this->count);
+			MS_DUMP("  </FeedbackRtpTransportPacket::RunLengthChunk>");
 		}
 
 		size_t FeedbackRtpTransportPacket::RunLengthChunk::Serialize(uint8_t* buffer)
@@ -561,9 +558,9 @@ namespace RTC
 
 			out << "|";
 
-			MS_DUMP("<FeedbackRtpTransportPacket::TwoBitVectorChunk>");
-			MS_DUMP("%s", out.str().c_str());
-			MS_DUMP("</FeedbackRtpTransportPacket::TwoBitVectorChunk>");
+			MS_DUMP("  <FeedbackRtpTransportPacket::TwoBitVectorChunk>");
+			MS_DUMP("    %s", out.str().c_str());
+			MS_DUMP("  </FeedbackRtpTransportPacket::TwoBitVectorChunk>");
 		}
 
 		FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(uint16_t buffer)

@@ -1916,8 +1916,8 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: Update wide sequence number if present when Transport-CC client is done.
+		// packet->updateTransportWideCseq-1(this->wideSeqNumber++);
 
-		// packet->updateTransportWideCseq-1(wideSeqNumber++);
 		SendRtpPacket(packet);
 	}
 
@@ -2203,8 +2203,8 @@ namespace RTC
 		SendRtcpPacket(packet);
 
 		// TODO
-		packet->Dump();
-		MS_DUMP_DATA(packet->GetData(), packet->GetSize());
+		// packet->Dump();
+		// MS_DUMP_DATA(packet->GetData(), packet->GetSize());
 	}
 
 	inline void Transport::OnTimer(Timer* timer)
