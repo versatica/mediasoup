@@ -57,15 +57,15 @@ namespace RTC
 			~FeedbackRtpTransportPacket();
 
 		public:
-			bool AddPacket(uint16_t wideSeqNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
+			bool AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			bool IsFull();
 			bool IsSerializable();
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
 			uint32_t GetReferenceTime() const;
 			uint8_t GetFeedbackPacketCount() const;
-			uint16_t GetLastSequenceNumber() const;
-			uint64_t GetLastTimestamp() const;
+			uint16_t GetHighestSequenceNumber() const;
+			uint64_t GetHighestTimestamp() const;
 			void SetFeedbackPacketCount(uint8_t count);
 
 			/* Pure virtual methods inherited from Packet. */
@@ -142,21 +142,20 @@ namespace RTC
 			void FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta);
 			void CreateRunLengthChunk(Status status, uint16_t count);
 			void CreateTwoBitVectorChunk(std::vector<Status>& statuses);
-			bool CheckMissingPackets(uint16_t previousSequenceNumber, uint16_t nextSecuenceNumber);
+			bool CheckMissingPackets(uint16_t previousSequenceNumber, uint16_t sequenceNumber);
 			bool CheckDelta(uint16_t previousTimestamp, uint16_t nextTimestamp);
 			bool CheckSize(size_t maxRtcpPacketLen);
 
 		private:
-			bool hasPreBase{ false };
-			uint16_t preBaseSequenceNumber{ 0u };
 			uint16_t baseSequenceNumber{ 0u };
 			uint64_t referenceTimeMs{ 0u };
+			uint16_t highestSequenceNumber{ 0u };
+			uint64_t highestTimestamp{ 0u };
 			uint16_t packetStatusCount{ 0u };
 			uint8_t feedbackPacketCount{ 0u };
 			std::vector<ReceivedPacket> receivedPackets;
 			std::vector<Chunk*> chunks;
 			std::vector<uint16_t> deltas;
-			uint64_t lastTimestamp{ 0u };
 			Context context;
 			size_t size{ 0u };
 		};
@@ -198,17 +197,14 @@ namespace RTC
 			return this->feedbackPacketCount;
 		}
 
-		inline uint16_t FeedbackRtpTransportPacket::GetLastSequenceNumber() const
+		inline uint16_t FeedbackRtpTransportPacket::GetHighestSequenceNumber() const
 		{
-			if (this->receivedPackets.empty())
-				return 0u;
-
-			return this->receivedPackets.back().sequenceNumber;
+			return this->highestSequenceNumber;
 		}
 
-		inline uint64_t FeedbackRtpTransportPacket::GetLastTimestamp() const
+		inline uint64_t FeedbackRtpTransportPacket::GetHighestTimestamp() const
 		{
-			return this->lastTimestamp;
+			return this->highestTimestamp;
 		}
 
 		inline void FeedbackRtpTransportPacket::SetFeedbackPacketCount(uint8_t count)

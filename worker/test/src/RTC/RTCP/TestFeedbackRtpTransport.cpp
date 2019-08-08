@@ -207,13 +207,13 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet->Dump();
 		MS_DUMP_DATA(buffer, len);
 
-		auto lastWideSeqNumber = packet->GetLastSequenceNumber();
-		auto lastTimestamp     = packet->GetLastTimestamp();
+		auto highestWideSeqNumber = packet->GetHighestSequenceNumber();
+		auto highestTimestamp     = packet->GetHighestTimestamp();
 
 		auto* packet2 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 		packet2->SetFeedbackPacketCount(2);
 
-		packet2->AddPacket(lastWideSeqNumber, lastTimestamp, RtcpMtu);
+		packet2->AddPacket(highestWideSeqNumber, highestTimestamp, RtcpMtu);
 		packet2->AddPacket(1009, 10000009, RtcpMtu);
 		packet2->AddPacket(1010, 10000010, RtcpMtu);
 		packet2->AddPacket(1011, 10000011, RtcpMtu);

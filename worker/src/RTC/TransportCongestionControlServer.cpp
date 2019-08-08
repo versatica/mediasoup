@@ -81,8 +81,8 @@ namespace RTC
 		if (!this->feedbackPacket->IsSerializable())
 			return;
 
-		auto lastWideSeqNumber = this->feedbackPacket->GetLastSequenceNumber();
-		auto lastTimestamp     = this->feedbackPacket->GetLastTimestamp();
+		auto highestWideSeqNumber = this->feedbackPacket->GetHighestSequenceNumber();
+		auto highestTimestamp     = this->feedbackPacket->GetHighestTimestamp();
 
 		// Notify the listener.
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket.get());
@@ -93,9 +93,9 @@ namespace RTC
 		// Increment packet count.
 		this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);
 
-		// Pass the last packet info (if any) as pre base for the new feedback packet.
-		if (lastTimestamp > 0u)
-			this->feedbackPacket->AddPacket(lastWideSeqNumber, lastTimestamp, this->maxRtcpPacketLen);
+		// Pass the highest packet info (if any) as pre base for the new feedback packet.
+		if (highestTimestamp > 0u)
+			this->feedbackPacket->AddPacket(highestWideSeqNumber, highestTimestamp, this->maxRtcpPacketLen);
 	}
 
 	inline void TransportCongestionControlServer::OnTimer(Timer* timer)
