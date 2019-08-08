@@ -95,9 +95,7 @@ namespace RTC
 
 		// Pass the last packet info (if any) as pre base for the new feedback packet.
 		if (lastTimestamp > 0u)
-		{
 			this->feedbackPacket->AddPacket(lastWideSeqNumber, lastTimestamp, this->maxRtcpPacketLen);
-		}
 	}
 
 	inline void TransportCongestionControlServer::OnTimer(Timer* timer)
