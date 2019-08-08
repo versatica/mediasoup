@@ -319,25 +319,9 @@ namespace RTC
 			}
 			else
 			{
-				Status currentStatus = this->context.statuses.front();
-				size_t count{ 0u };
+				MS_ASSERT(this->context.statuses.size() < 7, "already 7 status packets present");
 
-				for (auto status : this->context.statuses)
-				{
-					if (status == currentStatus)
-					{
-						count++;
-					}
-					else
-					{
-						CreateRunLengthChunk(currentStatus, count);
-
-						currentStatus = status;
-						count = 1;
-					}
-				}
-
-				CreateRunLengthChunk(currentStatus, count);
+				CreateTwoBitVectorChunk(this->context.statuses);
 
 				this->context.statuses.clear();
 			}
@@ -478,7 +462,7 @@ namespace RTC
 			auto* chunk = new TwoBitVectorChunk(statuses);
 
 			this->chunks.push_back(chunk);
-			this->packetStatusCount += 7;
+			this->packetStatusCount += statuses.size();
 			this->size += sizeof(uint16_t);
 		}
 
@@ -565,8 +549,13 @@ namespace RTC
 
 			std::ostringstream out;
 
+			// Dump status slots.
 			for (auto status : this->statuses)
 				out << "|" << FeedbackRtpTransportPacket::Status2String[status];
+
+			// Dump empty slots.
+			for (size_t i{ this->statuses.size() }; i < 7; ++i)
+				out << "|--";
 
 			out << "|";
 
@@ -593,7 +582,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(this->statuses.size() == 7, "packet info size must be 7");
+			MS_ASSERT(this->statuses.size() <= 7, "packet info size must be 7 or less");
 
 			uint16_t bytes{ 0x8000 };
 			uint8_t i{ 12u };
