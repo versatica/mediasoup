@@ -41,7 +41,7 @@ namespace RTC
 
 				default:
 				{
-					MS_WARN_TAG(rtcp, "unknown RTCP XR block type [blockType:%" PRIu8 "]", header->blockType);
+					MS_DEBUG_TAG(rtcp, "unknown RTCP XR block type [blockType:%" PRIu8 "]", header->blockType);
 					break;
 				}
 			}
