@@ -62,7 +62,7 @@ namespace RTC
 			bool IsSerializable();
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
-			uint32_t GetReferenceTime() const;
+			int32_t GetReferenceTime() const;
 			uint8_t GetFeedbackPacketCount() const;
 			uint16_t GetHighestSequenceNumber() const;
 			uint64_t GetHighestTimestamp() const;
@@ -143,12 +143,12 @@ namespace RTC
 			void CreateRunLengthChunk(Status status, uint16_t count);
 			void CreateTwoBitVectorChunk(std::vector<Status>& statuses);
 			bool CheckMissingPackets(uint16_t previousSequenceNumber, uint16_t sequenceNumber);
-			bool CheckDelta(uint16_t previousTimestamp, uint16_t nextTimestamp);
+			bool CheckDelta(uint64_t previousTimestamp, uint64_t timestamp);
 			bool CheckSize(size_t maxRtcpPacketLen);
 
 		private:
 			uint16_t baseSequenceNumber{ 0u };
-			uint64_t referenceTimeMs{ 0u };
+			int32_t referenceTime{ 0 };
 			uint16_t highestSequenceNumber{ 0u };
 			uint64_t highestTimestamp{ 0u };
 			uint16_t packetStatusCount{ 0u };
@@ -187,9 +187,9 @@ namespace RTC
 			return this->packetStatusCount;
 		}
 
-		inline uint32_t FeedbackRtpTransportPacket::GetReferenceTime() const
+		inline int32_t FeedbackRtpTransportPacket::GetReferenceTime() const
 		{
-			return this->referenceTimeMs;
+			return this->referenceTime;
 		}
 
 		inline uint8_t FeedbackRtpTransportPacket::GetFeedbackPacketCount() const

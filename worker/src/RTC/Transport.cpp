@@ -2205,8 +2205,8 @@ namespace RTC
 		SendRtcpPacket(packet);
 
 		// TODO
-		// packet->Dump();
-		// MS_DUMP_DATA(packet->GetData(), packet->GetSize());
+		packet->Dump();
+		MS_DUMP_DATA(packet->GetData(), packet->GetSize());
 	}
 
 	inline void Transport::OnTimer(Timer* timer)

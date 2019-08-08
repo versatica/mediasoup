@@ -16,7 +16,7 @@ namespace RTC
 		size_t FeedbackRtpTransportPacket::fixedHeaderSize{ 8u };
 		uint16_t FeedbackRtpTransportPacket::maxMissingPackets{ (1 << 13) - 1 };
 		uint16_t FeedbackRtpTransportPacket::maxPacketStatusCount{ (1 << 16) - 1 };
-		uint16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFC };
+		uint16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
 
 		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
 		{
@@ -61,7 +61,7 @@ namespace RTC
 
 			this->baseSequenceNumber  = Utils::Byte::Get2Bytes(data, 0);
 			this->packetStatusCount   = Utils::Byte::Get2Bytes(data, 2);
-			this->referenceTimeMs     = Utils::Byte::Get3Bytes(data, 4);
+			this->referenceTime       = static_cast<int32_t>(Utils::Byte::Get3Bytes(data, 4));
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
 
 			// TODO: Parse.
@@ -91,7 +91,7 @@ namespace RTC
 				MS_DEBUG_DEV("setting base");
 
 				this->baseSequenceNumber    = sequenceNumber + 1;
-				this->referenceTimeMs       = timestamp;
+				this->referenceTime         = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
 				this->highestSequenceNumber = sequenceNumber;
 				this->highestTimestamp      = timestamp;
 
@@ -163,10 +163,8 @@ namespace RTC
 			Utils::Byte::Set2Bytes(buffer, offset, this->packetStatusCount);
 			offset += 2;
 
-			// Reference time is represented in multiples of 64ms.
-			auto referenceTime = (this->referenceTimeMs / 64) & 0xFFFFFF;
-
-			Utils::Byte::Set3Bytes(buffer, offset, referenceTime);
+			// Reference time.
+			Utils::Byte::Set3Bytes(buffer, offset, static_cast<uint32_t>(this->referenceTime));
 			offset += 3;
 
 			// Feedback packet count.
@@ -214,7 +212,7 @@ namespace RTC
 			MS_DUMP("<FeedbackRtpTransportPacket>");
 			MS_DUMP("  base sequence         : %" PRIu16, this->baseSequenceNumber);
 			MS_DUMP("  packet status count   : %" PRIu16, this->packetStatusCount);
-			MS_DUMP("  reference time        : %" PRIu64, this->referenceTimeMs);
+			MS_DUMP("  reference time        : %" PRIi32, this->referenceTime);
 			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
 			MS_DUMP("  size                  : %zu", GetSize());
 
@@ -435,15 +433,15 @@ namespace RTC
 			return (missingPackets <= FeedbackRtpTransportPacket::maxMissingPackets);
 		}
 
-		bool FeedbackRtpTransportPacket::CheckDelta(uint16_t previousTimestamp, uint16_t nextTimestamp)
+		bool FeedbackRtpTransportPacket::CheckDelta(uint64_t previousTimestamp, uint64_t timestamp)
 		{
 			MS_TRACE();
 
 			// Delta since last received RTP packet in milliseconds.
-			auto deltaMs = nextTimestamp - previousTimestamp;
+			uint64_t deltaMs = timestamp - previousTimestamp;
 
 			// Deltas are represented as multiples of 250us.
-			auto delta = deltaMs * 1000 / 250;
+			auto delta = deltaMs * 4;
 
 			// Check if there is too much delta since previous RTP packet.
 			return (delta <= FeedbackRtpTransportPacket::maxPacketDelta);
