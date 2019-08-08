@@ -94,22 +94,8 @@ namespace RTC
 
 				this->hasPreBase            = true;
 				this->preBaseSequenceNumber = wideSeqNumber;
-				this->preReferenceTimeMs    = timestamp;
-
-				return true;
-			}
-			// Ensure this can be the base. Update pre base otherwise.
-			// clang-format off
-			else if (
-				this->receivedPackets.empty() &&
-				wideSeqNumber != this->preBaseSequenceNumber + 1
-			)
-			// clang-format on
-			{
-				MS_WARN_DEV("not valid as base, resetting pre base");
-
-				this->preBaseSequenceNumber = wideSeqNumber;
-				this->preReferenceTimeMs    = timestamp;
+				this->baseSequenceNumber    = wideSeqNumber + 1;
+				this->referenceTimeMs       = timestamp;
 
 				return true;
 			}
@@ -117,26 +103,22 @@ namespace RTC
 			else if (this->receivedPackets.empty())
 			{
 				// Not a valid base. Use it as pre base.
-				if (!CheckDelta(this->preReferenceTimeMs, timestamp))
+				if (!CheckDelta(this->referenceTimeMs, timestamp))
 				{
 					MS_WARN_DEV(
-					  "RTP packet delta exceeded, not valid as base, resetting pre base [preReferenceTimeMs:%" PRIu64
+					  "RTP packet delta exceeded, not valid as base, resetting pre base [referenceTimeMs:%" PRIu64
 					  ", timestamp:%" PRIu64 "]",
-					  this->preReferenceTimeMs,
+					  this->referenceTimeMs,
 					  timestamp);
 
 					this->preBaseSequenceNumber = wideSeqNumber;
-					this->preReferenceTimeMs    = timestamp;
+					this->baseSequenceNumber    = wideSeqNumber + 1;
+					this->referenceTimeMs       = timestamp;
 
 					return true;
 				}
 
-				MS_DEBUG_DEV("setting base");
-
-				this->baseSequenceNumber = wideSeqNumber;
-				this->referenceTimeMs    = timestamp;
-
-				delta = (timestamp - this->preReferenceTimeMs) * 1000 / 250;
+				delta = (timestamp - this->referenceTimeMs) * 1000 / 250;
 
 				FillChunk(this->preBaseSequenceNumber, wideSeqNumber, delta);
 			}
@@ -286,11 +268,13 @@ namespace RTC
 				auto receivedPacketIt = this->receivedPackets.begin();
 				auto deltaIt          = this->deltas.begin();
 
+				MS_DUMP("  <Deltas>");
+
 				while (receivedPacketIt != this->receivedPackets.end())
 				{
 					// TODO.
 					MS_DUMP(
-					  "  seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
+					  "    seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
 					  receivedPacketIt->sequenceNumber,
 					  static_cast<uint16_t>(receivedPacketIt->delta/4));
 
@@ -300,6 +284,8 @@ namespace RTC
 					receivedPacketIt++;
 					deltaIt++;
 				}
+
+				MS_DUMP("  </Deltas>");
 			}
 
 			MS_DUMP("</FeedbackRtpTransportPacket>");
@@ -358,6 +344,7 @@ namespace RTC
 					this->context.currentStatus = Status::None;
 				}
 
+				this->context.currentStatus = Status::NotReceived;
 				size_t representedPackets{ 0u };
 
 				// Fill statuses vector.

@@ -149,7 +149,6 @@ namespace RTC
 		private:
 			bool hasPreBase{ false };
 			uint16_t preBaseSequenceNumber{ 0u };
-			uint64_t preReferenceTimeMs{ 0u };
 			uint16_t baseSequenceNumber{ 0u };
 			uint64_t referenceTimeMs{ 0u };
 			uint16_t packetStatusCount{ 0u };
