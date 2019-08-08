@@ -1149,9 +1149,6 @@ namespace RTC
 		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
 		packet->SetTransportWideCc01ExtensionId(this->rtpHeaderExtensionIds.transportWideCc01);
 
-			// TODO: Remove
-			DepLibUV::UpdateTime();
-
 		auto now = DepLibUV::GetTime();
 
 		// Feed the REMB server.
@@ -1919,7 +1916,7 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: Update wide sequence number if present when Transport-CC client is done.
-		// packet->updateTransportWideCseq-1(this->wideSeqNumber++);
+			packet->UpdateTransportWideCc01(this->transportWideSeq++);
 
 		SendRtpPacket(packet);
 	}
@@ -1934,6 +1931,7 @@ namespace RTC
 		packet->UpdateAbsSendTime(now);
 
 		// TODO: Update wide sequence number if present when Transport-CC client is done.
+			packet->UpdateTransportWideCc01(this->transportWideSeq++);
 
 		// Send the packet.
 		SendRtpPacket(packet);
@@ -2158,6 +2156,7 @@ namespace RTC
 		packet->UpdateAbsSendTime(now);
 
 		// TODO: Update wide sequence number if present when Transport-CC client is done.
+			packet->UpdateTransportWideCc01(this->transportWideSeq++);
 
 		// Send the packet.
 		SendRtpPacket(packet);
@@ -2206,7 +2205,7 @@ namespace RTC
 		SendRtcpPacket(packet);
 
 		// TODO
-		packet->Dump();
+		// packet->Dump();
 		// MS_DUMP_DATA(packet->GetData(), packet->GetSize());
 	}
 
