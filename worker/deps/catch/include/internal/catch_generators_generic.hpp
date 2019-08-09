@@ -91,6 +91,9 @@ namespace Generators {
 
     template <typename T>
     class RepeatGenerator : public IGenerator<T> {
+        static_assert(!std::is_same<T, bool>::value,
+            "RepeatGenerator currently does not support bools"
+            "because of std::vector<bool> specialization");
         GeneratorWrapper<T> m_generator;
         mutable std::vector<T> m_returned;
         size_t m_target_repeats;
@@ -205,12 +208,14 @@ namespace Generators {
             m_chunk_size(size), m_generator(std::move(generator))
         {
             m_chunk.reserve(m_chunk_size);
-            m_chunk.push_back(m_generator.get());
-            for (size_t i = 1; i < m_chunk_size; ++i) {
-                if (!m_generator.next()) {
-                    Catch::throw_exception(GeneratorException("Not enough values to initialize the first chunk"));
-                }
+            if (m_chunk_size != 0) {
                 m_chunk.push_back(m_generator.get());
+                for (size_t i = 1; i < m_chunk_size; ++i) {
+                    if (!m_generator.next()) {
+                        Catch::throw_exception(GeneratorException("Not enough values to initialize the first chunk"));
+                    }
+                    m_chunk.push_back(m_generator.get());
+                }
             }
         }
         std::vector<T> const& get() const override {

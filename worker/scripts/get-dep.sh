@@ -109,7 +109,7 @@ function get_usrsctp()
 function get_catch()
 {
 	GIT_REPO="https://github.com/catchorg/Catch2.git"
-	GIT_TAG="v2.9.1"
+	GIT_TAG="v2.9.2"
 	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"

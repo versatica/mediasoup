@@ -1,6 +1,8 @@
 <a id="top"></a>
 # Data Generators
 
+> Introduced in Catch 2.6.0.
+
 Data generators (also known as _data driven/parametrized test cases_)
 let you reuse the same set of assertions across different input values.
 In Catch2, this means that they respect the ordering and nesting
@@ -49,6 +51,8 @@ a test case,
   * `RandomFloatGenerator<Float>` -- generates random Floats from range
   * `RangeGenerator<T>` -- generates all values inside a specific range
 
+> `ChunkGenerator<T>`, `RandomIntegerGenerator<Integral>`, `RandomFloatGenerator<Float>` and `RangeGenerator<T>` were introduced in Catch 2.7.0.
+
 The generators also have associated helper functions that infer their
 type, making their usage much nicer. These are
 
@@ -64,6 +68,7 @@ type, making their usage much nicer. These are
 * `range(start, end)` for `RangeGenerator<T>` with a step size of `1`
 * `range(start, end, step)` for `RangeGenerator<T>` with a custom step size
 
+> `chunk()`, `random()` and both `range()` functions were introduced in Catch 2.7.0.
 
 And can be used as shown in the example below to create a generator
 that returns 100 odd random number:
@@ -95,6 +100,8 @@ This is done because the generator expression _will_ outlive the outside
 scope and thus capturing references is dangerous. If you need to use
 variables inside the generator expression, make sure you thought through
 the lifetime implications and use `GENERATE_COPY` or `GENERATE_REF`.**
+
+> `GENERATE_COPY` and `GENERATE_REF` were introduced in Catch 2.7.1.
 
 You can also override the inferred type by using `as<type>` as the first
 argument to the macro. This can be useful when dealing with string literals,
