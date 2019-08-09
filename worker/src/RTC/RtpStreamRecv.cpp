@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpStreamRecv"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/RtpStreamRecv.hpp"
 #include "Logger.hpp"
@@ -8,6 +8,7 @@
 
 	// TODO: TMP
 	static uint16_t LastWideSeq{ 65535u };
+	static bool AlwaysLogWideSeq{ true };
 
 namespace RTC
 {
@@ -250,7 +251,7 @@ namespace RTC
 			uint16_t wideSeqNumber{ 0u };
 			if (packet->ReadTransportWideCc01(wideSeqNumber))
 			{
-				if (wideSeqNumber != LastWideSeq + 1)
+				if (AlwaysLogWideSeq || wideSeqNumber != LastWideSeq + 1)
 					logWideStuff = true;
 
 				LastWideSeq = wideSeqNumber;
@@ -261,8 +262,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "packet discarded");
 
-				if (logWideStuff)
-					MS_DUMP("*** RTP packet discarded by RtpStream::ReceivePacket() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
+				MS_DUMP("*** RTP packet discarded by RtpStream::ReceivePacket() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", ssrc:%" PRIu32 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetSsrc(), DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 			return false;
 		}
@@ -311,7 +311,7 @@ namespace RTC
 		this->lastPacketAt = DepLibUV::GetTime();
 
 			if (logWideStuff)
-				MS_DUMP("--- RTP packet valid [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
+				MS_DUMP("--- RTP packet valid [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", ssrc:%" PRIu32 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetSsrc(), DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 		return true;
 	}
@@ -325,7 +325,7 @@ namespace RTC
 			uint16_t wideSeqNumber{ 0u };
 			if (packet->ReadTransportWideCc01(wideSeqNumber))
 			{
-				if (wideSeqNumber != LastWideSeq + 1)
+				if (AlwaysLogWideSeq || wideSeqNumber != LastWideSeq + 1)
 					logWideStuff = true;
 
 				LastWideSeq = wideSeqNumber;
@@ -368,8 +368,7 @@ namespace RTC
 			  packet->GetSequenceNumber(),
 			  packet->GetPayloadType());
 
-				if (logWideStuff)
-					MS_DUMP("*** RTX packet discarded (empty) [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
+				MS_DUMP("*** RTX packet discarded (empty) [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", ssrc:%" PRIu32 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetSsrc(), DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 			return false;
 		}
@@ -391,8 +390,7 @@ namespace RTC
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber());
 
-				if (logWideStuff)
-					MS_DUMP("*** RTX packet discarded by RtpStream::UpdateSeq() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
+				MS_DUMP("*** RTX packet discarded by RtpStream::UpdateSeq() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", ssrc:%" PRIu32 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetSsrc(), DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 			return false;
 		}
@@ -408,8 +406,7 @@ namespace RTC
 		// NACKed packet.
 		if (this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true))
 		{
-				if (logWideStuff)
-					MS_DUMP("--- RTX packet valid by NackGenerator [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
+				MS_DUMP("--- RTX packet valid by NackGenerator [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", ssrc:%" PRIu32 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetSsrc(), DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 			// Mark the packet as repaired.
 			RTC::RtpStream::PacketRepaired(packet);
@@ -432,8 +429,7 @@ namespace RTC
 			return true;
 		}
 
-			if (logWideStuff)
-				MS_DUMP("*** RTP packet discarded by NackGenerator() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
+			MS_DUMP("*** RTP packet discarded by NackGenerator() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", ssrc:%" PRIu32 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetSsrc(), DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 		return false;
 	}
@@ -763,7 +759,7 @@ namespace RTC
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
 		  score,
-		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score: %lf]",
+		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score:%" PRIu8 "]",
 		  deliveredRatio,
 		  repairedRatio,
 		  repairedWeight,
