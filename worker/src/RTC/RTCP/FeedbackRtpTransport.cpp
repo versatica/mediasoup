@@ -504,11 +504,15 @@ namespace RTC
 
 			// Dump status slots.
 			for (auto status : this->statuses)
+			{
 				out << "|" << FeedbackRtpTransportPacket::Status2String[status];
+			}
 
 			// Dump empty slots.
 			for (size_t i{ this->statuses.size() }; i < 7; ++i)
+			{
 				out << "|--";
+			}
 
 			out << "|";
 
