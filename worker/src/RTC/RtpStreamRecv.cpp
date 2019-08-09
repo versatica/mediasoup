@@ -429,7 +429,7 @@ namespace RTC
 			return true;
 		}
 
-			MS_DUMP("*** RTP packet discarded by NackGenerator() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", ssrc:%" PRIu32 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetSsrc(), DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
+			MS_DUMP("*** RTX packet discarded by NackGenerator() [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", ssrc:%" PRIu32 ", time:%" PRIu64 ", payloadLen:%zu, score:%" PRIu8 "]", packet->GetSequenceNumber(), wideSeqNumber, packet->GetSsrc(), DepLibUV::GetTime(), packet->GetPayloadLength(), GetScore());
 
 		return false;
 	}
