@@ -8,7 +8,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t FeedbackSendInterval{ 50u }; // In ms.
+	static constexpr uint64_t FeedbackSendInterval{ 100u }; // In ms.
 
 	/* Instance methods. */
 
@@ -40,7 +40,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->senderSsrc = senderSsrc;
-		this->mediaSsrc = mediaSsrc;
+		this->mediaSsrc  = mediaSsrc;
 
 		this->feedbackPacket->SetSenderSsrc(this->senderSsrc);
 		this->feedbackPacket->SetMediaSsrc(this->mediaSsrc);
@@ -99,7 +99,8 @@ namespace RTC
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, this->feedbackPacket.get());
 
 		// Create a new feedback packet.
-		this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(this->senderSsrc, this->mediaSsrc));
+		this->feedbackPacket.reset(
+		  new RTC::RTCP::FeedbackRtpTransportPacket(this->senderSsrc, this->mediaSsrc));
 
 		// Increment packet count.
 		this->feedbackPacket->SetFeedbackPacketCount(++this->feedbackPacketCount);

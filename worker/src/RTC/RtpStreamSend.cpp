@@ -647,7 +647,8 @@ namespace RTC
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
 		  score,
-		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score:%" PRIu8 "]",
+		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score:%" PRIu8
+		  "]",
 		  deliveredRatio,
 		  repairedRatio,
 		  repairedWeight,

@@ -469,8 +469,7 @@ namespace RTC
 				if (this->maxIncomingBitrate != 0u && this->maxIncomingBitrate < MinBitrate)
 					this->maxIncomingBitrate = MinBitrate;
 
-				MS_DEBUG_TAG(
-				  bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
+				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
 
 				request->Accept();
 
@@ -1169,9 +1168,8 @@ namespace RTC
 
 			if (packet->ReadTransportWideCc01(wideSeqNumber))
 			{
-				// TODO: TESTING. Update the media ssrc of the TCC server to the SSRC of
-				// this packet.
-				this->tccServer->SetRtcpSsrcs(packet->GetSsrc(), packet->GetSsrc());
+				// Update the RTCP media SSRC of the ongoing Transport Feedback packet.
+				this->tccServer->SetRtcpSsrcs(0, packet->GetSsrc());
 
 				this->tccServer->IncomingPacket(now, wideSeqNumber);
 			}
@@ -1921,8 +1919,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Update wide sequence number if present when Transport-CC client is done.
-			packet->UpdateTransportWideCc01(this->transportWideSeq++);
+		// Update transport wide sequence number if present.
+		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+			this->transportWideSeq++;
 
 		SendRtpPacket(packet);
 	}
@@ -1932,12 +1931,11 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		auto now = DepLibUV::GetTime();
+		packet->UpdateAbsSendTime(DepLibUV::GetTime());
 
-		packet->UpdateAbsSendTime(now);
-
-		// TODO: Update wide sequence number if present when Transport-CC client is done.
-			packet->UpdateTransportWideCc01(this->transportWideSeq++);
+		// Update transport wide sequence number if present.
+		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+			this->transportWideSeq++;
 
 		// Send the packet.
 		SendRtpPacket(packet);
@@ -2157,12 +2155,11 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		auto now = DepLibUV::GetTime();
+		packet->UpdateAbsSendTime(DepLibUV::GetTime());
 
-		packet->UpdateAbsSendTime(now);
-
-		// TODO: Update wide sequence number if present when Transport-CC client is done.
-			packet->UpdateTransportWideCc01(this->transportWideSeq++);
+		// Update transport wide sequence number if present.
+		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+			this->transportWideSeq++;
 
 		// Send the packet.
 		SendRtpPacket(packet);
@@ -2209,10 +2206,6 @@ namespace RTC
 
 		packet->Serialize(RTC::RTCP::Buffer);
 		SendRtcpPacket(packet);
-
-			// TODO
-			// packet->Dump();
-			// MS_DUMP_DATA(packet->GetData(), packet->GetSize());
 	}
 
 	inline void Transport::OnTimer(Timer* timer)

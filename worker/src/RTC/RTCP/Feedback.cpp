@@ -256,9 +256,8 @@ namespace RTC
 				case FeedbackRtp::MessageType::EXT:
 					break;
 
-					// TODO: TMP
+					// TODO: Enable once Transport-CC client is done.
 					// case FeedbackRtp::MessageType::TCC:
-					// 	MS_DUMP_DATA(data, len);
 					// 	break;
 
 				default:

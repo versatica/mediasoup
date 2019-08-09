@@ -234,9 +234,7 @@ namespace RTC
 		RTC::RateCalculator sendTransmission;
 		uint32_t initialAvailableOutgoingBitrate{ 600000 };
 		uint32_t maxIncomingBitrate{ 0 };
-
-			// TODO
-			uint16_t transportWideSeq{ 0u };
+		uint16_t transportWideSeq{ 0u };
 	};
 
 	/* Inline instance methods. */

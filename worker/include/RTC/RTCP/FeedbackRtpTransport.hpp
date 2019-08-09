@@ -107,7 +107,7 @@ namespace RTC
 				Chunk()          = default;
 				virtual ~Chunk() = default;
 
-				virtual void Dump() = 0;
+				virtual void Dump()                       = 0;
 				virtual size_t Serialize(uint8_t* buffer) = 0;
 			};
 
@@ -229,13 +229,12 @@ namespace RTC
 		}
 
 		inline FeedbackRtpTransportPacket::RunLengthChunk::RunLengthChunk(Status status, uint16_t count)
-			: status(status),
-			  count(count)
+		  : status(status), count(count)
 		{
 		}
 
 		inline FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(std::vector<Status> statuses)
-			: statuses(statuses)
+		  : statuses(statuses)
 		{
 		}
 	} // namespace RTCP

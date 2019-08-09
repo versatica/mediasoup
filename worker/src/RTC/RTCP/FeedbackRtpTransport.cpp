@@ -18,11 +18,10 @@ namespace RTC
 		uint16_t FeedbackRtpTransportPacket::maxPacketStatusCount{ (1 << 16) - 1 };
 		uint16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
 
-		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
-		{
+		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String = {
 			{ FeedbackRtpTransportPacket::Status::NotReceived, "NR" },
-			{ FeedbackRtpTransportPacket::Status::SmallDelta,  "SD" },
-			{ FeedbackRtpTransportPacket::Status::LargeDelta,  "LD" }
+			{ FeedbackRtpTransportPacket::Status::SmallDelta, "SD" },
+			{ FeedbackRtpTransportPacket::Status::LargeDelta, "LD" }
 		};
 
 		/* Class methods. */
@@ -93,7 +92,7 @@ namespace RTC
 				this->baseSequenceNumber    = sequenceNumber + 1;
 				this->referenceTime         = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
 				this->highestSequenceNumber = sequenceNumber;
-				this->highestTimestamp      = timestamp;
+				this->highestTimestamp      = this->referenceTime * 64; // IMPORTANT.
 
 				return true;
 			}
@@ -223,13 +222,13 @@ namespace RTC
 
 			if (this->receivedPackets.size() != this->deltas.size())
 			{
-				MS_ERROR("received packets and number of deltas mismatch [packets:%zu, deltas:%zu]",
-					this->receivedPackets.size(),
-					this->deltas.size());
+				MS_ERROR(
+				  "received packets and number of deltas mismatch [packets:%zu, deltas:%zu]",
+				  this->receivedPackets.size(),
+				  this->deltas.size());
 
 				for (auto& packet : this->receivedPackets)
 				{
-					// TODO.
 					MS_DUMP("  seqNumber:%d, delta(ms):%d", packet.sequenceNumber, packet.delta / 4);
 				}
 			}
@@ -242,11 +241,10 @@ namespace RTC
 
 				while (receivedPacketIt != this->receivedPackets.end())
 				{
-					// TODO.
 					MS_DUMP(
 					  "    seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
 					  receivedPacketIt->sequenceNumber,
-					  static_cast<uint16_t>(receivedPacketIt->delta/4));
+					  static_cast<uint16_t>(receivedPacketIt->delta / 4));
 
 					if (receivedPacketIt->delta != *deltaIt)
 						MS_ERROR("delta block does not coincide with the received value");
@@ -283,7 +281,8 @@ namespace RTC
 			}
 		}
 
-		void FeedbackRtpTransportPacket::FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta)
+		void FeedbackRtpTransportPacket::FillChunk(
+		  uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta)
 		{
 			MS_TRACE();
 
@@ -402,8 +401,7 @@ namespace RTC
 			}
 		}
 
-		void FeedbackRtpTransportPacket::CreateRunLengthChunk(
-		  Status status, uint16_t count)
+		void FeedbackRtpTransportPacket::CreateRunLengthChunk(Status status, uint16_t count)
 		{
 			auto* chunk = new RunLengthChunk(status, count);
 
@@ -412,8 +410,7 @@ namespace RTC
 			this->size += sizeof(uint16_t);
 		}
 
-		void FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(
-		  std::vector<Status>& statuses)
+		void FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(std::vector<Status>& statuses)
 		{
 			auto* chunk = new TwoBitVectorChunk(statuses);
 
@@ -422,7 +419,8 @@ namespace RTC
 			this->size += sizeof(uint16_t);
 		}
 
-		bool FeedbackRtpTransportPacket::CheckMissingPackets(uint16_t previousSequenceNumber, uint16_t sequenceNumber)
+		bool FeedbackRtpTransportPacket::CheckMissingPackets(
+		  uint16_t previousSequenceNumber, uint16_t sequenceNumber)
 		{
 			MS_TRACE();
 
@@ -523,7 +521,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(buffer & 0xC000, "Invalid two bit vector chunk");
+			MS_ASSERT(buffer & 0xC000, "invalid two bit vector chunk");
 
 			for (size_t i{ 0u }; i < 7; ++i)
 			{
