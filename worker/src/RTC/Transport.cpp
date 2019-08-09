@@ -587,6 +587,16 @@ namespace RTC
 
 						this->tccServer = new RTC::TransportCongestionControlServer(this, RTC::MtuSize);
 
+						// TODO: TESTING.
+						if (producer->GetKind() == RTC::Media::Kind::VIDEO)
+						{
+							// Get the highest layer SSRC.
+							auto mediaSsrc =
+								producer->GetRtpParameters().encodings.back().ssrc;
+
+							this->tccServer->SetRtcpSsrcs(0u, mediaSsrc);
+						}
+
 						// If the transport is connected, tell the Transport-CC server.
 						if (IsConnected())
 							this->tccServer->TransportConnected();
@@ -1868,10 +1878,6 @@ namespace RTC
 	  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
-
-		// TODO: Should check if this Producer supports Transport-CC.
-		if (this->tccServer && producer->GetKind() == RTC::Media::Kind::VIDEO)
-			this->tccServer->SetRtcpSsrcs(0u, rtpStream->GetSsrc());
 
 		this->listener->OnTransportProducerNewRtpStream(this, producer, rtpStream, mappedSsrc);
 	}
