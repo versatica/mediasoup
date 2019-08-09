@@ -24,6 +24,7 @@ namespace RTC
 		virtual ~TransportCongestionControlServer();
 
 	public:
+		void SetRtcpSsrcs(uint32_t senderSsrc, uint32_t mediaSsrc);
 		void TransportConnected();
 		void TransportDisconnected();
 		void IncomingPacket(int64_t arrivalTimeMs, uint16_t wideSeqNumber);
@@ -44,6 +45,8 @@ namespace RTC
 		// Others.
 		size_t maxRtcpPacketLen{ 0u };
 		uint8_t feedbackPacketCount{ 0u };
+		uint32_t senderSsrc{ 0u };
+		uint32_t mediaSsrc{ 0u };
 	};
 } // namespace RTC
 
