@@ -1870,7 +1870,7 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: Should check if this Producer supports Transport-CC.
-		if (this->tccServer)
+		if (this->tccServer && producer->GetKind() == RTC::Media::Kind::VIDEO)
 			this->tccServer->SetRtcpSsrcs(0u, rtpStream->GetSsrc());
 
 		this->listener->OnTransportProducerNewRtpStream(this, producer, rtpStream, mappedSsrc);

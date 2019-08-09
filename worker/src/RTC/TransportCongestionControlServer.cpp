@@ -39,6 +39,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->mediaSsrc != 0u)
+			return;
+
 		this->senderSsrc = senderSsrc;
 		this->mediaSsrc = mediaSsrc;
 
