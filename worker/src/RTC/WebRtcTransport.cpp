@@ -765,9 +765,6 @@ namespace RTC
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
-
-				// TODO: REMOVE
-				packet->Dump();
 	}
 
 	void WebRtcTransport::SendSctpData(const uint8_t* data, size_t len)
