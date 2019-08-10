@@ -92,7 +92,7 @@ namespace RTC
 				this->baseSequenceNumber    = sequenceNumber + 1;
 				this->referenceTime         = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
 				this->highestSequenceNumber = sequenceNumber;
-				this->highestTimestamp      = this->referenceTime * 64; // IMPORTANT.
+				this->highestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
 
 				return true;
 			}
