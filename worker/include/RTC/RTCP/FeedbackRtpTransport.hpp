@@ -39,41 +39,8 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		// RTP Transport packet declaration.
 		class FeedbackRtpTransportPacket : public FeedbackRtpPacket
 		{
-		public:
-			static size_t fixedHeaderSize;
-			static uint16_t maxMissingPackets;
-			static uint16_t maxPacketStatusCount;
-			static uint16_t maxPacketDelta;
-
-		public:
-			static FeedbackRtpTransportPacket* Parse(const uint8_t* data, size_t len);
-
-		public:
-			FeedbackRtpTransportPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
-			FeedbackRtpTransportPacket(CommonHeader* commonHeader);
-			~FeedbackRtpTransportPacket();
-
-		public:
-			bool AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
-			bool IsFull();
-			bool IsSerializable();
-			uint16_t GetBaseSequenceNumber() const;
-			uint16_t GetPacketStatusCount() const;
-			int32_t GetReferenceTime() const;
-			uint8_t GetFeedbackPacketCount() const;
-			uint16_t GetHighestSequenceNumber() const;
-			uint64_t GetHighestTimestamp() const;
-			void SetFeedbackPacketCount(uint8_t count);
-
-			/* Pure virtual methods inherited from Packet. */
-		public:
-			void Dump() const override;
-			size_t Serialize(uint8_t* buffer) override;
-			size_t GetSize() const override;
-
 		private:
 			enum Status : uint8_t
 			{
@@ -134,17 +101,46 @@ namespace RTC
 				std::vector<Status> statuses;
 			};
 
+		public:
+			static size_t fixedHeaderSize;
+			static uint16_t maxMissingPackets;
+			static uint16_t maxPacketStatusCount;
+			static uint16_t maxPacketDelta;
+
+		public:
+			static FeedbackRtpTransportPacket* Parse(const uint8_t* data, size_t len);
+
 		private:
 			static std::map<Status, std::string> Status2String;
 
+		public:
+			FeedbackRtpTransportPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
+			FeedbackRtpTransportPacket(CommonHeader* commonHeader);
+			~FeedbackRtpTransportPacket();
+
+		public:
+			bool AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
+			bool IsFull();
+			bool IsSerializable();
+			uint16_t GetBaseSequenceNumber() const;
+			uint16_t GetPacketStatusCount() const;
+			int32_t GetReferenceTime() const;
+			uint8_t GetFeedbackPacketCount() const;
+			uint16_t GetHighestSequenceNumber() const;
+			uint64_t GetHighestTimestamp() const;
+			void SetFeedbackPacketCount(uint8_t count);
+
+			/* Pure virtual methods inherited from Packet. */
+		public:
+			void Dump() const override;
+			size_t Serialize(uint8_t* buffer) override;
+			size_t GetSize() const override;
+
 		private:
-			void AddPendingChunks();
 			void FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta);
 			void CreateRunLengthChunk(Status status, uint16_t count);
 			void CreateTwoBitVectorChunk(std::vector<Status>& statuses);
-			bool CheckMissingPackets(uint16_t previousSequenceNumber, uint16_t sequenceNumber);
-			bool CheckDelta(uint64_t previousTimestamp, uint64_t timestamp);
-			bool CheckSize(size_t maxRtcpPacketLen);
+			void AddPendingChunks();
 
 		private:
 			uint16_t baseSequenceNumber{ 0u };

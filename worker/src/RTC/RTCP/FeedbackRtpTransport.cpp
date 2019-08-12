@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackRtpTransportPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackRtpTransport"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
@@ -106,14 +106,23 @@ namespace RTC
 				return true;
 			}
 
-			if (!CheckMissingPackets(this->highestSequenceNumber, sequenceNumber))
+			// Check if there are too many missing packets.
 			{
-				MS_WARN_DEV("RTP missing packet number exceeded");
+				auto missingPackets = sequenceNumber - (this->highestSequenceNumber + 1);
 
-				return false;
+				if (missingPackets > FeedbackRtpTransportPacket::maxMissingPackets)
+				{
+					MS_WARN_DEV("RTP missing packet number exceeded");
+
+					return false;
+				}
 			}
 
-			if (!CheckDelta(this->highestTimestamp, timestamp))
+			// Deltas are represented as multiples of 250us.
+			// NOTE: Read it as uint 64 to detect long elapsed times.
+			uint64_t delta64 = (timestamp - this->highestTimestamp) * 4;
+
+			if (delta64 > FeedbackRtpTransportPacket::maxPacketDelta)
 			{
 				MS_WARN_DEV(
 				  "RTP packet delta exceeded [highestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
@@ -123,16 +132,29 @@ namespace RTC
 				return false;
 			}
 
-			if (!CheckSize(maxRtcpPacketLen))
-			{
-				MS_WARN_DEV("maximum packet size exceeded");
+			// Delta in 16 bits.
+			auto delta = static_cast<uint16_t>(delta64);
 
-				return false;
+			// Check whether another chunks and corresponding delta infos could be added.
+			{
+				auto size = GetSize();
+
+				// Maximum size needed for another chunk and its delta infos.
+				size += sizeof(uint16_t);
+				size += sizeof(uint16_t) * 7;
+
+				// 32 bits padding.
+				size += (-size) & 3;
+
+				if (size > maxRtcpPacketLen)
+				{
+					MS_WARN_DEV("maximum packet size exceeded");
+
+					return false;
+				}
 			}
 
-			// Deltas are represented as multiples of 250us.
-			uint16_t delta = (timestamp - this->highestTimestamp) * 1000 / 250;
-
+			// Fill a chunk.
 			FillChunk(this->highestSequenceNumber, sequenceNumber, delta);
 
 			// Update highest sequence number and timestamp seen.
@@ -143,6 +165,61 @@ namespace RTC
 			this->receivedPackets.emplace_back(sequenceNumber, delta);
 
 			return true;
+		}
+
+		void FeedbackRtpTransportPacket::Dump() const
+		{
+			MS_TRACE();
+
+			MS_DUMP("<FeedbackRtpTransportPacket>");
+			MS_DUMP("  base sequence         : %" PRIu16, this->baseSequenceNumber);
+			MS_DUMP("  packet status count   : %" PRIu16, this->packetStatusCount);
+			MS_DUMP("  reference time        : %" PRIi32, this->referenceTime);
+			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
+			MS_DUMP("  size                  : %zu", GetSize());
+
+			for (auto* chunk : this->chunks)
+			{
+				chunk->Dump();
+			}
+
+			if (this->receivedPackets.size() != this->deltas.size())
+			{
+				MS_ERROR(
+				  "received packets and number of deltas mismatch [packets:%zu, deltas:%zu]",
+				  this->receivedPackets.size(),
+				  this->deltas.size());
+
+				for (auto& packet : this->receivedPackets)
+				{
+					MS_DUMP("  seqNumber:%d, delta(ms):%d", packet.sequenceNumber, packet.delta / 4);
+				}
+			}
+			else
+			{
+				auto receivedPacketIt = this->receivedPackets.begin();
+				auto deltaIt          = this->deltas.begin();
+
+				MS_DUMP("  <Deltas>");
+
+				while (receivedPacketIt != this->receivedPackets.end())
+				{
+					MS_DUMP(
+					  "    seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
+					  receivedPacketIt->sequenceNumber,
+					  static_cast<uint16_t>(receivedPacketIt->delta / 4));
+
+					if (receivedPacketIt->delta != *deltaIt)
+						MS_ERROR("delta block does not coincide with the received value");
+
+					receivedPacketIt++;
+					deltaIt++;
+				}
+
+				MS_DUMP("  </Deltas>");
+			}
+
+			MS_DUMP("</FeedbackRtpTransportPacket>");
 		}
 
 		size_t FeedbackRtpTransportPacket::Serialize(uint8_t* buffer)
@@ -204,83 +281,6 @@ namespace RTC
 			return offset;
 		}
 
-		void FeedbackRtpTransportPacket::Dump() const
-		{
-			MS_TRACE();
-
-			MS_DUMP("<FeedbackRtpTransportPacket>");
-			MS_DUMP("  base sequence         : %" PRIu16, this->baseSequenceNumber);
-			MS_DUMP("  packet status count   : %" PRIu16, this->packetStatusCount);
-			MS_DUMP("  reference time        : %" PRIi32, this->referenceTime);
-			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
-			MS_DUMP("  size                  : %zu", GetSize());
-
-			for (auto* chunk : this->chunks)
-			{
-				chunk->Dump();
-			}
-
-			if (this->receivedPackets.size() != this->deltas.size())
-			{
-				MS_ERROR(
-				  "received packets and number of deltas mismatch [packets:%zu, deltas:%zu]",
-				  this->receivedPackets.size(),
-				  this->deltas.size());
-
-				for (auto& packet : this->receivedPackets)
-				{
-					MS_DUMP("  seqNumber:%d, delta(ms):%d", packet.sequenceNumber, packet.delta / 4);
-				}
-			}
-			else
-			{
-				auto receivedPacketIt = this->receivedPackets.begin();
-				auto deltaIt          = this->deltas.begin();
-
-				MS_DUMP("  <Deltas>");
-
-				while (receivedPacketIt != this->receivedPackets.end())
-				{
-					MS_DUMP(
-					  "    seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
-					  receivedPacketIt->sequenceNumber,
-					  static_cast<uint16_t>(receivedPacketIt->delta / 4));
-
-					if (receivedPacketIt->delta != *deltaIt)
-						MS_ERROR("delta block does not coincide with the received value");
-
-					receivedPacketIt++;
-					deltaIt++;
-				}
-
-				MS_DUMP("  </Deltas>");
-			}
-
-			MS_DUMP("</FeedbackRtpTransportPacket>");
-		}
-
-		void FeedbackRtpTransportPacket::AddPendingChunks()
-		{
-			// No pending status packets.
-			if (this->context.statuses.size() == 0)
-				return;
-
-			if (this->context.allSameStatus)
-			{
-				CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
-
-				this->context.statuses.clear();
-			}
-			else
-			{
-				MS_ASSERT(this->context.statuses.size() < 7, "already 7 status packets present");
-
-				CreateTwoBitVectorChunk(this->context.statuses);
-
-				this->context.statuses.clear();
-			}
-		}
-
 		void FeedbackRtpTransportPacket::FillChunk(
 		  uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta)
 		{
@@ -299,12 +299,7 @@ namespace RTC
 			if (missingPackets > 0)
 			{
 				// Create a long run chunk before processing this packet, if needed.
-				// clang-format off
-				if (
-					this->context.statuses.size() >= 7 &&
-					this->context.allSameStatus
-				)
-				// clang-format on
+				if (this->context.statuses.size() >= 7 && this->context.allSameStatus)
 				{
 					CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
@@ -419,47 +414,26 @@ namespace RTC
 			this->size += sizeof(uint16_t);
 		}
 
-		bool FeedbackRtpTransportPacket::CheckMissingPackets(
-		  uint16_t previousSequenceNumber, uint16_t sequenceNumber)
+		void FeedbackRtpTransportPacket::AddPendingChunks()
 		{
-			MS_TRACE();
+			// No pending status packets.
+			if (this->context.statuses.size() == 0)
+				return;
 
-			// Check missing packet limits.
-			auto missingPackets = sequenceNumber - (previousSequenceNumber + 1);
+			if (this->context.allSameStatus)
+			{
+				CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
-			// Check if there are too many missing packets.
-			return (missingPackets <= FeedbackRtpTransportPacket::maxMissingPackets);
-		}
+				this->context.statuses.clear();
+			}
+			else
+			{
+				MS_ASSERT(this->context.statuses.size() < 7, "already 7 status packets present");
 
-		bool FeedbackRtpTransportPacket::CheckDelta(uint64_t previousTimestamp, uint64_t timestamp)
-		{
-			MS_TRACE();
+				CreateTwoBitVectorChunk(this->context.statuses);
 
-			// Delta since last received RTP packet in milliseconds.
-			uint64_t deltaMs = timestamp - previousTimestamp;
-
-			// Deltas are represented as multiples of 250us.
-			auto delta = deltaMs * 4;
-
-			// Check if there is too much delta since previous RTP packet.
-			return (delta <= FeedbackRtpTransportPacket::maxPacketDelta);
-		}
-
-		// Check whether another chunks and corresponding delta infos could be added.
-		bool FeedbackRtpTransportPacket::CheckSize(size_t maxRtcpPacketLen)
-		{
-			MS_TRACE();
-
-			auto size = GetSize();
-
-			// Maximum size needed for another chunk and its delta infos.
-			size += sizeof(uint16_t);
-			size += sizeof(uint16_t) * 7;
-
-			// 32 bits padding.
-			size += (-size) & 3;
-
-			return (size <= maxRtcpPacketLen);
+				this->context.statuses.clear();
+			}
 		}
 
 		FeedbackRtpTransportPacket::RunLengthChunk::RunLengthChunk(uint16_t buffer)
@@ -496,6 +470,20 @@ namespace RTC
 			return sizeof(uint16_t);
 		}
 
+		FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(uint16_t buffer)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(buffer & 0xC000, "invalid two bit vector chunk");
+
+			for (size_t i{ 0u }; i < 7; ++i)
+			{
+				auto status = static_cast<Status>((buffer >> 2 * (7 - 1 - i)) & 0x03);
+
+				this->statuses.emplace_back(status);
+			}
+		}
+
 		void FeedbackRtpTransportPacket::TwoBitVectorChunk::Dump()
 		{
 			MS_TRACE();
@@ -519,20 +507,6 @@ namespace RTC
 			MS_DUMP("  <FeedbackRtpTransportPacket::TwoBitVectorChunk>");
 			MS_DUMP("    %s", out.str().c_str());
 			MS_DUMP("  </FeedbackRtpTransportPacket::TwoBitVectorChunk>");
-		}
-
-		FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(uint16_t buffer)
-		{
-			MS_TRACE();
-
-			MS_ASSERT(buffer & 0xC000, "invalid two bit vector chunk");
-
-			for (size_t i{ 0u }; i < 7; ++i)
-			{
-				auto status = static_cast<Status>((buffer >> 2 * (7 - 1 - i)) & 0x03);
-
-				this->statuses.emplace_back(status);
-			}
 		}
 
 		size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::Serialize(uint8_t* buffer)
