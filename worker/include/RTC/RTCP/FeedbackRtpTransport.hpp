@@ -215,7 +215,6 @@ namespace RTC
 
 			size += FeedbackRtpTransportPacket::fixedHeaderSize;
 
-			// Size chunks and deltas represented in this packet.
 			size += this->deltasAndChunksSize;
 
 			// 32 bits padding.

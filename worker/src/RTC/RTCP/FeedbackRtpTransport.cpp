@@ -140,11 +140,16 @@ namespace RTC
 
 			// Check whether another chunks and corresponding delta infos could be added.
 			{
-				auto size = GetSize();
+				// Fixed packet size.
+				size_t size = FeedbackRtpPacket::GetSize();
+
+				size += FeedbackRtpTransportPacket::fixedHeaderSize;
+
+				size += this->deltasAndChunksSize;
 
 				// Maximum size needed for another chunk and its delta infos.
 				size += sizeof(uint16_t);
-				size += sizeof(uint16_t) * 7;
+				size += sizeof(uint16_t);
 
 				// 32 bits padding.
 				size += (-size) & 3;
