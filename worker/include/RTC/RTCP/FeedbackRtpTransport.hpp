@@ -69,35 +69,71 @@ namespace RTC
 				std::vector<Status> statuses;
 			};
 
-			struct Chunk
+			class Chunk
 			{
+			public:
+				static Chunk* Parse(const uint8_t* data, size_t len, size_t count);
+
+			public:
 				Chunk()          = default;
 				virtual ~Chunk() = default;
 
-				virtual void Dump()                       = 0;
-				virtual size_t Serialize(uint8_t* buffer) = 0;
+				virtual bool AddDeltas(
+				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) = 0;
+				virtual void Dump()                                                               = 0;
+				virtual size_t GetCount()                                                         = 0;
+				virtual size_t Serialize(uint8_t* buffer)                                         = 0;
 			};
 
-			struct RunLengthChunk : public Chunk
+			class RunLengthChunk : public Chunk
 			{
+			public:
 				RunLengthChunk(Status status, uint16_t count);
 				RunLengthChunk(uint16_t buffer);
 
+			public:
+				bool AddDeltas(
+				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
 				void Dump() override;
+				size_t GetCount() override;
 				size_t Serialize(uint8_t* buffer) override;
 
+			private:
 				Status status{ Status::None };
 				uint16_t count{ 0u };
 			};
 
-			struct TwoBitVectorChunk : public Chunk
+			class OneBitVectorChunk : public Chunk
 			{
-				TwoBitVectorChunk(std::vector<Status> statuses);
-				TwoBitVectorChunk(uint16_t buffer);
+			public:
+				OneBitVectorChunk(std::vector<Status> statuses);
+				OneBitVectorChunk(uint16_t buffer, size_t count);
 
+			public:
+				bool AddDeltas(
+				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
 				void Dump() override;
+				size_t GetCount() override;
 				size_t Serialize(uint8_t* buffer) override;
 
+			private:
+				std::vector<Status> statuses;
+			};
+
+			class TwoBitVectorChunk : public Chunk
+			{
+			public:
+				TwoBitVectorChunk(std::vector<Status> statuses);
+				TwoBitVectorChunk(uint16_t buffer, size_t count);
+
+			public:
+				bool AddDeltas(
+				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
+				void Dump() override;
+				size_t GetCount() override;
+				size_t Serialize(uint8_t* buffer) override;
+
+			private:
 				std::vector<Status> statuses;
 			};
 
@@ -122,6 +158,7 @@ namespace RTC
 			bool AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			bool IsFull();
 			bool IsSerializable();
+			bool IsCorrect();
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
 			int32_t GetReferenceTime() const;
@@ -139,6 +176,7 @@ namespace RTC
 		private:
 			void FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta);
 			void CreateRunLengthChunk(Status status, uint16_t count);
+			void CreateOneBitVectorChunk(std::vector<Status>& statuses);
 			void CreateTwoBitVectorChunk(std::vector<Status>& statuses);
 			void AddPendingChunks();
 
@@ -154,6 +192,7 @@ namespace RTC
 			std::vector<uint16_t> deltas;
 			Context context;
 			size_t deltasAndChunksSize{ 0u };
+			bool isCorrect{ true };
 		};
 
 		/* Inline instance methods. */
@@ -171,6 +210,11 @@ namespace RTC
 		inline bool FeedbackRtpTransportPacket::IsSerializable()
 		{
 			return this->receivedPackets.size() > 0;
+		}
+
+		inline bool FeedbackRtpTransportPacket::IsCorrect()
+		{
+			return this->isCorrect;
 		}
 
 		inline uint16_t FeedbackRtpTransportPacket::GetBaseSequenceNumber() const
@@ -227,9 +271,29 @@ namespace RTC
 		{
 		}
 
+		inline size_t FeedbackRtpTransportPacket::RunLengthChunk::GetCount()
+		{
+			return this->count;
+		}
+
 		inline FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(std::vector<Status> statuses)
 		  : statuses(statuses)
 		{
+		}
+
+		inline size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetCount()
+		{
+			return this->statuses.size();
+		}
+
+		inline FeedbackRtpTransportPacket::OneBitVectorChunk::OneBitVectorChunk(std::vector<Status> statuses)
+		  : statuses(statuses)
+		{
+		}
+
+		inline size_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetCount()
+		{
+			return this->statuses.size();
 		}
 	} // namespace RTCP
 } // namespace RTC

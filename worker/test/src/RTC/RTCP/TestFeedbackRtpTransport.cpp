@@ -3,20 +3,16 @@
 #include "catch.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 
-// TODO: Remove.
-#define MS_CLASS "TestFeedbackTransport"
-
 using namespace RTC::RTCP;
 
 SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
 {
 	static constexpr size_t RtcpMtu{ 1200u };
+	uint32_t senderSsrc{ 1111u };
+	uint32_t mediaSsrc{ 2222u };
 
-	SECTION("create FeedbackRtpTransportPacketPacket")
+	SECTION("create FeedbackRtpTransportPacketPacket, run length chunk")
 	{
-		uint32_t senderSsrc{ 1111u };
-		uint32_t mediaSsrc{ 2222u };
-
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
@@ -44,19 +40,20 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			uint8_t buffer[1024];
 			auto len = packet->Serialize(buffer);
 
-			// TODO: Remove.
-			MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
-			packet->Dump();
-			MS_DUMP_DATA(buffer, len);
-
 			SECTION("parse serialized buffer")
 			{
 				auto* packet2 = FeedbackRtpTransportPacket::Parse(buffer, len);
 
 				REQUIRE(packet2);
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
-				REQUIRE(packet2->GetPacketStatusCount() == 15); // TODO: Fails.
+				REQUIRE(packet2->GetPacketStatusCount() == 15);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
+
+				uint8_t buffer2[1024];
+				auto len2 = packet2->Serialize(buffer2);
+
+				REQUIRE(len == len2);
+				REQUIRE(std::memcmp(buffer, buffer2, len) == 0);
 
 				delete packet2;
 			}
@@ -65,11 +62,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("create FeedbackRtpTransportPacketPacket (2)")
+	SECTION("create FeedbackRtpTransportPacketPacket, run length chunk (2)")
 	{
-		uint32_t senderSsrc{ 1111u };
-		uint32_t mediaSsrc{ 2222u };
-
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
@@ -82,11 +76,6 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			uint8_t buffer[1024];
 			auto len = packet->Serialize(buffer);
 
-			// TODO: Remove.
-			MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
-			packet->Dump();
-			MS_DUMP_DATA(buffer, len);
-
 			SECTION("parse serialized buffer")
 			{
 				auto* packet2 = FeedbackRtpTransportPacket::Parse(buffer, len);
@@ -96,6 +85,12 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				REQUIRE(packet2->GetPacketStatusCount() == 1016);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
 
+				uint8_t buffer2[1024];
+				auto len2 = packet2->Serialize(buffer2);
+
+				REQUIRE(len == len2);
+				REQUIRE(std::memcmp(buffer, buffer2, len) == 0);
+
 				delete packet2;
 			}
 		}
@@ -103,11 +98,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("create FeedbackRtpTransportPacketPacket (3)")
+	SECTION("create FeedbackRtpTransportPacketPacket, mixed chunks")
 	{
-		uint32_t senderSsrc{ 1111u };
-		uint32_t mediaSsrc{ 2222u };
-
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
@@ -124,11 +116,6 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			uint8_t buffer[1024];
 			auto len = packet->Serialize(buffer);
 
-			// TODO: Remove.
-			MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
-			packet->Dump();
-			MS_DUMP_DATA(buffer, len);
-
 			SECTION("parse serialized buffer")
 			{
 				auto* packet2 = FeedbackRtpTransportPacket::Parse(buffer, len);
@@ -138,6 +125,12 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				REQUIRE(packet2->GetPacketStatusCount() == 18);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
 
+				uint8_t buffer2[1024];
+				auto len2 = packet2->Serialize(buffer2);
+
+				REQUIRE(len == len2);
+				REQUIRE(std::memcmp(buffer, buffer2, len) == 0);
+
 				delete packet2;
 			}
 		}
@@ -145,11 +138,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("create FeedbackRtpTransportPacketPacket (4)")
+	SECTION("create FeedbackRtpTransportPacketPacket, incomplete two bit vector chunk")
 	{
-		uint32_t senderSsrc{ 1111u };
-		uint32_t mediaSsrc{ 2222u };
-
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
@@ -162,11 +152,6 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			uint8_t buffer[1024];
 			auto len = packet->Serialize(buffer);
 
-			// TODO: Remove.
-			MS_DUMP("len: %zu, packet size: %zu", len, packet->GetSize());
-			packet->Dump();
-			MS_DUMP_DATA(buffer, len);
-
 			SECTION("parse serialized buffer")
 			{
 				auto* packet2 = FeedbackRtpTransportPacket::Parse(buffer, len);
@@ -176,6 +161,12 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				REQUIRE(packet2->GetPacketStatusCount() == 2);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
 
+				uint8_t buffer2[1024];
+				auto len2 = packet2->Serialize(buffer2);
+
+				REQUIRE(len == len2);
+				REQUIRE(std::memcmp(buffer, buffer2, len) == 0);
+
 				delete packet2;
 			}
 		}
@@ -183,11 +174,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("create FeedbackRtpTransportPacketPacket (5)")
+	SECTION("create two sequential FeedbackRtpTransportPacketPackets")
 	{
-		uint32_t senderSsrc{ 1111u };
-		uint32_t mediaSsrc{ 2222u };
-
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
@@ -204,8 +192,23 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		uint8_t buffer[1024];
 		auto len = packet->Serialize(buffer);
 
-		packet->Dump();
-		MS_DUMP_DATA(buffer, len);
+		SECTION("parse serialized buffer")
+		{
+			auto* packet2 = FeedbackRtpTransportPacket::Parse(buffer, len);
+
+			REQUIRE(packet2);
+			REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
+			REQUIRE(packet2->GetPacketStatusCount() == 8);
+			REQUIRE(packet2->GetFeedbackPacketCount() == 1);
+
+			uint8_t buffer2[1024];
+			auto len2 = packet2->Serialize(buffer2);
+
+			REQUIRE(len == len2);
+			REQUIRE(std::memcmp(buffer, buffer2, len) == 0);
+
+			delete packet2;
+		}
 
 		auto highestWideSeqNumber = packet->GetHighestSequenceNumber();
 		auto highestTimestamp     = packet->GetHighestTimestamp();
@@ -223,9 +226,6 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		len = packet2->Serialize(buffer);
 
-		packet2->Dump();
-		MS_DUMP_DATA(buffer, len);
-
 		SECTION("parse serialized buffer")
 		{
 			auto* packet3 = FeedbackRtpTransportPacket::Parse(buffer, len);
@@ -235,10 +235,42 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			REQUIRE(packet3->GetPacketStatusCount() == 7);
 			REQUIRE(packet3->GetFeedbackPacketCount() == 2);
 
+			uint8_t buffer2[1024];
+			auto len2 = packet3->Serialize(buffer2);
+
+			REQUIRE(len == len2);
+			REQUIRE(std::memcmp(buffer, buffer2, len) == 0);
+
 			delete packet3;
 		}
 
 		delete packet2;
+		delete packet;
+	}
+
+	SECTION("parse FeedbackRtpTransportPacketPacket, one bit vector chunk")
+	{
+		uint8_t data[] = { 0x8F, 0xCD, 0x00, 0x07, 0xFA, 0x17, 0xFA, 0x17, 0x09, 0xFA, 0xFF,
+			                 0x67, 0x00, 0x27, 0x00, 0x0D, 0x5F, 0xC2, 0xF1, 0x03, 0xBF, 0x8E,
+			                 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x04, 0x00 };
+
+		auto* packet = FeedbackRtpTransportPacket::Parse(data, 32);
+
+		REQUIRE(packet);
+		REQUIRE(packet->GetBaseSequenceNumber() == 39);
+		REQUIRE(packet->GetPacketStatusCount() == 13);
+		REQUIRE(packet->GetFeedbackPacketCount() == 3);
+		REQUIRE(packet->GetReferenceTime() == 6275825);
+
+		SECTION("parse serialized buffer")
+		{
+			uint8_t buffer[1024];
+			auto len = packet->Serialize(buffer);
+
+			REQUIRE(len == 32);
+			REQUIRE(std::memcmp(data, buffer, len) == 0);
+		}
+
 		delete packet;
 	}
 }
