@@ -361,7 +361,7 @@ namespace RTC
 
 			this->context.statuses.emplace_back(status);
 			this->deltas.emplace_back(delta);
-			this->size += (status == Status::SmallDelta) ? sizeof(uint8_t) : sizeof(uint16_t);
+			this->deltasAndChunksSize += (status == Status::SmallDelta) ? sizeof(uint8_t) : sizeof(uint16_t);
 
 			// Update context info.
 
@@ -405,7 +405,7 @@ namespace RTC
 
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += count;
-			this->size += sizeof(uint16_t);
+			this->deltasAndChunksSize += sizeof(uint16_t);
 		}
 
 		void FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(std::vector<Status>& statuses)
@@ -414,7 +414,7 @@ namespace RTC
 
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += statuses.size();
-			this->size += sizeof(uint16_t);
+			this->deltasAndChunksSize += sizeof(uint16_t);
 		}
 
 		void FeedbackRtpTransportPacket::AddPendingChunks()

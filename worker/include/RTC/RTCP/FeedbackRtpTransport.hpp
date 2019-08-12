@@ -153,7 +153,7 @@ namespace RTC
 			std::vector<Chunk*> chunks;
 			std::vector<uint16_t> deltas;
 			Context context;
-			size_t size{ 0u };
+			size_t deltasAndChunksSize{ 0u };
 		};
 
 		/* Inline instance methods. */
@@ -216,7 +216,7 @@ namespace RTC
 			size += FeedbackRtpTransportPacket::fixedHeaderSize;
 
 			// Size chunks and deltas represented in this packet.
-			size += this->size;
+			size += this->deltasAndChunksSize;
 
 			// 32 bits padding.
 			size += (-size) & 3;
