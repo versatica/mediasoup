@@ -144,7 +144,6 @@ namespace RTC
 				size_t size = FeedbackRtpPacket::GetSize();
 
 				size += FeedbackRtpTransportPacket::fixedHeaderSize;
-
 				size += this->deltasAndChunksSize;
 
 				// Maximum size needed for another chunk and its delta infos.
@@ -366,7 +365,8 @@ namespace RTC
 
 			this->context.statuses.emplace_back(status);
 			this->deltas.emplace_back(delta);
-			this->deltasAndChunksSize += (status == Status::SmallDelta) ? sizeof(uint8_t) : sizeof(uint16_t);
+			this->deltasAndChunksSize +=
+			  (status == Status::SmallDelta) ? sizeof(uint8_t) : sizeof(uint16_t);
 
 			// Update context info.
 
