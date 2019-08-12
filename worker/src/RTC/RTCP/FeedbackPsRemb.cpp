@@ -70,7 +70,6 @@ namespace RTC
 				return;
 			}
 
-			// size_t numSsrcs  = data[12];
 			uint8_t exponent = data[5] >> 2;
 			uint64_t mantissa =
 			  (static_cast<uint32_t>(data[5] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 6);

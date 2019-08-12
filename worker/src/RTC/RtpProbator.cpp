@@ -296,12 +296,12 @@ namespace RTC
 				{
 					Stop();
 
-					this->listener->OnRtpProbatorEnded(this);
+					this->listener->OnRtpProbatorStepDone(this, /*last*/ true);
 
 					return;
 				}
 
-				this->listener->OnRtpProbatorStep(this);
+				this->listener->OnRtpProbatorStepDone(this, /*last*/ false);
 
 				// If the listener stopped us, exit.
 				if (!IsRunning())

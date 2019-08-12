@@ -17,8 +17,7 @@ namespace RTC
 		{
 		public:
 			virtual void OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator, RTC::RtpPacket* packet) = 0;
-			virtual void OnRtpProbatorStep(RTC::RtpProbator* rtpProbator)  = 0;
-			virtual void OnRtpProbatorEnded(RTC::RtpProbator* rtpProbator) = 0;
+			virtual void OnRtpProbatorStepDone(RTC::RtpProbator* rtpProbator, bool last) = 0;
 		};
 
 	public:

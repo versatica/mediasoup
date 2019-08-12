@@ -26,7 +26,11 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t RembLimiterInterval{ 2000 }; // In ms,
+	static constexpr uint64_t IncomingBitrateLimitationByRembInterval{ 1500 }; // In ms.
+	static constexpr size_t RtpProbationPacketLen{ 1100u };                    // in bytes.
+	static constexpr uint64_t RtpProbationScheduleSuccessTimeout{ 4000u };     // In ms.
+	static constexpr uint64_t RtpProbationScheduleFailureTimeout{ 12000u };    // In ms.
+	static constexpr uint8_t RtpProbationMaxFractionLost{ 10u };
 
 	/* Instance methods. */
 
@@ -115,8 +119,11 @@ namespace RTC
 		// Create the RTCP timer.
 		this->rtcpTimer = new Timer(this);
 
-		// Create the REMB limiter timer.
-		this->rembLimiterTimer = new Timer(this);
+		// Create a RTP probator.
+		this->rtpProbator = new RTC::RtpProbator(this, RtpProbationPacketLen);
+
+		// Create the RTP probation timer.
+		this->rtpProbationTimer = new Timer(this);
 	}
 
 	Transport::~Transport()
@@ -169,6 +176,10 @@ namespace RTC
 		delete this->sctpAssociation;
 		this->sctpAssociation = nullptr;
 
+		// Delete the RTCP timer.
+		delete this->rtcpTimer;
+		this->rtcpTimer = nullptr;
+
 		// Delete REMB client.
 		delete this->rembClient;
 		this->rembClient = nullptr;
@@ -181,13 +192,12 @@ namespace RTC
 		delete this->tccServer;
 		this->tccServer = nullptr;
 
-		// Delete the RTCP timer.
-		delete this->rtcpTimer;
-		this->rtcpTimer = nullptr;
+		// Delete the RTP probator.
+		delete this->rtpProbator;
 
-		// Delete the REMB limiter timer.
-		delete this->rembLimiterTimer;
-		this->rembLimiterTimer = nullptr;
+		// Delete the RTP probation timer.
+		delete this->rtpProbationTimer;
+		this->rtpProbationTimer = nullptr;
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -473,10 +483,8 @@ namespace RTC
 
 				request->Accept();
 
-				if (this->maxIncomingBitrate > 0u)
-					MayRunRembLimiterTimer();
-				else
-					this->rembLimiterTimer->Stop();
+				// May set REMB based incoming bitrate limitation.
+				MaySetIncomingBitrateLimitationByRemb();
 
 				break;
 			}
@@ -620,9 +628,8 @@ namespace RTC
 					}
 				}
 
-				// May start the REMB limiter timer.
-				if (producer->GetKind() == RTC::Media::Kind::VIDEO)
-					MayRunRembLimiterTimer();
+				// May set REMB based incoming bitrate limitation.
+				MaySetIncomingBitrateLimitationByRemb();
 
 				break;
 			}
@@ -769,13 +776,7 @@ namespace RTC
 							auto* consumer = kv.second;
 
 							consumer->SetExternallyManagedBitrate();
-						}
-
-						// If the transport is connected, tell the REMB client.
-						// NOTE: Must be done after calling SetExternallyManagedBitrate() in
-						// Consumers.
-						if (IsConnected())
-							this->rembClient->TransportConnected();
+						};
 					}
 					// Otherwise, if REMB client is set, tell the new Consumer that we are
 					// gonna manage its bitrate.
@@ -1067,12 +1068,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
-
-		// May start the REMB limiter timer.
-		MayRunRembLimiterTimer();
-
 		// Tell all Consumers.
 		for (auto& kv : this->mapConsumers)
 		{
@@ -1093,24 +1088,20 @@ namespace RTC
 		if (this->sctpAssociation)
 			this->sctpAssociation->TransportConnected();
 
-		// Tell the REMB client.
-		if (this->rembClient)
-			this->rembClient->TransportConnected();
+		// Start the RTCP timer.
+		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
 		// Tell the Transport-CC server.
 		if (this->tccServer)
 			this->tccServer->TransportConnected();
+
+		// Start the RTP probation.
+		this->rtpProbationTimer->Start(0, 0);
 	}
 
 	void Transport::Disconnected()
 	{
 		MS_TRACE();
-
-		// Stop the RTCP timer.
-		this->rtcpTimer->Stop();
-
-		// Stop the REMB limiter timer.
-		this->rembLimiterTimer->Stop();
 
 		// Tell all Consumers.
 		for (auto& kv : this->mapConsumers)
@@ -1128,13 +1119,16 @@ namespace RTC
 			dataConsumer->TransportDisconnected();
 		}
 
-		// Tell the REMB client.
-		if (this->rembClient)
-			this->rembClient->TransportDisconnected();
+		// Stop the RTCP timer.
+		this->rtcpTimer->Stop();
 
 		// Tell the Transport-CC server.
 		if (this->tccServer)
 			this->tccServer->TransportDisconnected();
+
+		// Stop the RTP probator and the probation timer.
+		this->rtpProbator->Stop();
+		this->rtpProbationTimer->Stop();
 	}
 
 	void Transport::ReceiveRtpPacket(RTC::RtpPacket* packet)
@@ -1201,6 +1195,25 @@ namespace RTC
 		producer->ReceiveRtpPacket(packet);
 
 		delete packet;
+
+		// If REMB based incoming bitrate limitation is enabled, check whether
+		// we should send a REMB now.
+		// clang-format off
+		if (
+			this->incomingBitrateLimitedByRemb &&
+			now - this->lastRembSentAt > IncomingBitrateLimitationByRembInterval
+		)
+		// clang-format on
+		{
+			RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+
+			packet.SetBitrate(this->maxIncomingBitrate);
+			packet.Serialize(RTC::RTCP::Buffer);
+
+			SendRtcpPacket(&packet);
+
+			this->lastRembSentAt = now;
+		}
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
@@ -1407,9 +1420,17 @@ namespace RTC
 						// Special case for the RTP probator.
 						if (report->GetSsrc() == RTC::RtpProbatorSsrc)
 						{
-							// Pass it to the REMB client.
-							if (this->rembClient)
-								this->rembClient->ReceiveRtpProbatorReceiverReport(report);
+							auto fractionLost = report->GetFractionLost();
+
+							if (this->rtpProbator->IsRunning() && fractionLost >= RtpProbationMaxFractionLost)
+							{
+								MS_DEBUG_TAG(
+								  bwe, "stopping RTP probator due to probation fraction lost:%" PRIu8, fractionLost);
+
+								// Try again after RtpProbationScheduleFailureTimeout.
+								this->rtpProbator->Stop();
+								this->rtpProbationTimer->Start(RtpProbationScheduleFailureTimeout, 0);
+							}
 
 							continue;
 						}
@@ -1833,25 +1854,72 @@ namespace RTC
 		}
 	}
 
-	void Transport::MayRunRembLimiterTimer()
+	uint32_t Transport::CalculateOutgoingProbationBitrate()
 	{
 		MS_TRACE();
 
-		if (this->rembLimiterTimer->IsActive())
-			return;
+		uint32_t probationBitrate{ 0u };
 
-		if (this->rembServer)
-			return;
+		// Ask all the Consumers for the total bitrate they need.
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
 
-		if (this->rtpHeaderExtensionIds.absSendTime == 0u)
-			return;
+			probationBitrate += consumer->GetProbationBitrate();
+		}
 
-		if (this->maxIncomingBitrate == 0u)
-			return;
+		return probationBitrate;
+	}
 
-		MS_DEBUG_DEV("running REMB limiter timer");
+	void Transport::MaySetIncomingBitrateLimitationByRemb()
+	{
+		MS_TRACE();
 
-		this->rembLimiterTimer->Start(RembLimiterInterval, RembLimiterInterval);
+		// Enable REMB based incoming bitrate limitation if:
+		// - REMB server is not running (the endpoint may be using Transport-CC instead), and
+		// - abs-send-time RTP extension has been negotiated, and
+		// - the app called setMaxIncomingBitrate() with a value > 0.
+		//
+		// clang-format off
+		if (
+			!this->rembServer &&
+			this->rtpHeaderExtensionIds.absSendTime != 0u &&
+			this->maxIncomingBitrate > 0u
+		)
+		// clang-format on
+		{
+			// If it was already set, do nothing.
+			if (this->incomingBitrateLimitedByRemb)
+				return;
+
+			MS_DEBUG_TAG(
+			  bwe,
+			  "enabling REMB based incoming bitrate limitation [bitrate:%" PRIu32 "]",
+			  this->maxIncomingBitrate);
+
+			this->incomingBitrateLimitedByRemb = true;
+		}
+		else
+		{
+			// If it was already unset, do nothing.
+			if (!this->incomingBitrateLimitedByRemb)
+				return;
+
+			MS_DEBUG_TAG(bwe, "disabling REMB based incoming bitrate limitation");
+
+			this->incomingBitrateLimitedByRemb = false;
+
+			// NOTE: By sending a REMB with bitrate set to 0, libwebrtc resets the
+			// latest received REMB value.
+			RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+
+			packet.SetBitrate(0);
+			packet.Serialize(RTC::RTCP::Buffer);
+
+			// NOTE: Send two packets just in case the first one is lost.
+			SendRtcpPacket(&packet);
+			SendRtcpPacket(&packet);
+		}
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2126,43 +2194,23 @@ namespace RTC
 	}
 
 	inline void Transport::OnRembClientAvailableBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate) // NOLINT(misc-unused-parameters)
+	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate, uint32_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("outgoing available bitrate [bitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV(
+		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
+		  availableBitrate,
+		  previousAvailableBitrate);
+
+		if (availableBitrate < previousAvailableBitrate * 0.75)
+		{
+			// Stop the RTP probator and reset the probation timer.
+			this->rtpProbator->Stop();
+			this->rtpProbationTimer->Start(RtpProbationScheduleFailureTimeout, 0);
+		}
 
 		DistributeAvailableOutgoingBitrate();
-	}
-
-	inline void Transport::OnRembClientNeedProbationBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t& probationBitrate)
-	{
-		MS_TRACE();
-
-		// Ask all the Consumers for the probation bitrate they need.
-		for (auto& kv : this->mapConsumers)
-		{
-			auto* consumer = kv.second;
-
-			probationBitrate += consumer->GetProbationBitrate();
-		}
-	}
-
-	inline void Transport::OnRembClientSendProbationRtpPacket(
-	  RTC::RembClient* /*rembClient*/, RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(DepLibUV::GetTime());
-
-		// Update transport wide sequence number if present.
-		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
-			this->transportWideSeq++;
-
-		// Send the packet.
-		SendRtpPacket(packet);
 	}
 
 	inline void Transport::OnRembServerAvailableBitrate(
@@ -2196,6 +2244,7 @@ namespace RTC
 		packet.SetBitrate(availableBitrate);
 		packet.SetSsrcs(ssrcs);
 		packet.Serialize(RTC::RTCP::Buffer);
+
 		SendRtcpPacket(&packet);
 	}
 
@@ -2205,13 +2254,59 @@ namespace RTC
 		MS_TRACE();
 
 		packet->Serialize(RTC::RTCP::Buffer);
+
 		SendRtcpPacket(packet);
+	}
+
+	inline void Transport::OnRtpProbatorSendRtpPacket(
+	  RTC::RtpProbator* /*rtpProbator*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// Update abs-send-time if present.
+		packet->UpdateAbsSendTime(DepLibUV::GetTime());
+
+		// Update transport wide sequence number if present.
+		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+			this->transportWideSeq++;
+
+		// Send the packet.
+		SendRtpPacket(packet);
+	}
+
+	inline void Transport::OnRtpProbatorStepDone(RTC::RtpProbator* /*rtpProbator*/, bool last)
+	{
+		MS_TRACE();
+
+		if (last)
+		{
+			// Try again after RtpProbationScheduleSuccessTimeout.
+			this->rtpProbationTimer->Start(RtpProbationScheduleSuccessTimeout, 0);
+		}
+		else
+		{
+			auto probationBitrate = CalculateOutgoingProbationBitrate();
+
+			if (probationBitrate < this->rtpProbator->GetTargetBitrate() * 0.85)
+			{
+				MS_DEBUG_TAG(
+				  bwe,
+				  "needed probation bitrate changed to %" PRIu32 ", stopping RTP probator",
+				  probationBitrate);
+
+				this->rtpProbator->Stop();
+
+				// Try again after RtpProbationScheduleSuccessTimeout.
+				this->rtpProbationTimer->Start(RtpProbationScheduleSuccessTimeout, 0);
+			}
+		}
 	}
 
 	inline void Transport::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
 
+		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
 			auto interval = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
@@ -2250,38 +2345,21 @@ namespace RTC
 
 			this->rtcpTimer->Start(interval);
 		}
-		else if (timer == this->rembLimiterTimer)
+		// RTP probation timer.
+		else if (timer == this->rtpProbationTimer)
 		{
-			std::vector<uint32_t> ssrcs;
+			this->rtpProbator->Stop();
 
-			for (auto& kv : this->mapProducers)
+			auto probationBitrate = CalculateOutgoingProbationBitrate();
+
+			if (probationBitrate == 0u)
 			{
-				auto* producer = kv.second;
-
-				// Do this just for video.
-				if (producer->GetKind() != RTC::Media::Kind::VIDEO)
-					continue;
-
-				for (auto& kv2 : producer->GetRtpStreams())
-				{
-					auto* rtpStream = kv2.first;
-
-					ssrcs.push_back(rtpStream->GetSsrc());
-				}
-			}
-
-			if (!ssrcs.empty())
-			{
-				RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
-
-				packet.SetBitrate(this->maxIncomingBitrate);
-				packet.SetSsrcs(ssrcs);
-				packet.Serialize(RTC::RTCP::Buffer);
-				SendRtcpPacket(&packet);
+				// Try again after RtpProbationScheduleSuccessTimeout.
+				this->rtpProbationTimer->Start(RtpProbationScheduleSuccessTimeout, 0);
 			}
 			else
 			{
-				this->rembLimiterTimer->Stop();
+				this->rtpProbator->Start(probationBitrate);
 			}
 		}
 	}
