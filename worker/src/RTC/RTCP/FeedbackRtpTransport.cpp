@@ -18,11 +18,14 @@ namespace RTC
 		uint16_t FeedbackRtpTransportPacket::maxPacketStatusCount{ (1 << 16) - 1 };
 		uint16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
 
-		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String = {
+		// clang-format off
+		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
+		{
 			{ FeedbackRtpTransportPacket::Status::NotReceived, "NR" },
-			{ FeedbackRtpTransportPacket::Status::SmallDelta, "SD" },
-			{ FeedbackRtpTransportPacket::Status::LargeDelta, "LD" }
+			{ FeedbackRtpTransportPacket::Status::SmallDelta,  "SD" },
+			{ FeedbackRtpTransportPacket::Status::LargeDelta,  "LD" }
 		};
+		// clang-format on
 
 		/* Class methods. */
 
