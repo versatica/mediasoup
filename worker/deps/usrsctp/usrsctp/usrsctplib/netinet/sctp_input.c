@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 339042 2018-10-01 14:05:31Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 349986 2019-07-14 12:04:39Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -2241,13 +2241,13 @@ sctp_process_cookie_new(struct mbuf *m, int iphlen, int offset,
 	                       ntohs(initack_cp->init.num_outbound_streams),
 	                       port,
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
-	                       (struct thread *)NULL
+	                       (struct thread *)NULL,
 #elif defined(__Windows__)
-	                       (PKTHREAD)NULL
+	                       (PKTHREAD)NULL,
 #else
-	                       (struct proc *)NULL
+	                       (struct proc *)NULL,
 #endif
-	                       );
+	                       SCTP_DONT_INITIALIZE_AUTH_PARAMS);
 	if (stcb == NULL) {
 		struct mbuf *op_err;
 

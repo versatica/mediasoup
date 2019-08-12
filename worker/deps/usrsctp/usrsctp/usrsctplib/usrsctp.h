@@ -1021,13 +1021,6 @@ usrsctp_set_non_blocking(struct socket *, int);
 int
 usrsctp_get_non_blocking(struct socket *);
 
-int
-usrsctp_get_events(struct socket *so);
-
-int
-usrsctp_set_upcall(struct socket *so,
-		   void (*upcall)(struct socket *, void *, int), void *arg);
-
 void
 usrsctp_register_address(void *);
 
@@ -1047,7 +1040,7 @@ usrsctp_get_events(struct socket *so);
 
 
 void
-usrsctp_fire_timer(int delta);
+usrsctp_handle_timers(int delta);
 
 #define SCTP_DUMP_OUTBOUND 1
 #define SCTP_DUMP_INBOUND  0

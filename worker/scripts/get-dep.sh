@@ -99,7 +99,7 @@ function get_libsrtp()
 
 function get_usrsctp()
 {
-	GIT_REPO="https://github.com/versatica/usrsctp.git"
+	GIT_REPO="https://github.com/sctplab/usrsctp.git"
 	GIT_TAG="master"
 	DEST="deps/usrsctp/usrsctp"
 

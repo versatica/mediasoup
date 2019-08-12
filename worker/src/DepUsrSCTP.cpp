@@ -141,7 +141,7 @@ void DepUsrSCTP::Checker::OnTimer(Timer* /*timer*/)
 	auto now  = DepLibUV::GetTime();
 	int delta = this->lastCalledAt ? static_cast<int>(now - this->lastCalledAt) : 0;
 
-	usrsctp_fire_timer(delta);
+	usrsctp_handle_timers(delta);
 
 	this->lastCalledAt = now;
 }
