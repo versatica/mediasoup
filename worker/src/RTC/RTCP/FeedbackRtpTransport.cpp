@@ -73,7 +73,7 @@ namespace RTC
 
 			while (count < this->packetStatusCount && len > offset)
 			{
-				if (sizeof(uint16_t) > len - offset)
+				if (len - offset < sizeof(uint16_t))
 				{
 					MS_WARN_TAG(rtcp, "not enough space for chunk");
 
@@ -526,7 +526,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (sizeof(uint16_t) > len)
+			if (len < sizeof(uint16_t))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for FeedbackRtpTransportPacket chunk, discarded");
 
