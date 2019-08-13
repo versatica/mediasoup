@@ -33,7 +33,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	if (!packet)
 		return;
 
-	packet->Dump();
+	// packet->Dump();
 	packet->GetData();
 	packet->GetSize();
 	packet->GetPayloadType();

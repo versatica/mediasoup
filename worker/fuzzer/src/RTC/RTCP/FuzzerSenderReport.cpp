@@ -7,7 +7,7 @@ void Fuzzer::RTC::RTCP::SenderReport::Fuzz(::RTC::RTCP::SenderReportPacket* pack
 	if (packet->GetCount() == 1)
 		packet->Serialize(::RTC::RTCP::Buffer);
 
-	packet->Dump();
+	// packet->Dump();
 	packet->GetCount();
 	packet->GetSize();
 
@@ -19,7 +19,7 @@ void Fuzzer::RTC::RTCP::SenderReport::Fuzz(::RTC::RTCP::SenderReportPacket* pack
 	{
 		auto& report = (*it);
 
-		report->Dump();
+		// report->Dump();
 		report->Serialize(::RTC::RTCP::Buffer);
 		report->GetSize();
 		report->GetSsrc();
