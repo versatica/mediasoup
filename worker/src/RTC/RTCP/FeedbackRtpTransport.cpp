@@ -69,7 +69,7 @@ namespace RTC
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
 
 			size_t offset = FeedbackRtpTransportPacket::fixedHeaderSize;
-			size_t count  = 0;
+			size_t count{ 0u };
 
 			while (count < this->packetStatusCount && len > offset)
 			{
@@ -78,34 +78,53 @@ namespace RTC
 					MS_WARN_TAG(rtcp, "not enough space for chunk");
 
 					this->isCorrect = false;
+
 					return;
 				}
 
-				auto chunk = Chunk::Parse(data + offset, len, this->packetStatusCount - count);
+				auto* chunk = Chunk::Parse(data + offset, len, this->packetStatusCount - count);
+
 				if (!chunk)
 				{
 					MS_WARN_TAG(rtcp, "invalid chunk");
 
 					this->isCorrect = false;
+
+					// Delete all created chunks.
+					for (auto* chunk : this->chunks)
+					{
+						delete chunk;
+					}
+
 					return;
 				}
 
 				this->chunks.push_back(chunk);
 				this->deltasAndChunksSize += sizeof(uint16_t);
+
 				offset += sizeof(uint16_t);
 				count += chunk->GetCount();
 			}
 
 			auto chunksIt = this->chunks.begin();
+
 			while (chunksIt != this->chunks.end() && len > offset)
 			{
-				size_t deltasOffset = 0;
-				auto* chunk         = *chunksIt;
+				size_t deltasOffset{ 0u };
+				auto* chunk = *chunksIt;
+
 				if (!chunk->AddDeltas(data + offset, len, this->deltas, deltasOffset))
 				{
 					MS_WARN_TAG(rtcp, "not enough space for deltas");
 
 					this->isCorrect = false;
+
+					// Delete all created chunks.
+					for (auto* chunk : this->chunks)
+					{
+						delete chunk;
+					}
+
 					return;
 				}
 
@@ -526,13 +545,9 @@ namespace RTC
 				uint8_t symbolSize = data[0] & 0x40;
 
 				if (symbolSize == 0)
-				{
 					return new OneBitVectorChunk(bytes, count);
-				}
 				else
-				{
 					return new TwoBitVectorChunk(bytes, count);
-				}
 			}
 
 			return nullptr;
@@ -561,6 +576,7 @@ namespace RTC
 				if (len < this->count * sizeof(uint8_t))
 				{
 					MS_WARN_TAG(rtcp, "not enough space for small deltas");
+
 					return false;
 				}
 				for (size_t i{ 0 }; i < this->count; ++i)
@@ -574,6 +590,7 @@ namespace RTC
 				if (len < this->count * sizeof(uint16_t))
 				{
 					MS_WARN_TAG(rtcp, "not enough space for large deltas");
+
 					return false;
 				}
 				for (size_t i{ 0 }; i < this->count; ++i)
@@ -640,6 +657,7 @@ namespace RTC
 					if (len < sizeof(uint8_t))
 					{
 						MS_WARN_TAG(rtcp, "not enough space for small delta");
+
 						return false;
 					}
 
@@ -653,6 +671,7 @@ namespace RTC
 					if (len < sizeof(uint16_t))
 					{
 						MS_WARN_TAG(rtcp, "not enough space for large delta");
+
 						return false;
 					}
 
@@ -743,6 +762,7 @@ namespace RTC
 					if (len < sizeof(uint8_t))
 					{
 						MS_WARN_TAG(rtcp, "not enough space for small delta");
+
 						return false;
 					}
 
@@ -754,6 +774,7 @@ namespace RTC
 				else
 				{
 					MS_WARN_TAG(rtcp, "invalid status for one bit vector chunk");
+
 					return false;
 				}
 			}
