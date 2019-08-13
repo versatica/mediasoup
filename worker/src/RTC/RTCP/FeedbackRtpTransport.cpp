@@ -33,7 +33,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + FeedbackRtpTransportPacket::fixedHeaderSize > len)
+			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + FeedbackRtpTransportPacket::fixedHeaderSize)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
@@ -42,7 +42,8 @@ namespace RTC
 
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			std::unique_ptr<FeedbackRtpTransportPacket> packet(new FeedbackRtpTransportPacket(commonHeader));
+			std::unique_ptr<FeedbackRtpTransportPacket> packet(
+			  new FeedbackRtpTransportPacket(commonHeader, len));
 
 			if (!packet->IsCorrect())
 				return nullptr;
@@ -52,12 +53,21 @@ namespace RTC
 
 		/* Instance methods. */
 
-		FeedbackRtpTransportPacket::FeedbackRtpTransportPacket(CommonHeader* commonHeader)
+		FeedbackRtpTransportPacket::FeedbackRtpTransportPacket(CommonHeader* commonHeader, size_t availableLen)
 		  : FeedbackRtpPacket(commonHeader)
 		{
 			MS_TRACE();
 
 			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
+
+			if (len < availableLen)
+			{
+				MS_WARN_TAG(rtcp, "not enough space for Feedback packet announced length, discarded");
+
+				this->isCorrect = false;
+
+				return;
+			}
 
 			// Make data point to the packet specific info.
 			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader) +
@@ -121,6 +131,16 @@ namespace RTC
 				size_t deltasOffset{ 0u };
 				auto* chunk = *chunksIt;
 
+				// TODO: This is wrong. Instead of `len` as second argument it should be
+				// `len - offset`, otherwise len is always the total packet size!
+				//
+				// NOTE: However, even with that, fuzzer crashes:
+				//
+				//   dynamic-stack-buffer-overflow
+				//     Utils.hpp:128:20
+				//     FeedbackRtpTransport.cpp:618:23
+				//     FeedbackRtpTransport.cpp:133:17
+				//     FeedbackRtpTransport.cpp:45:59
 				if (!chunk->AddDeltas(data + offset, len, this->deltas, deltasOffset))
 				{
 					MS_WARN_TAG(rtcp, "not enough space for deltas");
@@ -588,8 +608,18 @@ namespace RTC
 
 					return false;
 				}
+
 				for (size_t i{ 0 }; i < this->count; ++i)
 				{
+					// TODO: Fuzzer crashes.
+					//
+					// dynamic-stack-buffer-overflow
+					//   Utils.hpp:123:10
+					//   FeedbackRtpTransport.cpp:613:23
+					//   FeedbackRtpTransport.cpp:143:17
+					//   FeedbackRtpTransport.cpp:45:59
+					//   FuzzerFeedbackRtpTransport.cpp:30:18
+
 					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
 					offset += sizeof(uint8_t);
 				}
@@ -602,6 +632,7 @@ namespace RTC
 
 					return false;
 				}
+
 				for (size_t i{ 0 }; i < this->count; ++i)
 				{
 					deltas.push_back(Utils::Byte::Get2Bytes(data, offset));
@@ -630,6 +661,101 @@ namespace RTC
 
 			bytes |= this->status << 13;
 			bytes |= this->count & 0x1FFF;
+
+			Utils::Byte::Set2Bytes(buffer, 0, bytes);
+
+			return sizeof(uint16_t);
+		}
+
+		FeedbackRtpTransportPacket::OneBitVectorChunk::OneBitVectorChunk(uint16_t buffer, size_t count)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(buffer & 0x8000, "invalid one bit vector chunk");
+
+			for (size_t i{ 0u }; i < 14 && count > 0; ++i, --count)
+			{
+				auto status = static_cast<Status>((buffer >> (14 - 1 - i)) & 0x01);
+
+				this->statuses.emplace_back(status);
+			}
+		}
+
+		bool FeedbackRtpTransportPacket::OneBitVectorChunk::AddDeltas(
+		  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset)
+		{
+			MS_TRACE();
+
+			for (auto status : this->statuses)
+			{
+				if (status == Status::NotReceived)
+				{
+					continue;
+				}
+				else if (status == Status::SmallDelta)
+				{
+					if (len < sizeof(uint8_t))
+					{
+						MS_WARN_TAG(rtcp, "not enough space for small delta");
+
+						return false;
+					}
+
+					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
+					offset += sizeof(uint8_t);
+
+					continue;
+				}
+				else
+				{
+					MS_WARN_TAG(rtcp, "invalid status for one bit vector chunk");
+
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		void FeedbackRtpTransportPacket::OneBitVectorChunk::Dump()
+		{
+			MS_TRACE();
+
+			std::ostringstream out;
+
+			// Dump status slots.
+			for (auto status : this->statuses)
+			{
+				out << "|" << FeedbackRtpTransportPacket::Status2String[status];
+			}
+
+			// Dump empty slots.
+			for (size_t i{ this->statuses.size() }; i < 14; ++i)
+			{
+				out << "|--";
+			}
+
+			out << "|";
+
+			MS_DUMP("  <FeedbackRtpTransportPacket::OneBitVectorChunk>");
+			MS_DUMP("    %s", out.str().c_str());
+			MS_DUMP("  </FeedbackRtpTransportPacket::OneBitVectorChunk>");
+		}
+
+		size_t FeedbackRtpTransportPacket::OneBitVectorChunk::Serialize(uint8_t* buffer)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->statuses.size() <= 14, "packet info size must be 14 or less");
+
+			uint16_t bytes{ 0x8000 };
+			uint8_t i{ 13u };
+
+			for (auto status : this->statuses)
+			{
+				bytes |= status << i;
+				i -= 1;
+			}
 
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);
 
@@ -734,101 +860,6 @@ namespace RTC
 			{
 				bytes |= status << i;
 				i -= 2;
-			}
-
-			Utils::Byte::Set2Bytes(buffer, 0, bytes);
-
-			return sizeof(uint16_t);
-		}
-
-		FeedbackRtpTransportPacket::OneBitVectorChunk::OneBitVectorChunk(uint16_t buffer, size_t count)
-		{
-			MS_TRACE();
-
-			MS_ASSERT(buffer & 0x8000, "invalid one bit vector chunk");
-
-			for (size_t i{ 0u }; i < 14 && count > 0; ++i, --count)
-			{
-				auto status = static_cast<Status>((buffer >> (14 - 1 - i)) & 0x01);
-
-				this->statuses.emplace_back(status);
-			}
-		}
-
-		bool FeedbackRtpTransportPacket::OneBitVectorChunk::AddDeltas(
-		  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset)
-		{
-			MS_TRACE();
-
-			for (auto status : this->statuses)
-			{
-				if (status == Status::NotReceived)
-				{
-					continue;
-				}
-				else if (status == Status::SmallDelta)
-				{
-					if (len < sizeof(uint8_t))
-					{
-						MS_WARN_TAG(rtcp, "not enough space for small delta");
-
-						return false;
-					}
-
-					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
-					offset += sizeof(uint8_t);
-
-					continue;
-				}
-				else
-				{
-					MS_WARN_TAG(rtcp, "invalid status for one bit vector chunk");
-
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		void FeedbackRtpTransportPacket::OneBitVectorChunk::Dump()
-		{
-			MS_TRACE();
-
-			std::ostringstream out;
-
-			// Dump status slots.
-			for (auto status : this->statuses)
-			{
-				out << "|" << FeedbackRtpTransportPacket::Status2String[status];
-			}
-
-			// Dump empty slots.
-			for (size_t i{ this->statuses.size() }; i < 14; ++i)
-			{
-				out << "|--";
-			}
-
-			out << "|";
-
-			MS_DUMP("  <FeedbackRtpTransportPacket::OneBitVectorChunk>");
-			MS_DUMP("    %s", out.str().c_str());
-			MS_DUMP("  </FeedbackRtpTransportPacket::OneBitVectorChunk>");
-		}
-
-		size_t FeedbackRtpTransportPacket::OneBitVectorChunk::Serialize(uint8_t* buffer)
-		{
-			MS_TRACE();
-
-			MS_ASSERT(this->statuses.size() <= 14, "packet info size must be 14 or less");
-
-			uint16_t bytes{ 0x8000 };
-			uint8_t i{ 13u };
-
-			for (auto status : this->statuses)
-			{
-				bytes |= status << i;
-				i -= 1;
 			}
 
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);

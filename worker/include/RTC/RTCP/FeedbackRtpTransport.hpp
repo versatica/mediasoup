@@ -151,7 +151,7 @@ namespace RTC
 
 		public:
 			FeedbackRtpTransportPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
-			FeedbackRtpTransportPacket(CommonHeader* commonHeader);
+			FeedbackRtpTransportPacket(CommonHeader* commonHeader, size_t availableLen);
 			~FeedbackRtpTransportPacket();
 
 		public:
