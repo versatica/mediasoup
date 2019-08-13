@@ -201,7 +201,8 @@ namespace RTC
 			{ FeedbackRtp::MessageType::TLLEI,  "TLLEI"  },
 			{ FeedbackRtp::MessageType::ECN,    "ECN"    },
 			{ FeedbackRtp::MessageType::PS,     "PS"     },
-			{ FeedbackRtp::MessageType::EXT,    "EXT"    }
+			{ FeedbackRtp::MessageType::EXT,    "EXT"    },
+			{ FeedbackRtp::MessageType::TCC,    "TCC"    }
 		};
 		// clang-format on
 
@@ -257,9 +258,9 @@ namespace RTC
 				case FeedbackRtp::MessageType::EXT:
 					break;
 
-					// TODO: Enable once Transport-CC client is done.
-					// case FeedbackRtp::MessageType::TCC:
-					//      break;
+				case FeedbackRtp::MessageType::TCC:
+					packet = FeedbackRtpTransportPacket::Parse(data, len);
+					break;
 
 				default:
 					MS_WARN_TAG(
