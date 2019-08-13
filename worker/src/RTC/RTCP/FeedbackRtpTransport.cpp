@@ -95,6 +95,7 @@ namespace RTC
 					{
 						delete chunk;
 					}
+					this->chunks.clear();
 
 					return;
 				}
@@ -124,6 +125,7 @@ namespace RTC
 					{
 						delete chunk;
 					}
+					this->chunks.clear();
 
 					return;
 				}
