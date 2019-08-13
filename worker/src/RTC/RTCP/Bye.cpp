@@ -24,7 +24,7 @@ namespace RTC
 
 			while (((count--) != 0u) && (len > offset))
 			{
-				if (sizeof(uint32_t) > len - offset)
+				if (len - offset < sizeof(uint32_t))
 				{
 					MS_WARN_TAG(rtcp, "not enough space for SSRC in RTCP Bye message");
 
@@ -40,10 +40,9 @@ namespace RTC
 				auto length = size_t{ Utils::Byte::Get1Byte(data, offset) };
 
 				offset += sizeof(uint8_t);
+
 				if (length <= len - offset)
-				{
 					packet->SetReason(std::string(reinterpret_cast<const char*>(data) + offset, length));
-				}
 			}
 
 			return packet.release();

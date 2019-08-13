@@ -20,7 +20,7 @@ namespace RTC
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			// Ensure there is space for the common header and the SSRC of packet sender.
-			if (sizeof(CommonHeader) > len)
+			if (len < sizeof(CommonHeader))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for a extended report block, report discarded");
 
@@ -42,6 +42,7 @@ namespace RTC
 				default:
 				{
 					MS_DEBUG_TAG(rtcp, "unknown RTCP XR block type [blockType:%" PRIu8 "]", header->blockType);
+
 					break;
 				}
 			}
@@ -61,7 +62,7 @@ namespace RTC
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			// Ensure there is space for the common header and the SSRC of packet sender.
-			if (sizeof(CommonHeader) + sizeof(uint32_t) > len)
+			if (len < sizeof(CommonHeader) + sizeof(uint32_t))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for a extended report packet, packet discarded");
 

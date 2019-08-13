@@ -1205,7 +1205,7 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+			RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
 
 			packet.SetBitrate(this->maxIncomingBitrate);
 			packet.Serialize(RTC::RTCP::Buffer);
@@ -1911,7 +1911,7 @@ namespace RTC
 
 			// NOTE: By sending a REMB with bitrate set to 0, libwebrtc resets the
 			// latest received REMB value.
-			RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+			RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
 
 			packet.SetBitrate(0);
 			packet.Serialize(RTC::RTCP::Buffer);
@@ -2239,7 +2239,7 @@ namespace RTC
 		  ssrcsStream.str().c_str());
 #endif
 
-		RTC::RTCP::FeedbackPsRembPacket packet(0, 0);
+		RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
 
 		packet.SetBitrate(availableBitrate);
 		packet.SetSsrcs(ssrcs);

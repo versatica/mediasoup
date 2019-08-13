@@ -2,14 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/Feedback.hpp"
-// Feedback RTP.
-#include "RTC/RTCP/FeedbackRtpEcn.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/FeedbackRtpSrReq.hpp"
-#include "RTC/RTCP/FeedbackRtpTllei.hpp"
-#include "RTC/RTCP/FeedbackRtpTmmb.hpp"
-#include "RTC/RTCP/FeedbackRtpTransport.hpp"
-// Feedback PS.
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
@@ -20,6 +12,12 @@
 #include "RTC/RTCP/FeedbackPsSli.hpp"
 #include "RTC/RTCP/FeedbackPsTst.hpp"
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
+#include "RTC/RTCP/FeedbackRtpEcn.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/FeedbackRtpSrReq.hpp"
+#include "RTC/RTCP/FeedbackRtpTllei.hpp"
+#include "RTC/RTCP/FeedbackRtpTmmb.hpp"
+#include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include <cstring>
 
 namespace RTC
@@ -122,7 +120,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
+			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
@@ -213,7 +211,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
+			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 

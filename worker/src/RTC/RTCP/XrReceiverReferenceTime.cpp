@@ -16,7 +16,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Ensure there is space for the common header and the body.
-			if (sizeof(ExtendedReportBlock::CommonHeader) + sizeof(ReceiverReferenceTime::Body) > len)
+			if (len < sizeof(ExtendedReportBlock::CommonHeader) + sizeof(ReceiverReferenceTime::Body))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for a extended RRT block, block discarded");
 

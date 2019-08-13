@@ -16,7 +16,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Ensure there is space for the common header and the SSRC of packet sender.
-			if (sizeof(Body) > len)
+			if (len < sizeof(Body))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for a extended DSLR sub-block, sub-block discarded");
 
@@ -63,7 +63,6 @@ namespace RTC
 			auto* header = const_cast<ExtendedReportBlock::CommonHeader*>(
 			  reinterpret_cast<const ExtendedReportBlock::CommonHeader*>(data));
 			std::unique_ptr<DelaySinceLastRr> report(new DelaySinceLastRr(header));
-
 			size_t offset{ sizeof(ExtendedReportBlock::CommonHeader) };
 			uint16_t reportLength = ntohs(header->length) * 4;
 
@@ -72,7 +71,7 @@ namespace RTC
 				DelaySinceLastRr::SsrcInfo* ssrcInfo =
 				  DelaySinceLastRr::SsrcInfo::Parse(data + offset, len - offset);
 
-				if (ssrcInfo != nullptr)
+				if (ssrcInfo)
 				{
 					report->AddSsrcInfo(ssrcInfo);
 					offset += ssrcInfo->GetSize();

@@ -19,7 +19,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Create a feedback packet.
-		this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0, 0));
+		this->feedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0u, 0u));
 
 		// Set initial packet count.
 		this->feedbackPacket->SetFeedbackPacketCount(this->feedbackPacketCount);

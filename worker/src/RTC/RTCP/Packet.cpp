@@ -47,7 +47,7 @@ namespace RTC
 
 			first = current = last = nullptr;
 
-			while (int(len) > 0)
+			while (len > 0u)
 			{
 				if (!Packet::IsRtcp(data, len))
 				{
