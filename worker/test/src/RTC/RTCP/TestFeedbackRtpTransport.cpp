@@ -8,6 +8,7 @@ using namespace RTC::RTCP;
 SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
 {
 	static constexpr size_t RtcpMtu{ 1200u };
+
 	uint32_t senderSsrc{ 1111u };
 	uint32_t mediaSsrc{ 2222u };
 
@@ -214,6 +215,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		auto highestTimestamp     = packet->GetHighestTimestamp();
 
 		auto* packet2 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
+
 		packet2->SetFeedbackPacketCount(2);
 
 		packet2->AddPacket(highestWideSeqNumber, highestTimestamp, RtcpMtu);
@@ -250,9 +252,14 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 	SECTION("parse FeedbackRtpTransportPacketPacket, one bit vector chunk")
 	{
-		uint8_t data[] = { 0x8F, 0xCD, 0x00, 0x07, 0xFA, 0x17, 0xFA, 0x17, 0x09, 0xFA, 0xFF,
-			                 0x67, 0x00, 0x27, 0x00, 0x0D, 0x5F, 0xC2, 0xF1, 0x03, 0xBF, 0x8E,
-			                 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x04, 0x00 };
+		// clang-format off
+		uint8_t data[] =
+		{
+			0x8F, 0xCD, 0x00, 0x07, 0xFA, 0x17, 0xFA, 0x17, 0x09, 0xFA, 0xFF,
+			0x67, 0x00, 0x27, 0x00, 0x0D, 0x5F, 0xC2, 0xF1, 0x03, 0xBF, 0x8E,
+			0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x04, 0x00
+		};
+		// clang-format on
 
 		auto* packet = FeedbackRtpTransportPacket::Parse(data, 32);
 
