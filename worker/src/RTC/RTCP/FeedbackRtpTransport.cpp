@@ -35,7 +35,7 @@ namespace RTC
 
 			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + FeedbackRtpTransportPacket::fixedHeaderSize > len)
 			{
-				MS_WARN_TAG(rtcp, "not enough space for FeedbackRtpTransportPacket packet, discarded");
+				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
 				return nullptr;
 			}
@@ -44,10 +44,10 @@ namespace RTC
 
 			std::unique_ptr<FeedbackRtpTransportPacket> packet(new FeedbackRtpTransportPacket(commonHeader));
 
-			if (packet->IsCorrect())
-				return packet.release();
-			else
+			if (!packet->IsCorrect())
 				return nullptr;
+
+			return packet.release();
 		}
 
 		/* Instance methods. */

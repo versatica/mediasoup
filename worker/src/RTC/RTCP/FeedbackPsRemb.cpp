@@ -44,6 +44,7 @@ namespace RTC
 		  : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
 			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
+
 			// Make data point to the 4 bytes that must containt the "REMB" identifier.
 			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader) +
 			             sizeof(FeedbackPacket::Header);
