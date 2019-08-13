@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::FeedbackPsRembPacket"
+#define MS_CLASS "RTC::RTCP::FeedbackPsRemb"
 // #define MS_LOG_DEV
 
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
