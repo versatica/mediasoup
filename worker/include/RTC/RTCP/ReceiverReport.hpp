@@ -56,7 +56,7 @@ namespace RTC
 
 		private:
 			Header* header{ nullptr };
-			uint8_t raw[sizeof(Header)]{ 0 };
+			uint8_t raw[sizeof(Header)]{ 0u };
 		};
 
 		class ReceiverReportPacket : public Packet
@@ -86,7 +86,7 @@ namespace RTC
 
 		private:
 			// SSRC of packet sender.
-			uint32_t ssrc{ 0 };
+			uint32_t ssrc{ 0u };
 			std::vector<ReceiverReport*> reports;
 		};
 
@@ -227,12 +227,12 @@ namespace RTC
 
 		inline uint32_t ReceiverReportPacket::GetSsrc() const
 		{
-			return uint32_t{ ntohl(this->ssrc) };
+			return this->ssrc;
 		}
 
 		inline void ReceiverReportPacket::SetSsrc(uint32_t ssrc)
 		{
-			this->ssrc = uint32_t{ htonl(ssrc) };
+			this->ssrc = ssrc;
 		}
 
 		inline void ReceiverReportPacket::AddReport(ReceiverReport* report)
