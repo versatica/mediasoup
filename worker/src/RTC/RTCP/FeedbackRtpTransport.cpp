@@ -460,8 +460,7 @@ namespace RTC
 
 			this->context.statuses.emplace_back(status);
 			this->deltas.emplace_back(delta);
-			this->deltasAndChunksSize +=
-			  (status == Status::SmallDelta) ? 1u : 2u;
+			this->deltasAndChunksSize += (status == Status::SmallDelta) ? 1u : 2u;
 
 			// Update context info.
 
