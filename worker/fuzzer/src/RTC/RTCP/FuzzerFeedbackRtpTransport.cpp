@@ -9,8 +9,10 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 {
 	static constexpr size_t RtcpMtu{ 2500u };
 
-	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::Buffer);
+		MS_DUMP("dumping packet");
+	packet->Dump();
+	auto len = packet->Serialize(::RTC::RTCP::Buffer);
+		MS_DUMP_DATA(packet->GetData(), len);
 	packet->GetCount();
 	packet->GetSize();
 	packet->IsFull();
@@ -31,7 +33,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 
 	std::memcpy(data2, packet->GetData(), packet->GetSize());
 
-	auto* packet2 = ::RTC::RTCP::FeedbackRtpTransportPacket::Parse(data2, len2);
+	auto* packet2 = ::RTC::RTCP::FeedbackRtpTransportPacket::Parse(data2, packet->GetSize());
 
 	// TODO
 	if (!packet2)
@@ -48,6 +50,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 			packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
 	}
 
+		MS_DUMP("dumping packet2:");
 	packet2->Dump();
 	if (packet2->IsSerializable())
 		packet2->Serialize(::RTC::RTCP::Buffer);

@@ -85,6 +85,7 @@ namespace RTC
 			                    FeedbackRtpTransportPacket::fixedHeaderSize;
 			size_t offset{ 0u };
 			size_t count{ 0u };
+			size_t receivedPacketStatusCount{ 0u };
 
 			while (count < this->packetStatusCount && contentLen > offset)
 			{
@@ -113,13 +114,6 @@ namespace RTC
 
 					this->isCorrect = false;
 
-					// Delete all created chunks.
-					for (auto* chunk : this->chunks)
-					{
-						delete chunk;
-					}
-					this->chunks.clear();
-
 					return;
 				}
 
@@ -128,6 +122,15 @@ namespace RTC
 
 				offset += 2u;
 				count += chunk->GetCount();
+				receivedPacketStatusCount += chunk->GetReceivedStatusCount();
+			}
+
+			if (this->packetStatusCount != count)
+			{
+				MS_WARN_TAG(rtcp, "provided packet status count does not match with content");
+				this->isCorrect = false;
+
+				return;
 			}
 
 			auto chunksIt = this->chunks.begin();
@@ -157,6 +160,14 @@ namespace RTC
 				this->deltasAndChunksSize += deltasOffset;
 
 				++chunksIt;
+			}
+
+			if (this->deltas.size() != receivedPacketStatusCount)
+			{
+				MS_WARN_TAG(rtcp, "received deltas does not match with received status count");
+				this->isCorrect = false;
+
+				return;
 			}
 		}
 
@@ -561,7 +572,20 @@ namespace RTC
 			// Run length chunk.
 			if (chunkType == 0)
 			{
-				return new RunLengthChunk(bytes);
+				auto* chunk = new RunLengthChunk(bytes);
+
+				// Verify that the status is a valid one.
+				if (chunk->GetStatus() > 2u)
+				{
+					MS_WARN_DEV("invalid status for a run length chunk");
+					delete chunk;
+
+					return nullptr;
+				}
+				else
+				{
+					return chunk;
+				}
 			}
 			// Vector chunk.
 			else
@@ -646,6 +670,20 @@ namespace RTC
 			MS_DUMP("    status : %s", FeedbackRtpTransportPacket::Status2String[this->status].c_str());
 			MS_DUMP("    count  : %" PRIu16, this->count);
 			MS_DUMP("  </FeedbackRtpTransportPacket::RunLengthChunk>");
+		}
+
+		size_t FeedbackRtpTransportPacket::RunLengthChunk::GetReceivedStatusCount() const
+		{
+			MS_TRACE();
+
+			if (this->status == Status::SmallDelta || this->status == Status::LargeDelta)
+			{
+				return this->count;
+			}
+			else
+			{
+				return 0;
+			}
 		}
 
 		size_t FeedbackRtpTransportPacket::RunLengthChunk::Serialize(uint8_t* buffer)
@@ -735,6 +773,21 @@ namespace RTC
 			MS_DUMP("  <FeedbackRtpTransportPacket::OneBitVectorChunk>");
 			MS_DUMP("    %s", out.str().c_str());
 			MS_DUMP("  </FeedbackRtpTransportPacket::OneBitVectorChunk>");
+		}
+
+		size_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetReceivedStatusCount() const
+		{
+			MS_TRACE();
+
+			size_t count{ 0 };
+
+			for (auto status : statuses)
+			{
+				if (status == Status::SmallDelta || status == Status::LargeDelta)
+					count++;
+			}
+
+			return count;
 		}
 
 		size_t FeedbackRtpTransportPacket::OneBitVectorChunk::Serialize(uint8_t* buffer)
@@ -840,6 +893,20 @@ namespace RTC
 			MS_DUMP("  </FeedbackRtpTransportPacket::TwoBitVectorChunk>");
 		}
 
+		size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetReceivedStatusCount() const
+		{
+			MS_TRACE();
+
+			size_t count{ 0 };
+
+			for (auto status : statuses)
+			{
+				if (status == Status::SmallDelta || status == Status::LargeDelta)
+					count++;
+			}
+
+			return count;
+		}
 		size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::Serialize(uint8_t* buffer)
 		{
 			MS_TRACE();
