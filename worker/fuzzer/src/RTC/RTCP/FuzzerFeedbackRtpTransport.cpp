@@ -33,6 +33,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 
 	auto* packet2 = ::RTC::RTCP::FeedbackRtpTransportPacket::Parse(data2, len2);
 
+	// TODO
 	if (!packet2)
 		MS_DUMP("------------------- packet2 is nullptr! THIS SHOULD NOT HAPPEN!");
 
@@ -42,7 +43,9 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 		if (seq % 8 == 0)
 			continue;
 
-		packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
+		// Do not produce an assert.
+		if (!packet2->IsFull())
+			packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
 	}
 
 	packet2->Dump();
