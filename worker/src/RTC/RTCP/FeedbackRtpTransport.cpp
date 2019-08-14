@@ -81,8 +81,8 @@ namespace RTC
 			// Make contentData point to the beginning of the chunks.
 			uint8_t* contentData = data + FeedbackRtpTransportPacket::fixedHeaderSize;
 			// Make contentLen be the available length for chunks.
-			size_t contentLen =
-			  len - sizeof(CommonHeader) - sizeof(FeedbackPacket::Header) - FeedbackRtpTransportPacket::fixedHeaderSize;
+			size_t contentLen = len - sizeof(CommonHeader) - sizeof(FeedbackPacket::Header) -
+			                    FeedbackRtpTransportPacket::fixedHeaderSize;
 			size_t offset{ 0u };
 			size_t count{ 0u };
 
@@ -104,7 +104,8 @@ namespace RTC
 					return;
 				}
 
-				auto* chunk = Chunk::Parse(contentData + offset, contentLen - offset, this->packetStatusCount - count);
+				auto* chunk =
+				  Chunk::Parse(contentData + offset, contentLen - offset, this->packetStatusCount - count);
 
 				if (!chunk)
 				{
@@ -637,7 +638,7 @@ namespace RTC
 			return true;
 		}
 
-		void FeedbackRtpTransportPacket::RunLengthChunk::Dump()
+		void FeedbackRtpTransportPacket::RunLengthChunk::Dump() const
 		{
 			MS_TRACE();
 
@@ -711,7 +712,7 @@ namespace RTC
 			return true;
 		}
 
-		void FeedbackRtpTransportPacket::OneBitVectorChunk::Dump()
+		void FeedbackRtpTransportPacket::OneBitVectorChunk::Dump() const
 		{
 			MS_TRACE();
 
@@ -814,7 +815,7 @@ namespace RTC
 			return true;
 		}
 
-		void FeedbackRtpTransportPacket::TwoBitVectorChunk::Dump()
+		void FeedbackRtpTransportPacket::TwoBitVectorChunk::Dump() const
 		{
 			MS_TRACE();
 

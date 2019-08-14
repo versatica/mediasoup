@@ -80,8 +80,8 @@ namespace RTC
 
 				virtual bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) = 0;
-				virtual void Dump()                                                               = 0;
-				virtual size_t GetCount()                                                         = 0;
+				virtual void Dump() const                                                         = 0;
+				virtual size_t GetCount() const                                                   = 0;
 				virtual size_t Serialize(uint8_t* buffer)                                         = 0;
 			};
 
@@ -94,8 +94,8 @@ namespace RTC
 			public:
 				bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
-				void Dump() override;
-				size_t GetCount() override;
+				void Dump() const override;
+				size_t GetCount() const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -112,8 +112,8 @@ namespace RTC
 			public:
 				bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
-				void Dump() override;
-				size_t GetCount() override;
+				void Dump() const override;
+				size_t GetCount() const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -129,8 +129,8 @@ namespace RTC
 			public:
 				bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
-				void Dump() override;
-				size_t GetCount() override;
+				void Dump() const override;
+				size_t GetCount() const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -271,7 +271,7 @@ namespace RTC
 		{
 		}
 
-		inline size_t FeedbackRtpTransportPacket::RunLengthChunk::GetCount()
+		inline size_t FeedbackRtpTransportPacket::RunLengthChunk::GetCount() const
 		{
 			return this->count;
 		}
@@ -281,7 +281,7 @@ namespace RTC
 		{
 		}
 
-		inline size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetCount()
+		inline size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetCount() const
 		{
 			return this->statuses.size();
 		}
@@ -291,7 +291,7 @@ namespace RTC
 		{
 		}
 
-		inline size_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetCount()
+		inline size_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetCount() const
 		{
 			return this->statuses.size();
 		}
