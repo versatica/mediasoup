@@ -23,7 +23,7 @@ namespace RTC
 			// Check that there is space for the REMB unique identifier and basic fields.
 			// NOTE: Feedback.cpp already checked that there is space for CommonHeader and
 			// Feedback Header.
-			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8)
+			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8u)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
@@ -60,7 +60,7 @@ namespace RTC
 			size_t numSsrcs = data[4];
 
 			// Ensure there is space for the the announced number of SSRC feedbacks.
-			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8 + (numSsrcs * 4u))
+			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8u + (numSsrcs * 4u))
 			{
 				MS_WARN_TAG(
 				  rtcp, "invalid payload size (%zu bytes) for the given number of ssrcs (%zu)", len, numSsrcs);
@@ -136,7 +136,7 @@ namespace RTC
 			for (auto ssrc : this->ssrcs)
 			{
 				Utils::Byte::Set4Bytes(buffer, offset, ssrc);
-				offset += sizeof(ssrc);
+				offset += 4u;
 			}
 
 			return offset;
