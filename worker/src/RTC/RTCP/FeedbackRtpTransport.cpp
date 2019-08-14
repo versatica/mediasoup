@@ -631,15 +631,6 @@ namespace RTC
 
 				for (size_t i{ 0 }; i < this->count; ++i)
 				{
-					// TODO: Fuzzer crashes.
-					//
-					// dynamic-stack-buffer-overflow
-					//   Utils.hpp:123:10
-					//   FeedbackRtpTransport.cpp:613:23
-					//   FeedbackRtpTransport.cpp:143:17
-					//   FeedbackRtpTransport.cpp:45:59
-					//   FuzzerFeedbackRtpTransport.cpp:30:18
-
 					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
 					offset += 1u;
 				}
