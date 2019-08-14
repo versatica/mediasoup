@@ -99,7 +99,7 @@ namespace RTC
 					return;
 				}
 
-				auto* chunk = Chunk::Parse(data + offset, len, this->packetStatusCount - count);
+				auto* chunk = Chunk::Parse(data + offset, len - offset, this->packetStatusCount - count);
 
 				if (!chunk)
 				{
@@ -131,17 +131,7 @@ namespace RTC
 				size_t deltasOffset{ 0u };
 				auto* chunk = *chunksIt;
 
-				// TODO: This is wrong. Instead of `len` as second argument it should be
-				// `len - offset`, otherwise len is always the total packet size!
-				//
-				// NOTE: However, even with that, fuzzer crashes:
-				//
-				//   dynamic-stack-buffer-overflow
-				//     Utils.hpp:128:20
-				//     FeedbackRtpTransport.cpp:618:23
-				//     FeedbackRtpTransport.cpp:133:17
-				//     FeedbackRtpTransport.cpp:45:59
-				if (!chunk->AddDeltas(data + offset, len, this->deltas, deltasOffset))
+				if (!chunk->AddDeltas(data + offset, len - offset, this->deltas, deltasOffset))
 				{
 					MS_WARN_TAG(rtcp, "not enough space for deltas");
 
