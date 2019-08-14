@@ -568,16 +568,23 @@ namespace RTC
 				auto* chunk = new RunLengthChunk(bytes);
 
 				// Verify that the status is a valid one.
-				if (chunk->GetStatus() > 2u)
+				switch (chunk->GetStatus())
 				{
-					MS_WARN_DEV("invalid status for a run length chunk");
-					delete chunk;
+					case Status::NotReceived:
+					case Status::SmallDelta:
+					case Status::LargeDelta:
+					{
+						return chunk;
+					}
 
-					return nullptr;
-				}
-				else
-				{
-					return chunk;
+					default:
+					{
+						MS_WARN_DEV("invalid status for a run length chunk");
+
+						delete chunk;
+
+						return nullptr;
+					}
 				}
 			}
 			// Vector chunk.
