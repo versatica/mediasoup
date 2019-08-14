@@ -25,7 +25,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 	size_t len2 = packet->GetSize() + 2000u;
 	uint8_t data2[len2];
 
-	std::memcpy(data2, static_cast<void*>(packet), packet->GetSize());
+	std::memcpy(data2, packet->GetData(), packet->GetSize());
 
 	auto* packet2 = ::RTC::RTCP::FeedbackRtpTransportPacket::Parse(data2, len2);
 
