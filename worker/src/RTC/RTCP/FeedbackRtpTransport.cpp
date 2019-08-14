@@ -157,7 +157,8 @@ namespace RTC
 
 			if (this->deltas.size() != receivedPacketStatusCount)
 			{
-				MS_WARN_TAG(rtcp, "received deltas does not match with received status count");
+				MS_WARN_TAG(rtcp, "received deltas does not match received status count");
+
 				this->isCorrect = false;
 
 				return;

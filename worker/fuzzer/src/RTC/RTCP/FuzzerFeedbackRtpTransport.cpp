@@ -30,16 +30,16 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 	if (!packet2)
 		MS_DUMP("------------------- packet2 is nullptr! THIS SHOULD NOT HAPPEN!");
 
-	// for (uint16_t seq{ 0u }; seq < 30u; ++seq)
-	// {
-	// 	// Generate lost seqs.
-	// 	if (seq % 8 == 0)
-	// 		continue;
+	for (uint16_t seq{ 0u }; seq < 30u; ++seq)
+	{
+		// Generate lost seqs.
+		if (seq % 8 == 0)
+			continue;
 
-	// 	// Do not produce an assert.
-	// 	if (!packet2->IsFull())
-	// 		packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
-	// }
+		// Do not produce an assert.
+		if (!packet2->IsFull())
+			packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
+	}
 
 		MS_DUMP(">>>>>>>>>> dumping packet2:");
 	packet2->Dump();
