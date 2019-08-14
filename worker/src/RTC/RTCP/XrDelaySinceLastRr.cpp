@@ -38,9 +38,9 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("  <SsrcInfo>");
-			MS_DUMP("      ssrc  : %" PRIu32, GetSsrc());
-			MS_DUMP("      lrr   : %" PRIu32, GetLastReceiverReport());
-			MS_DUMP("      dlrr  : %" PRIu32, GetDelaySinceLastReceiverReport());
+			MS_DUMP("    ssrc : %" PRIu32, GetSsrc());
+			MS_DUMP("    lrr  : %" PRIu32, GetLastReceiverReport());
+			MS_DUMP("    dlrr : %" PRIu32, GetDelaySinceLastReceiverReport());
 			MS_DUMP("  <SsrcInfo>");
 		}
 

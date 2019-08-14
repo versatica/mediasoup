@@ -68,8 +68,7 @@ namespace RTC
 		  : ExtendedReportBlock(ExtendedReportBlock::Type::RRT)
 		{
 			this->header = header;
-
-			this->body = reinterpret_cast<Body*>((header) + 1);
+			this->body   = reinterpret_cast<Body*>((header) + 1);
 		}
 
 		inline size_t ReceiverReferenceTime::GetSize() const
