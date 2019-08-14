@@ -42,7 +42,10 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 		if (packet2->IsFull())
 			break;
 
-		packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
+		if (seq % 14 != 0)
+			packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
+		else
+			packet2->AddPacket(seq, 10000000 + (seq * 100), RtcpMtu);
 	}
 
 		MS_DUMP(">>>>>>>>>> dumping packet2:");
