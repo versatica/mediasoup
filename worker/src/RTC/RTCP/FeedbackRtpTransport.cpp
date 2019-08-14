@@ -641,7 +641,6 @@ namespace RTC
 
 					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
 					offset += 1u;
-					len -= 1u;
 				}
 			}
 			else if (this->status == Status::LargeDelta)
@@ -657,7 +656,6 @@ namespace RTC
 				{
 					deltas.push_back(Utils::Byte::Get2Bytes(data, offset));
 					offset += 2u;
-					len -= 2u;
 				}
 			}
 
