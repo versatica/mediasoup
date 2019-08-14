@@ -92,7 +92,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			uint32_t ssrc{ 0 };
+			uint32_t ssrc{ 0u };
 			std::vector<ExtendedReportBlock*> reports;
 		};
 
@@ -117,12 +117,12 @@ namespace RTC
 
 		inline uint32_t ExtendedReportPacket::GetSsrc() const
 		{
-			return uint32_t{ ntohl(this->ssrc) };
+			return this->ssrc;
 		}
 
 		inline void ExtendedReportPacket::SetSsrc(uint32_t ssrc)
 		{
-			this->ssrc = uint32_t{ htonl(ssrc) };
+			this->ssrc = ssrc;
 		}
 
 		/* Inline ExtendedReportPacket instance methods. */
@@ -156,7 +156,7 @@ namespace RTC
 
 		inline size_t ExtendedReportPacket::GetSize() const
 		{
-			size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc);
+			size_t size = sizeof(Packet::CommonHeader) + 4u /*ssrc*/;
 
 			for (auto* report : this->reports)
 			{
