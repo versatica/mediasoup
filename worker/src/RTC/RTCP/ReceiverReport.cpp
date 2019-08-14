@@ -119,7 +119,7 @@ namespace RTC
 			size_t offset = Packet::Serialize(buffer);
 
 			// Copy the SSRC.
-			std::memcpy(buffer + sizeof(Packet::CommonHeader), &this->ssrc, 4u);
+			Utils::Byte::Set4Bytes(buffer, sizeof(Packet::CommonHeader), this->ssrc);
 			offset += 4u;
 
 			// Serialize reports.
@@ -136,7 +136,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<ReceiverReportPacket>");
-			MS_DUMP("  ssrc: %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
+			MS_DUMP("  ssrc: %" PRIu32, this->ssrc);
 			for (auto* report : this->reports)
 			{
 				report->Dump();
