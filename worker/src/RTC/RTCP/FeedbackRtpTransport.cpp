@@ -95,13 +95,6 @@ namespace RTC
 
 					this->isCorrect = false;
 
-					// Delete all created chunks.
-					for (auto* chunk : this->chunks)
-					{
-						delete chunk;
-					}
-					this->chunks.clear();
-
 					return;
 				}
 
