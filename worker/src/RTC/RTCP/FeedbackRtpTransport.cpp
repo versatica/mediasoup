@@ -78,12 +78,17 @@ namespace RTC
 			this->referenceTime       = static_cast<int32_t>(Utils::Byte::Get3Bytes(data, 4));
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
 
-			size_t offset = FeedbackRtpTransportPacket::fixedHeaderSize;
+			// Make contentData point to the beginning of the chunks.
+			uint8_t* contentData = data + FeedbackRtpTransportPacket::fixedHeaderSize;
+			// Make contentLen be the available length for chunks.
+			size_t contentLen =
+			  len - sizeof(CommonHeader) - sizeof(FeedbackPacket::Header) - FeedbackRtpTransportPacket::fixedHeaderSize;
+			size_t offset{ 0u };
 			size_t count{ 0u };
 
-			while (count < this->packetStatusCount && len > offset)
+			while (count < this->packetStatusCount && contentLen > offset)
 			{
-				if (len - offset < 2u)
+				if (contentLen - offset < 2u)
 				{
 					MS_WARN_TAG(rtcp, "not enough space for chunk");
 
@@ -99,7 +104,7 @@ namespace RTC
 					return;
 				}
 
-				auto* chunk = Chunk::Parse(data + offset, len - offset, this->packetStatusCount - count);
+				auto* chunk = Chunk::Parse(contentData + offset, contentLen - offset, this->packetStatusCount - count);
 
 				if (!chunk)
 				{
@@ -126,12 +131,12 @@ namespace RTC
 
 			auto chunksIt = this->chunks.begin();
 
-			while (chunksIt != this->chunks.end() && len > offset)
+			while (chunksIt != this->chunks.end() && contentLen > offset)
 			{
 				size_t deltasOffset{ 0u };
 				auto* chunk = *chunksIt;
 
-				if (!chunk->AddDeltas(data + offset, len - offset, this->deltas, deltasOffset))
+				if (!chunk->AddDeltas(contentData + offset, contentLen - offset, this->deltas, deltasOffset))
 				{
 					MS_WARN_TAG(rtcp, "not enough space for deltas");
 

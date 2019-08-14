@@ -1,6 +1,10 @@
 #include "RTC/RTCP/FuzzerFeedbackRtpTransport.hpp"
 #include <cstring> // std::memory()
 
+	// TODO: REMOVE
+	#include "Logger.hpp"
+	#define MS_CLASS "FuzzerFeedbackRtpTransport"
+
 void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTransportPacket* packet)
 {
 	static constexpr size_t RtcpMtu{ 2500u };
@@ -29,6 +33,9 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 
 	auto* packet2 = ::RTC::RTCP::FeedbackRtpTransportPacket::Parse(data2, len2);
 
+	if (!packet2)
+		MS_DUMP("------------------- packet2 is nullptr! THIS SHOULD NOT HAPPEN!");
+
 	for (uint16_t seq{ 0u }; seq < 30u; ++seq)
 	{
 		// Generate lost seqs.
@@ -39,7 +46,8 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 	}
 
 	packet2->Dump();
-	packet2->Serialize(::RTC::RTCP::Buffer);
+	if (packet2->IsSerializable())
+		packet2->Serialize(::RTC::RTCP::Buffer);
 	packet2->GetCount();
 	packet2->GetSize();
 	packet2->IsFull();
