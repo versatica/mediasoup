@@ -53,13 +53,13 @@ namespace RTC
 
 			struct ReceivedPacket
 			{
-				ReceivedPacket(uint16_t sequenceNumber, uint16_t delta)
+				ReceivedPacket(uint16_t sequenceNumber, int16_t delta)
 				  : sequenceNumber(sequenceNumber), delta(delta)
 				{
 				}
 
 				uint16_t sequenceNumber;
-				uint16_t delta;
+				int16_t delta;
 			};
 
 			struct Context
@@ -79,11 +79,11 @@ namespace RTC
 				virtual ~Chunk() = default;
 
 				virtual bool AddDeltas(
-				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) = 0;
-				virtual void Dump() const                                                         = 0;
-				virtual size_t GetCount() const                                                   = 0;
-				virtual size_t GetReceivedStatusCount() const                                     = 0;
-				virtual size_t Serialize(uint8_t* buffer)                                         = 0;
+				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) = 0;
+				virtual void Dump() const                                                        = 0;
+				virtual size_t GetCount() const                                                  = 0;
+				virtual size_t GetReceivedStatusCount() const                                    = 0;
+				virtual size_t Serialize(uint8_t* buffer)                                        = 0;
 			};
 
 			class RunLengthChunk : public Chunk
@@ -94,7 +94,7 @@ namespace RTC
 
 			public:
 				bool AddDeltas(
-				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
+				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) override;
 				Status GetStatus() const;
 				void Dump() const override;
 				size_t GetCount() const override;
@@ -114,7 +114,7 @@ namespace RTC
 
 			public:
 				bool AddDeltas(
-				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
+				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) override;
 				void Dump() const override;
 				size_t GetCount() const override;
 				size_t GetReceivedStatusCount() const override;
@@ -132,7 +132,7 @@ namespace RTC
 
 			public:
 				bool AddDeltas(
-				  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset) override;
+				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) override;
 				void Dump() const override;
 				size_t GetCount() const override;
 				size_t GetReceivedStatusCount() const override;
@@ -146,7 +146,7 @@ namespace RTC
 			static size_t fixedHeaderSize;
 			static uint16_t maxMissingPackets;
 			static uint16_t maxPacketStatusCount;
-			static uint16_t maxPacketDelta;
+			static int16_t maxPacketDelta;
 
 		public:
 			static FeedbackRtpTransportPacket* Parse(const uint8_t* data, size_t len);
@@ -179,7 +179,7 @@ namespace RTC
 			size_t GetSize() const override;
 
 		private:
-			void FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta);
+			void FillChunk(uint16_t previousSequenceNumber, uint16_t sequenceNumber, int16_t delta);
 			void CreateRunLengthChunk(Status status, uint16_t count);
 			void CreateOneBitVectorChunk(std::vector<Status>& statuses);
 			void CreateTwoBitVectorChunk(std::vector<Status>& statuses);
@@ -194,7 +194,7 @@ namespace RTC
 			uint8_t feedbackPacketCount{ 0u };
 			std::vector<ReceivedPacket> receivedPackets;
 			std::vector<Chunk*> chunks;
-			std::vector<uint16_t> deltas;
+			std::vector<int16_t> deltas;
 			Context context;
 			size_t deltasAndChunksSize{ 0u };
 			bool isCorrect{ true };

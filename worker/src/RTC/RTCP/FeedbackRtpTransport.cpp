@@ -16,7 +16,7 @@ namespace RTC
 		size_t FeedbackRtpTransportPacket::fixedHeaderSize{ 8u };
 		uint16_t FeedbackRtpTransportPacket::maxMissingPackets{ (1 << 13) - 1 };
 		uint16_t FeedbackRtpTransportPacket::maxPacketStatusCount{ (1 << 16) - 1 };
-		uint16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
+		int16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
 
 		// clang-format off
 		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
@@ -221,7 +221,7 @@ namespace RTC
 			// NOTE: Read it as uint 64 to detect long elapsed times.
 			uint64_t delta64 = (timestamp - this->highestTimestamp) * 4;
 
-			if (delta64 > FeedbackRtpTransportPacket::maxPacketDelta)
+			if (delta64 > static_cast<uint64_t>(FeedbackRtpTransportPacket::maxPacketDelta))
 			{
 				MS_WARN_DEV(
 				  "RTP packet delta exceeded [highestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
@@ -231,8 +231,8 @@ namespace RTC
 				return false;
 			}
 
-			// Delta in 16 bits.
-			auto delta = static_cast<uint16_t>(delta64);
+			// Delta in 16 bits signed.
+			auto delta = static_cast<int16_t>(delta64);
 
 			// Check whether another chunks and corresponding delta infos could be added.
 			{
@@ -295,7 +295,8 @@ namespace RTC
 
 				for (auto& packet : this->receivedPackets)
 				{
-					MS_DUMP("  seqNumber:%d, delta(ms):%d", packet.sequenceNumber, packet.delta / 4);
+					MS_DUMP(
+					  "  seqNumber:%" PRIu16 ", delta(ms):%" PRIi16, packet.sequenceNumber, packet.delta / 4);
 				}
 			}
 			else
@@ -308,9 +309,9 @@ namespace RTC
 				while (receivedPacketIt != this->receivedPackets.end())
 				{
 					MS_DUMP(
-					  "    seqNumber:%" PRIu16 ", delta(ms):%" PRIu16,
+					  "    seqNumber:%" PRIu16 ", delta(ms):%" PRIi16,
 					  receivedPacketIt->sequenceNumber,
-					  static_cast<uint16_t>(receivedPacketIt->delta / 4));
+					  receivedPacketIt->delta / 4);
 
 					if (receivedPacketIt->delta != *deltaIt)
 						MS_ERROR("delta block does not coincide with the received value");
@@ -385,19 +386,11 @@ namespace RTC
 		}
 
 		void FeedbackRtpTransportPacket::FillChunk(
-		  uint16_t previousSequenceNumber, uint16_t sequenceNumber, uint16_t delta)
+		  uint16_t previousSequenceNumber, uint16_t sequenceNumber, int16_t delta)
 		{
 			MS_TRACE();
 
 			auto missingPackets = static_cast<uint16_t>(sequenceNumber - (previousSequenceNumber + 1));
-
-			// MS_DEBUG_DEV(
-			//   "[sequenceNumber:%" PRIu16 ", delta:%" PRIu16 ", missingPackets:%" PRIu16
-			//   ", packetStatusCount:%" PRIu16 "]",
-			//   sequenceNumber,
-			//   delta,
-			//   missingPackets,
-			//   this->packetStatusCount);
 
 			if (missingPackets > 0)
 			{
@@ -611,7 +604,7 @@ namespace RTC
 		}
 
 		bool FeedbackRtpTransportPacket::RunLengthChunk::AddDeltas(
-		  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset)
+		  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset)
 		{
 			MS_TRACE();
 
@@ -631,7 +624,9 @@ namespace RTC
 
 				for (size_t i{ 0 }; i < this->count; ++i)
 				{
-					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
+					auto delta = static_cast<int16_t>(Utils::Byte::Get1Byte(data, offset));
+
+					deltas.push_back(delta);
 					offset += 1u;
 				}
 			}
@@ -646,7 +641,9 @@ namespace RTC
 
 				for (size_t i{ 0 }; i < this->count; ++i)
 				{
-					deltas.push_back(Utils::Byte::Get2Bytes(data, offset));
+					auto delta = static_cast<int16_t>(Utils::Byte::Get2Bytes(data, offset));
+
+					deltas.push_back(delta);
 					offset += 2u;
 				}
 			}
@@ -707,7 +704,7 @@ namespace RTC
 		}
 
 		bool FeedbackRtpTransportPacket::OneBitVectorChunk::AddDeltas(
-		  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset)
+		  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset)
 		{
 			MS_TRACE();
 
@@ -726,7 +723,9 @@ namespace RTC
 						return false;
 					}
 
-					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
+					auto delta = static_cast<int16_t>(Utils::Byte::Get1Byte(data, offset));
+
+					deltas.push_back(delta);
 					offset += 1u;
 					len -= 1u;
 
@@ -818,7 +817,7 @@ namespace RTC
 		}
 
 		bool FeedbackRtpTransportPacket::TwoBitVectorChunk::AddDeltas(
-		  const uint8_t* data, size_t len, std::vector<uint16_t>& deltas, size_t& offset)
+		  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset)
 		{
 			MS_TRACE();
 
@@ -837,7 +836,9 @@ namespace RTC
 						return false;
 					}
 
-					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
+					auto delta = static_cast<int16_t>(Utils::Byte::Get1Byte(data, offset));
+
+					deltas.push_back(delta);
 					offset += 1u;
 					len -= 1u;
 
@@ -852,7 +853,9 @@ namespace RTC
 						return false;
 					}
 
-					deltas.push_back(Utils::Byte::Get2Bytes(data, offset));
+					auto delta = static_cast<int16_t>(Utils::Byte::Get2Bytes(data, offset));
+
+					deltas.push_back(delta);
 					offset += 2u;
 					len -= 2u;
 
