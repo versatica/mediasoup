@@ -83,7 +83,7 @@ namespace RTC
 
 			while (count < this->packetStatusCount && len > offset)
 			{
-				if (len - offset < sizeof(uint16_t))
+				if (len - offset < 2u)
 				{
 					MS_WARN_TAG(rtcp, "not enough space for chunk");
 
@@ -118,9 +118,9 @@ namespace RTC
 				}
 
 				this->chunks.push_back(chunk);
-				this->deltasAndChunksSize += sizeof(uint16_t);
+				this->deltasAndChunksSize += 2u;
 
-				offset += sizeof(uint16_t);
+				offset += 2u;
 				count += chunk->GetCount();
 			}
 
@@ -242,8 +242,8 @@ namespace RTC
 				size += this->deltasAndChunksSize;
 
 				// Maximum size needed for another chunk and its delta infos.
-				size += sizeof(uint16_t);
-				size += sizeof(uint16_t);
+				size += 2u;
+				size += 2u;
 
 				// 32 bits padding.
 				size += (-size) & 3;
@@ -361,12 +361,12 @@ namespace RTC
 				if (delta <= 255)
 				{
 					Utils::Byte::Set1Byte(buffer, offset, delta);
-					offset += sizeof(uint8_t);
+					offset += 1u;
 				}
 				else
 				{
 					Utils::Byte::Set2Bytes(buffer, offset, delta);
-					offset += sizeof(uint16_t);
+					offset += 2u;
 				}
 			}
 
@@ -461,7 +461,7 @@ namespace RTC
 			this->context.statuses.emplace_back(status);
 			this->deltas.emplace_back(delta);
 			this->deltasAndChunksSize +=
-			  (status == Status::SmallDelta) ? sizeof(uint8_t) : sizeof(uint16_t);
+			  (status == Status::SmallDelta) ? 1u : 2u;
 
 			// Update context info.
 
@@ -505,7 +505,7 @@ namespace RTC
 
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += count;
-			this->deltasAndChunksSize += sizeof(uint16_t);
+			this->deltasAndChunksSize += 2u;
 		}
 
 		void FeedbackRtpTransportPacket::CreateOneBitVectorChunk(std::vector<Status>& statuses)
@@ -514,7 +514,7 @@ namespace RTC
 
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += statuses.size();
-			this->deltasAndChunksSize += sizeof(uint16_t);
+			this->deltasAndChunksSize += 2u;
 		}
 
 		void FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(std::vector<Status>& statuses)
@@ -523,7 +523,7 @@ namespace RTC
 
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += statuses.size();
-			this->deltasAndChunksSize += sizeof(uint16_t);
+			this->deltasAndChunksSize += 2u;
 		}
 
 		void FeedbackRtpTransportPacket::AddPendingChunks()
@@ -553,7 +553,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (len < sizeof(uint16_t))
+			if (len < 2u)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for FeedbackRtpTransportPacket chunk, discarded");
 
@@ -602,7 +602,7 @@ namespace RTC
 			}
 			else if (this->status == Status::SmallDelta)
 			{
-				if (len < this->count * sizeof(uint8_t))
+				if (len < this->count * 1u)
 				{
 					MS_WARN_TAG(rtcp, "not enough space for small deltas");
 
@@ -621,12 +621,12 @@ namespace RTC
 					//   FuzzerFeedbackRtpTransport.cpp:30:18
 
 					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
-					offset += sizeof(uint8_t);
+					offset += 1u;
 				}
 			}
 			else if (this->status == Status::LargeDelta)
 			{
-				if (len < this->count * sizeof(uint16_t))
+				if (len < this->count * 2u)
 				{
 					MS_WARN_TAG(rtcp, "not enough space for large deltas");
 
@@ -636,7 +636,7 @@ namespace RTC
 				for (size_t i{ 0 }; i < this->count; ++i)
 				{
 					deltas.push_back(Utils::Byte::Get2Bytes(data, offset));
-					offset += sizeof(uint16_t);
+					offset += 2u;
 				}
 			}
 
@@ -664,7 +664,7 @@ namespace RTC
 
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);
 
-			return sizeof(uint16_t);
+			return 2u;
 		}
 
 		FeedbackRtpTransportPacket::OneBitVectorChunk::OneBitVectorChunk(uint16_t buffer, size_t count)
@@ -694,7 +694,7 @@ namespace RTC
 				}
 				else if (status == Status::SmallDelta)
 				{
-					if (len < sizeof(uint8_t))
+					if (len < 1u)
 					{
 						MS_WARN_TAG(rtcp, "not enough space for small delta");
 
@@ -702,7 +702,7 @@ namespace RTC
 					}
 
 					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
-					offset += sizeof(uint8_t);
+					offset += 1u;
 
 					continue;
 				}
@@ -759,7 +759,7 @@ namespace RTC
 
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);
 
-			return sizeof(uint16_t);
+			return 2u;
 		}
 
 		FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(uint16_t buffer, size_t count)
@@ -789,7 +789,7 @@ namespace RTC
 				}
 				else if (status == Status::SmallDelta)
 				{
-					if (len < sizeof(uint8_t))
+					if (len < 1u)
 					{
 						MS_WARN_TAG(rtcp, "not enough space for small delta");
 
@@ -797,13 +797,13 @@ namespace RTC
 					}
 
 					deltas.push_back(Utils::Byte::Get1Byte(data, offset));
-					offset += sizeof(uint8_t);
+					offset += 1u;
 
 					continue;
 				}
 				else if (status == Status::LargeDelta)
 				{
-					if (len < sizeof(uint16_t))
+					if (len < 2u)
 					{
 						MS_WARN_TAG(rtcp, "not enough space for large delta");
 
@@ -811,7 +811,7 @@ namespace RTC
 					}
 
 					deltas.push_back(Utils::Byte::Get2Bytes(data, offset));
-					offset += sizeof(uint16_t);
+					offset += 2u;
 
 					continue;
 				}
@@ -864,7 +864,7 @@ namespace RTC
 
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);
 
-			return sizeof(uint16_t);
+			return 2u;
 		}
 	} // namespace RTCP
 } // namespace RTC

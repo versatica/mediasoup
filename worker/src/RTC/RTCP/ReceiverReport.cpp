@@ -73,7 +73,7 @@ namespace RTC
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			// Ensure there is space for the common header and the SSRC of packet sender.
-			if (len < sizeof(CommonHeader) + sizeof(uint32_t))
+			if (len < sizeof(CommonHeader) + 4u)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for receiver report packet, packet discarded");
 
@@ -86,7 +86,7 @@ namespace RTC
 			  Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(header), sizeof(CommonHeader)));
 
 			if (offset == 0)
-				offset = sizeof(Packet::CommonHeader) + sizeof(uint32_t) /* ssrc */;
+				offset = sizeof(Packet::CommonHeader) + 4u /* ssrc */;
 
 			uint8_t count = header->count;
 

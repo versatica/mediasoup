@@ -55,11 +55,11 @@ namespace RTC
 		{
 			size_t size = sizeof(Packet::CommonHeader);
 
-			size += ssrcs.size() * sizeof(uint32_t);
+			size += ssrcs.size() * 4u;
 
 			if (!this->reason.empty())
 			{
-				size += sizeof(uint8_t); // Length field.
+				size += 1u; // Length field.
 				size += this->reason.length();
 			}
 

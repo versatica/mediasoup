@@ -37,7 +37,7 @@ namespace RTC
 			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// data size must be >= header + length value.
-			if (len < sizeof(Header) || len < sizeof(uint8_t) * 2 + header->length)
+			if (len < sizeof(Header) || len < 1u * 2 + header->length)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for SDES item, discarded");
 
@@ -112,7 +112,7 @@ namespace RTC
 			MS_TRACE();
 
 			// data size must be > SSRC field.
-			if (len < sizeof(uint32_t) /* ssrc */)
+			if (len < 4u /* ssrc */)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for SDES chunk, discarded");
 
@@ -121,7 +121,7 @@ namespace RTC
 
 			std::unique_ptr<SdesChunk> chunk(new SdesChunk(Utils::Byte::Get4Bytes(data, 0)));
 
-			size_t offset = sizeof(uint32_t) /* ssrc */;
+			size_t offset = 4u /* ssrc */;
 
 			while (len > offset)
 			{

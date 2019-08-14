@@ -60,7 +60,7 @@ namespace RTC
 			size_t numSsrcs = data[4];
 
 			// Ensure there is space for the the announced number of SSRC feedbacks.
-			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8 + (numSsrcs * sizeof(uint32_t)))
+			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8 + (numSsrcs * 4u))
 			{
 				MS_WARN_TAG(
 				  rtcp, "invalid payload size (%zu bytes) for the given number of ssrcs (%zu)", len, numSsrcs);
@@ -103,7 +103,7 @@ namespace RTC
 			for (size_t n{ 0 }; n < numSsrcs; ++n)
 			{
 				this->ssrcs.push_back(Utils::Byte::Get4Bytes(data, index));
-				index += sizeof(uint32_t);
+				index += 4u;
 			}
 		}
 

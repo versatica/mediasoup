@@ -97,7 +97,7 @@ namespace RTC
 
 		inline size_t FeedbackPsRembPacket::GetSize() const
 		{
-			return FeedbackPsPacket::GetSize() + 8 + (sizeof(uint32_t) * this->ssrcs.size());
+			return FeedbackPsPacket::GetSize() + 8 + (4u * this->ssrcs.size());
 		}
 	} // namespace RTCP
 } // namespace RTC
