@@ -45,9 +45,9 @@ namespace RTC
 		{
 			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
 
-			if (len < availableLen)
+			if (len > availableLen)
 			{
-				MS_WARN_TAG(rtcp, "not enough space for Feedback packet announced length, discarded");
+				MS_WARN_TAG(rtcp, "packet announced length exceeds the available buffer length, discarded");
 
 				this->isCorrect = false;
 
