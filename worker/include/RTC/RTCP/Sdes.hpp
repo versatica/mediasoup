@@ -87,7 +87,7 @@ namespace RTC
 			Iterator End();
 
 		private:
-			uint32_t ssrc{ 0 };
+			uint32_t ssrc{ 0u };
 			std::vector<SdesItem*> items;
 		};
 
@@ -152,7 +152,7 @@ namespace RTC
 
 		inline SdesChunk::SdesChunk(uint32_t ssrc)
 		{
-			this->ssrc = uint32_t{ htonl(ssrc) };
+			this->ssrc = ssrc;
 		}
 
 		inline SdesChunk::SdesChunk(SdesChunk* chunk)
@@ -175,26 +175,26 @@ namespace RTC
 
 		inline size_t SdesChunk::GetSize() const
 		{
-			size_t size = sizeof(this->ssrc);
+			size_t size = 4u /*ssrc*/;
 
 			for (auto* item : this->items)
 			{
 				size += item->GetSize();
 			}
 
-			// http://stackoverflow.com/questions/11642210/computing-padding-required-for-n-byte-alignment
 			// Consider pading to 32 bits (4 bytes) boundary.
+			// http://stackoverflow.com/questions/11642210/computing-padding-required-for-n-byte-alignment
 			return (size + 3) & ~3;
 		}
 
 		inline uint32_t SdesChunk::GetSsrc() const
 		{
-			return uint32_t{ ntohl(this->ssrc) };
+			return this->ssrc;
 		}
 
 		inline void SdesChunk::SetSsrc(uint32_t ssrc)
 		{
-			this->ssrc = uint32_t{ htonl(ssrc) };
+			this->ssrc = htonl(ssrc);
 		}
 
 		inline void SdesChunk::AddItem(SdesItem* item)
