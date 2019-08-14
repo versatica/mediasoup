@@ -6,6 +6,8 @@
 
 void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTransportPacket* packet)
 {
+	static size_t RtcpMtu{ 1500u };
+
 		MS_DUMP(">>>>>>>>>> dumping original packet:");
 	packet->Dump();
 	// auto len = packet->Serialize(::RTC::RTCP::Buffer);
@@ -37,8 +39,10 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 			continue;
 
 		// Do not produce an assert.
-		if (!packet2->IsFull())
-			packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
+		if (packet2->IsFull())
+			break;
+
+		packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
 	}
 
 		MS_DUMP(">>>>>>>>>> dumping packet2:");
