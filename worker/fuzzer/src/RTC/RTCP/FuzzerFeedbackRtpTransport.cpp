@@ -1,5 +1,4 @@
 #include "RTC/RTCP/FuzzerFeedbackRtpTransport.hpp"
-#include <cstring> // std::memory()
 
 	// TODO: REMOVE
 	#include "Logger.hpp"
@@ -7,12 +6,10 @@
 
 void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTransportPacket* packet)
 {
-	static constexpr size_t RtcpMtu{ 2500u };
-
-		MS_DUMP("dumping packet");
+		MS_DUMP(">>>>>>>>>> dumping original packet:");
 	packet->Dump();
-	auto len = packet->Serialize(::RTC::RTCP::Buffer);
-		MS_DUMP_DATA(packet->GetData(), len);
+	// auto len = packet->Serialize(::RTC::RTCP::Buffer);
+		// MS_DUMP_DATA(packet->GetData(), len);
 	packet->GetCount();
 	packet->GetSize();
 	packet->IsFull();
@@ -25,15 +22,9 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 	packet->GetHighestSequenceNumber();
 	packet->GetHighestTimestamp();
 	packet->Serialize(::RTC::RTCP::Buffer);
-	packet->SetFeedbackPacketCount(0u);
 
 	// We'll increase the packet size, so must clone it into a bigger buffer.
-	size_t len2 = packet->GetSize() + 2000u;
-	uint8_t data2[len2];
-
-	std::memcpy(data2, packet->GetData(), packet->GetSize());
-
-	auto* packet2 = ::RTC::RTCP::FeedbackRtpTransportPacket::Parse(data2, packet->GetSize());
+	auto* packet2 = ::RTC::RTCP::FeedbackRtpTransportPacket::Parse(::RTC::RTCP::Buffer, packet->GetSize());
 
 	// TODO
 	if (!packet2)
@@ -50,7 +41,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 	// 		packet2->AddPacket(seq, 10000000 + (seq * 10), RtcpMtu);
 	// }
 
-		MS_DUMP("dumping packet2:");
+		MS_DUMP(">>>>>>>>>> dumping packet2:");
 	packet2->Dump();
 	if (packet2->IsSerializable())
 		packet2->Serialize(::RTC::RTCP::Buffer);
