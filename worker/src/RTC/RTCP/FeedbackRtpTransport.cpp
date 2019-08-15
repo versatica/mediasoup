@@ -259,10 +259,15 @@ namespace RTC
 			}
 
 			// Deltas are represented as multiples of 250us.
-			// NOTE: Read it as uint 64 to detect long elapsed times.
-			uint64_t delta64 = (timestamp - this->highestTimestamp) * 4;
+			// NOTE: Read it as int 64 to detect long elapsed times.
+			int64_t delta64 = (timestamp - this->highestTimestamp) * 4;
 
-			if (delta64 > static_cast<uint64_t>(FeedbackRtpTransportPacket::maxPacketDelta))
+			// clang-format off
+			if (
+				delta64 > FeedbackRtpTransportPacket::maxPacketDelta ||
+				delta64 < -1 * FeedbackRtpTransportPacket::maxPacketDelta
+			)
+			// clang-format on
 			{
 				MS_WARN_DEV(
 				  "RTP packet delta exceeded [highestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
