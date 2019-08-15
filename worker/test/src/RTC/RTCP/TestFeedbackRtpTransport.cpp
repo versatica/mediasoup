@@ -13,7 +13,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 	uint32_t senderSsrc{ 1111u };
 	uint32_t mediaSsrc{ 2222u };
 
-	SECTION("create FeedbackRtpTransportPacketPacket, run length chunk")
+	SECTION("create FeedbackRtpTransportPacket, run length chunk")
 	{
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
@@ -33,9 +33,15 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet->AddPacket(1011, 10000000, RtcpMtu);
 		packet->AddPacket(1012, 10000000, RtcpMtu);
 		packet->AddPacket(1013, 10000000, RtcpMtu);
-		packet->AddPacket(1014, 10000000, RtcpMtu);
 
-		REQUIRE(packet);
+		REQUIRE(packet->GetHighestSequenceNumber() == 1013);
+		REQUIRE(packet->GetHighestTimestamp() == 10000000);
+
+		// Add a packet with greater seq number but older timestamp.
+		packet->AddPacket(1014, 10000000 - 10, RtcpMtu);
+
+		REQUIRE(packet->GetHighestSequenceNumber() == 1014);
+		REQUIRE(packet->GetHighestTimestamp() == 10000000);
 
 		SECTION("serialize packet instance")
 		{
@@ -64,7 +70,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("create FeedbackRtpTransportPacketPacket, run length chunk (2)")
+	SECTION("create FeedbackRtpTransportPacket, run length chunk (2)")
 	{
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
@@ -100,7 +106,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("create FeedbackRtpTransportPacketPacket, mixed chunks")
+	SECTION("create FeedbackRtpTransportPacket, mixed chunks")
 	{
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
@@ -140,7 +146,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("create FeedbackRtpTransportPacketPacket, incomplete two bit vector chunk")
+	SECTION("create FeedbackRtpTransportPacket, incomplete two bit vector chunk")
 	{
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
@@ -176,7 +182,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("create two sequential FeedbackRtpTransportPacketPackets")
+	SECTION("create two sequential FeedbackRtpTransportPackets")
 	{
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
@@ -251,7 +257,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		delete packet;
 	}
 
-	SECTION("parse FeedbackRtpTransportPacketPacket, one bit vector chunk")
+	SECTION("parse FeedbackRtpTransportPacket, one bit vector chunk")
 	{
 		// clang-format off
 		uint8_t data[] =
