@@ -296,7 +296,9 @@ namespace RTC
 				for (auto& packet : this->receivedPackets)
 				{
 					MS_DUMP(
-					  "  seqNumber:%" PRIu16 ", delta(ms):%" PRIi16, packet.sequenceNumber, packet.delta / 4);
+					  "  seqNumber:%" PRIu16 ", delta(ms):%" PRIi16,
+					  packet.sequenceNumber,
+					  static_cast<int16_t>(packet.delta / 4));
 				}
 			}
 			else
@@ -311,7 +313,7 @@ namespace RTC
 					MS_DUMP(
 					  "    seqNumber:%" PRIu16 ", delta(ms):%" PRIi16,
 					  receivedPacketIt->sequenceNumber,
-					  receivedPacketIt->delta / 4);
+					  static_cast<int16_t>(receivedPacketIt->delta / 4));
 
 					if (receivedPacketIt->delta != *deltaIt)
 						MS_ERROR("delta block does not coincide with the received value");
