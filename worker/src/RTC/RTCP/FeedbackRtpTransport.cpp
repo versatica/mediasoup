@@ -306,9 +306,12 @@ namespace RTC
 			// Fill a chunk.
 			FillChunk(this->highestSequenceNumber, sequenceNumber, delta);
 
-			// Update highest sequence number and timestamp seen.
+			// Update highest seen sequence number.
 			this->highestSequenceNumber = sequenceNumber;
-			this->highestTimestamp      = timestamp;
+
+			// Update highest seen timestamp.
+			if (timestamp > this->highestTimestamp)
+				this->highestTimestamp = timestamp;
 
 			// Add entry to received packets container.
 			this->receivedPackets.emplace_back(sequenceNumber, delta);
