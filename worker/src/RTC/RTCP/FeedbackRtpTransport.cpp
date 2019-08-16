@@ -412,7 +412,7 @@ namespace RTC
 			// Serialize deltas.
 			for (auto delta : this->deltas)
 			{
-				if (delta <= 255)
+				if (delta >= 0 && delta <= 255)
 				{
 					Utils::Byte::Set1Byte(buffer, offset, delta);
 					offset += 1u;
@@ -488,7 +488,11 @@ namespace RTC
 				}
 			}
 
-			Status status = (delta <= 255) ? Status::SmallDelta : Status::LargeDelta;
+			Status status;
+			if (delta >= 0 && delta <= 255)
+				status = Status::SmallDelta;
+			else
+				status = Status::LargeDelta;
 
 			// Create a long run chunk before processing this packet, if needed.
 			// clang-format off
