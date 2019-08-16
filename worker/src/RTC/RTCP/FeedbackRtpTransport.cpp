@@ -162,6 +162,7 @@ namespace RTC
 			if (this->packetStatusCount != count)
 			{
 				MS_WARN_TAG(rtcp, "provided packet status count does not match with content");
+
 				this->isCorrect = false;
 
 				return;

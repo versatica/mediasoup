@@ -17,6 +17,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 	{
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
+		REQUIRE(packet);
+
 		packet->SetFeedbackPacketCount(1);
 		packet->AddPacket(999, 10000000, RtcpMtu);  // Pre base.
 		packet->AddPacket(1000, 10000000, RtcpMtu); // Base.
@@ -262,26 +264,64 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		// clang-format off
 		uint8_t data[] =
 		{
-			0x8F, 0xCD, 0x00, 0x07, 0xFA, 0x17, 0xFA, 0x17, 0x09, 0xFA, 0xFF,
-			0x67, 0x00, 0x27, 0x00, 0x0D, 0x5F, 0xC2, 0xF1, 0x03, 0xBF, 0x8E,
-			0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x04, 0x00
+			0x8F, 0xCD, 0x00, 0x07,
+			0xFA, 0x17, 0xFA, 0x17,
+			0x09, 0xFA, 0xFF, 0x67,
+			0x00, 0x27, 0x00, 0x0D,
+			0x5F, 0xC2, 0xF1, 0x03,
+			0xBF, 0x8E, 0x10, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x1C, 0x04, 0x00
 		};
 		// clang-format on
 
-		auto* packet = FeedbackRtpTransportPacket::Parse(data, 32);
+		auto* packet = FeedbackRtpTransportPacket::Parse(data, sizeof(data));
 
 		REQUIRE(packet);
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 13);
+		REQUIRE(packet->GetReferenceTime() == 6275825); // 0x5FC2F1
 		REQUIRE(packet->GetFeedbackPacketCount() == 3);
-		REQUIRE(packet->GetReferenceTime() == 6275825);
 
 		SECTION("parse serialized buffer")
 		{
 			uint8_t buffer[1024];
 			auto len = packet->Serialize(buffer);
 
-			REQUIRE(len == 32);
+			REQUIRE(len == sizeof(data));
+			REQUIRE(std::memcmp(data, buffer, len) == 0);
+		}
+
+		delete packet;
+	}
+
+	SECTION("parse FeedbackRtpTransportPacket with negative reference time")
+	{
+		// clang-format off
+		uint8_t data[] =
+		{
+			0x8F, 0xCD, 0x00, 0x04,
+			0xFA, 0x17, 0xFA, 0x17,
+			0x09, 0xFA, 0xFF, 0x67,
+			0x00, 0x27, 0x00, 0x00,
+			0xFF, 0xFF, 0xFE, 0x01
+		};
+		// clang-format on
+
+		auto* packet = FeedbackRtpTransportPacket::Parse(data, sizeof(data));
+
+		REQUIRE(packet);
+		REQUIRE(packet->GetBaseSequenceNumber() == 39);
+		REQUIRE(packet->GetPacketStatusCount() == 0);
+		REQUIRE(packet->GetReferenceTime() == -2); // 0xFFFFFE (signed 25 bits)
+		REQUIRE(packet->GetFeedbackPacketCount() == 1);
+
+		SECTION("parse serialized buffer")
+		{
+			uint8_t buffer[1024];
+			auto len = packet->Serialize(buffer);
+
+			REQUIRE(len == sizeof(data));
 			REQUIRE(std::memcmp(data, buffer, len) == 0);
 		}
 
