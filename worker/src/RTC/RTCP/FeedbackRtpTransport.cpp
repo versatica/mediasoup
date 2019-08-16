@@ -9,7 +9,7 @@
 #include <sstream>
 
 // Code taken and adapted from libwebrtc (byte_io.h).
-inline static int32_t parseReferencetime(uint8_t* buffer)
+inline static int32_t parseReferenceTime(uint8_t* buffer)
 {
 	int32_t referenceTime;
 	uint32_t unsignedVal = Utils::Byte::Get3Bytes(buffer, 0);
@@ -116,7 +116,7 @@ namespace RTC
 
 			this->baseSequenceNumber  = Utils::Byte::Get2Bytes(data, 0);
 			this->packetStatusCount   = Utils::Byte::Get2Bytes(data, 2);
-			this->referenceTime       = parseReferencetime(data + 4u);
+			this->referenceTime       = parseReferenceTime(data + 4u);
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
 
 			// Make contentData point to the beginning of the chunks.
