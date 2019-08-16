@@ -313,7 +313,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet);
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 0);
-		REQUIRE(packet->GetReferenceTime() == -2); // 0xFFFFFE (signed 25 bits)
+		REQUIRE(packet->GetReferenceTime() == -2); // 0xFFFFFE (signed 24 bits)
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 
 		SECTION("parse serialized buffer")
