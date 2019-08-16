@@ -218,108 +218,6 @@ namespace RTC
 			this->chunks.clear();
 		}
 
-		bool FeedbackRtpTransportPacket::AddPacket(
-		  uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen)
-		{
-			MS_TRACE();
-
-			MS_ASSERT(!IsFull(), "packet is full");
-
-			// Let's see if we must set our base.
-			if (this->highestTimestamp == 0u)
-			{
-				MS_DEBUG_DEV("setting base");
-
-				this->baseSequenceNumber    = sequenceNumber + 1;
-				this->referenceTime         = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
-				this->highestSequenceNumber = sequenceNumber;
-				this->highestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
-
-				return true;
-			}
-
-			// If the wide sequence number of the new packet is lower than the highest seen,
-			// ignore it.
-			// NOTE: Not very spec compliant but libwebrtc does it.
-			// Also ignore if the sequence number matches the highest seen.
-			if (!RTC::SeqManager<uint16_t>::IsSeqHigherThan(sequenceNumber, this->highestSequenceNumber))
-			{
-				return true;
-			}
-
-			// Check if there are too many missing packets.
-			{
-				auto missingPackets = sequenceNumber - (this->highestSequenceNumber + 1);
-
-				if (missingPackets > FeedbackRtpTransportPacket::maxMissingPackets)
-				{
-					MS_WARN_DEV("RTP missing packet number exceeded");
-
-					return false;
-				}
-			}
-
-			// Deltas are represented as multiples of 250us.
-			// NOTE: Read it as int 64 to detect long elapsed times.
-			int64_t delta64 = (timestamp - this->highestTimestamp) * 4;
-
-			// clang-format off
-			if (
-				delta64 > FeedbackRtpTransportPacket::maxPacketDelta ||
-				delta64 < -1 * FeedbackRtpTransportPacket::maxPacketDelta
-			)
-			// clang-format on
-			{
-				MS_WARN_DEV(
-				  "RTP packet delta exceeded [highestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
-				  this->highestTimestamp,
-				  timestamp);
-
-				return false;
-			}
-
-			// Delta in 16 bits signed.
-			auto delta = static_cast<int16_t>(delta64);
-
-			// Check whether another chunks and corresponding delta infos could be added.
-			{
-				// Fixed packet size.
-				size_t size = FeedbackRtpPacket::GetSize();
-
-				size += FeedbackRtpTransportPacket::fixedHeaderSize;
-				size += this->deltasAndChunksSize;
-
-				// Maximum size needed for another chunk and its delta infos.
-				size += 2u;
-				size += 2u;
-
-				// 32 bits padding.
-				size += (-size) & 3;
-
-				if (size > maxRtcpPacketLen)
-				{
-					MS_WARN_DEV("maximum packet size exceeded");
-
-					return false;
-				}
-			}
-
-			// Fill a chunk.
-			FillChunk(this->highestSequenceNumber, sequenceNumber, delta);
-
-			// Update highest seen sequence number.
-			this->highestSequenceNumber = sequenceNumber;
-
-			// Update highest seen timestamp.
-			if (timestamp > this->highestTimestamp)
-				this->highestTimestamp = timestamp;
-
-			// Add entry to received packets container.
-			this->receivedPackets.emplace_back(sequenceNumber, delta);
-
-			return true;
-		}
-
 		void FeedbackRtpTransportPacket::Dump() const
 		{
 			MS_TRACE();
@@ -435,6 +333,108 @@ namespace RTC
 			offset += padding;
 
 			return offset;
+		}
+
+		bool FeedbackRtpTransportPacket::AddPacket(
+		  uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(!IsFull(), "packet is full");
+
+			// Let's see if we must set our base.
+			if (this->highestTimestamp == 0u)
+			{
+				MS_DEBUG_DEV("setting base");
+
+				this->baseSequenceNumber    = sequenceNumber + 1;
+				this->referenceTime         = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
+				this->highestSequenceNumber = sequenceNumber;
+				this->highestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
+
+				return true;
+			}
+
+			// If the wide sequence number of the new packet is lower than the highest seen,
+			// ignore it.
+			// NOTE: Not very spec compliant but libwebrtc does it.
+			// Also ignore if the sequence number matches the highest seen.
+			if (!RTC::SeqManager<uint16_t>::IsSeqHigherThan(sequenceNumber, this->highestSequenceNumber))
+			{
+				return true;
+			}
+
+			// Check if there are too many missing packets.
+			{
+				auto missingPackets = sequenceNumber - (this->highestSequenceNumber + 1);
+
+				if (missingPackets > FeedbackRtpTransportPacket::maxMissingPackets)
+				{
+					MS_WARN_DEV("RTP missing packet number exceeded");
+
+					return false;
+				}
+			}
+
+			// Deltas are represented as multiples of 250us.
+			// NOTE: Read it as int 64 to detect long elapsed times.
+			int64_t delta64 = (timestamp - this->highestTimestamp) * 4;
+
+			// clang-format off
+			if (
+				delta64 > FeedbackRtpTransportPacket::maxPacketDelta ||
+				delta64 < -1 * FeedbackRtpTransportPacket::maxPacketDelta
+			)
+			// clang-format on
+			{
+				MS_WARN_DEV(
+				  "RTP packet delta exceeded [highestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
+				  this->highestTimestamp,
+				  timestamp);
+
+				return false;
+			}
+
+			// Delta in 16 bits signed.
+			auto delta = static_cast<int16_t>(delta64);
+
+			// Check whether another chunks and corresponding delta infos could be added.
+			{
+				// Fixed packet size.
+				size_t size = FeedbackRtpPacket::GetSize();
+
+				size += FeedbackRtpTransportPacket::fixedHeaderSize;
+				size += this->deltasAndChunksSize;
+
+				// Maximum size needed for another chunk and its delta infos.
+				size += 2u;
+				size += 2u;
+
+				// 32 bits padding.
+				size += (-size) & 3;
+
+				if (size > maxRtcpPacketLen)
+				{
+					MS_WARN_DEV("maximum packet size exceeded");
+
+					return false;
+				}
+			}
+
+			// Fill a chunk.
+			FillChunk(this->highestSequenceNumber, sequenceNumber, delta);
+
+			// Update highest seen sequence number.
+			this->highestSequenceNumber = sequenceNumber;
+
+			// Update highest seen timestamp.
+			if (timestamp > this->highestTimestamp)
+				this->highestTimestamp = timestamp;
+
+			// Add entry to received packets container.
+			this->receivedPackets.emplace_back(sequenceNumber, delta);
+
+			return true;
 		}
 
 		void FeedbackRtpTransportPacket::FillChunk(
