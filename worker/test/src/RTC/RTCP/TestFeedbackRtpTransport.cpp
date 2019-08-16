@@ -13,7 +13,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 	uint32_t senderSsrc{ 1111u };
 	uint32_t mediaSsrc{ 2222u };
 
-	SECTION("create FeedbackRtpTransportPacket, small delta run length chunk and single large delta status packet")
+	SECTION(
+	  "create FeedbackRtpTransportPacket, small delta run length chunk and single large delta status packet")
 	{
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
