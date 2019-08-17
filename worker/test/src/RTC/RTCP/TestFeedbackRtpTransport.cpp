@@ -279,6 +279,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		auto* packet = FeedbackRtpTransportPacket::Parse(data, sizeof(data));
 
 		REQUIRE(packet);
+		REQUIRE(packet->GetSize() == sizeof(data));
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 13);
 		REQUIRE(packet->GetReferenceTime() == 6275825); // 0x5FC2F1
@@ -312,6 +313,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		auto* packet = FeedbackRtpTransportPacket::Parse(data, sizeof(data));
 
 		REQUIRE(packet);
+		REQUIRE(packet->GetSize() == sizeof(data));
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 0);
 		REQUIRE(packet->GetReferenceTime() == -2); // 0xFFFFFE (signed 24 bits)

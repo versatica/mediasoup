@@ -188,14 +188,14 @@ namespace RTC
 		private:
 			uint16_t baseSequenceNumber{ 0u };
 			int32_t referenceTime{ 0 };
-			uint16_t highestSequenceNumber{ 0u };
-			uint64_t highestTimestamp{ 0u };
+			uint16_t highestSequenceNumber{ 0u }; // Just for locally generated packets.
+			uint64_t highestTimestamp{ 0u };      // Just for locally generated packets.
 			uint16_t packetStatusCount{ 0u };
 			uint8_t feedbackPacketCount{ 0u };
 			std::vector<ReceivedPacket> receivedPackets;
 			std::vector<Chunk*> chunks;
 			std::vector<int16_t> deltas;
-			Context context;
+			Context context; // Just for locally generated packets.
 			size_t deltasAndChunksSize{ 0u };
 			bool isCorrect{ true };
 		};
