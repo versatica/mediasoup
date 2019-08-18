@@ -225,10 +225,10 @@ namespace RTC
 			{
 				chunk->Dump();
 			}
-			MS_DUMP("  <Deltas> (ms)");
+			MS_DUMP("  <Deltas>");
 			for (auto delta : this->deltas)
 			{
-				MS_DUMP("    %" PRIi16, static_cast<int16_t>(delta / 4));
+				MS_DUMP("    %" PRIi16 "ms", static_cast<int16_t>(delta / 4));
 			}
 			MS_DUMP("  </Deltas>");
 			MS_DUMP("</FeedbackRtpTransportPacket>");
