@@ -192,7 +192,6 @@ namespace RTC
 			uint64_t highestTimestamp{ 0u };      // Just for locally generated packets.
 			uint16_t packetStatusCount{ 0u };
 			uint8_t feedbackPacketCount{ 0u };
-			std::vector<ReceivedPacket> receivedPackets;
 			std::vector<Chunk*> chunks;
 			std::vector<int16_t> deltas;
 			Context context; // Just for locally generated packets.

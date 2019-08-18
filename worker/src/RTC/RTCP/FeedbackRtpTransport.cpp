@@ -221,51 +221,16 @@ namespace RTC
 			MS_DUMP("  reference time        : %" PRIi32, this->referenceTime);
 			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
 			MS_DUMP("  size                  : %zu", GetSize());
-
 			for (auto* chunk : this->chunks)
 			{
 				chunk->Dump();
 			}
-
-			if (this->receivedPackets.size() != this->deltas.size())
+			MS_DUMP("  <Deltas> (ms)");
+			for (auto delta : this->deltas)
 			{
-				MS_ERROR(
-				  "received packets and number of deltas mismatch [packets:%zu, deltas:%zu]",
-				  this->receivedPackets.size(),
-				  this->deltas.size());
-
-				for (auto& packet : this->receivedPackets)
-				{
-					MS_DUMP(
-					  "  seqNumber:%" PRIu16 ", delta(ms):%" PRIi16,
-					  packet.sequenceNumber,
-					  static_cast<int16_t>(packet.delta / 4));
-				}
+				MS_DUMP("    %" PRIi16, static_cast<int16_t>(delta / 4));
 			}
-			else
-			{
-				auto receivedPacketIt = this->receivedPackets.begin();
-				auto deltaIt          = this->deltas.begin();
-
-				MS_DUMP("  <Deltas>");
-
-				while (receivedPacketIt != this->receivedPackets.end())
-				{
-					MS_DUMP(
-					  "    seqNumber:%" PRIu16 ", delta(ms):%" PRIi16,
-					  receivedPacketIt->sequenceNumber,
-					  static_cast<int16_t>(receivedPacketIt->delta / 4));
-
-					if (receivedPacketIt->delta != *deltaIt)
-						MS_ERROR("delta block does not coincide with the received value");
-
-					receivedPacketIt++;
-					deltaIt++;
-				}
-
-				MS_DUMP("  </Deltas>");
-			}
-
+			MS_DUMP("  </Deltas>");
 			MS_DUMP("</FeedbackRtpTransportPacket>");
 		}
 
@@ -424,9 +389,6 @@ namespace RTC
 			if (timestamp > this->highestTimestamp)
 				this->highestTimestamp = timestamp;
 
-			// Add entry to received packets container.
-			this->receivedPackets.emplace_back(sequenceNumber, delta);
-
 			return true;
 		}
 
@@ -502,7 +464,7 @@ namespace RTC
 			}
 
 			this->context.statuses.emplace_back(status);
-			this->deltas.emplace_back(delta);
+			this->deltas.push_back(delta);
 			this->deltasAndChunksSize += (status == Status::SmallDelta) ? 1u : 2u;
 
 			// Update context info.
@@ -704,10 +666,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("  <FeedbackRtpTransportPacket::RunLengthChunk>");
+			MS_DUMP("  <RunLengthChunk>");
 			MS_DUMP("    status : %s", FeedbackRtpTransportPacket::Status2String[this->status].c_str());
 			MS_DUMP("    count  : %" PRIu16, this->count);
-			MS_DUMP("  </FeedbackRtpTransportPacket::RunLengthChunk>");
+			MS_DUMP("  </RunLengthChunk>");
 		}
 
 		size_t FeedbackRtpTransportPacket::RunLengthChunk::GetReceivedStatusCount() const
@@ -811,9 +773,9 @@ namespace RTC
 
 			out << "|";
 
-			MS_DUMP("  <FeedbackRtpTransportPacket::OneBitVectorChunk>");
+			MS_DUMP("  <OneBitVectorChunk>");
 			MS_DUMP("    %s", out.str().c_str());
-			MS_DUMP("  </FeedbackRtpTransportPacket::OneBitVectorChunk>");
+			MS_DUMP("  </OneBitVectorChunk>");
 		}
 
 		size_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetReceivedStatusCount() const
@@ -935,9 +897,9 @@ namespace RTC
 
 			out << "|";
 
-			MS_DUMP("  <FeedbackRtpTransportPacket::TwoBitVectorChunk>");
+			MS_DUMP("  <TwoBitVectorChunk>");
 			MS_DUMP("    %s", out.str().c_str());
-			MS_DUMP("  </FeedbackRtpTransportPacket::TwoBitVectorChunk>");
+			MS_DUMP("  </TwoBitVectorChunk>");
 		}
 
 		size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetReceivedStatusCount() const
