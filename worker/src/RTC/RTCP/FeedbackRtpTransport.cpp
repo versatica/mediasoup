@@ -429,8 +429,8 @@ namespace RTC
 					if (!packetResult.received)
 						continue;
 
+					// TODO: fuzzer crashes here with 'std::out_of_range'
 					currentReceivedAt += this->deltas.at(deltaIdx) / 4;
-					// currentReceivedAt += this->deltas[deltaIdx] / 4; // More efficient.
 					packetResult.receivedAt = currentReceivedAt;
 					deltaIdx++;
 				}
