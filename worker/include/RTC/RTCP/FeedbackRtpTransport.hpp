@@ -51,22 +51,21 @@ namespace RTC
 				None
 			};
 
-			struct ReceivedPacket
-			{
-				ReceivedPacket(uint16_t sequenceNumber, int16_t delta)
-				  : sequenceNumber(sequenceNumber), delta(delta)
-				{
-				}
-
-				uint16_t sequenceNumber;
-				int16_t delta;
-			};
-
 			struct Context
 			{
 				bool allSameStatus{ true };
 				Status currentStatus{ Status::None };
 				std::vector<Status> statuses;
+			};
+
+			struct PacketResult
+			{
+				PacketResult(uint16_t sequenceNumber, bool received) : sequenceNumber(sequenceNumber), received(received)
+				{}
+
+				uint16_t sequenceNumber; // Wide sequence number.
+				bool received{ false };  // Packet received or not.
+				int32_t receivedAt{ 0 }; // Received time (ms) in remote timestamp reference.
 			};
 
 			class Chunk
@@ -83,6 +82,7 @@ namespace RTC
 				virtual void Dump() const                                                        = 0;
 				virtual size_t GetCount() const                                                  = 0;
 				virtual size_t GetReceivedStatusCount() const                                    = 0;
+				virtual void FillResults(std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const = 0;
 				virtual size_t Serialize(uint8_t* buffer)                                        = 0;
 			};
 
@@ -99,6 +99,7 @@ namespace RTC
 				void Dump() const override;
 				size_t GetCount() const override;
 				size_t GetReceivedStatusCount() const override;
+				void FillResults(std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -118,6 +119,7 @@ namespace RTC
 				void Dump() const override;
 				size_t GetCount() const override;
 				size_t GetReceivedStatusCount() const override;
+				void FillResults(std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -136,6 +138,7 @@ namespace RTC
 				void Dump() const override;
 				size_t GetCount() const override;
 				size_t GetReceivedStatusCount() const override;
+				void FillResults(std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -168,9 +171,10 @@ namespace RTC
 			uint16_t GetPacketStatusCount() const;
 			int32_t GetReferenceTime() const;
 			uint8_t GetFeedbackPacketCount() const;
+			void SetFeedbackPacketCount(uint8_t count);
 			uint16_t GetHighestSequenceNumber() const;
 			uint64_t GetHighestTimestamp() const;
-			void SetFeedbackPacketCount(uint8_t count);
+			std::vector<struct PacketResult> GetPacketResults() const;
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
@@ -241,6 +245,11 @@ namespace RTC
 			return this->feedbackPacketCount;
 		}
 
+		inline void FeedbackRtpTransportPacket::SetFeedbackPacketCount(uint8_t count)
+		{
+			this->feedbackPacketCount = count;
+		}
+
 		inline uint16_t FeedbackRtpTransportPacket::GetHighestSequenceNumber() const
 		{
 			return this->highestSequenceNumber;
@@ -249,11 +258,6 @@ namespace RTC
 		inline uint64_t FeedbackRtpTransportPacket::GetHighestTimestamp() const
 		{
 			return this->highestTimestamp;
-		}
-
-		inline void FeedbackRtpTransportPacket::SetFeedbackPacketCount(uint8_t count)
-		{
-			this->feedbackPacketCount = count;
 		}
 
 		inline size_t FeedbackRtpTransportPacket::GetSize() const

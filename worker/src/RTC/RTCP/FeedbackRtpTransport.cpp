@@ -221,16 +221,31 @@ namespace RTC
 			MS_DUMP("  reference time        : %" PRIi32, this->referenceTime);
 			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
 			MS_DUMP("  size                  : %zu", GetSize());
+
 			for (auto* chunk : this->chunks)
 			{
 				chunk->Dump();
 			}
+
 			MS_DUMP("  <Deltas>");
 			for (auto delta : this->deltas)
 			{
 				MS_DUMP("    %" PRIi16 "ms", static_cast<int16_t>(delta / 4));
 			}
 			MS_DUMP("  </Deltas>");
+
+			auto packetResults = GetPacketResults();
+			MS_DUMP("  <PacketResults>");
+			for (auto& packetResult : packetResults)
+			{
+				MS_DUMP(
+				  "    seq:%" PRIu16 ", received:%s, receivedAt:%" PRIi32,
+				  packetResult.sequenceNumber,
+				  packetResult.received ? "yes" : "no",
+				  packetResult.receivedAt);
+			}
+			MS_DUMP("  </PacketResults>");
+
 			MS_DUMP("</FeedbackRtpTransportPacket>");
 		}
 
@@ -390,6 +405,40 @@ namespace RTC
 				this->highestTimestamp = timestamp;
 
 			return true;
+		}
+
+		std::vector<struct FeedbackRtpTransportPacket::PacketResult> FeedbackRtpTransportPacket::GetPacketResults() const
+		{
+			MS_TRACE();
+
+			std::vector<struct PacketResult> packetResults;
+
+			uint16_t currentSequenceNumber = this->baseSequenceNumber - 1;
+			int32_t currentReceivedAt      = this->referenceTime * 64;
+			size_t packetResultIdx{ 0u };
+			size_t deltaIdx{ 0u };
+
+			for (auto* chunk : this->chunks)
+			{
+				chunk->FillResults(packetResults, currentSequenceNumber);
+
+				for (; packetResultIdx < packetResults.size(); ++packetResultIdx)
+				{
+					auto& packetResult = packetResults[packetResultIdx];
+
+					if (!packetResult.received)
+						continue;
+
+					currentReceivedAt += this->deltas.at(deltaIdx) / 4;
+					// currentReceivedAt += this->deltas[deltaIdx] / 4; // More efficient.
+					packetResult.receivedAt = currentReceivedAt;
+					deltaIdx++;
+				}
+
+				packetResultIdx = packetResults.size() - 1;
+			}
+
+			return packetResults;
 		}
 
 		void FeedbackRtpTransportPacket::FillChunk(
@@ -686,6 +735,18 @@ namespace RTC
 			}
 		}
 
+		void FeedbackRtpTransportPacket::RunLengthChunk::FillResults(std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults, uint16_t& currentSequenceNumber) const
+		{
+			MS_TRACE();
+
+			bool received = (this->status == Status::SmallDelta || this->status == Status::LargeDelta);
+
+			for (uint16_t idx{ 0u }; idx < this->count; ++idx)
+			{
+				packetResults.emplace_back(++currentSequenceNumber, received);
+			}
+		}
+
 		size_t FeedbackRtpTransportPacket::RunLengthChunk::Serialize(uint8_t* buffer)
 		{
 			MS_TRACE();
@@ -784,13 +845,25 @@ namespace RTC
 
 			size_t count{ 0 };
 
-			for (auto status : statuses)
+			for (auto status : this->statuses)
 			{
 				if (status == Status::SmallDelta || status == Status::LargeDelta)
 					count++;
 			}
 
 			return count;
+		}
+
+		void FeedbackRtpTransportPacket::OneBitVectorChunk::FillResults(std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults, uint16_t& currentSequenceNumber) const
+		{
+			MS_TRACE();
+
+			for (auto status : this->statuses)
+			{
+				bool received = (status == Status::SmallDelta || status == Status::LargeDelta);
+
+				packetResults.emplace_back(++currentSequenceNumber, received);
+			}
 		}
 
 		size_t FeedbackRtpTransportPacket::OneBitVectorChunk::Serialize(uint8_t* buffer)
@@ -908,7 +981,7 @@ namespace RTC
 
 			size_t count{ 0 };
 
-			for (auto status : statuses)
+			for (auto status : this->statuses)
 			{
 				if (status == Status::SmallDelta || status == Status::LargeDelta)
 					count++;
@@ -916,6 +989,19 @@ namespace RTC
 
 			return count;
 		}
+
+		void FeedbackRtpTransportPacket::TwoBitVectorChunk::FillResults(std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults, uint16_t& currentSequenceNumber) const
+		{
+			MS_TRACE();
+
+			for (auto status : this->statuses)
+			{
+				bool received = (status == Status::SmallDelta || status == Status::LargeDelta);
+
+				packetResults.emplace_back(++currentSequenceNumber, received);
+			}
+		}
+
 		size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::Serialize(uint8_t* buffer)
 		{
 			MS_TRACE();

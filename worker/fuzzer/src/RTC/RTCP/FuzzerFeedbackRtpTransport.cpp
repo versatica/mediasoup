@@ -14,5 +14,6 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 	packet->GetFeedbackPacketCount();
 	packet->GetHighestSequenceNumber();
 	packet->GetHighestTimestamp();
+	packet->GetPacketResults();
 	packet->Serialize(::RTC::RTCP::Buffer);
 }
