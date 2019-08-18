@@ -60,8 +60,10 @@ namespace RTC
 
 			struct PacketResult
 			{
-				PacketResult(uint16_t sequenceNumber, bool received) : sequenceNumber(sequenceNumber), received(received)
-				{}
+				PacketResult(uint16_t sequenceNumber, bool received)
+				  : sequenceNumber(sequenceNumber), received(received)
+				{
+				}
 
 				uint16_t sequenceNumber; // Wide sequence number.
 				bool received{ false };  // Packet received or not.
@@ -82,8 +84,9 @@ namespace RTC
 				virtual void Dump() const                                                        = 0;
 				virtual size_t GetCount() const                                                  = 0;
 				virtual size_t GetReceivedStatusCount() const                                    = 0;
-				virtual void FillResults(std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const = 0;
-				virtual size_t Serialize(uint8_t* buffer)                                        = 0;
+				virtual void FillResults(
+				  std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const = 0;
+				virtual size_t Serialize(uint8_t* buffer) = 0;
 			};
 
 			class RunLengthChunk : public Chunk
@@ -99,7 +102,9 @@ namespace RTC
 				void Dump() const override;
 				size_t GetCount() const override;
 				size_t GetReceivedStatusCount() const override;
-				void FillResults(std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const override;
+				void FillResults(
+				  std::vector<struct PacketResult>& packetResults,
+				  uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -119,7 +124,9 @@ namespace RTC
 				void Dump() const override;
 				size_t GetCount() const override;
 				size_t GetReceivedStatusCount() const override;
-				void FillResults(std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const override;
+				void FillResults(
+				  std::vector<struct PacketResult>& packetResults,
+				  uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -138,7 +145,9 @@ namespace RTC
 				void Dump() const override;
 				size_t GetCount() const override;
 				size_t GetReceivedStatusCount() const override;
-				void FillResults(std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const override;
+				void FillResults(
+				  std::vector<struct PacketResult>& packetResults,
+				  uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
 			private:
@@ -164,6 +173,7 @@ namespace RTC
 
 		public:
 			bool AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
+			void Finish();
 			bool IsFull();
 			bool IsSerializable();
 			bool IsCorrect();

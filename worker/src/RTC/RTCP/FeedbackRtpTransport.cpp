@@ -399,9 +399,16 @@ namespace RTC
 
 			// Update latest seen sequence number and timestamp.
 			this->latestSequenceNumber = sequenceNumber;
-			this->latestTimestamp = timestamp;
+			this->latestTimestamp      = timestamp;
 
 			return true;
+		}
+
+		void FeedbackRtpTransportPacket::Finish()
+		{
+			MS_TRACE();
+
+			AddPendingChunks();
 		}
 
 		std::vector<struct FeedbackRtpTransportPacket::PacketResult> FeedbackRtpTransportPacket::GetPacketResults() const
@@ -427,7 +434,6 @@ namespace RTC
 				if (!packetResult.received)
 					continue;
 
-				// TODO: fuzzer crashes here with 'std::out_of_range'
 				currentReceivedAt += this->deltas.at(deltaIdx) / 4;
 				packetResult.receivedAt = currentReceivedAt;
 				deltaIdx++;
@@ -586,17 +592,15 @@ namespace RTC
 			if (this->context.allSameStatus)
 			{
 				CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
-
-				this->context.statuses.clear();
 			}
 			else
 			{
 				MS_ASSERT(this->context.statuses.size() < 7, "already 7 status packets present");
 
 				CreateTwoBitVectorChunk(this->context.statuses);
-
-				this->context.statuses.clear();
 			}
+
+			this->context.statuses.clear();
 		}
 
 		FeedbackRtpTransportPacket::Chunk* FeedbackRtpTransportPacket::Chunk::Parse(
@@ -733,7 +737,9 @@ namespace RTC
 			}
 		}
 
-		void FeedbackRtpTransportPacket::RunLengthChunk::FillResults(std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults, uint16_t& currentSequenceNumber) const
+		void FeedbackRtpTransportPacket::RunLengthChunk::FillResults(
+		  std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults,
+		  uint16_t& currentSequenceNumber) const
 		{
 			MS_TRACE();
 
@@ -852,7 +858,9 @@ namespace RTC
 			return count;
 		}
 
-		void FeedbackRtpTransportPacket::OneBitVectorChunk::FillResults(std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults, uint16_t& currentSequenceNumber) const
+		void FeedbackRtpTransportPacket::OneBitVectorChunk::FillResults(
+		  std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults,
+		  uint16_t& currentSequenceNumber) const
 		{
 			MS_TRACE();
 
@@ -988,7 +996,9 @@ namespace RTC
 			return count;
 		}
 
-		void FeedbackRtpTransportPacket::TwoBitVectorChunk::FillResults(std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults, uint16_t& currentSequenceNumber) const
+		void FeedbackRtpTransportPacket::TwoBitVectorChunk::FillResults(
+		  std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults,
+		  uint16_t& currentSequenceNumber) const
 		{
 			MS_TRACE();
 
