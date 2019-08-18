@@ -316,30 +316,30 @@ namespace RTC
 			MS_ASSERT(!IsFull(), "packet is full");
 
 			// Let's see if we must set our base.
-			if (this->highestTimestamp == 0u)
+			if (this->latestTimestamp == 0u)
 			{
 				MS_DEBUG_DEV("setting base");
 
-				this->baseSequenceNumber    = sequenceNumber + 1;
-				this->referenceTime         = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
-				this->highestSequenceNumber = sequenceNumber;
-				this->highestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
+				this->baseSequenceNumber   = sequenceNumber + 1;
+				this->referenceTime        = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
+				this->latestSequenceNumber = sequenceNumber;
+				this->latestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
 
 				return true;
 			}
 
-			// If the wide sequence number of the new packet is lower than the highest seen,
+			// If the wide sequence number of the new packet is lower than the latest seen,
 			// ignore it.
 			// NOTE: Not very spec compliant but libwebrtc does it.
-			// Also ignore if the sequence number matches the highest seen.
-			if (!RTC::SeqManager<uint16_t>::IsSeqHigherThan(sequenceNumber, this->highestSequenceNumber))
+			// Also ignore if the sequence number matches the latest seen.
+			if (!RTC::SeqManager<uint16_t>::IsSeqHigherThan(sequenceNumber, this->latestSequenceNumber))
 			{
 				return true;
 			}
 
 			// Check if there are too many missing packets.
 			{
-				auto missingPackets = sequenceNumber - (this->highestSequenceNumber + 1);
+				auto missingPackets = sequenceNumber - (this->latestSequenceNumber + 1);
 
 				if (missingPackets > FeedbackRtpTransportPacket::maxMissingPackets)
 				{
@@ -351,7 +351,7 @@ namespace RTC
 
 			// Deltas are represented as multiples of 250us.
 			// NOTE: Read it as int 64 to detect long elapsed times.
-			int64_t delta64 = (timestamp - this->highestTimestamp) * 4;
+			int64_t delta64 = (timestamp - this->latestTimestamp) * 4;
 
 			// clang-format off
 			if (
@@ -361,8 +361,8 @@ namespace RTC
 			// clang-format on
 			{
 				MS_WARN_DEV(
-				  "RTP packet delta exceeded [highestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
-				  this->highestTimestamp,
+				  "RTP packet delta exceeded [latestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
+				  this->latestTimestamp,
 				  timestamp);
 
 				return false;
@@ -395,14 +395,11 @@ namespace RTC
 			}
 
 			// Fill a chunk.
-			FillChunk(this->highestSequenceNumber, sequenceNumber, delta);
+			FillChunk(this->latestSequenceNumber, sequenceNumber, delta);
 
-			// Update highest seen sequence number.
-			this->highestSequenceNumber = sequenceNumber;
-
-			// Update highest seen timestamp.
-			if (timestamp > this->highestTimestamp)
-				this->highestTimestamp = timestamp;
+			// Update latest seen sequence number and timestamp.
+			this->latestSequenceNumber = sequenceNumber;
+			this->latestTimestamp = timestamp;
 
 			return true;
 		}
@@ -414,28 +411,26 @@ namespace RTC
 			std::vector<struct PacketResult> packetResults;
 
 			uint16_t currentSequenceNumber = this->baseSequenceNumber - 1;
-			int32_t currentReceivedAt      = this->referenceTime * 64;
-			size_t packetResultIdx{ 0u };
-			size_t deltaIdx{ 0u };
 
 			for (auto* chunk : this->chunks)
 			{
 				chunk->FillResults(packetResults, currentSequenceNumber);
+			}
 
-				for (; packetResultIdx < packetResults.size(); ++packetResultIdx)
-				{
-					auto& packetResult = packetResults[packetResultIdx];
+			size_t deltaIdx{ 0u };
+			int32_t currentReceivedAt = this->referenceTime * 64;
 
-					if (!packetResult.received)
-						continue;
+			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)
+			{
+				auto& packetResult = packetResults[idx];
 
-					// TODO: fuzzer crashes here with 'std::out_of_range'
-					currentReceivedAt += this->deltas.at(deltaIdx) / 4;
-					packetResult.receivedAt = currentReceivedAt;
-					deltaIdx++;
-				}
+				if (!packetResult.received)
+					continue;
 
-				packetResultIdx = packetResults.size() - 1;
+				// TODO: fuzzer crashes here with 'std::out_of_range'
+				currentReceivedAt += this->deltas.at(deltaIdx) / 4;
+				packetResult.receivedAt = currentReceivedAt;
+				deltaIdx++;
 			}
 
 			return packetResults;
@@ -493,6 +488,7 @@ namespace RTC
 			}
 
 			Status status;
+
 			if (delta >= 0 && delta <= 255)
 				status = Status::SmallDelta;
 			else
@@ -545,6 +541,8 @@ namespace RTC
 				// Reset current status.
 				this->context.currentStatus = Status::None;
 
+				// TODO: Why must it be a TwoBitVectorChunk and not a OneBitVectorChunk?
+				//
 				// Fill a vector chunk and return.
 				CreateTwoBitVectorChunk(this->context.statuses);
 
@@ -741,7 +739,7 @@ namespace RTC
 
 			bool received = (this->status == Status::SmallDelta || this->status == Status::LargeDelta);
 
-			for (uint16_t idx{ 0u }; idx < this->count; ++idx)
+			for (uint16_t count{ 1u }; count <= this->count; ++count)
 			{
 				packetResults.emplace_back(++currentSequenceNumber, received);
 			}

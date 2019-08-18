@@ -172,8 +172,8 @@ namespace RTC
 			int32_t GetReferenceTime() const;
 			uint8_t GetFeedbackPacketCount() const;
 			void SetFeedbackPacketCount(uint8_t count);
-			uint16_t GetHighestSequenceNumber() const;
-			uint64_t GetHighestTimestamp() const;
+			uint16_t GetLatestSequenceNumber() const;
+			uint64_t GetLatestTimestamp() const;
 			std::vector<struct PacketResult> GetPacketResults() const;
 
 			/* Pure virtual methods inherited from Packet. */
@@ -192,8 +192,8 @@ namespace RTC
 		private:
 			uint16_t baseSequenceNumber{ 0u };
 			int32_t referenceTime{ 0 };
-			uint16_t highestSequenceNumber{ 0u }; // Just for locally generated packets.
-			uint64_t highestTimestamp{ 0u };      // Just for locally generated packets.
+			uint16_t latestSequenceNumber{ 0u }; // Just for locally generated packets.
+			uint64_t latestTimestamp{ 0u };      // Just for locally generated packets.
 			uint16_t packetStatusCount{ 0u };
 			uint8_t feedbackPacketCount{ 0u };
 			std::vector<Chunk*> chunks;
@@ -250,14 +250,14 @@ namespace RTC
 			this->feedbackPacketCount = count;
 		}
 
-		inline uint16_t FeedbackRtpTransportPacket::GetHighestSequenceNumber() const
+		inline uint16_t FeedbackRtpTransportPacket::GetLatestSequenceNumber() const
 		{
-			return this->highestSequenceNumber;
+			return this->latestSequenceNumber;
 		}
 
-		inline uint64_t FeedbackRtpTransportPacket::GetHighestTimestamp() const
+		inline uint64_t FeedbackRtpTransportPacket::GetLatestTimestamp() const
 		{
-			return this->highestTimestamp;
+			return this->latestTimestamp;
 		}
 
 		inline size_t FeedbackRtpTransportPacket::GetSize() const
