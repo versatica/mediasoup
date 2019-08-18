@@ -235,14 +235,21 @@ namespace RTC
 			MS_DUMP("  </Deltas>");
 
 			auto packetResults = GetPacketResults();
+
 			MS_DUMP("  <PacketResults>");
 			for (auto& packetResult : packetResults)
 			{
-				MS_DUMP(
-				  "    seq:%" PRIu16 ", received:%s, receivedAt:%" PRIi32,
-				  packetResult.sequenceNumber,
-				  packetResult.received ? "yes" : "no",
-				  packetResult.receivedAt);
+				if (packetResult.received)
+				{
+					MS_DUMP(
+					  "    seq:%" PRIu16 ", received:yes, receivedAt:%" PRIi32,
+					  packetResult.sequenceNumber,
+					  packetResult.receivedAt);
+				}
+				else
+				{
+					MS_DUMP("    seq:%" PRIu16 ", received:no", packetResult.sequenceNumber);
+				}
 			}
 			MS_DUMP("  </PacketResults>");
 
