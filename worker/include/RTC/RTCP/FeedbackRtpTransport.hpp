@@ -214,7 +214,7 @@ namespace RTC
 
 		inline bool FeedbackRtpTransportPacket::IsSerializable()
 		{
-			return this->receivedPackets.size() > 0;
+			return this->deltas.size() > 0;
 		}
 
 		inline bool FeedbackRtpTransportPacket::IsCorrect()
