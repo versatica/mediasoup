@@ -554,8 +554,6 @@ namespace RTC
 				// Reset current status.
 				this->context.currentStatus = Status::None;
 
-				// TODO: Why must it be a TwoBitVectorChunk and not a OneBitVectorChunk?
-				//
 				// Fill a vector chunk and return.
 				CreateTwoBitVectorChunk(this->context.statuses);
 
