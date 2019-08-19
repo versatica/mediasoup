@@ -535,7 +535,10 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetPacketStatusCount() == 2);
 		REQUIRE(packet->GetReferenceTime() == -4368470);
 
+		// Let's also test the reference time reported by Wireshark.
 		int32_t wiresharkValue{ 12408746 };
+
+		// Constraint it to signed 24 bits.
 		wiresharkValue = wiresharkValue << 8;
 		wiresharkValue = wiresharkValue >> 8;
 
