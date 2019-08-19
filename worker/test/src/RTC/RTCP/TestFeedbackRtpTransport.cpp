@@ -13,9 +13,9 @@ struct TestFeedbackRtpTransportInput
 	{
 	}
 
-	uint16_t sequenceNumber{ 0 };
-	uint64_t timestamp{ 0 };
-	size_t maxPacketSize{ 0 };
+	uint16_t sequenceNumber{ 0u };
+	uint64_t timestamp{ 0u };
+	size_t maxPacketSize{ 0u };
 };
 
 void validate(
@@ -36,7 +36,7 @@ void validate(
 		if (missingPackets > 0)
 		{
 			// All missing packets must be represented in packetResults.
-			for (size_t i{ 0 }; i < missingPackets; ++i)
+			for (size_t i{ 0u }; i < missingPackets; ++i)
 			{
 				packetResult = *packetResultsIterator;
 

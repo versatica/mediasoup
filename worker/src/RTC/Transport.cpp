@@ -12,6 +12,7 @@
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpProbator.hpp"
@@ -194,6 +195,7 @@ namespace RTC
 
 		// Delete the RTP probator.
 		delete this->rtpProbator;
+		this->rtpProbator = nullptr;
 
 		// Delete the RTP probation timer.
 		delete this->rtpProbationTimer;
@@ -777,6 +779,10 @@ namespace RTC
 
 							consumer->SetExternallyManagedBitrate();
 						};
+
+						// Start the RTP probation timer if connected.
+						if (IsConnected())
+							this->rtpProbationTimer->Start(0, 0);
 					}
 					// Otherwise, if REMB client is set, tell the new Consumer that we are
 					// gonna manage its bitrate.
@@ -1096,7 +1102,9 @@ namespace RTC
 			this->tccServer->TransportConnected();
 
 		// Start the RTP probation.
-		this->rtpProbationTimer->Start(0, 0);
+		// TODO: Also enable if Transport-CC client is set.
+		if (this->rembClient)
+			this->rtpProbationTimer->Start(0, 0);
 	}
 
 	void Transport::Disconnected()
@@ -1420,6 +1428,11 @@ namespace RTC
 						// Special case for the RTP probator.
 						if (report->GetSsrc() == RTC::RtpProbatorSsrc)
 						{
+							// TODO: Hack. Must refactor these ugly checks.
+							// TODO: Also check if Transport-CC client is set.
+							if (!this->rembClient)
+								continue;
+
 							auto fractionLost = report->GetFractionLost();
 
 							if (this->rtpProbator->IsRunning() && fractionLost >= RtpProbationMaxFractionLost)
@@ -1567,6 +1580,16 @@ namespace RTC
 						break;
 					}
 
+					case RTC::RTCP::FeedbackRtp::MessageType::TCC:
+					{
+						// auto* feedback = static_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
+
+						// TODO: REMOVE
+						// feedback->Dump();
+
+						break;
+					}
+
 					default:
 					{
 						MS_DEBUG_TAG(
@@ -1678,10 +1701,7 @@ namespace RTC
 							break;
 						}
 
-						default:
-						{
-							break;
-						}
+						default:;
 					}
 				}
 
