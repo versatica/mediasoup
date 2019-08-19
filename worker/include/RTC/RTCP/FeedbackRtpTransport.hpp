@@ -41,6 +41,18 @@ namespace RTC
 	{
 		class FeedbackRtpTransportPacket : public FeedbackRtpPacket
 		{
+		public:
+			struct PacketResult
+			{
+				PacketResult(uint16_t sequenceNumber, bool received)
+				  : sequenceNumber(sequenceNumber), received(received)
+				{
+				}
+
+				uint16_t sequenceNumber; // Wide sequence number.
+				bool received{ false };  // Packet received or not.
+				int32_t receivedAt{ 0 }; // Received time (ms) in remote timestamp reference.
+			};
 		private:
 			enum Status : uint8_t
 			{
@@ -56,18 +68,6 @@ namespace RTC
 				bool allSameStatus{ true };
 				Status currentStatus{ Status::None };
 				std::vector<Status> statuses;
-			};
-
-			struct PacketResult
-			{
-				PacketResult(uint16_t sequenceNumber, bool received)
-				  : sequenceNumber(sequenceNumber), received(received)
-				{
-				}
-
-				uint16_t sequenceNumber; // Wide sequence number.
-				bool received{ false };  // Packet received or not.
-				int32_t receivedAt{ 0 }; // Received time (ms) in remote timestamp reference.
 			};
 
 			class Chunk

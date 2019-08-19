@@ -6,6 +6,56 @@
 
 using namespace RTC::RTCP;
 
+struct TestFeedbackRtpTransportInput
+{
+	TestFeedbackRtpTransportInput(uint16_t sequenceNumber, uint64_t timestamp, size_t maxPacketSize)
+		: sequenceNumber(sequenceNumber), timestamp(timestamp), maxPacketSize(maxPacketSize)
+	{
+	}
+
+	uint16_t sequenceNumber{ 0 };
+	uint64_t timestamp{ 0 };
+	size_t maxPacketSize{ 0 };
+};
+
+void validate(std::vector<struct TestFeedbackRtpTransportInput> inputs, std::vector<struct FeedbackRtpTransportPacket::PacketResult> packetResults)
+{
+	auto inputsIterator = inputs.begin();
+	auto packetResultsIterator = packetResults.begin();
+	auto& lastInput = *inputsIterator;
+
+	for (++inputsIterator; inputsIterator != inputs.end(); ++inputsIterator, ++packetResultsIterator)
+	{
+		auto& input = *inputsIterator;
+		auto& packetResult = *packetResultsIterator;
+
+		size_t missingPackets = input.sequenceNumber - lastInput.sequenceNumber - 1;
+
+		if (missingPackets > 0)
+		{
+			// All missing packets must be represented in packetResults.
+			for (size_t i{ 0 }; i < missingPackets; ++i)
+			{
+				packetResult = *packetResultsIterator;
+
+				REQUIRE(packetResult.sequenceNumber == lastInput.sequenceNumber + i + 1);
+				REQUIRE(packetResult.received == false);
+
+				packetResultsIterator++;
+			}
+		}
+		else
+		{
+			REQUIRE(packetResult.sequenceNumber == lastInput.sequenceNumber + 1);
+			REQUIRE(packetResult.sequenceNumber == input.sequenceNumber);
+			REQUIRE(packetResult.received == true);
+			// TODO. verify reference time.
+		}
+
+		lastInput = input;
+	}
+}
+
 SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
 {
 	static constexpr size_t RtcpMtu{ 1200u };
@@ -20,38 +70,48 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		REQUIRE(packet);
 
+		std::vector<struct TestFeedbackRtpTransportInput> inputs =
+		{
+			{ 999, 1000000000, RtcpMtu },  // Pre base.
+			{ 1000, 1000000000, RtcpMtu }, // Base.
+			{ 1001, 1000000001, RtcpMtu },
+			{ 1002, 1000000012, RtcpMtu },
+			{ 1003, 1000000015, RtcpMtu },
+			{ 1004, 1000000017, RtcpMtu },
+			{ 1005, 1000000018, RtcpMtu },
+			{ 1006, 1000000018, RtcpMtu },
+			{ 1007, 1000000018, RtcpMtu },
+			{ 1008, 1000000018, RtcpMtu },
+			{ 1009, 1000000019, RtcpMtu },
+			{ 1010, 1000000010, RtcpMtu },
+			{ 1011, 1000000011, RtcpMtu },
+			{ 1012, 1000000011, RtcpMtu },
+			{ 1013, 1000000013, RtcpMtu }
+		};
+
 		packet->SetFeedbackPacketCount(1);
-		packet->AddPacket(999, 1000000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 1000000000, RtcpMtu); // Base.
-		packet->AddPacket(1001, 1000000001, RtcpMtu);
-		packet->AddPacket(1002, 1000000012, RtcpMtu);
-		packet->AddPacket(1003, 1000000015, RtcpMtu);
-		packet->AddPacket(1004, 1000000017, RtcpMtu);
-		packet->AddPacket(1005, 1000000018, RtcpMtu);
-		packet->AddPacket(1006, 1000000018, RtcpMtu);
-		packet->AddPacket(1007, 1000000018, RtcpMtu);
-		packet->AddPacket(1008, 1000000018, RtcpMtu);
-		packet->AddPacket(1009, 1000000019, RtcpMtu);
-		packet->AddPacket(1010, 1000000010, RtcpMtu);
-		packet->AddPacket(1011, 1000000011, RtcpMtu);
-		packet->AddPacket(1012, 1000000011, RtcpMtu);
-		packet->AddPacket(1013, 1000000013, RtcpMtu);
+
+		for (auto& input : inputs)
+			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
 
 		REQUIRE(packet->GetLatestSequenceNumber() == 1013);
 		REQUIRE(packet->GetLatestTimestamp() == 1000000013);
 
 		// Add a packet with greater seq number but older timestamp.
 		packet->AddPacket(1014, 1000000013 - 128, RtcpMtu);
+		inputs.emplace_back(1014, 1000000013 - 128, RtcpMtu);
 
 		REQUIRE(packet->GetLatestSequenceNumber() == 1014);
 		REQUIRE(packet->GetLatestTimestamp() == 1000000013 - 128);
 
 		packet->AddPacket(1015, 1000000015, RtcpMtu);
+		inputs.emplace_back(1015, 1000000015, RtcpMtu);
 
 		REQUIRE(packet->GetLatestSequenceNumber() == 1015);
 		REQUIRE(packet->GetLatestTimestamp() == 1000000015);
 
 		packet->Finish();
+		validate(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 16);
@@ -99,12 +159,20 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 	{
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
+		std::vector<TestFeedbackRtpTransportInput> inputs =
+		{
+			{ 999, 1000000000, RtcpMtu },  // Pre base.
+			{ 1000, 1000000000, RtcpMtu }, // Base.
+			{ 1050, 1000000216, RtcpMtu }
+		};
+
 		packet->SetFeedbackPacketCount(10);
-		packet->AddPacket(999, 1000000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 1000000000, RtcpMtu); // Base.
-		packet->AddPacket(1050, 1000000216, RtcpMtu);
+
+		for (auto& input : inputs)
+			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
 
 		packet->Finish();
+		validate(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 51);
@@ -152,18 +220,26 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 	SECTION("create FeedbackRtpTransportPacket, mixed chunks")
 	{
+		std::vector<TestFeedbackRtpTransportInput> inputs =
+		{
+			{ 999, 1000000000, RtcpMtu },  // Pre base.
+			{ 1000, 1000000000, RtcpMtu }, // Base.
+			{ 1001, 1000000100, RtcpMtu },
+			{ 1002, 1000000200, RtcpMtu },
+			{ 1015, 1000000300, RtcpMtu },
+			{ 1016, 1000000400, RtcpMtu },
+			{ 1017, 1000000500, RtcpMtu }
+		};
+
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
-		packet->AddPacket(999, 1000000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 1000000000, RtcpMtu); // Base.
-		packet->AddPacket(1001, 1000000100, RtcpMtu);
-		packet->AddPacket(1002, 1000000200, RtcpMtu);
-		packet->AddPacket(1015, 1000000300, RtcpMtu);
-		packet->AddPacket(1016, 1000000400, RtcpMtu);
-		packet->AddPacket(1017, 1000000500, RtcpMtu);
+
+		for (auto& input : inputs)
+			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
 
 		packet->Finish();
+		validate(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 18);
@@ -211,14 +287,22 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 	SECTION("create FeedbackRtpTransportPacket, incomplete two bit vector chunk")
 	{
+		std::vector<TestFeedbackRtpTransportInput> inputs =
+		{
+			{ 999, 1000000000, RtcpMtu },  // Pre base.
+			{ 1000, 1000000100, RtcpMtu }, // Base.
+			{ 1001, 1000000700, RtcpMtu },
+		};
+
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
-		packet->AddPacket(999, 1000000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 1000000100, RtcpMtu); // Base.
-		packet->AddPacket(1001, 1000000700, RtcpMtu);
+
+		for (auto& input : inputs)
+			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
 
 		packet->Finish();
+		validate(inputs, packet->GetPacketResults());
 
 			// TODO
 			printf("packet->Dump() 4a\n");
@@ -266,20 +350,28 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 	SECTION("create two sequential FeedbackRtpTransportPackets")
 	{
+		std::vector<TestFeedbackRtpTransportInput> inputs =
+		{
+			{ 999, 1000000000, RtcpMtu },  // Pre base.
+			{ 1000, 1000000000, RtcpMtu }, // Base.
+			{ 1001, 1000000003, RtcpMtu },
+			{ 1002, 1000000003, RtcpMtu },
+			{ 1003, 1000000003, RtcpMtu },
+			{ 1004, 1000000004, RtcpMtu },
+			{ 1005, 1000000005, RtcpMtu },
+			{ 1006, 1000000005, RtcpMtu },
+			{ 1007, 1000000007, RtcpMtu }
+		};
+
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
-		packet->AddPacket(999, 1000000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 1000000000, RtcpMtu); // Base.
-		packet->AddPacket(1001, 1000000003, RtcpMtu);
-		packet->AddPacket(1002, 1000000003, RtcpMtu);
-		packet->AddPacket(1003, 1000000003, RtcpMtu);
-		packet->AddPacket(1004, 1000000004, RtcpMtu);
-		packet->AddPacket(1005, 1000000005, RtcpMtu);
-		packet->AddPacket(1006, 1000000005, RtcpMtu);
-		packet->AddPacket(1007, 1000000007, RtcpMtu);
+
+		for (auto& input : inputs)
+			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
 
 		packet->Finish();
+		validate(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 8);
@@ -321,20 +413,28 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		auto latestWideSeqNumber = packet->GetLatestSequenceNumber();
 		auto latestTimestamp     = packet->GetLatestTimestamp();
-		auto* packet2            = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
+
+		std::vector<TestFeedbackRtpTransportInput> inputs2 =
+		{
+			{ latestWideSeqNumber, latestTimestamp, RtcpMtu },
+			{ 1008, 1000000008, RtcpMtu },
+			{ 1009, 1000000009, RtcpMtu },
+			{ 1010, 1000000010, RtcpMtu },
+			{ 1011, 1000000010, RtcpMtu },
+			{ 1012, 1000000010, RtcpMtu },
+			{ 1013, 1000000014, RtcpMtu },
+			{ 1014, 1000000014, RtcpMtu }
+		};
+
+		auto* packet2 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet2->SetFeedbackPacketCount(2);
 
-		packet2->AddPacket(latestWideSeqNumber, latestTimestamp, RtcpMtu);
-		packet2->AddPacket(1008, 1000000008, RtcpMtu);
-		packet2->AddPacket(1009, 1000000009, RtcpMtu);
-		packet2->AddPacket(1010, 1000000010, RtcpMtu);
-		packet2->AddPacket(1011, 1000000010, RtcpMtu);
-		packet2->AddPacket(1012, 1000000010, RtcpMtu);
-		packet2->AddPacket(1013, 1000000014, RtcpMtu);
-		packet2->AddPacket(1014, 1000000014, RtcpMtu);
+		for (auto& input : inputs2)
+			packet2->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
 
 		packet2->Finish();
+		validate(inputs2, packet2->GetPacketResults());
 
 		REQUIRE(packet2->GetBaseSequenceNumber() == 1008);
 		REQUIRE(packet2->GetPacketStatusCount() == 7);
