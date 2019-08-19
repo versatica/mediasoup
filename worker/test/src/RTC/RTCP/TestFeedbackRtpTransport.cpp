@@ -52,8 +52,8 @@ void validate(
 			REQUIRE(packetResult.sequenceNumber == input.sequenceNumber);
 			REQUIRE(packetResult.received == true);
 			REQUIRE(
-			  (static_cast<int32_t>(packetResult.receivedAt & 0x1FFFFFC0) / 64) ==
-			  static_cast<int32_t>((input.timestamp) & 0x1FFFFFC0) / 64);
+			  static_cast<int32_t>(packetResult.receivedAt & 0x1FFFFFC0) / 64 ==
+			  static_cast<int32_t>(input.timestamp & 0x1FFFFFC0) / 64);
 		}
 
 		lastInput = input;
