@@ -173,17 +173,17 @@ namespace RTC
 
 		public:
 			bool AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
-			void Finish();
+			void Finish(); // Just for locally generated packets.
 			bool IsFull();
 			bool IsSerializable();
-			bool IsCorrect();
+			bool IsCorrect(); // Just for locally generated packets.
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
 			int32_t GetReferenceTime() const;
 			uint8_t GetFeedbackPacketCount() const;
 			void SetFeedbackPacketCount(uint8_t count);
-			uint16_t GetLatestSequenceNumber() const;
-			uint64_t GetLatestTimestamp() const;
+			uint16_t GetLatestSequenceNumber() const; // Just for locally generated packets.
+			uint64_t GetLatestTimestamp() const;      // Just for locally generated packets.
 			std::vector<struct PacketResult> GetPacketResults() const;
 
 			/* Pure virtual methods inherited from Packet. */
@@ -222,7 +222,10 @@ namespace RTC
 
 		inline bool FeedbackRtpTransportPacket::IsFull()
 		{
-			return this->packetStatusCount == FeedbackRtpTransportPacket::maxPacketStatusCount;
+			// NOTE: Since AddPendingChunks() is called at the end, we cannot track
+			// the exact ongoing value of packetStatusCount. Hence, let's reserve 7
+			// packets just in case.
+			return this->packetStatusCount >= FeedbackRtpTransportPacket::maxPacketStatusCount - 7;
 		}
 
 		inline bool FeedbackRtpTransportPacket::IsSerializable()
