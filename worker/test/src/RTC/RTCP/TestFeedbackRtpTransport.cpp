@@ -21,35 +21,35 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet);
 
 		packet->SetFeedbackPacketCount(1);
-		packet->AddPacket(999, 10000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 10000000, RtcpMtu); // Base.
-		packet->AddPacket(1001, 10000001, RtcpMtu);
-		packet->AddPacket(1002, 10000002, RtcpMtu);
-		packet->AddPacket(1003, 10000003, RtcpMtu);
-		packet->AddPacket(1004, 10000004, RtcpMtu);
-		packet->AddPacket(1005, 10000005, RtcpMtu);
-		packet->AddPacket(1006, 10000006, RtcpMtu);
-		packet->AddPacket(1007, 10000007, RtcpMtu);
-		packet->AddPacket(1008, 10000008, RtcpMtu);
-		packet->AddPacket(1009, 10000009, RtcpMtu);
-		packet->AddPacket(1010, 10000010, RtcpMtu);
-		packet->AddPacket(1011, 10000011, RtcpMtu);
-		packet->AddPacket(1012, 10000012, RtcpMtu);
-		packet->AddPacket(1013, 10000013, RtcpMtu);
+		packet->AddPacket(999, 3275704180, RtcpMtu);  // Pre base.
+		packet->AddPacket(1000, 3275704180, RtcpMtu); // Base.
+		packet->AddPacket(1001, 3275704181, RtcpMtu);
+		packet->AddPacket(1002, 3275704192, RtcpMtu);
+		packet->AddPacket(1003, 3275704195, RtcpMtu);
+		packet->AddPacket(1004, 3275704197, RtcpMtu);
+		packet->AddPacket(1005, 3275704198, RtcpMtu);
+		packet->AddPacket(1006, 3275704198, RtcpMtu);
+		packet->AddPacket(1007, 3275704198, RtcpMtu);
+		packet->AddPacket(1008, 3275704198, RtcpMtu);
+		packet->AddPacket(1009, 3275704199, RtcpMtu);
+		packet->AddPacket(1010, 3275704190, RtcpMtu);
+		packet->AddPacket(1011, 3275704191, RtcpMtu);
+		packet->AddPacket(1012, 3275704191, RtcpMtu);
+		packet->AddPacket(1013, 3275704193, RtcpMtu);
 
 		REQUIRE(packet->GetLatestSequenceNumber() == 1013);
-		REQUIRE(packet->GetLatestTimestamp() == 10000013);
+		REQUIRE(packet->GetLatestTimestamp() == 3275704193);
 
 		// Add a packet with greater seq number but older timestamp.
-		packet->AddPacket(1014, 10000013 - 128, RtcpMtu);
+		packet->AddPacket(1014, 3275704193 - 128, RtcpMtu);
 
 		REQUIRE(packet->GetLatestSequenceNumber() == 1014);
-		REQUIRE(packet->GetLatestTimestamp() == 10000013 - 128);
+		REQUIRE(packet->GetLatestTimestamp() == 3275704193 - 128);
 
-		packet->AddPacket(1015, 10000015, RtcpMtu);
+		packet->AddPacket(1015, 3275704195, RtcpMtu);
 
 		REQUIRE(packet->GetLatestSequenceNumber() == 1015);
-		REQUIRE(packet->GetLatestTimestamp() == 10000015);
+		REQUIRE(packet->GetLatestTimestamp() == 3275704195);
 
 		packet->Finish();
 
@@ -100,9 +100,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(10);
-		packet->AddPacket(999, 10000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 10000000, RtcpMtu); // Base.
-		packet->AddPacket(1050, 10001000, RtcpMtu);
+		packet->AddPacket(999, 3275704180, RtcpMtu);  // Pre base.
+		packet->AddPacket(1000, 3275704180, RtcpMtu); // Base.
+		packet->AddPacket(1050, 3275704396, RtcpMtu);
 
 		packet->Finish();
 
@@ -110,7 +110,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetPacketStatusCount() == 51);
 		REQUIRE(packet->GetFeedbackPacketCount() == 10);
 		REQUIRE(packet->GetLatestSequenceNumber() == 1050);
-		REQUIRE(packet->GetLatestTimestamp() == 10001000);
+		REQUIRE(packet->GetLatestTimestamp() == 3275704396);
 
 			// TODO
 			printf("packet->Dump() 2a\n");
@@ -155,13 +155,13 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
-		packet->AddPacket(999, 10000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 10000000, RtcpMtu); // Base.
-		packet->AddPacket(1001, 10000010, RtcpMtu);
-		packet->AddPacket(1002, 10000020, RtcpMtu);
-		packet->AddPacket(1015, 10000030, RtcpMtu);
-		packet->AddPacket(1016, 10000040, RtcpMtu);
-		packet->AddPacket(1017, 10000050, RtcpMtu);
+		packet->AddPacket(999, 3275704180, RtcpMtu);  // Pre base.
+		packet->AddPacket(1000, 3275704180, RtcpMtu); // Base.
+		packet->AddPacket(1001, 3275704280, RtcpMtu);
+		packet->AddPacket(1002, 3275704380, RtcpMtu);
+		packet->AddPacket(1015, 3275704480, RtcpMtu);
+		packet->AddPacket(1016, 3275704580, RtcpMtu);
+		packet->AddPacket(1017, 3275704680, RtcpMtu);
 
 		packet->Finish();
 
@@ -169,7 +169,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetPacketStatusCount() == 18);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 		REQUIRE(packet->GetLatestSequenceNumber() == 1017);
-		REQUIRE(packet->GetLatestTimestamp() == 10000050);
+		REQUIRE(packet->GetLatestTimestamp() == 3275704680);
 
 			// TODO
 			printf("packet->Dump() 3a\n");
@@ -214,21 +214,21 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
-		packet->AddPacket(999, 10000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 10000020, RtcpMtu); // Base.
-		packet->AddPacket(1001, 10002560, RtcpMtu);
+		packet->AddPacket(999, 3275704180, RtcpMtu);  // Pre base.
+		packet->AddPacket(1000, 3275704280, RtcpMtu); // Base.
+		packet->AddPacket(1001, 3275706443, RtcpMtu);
 
 		packet->Finish();
+
+			// TODO
+			printf("packet->Dump() 4a\n");
+			packet->Dump();
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 2);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 		REQUIRE(packet->GetLatestSequenceNumber() == 1001);
-		REQUIRE(packet->GetLatestTimestamp() == 10002560);
-
-			// TODO
-			printf("packet->Dump() 4a\n");
-			packet->Dump();
+		REQUIRE(packet->GetLatestTimestamp() == 3275706443);
 
 		SECTION("serialize packet instance")
 		{
@@ -269,15 +269,15 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
-		packet->AddPacket(999, 10000000, RtcpMtu);  // Pre base.
-		packet->AddPacket(1000, 10000000, RtcpMtu); // Base.
-		packet->AddPacket(1001, 10000001, RtcpMtu);
-		packet->AddPacket(1002, 10000002, RtcpMtu);
-		packet->AddPacket(1003, 10000003, RtcpMtu);
-		packet->AddPacket(1004, 10000004, RtcpMtu);
-		packet->AddPacket(1005, 10000005, RtcpMtu);
-		packet->AddPacket(1006, 10000006, RtcpMtu);
-		packet->AddPacket(1007, 10000007, RtcpMtu);
+		packet->AddPacket(999, 3275704180, RtcpMtu);  // Pre base.
+		packet->AddPacket(1000, 3275704180, RtcpMtu); // Base.
+		packet->AddPacket(1001, 3275704183, RtcpMtu);
+		packet->AddPacket(1002, 3275704183, RtcpMtu);
+		packet->AddPacket(1003, 3275704183, RtcpMtu);
+		packet->AddPacket(1004, 3275704184, RtcpMtu);
+		packet->AddPacket(1005, 3275704185, RtcpMtu);
+		packet->AddPacket(1006, 3275704185, RtcpMtu);
+		packet->AddPacket(1007, 3275704187, RtcpMtu);
 
 		packet->Finish();
 
@@ -285,7 +285,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetPacketStatusCount() == 8);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 		REQUIRE(packet->GetLatestSequenceNumber() == 1007);
-		REQUIRE(packet->GetLatestTimestamp() == 10000007);
+		REQUIRE(packet->GetLatestTimestamp() == 3275704187);
 
 			// TODO
 			printf("packet->Dump() 5a\n");
@@ -326,13 +326,13 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet2->SetFeedbackPacketCount(2);
 
 		packet2->AddPacket(latestWideSeqNumber, latestTimestamp, RtcpMtu);
-		packet2->AddPacket(1008, 10000008, RtcpMtu);
-		packet2->AddPacket(1009, 10000009, RtcpMtu);
-		packet2->AddPacket(1010, 10000010, RtcpMtu);
-		packet2->AddPacket(1011, 10000011, RtcpMtu);
-		packet2->AddPacket(1012, 10000012, RtcpMtu);
-		packet2->AddPacket(1013, 10000013, RtcpMtu);
-		packet2->AddPacket(1014, 10000014, RtcpMtu);
+		packet2->AddPacket(1008, 3275704188, RtcpMtu);
+		packet2->AddPacket(1009, 3275704189, RtcpMtu);
+		packet2->AddPacket(1010, 3275704190, RtcpMtu);
+		packet2->AddPacket(1011, 3275704190, RtcpMtu);
+		packet2->AddPacket(1012, 3275704190, RtcpMtu);
+		packet2->AddPacket(1013, 3275704194, RtcpMtu);
+		packet2->AddPacket(1014, 3275704194, RtcpMtu);
 
 		packet2->Finish();
 
@@ -340,7 +340,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet2->GetPacketStatusCount() == 7);
 		REQUIRE(packet2->GetFeedbackPacketCount() == 2);
 		REQUIRE(packet2->GetLatestSequenceNumber() == 1014);
-		REQUIRE(packet2->GetLatestTimestamp() == 10000014);
+		REQUIRE(packet2->GetLatestTimestamp() == 3275704194);
 
 			// TODO
 			printf("packet2->Dump() 5c\n");
