@@ -18,11 +18,11 @@ struct TestFeedbackRtpTransportInput
 	size_t maxPacketSize{ 0 };
 };
 
-void validate(std::vector<struct TestFeedbackRtpTransportInput> inputs, std::vector<struct FeedbackRtpTransportPacket::PacketResult> packetResults)
+void validate(const std::vector<struct TestFeedbackRtpTransportInput> inputs, std::vector<struct FeedbackRtpTransportPacket::PacketResult> packetResults)
 {
 	auto inputsIterator = inputs.begin();
 	auto packetResultsIterator = packetResults.begin();
-	auto& lastInput = *inputsIterator;
+	auto lastInput = *inputsIterator;
 
 	for (++inputsIterator; inputsIterator != inputs.end(); ++inputsIterator, ++packetResultsIterator)
 	{
@@ -49,7 +49,7 @@ void validate(std::vector<struct TestFeedbackRtpTransportInput> inputs, std::vec
 			REQUIRE(packetResult.sequenceNumber == lastInput.sequenceNumber + 1);
 			REQUIRE(packetResult.sequenceNumber == input.sequenceNumber);
 			REQUIRE(packetResult.received == true);
-			// TODO. verify reference time.
+			REQUIRE((static_cast<int32_t>(packetResult.receivedAt & 0x1FFFFFC0) / 64) == static_cast<int32_t>((input.timestamp) & 0x1FFFFFC0) / 64);
 		}
 
 		lastInput = input;
