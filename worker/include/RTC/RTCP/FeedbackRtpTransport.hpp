@@ -53,6 +53,7 @@ namespace RTC
 				bool received{ false };  // Packet received or not.
 				int32_t receivedAt{ 0 }; // Received time (ms) in remote timestamp reference.
 			};
+
 		private:
 			enum Status : uint8_t
 			{
