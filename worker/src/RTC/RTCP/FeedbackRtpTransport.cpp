@@ -114,12 +114,11 @@ namespace RTC
 			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader) +
 			             sizeof(FeedbackPacket::Header);
 
-			this->size = len;
-
 			this->baseSequenceNumber  = Utils::Byte::Get2Bytes(data, 0);
 			this->packetStatusCount   = Utils::Byte::Get2Bytes(data, 2);
 			this->referenceTime       = parseReferenceTime(data + 4u);
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
+			this->size                = len;
 
 			// Make contentData point to the beginning of the chunks.
 			uint8_t* contentData = data + FeedbackRtpTransportPacket::fixedHeaderSize;
