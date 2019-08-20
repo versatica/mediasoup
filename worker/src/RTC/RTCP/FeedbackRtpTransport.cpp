@@ -357,7 +357,7 @@ namespace RTC
 				}
 			}
 
-			// Deltas are represented as multiples of 250us.
+			// Deltas are represented as multiples of 250 us.
 			// NOTE: Read it as int 64 to detect long elapsed times.
 			int64_t delta64 = (timestamp - this->latestTimestamp) * 4;
 
