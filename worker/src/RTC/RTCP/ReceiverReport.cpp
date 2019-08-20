@@ -80,7 +80,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket());
+			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket(header));
 
 			uint32_t ssrc =
 			  Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(header), sizeof(CommonHeader));

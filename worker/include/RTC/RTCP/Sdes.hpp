@@ -101,6 +101,7 @@ namespace RTC
 
 		public:
 			SdesPacket();
+			explicit SdesPacket(CommonHeader* commonHeader);
 			~SdesPacket() override;
 
 			void AddChunk(SdesChunk* chunk);
@@ -215,6 +216,10 @@ namespace RTC
 		/* Inline instance methods. */
 
 		inline SdesPacket::SdesPacket() : Packet(RTCP::Type::SDES)
+		{
+		}
+
+		inline SdesPacket::SdesPacket(CommonHeader* commonHeader) : Packet(commonHeader)
 		{
 		}
 

@@ -187,7 +187,7 @@ namespace RTC
 
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-			std::unique_ptr<SdesPacket> packet(new SdesPacket());
+			std::unique_ptr<SdesPacket> packet(new SdesPacket(header));
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
 

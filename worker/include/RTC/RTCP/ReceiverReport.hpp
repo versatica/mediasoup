@@ -68,6 +68,7 @@ namespace RTC
 
 		public:
 			ReceiverReportPacket();
+			explicit ReceiverReportPacket(CommonHeader* commonHeader);
 			~ReceiverReportPacket() override;
 
 			uint32_t GetSsrc() const;
@@ -196,6 +197,11 @@ namespace RTC
 		}
 
 		inline ReceiverReportPacket::ReceiverReportPacket() : Packet(Type::RR)
+		{
+		}
+
+		inline ReceiverReportPacket::ReceiverReportPacket(CommonHeader* commonHeader)
+		  : Packet(commonHeader)
 		{
 		}
 

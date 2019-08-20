@@ -109,7 +109,7 @@ namespace RTC
 
 		inline Packet::Packet(CommonHeader* commonHeader)
 		{
-			this->type = RTCP::Type(commonHeader->packetType);
+			this->type   = RTCP::Type(commonHeader->packetType);
 			this->header = commonHeader;
 		}
 

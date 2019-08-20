@@ -61,7 +61,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::unique_ptr<SenderReportPacket> packet(new SenderReportPacket());
+			// Get the header.
+			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+
+			std::unique_ptr<SenderReportPacket> packet(new SenderReportPacket(header));
 			size_t offset = sizeof(Packet::CommonHeader);
 
 			SenderReport* report = SenderReport::Parse(data + offset, len - offset);

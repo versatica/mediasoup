@@ -20,6 +20,7 @@ namespace RTC
 
 		public:
 			ByePacket();
+			explicit ByePacket(CommonHeader* commonHeader);
 			~ByePacket() override = default;
 
 			void AddSsrc(uint32_t ssrc);
@@ -43,6 +44,10 @@ namespace RTC
 		/* Inline instance methods. */
 
 		inline ByePacket::ByePacket() : Packet(Type::BYE)
+		{
+		}
+
+		inline ByePacket::ByePacket(CommonHeader* commonHeader) : Packet(commonHeader)
 		{
 		}
 

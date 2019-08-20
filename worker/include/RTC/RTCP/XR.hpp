@@ -76,6 +76,7 @@ namespace RTC
 
 		public:
 			ExtendedReportPacket();
+			explicit ExtendedReportPacket(CommonHeader* commonHeader);
 			~ExtendedReportPacket() override;
 
 			void AddReport(ExtendedReportBlock* report);
@@ -128,6 +129,11 @@ namespace RTC
 		/* Inline ExtendedReportPacket instance methods. */
 
 		inline ExtendedReportPacket::ExtendedReportPacket() : Packet(Type::XR)
+		{
+		}
+
+		inline ExtendedReportPacket::ExtendedReportPacket(CommonHeader* commonHeader)
+		  : Packet(commonHeader)
 		{
 		}
 

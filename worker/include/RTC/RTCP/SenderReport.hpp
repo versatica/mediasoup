@@ -64,6 +64,7 @@ namespace RTC
 
 		public:
 			SenderReportPacket();
+			explicit SenderReportPacket(CommonHeader* commonHeader);
 			~SenderReportPacket() override;
 
 			void AddReport(SenderReport* report);
@@ -164,6 +165,10 @@ namespace RTC
 		/* Inline instance methods. */
 
 		inline SenderReportPacket::SenderReportPacket() : Packet(Type::SR)
+		{
+		}
+
+		inline SenderReportPacket::SenderReportPacket(CommonHeader* commonHeader) : Packet(commonHeader)
 		{
 		}
 
