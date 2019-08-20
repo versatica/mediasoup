@@ -211,6 +211,7 @@ namespace RTC
 			std::vector<int16_t> deltas;
 			Context context; // Just for locally generated packets.
 			size_t deltasAndChunksSize{ 0u };
+			size_t size{ 0 };
 			bool isCorrect{ true };
 		};
 
@@ -276,6 +277,9 @@ namespace RTC
 
 		inline size_t FeedbackRtpTransportPacket::GetSize() const
 		{
+			if (this->size)
+				return this->size;
+
 			// Fixed packet size.
 			size_t size = FeedbackRtpPacket::GetSize();
 

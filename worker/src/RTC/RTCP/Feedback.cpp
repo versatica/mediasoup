@@ -43,7 +43,7 @@ namespace RTC
 
 		template<typename T>
 		FeedbackPacket<T>::FeedbackPacket(CommonHeader* commonHeader)
-		  : Packet(RTCP::Type(commonHeader->packetType)),
+		  : Packet(commonHeader),
 		    messageType(typename T::MessageType(commonHeader->count))
 		{
 			this->header =

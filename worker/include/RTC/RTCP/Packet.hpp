@@ -60,6 +60,7 @@ namespace RTC
 
 		public:
 			explicit Packet(Type type);
+			explicit Packet(CommonHeader* commonHeader);
 			virtual ~Packet();
 
 			void SetNext(Packet* packet);
@@ -104,6 +105,12 @@ namespace RTC
 
 		inline Packet::Packet(Type type) : type(type)
 		{
+		}
+
+		inline Packet::Packet(CommonHeader* commonHeader)
+		{
+			this->type = RTCP::Type(commonHeader->packetType);
+			this->header = commonHeader;
 		}
 
 		inline Packet::~Packet() = default;
