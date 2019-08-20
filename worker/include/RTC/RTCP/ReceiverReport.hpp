@@ -32,7 +32,6 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit ReceiverReport(Header* header);
 			explicit ReceiverReport(ReceiverReport* report);
-
 			// Locally generated Report. Holds the data internally.
 			ReceiverReport();
 
