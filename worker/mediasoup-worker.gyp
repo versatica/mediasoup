@@ -7,7 +7,8 @@
       'deps/libuv/uv.gyp:libuv',
       'deps/openssl/openssl.gyp:openssl',
       'deps/libsrtp/libsrtp.gyp:libsrtp',
-      'deps/usrsctp/usrsctp.gyp:usrsctp'
+      'deps/usrsctp/usrsctp.gyp:usrsctp',
+      'deps/abseil-cpp/abseil-cpp.gyp:abseil'
     ],
     # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
     # 'defines': [ 'SCTP_DEBUG' ],
@@ -304,7 +305,8 @@
     ],
     'include_dirs':
     [
-      'include'
+      'include',
+      'deps/abseil-cpp'
     ],
     'conditions':
     [
