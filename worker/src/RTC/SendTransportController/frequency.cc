@@ -8,28 +8,24 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #include "RTC/SendTransportController/frequency.h"
+#include <sstream>
+#include <iomanip> // setfill, setw.
 
 // #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
-// TODO: jmillan
-  std::string ToString(Frequency /*value*/) {
-    return std::string("ToString implementation missing!!!!");
+std::string ToString(Frequency value) {
+  std::ostringstream sb;
+  if (value.IsPlusInfinity()) {
+    sb << "+inf Hz";
+  } else if (value.IsMinusInfinity()) {
+    sb << "-inf Hz";
+  } else if (value.millihertz<int64_t>() % 1000 != 0) {
+    sb << std::setfill('0') << std::setw(2) << value.hertz<double>() << " Hz";
+  } else {
+    sb << value.hertz<int64_t>() << " Hz";
   }
-
-// std::string ToString(Frequency value) {
-  // char buf[64];
-  // rtc::SimpleStringBuilder sb(buf);
-  // if (value.IsPlusInfinity()) {
-    // sb << "+inf Hz";
-  // } else if (value.IsMinusInfinity()) {
-    // sb << "-inf Hz";
-  // } else if (value.millihertz<int64_t>() % 1000 != 0) {
-    // sb.AppendFormat("%.3f Hz", value.hertz<double>());
-  // } else {
-    // sb << value.hertz<int64_t>() << " Hz";
-  // }
-  // return sb.str();
-// }
+  return sb.str();
+}
 }  // namespace webrtc

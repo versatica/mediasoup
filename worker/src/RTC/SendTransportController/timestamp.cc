@@ -9,30 +9,25 @@
  */
 
 #include "RTC/SendTransportController/timestamp.h"
+#include <sstream>
 
 // #include "api/array_view.h"
 // #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
-  // TODO: jmillan
-  std::string ToString(Timestamp /*value*/) {
-    return std::string("ToString implementation missing!!!!");
+std::string ToString(Timestamp value) {
+  std::ostringstream sb;
+  if (value.IsPlusInfinity()) {
+    sb << "+inf ms";
+  } else if (value.IsMinusInfinity()) {
+    sb << "-inf ms";
+  } else {
+    if (value.ms() % 1000 == 0)
+      sb << value.seconds() << " s";
+    else
+      sb << value.ms() << " ms";
   }
-
-// std::string ToString(Timestamp value) {
-  // char buf[64];
-  // rtc::SimpleStringBuilder sb(buf);
-  // if (value.IsPlusInfinity()) {
-    // sb << "+inf ms";
-  // } else if (value.IsMinusInfinity()) {
-    // sb << "-inf ms";
-  // } else {
-    // if (value.ms() % 1000 == 0)
-      // sb << value.seconds() << " s";
-    // else
-      // sb << value.ms() << " ms";
-  // }
-  // return sb.str();
-// }
+  return sb.str();
+}
 }  // namespace webrtc

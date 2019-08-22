@@ -9,27 +9,22 @@
  */
 
 #include "RTC/SendTransportController/data_size.h"
+#include <sstream>
 
 // #include "api/array_view.h"
 // #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
-// TODO: jmillan
-  std::string ToString(DataSize /*value*/) {
-    return std::string("ToString implementation missing!!!!");
+std::string ToString(DataSize value) {
+  std::ostringstream sb;
+  if (value.IsPlusInfinity()) {
+    sb << "+inf bytes";
+  } else if (value.IsMinusInfinity()) {
+    sb << "-inf bytes";
+  } else {
+    sb << value.bytes() << " bytes";
   }
-
-// std::string ToString(DataSize value) {
-  // char buf[64];
-  // rtc::SimpleStringBuilder sb(buf);
-  // if (value.IsPlusInfinity()) {
-    // sb << "+inf bytes";
-  // } else if (value.IsMinusInfinity()) {
-    // sb << "-inf bytes";
-  // } else {
-    // sb << value.bytes() << " bytes";
-  // }
-  // return sb.str();
-// }
+  return sb.str();
+}
 }  // namespace webrtc

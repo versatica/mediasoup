@@ -9,33 +9,28 @@
  */
 
 #include "RTC/SendTransportController/time_delta.h"
+#include <sstream>
 
 // #include "api/array_view.h"
 // #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
- // TODO: jmillan
-  std::string ToString(TimeDelta /*value*/) {
-    return std::string("ToString implementation missing!!!!");
+std::string ToString(TimeDelta value) {
+  std::ostringstream sb;
+  if (value.IsPlusInfinity()) {
+    sb << "+inf ms";
+  } else if (value.IsMinusInfinity()) {
+    sb << "-inf ms";
+  } else {
+    if (value.us() == 0 || (value.us() % 1000) != 0)
+      sb << value.us() << " us";
+    else if (value.ms() % 1000 != 0)
+      sb << value.ms() << " ms";
+    else
+      sb << value.seconds() << " s";
   }
-
-// std::string ToString(TimeDelta value) {
-  // char buf[64];
-  // rtc::SimpleStringBuilder sb(buf);
-  // if (value.IsPlusInfinity()) {
-    // sb << "+inf ms";
-  // } else if (value.IsMinusInfinity()) {
-    // sb << "-inf ms";
-  // } else {
-    // if (value.us() == 0 || (value.us() % 1000) != 0)
-      // sb << value.us() << " us";
-    // else if (value.ms() % 1000 != 0)
-      // sb << value.ms() << " ms";
-    // else
-      // sb << value.seconds() << " s";
-  // }
-  // return sb.str();
-// }
+  return sb.str();
+}
 
 }  // namespace webrtc
