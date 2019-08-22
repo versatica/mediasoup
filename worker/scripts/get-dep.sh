@@ -158,6 +158,15 @@ function get_fuzzer_corpora()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
+function get_abseil_cpp()
+{
+	GIT_REPO="https://github.com/abseil/abseil-cpp"
+	GIT_TAG="93d155bc4414f6c121bb1f19dba9fdb27c8943bc"
+	DEST="deps/abseil-cpp/abseil-cpp"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
@@ -196,6 +205,9 @@ case "${DEP}" in
 		;;
 	fuzzer-corpora)
 		get_fuzzer_corpora
+		;;
+	abseil-cpp)
+		get_abseil_cpp
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2
