@@ -23,7 +23,7 @@
 #include "RTC/SendTransportController/data_rate.h"
 #include "RTC/SendTransportController/bwe_defines.h"
 #include "RTC/SendTransportController/overuse_detector.h"
-// #include "rtc_base/experiments/field_trial_parser.h"
+#include "RTC/SendTransportController/field_trial_parser.h"
 // #include "rtc_base/logging.h"
 #include "RTC/SendTransportController/safe_minmax.h"
 
@@ -95,27 +95,23 @@ AimdRateControl::AimdRateControl(const WebRtcKeyValueConfig* key_value_config,
           IsEnabled(*key_value_config, "WebRTC-Bwe-EstimateBoundedBackoff")),
       estimate_bounded_increase_(
           IsEnabled(*key_value_config, "WebRTC-Bwe-EstimateBoundedIncrease")),
-      // TODO: jmillan
-      // initial_backoff_interval_(),
-      low_throughput_threshold_(DataRate::Zero()),
-      capacity_deviation_ratio_threshold_(0.2),
-      capacity_limit_deviation_factor_(1) {
+      initial_backoff_interval_("initial_backoff_interval"),
+      low_throughput_threshold_("low_throughput", DataRate::Zero()),
+      capacity_deviation_ratio_threshold_("cap_thr", 0.2),
+      capacity_limit_deviation_factor_("cap_lim", 1) {
   // E.g
   // WebRTC-BweAimdRateControlConfig/initial_backoff_interval:100ms,
   // low_throughput:50kbps/
-  // TODO: jmillan
-  // ParseFieldTrial({&initial_backoff_interval_, &low_throughput_threshold_},
-                  // key_value_config->Lookup("WebRTC-BweAimdRateControlConfig"));
-  // TODO: jmillan
-  // if (initial_backoff_interval_) {
-    // MS_DEBUG_TAG(bwe, "Using aimd rate control with initial back-off interval: %s",
-                     // ToString(initial_backoff_interval_).c_str());
-  // }
+  ParseFieldTrial({&initial_backoff_interval_, &low_throughput_threshold_},
+                  key_value_config->Lookup("WebRTC-BweAimdRateControlConfig"));
+  if (initial_backoff_interval_) {
+    MS_DEBUG_TAG(bwe, "Using aimd rate control with initial back-off interval: %s",
+                     ToString(*initial_backoff_interval_).c_str());
+  }
   MS_DEBUG_TAG(bwe, "Using aimd rate control with back off factor: %f ", beta_);
-  // TODO: jmillan
-  // ParseFieldTrial(
-      // {&capacity_deviation_ratio_threshold_, &capacity_limit_deviation_factor_},
-      // key_value_config->Lookup("WebRTC-Bwe-AimdRateControl-NetworkState"));
+  ParseFieldTrial(
+      {&capacity_deviation_ratio_threshold_, &capacity_limit_deviation_factor_},
+      key_value_config->Lookup("WebRTC-Bwe-AimdRateControl-NetworkState"));
 }
 
 AimdRateControl::~AimdRateControl() {}
@@ -163,22 +159,17 @@ bool AimdRateControl::TimeToReduceFurther(Timestamp at_time,
 }
 
 bool AimdRateControl::InitialTimeToReduceFurther(Timestamp at_time) const {
-  // TODO: jmillan
+  if (!initial_backoff_interval_) {
     return ValidEstimate() &&
            TimeToReduceFurther(at_time,
                                LatestEstimate() / 2 - DataRate::bps(1));
-  // if (!initial_backoff_interval_) {
-    // return ValidEstimate() &&
-           // TimeToReduceFurther(at_time,
-                               // LatestEstimate() / 2 - DataRate::bps(1));
-  // }
+  }
   // TODO(terelius): We could use the RTT (clamped to suitable limits) instead
   // of a fixed bitrate_reduction_interval.
-  // TODO: jmillan
-  // if (time_last_bitrate_decrease_.IsInfinite() ||
-      // at_time - time_last_bitrate_decrease_ >= initial_backoff_interval_) {
-    // return true;
-  // }
+  if (time_last_bitrate_decrease_.IsInfinite() ||
+      at_time - time_last_bitrate_decrease_ >= *initial_backoff_interval_) {
+    return true;
+  }
   return false;
 }
 
@@ -342,7 +333,7 @@ DataRate AimdRateControl::ChangeBitrate(DataRate new_bitrate,
         if (link_capacity_.has_estimate()) {
           new_bitrate = std::max(new_bitrate, link_capacity_.estimate());
         }
-        new_bitrate = std::min(new_bitrate, low_throughput_threshold_);
+        new_bitrate = std::min(new_bitrate, low_throughput_threshold_.Get());
       }
       new_bitrate = std::min(new_bitrate, current_bitrate_);
 

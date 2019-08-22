@@ -20,7 +20,7 @@
 #include "RTC/SendTransportController/timestamp.h"
 #include "RTC/SendTransportController/goog_cc/link_capacity_estimator.h"
 #include "RTC/SendTransportController/bwe_defines.h"
-// #include "rtc_base/experiments/field_trial_parser.h"
+#include "RTC/SendTransportController/field_trial_parser.h"
 
 namespace webrtc {
 // A rate control implementation based on additive increases of
@@ -115,13 +115,12 @@ class AimdRateControl {
   // bitrate over the acknowledged rate.
   const bool estimate_bounded_increase_;
   absl::optional<DataRate> last_decrease_;
-  // TODO: jmillan
-  // TimeDelta initial_backoff_interval_;
-  DataRate low_throughput_threshold_;
+  FieldTrialOptional<TimeDelta> initial_backoff_interval_;
+  FieldTrialParameter<DataRate> low_throughput_threshold_;
   // Deprecated, enable |estimate_bounded_backoff_| instead.
-  double capacity_deviation_ratio_threshold_;
+  FieldTrialOptional<double> capacity_deviation_ratio_threshold_;
   // Deprecated, enable |estimate_bounded_increase_| instead.
-  double capacity_limit_deviation_factor_;
+  FieldTrialOptional<double> capacity_limit_deviation_factor_;
 };
 }  // namespace webrtc
 
