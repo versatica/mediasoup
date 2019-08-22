@@ -18,8 +18,8 @@
 #include "RTC/SendTransportController/webrtc_key_value_config.h"
 #include "RTC/SendTransportController/data_rate.h"
 #include "RTC/SendTransportController/timestamp.h"
-#include "RTC/SendTransportController/goog_cc/link_capacity_estimator.h"
-#include "RTC/SendTransportController/bwe_defines.h"
+#include "RTC/SendTransportController/congestion_controller/link_capacity_estimator.h"
+#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
 #include "RTC/SendTransportController/field_trial_parser.h"
 
 namespace webrtc {

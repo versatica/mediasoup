@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 #include "RTC/SendTransportController/webrtc_key_value_config.h"
-#include "RTC/SendTransportController/bwe_defines.h"
+#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
 #include "RTC/SendTransportController/constructor_magic.h"
 
 namespace webrtc {

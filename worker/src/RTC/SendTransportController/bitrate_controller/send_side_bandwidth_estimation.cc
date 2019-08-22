@@ -19,7 +19,7 @@
 // #include "logging/rtc_event_log/events/rtc_event.h"
 // #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
 // #include "logging/rtc_event_log/rtc_event_log.h"
-#include "RTC/SendTransportController/bwe_defines.h"
+#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
 // #include "rtc_base/checks.h"
 // #include "rtc_base/logging.h"
 #include "RTC/SendTransportController/field_trial.h"
