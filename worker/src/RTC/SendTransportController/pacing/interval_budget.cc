@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-#include "RTC/SendTransportController/interval_budget.h"
+#include "RTC/SendTransportController/pacing/interval_budget.h"
 #include "RTC/SendTransportController/safe_conversions.h"
 
 namespace webrtc {

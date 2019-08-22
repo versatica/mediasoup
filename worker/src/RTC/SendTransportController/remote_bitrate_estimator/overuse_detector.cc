@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/overuse_detector.h"
+#include "RTC/SendTransportController/remote_bitrate_estimator/overuse_detector.h"
 
 #include <math.h>
 #include <stdio.h>

@@ -24,7 +24,7 @@
 #include "RTC/SendTransportController/data_rate.h"
 #include "RTC/SendTransportController/time_delta.h"
 #include "RTC/SendTransportController/timestamp.h"
-#include "RTC/SendTransportController/loss_based_bandwidth_estimation.h"
+#include "RTC/SendTransportController/bitrate_controller/loss_based_bandwidth_estimation.h"
 #include "RTC/SendTransportController/field_trial_parser.h"
 
 namespace webrtc {

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/aimd_rate_control.h"
+#include "RTC/SendTransportController/remote_bitrate_estimator/aimd_rate_control.h"
 
 #include <inttypes.h>
 

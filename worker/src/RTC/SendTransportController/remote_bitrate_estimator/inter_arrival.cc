@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/inter_arrival.h"
+#include "RTC/SendTransportController/remote_bitrate_estimator/inter_arrival.h"
 
 #include <cassert>
 

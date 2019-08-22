@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/loss_based_bandwidth_estimation.h"
+#include "RTC/SendTransportController/bitrate_controller/loss_based_bandwidth_estimation.h"
 
 #include <algorithm>
 #include <string>
