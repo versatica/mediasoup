@@ -59,10 +59,9 @@ AlrDetector::AlrDetector(
               ? experiment_settings->alr_stop_budget_level_percent / 100.0
               : kDefaultStopBudgetLevelRatio),
       alr_budget_(0, true) {
-  // TODO: jmillan
-  // ParseFieldTrial({&bandwidth_usage_ratio_, &start_budget_level_ratio_,
-                   // &stop_budget_level_ratio_},
-                  // key_value_config->Lookup("WebRTC-AlrDetectorParameters"));
+  ParseFieldTrial({&bandwidth_usage_ratio_, &start_budget_level_ratio_,
+                   &stop_budget_level_ratio_},
+                  key_value_config->Lookup("WebRTC-AlrDetectorParameters"));
 }
 
 AlrDetector::~AlrDetector() {}

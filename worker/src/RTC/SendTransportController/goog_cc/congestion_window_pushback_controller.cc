@@ -17,7 +17,7 @@
 #include <string>
 
 // #include "rtc_base/checks.h"
-// #include "rtc_base/experiments/rate_control_settings.h"
+#include "RTC/SendTransportController/rate_control_settings.h"
 
 namespace webrtc {
 
@@ -26,11 +26,9 @@ CongestionWindowPushbackController::CongestionWindowPushbackController(
     : add_pacing_(
           key_value_config->Lookup("WebRTC-AddPacingToCongestionWindowPushback")
               .find("Enabled") == 0),
-      min_pushback_target_bitrate_bps_(100000) {}
-      // TODO: jmillan.
-      // min_pushback_target_bitrate_bps_(
-          // RateControlSettings::ParseFromKeyValueConfig(key_value_config)
-              // .CongestionWindowMinPushbackTargetBitrateBps()) {}
+      min_pushback_target_bitrate_bps_(
+          RateControlSettings::ParseFromKeyValueConfig(key_value_config)
+              .CongestionWindowMinPushbackTargetBitrateBps()) {}
 
 CongestionWindowPushbackController::CongestionWindowPushbackController(
     const WebRtcKeyValueConfig* key_value_config,

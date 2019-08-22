@@ -37,22 +37,27 @@ const char kBweThroughputWindowConfig[] = "WebRTC-BweThroughputWindowConfig";
 
 BitrateEstimator::BitrateEstimator(const WebRtcKeyValueConfig* key_value_config)
     : sum_(0),
-      initial_window_ms_(kInitialRateWindowMs),
-      noninitial_window_ms_(kRateWindowMs),
-      uncertainty_scale_(10.0),
-      uncertainty_scale_in_alr_(10.0),
-      uncertainty_symmetry_cap_(DataRate::Zero()),
-      estimate_floor_(DataRate::Zero()),
+      initial_window_ms_("initial_window_ms",
+                         kInitialRateWindowMs,
+                         kMinRateWindowMs,
+                         kMaxRateWindowMs),
+      noninitial_window_ms_("window_ms",
+                            kRateWindowMs,
+                            kMinRateWindowMs,
+                            kMaxRateWindowMs),
+      uncertainty_scale_("scale", 10.0),
+      uncertainty_scale_in_alr_("scale_alr", 10.0),
+      uncertainty_symmetry_cap_("symmetry_cap", DataRate::Zero()),
+      estimate_floor_("floor", DataRate::Zero()),
       current_window_ms_(0),
       prev_time_ms_(-1),
       bitrate_estimate_kbps_(-1.0f),
       bitrate_estimate_var_(50.0f) {
   // E.g WebRTC-BweThroughputWindowConfig/initial_window_ms:350,window_ms:250/
-  // TODO: jmillan.
-  // ParseFieldTrial({&initial_window_ms_, &noninitial_window_ms_,
-                   // &uncertainty_scale_, &uncertainty_scale_in_alr_,
-                   // &uncertainty_symmetry_cap_, &estimate_floor_},
-                  // key_value_config->Lookup(kBweThroughputWindowConfig));
+  ParseFieldTrial({&initial_window_ms_, &noninitial_window_ms_,
+                   &uncertainty_scale_, &uncertainty_scale_in_alr_,
+                   &uncertainty_symmetry_cap_, &estimate_floor_},
+                  key_value_config->Lookup(kBweThroughputWindowConfig));
 }
 
 BitrateEstimator::~BitrateEstimator() = default;
@@ -85,7 +90,7 @@ void BitrateEstimator::Update(Timestamp at_time, DataSize amount, bool in_alr) {
       scale * std::abs(bitrate_estimate_kbps_ - bitrate_sample_kbps) /
       (bitrate_estimate_kbps_ +
        std::min(bitrate_sample_kbps,
-                uncertainty_symmetry_cap_.kbps<float>()));
+                uncertainty_symmetry_cap_.Get().kbps<float>()));
 
   float sample_var = sample_uncertainty * sample_uncertainty;
   // Update a bayesian estimate of the rate, weighting it lower if the sample
@@ -97,7 +102,7 @@ void BitrateEstimator::Update(Timestamp at_time, DataSize amount, bool in_alr) {
                             pred_bitrate_estimate_var * bitrate_sample_kbps) /
                            (sample_var + pred_bitrate_estimate_var);
   bitrate_estimate_kbps_ =
-      std::max(bitrate_estimate_kbps_, estimate_floor_.kbps<float>());
+      std::max(bitrate_estimate_kbps_, estimate_floor_.Get().kbps<float>());
   bitrate_estimate_var_ = sample_var * pred_bitrate_estimate_var /
                           (sample_var + pred_bitrate_estimate_var);
   MS_DEBUG_TAG(bwe, "acknowledged_bitrate %" PRIu64", %f", at_time.ms(),

@@ -16,7 +16,7 @@
 
 #include "RTC/SendTransportController/data_rate.h"
 #include "RTC/SendTransportController/time_delta.h"
-// #include "system_wrappers/include/field_trial.h"
+#include "RTC/SendTransportController/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -74,9 +74,7 @@ double ExponentialUpdate(TimeDelta window, TimeDelta interval) {
 }  // namespace
 
 LossBasedControlConfig::LossBasedControlConfig()
-    // TODO: jmillan
-    : enabled(true),
-    // : enabled(field_trial::IsEnabled(kBweLossBasedControl)),
+    : enabled(field_trial::IsEnabled(kBweLossBasedControl)),
       min_increase_factor("min_incr", 1.02),
       max_increase_factor("max_incr", 1.08),
       increase_low_rtt("incr_low_rtt", TimeDelta::ms(200)),
@@ -92,16 +90,15 @@ LossBasedControlConfig::LossBasedControlConfig()
       allow_resets("resets", false),
       decrease_interval("decr_intvl", TimeDelta::ms(300)),
       loss_report_timeout("timeout", TimeDelta::ms(6000)) {
-  // TODO: jmillan
-  // std::string trial_string = field_trial::FindFullName(kBweLossBasedControl);
-  // ParseFieldTrial(
-      // {&min_increase_factor, &max_increase_factor, &increase_low_rtt,
-       // &increase_high_rtt, &decrease_factor, &loss_window, &loss_max_window,
-       // &acknowledged_rate_max_window, &increase_offset,
-       // &loss_bandwidth_balance_increase, &loss_bandwidth_balance_decrease,
-       // &loss_bandwidth_balance_exponent, &allow_resets, &decrease_interval,
-       // &loss_report_timeout},
-      // trial_string);
+  std::string trial_string = field_trial::FindFullName(kBweLossBasedControl);
+  ParseFieldTrial(
+      {&min_increase_factor, &max_increase_factor, &increase_low_rtt,
+       &increase_high_rtt, &decrease_factor, &loss_window, &loss_max_window,
+       &acknowledged_rate_max_window, &increase_offset,
+       &loss_bandwidth_balance_increase, &loss_bandwidth_balance_decrease,
+       &loss_bandwidth_balance_exponent, &allow_resets, &decrease_interval,
+       &loss_report_timeout},
+      trial_string);
 }
 LossBasedControlConfig::LossBasedControlConfig(const LossBasedControlConfig&) =
     default;

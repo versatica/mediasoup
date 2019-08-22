@@ -17,7 +17,7 @@
 #include "RTC/SendTransportController/webrtc_key_value_config.h"
 #include "RTC/SendTransportController/data_rate.h"
 #include "RTC/SendTransportController/timestamp.h"
-// #include "rtc_base/experiments/field_trial_parser.h"
+#include "RTC/SendTransportController/field_trial_parser.h"
 
 namespace webrtc {
 
@@ -40,12 +40,12 @@ class BitrateEstimator {
  private:
   float UpdateWindow(int64_t now_ms, int bytes, int rate_window_ms);
   int sum_;
-  int initial_window_ms_;
-  int noninitial_window_ms_;
-  double uncertainty_scale_;
-  double uncertainty_scale_in_alr_;
-  DataRate uncertainty_symmetry_cap_;
-  DataRate estimate_floor_;
+  FieldTrialConstrained<int> initial_window_ms_;
+  FieldTrialConstrained<int> noninitial_window_ms_;
+  FieldTrialParameter<double> uncertainty_scale_;
+  FieldTrialParameter<double> uncertainty_scale_in_alr_;
+  FieldTrialParameter<DataRate> uncertainty_symmetry_cap_;
+  FieldTrialParameter<DataRate> estimate_floor_;
   int64_t current_window_ms_;
   int64_t prev_time_ms_;
   float bitrate_estimate_kbps_;
