@@ -46,8 +46,10 @@ struct GoogCcConfig {
 
 class GoogCcNetworkController : public NetworkControllerInterface {
  public:
-  GoogCcNetworkController(NetworkControllerConfig config,
-                          GoogCcConfig congestion_controller_config);
+  // jmillan: TODO.
+  GoogCcNetworkController(NetworkControllerConfig config);
+  // GoogCcNetworkController(NetworkControllerConfig config,
+                          // GoogCcConfig congestion_controller_config);
   ~GoogCcNetworkController() override;
 
   // NetworkControllerInterface
@@ -57,7 +59,6 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   NetworkControlUpdate OnRemoteBitrateReport(RemoteBitrateReport msg) override;
   NetworkControlUpdate OnRoundTripTimeUpdate(RoundTripTimeUpdate msg) override;
   NetworkControlUpdate OnSentPacket(SentPacket msg) override;
-  NetworkControlUpdate OnReceivedPacket(ReceivedPacket msg) override;
   NetworkControlUpdate OnStreamsConfig(StreamsConfig msg) override;
   NetworkControlUpdate OnTargetRateConstraints(
       TargetRateConstraints msg) override;
@@ -125,7 +126,6 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   int32_t last_estimated_bitrate_bps_ = 0;
   uint8_t last_estimated_fraction_loss_ = 0;
   int64_t last_estimated_rtt_ms_ = 0;
-  Timestamp last_packet_received_time_ = Timestamp::MinusInfinity();
 
   double pacing_factor_;
   DataRate min_total_allocated_bitrate_;

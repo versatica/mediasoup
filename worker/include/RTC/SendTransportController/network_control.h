@@ -73,8 +73,6 @@ class NetworkControllerInterface {
   virtual NetworkControlUpdate OnRoundTripTimeUpdate(RoundTripTimeUpdate) = 0;
   // Called when a packet is sent on the network.
   virtual NetworkControlUpdate OnSentPacket(SentPacket) = 0;
-  // Called when a packet is received from the remote client.
-  virtual NetworkControlUpdate OnReceivedPacket(ReceivedPacket) = 0;
   // Called when the stream specific configuration has been updated.
   virtual NetworkControlUpdate OnStreamsConfig(StreamsConfig) = 0;
   // Called when target transfer rate constraints has been changed.

@@ -62,11 +62,15 @@ bool IsNotDisabled(const WebRtcKeyValueConfig* config, absl::string_view key) {
 }
 }  // namespace
 
-GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
-                                                 GoogCcConfig congestion_controller_config)
+// jmillan: TODO.
+// GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
+                                                 // GoogCcConfig congestion_controller_config)
+GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config)
     : key_value_config_(config.key_value_config ? config.key_value_config
                                                 : &trial_based_config_),
-      packet_feedback_only_(congestion_controller_config.feedback_only),
+      // jmillan.
+      // packet_feedback_only_(congestion_controller_config.feedback_only),
+      packet_feedback_only_(false),
       safe_reset_on_route_change_("Enabled"),
       safe_reset_acknowledged_rate_("ack"),
       use_stable_bandwidth_estimate_(
@@ -92,9 +96,13 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       alr_detector_(
           absl::make_unique<AlrDetector>(key_value_config_)),
       probe_bitrate_estimator_(new ProbeBitrateEstimator()),
-      network_estimator_(std::move(congestion_controller_config.network_state_estimator)),
-      network_state_predictor_(
-          std::move(congestion_controller_config.network_state_predictor)),
+      // jmillan.
+      // network_estimator_(std::move(congestion_controller_config.network_state_estimator)),
+      network_estimator_(nullptr),
+      // jmillan.
+      // network_state_predictor_(
+          // std::move(congestion_controller_config.network_state_predictor)),
+      network_state_predictor_(nullptr),
       delay_based_bwe_(new DelayBasedBwe(key_value_config_,
                                          network_state_predictor_.get())),
       acknowledged_bitrate_estimator_(
@@ -205,11 +213,6 @@ NetworkControlUpdate GoogCcNetworkController::OnProcessInterval(
   update.probe_cluster_configs.insert(update.probe_cluster_configs.end(),
                                       probes.begin(), probes.end());
 
-  if (rate_control_settings_.UseCongestionWindow() &&
-      use_downlink_delay_for_congestion_window_ &&
-      last_packet_received_time_.IsFinite() && !feedback_max_rtts_.empty()) {
-    UpdateCongestionWindowSize(msg.at_time - last_packet_received_time_);
-  }
   if (congestion_window_pushback_controller_ && current_data_window_) {
     congestion_window_pushback_controller_->SetDataWindow(
         *current_data_window_);
@@ -273,12 +276,6 @@ NetworkControlUpdate GoogCcNetworkController::OnSentPacket(
   } else {
     return NetworkControlUpdate();
   }
-}
-
-NetworkControlUpdate GoogCcNetworkController::OnReceivedPacket(
-    ReceivedPacket received_packet) {
-  last_packet_received_time_ = received_packet.receive_time;
-  return NetworkControlUpdate();
 }
 
 NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(

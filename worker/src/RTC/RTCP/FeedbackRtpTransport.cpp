@@ -443,6 +443,7 @@ namespace RTC
 					continue;
 
 				currentReceivedAt += this->deltas.at(deltaIdx) / 4;
+				packetResult.delta = this->deltas.at(deltaIdx);
 				packetResult.receivedAt = currentReceivedAt;
 				deltaIdx++;
 			}
