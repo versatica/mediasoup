@@ -172,6 +172,7 @@ module.exports =
 		'spaced-comment': [ 2, 'always' ],
 		'strict': 2,
 		'valid-typeof': 2,
-		'yoda': 2
+		'yoda': 2,
+		"linebreak-style": 0
 	}
 };

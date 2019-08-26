@@ -1281,7 +1281,7 @@ namespace RTC
 		uint8_t* srtpLocalSalt;
 		uint8_t* srtpRemoteKey;
 		uint8_t* srtpRemoteSalt;
-		uint8_t* srtpLocalMasterKey = new uint8_t[srtpMasterLength];
+		uint8_t* srtpLocalMasterKey  = new uint8_t[srtpMasterLength];
 		uint8_t* srtpRemoteMasterKey = new uint8_t[srtpMasterLength];
 		int ret;
 
@@ -1336,9 +1336,9 @@ namespace RTC
 		  srtpMasterLength,
 		  this->remoteCert);
 
-		delete[]srtpMaterial;
-		delete[]srtpLocalMasterKey;
-		delete[]srtpRemoteMasterKey;
+		delete[] srtpMaterial;
+		delete[] srtpLocalMasterKey;
+		delete[] srtpRemoteMasterKey;
 	}
 
 	inline RTC::SrtpSession::Profile DtlsTransport::GetNegotiatedSrtpProfile()

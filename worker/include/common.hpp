@@ -1,9 +1,9 @@
 #ifndef MS_COMMON_HPP
 #define MS_COMMON_HPP
 
-#include <algorithm>    // std::transform(), std::find(), std::min(), std::max()
+#include <algorithm> // std::transform(), std::find(), std::min(), std::max()
 #ifdef _MSC_VER
-#include <winsock2.h> 
+#include <winsock2.h>
 #undef max // https://stackoverflow.com/a/27443191/2085408
 #undef min
 
@@ -11,16 +11,16 @@
 #if !defined(_SSIZE_T_) && !defined(_SSIZE_T_DEFINED)
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
-# define SSIZE_MAX INTPTR_MAX
-# define _SSIZE_T_
-# define _SSIZE_T_DEFINED
+#define SSIZE_MAX INTPTR_MAX
+#define _SSIZE_T_
+#define _SSIZE_T_DEFINED
 #endif
 
 #else
 #include <arpa/inet.h>  // htonl(), htons(), ntohl(), ntohs()
 #include <netinet/in.h> // sockaddr_in, sockaddr_in6
 #include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
-#endif // _WINDOWS
+#endif                  // _WINDOWS
 #include <cinttypes>    // PRIu64, etc
 #include <cstddef>      // size_t
 #include <cstdint>      // uint8_t, etc

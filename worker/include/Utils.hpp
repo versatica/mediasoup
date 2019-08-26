@@ -13,7 +13,6 @@
 #define __builtin_popcount __popcnt
 #endif // _WIN32
 
-
 namespace Utils
 {
 	class IP
