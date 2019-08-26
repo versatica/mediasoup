@@ -10,9 +10,13 @@
 #include <cerrno>
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
+#ifdef _MSC_VER
+#include "opt/getopt.h"
+#else
 extern "C" {
 #include <getopt.h>
 }
+#endif // _MSC_VER
 
 /* Class variables. */
 

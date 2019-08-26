@@ -2,7 +2,9 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
+#ifndef _MSC_VER
 #include <unistd.h> // getpid()
+#endif
 
 /* Class variables. */
 

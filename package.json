@@ -19,9 +19,6 @@
     "sfu",
     "nodejs"
   ],
-  "os": [
-    "!win32"
-  ],
   "engines": {
     "node": ">=8.6.0"
   },
@@ -34,7 +31,7 @@
     "test:node": "make -C worker && jest",
     "test:worker": "make test -C worker",
     "coverage:node": "make -C worker && jest --coverage && open-cli coverage/lcov-report/index.html",
-    "postinstall": "make -C worker"
+    "postinstall": "gulp build"
   },
   "jest": {
     "verbose": true,
@@ -46,13 +43,18 @@
     "h264-profile-level-id": "^1.0.0",
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "gulp": "^4.0.2",
+    "gulp-clang-format": "^1.0.27",    
+    "gulp-eslint": "^6.0.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-replace": "^1.0.0",
+    "gulp-shell": "^0.6.5",
+    "gulp-touch-cmd": "0.0.1"
   },
   "devDependencies": {
     "eslint": "^6.1.0",
     "eslint-plugin-jest": "^22.13.6",
-    "gulp": "^4.0.2",
-    "gulp-clang-format": "^1.0.27",
     "jest": "^24.8.0",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^5.0.0",

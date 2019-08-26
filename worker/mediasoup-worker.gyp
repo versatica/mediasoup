@@ -271,6 +271,13 @@
         'ldflags': [ '-Wl,--export-dynamic' ]
       }],
 
+      [ 'OS == "win"', {
+        'sources': [
+          'include/opt/getopt.h',
+          'opt/getopt.cpp'
+        ]
+      }],
+
       [ 'OS != "win"', {
         'cflags': [ '-std=c++11', '-Wall', '-Wextra', '-Wno-unused-parameter', '-Wno-implicit-fallthrough' ]
       }],
@@ -298,7 +305,13 @@
       [
         # C++ source files.
         'src/main.cpp'
-      ]
+      ],
+      # handle multi files with same name
+      # https://stackoverflow.com/a/22936230/2085408
+      # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
+      'msvs_settings': {
+          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
+      }
     },
     {
       'target_name': 'mediasoup-worker-test',
@@ -356,6 +369,12 @@
         'OTHER_LDFLAGS': [
           '--coverage'
         ]
+      },
+      # handle multi files with same name
+      # https://stackoverflow.com/a/22936230/2085408
+      # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
+      'msvs_settings': {
+          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
       }
     },
     {
@@ -419,6 +438,13 @@
       [
         'fuzzer/include'
       ],
+      # handle multi files with same name
+      # https://stackoverflow.com/a/22936230/2085408
+      # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
+      'msvs_settings': {
+          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
+      },
+
       'conditions':
       [
         [ 'OS == "linux"', {

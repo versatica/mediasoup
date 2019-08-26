@@ -85,6 +85,11 @@ if __name__ == '__main__':
     args.append('-Dclang=%d' % int(is_clang))
     if is_clang == False and major == 4 and minor <= 8:
       raise RuntimeError('gcc <= 4.8 not supported, please upgrade your gcc')
+  else:
+    if 'ninja' not in args:
+      args.extend(['-Goutput_dir=' + output_dir])
+      args.extend(['--generator-output', output_dir])
+
 
   if not any(a.startswith('-Dhost_arch=') for a in args):
     args.append('-Dhost_arch=%s' % host_arch())

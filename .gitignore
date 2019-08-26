@@ -22,3 +22,6 @@
 
 # Mac Stuff.
 .DS_Store
+
+# Win Stuff
+configure.pyc

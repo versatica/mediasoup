@@ -21,7 +21,11 @@
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
-#include <unistd.h> // usleep()
+#ifdef _MSC_VER
+#define usleep Sleep
+#else
+#include <unistd.h> // getpid(), usleep()
+#endif
 
 static constexpr int ChannelFd{ 3 };
 
@@ -137,6 +141,7 @@ int main(int argc, char* argv[])
 
 void IgnoreSignals()
 {
+#ifndef _MSC_VER
 	MS_TRACE();
 
 	int err;
@@ -170,4 +175,5 @@ void IgnoreSignals()
 		if (err != 0)
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
 	}
+#endif
 }
