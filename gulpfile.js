@@ -47,7 +47,7 @@ gulp.task('win:build', shell.task(
 		`MSBuild ./worker/out/mediasoup-worker.sln /p:Configuration=${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ?'Debug' : 'Release'} -t:mediasoup-worker `
 	],
 	{
-		verbose : true,
+		verbose : true
 	}
 ));
 
