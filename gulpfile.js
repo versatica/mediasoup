@@ -61,3 +61,17 @@ gulp.task('make:build', shell.task(
 ));
 
 gulp.task('build', gulp.series(os.platform() === 'win32'? 'win:build' : 'make:build'));
+
+gulp.task('test:win:worker', shell.task(
+	[
+		'echo not support yet!!'
+	]
+));
+
+gulp.task('test:make:worker', shell.task(
+	[
+		'make test -C worker'
+	]
+));
+
+gulp.task('test:worker', gulp.series(os.platform() === 'win32'? 'test:win:worker' : 'test:make:worker'))

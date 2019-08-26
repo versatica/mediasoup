@@ -25,12 +25,12 @@
   "scripts": {
     "lint": "npm run lint:node && npm run lint:worker",
     "lint:node": "eslint -c .eslintrc.js gulpfile.js lib test",
-    "lint:worker": "make lint -C worker",
-    "format:worker": "make format -C worker",
+    "lint:worker": "gulp lint:worker",
+    "format:worker": "gulp format:worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "make -C worker && jest",
-    "test:worker": "make test -C worker",
-    "coverage:node": "make -C worker && jest --coverage && open-cli coverage/lcov-report/index.html",
+    "test:node": "gulp build && jest",
+    "test:worker": "gulp test:worker",
+    "coverage:node": "gulp build && jest --coverage && open-cli coverage/lcov-report/index.html",
     "postinstall": "gulp build"
   },
   "jest": {
