@@ -225,7 +225,6 @@
       'include/RTC/SendTransportController/constructor_magic.h',
       'include/RTC/SendTransportController/data_rate.h',
       'include/RTC/SendTransportController/data_size.h',
-      'include/RTC/SendTransportController/deprecation.h',
       'include/RTC/SendTransportController/field_trial.h',
       'include/RTC/SendTransportController/field_trial_based_config.h',
       'include/RTC/SendTransportController/field_trial_parser.h',
