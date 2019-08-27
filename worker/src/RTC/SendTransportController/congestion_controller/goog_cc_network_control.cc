@@ -65,12 +65,11 @@ bool IsNotDisabled(const WebRtcKeyValueConfig* config, absl::string_view key) {
 // jmillan: TODO.
 // GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
                                                  // GoogCcConfig congestion_controller_config)
-GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config)
+GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
+    GoogCcConfig congestion_controller_config)
     : key_value_config_(config.key_value_config ? config.key_value_config
                                                 : &trial_based_config_),
-      // jmillan.
-      // packet_feedback_only_(congestion_controller_config.feedback_only),
-      packet_feedback_only_(false),
+      packet_feedback_only_(congestion_controller_config.feedback_only),
       safe_reset_on_route_change_("Enabled"),
       safe_reset_acknowledged_rate_("ack"),
       use_stable_bandwidth_estimate_(

@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-// #include "api/network_state_predictor.h"
+#include "RTC/SendTransportController/network_state_predictor.h"
 #include "RTC/SendTransportController/network_control.h"
 // #include "call/rtp_bitrate_configurator.h"
 #include "RTC/SendTransportController/rtp_transport_controller_send_interface.h"
@@ -44,6 +44,8 @@ class RtpTransportControllerSend final
       public Timer::Listener {
  public:
   RtpTransportControllerSend(
+      NetworkStatePredictorFactoryInterface* predictor_factory,
+      NetworkControllerFactoryInterface* controller_factory,
       const BitrateConstraints& bitrate_config);
   ~RtpTransportControllerSend() override;
 
@@ -112,7 +114,8 @@ class RtpTransportControllerSend final
   // Does this observer receive the clean BW that can distribute among consumers?
   TargetTransferRateObserver* observer_;
 
-  // jmillan: We need this.
+  NetworkControllerFactoryInterface* const controller_factory_override_;
+
   TransportFeedbackAdapter transport_feedback_adapter_;
 
   std::unique_ptr<CongestionControlHandler> control_handler_;

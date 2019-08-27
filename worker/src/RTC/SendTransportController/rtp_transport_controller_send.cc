@@ -54,9 +54,12 @@ TargetRateConstraints ConvertConstraints(const BitrateConstraints& contraints) {
 }  // namespace
 
 RtpTransportControllerSend::RtpTransportControllerSend(
+    NetworkStatePredictorFactoryInterface* predictor_factory,
+    NetworkControllerFactoryInterface* controller_factory,
     const BitrateConstraints& bitrate_config)
     : pacer_(&packet_router_),
       observer_(nullptr),
+      controller_factory_override_(controller_factory),
       // from: api/transport/goog_cc_factory.cc.
       // const int64_t kUpdateIntervalMs = 25;
       process_interval_(TimeDelta::ms(25)),
@@ -243,8 +246,8 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
       Timestamp::ms(DepLibUV::GetTime());
 
   // jmillan: properly create
-  GoogCcConfig congestion_controller_config;
-  controller_ = absl::make_unique<GoogCcNetworkController>(initial_config_);
+  controller_ = controller_factory_override_->Create(initial_config_);
+  process_interval_ = controller_factory_override_->GetProcessInterval();
 
   UpdateControllerWithTimeInterval();
   StartProcessPeriodicTasks();

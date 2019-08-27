@@ -46,10 +46,8 @@ struct GoogCcConfig {
 
 class GoogCcNetworkController : public NetworkControllerInterface {
  public:
-  // jmillan: TODO.
-  GoogCcNetworkController(NetworkControllerConfig config);
-  // GoogCcNetworkController(NetworkControllerConfig config,
-                          // GoogCcConfig congestion_controller_config);
+  GoogCcNetworkController(NetworkControllerConfig config,
+                          GoogCcConfig congestion_controller_config);
   ~GoogCcNetworkController() override;
 
   // NetworkControllerInterface
