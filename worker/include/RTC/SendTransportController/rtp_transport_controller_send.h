@@ -27,8 +27,6 @@
 #include "RTC/SendTransportController/field_trial_based_config.h"
 #include "RTC/SendTransportController/pacing/packet_router.h"
 #include "RTC/SendTransportController/pacing/paced_sender.h"
-#include "RTC/Transport.hpp"
-
 #include "handles/Timer.hpp"
 
 namespace webrtc {
@@ -44,13 +42,12 @@ class RtpTransportControllerSend final
       public Timer::Listener {
  public:
   RtpTransportControllerSend(
+      PacketRouter* packet_router,
       NetworkStatePredictorFactoryInterface* predictor_factory,
       NetworkControllerFactoryInterface* controller_factory,
       const BitrateConstraints& bitrate_config);
   ~RtpTransportControllerSend() override;
 
-  // Implements RtpTransportControllerSendInterface
-  // jmillan: PacketRouter is our Transport.
   PacketRouter* packet_router() override;
 
   NetworkStateEstimateObserver* network_state_estimate_observer() override;
@@ -105,12 +102,10 @@ class RtpTransportControllerSend final
   void UpdateControlState();
 
   const FieldTrialBasedConfig trial_based_config_;
-  // jmillan: can this be Transport.cpp
-  PacketRouter packet_router_;
+
+  PacketRouter* packet_router_;
   PacedSender pacer_;
 
-  // jmillan: Transport.cpp
-  // Does this observer receive the clean BW that can distribute among consumers?
   TargetTransferRateObserver* observer_;
 
   NetworkControllerFactoryInterface* const controller_factory_override_;
@@ -138,10 +133,9 @@ class RtpTransportControllerSend final
   // TODO(srte): Remove atomic when feedback adapter runs on task queue.
   std::atomic<size_t> transport_overhead_bytes_per_packet_;
 
-  // jmillan: should be 'transportConnected' or similar, as used in other parts (Consumer, Producer, etc)
   bool network_available_;
-  Timer* pacer_queue_update_task_periodic_timer;
-  Timer* controller_task_periodic_timer;
+  Timer* pacer_queue_update_task_periodic_timer_;
+  Timer* controller_task_periodic_timer_;
 
   // TODO(perkj): |task_queue_| is supposed to replace |process_thread_|.
   // |task_queue_| is defined last to ensure all pending tasks are cancelled

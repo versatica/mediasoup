@@ -21,6 +21,7 @@
 #include "RTC/RtpProbator.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include "RTC/SctpListener.hpp"
+#include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "handles/Timer.hpp"
 #include <string>
@@ -37,6 +38,7 @@ namespace RTC
 	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::RembClient::Listener,
 	                  public RTC::RembServer::RemoteBitrateEstimator::Listener,
+	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public RTC::RtpProbator::Listener,
 	                  public Timer::Listener
@@ -201,6 +203,15 @@ namespace RTC
 		  const std::vector<uint32_t>& ssrcs,
 		  uint32_t availableBitrate) override;
 
+		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
+	public:
+		void OnTransportCongestionControlClientTargetTransferRate(
+		  RTC::TransportCongestionControlClient* tccClient,
+		  webrtc::TargetTransferRate targetTransferRate) override;
+
+		void OnTransportCongestionControlClientSendRtpPacket(
+		  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet) override;
+
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlServer::Listener. */
 	public:
 		void OnTransportCongestionControlServerSendRtcpPacket(
@@ -232,6 +243,7 @@ namespace RTC
 		Timer* rtcpTimer{ nullptr };
 		RTC::RembClient* rembClient{ nullptr };
 		RTC::RembServer::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
+		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
 		RTC::RtpProbator* rtpProbator{ nullptr };
 		Timer* rtpProbationTimer{ nullptr };

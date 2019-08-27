@@ -189,6 +189,10 @@ namespace RTC
 		delete this->rembServer;
 		this->rembServer = nullptr;
 
+		// Delete Transport-CC client.
+		delete this->tccClient;
+		this->tccClient = nullptr;
+
 		// Delete Transport-CC server.
 		delete this->tccServer;
 		this->tccServer = nullptr;
@@ -742,6 +746,54 @@ namespace RTC
 					auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
 					auto& codecs                = consumer->GetRtpParameters().codecs;
 
+					// Set TCC client bitrate estimator:
+					// - if not already set, and
+					// - Consumer is simulcast or SVC, and
+					// - there is transport-wide-cc-01 RTP header extension, and
+					// - there is "transport-cc" in codecs RTCP feedback.
+					//
+					// clang-format off
+					if (
+						!this->tccClient &&
+						!this->rembClient &&
+						(
+							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+							consumer->GetType() == RTC::RtpParameters::Type::SVC
+						) &&
+						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RtcpFeedback& fb)
+									{
+										return fb.type == "transport-cc";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TCC client");
+
+						this->tccClient = new RTC::TransportCongestionControlClient(this);
+
+						// If the transport is connected, tell the Transport-CC client.
+						if (IsConnected())
+							this->tccClient->TransportConnected();
+
+						// Tell all the Consumers that we are gonna manage their bitrate.
+						for (auto& kv : this->mapConsumers)
+						{
+							auto* consumer = kv.second;
+
+							consumer->SetExternallyManagedBitrate();
+						};
+
+						// Start the RTP probation timer if connected.
+						if (IsConnected())
+							this->rtpProbationTimer->Start(0, 0);
+					}
+
 					// Set REMB client bitrate estimator:
 					// - if not already set, and
 					// - Consumer is simulcast or SVC, and
@@ -749,7 +801,8 @@ namespace RTC
 					// - there is "remb" in codecs RTCP feedback.
 					//
 					// clang-format off
-					if (
+					else if (
+						!this->tccClient &&
 						!this->rembClient &&
 						(
 							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
@@ -786,7 +839,7 @@ namespace RTC
 					}
 					// Otherwise, if REMB client is set, tell the new Consumer that we are
 					// gonna manage its bitrate.
-					else if (this->rembClient)
+					else if (this->rembClient || this->tccClient)
 					{
 						consumer->SetExternallyManagedBitrate();
 					}
@@ -1097,6 +1150,10 @@ namespace RTC
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
+		// Tell the Transport-CC client.
+		if (this->tccClient)
+			this->tccClient->TransportConnected();
+
 		// Tell the Transport-CC server.
 		if (this->tccServer)
 			this->tccServer->TransportConnected();
@@ -1129,6 +1186,10 @@ namespace RTC
 
 		// Stop the RTCP timer.
 		this->rtcpTimer->Stop();
+
+		// Tell the Transport-CC client.
+		if (this->tccClient)
+			this->tccClient->TransportDisconnected();
 
 		// Tell the Transport-CC server.
 		if (this->tccServer)
@@ -1457,6 +1518,14 @@ namespace RTC
 					}
 
 					consumer->ReceiveRtcpReceiverReport(report);
+
+					// TODO. Convert report to ReportBlock and pass to tccClient.
+					// RTCPReportBlock in include/RTC/SendTransportController/rtp_rtcp_defines.h
+					// if (this->tccClient)
+					// {
+					// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
+					// DepLibUV::GetTime());
+					// }
 				}
 
 				break;
@@ -1516,6 +1585,10 @@ namespace RTC
 							// Pass it to the REMB client.
 							if (this->rembClient)
 								this->rembClient->ReceiveRembFeedback(remb);
+
+							// Pass it to the TCC client.
+							if (this->tccClient)
+								this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
 
 							break;
 						}
@@ -1582,11 +1655,14 @@ namespace RTC
 
 					case RTC::RTCP::FeedbackRtp::MessageType::TCC:
 					{
-						// auto* feedback = static_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
+						auto* feedback = static_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
 
 						// TODO: REMOVE
 						// feedback->Dump();
 						// MS_DUMP_DATA(feedback->GetData(), feedback->GetSize());
+
+						if (this->tccClient)
+							this->tccClient->ReceiveRtcpTransportFeedback(feedback);
 
 						break;
 					}
@@ -2012,6 +2088,17 @@ namespace RTC
 		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
 			this->transportWideSeq++;
 
+		if (this->tccClient)
+		{
+			// TODO: Fill retransmission flag.
+			this->tccClient->InsertPacket(
+			  packet->GetSsrc(),
+			  this->transportWideSeq,
+			  DepLibUV::GetTime(),
+			  packet->GetSize(),
+			  false /* retransmission */);
+		}
+
 		SendRtpPacket(packet);
 	}
 
@@ -2267,6 +2354,23 @@ namespace RTC
 		packet.Serialize(RTC::RTCP::Buffer);
 
 		SendRtcpPacket(&packet);
+	}
+
+	inline void Transport::OnTransportCongestionControlClientTargetTransferRate(
+	  RTC::TransportCongestionControlClient* /*tccClient*/,
+	  webrtc::TargetTransferRate targetTransferRate)
+	{
+		MS_TRACE();
+
+		MS_DUMP("OnTransportCongestionControlClientTargetTransferRate");
+	}
+
+	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(
+	  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		SendRtpPacket(packet);
 	}
 
 	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(

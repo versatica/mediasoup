@@ -125,8 +125,6 @@ void PacedSender::InsertPacket(uint32_t ssrc,
 
   if (capture_time_ms < 0)
     capture_time_ms = now_ms;
-
-  // jmillan:: Send the packet!
 }
 
 void PacedSender::SetAccountForAudioPackets(bool account_for_audio) {

@@ -32,6 +32,8 @@ namespace webrtc {
 namespace {
 static const size_t kMaxOverheadBytes = 500;
 
+constexpr TimeDelta kPacerQueueUpdateInterval = TimeDelta::Millis<25>();
+
 TargetRateConstraints ConvertConstraints(int min_bitrate_bps,
                                          int max_bitrate_bps,
                                          int start_bitrate_bps) {
@@ -54,10 +56,12 @@ TargetRateConstraints ConvertConstraints(const BitrateConstraints& contraints) {
 }  // namespace
 
 RtpTransportControllerSend::RtpTransportControllerSend(
+    PacketRouter* packet_router,
     NetworkStatePredictorFactoryInterface* predictor_factory,
     NetworkControllerFactoryInterface* controller_factory,
     const BitrateConstraints& bitrate_config)
-    : pacer_(&packet_router_),
+    : packet_router_(packet_router),
+      pacer_(packet_router_),
       observer_(nullptr),
       controller_factory_override_(controller_factory),
       // from: api/transport/goog_cc_factory.cc.
@@ -76,6 +80,17 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
+  if (pacer_queue_update_task_periodic_timer_)
+  {
+    pacer_queue_update_task_periodic_timer_->Stop();
+    delete pacer_queue_update_task_periodic_timer_;
+  }
+
+  if (controller_task_periodic_timer_)
+  {
+    controller_task_periodic_timer_->Stop();
+    delete controller_task_periodic_timer_;
+  }
 }
 
 void RtpTransportControllerSend::UpdateControlState() {
@@ -88,7 +103,7 @@ void RtpTransportControllerSend::UpdateControlState() {
 }
 
 PacketRouter* RtpTransportControllerSend::packet_router() {
-  return &this->packet_router_;
+  return this->packet_router_;
 }
 
 NetworkStateEstimateObserver*
@@ -223,17 +238,16 @@ void RtpTransportControllerSend::OnRemoteNetworkEstimate(
 
 void RtpTransportControllerSend::OnTimer(Timer* timer)
 {
-	if (timer == pacer_queue_update_task_periodic_timer)
+	if (timer == pacer_queue_update_task_periodic_timer_)
 	{
 		UpdateControlState();
 	}
-	else if (timer == controller_task_periodic_timer)
+	else if (timer == controller_task_periodic_timer_)
 	{
 		UpdateControllerWithTimeInterval();
   }
 }
 
-// jmillan: this should be done on transport connected.
 void RtpTransportControllerSend::MaybeCreateControllers() {
   // RTC_DCHECK(!controller_);
   // RTC_DCHECK(!control_handler_);
@@ -260,8 +274,10 @@ void RtpTransportControllerSend::UpdateInitialConstraints(
   initial_config_.constraints = new_contraints;
 }
 
-// jmillan: moved to OnTimer.
 void RtpTransportControllerSend::StartProcessPeriodicTasks() {
+  pacer_queue_update_task_periodic_timer_->Start(kPacerQueueUpdateInterval.ms(), kPacerQueueUpdateInterval.ms());
+
+  controller_task_periodic_timer_->Start(process_interval_.ms(), process_interval_.ms());
 }
 
 void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
