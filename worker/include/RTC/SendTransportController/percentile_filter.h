@@ -16,8 +16,6 @@
 #include <iterator>
 #include <set>
 
-// #include "rtc_base/checks.h"
-
 namespace webrtc {
 
 // Class to efficiently get the percentile value from a group of observations.

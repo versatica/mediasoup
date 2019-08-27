@@ -16,7 +16,6 @@
 #include <string>
 
 #include "RTC/SendTransportController/field_trial_based_config.h"
-// #include "rtc_base/logging.h"
 #include "Logger.hpp"
 
 #define MS_CLASS "AlrExperiment"

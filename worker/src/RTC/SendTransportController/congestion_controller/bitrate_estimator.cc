@@ -18,8 +18,6 @@
 
 #include "RTC/SendTransportController/data_rate.h"
 #include "Logger.hpp"
-// #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
-// #include "rtc_base/logging.h"
 
 #define MS_CLASS "BitrateEstimator"
 

@@ -11,8 +11,6 @@
 #include <sstream>
 #include <iomanip> // setfill, setw.
 
-// #include "rtc_base/strings/string_builder.h"
-
 namespace webrtc {
 
 std::string ToString(Frequency value) {

@@ -17,7 +17,6 @@
 
 #include "RTC/SendTransportController/field_trial_based_config.h"
 #include "RTC/SendTransportController/field_trial_parser.h"
-// #include "rtc_base/logging.h"
 #include "RTC/SendTransportController/safe_conversions.h"
 
 namespace webrtc {

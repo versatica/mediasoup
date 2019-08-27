@@ -16,7 +16,6 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
-// #include "rtc_base/checks.h"
 #include "RTC/SendTransportController/safe_conversions.h"
 
 namespace webrtc {

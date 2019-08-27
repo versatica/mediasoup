@@ -245,7 +245,6 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
   initial_config_.constraints.at_time =
       Timestamp::ms(DepLibUV::GetTime());
 
-  // jmillan: properly create
   controller_ = controller_factory_override_->Create(initial_config_);
   process_interval_ = controller_factory_override_->GetProcessInterval();
 

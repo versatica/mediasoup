@@ -17,7 +17,6 @@
 #include <limits>
 #include <type_traits>
 
-// #include "rtc_base/checks.h"
 #include "RTC/SendTransportController/safe_conversions.h"
 
 namespace webrtc {

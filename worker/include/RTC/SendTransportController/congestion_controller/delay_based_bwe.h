@@ -27,7 +27,6 @@
 #include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
 #include "RTC/SendTransportController/remote_bitrate_estimator/inter_arrival.h"
 #include "RTC/SendTransportController/constructor_magic.h"
-// #include "rtc_base/race_checker.h"
 
 namespace webrtc {
 class RtcEventLog;
@@ -82,8 +81,6 @@ class DelayBasedBwe {
                       absl::optional<DataRate> acked_bitrate,
                       DataRate* target_bitrate);
 
-  // TODO: jmillan
-  // rtc::RaceChecker network_race_;
   const WebRtcKeyValueConfig* const key_value_config_;
   NetworkStatePredictor* network_state_predictor_;
   std::unique_ptr<InterArrival> inter_arrival_;

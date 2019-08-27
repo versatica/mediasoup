@@ -19,7 +19,6 @@
 #include "absl/types/optional.h"
 #include "RTC/SendTransportController/network_control.h"
 #include "RTC/SendTransportController/webrtc_key_value_config.h"
-// #include "logging/rtc_event_log/rtc_event_log.h"
 #include "RTC/SendTransportController/constructor_magic.h"
 #include "RTC/SendTransportController/field_trial_parser.h"
 #include "RTC/SendTransportController/unused.h"

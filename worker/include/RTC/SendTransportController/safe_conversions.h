@@ -15,7 +15,6 @@
 
 #include <limits>
 
-// #include "rtc_base/checks.h"
 #include "RTC/SendTransportController/safe_conversions_impl.h"
 
 namespace rtc {

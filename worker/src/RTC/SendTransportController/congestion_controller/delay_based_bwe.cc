@@ -17,14 +17,7 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
-// #include "logging/rtc_event_log/events/rtc_event.h"
-// #include "logging/rtc_event_log/events/rtc_event_bwe_update_delay_based.h"
-// #include "logging/rtc_event_log/rtc_event_log.h"
 #include "RTC/SendTransportController/congestion_controller/trendline_estimator.h"
-// #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
-// #include "rtc_base/checks.h"
-// #include "rtc_base/logging.h"
-// #include "system_wrappers/include/metrics.h"
 #include "Logger.hpp"
 
 #define MS_CLASS "DelayBasedBwe"
@@ -97,10 +90,6 @@ DelayBasedBwe::Result DelayBasedBwe::IncomingPacketFeedbackVector(
   }
 
   if (!uma_recorded_) {
-    // TODO: jmillan
-    // RTC_HISTOGRAM_ENUMERATION(kBweTypeHistogram,
-                              // BweNames::kSendSideTransportSeqNum,
-                              // BweNames::kBweNamesMax);
     uma_recorded_ = true;
   }
   bool delayed_feedback = true;
@@ -220,13 +209,7 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
       detector_state != prev_state_) {
     DataRate bitrate = result.updated ? result.target_bitrate : prev_bitrate_;
 
-    // TODO: jmillan
-    // BWE_TEST_LOGGING_PLOT(1, "target_bitrate_bps", at_time.ms(), bitrate.bps());
-
-    // if (event_log_) {
-      // event_log_->Log(absl::make_unique<RtcEventBweUpdateDelayBased>(
-          // bitrate.bps(), detector_state));
-    // }
+    MS_DEBUG_TAG(bwe, "at_time.ms():%lld, target_bitrate_bps: %lld, detector_state: %d", at_time.ms(), bitrate.bps(), detector_state);
 
     prev_bitrate_ = bitrate;
     prev_state_ = detector_state;

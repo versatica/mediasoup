@@ -18,11 +18,7 @@
 #include "RTC/SendTransportController/data_rate.h"
 #include "RTC/SendTransportController/time_delta.h"
 #include "RTC/SendTransportController/timestamp.h"
-// #include "logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
-// #include "rtc_base/checks.h"
-// #include "rtc_base/logging.h"
 #include "RTC/SendTransportController/safe_conversions.h"
-// #include "system_wrappers/include/metrics.h"
 
 #include "Logger.hpp"
 
@@ -82,19 +78,13 @@ constexpr char kAllocProbingOnlyInAlrFieldTrialName[] =
     "WebRTC-BweAllocProbingOnlyInAlr";
 
 void MaybeLogProbeClusterCreated(const ProbeClusterConfig& probe) {
-  // TODO: jmillan
-  return;
+  size_t min_bytes = static_cast<int32_t>(probe.target_data_rate.bps() *
+                                          probe.target_duration.ms() / 8000);
 
-  //RTC_DCHECK(event_log);
-  // if (!event_log) {
-    // return;
-  // }
-
-  // size_t min_bytes = static_cast<int32_t>(probe.target_data_rate.bps() *
-                                          // probe.target_duration.ms() / 8000);
-  // event_log->Log(absl::make_unique<RtcEventProbeClusterCreated>(
-      // probe.id, probe.target_data_rate.bps(), probe.target_probe_count,
-      // min_bytes));
+  MS_DEBUG_TAG(bwe, "probe cluster created [id:%d, target data rate(bps):%lld"
+      "target probe count:%d, min_bytes:%zu]",
+      probe.id, probe.target_data_rate.bps(), probe.target_probe_count,
+      min_bytes);
 }
 
 }  // namespace

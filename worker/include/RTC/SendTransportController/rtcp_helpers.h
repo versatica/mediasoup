@@ -7,7 +7,6 @@
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 
 /*
- * jmillan:
  * Helpers to retrieve necessary data from mediasoup FeedbackRtpTransportPacket.
  */
 

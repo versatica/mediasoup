@@ -79,7 +79,6 @@
 #include <limits>
 #include <type_traits>
 
-// #include "rtc_base/checks.h"
 #include "RTC/SendTransportController/safe_compare.h"
 #include "RTC/SendTransportController/type_traits.h"
 

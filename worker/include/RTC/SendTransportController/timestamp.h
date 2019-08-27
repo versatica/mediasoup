@@ -19,7 +19,6 @@
 #include <type_traits>
 
 #include "RTC/SendTransportController/time_delta.h"
-// #include "rtc_base/checks.h"
 
 namespace webrtc {
 // Timestamp represents the time that has passed since some unspecified epoch.

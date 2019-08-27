@@ -16,14 +16,8 @@
 #include <string>
 
 #include "absl/memory/memory.h"
-// #include "logging/rtc_event_log/events/rtc_event.h"
-// #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
-// #include "logging/rtc_event_log/rtc_event_log.h"
 #include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-// #include "rtc_base/checks.h"
-// #include "rtc_base/logging.h"
 #include "RTC/SendTransportController/field_trial.h"
-// #include "system_wrappers/include/metrics.h"
 #include "Logger.hpp"
 
 #define MS_CLASS "SendSideBandwidthEstimation"
@@ -424,8 +418,8 @@ void SendSideBandwidthEstimation::UpdateUmaStatsPacketsLost(Timestamp at_time,
   } else if (uma_update_state_ == kFirstDone &&
              at_time - first_report_time_ >= kBweConverganceTime) {
     uma_update_state_ = kDone;
-    int bitrate_diff_kbps = std::max(
-        bitrate_at_2_seconds_.kbps<int>() - bitrate_kbps.kbps<int>(), 0);
+    // int bitrate_diff_kbps = std::max(
+        // bitrate_at_2_seconds_.kbps<int>() - bitrate_kbps.kbps<int>(), 0);
     // RTC_HISTOGRAM_COUNTS("WebRTC.BWE.InitialVsConvergedDiff", bitrate_diff_kbps,
                          // 0, 2000, 50);
   }
@@ -655,10 +649,6 @@ void SendSideBandwidthEstimation::CapBitrateToThresholds(Timestamp at_time,
   if (bitrate != current_bitrate_ ||
       last_fraction_loss_ != last_logged_fraction_loss_ ||
       at_time - last_rtc_event_log_ > kRtcEventLogPeriod) {
-    // TODO: jmillan
-    // event_log_->Log(absl::make_unique<RtcEventBweUpdateLossBased>(
-        // bitrate.bps(), last_fraction_loss_,
-        // expected_packets_since_last_loss_update_));
     last_logged_fraction_loss_ = last_fraction_loss_;
     last_rtc_event_log_ = at_time;
   }

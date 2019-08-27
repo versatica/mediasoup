@@ -13,11 +13,6 @@
 #include <algorithm>
 
 #include "absl/memory/memory.h"
-// #include "logging/rtc_event_log/events/rtc_event_probe_result_failure.h"
-// #include "logging/rtc_event_log/events/rtc_event_probe_result_success.h"
-// #include "logging/rtc_event_log/rtc_event_log.h"
-// #include "rtc_base/checks.h"
-// #include "rtc_base/logging.h"
 #include "RTC/SendTransportController/safe_conversions.h"
 #include "Logger.hpp"
 

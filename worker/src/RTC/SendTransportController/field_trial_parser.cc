@@ -16,9 +16,6 @@
 
 #include "Logger.hpp"
 
-// #include "rtc_base/checks.h"
-// #include "rtc_base/logging.h"
-
 #define MS_CLASS "FieldTrialParser"
 
 namespace webrtc {

@@ -13,7 +13,6 @@
 #include <algorithm>
 
 #include "absl/memory/memory.h"
-// #include "system_wrappers/include/metrics.h"
 
 #include "Logger.hpp"
 

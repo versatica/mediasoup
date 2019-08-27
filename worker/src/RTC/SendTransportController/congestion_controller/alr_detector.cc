@@ -17,6 +17,10 @@
 #include "RTC/SendTransportController/safe_conversions.h"
 #include "DepLibUV.hpp"
 
+#include "Logger.hpp"
+
+#define MS_CLASS "AlrDetector"
+
 namespace webrtc {
 
 namespace {
@@ -88,11 +92,9 @@ void AlrDetector::OnBytesSent(size_t bytes_sent, int64_t send_time_ms) {
     state_changed = true;
     alr_started_time_ms_.reset();
   }
-  // TODO: jmillan
-  // if (event_log_ && state_changed) {
-    // event_log_->Log(
-        // absl::make_unique<RtcEventAlrState>(alr_started_time_ms_.has_value()));
-  // }
+
+  if (state_changed)
+    MS_DEBUG_TAG(bwe, "state changed");
 }
 
 void AlrDetector::SetEstimatedBitrate(int bitrate_bps) {

@@ -27,9 +27,6 @@
 #include "RTC/SendTransportController/congestion_controller/alr_detector.h"
 #include "RTC/SendTransportController/congestion_controller/probe_controller.h"
 #include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-// #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
-// #include "rtc_base/checks.h"
-// #include "rtc_base/logging.h"
 #include "Logger.hpp"
 
 #define MS_CLASS "GoogCCNetworkControl"
@@ -62,11 +59,8 @@ bool IsNotDisabled(const WebRtcKeyValueConfig* config, absl::string_view key) {
 }
 }  // namespace
 
-// jmillan: TODO.
-// GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
-                                                 // GoogCcConfig congestion_controller_config)
 GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
-    GoogCcConfig congestion_controller_config)
+                                                 GoogCcConfig congestion_controller_config)
     : key_value_config_(config.key_value_config ? config.key_value_config
                                                 : &trial_based_config_),
       packet_feedback_only_(congestion_controller_config.feedback_only),
@@ -95,13 +89,9 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       alr_detector_(
           absl::make_unique<AlrDetector>(key_value_config_)),
       probe_bitrate_estimator_(new ProbeBitrateEstimator()),
-      // jmillan.
-      // network_estimator_(std::move(congestion_controller_config.network_state_estimator)),
-      network_estimator_(nullptr),
-      // jmillan.
-      // network_state_predictor_(
-          // std::move(congestion_controller_config.network_state_predictor)),
-      network_state_predictor_(nullptr),
+      network_estimator_(std::move(congestion_controller_config.network_state_estimator)),
+      network_state_predictor_(
+          std::move(congestion_controller_config.network_state_predictor)),
       delay_based_bwe_(new DelayBasedBwe(key_value_config_,
                                          network_state_predictor_.get())),
       acknowledged_bitrate_estimator_(

@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <string>
 
-// #include "rtc_base/checks.h"
 #include "RTC/SendTransportController/rate_control_settings.h"
 
 namespace webrtc {

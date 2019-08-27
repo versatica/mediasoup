@@ -22,7 +22,6 @@
 #include "RTC/SendTransportController/data_size.h"
 #include "RTC/SendTransportController/frequency.h"
 #include "RTC/SendTransportController/time_delta.h"
-// #include "rtc_base/checks.h"
 #include "RTC/SendTransportController/unit_base.h"
 
 namespace webrtc {

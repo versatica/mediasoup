@@ -18,18 +18,14 @@
 #include <memory>
 
 #include "absl/types/optional.h"
-// #include "api/function_view.h"
 #include "RTC/SendTransportController/field_trial_based_config.h"
 #include "RTC/SendTransportController/network_types.h"
 #include "RTC/SendTransportController/webrtc_key_value_config.h"
 #include "RTC/SendTransportController/pacing/bitrate_prober.h"
 #include "RTC/SendTransportController/pacing/interval_budget.h"
 #include "RTC/SendTransportController/pacing/packet_router.h"
-// #include "modules/rtp_rtcp/include/rtp_packet_sender.h"
-// #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "RTC/SendTransportController/field_trial_parser.h"
 #include "RTC/RtpPacket.hpp"
-// jmillan.
 #include "RTC/SendTransportController/rtp_packet_send_result.h"
 
 namespace webrtc {

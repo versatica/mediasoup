@@ -17,9 +17,6 @@
 
 #include "absl/types/optional.h"
 #include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-// #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
-// #include "rtc_base/checks.h"
-// #include "rtc_base/logging.h"
 #include "RTC/SendTransportController/safe_minmax.h"
 #include "Logger.hpp"
 

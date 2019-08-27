@@ -24,7 +24,6 @@
 #include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
 #include "RTC/SendTransportController/remote_bitrate_estimator/overuse_detector.h"
 #include "RTC/SendTransportController/field_trial_parser.h"
-// #include "rtc_base/logging.h"
 #include "RTC/SendTransportController/safe_minmax.h"
 
 #define MS_CLASS "AimdRateControl"

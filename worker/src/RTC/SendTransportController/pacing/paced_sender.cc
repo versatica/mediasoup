@@ -17,7 +17,6 @@
 #include "absl/memory/memory.h"
 #include "RTC/SendTransportController/pacing/bitrate_prober.h"
 #include "RTC/SendTransportController/pacing/interval_budget.h"
-// jmillan
 #include "RTC/SendTransportController/rtp_packet_send_result.h"
 
 #include "DepLibUV.hpp"

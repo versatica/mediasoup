@@ -14,7 +14,6 @@
 
 #include "RTC/SendTransportController/module_common_types_public.h"
 #include "Logger.hpp"
-// #include "rtc_base/logging.h"
 
 #define MS_CLASS "InterArrival"
 

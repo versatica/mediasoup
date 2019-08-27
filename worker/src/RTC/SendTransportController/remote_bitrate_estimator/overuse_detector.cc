@@ -17,8 +17,6 @@
 #include <string>
 
 #include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-// #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
-// #include "rtc_base/checks.h"
 #include "RTC/SendTransportController/safe_minmax.h"
 
 namespace webrtc {

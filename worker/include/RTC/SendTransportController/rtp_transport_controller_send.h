@@ -107,7 +107,6 @@ class RtpTransportControllerSend final
   const FieldTrialBasedConfig trial_based_config_;
   // jmillan: can this be Transport.cpp
   PacketRouter packet_router_;
-  // jmillan: just keep the probator from the pacer.
   PacedSender pacer_;
 
   // jmillan: Transport.cpp

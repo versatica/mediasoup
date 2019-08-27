@@ -26,7 +26,6 @@
 #include "RTC/SendTransportController/data_rate.h"
 #include "RTC/SendTransportController/data_size.h"
 #include "RTC/SendTransportController/timestamp.h"
-// #include "logging/rtc_event_log/rtc_event_log.h"
 #include "RTC/SendTransportController/bitrate_controller/send_side_bandwidth_estimation.h"
 #include "RTC/SendTransportController/congestion_controller/acknowledged_bitrate_estimator.h"
 #include "RTC/SendTransportController/congestion_controller/alr_detector.h"
