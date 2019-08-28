@@ -92,6 +92,11 @@ namespace RTC
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
+			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			{
+				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
 				this->rtpHeaderExtensionIds.mid = exten.id;

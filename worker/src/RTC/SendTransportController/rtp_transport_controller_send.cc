@@ -77,6 +77,9 @@ RtpTransportControllerSend::RtpTransportControllerSend(
   // RTC_DCHECK(bitrate_config.start_bitrate_bps > 0);
 
   pacer_.SetPacingRates(bitrate_config.start_bitrate_bps, 0);
+
+  pacer_queue_update_task_periodic_timer_ = new Timer(this);
+  controller_task_periodic_timer_ = new Timer(this);
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
@@ -252,8 +255,10 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
   // RTC_DCHECK(!controller_);
   // RTC_DCHECK(!control_handler_);
 
-  if (!network_available_ || !observer_)
-    return;
+  // jmillan.
+  // if (!network_available_ || !observer_)
+    // return;
+
   control_handler_ = absl::make_unique<CongestionControlHandler>();
 
   initial_config_.constraints.at_time =
@@ -275,9 +280,13 @@ void RtpTransportControllerSend::UpdateInitialConstraints(
 }
 
 void RtpTransportControllerSend::StartProcessPeriodicTasks() {
-  pacer_queue_update_task_periodic_timer_->Start(kPacerQueueUpdateInterval.ms(), kPacerQueueUpdateInterval.ms());
+  auto pacerQueueUpdateInterval = kPacerQueueUpdateInterval.ms();
 
-  controller_task_periodic_timer_->Start(process_interval_.ms(), process_interval_.ms());
+  pacer_queue_update_task_periodic_timer_->Start(pacerQueueUpdateInterval, pacerQueueUpdateInterval);
+
+  auto controllerTaskPeriodicInterval = process_interval_.ms();
+
+  controller_task_periodic_timer_->Start(controllerTaskPeriodicInterval, controllerTaskPeriodicInterval);
 }
 
 void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {

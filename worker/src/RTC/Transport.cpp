@@ -793,7 +793,6 @@ namespace RTC
 						if (IsConnected())
 							this->rtpProbationTimer->Start(0, 0);
 					}
-
 					// Set REMB client bitrate estimator:
 					// - if not already set, and
 					// - Consumer is simulcast or SVC, and
@@ -1852,9 +1851,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TMP.
+		return;
+
 		// TODO: Uncomment when Transport-CC client is done.
-		// MS_ASSERT(this->rembClient || this->transportCcClient, "no REMB client nor Transport-CC client");
-		MS_ASSERT(this->rembClient, "no REMB client");
+		// MS_ASSERT(this->rembClient || this->tccClient, "no REMB client nor Transport-CC client");
+		// MS_ASSERT(this->rembClient, "no REMB client");
 
 		std::multimap<uint16_t, RTC::Consumer*> multimapPriorityConsumer;
 		uint16_t totalPriorities{ 0 };

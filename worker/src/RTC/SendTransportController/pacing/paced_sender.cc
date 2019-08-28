@@ -184,12 +184,19 @@ void PacedSender::Process() {
     size_t padding_bytes_to_add =
       PaddingBytesToAdd(recommended_probe_size, bytes_sent);
     if (padding_bytes_to_add > 0) {
+      MS_DUMP("%zu padding bytes to add", padding_bytes_to_add);
       padding_packets =
         packet_router_->GeneratePadding(padding_bytes_to_add);
       if (padding_packets.empty()) {
         // No padding packets were generated, quite send loop.
         break;
       }
+    }
+    else
+    {
+      MS_DUMP("no padding bytes to add");
+
+      break;
     }
 
     auto packet = padding_packets.front();
