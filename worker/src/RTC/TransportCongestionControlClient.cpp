@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
 // #define MS_LOG_DEV
 
+#include "RTC/SendTransportController/goog_cc_factory.h"
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "Logger.hpp"
 
@@ -30,6 +31,9 @@ namespace RTC
 		// TODO: Create controller factory.
 		if (!controllerFactory)
 		{
+			webrtc::GoogCcFactoryConfig config;
+			config.feedback_only = true;
+			controllerFactory.reset(new webrtc::GoogCcNetworkControllerFactory(std::move(config)));
 		}
 
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
