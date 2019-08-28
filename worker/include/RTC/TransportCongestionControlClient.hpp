@@ -12,7 +12,8 @@
 namespace RTC
 {
 	class TransportCongestionControlClient : public webrtc::PacketRouter,
-	                                         public webrtc::TargetTransferRateObserver
+	                                         public webrtc::TargetTransferRateObserver,
+	                                         public Timer::Listener
 	{
 	public:
 		class Listener
@@ -31,16 +32,15 @@ namespace RTC
 		virtual ~TransportCongestionControlClient();
 
 	public:
-		void InsertPacket(
-		  uint32_t ssrc, uint16_t sequenceNumber, int64_t captureTimeMs, size_t bytes, bool retransmission);
+		void InsertPacket(size_t bytes);
+		void PacketSent(rtc::SentPacket& sentPacket);
 		void TransportConnected();
 		void TransportDisconnected();
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, int64_t rtt, int64_t now_ms);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 
-		// jmillan: missing these two methods:
-		// void OnAddPacket(const RtpPacketSendInfo& packet_info) override;
+		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
 
 		/* Pure virtual methods inherited from webrtc::TargetTransferRateObserver. */
@@ -49,15 +49,20 @@ namespace RTC
 
 		/* Pure virtual methods inherited from webrtc::PacketRouter. */
 	public:
-		virtual void SendPacket(RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& cluster_info) override;
+		virtual void SendPacket(RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
 
-		virtual std::vector<RTC::RtpPacket*> GeneratePadding(size_t target_size_bytes) override;
+		virtual std::vector<RTC::RtpPacket*> GeneratePadding(size_t size) override;
+
+		/* Pure virtual methods inherited from RTC::Timer. */
+	public:
+		void OnTimer(Timer* timer) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };
+		Timer* pacerTimer{ nullptr };
 	};
 } // namespace RTC
 

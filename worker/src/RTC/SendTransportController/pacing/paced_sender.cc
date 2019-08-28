@@ -106,25 +106,17 @@ void PacedSender::SetPacingRates(uint32_t pacing_rate_bps,
   pacing_bitrate_kbps_ = pacing_rate_bps / 1000;
   padding_budget_.set_target_rate_kbps(padding_rate_bps / 1000);
 
-  MS_DEBUG_TAG(bwe, "bwe:pacer_updated pacing_kbps=%" PRIu32
+  MS_DEBUG_TAG(bwe, "pacer_updated pacing_kbps=%" PRIu32
                     " padding_budget_kbps=%" PRIu32,
                       pacing_bitrate_kbps_,
                       padding_rate_bps / 1000);
 }
 
-void PacedSender::InsertPacket(uint32_t ssrc,
-                               uint16_t sequence_number,
-                               int64_t capture_time_ms,
-                               size_t bytes,
-                               bool retransmission) {
-  // RTC_DCHECK(pacing_bitrate_kbps_ > 0)
-      // << "SetPacingRate must be called before InsertPacket.";
+void PacedSender::InsertPacket(size_t bytes) {
+  if (pacing_bitrate_kbps_ == 0)
+      MS_WARN_TAG(bwe, "SetPacingRates() must be called before InsertPacket()");
 
-  int64_t now_ms = DepLibUV::GetTime();
   prober_.OnIncomingPacket(bytes);
-
-  if (capture_time_ms < 0)
-    capture_time_ms = now_ms;
 }
 
 void PacedSender::SetAccountForAudioPackets(bool account_for_audio) {
@@ -204,7 +196,7 @@ void PacedSender::Process() {
     RtpPacketSendResult success;
 
     // jmillan: should we make sure the packet has been sent in order
-    // to set 'success'.
+    // to set 'success'?
     packet_router_->SendPacket(packet, pacing_info);
     success = RtpPacketSendResult::kSuccess;
 

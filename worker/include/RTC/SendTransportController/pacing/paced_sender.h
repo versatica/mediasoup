@@ -69,11 +69,7 @@ class PacedSender {
   // when it's time to send.
   // jmillan: defined in:
   // #include "modules/rtp_rtcp/include/rtp_packet_sender.h"
-  void InsertPacket(uint32_t ssrc,
-                    uint16_t sequence_number,
-                    int64_t capture_time_ms,
-                    size_t bytes,
-                    bool retransmission);
+  void InsertPacket(size_t bytes);
 
   // Currently audio traffic is not accounted by pacer and passed through.
   // With the introduction of audio BWE audio traffic will be accounted for

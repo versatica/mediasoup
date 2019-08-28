@@ -2086,17 +2086,23 @@ namespace RTC
 
 		// Update transport wide sequence number if present.
 		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+		{
 			this->transportWideSeq++;
 
-		if (this->tccClient)
-		{
-			// TODO: Fill retransmission flag.
-			this->tccClient->InsertPacket(
-			  packet->GetSsrc(),
-			  this->transportWideSeq,
-			  DepLibUV::GetTime(),
-			  packet->GetSize(),
-			  false /* retransmission */);
+			if (this->tccClient)
+			{
+				auto now = DepLibUV::GetTime();
+
+				// Indicate the pacer (and prober) that a packet is to be sent.
+				this->tccClient->InsertPacket(packet->GetSize());
+
+				SendRtpPacket(packet);
+
+				rtc::SentPacket sentPacket(this->transportWideSeq, now);
+				this->tccClient->PacketSent(sentPacket);
+
+				return;
+			}
 		}
 
 		SendRtpPacket(packet);

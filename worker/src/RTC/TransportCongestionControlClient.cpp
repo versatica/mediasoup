@@ -37,30 +37,46 @@ namespace RTC
 
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
 
-		// TODO: timers?
+		this->pacerTimer = new Timer(this);
+
+		auto TimeUntilNextProcess =
+		  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess();
+
+		this->pacerTimer->Start(TimeUntilNextProcess);
 	}
 
 	TransportCongestionControlClient::~TransportCongestionControlClient()
 	{
 		MS_TRACE();
 
-		// TODO: timers?
 		delete this->rtpTransportControllerSend;
 		this->rtpTransportControllerSend = nullptr;
+
+		if (this->pacerTimer)
+		{
+			this->pacerTimer->Stop();
+			delete this->pacerTimer;
+		}
 	}
 
-	void TransportCongestionControlClient::InsertPacket(
-	  uint32_t ssrc, uint16_t sequenceNumber, int64_t captureTimeMs, size_t bytes, bool retransmission)
+	void TransportCongestionControlClient::InsertPacket(size_t bytes)
 	{
-		this->rtpTransportControllerSend->packet_sender()->InsertPacket(
-		  ssrc, sequenceNumber, captureTimeMs, bytes, retransmission);
+		MS_TRACE();
+
+		this->rtpTransportControllerSend->packet_sender()->InsertPacket(bytes);
+	}
+
+	void TransportCongestionControlClient::PacketSent(rtc::SentPacket& sentPacket)
+	{
+		MS_TRACE();
+
+		// Notify feedback adapter about the sent packet.
+		this->rtpTransportControllerSend->OnSentPacket(sentPacket);
 	}
 
 	void TransportCongestionControlClient::TransportConnected()
 	{
 		MS_TRACE();
-
-		// TODO: timers?
 
 		this->rtpTransportControllerSend->OnNetworkAvailability(true);
 	}
@@ -68,8 +84,6 @@ namespace RTC
 	void TransportCongestionControlClient::TransportDisconnected()
 	{
 		MS_TRACE();
-
-		// TODO: timers?
 
 		this->rtpTransportControllerSend->OnNetworkAvailability(false);
 	}
@@ -104,20 +118,52 @@ namespace RTC
 		this->listener->OnTransportCongestionControlClientTargetTransferRate(this, targetTransferRate);
 	}
 
+	// Called from PacedSender.
 	void TransportCongestionControlClient::SendPacket(
-	  RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& cluster_info)
+	  RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo)
 	{
 		MS_TRACE();
 
+		// Send the packet.
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet);
+
+		uint16_t wideSeqNumber;
+		packet->ReadTransportWideCc01(wideSeqNumber);
+
+		webrtc::RtpPacketSendInfo packetInfo;
+		packetInfo.ssrc                      = packet->GetSsrc();
+		packetInfo.transport_sequence_number = wideSeqNumber;
+		packetInfo.has_rtp_sequence_number   = true;
+		packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+		packetInfo.length                    = packet->GetSize();
+		packetInfo.pacing_info               = pacingInfo;
+
+		// Notify the transport feedback adapter about the sent packet.
+		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 	}
 
 	// TODO:
 	// Should generate probation packets.
-	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t target_size_bytes)
+	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t size)
 	{
 		MS_TRACE();
 
 		return {};
+	}
+
+	void TransportCongestionControlClient::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->pacerTimer)
+		{
+			// Time to call PacedSender::Process().
+			this->rtpTransportControllerSend->packet_sender()->Process();
+
+			auto TimeUntilNextProcess =
+			  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess();
+
+			this->pacerTimer->Start(TimeUntilNextProcess);
+		}
 	}
 } // namespace RTC
