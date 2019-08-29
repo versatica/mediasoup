@@ -1461,7 +1461,7 @@ namespace RTC
 
 					consumer->ReceiveRtcpReceiverReport(report);
 
-					// TODO. Convert report to ReportBlock and pass to tccClient.
+					// TODO: Convert report to ReportBlock and pass to tccClient.
 					// RTCPReportBlock in include/RTC/SendTransportController/rtp_rtcp_defines.h
 					// if (this->tccClient)
 					// {
@@ -2011,9 +2011,10 @@ namespace RTC
 				// Indicate the pacer (and prober) that a packet is to be sent.
 				this->tccClient->InsertPacket(packet->GetSize());
 
-				// TODO: Must be this in all SendRtpPacket() if tcc is in use.
 				auto* tccClient = this->tccClient;
 
+				// TODO: This is wrong. packet is a pointer and has been deallocated
+				// when the onSend callback is called, so it's garbage.
 				SendRtpPacket(packet, [packet, tccClient](bool sent) {
 					if (sent)
 						tccClient->PacketSent(packet, DepLibUV::GetTime());
@@ -2040,18 +2041,23 @@ namespace RTC
 
 			if (this->tccClient)
 			{
-				auto now = DepLibUV::GetTime();
-
 				// Indicate the pacer (and prober) that a packet is to be sent.
 				this->tccClient->InsertPacket(packet->GetSize());
 
-				SendRtpPacket(packet);
+				auto* tccClient = this->tccClient;
 
-				this->tccClient->PacketSent(packet, now);
+				// TODO: This is wrong. packet is a pointer and has been deallocated
+				// when the onSend callback is called, so it's garbage.
+				SendRtpPacket(packet, [packet, tccClient](bool sent) {
+					if (sent)
+						tccClient->PacketSent(packet, DepLibUV::GetTime());
+				});
 
 				return;
 			}
 		}
+
+		SendRtpPacket(packet);
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
@@ -2308,11 +2314,21 @@ namespace RTC
 		{
 			this->transportWideSeq++;
 
-			SendRtpPacket(packet);
+			// TODO: Must do this here?
+			// Indicate the pacer (and prober) that a packet is to be sent.
+			this->tccClient->InsertPacket(packet->GetSize());
+
+			// TODO: This is wrong. packet is a pointer and has been deallocated when
+			// the onSend callback is called, so it's garbage.
+			SendRtpPacket(packet, [packet, tccClient](bool sent) {
+				// TODO: Must do this here?
+				if (sent)
+					tccClient->PacketSent(packet, DepLibUV::GetTime());
+			});
 		}
 		else
 		{
-			MS_ERROR("packet->UpdateTransportWideCc01 returned 'false'");
+			MS_ERROR("packet->UpdateTransportWideCc01() returned false");
 		}
 	}
 
