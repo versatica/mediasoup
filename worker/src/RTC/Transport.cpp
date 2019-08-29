@@ -2288,7 +2288,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		SendRtpPacket(packet);
+		// Update transport wide sequence number if present.
+		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+		{
+			this->transportWideSeq++;
+
+			SendRtpPacket(packet);
+		}
+		else
+		{
+			MS_ERROR("packet->UpdateTransportWideCc01 returned 'false'");
+		}
 	}
 
 	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(
