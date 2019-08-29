@@ -1,12 +1,15 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
 // #define MS_LOG_DEV
 
-#include "RTC/SendTransportController/goog_cc_factory.h"
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "Logger.hpp"
+#include "RTC/SendTransportController/goog_cc_factory.h"
 
 static std::unique_ptr<webrtc::NetworkStatePredictorFactoryInterface> predictorFactory{ nullptr };
 static std::unique_ptr<webrtc::NetworkControllerFactoryInterface> controllerFactory{ nullptr };
+
+// Size of probation packets.
+constexpr size_t probationPacketSize{ 50 };
 
 // jmillan: TODO.
 webrtc::BitrateConstraints bitrateConfig;
@@ -39,6 +42,8 @@ namespace RTC
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
 		  this, predictorFactory.get(), controllerFactory.get(), bitrateConfig);
 
+		this->probationGenerator = new RTC::RtpProbationGenerator(probationPacketSize);
+
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
 
 		this->pacerTimer = new Timer(this);
@@ -56,6 +61,9 @@ namespace RTC
 		delete this->rtpTransportControllerSend;
 		this->rtpTransportControllerSend = nullptr;
 
+		delete this->probationGenerator;
+		this->probationGenerator = nullptr;
+
 		if (this->pacerTimer)
 		{
 			this->pacerTimer->Stop();
@@ -70,11 +78,26 @@ namespace RTC
 		this->rtpTransportControllerSend->packet_sender()->InsertPacket(bytes);
 	}
 
-	void TransportCongestionControlClient::PacketSent(rtc::SentPacket& sentPacket)
+	void TransportCongestionControlClient::PacketSent(RTC::RtpPacket* packet, uint64_t now)
 	{
 		MS_TRACE();
 
-		// Notify feedback adapter about the sent packet.
+		uint16_t wideSeqNumber;
+		packet->ReadTransportWideCc01(wideSeqNumber);
+
+		webrtc::RtpPacketSendInfo packetInfo;
+		packetInfo.ssrc                      = packet->GetSsrc();
+		packetInfo.transport_sequence_number = wideSeqNumber;
+		packetInfo.has_rtp_sequence_number   = true;
+		packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+		packetInfo.length                    = packet->GetSize();
+		// packetInfo.pacing_info               = pacingInfo;
+
+		// Notify the transport feedback adapter about the sent packet.
+		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
+
+		// Notify the transport feedback adapter about the sent packet.
+		rtc::SentPacket sentPacket(wideSeqNumber, now);
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket);
 	}
 
@@ -146,13 +169,11 @@ namespace RTC
 		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 	}
 
-	// TODO:
-	// Should generate probation packets.
-	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t size)
+	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t /*size*/)
 	{
 		MS_TRACE();
 
-		return {};
+		return { this->probationGenerator->GetNextPacket() };
 	}
 
 	void TransportCongestionControlClient::OnTimer(Timer* timer)

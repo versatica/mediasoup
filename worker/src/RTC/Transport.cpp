@@ -755,7 +755,6 @@ namespace RTC
 					// clang-format off
 					if (
 						!this->tccClient &&
-						!this->rembClient &&
 						(
 							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
 							consumer->GetType() == RTC::RtpParameters::Type::SVC
@@ -793,6 +792,7 @@ namespace RTC
 						if (IsConnected())
 							this->rtpProbationTimer->Start(0, 0);
 					}
+
 					// Set REMB client bitrate estimator:
 					// - if not already set, and
 					// - Consumer is simulcast or SVC, and
@@ -800,23 +800,24 @@ namespace RTC
 					// - there is "remb" in codecs RTCP feedback.
 					//
 					// clang-format off
-					else if (
-						!this->tccClient &&
+					if (
 						!this->rembClient &&
 						(
 							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
 							consumer->GetType() == RTC::RtpParameters::Type::SVC
 						) &&
-						rtpHeaderExtensionIds.absSendTime != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RtcpFeedback& fb)
-									{
-										return fb.type == "goog-remb";
-									});
-							})
+						rtpHeaderExtensionIds.absSendTime != 0u
+						// TMP: jmillan.
+						// &&
+						// std::any_of(
+							// codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							// {
+								// return std::any_of(
+									// codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RtcpFeedback& fb)
+									// {
+										// return fb.type == "goog-remb";
+									// });
+							// })
 					)
 					// clang-format on
 					{
@@ -836,9 +837,10 @@ namespace RTC
 						if (IsConnected())
 							this->rtpProbationTimer->Start(0, 0);
 					}
-					// Otherwise, if REMB client is set, tell the new Consumer that we are
+
+					// if REMB client is set, tell the new Consumer that we are
 					// gonna manage its bitrate.
-					else if (this->rembClient || this->tccClient)
+					if (this->rembClient || this->tccClient)
 					{
 						consumer->SetExternallyManagedBitrate();
 					}
@@ -1851,12 +1853,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TMP.
-		return;
-
 		// TODO: Uncomment when Transport-CC client is done.
 		// MS_ASSERT(this->rembClient || this->tccClient, "no REMB client nor Transport-CC client");
-		// MS_ASSERT(this->rembClient, "no REMB client");
+		MS_ASSERT(this->rembClient, "no REMB client");
 
 		std::multimap<uint16_t, RTC::Consumer*> multimapPriorityConsumer;
 		uint16_t totalPriorities{ 0 };
@@ -2100,8 +2099,7 @@ namespace RTC
 
 				SendRtpPacket(packet);
 
-				rtc::SentPacket sentPacket(this->transportWideSeq, now);
-				this->tccClient->PacketSent(sentPacket);
+				this->tccClient->PacketSent(packet, now);
 
 				return;
 			}
@@ -2371,6 +2369,9 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DUMP("OnTransportCongestionControlClientTargetTransferRate");
+		MS_DUMP(
+		  "------------------  targetTransferRate.target_rate.kbps():%" PRIi64 "----------------",
+		  targetTransferRate.target_rate.kbps());
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(

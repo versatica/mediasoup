@@ -95,6 +95,7 @@ class PacedSender {
                            size_t bytes_sent);
 
   void OnPacketSent(RTC::RtpPacket* packet);
+  void OnPaddingSent(int64_t now, size_t bytes_sent);
 
   bool Congested() const;
 

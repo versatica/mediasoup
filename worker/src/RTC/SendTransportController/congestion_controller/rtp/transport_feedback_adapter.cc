@@ -75,6 +75,17 @@ void TransportFeedbackAdapter::AddPacket(const RtpPacketSendInfo& packet_info,
       packet_feedback.rtp_sequence_number = packet_info.rtp_sequence_number;
     }
     send_time_history_.RemoveOld(creation_time.ms());
+    // MS_DUMP("packet_feedback.arrival_time_ms: %" PRIi64, packet_feedback.arrival_time_ms);
+    // MS_DUMP("packet_feedback.send_time_ms: %" PRIi64, packet_feedback.send_time_ms);
+    // MS_DUMP("packet_feedback.sequence_number: %" PRIu16, packet_feedback.sequence_number);
+    // MS_DUMP("packet_feedback.long_sequence_number: %" PRIi64, packet_feedback.long_sequence_number);
+    // MS_DUMP("packet_feedback.payload_size: %zu", packet_feedback.payload_size);
+    // MS_DUMP("packet_feedback.unacknowledged_data: %zu", packet_feedback.unacknowledged_data);
+    // MS_DUMP("packet_feedback.local_net_id: %" PRIu16, packet_feedback.local_net_id);
+    // MS_DUMP("packet_feedback.remote_net_id: %" PRIu16, packet_feedback.remote_net_id);
+    // MS_DUMP("packet_feedback.ssrc: %" PRIu32, packet_feedback.ssrc.value());
+    // MS_DUMP("packet_feedback.rtp_sequence_number: %" PRIu16, packet_feedback.rtp_sequence_number);
+
     send_time_history_.AddNewPacket(std::move(packet_feedback));
   }
 
@@ -208,11 +219,6 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
       PacketFeedback packet_feedback(timestamp_ms, packet.sequence_number());
       if (!send_time_history_.GetFeedback(&packet_feedback, true))
         ++failed_lookups;
-      // jmillan: local_net_id_ and remote_net_id_ are not set. Remove them.
-      if (packet_feedback.local_net_id == local_net_id_ &&
-          packet_feedback.remote_net_id == remote_net_id_) {
-        packet_feedback_vector.push_back(packet_feedback);
-      }
 
       ++seq_num;
     }

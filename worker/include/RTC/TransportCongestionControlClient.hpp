@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RtpProbationGenerator.hpp"
 #include "RTC/SendTransportController/network_types.h" // TargetTransferRate.
 #include "RTC/SendTransportController/pacing/packet_router.h"
 #include "RTC/SendTransportController/rtp_transport_controller_send.h"
@@ -33,7 +34,7 @@ namespace RTC
 
 	public:
 		void InsertPacket(size_t bytes);
-		void PacketSent(rtc::SentPacket& sentPacket);
+		void PacketSent(RTC::RtpPacket* packet, uint64_t now);
 		void TransportConnected();
 		void TransportDisconnected();
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
@@ -62,6 +63,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		// Allocated by this.
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };
+		RTC::RtpProbationGenerator* probationGenerator{ nullptr };
 		Timer* pacerTimer{ nullptr };
 	};
 } // namespace RTC

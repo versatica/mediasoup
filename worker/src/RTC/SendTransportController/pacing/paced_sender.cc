@@ -117,6 +117,8 @@ void PacedSender::InsertPacket(size_t bytes) {
       MS_WARN_TAG(bwe, "SetPacingRates() must be called before InsertPacket()");
 
   prober_.OnIncomingPacket(bytes);
+
+  packet_counter_++;
 }
 
 void PacedSender::SetAccountForAudioPackets(bool account_for_audio) {
@@ -166,19 +168,19 @@ void PacedSender::Process() {
     UpdateBudgetWithElapsedTime(elapsed_time_ms);
   }
 
-  bool is_probing = prober_.IsProbing();
+  if (!prober_.IsProbing())
+    return;
+
   PacedPacketInfo pacing_info;
   absl::optional<size_t> recommended_probe_size;
-  if (is_probing) {
-    pacing_info = prober_.CurrentCluster();
-    recommended_probe_size = prober_.RecommendedMinProbeSize();
-  }
+
+  pacing_info = prober_.CurrentCluster();
+  recommended_probe_size = prober_.RecommendedMinProbeSize();
 
   size_t bytes_sent = 0;
-  // The paused state is checked in the loop since it leaves the critical
-  // section allowing the paused state to be changed from other code.
-  // jmillan: Delete the RtpPacket instances once used!!
   std::vector<RTC::RtpPacket*> padding_packets;
+
+  /*
   while (true) {
     // Check if we should send padding.
     size_t padding_bytes_to_add =
@@ -216,11 +218,42 @@ void PacedSender::Process() {
         break;
     }
   }
+  */
 
-  if (is_probing) {
-    probing_send_failure_ = bytes_sent == 0;
-    if (!probing_send_failure_)
-      prober_.ProbeSent(DepLibUV::GetTime(), bytes_sent);
+  // Check if we should send padding.
+  size_t padding_bytes_to_add =
+    PaddingBytesToAdd(recommended_probe_size, bytes_sent);
+  if (padding_bytes_to_add == 0) {
+    MS_DUMP("no padding bytes to add");
+
+    return;
+  }
+  else
+  {
+    MS_DUMP("%zu padding bytes to add", padding_bytes_to_add);
+    while (bytes_sent < padding_bytes_to_add)
+    {
+      padding_packets =
+        packet_router_->GeneratePadding(padding_bytes_to_add /* not used*/);
+
+      auto packet = padding_packets.front();
+
+      MS_DUMP("sending padding packet for size: %zu", packet->GetSize());
+      packet_router_->SendPacket(packet, pacing_info);
+      bytes_sent += packet->GetSize();
+
+      // Send succeeded.
+      OnPacketSent(packet);
+    }
+  }
+
+  if (bytes_sent != 0)
+  {
+    auto now = DepLibUV::GetTime();
+    MS_DUMP("OnPaddingSent(bytes_sent:%zu)", bytes_sent);
+    OnPaddingSent(now, bytes_sent);
+    MS_DUMP("prober_.ProbeSent(now, bytes_sent:%zu)", bytes_sent);
+    prober_.ProbeSent(now, bytes_sent);
   }
 }
 
@@ -252,18 +285,13 @@ size_t PacedSender::PaddingBytesToAdd(
 void PacedSender::OnPacketSent(RTC::RtpPacket* packet) {
   if (first_sent_packet_ms_ == -1)
     first_sent_packet_ms_ = DepLibUV::GetTime();
+}
 
-  // jmillan: TODO. (adapted in next block).
-  // bool audio_packet = packet->type() == RtpPacketToSend::Type::kAudio;
-  // if (!audio_packet || account_for_audio_) {
-    // // Update media bytes sent.
-    // UpdateBudgetWithBytesSent(packet->size_in_bytes());
-    // last_send_time_ms_ = DepLibUV::GetTime();
-  // }
-
-  // Update media bytes sent.
-  UpdateBudgetWithBytesSent(packet->GetSize());
-  last_send_time_ms_ = DepLibUV::GetTime();
+void PacedSender::OnPaddingSent(int64_t now, size_t bytes_sent) {
+  if (bytes_sent > 0) {
+    UpdateBudgetWithBytesSent(bytes_sent);
+  }
+  last_send_time_ms_ = now;
 }
 
 void PacedSender::UpdateBudgetWithElapsedTime(int64_t delta_time_ms) {
