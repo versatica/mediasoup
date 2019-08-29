@@ -332,7 +332,7 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 
 void TcpConnection::ErrorReceiving()
 {
-	MS_ERROR();
+	MS_TRACE();
 
 	Close();
 
