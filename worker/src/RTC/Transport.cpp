@@ -15,7 +15,6 @@
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpProbator.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
@@ -28,10 +27,6 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint64_t IncomingBitrateLimitationByRembInterval{ 1500 }; // In ms.
-	static constexpr size_t RtpProbationPacketLen{ 1100u };                    // in bytes.
-	static constexpr uint64_t RtpProbationScheduleSuccessTimeout{ 4000u };     // In ms.
-	static constexpr uint64_t RtpProbationScheduleFailureTimeout{ 12000u };    // In ms.
-	static constexpr uint8_t RtpProbationMaxFractionLost{ 10u };
 
 	/* Instance methods. */
 
@@ -119,12 +114,6 @@ namespace RTC
 
 		// Create the RTCP timer.
 		this->rtcpTimer = new Timer(this);
-
-		// Create a RTP probator.
-		this->rtpProbator = new RTC::RtpProbator(this, RtpProbationPacketLen);
-
-		// Create the RTP probation timer.
-		this->rtpProbationTimer = new Timer(this);
 	}
 
 	Transport::~Transport()
@@ -196,14 +185,6 @@ namespace RTC
 		// Delete Transport-CC server.
 		delete this->tccServer;
 		this->tccServer = nullptr;
-
-		// Delete the RTP probator.
-		delete this->rtpProbator;
-		this->rtpProbator = nullptr;
-
-		// Delete the RTP probation timer.
-		delete this->rtpProbationTimer;
-		this->rtpProbationTimer = nullptr;
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -787,10 +768,6 @@ namespace RTC
 
 							consumer->SetExternallyManagedBitrate();
 						};
-
-						// Start the RTP probation timer if connected.
-						if (IsConnected())
-							this->rtpProbationTimer->Start(0, 0);
 					}
 
 					// Set REMB client bitrate estimator:
@@ -832,10 +809,6 @@ namespace RTC
 
 							consumer->SetExternallyManagedBitrate();
 						};
-
-						// Start the RTP probation timer if connected.
-						if (IsConnected())
-							this->rtpProbationTimer->Start(0, 0);
 					}
 
 					// if REMB client is set, tell the new Consumer that we are
@@ -1158,11 +1131,6 @@ namespace RTC
 		// Tell the Transport-CC server.
 		if (this->tccServer)
 			this->tccServer->TransportConnected();
-
-		// Start the RTP probation.
-		// TODO: Also enable if Transport-CC client is set.
-		if (this->rembClient)
-			this->rtpProbationTimer->Start(0, 0);
 	}
 
 	void Transport::Disconnected()
@@ -1195,10 +1163,6 @@ namespace RTC
 		// Tell the Transport-CC server.
 		if (this->tccServer)
 			this->tccServer->TransportDisconnected();
-
-		// Stop the RTP probator and the probation timer.
-		this->rtpProbator->Stop();
-		this->rtpProbationTimer->Stop();
 	}
 
 	void Transport::ReceiveRtpPacket(RTC::RtpPacket* packet)
@@ -1487,29 +1451,6 @@ namespace RTC
 
 					if (consumer == nullptr)
 					{
-						// Special case for the RTP probator.
-						if (report->GetSsrc() == RTC::RtpProbatorSsrc)
-						{
-							// TODO: Hack. Must refactor these ugly checks.
-							// TODO: Also check if Transport-CC client is set.
-							if (!this->rembClient)
-								continue;
-
-							auto fractionLost = report->GetFractionLost();
-
-							if (this->rtpProbator->IsRunning() && fractionLost >= RtpProbationMaxFractionLost)
-							{
-								MS_DEBUG_TAG(
-								  bwe, "stopping RTP probator due to probation fraction lost:%" PRIu8, fractionLost);
-
-								// Try again after RtpProbationScheduleFailureTimeout.
-								this->rtpProbator->Stop();
-								this->rtpProbationTimer->Start(RtpProbationScheduleFailureTimeout, 0);
-							}
-
-							continue;
-						}
-
 						MS_DEBUG_TAG(
 						  rtcp,
 						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
@@ -1545,10 +1486,6 @@ namespace RTC
 
 						if (consumer == nullptr)
 						{
-							// Special case for the RTP probator.
-							if (feedback->GetMediaSsrc() == RTC::RtpProbatorSsrc)
-								break;
-
 							MS_DEBUG_TAG(
 							  rtcp,
 							  "no Consumer found for received %s Feedback packet "
@@ -1629,10 +1566,6 @@ namespace RTC
 
 				if (consumer == nullptr)
 				{
-					// Special case for the RTP probator.
-					if (feedback->GetMediaSsrc() == RTC::RtpProbatorSsrc)
-						break;
-
 					MS_DEBUG_TAG(
 					  rtcp,
 					  "no Consumer found for received Feedback packet "
@@ -1950,23 +1883,6 @@ namespace RTC
 
 			consumer->ApplyLayers();
 		}
-	}
-
-	uint32_t Transport::CalculateOutgoingProbationBitrate()
-	{
-		MS_TRACE();
-
-		uint32_t probationBitrate{ 0u };
-
-		// Ask all the Consumers for the total bitrate they need.
-		for (auto& kv : this->mapConsumers)
-		{
-			auto* consumer = kv.second;
-
-			probationBitrate += consumer->GetProbationBitrate();
-		}
-
-		return probationBitrate;
 	}
 
 	void Transport::MaySetIncomingBitrateLimitationByRemb()
@@ -2317,13 +2233,6 @@ namespace RTC
 		  availableBitrate,
 		  previousAvailableBitrate);
 
-		if (availableBitrate < previousAvailableBitrate * 0.75)
-		{
-			// Stop the RTP probator and reset the probation timer.
-			this->rtpProbator->Stop();
-			this->rtpProbationTimer->Start(RtpProbationScheduleFailureTimeout, 0);
-		}
-
 		DistributeAvailableOutgoingBitrate();
 	}
 
@@ -2392,50 +2301,6 @@ namespace RTC
 		SendRtcpPacket(packet);
 	}
 
-	inline void Transport::OnRtpProbatorSendRtpPacket(
-	  RTC::RtpProbator* /*rtpProbator*/, RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(DepLibUV::GetTime());
-
-		// Update transport wide sequence number if present.
-		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
-			this->transportWideSeq++;
-
-		// Send the packet.
-		SendRtpPacket(packet);
-	}
-
-	inline void Transport::OnRtpProbatorStepDone(RTC::RtpProbator* /*rtpProbator*/, bool last)
-	{
-		MS_TRACE();
-
-		if (last)
-		{
-			// Try again after RtpProbationScheduleSuccessTimeout.
-			this->rtpProbationTimer->Start(RtpProbationScheduleSuccessTimeout, 0);
-		}
-		else
-		{
-			auto probationBitrate = CalculateOutgoingProbationBitrate();
-
-			if (probationBitrate < this->rtpProbator->GetTargetBitrate() * 0.85)
-			{
-				MS_DEBUG_TAG(
-				  bwe,
-				  "needed probation bitrate changed to %" PRIu32 ", stopping RTP probator",
-				  probationBitrate);
-
-				this->rtpProbator->Stop();
-
-				// Try again after RtpProbationScheduleSuccessTimeout.
-				this->rtpProbationTimer->Start(RtpProbationScheduleSuccessTimeout, 0);
-			}
-		}
-	}
-
 	inline void Transport::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
@@ -2478,23 +2343,6 @@ namespace RTC
 			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
 
 			this->rtcpTimer->Start(interval);
-		}
-		// RTP probation timer.
-		else if (timer == this->rtpProbationTimer)
-		{
-			this->rtpProbator->Stop();
-
-			auto probationBitrate = CalculateOutgoingProbationBitrate();
-
-			if (probationBitrate == 0u)
-			{
-				// Try again after RtpProbationScheduleSuccessTimeout.
-				this->rtpProbationTimer->Start(RtpProbationScheduleSuccessTimeout, 0);
-			}
-			else
-			{
-				this->rtpProbator->Start(probationBitrate);
-			}
 		}
 	}
 } // namespace RTC

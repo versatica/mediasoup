@@ -18,7 +18,6 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpProbator.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include "RTC/SctpListener.hpp"
 #include "RTC/TransportCongestionControlClient.hpp"
@@ -40,7 +39,6 @@ namespace RTC
 	                  public RTC::RembServer::RemoteBitrateEstimator::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
-	                  public RTC::RtpProbator::Listener,
 	                  public Timer::Listener
 	{
 	public:
@@ -137,7 +135,6 @@ namespace RTC
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendSctpData(const uint8_t* data, size_t len)             = 0;
 		void DistributeAvailableOutgoingBitrate();
-		uint32_t CalculateOutgoingProbationBitrate();
 		void MaySetIncomingBitrateLimitationByRemb();
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
@@ -217,11 +214,6 @@ namespace RTC
 		void OnTransportCongestionControlServerSendRtcpPacket(
 		  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) override;
 
-		/* Pure virtual methods inherited from RTC::RtpProbator. */
-	public:
-		void OnRtpProbatorSendRtpPacket(RTC::RtpProbator* rtpProbator, RTC::RtpPacket* packet) override;
-		void OnRtpProbatorStepDone(RTC::RtpProbator* rtpProbator, bool last) override;
-
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
 		void OnTimer(Timer* timer) override;
@@ -245,8 +237,6 @@ namespace RTC
 		RTC::RembServer::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
-		RTC::RtpProbator* rtpProbator{ nullptr };
-		Timer* rtpProbationTimer{ nullptr };
 		// Others.
 		bool destroying{ false };
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
