@@ -69,7 +69,8 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 /* Instance methods. */
 
-UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, SocketRole role) : bufferSize(bufferSize), role(role)
+UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, SocketRole role)
+  : bufferSize(bufferSize), role(role)
 {
 	MS_TRACE_STD();
 
@@ -101,9 +102,9 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, SocketRole role) :
 	{
 		// Start reading.
 		err = uv_read_start(
-			reinterpret_cast<uv_stream_t*>(this->uvHandle),
-			static_cast<uv_alloc_cb>(onAlloc),
-			static_cast<uv_read_cb>(onRead));
+		  reinterpret_cast<uv_stream_t*>(this->uvHandle),
+		  static_cast<uv_alloc_cb>(onAlloc),
+		  static_cast<uv_read_cb>(onRead));
 
 		if (err != 0)
 		{

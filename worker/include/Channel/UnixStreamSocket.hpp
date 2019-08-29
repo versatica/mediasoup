@@ -39,12 +39,13 @@ namespace Channel
 		size_t msgStart{ 0 }; // Where the latest message starts.
 	};
 
-
 	class ChannelWrapper
 	{
 	public:
-		explicit ChannelWrapper(int consumerFd, int producerFd):consumerSocket(consumerFd, ::UnixStreamSocket::SocketRole::CONSUMER)
-			, producerSocket(producerFd, ::UnixStreamSocket::SocketRole::PRODUCER){
+		explicit ChannelWrapper(int consumerFd, int producerFd)
+		  : consumerSocket(consumerFd, ::UnixStreamSocket::SocketRole::CONSUMER),
+		    producerSocket(producerFd, ::UnixStreamSocket::SocketRole::PRODUCER)
+		{
 		}
 
 		UnixStreamSocket consumerSocket;

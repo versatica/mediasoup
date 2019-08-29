@@ -195,7 +195,8 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =>
 {
-	if (os.platform() === 'win32') {
+	if (os.platform() === 'win32') 
+	{
 		return;
 	}
 

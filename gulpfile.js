@@ -74,4 +74,4 @@ gulp.task('test:make:worker', shell.task(
 	]
 ));
 
-gulp.task('test:worker', gulp.series(os.platform() === 'win32'? 'test:win:worker' : 'test:make:worker'))
+gulp.task('test:worker', gulp.series(os.platform() === 'win32'? 'test:win:worker' : 'test:make:worker'));

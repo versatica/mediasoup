@@ -15,7 +15,8 @@ public:
 		uint8_t store[1];
 	};
 
-	enum SocketRole {
+	enum SocketRole
+	{
 		CONSUMER,
 		PRODUCER
 	};

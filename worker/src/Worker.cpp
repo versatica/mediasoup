@@ -123,7 +123,8 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* socket, Channel:
 {
 	MS_TRACE();
 
-	MS_ASSERT(socket != &this->channel->producerSocket, "Producer Socket should not used as request channel.");
+	MS_ASSERT(
+	  socket != &this->channel->producerSocket, "Producer Socket should not used as request channel.");
 
 	MS_DEBUG_DEV(
 	  "Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
