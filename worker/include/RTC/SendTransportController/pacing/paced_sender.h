@@ -84,6 +84,7 @@ class PacedSender {
   // Process any pending packets in the queue(s).
   void Process();
 
+  void OnPacketSent(size_t size);
  private:
   int64_t UpdateTimeAndGetElapsedMs(int64_t now_us);
 
@@ -94,7 +95,6 @@ class PacedSender {
   size_t PaddingBytesToAdd(absl::optional<size_t> recommended_probe_size,
                            size_t bytes_sent);
 
-  void OnPacketSent(RTC::RtpPacket* packet);
   void OnPaddingSent(int64_t now, size_t bytes_sent);
 
   bool Congested() const;

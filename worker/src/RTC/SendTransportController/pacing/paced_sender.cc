@@ -243,7 +243,7 @@ void PacedSender::Process() {
       bytes_sent += packet->GetSize();
 
       // Send succeeded.
-      OnPacketSent(packet);
+      OnPacketSent(packet->GetSize());
     }
   }
 
@@ -282,9 +282,13 @@ size_t PacedSender::PaddingBytesToAdd(
   return padding_budget_.bytes_remaining();
 }
 
-void PacedSender::OnPacketSent(RTC::RtpPacket* packet) {
+void PacedSender::OnPacketSent(size_t size) {
   if (first_sent_packet_ms_ == -1)
     first_sent_packet_ms_ = DepLibUV::GetTime();
+
+  // Update media bytes sent.
+  UpdateBudgetWithBytesSent(size);
+  last_send_time_ms_ = DepLibUV::GetTime();
 }
 
 void PacedSender::OnPaddingSent(int64_t now, size_t bytes_sent) {

@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "RTC/RtpPacket.hpp"
 #include "RTC/SendTransportController/bitrate_constraints.h"
 #include "RTC/SendTransportController/bitrate_settings.h"
 // #include "call/rtp_config.h"
@@ -100,7 +101,9 @@ class RtpTransportControllerSendInterface {
   virtual void OnNetworkAvailability(bool network_available) = 0;
   virtual RtcpBandwidthObserver* GetBandwidthObserver() = 0;
   virtual void EnablePeriodicAlrProbing(bool enable) = 0;
-  virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;
+  // jmillan.
+  // virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;
+  virtual void OnSentPacket(const RTC::RtpPacket* rtp_packet, const rtc::SentPacket& sent_packet) = 0;
 
   // jmillan
   // virtual void SetClientBitratePreferences(

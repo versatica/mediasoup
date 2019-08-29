@@ -1,9 +1,10 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
 // #define MS_LOG_DEV
 
-#include "RTC/TransportCongestionControlClient.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/SendTransportController/goog_cc_factory.h"
+#include "RTC/TransportCongestionControlClient.hpp"
 
 static std::unique_ptr<webrtc::NetworkStatePredictorFactoryInterface> predictorFactory{ nullptr };
 static std::unique_ptr<webrtc::NetworkControllerFactoryInterface> controllerFactory{ nullptr };
@@ -98,7 +99,7 @@ namespace RTC
 
 		// Notify the transport feedback adapter about the sent packet.
 		rtc::SentPacket sentPacket(wideSeqNumber, now);
-		this->rtpTransportControllerSend->OnSentPacket(sentPacket);
+		this->rtpTransportControllerSend->OnSentPacket(packet, sentPacket);
 	}
 
 	void TransportCongestionControlClient::TransportConnected()
@@ -151,6 +152,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Indicate the pacer (and prober) that a packet is to be sent.
+		InsertPacket(packet->GetSize());
+
 		// Send the packet.
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet);
 
@@ -167,6 +171,10 @@ namespace RTC
 
 		// Notify the transport feedback adapter about the sent packet.
 		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
+
+		// Notify the transport feedback adapter about the sent packet.
+		rtc::SentPacket sentPacket(wideSeqNumber, DepLibUV::GetTime());
+		this->rtpTransportControllerSend->OnSentPacket(packet, sentPacket);
 	}
 
 	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t /*size*/)

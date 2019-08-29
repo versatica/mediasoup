@@ -172,7 +172,7 @@ RtcpBandwidthObserver* RtpTransportControllerSend::GetBandwidthObserver() {
 void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
   UpdateStreamsConfig();
 }
-void RtpTransportControllerSend::OnSentPacket(
+void RtpTransportControllerSend::OnSentPacket(const RTC::RtpPacket* rtp_packet,
     const rtc::SentPacket& sent_packet) {
   absl::optional<SentPacket> packet_msg =
       transport_feedback_adapter_.ProcessSentPacket(sent_packet);
@@ -180,6 +180,10 @@ void RtpTransportControllerSend::OnSentPacket(
     PostUpdates(controller_->OnSentPacket(*packet_msg));
   pacer_.UpdateOutstandingData(
       transport_feedback_adapter_.GetOutstandingData().bytes());
+
+  // jmillan. Since we don't send media packets within ::Process()
+  // we use this callback to acknowledge sent packets.
+  pacer_.OnPacketSent(rtp_packet->GetSize());
 }
 
 void RtpTransportControllerSend::OnTransportOverheadChanged(
