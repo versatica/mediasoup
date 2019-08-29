@@ -15,7 +15,7 @@ using json = nlohmann::json;
 class Worker : public Channel::UnixStreamSocket::Listener, public SignalsHandler::Listener
 {
 public:
-	explicit Worker(Channel::UnixStreamSocket* channel);
+	explicit Worker(Channel::ChannelWrapper* channel);
 	~Worker();
 
 private:
@@ -35,7 +35,7 @@ public:
 
 private:
 	// Passed by argument.
-	Channel::UnixStreamSocket* channel{ nullptr };
+	Channel::ChannelWrapper* channel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
 	// Others.

@@ -64,7 +64,7 @@ gulp.task('build', gulp.series(os.platform() === 'win32'? 'win:build' : 'make:bu
 
 gulp.task('test:win:worker', shell.task(
 	[
-		'echo not support yet!!'
+		'echo not support yet!!! run test in visual studio!!!'
 	]
 ));
 

@@ -25,3 +25,6 @@
 
 # Win Stuff
 configure.pyc
+
+# VS stuff
+/worker/.vs/

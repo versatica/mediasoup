@@ -19,7 +19,7 @@ namespace Channel
 		};
 
 	public:
-		explicit UnixStreamSocket(int fd);
+		explicit UnixStreamSocket(int fd, ::UnixStreamSocket::SocketRole role);
 
 	public:
 		void SetListener(Listener* listener);
@@ -37,6 +37,18 @@ namespace Channel
 		Listener* listener{ nullptr };
 		// Others.
 		size_t msgStart{ 0 }; // Where the latest message starts.
+	};
+
+
+	class ChannelWrapper
+	{
+	public:
+		explicit ChannelWrapper(int consumerFd, int producerFd):consumerSocket(consumerFd, ::UnixStreamSocket::SocketRole::CONSUMER)
+			, producerSocket(producerFd, ::UnixStreamSocket::SocketRole::PRODUCER){
+		}
+
+		UnixStreamSocket consumerSocket;
+		UnixStreamSocket producerSocket;
 	};
 } // namespace Channel
 

@@ -3,6 +3,7 @@ const { toBeType } = require('jest-tobetype');
 const mediasoup = require('../');
 const { createWorker, observer } = mediasoup;
 const { InvalidStateError } = require('../lib/errors');
+const os = require('os');
 
 expect.extend({ toBeType });
 
@@ -194,6 +195,10 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =>
 {
+	if (os.platform() === 'win32') {
+		return;
+	}
+
 	worker = await createWorker({ logLevel: 'warn' });
 
 	await new Promise((resolve, reject) =>

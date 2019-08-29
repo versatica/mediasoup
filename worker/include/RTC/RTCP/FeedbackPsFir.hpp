@@ -27,7 +27,12 @@ namespace RTC
 			{
 				uint32_t ssrc;
 				uint8_t sequenceNumber;
+#ifdef _MSC_VER
+				// alignment
+				uint8_t reserved[3];
+#else
 				uint32_t reserved : 24;
+#endif //_MSC_VER
 			};
 
 		public:

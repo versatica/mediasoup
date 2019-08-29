@@ -69,7 +69,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 /* Instance methods. */
 
-UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(bufferSize)
+UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, SocketRole role) : bufferSize(bufferSize), role(role)
 {
 	MS_TRACE_STD();
 
@@ -97,17 +97,20 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(buffe
 		MS_THROW_ERROR_STD("uv_pipe_open() failed: %s", uv_strerror(err));
 	}
 
-	// Start reading.
-	err = uv_read_start(
-	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  static_cast<uv_alloc_cb>(onAlloc),
-	  static_cast<uv_read_cb>(onRead));
-
-	if (err != 0)
+	if (this->role == SocketRole::CONSUMER)
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+		// Start reading.
+		err = uv_read_start(
+			reinterpret_cast<uv_stream_t*>(this->uvHandle),
+			static_cast<uv_alloc_cb>(onAlloc),
+			static_cast<uv_read_cb>(onRead));
 
-		MS_THROW_ERROR_STD("uv_read_start() failed: %s", uv_strerror(err));
+		if (err != 0)
+		{
+			uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+
+			MS_THROW_ERROR_STD("uv_read_start() failed: %s", uv_strerror(err));
+		}
 	}
 
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
@@ -137,11 +140,14 @@ void UnixStreamSocket::Close()
 	// Tell the UV handle that the UnixStreamSocket has been closed.
 	this->uvHandle->data = nullptr;
 
-	// Don't read more.
-	err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
+	if (this->role == SocketRole::CONSUMER)
+	{
+		// Don't read more.
+		err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
 
-	if (err != 0)
-		MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+		if (err != 0)
+			MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+	}
 
 	// If there is no error and the peer didn't close its pipe side then close gracefully.
 	if (!this->hasError && !this->isClosedByPeer)

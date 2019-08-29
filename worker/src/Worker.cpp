@@ -10,12 +10,13 @@
 
 /* Instance methods. */
 
-Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
+Worker::Worker(Channel::ChannelWrapper* channel) : channel(channel)
 {
 	MS_TRACE();
 
 	// Set us as Channel's listener.
-	this->channel->SetListener(this);
+	this->channel->consumerSocket.SetListener(this);
+	this->channel->producerSocket.SetListener(this);
 
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
@@ -118,9 +119,11 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	return router;
 }
 
-inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
+inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* socket, Channel::Request* request)
 {
 	MS_TRACE();
+
+	MS_ASSERT(socket != &this->channel->producerSocket, "Producer Socket should not used as request channel.");
 
 	MS_DEBUG_DEV(
 	  "Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);

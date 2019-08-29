@@ -15,8 +15,13 @@ public:
 		uint8_t store[1];
 	};
 
+	enum SocketRole {
+		CONSUMER,
+		PRODUCER
+	};
+
 public:
-	UnixStreamSocket(int fd, size_t bufferSize);
+	UnixStreamSocket(int fd, size_t bufferSize, SocketRole role);
 	UnixStreamSocket& operator=(const UnixStreamSocket&) = delete;
 	UnixStreamSocket(const UnixStreamSocket&)            = delete;
 	virtual ~UnixStreamSocket();
@@ -49,6 +54,7 @@ private:
 protected:
 	// Passed by argument.
 	size_t bufferSize{ 0 };
+	SocketRole role;
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.

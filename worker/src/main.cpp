@@ -27,7 +27,8 @@
 #include <unistd.h> // getpid(), usleep()
 #endif
 
-static constexpr int ChannelFd{ 3 };
+static constexpr int ConsumerChannelFd{ 3 };
+static constexpr int ProducerChannelFd{ 4 };
 
 void IgnoreSignals();
 
@@ -47,11 +48,11 @@ int main(int argc, char* argv[])
 	DepLibUV::ClassInit();
 
 	// Channel socket (it will be handled and deleted by the Worker).
-	Channel::UnixStreamSocket* channel{ nullptr };
+	Channel::ChannelWrapper* channel{ nullptr };
 
 	try
 	{
-		channel = new Channel::UnixStreamSocket(ChannelFd);
+		channel = new Channel::ChannelWrapper(ConsumerChannelFd, ProducerChannelFd);
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -61,7 +62,7 @@ int main(int argc, char* argv[])
 	}
 
 	// Initialize the Logger.
-	Logger::ClassInit(channel);
+	Logger::ClassInit(&channel->producerSocket);
 
 	try
 	{
@@ -111,7 +112,8 @@ int main(int argc, char* argv[])
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
-		Channel::Notifier::ClassInit(channel);
+		Channel::Notifier::ClassInit(&channel->producerSocket);
+		Channel::Request::ClassInit(&channel->producerSocket);
 
 		// Ignore some signals.
 		IgnoreSignals();
