@@ -145,7 +145,7 @@ namespace RTC
 		this->listener->OnTransportCongestionControlClientTargetTransferRate(this, targetTransferRate);
 	}
 
-	// Called from PacedSender.
+	// Called from PacedSender in order to send probation packets.
 	void TransportCongestionControlClient::SendPacket(
 	  RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo)
 	{
