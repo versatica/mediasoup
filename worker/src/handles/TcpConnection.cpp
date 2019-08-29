@@ -368,7 +368,7 @@ void TcpConnection::Write(
 
 void TcpConnection::ErrorReceiving()
 {
-	MS_ERROR();
+	MS_TRACE();
 
 	Close();
 
