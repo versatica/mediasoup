@@ -94,6 +94,9 @@ namespace RTC
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
 		};
 
+	protected:
+		using onSendHandler = const std::function<void(bool sent)>;
+
 	public:
 		Transport(const std::string& id, Listener* listener, json& data);
 		virtual ~Transport();
@@ -127,8 +130,8 @@ namespace RTC
 		RTC::DataProducer* GetDataProducerFromRequest(Channel::Request* request) const;
 		void SetNewDataConsumerIdFromRequest(Channel::Request* request, std::string& dataConsumerId) const;
 		RTC::DataConsumer* GetDataConsumerFromRequest(Channel::Request* request) const;
-		virtual bool IsConnected() const                   = 0;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet) = 0;
+		virtual bool IsConnected() const                                                        = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet, onSendHandler& onDone = [](bool) {}) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcp(uint64_t now);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;

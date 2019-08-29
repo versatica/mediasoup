@@ -675,17 +675,23 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendHandler& onDone)
 	{
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
+			onDone(false);
+
 			return;
+		}
 
 		// Ensure there is sending SRTP session.
 		if (this->srtpSendSession == nullptr)
 		{
 			MS_WARN_DEV("ignoring RTP packet due to non sending SRTP session");
+
+			onDone(false);
 
 			return;
 		}
@@ -694,20 +700,13 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		if (!this->srtpSendSession->EncryptRtp(&data, &len))
+		{
+			onDone(false);
+
 			return;
+		}
 
-		// TODO: Uncomment this when we need it for Transport-CC client.
-		// auto seq = packet->GetSequenceNumber();
-
-		// this->iceSelectedTuple->Send(data, len, [seq](bool sent) {
-		// 	if (sent)
-		// 		MS_DUMP("RTP packet sent! [seq:%" PRIu16 "]", seq);
-		// 	else
-		// 		MS_DUMP("RTP packet NOT sent! [seq:%" PRIu16 "]", seq);
-		// });
-
-		// TODO: Remove this when the above code is uncommented.
-		this->iceSelectedTuple->Send(data, len);
+		this->iceSelectedTuple->Send(data, len, onDone);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);

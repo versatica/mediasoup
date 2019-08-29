@@ -2008,14 +2008,16 @@ namespace RTC
 
 			if (this->tccClient)
 			{
-				auto now = DepLibUV::GetTime();
-
 				// Indicate the pacer (and prober) that a packet is to be sent.
 				this->tccClient->InsertPacket(packet->GetSize());
 
-				SendRtpPacket(packet);
+				// TODO: Must be this in all SendRtpPacket() if tcc is in use.
+				auto* tccClient = this->tccClient;
 
-				this->tccClient->PacketSent(packet, now);
+				SendRtpPacket(packet, [packet, tccClient](bool sent) {
+					if (sent)
+						tccClient->PacketSent(packet, DepLibUV::GetTime());
+				});
 
 				return;
 			}
