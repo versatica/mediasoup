@@ -2033,10 +2033,23 @@ namespace RTC
 
 		// Update transport wide sequence number if present.
 		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+		{
 			this->transportWideSeq++;
 
-		// Send the packet.
-		SendRtpPacket(packet);
+			if (this->tccClient)
+			{
+				auto now = DepLibUV::GetTime();
+
+				// Indicate the pacer (and prober) that a packet is to be sent.
+				this->tccClient->InsertPacket(packet->GetSize());
+
+				SendRtpPacket(packet);
+
+				this->tccClient->PacketSent(packet, now);
+
+				return;
+			}
+		}
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
