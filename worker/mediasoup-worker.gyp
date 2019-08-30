@@ -303,7 +303,7 @@
         # C++ source files.
         'src/main.cpp'
       ],
-      # handle multi files with same name
+      # handle multi files with same name.
       # https://stackoverflow.com/a/22936230/2085408
       # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
       'msvs_settings': {
@@ -367,7 +367,7 @@
           '--coverage'
         ]
       },
-      # handle multi files with same name
+      # handle multi files with same name.
       # https://stackoverflow.com/a/22936230/2085408
       # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
       'msvs_settings': {
@@ -435,7 +435,7 @@
       [
         'fuzzer/include'
       ],
-      # handle multi files with same name
+      # handle multi files with same name.
       # https://stackoverflow.com/a/22936230/2085408
       # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
       'msvs_settings': {
