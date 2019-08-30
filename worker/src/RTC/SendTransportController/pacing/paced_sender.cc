@@ -291,6 +291,16 @@ void PacedSender::OnPacketSent(size_t size) {
   last_send_time_ms_ = DepLibUV::GetTime();
 }
 
+PacedPacketInfo PacedSender::GetPacingInfo() {
+  PacedPacketInfo pacing_info;
+
+  if (prober_.IsProbing()) {
+    pacing_info = prober_.CurrentCluster();
+  }
+
+  return pacing_info;
+}
+
 void PacedSender::OnPaddingSent(int64_t now, size_t bytes_sent) {
   if (bytes_sent > 0) {
     UpdateBudgetWithBytesSent(bytes_sent);

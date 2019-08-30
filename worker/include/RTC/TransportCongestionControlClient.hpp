@@ -34,6 +34,7 @@ namespace RTC
 
 	public:
 		void InsertPacket(size_t bytes);
+		webrtc::PacedPacketInfo GetPacingInfo();
 		void PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now);
 		void TransportConnected();
 		void TransportDisconnected();

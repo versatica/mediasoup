@@ -2019,7 +2019,7 @@ namespace RTC
 				packetInfo.has_rtp_sequence_number   = true;
 				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 				packetInfo.length                    = packet->GetSize();
-				// packetInfo.pacing_info               = pacingInfo;
+				packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
 
 				SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
 					if (sent)
@@ -2058,7 +2058,7 @@ namespace RTC
 				packetInfo.has_rtp_sequence_number   = true;
 				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 				packetInfo.length                    = packet->GetSize();
-				// packetInfo.pacing_info               = pacingInfo;
+				packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
 
 				SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
 					if (sent)
@@ -2310,7 +2310,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DUMP("OnTransportCongestionControlClientTargetTransferRate");
 		MS_DUMP(
 		  "------------------  targetTransferRate.target_rate.kbps():%" PRIi64 "----------------",
 		  targetTransferRate.target_rate.kbps());
@@ -2326,7 +2325,6 @@ namespace RTC
 		{
 			this->transportWideSeq++;
 
-			// TODO: Must do this here?
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packet->GetSize());
 

@@ -40,6 +40,7 @@ namespace RTC
 			controllerFactory.reset(new webrtc::GoogCcNetworkControllerFactory(std::move(config)));
 		}
 
+		bitrateConfig.start_bitrate_bps = 500000;
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
 		  this, predictorFactory.get(), controllerFactory.get(), bitrateConfig);
 
@@ -77,6 +78,13 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpTransportControllerSend->packet_sender()->InsertPacket(bytes);
+	}
+
+	webrtc::PacedPacketInfo TransportCongestionControlClient::GetPacingInfo()
+	{
+		MS_TRACE();
+
+		return this->rtpTransportControllerSend->packet_sender()->GetPacingInfo();
 	}
 
 	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now)

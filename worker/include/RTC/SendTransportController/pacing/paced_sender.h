@@ -85,6 +85,8 @@ class PacedSender {
   void Process();
 
   void OnPacketSent(size_t size);
+  PacedPacketInfo GetPacingInfo();
+
  private:
   int64_t UpdateTimeAndGetElapsedMs(int64_t now_us);
 
