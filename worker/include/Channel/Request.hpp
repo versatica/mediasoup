@@ -86,6 +86,8 @@ namespace Channel
 
 	public:
 		static void ClassInit(Channel::UnixStreamSocket* channel);
+
+	public:
 		// Passed by argument.
 		static Channel::UnixStreamSocket* channel;
 	};
