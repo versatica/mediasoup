@@ -67,7 +67,7 @@ namespace Channel
 		static std::unordered_map<std::string, MethodId> string2MethodId;
 
 	public:
-		Request(json& jsonRequest);
+		explicit Request(json& jsonRequest);
 		virtual ~Request();
 
 		void Accept();
