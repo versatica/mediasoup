@@ -23,8 +23,8 @@
 # Mac Stuff.
 .DS_Store
 
-# Win Stuff
-configure.pyc
+# python win generated Stuff.
+/worker/scripts/configure.pyc
 
-# VS stuff
+# VS stuff.
 /worker/.vs/
