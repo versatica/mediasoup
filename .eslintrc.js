@@ -173,6 +173,6 @@ module.exports =
 		'strict': 2,
 		'valid-typeof': 2,
 		'yoda': 2,
-		"linebreak-style": 0
+		'linebreak-style': 0
 	}
 };
