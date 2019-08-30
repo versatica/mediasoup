@@ -272,10 +272,7 @@
       }],
 
       [ 'OS == "win"', {
-        'sources': [
-          'include/opt/getopt.h',
-          'opt/getopt.cpp'
-        ]
+        'dependencies': [ 'deps/getopt/getopt.gyp:getopt' ]
       }],
 
       [ 'OS != "win"', {

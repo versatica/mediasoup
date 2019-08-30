@@ -29,7 +29,7 @@ Then the behavior is completely standard.
 GNU application programs can use a third alternative mode in which
 they can distinguish the relative order of options and other arguments.  */
 
-#include "opt/getopt.h"
+#include "getopt.h"
 
 /* For communication from `getopt' to the caller.
 When `getopt' finds an option that takes an argument,
@@ -799,14 +799,13 @@ int
 main(int argc,
 	char **argv)
 {
-	int c;
 	int digit_optind = 0;
 
 	while (1)
 	{
 		int this_option_optind = optind ? optind : 1;
 
-		c = getopt(argc, argv, "abc:d:0123456789");
+		int c = getopt(argc, argv, "abc:d:0123456789");
 		if (c == -1)
 			break;
 
