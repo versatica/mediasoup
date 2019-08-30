@@ -221,6 +221,10 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
       PacketFeedback packet_feedback(timestamp_ms, packet.sequence_number());
       if (!send_time_history_.GetFeedback(&packet_feedback, true))
         ++failed_lookups;
+      if (packet_feedback.local_net_id == local_net_id_ &&
+          packet_feedback.remote_net_id == remote_net_id_) {
+        packet_feedback_vector.push_back(packet_feedback);
+      }
 
       ++seq_num;
     }
