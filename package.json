@@ -46,11 +46,7 @@
     "uuid": "^3.3.2",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",    
-    "gulp-eslint": "^6.0.0",
-    "gulp-rename": "^1.4.0",
-    "gulp-replace": "^1.0.0",
-    "gulp-shell": "^0.6.5",
-    "gulp-touch-cmd": "0.0.1"
+    "gulp-shell": "^0.6.5"
   },
   "devDependencies": {
     "eslint": "^6.1.0",
