@@ -74,7 +74,8 @@ void TransportFeedbackAdapter::AddPacket(const RtpPacketSendInfo& packet_info,
       packet_feedback.ssrc = packet_info.ssrc;
       packet_feedback.rtp_sequence_number = packet_info.rtp_sequence_number;
     }
-    send_time_history_.RemoveOld(creation_time.ms());
+
+    // jmillan: TMP.
     // MS_DUMP("packet_feedback.arrival_time_ms: %" PRIi64, packet_feedback.arrival_time_ms);
     // MS_DUMP("packet_feedback.send_time_ms: %" PRIi64, packet_feedback.send_time_ms);
     // MS_DUMP("packet_feedback.sequence_number: %" PRIu16, packet_feedback.sequence_number);
@@ -86,6 +87,7 @@ void TransportFeedbackAdapter::AddPacket(const RtpPacketSendInfo& packet_info,
     // MS_DUMP("packet_feedback.ssrc: %" PRIu32, packet_feedback.ssrc.value());
     // MS_DUMP("packet_feedback.rtp_sequence_number: %" PRIu16, packet_feedback.rtp_sequence_number);
 
+    send_time_history_.RemoveOld(creation_time.ms());
     send_time_history_.AddNewPacket(std::move(packet_feedback));
   }
 
