@@ -69,7 +69,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 /* Instance methods. */
 
-UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, SocketRole role)
+UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::Role role)
   : bufferSize(bufferSize), role(role)
 {
 	MS_TRACE_STD();
@@ -98,7 +98,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, SocketRole role)
 		MS_THROW_ERROR_STD("uv_pipe_open() failed: %s", uv_strerror(err));
 	}
 
-	if (this->role == SocketRole::CONSUMER)
+	if (this->role == UnixStreamSocket::Role::CONSUMER)
 	{
 		// Start reading.
 		err = uv_read_start(
@@ -141,7 +141,7 @@ void UnixStreamSocket::Close()
 	// Tell the UV handle that the UnixStreamSocket has been closed.
 	this->uvHandle->data = nullptr;
 
-	if (this->role == SocketRole::CONSUMER)
+	if (this->role == UnixStreamSocket::Role::CONSUMER)
 	{
 		// Don't read more.
 		err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));

@@ -19,7 +19,7 @@ namespace Channel
 		};
 
 	public:
-		explicit UnixStreamSocket(int fd, ::UnixStreamSocket::SocketRole role);
+		explicit UnixStreamSocket(int fd, ::UnixStreamSocket::Role role);
 
 	public:
 		void SetListener(Listener* listener);
@@ -42,12 +42,14 @@ namespace Channel
 	class ChannelWrapper
 	{
 	public:
-		explicit ChannelWrapper(int consumerFd, int producerFd)
-		  : consumerSocket(consumerFd, ::UnixStreamSocket::SocketRole::CONSUMER),
-		    producerSocket(producerFd, ::UnixStreamSocket::SocketRole::PRODUCER)
+		ChannelWrapper(int consumerFd, int producerFd)
+		  : consumerSocket(consumerFd, ::UnixStreamSocket::Role::CONSUMER),
+		    producerSocket(producerFd, ::UnixStreamSocket::Role::PRODUCER)
 		{
 		}
 
+	public:
+		// Passed by argument.
 		UnixStreamSocket consumerSocket;
 		UnixStreamSocket producerSocket;
 	};

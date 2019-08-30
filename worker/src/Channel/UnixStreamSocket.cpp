@@ -22,7 +22,7 @@ namespace Channel
 
 	/* Instance methods. */
 
-	UnixStreamSocket::UnixStreamSocket(int fd, ::UnixStreamSocket::SocketRole role)
+	UnixStreamSocket::UnixStreamSocket(int fd, ::UnixStreamSocket::Role role)
 	  : ::UnixStreamSocket::UnixStreamSocket(fd, NsMessageMaxLen, role)
 	{
 		MS_TRACE_STD();
