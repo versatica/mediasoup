@@ -2013,11 +2013,17 @@ namespace RTC
 
 				auto* tccClient = this->tccClient;
 
-				// TODO: This is wrong. packet is a pointer and has been deallocated
-				// when the onSend callback is called, so it's garbage.
-				SendRtpPacket(packet, [packet, tccClient](bool sent) {
+				webrtc::RtpPacketSendInfo packetInfo;
+				packetInfo.ssrc                      = packet->GetSsrc();
+				packetInfo.transport_sequence_number = this->transportWideSeq;
+				packetInfo.has_rtp_sequence_number   = true;
+				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+				packetInfo.length                    = packet->GetSize();
+				// packetInfo.pacing_info               = pacingInfo;
+
+				SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
 					if (sent)
-						tccClient->PacketSent(packet, DepLibUV::GetTime());
+						tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
 				});
 
 				return;
@@ -2046,11 +2052,17 @@ namespace RTC
 
 				auto* tccClient = this->tccClient;
 
-				// TODO: This is wrong. packet is a pointer and has been deallocated
-				// when the onSend callback is called, so it's garbage.
-				SendRtpPacket(packet, [packet, tccClient](bool sent) {
+				webrtc::RtpPacketSendInfo packetInfo;
+				packetInfo.ssrc                      = packet->GetSsrc();
+				packetInfo.transport_sequence_number = this->transportWideSeq;
+				packetInfo.has_rtp_sequence_number   = true;
+				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+				packetInfo.length                    = packet->GetSize();
+				// packetInfo.pacing_info               = pacingInfo;
+
+				SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
 					if (sent)
-						tccClient->PacketSent(packet, DepLibUV::GetTime());
+						tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
 				});
 
 				return;
@@ -2305,7 +2317,7 @@ namespace RTC
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(
-	  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet)
+	  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo)
 	{
 		MS_TRACE();
 
@@ -2318,12 +2330,17 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packet->GetSize());
 
-			// TODO: This is wrong. packet is a pointer and has been deallocated when
-			// the onSend callback is called, so it's garbage.
-			SendRtpPacket(packet, [packet, tccClient](bool sent) {
-				// TODO: Must do this here?
+			webrtc::RtpPacketSendInfo packetInfo;
+			packetInfo.ssrc                      = packet->GetSsrc();
+			packetInfo.transport_sequence_number = this->transportWideSeq;
+			packetInfo.has_rtp_sequence_number   = true;
+			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+			packetInfo.length                    = packet->GetSize();
+			packetInfo.pacing_info               = pacingInfo;
+
+			SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
 				if (sent)
-					tccClient->PacketSent(packet, DepLibUV::GetTime());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
 			});
 		}
 		else

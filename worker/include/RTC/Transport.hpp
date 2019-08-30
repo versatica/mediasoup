@@ -210,7 +210,7 @@ namespace RTC
 		  webrtc::TargetTransferRate targetTransferRate) override;
 
 		void OnTransportCongestionControlClientSendRtpPacket(
-		  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet) override;
+		  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlServer::Listener. */
 	public:

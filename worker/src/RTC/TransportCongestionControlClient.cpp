@@ -79,27 +79,16 @@ namespace RTC
 		this->rtpTransportControllerSend->packet_sender()->InsertPacket(bytes);
 	}
 
-	void TransportCongestionControlClient::PacketSent(RTC::RtpPacket* packet, uint64_t now)
+	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now)
 	{
 		MS_TRACE();
-
-		uint16_t wideSeqNumber;
-		packet->ReadTransportWideCc01(wideSeqNumber);
-
-		webrtc::RtpPacketSendInfo packetInfo;
-		packetInfo.ssrc                      = packet->GetSsrc();
-		packetInfo.transport_sequence_number = wideSeqNumber;
-		packetInfo.has_rtp_sequence_number   = true;
-		packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
-		packetInfo.length                    = packet->GetSize();
-		// packetInfo.pacing_info               = pacingInfo;
 
 		// Notify the transport feedback adapter about the sent packet.
 		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 
 		// Notify the transport feedback adapter about the sent packet.
-		rtc::SentPacket sentPacket(wideSeqNumber, now);
-		this->rtpTransportControllerSend->OnSentPacket(packet, sentPacket);
+		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, now);
+		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 	}
 
 	void TransportCongestionControlClient::TransportConnected()
@@ -152,29 +141,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Indicate the pacer (and prober) that a packet is to be sent.
-		InsertPacket(packet->GetSize());
-
 		// Send the packet.
-		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet);
-
-		uint16_t wideSeqNumber;
-		packet->ReadTransportWideCc01(wideSeqNumber);
-
-		webrtc::RtpPacketSendInfo packetInfo;
-		packetInfo.ssrc                      = packet->GetSsrc();
-		packetInfo.transport_sequence_number = wideSeqNumber;
-		packetInfo.has_rtp_sequence_number   = true;
-		packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
-		packetInfo.length                    = packet->GetSize();
-		packetInfo.pacing_info               = pacingInfo;
-
-		// Notify the transport feedback adapter about the sent packet.
-		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
-
-		// Notify the transport feedback adapter about the sent packet.
-		rtc::SentPacket sentPacket(wideSeqNumber, DepLibUV::GetTime());
-		this->rtpTransportControllerSend->OnSentPacket(packet, sentPacket);
+		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet, pacingInfo);
 	}
 
 	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t /*size*/)

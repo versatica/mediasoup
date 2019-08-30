@@ -25,7 +25,7 @@ namespace RTC
 			  webrtc::TargetTransferRate targetTransferRate) = 0;
 
 			virtual void OnTransportCongestionControlClientSendRtpPacket(
-			  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet) = 0;
+			  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) = 0;
 		};
 
 	public:
@@ -34,7 +34,7 @@ namespace RTC
 
 	public:
 		void InsertPacket(size_t bytes);
-		void PacketSent(RTC::RtpPacket* packet, uint64_t now);
+		void PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now);
 		void TransportConnected();
 		void TransportDisconnected();
 		void ReceiveEstimatedBitrate(uint32_t bitrate);

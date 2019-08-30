@@ -64,7 +64,7 @@ class RtpTransportControllerSend final
   void OnNetworkAvailability(bool network_available) override;
   RtcpBandwidthObserver* GetBandwidthObserver() override;
   void EnablePeriodicAlrProbing(bool enable) override;
-  void OnSentPacket(const RTC::RtpPacket* rtp_packet, const rtc::SentPacket& sent_packet) override;
+  void OnSentPacket(const rtc::SentPacket& sent_packet, size_t size) override;
 
   // jmillan
   // void SetClientBitratePreferences(const BitrateSettings& preferences) override;
