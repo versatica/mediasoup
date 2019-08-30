@@ -8,6 +8,10 @@
 # gyp generated stuff.
 /worker/out/
 /worker/**/*.xcodeproj/
+/worker/**/*.sln
+/worker/**/*.vcxproj
+/worker/**/*.vcxproj.filters
+/worker/**/*.vcxproj.user
 
 # clang-fuzzer stuff is too big.
 /worker/deps/clang-fuzzer
@@ -25,6 +29,10 @@
 
 # python win generated Stuff.
 /worker/scripts/configure.pyc
+
+# vistual studio generated Stuff.
+/worker/**/Debug/
+/worker/**/Release/
 
 # VS stuff.
 /worker/.vs/

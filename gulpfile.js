@@ -43,8 +43,8 @@ gulp.task('format:worker', () =>
 gulp.task('win:build', shell.task(
 	[
 		'echo build for windows',
-		'cd worker && python ./scripts/configure.py --format=msvs',
-		`MSBuild ./worker/out/mediasoup-worker.sln /p:Configuration=${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ?'Debug' : 'Release'} -t:mediasoup-worker `
+		'python ./worker/scripts/configure.py --format=msvs',
+		`MSBuild ./worker/mediasoup-worker.sln /p:Configuration=${process.env.MEDIASOUP_BUILDTYPE === 'Debug' ?'Debug' : 'Release'} -t:mediasoup-worker `
 	],
 	{
 		verbose : true

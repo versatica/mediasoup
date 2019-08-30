@@ -272,7 +272,20 @@
       }],
 
       [ 'OS == "win"', {
-        'dependencies': [ 'deps/getopt/getopt.gyp:getopt' ]
+        'dependencies': [ 'deps/getopt/getopt.gyp:getopt' ],
+        
+        # handle multi files with same name.
+        # https://stackoverflow.com/a/22936230/2085408
+        # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
+        'msvs_settings': {
+          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
+        },
+
+        # Output Directory setting for msvc.
+        # https://github.com/nodejs/node-gyp/issues/1242#issuecomment-310921441
+        'msvs_configuration_attributes': {
+          'OutputDirectory': '$(SolutionDir)\\out\\$(Configuration)\\'
+        }
       }],
 
       [ 'OS != "win"', {
@@ -302,13 +315,7 @@
       [
         # C++ source files.
         'src/main.cpp'
-      ],
-      # handle multi files with same name.
-      # https://stackoverflow.com/a/22936230/2085408
-      # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
-      'msvs_settings': {
-          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
-      }
+      ]
     },
     {
       'target_name': 'mediasoup-worker-test',
@@ -366,12 +373,6 @@
         'OTHER_LDFLAGS': [
           '--coverage'
         ]
-      },
-      # handle multi files with same name.
-      # https://stackoverflow.com/a/22936230/2085408
-      # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
-      'msvs_settings': {
-          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
       }
     },
     {
@@ -435,12 +436,6 @@
       [
         'fuzzer/include'
       ],
-      # handle multi files with same name.
-      # https://stackoverflow.com/a/22936230/2085408
-      # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
-      'msvs_settings': {
-          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
-      },
 
       'conditions':
       [
