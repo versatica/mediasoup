@@ -6,13 +6,13 @@
 #include "Utils.hpp"
 #include <cerrno>
 #include <sys/stat.h> // stat()
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <io.h>
 #define __S_ISTYPE(mode, mask) (((mode)&_S_IFMT) == (mask))
 #define S_ISREG(mode) __S_ISTYPE((mode), _S_IFREG)
 #else
 #include <unistd.h> // access(), R_OK
-#endif              // _WINDOWS
+#endif
 
 namespace Utils
 {

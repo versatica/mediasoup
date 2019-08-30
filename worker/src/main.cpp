@@ -21,7 +21,7 @@
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define usleep Sleep
 #else
 #include <unistd.h> // getpid(), usleep()
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 
 void IgnoreSignals()
 {
-#ifndef _MSC_VER
+#ifndef _WIN32
 	MS_TRACE();
 
 	int err;

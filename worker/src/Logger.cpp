@@ -2,7 +2,7 @@
 // #define MS_LOG_DEV
 
 #include "Logger.hpp"
-#ifndef _MSC_VER
+#ifndef _WIN32
 #include <unistd.h> // getpid()
 #endif
 
