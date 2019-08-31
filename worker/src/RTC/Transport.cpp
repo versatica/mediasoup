@@ -1571,14 +1571,11 @@ namespace RTC
 				auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
 				if (
-					// No consumer.
-					(consumer == nullptr) &&
-					// No transport feedback for the probation RTP SSRC.
-					!(
-					 feedback->GetMediaSsrc() == RTC::RtpProbationSsrc &&
-					 feedback->GetMessageType() == RTC::RTCP::FeedbackRtp::MessageType::TCC
-					)
-				)
+				  // No consumer.
+				  (consumer == nullptr) &&
+				  // No transport feedback for the probation RTP SSRC.
+				  !(feedback->GetMediaSsrc() == RTC::RtpProbationSsrc &&
+				    feedback->GetMessageType() == RTC::RTCP::FeedbackRtp::MessageType::TCC))
 				{
 					MS_DEBUG_TAG(
 					  rtcp,
@@ -2026,8 +2023,8 @@ namespace RTC
 				this->tccClient->InsertPacket(packet->GetSize());
 
 				auto* tccClient = this->tccClient;
-
 				webrtc::RtpPacketSendInfo packetInfo;
+
 				packetInfo.ssrc                      = packet->GetSsrc();
 				packetInfo.transport_sequence_number = this->transportWideSeq;
 				packetInfo.has_rtp_sequence_number   = true;
@@ -2065,8 +2062,8 @@ namespace RTC
 				this->tccClient->InsertPacket(packet->GetSize());
 
 				auto* tccClient = this->tccClient;
-
 				webrtc::RtpPacketSendInfo packetInfo;
+
 				packetInfo.ssrc                      = packet->GetSsrc();
 				packetInfo.transport_sequence_number = this->transportWideSeq;
 				packetInfo.has_rtp_sequence_number   = true;
@@ -2330,7 +2327,9 @@ namespace RTC
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(
-	  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo)
+	  RTC::TransportCongestionControlClient* tccClient,
+	  RTC::RtpPacket* packet,
+	  const webrtc::PacedPacketInfo& pacingInfo)
 	{
 		MS_TRACE();
 
@@ -2343,6 +2342,7 @@ namespace RTC
 			this->tccClient->InsertPacket(packet->GetSize());
 
 			webrtc::RtpPacketSendInfo packetInfo;
+
 			packetInfo.ssrc                      = packet->GetSsrc();
 			packetInfo.transport_sequence_number = this->transportWideSeq;
 			packetInfo.has_rtp_sequence_number   = true;

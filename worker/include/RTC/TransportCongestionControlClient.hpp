@@ -25,7 +25,9 @@ namespace RTC
 			  webrtc::TargetTransferRate targetTransferRate) = 0;
 
 			virtual void OnTransportCongestionControlClientSendRtpPacket(
-			  RTC::TransportCongestionControlClient* tccClient, RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) = 0;
+			  RTC::TransportCongestionControlClient* tccClient,
+			  RTC::RtpPacket* packet,
+			  const webrtc::PacedPacketInfo& pacingInfo) = 0;
 		};
 
 	public:

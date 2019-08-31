@@ -40,7 +40,7 @@ namespace RTC
 			controllerFactory.reset(new webrtc::GoogCcNetworkControllerFactory(std::move(config)));
 		}
 
-		bitrateConfig.start_bitrate_bps = 500000;
+		bitrateConfig.start_bitrate_bps  = 500000;
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
 		  this, predictorFactory.get(), controllerFactory.get(), bitrateConfig);
 
