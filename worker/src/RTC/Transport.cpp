@@ -1451,6 +1451,12 @@ namespace RTC
 
 					if (consumer == nullptr)
 					{
+						// Special case for the RTP probator.
+						if (report->GetSsrc() == RTC::RtpProbationSsrc)
+						{
+							break;
+						}
+
 						MS_DEBUG_TAG(
 						  rtcp,
 						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
@@ -1564,7 +1570,15 @@ namespace RTC
 				auto* feedback = static_cast<RTC::RTCP::FeedbackRtpPacket*>(packet);
 				auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
-				if (consumer == nullptr)
+				if (
+					// No consumer.
+					(consumer == nullptr) &&
+					// No transport feedback for the probation RTP SSRC.
+					!(
+					 feedback->GetMediaSsrc() == RTC::RtpProbationSsrc &&
+					 feedback->GetMessageType() == RTC::RTCP::FeedbackRtp::MessageType::TCC
+					)
+				)
 				{
 					MS_DEBUG_TAG(
 					  rtcp,

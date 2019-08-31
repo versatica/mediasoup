@@ -6,6 +6,9 @@
 
 namespace RTC
 {
+	// SSRC of the probation RTP stream.
+	constexpr uint32_t RtpProbationSsrc{ 1234u };
+
 	class RtpProbationGenerator
 	{
 	public:

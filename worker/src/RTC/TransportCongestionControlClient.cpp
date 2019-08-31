@@ -10,7 +10,7 @@ static std::unique_ptr<webrtc::NetworkStatePredictorFactoryInterface> predictorF
 static std::unique_ptr<webrtc::NetworkControllerFactoryInterface> controllerFactory{ nullptr };
 
 // Size of probation packets.
-constexpr size_t probationPacketSize{ 50 };
+constexpr size_t probationPacketSize{ 250 };
 
 // jmillan: TODO.
 webrtc::BitrateConstraints bitrateConfig;

@@ -9,9 +9,6 @@
 #include <cstring> // std::memcpy()
 #include <vector>
 
-// SSRC of the probation RTP stream.
-constexpr uint32_t ssrc{ 1234u };
-
 namespace RTC
 {
 	/* Static. */
@@ -50,7 +47,7 @@ namespace RTC
 		  RTC::RtpPacket::Parse(this->probationPacketBuffer, this->probationPacketLen);
 
 		// Set fixed SSRC.
-		this->probationPacket->SetSsrc(ssrc);
+		this->probationPacket->SetSsrc(RTC::RtpProbationSsrc);
 
 		// Set random initial RTP seq number and timestamp.
 		this->probationPacket->SetSequenceNumber(
