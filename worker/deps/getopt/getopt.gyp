@@ -6,12 +6,16 @@
       'type': 'static_library',
       'sources':
       [
-        'getopt.h',
-        'getopt.cpp'
+        'getopt/src/getopt.h',
+        'getopt/src/getopt.c'
+      ],
+      'include_dirs': 
+      [
+        'getopt/src/'
       ],
       'direct_dependent_settings':
       {
-        'include_dirs': ['.']
+        'include_dirs': ['getopt/src/']
       },
     }
   ]

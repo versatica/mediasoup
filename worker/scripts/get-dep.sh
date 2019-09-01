@@ -158,6 +158,15 @@ function get_fuzzer_corpora()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
+function get_win_getopt()
+{
+	GIT_REPO="git@github.com:alex85k/wingetopt.git"
+	GIT_TAG="master"
+	DEST="deps/getopt/getopt"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
@@ -196,6 +205,9 @@ case "${DEP}" in
 		;;
 	fuzzer-corpora)
 		get_fuzzer_corpora
+		;;
+	get-win-opt)
+		get_win_getopt
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2
