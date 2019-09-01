@@ -45,12 +45,12 @@
     "random-number": "^0.0.9",
     "uuid": "^3.3.2",
     "gulp": "^4.0.2",
-    "gulp-clang-format": "^1.0.27",    
     "gulp-shell": "^0.6.5"
   },
   "devDependencies": {
     "eslint": "^6.1.0",
     "eslint-plugin-jest": "^22.13.6",
+    "gulp-clang-format": "^1.0.27",    
     "jest": "^24.8.0",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^5.0.0",
