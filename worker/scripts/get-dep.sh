@@ -170,7 +170,7 @@ function get_win_getopt()
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer|fuzzer-corpora]"
+		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer|fuzzer-corpora|win-getopt]"
 		echo
 		;;
 	gyp)
@@ -206,7 +206,7 @@ case "${DEP}" in
 	fuzzer-corpora)
 		get_fuzzer_corpora
 		;;
-	get-win-opt)
+	win-getopt)
 		get_win_getopt
 		;;
 	*)
