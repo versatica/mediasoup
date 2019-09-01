@@ -1,7 +1,7 @@
+const os = require('os');
 const gulp = require('gulp');
 const shell = require('gulp-shell');
 const clangFormat = require('gulp-clang-format');
-const os = require('os');
 
 const workerFiles =
 [
