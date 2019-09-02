@@ -223,6 +223,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetPayloadLength() == 0);
+		REQUIRE(packet->GetSize() == 28);
+
+		packet->SetPayloadLength(1000);
+
+		REQUIRE(packet->GetPayloadLength() == 1000);
+		REQUIRE(packet->GetSize() == 1028);
 
 		delete packet;
 	}
@@ -442,11 +448,17 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(payload[6] == 0x06);
 		REQUIRE(payload[7] == 0x07);
 
+		packet->SetPayloadLength(14);
+
+		REQUIRE(packet->GetPayloadLength() == 14);
+		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetSize() == 42);
+
 		packet->ShiftPayload(4, 4, true);
 
-		REQUIRE(packet->GetPayloadLength() == 12);
-		REQUIRE(packet->GetPayloadPadding() == 4);
-		REQUIRE(packet->GetSize() == 44);
+		REQUIRE(packet->GetPayloadLength() == 18);
+		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetSize() == 46);
 		REQUIRE(payload[0] == 0x00);
 		REQUIRE(payload[1] == 0x01);
 		REQUIRE(payload[2] == 0x02);
@@ -455,6 +467,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(payload[9] == 0x05);
 		REQUIRE(payload[10] == 0x06);
 		REQUIRE(payload[11] == 0x07);
+
+		packet->SetPayloadLength(1000);
+
+		REQUIRE(packet->GetPayloadLength() == 1000);
+		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetSize() == 1028);
 
 		delete packet;
 	}

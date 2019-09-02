@@ -166,6 +166,7 @@ namespace RTC
 		uint8_t* GetExtension(uint8_t id, uint8_t& len) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
+		void SetPayloadLength(size_t length);
 		uint8_t GetPayloadPadding() const;
 		uint8_t GetSpatialLayer() const;
 		uint8_t GetTemporalLayer() const;
@@ -588,6 +589,17 @@ namespace RTC
 	inline size_t RtpPacket::GetPayloadLength() const
 	{
 		return this->payloadLength;
+	}
+
+	inline void RtpPacket::SetPayloadLength(size_t length)
+	{
+		this->size -= this->payloadLength;
+		this->size -= size_t{ this->payloadPadding };
+		this->payloadLength  = length;
+		this->payloadPadding = 0u;
+		this->size += length;
+
+		SetPayloadPaddingFlag(false);
 	}
 
 	inline uint8_t RtpPacket::GetPayloadPadding() const
