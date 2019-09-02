@@ -28,7 +28,7 @@ namespace RTC
 				uint32_t ssrc;
 				uint8_t sequenceNumber;
 #ifdef _WIN32
-				uint8_t reserved[3];	// Alignment.
+				uint8_t reserved[3]; // Alignment.
 #else
 				uint32_t reserved : 24;
 #endif
