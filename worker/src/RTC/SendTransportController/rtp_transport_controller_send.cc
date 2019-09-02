@@ -123,16 +123,20 @@ PacedSender* RtpTransportControllerSend::packet_sender() {
   return &pacer_;
 }
 
-// jmillan: not used.
 void RtpTransportControllerSend::SetAllocatedSendBitrateLimits(
     int min_send_bitrate_bps,
     int max_padding_bitrate_bps,
     int max_total_bitrate_bps) {
+  streams_config_.min_total_allocated_bitrate =
+      DataRate::bps(min_send_bitrate_bps);
+  streams_config_.max_padding_rate = DataRate::bps(max_padding_bitrate_bps);
+  streams_config_.max_total_allocated_bitrate =
+      DataRate::bps(max_total_bitrate_bps);
   UpdateStreamsConfig();
 }
 
-// jmillan: not used.
 void RtpTransportControllerSend::SetPacingFactor(float pacing_factor) {
+  streams_config_.pacing_factor = pacing_factor;
   UpdateStreamsConfig();
 }
 
@@ -168,8 +172,8 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
 RtcpBandwidthObserver* RtpTransportControllerSend::GetBandwidthObserver() {
   return this;
 }
-// jmillan: not used.
 void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
+	streams_config_.requests_alr_probing = enable;
   UpdateStreamsConfig();
 }
 void RtpTransportControllerSend::OnSentPacket(
@@ -304,6 +308,9 @@ void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
 
 // jmillan. removed.
 void RtpTransportControllerSend::UpdateStreamsConfig() {
+  streams_config_.at_time = Timestamp::ms(DepLibUV::GetTime());
+  if (controller_)
+    controller_->OnStreamsConfig(streams_config_);
 }
 
 void RtpTransportControllerSend::PostUpdates(NetworkControlUpdate update) {

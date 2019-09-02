@@ -122,8 +122,7 @@ class RtpTransportControllerSend final
   Timestamp last_report_block_time_;
 
   NetworkControllerConfig initial_config_;
-  // jmillan: removed.
-  // StreamsConfig streams_config_;
+	StreamsConfig streams_config_;
 
   const bool send_side_bwe_with_overhead_;
   // jmillan: deleted
