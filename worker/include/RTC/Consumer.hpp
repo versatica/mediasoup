@@ -68,7 +68,7 @@ namespace RTC
 		virtual uint32_t UseAvailableBitrate(uint32_t bitrate);
 		virtual uint32_t IncreaseTemporalLayer(uint32_t bitrate);
 		virtual void ApplyLayers();
-		virtual uint32_t GetProbationBitrate() const;
+		virtual uint32_t GetDesiredBitrate() const;
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)       = 0;
 		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams() = 0;
 		virtual void GetRtcp(

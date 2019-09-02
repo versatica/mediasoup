@@ -138,6 +138,7 @@ namespace RTC
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendSctpData(const uint8_t* data, size_t len)             = 0;
 		void DistributeAvailableOutgoingBitrate();
+		void ComputeOutgoingDesiredBitrate();
 		void MaySetIncomingBitrateLimitationByRemb();
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */

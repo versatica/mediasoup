@@ -30,7 +30,7 @@ namespace RTC
 		uint32_t UseAvailableBitrate(uint32_t bitrate) override;
 		uint32_t IncreaseTemporalLayer(uint32_t bitrate) override;
 		void ApplyLayers() override;
-		uint32_t GetProbationBitrate() const override;
+		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;

@@ -1896,6 +1896,29 @@ namespace RTC
 		}
 	}
 
+	void Transport::ComputeOutgoingDesiredBitrate()
+	{
+		MS_TRACE();
+
+		// TODO: Uncomment when Transport-CC client is done.
+		// MS_ASSERT(this->rembClient || this->tccClient, "no REMB client nor Transport-CC client");
+		MS_ASSERT(this->rembClient, "no REMB client");
+
+		uint32_t totalDesiredBitrate{ 0u };
+
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer      = kv.second;
+			auto desiredBitrate = consumer->GetDesiredBitrate();
+
+			totalDesiredBitrate += desiredBitrate;
+		}
+
+		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
+
+		// TODO: Use totalDesiredBitrate.
+	}
+
 	void Transport::MaySetIncomingBitrateLimitationByRemb()
 	{
 		MS_TRACE();

@@ -268,7 +268,6 @@ namespace RTC
 		if (RTC::Consumer::IsActive())
 		{
 			// Just check target layers if the stream has died or reborned.
-			//
 			// clang-format off
 			if (
 				!this->externallyManagedBitrate ||
@@ -601,7 +600,7 @@ namespace RTC
 		}
 	}
 
-	uint32_t SvcConsumer::GetProbationBitrate() const
+	uint32_t SvcConsumer::GetDesiredBitrate() const
 	{
 		MS_TRACE();
 
@@ -615,18 +614,6 @@ namespace RTC
 
 		if (this->producerRtpStream->GetScore() == 0)
 			return 0u;
-
-		// If target layers are different than current layers then we are in upgrade
-		// progress, so don't request probation bitrate.
-		// clang-format off
-		if (
-			this->encodingContext->GetTargetSpatialLayer() != this->encodingContext->GetCurrentSpatialLayer() ||
-			this->encodingContext->GetTargetTemporalLayer() != this->encodingContext->GetCurrentTemporalLayer()
-		)
-		// clang-format on
-		{
-			return 0u;
-		}
 
 		int16_t desiredSpatialLayer{ -1 };
 		int16_t desiredTemporalLayer{ -1 };
@@ -663,17 +650,9 @@ namespace RTC
 				}
 			}
 
-			// TODO: Or this instead?
 			// If this is the preferred or higher spatial layer, take it and exit.
-			// if (desiredSpatialLayer >= this->preferredSpatialLayer)
-			// 	break;
-
-			// If this is higher than the current spatial layer, take it and
-			// exit.
-			if (desiredSpatialLayer > this->encodingContext->GetCurrentSpatialLayer())
-			{
+			if (desiredSpatialLayer >= this->preferredSpatialLayer)
 				break;
-			}
 		}
 
 	done:
@@ -682,38 +661,19 @@ namespace RTC
 		if (desiredSpatialLayer == -1)
 			return 0u;
 
-		// No change.
-		// clang-format off
-		if (
-			desiredSpatialLayer == this->encodingContext->GetCurrentSpatialLayer() &&
-			desiredTemporalLayer == this->encodingContext->GetCurrentTemporalLayer()
-		)
-		// clang-format on
-		{
-			return 0u;
-		}
-
-		// Get the current bitrate from our own RTP stream.
-		uint32_t currentBitrate = this->rtpStream->GetBitrate(now);
-
-		if (desiredBitrate < currentBitrate)
-			return 0u;
-
-		uint32_t probationBitrate = desiredBitrate - currentBitrate;
-
 		MS_DEBUG_2TAGS(
 		  bwe,
 		  svc,
 		  "[current layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
-		  ", probation bitrate:%" PRIu32 ", consumerId:%s]",
+		  ", desired bitrate:%" PRIu32 ", consumerId:%s]",
 		  this->encodingContext->GetCurrentSpatialLayer(),
 		  this->encodingContext->GetCurrentTemporalLayer(),
 		  desiredSpatialLayer,
 		  desiredTemporalLayer,
-		  probationBitrate,
+		  desiredBitrate,
 		  this->id.c_str());
 
-		return probationBitrate;
+		return desiredBitrate;
 	}
 
 	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet)

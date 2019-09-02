@@ -377,7 +377,7 @@ namespace RTC
 		// it does nothing.
 	}
 
-	uint32_t Consumer::GetProbationBitrate() const
+	uint32_t Consumer::GetDesiredBitrate() const
 	{
 		MS_TRACE();
 
