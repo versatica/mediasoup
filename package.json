@@ -28,10 +28,14 @@
     "lint:worker": "gulp lint:worker",
     "format:worker": "gulp format:worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "gulp build && jest",
-    "test:worker": "gulp test:worker",
-    "coverage:node": "gulp build && jest --coverage && open-cli coverage/lcov-report/index.html",
-    "postinstall": "gulp build"
+    "test:node": "npm run postinstall && jest",
+    "test:worker": "run-script-os",
+    "test:worker:win32": "echo test:worker not support yet!!! run test in visual studio!!!",
+    "test:worker:default": "make test -C worker",
+    "coverage:node": "npm run postinstall && jest --coverage && open-cli coverage/lcov-report/index.html",
+    "postinstall": "run-script-os",
+    "postinstall:win32": "python ./worker/scripts/configure.py --format=msvs && IF %MEDIASOUP_BUILDTYPE% == Release ( MSBuild ./worker/mediasoup-worker.sln /p:Configuration=Release -t:mediasoup-worker ) ELSE ( MSBuild ./worker/mediasoup-worker.sln /p:Configuration=Debug -t:mediasoup-worker )",
+    "postinstall:default": "make -C worker"
   },
   "jest": {
     "verbose": true,
@@ -43,14 +47,14 @@
     "h264-profile-level-id": "^1.0.0",
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
-    "uuid": "^3.3.2",
-    "gulp": "^4.0.2",
-    "gulp-shell": "^0.6.5"
+    "run-script-os": "git+https://github.com/kawatzaki/run-script-os.git",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "eslint": "^6.1.0",
     "eslint-plugin-jest": "^22.13.6",
-    "gulp-clang-format": "^1.0.27",    
+    "gulp": "^4.0.2",
+    "gulp-clang-format": "^1.0.27",
     "jest": "^24.8.0",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^5.0.0",
