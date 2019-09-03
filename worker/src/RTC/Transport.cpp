@@ -1841,7 +1841,7 @@ namespace RTC
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 		{
 			auto priority    = it->first;
-			auto consumer    = it->second;
+			auto* consumer   = it->second;
 			uint32_t bitrate = (availableBitrate * priority) / totalPriorities;
 
 			MS_DEBUG_DEV(
@@ -1875,7 +1875,7 @@ namespace RTC
 
 			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 			{
-				auto consumer = it->second;
+				auto* consumer = it->second;
 
 				MS_DEBUG_DEV(
 				  "layer bitrate for Consumer [bitrate:%" PRIu32 ", consumerId:%s]",
@@ -1910,7 +1910,7 @@ namespace RTC
 		// Finally instruct Consumers to apply their computed layers.
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 		{
-			auto consumer = it->second;
+			auto* consumer = it->second;
 
 			consumer->ApplyLayers();
 		}
