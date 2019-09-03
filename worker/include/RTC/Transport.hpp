@@ -208,8 +208,8 @@ namespace RTC
 	public:
 		void OnTransportCongestionControlClientAvailableBitrate(
 		  RTC::TransportCongestionControlClient* tccClient,
-		  int64_t availableBitrate,
-		  int64_t previousAvailableBitrate) override;
+		  uint32_t availableBitrate,
+		  uint32_t previousAvailableBitrate) override;
 
 		void OnTransportCongestionControlClientSendRtpPacket(
 		  RTC::TransportCongestionControlClient* tccClient,

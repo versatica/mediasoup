@@ -711,13 +711,6 @@ namespace RTC
 				MS_DEBUG_DEV(
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
-					// TODO
-					MS_DUMP("---- new consumer created in transport.id:%s", this->id.c_str());
-					if (consumer->GetKind() == RTC::Media::Kind::AUDIO)
-						MS_DUMP("---- it's audio consumer");
-					else if (consumer->GetKind() == RTC::Media::Kind::VIDEO)
-						MS_DUMP("---- it's video consumer");
-
 				// Create status response.
 				json data = json::object();
 
@@ -762,8 +755,6 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(bwe, "enabling TCC client");
 
-						MS_DUMP("---- enabling TCC client");
-
 					// Tell all the Consumers that we are gonna manage their bitrate.
 					for (auto& kv : this->mapConsumers)
 					{
@@ -772,8 +763,6 @@ namespace RTC
 						consumer->SetExternallyManagedBitrate();
 					};
 
-						MS_DUMP("---- creating tccClient");
-
 					// TODO: When unified with REMB we must check properly set bweType.
 					RTC::TransportCongestionControlClient::BweType bweType;
 
@@ -781,8 +770,6 @@ namespace RTC
 
 					this->tccClient = new RTC::TransportCongestionControlClient(
 					  this, bweType, this->initialAvailableOutgoingBitrate);
-
-						MS_DUMP("---- tccClient created");
 
 					// If the transport is connected, tell the Transport-CC client.
 					if (IsConnected())
@@ -819,8 +806,6 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(bwe, "enabling REMB client");
 
-						MS_DUMP("---- enabling REMB client");
-
 					// Tell all the Consumers that we are gonna manage their bitrate.
 					for (auto& kv : this->mapConsumers)
 					{
@@ -832,20 +817,13 @@ namespace RTC
 					this->rembClient = new RTC::RembClient(this, this->initialAvailableOutgoingBitrate);
 				}
 
-					MS_DUMP("---- 3");
-
 				// If applicable, tell the new Consumer that we are gonna manage its
 				// bitrate.
 				if (this->rembClient || this->tccClient)
 					consumer->SetExternallyManagedBitrate();
 
 				if (IsConnected())
-				{
-						MS_DUMP("---- 4a");
 					consumer->TransportConnected();
-				}
-				else
-					MS_DUMP("---- 4b");
 
 				break;
 			}
@@ -1231,7 +1209,7 @@ namespace RTC
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
 
-		if (producer == nullptr)
+		if (!producer)
 		{
 			MS_WARN_TAG(
 			  rtp,
@@ -1280,7 +1258,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Handle each RTCP packet.
-		while (packet != nullptr)
+		while (packet)
 		{
 			HandleRtcpPacket(packet);
 
@@ -1474,12 +1452,26 @@ namespace RTC
 					auto& report   = (*it);
 					auto* consumer = GetConsumerByMediaSsrc(report->GetSsrc());
 
-					if (consumer == nullptr)
+					if (!consumer)
 					{
 						// Special case for the RTP probator.
 						if (report->GetSsrc() == RTC::RtpProbationSsrc)
 						{
-							break;
+							// TODO: We should pass the RR to the tccClient (and just RR for the
+							// probation stream).
+
+							// TODO: Convert report to ReportBlock and pass to tccClient.
+							// RTCPReportBlock in include/RTC/SendTransportController/rtp_rtcp_defines.h
+							//
+							// NOTE: consumer->GetRtt() is already implemented.
+							//
+							// if (this->tccClient)
+							// {
+							// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
+							// DepLibUV::GetTime());
+							// }
+
+							continue;
 						}
 
 						MS_DEBUG_TAG(
@@ -1491,14 +1483,6 @@ namespace RTC
 					}
 
 					consumer->ReceiveRtcpReceiverReport(report);
-
-					// TODO: Convert report to ReportBlock and pass to tccClient.
-					// RTCPReportBlock in include/RTC/SendTransportController/rtp_rtcp_defines.h
-					// if (this->tccClient)
-					// {
-					// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
-					// DepLibUV::GetTime());
-					// }
 				}
 
 				break;
@@ -1515,7 +1499,7 @@ namespace RTC
 					{
 						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
-						if (consumer == nullptr)
+						if (!consumer)
 						{
 							MS_DEBUG_TAG(
 							  rtcp,
@@ -1598,12 +1582,18 @@ namespace RTC
 				auto* feedback = static_cast<RTC::RTCP::FeedbackRtpPacket*>(packet);
 				auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
+				// If no Consumer is found and this is not a Transport Feedback for the
+				// probation SSRC, ignore it.
+				//
+				// clang-format off
 				if (
-				  // No consumer.
-				  (consumer == nullptr) &&
-				  // No transport feedback for the probation RTP SSRC.
-				  !(feedback->GetMediaSsrc() == RTC::RtpProbationSsrc &&
-				    feedback->GetMessageType() == RTC::RTCP::FeedbackRtp::MessageType::TCC))
+					!consumer &&
+					(
+						feedback->GetMediaSsrc() != RTC::RtpProbationSsrc ||
+						feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC
+					)
+				)
+				// clang-format on
 				{
 					MS_DEBUG_TAG(
 					  rtcp,
@@ -1666,7 +1656,7 @@ namespace RTC
 					// Get the producer associated to the SSRC indicated in the report.
 					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
 
-					if (producer == nullptr)
+					if (!producer)
 					{
 						MS_DEBUG_TAG(
 						  rtcp,
@@ -1692,7 +1682,7 @@ namespace RTC
 					// Get the producer associated to the SSRC indicated in the report.
 					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
 
-					if (producer == nullptr)
+					if (!producer)
 					{
 						MS_DEBUG_TAG(
 						  rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
@@ -1735,7 +1725,7 @@ namespace RTC
 
 								auto* producer = this->rtpListener.GetProducer(ssrcInfo->GetSsrc());
 
-								if (producer == nullptr)
+								if (!producer)
 								{
 									MS_WARN_TAG(
 									  rtcp,
@@ -1824,10 +1814,6 @@ namespace RTC
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
 		MS_TRACE();
-
-			MS_DUMP("---- id:%s", this->id.c_str());
-			if (this->destroying)
-				MS_ERROR("---- DESTROYING !!!");
 
 		MS_ASSERT(this->rembClient || this->tccClient, "no REMB client nor Transport-CC client");
 
@@ -2340,7 +2326,7 @@ namespace RTC
 
 		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(streamId);
 
-		if (dataProducer == nullptr)
+		if (!dataProducer)
 		{
 			MS_WARN_TAG(
 			  sctp, "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]", streamId);
@@ -2403,13 +2389,13 @@ namespace RTC
 
 	inline void Transport::OnTransportCongestionControlClientAvailableBitrate(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
-	  int64_t availableBitrate,
-	  int64_t previousAvailableBitrate)
+	  uint32_t availableBitrate,
+	  uint32_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
 		MS_DEBUG_DEV(
-		  "outgoing available bitrate [now:%" PRIi64 ", before:%" PRIi64 "]",
+		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
 		  availableBitrate,
 		  previousAvailableBitrate);
 

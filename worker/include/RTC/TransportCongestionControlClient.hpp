@@ -4,11 +4,12 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpProbationGenerator.hpp"
-#include "RTC/SendTransportController/network_types.h" // TargetTransferRate.
+#include "RTC/SendTransportController/goog_cc_factory.h"
+#include "RTC/SendTransportController/network_types.h" // TargetTransferRate
 #include "RTC/SendTransportController/pacing/packet_router.h"
 #include "RTC/SendTransportController/rtp_transport_controller_send.h"
-#include "RTC/SendTransportController/goog_cc_factory.h"
 #include "handles/Timer.hpp"
 
 namespace RTC
@@ -30,8 +31,8 @@ namespace RTC
 		public:
 			virtual void OnTransportCongestionControlClientAvailableBitrate(
 			  RTC::TransportCongestionControlClient* tccClient,
-			  int64_t availableBitrate,
-			  int64_t previousAvailableBitrate) = 0;
+			  uint32_t availableBitrate,
+			  uint32_t previousAvailableBitrate) = 0;
 
 			virtual void OnTransportCongestionControlClientSendRtpPacket(
 			  RTC::TransportCongestionControlClient* tccClient,
@@ -53,10 +54,11 @@ namespace RTC
 		void TransportConnected();
 		void TransportDisconnected();
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
-		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, int64_t rtt, int64_t now_ms);
+		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, float rtt, uint64_t now);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void SetDesiredBitrates(int minSendBitrateBps, int maxPaddingBitrateBps, int maxTotalBitrateBps);
 		uint32_t GetAvailableBitrate() const;
+		void RescheduleNextAvailableBitrateEvent();
 
 		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
@@ -78,26 +80,15 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
+		webrtc::NetworkStatePredictorFactoryInterface* predictorFactory{ nullptr };
+		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };
 		RTC::RtpProbationGenerator* probationGenerator{ nullptr };
 		Timer* pacerTimer{ nullptr };
-		int64_t availableBitrate{ 0 };
-
-		// TODO
-		webrtc::NetworkStatePredictorFactoryInterface* predictorFactory{ nullptr };
-		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
-
-		// TODO: for testing.
-		bool initialized{ false };
-		bool destroying{ false };
+		// Others.
+		uint32_t availableBitrate{ 0 };
+		uint64_t lastAvailableBitrateEventAt{ 0 };
 	};
-
-	/* Inline instance methods */
-
-	inline uint32_t TransportCongestionControlClient::GetAvailableBitrate() const
-	{
-		return static_cast<uint32_t>(this->availableBitrate);
-	}
 } // namespace RTC
 
 #endif

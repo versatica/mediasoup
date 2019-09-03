@@ -4,15 +4,17 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-
-// Size of probation packets.
-static constexpr size_t ProbationPacketSize{ 250u };
-
-// TMP: OnOutgoingAvailableBitrate fire module.
-static uint8_t availableBitrateTrigger{ 4u };
+#include <limits>
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
+	// TODO: No. Must be dynamic.
+	// Size of probation packets.
+	static constexpr size_t ProbationPacketSize{ 250u };
+
 	/* Instance methods. */
 
 	TransportCongestionControlClient::TransportCongestionControlClient(
@@ -36,8 +38,7 @@ namespace RTC
 
 		webrtc::BitrateConstraints bitrateConfig;
 
-		// TODO: cast?
-		bitrateConfig.start_bitrate_bps = initialAvailableBitrate;
+		bitrateConfig.start_bitrate_bps = static_cast<int>(initialAvailableBitrate);
 
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
 		  this, this->predictorFactory, this->controllerFactory, bitrateConfig);
@@ -48,22 +49,15 @@ namespace RTC
 
 		this->pacerTimer = new Timer(this);
 
-		auto timeUntilNextProcess =
-		  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess();
+		auto delay = static_cast<uint64_t>(
+		  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 
-		  MS_DUMP("------ timeUntilNextProcess:%" PRIi64, timeUntilNextProcess);
-
-		this->pacerTimer->Start(timeUntilNextProcess);
-
-		this->initialized = true;
+		this->pacerTimer->Start(delay);
 	}
 
 	TransportCongestionControlClient::~TransportCongestionControlClient()
 	{
 		MS_TRACE();
-
-			MS_DEBUG_DEV("---- destructor starts");
-			this->destroying = true;
 
 		delete this->predictorFactory;
 		this->predictorFactory = nullptr;
@@ -79,8 +73,6 @@ namespace RTC
 
 		delete this->pacerTimer;
 		this->pacerTimer = nullptr;
-
-			MS_DEBUG_DEV("---- destructor ends");
 	}
 
 	void TransportCongestionControlClient::InsertPacket(size_t bytes)
@@ -113,8 +105,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-			MS_DUMP("------ jeje");
-
 		this->rtpTransportControllerSend->OnNetworkAvailability(true);
 	}
 
@@ -133,11 +123,12 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpReceiverReport(
-	  const webrtc::RTCPReportBlock& report, int64_t rtt, int64_t now_ms)
+	  const webrtc::RTCPReportBlock& report, float rtt, uint64_t now)
 	{
 		MS_TRACE();
 
-		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport({ report }, rtt, now_ms);
+		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
+		  { report }, static_cast<int64_t>(rtt), static_cast<int64_t>(now));
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpTransportFeedback(
@@ -157,27 +148,52 @@ namespace RTC
 		  minSendBitrateBps, maxPaddingBitrateBps, maxTotalBitrateBps);
 	}
 
+	uint32_t TransportCongestionControlClient::GetAvailableBitrate() const
+	{
+		MS_TRACE();
+
+		return this->availableBitrate;
+	}
+
+	void TransportCongestionControlClient::RescheduleNextAvailableBitrateEvent()
+	{
+		MS_TRACE();
+
+		this->lastAvailableBitrateEventAt = DepLibUV::GetTime();
+	}
+
 	void TransportCongestionControlClient::OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate)
 	{
 		MS_TRACE();
 
-		// TODO: Let's see.
-		if (!this->initialized)
+		auto previousAvailableBitrate = this->availableBitrate;
+		uint64_t now                  = DepLibUV::GetTime();
+
+		// Update availableBitrate.
+		// NOTE: Just in case.
+		if (targetTransferRate.target_rate.bps() > std::numeric_limits<uint32_t>::max())
+			this->availableBitrate = std::numeric_limits<uint32_t>::max();
+		else
+			this->availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
+
+		// TODO: This produces lot of logs with the very same availableBitrate, so why is this
+		// event called so frequently?
+		MS_DEBUG_DEV("new availableBitrate:%" PRIu32, this->availableBitrate);
+
+		// Ignore if first event.
+		// NOTE: Otherwise it will make the Transport crash since this event also happens
+		// during the constructor of this class.
+		if (this->lastAvailableBitrateEventAt == 0u)
 		{
-			MS_ERROR("---- not yet initialized !!!");
+			this->lastAvailableBitrateEventAt = now;
 
 			return;
 		}
 
-		// TODO: Keep this for debugging until it's clear that this never happens.
-		if (this->destroying)
-			MS_ERROR("---- called with this->destroying");
-
-		// Trigger the callback once for each four times we get here.
-		if (++availableBitrateTrigger % 4 == 0)
+		// Emit event if AvailableBitrateEventInterval elapsed.
+		if (now - this->lastAvailableBitrateEventAt >= AvailableBitrateEventInterval)
 		{
-			uint32_t previousAvailableBitrate = this->availableBitrate;
-			this->availableBitrate            = targetTransferRate.target_rate.bps();
+			this->lastAvailableBitrateEventAt = now;
 
 			this->listener->OnTransportCongestionControlClientAvailableBitrate(
 			  this, this->availableBitrate, previousAvailableBitrate);
@@ -190,18 +206,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Let's see.
-		if (!this->initialized)
-		{
-			MS_ERROR("---- not yet initialized !!!");
-
-			return;
-		}
-
-		// TODO: Keep this for debugging until it's clear that this never happens.
-		if (this->destroying)
-			MS_ERROR("---- called with this->destroying");
-
 		// Send the packet.
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet, pacingInfo);
 	}
@@ -209,18 +213,6 @@ namespace RTC
 	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t /*size*/)
 	{
 		MS_TRACE();
-
-		// TODO: Let's see.
-		if (!this->initialized)
-		{
-			MS_ERROR("---- not yet initialized !!!");
-
-			return {};
-		}
-
-		// TODO: Keep this for debugging until it's clear that this never happens.
-		if (this->destroying)
-			MS_ERROR("---- called with this->destroying");
 
 		// TODO: Must generate a packet of the requested size.
 		return { this->probationGenerator->GetNextPacket() };
@@ -235,10 +227,10 @@ namespace RTC
 			// Time to call PacedSender::Process().
 			this->rtpTransportControllerSend->packet_sender()->Process();
 
-			auto timeUntilNextProcess =
-			  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess();
+			auto delay = static_cast<uint64_t>(
+			  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 
-			this->pacerTimer->Start(timeUntilNextProcess);
+			this->pacerTimer->Start(delay);
 		}
 	}
 } // namespace RTC
