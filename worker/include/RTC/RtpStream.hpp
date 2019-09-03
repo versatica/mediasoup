@@ -80,6 +80,7 @@ namespace RTC
 		void ResetScore(uint8_t score, bool notify);
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
+		float GetRtt() const;
 		uint64_t GetMaxPacketMs() const;
 		uint32_t GetMaxPacketTs() const;
 		uint64_t GetSenderReportNtpMs() const;
@@ -123,6 +124,7 @@ namespace RTC
 		uint32_t expectedPrior{ 0 };         // Packets expected at last interval.
 		uint64_t lastSenderReportNtpMs{ 0 }; // NTP timestamp in last Sender Report (in ms).
 		uint32_t lastSenderReporTs{ 0 };     // RTP timestamp in last Sender Report.
+		float rtt{ 0 };
 
 	private:
 		// Score related.
@@ -209,6 +211,11 @@ namespace RTC
 	inline float RtpStream::GetLossPercentage() const
 	{
 		return static_cast<float>(this->fractionLost) * 100 / 256;
+	}
+
+	inline float RtpStream::GetRtt() const
+	{
+		return this->rtt;
 	}
 
 	inline uint64_t RtpStream::GetMaxPacketMs() const

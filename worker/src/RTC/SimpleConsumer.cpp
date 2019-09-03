@@ -338,6 +338,13 @@ namespace RTC
 		return this->rtpStream->GetBitrate(now);
 	}
 
+	float SimpleConsumer::GetRtt() const
+	{
+		MS_TRACE();
+
+		return this->rtpStream->GetRtt();
+	}
+
 	void SimpleConsumer::UserOnTransportConnected()
 	{
 		MS_TRACE();

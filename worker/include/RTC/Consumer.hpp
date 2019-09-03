@@ -79,6 +79,7 @@ namespace RTC
 		  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)          = 0;
 		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) = 0;
 		virtual uint32_t GetTransmissionRate(uint64_t now)                        = 0;
+		virtual float GetRtt() const                                              = 0;
 
 	private:
 		virtual void UserOnTransportConnected()    = 0;

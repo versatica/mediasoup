@@ -35,6 +35,7 @@ namespace RTC
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
 		uint32_t GetTransmissionRate(uint64_t now) override;
+		float GetRtt() const override;
 
 	private:
 		void UserOnTransportConnected() override;
@@ -51,9 +52,9 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		std::unordered_map<uint32_t, RTC::RtpStreamSend*> mapMappedSsrcRtpStream;
-		// Others.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
+		// Others.
+		std::unordered_map<uint32_t, RTC::RtpStreamSend*> mapMappedSsrcRtpStream;
 		bool keyFrameSupported{ false };
 		std::unordered_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
 		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;

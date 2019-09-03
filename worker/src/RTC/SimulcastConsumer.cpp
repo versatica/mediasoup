@@ -1078,6 +1078,13 @@ namespace RTC
 		return this->rtpStream->GetBitrate(now);
 	}
 
+	float SimulcastConsumer::GetRtt() const
+	{
+		MS_TRACE();
+
+		return this->rtpStream->GetRtt();
+	}
+
 	void SimulcastConsumer::UserOnTransportConnected()
 	{
 		MS_TRACE();

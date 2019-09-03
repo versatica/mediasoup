@@ -68,7 +68,6 @@ namespace RTC
 		uint16_t bufferStartIdx{ 0 };
 		size_t bufferSize{ 0 };
 		std::vector<StorageItem> storage;
-		float rtt{ 0 };
 		uint16_t rtxSeq{ 0 };
 		RTC::RtpDataCounter transmissionCounter;
 	};
