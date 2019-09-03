@@ -1817,7 +1817,7 @@ namespace RTC
 		if (totalPriorities == 0)
 			return;
 
-		uint32_t availableBitrate
+		uint32_t availableBitrate;
 
 		if (this->rembClient)
 		{
