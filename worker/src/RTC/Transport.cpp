@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Transport"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/Transport.hpp"
 #include "Logger.hpp"
@@ -1519,6 +1519,8 @@ namespace RTC
 						// Store REMB info.
 						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
 						{
+							// TMP: ignore REMB.
+							/*
 							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
 							// Pass it to the REMB client.
@@ -1528,6 +1530,7 @@ namespace RTC
 							// Pass it to the TCC client.
 							if (this->tccClient)
 								this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
+							*/
 
 							break;
 						}
@@ -1814,12 +1817,19 @@ namespace RTC
 		if (totalPriorities == 0)
 			return;
 
-		// TODO: Wrong, must ask to the future single tccClient.
-		uint32_t availableBitrate = this->rembClient->GetAvailableBitrate();
+		uint32_t availableBitrate
 
-		// TODO: The same.
-		// Resechedule next REMB event.
-		this->rembClient->RescheduleNextAvailableBitrateEvent();
+		if (this->rembClient)
+		{
+			availableBitrate = this->rembClient->GetAvailableBitrate();
+			this->rembClient->RescheduleNextAvailableBitrateEvent();
+		}
+		else
+		{
+			availableBitrate = this->tccClient->GetAvailableBitrate();
+			if (availableBitrate == 0)
+				availableBitrate = this->initialAvailableOutgoingBitrate;
+		}
 
 		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
@@ -1923,7 +1933,12 @@ namespace RTC
 
 		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
 
-		// TODO: Use totalDesiredBitrate.
+		// TODO:
+		// Must adjust these values.
+		this->tccClient->SetDesiredBitrates(
+				totalDesiredBitrate / 2,
+				totalDesiredBitrate / 4,
+				totalDesiredBitrate);
 	}
 
 	void Transport::MaySetIncomingBitrateLimitationByRemb()
@@ -2132,6 +2147,7 @@ namespace RTC
 		MS_TRACE();
 
 		DistributeAvailableOutgoingBitrate();
+		ComputeOutgoingDesiredBitrate();
 	}
 
 	inline void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)
@@ -2308,6 +2324,7 @@ namespace RTC
 		  previousAvailableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
+		ComputeOutgoingDesiredBitrate();
 	}
 
 	inline void Transport::OnRembServerAvailableBitrate(
@@ -2345,15 +2362,19 @@ namespace RTC
 		SendRtcpPacket(&packet);
 	}
 
-	inline void Transport::OnTransportCongestionControlClientTargetTransferRate(
+	inline void Transport::OnTransportCongestionControlClientAvailableBitrate(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
-	  webrtc::TargetTransferRate targetTransferRate)
+	  int64_t availableBitrate, int64_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
-		MS_DUMP(
-		  "------------------  targetTransferRate.target_rate.kbps():%" PRIi64 "----------------",
-		  targetTransferRate.target_rate.kbps());
+		MS_DEBUG_DEV(
+		  "outgoing available bitrate [now:%" PRIi64 ", before:%" PRIi64 "]",
+		  availableBitrate,
+		  previousAvailableBitrate);
+
+		DistributeAvailableOutgoingBitrate();
+		ComputeOutgoingDesiredBitrate();
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(

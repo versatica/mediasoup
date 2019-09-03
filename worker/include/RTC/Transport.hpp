@@ -206,9 +206,9 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
-		void OnTransportCongestionControlClientTargetTransferRate(
+		void OnTransportCongestionControlClientAvailableBitrate(
 		  RTC::TransportCongestionControlClient* tccClient,
-		  webrtc::TargetTransferRate targetTransferRate) override;
+		  int64_t availableBitrate, int64_t previousAvailableBitrate) override;
 
 		void OnTransportCongestionControlClientSendRtpPacket(
 		  RTC::TransportCongestionControlClient* tccClient,

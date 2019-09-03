@@ -15,6 +15,9 @@ constexpr size_t probationPacketSize{ 250 };
 // jmillan: TODO.
 webrtc::BitrateConstraints bitrateConfig;
 
+// TMP: OnOutgoingAvailableBitrate fire module.
+static uint8_t availableBitrateTrigger{ 4 };
+
 namespace RTC
 {
 	/* Static. */
@@ -136,7 +139,7 @@ namespace RTC
 		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
 	}
 
-	void TransportCongestionControlClient::SetAllocatedSendBitrateLimits(
+	void TransportCongestionControlClient::SetDesiredBitrates(
 			int minSendBitrateBps,
 			int maxPaddingBitrateBps,
 			int maxTotalBitrateBps)
@@ -153,7 +156,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportCongestionControlClientTargetTransferRate(this, targetTransferRate);
+		// Trigger the callback once for each four times we get here.
+		if (++availableBitrateTrigger % 4 == 0)
+		{
+			uint32_t previousAvailableBitrate = this->availableBitrate;
+			this->availableBitrate = targetTransferRate.target_rate.bps();
+
+			this->listener->OnTransportCongestionControlClientAvailableBitrate(this, this->availableBitrate, previousAvailableBitrate);
+
+		}
 	}
 
 	// Called from PacedSender in order to send probation packets.

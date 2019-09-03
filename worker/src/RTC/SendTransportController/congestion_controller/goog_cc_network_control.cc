@@ -639,7 +639,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
                                          probes.begin(), probes.end());
     update->pacer_config = GetPacingRates(at_time);
 
-    MS_DEBUG_TAG(bwe, "bwe %" PRIu64", pushback_target_bps=%lld, estimate_bps:%lld",
+    MS_DEBUG_DEV("bwe %" PRIu64", pushback_target_bps=%lld, estimate_bps:%lld",
                         at_time.ms(),
                         last_pushback_target_rate_.bps(),
                         last_raw_target_rate_.bps());

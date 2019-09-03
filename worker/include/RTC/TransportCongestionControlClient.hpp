@@ -20,9 +20,9 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnTransportCongestionControlClientTargetTransferRate(
+			virtual void OnTransportCongestionControlClientAvailableBitrate(
 			  RTC::TransportCongestionControlClient* tccClient,
-			  webrtc::TargetTransferRate targetTransferRate) = 0;
+			  int64_t availableBitrate, int64_t previousAvailableBitrate) = 0;
 
 			virtual void OnTransportCongestionControlClientSendRtpPacket(
 			  RTC::TransportCongestionControlClient* tccClient,
@@ -43,7 +43,7 @@ namespace RTC
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, int64_t rtt, int64_t now_ms);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
-		void SetAllocatedSendBitrateLimits(int minSendBitrateBps,
+		void SetDesiredBitrates(int minSendBitrateBps,
 				int maxPaddingBitrateBps,
 				int maxTotalBitrateBps);
 
@@ -64,6 +64,9 @@ namespace RTC
 	public:
 		void OnTimer(Timer* timer) override;
 
+	public:
+		uint32_t GetAvailableBitrate() const;
+
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
@@ -71,7 +74,15 @@ namespace RTC
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };
 		RTC::RtpProbationGenerator* probationGenerator{ nullptr };
 		Timer* pacerTimer{ nullptr };
+		int64_t availableBitrate{ 0 };
 	};
+
+	/* Inline instance methods */
+
+	inline uint32_t TransportCongestionControlClient::GetAvailableBitrate() const
+	{
+		return static_cast<uint32_t>(this->availableBitrate);
+	}
 } // namespace RTC
 
 #endif
