@@ -43,6 +43,9 @@ namespace RTC
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, int64_t rtt, int64_t now_ms);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
+		void SetAllocatedSendBitrateLimits(int minSendBitrateBps,
+				int maxPaddingBitrateBps,
+				int maxTotalBitrateBps);
 
 		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;

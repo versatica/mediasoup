@@ -136,6 +136,19 @@ namespace RTC
 		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
 	}
 
+	void TransportCongestionControlClient::SetAllocatedSendBitrateLimits(
+			int minSendBitrateBps,
+			int maxPaddingBitrateBps,
+			int maxTotalBitrateBps)
+	{
+		MS_TRACE();
+
+		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
+				minSendBitrateBps,
+				maxPaddingBitrateBps,
+				maxTotalBitrateBps);
+	}
+
 	void TransportCongestionControlClient::OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate)
 	{
 		MS_TRACE();
