@@ -56,6 +56,7 @@ namespace RTC
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, int64_t rtt, int64_t now_ms);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void SetDesiredBitrates(int minSendBitrateBps, int maxPaddingBitrateBps, int maxTotalBitrateBps);
+		uint32_t GetAvailableBitrate() const;
 
 		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
@@ -67,15 +68,11 @@ namespace RTC
 		/* Pure virtual methods inherited from webrtc::PacketRouter. */
 	public:
 		virtual void SendPacket(RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
-
 		virtual std::vector<RTC::RtpPacket*> GeneratePadding(size_t size) override;
 
 		/* Pure virtual methods inherited from RTC::Timer. */
 	public:
 		void OnTimer(Timer* timer) override;
-
-	public:
-		uint32_t GetAvailableBitrate() const;
 
 	private:
 		// Passed by argument.
@@ -91,6 +88,7 @@ namespace RTC
 		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
 
 		// TODO: for testing.
+		bool initialized{ false };
 		bool destroying{ false };
 	};
 

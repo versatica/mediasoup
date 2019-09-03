@@ -36,6 +36,7 @@ namespace RTC
 
 		webrtc::BitrateConstraints bitrateConfig;
 
+		// TODO: cast?
 		bitrateConfig.start_bitrate_bps = initialAvailableBitrate;
 
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
@@ -50,7 +51,11 @@ namespace RTC
 		auto timeUntilNextProcess =
 		  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess();
 
+		  MS_DUMP("------ timeUntilNextProcess:%" PRIi64, timeUntilNextProcess);
+
 		this->pacerTimer->Start(timeUntilNextProcess);
+
+		this->initialized = true;
 	}
 
 	TransportCongestionControlClient::~TransportCongestionControlClient()
@@ -108,6 +113,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+			MS_DUMP("------ jeje");
+
 		this->rtpTransportControllerSend->OnNetworkAvailability(true);
 	}
 
@@ -154,6 +161,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: Let's see.
+		if (!this->initialized)
+		{
+			MS_ERROR("---- not yet initialized !!!");
+
+			return;
+		}
+
+		// TODO: Keep this for debugging until it's clear that this never happens.
 		if (this->destroying)
 			MS_ERROR("---- called with this->destroying");
 
@@ -174,6 +190,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: Let's see.
+		if (!this->initialized)
+		{
+			MS_ERROR("---- not yet initialized !!!");
+
+			return;
+		}
+
+		// TODO: Keep this for debugging until it's clear that this never happens.
 		if (this->destroying)
 			MS_ERROR("---- called with this->destroying");
 
@@ -184,6 +209,18 @@ namespace RTC
 	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t /*size*/)
 	{
 		MS_TRACE();
+
+		// TODO: Let's see.
+		if (!this->initialized)
+		{
+			MS_ERROR("---- not yet initialized !!!");
+
+			return {};
+		}
+
+		// TODO: Keep this for debugging until it's clear that this never happens.
+		if (this->destroying)
+			MS_ERROR("---- called with this->destroying");
 
 		// TODO: Must generate a packet of the requested size.
 		return { this->probationGenerator->GetNextPacket() };
