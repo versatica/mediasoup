@@ -414,6 +414,8 @@ namespace RTC
 		// Add availableOutgoingBitrate.
 		if (this->rembClient)
 			jsonObject["availableOutgoingBitrate"] = this->rembClient->GetAvailableBitrate();
+		else if (this->tccClient)
+			jsonObject["availableOutgoingBitrate"] = this->tccClient->GetAvailableBitrate();
 
 		// Add availableIncomingBitrate.
 		if (this->rembServer)
@@ -709,6 +711,13 @@ namespace RTC
 				MS_DEBUG_DEV(
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
+					// TODO
+					MS_DUMP("---- new consumer created in transport.id:%s", this->id.c_str());
+					if (consumer->GetKind() == RTC::Media::Kind::AUDIO)
+						MS_DUMP("---- it's audio consumer");
+					else if (consumer->GetKind() == RTC::Media::Kind::VIDEO)
+						MS_DUMP("---- it's video consumer");
+
 				// Create status response.
 				json data = json::object();
 
@@ -753,18 +762,7 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(bwe, "enabling TCC client");
 
-					// TODO: When unified with REMB we must check properly set bweType.
-
-					RTC::TransportCongestionControlClient::BweType bweType;
-
-					bweType = RTC::TransportCongestionControlClient::BweType::TRANSPORT_WIDE_CONGESTION;
-
-					this->tccClient = new RTC::TransportCongestionControlClient(
-					  this, bweType, this->initialAvailableOutgoingBitrate);
-
-					// If the transport is connected, tell the Transport-CC client.
-					if (IsConnected())
-						this->tccClient->TransportConnected();
+						MS_DUMP("---- enabling TCC client");
 
 					// Tell all the Consumers that we are gonna manage their bitrate.
 					for (auto& kv : this->mapConsumers)
@@ -773,6 +771,22 @@ namespace RTC
 
 						consumer->SetExternallyManagedBitrate();
 					};
+
+						MS_DUMP("---- creating tccClient");
+
+					// TODO: When unified with REMB we must check properly set bweType.
+					RTC::TransportCongestionControlClient::BweType bweType;
+
+					bweType = RTC::TransportCongestionControlClient::BweType::TRANSPORT_WIDE_CONGESTION;
+
+					this->tccClient = new RTC::TransportCongestionControlClient(
+					  this, bweType, this->initialAvailableOutgoingBitrate);
+
+						MS_DUMP("---- tccClient created");
+
+					// If the transport is connected, tell the Transport-CC client.
+					if (IsConnected())
+						this->tccClient->TransportConnected();
 				}
 
 				// Set REMB client bitrate estimator:
@@ -805,7 +819,7 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(bwe, "enabling REMB client");
 
-					this->rembClient = new RTC::RembClient(this, this->initialAvailableOutgoingBitrate);
+						MS_DUMP("---- enabling REMB client");
 
 					// Tell all the Consumers that we are gonna manage their bitrate.
 					for (auto& kv : this->mapConsumers)
@@ -814,7 +828,11 @@ namespace RTC
 
 						consumer->SetExternallyManagedBitrate();
 					};
+
+					this->rembClient = new RTC::RembClient(this, this->initialAvailableOutgoingBitrate);
 				}
+
+					MS_DUMP("---- 3");
 
 				// If applicable, tell the new Consumer that we are gonna manage its
 				// bitrate.
@@ -822,7 +840,12 @@ namespace RTC
 					consumer->SetExternallyManagedBitrate();
 
 				if (IsConnected())
+				{
+						MS_DUMP("---- 4a");
 					consumer->TransportConnected();
+				}
+				else
+					MS_DUMP("---- 4b");
 
 				break;
 			}
@@ -1801,6 +1824,10 @@ namespace RTC
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
 		MS_TRACE();
+
+			MS_DUMP("---- id:%s", this->id.c_str());
+			if (this->destroying)
+				MS_ERROR("---- DESTROYING !!!");
 
 		MS_ASSERT(this->rembClient || this->tccClient, "no REMB client nor Transport-CC client");
 
