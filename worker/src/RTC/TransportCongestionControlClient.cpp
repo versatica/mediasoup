@@ -1,14 +1,9 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "RTC/SendTransportController/goog_cc_factory.h"
-
-// TODO: Use ClassInit() and ClassDestroy() for this.
-static std::unique_ptr<webrtc::NetworkStatePredictorFactoryInterface> predictorFactory{ nullptr };
-static std::unique_ptr<webrtc::NetworkControllerFactoryInterface> controllerFactory{ nullptr };
 
 // Size of probation packets.
 static constexpr size_t ProbationPacketSize{ 250u };
@@ -28,28 +23,23 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Create predictor factory.
-		if (!predictorFactory)
-		{
-		}
+		// TODO: Must these factories be static members?
 
-		// TODO: Create controller factory.
-		// TODO: Must set feedback_only: true si se usa TCC. Y false is REMB.
-		if (!controllerFactory)
-		{
-			webrtc::GoogCcFactoryConfig config;
+		// TODO: Create predictor factory?
 
-			config.feedback_only = bweType == BweType::TRANSPORT_WIDE_CONGESTION;
+		// TODO: Create controller factory. Let's see.
+		webrtc::GoogCcFactoryConfig config;
 
-			controllerFactory.reset(new webrtc::GoogCcNetworkControllerFactory(std::move(config)));
-		}
+		config.feedback_only = bweType == BweType::TRANSPORT_WIDE_CONGESTION;
+
+		this->controllerFactory = new webrtc::GoogCcNetworkControllerFactory(std::move(config));
 
 		webrtc::BitrateConstraints bitrateConfig;
 
 		bitrateConfig.start_bitrate_bps = initialAvailableBitrate;
 
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
-		  this, predictorFactory.get(), controllerFactory.get(), bitrateConfig);
+		  this, this->predictorFactory, this->controllerFactory, bitrateConfig);
 
 		this->probationGenerator = new RTC::RtpProbationGenerator(ProbationPacketSize);
 
@@ -67,15 +57,25 @@ namespace RTC
 	{
 		MS_TRACE();
 
+			MS_DEBUG_DEV("---- destructor starts");
+			this->destroying = true;
+
+		delete this->predictorFactory;
+		this->predictorFactory = nullptr;
+
+		delete this->controllerFactory;
+		this->controllerFactory = nullptr;
+
 		delete this->rtpTransportControllerSend;
 		this->rtpTransportControllerSend = nullptr;
 
 		delete this->probationGenerator;
 		this->probationGenerator = nullptr;
 
-		this->pacerTimer->Stop();
 		delete this->pacerTimer;
 		this->pacerTimer = nullptr;
+
+			MS_DEBUG_DEV("---- destructor ends");
 	}
 
 	void TransportCongestionControlClient::InsertPacket(size_t bytes)
@@ -154,6 +154,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->destroying)
+			MS_ERROR("---- called with this->destroying");
+
 		// Trigger the callback once for each four times we get here.
 		if (++availableBitrateTrigger % 4 == 0)
 		{
@@ -170,6 +173,9 @@ namespace RTC
 	  RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo)
 	{
 		MS_TRACE();
+
+		if (this->destroying)
+			MS_ERROR("---- called with this->destroying");
 
 		// Send the packet.
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet, pacingInfo);

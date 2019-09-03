@@ -8,6 +8,7 @@
 #include "RTC/SendTransportController/network_types.h" // TargetTransferRate.
 #include "RTC/SendTransportController/pacing/packet_router.h"
 #include "RTC/SendTransportController/rtp_transport_controller_send.h"
+#include "RTC/SendTransportController/goog_cc_factory.h"
 #include "handles/Timer.hpp"
 
 namespace RTC
@@ -84,6 +85,13 @@ namespace RTC
 		RTC::RtpProbationGenerator* probationGenerator{ nullptr };
 		Timer* pacerTimer{ nullptr };
 		int64_t availableBitrate{ 0 };
+
+		// TODO
+		webrtc::NetworkStatePredictorFactoryInterface* predictorFactory{ nullptr };
+		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
+
+		// TODO: for testing.
+		bool destroying{ false };
 	};
 
 	/* Inline instance methods */
