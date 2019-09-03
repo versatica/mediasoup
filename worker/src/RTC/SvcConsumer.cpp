@@ -329,7 +329,7 @@ namespace RTC
 		return static_cast<uint16_t>(prioritySpatialLayer + 1);
 	}
 
-	uint32_t SvcConsumer::UseAvailableBitrate(uint32_t bitrate)
+	uint32_t SvcConsumer::UseAvailableBitrate(uint32_t bitrate, bool considerLoss)
 	{
 		MS_TRACE();
 
@@ -341,18 +341,25 @@ namespace RTC
 		if (!RTC::Consumer::IsActive())
 			return 0u;
 
-		// Calculate virtual available bitrate based on given bitrate and our
-		// packet lost fraction.
 		uint32_t virtualBitrate;
-		auto lossPercentage = this->rtpStream->GetLossPercentage();
 
-		// TODO: We may have to not consider fraction lost with Transport-CC.
-		if (lossPercentage < 2)
-			virtualBitrate = 1.08 * bitrate;
-		else if (lossPercentage > 10)
-			virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
+		if (considerLoss)
+		{
+			// Calculate virtual available bitrate based on given bitrate and our
+			// packet lost.
+			auto lossPercentage = this->rtpStream->GetLossPercentage();
+
+			if (lossPercentage < 2)
+				virtualBitrate = 1.08 * bitrate;
+			else if (lossPercentage > 10)
+				virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
+			else
+				virtualBitrate = bitrate;
+		}
 		else
+		{
 			virtualBitrate = bitrate;
+		}
 
 		uint32_t usedBitrate{ 0 };
 		auto now = DepLibUV::GetTime();
@@ -456,7 +463,7 @@ namespace RTC
 			return usedBitrate;
 	}
 
-	uint32_t SvcConsumer::IncreaseTemporalLayer(uint32_t bitrate)
+	uint32_t SvcConsumer::IncreaseTemporalLayer(uint32_t bitrate, bool considerLoss)
 	{
 		MS_TRACE();
 
@@ -485,22 +492,29 @@ namespace RTC
 			return 0u;
 		}
 
-		// Calculate virtual available bitrate based on given bitrate and our
-		// packet lost fraction.
 		uint32_t virtualBitrate;
-		auto lossPercentage = this->rtpStream->GetLossPercentage();
 
-		// TODO: We may have to not consider fraction lost with Transport-CC.
-		if (lossPercentage < 2)
-			virtualBitrate = 1.08 * bitrate;
-		else if (lossPercentage > 10)
-			virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
+		if (considerLoss)
+		{
+			// Calculate virtual available bitrate based on given bitrate and our
+			// packet lost.
+			auto lossPercentage = this->rtpStream->GetLossPercentage();
+
+			if (lossPercentage < 2)
+				virtualBitrate = 1.08 * bitrate;
+			else if (lossPercentage > 10)
+				virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
+			else
+				virtualBitrate = bitrate;
+		}
 		else
+		{
 			virtualBitrate = bitrate;
+		}
 
-		auto now = DepLibUV::GetTime();
 		uint32_t requiredBitrate{ 0u };
 		int16_t temporalLayer = this->provisionalTargetTemporalLayer + 1;
+		auto now              = DepLibUV::GetTime();
 
 		for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 		{

@@ -144,7 +144,7 @@ namespace RTC
 		return 0u;
 	}
 
-	uint32_t SimpleConsumer::UseAvailableBitrate(uint32_t /*bitrate*/)
+	uint32_t SimpleConsumer::UseAvailableBitrate(uint32_t /*bitrate*/, bool /*considerLoss*/)
 	{
 		MS_TRACE();
 
@@ -152,7 +152,7 @@ namespace RTC
 		return 0;
 	}
 
-	uint32_t SimpleConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/)
+	uint32_t SimpleConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
 	{
 		MS_TRACE();
 

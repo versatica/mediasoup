@@ -146,7 +146,7 @@ namespace RTC
 		return 0u;
 	}
 
-	uint32_t PipeConsumer::UseAvailableBitrate(uint32_t /*bitrate*/)
+	uint32_t PipeConsumer::UseAvailableBitrate(uint32_t /*bitrate*/, bool /*considerLoss*/)
 	{
 		MS_TRACE();
 
@@ -154,7 +154,7 @@ namespace RTC
 		return 0;
 	}
 
-	uint32_t PipeConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/)
+	uint32_t PipeConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
 	{
 		MS_TRACE();
 
