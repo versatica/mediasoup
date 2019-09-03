@@ -168,6 +168,7 @@ namespace RTC
 
 		auto previousAvailableBitrate = this->availableBitrate;
 		uint64_t now                  = DepLibUV::GetTime();
+		bool notify{ false };
 
 		// Update availableBitrate.
 		// NOTE: Just in case.
@@ -192,6 +193,23 @@ namespace RTC
 
 		// Emit event if AvailableBitrateEventInterval elapsed.
 		if (now - this->lastAvailableBitrateEventAt >= AvailableBitrateEventInterval)
+		{
+			notify = true;
+		}
+		// Also emit the event fast if we detect a high BWE value decrease.
+		else if (this->availableBitrate < previousAvailableBitrate * 0.75)
+		{
+			MS_WARN_TAG(
+			  bwe,
+			  "high BWE value decrease detected, notifying the listener [now:%" PRIu32 ", before:%" PRIu32
+			  "]",
+			  this->availableBitrate,
+			  previousAvailableBitrate);
+
+			notify = true;
+		}
+
+		if (notify)
 		{
 			this->lastAvailableBitrateEventAt = now;
 
