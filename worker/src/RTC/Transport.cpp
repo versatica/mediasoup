@@ -1827,6 +1827,7 @@ namespace RTC
 		else
 		{
 			availableBitrate = this->tccClient->GetAvailableBitrate();
+			// TODO: Not necessary when creating tccClient with initial bitrate.
 			if (availableBitrate == 0)
 				availableBitrate = this->initialAvailableOutgoingBitrate;
 		}
