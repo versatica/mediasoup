@@ -138,6 +138,45 @@ namespace RTC
 		// Do nothing.
 	}
 
+	uint16_t PipeConsumer::GetBitratePriority() const
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	uint32_t PipeConsumer::UseAvailableBitrate(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0;
+	}
+
+	uint32_t PipeConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0;
+	}
+
+	void PipeConsumer::ApplyLayers()
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+	}
+
+	uint32_t PipeConsumer::GetDesiredBitrate() const
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0u;
+	}
+
 	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

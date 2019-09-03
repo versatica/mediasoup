@@ -280,30 +280,11 @@ namespace RTC
 		}
 	}
 
-	void SvcConsumer::ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first)
+	void SvcConsumer::ProducerRtcpSenderReport(RTC::RtpStream* /*rtpStream*/, bool /*first*/)
 	{
 		MS_TRACE();
 
-		// Just interested if this is the first Sender Report for a RTP stream.
-		if (first)
-			MS_DEBUG_TAG(svc, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
-		else
-			return;
-
-		// If our RTP stream does not yet have SR, do nothing since
-		// we know we won't be able to switch.
-		if (!this->producerRtpStream || !this->producerRtpStream->GetSenderReportNtpMs())
-			return;
-
-		if (IsActive())
-			MayChangeLayers();
-	}
-
-	void SvcConsumer::SetExternallyManagedBitrate()
-	{
-		MS_TRACE();
-
-		this->externallyManagedBitrate = true;
+		// Do nothing.
 	}
 
 	uint16_t SvcConsumer::GetBitratePriority() const
@@ -428,9 +409,7 @@ namespace RTC
 
 			// If this is the preferred or higher spatial layer, take it and exit.
 			if (this->provisionalTargetSpatialLayer >= this->preferredSpatialLayer)
-			{
 				break;
-			}
 		}
 
 	done:

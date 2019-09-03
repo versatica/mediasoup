@@ -25,7 +25,6 @@ namespace RTC
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
-		void SetExternallyManagedBitrate() override;
 		uint16_t GetBitratePriority() const override;
 		uint32_t UseAvailableBitrate(uint32_t bitrate) override;
 		uint32_t IncreaseTemporalLayer(uint32_t bitrate) override;
@@ -83,7 +82,6 @@ namespace RTC
 		int16_t currentSpatialLayer{ -1 };
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		bool externallyManagedBitrate{ false };
 		uint32_t tsOffset{ 0 }; // RTP Timestamp offset.
 		std::map<uint32_t, uint32_t> tsExtraOffsets;
 		uint16_t tsExtraOffetPacketCount{ 0 };

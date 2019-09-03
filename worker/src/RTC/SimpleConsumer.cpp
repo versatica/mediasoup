@@ -136,6 +136,45 @@ namespace RTC
 		// Do nothing.
 	}
 
+	uint16_t SimpleConsumer::GetBitratePriority() const
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	uint32_t SimpleConsumer::UseAvailableBitrate(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+		return 0;
+	}
+
+	uint32_t SimpleConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/)
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+		return 0;
+	}
+
+	void SimpleConsumer::ApplyLayers()
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+	}
+
+	uint32_t SimpleConsumer::GetDesiredBitrate() const
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+		return 0u;
+	}
+
 	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

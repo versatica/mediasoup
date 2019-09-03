@@ -63,12 +63,12 @@ namespace RTC
 		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
 		virtual void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) = 0;
 		void ProducerClosed();
-		virtual void SetExternallyManagedBitrate();
-		virtual uint16_t GetBitratePriority() const;
-		virtual uint32_t UseAvailableBitrate(uint32_t bitrate);
-		virtual uint32_t IncreaseTemporalLayer(uint32_t bitrate);
-		virtual void ApplyLayers();
-		virtual uint32_t GetDesiredBitrate() const;
+		void SetExternallyManagedBitrate();
+		virtual uint16_t GetBitratePriority() const              = 0;
+		virtual uint32_t UseAvailableBitrate(uint32_t bitrate)   = 0;
+		virtual uint32_t IncreaseTemporalLayer(uint32_t bitrate) = 0;
+		virtual void ApplyLayers()                               = 0;
+		virtual uint32_t GetDesiredBitrate() const               = 0;
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)       = 0;
 		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams() = 0;
 		virtual void GetRtcp(
@@ -102,6 +102,7 @@ namespace RTC
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
 		uint64_t lastRtcpSentTime{ 0 };
 		uint16_t maxRtcpInterval{ 0 };
+		bool externallyManagedBitrate{ false };
 
 	private:
 		// Others.
@@ -143,8 +144,14 @@ namespace RTC
 	{
 		// The parent Consumer just checks whether Consumer and Producer are
 		// not paused and the transport connected.
+		// clang-format off
 		return (
-		  this->transportConnected && !this->paused && !this->producerPaused && !this->producerClosed);
+			this->transportConnected &&
+			!this->paused &&
+			!this->producerPaused &&
+			!this->producerClosed
+		);
+		// clang-format on
 	}
 
 	inline bool Consumer::IsPaused() const
@@ -155,6 +162,11 @@ namespace RTC
 	inline bool Consumer::IsProducerPaused() const
 	{
 		return this->producerPaused;
+	}
+
+	inline void Consumer::SetExternallyManagedBitrate()
+	{
+		this->externallyManagedBitrate = true;
 	}
 } // namespace RTC
 

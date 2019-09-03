@@ -313,10 +313,10 @@ namespace RTC
 		MS_TRACE();
 
 		// Just interested if this is the first Sender Report for a RTP stream.
-		if (first)
-			MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
-		else
+		if (!first)
 			return;
+
+		MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
 		// If our current selected RTP stream does not yet have SR, do nothing since
 		// we know we won't be able to switch.
@@ -327,13 +327,6 @@ namespace RTC
 
 		if (IsActive())
 			MayChangeLayers();
-	}
-
-	void SimulcastConsumer::SetExternallyManagedBitrate()
-	{
-		MS_TRACE();
-
-		this->externallyManagedBitrate = true;
 	}
 
 	uint16_t SimulcastConsumer::GetBitratePriority() const
@@ -470,7 +463,12 @@ namespace RTC
 
 			// If this is the preferred or higher spatial layer and has good score,
 			// take it and exit.
-			if (this->provisionalTargetSpatialLayer >= this->preferredSpatialLayer && producerScore >= GoodScore)
+			// clang-format off
+			if (
+				this->provisionalTargetSpatialLayer >= this->preferredSpatialLayer &&
+				producerScore >= GoodScore
+			)
+			// clang-format on
 			{
 				break;
 			}
