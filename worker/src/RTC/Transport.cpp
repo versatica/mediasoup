@@ -1849,13 +1849,7 @@ namespace RTC
 		{
 			availableBitrate = this->tccClient->GetAvailableBitrate();
 
-			// TODO: Not necessary when creating tccClient with initial bitrate.
-			// TODO: ibc: no, this must not happen. Let's see how to fix it.
-			if (availableBitrate == 0)
-				availableBitrate = this->initialAvailableOutgoingBitrate;
-
-			// TODO: Implement it.
-			// this->tccClient->RescheduleNextAvailableBitrateEvent();
+			this->tccClient->RescheduleNextAvailableBitrateEvent();
 		}
 
 		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
