@@ -6,26 +6,24 @@
 #include "Logger.hpp"
 #include "RTC/SendTransportController/goog_cc_factory.h"
 
+// TODO: Use ClassInit() and ClassDestroy() for this.
 static std::unique_ptr<webrtc::NetworkStatePredictorFactoryInterface> predictorFactory{ nullptr };
 static std::unique_ptr<webrtc::NetworkControllerFactoryInterface> controllerFactory{ nullptr };
 
 // Size of probation packets.
-constexpr size_t probationPacketSize{ 250 };
-
-// jmillan: TODO.
-webrtc::BitrateConstraints bitrateConfig;
+static constexpr size_t ProbationPacketSize{ 250u };
 
 // TMP: OnOutgoingAvailableBitrate fire module.
-static uint8_t availableBitrateTrigger{ 4 };
+static uint8_t availableBitrateTrigger{ 4u };
 
 namespace RTC
 {
-	/* Static. */
-
 	/* Instance methods. */
 
 	TransportCongestionControlClient::TransportCongestionControlClient(
-	  RTC::TransportCongestionControlClient::Listener* listener)
+	  RTC::TransportCongestionControlClient::Listener* listener,
+	  BweType bweType,
+	  uint32_t initialAvailableBitrate)
 	  : listener(listener)
 	{
 		MS_TRACE();
@@ -36,28 +34,33 @@ namespace RTC
 		}
 
 		// TODO: Create controller factory.
+		// TODO: Must set feedback_only: true si se usa TCC. Y false is REMB.
 		if (!controllerFactory)
 		{
 			webrtc::GoogCcFactoryConfig config;
-			config.feedback_only = true;
+
+			config.feedback_only = bweType == BweType::TRANSPORT_WIDE_CONGESTION;
+
 			controllerFactory.reset(new webrtc::GoogCcNetworkControllerFactory(std::move(config)));
 		}
 
-		// TODO: Make it configurable.
-		bitrateConfig.start_bitrate_bps  = 500000;
+		webrtc::BitrateConstraints bitrateConfig;
+
+		bitrateConfig.start_bitrate_bps = initialAvailableBitrate;
+
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
 		  this, predictorFactory.get(), controllerFactory.get(), bitrateConfig);
 
-		this->probationGenerator = new RTC::RtpProbationGenerator(probationPacketSize);
+		this->probationGenerator = new RTC::RtpProbationGenerator(ProbationPacketSize);
 
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
 
 		this->pacerTimer = new Timer(this);
 
-		auto TimeUntilNextProcess =
+		auto timeUntilNextProcess =
 		  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess();
 
-		this->pacerTimer->Start(TimeUntilNextProcess);
+		this->pacerTimer->Start(timeUntilNextProcess);
 	}
 
 	TransportCongestionControlClient::~TransportCongestionControlClient()
@@ -70,11 +73,9 @@ namespace RTC
 		delete this->probationGenerator;
 		this->probationGenerator = nullptr;
 
-		if (this->pacerTimer)
-		{
-			this->pacerTimer->Stop();
-			delete this->pacerTimer;
-		}
+		this->pacerTimer->Stop();
+		delete this->pacerTimer;
+		this->pacerTimer = nullptr;
 	}
 
 	void TransportCongestionControlClient::InsertPacket(size_t bytes)
@@ -141,16 +142,12 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::SetDesiredBitrates(
-			int minSendBitrateBps,
-			int maxPaddingBitrateBps,
-			int maxTotalBitrateBps)
+	  int minSendBitrateBps, int maxPaddingBitrateBps, int maxTotalBitrateBps)
 	{
 		MS_TRACE();
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
-				minSendBitrateBps,
-				maxPaddingBitrateBps,
-				maxTotalBitrateBps);
+		  minSendBitrateBps, maxPaddingBitrateBps, maxTotalBitrateBps);
 	}
 
 	void TransportCongestionControlClient::OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate)
@@ -161,10 +158,10 @@ namespace RTC
 		if (++availableBitrateTrigger % 4 == 0)
 		{
 			uint32_t previousAvailableBitrate = this->availableBitrate;
-			this->availableBitrate = targetTransferRate.target_rate.bps();
+			this->availableBitrate            = targetTransferRate.target_rate.bps();
 
-			this->listener->OnTransportCongestionControlClientAvailableBitrate(this, this->availableBitrate, previousAvailableBitrate);
-
+			this->listener->OnTransportCongestionControlClientAvailableBitrate(
+			  this, this->availableBitrate, previousAvailableBitrate);
 		}
 	}
 
@@ -182,6 +179,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: Must generate a packet of the requested size.
 		return { this->probationGenerator->GetNextPacket() };
 	}
 
@@ -194,10 +192,10 @@ namespace RTC
 			// Time to call PacedSender::Process().
 			this->rtpTransportControllerSend->packet_sender()->Process();
 
-			auto TimeUntilNextProcess =
+			auto timeUntilNextProcess =
 			  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess();
 
-			this->pacerTimer->Start(TimeUntilNextProcess);
+			this->pacerTimer->Start(timeUntilNextProcess);
 		}
 	}
 } // namespace RTC

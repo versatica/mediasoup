@@ -17,12 +17,20 @@ namespace RTC
 	                                         public Timer::Listener
 	{
 	public:
+		enum class BweType
+		{
+			TRANSPORT_WIDE_CONGESTION = 1,
+			REMB
+		};
+
+	public:
 		class Listener
 		{
 		public:
 			virtual void OnTransportCongestionControlClientAvailableBitrate(
 			  RTC::TransportCongestionControlClient* tccClient,
-			  int64_t availableBitrate, int64_t previousAvailableBitrate) = 0;
+			  int64_t availableBitrate,
+			  int64_t previousAvailableBitrate) = 0;
 
 			virtual void OnTransportCongestionControlClientSendRtpPacket(
 			  RTC::TransportCongestionControlClient* tccClient,
@@ -31,7 +39,10 @@ namespace RTC
 		};
 
 	public:
-		TransportCongestionControlClient(RTC::TransportCongestionControlClient::Listener* listener);
+		TransportCongestionControlClient(
+		  RTC::TransportCongestionControlClient::Listener* listener,
+		  BweType bweType,
+		  uint32_t initialAvailableBitrate);
 		virtual ~TransportCongestionControlClient();
 
 	public:
@@ -43,9 +54,7 @@ namespace RTC
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, int64_t rtt, int64_t now_ms);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
-		void SetDesiredBitrates(int minSendBitrateBps,
-				int maxPaddingBitrateBps,
-				int maxTotalBitrateBps);
+		void SetDesiredBitrates(int minSendBitrateBps, int maxPaddingBitrateBps, int maxTotalBitrateBps);
 
 		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;

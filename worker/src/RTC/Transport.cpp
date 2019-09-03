@@ -753,7 +753,14 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(bwe, "enabling TCC client");
 
-					this->tccClient = new RTC::TransportCongestionControlClient(this);
+					// TODO: When unified with REMB we must check properly set bweType.
+
+					RTC::TransportCongestionControlClient::BweType bweType;
+
+					bweType = RTC::TransportCongestionControlClient::BweType::TRANSPORT_WIDE_CONGESTION;
+
+					this->tccClient = new RTC::TransportCongestionControlClient(
+					  this, bweType, this->initialAvailableOutgoingBitrate);
 
 					// If the transport is connected, tell the Transport-CC client.
 					if (IsConnected())
@@ -1525,11 +1532,11 @@ namespace RTC
 
 							// Pass it to the REMB client.
 							if (this->rembClient)
-								this->rembClient->ReceiveRembFeedback(remb);
+							  this->rembClient->ReceiveRembFeedback(remb);
 
 							// Pass it to the TCC client.
 							if (this->tccClient)
-								this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
+							  this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
 							*/
 
 							break;
@@ -1822,14 +1829,20 @@ namespace RTC
 		if (this->rembClient)
 		{
 			availableBitrate = this->rembClient->GetAvailableBitrate();
+
 			this->rembClient->RescheduleNextAvailableBitrateEvent();
 		}
 		else
 		{
 			availableBitrate = this->tccClient->GetAvailableBitrate();
+
 			// TODO: Not necessary when creating tccClient with initial bitrate.
+			// TODO: ibc: no, this must not exist.
 			if (availableBitrate == 0)
 				availableBitrate = this->initialAvailableOutgoingBitrate;
+
+			// TODO: Implement it.
+			// this->tccClient->RescheduleNextAvailableBitrateEvent();
 		}
 
 		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
@@ -1937,9 +1950,7 @@ namespace RTC
 		// TODO:
 		// Must adjust these values.
 		this->tccClient->SetDesiredBitrates(
-				totalDesiredBitrate / 2,
-				totalDesiredBitrate / 4,
-				totalDesiredBitrate);
+		  totalDesiredBitrate / 2, totalDesiredBitrate / 4, totalDesiredBitrate);
 	}
 
 	void Transport::MaySetIncomingBitrateLimitationByRemb()
@@ -2365,7 +2376,8 @@ namespace RTC
 
 	inline void Transport::OnTransportCongestionControlClientAvailableBitrate(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
-	  int64_t availableBitrate, int64_t previousAvailableBitrate)
+	  int64_t availableBitrate,
+	  int64_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
