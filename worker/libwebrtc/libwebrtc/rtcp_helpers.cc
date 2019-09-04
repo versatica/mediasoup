@@ -2,9 +2,9 @@
 #include "rtcp_helpers.h"
 #include <vector>
 
-const std::vector<ReceivedPacket> GetReceivedPackets(const RTC::RTCP::FeedbackRtpTransportPacket* packet)
+const std::vector<webrtc::rtcp::ReceivedPacket> GetReceivedPackets(const RTC::RTCP::FeedbackRtpTransportPacket* packet)
 {
-  std::vector<ReceivedPacket> receivedPackets;
+  std::vector<webrtc::rtcp::ReceivedPacket> receivedPackets;
 
   for (auto& packetResult : packet->GetPacketResults())
   {

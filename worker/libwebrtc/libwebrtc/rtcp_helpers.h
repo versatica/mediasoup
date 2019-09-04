@@ -11,7 +11,7 @@
  * Helpers to retrieve necessary data from mediasoup FeedbackRtpTransportPacket.
  */
 
-const std::vector<ReceivedPacket> GetReceivedPackets(const RTC::RTCP::FeedbackRtpTransportPacket* packet);
+const std::vector<webrtc::rtcp::ReceivedPacket> GetReceivedPackets(const RTC::RTCP::FeedbackRtpTransportPacket* packet);
 
 // Get the reference time in microseconds, including any precision loss.
 int64_t GetBaseTimeUs(const RTC::RTCP::FeedbackRtpTransportPacket* packet);
