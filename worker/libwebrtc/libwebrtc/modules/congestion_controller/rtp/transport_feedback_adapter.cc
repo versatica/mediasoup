@@ -15,7 +15,7 @@
 #include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "system_wrappers/source/field_trial.h"
-#include "rtcp_helpers.h" // TODO: Replace it
+#include "rtcp_helpers.h"
 
 #include "Logger.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
