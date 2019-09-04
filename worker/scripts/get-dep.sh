@@ -114,7 +114,7 @@ function get_abseil_cpp()
 {
 	GIT_REPO="https://github.com/abseil/abseil-cpp"
 	GIT_TAG="93d155bc4414f6c121bb1f19dba9fdb27c8943bc"
-	DEST="deps/abseil-cpp/abseil-cpp"
+	DEST="libwebrtc/deps/abseil-cpp/abseil-cpp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }

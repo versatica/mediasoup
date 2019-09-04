@@ -2,8 +2,7 @@
   'target_defaults': {
     'dependencies':
     [
-      # TODO: move deps to this directory.
-      '../deps/abseil-cpp/abseil-cpp.gyp:abseil'
+      'deps/abseil-cpp/abseil-cpp.gyp:abseil'
     ],
     'sources':
     [
