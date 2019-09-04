@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "json.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
@@ -14,6 +13,7 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <json.hpp>
 #include <string>
 #include <vector>
 

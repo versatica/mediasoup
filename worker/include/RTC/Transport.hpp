@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
@@ -22,6 +21,7 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "handles/Timer.hpp"
+#include <json.hpp>
 #include <string>
 #include <unordered_map>
 

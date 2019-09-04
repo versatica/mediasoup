@@ -2,7 +2,6 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -13,6 +12,7 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
+#include <json.hpp>
 #include <map>
 #include <string>
 #include <vector>

@@ -226,7 +226,6 @@
       'include/RTC/SendTransportController/congestion_controller/bitrate_estimator.h',
       'include/RTC/SendTransportController/congestion_controller/congestion_window_pushback_controller.h',
       'include/RTC/SendTransportController/congestion_controller/delay_based_bwe.h',
-      'include/RTC/SendTransportController/congestion_controller/delay_based_bwe_unittest_helper.h',
       'include/RTC/SendTransportController/congestion_controller/delay_increase_detector_interface.h',
       'include/RTC/SendTransportController/congestion_controller/goog_cc_network_control.h',
       'include/RTC/SendTransportController/congestion_controller/link_capacity_estimator.h',
@@ -334,7 +333,7 @@
     'include_dirs':
     [
       'include',
-      'deps/abseil-cpp'
+      'deps/json/single_include/nlohmann'
     ],
     'conditions':
     [

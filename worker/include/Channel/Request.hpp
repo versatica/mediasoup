@@ -2,7 +2,7 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
-#include "json.hpp"
+#include <json.hpp>
 #include <string>
 #include <unordered_map>
 

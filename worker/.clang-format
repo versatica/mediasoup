@@ -51,7 +51,7 @@ IncludeCategories:
     Priority: 3
   - Regex:    '"*"'
     Priority: 2
-  - Regex:    '^<(uv|openssl|srtp|json|netstring)(.|/)'
+  - Regex:    '^<(json|netstring|us|openssl|srtp|usrsctp)(.|/)'
     Priority: 4
   - Regex:    '<*>'
     Priority: 5

@@ -2,9 +2,9 @@
 #define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "handles/UnixStreamSocket.hpp"
+#include <json.hpp>
 
 namespace Channel
 {

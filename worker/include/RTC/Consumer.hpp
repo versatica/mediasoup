@@ -2,7 +2,6 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -13,6 +12,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include <json.hpp>
 #include <string>
 #include <unordered_set>
 #include <vector>
