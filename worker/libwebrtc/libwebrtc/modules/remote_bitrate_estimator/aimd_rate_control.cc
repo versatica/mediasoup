@@ -13,7 +13,7 @@
 
 #include "modules/remote_bitrate_estimator/aimd_rate_control.h"
 #include "api/transport/network_types.h"
-#include "api/units/SendTransportController/data_rate.h"
+#include "api/units/data_rate.h"
 #include "modules/remote_bitrate_estimator/bwe_defines.h"
 #include "modules/remote_bitrate_estimator/overuse_detector.h"
 #include "rtc_base/experiments/field_trial_parser.h"

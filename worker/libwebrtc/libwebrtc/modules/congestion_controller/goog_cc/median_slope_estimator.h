@@ -11,7 +11,7 @@
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_MEDIAN_SLOPE_ESTIMATOR_H_
 
 #include "rtc_base/constructor_magic.h"
-#include "rtc_base/experiments/percentile_filter.h"
+#include "rtc_base/numerics/percentile_filter.h"
 
 #include <stddef.h>
 #include <stdint.h>

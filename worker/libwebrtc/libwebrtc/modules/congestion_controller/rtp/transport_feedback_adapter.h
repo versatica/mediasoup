@@ -12,7 +12,7 @@
 #define MODULES_CONGESTION_CONTROLLER_RTP_TRANSPORT_FEEDBACK_ADAPTER_H_
 
 #include "api/transport/network_types.h"
-#include "modules/congestion_controller/goog_cc/rtp/send_time_history.h"
+#include "modules/congestion_controller/rtp/send_time_history.h"
 #include "rtc_base/network/sent_packet.h"
 
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
