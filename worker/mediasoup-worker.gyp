@@ -8,7 +8,8 @@
       'deps/openssl/openssl.gyp:openssl',
       'deps/libsrtp/libsrtp.gyp:libsrtp',
       'deps/usrsctp/usrsctp.gyp:usrsctp',
-      'libwebrtc/libwebrtc.gyp:libwebrtc'
+      'libwebrtc/libwebrtc.gyp:libwebrtc',
+      'libwebrtc/deps/abseil-cpp/abseil-cpp.gyp:abseil'
     ],
     # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
     # 'defines': [ 'SCTP_DEBUG' ],
@@ -117,6 +118,7 @@
       'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
       'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
       'src/RTC/RembClient.cpp',
+      # TODO: To be removed
       'src/RTC/libwebrtc/remote_bitrate_estimator/AimdRateControl.cpp',
       'src/RTC/libwebrtc/remote_bitrate_estimator/InterArrival.cpp',
       'src/RTC/libwebrtc/remote_bitrate_estimator/OveruseDetector.cpp',
@@ -222,6 +224,7 @@
       'include/RTC/RTCP/XrDelaySinceLastRr.hpp',
       'include/RTC/RTCP/XrReceiverReferenceTime.hpp',
       'include/RTC/RembClient.hpp',
+      # TODO: To be removed
       'include/RTC/libwebrtc/remote_bitrate_estimator/AimdRateControl.hpp',
       'include/RTC/libwebrtc/remote_bitrate_estimator/InterArrival.hpp',
       'include/RTC/libwebrtc/remote_bitrate_estimator/OveruseDetector.hpp',
@@ -233,9 +236,7 @@
     'include_dirs':
     [
       'include',
-      'deps/json/single_include/nlohmann',
-      'libwebrtc/',
-      'libwebrtc/deps/abseil-cpp/abseil-cpp',
+      'deps/json/single_include/nlohmann'
     ],
     'conditions':
     [

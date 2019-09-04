@@ -2,10 +2,14 @@
   'target_defaults': {
     'dependencies':
     [
-      'deps/abseil-cpp/abseil-cpp.gyp:abseil'
+      'deps/abseil-cpp/abseil-cpp.gyp:abseil',
+      '../deps/libuv/uv.gyp:libuv',
+      '../deps/openssl/openssl.gyp:openssl'
     ],
     'direct_dependent_settings': {
-      'include_dirs': [
+      'include_dirs':
+      [
+        '.',
         'libwebrtc'
       ]
     },
@@ -117,10 +121,9 @@
     ],
     'include_dirs':
     [
+      'libwebrtc',
       '../include',
-      '../deps/json/single_include/nlohmann',
-      '../deps/libuv/include',
-      'libwebrtc'
+      '../deps/json/single_include/nlohmann'
     ],
     'conditions':
     [
