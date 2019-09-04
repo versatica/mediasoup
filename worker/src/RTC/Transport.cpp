@@ -19,7 +19,9 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
-#include <map> // std::multimap
+// TODO: Should not include directly libwebrtc from here.
+#include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
+#include <map>                                                   // std::multimap
 
 namespace RTC
 {
