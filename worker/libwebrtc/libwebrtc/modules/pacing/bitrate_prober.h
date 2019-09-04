@@ -11,14 +11,13 @@
 #ifndef MODULES_PACING_BITRATE_PROBER_H_
 #define MODULES_PACING_BITRATE_PROBER_H_
 
+#include "api/transport/field_trial_based_config.h"
+#include "api/transport/network_types.h"
+#include "rtc_base/experiments/field_trial_parser.h"
+
 #include <stddef.h>
 #include <stdint.h>
-
 #include <queue>
-
-#include "RTC/SendTransportController/field_trial_based_config.h"
-#include "RTC/SendTransportController/network_types.h"
-#include "RTC/SendTransportController/field_trial_parser.h"
 
 namespace webrtc {
 

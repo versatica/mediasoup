@@ -11,16 +11,16 @@
 #ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_AIMD_RATE_CONTROL_H_
 #define MODULES_REMOTE_BITRATE_ESTIMATOR_AIMD_RATE_CONTROL_H_
 
-#include <stdint.h>
+#include "api/transport/network_types.h"
+#include "api/transport/webrtc_key_value_config.h"
+#include "api/units/data_rate.h"
+#include "api/units/timestamp.h"
+#include "modules/congestion_controller/goog_cc/link_capacity_estimator.h"
+#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 
-#include "absl/types/optional.h"
-#include "RTC/SendTransportController/network_types.h"
-#include "RTC/SendTransportController/webrtc_key_value_config.h"
-#include "RTC/SendTransportController/data_rate.h"
-#include "RTC/SendTransportController/timestamp.h"
-#include "RTC/SendTransportController/congestion_controller/link_capacity_estimator.h"
-#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-#include "RTC/SendTransportController/field_trial_parser.h"
+#include <absl/types/optional.h>
+#include <stdint.h>
 
 namespace webrtc {
 // A rate control implementation based on additive increases of

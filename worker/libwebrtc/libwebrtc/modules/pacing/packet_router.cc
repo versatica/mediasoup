@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/pacing/packet_router.h"
+#define MS_CLASS "webrtc::PacketRouter"
+// #define MS_LOG_DEV
+
+#include "modules/pacing/packet_router.h"
 
 #include "Logger.hpp"
-
-#define MS_CLASS "PacketRouter"
 
 namespace webrtc {
 

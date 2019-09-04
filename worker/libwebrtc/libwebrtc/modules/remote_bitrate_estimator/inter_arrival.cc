@@ -8,14 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/remote_bitrate_estimator/inter_arrival.h"
+#define MS_CLASS "webrtc::InterArrival"
+// #define MS_LOG_DEV
 
-#include <cassert>
+#include "modules/remote_bitrate_estimator/inter_arrival.h"
+#include "modules/include/module_common_types_public.h"
 
-#include "RTC/SendTransportController/module_common_types_public.h"
 #include "Logger.hpp"
 
-#define MS_CLASS "InterArrival"
+#include <cassert>
 
 namespace webrtc {
 

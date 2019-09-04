@@ -11,11 +11,11 @@
 #ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_INCLUDE_BWE_DEFINES_H_
 #define MODULES_REMOTE_BITRATE_ESTIMATOR_INCLUDE_BWE_DEFINES_H_
 
-#include <stdint.h>
+#include "api/network_state_predictor.h"
+#include "api/units/data_rate.h"
 
-#include "absl/types/optional.h"
-#include "RTC/SendTransportController/network_state_predictor.h"
-#include "RTC/SendTransportController/data_rate.h"
+#include <absl/types/optional.h>
+#include <stdint.h>
 
 #define BWE_MAX(a, b) ((a) > (b) ? (a) : (b))
 #define BWE_MIN(a, b) ((a) < (b) ? (a) : (b))

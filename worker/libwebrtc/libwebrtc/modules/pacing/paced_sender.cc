@@ -8,22 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/pacing/paced_sender.h"
+#define MS_CLASS "webrtc::PacedSender"
+// #define MS_LOG_DEV
 
-#include <algorithm>
-#include <utility>
-#include <vector>
-
-#include "absl/memory/memory.h"
-#include "RTC/SendTransportController/pacing/bitrate_prober.h"
-#include "RTC/SendTransportController/pacing/interval_budget.h"
-#include "RTC/SendTransportController/rtp_packet_send_result.h"
+#include "modules/pacing/paced_sender.h"
+#include "modules/pacing/bitrate_prober.h"
+#include "modules/pacing/interval_budget.h"
+#include "rtp_packet_send_result.h" // TODO: Replace it.
 
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/RtpPacket.hpp"
 
-#define MS_CLASS "PacedSender"
+#include <absl/memory/memory.h>
+#include <algorithm>
+#include <utility>
+#include <vector>
 
 namespace webrtc {
 namespace {

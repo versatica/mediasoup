@@ -11,14 +11,14 @@
 #ifndef MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_DEFINES_H_
 #define MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_DEFINES_H_
 
-#include <stddef.h>
+#include "api/transport/network_types.h"
 
+#include "RTC/RTCP/FeedbackRtpTransport.hpp"
+
+#include <absl/types/optional.h>
+#include <stddef.h>
 #include <list>
 #include <vector>
-
-#include "absl/types/optional.h"
-#include "RTC/SendTransportController/network_types.h" // PacedPacketInfo.
-#include "RTC/RTCP/FeedbackRtpTransport.hpp" // PacedPacketInfo.
 
 namespace webrtc {
 namespace rtcp {

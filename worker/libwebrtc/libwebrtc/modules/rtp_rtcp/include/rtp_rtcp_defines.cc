@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/rtp_rtcp_defines.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 #include <ctype.h>
 #include <string.h>

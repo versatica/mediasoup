@@ -11,10 +11,10 @@
 #ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_INTER_ARRIVAL_H_
 #define MODULES_REMOTE_BITRATE_ESTIMATOR_INTER_ARRIVAL_H_
 
+#include "rtc_base/constructor_magic.h"
+
 #include <stddef.h>
 #include <stdint.h>
-
-#include "RTC/SendTransportController/constructor_magic.h"
 
 namespace webrtc {
 

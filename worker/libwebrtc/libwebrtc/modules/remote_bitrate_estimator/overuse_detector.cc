@@ -8,16 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/remote_bitrate_estimator/overuse_detector.h"
+#include "modules/remote_bitrate_estimator/overuse_detector.h"
+#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "rtc_base/numerics/safe_minmax.h"
 
 #include <math.h>
 #include <stdio.h>
-
 #include <algorithm>
 #include <string>
-
-#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-#include "RTC/SendTransportController/safe_minmax.h"
 
 namespace webrtc {
 

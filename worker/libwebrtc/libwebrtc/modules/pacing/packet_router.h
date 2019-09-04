@@ -11,18 +11,14 @@
 #ifndef MODULES_PACING_PACKET_ROUTER_H_
 #define MODULES_PACING_PACKET_ROUTER_H_
 
-#include <stddef.h>
-#include <stdint.h>
-
-#include <list>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
-#include "RTC/SendTransportController/network_types.h"
-#include "RTC/SendTransportController/constructor_magic.h"
+#include "api/transport/network_types.h"
+#include "rtc_base/constructor_magic.h"
 
 #include "RTC/RtpPacket.hpp"
+
+#include <stddef.h>
+#include <stdint.h>
+#include <vector>
 
 namespace webrtc {
 

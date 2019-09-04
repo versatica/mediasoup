@@ -10,11 +10,11 @@
 #ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_OVERUSE_DETECTOR_H_
 #define MODULES_REMOTE_BITRATE_ESTIMATOR_OVERUSE_DETECTOR_H_
 
-#include <stdint.h>
+#include "api/transport/webrtc_key_value_config.h"
+#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "rtc_base/constructor_magic.h"
 
-#include "RTC/SendTransportController/webrtc_key_value_config.h"
-#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-#include "RTC/SendTransportController/constructor_magic.h"
+#include <stdint.h>
 
 namespace webrtc {
 
