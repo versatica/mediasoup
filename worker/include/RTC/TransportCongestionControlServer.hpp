@@ -39,7 +39,7 @@ namespace RTC
 
 	private:
 		void SendTransportCcFeedback();
-		void MaySendLimitationRembFeedback(bool force = false);
+		void MaySendLimitationRembFeedback();
 
 		/* Pure virtual methods inherited from RTC::libwebrtc::RemoteBitrateEstimator::Listener. */
 	public:
@@ -67,6 +67,7 @@ namespace RTC
 		uint32_t transportCcFeedbackMediaSsrc{ 0u };
 		uint32_t maxIncomingBitrate{ 0u };
 		uint64_t limitationRembSentAt{ 0u };
+		uint8_t unlimitedRembCounter{ 0u };
 	};
 
 	/* Inline instance methods. */

@@ -13,7 +13,8 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint64_t TransportCcFeedbackSendInterval{ 100u }; // In ms.
-	static constexpr uint64_t LimitationRembInterval{ 1500 };          // In ms.
+	static constexpr uint64_t LimitationRembInterval{ 1500u };         // In ms.
+	static constexpr uint8_t UnlimitedRembNumPackets{ 4u };
 
 	/* Instance methods. */
 
@@ -169,7 +170,12 @@ namespace RTC
 		this->maxIncomingBitrate = bitrate;
 
 		if (previousMaxIncomingBitrate != 0u && this->maxIncomingBitrate == 0u)
-			MaySendLimitationRembFeedback(/*force*/ true);
+		{
+			// This is to ensure that we send N REMB packets with bitrate 0 (unlimited).
+			this->unlimitedRembCounter = UnlimitedRembNumPackets;
+
+			MaySendLimitationRembFeedback();
+		}
 	}
 
 	inline void TransportCongestionControlServer::SendTransportCcFeedback()
@@ -201,19 +207,26 @@ namespace RTC
 		}
 	}
 
-	inline void TransportCongestionControlServer::MaySendLimitationRembFeedback(bool force)
+	inline void TransportCongestionControlServer::MaySendLimitationRembFeedback()
 	{
 		MS_TRACE();
 
 		auto now = DepLibUV::GetTime();
 
+		// May fix unlimitedRembCounter.
+		if (this->unlimitedRembCounter > 0u && this->maxIncomingBitrate != 0u)
+			this->unlimitedRembCounter = 0u;
+
+		// In case this is the first unlimited REMB packet, send it fast.
 		// clang-format off
 		if (
-			force ||
 			(
-				this->bweType != RTC::BweType::REMB &&
-				this->maxIncomingBitrate != 0u &&
-				now - this->limitationRembSentAt > LimitationRembInterval
+				(this->bweType != RTC::BweType::REMB && this->maxIncomingBitrate != 0u) ||
+				this->unlimitedRembCounter > 0u
+			) &&
+			(
+				now - this->limitationRembSentAt > LimitationRembInterval ||
+				this->unlimitedRembCounter == UnlimitedRembNumPackets
 			)
 		)
 		// clang-format on
@@ -230,6 +243,9 @@ namespace RTC
 			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, &packet);
 
 			this->limitationRembSentAt = now;
+
+			if (this->unlimitedRembCounter > 0u)
+				this->unlimitedRembCounter--;
 		}
 	}
 
