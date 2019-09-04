@@ -234,6 +234,7 @@
     [
       'include',
       'deps/json/single_include/nlohmann',
+      'libwebrtc/',
       'libwebrtc/deps/abseil-cpp/abseil-cpp',
     ],
     'conditions':
