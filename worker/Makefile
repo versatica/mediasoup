@@ -83,6 +83,7 @@ clean-all:
 	$(RM) -rf worker/mediasoup-worker.xcodeproj
 	$(RM) -rf worker/mediasoup-worker-test.xcodeproj
 	$(RM) -rf worker/deps/*/*.xcodeproj
+	$(RM) -rf worker/libwebrtc/*/*.xcodeproj
 
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
