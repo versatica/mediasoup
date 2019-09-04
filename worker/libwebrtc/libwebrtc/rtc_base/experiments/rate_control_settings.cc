@@ -8,16 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/rate_control_settings.h"
+#include "rtc_base/experiments/rate_control_settings.h"
+#include "api/transport/field_trial_based_config.h"
+#include "rtc_base/experiments/field_trial_parser.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 #include <inttypes.h>
 #include <stdio.h>
-
 #include <string>
-
-#include "RTC/SendTransportController/field_trial_based_config.h"
-#include "RTC/SendTransportController/field_trial_parser.h"
-#include "RTC/SendTransportController/safe_conversions.h"
 
 namespace webrtc {
 

@@ -31,13 +31,12 @@
 #ifndef RTC_BASE_NUMERICS_SAFE_COMPARE_H_
 #define RTC_BASE_NUMERICS_SAFE_COMPARE_H_
 
+#include "rtc_base/type_traits.h"
+
 #include <stddef.h>
 #include <stdint.h>
-
 #include <type_traits>
 #include <utility>
-
-#include "RTC/SendTransportController/type_traits.h"
 
 namespace rtc {
 

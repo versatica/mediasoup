@@ -10,15 +10,13 @@
 #ifndef RTC_BASE_EXPERIMENTS_FIELD_TRIAL_PARSER_H_
 #define RTC_BASE_EXPERIMENTS_FIELD_TRIAL_PARSER_H_
 
+#include <absl/types/optional.h>
 #include <stdint.h>
-
 #include <initializer_list>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-
-#include "absl/types/optional.h"
 
 // Field trial parser functionality. Provides funcitonality to parse field trial
 // argument strings in key:value format. Each parameter is described using

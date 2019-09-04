@@ -11,10 +11,10 @@
 #ifndef RTC_BASE_EXPERIMENTS_ALR_EXPERIMENT_H_
 #define RTC_BASE_EXPERIMENTS_ALR_EXPERIMENT_H_
 
-#include <stdint.h>
+#include "api/transport/webrtc_key_value_config.h"
 
-#include "absl/types/optional.h"
-#include "RTC/SendTransportController/webrtc_key_value_config.h"
+#include <absl/types/optional.h>
+#include <stdint.h>
 
 namespace webrtc {
 struct AlrExperimentSettings {

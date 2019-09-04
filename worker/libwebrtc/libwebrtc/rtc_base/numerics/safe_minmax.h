@@ -76,11 +76,11 @@
 #ifndef RTC_BASE_NUMERICS_SAFE_MINMAX_H_
 #define RTC_BASE_NUMERICS_SAFE_MINMAX_H_
 
+#include "rtc_base/numerics/safe_compare.h"
+#include "rtc_base/type_traits.h"
+
 #include <limits>
 #include <type_traits>
-
-#include "RTC/SendTransportController/safe_compare.h"
-#include "RTC/SendTransportController/type_traits.h"
 
 namespace rtc {
 

@@ -11,10 +11,11 @@
 #ifndef RTC_BASE_EXPERIMENTS_RATE_CONTROL_SETTINGS_H_
 #define RTC_BASE_EXPERIMENTS_RATE_CONTROL_SETTINGS_H_
 
-#include "absl/types/optional.h"
-#include "RTC/SendTransportController/webrtc_key_value_config.h"
-#include "RTC/SendTransportController/field_trial_parser.h"
+#include "api/transport/webrtc_key_value_config.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 // #include "rtc_base/experiments/field_trial_units.h"
+
+#include <absl/types/optional.h>
 
 namespace webrtc {
 
