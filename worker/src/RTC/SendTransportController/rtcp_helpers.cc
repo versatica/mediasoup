@@ -8,13 +8,9 @@ const std::vector<ReceivedPacket> GetReceivedPackets(const RTC::RTCP::FeedbackRt
   for (auto& packetResult : packet->GetPacketResults())
   {
     if (packetResult.received)
-    {
       receivedPackets.emplace_back(packetResult.sequenceNumber, packetResult.delta);
-    }
     else
-    {
       receivedPackets.emplace_back(packetResult.sequenceNumber);
-    }
   }
 
   return receivedPackets;
