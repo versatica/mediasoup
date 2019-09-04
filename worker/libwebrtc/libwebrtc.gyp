@@ -4,6 +4,12 @@
     [
       'deps/abseil-cpp/abseil-cpp.gyp:abseil'
     ],
+    'direct_dependent_settings': {
+      'include_dirs': [
+        '.',
+        'libwebrtc'
+      ]
+    },
     'sources':
     [
       # C++ source files.
