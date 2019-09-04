@@ -8,7 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/time_delta.h"
+#include "api/units/time_delta.h"
+
 #include <sstream>
 
 namespace webrtc {

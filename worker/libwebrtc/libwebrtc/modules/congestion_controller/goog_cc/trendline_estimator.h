@@ -10,17 +10,16 @@
 #ifndef MODULES_CONGESTION_CONTROLLER_GOOG_CC_TRENDLINE_ESTIMATOR_H_
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_TRENDLINE_ESTIMATOR_H_
 
+#include "api/network_state_predictor.h"
+#include "api/transport/webrtc_key_value_config.h"
+#include "modules/congestion_controller/goog_cc/delay_increase_detector_interface.h"
+#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "rtc_base/constructor_magic.h"
+
 #include <stddef.h>
 #include <stdint.h>
-
 #include <deque>
 #include <utility>
-
-#include "RTC/SendTransportController/network_state_predictor.h"
-#include "RTC/SendTransportController/webrtc_key_value_config.h"
-#include "RTC/SendTransportController/congestion_controller/delay_increase_detector_interface.h"
-#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-#include "RTC/SendTransportController/constructor_magic.h"
 
 namespace webrtc {
 

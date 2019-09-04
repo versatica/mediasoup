@@ -11,15 +11,14 @@
 #ifndef API_UNITS_TIME_DELTA_H_
 #define API_UNITS_TIME_DELTA_H_
 
-#ifdef UNIT_TEST
-#include <ostream>  // no-presubmit-check TODO(webrtc:8982)
-#endif              // UNIT_TEST
+#include "rtc_base/units/unit_base.h"
 
 #include <cstdlib>
 #include <string>
 #include <type_traits>
-
-#include "RTC/SendTransportController/unit_base.h"
+#ifdef UNIT_TEST
+#include <ostream>  // no-presubmit-check TODO(webrtc:8982)
+#endif              // UNIT_TEST
 
 namespace webrtc {
 

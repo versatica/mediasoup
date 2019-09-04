@@ -10,12 +10,12 @@
 
 #ifndef API_TRANSPORT_NETWORK_CONTROL_H_
 #define API_TRANSPORT_NETWORK_CONTROL_H_
+
+#include "api/transport/network_types.h"
+#include "api/transport/webrtc_key_value_config.h"
+
 #include <stdint.h>
-
 #include <memory>
-
-#include "RTC/SendTransportController/network_types.h"
-#include "RTC/SendTransportController/webrtc_key_value_config.h"
 
 namespace webrtc {
 // TODO(srte): Remove this forward declaration when this is in api.

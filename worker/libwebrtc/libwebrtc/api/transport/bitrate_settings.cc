@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/bitrate_settings.h"
+#include "api/transport/bitrate_settings.h"
 
 namespace webrtc {
 

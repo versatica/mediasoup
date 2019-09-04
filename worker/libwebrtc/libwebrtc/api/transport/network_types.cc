@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/network_types.h"
+#include "api/transport/network_types.h"
 
 #include <algorithm>
 

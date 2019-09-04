@@ -10,15 +10,15 @@
 
 #ifndef API_TRANSPORT_NETWORK_TYPES_H_
 #define API_TRANSPORT_NETWORK_TYPES_H_
+
+#include "api/units/data_rate.h"
+#include "api/units/data_size.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
+
+#include <absl/types/optional.h>
 #include <stdint.h>
-
 #include <vector>
-
-#include "absl/types/optional.h"
-#include "RTC/SendTransportController/data_rate.h"
-#include "RTC/SendTransportController/data_size.h"
-#include "RTC/SendTransportController/time_delta.h"
-#include "RTC/SendTransportController/timestamp.h"
 
 namespace webrtc {
 

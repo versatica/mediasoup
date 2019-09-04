@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/congestion_controller/median_slope_estimator.h"
+#include "modules/congestion_controller/goog_cc/median_slope_estimator.h"
 
 #include <vector>
 

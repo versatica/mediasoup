@@ -8,19 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/congestion_controller/trendline_estimator.h"
+#define MS_CLASS "webrtc::TrendlineEstimator"
+// #define MS_LOG_DEV
 
-#include <math.h>
+#include "modules/congestion_controller/goog_cc/trendline_estimator.h"
 
-#include <algorithm>
-#include <string>
+#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "rtc_base/numerics/safe_minmax.h"
 
-#include "absl/types/optional.h"
-#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-#include "RTC/SendTransportController/safe_minmax.h"
 #include "Logger.hpp"
 
-#define MS_CLASS "TrendlineEstimator"
+#include <absl/types/optional.h>
+#include <math.h>
+#include <algorithm>
+#include <string>
 
 namespace webrtc {
 

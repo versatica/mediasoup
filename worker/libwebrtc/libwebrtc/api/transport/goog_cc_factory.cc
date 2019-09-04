@@ -8,12 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/goog_cc_factory.h"
+#include "api/transport/goog_cc_factory.h"
+#include "modules/congestion_controller/goog_cc/goog_cc_network_control.h"
 
+#include <absl/memory/memory.h>
 #include <utility>
-
-#include "absl/memory/memory.h"
-#include "RTC/SendTransportController/congestion_controller/goog_cc_network_control.h"
 
 namespace webrtc {
 GoogCcNetworkControllerFactory::GoogCcNetworkControllerFactory(

@@ -10,10 +10,11 @@
 
 #ifndef API_TRANSPORT_GOOG_CC_FACTORY_H_
 #define API_TRANSPORT_GOOG_CC_FACTORY_H_
-#include <memory>
 
-#include "RTC/SendTransportController/network_state_predictor.h"
-#include "RTC/SendTransportController/network_control.h"
+#include "api/network_state_predictor.h"
+#include "api/transport/network_control.h"
+
+#include <memory>
 
 namespace webrtc {
 

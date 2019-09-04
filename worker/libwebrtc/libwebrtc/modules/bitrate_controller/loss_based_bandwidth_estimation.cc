@@ -8,15 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "RTC/SendTransportController/bitrate_controller/loss_based_bandwidth_estimation.h"
+#include "modules/bitrate_controller/loss_based_bandwidth_estimation.h"
+#include "api/units/data_rate.h"
+#include "api/units/time_delta.h"
+#include "system_wrappers/source/field_trial.h"
 
 #include <algorithm>
 #include <string>
 #include <vector>
-
-#include "RTC/SendTransportController/data_rate.h"
-#include "RTC/SendTransportController/time_delta.h"
-#include "RTC/SendTransportController/field_trial.h"
 
 namespace webrtc {
 namespace {

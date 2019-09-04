@@ -11,14 +11,13 @@
 #ifndef API_UNITS_TIMESTAMP_H_
 #define API_UNITS_TIMESTAMP_H_
 
-#ifdef UNIT_TEST
-#include <ostream>  // no-presubmit-check TODO(webrtc:8982)
-#endif              // UNIT_TEST
+#include "api/units/time_delta.h"
 
 #include <string>
 #include <type_traits>
-
-#include "RTC/SendTransportController/time_delta.h"
+#ifdef UNIT_TEST
+#include <ostream>  // no-presubmit-check TODO(webrtc:8982)
+#endif              // UNIT_TEST
 
 namespace webrtc {
 // Timestamp represents the time that has passed since some unspecified epoch.

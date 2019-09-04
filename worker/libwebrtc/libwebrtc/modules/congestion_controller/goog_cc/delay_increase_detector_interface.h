@@ -10,10 +10,10 @@
 #ifndef MODULES_CONGESTION_CONTROLLER_GOOG_CC_DELAY_INCREASE_DETECTOR_INTERFACE_H_
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_DELAY_INCREASE_DETECTOR_INTERFACE_H_
 
-#include <stdint.h>
+#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "rtc_base/constructor_magic.h"
 
-#include "RTC/SendTransportController/remote_bitrate_estimator/bwe_defines.h"
-#include "RTC/SendTransportController/constructor_magic.h"
+#include <stdint.h>
 
 namespace webrtc {
 

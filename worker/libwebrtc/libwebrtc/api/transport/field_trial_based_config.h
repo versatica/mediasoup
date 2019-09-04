@@ -10,10 +10,10 @@
 #ifndef API_TRANSPORT_FIELD_TRIAL_BASED_CONFIG_H_
 #define API_TRANSPORT_FIELD_TRIAL_BASED_CONFIG_H_
 
-#include <string>
+#include "api/transport/webrtc_key_value_config.h"
 
-#include "absl/strings/string_view.h"
-#include "RTC/SendTransportController/webrtc_key_value_config.h"
+#include <absl/strings/string_view.h>
+#include <string>
 
 namespace webrtc {
 // Implementation using the field trial API fo the key value lookup.

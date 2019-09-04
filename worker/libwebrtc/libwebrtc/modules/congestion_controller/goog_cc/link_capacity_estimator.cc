@@ -7,11 +7,10 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "RTC/SendTransportController/congestion_controller/link_capacity_estimator.h"
+#include "modules/congestion_controller/goog_cc/link_capacity_estimator.h"
+#include "rtc_base/numerics/safe_minmax.h"
 
 #include <algorithm>
-
-#include "RTC/SendTransportController/safe_minmax.h"
 
 namespace webrtc {
 LinkCapacityEstimator::LinkCapacityEstimator() {}

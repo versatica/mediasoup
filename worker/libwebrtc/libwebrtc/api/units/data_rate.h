@@ -11,18 +11,17 @@
 #ifndef API_UNITS_DATA_RATE_H_
 #define API_UNITS_DATA_RATE_H_
 
-#ifdef UNIT_TEST
-#include <ostream>  // no-presubmit-check TODO(webrtc:8982)
-#endif              // UNIT_TEST
+#include "api/units/data_size.h"
+#include "api/units/frequency.h"
+#include "api/units/time_delta.h"
+#include "api/units/unit_base.h"
 
 #include <limits>
 #include <string>
 #include <type_traits>
-
-#include "RTC/SendTransportController/data_size.h"
-#include "RTC/SendTransportController/frequency.h"
-#include "RTC/SendTransportController/time_delta.h"
-#include "RTC/SendTransportController/unit_base.h"
+#ifdef UNIT_TEST
+#include <ostream>  // no-presubmit-check TODO(webrtc:8982)
+#endif              // UNIT_TEST
 
 namespace webrtc {
 // DataRate is a class that represents a given data rate. This can be used to
