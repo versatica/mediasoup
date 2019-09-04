@@ -541,7 +541,7 @@ namespace RTC
 				auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 				auto& codecs                = producer->GetRtpParameters().codecs;
 
-				// Set TransportCongestionControl server:
+				// Set TransportCongestionControl server.
 				if (!this->tccServer)
 				{
 					bool createTccServer{ false };
@@ -600,7 +600,8 @@ namespace RTC
 					{
 						this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
 
-						this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+						if (this->maxIncomingBitrate != 0u)
+							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 
 						if (IsConnected())
 							this->tccServer->TransportConnected();
@@ -1116,11 +1117,11 @@ namespace RTC
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
-		// Tell the Transport-CC client.
+		// Tell the TransportCongestionControl client.
 		if (this->tccClient)
 			this->tccClient->TransportConnected();
 
-		// Tell the Transport-CC server.
+		// Tell the TransportCongestionControl server.
 		if (this->tccServer)
 			this->tccServer->TransportConnected();
 	}
@@ -1148,11 +1149,11 @@ namespace RTC
 		// Stop the RTCP timer.
 		this->rtcpTimer->Stop();
 
-		// Tell the Transport-CC client.
+		// Tell the TransportCongestionControl client.
 		if (this->tccClient)
 			this->tccClient->TransportDisconnected();
 
-		// Tell the Transport-CC server.
+		// Tell the TransportCongestionControl server.
 		if (this->tccServer)
 			this->tccServer->TransportDisconnected();
 	}
@@ -1170,7 +1171,7 @@ namespace RTC
 
 		auto now = DepLibUV::GetTime();
 
-		// Feed the transport congestion server.
+		// Feed the TransportCongestionControl server.
 		if (this->tccServer)
 			this->tccServer->IncomingPacket(now, packet);
 
@@ -1398,7 +1399,7 @@ namespace RTC
 
 				for (auto it = rr->Begin(); it != rr->End(); ++it)
 				{
-					auto& report   = (*it);
+					auto& report   = *it;
 					auto* consumer = GetConsumerByMediaSsrc(report->GetSsrc());
 
 					if (!consumer)
@@ -1406,7 +1407,7 @@ namespace RTC
 						// Special case for the RTP probator.
 						if (report->GetSsrc() == RTC::RtpProbationSsrc)
 						{
-							// TODO: We should pass the RR to the tccClient (and just RR for the
+							// TODO: We should pass the RR to the tccClient (and in fact just RR for the
 							// probation stream).
 
 							// TODO: Convert report to ReportBlock and pass to tccClient.
@@ -1599,8 +1600,7 @@ namespace RTC
 				// Even if Sender Report packet can only contains one report.
 				for (auto it = sr->Begin(); it != sr->End(); ++it)
 				{
-					auto& report = (*it);
-					// Get the producer associated to the SSRC indicated in the report.
+					auto& report   = *it;
 					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
 
 					if (!producer)
@@ -1625,8 +1625,7 @@ namespace RTC
 
 				for (auto it = sdes->Begin(); it != sdes->End(); ++it)
 				{
-					auto& chunk = (*it);
-					// Get the producer associated to the SSRC indicated in the report.
+					auto& chunk    = *it;
 					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
 
 					if (!producer)
@@ -1654,7 +1653,7 @@ namespace RTC
 
 				for (auto it = xr->Begin(); it != xr->End(); ++it)
 				{
-					auto& report = (*it);
+					auto& report = *it;
 
 					switch (report->GetType())
 					{
@@ -1664,7 +1663,7 @@ namespace RTC
 
 							for (auto it2 = dlrr->Begin(); it2 != dlrr->End(); ++it2)
 							{
-								auto& ssrcInfo = (*it2);
+								auto& ssrcInfo = *it2;
 
 								// SSRC should be filled in the sub-block.
 								if (ssrcInfo->GetSsrc() == 0)
@@ -1765,7 +1764,7 @@ namespace RTC
 		MS_ASSERT(this->rembClient || this->tccClient, "no REMB client nor Transport-CC client");
 
 		std::multimap<uint16_t, RTC::Consumer*> multimapPriorityConsumer;
-		uint16_t totalPriorities{ 0 };
+		uint16_t totalPriorities{ 0u };
 
 		// Fill the map with Consumers and their priority (if > 0).
 		for (auto& kv : this->mapConsumers)
@@ -1773,7 +1772,7 @@ namespace RTC
 			auto* consumer = kv.second;
 			auto priority  = consumer->GetBitratePriority();
 
-			if (priority > 0)
+			if (priority > 0u)
 			{
 				multimapPriorityConsumer.emplace(priority, consumer);
 				totalPriorities += priority;
@@ -1781,7 +1780,7 @@ namespace RTC
 		}
 
 		// Nobody wants bitrate. Exit.
-		if (totalPriorities == 0)
+		if (totalPriorities == 0u)
 			return;
 
 		uint32_t availableBitrate;
@@ -1819,6 +1818,8 @@ namespace RTC
 
 			uint32_t usedBitrate;
 
+			// TODO: When unified into tccClient we must set considerLoss based on
+			// tccClient->GetBweType().
 			if (this->rembClient)
 				usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ true);
 			else if (this->tccClient)
@@ -1829,14 +1830,14 @@ namespace RTC
 			if (usedBitrate <= remainingBitrate)
 				remainingBitrate -= usedBitrate;
 			else
-				remainingBitrate = 0;
+				remainingBitrate = 0u;
 		}
 
 		MS_DEBUG_DEV("after first main iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
 
 		// Then redistribute the remaining bitrate by allowing Consumers to increase
 		// layer by layer.
-		while (remainingBitrate >= 2000)
+		while (remainingBitrate >= 2000u)
 		{
 			auto previousRemainingBitrate = remainingBitrate;
 
@@ -1851,6 +1852,8 @@ namespace RTC
 
 				uint32_t usedBitrate;
 
+				// TODO: When unified into tccClient we must set considerLoss based on
+				// tccClient->GetBweType().
 				if (this->rembClient)
 					usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ true);
 				else if (this->tccClient)
@@ -1863,7 +1866,7 @@ namespace RTC
 				remainingBitrate -= usedBitrate;
 
 				// No more.
-				if (remainingBitrate < 2000)
+				if (remainingBitrate < 2000u)
 					break;
 			}
 
