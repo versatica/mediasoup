@@ -8,9 +8,9 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpProbationGenerator.hpp"
 #include "libwebrtc/api/transport/goog_cc_factory.h"
-#include "RTC/SendTransportController/network_types.h" // webrtc::TargetTransferRate
-#include "RTC/SendTransportController/pacing/packet_router.h"
-#include "RTC/SendTransportController/rtp_transport_controller_send.h"
+#include "libwebrtc/api/transport/network_types.h"
+#include "libwebrtc/modules/pacing/packet_router.h"
+#include "libwebrtc/call/rtp_transport_controller_send.h"
 #include "handles/Timer.hpp"
 
 namespace RTC
