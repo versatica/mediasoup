@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
-#define MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
+#ifndef MS_RTC_LIBWEBRTC_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
+#define MS_RTC_LIBWEBRTC_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_HPP
 
 #include "common.hpp"
 #include "RTC/RateCalculator.hpp"
-#include "RTC/RembServer/AimdRateControl.hpp"
-#include "RTC/RembServer/InterArrival.hpp"
-#include "RTC/RembServer/OveruseDetector.hpp"
-#include "RTC/RembServer/OveruseEstimator.hpp"
-#include "RTC/RembServer/RemoteBitrateEstimator.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/AimdRateControl.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/InterArrival.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/OveruseDetector.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/OveruseEstimator.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimator.hpp"
 #include <cassert>
 #include <list>
 #include <map>
@@ -26,7 +26,7 @@
 
 namespace RTC
 {
-	namespace RembServer
+	namespace libwebrtc
 	{
 		struct Probe
 		{
@@ -152,7 +152,7 @@ namespace RTC
 		{
 			this->remoteRate.SetMinBitrate(minBitrateBps);
 		}
-	} // namespace RembServer
+	} // namespace libwebrtc
 } // namespace RTC
 
 #endif

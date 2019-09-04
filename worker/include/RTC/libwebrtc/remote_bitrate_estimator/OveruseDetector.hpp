@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MS_RTC_REMB_SERVER_OVERUSE_DETECTOR_HPP
-#define MS_RTC_REMB_SERVER_OVERUSE_DETECTOR_HPP
+#ifndef MS_RTC_LIBWEBRTC_OVERUSE_DETECTOR_HPP
+#define MS_RTC_LIBWEBRTC_OVERUSE_DETECTOR_HPP
 
 #include "common.hpp"
-#include "RTC/RembServer/BandwidthUsage.hpp"
-#include "RTC/RembServer/RateControlRegion.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/BandwidthUsage.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/RateControlRegion.hpp"
 #include <list>
 
 namespace RTC
 {
-	namespace RembServer
+	namespace libwebrtc
 	{
 		class OveruseDetector
 		{
@@ -57,7 +57,7 @@ namespace RTC
 		{
 			return this->hypothesis;
 		}
-	} // namespace RembServer
+	} // namespace libwebrtc
 } // namespace RTC
 
 #endif

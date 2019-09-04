@@ -10,8 +10,8 @@
 
 // This class estimates the incoming available bandwidth.
 
-#ifndef MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_HPP
-#define MS_RTC_REMB_SERVER_REMOTE_BITRATE_ESTIMATOR_HPP
+#ifndef MS_RTC_LIBWEBRTC_REMOTE_BITRATE_ESTIMATOR_HPP
+#define MS_RTC_LIBWEBRTC_REMOTE_BITRATE_ESTIMATOR_HPP
 
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -20,7 +20,7 @@
 
 namespace RTC
 {
-	namespace RembServer
+	namespace libwebrtc
 	{
 		// (jmillan) borrowed from webrtc/modules/include/module_common_types.h
 		//
@@ -89,7 +89,7 @@ namespace RTC
 		{
 			return this->availableBitrate;
 		}
-	} // namespace RembServer
+	} // namespace libwebrtc
 } // namespace RTC
 
 #endif

@@ -2,13 +2,17 @@
 #define MS_RTC_TRANSPORT_CONGESTION_CONTROL_SERVER_HPP
 
 #include "common.hpp"
+#include "RTC/BweType.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "RTC/RtpPacket.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "handles/Timer.hpp"
 
 namespace RTC
 {
-	class TransportCongestionControlServer : public Timer::Listener
+	class TransportCongestionControlServer : public RTC::libwebrtc::RemoteBitrateEstimator::Listener,
+	                                         public Timer::Listener
 	{
 	public:
 		class Listener
@@ -20,17 +24,29 @@ namespace RTC
 
 	public:
 		TransportCongestionControlServer(
-		  RTC::TransportCongestionControlServer::Listener* listener, size_t maxRtcpPacketLen);
+		  RTC::TransportCongestionControlServer::Listener* listener,
+		  RTC::BweType bweType,
+		  size_t maxRtcpPacketLen);
 		virtual ~TransportCongestionControlServer();
 
 	public:
-		void SetRtcpSsrcs(uint32_t senderSsrc, uint32_t mediaSsrc);
+		RTC::BweType GetBweType() const;
 		void TransportConnected();
 		void TransportDisconnected();
-		void IncomingPacket(int64_t arrivalTimeMs, uint16_t wideSeqNumber);
+		uint32_t GetAvailableBitrate() const;
+		void IncomingPacket(uint64_t now, const RTC::RtpPacket* packet);
+		void SetMaxIncomingBitrate(uint32_t bitrate);
 
 	private:
-		void SendFeedback();
+		void SendTransportCcFeedback();
+		void MaySendLimitationRembFeedback(bool force = false);
+
+		/* Pure virtual methods inherited from RTC::libwebrtc::RemoteBitrateEstimator::Listener. */
+	public:
+		void OnRembServerAvailableBitrate(
+		  const RTC::libwebrtc::RemoteBitrateEstimator* remoteBitrateEstimator,
+		  const std::vector<uint32_t>& ssrcs,
+		  uint32_t availableBitrate) override;
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -40,14 +56,37 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		Timer* feedbackSendPeriodicTimer{ nullptr };
-		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> feedbackPacket;
+		Timer* transportCcFeedbackSendPeriodicTimer{ nullptr };
+		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> transportCcFeedbackPacket;
+		RTC::libwebrtc::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.
+		RTC::BweType bweType;
 		size_t maxRtcpPacketLen{ 0u };
-		uint8_t feedbackPacketCount{ 0u };
-		uint32_t senderSsrc{ 0u };
-		uint32_t mediaSsrc{ 0u };
+		uint8_t transportCcFeedbackPacketCount{ 0u };
+		uint32_t transportCcFeedbackSenderSsrc{ 0u };
+		uint32_t transportCcFeedbackMediaSsrc{ 0u };
+		uint32_t maxIncomingBitrate{ 0u };
+		uint64_t limitationRembSentAt{ 0u };
 	};
+
+	/* Inline instance methods. */
+
+	inline RTC::BweType TransportCongestionControlServer::GetBweType() const
+	{
+		return this->bweType;
+	}
+
+	inline uint32_t TransportCongestionControlServer::GetAvailableBitrate() const
+	{
+		switch (this->bweType)
+		{
+			case RTC::BweType::REMB:
+				return this->rembServer->GetAvailableBitrate();
+
+			default:
+				return 0u;
+		}
+	}
 } // namespace RTC
 
 #endif

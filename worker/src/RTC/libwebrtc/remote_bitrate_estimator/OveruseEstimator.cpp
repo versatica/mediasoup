@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "RTC::RembServer::OveruseEstimator"
+#define MS_CLASS "RTC::libwebrtc::OveruseEstimator"
 // #define MS_LOG_DEV
 
-#include "RTC/RembServer/OveruseEstimator.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/OveruseEstimator.hpp"
 #include "Logger.hpp"
 #include <algorithm>
 #include <cmath>
@@ -20,7 +20,7 @@
 
 namespace RTC
 {
-	namespace RembServer
+	namespace libwebrtc
 	{
 		constexpr size_t MinFramePeriodHistoryLength{ 60 };
 		constexpr uint16_t DeltaCounterMax{ 1000 };
@@ -142,5 +142,5 @@ namespace RTC
 			if (this->varNoise < 1)
 				this->varNoise = 1;
 		}
-	} // namespace RembServer
+	} // namespace libwebrtc
 } // namespace RTC

@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "RTC::RembServer::RemoteBitrateEstimatorAbsSendTime"
+#define MS_CLASS "RTC::libwebrtc::RemoteBitrateEstimatorAbsSendTime"
 // #define MS_LOG_DEV
 
-#include "RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "RTC/RembServer/RemoteBitrateEstimator.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimator.hpp"
 #include <algorithm>
 #include <cmath>
 
 namespace RTC
 {
-	namespace RembServer
+	namespace libwebrtc
 	{
 		static constexpr int TimestampGroupLengthMs{ 5 };
 		static constexpr uint32_t AbsSendTimeFraction{ 18 };
@@ -424,5 +424,5 @@ namespace RTC
 
 			return true;
 		}
-	} // namespace RembServer
+	} // namespace libwebrtc
 } // namespace RTC

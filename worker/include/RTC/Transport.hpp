@@ -14,7 +14,6 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RembClient.hpp"
-#include "RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -36,7 +35,6 @@ namespace RTC
 	                  public RTC::DataConsumer::Listener,
 	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::RembClient::Listener,
-	                  public RTC::RembServer::RemoteBitrateEstimator::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Timer::Listener
@@ -139,7 +137,6 @@ namespace RTC
 		virtual void SendSctpData(const uint8_t* data, size_t len)             = 0;
 		void DistributeAvailableOutgoingBitrate();
 		void ComputeOutgoingDesiredBitrate();
-		void MaySetIncomingBitrateLimitationByRemb();
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
@@ -197,13 +194,6 @@ namespace RTC
 		  uint32_t availableBitrate,
 		  uint32_t previousAvailableBitrate) override;
 
-		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
-	public:
-		void OnRembServerAvailableBitrate(
-		  const RTC::RembServer::RemoteBitrateEstimator* remoteBitrateEstimator,
-		  const std::vector<uint32_t>& ssrcs,
-		  uint32_t availableBitrate) override;
-
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
 		void OnTransportCongestionControlClientAvailableBitrate(
@@ -241,7 +231,6 @@ namespace RTC
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		Timer* rtcpTimer{ nullptr };
 		RTC::RembClient* rembClient{ nullptr };
-		RTC::RembServer::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
 		// Others.
@@ -251,11 +240,9 @@ namespace RTC
 		RTC::SctpListener sctpListener;
 		RTC::RateCalculator recvTransmission;
 		RTC::RateCalculator sendTransmission;
-		uint32_t initialAvailableOutgoingBitrate{ 600000 };
-		uint32_t maxIncomingBitrate{ 0 };
-		bool incomingBitrateLimitedByRemb{ false };
-		uint64_t lastRembSentAt{ 0u };
-		uint16_t transportWideSeq{ 0u };
+		uint16_t transportWideCcSeq{ 0u };
+		uint32_t initialAvailableOutgoingBitrate{ 600000u };
+		uint32_t maxIncomingBitrate{ 0u };
 	};
 
 	/* Inline instance methods. */

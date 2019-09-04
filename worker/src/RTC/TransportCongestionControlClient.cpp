@@ -19,7 +19,7 @@ namespace RTC
 
 	TransportCongestionControlClient::TransportCongestionControlClient(
 	  RTC::TransportCongestionControlClient::Listener* listener,
-	  BweType bweType,
+	  RTC::BweType bweType,
 	  uint32_t initialAvailableBitrate)
 	  : listener(listener)
 	{
@@ -32,7 +32,7 @@ namespace RTC
 		// TODO: Create controller factory. Let's see.
 		webrtc::GoogCcFactoryConfig config;
 
-		config.feedback_only = bweType == BweType::TRANSPORT_WIDE_CONGESTION;
+		config.feedback_only = bweType == RTC::BweType::TRANSPORT_CC;
 
 		this->controllerFactory = new webrtc::GoogCcNetworkControllerFactory(std::move(config));
 

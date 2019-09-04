@@ -1,11 +1,12 @@
 #define MS_CLASS "RTC::Transport"
-#define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "RTC/Transport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
+#include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
@@ -18,16 +19,10 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
-#include <iterator> // std::ostream_iterator
-#include <map>      // std::multimap
-#include <sstream>  // std::ostringstream
+#include <map> // std::multimap
 
 namespace RTC
 {
-	/* Static. */
-
-	static constexpr uint64_t IncomingBitrateLimitationByRembInterval{ 1500 }; // In ms.
-
 	/* Instance methods. */
 
 	Transport::Transport(const std::string& id, Listener* listener, json& data)
@@ -173,10 +168,6 @@ namespace RTC
 		// Delete REMB client.
 		delete this->rembClient;
 		this->rembClient = nullptr;
-
-		// Delete REMB server.
-		delete this->rembServer;
-		this->rembServer = nullptr;
 
 		// Delete Transport-CC client.
 		delete this->tccClient;
@@ -418,8 +409,8 @@ namespace RTC
 			jsonObject["availableOutgoingBitrate"] = this->tccClient->GetAvailableBitrate();
 
 		// Add availableIncomingBitrate.
-		if (this->rembServer)
-			jsonObject["availableIncomingBitrate"] = this->rembServer->GetAvailableBitrate();
+		if (this->tccServer && this->tccServer->GetAvailableBitrate() != 0u)
+			jsonObject["availableIncomingBitrate"] = this->tccServer->GetAvailableBitrate();
 
 		// Add maxIncomingBitrate.
 		if (this->maxIncomingBitrate != 0u)
@@ -456,8 +447,6 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE:
 			{
-				static constexpr uint32_t MinBitrate{ 100000 };
-
 				auto jsonBitrateIt = request->data.find("bitrate");
 
 				if (jsonBitrateIt == request->data.end() || !jsonBitrateIt->is_number_unsigned())
@@ -465,15 +454,12 @@ namespace RTC
 
 				this->maxIncomingBitrate = jsonBitrateIt->get<uint32_t>();
 
-				if (this->maxIncomingBitrate != 0u && this->maxIncomingBitrate < MinBitrate)
-					this->maxIncomingBitrate = MinBitrate;
-
 				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
 
 				request->Accept();
 
-				// May set REMB based incoming bitrate limitation.
-				MaySetIncomingBitrateLimitationByRemb();
+				if (this->tccServer)
+					this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 
 				break;
 			}
@@ -556,67 +542,70 @@ namespace RTC
 				auto& codecs                = producer->GetRtpParameters().codecs;
 
 				// Set TransportCongestionControl server:
-				// - if not already set, and
-				// - if there it not REMB server, and
-				// - there is transport-wide-cc-01 RTP header extension, and
-				// - there is "transport-cc" in codecs RTCP feedback.
-				//
-				// clang-format off
-				if (
-					!this->tccServer &&
-					!this->rembServer &&
-					rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-					std::any_of(
-						codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-						{
-							return std::any_of(
-								codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-								{
-									return fb.type == "transport-cc";
-								});
-						})
-				)
-				// clang-format on
+				if (!this->tccServer)
 				{
-					MS_DEBUG_TAG(bwe, "enabling TransportCongestionControl server");
+					bool createTccServer{ false };
+					RTC::BweType bweType;
 
-					this->tccServer = new RTC::TransportCongestionControlServer(this, RTC::MtuSize);
+					// Use transport-cc if:
+					// - there is transport-wide-cc-01 RTP header extension, and
+					// - there is "transport-cc" in codecs RTCP feedback.
+					//
+					// clang-format off
+					if (
+						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "transport-cc";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControl server with transport-cc");
 
-					// If the transport is connected, tell the Transport-CC server.
-					if (IsConnected())
-						this->tccServer->TransportConnected();
+						createTccServer = true;
+						bweType         = RTC::BweType::TRANSPORT_CC;
+					}
+					// Use REMB if:
+					// - there is abs-send-time RTP header extension, and
+					// - there is "remb" in codecs RTCP feedback.
+					//
+					// clang-format off
+					else if (
+						rtpHeaderExtensionIds.absSendTime != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "goog-remb";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControl server with REMB");
+
+						createTccServer = true;
+						bweType         = RTC::BweType::REMB;
+					}
+
+					if (createTccServer)
+					{
+						this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
+
+						this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+
+						if (IsConnected())
+							this->tccServer->TransportConnected();
+					}
 				}
-
-				// Set REMB server:
-				// - if not already set, and
-				// - if there it not TransportCongestionControl server, and
-				// - there is abs-send-time RTP header extension, and
-				// - there is "remb" in codecs RTCP feedback.
-				//
-				// clang-format off
-				if (
-					!this->rembServer &&
-					!this->tccServer &&
-					rtpHeaderExtensionIds.absSendTime != 0u &&
-					std::any_of(
-						codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-						{
-							return std::any_of(
-								codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-								{
-									return fb.type == "goog-remb";
-								});
-						})
-				)
-				// clang-format on
-				{
-					MS_DEBUG_TAG(bwe, "enabling REMB server");
-
-					this->rembServer = new RTC::RembServer::RemoteBitrateEstimatorAbsSendTime(this);
-				}
-
-				// May set REMB based incoming bitrate limitation.
-				MaySetIncomingBitrateLimitationByRemb();
 
 				break;
 			}
@@ -764,9 +753,9 @@ namespace RTC
 					};
 
 					// TODO: When unified with REMB we must check properly set bweType.
-					RTC::TransportCongestionControlClient::BweType bweType;
+					RTC::BweType bweType;
 
-					bweType = RTC::TransportCongestionControlClient::BweType::TRANSPORT_WIDE_CONGESTION;
+					bweType = RTC::BweType::TRANSPORT_CC;
 
 					this->tccClient = new RTC::TransportCongestionControlClient(
 					  this, bweType, this->initialAvailableOutgoingBitrate);
@@ -1181,30 +1170,9 @@ namespace RTC
 
 		auto now = DepLibUV::GetTime();
 
-		// Feed the REMB server.
-		if (this->rembServer)
-		{
-			uint32_t absSendTime;
-
-			if (packet->ReadAbsSendTime(absSendTime))
-			{
-				this->rembServer->IncomingPacket(now, packet->GetPayloadLength(), *packet, absSendTime);
-			}
-		}
-
-		// Feed the TransportCongestionControl server.
+		// Feed the transport congestion server.
 		if (this->tccServer)
-		{
-			uint16_t wideSeqNumber;
-
-			if (packet->ReadTransportWideCc01(wideSeqNumber))
-			{
-				// Update the RTCP media SSRC of the ongoing Transport Feedback packet.
-				this->tccServer->SetRtcpSsrcs(0, packet->GetSsrc());
-
-				this->tccServer->IncomingPacket(now, wideSeqNumber);
-			}
-		}
+			this->tccServer->IncomingPacket(now, packet);
 
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
@@ -1232,25 +1200,6 @@ namespace RTC
 		producer->ReceiveRtpPacket(packet);
 
 		delete packet;
-
-		// If REMB based incoming bitrate limitation is enabled, check whether
-		// we should send a REMB now.
-		// clang-format off
-		if (
-			this->incomingBitrateLimitedByRemb &&
-			now - this->lastRembSentAt > IncomingBitrateLimitationByRembInterval
-		)
-		// clang-format on
-		{
-			RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
-
-			packet.SetBitrate(this->maxIncomingBitrate);
-			packet.Serialize(RTC::RTCP::Buffer);
-
-			SendRtcpPacket(&packet);
-
-			this->lastRembSentAt = now;
-		}
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
@@ -1533,18 +1482,16 @@ namespace RTC
 						// Store REMB info.
 						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
 						{
-							// TMP: ignore REMB.
-							/*
-							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
+							// TODO: ehhh, what?
+							// auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
-							// Pass it to the REMB client.
-							if (this->rembClient)
-							  this->rembClient->ReceiveRembFeedback(remb);
+							// // Pass it to the REMB client.
+							// if (this->rembClient)
+							//   this->rembClient->ReceiveRembFeedback(remb);
 
-							// Pass it to the TCC client.
-							if (this->tccClient)
-							  this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
-							*/
+							// // Pass it to the TCC client.
+							// if (this->tccClient)
+							//   this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
 
 							break;
 						}
@@ -1960,57 +1907,6 @@ namespace RTC
 		  totalDesiredBitrate / 2, totalDesiredBitrate / 4, totalDesiredBitrate);
 	}
 
-	void Transport::MaySetIncomingBitrateLimitationByRemb()
-	{
-		MS_TRACE();
-
-		// Enable REMB based incoming bitrate limitation if:
-		// - REMB server is not running (the endpoint may be using Transport-CC instead), and
-		// - abs-send-time RTP extension has been negotiated, and
-		// - the app called setMaxIncomingBitrate() with a value > 0.
-		//
-		// clang-format off
-		if (
-			!this->rembServer &&
-			this->rtpHeaderExtensionIds.absSendTime != 0u &&
-			this->maxIncomingBitrate > 0u
-		)
-		// clang-format on
-		{
-			// If it was already set, do nothing.
-			if (this->incomingBitrateLimitedByRemb)
-				return;
-
-			MS_DEBUG_TAG(
-			  bwe,
-			  "enabling REMB based incoming bitrate limitation [bitrate:%" PRIu32 "]",
-			  this->maxIncomingBitrate);
-
-			this->incomingBitrateLimitedByRemb = true;
-		}
-		else
-		{
-			// If it was already unset, do nothing.
-			if (!this->incomingBitrateLimitedByRemb)
-				return;
-
-			MS_DEBUG_TAG(bwe, "disabling REMB based incoming bitrate limitation");
-
-			this->incomingBitrateLimitedByRemb = false;
-
-			// NOTE: By sending a REMB with bitrate set to 0, libwebrtc resets the
-			// latest received REMB value.
-			RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
-
-			packet.SetBitrate(0);
-			packet.Serialize(RTC::RTCP::Buffer);
-
-			// NOTE: Send two packets just in case the first one is lost.
-			SendRtcpPacket(&packet);
-			SendRtcpPacket(&packet);
-		}
-	}
-
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
 	{
 		MS_TRACE();
@@ -2077,9 +1973,9 @@ namespace RTC
 		MS_TRACE();
 
 		// Update transport wide sequence number if present.
-		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
-			this->transportWideSeq++;
+			this->transportWideCcSeq++;
 
 			if (this->tccClient)
 			{
@@ -2090,7 +1986,7 @@ namespace RTC
 				webrtc::RtpPacketSendInfo packetInfo;
 
 				packetInfo.ssrc                      = packet->GetSsrc();
-				packetInfo.transport_sequence_number = this->transportWideSeq;
+				packetInfo.transport_sequence_number = this->transportWideCcSeq;
 				packetInfo.has_rtp_sequence_number   = true;
 				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 				packetInfo.length                    = packet->GetSize();
@@ -2116,9 +2012,9 @@ namespace RTC
 		packet->UpdateAbsSendTime(DepLibUV::GetTime());
 
 		// Update transport wide sequence number if present.
-		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
-			this->transportWideSeq++;
+			this->transportWideCcSeq++;
 
 			if (this->tccClient)
 			{
@@ -2129,7 +2025,7 @@ namespace RTC
 				webrtc::RtpPacketSendInfo packetInfo;
 
 				packetInfo.ssrc                      = packet->GetSsrc();
-				packetInfo.transport_sequence_number = this->transportWideSeq;
+				packetInfo.transport_sequence_number = this->transportWideCcSeq;
 				packetInfo.has_rtp_sequence_number   = true;
 				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 				packetInfo.length                    = packet->GetSize();
@@ -2346,41 +2242,6 @@ namespace RTC
 		ComputeOutgoingDesiredBitrate();
 	}
 
-	inline void Transport::OnRembServerAvailableBitrate(
-	  const RTC::RembServer::RemoteBitrateEstimator* /*rembServer*/,
-	  const std::vector<uint32_t>& ssrcs,
-	  uint32_t availableBitrate)
-	{
-		MS_TRACE();
-
-		// Limit announced bitrate if requested via API.
-		if (this->maxIncomingBitrate != 0u)
-			availableBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
-
-#ifdef MS_LOG_DEV
-		std::ostringstream ssrcsStream;
-
-		if (!ssrcs.empty())
-		{
-			std::copy(ssrcs.begin(), ssrcs.end() - 1, std::ostream_iterator<uint32_t>(ssrcsStream, ","));
-			ssrcsStream << ssrcs.back();
-		}
-
-		MS_DEBUG_DEV(
-		  "sending RTCP REMB packet [bitrate:%" PRIu32 ", ssrcs:%s]",
-		  availableBitrate,
-		  ssrcsStream.str().c_str());
-#endif
-
-		RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
-
-		packet.SetBitrate(availableBitrate);
-		packet.SetSsrcs(ssrcs);
-		packet.Serialize(RTC::RTCP::Buffer);
-
-		SendRtcpPacket(&packet);
-	}
-
 	inline void Transport::OnTransportCongestionControlClientAvailableBitrate(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
 	  uint32_t availableBitrate,
@@ -2405,9 +2266,9 @@ namespace RTC
 		MS_TRACE();
 
 		// Update transport wide sequence number if present.
-		if (packet->UpdateTransportWideCc01(this->transportWideSeq + 1))
+		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
-			this->transportWideSeq++;
+			this->transportWideCcSeq++;
 
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packet->GetSize());
@@ -2415,7 +2276,7 @@ namespace RTC
 			webrtc::RtpPacketSendInfo packetInfo;
 
 			packetInfo.ssrc                      = packet->GetSsrc();
-			packetInfo.transport_sequence_number = this->transportWideSeq;
+			packetInfo.transport_sequence_number = this->transportWideCcSeq;
 			packetInfo.has_rtp_sequence_number   = true;
 			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 			packetInfo.length                    = packet->GetSize();

@@ -2,12 +2,13 @@
 #define MS_RTC_TRANSPORT_CONGESTION_CONTROL_CLIENT_HPP
 
 #include "common.hpp"
+#include "RTC/BweType.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpProbationGenerator.hpp"
 #include "RTC/SendTransportController/goog_cc_factory.h"
-#include "RTC/SendTransportController/network_types.h" // TargetTransferRate
+#include "RTC/SendTransportController/network_types.h" // webrtc::TargetTransferRate
 #include "RTC/SendTransportController/pacing/packet_router.h"
 #include "RTC/SendTransportController/rtp_transport_controller_send.h"
 #include "handles/Timer.hpp"
@@ -18,13 +19,6 @@ namespace RTC
 	                                         public webrtc::TargetTransferRateObserver,
 	                                         public Timer::Listener
 	{
-	public:
-		enum class BweType
-		{
-			TRANSPORT_WIDE_CONGESTION = 1,
-			REMB
-		};
-
 	public:
 		class Listener
 		{
@@ -43,7 +37,7 @@ namespace RTC
 	public:
 		TransportCongestionControlClient(
 		  RTC::TransportCongestionControlClient::Listener* listener,
-		  BweType bweType,
+		  RTC::BweType bweType,
 		  uint32_t initialAvailableBitrate);
 		virtual ~TransportCongestionControlClient();
 

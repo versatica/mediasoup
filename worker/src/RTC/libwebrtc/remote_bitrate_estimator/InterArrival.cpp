@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "RTC::RembServer::InterArrival"
+#define MS_CLASS "RTC::libwebrtc::InterArrival"
 // #define MS_LOG_DEV
 
-#include "RTC/RembServer/InterArrival.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/InterArrival.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp" // LatestTimestamp
 #include <algorithm>
@@ -19,7 +19,7 @@
 
 namespace RTC
 {
-	namespace RembServer
+	namespace libwebrtc
 	{
 		static constexpr int BurstDeltaThresholdMs{ 5 };
 
@@ -188,5 +188,5 @@ namespace RTC
 			this->currentTimestampGroup          = TimestampGroup();
 			this->prevTimestampGroup             = TimestampGroup();
 		}
-	} // namespace RembServer
+	} // namespace libwebrtc
 } // namespace RTC

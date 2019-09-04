@@ -8,21 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "RTC::RembServer::RemoteBitrateEstimatorSingleStream"
+#define MS_CLASS "RTC::libwebrtc::RemoteBitrateEstimatorSingleStream"
 // #define MS_LOG_DEV
 
-#include "RTC/RembServer/RemoteBitrateEstimatorSingleStream.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimatorSingleStream.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "RTC/RembServer/AimdRateControl.hpp"
-#include "RTC/RembServer/InterArrival.hpp"
-#include "RTC/RembServer/OveruseDetector.hpp"
-#include "RTC/RembServer/OveruseEstimator.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/AimdRateControl.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/InterArrival.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/OveruseDetector.hpp"
+#include "RTC/libwebrtc/remote_bitrate_estimator/OveruseEstimator.hpp"
 #include <utility> // std::make_pair()
 
 namespace RTC
 {
-	namespace RembServer
+	namespace libwebrtc
 	{
 		void RemoteBitrateEstimatorSingleStream::IncomingPacket(
 		  int64_t arrivalTimeMs,
@@ -205,5 +205,5 @@ namespace RTC
 				(*ssrcs)[i] = it->first;
 			}
 		}
-	} // namespace RembServer
+	} // namespace libwebrtc
 } // namespace RTC
