@@ -115,7 +115,6 @@
       'libwebrtc/modules/congestion_controller/rtp/transport_feedback_adapter.h',
       'libwebrtc/modules/congestion_controller/rtp/control_handler.h',
       'libwebrtc/rtcp_helpers.h',
-      'libwebrtc/rtp_packet_send_result.h',
     ],
     'include_dirs':
     [

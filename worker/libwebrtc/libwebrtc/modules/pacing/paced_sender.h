@@ -17,8 +17,8 @@
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
 #include "modules/pacing/packet_router.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "rtc_base/experiments/field_trial_parser.h"
-#include "rtp_packet_send_result.h" // TODO: Replace it.
 
 #include "RTC/RtpPacket.hpp"
 
