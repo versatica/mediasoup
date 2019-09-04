@@ -47,7 +47,7 @@ FixNamespaceComments: true
 IncludeCategories:
   - Regex:    '"common.hpp"'
     Priority: 1
-  - Regex:    '^"(Channel|RTC|handles)/'
+  - Regex:    '^"(Channel|RTC|Utils|handles)/'
     Priority: 3
   - Regex:    '"*"'
     Priority: 2
