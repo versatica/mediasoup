@@ -8,11 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "GoogCCNetworkControl"
+#define MS_CLASS "webrtc::GoogCcNetworkController"
 // #define MS_LOG_DEV
 
 #include "modules/congestion_controller/goog_cc/goog_cc_network_control.h"
-
 #include "api/units/time_delta.h"
 #include "modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator.h"
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
@@ -31,7 +30,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 
 namespace webrtc {
 namespace {

@@ -1,6 +1,3 @@
-#define MS_CLASS "webrtc::AlrDetector"
-// #define MS_LOG_DEV
-
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -10,6 +7,9 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+
+#define MS_CLASS "webrtc::AlrDetector"
+// #define MS_LOG_DEV
 
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
 #include "rtc_base/enumerics/safe_conversions.h"

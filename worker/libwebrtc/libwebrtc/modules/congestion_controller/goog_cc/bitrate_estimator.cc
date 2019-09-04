@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#define MS_CLASS "BitrateEstimator"
+#define MS_CLASS "webrtc::BitrateEstimator"
 // #define MS_LOG_DEV
 
 #include "modules/congestion_controller/goog_cc/bitrate_estimator.h"
