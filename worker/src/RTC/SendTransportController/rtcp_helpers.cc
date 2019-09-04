@@ -23,7 +23,7 @@ const std::vector<ReceivedPacket> GetReceivedPackets(const RTC::RTCP::FeedbackRt
 // Get the reference time in microseconds, including any precision loss.
 int64_t GetBaseTimeUs(const RTC::RTCP::FeedbackRtpTransportPacket* packet)
 {
-  return static_cast<int64_t>(packet->GetReferenceTime() * 64 * 1000);
+  return packet->GetReferenceTimestamp() * 1000;
 }
 
 // Get the unwrapped delta between current base time and |prev_timestamp_us|.

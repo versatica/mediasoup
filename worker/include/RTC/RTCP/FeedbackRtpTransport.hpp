@@ -182,6 +182,7 @@ namespace RTC
 			uint16_t GetBaseSequenceNumber() const;
 			uint16_t GetPacketStatusCount() const;
 			int32_t GetReferenceTime() const;
+			int64_t GetReferenceTimestamp() const; // Reference time in ms.
 			uint8_t GetFeedbackPacketCount() const;
 			void SetFeedbackPacketCount(uint8_t count);
 			uint16_t GetLatestSequenceNumber() const; // Just for locally generated packets.
@@ -254,6 +255,11 @@ namespace RTC
 		inline int32_t FeedbackRtpTransportPacket::GetReferenceTime() const
 		{
 			return this->referenceTime;
+		}
+
+		inline int64_t FeedbackRtpTransportPacket::GetReferenceTimestamp() const
+		{
+			return static_cast<int64_t>(this->referenceTime * 64);
 		}
 
 		inline uint8_t FeedbackRtpTransportPacket::GetFeedbackPacketCount() const

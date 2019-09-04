@@ -465,6 +465,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 13);
 		REQUIRE(packet->GetReferenceTime() == 6275825); // 0x5FC2F1 (signed 24 bits)
+		REQUIRE(packet->GetReferenceTimestamp() == 6275825 * 64);
 		REQUIRE(packet->GetFeedbackPacketCount() == 3);
 
 		SECTION("serialize packet")
@@ -499,6 +500,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 0);
 		REQUIRE(packet->GetReferenceTime() == -2); // 0xFFFFFE (signed 24 bits)
+		REQUIRE(packet->GetReferenceTimestamp() == -2 * 64);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 
 		SECTION("serialize packet")
@@ -534,6 +536,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 1);
 		REQUIRE(packet->GetPacketStatusCount() == 2);
 		REQUIRE(packet->GetReferenceTime() == -4368470);
+		REQUIRE(packet->GetReferenceTimestamp() == -4368470 * 64);
 
 		// Let's also test the reference time reported by Wireshark.
 		int32_t wiresharkValue{ 12408746 };
@@ -543,6 +546,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		wiresharkValue = wiresharkValue >> 8;
 
 		REQUIRE(packet->GetReferenceTime() == wiresharkValue);
+		REQUIRE(packet->GetReferenceTimestamp() == wiresharkValue * 64);
 		REQUIRE(packet->GetFeedbackPacketCount() == 0);
 
 		SECTION("serialize packet")
