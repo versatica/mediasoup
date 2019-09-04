@@ -2,6 +2,9 @@
 #include "rtcp_helpers.h"
 #include <vector>
 
+namespace webrtc {
+namespace rtcp_helpers {
+
 const std::vector<webrtc::rtcp::ReceivedPacket> GetReceivedPackets(const RTC::RTCP::FeedbackRtpTransportPacket* packet)
 {
   std::vector<webrtc::rtcp::ReceivedPacket> receivedPackets;
@@ -29,3 +32,5 @@ int64_t GetBaseDeltaUs(const RTC::RTCP::FeedbackRtpTransportPacket* packet, int6
   return GetBaseTimeUs(packet) - prev_timestamp_us;
 }
 
+}  // namespace rtcp_helpers
+}  // namespace webrtc

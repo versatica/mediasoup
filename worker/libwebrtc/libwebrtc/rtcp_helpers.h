@@ -11,6 +11,9 @@
  * Helpers to retrieve necessary data from mediasoup FeedbackRtpTransportPacket.
  */
 
+namespace webrtc {
+namespace rtcp_helpers {
+
 const std::vector<webrtc::rtcp::ReceivedPacket> GetReceivedPackets(const RTC::RTCP::FeedbackRtpTransportPacket* packet);
 
 // Get the reference time in microseconds, including any precision loss.
@@ -21,3 +24,5 @@ int64_t GetBaseDeltaUs(const RTC::RTCP::FeedbackRtpTransportPacket* packet, int6
 
 #endif
 
+}  // namespace rtcp_helpers
+}  // namespace webrtc
