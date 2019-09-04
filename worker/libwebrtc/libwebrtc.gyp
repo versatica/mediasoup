@@ -23,7 +23,6 @@
       'libwebrtc/rtc_base/experiments/rate_control_settings.cc',
       'libwebrtc/rtc_base/network/sent_packet.cc',
       'libwebrtc/call/rtp_transport_controller_send.cc',
-      'libwebrtc/rtcp_helpers.cc',
       'libwebrtc/api/transport/bitrate_settings.cc',
       'libwebrtc/api/transport/field_trial_based_config.cc',
       'libwebrtc/api/transport/network_types.cc',
@@ -117,7 +116,7 @@
       'libwebrtc/modules/congestion_controller/rtp/send_time_history.h',
       'libwebrtc/modules/congestion_controller/rtp/transport_feedback_adapter.h',
       'libwebrtc/modules/congestion_controller/rtp/control_handler.h',
-      'libwebrtc/rtcp_helpers.h',
+      'libwebrtc/mediasoup_helpers.h'
     ],
     'include_dirs':
     [

@@ -15,7 +15,7 @@
 #include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "system_wrappers/source/field_trial.h"
-#include "rtcp_helpers.h"
+#include "mediasoup_helpers.h"
 
 #include "Logger.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
@@ -183,9 +183,11 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
   if (last_timestamp_us_ == kNoTimestamp) {
     current_offset_ms_ = feedback_time.ms();
   } else {
-    current_offset_ms_ += rtcp_helpers::GetBaseDeltaUs(&feedback, last_timestamp_us_) / 1000;
+    current_offset_ms_ +=
+      mediasoup_helpers::FeedbackRtpTransport::GetBaseDeltaUs(&feedback, last_timestamp_us_) / 1000;
   }
-  last_timestamp_us_ = rtcp_helpers::GetBaseTimeUs(&feedback);
+  last_timestamp_us_ =
+    mediasoup_helpers::FeedbackRtpTransport::GetBaseTimeUs(&feedback);
 
   std::vector<PacketFeedback> packet_feedback_vector;
   if (feedback.GetPacketStatusCount() == 0) {
@@ -198,7 +200,7 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
     int64_t offset_us = 0;
     int64_t timestamp_ms = 0;
     uint16_t seq_num = feedback.GetBaseSequenceNumber();
-    for (const auto& packet : rtcp_helpers::GetReceivedPackets(&feedback)) {
+    for (const auto& packet : mediasoup_helpers::FeedbackRtpTransport::GetReceivedPackets(&feedback)) {
       // Insert into the vector those unreceived packets which precede this
       // iteration's received packet.
       for (; seq_num != packet.sequence_number(); ++seq_num) {
