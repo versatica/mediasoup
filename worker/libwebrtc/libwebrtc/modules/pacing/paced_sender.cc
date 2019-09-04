@@ -14,7 +14,7 @@
 #include "modules/pacing/paced_sender.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
-#include "rtp_packet_send_result.h" // TODO: Replace it.
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
