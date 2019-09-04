@@ -24,6 +24,7 @@
             '-Wnull-conversion',
             '-Wobjc-literal-conversion',
             '-Wno-sign-conversion',
+            '-Wno-sign-compare',
             '-Wstring-conversion'
           ],
           'OTHER_CPLUSPLUSFLAGS': [
