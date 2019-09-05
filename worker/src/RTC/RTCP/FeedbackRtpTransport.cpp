@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::FeedbackRtpTransport"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "Logger.hpp"

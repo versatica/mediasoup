@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlServer"
-// TODO.
-#define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "DepLibUV.hpp"
@@ -132,7 +131,25 @@ namespace RTC
 					SendTransportCcFeedback();
 
 					// Pass the packet info to the new feedback packet.
-					this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen);
+					// NTOE: If this fails again, then we must regenerate from scratch the
+					// feedback packet, without adding latest wide seq number and latest
+					// timestamp.
+					if (!this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen))
+					{
+						MS_WARN_DEV("resetting transport-cc feedback packet");
+
+						// Create a new feedback packet.
+						this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
+						  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+
+						// Increment packet count.
+						this->transportCcFeedbackPacket->SetFeedbackPacketCount(
+						  ++this->transportCcFeedbackPacketCount);
+
+						// Pass the packet info to the new feedback packet. It cannot
+						// fail now.
+						this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen);
+					}
 				}
 
 				// If the feedback packet is full, send it now.
