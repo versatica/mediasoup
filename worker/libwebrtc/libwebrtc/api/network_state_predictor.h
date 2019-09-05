@@ -12,6 +12,7 @@
 #define API_NETWORK_STATE_PREDICTOR_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace webrtc {
@@ -22,6 +23,9 @@ enum class BandwidthUsage {
   kBwOverusing = 2,
   kLast
 };
+
+// MS_NOTE: added function.
+std::string BandwidthUsage2String(BandwidthUsage bandwidthUsage);
 
 // TODO(yinwa): work in progress. API in class NetworkStatePredictor should not
 // be used by other users until this comment is removed.

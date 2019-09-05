@@ -210,7 +210,7 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
       detector_state != prev_state_) {
     DataRate bitrate = result.updated ? result.target_bitrate : prev_bitrate_;
 
-    MS_DEBUG_TAG(bwe, "at_time.ms():%lld, target_bitrate_bps: %lld, detector_state: %d", at_time.ms(), bitrate.bps(), detector_state);
+    MS_DEBUG_TAG(bwe, "at_time.ms():%lld, target_bitrate_bps: %lld, detector_state: %s", at_time.ms(), bitrate.bps(), BandwidthUsage2String(detector_state).c_str());
 
     prev_bitrate_ = bitrate;
     prev_state_ = detector_state;

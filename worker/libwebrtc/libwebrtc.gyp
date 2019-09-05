@@ -33,6 +33,7 @@
       'libwebrtc/api/units/data_rate.cc',
       'libwebrtc/api/units/data_size.cc',
       'libwebrtc/api/units/frequency.cc',
+      'libwebrtc/api/network_state_predictor.cc',
       'libwebrtc/modules/pacing/interval_budget.cc',
       'libwebrtc/modules/pacing/packet_router.cc',
       'libwebrtc/modules/pacing/bitrate_prober.cc',
