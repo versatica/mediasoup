@@ -211,7 +211,6 @@ void PacedSender::Process() {
   if (bytes_sent != 0)
   {
     auto now = DepLibUV::GetTime();
-    MS_DUMP("OnPaddingSent(bytes_sent:%zu)", bytes_sent);
     OnPaddingSent(now, bytes_sent);
     prober_.ProbeSent(now, bytes_sent);
   }
