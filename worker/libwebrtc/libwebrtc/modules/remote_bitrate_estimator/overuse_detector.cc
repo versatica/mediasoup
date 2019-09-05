@@ -9,7 +9,7 @@
  */
 
 #include "modules/remote_bitrate_estimator/overuse_detector.h"
-#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "rtc_base/numerics/safe_minmax.h"
 
 #include <math.h>

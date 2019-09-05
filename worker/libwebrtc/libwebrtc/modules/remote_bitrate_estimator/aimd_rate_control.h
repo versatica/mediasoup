@@ -16,7 +16,7 @@
 #include "api/units/data_rate.h"
 #include "api/units/timestamp.h"
 #include "modules/congestion_controller/goog_cc/link_capacity_estimator.h"
-#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
 #include <absl/types/optional.h>

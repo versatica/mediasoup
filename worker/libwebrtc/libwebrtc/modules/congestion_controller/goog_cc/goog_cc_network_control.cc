@@ -16,7 +16,7 @@
 #include "modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator.h"
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
-#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 
 #include "Logger.hpp"
 

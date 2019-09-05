@@ -13,7 +13,7 @@
 
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
 
-#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "rtc_base/numerics/safe_minmax.h"
 
 #include "Logger.hpp"
