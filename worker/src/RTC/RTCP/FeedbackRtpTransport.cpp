@@ -231,7 +231,7 @@ namespace RTC
 			MS_DUMP("  <Deltas>");
 			for (auto delta : this->deltas)
 			{
-				MS_DUMP("    %" PRIi16 "ms", static_cast<int16_t>(delta / 4));
+				MS_DUMP("    %" PRIi16 " ms", static_cast<int16_t>(delta / 4));
 			}
 			MS_DUMP("  </Deltas>");
 
