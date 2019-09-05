@@ -13,6 +13,7 @@
 #ifndef RTC_BASE_NUMERICS_SAFE_CONVERSIONS_IMPL_H_
 #define RTC_BASE_NUMERICS_SAFE_CONVERSIONS_IMPL_H_
 
+#include <cstddef>
 #include <limits>
 
 namespace rtc {
