@@ -121,8 +121,8 @@ namespace RTC
 				this->transportCcFeedbackPacket->SetSenderSsrc(0u);
 				this->transportCcFeedbackPacket->SetMediaSsrc(packet->GetSsrc());
 
-				// Provide the feedback packet with the RTP packet info. If it fails, send
-				// current feedback and add the packet info to a new one.
+				// Provide the feedback packet with the RTP packet info. If it fails,
+				// send current feedback and add the packet info to a new one.
 				if (!this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen))
 				{
 					MS_DEBUG_DEV(
@@ -131,7 +131,7 @@ namespace RTC
 					SendTransportCcFeedback();
 
 					// Pass the packet info to the new feedback packet.
-					// NTOE: If this fails again, then we must regenerate from scratch the
+					// NOTE: If this fails again, then we must regenerate from scratch the
 					// feedback packet, without adding latest wide seq number and latest
 					// timestamp.
 					if (!this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen))
@@ -146,8 +146,8 @@ namespace RTC
 						this->transportCcFeedbackPacket->SetFeedbackPacketCount(
 						  ++this->transportCcFeedbackPacketCount);
 
-						// Pass the packet info to the new feedback packet. It cannot
-						// fail now.
+						// Pass the packet info to the new feedback packet.
+						// NOTE: It cannot fail now.
 						this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen);
 					}
 				}
