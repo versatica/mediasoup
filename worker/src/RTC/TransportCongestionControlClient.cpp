@@ -11,9 +11,6 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
-	// TODO: No. Must be dynamic.
-	// Size of probation packets.
-	static constexpr size_t ProbationPacketSize{ 250u };
 
 	/* Instance methods. */
 
@@ -43,7 +40,7 @@ namespace RTC
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
 		  this, this->predictorFactory, this->controllerFactory, bitrateConfig);
 
-		this->probationGenerator = new RTC::RtpProbationGenerator(ProbationPacketSize);
+		this->probationGenerator = new RTC::RtpProbationGenerator();
 
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
 
@@ -192,13 +189,13 @@ namespace RTC
 		}
 
 		// Emit event if AvailableBitrateEventInterval elapsed
-    // and availableBitrate has changed.
-    /* clang-format off */
+		// and availableBitrate has changed.
+		/* clang-format off */
 		if (
 			now - this->lastAvailableBitrateEventAt >= AvailableBitrateEventInterval &&
 			previousAvailableBitrate != this->availableBitrate
 		)
-    /* clang-format on */
+		/* clang-format on */
 		{
 			notify = true;
 		}
@@ -234,12 +231,11 @@ namespace RTC
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet, pacingInfo);
 	}
 
-	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t /*size*/)
+	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t size)
 	{
 		MS_TRACE();
 
-		// TODO: Must generate a packet of the requested size.
-		return { this->probationGenerator->GetNextPacket() };
+		return { this->probationGenerator->GetNextPacket(size) };
 	}
 
 	void TransportCongestionControlClient::OnTimer(Timer* timer)

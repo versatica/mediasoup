@@ -12,15 +12,13 @@ namespace RTC
 	class RtpProbationGenerator
 	{
 	public:
-		explicit RtpProbationGenerator(size_t probationPacketLen);
+		explicit RtpProbationGenerator();
 		virtual ~RtpProbationGenerator();
 
 	public:
-		RTC::RtpPacket* GetNextPacket();
+		RTC::RtpPacket* GetNextPacket(size_t len);
 
 	private:
-		// Given as argument.
-		size_t probationPacketLen{ 0 };
 		// Allocated by this.
 		uint8_t* probationPacketBuffer{ nullptr };
 		RTC::RtpPacket* probationPacket{ nullptr };

@@ -26,25 +26,23 @@ namespace RTC
 	};
 	// clang-format on
 
+	static constexpr size_t ProbationMtu{ 1200u };
+	static constexpr size_t MaxProbationPayloadLength{ ProbationMtu - sizeof(ProbationPacketHeader) };
+
 	/* Instance methods. */
 
-	RtpProbationGenerator::RtpProbationGenerator(size_t probationPacketLen)
-	  : probationPacketLen(probationPacketLen)
+	RtpProbationGenerator::RtpProbationGenerator()
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->probationPacketLen >= sizeof(ProbationPacketHeader), "probationPacketLen too small");
-
 		// Allocate the probation RTP packet buffer.
-		this->probationPacketBuffer = new uint8_t[this->probationPacketLen];
+		this->probationPacketBuffer = new uint8_t[ProbationMtu];
 
 		// Copy the generic probation RTP packet header into the buffer.
 		std::memcpy(this->probationPacketBuffer, ProbationPacketHeader, sizeof(ProbationPacketHeader));
 
 		// Create the probation RTP packet.
-		this->probationPacket =
-		  RTC::RtpPacket::Parse(this->probationPacketBuffer, this->probationPacketLen);
+		this->probationPacket = RTC::RtpPacket::Parse(this->probationPacketBuffer, ProbationMtu);
 
 		// Set fixed SSRC.
 		this->probationPacket->SetSsrc(RTC::RtpProbationSsrc);
@@ -109,9 +107,15 @@ namespace RTC
 		delete this->probationPacket;
 	}
 
-	RTC::RtpPacket* RtpProbationGenerator::GetNextPacket()
+	RTC::RtpPacket* RtpProbationGenerator::GetNextPacket(size_t len)
 	{
 		MS_TRACE();
+
+		if (len <= sizeof(ProbationPacketHeader))
+			return nullptr;
+
+		if (len > MaxProbationPayloadLength)
+			len = MaxProbationPayloadLength;
 
 		// Just send up to StepNumPackets per step.
 		// Increase RTP seq number and timestamp.
@@ -123,6 +127,7 @@ namespace RTC
 
 		this->probationPacket->SetSequenceNumber(seq);
 		this->probationPacket->SetTimestamp(timestamp);
+		this->probationPacket->SetPayloadLength(len);
 
 		return this->probationPacket;
 	}
