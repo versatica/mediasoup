@@ -12,7 +12,7 @@
 // #define MS_LOG_DEV
 
 #include "modules/bitrate_controller/send_side_bandwidth_estimation.h"
-#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "system_wrappers/source/field_trial.h"
 
 #include "Logger.hpp"

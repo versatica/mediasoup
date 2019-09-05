@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/remote_bitrate_estimator/bwe_defines.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 
 namespace webrtc {
 
