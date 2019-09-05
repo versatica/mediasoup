@@ -35,7 +35,6 @@
       'libwebrtc/api/units/frequency.cc',
       'libwebrtc/api/network_state_predictor.cc',
       'libwebrtc/modules/pacing/interval_budget.cc',
-      'libwebrtc/modules/pacing/packet_router.cc',
       'libwebrtc/modules/pacing/bitrate_prober.cc',
       'libwebrtc/modules/pacing/paced_sender.cc',
       'libwebrtc/modules/remote_bitrate_estimator/overuse_detector.cc',

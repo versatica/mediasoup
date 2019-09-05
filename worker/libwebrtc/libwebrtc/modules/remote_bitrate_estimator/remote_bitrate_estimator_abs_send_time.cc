@@ -35,7 +35,7 @@ absl::optional<DataRate> OptionalRateFromOptionalBps(
 }  // namespace
 
 enum {
-  //jmillan. kAbsSendTimeFraction was RTPHeaderExtension::kAbsSendTimeFraction.
+  // MS_NOTE: kAbsSendTimeFraction taken from RTPHeaderExtension::kAbsSendTimeFraction.
   kAbsSendTimeFraction = 18,
   kTimestampGroupLengthMs = 5,
   kAbsSendTimeInterArrivalUpshift = 8,
@@ -151,7 +151,7 @@ RemoteBitrateEstimatorAbsSendTime::FindBestProbe(
         best_it = it;
       }
     } else {
-// jmillan: avoid 'unused variable' compiler warning.
+// MS_NOTE: avoid 'unused variable' compiler warning.
 #ifdef MS_LOG_DEV
       int send_bitrate_bps = it->mean_size * 8 * 1000 / it->send_mean_ms;
       int recv_bitrate_bps = it->mean_size * 8 * 1000 / it->recv_mean_ms;

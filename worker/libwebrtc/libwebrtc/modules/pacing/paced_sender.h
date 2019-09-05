@@ -67,8 +67,7 @@ class PacedSender {
 
   // Adds the packet information to the queue and calls TimeToSendPacket
   // when it's time to send.
-  // jmillan: defined in:
-  // #include "modules/rtp_rtcp/include/rtp_packet_sender.h"
+  // MS_NOTE: defined in "modules/rtp_rtcp/include/rtp_packet_sender.h"
   void InsertPacket(size_t bytes);
 
   // Currently audio traffic is not accounted by pacer and passed through.

@@ -57,10 +57,10 @@ class TransportFeedbackAdapter {
   int64_t current_offset_ms_;
   int64_t last_timestamp_us_;
   std::vector<PacketFeedback> last_packet_feedback_vector_;
+  // MS_NOTE: local_net_id_ and remote_net_id_ are not set.
   uint16_t local_net_id_;
   uint16_t remote_net_id_;
 
-  // jmillan: must be a single instance (not a vector), and passed on constructor.
   std::vector<PacketFeedbackObserver*> observers_;
 };
 

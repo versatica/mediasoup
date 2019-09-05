@@ -92,7 +92,7 @@ class RtpTransportControllerSendInterface {
 
   virtual void SetPacingFactor(float pacing_factor) = 0;
 
-  // jmillan: observers must be set upon construction.
+  // MS_NOTE: not used.
   // virtual void RegisterPacketFeedbackObserver(
       // PacketFeedbackObserver* observer) = 0;
   // virtual void DeRegisterPacketFeedbackObserver(
@@ -102,11 +102,10 @@ class RtpTransportControllerSendInterface {
   virtual void OnNetworkAvailability(bool network_available) = 0;
   virtual RtcpBandwidthObserver* GetBandwidthObserver() = 0;
   virtual void EnablePeriodicAlrProbing(bool enable) = 0;
-  // jmillan.
-  // virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;
+  // MS_NOTE: signature changed.
   virtual void OnSentPacket(const rtc::SentPacket& sent_packet, size_t size) = 0;
 
-  // jmillan
+  // MS_NOTE: not used.
   // virtual void SetClientBitratePreferences(
       // const BitrateSettings& preferences) = 0;
 

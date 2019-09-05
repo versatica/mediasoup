@@ -64,7 +64,6 @@ void TransportFeedbackAdapter::AddPacket(const RtpPacketSendInfo& packet_info,
                                          size_t overhead_bytes,
                                          Timestamp creation_time) {
   {
-    // jmillan: local_net_id_ and remote_net_id_ are not set. Remove them.
     PacketFeedback packet_feedback(
         creation_time.ms(), packet_info.transport_sequence_number,
         packet_info.length + overhead_bytes, local_net_id_, remote_net_id_,
@@ -74,7 +73,7 @@ void TransportFeedbackAdapter::AddPacket(const RtpPacketSendInfo& packet_info,
       packet_feedback.rtp_sequence_number = packet_info.rtp_sequence_number;
     }
 
-    // jmillan: TMP.
+    // MS_NOTE: TODO remove.
     // MS_DUMP("packet_feedback.arrival_time_ms: %" PRIi64, packet_feedback.arrival_time_ms);
     // MS_DUMP("packet_feedback.send_time_ms: %" PRIi64, packet_feedback.send_time_ms);
     // MS_DUMP("packet_feedback.sequence_number: %" PRIu16, packet_feedback.sequence_number);
@@ -115,7 +114,6 @@ absl::optional<SentPacket> TransportFeedbackAdapter::ProcessSentPacket(
       msg.send_time = Timestamp::ms(packet->send_time_ms);
       msg.sequence_number = packet->long_sequence_number;
       msg.prior_unacked_data = DataSize::bytes(packet->unacknowledged_data);
-      // jmillan: local_net_id_ and remote_net_id_ are not set. Remove them.
       msg.data_in_flight =
           send_time_history_.GetOutstandingData(local_net_id_, remote_net_id_);
       return msg;
@@ -170,7 +168,6 @@ TransportFeedbackAdapter::ProcessTransportFeedback(
 }
 
 DataSize TransportFeedbackAdapter::GetOutstandingData() const {
-  // jmillan: local_net_id_ and remote_net_id_ are not set. Remove them.
   return send_time_history_.GetOutstandingData(local_net_id_, remote_net_id_);
 }
 
@@ -209,7 +206,6 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
         // as received by another feedback.
         if (!send_time_history_.GetFeedback(&packet_feedback, false))
           ++failed_lookups;
-        // jmillan: local_net_id_ and remote_net_id_ are not set. Remove them.
         if (packet_feedback.local_net_id == local_net_id_ &&
             packet_feedback.remote_net_id == remote_net_id_) {
           packet_feedback_vector.push_back(packet_feedback);

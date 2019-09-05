@@ -63,8 +63,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from webrtc::PacketRouter. */
 	public:
-		virtual void SendPacket(RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
-		virtual std::vector<RTC::RtpPacket*> GeneratePadding(size_t size) override;
+		void SendPacket(RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
+		std::vector<RTC::RtpPacket*> GeneratePadding(size_t size) override;
 
 		/* Pure virtual methods inherited from RTC::Timer. */
 	public:

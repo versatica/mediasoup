@@ -82,7 +82,7 @@ class RemoteBitrateEstimator {
 
   virtual void SetMinBitrate(int min_bitrate_bps) = 0;
 
-// jmillan.
+ // MS_NOTE: added method.
  public:
   uint32_t GetAvailableBitrate() const;
 

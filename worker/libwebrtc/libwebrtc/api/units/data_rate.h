@@ -83,7 +83,7 @@ class DataRate final : public rtc_units_impl::RelativeUnit<DataRate> {
 
 namespace data_rate_impl {
 inline int64_t Microbits(const DataSize& size) {
-  // TODO: jmillan
+  // MS_NOTE: check removed.
   // constexpr int64_t kMaxBeforeConversion =
       // std::numeric_limits<int64_t>::max() / 8000000;
   // RTC_DCHECK_LE(size.bytes(), kMaxBeforeConversion)
@@ -92,7 +92,7 @@ inline int64_t Microbits(const DataSize& size) {
 }
 
 inline int64_t MillibytePerSec(const DataRate& size) {
-  // TODO: jmillan
+  // MS_NOTE: check removed.
   // constexpr int64_t kMaxBeforeConversion =
       // std::numeric_limits<int64_t>::max() / (1000 / 8);
   // RTC_DCHECK_LE(size.bps(), kMaxBeforeConversion)

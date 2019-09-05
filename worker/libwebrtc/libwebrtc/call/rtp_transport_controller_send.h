@@ -67,7 +67,7 @@ class RtpTransportControllerSend final
   void EnablePeriodicAlrProbing(bool enable) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet, size_t size) override;
 
-  // jmillan
+  // MS_NOTE: not used.
   // void SetClientBitratePreferences(const BitrateSettings& preferences) override;
 
   void OnTransportOverheadChanged(
@@ -126,7 +126,7 @@ class RtpTransportControllerSend final
 	StreamsConfig streams_config_;
 
   const bool send_side_bwe_with_overhead_;
-  // jmillan: deleted
+  // MS_NOTE: not used.
   // const bool add_pacing_to_cwin_;
   // Transport overhead is written by OnNetworkRouteChanged and read by
   // AddPacket.

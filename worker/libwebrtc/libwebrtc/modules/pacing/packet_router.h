@@ -33,10 +33,10 @@ class PacketRouter {
   ~PacketRouter() = default;
 
   virtual void SendPacket(RTC::RtpPacket* packet,
-                          const PacedPacketInfo& cluster_info);
+                          const PacedPacketInfo& cluster_info) = 0;
 
   virtual std::vector<RTC::RtpPacket*> GeneratePadding(
-      size_t target_size_bytes);
+      size_t target_size_bytes) = 0;
 };
 }  // namespace webrtc
 #endif  // MODULES_PACING_PACKET_ROUTER_H_
