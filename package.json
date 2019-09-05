@@ -30,11 +30,11 @@
     "test": "npm run test:node && npm run test:worker",
     "test:node": "npm run postinstall && jest",
     "test:worker": "run-script-os",
-    "test:worker:win32": "echo test:worker not support yet!!! run test in visual studio!!!",
+    "test:worker:win32": "\"\"%NODE%\"\" ./worker/win-tasks.js test",
     "test:worker:default": "make test -C worker",
     "coverage:node": "npm run postinstall && jest --coverage && open-cli coverage/lcov-report/index.html",
     "postinstall": "run-script-os",
-    "postinstall:win32": "python ./worker/scripts/configure.py --format=msvs && IF %MEDIASOUP_BUILDTYPE% == Release ( MSBuild ./worker/mediasoup-worker.sln /p:Configuration=Release -t:mediasoup-worker ) ELSE ( MSBuild ./worker/mediasoup-worker.sln /p:Configuration=Debug -t:mediasoup-worker )",
+    "postinstall:win32": "\"\"%NODE%\"\" ./worker/win-tasks.js make",
     "postinstall:default": "make -C worker"
   },
   "jest": {
