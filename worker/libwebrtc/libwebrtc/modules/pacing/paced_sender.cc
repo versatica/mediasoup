@@ -180,49 +180,10 @@ void PacedSender::Process() {
   size_t bytes_sent = 0;
   std::vector<RTC::RtpPacket*> padding_packets;
 
-  /*
-  while (true) {
-    // Check if we should send padding.
-    size_t padding_bytes_to_add =
-      PaddingBytesToAdd(recommended_probe_size, bytes_sent);
-    if (padding_bytes_to_add > 0) {
-      MS_DUMP("%zu padding bytes to add", padding_bytes_to_add);
-      padding_packets =
-        packet_router_->GeneratePadding(padding_bytes_to_add);
-      if (padding_packets.empty()) {
-        // No padding packets were generated, quite send loop.
-        break;
-      }
-    }
-    else
-    {
-      MS_DUMP("no padding bytes to add");
-
-      break;
-    }
-
-    auto packet = padding_packets.front();
-    RtpPacketSendResult success;
-
-    // jmillan: should we make sure the packet has been sent in order
-    // to set 'success'?
-    packet_router_->SendPacket(packet, pacing_info);
-    success = RtpPacketSendResult::kSuccess;
-
-    if (success == RtpPacketSendResult::kSuccess) {
-      // TODO(webrtc:8052): Don't consume media budget on kInvalid.
-      bytes_sent += packet->GetSize();
-      // Send succeeded, remove it from the queue.
-      OnPacketSent(packet);
-      if (recommended_probe_size && bytes_sent > *recommended_probe_size)
-        break;
-    }
-  }
-  */
-
   // Check if we should send padding.
   size_t padding_bytes_to_add =
     PaddingBytesToAdd(recommended_probe_size, bytes_sent);
+
   if (padding_bytes_to_add == 0) {
     MS_DUMP("no padding bytes to add");
 
@@ -241,9 +202,6 @@ void PacedSender::Process() {
       MS_DUMP("sending padding packet for size: %zu", packet->GetSize());
       packet_router_->SendPacket(packet, pacing_info);
       bytes_sent += packet->GetSize();
-
-      // Send succeeded.
-      OnPacketSent(packet->GetSize());
     }
   }
 
@@ -252,7 +210,6 @@ void PacedSender::Process() {
     auto now = DepLibUV::GetTime();
     MS_DUMP("OnPaddingSent(bytes_sent:%zu)", bytes_sent);
     OnPaddingSent(now, bytes_sent);
-    MS_DUMP("prober_.ProbeSent(now, bytes_sent:%zu)", bytes_sent);
     prober_.ProbeSent(now, bytes_sent);
   }
 }
