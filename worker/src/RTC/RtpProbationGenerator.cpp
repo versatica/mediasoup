@@ -127,7 +127,7 @@ namespace RTC
 
 		this->probationPacket->SetSequenceNumber(seq);
 		this->probationPacket->SetTimestamp(timestamp);
-		this->probationPacket->SetPayloadLength(len);
+		this->probationPacket->SetPayloadLength(len - sizeof(ProbationPacketHeader));
 
 		return this->probationPacket;
 	}

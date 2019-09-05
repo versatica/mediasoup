@@ -180,32 +180,29 @@ void PacedSender::Process() {
   std::vector<RTC::RtpPacket*> padding_packets;
 
   // Check if we should send padding.
-  size_t padding_bytes_to_add =
-    PaddingBytesToAdd(recommended_probe_size, bytes_sent);
-
-  if (padding_bytes_to_add == 0) {
-    MS_DUMP("no padding bytes to add");
-
-    return;
-  }
-  else
+  while (true)
   {
+    size_t padding_bytes_to_add =
+      PaddingBytesToAdd(recommended_probe_size, bytes_sent);
+
+    if (padding_bytes_to_add == 0)
+      break;
+
     MS_DUMP("%zu padding bytes to add", padding_bytes_to_add);
-    while (bytes_sent < padding_bytes_to_add)
-    {
-      padding_packets =
-        packet_router_->GeneratePadding(padding_bytes_to_add /* not used*/);
+    padding_packets =
+      packet_router_->GeneratePadding(padding_bytes_to_add);
 
-      if (padding_packets.empty())
-        break;
+    if (padding_packets.empty())
+      break;
 
-      auto packet = padding_packets.front();
+    auto packet = padding_packets.front();
 
-      MS_DUMP("sending padding packet for size: %zu", packet->GetSize());
-      packet_router_->SendPacket(packet, pacing_info);
-      padding_bytes_to_add -= packet->GetSize();
-      bytes_sent += packet->GetSize();
-    }
+    MS_DUMP("sending padding packet for size: %zu", packet->GetSize());
+    packet_router_->SendPacket(packet, pacing_info);
+    bytes_sent += packet->GetSize();
+
+    if (recommended_probe_size && bytes_sent > *recommended_probe_size)
+      break;
   }
 
   if (bytes_sent != 0)
