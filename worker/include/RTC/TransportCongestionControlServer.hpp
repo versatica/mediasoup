@@ -6,12 +6,12 @@
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimatorAbsSendTime.hpp"
+#include "libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h"
 #include "handles/Timer.hpp"
 
 namespace RTC
 {
-	class TransportCongestionControlServer : public RTC::libwebrtc::RemoteBitrateEstimator::Listener,
+	class TransportCongestionControlServer : public webrtc::RemoteBitrateEstimator::Listener,
 	                                         public Timer::Listener
 	{
 	public:
@@ -41,10 +41,10 @@ namespace RTC
 		void SendTransportCcFeedback();
 		void MaySendLimitationRembFeedback();
 
-		/* Pure virtual methods inherited from RTC::libwebrtc::RemoteBitrateEstimator::Listener. */
+		/* Pure virtual methods inherited from webrtc::RemoteBitrateEstimator::Listener. */
 	public:
 		void OnRembServerAvailableBitrate(
-		  const RTC::libwebrtc::RemoteBitrateEstimator* remoteBitrateEstimator,
+		  const webrtc::RemoteBitrateEstimator* remoteBitrateEstimator,
 		  const std::vector<uint32_t>& ssrcs,
 		  uint32_t availableBitrate) override;
 
@@ -58,7 +58,7 @@ namespace RTC
 		// Allocated by this.
 		Timer* transportCcFeedbackSendPeriodicTimer{ nullptr };
 		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> transportCcFeedbackPacket;
-		RTC::libwebrtc::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
+		webrtc::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.
 		RTC::BweType bweType;
 		size_t maxRtcpPacketLen{ 0u };

@@ -118,13 +118,6 @@
       'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
       'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
       'src/RTC/RembClient.cpp',
-      # TODO: To be removed
-      'src/RTC/libwebrtc/remote_bitrate_estimator/AimdRateControl.cpp',
-      'src/RTC/libwebrtc/remote_bitrate_estimator/InterArrival.cpp',
-      'src/RTC/libwebrtc/remote_bitrate_estimator/OveruseDetector.cpp',
-      'src/RTC/libwebrtc/remote_bitrate_estimator/OveruseEstimator.cpp',
-      'src/RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimatorAbsSendTime.cpp',
-      'src/RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimatorSingleStream.cpp',
       # C++ include files.
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
@@ -224,14 +217,6 @@
       'include/RTC/RTCP/XrDelaySinceLastRr.hpp',
       'include/RTC/RTCP/XrReceiverReferenceTime.hpp',
       'include/RTC/RembClient.hpp',
-      # TODO: To be removed
-      'include/RTC/libwebrtc/remote_bitrate_estimator/AimdRateControl.hpp',
-      'include/RTC/libwebrtc/remote_bitrate_estimator/InterArrival.hpp',
-      'include/RTC/libwebrtc/remote_bitrate_estimator/OveruseDetector.hpp',
-      'include/RTC/libwebrtc/remote_bitrate_estimator/OveruseEstimator.hpp',
-      'include/RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimator.hpp',
-      'include/RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimatorAbsSendTime.hpp',
-      'include/RTC/libwebrtc/remote_bitrate_estimator/RemoteBitrateEstimatorSingleStream.hpp'
     ],
     'include_dirs':
     [

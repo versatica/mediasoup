@@ -306,7 +306,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
       probes_.push_back(Probe(send_time_ms, arrival_time_ms, payload_size));
       ++total_probes_received_;
       // Make sure that a probe which updated the bitrate immediately has an
-      // effect by calling the OnReceiveBitrateChanged callback.
+      // effect by calling the OnRembServerAvailableBitrate callback.
       if (ProcessClusters(now_ms) == ProbeResult::kBitrateUpdated)
         update_estimate = true;
     }
@@ -352,7 +352,8 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
   }
   if (update_estimate) {
     last_update_ms_ = now_ms;
-    observer_->OnReceiveBitrateChanged(ssrcs, target_bitrate_bps);
+    available_bitrate = target_bitrate_bps;
+    observer_->OnRembServerAvailableBitrate(this, ssrcs, target_bitrate_bps);
   }
 }
 
