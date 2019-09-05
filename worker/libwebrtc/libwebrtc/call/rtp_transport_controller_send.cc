@@ -174,7 +174,7 @@ void RtpTransportControllerSend::OnSentPacket(
   pacer_.UpdateOutstandingData(
       transport_feedback_adapter_.GetOutstandingData().bytes());
 
-  // jmillan. Since we don't send media packets within ::Process()
+  // MS_NOTE: Since we don't send media packets within ::Process(),
   // we use this callback to acknowledge sent packets.
   pacer_.OnPacketSent(size);
 }
@@ -249,10 +249,6 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
   // RTC_DCHECK(!controller_);
   // RTC_DCHECK(!control_handler_);
 
-  // jmillan.
-  // if (!network_available_ || !observer_)
-    // return;
-
   control_handler_ = absl::make_unique<CongestionControlHandler>();
 
   initial_config_.constraints.at_time =
@@ -287,7 +283,6 @@ void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
   PostUpdates(controller_->OnProcessInterval(msg));
 }
 
-// jmillan. removed.
 void RtpTransportControllerSend::UpdateStreamsConfig() {
   streams_config_.at_time = Timestamp::ms(DepLibUV::GetTime());
   if (controller_)
