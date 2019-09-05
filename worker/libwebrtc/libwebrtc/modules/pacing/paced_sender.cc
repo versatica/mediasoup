@@ -266,11 +266,12 @@ size_t PacedSender::PaddingBytesToAdd(
     return 0;
   }
 
+  // MS_NOTE: This does not apply to mediasoup.
   // We can not send padding unless a normal packet has first been sent. If we
   // do, timestamps get messed up.
-  if (packet_counter_ == 0) {
-    return 0;
-  }
+  // if (packet_counter_ == 0) {
+  //   return 0;
+  // }
 
   if (recommended_probe_size) {
     if (*recommended_probe_size > bytes_sent) {
