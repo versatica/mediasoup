@@ -326,8 +326,6 @@ namespace RTC
 			// Let's see if we must set our base.
 			if (this->latestTimestamp == 0u)
 			{
-				MS_DEBUG_DEV("setting base");
-
 				this->baseSequenceNumber   = sequenceNumber + 1;
 				this->referenceTime        = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
 				this->latestSequenceNumber = sequenceNumber;
