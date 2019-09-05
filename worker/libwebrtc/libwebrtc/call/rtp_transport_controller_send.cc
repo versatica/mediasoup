@@ -62,9 +62,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       pacer_(packet_router_),
       observer_(nullptr),
       controller_factory_override_(controller_factory),
-      // from: api/transport/goog_cc_factory.cc.
-      // const int64_t kUpdateIntervalMs = 25;
-      process_interval_(TimeDelta::ms(25)),
+      process_interval_(controller_factory_override_->GetProcessInterval()),
       last_report_block_time_(Timestamp::ms(DepLibUV::GetTime())),
       send_side_bwe_with_overhead_(
           webrtc::field_trial::IsEnabled("WebRTC-SendSideBwe-WithOverhead")),
