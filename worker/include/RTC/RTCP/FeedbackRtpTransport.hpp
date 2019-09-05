@@ -259,7 +259,7 @@ namespace RTC
 
 		inline int64_t FeedbackRtpTransportPacket::GetReferenceTimestamp() const
 		{
-			return static_cast<int64_t>(this->referenceTime * 64);
+			return static_cast<int64_t>(this->referenceTime) * 64;
 		}
 
 		inline uint8_t FeedbackRtpTransportPacket::GetFeedbackPacketCount() const
