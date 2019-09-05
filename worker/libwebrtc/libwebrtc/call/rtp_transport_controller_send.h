@@ -134,7 +134,6 @@ class RtpTransportControllerSend final
   std::atomic<size_t> transport_overhead_bytes_per_packet_;
 
   bool network_available_;
-  Timer* pacer_queue_update_task_periodic_timer_;
   Timer* controller_task_periodic_timer_;
 
   // TODO(perkj): |task_queue_| is supposed to replace |process_thread_|.

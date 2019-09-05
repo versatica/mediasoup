@@ -32,8 +32,6 @@ namespace webrtc {
 namespace {
 static const size_t kMaxOverheadBytes = 500;
 
-constexpr TimeDelta kPacerQueueUpdateInterval = TimeDelta::Millis<25>();
-
 TargetRateConstraints ConvertConstraints(int min_bitrate_bps,
                                          int max_bitrate_bps,
                                          int start_bitrate_bps) {
@@ -78,17 +76,10 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 
   pacer_.SetPacingRates(bitrate_config.start_bitrate_bps, 0);
 
-  pacer_queue_update_task_periodic_timer_ = new Timer(this);
   controller_task_periodic_timer_ = new Timer(this);
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
-  if (pacer_queue_update_task_periodic_timer_)
-  {
-    pacer_queue_update_task_periodic_timer_->Stop();
-    delete pacer_queue_update_task_periodic_timer_;
-  }
-
   if (controller_task_periodic_timer_)
   {
     controller_task_periodic_timer_->Stop();
@@ -250,11 +241,7 @@ void RtpTransportControllerSend::OnRemoteNetworkEstimate(
 
 void RtpTransportControllerSend::OnTimer(Timer* timer)
 {
-	if (timer == pacer_queue_update_task_periodic_timer_)
-	{
-		UpdateControlState();
-	}
-	else if (timer == controller_task_periodic_timer_)
+	if (timer == controller_task_periodic_timer_)
 	{
 		UpdateControllerWithTimeInterval();
   }
@@ -289,10 +276,6 @@ void RtpTransportControllerSend::UpdateInitialConstraints(
 }
 
 void RtpTransportControllerSend::StartProcessPeriodicTasks() {
-  auto pacerQueueUpdateInterval = kPacerQueueUpdateInterval.ms();
-
-  pacer_queue_update_task_periodic_timer_->Start(pacerQueueUpdateInterval, pacerQueueUpdateInterval);
-
   auto controllerTaskPeriodicInterval = process_interval_.ms();
 
   controller_task_periodic_timer_->Start(controllerTaskPeriodicInterval, controllerTaskPeriodicInterval);
