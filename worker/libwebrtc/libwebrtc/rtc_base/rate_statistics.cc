@@ -10,9 +10,8 @@
 
 #include "rtc_base/rate_statistics.h"
 
+#include <absl/memory/memory.h>
 #include <algorithm>
-
-#include "absl/memory/memory.h"
 
 namespace webrtc {
 

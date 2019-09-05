@@ -8,19 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#define MS_CLASS "webrtc::OveruseEstimator"
+// #define MS_LOG_DEV
+
 #include "modules/remote_bitrate_estimator/overuse_estimator.h"
-
-#include <assert.h>
-#include <math.h>
-#include <string.h>
-
-#include <algorithm>
-
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 
 #include "Logger.hpp"
 
-#define MS_CLASS "OveruseEstimator"
+#include <assert.h>
+#include <math.h>
+#include <string.h>
+#include <algorithm>
 
 namespace webrtc {
 

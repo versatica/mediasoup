@@ -8,12 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#define MS_CLASS "webrtc::RemoteBitrateEstimatorAbsSendTime"
+// #define MS_LOG_DEV
+
 #include "modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h"
-
-#include <math.h>
-
-#include <algorithm>
-
 #include "api/transport/field_trial_based_config.h"
 #include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "rtc_base/constructor_magic.h"
@@ -21,7 +19,8 @@
 #include "Logger.hpp"
 #include "DepLibUV.hpp"
 
-#define MS_CLASS "RemoteBitrateEstimatorAbsSendTime"
+#include <math.h>
+#include <algorithm>
 
 namespace webrtc {
 namespace {

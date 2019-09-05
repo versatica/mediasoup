@@ -11,12 +11,10 @@
 #ifndef RTC_BASE_RATE_STATISTICS_H_
 #define RTC_BASE_RATE_STATISTICS_H_
 
+#include <absl/types/optional.h>
 #include <stddef.h>
 #include <stdint.h>
-
 #include <memory>
-
-#include "absl/types/optional.h"
 
 namespace webrtc {
 
