@@ -195,7 +195,7 @@ void PacedSender::Process() {
     if (padding_packets.empty())
       break;
 
-    auto packet = padding_packets.front();
+    auto* packet = padding_packets.front();
 
     MS_DUMP("sending padding packet for size: %zu", packet->GetSize());
     packet_router_->SendPacket(packet, pacing_info);

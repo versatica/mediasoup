@@ -86,7 +86,7 @@ DelayBasedBwe::Result DelayBasedBwe::IncomingPacketFeedbackVector(
   // all acks were too late and that the send time history had
   // timed out. We should reduce the rate when this occurs.
   if (packet_feedback_vector.empty()) {
-    MS_WARN_TAG(bwe, "Very late feedback received");
+    MS_WARN_DEV("very late feedback received");
     return DelayBasedBwe::Result();
   }
 
@@ -210,7 +210,9 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
       detector_state != prev_state_) {
     DataRate bitrate = result.updated ? result.target_bitrate : prev_bitrate_;
 
-    MS_DEBUG_TAG(bwe, "at_time.ms():%lld, target_bitrate_bps: %lld, detector_state: %s", at_time.ms(), bitrate.bps(), BandwidthUsage2String(detector_state).c_str());
+    MS_DEBUG_DEV(
+      "at_time.ms():%lld, target_bitrate_bps: %lld, detector_state: %s",
+      at_time.ms(), bitrate.bps(), BandwidthUsage2String(detector_state).c_str());
 
     prev_bitrate_ = bitrate;
     prev_state_ = detector_state;
@@ -247,8 +249,8 @@ bool DelayBasedBwe::LatestEstimate(std::vector<uint32_t>* ssrcs,
 }
 
 void DelayBasedBwe::SetStartBitrate(DataRate start_bitrate) {
-  MS_DEBUG_TAG(bwe, "BWE Setting start bitrate to: %s",
-                   ToString(start_bitrate).c_str());
+  MS_DEBUG_DEV("BWE setting start bitrate to: %s",
+               ToString(start_bitrate).c_str());
   rate_control_.SetStartBitrate(start_bitrate);
 }
 
