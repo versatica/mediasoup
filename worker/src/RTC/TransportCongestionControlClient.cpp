@@ -188,14 +188,8 @@ namespace RTC
 			return;
 		}
 
-		// Emit event if AvailableBitrateEventInterval elapsed
-		// and availableBitrate has changed.
-		/* clang-format off */
-		if (
-			now - this->lastAvailableBitrateEventAt >= AvailableBitrateEventInterval &&
-			previousAvailableBitrate != this->availableBitrate
-		)
-		/* clang-format on */
+		// Emit event if AvailableBitrateEventInterval elapsed.
+		if (now - this->lastAvailableBitrateEventAt >= AvailableBitrateEventInterval)
 		{
 			notify = true;
 		}
