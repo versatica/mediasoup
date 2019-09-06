@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SimulcastConsumer"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "RTC/SimulcastConsumer.hpp"
 #include "DepLibUV.hpp"
@@ -691,15 +691,16 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				desiredBitrate = producerRtpStream->GetBitrate(now, 0, temporalLayer);
+				auto bitrate = producerRtpStream->GetBitrate(now, 0, temporalLayer);
 
 				// If layer is not active move to next spatial layer.
-				if (desiredBitrate == 0)
+				if (bitrate == 0)
 					break;
 
-				// Set desired target layers.
+				// Set desired target layers and bitrate.
 				desiredSpatialLayer  = spatialLayer;
 				desiredTemporalLayer = temporalLayer;
+				desiredBitrate       = bitrate;
 
 				// If this is the preferred spatial and temporal layer, exit the loops.
 				// clang-format off

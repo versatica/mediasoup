@@ -621,15 +621,16 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				desiredBitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+				auto bitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
 
 				// If layer is not active move to next spatial layer.
-				if (desiredBitrate == 0)
+				if (bitrate == 0)
 					break;
 
-				// Set desired target layers.
+				// Set desired target layers and bitrate.
 				desiredSpatialLayer  = spatialLayer;
 				desiredTemporalLayer = temporalLayer;
+				desiredBitrate       = bitrate;
 
 				// If this is the preferred spatial and temporal layer, exit the loops.
 				// clang-format off
