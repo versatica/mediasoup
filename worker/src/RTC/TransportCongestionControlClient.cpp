@@ -225,11 +225,11 @@ namespace RTC
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet, pacingInfo);
 	}
 
-	std::vector<RTC::RtpPacket*> TransportCongestionControlClient::GeneratePadding(size_t size)
+	RTC::RtpPacket* TransportCongestionControlClient::GeneratePadding(size_t size)
 	{
 		MS_TRACE();
 
-		return { this->probationGenerator->GetNextPacket(size) };
+		return this->probationGenerator->GetNextPacket(size);
 	}
 
 	void TransportCongestionControlClient::OnTimer(Timer* timer)

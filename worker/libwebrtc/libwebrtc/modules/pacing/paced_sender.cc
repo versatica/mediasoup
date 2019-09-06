@@ -23,7 +23,6 @@
 #include <absl/memory/memory.h>
 #include <algorithm>
 #include <utility>
-#include <vector>
 
 namespace webrtc {
 namespace {
@@ -177,7 +176,8 @@ void PacedSender::Process() {
   recommended_probe_size = prober_.RecommendedMinProbeSize();
 
   size_t bytes_sent = 0;
-  std::vector<RTC::RtpPacket*> padding_packets;
+  // MS_NOTE: Let's not use a useless vector.
+  RTC::RtpPacket* padding_packet{ nullptr };
 
   // Check if we should send padding.
   while (true)
@@ -188,18 +188,18 @@ void PacedSender::Process() {
     if (padding_bytes_to_add == 0)
       break;
 
-    MS_DUMP("%zu padding bytes to add", padding_bytes_to_add);
-    padding_packets =
+    MS_DEBUG_DEV("%zu padding bytes to add", padding_bytes_to_add);
+
+    padding_packet =
       packet_router_->GeneratePadding(padding_bytes_to_add);
 
-    if (padding_packets.empty())
+    if (!padding_packet)
       break;
 
-    auto* packet = padding_packets.front();
+    MS_DEBUG_DEV("sending padding packet for size: %zu", padding_packet->GetSize());
 
-    MS_DUMP("sending padding packet for size: %zu", packet->GetSize());
-    packet_router_->SendPacket(packet, pacing_info);
-    bytes_sent += packet->GetSize();
+    packet_router_->SendPacket(padding_packet, pacing_info);
+    bytes_sent += padding_packet->GetSize();
 
     if (recommended_probe_size && bytes_sent > *recommended_probe_size)
       break;
