@@ -123,41 +123,49 @@ namespace RTC
 
 				// Provide the feedback packet with the RTP packet info. If it fails,
 				// send current feedback and add the packet info to a new one.
-				if (!this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen))
+				auto result =
+				  this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen);
+
+				switch (result)
 				{
-					MS_DEBUG_DEV(
-					  "RTP packet cannot be added into the transport-cc feedback packet, sending feedback now");
-
-					SendTransportCcFeedback();
-
-					// Pass the packet info to the new feedback packet.
-					// NOTE: If this fails again, then we must regenerate from scratch the
-					// feedback packet, without adding latest wide seq number and latest
-					// timestamp.
-					if (!this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen))
+					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS:
 					{
-						MS_WARN_DEV("resetting transport-cc feedback packet");
+						// If the feedback packet is full, send it now.
+						if (this->transportCcFeedbackPacket->IsFull())
+						{
+							MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
 
+							SendTransportCcFeedback();
+						}
+
+						break;
+					}
+
+					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
+					{
+						// Send ongoing feedback packet and add the new packet info to the
+						// regenerated one.
+						SendTransportCcFeedback();
+
+						this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen);
+
+						break;
+					}
+
+					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
+					{
 						// Create a new feedback packet.
 						this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
 						  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
 
-						// Increment packet count.
+						// Use current packet count.
+						// NOTE: Do not increment it since the previous ongoing feedback
+						// packet was not sent.
 						this->transportCcFeedbackPacket->SetFeedbackPacketCount(
-						  ++this->transportCcFeedbackPacketCount);
+						  this->transportCcFeedbackPacketCount);
 
-						// Pass the packet info to the new feedback packet.
-						// NOTE: It cannot fail now.
-						this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen);
+						break;
 					}
-				}
-
-				// If the feedback packet is full, send it now.
-				if (this->transportCcFeedbackPacket->IsFull())
-				{
-					MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
-
-					SendTransportCcFeedback();
 				}
 
 				MaySendLimitationRembFeedback();

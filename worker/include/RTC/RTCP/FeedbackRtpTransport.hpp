@@ -55,6 +55,14 @@ namespace RTC
 				int32_t receivedAt{ 0 }; // Received time (ms) in remote timestamp reference.
 			};
 
+		public:
+			enum class AddPacketResult
+			{
+				SUCCESS           = 0,
+				MAX_SIZE_EXCEEDED = 1,
+				FATAL
+			};
+
 		private:
 			enum Status : uint8_t
 			{
@@ -65,6 +73,7 @@ namespace RTC
 				None
 			};
 
+		private:
 			struct Context
 			{
 				bool allSameStatus{ true };
@@ -72,6 +81,7 @@ namespace RTC
 				std::vector<Status> statuses;
 			};
 
+		private:
 			class Chunk
 			{
 			public:
@@ -91,6 +101,7 @@ namespace RTC
 				virtual size_t Serialize(uint8_t* buffer) = 0;
 			};
 
+		private:
 			class RunLengthChunk : public Chunk
 			{
 			public:
@@ -114,6 +125,7 @@ namespace RTC
 				uint16_t count{ 0u };
 			};
 
+		private:
 			class OneBitVectorChunk : public Chunk
 			{
 			public:
@@ -135,6 +147,7 @@ namespace RTC
 				std::vector<Status> statuses;
 			};
 
+		private:
 			class TwoBitVectorChunk : public Chunk
 			{
 			public:
@@ -174,7 +187,7 @@ namespace RTC
 			~FeedbackRtpTransportPacket();
 
 		public:
-			bool AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
+			AddPacketResult AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			void Finish(); // Just for locally generated packets.
 			bool IsFull();
 			bool IsSerializable();

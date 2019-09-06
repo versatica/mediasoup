@@ -316,7 +316,7 @@ namespace RTC
 			return offset;
 		}
 
-		bool FeedbackRtpTransportPacket::AddPacket(
+		FeedbackRtpTransportPacket::AddPacketResult FeedbackRtpTransportPacket::AddPacket(
 		  uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen)
 		{
 			MS_TRACE();
@@ -331,7 +331,7 @@ namespace RTC
 				this->latestSequenceNumber = sequenceNumber;
 				this->latestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
 
-				return true;
+				return AddPacketResult::SUCCESS;
 			}
 
 			// If the wide sequence number of the new packet is lower than the latest seen,
@@ -340,7 +340,7 @@ namespace RTC
 			// Also ignore if the sequence number matches the latest seen.
 			if (!RTC::SeqManager<uint16_t>::IsSeqHigherThan(sequenceNumber, this->latestSequenceNumber))
 			{
-				return true;
+				return AddPacketResult::SUCCESS;
 			}
 
 			// Check if there are too many missing packets.
@@ -351,7 +351,7 @@ namespace RTC
 				{
 					MS_WARN_DEV("RTP missing packet number exceeded");
 
-					return false;
+					return AddPacketResult::FATAL;
 				}
 			}
 
@@ -371,7 +371,7 @@ namespace RTC
 				  this->latestTimestamp,
 				  timestamp);
 
-				return false;
+				return AddPacketResult::FATAL;
 			}
 
 			// Delta in 16 bits signed.
@@ -396,7 +396,7 @@ namespace RTC
 				{
 					MS_WARN_DEV("maximum packet size exceeded");
 
-					return false;
+					return AddPacketResult::MAX_SIZE_EXCEEDED;
 				}
 			}
 
@@ -407,7 +407,7 @@ namespace RTC
 			this->latestSequenceNumber = sequenceNumber;
 			this->latestTimestamp      = timestamp;
 
-			return true;
+			return AddPacketResult::SUCCESS;
 		}
 
 		void FeedbackRtpTransportPacket::Finish()
