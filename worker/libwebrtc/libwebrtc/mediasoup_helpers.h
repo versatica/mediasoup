@@ -24,8 +24,6 @@ namespace mediasoup_helpers
 			{
 			  if (packetResult.received)
 			    receivedPackets.emplace_back(packetResult.sequenceNumber, packetResult.delta);
-			  else
-			    receivedPackets.emplace_back(packetResult.sequenceNumber);
 			}
 
 			return receivedPackets;
