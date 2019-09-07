@@ -5,7 +5,7 @@ const PYTHON = process.env.PYTHON || 'python';
 const GULP = path.join(__dirname, '..', 'node_modules', '.bin', 'gulp');
 const MSBUILD = process.env.MSBUILD || 'MSBuild';
 const MEDIASOUP_BUILDTYPE = process.env.MEDIASOUP_BUILDTYPE || 'Release';
-
+const MEDIASOUP_TEST_TAGS = process.env.MEDIASOUP_TEST_TAGS || '';
 run();
 
 function run() {
@@ -33,8 +33,8 @@ function run() {
             if (!process.env.MEDIASOUP_WORKER_BIN) {
                 var generScript = `${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker-test`;
                 var buildScript = `${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`;
-                // TODO(tonywu) : find a alternative tool to replace LCOV
-                execute(`${generScript} && ${buildScript}`)
+                var testScript = `cd worker && .\\out\\${MEDIASOUP_BUILDTYPE}\\mediasoup-worker-test.exe --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}`
+                execute(`${generScript} && ${buildScript} && ${testScript}`)
             }
             break;
         }
