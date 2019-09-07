@@ -24,7 +24,7 @@
   },
   "scripts": {
     "lint": "npm run lint:node && npm run lint:worker",
-    "lint:node": "eslint -c .eslintrc.js gulpfile.js lib test",
+    "lint:node": "eslint -c .eslintrc.js gulpfile.js lib test worker/win-tasks.js",
     "lint:worker": "run-script-os",
     "lint:worker:win32": "\"\"%NODE%\"\" ./worker/win-tasks.js lint",
     "lint:worker:default": "make lint -C worker",
