@@ -124,6 +124,7 @@ namespace RTC
 		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
 		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
+		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
 		void SetNewDataProducerIdFromRequest(Channel::Request* request, std::string& dataProducerId) const;
 		RTC::DataProducer* GetDataProducerFromRequest(Channel::Request* request) const;
 		void SetNewDataConsumerIdFromRequest(Channel::Request* request, std::string& dataConsumerId) const;

@@ -1319,6 +1319,23 @@ namespace RTC
 		return consumer;
 	}
 
+	inline RTC::Consumer* Transport::GetConsumerByRtxSsrc(uint32_t ssrc) const
+	{
+		MS_TRACE();
+
+		for (auto& kv : this->mapSsrcConsumer)
+		{
+			auto* consumer = kv.second;
+			for (auto& encoding : consumer->GetRtpParameters().encodings)
+			{
+				if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
+					return consumer;
+			}
+		}
+
+		return nullptr;
+	}
+
 	void Transport::SetNewDataProducerIdFromRequest(
 	  Channel::Request* request, std::string& dataProducerId) const
 	{
@@ -1533,14 +1550,17 @@ namespace RTC
 				auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
 				// If no Consumer is found and this is not a Transport Feedback for the
-				// probation SSRC, ignore it.
+				// probation SSRC or any Consumer RTX SSRC ignore it.
 				//
 				// clang-format off
 				if (
 					!consumer &&
 					(
-						feedback->GetMediaSsrc() != RTC::RtpProbationSsrc ||
-						feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC
+						(feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC) &&
+						(
+						 feedback->GetMediaSsrc() != RTC::RtpProbationSsrc ||
+						 !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())
+						)
 					)
 				)
 				// clang-format on
