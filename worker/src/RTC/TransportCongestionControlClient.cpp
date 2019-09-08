@@ -244,6 +244,9 @@ namespace RTC
 			auto delay = static_cast<uint64_t>(
 			  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 
+			// TODO: REMOVE
+			MS_DUMP("---- delay:%" PRIu64, delay);
+
 			this->pacerTimer->Start(delay);
 		}
 	}

@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::PacedSender"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV
 
 #include "modules/pacing/paced_sender.h"
 #include "modules/pacing/bitrate_prober.h"
@@ -154,11 +154,19 @@ int64_t PacedSender::UpdateTimeAndGetElapsedMs(int64_t now_ms) {
 }
 
 void PacedSender::Process() {
+  // TODO: REMOVE
+  MS_DUMP("---- START");
+
   int64_t now_ms = DepLibUV::GetTime();
   int64_t elapsed_time_ms = UpdateTimeAndGetElapsedMs(now_ms);
 
   if (paused_)
+  {
+    // TODO: REMOVE
+    MS_DUMP("---- END 1");
+
     return;
+  }
 
   if (elapsed_time_ms > 0) {
     int target_bitrate_kbps = pacing_bitrate_kbps_;
@@ -167,7 +175,12 @@ void PacedSender::Process() {
   }
 
   if (!prober_.IsProbing())
+  {
+    // TODO: REMOVE
+    MS_DUMP("---- END 2");
+
     return;
+  }
 
   PacedPacketInfo pacing_info;
   absl::optional<size_t> recommended_probe_size;
@@ -179,6 +192,9 @@ void PacedSender::Process() {
   // MS_NOTE: Let's not use a useless vector.
   RTC::RtpPacket* padding_packet{ nullptr };
 
+  // TODO: REMOVE
+  MS_DUMP("---- entering loop");
+
   // Check if we should send padding.
   while (true)
   {
@@ -186,7 +202,12 @@ void PacedSender::Process() {
       PaddingBytesToAdd(recommended_probe_size, bytes_sent);
 
     if (padding_bytes_to_add == 0)
+    {
+      // TODO: REMOVE
+      MS_DUMP("---- break 1");
+
       break;
+    }
 
     MS_DEBUG_DEV(
       "[recommended_probe_size:%zu, padding_bytes_to_add:%zu]",
@@ -196,7 +217,12 @@ void PacedSender::Process() {
       packet_router_->GeneratePadding(padding_bytes_to_add);
 
     if (!padding_packet)
+    {
+      // TODO: REMOVE
+      MS_DUMP("---- break 2");
+
       break;
+    }
 
     MS_DEBUG_DEV("sending padding packet [size:%zu]", padding_packet->GetSize());
 
@@ -204,8 +230,16 @@ void PacedSender::Process() {
     bytes_sent += padding_packet->GetSize();
 
     if (recommended_probe_size && bytes_sent > *recommended_probe_size)
+    {
+      // TODO: REMOVE
+      MS_DUMP("---- break 3");
+
       break;
+    }
   }
+
+  // TODO: REMOVE
+  MS_DUMP("---- loop exited");
 
   if (bytes_sent != 0)
   {
@@ -213,6 +247,9 @@ void PacedSender::Process() {
     OnPaddingSent(now, bytes_sent);
     prober_.ProbeSent(now, bytes_sent);
   }
+
+  // TODO: REMOVE
+  MS_DUMP("---- END TOTAL");
 }
 
 size_t PacedSender::PaddingBytesToAdd(
