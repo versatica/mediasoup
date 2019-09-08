@@ -140,6 +140,7 @@ namespace RTC
 		}
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
+		this->mapRtxSsrcConsumer.clear();
 
 		// Delete all DataProducers.
 		for (auto& kv : this->mapDataProducers)
@@ -214,6 +215,7 @@ namespace RTC
 		}
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
+		this->mapRtxSsrcConsumer.clear();
 
 		// Delete all DataProducers.
 		for (auto& kv : this->mapDataProducers)
@@ -279,6 +281,18 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			(*jsonMapSsrcConsumerId)[std::to_string(ssrc)] = consumer->id;
+		}
+
+		// Add mapRtxSsrcConsumerId.
+		jsonObject["mapRtxSsrcConsumerId"] = json::object();
+		auto jsonMapRtxSsrcConsumerId      = jsonObject.find("mapRtxSsrcConsumerId");
+
+		for (auto& kv : this->mapRtxSsrcConsumer)
+		{
+			auto ssrc      = kv.first;
+			auto* consumer = kv.second;
+
+			(*jsonMapRtxSsrcConsumerId)[std::to_string(ssrc)] = consumer->id;
 		}
 
 		// Add dataProducerIds.
@@ -700,6 +714,11 @@ namespace RTC
 					this->mapSsrcConsumer[ssrc] = consumer;
 				}
 
+				for (auto ssrc : consumer->GetRtxSsrcs())
+				{
+					this->mapRtxSsrcConsumer[ssrc] = consumer;
+				}
+
 				MS_DEBUG_DEV(
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
@@ -969,6 +988,11 @@ namespace RTC
 				for (auto ssrc : consumer->GetMediaSsrcs())
 				{
 					this->mapSsrcConsumer.erase(ssrc);
+				}
+
+				for (auto ssrc : consumer->GetRtxSsrcs())
+				{
+					this->mapRtxSsrcConsumer.erase(ssrc);
 				}
 
 				// Notify the listener.
@@ -1323,17 +1347,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapSsrcConsumer)
-		{
-			auto* consumer = kv.second;
-			for (auto& encoding : consumer->GetRtpParameters().encodings)
-			{
-				if (encoding.hasRtx && encoding.rtx.ssrc == ssrc)
-					return consumer;
-			}
-		}
+		auto mapRtxSsrcConsumerIt = this->mapRtxSsrcConsumer.find(ssrc);
 
-		return nullptr;
+		if (mapRtxSsrcConsumerIt == this->mapRtxSsrcConsumer.end())
+			return nullptr;
+
+		auto* consumer = mapRtxSsrcConsumerIt->second;
+
+		return consumer;
 	}
 
 	void Transport::SetNewDataProducerIdFromRequest(
@@ -1928,8 +1949,7 @@ namespace RTC
 
 		// TODO:
 		// Must adjust these values.
-		this->tccClient->SetDesiredBitrates(
-		  100000, totalDesiredBitrate / 4, totalDesiredBitrate);
+		this->tccClient->SetDesiredBitrates(100000, totalDesiredBitrate / 4, totalDesiredBitrate);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2100,6 +2120,11 @@ namespace RTC
 		for (auto ssrc : consumer->GetMediaSsrcs())
 		{
 			this->mapSsrcConsumer.erase(ssrc);
+		}
+
+		for (auto ssrc : consumer->GetRtxSsrcs())
+		{
+			this->mapRtxSsrcConsumer.erase(ssrc);
 		}
 
 		// Notify the listener.

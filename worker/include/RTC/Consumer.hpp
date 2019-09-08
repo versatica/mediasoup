@@ -50,6 +50,7 @@ namespace RTC
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		RTC::RtpParameters::Type GetType() const;
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
+		const std::vector<uint32_t>& GetRtxSsrcs() const;
 		virtual bool IsActive() const;
 		void TransportConnected();
 		void TransportDisconnected();
@@ -108,6 +109,7 @@ namespace RTC
 	private:
 		// Others.
 		std::vector<uint32_t> mediaSsrcs;
+		std::vector<uint32_t> rtxSsrcs;
 		bool transportConnected{ false };
 		bool paused{ false };
 		bool producerPaused{ false };
@@ -139,6 +141,11 @@ namespace RTC
 	inline const std::vector<uint32_t>& Consumer::GetMediaSsrcs() const
 	{
 		return this->mediaSsrcs;
+	}
+
+	inline const std::vector<uint32_t>& Consumer::GetRtxSsrcs() const
+	{
+		return this->rtxSsrcs;
 	}
 
 	inline bool Consumer::IsActive() const

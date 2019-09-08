@@ -131,6 +131,13 @@ namespace RTC
 			this->mediaSsrcs.push_back(encoding.ssrc);
 		}
 
+		// Fill RTX SSRCs vector.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			if (encoding.hasRtx)
+				this->rtxSsrcs.push_back(encoding.rtx.ssrc);
+		}
+
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;

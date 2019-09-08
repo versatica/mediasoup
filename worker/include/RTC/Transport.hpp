@@ -229,6 +229,7 @@ namespace RTC
 		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;
 		std::unordered_map<std::string, RTC::DataConsumer*> mapDataConsumers;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
+		std::unordered_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		Timer* rtcpTimer{ nullptr };
 		RTC::RembClient* rembClient{ nullptr };
