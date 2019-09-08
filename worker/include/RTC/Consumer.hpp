@@ -102,8 +102,8 @@ namespace RTC
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
-		uint64_t lastRtcpSentTime{ 0 };
-		uint16_t maxRtcpInterval{ 0 };
+		uint64_t lastRtcpSentTime{ 0u };
+		uint16_t maxRtcpInterval{ 0u };
 		bool externallyManagedBitrate{ false };
 
 	private:

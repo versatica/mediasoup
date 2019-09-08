@@ -18,13 +18,13 @@ namespace RTC
 		MS_TRACE();
 
 		// Ensure there is a single encoding.
-		if (this->consumableRtpEncodings.size() != 1)
+		if (this->consumableRtpEncodings.size() != 1u)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 
 		auto& encoding = this->rtpParameters.encodings[0];
 
 		// Ensure there are multiple spatial or temporal layers.
-		if (encoding.spatialLayers < 2 && encoding.temporalLayers < 2)
+		if (encoding.spatialLayers < 2u && encoding.temporalLayers < 2u)
 			MS_THROW_TYPE_ERROR("invalid number of layers");
 
 		auto jsonPreferredLayersIt = data.find("preferredLayers");
@@ -271,7 +271,7 @@ namespace RTC
 			// clang-format off
 			if (
 				!this->externallyManagedBitrate ||
-				(score == 0 || previousScore == 0)
+				(score == 0u || previousScore == 0u)
 			)
 			// clang-format on
 			{
@@ -297,7 +297,7 @@ namespace RTC
 			return 0u;
 
 		// Return a 0 priority if score of producer stream is 0.
-		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0)
+		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0u)
 			return 0u;
 
 		auto now = DepLibUV::GetTime();
@@ -312,7 +312,7 @@ namespace RTC
 				break;
 
 			// Ignore spatial layers with 0 bitrate.
-			if (this->producerRtpStream->GetSpatialLayerBitrate(now, spatialLayer) == 0)
+			if (this->producerRtpStream->GetSpatialLayerBitrate(now, spatialLayer) == 0u)
 				continue;
 
 			// Choose this layer for now.
@@ -361,14 +361,14 @@ namespace RTC
 			virtualBitrate = bitrate;
 		}
 
-		uint32_t usedBitrate{ 0 };
+		uint32_t usedBitrate{ 0u };
 		auto now = DepLibUV::GetTime();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)
 			goto done;
 
-		if (this->producerRtpStream->GetScore() == 0)
+		if (this->producerRtpStream->GetScore() == 0u)
 			goto done;
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
@@ -389,7 +389,7 @@ namespace RTC
 				  requiredBitrate);
 
 				// If layer is not active move to next spatial layer.
-				if (requiredBitrate == 0)
+				if (requiredBitrate == 0u)
 					break;
 
 				// If this layer requires more bitrate than the given one, abort the loop
@@ -475,7 +475,7 @@ namespace RTC
 		if (!this->producerRtpStream)
 			return 0u;
 
-		if (this->producerRtpStream->GetScore() == 0)
+		if (this->producerRtpStream->GetScore() == 0u)
 			return 0u;
 
 		if (this->provisionalTargetSpatialLayer == -1)
@@ -605,12 +605,12 @@ namespace RTC
 		if (!this->producerRtpStream)
 			return 0u;
 
-		if (this->producerRtpStream->GetScore() == 0)
+		if (this->producerRtpStream->GetScore() == 0u)
 			return 0u;
 
 		int16_t desiredSpatialLayer{ -1 };
 		int16_t desiredTemporalLayer{ -1 };
-		uint32_t desiredBitrate{ 0 };
+		uint32_t desiredBitrate{ 0u };
 		auto now = DepLibUV::GetTime();
 		int16_t spatialLayer{ 0 };
 
@@ -624,7 +624,7 @@ namespace RTC
 				auto bitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
 
 				// If layer is not active move to next spatial layer.
-				if (bitrate == 0)
+				if (bitrate == 0u)
 					break;
 
 				// Set desired target layers and bitrate.
@@ -983,7 +983,7 @@ namespace RTC
 		}
 
 		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 600 : 0;
+		size_t bufferSize = params.useNack ? 600u : 0u;
 
 		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 		this->rtpStreams.push_back(this->rtpStream);
@@ -1051,7 +1051,7 @@ namespace RTC
 		if (!this->producerRtpStream)
 			goto done;
 
-		if (this->producerRtpStream->GetScore() == 0)
+		if (this->producerRtpStream->GetScore() == 0u)
 			goto done;
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)

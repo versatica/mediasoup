@@ -83,9 +83,9 @@ namespace RTC
 		int16_t currentSpatialLayer{ -1 };
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		uint32_t tsOffset{ 0 }; // RTP Timestamp offset.
+		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		std::map<uint32_t, uint32_t> tsExtraOffsets;
-		uint16_t tsExtraOffetPacketCount{ 0 };
+		uint16_t tsExtraOffetPacketCount{ 0u };
 	};
 
 	/* Inline methods. */
@@ -100,7 +100,7 @@ namespace RTC
 				this->producerRtpStreams.end(),
 				[](const RTC::RtpStream* rtpStream)
 				{
-					return (rtpStream != nullptr && rtpStream->GetScore() > 0);
+					return (rtpStream != nullptr && rtpStream->GetScore() > 0u);
 				}
 			)
 		);

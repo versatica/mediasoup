@@ -18,7 +18,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ensure there is a single encoding.
-		if (this->consumableRtpEncodings.size() != 1)
+		if (this->consumableRtpEncodings.size() != 1u)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 
 		auto& encoding   = this->rtpParameters.encodings[0];
@@ -149,7 +149,7 @@ namespace RTC
 		MS_TRACE();
 
 		// SimpleConsumer does not play the BWE game.
-		return 0;
+		return 0u;
 	}
 
 	uint32_t SimpleConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
@@ -157,7 +157,7 @@ namespace RTC
 		MS_TRACE();
 
 		// SimpleConsumer does not play the BWE game.
-		return 0;
+		return 0u;
 	}
 
 	void SimpleConsumer::ApplyLayers()
@@ -445,7 +445,7 @@ namespace RTC
 		}
 
 		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 600 : 0;
+		size_t bufferSize = params.useNack ? 600u : 0u;
 
 		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 		this->rtpStreams.push_back(this->rtpStream);

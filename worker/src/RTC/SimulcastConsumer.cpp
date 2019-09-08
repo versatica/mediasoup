@@ -12,7 +12,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint8_t GoodScore{ 5u };
+	static constexpr uint8_t StreamGoodScore{ 5u };
+	static constexpr uint64_t StreamMinActiveTime{ 2000u }; // In ms.
 
 	/* Instance methods. */
 
@@ -23,7 +24,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ensure there are N > 1 encodings.
-		if (this->consumableRtpEncodings.size() <= 1)
+		if (this->consumableRtpEncodings.size() <= 1u)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size <= 1");
 
 		auto& encoding = this->rtpParameters.encodings[0];
@@ -37,7 +38,7 @@ namespace RTC
 		auto jsonPreferredLayersIt = data.find("preferredLayers");
 
 		// Fill mapMappedSsrcSpatialLayer.
-		for (size_t idx{ 0 }; idx < this->consumableRtpEncodings.size(); ++idx)
+		for (size_t idx{ 0u }; idx < this->consumableRtpEncodings.size(); ++idx)
 		{
 			auto& encoding = this->consumableRtpEncodings[idx];
 
@@ -299,7 +300,7 @@ namespace RTC
 			// clang-format off
 			if (
 				!this->externallyManagedBitrate ||
-				(score == 0 || previousScore == 0)
+				(score == 0u || previousScore == 0u)
 			)
 			// clang-format on
 			{
@@ -340,7 +341,7 @@ namespace RTC
 
 		int16_t prioritySpatialLayer{ -1 };
 
-		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
 			auto spatialLayer = static_cast<int16_t>(sIdx);
 
@@ -402,26 +403,33 @@ namespace RTC
 			virtualBitrate = bitrate;
 		}
 
-		uint32_t usedBitrate{ 0 };
-		uint8_t maxProducerScore{ 0 };
+		uint32_t usedBitrate{ 0u };
+		uint8_t maxProducerScore{ 0u };
 		auto now = DepLibUV::GetTime();
 
-		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(sIdx);
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
-			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
+			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0u;
 
 			// Ignore spatial layers for non existing producer streams or for those
 			// with score 0.
-			if (producerScore == 0)
+			if (producerScore == 0u)
+				continue;
+
+			// If the stream has not been active time enough and we have an active one
+			// already, move to the next spatial layer.
+			if (usedBitrate > 0u && producerRtpStream->GetActiveTime() < StreamMinActiveTime)
 				continue;
 
 			// We may not yet switch to this spatial layer.
 			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
-			if (producerScore < maxProducerScore && producerScore < GoodScore)
+			// If the stream score is worse than the best seen and not good enough, ignore
+			// this stream.
+			if (producerScore < maxProducerScore && producerScore < StreamGoodScore)
 				continue;
 
 			maxProducerScore = producerScore;
@@ -431,7 +439,7 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				auto requiredBitrate = producerRtpStream->GetBitrate(now, 0, temporalLayer);
+				auto requiredBitrate = producerRtpStream->GetBitrate(now, 0u, temporalLayer);
 
 				MS_DEBUG_DEV(
 				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
@@ -442,7 +450,7 @@ namespace RTC
 				  requiredBitrate);
 
 				// If layer is not active move to next spatial layer.
-				if (requiredBitrate == 0)
+				if (requiredBitrate == 0u)
 					break;
 
 				// If this layer requires more bitrate than the given one, abort the loop
@@ -460,7 +468,7 @@ namespace RTC
 				if (
 					this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
 					this->provisionalTargetTemporalLayer == this->preferredTemporalLayer &&
-					producerScore >= GoodScore
+					producerScore >= StreamGoodScore
 				)
 				// clang-format on
 				{
@@ -473,7 +481,7 @@ namespace RTC
 			// clang-format off
 			if (
 				this->provisionalTargetSpatialLayer >= this->preferredSpatialLayer &&
-				producerScore >= GoodScore
+				producerScore >= StreamGoodScore
 			)
 			// clang-format on
 			{
@@ -588,7 +596,7 @@ namespace RTC
 				break;
 			}
 
-			requiredBitrate = producerRtpStream->GetLayerBitrate(now, 0, temporalLayer);
+			requiredBitrate = producerRtpStream->GetLayerBitrate(now, 0u, temporalLayer);
 
 			// If active layer, end iterations here.
 			if (requiredBitrate)
@@ -662,26 +670,33 @@ namespace RTC
 
 		int16_t desiredSpatialLayer{ -1 };
 		int16_t desiredTemporalLayer{ -1 };
-		uint32_t desiredBitrate{ 0 };
-		uint8_t maxProducerScore{ 0 };
+		uint32_t desiredBitrate{ 0u };
+		uint8_t maxProducerScore{ 0u };
 		auto now = DepLibUV::GetTime();
 
-		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(sIdx);
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
-			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
+			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0u;
 
 			// Ignore spatial layers for non existing producer streams or for those
 			// with score 0.
-			if (producerScore == 0)
+			if (producerScore == 0u)
+				continue;
+
+			// If the stream has not been active time enough and we have an active one
+			// already, move to the next spatial layer.
+			if (desiredBitrate > 0 && producerRtpStream->GetActiveTime() < StreamMinActiveTime)
 				continue;
 
 			// We may not yet switch to this spatial layer.
 			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
-			if (producerScore < maxProducerScore && producerScore < GoodScore)
+			// If the stream score is worse than the best seen and not good enough, ignore
+			// this stream.
+			if (producerScore < maxProducerScore && producerScore < StreamGoodScore)
 				continue;
 
 			maxProducerScore = producerScore;
@@ -691,10 +706,10 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				auto bitrate = producerRtpStream->GetBitrate(now, 0, temporalLayer);
+				auto bitrate = producerRtpStream->GetBitrate(now, 0u, temporalLayer);
 
 				// If layer is not active move to next spatial layer.
-				if (bitrate == 0)
+				if (bitrate == 0u)
 					break;
 
 				// Set desired target layers and bitrate.
@@ -707,7 +722,7 @@ namespace RTC
 				if (
 					desiredSpatialLayer == this->preferredSpatialLayer &&
 					desiredTemporalLayer == this->preferredTemporalLayer &&
-					producerScore >= GoodScore
+					producerScore >= StreamGoodScore
 				)
 				// clang-format on
 				{
@@ -717,7 +732,7 @@ namespace RTC
 
 			// If this is the preferred or higher spatial layer and has good score,
 			// take it and exit.
-			if (desiredSpatialLayer >= this->preferredSpatialLayer && producerScore >= GoodScore)
+			if (desiredSpatialLayer >= this->preferredSpatialLayer && producerScore >= StreamGoodScore)
 				break;
 		}
 
@@ -781,7 +796,7 @@ namespace RTC
 			this->encodingContext->SetCurrentTemporalLayer(packet->GetTemporalLayer());
 
 			// Reset the score of our RtpStream to 10.
-			this->rtpStream->ResetScore(10, /*notify*/ false);
+			this->rtpStream->ResetScore(10u, /*notify*/ false);
 
 			// Emit the layersChange event.
 			EmitLayersChange();
@@ -817,7 +832,7 @@ namespace RTC
 			// Sync our RTP stream's RTP timestamp.
 			if (spatialLayer == this->tsReferenceSpatialLayer)
 			{
-				this->tsOffset = 0;
+				this->tsOffset = 0u;
 			}
 			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
 			else
@@ -856,7 +871,7 @@ namespace RTC
 
 			// Reset tsExtraOffsets and tsExtraOffetPacketCount.
 			this->tsExtraOffsets.clear();
-			this->tsExtraOffetPacketCount = 0;
+			this->tsExtraOffetPacketCount = 0u;
 
 			// When switching to a new stream it may happen that the timestamp of this
 			// keyframe is lower than the last sent. If so, apply an extra offset to
@@ -902,7 +917,7 @@ namespace RTC
 
 		if (!this->tsExtraOffsets.empty())
 		{
-			uint32_t tsExtraOffset{ 0 };
+			uint32_t tsExtraOffset{ 0u };
 			auto it = this->tsExtraOffsets.find(packet->GetTimestamp());
 
 			if (it != this->tsExtraOffsets.end())
@@ -934,15 +949,15 @@ namespace RTC
 			// Reset if more than N packets.
 			// clang-format off
 			if (
-				(tsExtraOffset && ++this->tsExtraOffetPacketCount > 200) ||
-				this->tsExtraOffetPacketCount > 500
+				(tsExtraOffset && ++this->tsExtraOffetPacketCount > 200u) ||
+				this->tsExtraOffetPacketCount > 500u
 			)
 			// clang-format on
 			{
 				MS_DEBUG_DEV("cleaning ts extra map");
 
 				this->tsExtraOffsets.clear();
-				this->tsExtraOffetPacketCount = 0;
+				this->tsExtraOffetPacketCount = 0u;
 			}
 		}
 
@@ -1197,7 +1212,7 @@ namespace RTC
 		}
 
 		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 600 : 0;
+		size_t bufferSize = params.useNack ? 600u : 0u;
 
 		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 		this->rtpStreams.push_back(this->rtpStream);
@@ -1306,24 +1321,40 @@ namespace RTC
 		newTargetSpatialLayer  = -1;
 		newTargetTemporalLayer = -1;
 
-		uint8_t maxProducerScore{ 0 };
+		uint8_t maxProducerScore{ 0u };
 
-		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(sIdx);
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
-			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
+			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0u;
 
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.
-			if (producerScore == 0)
+			if (producerScore == 0u)
 				continue;
+
+			// If the stream has not been active time enough and we have an active one
+			// already, move to the next spatial layer.
+			// NOTE: Require bitrate externally managed for this.
+			// clang-format off
+			if (
+				this->externallyManagedBitrate &&
+				newTargetSpatialLayer != -1 &&
+				producerRtpStream->GetActiveTime() < StreamMinActiveTime
+			)
+			// clang-format on
+			{
+				continue;
+			}
 
 			// We may not yet switch to this spatial layer.
 			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
-			if (producerScore < maxProducerScore && producerScore < GoodScore)
+			// If the stream score is worse than the best seen and not good enough, ignore
+			// this stream.
+			if (producerScore < maxProducerScore && producerScore < StreamGoodScore)
 				continue;
 
 			newTargetSpatialLayer = spatialLayer;
@@ -1331,7 +1362,7 @@ namespace RTC
 
 			// If this is the preferred or higher spatial layer and has good score,
 			// take it and exit.
-			if (spatialLayer >= this->preferredSpatialLayer && producerScore >= GoodScore)
+			if (spatialLayer >= this->preferredSpatialLayer && producerScore >= StreamGoodScore)
 				break;
 		}
 

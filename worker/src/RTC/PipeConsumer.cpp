@@ -146,7 +146,7 @@ namespace RTC
 		MS_TRACE();
 
 		// PipeConsumer does not play the BWE game.
-		return 0;
+		return 0u;
 	}
 
 	uint32_t PipeConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
@@ -154,7 +154,7 @@ namespace RTC
 		MS_TRACE();
 
 		// PipeConsumer does not play the BWE game.
-		return 0;
+		return 0u;
 	}
 
 	void PipeConsumer::ApplyLayers()
@@ -347,7 +347,7 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		uint32_t rate{ 0 };
+		uint32_t rate{ 0u };
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
@@ -500,7 +500,7 @@ namespace RTC
 
 			// Create a RtpStreamSend for sending a single media stream.
 			// NOTE: PipeConsumer does not support NACK.
-			size_t bufferSize{ 0 };
+			size_t bufferSize{ 0u };
 			auto* rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
