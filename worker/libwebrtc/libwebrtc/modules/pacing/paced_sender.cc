@@ -188,7 +188,9 @@ void PacedSender::Process() {
     if (padding_bytes_to_add == 0)
       break;
 
-    MS_DEBUG_DEV("%zu padding bytes to add", padding_bytes_to_add);
+    MS_DEBUG_DEV(
+      "[recommended_probe_size:%zu, padding_bytes_to_add:%zu]",
+      *recommended_probe_size, padding_bytes_to_add);
 
     padding_packet =
       packet_router_->GeneratePadding(padding_bytes_to_add);
@@ -196,7 +198,7 @@ void PacedSender::Process() {
     if (!padding_packet)
       break;
 
-    MS_DEBUG_DEV("sending padding packet for size: %zu", padding_packet->GetSize());
+    MS_DEBUG_DEV("sending padding packet [size:%zu]", padding_packet->GetSize());
 
     packet_router_->SendPacket(padding_packet, pacing_info);
     bytes_sent += padding_packet->GetSize();
