@@ -1909,7 +1909,7 @@ namespace RTC
 		// TODO:
 		// Must adjust these values.
 		this->tccClient->SetDesiredBitrates(
-		  totalDesiredBitrate / 2, totalDesiredBitrate / 4, totalDesiredBitrate);
+		  100000, totalDesiredBitrate / 4, totalDesiredBitrate);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
