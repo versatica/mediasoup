@@ -232,7 +232,6 @@ void PacedSender::Process() {
 
     packet_router_->SendPacket(padding_packet, pacing_info);
     bytes_sent += padding_packet->GetSize();
-    OnPacketSent(padding_packet->GetSize());
 
     if (recommended_probe_size && bytes_sent > *recommended_probe_size)
     {
