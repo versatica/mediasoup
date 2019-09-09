@@ -42,11 +42,11 @@ namespace RTC
 		virtual ~TransportCongestionControlClient();
 
 	public:
+		void TransportConnected();
+		void TransportDisconnected();
 		void InsertPacket(webrtc::RtpPacketSendInfo& packetInfo);
 		webrtc::PacedPacketInfo GetPacingInfo();
 		void PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now);
-		void TransportConnected();
-		void TransportDisconnected();
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, float rtt, uint64_t now);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);

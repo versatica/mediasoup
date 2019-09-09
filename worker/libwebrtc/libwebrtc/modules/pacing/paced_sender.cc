@@ -106,9 +106,9 @@ void PacedSender::SetPacingRates(uint32_t pacing_rate_bps,
   padding_budget_.set_target_rate_kbps(padding_rate_bps / 1000);
 
   MS_DEBUG_DEV("pacer_updated pacing_kbps=%" PRIu32
-                    " padding_budget_kbps=%" PRIu32,
-                      pacing_bitrate_kbps_,
-                      padding_rate_bps / 1000);
+                " padding_budget_kbps=%" PRIu32,
+                pacing_bitrate_kbps_,
+                padding_rate_bps / 1000);
 }
 
 void PacedSender::InsertPacket(size_t bytes) {

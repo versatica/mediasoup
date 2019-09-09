@@ -72,6 +72,20 @@ namespace RTC
 		this->pacerTimer = nullptr;
 	}
 
+	void TransportCongestionControlClient::TransportConnected()
+	{
+		MS_TRACE();
+
+		this->rtpTransportControllerSend->OnNetworkAvailability(true);
+	}
+
+	void TransportCongestionControlClient::TransportDisconnected()
+	{
+		MS_TRACE();
+
+		this->rtpTransportControllerSend->OnNetworkAvailability(false);
+	}
+
 	void TransportCongestionControlClient::InsertPacket(webrtc::RtpPacketSendInfo& packetInfo)
 	{
 		MS_TRACE();
@@ -96,20 +110,6 @@ namespace RTC
 		// Notify the transport feedback adapter about the sent packet.
 		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, now);
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
-	}
-
-	void TransportCongestionControlClient::TransportConnected()
-	{
-		MS_TRACE();
-
-		this->rtpTransportControllerSend->OnNetworkAvailability(true);
-	}
-
-	void TransportCongestionControlClient::TransportDisconnected()
-	{
-		MS_TRACE();
-
-		this->rtpTransportControllerSend->OnNetworkAvailability(false);
 	}
 
 	void TransportCongestionControlClient::ReceiveEstimatedBitrate(uint32_t bitrate)
