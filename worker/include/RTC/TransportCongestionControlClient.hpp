@@ -42,7 +42,7 @@ namespace RTC
 		virtual ~TransportCongestionControlClient();
 
 	public:
-		void InsertPacket(size_t bytes);
+		void InsertPacket(webrtc::RtpPacketSendInfo& packetInfo);
 		webrtc::PacedPacketInfo GetPacingInfo();
 		void PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now);
 		void TransportConnected();

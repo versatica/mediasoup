@@ -2024,9 +2024,6 @@ namespace RTC
 
 			if (this->tccClient)
 			{
-				// Indicate the pacer (and prober) that a packet is to be sent.
-				this->tccClient->InsertPacket(packet->GetSize());
-
 				auto* tccClient = this->tccClient;
 				webrtc::RtpPacketSendInfo packetInfo;
 
@@ -2036,6 +2033,9 @@ namespace RTC
 				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 				packetInfo.length                    = packet->GetSize();
 				packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
+
+				// Indicate the pacer (and prober) that a packet is to be sent.
+				this->tccClient->InsertPacket(packetInfo);
 
 				SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
 					if (sent)
@@ -2063,9 +2063,6 @@ namespace RTC
 
 			if (this->tccClient)
 			{
-				// Indicate the pacer (and prober) that a packet is to be sent.
-				this->tccClient->InsertPacket(packet->GetSize());
-
 				auto* tccClient = this->tccClient;
 				webrtc::RtpPacketSendInfo packetInfo;
 
@@ -2075,6 +2072,9 @@ namespace RTC
 				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 				packetInfo.length                    = packet->GetSize();
 				packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
+
+				// Indicate the pacer (and prober) that a packet is to be sent.
+				this->tccClient->InsertPacket(packetInfo);
 
 				SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
 					if (sent)
@@ -2320,9 +2320,6 @@ namespace RTC
 		{
 			this->transportWideCcSeq++;
 
-			// Indicate the pacer (and prober) that a packet is to be sent.
-			this->tccClient->InsertPacket(packet->GetSize());
-
 			webrtc::RtpPacketSendInfo packetInfo;
 
 			packetInfo.ssrc                      = packet->GetSsrc();
@@ -2331,6 +2328,9 @@ namespace RTC
 			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 			packetInfo.length                    = packet->GetSize();
 			packetInfo.pacing_info               = pacingInfo;
+
+			// Indicate the pacer (and prober) that a packet is to be sent.
+			this->tccClient->InsertPacket(packetInfo);
 
 			SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
 				if (sent)

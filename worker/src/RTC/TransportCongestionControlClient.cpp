@@ -72,11 +72,14 @@ namespace RTC
 		this->pacerTimer = nullptr;
 	}
 
-	void TransportCongestionControlClient::InsertPacket(size_t bytes)
+	void TransportCongestionControlClient::InsertPacket(webrtc::RtpPacketSendInfo& packetInfo)
 	{
 		MS_TRACE();
 
-		this->rtpTransportControllerSend->packet_sender()->InsertPacket(bytes);
+		// Notify the transport feedback adapter about the sent packet.
+		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
+
+		this->rtpTransportControllerSend->packet_sender()->InsertPacket(packetInfo.length);
 	}
 
 	webrtc::PacedPacketInfo TransportCongestionControlClient::GetPacingInfo()
@@ -89,9 +92,6 @@ namespace RTC
 	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now)
 	{
 		MS_TRACE();
-
-		// Notify the transport feedback adapter about the sent packet.
-		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 
 		// Notify the transport feedback adapter about the sent packet.
 		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, now);
