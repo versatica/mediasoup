@@ -173,10 +173,6 @@ void RtpTransportControllerSend::OnSentPacket(
     PostUpdates(controller_->OnSentPacket(*packet_msg));
   pacer_.UpdateOutstandingData(
       transport_feedback_adapter_.GetOutstandingData().bytes());
-
-  // MS_NOTE: Since we don't send media packets within ::Process(),
-  // we use this callback to acknowledge sent packets.
-  pacer_.OnPacketSent(size);
 }
 
 void RtpTransportControllerSend::OnTransportOverheadChanged(

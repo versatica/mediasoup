@@ -118,6 +118,10 @@ void PacedSender::InsertPacket(size_t bytes) {
   prober_.OnIncomingPacket(bytes);
 
   packet_counter_++;
+
+  // MS_NOTE: Since we don't send media packets within ::Process(),
+  // we use this callback to acknowledge sent packets.
+  OnPacketSent(bytes);
 }
 
 void PacedSender::SetAccountForAudioPackets(bool account_for_audio) {
@@ -228,6 +232,7 @@ void PacedSender::Process() {
 
     packet_router_->SendPacket(padding_packet, pacing_info);
     bytes_sent += padding_packet->GetSize();
+    OnPacketSent(padding_packet->GetSize());
 
     if (recommended_probe_size && bytes_sent > *recommended_probe_size)
     {

@@ -2320,9 +2320,6 @@ namespace RTC
 		{
 			this->transportWideCcSeq++;
 
-			// Indicate the pacer (and prober) that a packet is to be sent.
-			this->tccClient->InsertPacket(packet->GetSize());
-
 			webrtc::RtpPacketSendInfo packetInfo;
 
 			packetInfo.ssrc                      = packet->GetSsrc();
