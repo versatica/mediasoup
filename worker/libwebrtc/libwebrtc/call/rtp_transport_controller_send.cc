@@ -124,6 +124,11 @@ void RtpTransportControllerSend::SetAllocatedSendBitrateLimits(
   UpdateStreamsConfig();
 }
 
+void RtpTransportControllerSend::SetClientBitratePreferences(const TargetRateConstraints& constraints)
+{
+  controller_->OnTargetRateConstraints(constraints);
+}
+
 void RtpTransportControllerSend::SetPacingFactor(float pacing_factor) {
   streams_config_.pacing_factor = pacing_factor;
   UpdateStreamsConfig();

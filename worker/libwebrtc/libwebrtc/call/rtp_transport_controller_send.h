@@ -59,6 +59,8 @@ class RtpTransportControllerSend final
                                      int max_padding_bitrate_bps,
                                      int max_total_bitrate_bps) override;
 
+  void SetClientBitratePreferences(const TargetRateConstraints& constraints);
+
   void SetPacingFactor(float pacing_factor) override;
   void RegisterTargetTransferRateObserver(
       TargetTransferRateObserver* observer) override;
@@ -66,9 +68,6 @@ class RtpTransportControllerSend final
   RtcpBandwidthObserver* GetBandwidthObserver() override;
   void EnablePeriodicAlrProbing(bool enable) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet, size_t size) override;
-
-  // MS_NOTE: not used.
-  // void SetClientBitratePreferences(const BitrateSettings& preferences) override;
 
   void OnTransportOverheadChanged(
       size_t transport_overhead_per_packet) override;
