@@ -141,21 +141,25 @@ namespace RTC
 		MS_TRACE();
 
 		// Already in the desired bitrate.
+		// TODO (ibc): I don't think it makes any sense.
 		if (maxSendBitrateBps == this->availableBitrate)
 			return;
 
 		// Bitrate increase requested, ask for a bit more to avoid fluctuations.
+		// TODO (ibc): I don't think it makes any sense.
 		if (maxSendBitrateBps > this->availableBitrate)
 		{
 			// TODO: Is it reasonable an increase of 3%?
 			maxSendBitrateBps *= 1.03;
 		}
 
+		// TODO (ibc): I don't think it makes any sense.
 		uint32_t minSendBitrateBps    = maxSendBitrateBps / 3;
 		uint32_t maxPaddingBitrateBps = maxSendBitrateBps - minSendBitrateBps;
 
 		webrtc::TargetRateConstraints constraints;
 
+		// TODO (ibc): I don't think it makes much sense.
 		constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTime());
 		constraints.min_data_rate = webrtc::DataRate::bps(minSendBitrateBps);
 		constraints.max_data_rate = webrtc::DataRate::bps(maxSendBitrateBps);
