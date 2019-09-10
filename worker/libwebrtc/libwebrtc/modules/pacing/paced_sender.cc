@@ -220,14 +220,6 @@ void PacedSender::Process() {
     padding_packet =
       packet_router_->GeneratePadding(padding_bytes_to_add);
 
-    if (!padding_packet)
-    {
-      // TODO: REMOVE
-      MS_DUMP("---- break 2");
-
-      break;
-    }
-
     MS_DEBUG_DEV("sending padding packet [size:%zu]", padding_packet->GetSize());
 
     packet_router_->SendPacket(padding_packet, pacing_info);
@@ -236,7 +228,7 @@ void PacedSender::Process() {
     if (recommended_probe_size && bytes_sent > *recommended_probe_size)
     {
       // TODO: REMOVE
-      MS_DUMP("---- break 3");
+      MS_DUMP("---- break 2");
 
       break;
     }
