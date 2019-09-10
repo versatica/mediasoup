@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::GoogCcNetworkController"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/goog_cc_network_control.h"
 #include "api/units/time_delta.h"
@@ -319,6 +319,14 @@ NetworkControlUpdate GoogCcNetworkController::OnTargetRateConstraints(
 }
 
 void GoogCcNetworkController::ClampConstraints() {
+  // TODO (ibc): Remove.
+  MS_WARN_DEV(
+    "1 - [min_data_rate_:%" PRIi64 ", min_total_allocated_bitrate_:%" PRIi64 ", max_data_rate_:%" PRIi64 ", starting_rate_:%" PRIi64 "]",
+    min_data_rate_.bps(),
+    min_total_allocated_bitrate_.bps(),
+    max_data_rate_.bps(),
+    (*starting_rate_).bps());
+
   // TODO(holmer): We should make sure the default bitrates are set to 10 kbps,
   // and that we don't try to set the min bitrate to 0 from any applications.
   // The congestion controller should allow a min bitrate of 0.
@@ -334,6 +342,14 @@ void GoogCcNetworkController::ClampConstraints() {
     MS_WARN_TAG(bwe, "start bitrate smaller than min bitrate");
     starting_rate_ = min_data_rate_;
   }
+
+  // TODO (ibc): Remove.
+  MS_WARN_DEV(
+    "2 - [min_data_rate_:%" PRIi64 ", min_total_allocated_bitrate_:%" PRIi64 ", max_data_rate_:%" PRIi64 ", starting_rate_:%" PRIi64 "]",
+    min_data_rate_.bps(),
+    min_total_allocated_bitrate_.bps(),
+    max_data_rate_.bps(),
+    (*starting_rate_).bps());
 }
 
 std::vector<ProbeClusterConfig> GoogCcNetworkController::ResetConstraints(

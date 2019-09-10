@@ -80,8 +80,9 @@ namespace RTC
 		RTC::RtpProbationGenerator* probationGenerator{ nullptr };
 		Timer* pacerTimer{ nullptr };
 		// Others.
-		uint32_t availableBitrate{ 0 };
-		uint64_t lastAvailableBitrateEventAt{ 0 };
+		uint32_t initialAvailableBitrate{ 0u };
+		uint32_t availableBitrate{ 0u };
+		uint64_t lastAvailableBitrateEventAt{ 0u };
 	};
 } // namespace RTC
 

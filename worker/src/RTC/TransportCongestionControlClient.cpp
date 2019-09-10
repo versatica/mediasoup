@@ -18,7 +18,7 @@ namespace RTC
 	  RTC::TransportCongestionControlClient::Listener* listener,
 	  RTC::BweType bweType,
 	  uint32_t initialAvailableBitrate)
-	  : listener(listener)
+	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate)
 	{
 		MS_TRACE();
 
@@ -35,7 +35,7 @@ namespace RTC
 
 		webrtc::BitrateConstraints bitrateConfig;
 
-		bitrateConfig.start_bitrate_bps = static_cast<int>(initialAvailableBitrate);
+		bitrateConfig.start_bitrate_bps = static_cast<int>(this->initialAvailableBitrate);
 
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
 		  this, this->predictorFactory, this->controllerFactory, bitrateConfig);
@@ -178,6 +178,37 @@ namespace RTC
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
 		  minSendBitrateBps, maxPaddingBitrateBps, desiredBitrate);
 	}
+
+	// TODO (ibc): Stupid attempt that does not work at all.
+	// void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate)
+	// {
+	// 	MS_TRACE();
+
+	// 	auto minBitrate        = static_cast<uint32_t>(std::min(desiredBitrate, 10000u));
+	// 	auto maxBitrate        = static_cast<uint32_t>(std::max(minBitrate, desiredBitrate));
+	// 	auto maxPaddingBitrate = maxBitrate;
+	// 	auto startBitrate      = static_cast<uint32_t>(std::min(this->initialAvailableBitrate, desiredBitrate));
+
+	// 	webrtc::TargetRateConstraints constraints;
+
+	// 	constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTime());
+	// 	constraints.min_data_rate = webrtc::DataRate::bps(minBitrate);
+	// 	constraints.max_data_rate = webrtc::DataRate::bps(maxBitrate);
+	// 	constraints.starting_rate = webrtc::DataRate::bps(startBitrate);
+
+	// 	MS_WARN_DEV(
+	// 	  "[desiredBitrate:%" PRIu32 ", minBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 ", startBitrate:%" PRIu32 "]",
+	// 	  desiredBitrate,
+	// 	  minBitrate,
+	// 	  maxBitrate,
+	// 	  maxPaddingBitrate,
+	// 	  startBitrate);
+
+	// 	this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
+
+	// 	this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
+	// 	  minBitrate, maxPaddingBitrate, maxBitrate);
+	// }
 
 	uint32_t TransportCongestionControlClient::GetAvailableBitrate() const
 	{
