@@ -140,11 +140,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Should we increase a bit the maxSendBirateBps??
-
 		// Already in the desired bitrate.
 		if (maxSendBitrateBps == this->availableBitrate)
 			return;
+
+		// Bitrate increase requested, ask for a bit more to avoid fluctuations.
+		if (maxSendBitrateBps > this->availableBitrate)
+		{
+			// TODO: Is it reasonable an increase of 3%?
+			maxSendBitrateBps *= 1.03;
+
+		}
 
 		uint32_t minSendBitrateBps    = maxSendBitrateBps / 3;
 		uint32_t maxPaddingBitrateBps = maxSendBitrateBps / 3;
