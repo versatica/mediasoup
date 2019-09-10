@@ -153,7 +153,7 @@ namespace RTC
 		}
 
 		uint32_t minSendBitrateBps    = maxSendBitrateBps / 3;
-		uint32_t maxPaddingBitrateBps = maxSendBitrateBps / 3;
+		uint32_t maxPaddingBitrateBps = maxSendBitrateBps - minSendBitrateBps;
 
 		webrtc::TargetRateConstraints constraints;
 
