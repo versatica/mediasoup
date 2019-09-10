@@ -111,9 +111,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (len <= sizeof(ProbationPacketHeader))
-			return nullptr;
-
 		if (len > MaxProbationPayloadLength)
 			len = MaxProbationPayloadLength;
 
@@ -127,6 +124,10 @@ namespace RTC
 
 		this->probationPacket->SetSequenceNumber(seq);
 		this->probationPacket->SetTimestamp(timestamp);
+
+		if (len < sizeof(ProbationPacketHeader))
+			len = sizeof(ProbationPacketHeader);
+
 		this->probationPacket->SetPayloadLength(len - sizeof(ProbationPacketHeader));
 
 		return this->probationPacket;

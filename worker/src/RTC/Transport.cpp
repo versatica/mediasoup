@@ -1947,9 +1947,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
 
-		// TODO:
-		// Must adjust these values.
-		this->tccClient->SetDesiredBitrates(100000, totalDesiredBitrate / 4, totalDesiredBitrate);
+		this->tccClient->SetDesiredBitrate(totalDesiredBitrate);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
