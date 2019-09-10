@@ -102,6 +102,8 @@ void PacedSender::SetProbingEnabled(bool enabled) {
 void PacedSender::SetPacingRates(uint32_t pacing_rate_bps,
                                  uint32_t padding_rate_bps) {
   // RTC_DCHECK(pacing_rate_bps > 0);
+  MS_ASSERT(pacing_rate_bps > 0, "pacing rate must be > 0");
+
   pacing_bitrate_kbps_ = pacing_rate_bps / 1000;
   padding_budget_.set_target_rate_kbps(padding_rate_bps / 1000);
 

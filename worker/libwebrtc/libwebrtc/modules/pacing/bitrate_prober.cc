@@ -93,6 +93,8 @@ void BitrateProber::CreateProbeCluster(int bitrate_bps,
                                        int cluster_id) {
   // RTC_DCHECK(probing_state_ != ProbingState::kDisabled);
   // RTC_DCHECK_GT(bitrate_bps, 0);
+  MS_ASSERT(probing_state_ != ProbingState::kDisabled, "probing disabled");
+  MS_ASSERT(bitrate_bps > 0, "bitrate must be > 0");
 
   total_probe_count_++;
   while (!clusters_.empty() &&
@@ -107,7 +109,10 @@ void BitrateProber::CreateProbeCluster(int bitrate_bps,
   cluster.pace_info.probe_cluster_min_bytes =
       static_cast<int32_t>(static_cast<int64_t>(bitrate_bps) *
                            config_.min_probe_duration->ms() / 8000);
+
   // RTC_DCHECK_GE(cluster.pace_info.probe_cluster_min_bytes, 0);
+  MS_ASSERT(cluster.pace_info.probe_cluster_min_bytes >= 0, "cluster min bytes must be >= 0");
+
   cluster.pace_info.send_bitrate_bps = bitrate_bps;
   cluster.pace_info.probe_cluster_id = cluster_id;
   clusters_.push(cluster);
@@ -147,6 +152,9 @@ int BitrateProber::TimeUntilNextProbe(int64_t now_ms) {
 PacedPacketInfo BitrateProber::CurrentCluster() const {
   // RTC_DCHECK(!clusters_.empty());
   // RTC_DCHECK(probing_state_ == ProbingState::kActive);
+  MS_ASSERT(!clusters_.empty(), "clusters is empty");
+  MS_ASSERT(probing_state_ == ProbingState::kActive, "probing not active");
+
   return clusters_.front().pace_info;
 }
 
@@ -155,6 +163,8 @@ PacedPacketInfo BitrateProber::CurrentCluster() const {
 // feasible.
 size_t BitrateProber::RecommendedMinProbeSize() const {
   // RTC_DCHECK(!clusters_.empty());
+  MS_ASSERT(!clusters_.empty(), "clusters is empty");
+
   return clusters_.front().pace_info.send_bitrate_bps * 2 *
          config_.min_probe_delta->ms() / (8 * 1000);
 }
@@ -162,11 +172,15 @@ size_t BitrateProber::RecommendedMinProbeSize() const {
 void BitrateProber::ProbeSent(int64_t now_ms, size_t bytes) {
   // RTC_DCHECK(probing_state_ == ProbingState::kActive);
   // RTC_DCHECK_GT(bytes, 0);
+  MS_ASSERT(probing_state_ == ProbingState::kActive, "probing not active");
+  MS_ASSERT(bytes > 0, "bytes must be > 0");
 
   if (!clusters_.empty()) {
     ProbeCluster* cluster = &clusters_.front();
     if (cluster->sent_probes == 0) {
       // RTC_DCHECK_EQ(cluster->time_started_ms, -1);
+      MS_ASSERT(cluster->time_started_ms == -1, "cluster started time must not be -1");
+
       cluster->time_started_ms = now_ms;
     }
     cluster->sent_bytes += static_cast<int>(bytes);

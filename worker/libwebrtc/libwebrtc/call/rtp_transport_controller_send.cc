@@ -70,7 +70,9 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       network_available_(false) {
   initial_config_.constraints = ConvertConstraints(bitrate_config);
   initial_config_.key_value_config = &trial_based_config_;
+
   // RTC_DCHECK(bitrate_config.start_bitrate_bps > 0);
+  MS_ASSERT(bitrate_config.start_bitrate_bps > 0, "start bitrate must be > 0");
 
   pacer_.SetPacingRates(bitrate_config.start_bitrate_bps, 0);
 
@@ -89,8 +91,11 @@ void RtpTransportControllerSend::UpdateControlState() {
   absl::optional<TargetTransferRate> update = control_handler_->GetUpdate();
   if (!update)
     return;
+
   // We won't create control_handler_ until we have an observers.
   // RTC_DCHECK(observer_ != nullptr);
+  MS_ASSERT(observer_ != nullptr, "no observer");
+
   observer_->OnTargetTransferRate(*update);
 }
 
@@ -131,7 +136,10 @@ void RtpTransportControllerSend::SetPacingFactor(float pacing_factor) {
 
 void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
     TargetTransferRateObserver* observer) {
+
     // RTC_DCHECK(observer_ == nullptr);
+    MS_ASSERT(observer_ == nullptr, "observer already set");
+
     observer_ = observer;
     observer_->OnStartRateUpdate(*initial_config_.constraints.starting_rate);
     MaybeCreateControllers();
@@ -244,6 +252,8 @@ void RtpTransportControllerSend::OnTimer(Timer* timer)
 void RtpTransportControllerSend::MaybeCreateControllers() {
   // RTC_DCHECK(!controller_);
   // RTC_DCHECK(!control_handler_);
+  MS_ASSERT(!controller_, "controller already set");
+  MS_ASSERT(!control_handler_, "controller handler already set");
 
   control_handler_ = absl::make_unique<CongestionControlHandler>();
 
@@ -261,7 +271,10 @@ void RtpTransportControllerSend::UpdateInitialConstraints(
     TargetRateConstraints new_contraints) {
   if (!new_contraints.starting_rate)
     new_contraints.starting_rate = initial_config_.constraints.starting_rate;
+
   // RTC_DCHECK(new_contraints.starting_rate);
+  MS_ASSERT(new_contraints.starting_rate, "starting rate unset");
+
   initial_config_.constraints = new_contraints;
 }
 
@@ -273,6 +286,8 @@ void RtpTransportControllerSend::StartProcessPeriodicTasks() {
 
 void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
   // RTC_DCHECK(controller_);
+  MS_ASSERT(controller_, "controller not set");
+
   ProcessInterval msg;
   msg.at_time = Timestamp::ms(DepLibUV::GetTime());
 
