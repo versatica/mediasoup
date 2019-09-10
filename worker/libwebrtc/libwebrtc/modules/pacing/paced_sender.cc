@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::PacedSender"
-#define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "modules/pacing/paced_sender.h"
 #include "modules/pacing/bitrate_prober.h"
@@ -161,7 +161,7 @@ int64_t PacedSender::UpdateTimeAndGetElapsedMs(int64_t now_ms) {
 
 void PacedSender::Process() {
   // TODO: REMOVE
-  MS_DUMP("---- START");
+  MS_DEBUG_DEV("---- START");
 
   int64_t now_ms = DepLibUV::GetTime();
   int64_t elapsed_time_ms = UpdateTimeAndGetElapsedMs(now_ms);
@@ -169,7 +169,7 @@ void PacedSender::Process() {
   if (paused_)
   {
     // TODO: REMOVE
-    MS_DUMP("---- END 1");
+    MS_DEBUG_DEV("---- END 1");
 
     return;
   }
@@ -183,7 +183,7 @@ void PacedSender::Process() {
   if (!prober_.IsProbing())
   {
     // TODO: REMOVE
-    MS_DUMP("---- END 2");
+    MS_DEBUG_DEV("---- END 2");
 
     return;
   }
@@ -199,7 +199,7 @@ void PacedSender::Process() {
   RTC::RtpPacket* padding_packet{ nullptr };
 
   // TODO: REMOVE
-  MS_DUMP("---- entering loop");
+  MS_DEBUG_DEV("---- entering loop");
 
   // Check if we should send padding.
   while (true)
@@ -210,7 +210,7 @@ void PacedSender::Process() {
     if (padding_bytes_to_add == 0)
     {
       // TODO: REMOVE
-      MS_DUMP("---- break 1");
+      MS_DEBUG_DEV("---- break 1");
 
       break;
     }
@@ -230,14 +230,14 @@ void PacedSender::Process() {
     if (recommended_probe_size && bytes_sent > *recommended_probe_size)
     {
       // TODO: REMOVE
-      MS_DUMP("---- break 2");
+      MS_DEBUG_DEV("---- break 2");
 
       break;
     }
   }
 
   // TODO: REMOVE
-  MS_DUMP("---- loop exited");
+  MS_DEBUG_DEV("---- loop exited");
 
   if (bytes_sent != 0)
   {
@@ -247,7 +247,7 @@ void PacedSender::Process() {
   }
 
   // TODO: REMOVE
-  MS_DUMP("---- END TOTAL");
+  MS_DEBUG_DEV("---- END TOTAL");
 }
 
 size_t PacedSender::PaddingBytesToAdd(

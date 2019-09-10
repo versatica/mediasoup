@@ -149,7 +149,6 @@ namespace RTC
 		{
 			// TODO: Is it reasonable an increase of 3%?
 			maxSendBitrateBps *= 1.03;
-
 		}
 
 		uint32_t minSendBitrateBps    = maxSendBitrateBps / 3;
@@ -163,8 +162,8 @@ namespace RTC
 		constraints.starting_rate = webrtc::DataRate::bps(this->availableBitrate);
 
 		MS_DEBUG_DEV(
-		  "minSendBitrateBps:%" PRIu32 ", maxPaddingBitrateBps:%" PRIi32 ", maxSendBitrateBps:%" PRIi32
-		  ", starting rate:%" PRIu32,
+		  "[minSendBitrateBps:%" PRIu32 ", maxPaddingBitrateBps:%" PRIi32 ", maxSendBitrateBps:%" PRIi32
+		  ", starting rate:%" PRIu32 "]",
 		  minSendBitrateBps,
 		  maxPaddingBitrateBps,
 		  maxSendBitrateBps,

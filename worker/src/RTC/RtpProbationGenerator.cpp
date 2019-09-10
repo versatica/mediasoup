@@ -111,8 +111,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Make the packet length fit into our available limits.
 		if (len > MaxProbationPayloadLength)
 			len = MaxProbationPayloadLength;
+		else if (len < sizeof(ProbationPacketHeader))
+			len = sizeof(ProbationPacketHeader);
 
 		// Just send up to StepNumPackets per step.
 		// Increase RTP seq number and timestamp.
@@ -124,9 +127,6 @@ namespace RTC
 
 		this->probationPacket->SetSequenceNumber(seq);
 		this->probationPacket->SetTimestamp(timestamp);
-
-		if (len < sizeof(ProbationPacketHeader))
-			len = sizeof(ProbationPacketHeader);
 
 		this->probationPacket->SetPayloadLength(len - sizeof(ProbationPacketHeader));
 
