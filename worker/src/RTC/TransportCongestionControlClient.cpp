@@ -40,9 +40,9 @@ namespace RTC
 		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
 		  this, this->predictorFactory, this->controllerFactory, bitrateConfig);
 
-		this->probationGenerator = new RTC::RtpProbationGenerator();
-
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
+
+		this->probationGenerator = new RTC::RtpProbationGenerator();
 
 		this->pacerTimer = new Timer(this);
 
