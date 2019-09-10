@@ -80,11 +80,8 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
-  if (controller_task_periodic_timer_)
-  {
-    controller_task_periodic_timer_->Stop();
-    delete controller_task_periodic_timer_;
-  }
+  controller_task_periodic_timer_->Stop();
+  delete controller_task_periodic_timer_;
 }
 
 void RtpTransportControllerSend::UpdateControlState() {
@@ -248,10 +245,7 @@ void RtpTransportControllerSend::OnRemoteNetworkEstimate(
 
 void RtpTransportControllerSend::OnTimer(Timer* timer)
 {
-	if (timer == controller_task_periodic_timer_)
-	{
-		UpdateControllerWithTimeInterval();
-  }
+	UpdateControllerWithTimeInterval();
 }
 
 void RtpTransportControllerSend::MaybeCreateControllers() {
