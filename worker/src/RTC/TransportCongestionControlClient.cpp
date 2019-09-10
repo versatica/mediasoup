@@ -136,47 +136,47 @@ namespace RTC
 		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
 	}
 
-	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t maxSendBitrateBps)
+	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate)
 	{
 		MS_TRACE();
 
 		// Already in the desired bitrate.
 		// TODO (ibc): I don't think it makes any sense.
-		if (maxSendBitrateBps == this->availableBitrate)
+		if (desiredBitrate == this->availableBitrate)
 			return;
 
 		// Bitrate increase requested, ask for a bit more to avoid fluctuations.
 		// TODO (ibc): I don't think it makes any sense.
-		if (maxSendBitrateBps > this->availableBitrate)
+		if (desiredBitrate > this->availableBitrate)
 		{
 			// TODO: Is it reasonable an increase of 3%?
-			maxSendBitrateBps *= 1.03;
+			desiredBitrate *= 1.03;
 		}
 
 		// TODO (ibc): I don't think it makes any sense.
-		uint32_t minSendBitrateBps    = maxSendBitrateBps / 3;
-		uint32_t maxPaddingBitrateBps = maxSendBitrateBps - minSendBitrateBps;
+		uint32_t minSendBitrateBps    = desiredBitrate / 3;
+		uint32_t maxPaddingBitrateBps = desiredBitrate - minSendBitrateBps;
 
 		webrtc::TargetRateConstraints constraints;
 
 		// TODO (ibc): I don't think it makes much sense.
 		constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTime());
 		constraints.min_data_rate = webrtc::DataRate::bps(minSendBitrateBps);
-		constraints.max_data_rate = webrtc::DataRate::bps(maxSendBitrateBps);
+		constraints.max_data_rate = webrtc::DataRate::bps(desiredBitrate);
 		constraints.starting_rate = webrtc::DataRate::bps(this->availableBitrate);
 
 		MS_DEBUG_DEV(
-		  "[minSendBitrateBps:%" PRIu32 ", maxPaddingBitrateBps:%" PRIi32 ", maxSendBitrateBps:%" PRIi32
+		  "[minSendBitrateBps:%" PRIu32 ", maxPaddingBitrateBps:%" PRIi32 ", desiredBitrate:%" PRIi32
 		  ", starting rate:%" PRIu32 "]",
 		  minSendBitrateBps,
 		  maxPaddingBitrateBps,
-		  maxSendBitrateBps,
+		  desiredBitrate,
 		  this->availableBitrate);
 
 		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
-		  minSendBitrateBps, maxPaddingBitrateBps, maxSendBitrateBps);
+		  minSendBitrateBps, maxPaddingBitrateBps, desiredBitrate);
 	}
 
 	uint32_t TransportCongestionControlClient::GetAvailableBitrate() const
