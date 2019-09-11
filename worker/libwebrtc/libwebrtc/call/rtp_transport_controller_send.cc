@@ -266,17 +266,6 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
   StartProcessPeriodicTasks();
 }
 
-void RtpTransportControllerSend::UpdateInitialConstraints(
-    TargetRateConstraints new_contraints) {
-  if (!new_contraints.starting_rate)
-    new_contraints.starting_rate = initial_config_.constraints.starting_rate;
-
-  // RTC_DCHECK(new_contraints.starting_rate);
-  MS_ASSERT(new_contraints.starting_rate, "starting rate unset");
-
-  initial_config_.constraints = new_contraints;
-}
-
 void RtpTransportControllerSend::StartProcessPeriodicTasks() {
   auto controllerTaskPeriodicInterval = process_interval_.ms();
 

@@ -90,7 +90,6 @@ class RtpTransportControllerSend final
 
  private:
   void MaybeCreateControllers();
-  void UpdateInitialConstraints(TargetRateConstraints new_contraints);
 
   void StartProcessPeriodicTasks();
   void UpdateControllerWithTimeInterval();
