@@ -30,9 +30,9 @@
 # python win generated Stuff.
 /worker/scripts/configure.pyc
 
-# vistual studio generated Stuff.
+# Vistual Studio generated Stuff.
 /worker/**/Debug/
 /worker/**/Release/
 
-# VS stuff.
+# Vistual Studio Code stuff.
 /worker/.vs/

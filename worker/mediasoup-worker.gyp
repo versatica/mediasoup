@@ -274,7 +274,7 @@
       [ 'OS == "win"', {
         'dependencies': [ 'deps/getopt/getopt.gyp:getopt' ],
         
-        # handle multi files with same name.
+        # Handle multi files with same name.
         # https://stackoverflow.com/a/22936230/2085408
         # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
         'msvs_settings': {
