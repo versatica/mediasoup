@@ -57,11 +57,9 @@ namespace Channel
 	};
 	// clang-format on
 
-	/* Class variables. */
-
 	Channel::UnixStreamSocket* Request::channel{ nullptr };
 
-	/* Static methods. */
+	/* Class methods. */
 
 	void Request::ClassInit(Channel::UnixStreamSocket* channel)
 	{
@@ -125,8 +123,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Request::channel != nullptr, "channel unset");
-
+		MS_ASSERT(Request::channel, "channel unset");
 		MS_ASSERT(!this->replied, "request already replied");
 
 		this->replied = true;
@@ -143,8 +140,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Request::channel != nullptr, "channel unset");
-
+		MS_ASSERT(Request::channel, "channel unset");
 		MS_ASSERT(!this->replied, "request already replied");
 
 		this->replied = true;
@@ -164,8 +160,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Request::channel != nullptr, "channel unset");
-
+		MS_ASSERT(Request::channel, "channel unset");
 		MS_ASSERT(!this->replied, "request already replied");
 
 		this->replied = true;
@@ -185,8 +180,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Request::channel != nullptr, "channel unset");
-
+		MS_ASSERT(Request::channel, "channel unset");
 		MS_ASSERT(!this->replied, "request already replied");
 
 		this->replied = true;

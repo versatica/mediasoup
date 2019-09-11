@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	}
 
 	// Initialize the Logger.
-	Logger::ClassInit(&channel->producerSocket);
+	Logger::ClassInit(&(channel->producerSocket));
 
 	try
 	{
@@ -112,8 +112,8 @@ int main(int argc, char* argv[])
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
-		Channel::Notifier::ClassInit(&channel->producerSocket);
-		Channel::Request::ClassInit(&channel->producerSocket);
+		Channel::Notifier::ClassInit(&(channel->producerSocket));
+		Channel::Request::ClassInit(&(channel->producerSocket));
 
 		// Ignore some signals.
 		IgnoreSignals();
