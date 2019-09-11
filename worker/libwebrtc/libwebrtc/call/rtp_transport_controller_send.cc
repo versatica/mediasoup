@@ -146,6 +146,7 @@ void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
     observer_->OnStartRateUpdate(*initial_config_.constraints.starting_rate);
     MaybeCreateControllers();
 }
+
 void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
   MS_DEBUG_TAG(bwe, "SignalNetworkState %s",
                    (network_available ? "Up" : "Down"));
@@ -171,10 +172,12 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
 RtcpBandwidthObserver* RtpTransportControllerSend::GetBandwidthObserver() {
   return this;
 }
+
 void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
 	streams_config_.requests_alr_probing = enable;
   UpdateStreamsConfig();
 }
+
 void RtpTransportControllerSend::OnSentPacket(
     const rtc::SentPacket& sent_packet, size_t size) {
   absl::optional<SentPacket> packet_msg =
