@@ -38,9 +38,9 @@ private:
 	Channel::UnixStreamSocket* channel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
+	std::unordered_map<std::string, RTC::Router*> mapRouters;
 	// Others.
 	bool closed{ false };
-	std::unordered_map<std::string, RTC::Router*> mapRouters;
 };
 
 #endif
