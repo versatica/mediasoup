@@ -27,7 +27,7 @@
 # Mac Stuff.
 .DS_Store
 
-# python win generated Stuff.
+# Python generated stuff in Windows.
 /worker/scripts/configure.pyc
 
 # Vistual Studio generated Stuff.
