@@ -80,7 +80,6 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
-  controller_task_periodic_timer_->Stop();
   delete controller_task_periodic_timer_;
 }
 
