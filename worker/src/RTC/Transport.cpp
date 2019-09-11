@@ -2314,6 +2314,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: REMOVE
+		MS_WARN_DEV(
+			"sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu]",
+			packet->GetSequenceNumber(), this->transportWideCcSeq + 1u, packet->GetSize());
+
 		// Update transport wide sequence number if present.
 		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{

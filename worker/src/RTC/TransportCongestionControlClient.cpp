@@ -191,7 +191,7 @@ namespace RTC
 		auto startBitrate = static_cast<uint32_t>(std::max(minBitrate, this->initialAvailableBitrate));
 		// Let's increase the max bitrate since it may oscillate.
 		auto maxBitrate        = static_cast<uint32_t>(std::max(startBitrate, desiredBitrate) * 1.15);
-		auto maxPaddingBitrate = desiredBitrate;
+		auto maxPaddingBitrate = desiredBitrate / 2; // TODO: No idea but we want full desiredBitrate.
 
 		webrtc::TargetRateConstraints constraints;
 
@@ -208,8 +208,8 @@ namespace RTC
 		  maxBitrate,
 		  startBitrate);
 
-		// TODO (ibc): It works without this!
-		// this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
+		// TODO (ibc): It does not work at all with this...
+		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
 		  minBitrate, maxPaddingBitrate, maxBitrate);
