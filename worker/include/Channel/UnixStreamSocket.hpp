@@ -8,25 +8,18 @@
 
 namespace Channel
 {
-	class UnixStreamSocket : public ::UnixStreamSocket
+	class ConsumerSocket : public ::UnixStreamSocket
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
-			virtual void OnChannelRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
+			virtual void OnSocketRequest(::UnixStreamSocket* socket, json& jsonRequest) = 0;
+			virtual void OnSocketRemotelyClosed(::UnixStreamSocket* socket)             = 0;
 		};
 
 	public:
-		explicit UnixStreamSocket(int fd, ::UnixStreamSocket::Role role);
-
-	public:
-		void SetListener(Listener* listener);
-		void Send(json& jsonMessage);
-		void SendLog(char* nsPayload, size_t nsPayloadLen);
-		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
-
+		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
@@ -39,19 +32,50 @@ namespace Channel
 		size_t msgStart{ 0 }; // Where the latest message starts.
 	};
 
-	class ChannelWrapper
+	class ProducerSocket : public ::UnixStreamSocket
 	{
 	public:
-		ChannelWrapper(int consumerFd, int producerFd)
-		  : consumerSocket(consumerFd, ::UnixStreamSocket::Role::CONSUMER),
-		    producerSocket(producerFd, ::UnixStreamSocket::Role::PRODUCER)
+		ProducerSocket(int fd, size_t bufferSize);
+		/* Pure virtual methods inherited from ::UnixStreamSocket. */
+	public:
+		void UserOnUnixStreamRead() override
 		{
 		}
+		void UserOnUnixStreamSocketClosed(bool isClosedByPeer) override
+		{
+		}
+	};
+
+	class UnixStreamSocket : public ConsumerSocket::Listener
+	{
+	public:
+		class Listener
+		{
+		public:
+			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
+			virtual void OnChannelRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
+		};
 
 	public:
+		explicit UnixStreamSocket(int consumerFd, int producerFd);
+
+	public:
+		void SetListener(Listener* listener);
+		void Send(json& jsonMessage);
+		void SendLog(char* nsPayload, size_t nsPayloadLen);
+		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
+
+		/* Pure virtual methods inherited from ::ConsumerSocket::Listener. */
+	public:
+		void OnSocketRequest(::UnixStreamSocket* socket, json& jsonRequest) override;
+		void OnSocketRemotelyClosed(::UnixStreamSocket* socket) override;
+
+	private:
 		// Passed by argument.
-		UnixStreamSocket consumerSocket;
-		UnixStreamSocket producerSocket;
+		Listener* listener{ nullptr };
+
+		ConsumerSocket consumerSocket;
+		ProducerSocket producerSocket;
 	};
 } // namespace Channel
 

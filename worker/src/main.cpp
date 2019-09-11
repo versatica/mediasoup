@@ -48,11 +48,11 @@ int main(int argc, char* argv[])
 	DepLibUV::ClassInit();
 
 	// Channel socket (it will be handled and deleted by the Worker).
-	Channel::ChannelWrapper* channel{ nullptr };
+	Channel::UnixStreamSocket* channel{ nullptr };
 
 	try
 	{
-		channel = new Channel::ChannelWrapper(ConsumerChannelFd, ProducerChannelFd);
+		channel = new Channel::UnixStreamSocket(ConsumerChannelFd, ProducerChannelFd);
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	}
 
 	// Initialize the Logger.
-	Logger::ClassInit(&(channel->producerSocket));
+	Logger::ClassInit(channel);
 
 	try
 	{
@@ -112,8 +112,7 @@ int main(int argc, char* argv[])
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
-		Channel::Notifier::ClassInit(&(channel->producerSocket));
-		Channel::Request::ClassInit(&(channel->producerSocket));
+		Channel::Notifier::ClassInit(channel);
 
 		// Ignore some signals.
 		IgnoreSignals();

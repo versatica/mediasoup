@@ -67,7 +67,7 @@ namespace Channel
 		static std::unordered_map<std::string, MethodId> string2MethodId;
 
 	public:
-		explicit Request(json& jsonRequest);
+		Request(Channel::UnixStreamSocket* channel, json& jsonRequest);
 		virtual ~Request();
 
 		void Accept();
@@ -76,6 +76,8 @@ namespace Channel
 		void TypeError(const char* reason = nullptr);
 
 	public:
+		// Passed by argument.
+		Channel::UnixStreamSocket* channel{ nullptr };
 		uint32_t id{ 0u };
 		std::string method;
 		MethodId methodId;
@@ -83,13 +85,6 @@ namespace Channel
 		json data;
 		// Others.
 		bool replied{ false };
-
-	public:
-		static void ClassInit(Channel::UnixStreamSocket* channel);
-
-	public:
-		// Passed by argument.
-		static Channel::UnixStreamSocket* channel;
 	};
 } // namespace Channel
 

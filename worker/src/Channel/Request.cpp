@@ -57,20 +57,9 @@ namespace Channel
 	};
 	// clang-format on
 
-	Channel::UnixStreamSocket* Request::channel{ nullptr };
-
-	/* Class methods. */
-
-	void Request::ClassInit(Channel::UnixStreamSocket* channel)
-	{
-		MS_TRACE();
-
-		Request::channel = channel;
-	}
-
 	/* Instance methods. */
 
-	Request::Request(json& jsonRequest)
+	Request::Request(Channel::UnixStreamSocket* channel, json& jsonRequest) : channel(channel)
 	{
 		MS_TRACE();
 
@@ -123,7 +112,6 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Request::channel, "channel unset");
 		MS_ASSERT(!this->replied, "request already replied");
 
 		this->replied = true;
@@ -133,14 +121,13 @@ namespace Channel
 		jsonResponse["id"]       = this->id;
 		jsonResponse["accepted"] = true;
 
-		Request::channel->Send(jsonResponse);
+		this->channel->Send(jsonResponse);
 	}
 
 	void Request::Accept(json& data)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Request::channel, "channel unset");
 		MS_ASSERT(!this->replied, "request already replied");
 
 		this->replied = true;
@@ -153,14 +140,13 @@ namespace Channel
 		if (data.is_structured())
 			jsonResponse["data"] = data;
 
-		Request::channel->Send(jsonResponse);
+		this->channel->Send(jsonResponse);
 	}
 
 	void Request::Error(const char* reason)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Request::channel, "channel unset");
 		MS_ASSERT(!this->replied, "request already replied");
 
 		this->replied = true;
@@ -173,14 +159,13 @@ namespace Channel
 		if (reason != nullptr)
 			jsonResponse["reason"] = reason;
 
-		Request::channel->Send(jsonResponse);
+		this->channel->Send(jsonResponse);
 	}
 
 	void Request::TypeError(const char* reason)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Request::channel, "channel unset");
 		MS_ASSERT(!this->replied, "request already replied");
 
 		this->replied = true;
@@ -193,6 +178,6 @@ namespace Channel
 		if (reason != nullptr)
 			jsonResponse["reason"] = reason;
 
-		Request::channel->Send(jsonResponse);
+		this->channel->Send(jsonResponse);
 	}
 } // namespace Channel
