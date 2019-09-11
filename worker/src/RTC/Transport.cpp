@@ -2297,7 +2297,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV(
+		// TODO: Use MS_DEBUG_DEV.
+		MS_WARN_DEV(
 		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
 		  availableBitrate,
 		  previousAvailableBitrate);
