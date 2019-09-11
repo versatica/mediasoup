@@ -79,4 +79,3 @@ function execute(command)
 	childProcess.stdout.pipe(process.stdout);
 	childProcess.stderr.pipe(process.stderr);
 }
-
