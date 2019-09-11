@@ -169,6 +169,7 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
   PostUpdates(controller_->OnNetworkAvailability(msg));
   UpdateControlState();
 }
+
 RtcpBandwidthObserver* RtpTransportControllerSend::GetBandwidthObserver() {
   return this;
 }
