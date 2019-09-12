@@ -90,13 +90,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO (ibc): Is this order correct? It does not match wath Gustavo does:
-		// https://gist.github.com/ibc/77ed0355ea617a47823cf70d13a065dd
-
-		// Notify the transport feedback adapter about the sent packet.
-		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
-
 		this->rtpTransportControllerSend->packet_sender()->InsertPacket(packetInfo.length);
+		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 	}
 
 	webrtc::PacedPacketInfo TransportCongestionControlClient::GetPacingInfo()
