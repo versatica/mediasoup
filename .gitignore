@@ -33,6 +33,7 @@
 # Vistual Studio generated Stuff.
 /worker/**/Debug/
 /worker/**/Release/
+/worker/.vs/
 
 # Vistual Studio Code stuff.
-/worker/.vs/
+/.vscode/
