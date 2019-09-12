@@ -27,6 +27,11 @@ namespace Channel
 		MS_TRACE_STD();
 	}
 
+	UnixStreamSocket ::~UnixStreamSocket()
+	{
+		MS_TRACE();
+	}
+
 	void UnixStreamSocket::SetListener(Listener* listener)
 	{
 		MS_TRACE_STD();

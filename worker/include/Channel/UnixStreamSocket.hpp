@@ -58,6 +58,7 @@ namespace Channel
 
 	public:
 		explicit UnixStreamSocket(int consumerFd, int producerFd);
+		virtual ~UnixStreamSocket();
 
 	public:
 		void SetListener(Listener* listener);
