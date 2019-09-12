@@ -14,8 +14,8 @@ namespace Channel
 		class Listener
 		{
 		public:
-			virtual void OnSocketRequest(::UnixStreamSocket* socket, json& jsonRequest) = 0;
-			virtual void OnSocketRemotelyClosed(::UnixStreamSocket* socket)             = 0;
+			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) = 0;
+			virtual void OnConsumerSocketRemotelyClosed(ConsumerSocket* consumerSocket)             = 0;
 		};
 
 	public:
@@ -65,15 +65,15 @@ namespace Channel
 		void SendLog(char* nsPayload, size_t nsPayloadLen);
 		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
 
-		/* Pure virtual methods inherited from ::ConsumerSocket::Listener. */
+		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
-		void OnSocketRequest(::UnixStreamSocket* socket, json& jsonRequest) override;
-		void OnSocketRemotelyClosed(::UnixStreamSocket* socket) override;
+		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) override;
+		void OnConsumerSocketRemotelyClosed(ConsumerSocket* consumerSocket) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-
+		// Others.
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
 	};

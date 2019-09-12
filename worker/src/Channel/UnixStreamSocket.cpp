@@ -36,7 +36,7 @@ namespace Channel
 
 	void UnixStreamSocket::Send(json& jsonMessage)
 	{
-		if (producerSocket.IsClosed())
+		if (this->producerSocket.IsClosed())
 			return;
 
 		std::string nsPayload = jsonMessage.dump();
@@ -68,12 +68,12 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		producerSocket.Write(WriteBuffer, nsLen);
+		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
 	{
-		if (producerSocket.IsClosed())
+		if (this->producerSocket.IsClosed())
 			return;
 
 		// MS_TRACE_STD();
@@ -105,12 +105,12 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		producerSocket.Write(WriteBuffer, nsLen);
+		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
 	{
-		if (producerSocket.IsClosed())
+		if (this->producerSocket.IsClosed())
 			return;
 
 		size_t nsNumLen;
@@ -140,24 +140,15 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		producerSocket.Write(WriteBuffer, nsLen);
+		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::OnSocketRequest(::UnixStreamSocket* socket, json& jsonRequest)
+	void UnixStreamSocket::OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage)
 	{
-		Channel::Request* request{ nullptr };
-
 		try
 		{
-			request = new Channel::Request(this, jsonRequest);
-		}
-		catch (const MediaSoupError& error)
-		{
-			MS_ERROR_STD("discarding wrong Channel request");
-		}
+			auto* request = new Channel::Request(this, jsonMessage);
 
-		if (request != nullptr)
-		{
 			// Notify the listener.
 			try
 			{
@@ -175,9 +166,13 @@ namespace Channel
 			// Delete the Request.
 			delete request;
 		}
+		catch (const MediaSoupError& error)
+		{
+			MS_ERROR_STD("discarding wrong Channel request");
+		}
 	}
 
-	void UnixStreamSocket::OnSocketRemotelyClosed(::UnixStreamSocket* socket)
+	void UnixStreamSocket::OnConsumerSocketRemotelyClosed(ConsumerSocket* consumerSocket)
 	{
 		this->listener->OnChannelRemotelyClosed(this);
 	}
@@ -288,12 +283,10 @@ namespace Channel
 
 			try
 			{
-				json jsonRequest = json::parse(jsonStart, jsonStart + jsonLen);
-
-				Channel::Request* request{ nullptr };
+				json jsonMessage = json::parse(jsonStart, jsonStart + jsonLen);
 
 				// Notify the listener.
-				this->listener->OnSocketRequest(this, jsonRequest);
+				this->listener->OnConsumerSocketMessage(this, jsonMessage);
 			}
 			catch (const json::parse_error& error)
 			{
@@ -331,7 +324,7 @@ namespace Channel
 
 		// Notify the listener.
 		if (isClosedByPeer)
-			this->listener->OnSocketRemotelyClosed(this);
+			this->listener->OnConsumerSocketRemotelyClosed(this);
 	}
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
