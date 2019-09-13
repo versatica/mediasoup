@@ -186,9 +186,14 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
   last_timestamp_us_ =
     mediasoup_helpers::FeedbackRtpTransport::GetBaseTimeUs(&feedback);
 
+  // TODO: REMOVE
+  MS_DUMP(
+    "[count:%" PRIu8 ", last_timestamp_us_:%" PRIi64 ", current_offset_ms_:%" PRIi64 "]",
+    feedback.GetFeedbackPacketCount(), last_timestamp_us_, current_offset_ms_);
+
   std::vector<PacketFeedback> packet_feedback_vector;
   if (feedback.GetPacketStatusCount() == 0) {
-    MS_DEBUG_TAG(bwe, "Empty transport feedback packet received");
+    MS_WARN_DEV("empty transport feedback packet received");
     return packet_feedback_vector;
   }
   packet_feedback_vector.reserve(feedback.GetPacketStatusCount());
@@ -223,14 +228,19 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
         packet_feedback_vector.push_back(packet_feedback);
       }
 
+      // TODO: REMOVE
+      MS_DUMP(
+        "-- [seq:%" PRIu16 ", timestamp_ms:%" PRIi64 ", offset_us:%" PRIi64 "]",
+        seq_num, timestamp_ms, offset_us);
+
       ++seq_num;
     }
 
     if (failed_lookups > 0) {
-      MS_WARN_TAG(bwe, "Failed to lookup send time for %zu"
-                          " packet%s. send time history too small?",
-                          failed_lookups,
-                          (failed_lookups > 1 ? "s" : ""));
+      MS_WARN_DEV("failed to lookup send time for %zu"
+                  " packet%s, send time history too small?",
+                  failed_lookups,
+                  (failed_lookups > 1 ? "s" : ""));
     }
   }
   return packet_feedback_vector;
