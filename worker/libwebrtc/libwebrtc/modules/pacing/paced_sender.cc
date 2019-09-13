@@ -114,8 +114,9 @@ void PacedSender::SetPacingRates(uint32_t pacing_rate_bps,
 }
 
 void PacedSender::InsertPacket(size_t bytes) {
-  if (pacing_bitrate_kbps_ == 0)
-      MS_WARN_TAG(bwe, "SetPacingRates() must be called before InsertPacket()");
+  // RTC_DCHECK(pacing_bitrate_kbps_ > 0)
+  //     << "SetPacingRate must be called before InsertPacket.";
+  MS_ASSERT(pacing_bitrate_kbps_ > 0, "SetPacingRates() must be called before InsertPacket()");
 
   prober_.OnIncomingPacket(bytes);
 
