@@ -1066,8 +1066,6 @@ namespace RTC
 			else if (this->kind == RTC::Media::Kind::VIDEO)
 			{
 				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
-				// NOTE: Just if this is simulcast or SVC.
-				if (this->type == RTC::RtpParameters::Type::SIMULCAST || this->type == RTC::RtpParameters::Type::SVC)
 				{
 					extenLen = 3u;
 
@@ -1078,6 +1076,23 @@ namespace RTC
 
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
+				// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
+				{
+					extenLen = 2u;
+
+					// NOTE: Add value 0. The sending Transport will update it.
+					uint16_t wideSeqNumber = 0u;
+
+					Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
+					  extenLen,
+					  bufferPtr);
 
 					bufferPtr += extenLen;
 				}
@@ -1139,24 +1154,6 @@ namespace RTC
 					// Not needed since this is the latest added extension.
 					// bufferPtr += extenLen;
 				}
-			}
-
-			// For both audio and video.
-			// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
-			{
-				extenLen = 2u;
-
-				// NOTE: Add value 0. The sending Transport will update it.
-				uint16_t wideSeqNumber = 0u;
-
-				Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
-
-				extensions.emplace_back(
-				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
-				  extenLen,
-				  bufferPtr);
-
-				bufferPtr += extenLen;
 			}
 
 			// Set the new extensions into the packet using One-Byte format.
