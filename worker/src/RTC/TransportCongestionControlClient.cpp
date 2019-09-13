@@ -329,7 +329,7 @@ namespace RTC
 			  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 
 			// TODO: REMOVE
-			MS_WARN_DEV("---- delay:%" PRIu64, delay);
+			// MS_WARN_DEV("---- delay:%" PRIu64, delay);
 
 			this->pacerTimer->Start(delay);
 		}

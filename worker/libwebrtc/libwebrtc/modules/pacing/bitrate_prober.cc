@@ -18,6 +18,25 @@
 #include <absl/memory/memory.h>
 #include <algorithm>
 
+// TODO: jeje
+#define TODO_PRINT_PROBING_STATE() \
+  switch (probing_state_) \
+  { \
+    case ProbingState::kDisabled: \
+      MS_DUMP("--- probing_state_:kDisabled, clusters_.size():%zu", clusters_.size()); \
+      break; \
+    case ProbingState::kInactive: \
+      MS_DUMP("--- probing_state_:kInactive, clusters_.size():%zu", clusters_.size()); \
+      break; \
+    case ProbingState::kActive: \
+      MS_DUMP("--- probing_state_:kActive, clusters_.size():%zu", clusters_.size()); \
+      break; \
+    case ProbingState::kSuspended: \
+      MS_DUMP("--- probing_state_:kSuspended, clusters_.size():%zu", clusters_.size()); \
+      break; \
+  } \
+
+
 namespace webrtc {
 
 namespace {
@@ -58,6 +77,9 @@ BitrateProber::BitrateProber(const WebRtcKeyValueConfig& field_trials)
       total_failed_probe_count_(0),
       config_(&field_trials) {
   SetEnabled(true);
+
+  // TODO: jeje
+  TODO_PRINT_PROBING_STATE();
 }
 
 void BitrateProber::SetEnabled(bool enable) {
@@ -70,6 +92,9 @@ void BitrateProber::SetEnabled(bool enable) {
     probing_state_ = ProbingState::kDisabled;
     MS_DEBUG_TAG(bwe, "Bandwidth probing disabled");
   }
+
+  // TODO: jeje
+  TODO_PRINT_PROBING_STATE();
 }
 
 bool BitrateProber::IsProbing() const {
@@ -86,6 +111,9 @@ void BitrateProber::OnIncomingPacket(size_t packet_size) {
     next_probe_time_ms_ = -1;
     probing_state_ = ProbingState::kActive;
   }
+
+  // TODO: jeje
+  TODO_PRINT_PROBING_STATE();
 }
 
 void BitrateProber::CreateProbeCluster(int bitrate_bps,
@@ -127,9 +155,15 @@ void BitrateProber::CreateProbeCluster(int bitrate_bps,
   // kInactive and wait for OnIncomingPacket to start the probing.
   if (probing_state_ != ProbingState::kActive)
     probing_state_ = ProbingState::kInactive;
+
+  // TODO: jeje
+  TODO_PRINT_PROBING_STATE();
 }
 
 int BitrateProber::TimeUntilNextProbe(int64_t now_ms) {
+  // TODO: jeje
+  TODO_PRINT_PROBING_STATE();
+
   // Probing is not active or probing is already complete.
   if (probing_state_ != ProbingState::kActive || clusters_.empty())
     return -1;
@@ -199,6 +233,9 @@ void BitrateProber::ProbeSent(int64_t now_ms, size_t bytes) {
     }
     if (clusters_.empty())
       probing_state_ = ProbingState::kSuspended;
+
+    // TODO: jeje
+    TODO_PRINT_PROBING_STATE();
   }
 }
 
