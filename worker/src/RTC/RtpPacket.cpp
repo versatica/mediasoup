@@ -231,7 +231,13 @@ namespace RTC
 		}
 		if (this->transportWideCc01ExtensionId != 0u)
 		{
-			MS_DUMP("  transportWideCc01 : extId:%" PRIu8, this->transportWideCc01ExtensionId);
+			uint16_t wideSeqNumber;
+
+			if (ReadTransportWideCc01(wideSeqNumber))
+				MS_DUMP(
+				  "  transportWideCc01 : extId:%" PRIu8 ", value:%" PRIu16,
+				  this->transportWideCc01ExtensionId,
+				  wideSeqNumber);
 		}
 		// Remove once it becomes RFC.
 		if (this->frameMarking07ExtensionId != 0u)
