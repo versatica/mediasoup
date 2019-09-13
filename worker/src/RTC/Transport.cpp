@@ -168,10 +168,6 @@ namespace RTC
 		delete this->rtcpTimer;
 		this->rtcpTimer = nullptr;
 
-		// Delete REMB client.
-		delete this->rembClient;
-		this->rembClient = nullptr;
-
 		// Delete Transport-CC client.
 		delete this->tccClient;
 		this->tccClient = nullptr;
@@ -419,9 +415,7 @@ namespace RTC
 		jsonObject["sendBitrate"] = this->sendTransmission.GetRate(DepLibUV::GetTime());
 
 		// Add availableOutgoingBitrate.
-		if (this->rembClient)
-			jsonObject["availableOutgoingBitrate"] = this->rembClient->GetAvailableBitrate();
-		else if (this->tccClient)
+		if (this->tccClient)
 			jsonObject["availableOutgoingBitrate"] = this->tccClient->GetAvailableBitrate();
 
 		// Add availableIncomingBitrate.
@@ -552,12 +546,12 @@ namespace RTC
 
 				request->Accept(data);
 
-				// Check if TransportCongestionControl server or REMB server must be
+				// Check if TransportCongestionControlServer or REMB server must be
 				// created.
 				auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 				auto& codecs                = producer->GetRtpParameters().codecs;
 
-				// Set TransportCongestionControl server.
+				// Set TransportCongestionControlServer.
 				if (!this->tccServer)
 				{
 					bool createTccServer{ false };
@@ -582,7 +576,7 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControl server with transport-cc");
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
 
 						createTccServer = true;
 						bweType         = RTC::BweType::TRANSPORT_CC;
@@ -606,7 +600,7 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControl server with REMB");
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
 
 						createTccServer = true;
 						bweType         = RTC::BweType::REMB;
@@ -736,101 +730,92 @@ namespace RTC
 				auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
 				auto& codecs                = consumer->GetRtpParameters().codecs;
 
-				// Set TCC client bitrate estimator:
-				// - if not already set, and
-				// - REMB client is not set, and
-				// - Consumer is simulcast or SVC, and
-				// - there is transport-wide-cc-01 RTP header extension, and
-				// - there is "transport-cc" in codecs RTCP feedback.
-				//
-				// clang-format off
-				if (
-					!this->tccClient &&
-					!this->rembClient &&
-					(
-						consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-						consumer->GetType() == RTC::RtpParameters::Type::SVC
-					) &&
-					rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-					std::any_of(
-						codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-						{
-							return std::any_of(
-								codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-								{
-									return fb.type == "transport-cc";
-								});
-						})
-				)
-				// clang-format on
+				// Set TransportCongestionControlServer.
+				if (!this->tccClient)
 				{
-					MS_DEBUG_TAG(bwe, "enabling TCC client");
-
-					// Tell all the Consumers that we are gonna manage their bitrate.
-					for (auto& kv : this->mapConsumers)
-					{
-						auto* consumer = kv.second;
-
-						consumer->SetExternallyManagedBitrate();
-					};
-
-					// TODO: When unified with REMB we must check properly set bweType.
+					bool createTccClient{ false };
 					RTC::BweType bweType;
 
-					bweType = RTC::BweType::TRANSPORT_CC;
-
-					this->tccClient = new RTC::TransportCongestionControlClient(
-					  this, bweType, this->initialAvailableOutgoingBitrate);
-
-					// If the transport is connected, tell the Transport-CC client.
-					if (IsConnected())
-						this->tccClient->TransportConnected();
-				}
-
-				// Set REMB client bitrate estimator:
-				// - if not already set, and
-				// - TCC client is not set, and
-				// - Consumer is simulcast or SVC, and
-				// - there is abs-send-time RTP header extension, and
-				// - there is "remb" in codecs RTCP feedback.
-				//
-				// clang-format off
-				if (
-					!this->rembClient &&
-					!this->tccClient &&
-					(
-						consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-						consumer->GetType() == RTC::RtpParameters::Type::SVC
-					) &&
-					rtpHeaderExtensionIds.absSendTime != 0u &&
-					std::any_of(
-						codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-						{
-							return std::any_of(
-								codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-								{
-									return fb.type == "goog-remb";
-								});
-						})
-				)
-				// clang-format on
-				{
-					MS_DEBUG_TAG(bwe, "enabling REMB client");
-
-					// Tell all the Consumers that we are gonna manage their bitrate.
-					for (auto& kv : this->mapConsumers)
+					// Use transport-cc if:
+					// - it's a simulcast or SVC Consumer, and
+					// - there is transport-wide-cc-01 RTP header extension, and
+					// - there is "transport-cc" in codecs RTCP feedback.
+					//
+					// clang-format off
+					if (
+						(
+							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+							consumer->GetType() == RTC::RtpParameters::Type::SVC
+						) &&
+						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "transport-cc";
+									});
+							})
+					)
+					// clang-format on
 					{
-						auto* consumer = kv.second;
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
 
-						consumer->SetExternallyManagedBitrate();
-					};
+						createTccClient = true;
+						bweType         = RTC::BweType::TRANSPORT_CC;
+					}
+					// Use REMB if:
+					// - it's a simulcast or SVC Consumer, and
+					// - there is abs-send-time RTP header extension, and
+					// - there is "remb" in codecs RTCP feedback.
+					//
+					// clang-format off
+					else if (
+						(
+							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+							consumer->GetType() == RTC::RtpParameters::Type::SVC
+						) &&
+						rtpHeaderExtensionIds.absSendTime != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "goog-remb";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
 
-					this->rembClient = new RTC::RembClient(this, this->initialAvailableOutgoingBitrate);
+						createTccClient = true;
+						bweType         = RTC::BweType::REMB;
+					}
+
+					if (createTccClient)
+					{
+						// Tell all the Consumers that we are gonna manage their bitrate.
+						for (auto& kv : this->mapConsumers)
+						{
+							auto* consumer = kv.second;
+
+							consumer->SetExternallyManagedBitrate();
+						};
+
+						this->tccClient = new RTC::TransportCongestionControlClient(
+						  this, bweType, this->initialAvailableOutgoingBitrate);
+
+						if (IsConnected())
+							this->tccClient->TransportConnected();
+					}
 				}
 
 				// If applicable, tell the new Consumer that we are gonna manage its
 				// bitrate.
-				if (this->rembClient || this->tccClient)
+				if (this->tccClient)
 					consumer->SetExternallyManagedBitrate();
 
 				if (IsConnected())
@@ -1143,11 +1128,11 @@ namespace RTC
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
-		// Tell the TransportCongestionControl client.
+		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
 			this->tccClient->TransportConnected();
 
-		// Tell the TransportCongestionControl server.
+		// Tell the TransportCongestionControlServer.
 		if (this->tccServer)
 			this->tccServer->TransportConnected();
 	}
@@ -1175,11 +1160,11 @@ namespace RTC
 		// Stop the RTCP timer.
 		this->rtcpTimer->Stop();
 
-		// Tell the TransportCongestionControl client.
+		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
 			this->tccClient->TransportDisconnected();
 
-		// Tell the TransportCongestionControl server.
+		// Tell the TransportCongestionControlServer.
 		if (this->tccServer)
 			this->tccServer->TransportDisconnected();
 	}
@@ -1197,7 +1182,7 @@ namespace RTC
 
 		auto now = DepLibUV::GetTime();
 
-		// Feed the TransportCongestionControl server.
+		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
 			this->tccServer->IncomingPacket(now, packet);
 
@@ -1523,16 +1508,11 @@ namespace RTC
 						// Store REMB info.
 						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
 						{
-							// TODO: ehhh, what?
-							// auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
+							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
-							// // Pass it to the REMB client.
-							// if (this->rembClient)
-							//   this->rembClient->ReceiveRembFeedback(remb);
-
-							// // Pass it to the TCC client.
-							// if (this->tccClient)
-							//   this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
+							// Pass it to the TCC client.
+							if (this->tccClient)
+							  this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
 
 							break;
 						}
@@ -1804,7 +1784,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->rembClient || this->tccClient, "no REMB client nor Transport-CC client");
+		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
 
 		std::multimap<uint16_t, RTC::Consumer*> multimapPriorityConsumer;
 		uint16_t totalPriorities{ 0u };
@@ -1828,18 +1808,9 @@ namespace RTC
 
 		uint32_t availableBitrate;
 
-		if (this->rembClient)
-		{
-			availableBitrate = this->rembClient->GetAvailableBitrate();
+		availableBitrate = this->tccClient->GetAvailableBitrate();
 
-			this->rembClient->RescheduleNextAvailableBitrateEvent();
-		}
-		else
-		{
-			availableBitrate = this->tccClient->GetAvailableBitrate();
-
-			this->tccClient->RescheduleNextAvailableBitrateEvent();
-		}
+		this->tccClient->RescheduleNextAvailableBitrateEvent();
 
 		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
@@ -1860,15 +1831,17 @@ namespace RTC
 			  consumer->id.c_str());
 
 			uint32_t usedBitrate;
+			auto bweType = this->tccClient->GetBweType();
 
-			// TODO: When unified into tccClient we must set considerLoss based on
-			// tccClient->GetBweType().
-			if (this->rembClient)
-				usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ true);
-			else if (this->tccClient)
-				usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ false);
-			else
-				MS_ABORT("neither REMB client nor TCC client is set");
+			switch (bweType)
+			{
+				case RTC::BweType::TRANSPORT_CC:
+					usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ false);
+					break;
+				case RTC::BweType::REMB:
+					usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ true);
+					break;
+			}
 
 			if (usedBitrate <= remainingBitrate)
 				remainingBitrate -= usedBitrate;
@@ -1894,15 +1867,16 @@ namespace RTC
 				  consumer->id.c_str());
 
 				uint32_t usedBitrate;
+				auto bweType = this->tccClient->GetBweType();
 
-				// TODO: When unified into tccClient we must set considerLoss based on
-				// tccClient->GetBweType().
-				if (this->rembClient)
-					usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ true);
-				else if (this->tccClient)
-					usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ false);
-				else
-					MS_ABORT("neither REMB client nor TCC client is set");
+				switch (bweType)
+				{
+					case RTC::BweType::TRANSPORT_CC:
+						usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ false);
+						break;
+					case RTC::BweType::REMB:
+						usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ true);
+				}
 
 				MS_ASSERT(usedBitrate <= remainingBitrate, "Consumer used more layer bitrate than given");
 
@@ -1933,7 +1907,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->rembClient || this->tccClient, "no REMB client nor Transport-CC client");
+		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
 
 		uint32_t totalDesiredBitrate{ 0u };
 
@@ -2274,20 +2248,6 @@ namespace RTC
 
 		// Pass the SCTP message to the corresponding DataProducer.
 		dataProducer->ReceiveSctpMessage(ppid, msg, len);
-	}
-
-	inline void Transport::OnRembClientAvailableBitrate(
-	  RTC::RembClient* /*rembClient*/, uint32_t availableBitrate, uint32_t previousAvailableBitrate)
-	{
-		MS_TRACE();
-
-		MS_DEBUG_DEV(
-		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
-		  availableBitrate,
-		  previousAvailableBitrate);
-
-		DistributeAvailableOutgoingBitrate();
-		ComputeOutgoingDesiredBitrate();
 	}
 
 	inline void Transport::OnTransportCongestionControlClientAvailableBitrate(

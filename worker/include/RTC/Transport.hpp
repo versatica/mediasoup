@@ -12,7 +12,6 @@
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RateCalculator.hpp"
-#include "RTC/RembClient.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -34,7 +33,6 @@ namespace RTC
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
 	                  public RTC::SctpAssociation::Listener,
-	                  public RTC::RembClient::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Timer::Listener
@@ -188,13 +186,6 @@ namespace RTC
 		  const uint8_t* msg,
 		  size_t len) override;
 
-		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
-	public:
-		void OnRembClientAvailableBitrate(
-		  RTC::RembClient* rembClient,
-		  uint32_t availableBitrate,
-		  uint32_t previousAvailableBitrate) override;
-
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
 		void OnTransportCongestionControlClientAvailableBitrate(
@@ -232,7 +223,6 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		Timer* rtcpTimer{ nullptr };
-		RTC::RembClient* rembClient{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
 		// Others.

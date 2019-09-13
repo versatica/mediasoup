@@ -42,6 +42,7 @@ namespace RTC
 		virtual ~TransportCongestionControlClient();
 
 	public:
+		RTC::BweType GetBweType() const;
 		void TransportConnected();
 		void TransportDisconnected();
 		void InsertPacket(webrtc::RtpPacketSendInfo& packetInfo);
@@ -80,10 +81,18 @@ namespace RTC
 		RTC::RtpProbationGenerator* probationGenerator{ nullptr };
 		Timer* pacerTimer{ nullptr };
 		// Others.
+		RTC::BweType bweType;
 		uint32_t initialAvailableBitrate{ 0u };
 		uint32_t availableBitrate{ 0u };
 		uint64_t lastAvailableBitrateEventAt{ 0u };
 	};
+
+	/* Inline instance methods. */
+
+	inline RTC::BweType TransportCongestionControlClient::GetBweType() const
+	{
+		return this->bweType;
+	}
 } // namespace RTC
 
 #endif

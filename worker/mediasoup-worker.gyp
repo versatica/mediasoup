@@ -117,7 +117,6 @@
       'src/RTC/RTCP/XR.cpp',
       'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
       'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
-      'src/RTC/RembClient.cpp',
       # C++ include files.
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
@@ -215,8 +214,7 @@
       'include/RTC/RTCP/FeedbackPsRemb.hpp',
       'include/RTC/RTCP/XR.hpp',
       'include/RTC/RTCP/XrDelaySinceLastRr.hpp',
-      'include/RTC/RTCP/XrReceiverReferenceTime.hpp',
-      'include/RTC/RembClient.hpp',
+      'include/RTC/RTCP/XrReceiverReferenceTime.hpp'
     ],
     'include_dirs':
     [

@@ -18,7 +18,7 @@ namespace RTC
 	  RTC::TransportCongestionControlClient::Listener* listener,
 	  RTC::BweType bweType,
 	  uint32_t initialAvailableBitrate)
-	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate)
+	  : listener(listener), bweType(bweType), initialAvailableBitrate(initialAvailableBitrate)
 	{
 		MS_TRACE();
 
@@ -113,6 +113,9 @@ namespace RTC
 	void TransportCongestionControlClient::ReceiveEstimatedBitrate(uint32_t bitrate)
 	{
 		MS_TRACE();
+
+		// TODO: REMOVE
+		MS_DUMP("--- REMB bitrate:%" PRIu32, bitrate);
 
 		this->rtpTransportControllerSend->OnReceivedEstimatedBitrate(bitrate);
 	}
