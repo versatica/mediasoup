@@ -59,7 +59,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from webrtc::TargetTransferRateObserver. */
 	public:
-		void OnTargetTransferRate(webrtc::TargetTransferRate targetTranferRate) override;
+		void OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate) override;
 
 		/* Pure virtual methods inherited from webrtc::PacketRouter. */
 	public:

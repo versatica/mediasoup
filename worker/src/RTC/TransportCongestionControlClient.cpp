@@ -196,7 +196,8 @@ namespace RTC
 		constraints.starting_rate = webrtc::DataRate::bps(startBitrate);
 
 		MS_WARN_DEV(
-		  "[desiredBitrate:%" PRIu32 ", minBitrate:%" PRIu32 ", startBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", startBitrate:%" PRIu32 "]",
+		  "[desiredBitrate:%" PRIu32 ", minBitrate:%" PRIu32 ", startBitrate:%" PRIu32
+		  ", maxBitrate:%" PRIu32 ", startBitrate:%" PRIu32 "]",
 		  desiredBitrate,
 		  minBitrate,
 		  startBitrate,
