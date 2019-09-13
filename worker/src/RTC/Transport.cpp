@@ -1440,6 +1440,9 @@ namespace RTC
 							//
 							// NOTE: consumer->GetRtt() is already implemented.
 							//
+							// NOTE: Better pass our RR to the tccClient and convert there to webrtc
+							// class.
+							//
 							// if (this->tccClient)
 							// {
 							// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
