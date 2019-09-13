@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::BitrateProber"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "modules/pacing/bitrate_prober.h"
 
@@ -137,11 +137,6 @@ int BitrateProber::TimeUntilNextProbe(int64_t now_ms) {
   int time_until_probe_ms = 0;
   if (next_probe_time_ms_ >= 0) {
     time_until_probe_ms = next_probe_time_ms_ - now_ms;
-    // TODO: REMOVE
-    MS_WARN_DEV(
-      "--- time_until_probe_ms:%d, -config_.max_probe_delay->ms():%" PRIi64,
-      time_until_probe_ms,
-      -config_.max_probe_delay->ms());
     if (time_until_probe_ms < -config_.max_probe_delay->ms()) {
       MS_WARN_TAG(bwe, "Probe delay too high"
                        " (next_ms:%" PRIi64 ", now_ms:%" PRIi64 ")",
