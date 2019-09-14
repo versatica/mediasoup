@@ -194,11 +194,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto minBitrate   = 30000u;
-		auto startBitrate = static_cast<uint32_t>(std::max(minBitrate, this->initialAvailableBitrate));
+		auto minBitrate       = 30000u;
+		uint32_t startBitrate = std::max<uint32_t>(minBitrate, this->initialAvailableBitrate);
 		// Let's increase the max bitrate since it may oscillate.
-		auto maxBitrate        = static_cast<uint32_t>(std::max(startBitrate, desiredBitrate) * 1.15);
-		auto maxPaddingBitrate = desiredBitrate / 2; // TODO: No idea but we want full desiredBitrate.
+		uint32_t maxBitrate        = std::max<uint32_t>(startBitrate, desiredBitrate) * 1.15;
+		uint32_t maxPaddingBitrate = desiredBitrate / 2; // TODO: No idea but we want full desiredBitrate.
 
 		webrtc::TargetRateConstraints constraints;
 
