@@ -213,13 +213,13 @@ namespace RTC
 		  desiredBitrate,
 		  minBitrate,
 		  startBitrate,
-		  maxBitrate * 10);
+		  maxBitrate);
 
 		// TODO (ibc): It does not work at all with this...
 		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
-		  minBitrate, maxPaddingBitrate, maxBitrate * 10);
+		  minBitrate, maxPaddingBitrate, maxBitrate);
 
 		// // TODO: Testing
 		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
