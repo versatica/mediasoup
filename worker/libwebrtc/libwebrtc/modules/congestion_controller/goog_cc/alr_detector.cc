@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::AlrDetector"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -94,7 +94,7 @@ void AlrDetector::OnBytesSent(size_t bytes_sent, int64_t send_time_ms) {
   }
 
   if (state_changed)
-    MS_DEBUG_TAG(bwe, "state changed");
+    MS_DEBUG_DEV("state changed");
 }
 
 void AlrDetector::SetEstimatedBitrate(int bitrate_bps) {

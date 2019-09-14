@@ -105,13 +105,16 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   if (send_interval <= TimeDelta::Zero() || send_interval > kMaxProbeInterval ||
       receive_interval <= TimeDelta::Zero() ||
       receive_interval > kMaxProbeInterval) {
-    MS_DEBUG_TAG(bwe, "Probing unsuccessful, invalid send/receive interval"
-                     " [cluster id: %d]"
-                     " [send interval: %s]"
-                     " [receive interval: %s]",
-                     cluster_id,
-                     ToString(send_interval).c_str(),
-                     ToString(receive_interval).c_str());
+    MS_WARN_TAG(
+      bwe,
+      "probing unsuccessful, invalid send/receive interval"
+      " [cluster id:%d]"
+      " [send interval:%s]"
+      " [receive interval:%s]",
+      cluster_id,
+      ToString(send_interval).c_str(),
+      ToString(receive_interval).c_str());
+
     return absl::nullopt;
   }
   // Since the |send_interval| does not include the time it takes to actually
@@ -130,37 +133,40 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
 
   double ratio = receive_rate / send_rate;
   if (ratio > kMaxValidRatio) {
-    MS_DEBUG_TAG(bwe, "Probing unsuccessful, receive/send ratio too high"
-                     " [cluster id: %d]"
-                     " [send: %s / %s = %s]"
-                     " [receive: %s / %s = %s]"
-                     " [ratio: %s / %s = %f]"
-                     " > kMaxValidRatio (%f)]",
-                     cluster_id,
-                     ToString(send_size).c_str(),
-                     ToString(send_interval).c_str(),
-                     ToString(send_rate).c_str(),
-                     ToString(receive_size).c_str(),
-                     ToString(receive_interval).c_str(),
-                     ToString(receive_rate).c_str(),
-                     ToString(receive_rate).c_str(),
-                     ToString(send_rate).c_str(),
-                     ratio,
-                     kMaxValidRatio);
+    MS_WARN_TAG(
+      bwe,
+      "probing unsuccessful, receive/send ratio too high"
+      " [cluster id:%d, send:%s / %s = %s]"
+      " [receive:%s / %s = %s]"
+      " [ratio:%s / %s = %f]"
+      " > kMaxValidRatio:%f]",
+      cluster_id,
+      ToString(send_size).c_str(),
+      ToString(send_interval).c_str(),
+      ToString(send_rate).c_str(),
+      ToString(receive_size).c_str(),
+      ToString(receive_interval).c_str(),
+      ToString(receive_rate).c_str(),
+      ToString(receive_rate).c_str(),
+      ToString(send_rate).c_str(),
+      ratio,
+      kMaxValidRatio);
 
     return absl::nullopt;
   }
-  MS_DEBUG_TAG(bwe, "Probing successful"
-                   " [cluster id: %d]"
-                   " [send: %s / %s = %s]"
-                   " [receive: %s / %s = %s]",
-                   cluster_id,
-                   ToString(send_size).c_str(),
-                   ToString(send_interval).c_str(),
-                   ToString(send_rate).c_str(),
-                   ToString(receive_size).c_str(),
-                   ToString(receive_interval).c_str(),
-                   ToString(receive_rate).c_str());
+  MS_DEBUG_TAG(
+    bwe,
+    "probing successful"
+    " [cluster id:%d]"
+    " [send:%s / %s = %s]"
+    " [receive:%s / %s = %s]",
+    cluster_id,
+    ToString(send_size).c_str(),
+    ToString(send_interval).c_str(),
+    ToString(send_rate).c_str(),
+    ToString(receive_size).c_str(),
+    ToString(receive_interval).c_str(),
+    ToString(receive_rate).c_str());
 
 
   DataRate res = std::min(send_rate, receive_rate);

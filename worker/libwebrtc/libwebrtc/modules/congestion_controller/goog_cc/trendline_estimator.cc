@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::TrendlineEstimator"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
 
@@ -44,10 +44,11 @@ size_t ReadTrendlineFilterWindowSize(
   if (parsed_values == 1) {
     if (window_size > 1)
       return window_size;
-    MS_WARN_TAG(bwe, "Window size must be greater than 1");
+    MS_WARN_DEV("window size must be greater than 1");
   }
-  MS_WARN_TAG(bwe, "Failed to parse parameters for BweWindowSizeInPackets"
-                         " experiment from field trial string. Using default");
+  MS_WARN_DEV(
+    "failed to parse parameters for BweWindowSizeInPackets"
+    " experiment from field trial string, using default");
   return kDefaultTrendlineWindowSize;
 }
 
@@ -119,9 +120,9 @@ TrendlineEstimator::TrendlineEstimator(
       hypothesis_(BandwidthUsage::kBwNormal),
       hypothesis_predicted_(BandwidthUsage::kBwNormal),
       network_state_predictor_(network_state_predictor) {
-  MS_DEBUG_TAG(bwe,
-      "Using Trendline filter for delay change estimation with window size: %zu",
-      window_size_);
+  MS_DEBUG_DEV(
+    "using Trendline filter for delay change estimation with window size: %zu",
+    window_size_);
 }
 
 TrendlineEstimator::~TrendlineEstimator() {}

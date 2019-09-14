@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::BitrateEstimator"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/bitrate_estimator.h"
 #include "api/units/data_rate.h"
@@ -103,8 +103,9 @@ void BitrateEstimator::Update(Timestamp at_time, DataSize amount, bool in_alr) {
       std::max(bitrate_estimate_kbps_, estimate_floor_.Get().kbps<float>());
   bitrate_estimate_var_ = sample_var * pred_bitrate_estimate_var /
                           (sample_var + pred_bitrate_estimate_var);
-  MS_DEBUG_DEV("acknowledged_bitrate %" PRIu64", %f", at_time.ms(),
-                        bitrate_estimate_kbps_ * 1000);
+  MS_DEBUG_DEV(
+    "acknowledged_bitrate %" PRIu64", %f",
+    at_time.ms(), bitrate_estimate_kbps_ * 1000);
 }
 
 float BitrateEstimator::UpdateWindow(int64_t now_ms,
