@@ -320,12 +320,12 @@ NetworkControlUpdate GoogCcNetworkController::OnTargetRateConstraints(
 
 void GoogCcNetworkController::ClampConstraints() {
   // TODO (ibc): Remove.
-  MS_WARN_DEV(
-    "[min_data_rate_:%" PRIi64 ", min_total_allocated_bitrate_:%" PRIi64 ", max_data_rate_:%" PRIi64 ", starting_rate_:%" PRIi64 "]",
-    min_data_rate_.bps(),
-    min_total_allocated_bitrate_.bps(),
-    max_data_rate_.bps(),
-    (*starting_rate_).bps());
+  // MS_WARN_DEV(
+  //   "[min_data_rate_:%" PRIi64 ", min_total_allocated_bitrate_:%" PRIi64 ", max_data_rate_:%" PRIi64 ", starting_rate_:%" PRIi64 "]",
+  //   min_data_rate_.bps(),
+  //   min_total_allocated_bitrate_.bps(),
+  //   max_data_rate_.bps(),
+  //   (*starting_rate_).bps());
 
   // TODO(holmer): We should make sure the default bitrates are set to 10 kbps,
   // and that we don't try to set the min bitrate to 0 from any applications.
@@ -335,11 +335,11 @@ void GoogCcNetworkController::ClampConstraints() {
   if (use_min_allocatable_as_lower_bound_)
     min_data_rate_ = std::max(min_data_rate_, min_total_allocated_bitrate_);
   if (max_data_rate_ < min_data_rate_) {
-    MS_WARN_TAG(bwe, "max bitrate smaller than min bitrate");
+    MS_ERROR("max bitrate smaller than min bitrate");
     max_data_rate_ = min_data_rate_;
   }
   if (starting_rate_ && starting_rate_ < min_data_rate_) {
-    MS_WARN_TAG(bwe, "start bitrate smaller than min bitrate");
+    MS_ERROR("start bitrate smaller than min bitrate");
     starting_rate_ = min_data_rate_;
   }
 }
@@ -647,10 +647,10 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
                                          probes.begin(), probes.end());
     update->pacer_config = GetPacingRates(at_time);
 
-    MS_DEBUG_DEV("bwe %" PRIu64", pushback_target_bps=%lld, estimate_bps:%lld",
-                        at_time.ms(),
-                        last_pushback_target_rate_.bps(),
-                        last_raw_target_rate_.bps());
+    MS_DEBUG_DEV("bwe [at_time:%" PRIu64", pushback_target_bps:%lld, estimate_bps:%lld]",
+                 at_time.ms(),
+                 last_pushback_target_rate_.bps(),
+                 last_raw_target_rate_.bps());
   }
 }
 

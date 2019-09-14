@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Transport"
-#define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV
 
 #include "RTC/Transport.hpp"
 #include "Logger.hpp"
@@ -1515,7 +1515,7 @@ namespace RTC
 
 							// Pass it to the TCC client.
 							if (this->tccClient)
-							  this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
+								this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
 
 							break;
 						}
@@ -2261,7 +2261,7 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: Use MS_DEBUG_DEV.
-		MS_WARN_DEV(
+		MS_DUMP(
 		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
 		  availableBitrate,
 		  previousAvailableBitrate);
@@ -2278,10 +2278,10 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: REMOVE
-		MS_WARN_DEV(
+		MS_DUMP(
 		  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu]",
 		  packet->GetSequenceNumber(),
-		  this->transportWideCcSeq + 1u,
+		  static_cast<uint16_t>(this->transportWideCcSeq + 1u),
 		  packet->GetSize());
 
 		// Update transport wide sequence number if present.

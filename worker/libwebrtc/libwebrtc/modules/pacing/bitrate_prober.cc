@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::BitrateProber"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "modules/pacing/bitrate_prober.h"
 
@@ -34,7 +34,9 @@
     case ProbingState::kSuspended: \
       MS_DUMP("--- probing_state_:kSuspended, clusters_.size():%zu", clusters_.size()); \
       break; \
-  } \
+  }
+#undef TODO_PRINT_PROBING_STATE
+  #define TODO_PRINT_PROBING_STATE() {}
 
 
 namespace webrtc {
@@ -145,11 +147,10 @@ void BitrateProber::CreateProbeCluster(int bitrate_bps,
   cluster.pace_info.probe_cluster_id = cluster_id;
   clusters_.push(cluster);
 
-  MS_DEBUG_TAG(bwe, "Probe cluster (bitrate:min bytes:min packets):"
-                    " (%d : %d : %d)",
-                   cluster.pace_info.send_bitrate_bps,
-                   cluster.pace_info.probe_cluster_min_bytes,
-                   cluster.pace_info.probe_cluster_min_probes);
+  MS_DEBUG_DEV("probe cluster [bitrate:%d, min bytes:%d, min probes:%d]",
+               cluster.pace_info.send_bitrate_bps,
+               cluster.pace_info.probe_cluster_min_bytes,
+               cluster.pace_info.probe_cluster_min_probes);
 
   // If we are already probing, continue to do so. Otherwise set it to
   // kInactive and wait for OnIncomingPacket to start the probing.
@@ -172,8 +173,7 @@ int BitrateProber::TimeUntilNextProbe(int64_t now_ms) {
   if (next_probe_time_ms_ >= 0) {
     time_until_probe_ms = next_probe_time_ms_ - now_ms;
     if (time_until_probe_ms < -config_.max_probe_delay->ms()) {
-      MS_WARN_TAG(bwe, "Probe delay too high"
-                       " (next_ms:%" PRIi64 ", now_ms:%" PRIi64 ")",
+      MS_WARN_TAG(bwe, "probe delay too high [next_ms:%" PRIi64 ", now_ms:%" PRIi64 "]",
                        next_probe_time_ms_,
                        now_ms);
       return -1;

@@ -68,14 +68,14 @@ void PacedSender::CreateProbeCluster(int bitrate_bps, int cluster_id) {
 
 void PacedSender::Pause() {
   if (!paused_)
-    MS_DEBUG_TAG(bwe, "PacedSender paused");
+    MS_DEBUG_DEV("paused");
 
   paused_ = true;
 }
 
 void PacedSender::Resume() {
   if (paused_)
-    MS_DEBUG_TAG(bwe, "PacedSender resumed");
+    MS_DEBUG_DEV("resumed");
 
   paused_ = false;
 }
@@ -96,6 +96,8 @@ bool PacedSender::Congested() const {
 
 void PacedSender::SetProbingEnabled(bool enabled) {
   // RTC_CHECK_EQ(0, packet_counter_);
+  MS_ASSERT(packet_counter_ == 0, "packet counter must be 0");
+
   prober_.SetEnabled(enabled);
 }
 
@@ -107,10 +109,9 @@ void PacedSender::SetPacingRates(uint32_t pacing_rate_bps,
   pacing_bitrate_kbps_ = pacing_rate_bps / 1000;
   padding_budget_.set_target_rate_kbps(padding_rate_bps / 1000);
 
-  MS_DEBUG_DEV("pacer_updated pacing_kbps=%" PRIu32
-                " padding_budget_kbps=%" PRIu32,
-                pacing_bitrate_kbps_,
-                padding_rate_bps / 1000);
+  MS_DEBUG_DEV("[pacer_updated pacing_kbps:%" PRIu32 ", padding_budget_kbps:%" PRIu32 "]",
+               pacing_bitrate_kbps_,
+               padding_rate_bps / 1000);
 }
 
 void PacedSender::InsertPacket(size_t bytes) {
@@ -151,7 +152,7 @@ int64_t PacedSender::UpdateTimeAndGetElapsedMs(int64_t now_ms) {
   int64_t elapsed_time_ms = (now_ms - time_last_process_ms_);
   time_last_process_ms_ = now_ms;
   if (elapsed_time_ms > kMaxElapsedTimeMs) {
-    MS_WARN_TAG(bwe, "Elapsed time (%" PRIi64 " ms) longer than expected,"
+    MS_WARN_TAG(bwe, "elapsed time (%" PRIi64 " ms) longer than expected,"
                      " limiting to %" PRIi64 " ms",
                         elapsed_time_ms,
                         kMaxElapsedTimeMs);

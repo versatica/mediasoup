@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SimulcastConsumer"
-#define MS_LOG_DEV
+// #define MS_LOG_DEV
 
 #include "RTC/SimulcastConsumer.hpp"
 #include "DepLibUV.hpp"

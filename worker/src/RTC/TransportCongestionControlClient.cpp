@@ -207,20 +207,19 @@ namespace RTC
 		constraints.max_data_rate = webrtc::DataRate::bps(maxBitrate);
 		constraints.starting_rate = webrtc::DataRate::bps(startBitrate);
 
-		MS_WARN_DEV(
+		MS_DEBUG_DEV(
 		  "[desiredBitrate:%" PRIu32 ", minBitrate:%" PRIu32 ", startBitrate:%" PRIu32
-		  ", maxBitrate:%" PRIu32 ", startBitrate:%" PRIu32 "]",
+		  ", maxBitrate:%" PRIu32 "]",
 		  desiredBitrate,
 		  minBitrate,
 		  startBitrate,
-		  maxBitrate,
-		  startBitrate);
+		  maxBitrate * 10);
 
 		// TODO (ibc): It does not work at all with this...
 		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
-		  minBitrate, maxPaddingBitrate, maxBitrate);
+		  minBitrate, maxPaddingBitrate, maxBitrate * 10);
 
 		// // TODO: Testing
 		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
@@ -257,7 +256,7 @@ namespace RTC
 
 		// TODO: This produces lot of logs with the very same availableBitrate, so why is this
 		// event called so frequently?
-		MS_DEBUG_DEV("new availableBitrate:%" PRIu32, this->availableBitrate);
+		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->availableBitrate);
 
 		// Ignore if first event.
 		// NOTE: Otherwise it will make the Transport crash since this event also happens

@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::RtpTransportControllerSend"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "call/rtp_transport_controller_send.h"
 #include "api/transport/network_types.h"
@@ -147,8 +147,7 @@ void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
 }
 
 void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
-  MS_DEBUG_TAG(bwe, "SignalNetworkState %s",
-                   (network_available ? "Up" : "Down"));
+  MS_DEBUG_DEV("SignalNetworkState:%s", network_available ? "Up" : "Down");
 
   NetworkAvailability msg;
   msg.at_time = Timestamp::ms(DepLibUV::GetTime());
@@ -191,7 +190,7 @@ void RtpTransportControllerSend::OnSentPacket(
 void RtpTransportControllerSend::OnTransportOverheadChanged(
     size_t transport_overhead_bytes_per_packet) {
   if (transport_overhead_bytes_per_packet >= kMaxOverheadBytes) {
-    MS_ERROR("Transport overhead exceeds: %zu", kMaxOverheadBytes);
+    MS_ERROR("transport overhead exceeds: %zu", kMaxOverheadBytes);
     return;
   }
 }
