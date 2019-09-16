@@ -94,7 +94,8 @@ namespace RTC
 		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64,
+		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	webrtc::PacedPacketInfo TransportCongestionControlClient::GetPacingInfo()
@@ -113,7 +114,8 @@ namespace RTC
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64,
+		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	void TransportCongestionControlClient::ReceiveEstimatedBitrate(uint32_t bitrate)
@@ -143,7 +145,8 @@ namespace RTC
 		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64,
+		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate)
@@ -186,7 +189,8 @@ namespace RTC
 		  minBitrate, maxPaddingBitrate, maxBitrate);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64,
+		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	uint32_t TransportCongestionControlClient::GetAvailableBitrate() const
@@ -269,7 +273,8 @@ namespace RTC
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet, pacingInfo);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64,
+		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	RTC::RtpPacket* TransportCongestionControlClient::GeneratePadding(size_t size)
