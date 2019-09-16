@@ -2050,6 +2050,21 @@ namespace RTC
 			packetInfo.length                    = packet->GetSize();
 			packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
 
+			// TODO: TMP
+			// MS_DUMP("<webrtc::RtpPacketSendInfo>");
+			// MS_DUMP("  - ssrc                      : %" PRIu32, packetInfo.ssrc);
+			// MS_DUMP("  - transport_sequence_number : %" PRIu16, packetInfo.transport_sequence_number);
+			// MS_DUMP("  - has_rtp_sequence_number   : true");
+			// MS_DUMP("  - rtp_sequence_number       : %" PRIu16, packetInfo.rtp_sequence_number);
+			// MS_DUMP("  - length                    : %zu", packetInfo.length);
+			// MS_DUMP("  <PacedPacketInfo>");
+			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
+			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
+			// MS_DUMP("    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
+			// MS_DUMP("    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
+			// MS_DUMP("  </PacedPacketInfo>");
+			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
+
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
@@ -2341,6 +2356,21 @@ namespace RTC
 			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
 			packetInfo.length                    = packet->GetSize();
 			packetInfo.pacing_info               = pacingInfo;
+
+			// TODO: TMP
+			// MS_DUMP("<webrtc::RtpPacketSendInfo>");
+			// MS_DUMP("  - ssrc                      : %" PRIu32, packetInfo.ssrc);
+			// MS_DUMP("  - transport_sequence_number : %" PRIu16, packetInfo.transport_sequence_number);
+			// MS_DUMP("  - has_rtp_sequence_number   : true");
+			// MS_DUMP("  - rtp_sequence_number       : %" PRIu16, packetInfo.rtp_sequence_number);
+			// MS_DUMP("  - length                    : %zu", packetInfo.length);
+			// MS_DUMP("  <PacedPacketInfo>");
+			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
+			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
+			// MS_DUMP("    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
+			// MS_DUMP("    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
+			// MS_DUMP("  </PacedPacketInfo>");
+			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
 
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);

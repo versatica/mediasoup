@@ -94,8 +94,7 @@ namespace RTC
 		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64,
-		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	webrtc::PacedPacketInfo TransportCongestionControlClient::GetPacingInfo()
@@ -114,8 +113,7 @@ namespace RTC
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64,
-		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	void TransportCongestionControlClient::ReceiveEstimatedBitrate(uint32_t bitrate)
@@ -145,8 +143,7 @@ namespace RTC
 		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64,
-		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate)
@@ -164,8 +161,8 @@ namespace RTC
 		auto minBitrate       = 30000u;
 		uint32_t startBitrate = std::max<uint32_t>(minBitrate, this->initialAvailableBitrate);
 		// Let's increase the max bitrate since it may oscillate.
-		uint32_t maxBitrate        = std::max<uint32_t>(startBitrate, desiredBitrate) * 1.5;
-		uint32_t maxPaddingBitrate = desiredBitrate; // TODO: No idea but we want full desiredBitrate.
+		uint32_t maxBitrate        = std::max<uint32_t>(startBitrate, desiredBitrate) * 1.25;
+		uint32_t maxPaddingBitrate = maxBitrate; // TODO: No idea but we want full maxBitrate.
 
 		webrtc::TargetRateConstraints constraints;
 
@@ -182,14 +179,14 @@ namespace RTC
 		  startBitrate,
 		  maxBitrate);
 
-		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
+		// TODO: Let's not use this.
+		// this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
 		  minBitrate, maxPaddingBitrate, maxBitrate);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64,
-		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	uint32_t TransportCongestionControlClient::GetAvailableBitrate() const
@@ -272,8 +269,7 @@ namespace RTC
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet, pacingInfo);
 
 		// // TODO: Testing
-		// MS_WARN_DEV("---- delay:%lld" PRIu64,
-		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+		// MS_WARN_DEV("---- delay:%lld" PRIu64, this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
 	RTC::RtpPacket* TransportCongestionControlClient::GeneratePadding(size_t size)
