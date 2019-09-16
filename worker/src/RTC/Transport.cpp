@@ -370,6 +370,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		auto now = DepLibUV::GetTime();
+
 		jsonArray.emplace_back(json::value_t::object);
 		auto& jsonObject = jsonArray[0];
 
@@ -405,14 +407,44 @@ namespace RTC
 		// Add bytesReceived.
 		jsonObject["bytesReceived"] = this->recvTransmission.GetBytes();
 
+		// Add recvBitrate.
+		jsonObject["recvBitrate"] = this->recvTransmission.GetRate(now);
+
 		// Add bytesSent.
 		jsonObject["bytesSent"] = this->sendTransmission.GetBytes();
 
-		// Add recvBitrate.
-		jsonObject["recvBitrate"] = this->recvTransmission.GetRate(DepLibUV::GetTime());
-
 		// Add sendBitrate.
-		jsonObject["sendBitrate"] = this->sendTransmission.GetRate(DepLibUV::GetTime());
+		jsonObject["sendBitrate"] = this->sendTransmission.GetRate(now);
+
+		// Add rtpBytesReceived.
+		jsonObject["rtpBytesReceived"] = this->recvRtpTransmission.GetBytes();
+
+		// Add rtpRecvBitrate.
+		jsonObject["rtpRecvBitrate"] = this->recvRtpTransmission.GetBitrate(now);
+
+		// Add rtpBytesSent.
+		jsonObject["rtpBytesSent"] = this->sendRtpTransmission.GetBytes();
+
+		// Add rtpSendBitrate.
+		jsonObject["rtpSendBitrate"] = this->sendRtpTransmission.GetBitrate(now);
+
+		// Add rtxBytesReceived.
+		jsonObject["rtxBytesReceived"] = this->recvRtxTransmission.GetBytes();
+
+		// Add rtxRecvBitrate.
+		jsonObject["rtxRecvBitrate"] = this->recvRtxTransmission.GetBitrate(now);
+
+		// Add rtxBytesSent.
+		jsonObject["rtxBytesSent"] = this->sendRtxTransmission.GetBytes();
+
+		// Add rtxSendBitrate.
+		jsonObject["rtxSendBitrate"] = this->sendRtxTransmission.GetBitrate(now);
+
+		// Add probationBytesSent.
+		jsonObject["probationBytesSent"] = this->sendProbationTransmission.GetBytes();
+
+		// Add probationSendBitrate.
+		jsonObject["probationSendBitrate"] = this->sendProbationTransmission.GetBitrate(now);
 
 		// Add availableOutgoingBitrate.
 		if (this->tccClient)
@@ -1209,7 +1241,18 @@ namespace RTC
 		//   producer->id.c_str());
 
 		// Pass the RTP packet to the corresponding Producer.
-		producer->ReceiveRtpPacket(packet);
+		auto result = producer->ReceiveRtpPacket(packet);
+
+		switch (result)
+		{
+			case RTC::Producer::ReceiveRtpPacketResult::MEDIA:
+				this->recvRtpTransmission.Update(packet);
+				break;
+			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
+				this->recvRtxTransmission.Update(packet);
+				break;
+			default:;
+		}
 
 		delete packet;
 	}
@@ -1993,35 +2036,34 @@ namespace RTC
 		MS_TRACE();
 
 		// Update transport wide sequence number if present.
-		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
+		if (this->tccClient && packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
 			this->transportWideCcSeq++;
 
-			if (this->tccClient)
-			{
-				auto* tccClient = this->tccClient;
-				webrtc::RtpPacketSendInfo packetInfo;
+			auto* tccClient = this->tccClient;
+			webrtc::RtpPacketSendInfo packetInfo;
 
-				packetInfo.ssrc                      = packet->GetSsrc();
-				packetInfo.transport_sequence_number = this->transportWideCcSeq;
-				packetInfo.has_rtp_sequence_number   = true;
-				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
-				packetInfo.length                    = packet->GetSize();
-				packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
+			packetInfo.ssrc                      = packet->GetSsrc();
+			packetInfo.transport_sequence_number = this->transportWideCcSeq;
+			packetInfo.has_rtp_sequence_number   = true;
+			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+			packetInfo.length                    = packet->GetSize();
+			packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
 
-				// Indicate the pacer (and prober) that a packet is to be sent.
-				this->tccClient->InsertPacket(packetInfo);
+			// Indicate the pacer (and prober) that a packet is to be sent.
+			this->tccClient->InsertPacket(packetInfo);
 
-				SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
-					if (sent)
-						tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
-				});
-
-				return;
-			}
+			SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
+				if (sent)
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+			});
+		}
+		else
+		{
+			SendRtpPacket(packet);
 		}
 
-		SendRtpPacket(packet);
+		this->sendRtpTransmission.Update(packet);
 	}
 
 	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
@@ -2032,35 +2074,34 @@ namespace RTC
 		packet->UpdateAbsSendTime(DepLibUV::GetTime());
 
 		// Update transport wide sequence number if present.
-		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
+		if (this->tccClient && packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
 			this->transportWideCcSeq++;
 
-			if (this->tccClient)
-			{
-				auto* tccClient = this->tccClient;
-				webrtc::RtpPacketSendInfo packetInfo;
+			auto* tccClient = this->tccClient;
+			webrtc::RtpPacketSendInfo packetInfo;
 
-				packetInfo.ssrc                      = packet->GetSsrc();
-				packetInfo.transport_sequence_number = this->transportWideCcSeq;
-				packetInfo.has_rtp_sequence_number   = true;
-				packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
-				packetInfo.length                    = packet->GetSize();
-				packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
+			packetInfo.ssrc                      = packet->GetSsrc();
+			packetInfo.transport_sequence_number = this->transportWideCcSeq;
+			packetInfo.has_rtp_sequence_number   = true;
+			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+			packetInfo.length                    = packet->GetSize();
+			packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
 
-				// Indicate the pacer (and prober) that a packet is to be sent.
-				this->tccClient->InsertPacket(packetInfo);
+			// Indicate the pacer (and prober) that a packet is to be sent.
+			this->tccClient->InsertPacket(packetInfo);
 
-				SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
-					if (sent)
-						tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
-				});
-
-				return;
-			}
+			SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
+				if (sent)
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+			});
+		}
+		else
+		{
+			SendRtpPacket(packet);
 		}
 
-		SendRtpPacket(packet);
+		this->sendRtxTransmission.Update(packet);
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
@@ -2284,6 +2325,9 @@ namespace RTC
 		  static_cast<uint16_t>(this->transportWideCcSeq + 1u),
 		  packet->GetSize());
 
+		// Update abs-send-time if present.
+		packet->UpdateAbsSendTime(DepLibUV::GetTime());
+
 		// Update transport wide sequence number if present.
 		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
@@ -2308,8 +2352,10 @@ namespace RTC
 		}
 		else
 		{
-			MS_ERROR("packet->UpdateTransportWideCc01() returned false");
+			SendRtpPacket(packet);
 		}
+
+		this->sendProbationTransmission.Update(packet);
 	}
 
 	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(

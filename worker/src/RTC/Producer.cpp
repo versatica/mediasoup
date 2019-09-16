@@ -459,7 +459,7 @@ namespace RTC
 		}
 	}
 
-	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
+	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -475,15 +475,19 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
-			return;
+			return ReceiveRtpPacketResult::DISCARDED;
 		}
 
 		// Pre-process the packet.
 		PreProcessRtpPacket(packet);
 
+		ReceiveRtpPacketResult result;
+
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
 		{
+			result = ReceiveRtpPacketResult::MEDIA;
+
 			// Process the packet.
 			if (!rtpStream->ReceivePacket(packet))
 			{
@@ -491,15 +495,17 @@ namespace RTC
 				if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
 					NotifyNewRtpStream(rtpStream);
 
-				return;
+				return result;
 			}
 		}
 		// RTX packet.
 		else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
 		{
+			result = ReceiveRtpPacketResult::RETRANSMISSION;
+
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
-				return;
+				return result;
 		}
 		// Should not happen.
 		else
@@ -539,16 +545,18 @@ namespace RTC
 
 		// If paused stop here.
 		if (this->paused)
-			return;
+			return result;
 
 		// Mangle the packet before providing the listener with it.
 		if (!MangleRtpPacket(packet, rtpStream))
-			return;
+			return ReceiveRtpPacketResult::DISCARDED;
 
 		// Post-process the packet.
 		PostProcessRtpPacket(packet);
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
+
+		return result;
 	}
 
 	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)

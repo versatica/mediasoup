@@ -63,6 +63,14 @@ namespace RTC
 		};
 
 	public:
+		enum class ReceiveRtpPacketResult
+		{
+			DISCARDED = 0,
+			MEDIA     = 1,
+			RETRANSMISSION
+		};
+
+	public:
 		Producer(const std::string& id, RTC::Producer::Listener* listener, json& data);
 		virtual ~Producer();
 
@@ -76,7 +84,7 @@ namespace RTC
 		RTC::RtpParameters::Type GetType() const;
 		bool IsPaused() const;
 		std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams();
-		void ReceiveRtpPacket(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
