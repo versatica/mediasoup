@@ -175,6 +175,10 @@ namespace RTC
 		// Delete Transport-CC server.
 		delete this->tccServer;
 		this->tccServer = nullptr;
+
+		// Delete Sender BWE.
+		delete this->senderBwe;
+		this->senderBwe = nullptr;
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -453,6 +457,11 @@ namespace RTC
 		// Add availableIncomingBitrate.
 		if (this->tccServer && this->tccServer->GetAvailableBitrate() != 0u)
 			jsonObject["availableIncomingBitrate"] = this->tccServer->GetAvailableBitrate();
+
+		// TODO
+		// Add availableOutgoingBitrate_2.
+		if (this->senderBwe)
+			jsonObject["availableOutgoingBitrate_2"] = this->senderBwe->GetAvailableBitrate();
 
 		// Add maxIncomingBitrate.
 		if (this->maxIncomingBitrate != 0u)
@@ -762,7 +771,7 @@ namespace RTC
 				auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
 				auto& codecs                = consumer->GetRtpParameters().codecs;
 
-				// Set TransportCongestionControlServer.
+				// Set TransportCongestionControlClient.
 				if (!this->tccClient)
 				{
 					bool createTccClient{ false };
@@ -845,9 +854,59 @@ namespace RTC
 					}
 				}
 
+				// TODO
+				// Create SenderBandwidthEstimator if:
+				// - not already created,
+				// - it's a simulcast or SVC Consumer, and
+				// - there is transport-wide-cc-01 RTP header extension, and
+				// - there is "transport-cc" in codecs RTCP feedback.
+				//
+				// clang-format off
+				if (
+					!this->senderBwe &&
+					(
+						consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+						consumer->GetType() == RTC::RtpParameters::Type::SVC
+					) &&
+					rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+					std::any_of(
+						codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+						{
+							return std::any_of(
+								codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+								{
+									return fb.type == "transport-cc";
+								});
+						})
+				)
+				// clang-format on
+				{
+					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
+
+					// Tell all the Consumers that we are gonna manage their bitrate.
+					for (auto& kv : this->mapConsumers)
+					{
+						auto* consumer = kv.second;
+
+						consumer->SetExternallyManagedBitrate();
+					};
+
+					this->senderBwe = new RTC::SenderBandwidthEstimator(
+					  this, this->initialAvailableOutgoingBitrate);
+
+					if (IsConnected())
+						this->senderBwe->TransportConnected();
+				}
+
 				// If applicable, tell the new Consumer that we are gonna manage its
 				// bitrate.
 				if (this->tccClient)
+					consumer->SetExternallyManagedBitrate();
+
+				// TODO
+				// If applicable, tell the new Consumer that we are gonna manage its
+				// bitrate.
+				if (this->senderBwe)
 					consumer->SetExternallyManagedBitrate();
 
 				if (IsConnected())
@@ -1167,6 +1226,10 @@ namespace RTC
 		// Tell the TransportCongestionControlServer.
 		if (this->tccServer)
 			this->tccServer->TransportConnected();
+
+		// Tell the SenderBandwidthEstimator.
+		if (this->senderBwe)
+			this->senderBwe->TransportConnected();
 	}
 
 	void Transport::Disconnected()
@@ -1199,6 +1262,10 @@ namespace RTC
 		// Tell the TransportCongestionControlServer.
 		if (this->tccServer)
 			this->tccServer->TransportDisconnected();
+
+		// Tell the SenderBandwidthEstimator.
+		if (this->senderBwe)
+			this->senderBwe->TransportDisconnected();
 	}
 
 	void Transport::ReceiveRtpPacket(RTC::RtpPacket* packet)
@@ -1644,6 +1711,11 @@ namespace RTC
 						if (this->tccClient)
 							this->tccClient->ReceiveRtcpTransportFeedback(feedback);
 
+						// TODO
+						// Pass it to the SenderBandwidthEstimator client.
+						if (this->senderBwe)
+							this->senderBwe->ReceiveRtcpTransportFeedback(feedback);
+
 						break;
 					}
 
@@ -1831,6 +1903,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
+		// TODO: do it with this->senderBwe.
 
 		std::multimap<uint16_t, RTC::Consumer*> multimapPriorityConsumer;
 		uint16_t totalPriorities{ 0u };
@@ -1954,6 +2027,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
+		// TODO: do it with this->senderBwe.
 
 		uint32_t totalDesiredBitrate{ 0u };
 
@@ -2035,6 +2109,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: Use senderBwe instead.
 		// Update transport wide sequence number if present.
 		if (this->tccClient && packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
@@ -2068,9 +2143,20 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
+			// TODO
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+
+			auto* senderBwe    = this->senderBwe;
+			auto wideSeqNumber = this->transportWideCcSeq;
+
+			SendRtpPacket(packet, [&packetInfo, wideSeqNumber, tccClient, senderBwe](bool sent) {
 				if (sent)
+				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+
+					// TODO
+					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTime());
+				}
 			});
 		}
 		else
@@ -2088,6 +2174,7 @@ namespace RTC
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTime());
 
+		// TODO: Use senderBwe instead.
 		// Update transport wide sequence number if present.
 		if (this->tccClient && packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
@@ -2106,9 +2193,20 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
+			// TODO
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+
+			auto* senderBwe    = this->senderBwe;
+			auto wideSeqNumber = this->transportWideCcSeq;
+
+			SendRtpPacket(packet, [&packetInfo, wideSeqNumber, tccClient, senderBwe](bool sent) {
 				if (sent)
+				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+
+					// TODO
+					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTime());
+				}
 			});
 		}
 		else
@@ -2375,9 +2473,22 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			SendRtpPacket(packet, [&packetInfo, tccClient](bool sent) {
+			// TODO
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+
+			auto* senderBwe = this->senderBwe;
+			uint16_t transportWideCcSeq;
+
+			packet->ReadTransportWideCc01(transportWideCcSeq);
+
+			SendRtpPacket(packet, [&packetInfo, transportWideCcSeq, tccClient, senderBwe](bool sent) {
 				if (sent)
+				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+
+					// TODO
+					senderBwe->RtpPacketSent(transportWideCcSeq, DepLibUV::GetTime());
+				}
 			});
 		}
 		else
@@ -2396,6 +2507,24 @@ namespace RTC
 		packet->Serialize(RTC::RTCP::Buffer);
 
 		SendRtcpPacket(packet);
+	}
+
+	inline void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
+	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
+	  uint32_t availableBitrate,
+	  uint32_t previousAvailableBitrate)
+	{
+		MS_TRACE();
+
+		// TODO: Use MS_DEBUG_DEV.
+		MS_DUMP(
+		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
+		  availableBitrate,
+		  previousAvailableBitrate);
+
+		// TODO: Uncomment.
+		// DistributeAvailableOutgoingBitrate();
+		// ComputeOutgoingDesiredBitrate();
 	}
 
 	inline void Transport::OnTimer(Timer* timer)
