@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-#define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV // TODO
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
@@ -164,11 +164,11 @@ namespace RTC
 		uint32_t maxBitrate        = std::max<uint32_t>(startBitrate, desiredBitrate) * 1.25;
 		uint32_t maxPaddingBitrate = maxBitrate; // TODO: No idea but we want full maxBitrate.
 
-		webrtc::TargetRateConstraints constraints;
+		// webrtc::TargetRateConstraints constraints;
 
-		constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTime());
-		constraints.min_data_rate = webrtc::DataRate::bps(minBitrate);
-		constraints.max_data_rate = webrtc::DataRate::bps(maxBitrate);
+		// constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTime());
+		// constraints.min_data_rate = webrtc::DataRate::bps(minBitrate);
+		// constraints.max_data_rate = webrtc::DataRate::bps(maxBitrate);
 		// constraints.starting_rate = webrtc::DataRate::bps(startBitrate);
 
 		MS_DEBUG_DEV(
