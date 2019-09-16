@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::ProbeBitrateEstimator"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
 #include "rtc_base/numerics/safe_conversions.h"
