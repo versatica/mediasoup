@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::GoogCcNetworkController"
-#define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/goog_cc_network_control.h"
 #include "api/units/time_delta.h"

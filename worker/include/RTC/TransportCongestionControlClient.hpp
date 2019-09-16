@@ -27,7 +27,6 @@ namespace RTC
 			  RTC::TransportCongestionControlClient* tccClient,
 			  uint32_t availableBitrate,
 			  uint32_t previousAvailableBitrate) = 0;
-
 			virtual void OnTransportCongestionControlClientSendRtpPacket(
 			  RTC::TransportCongestionControlClient* tccClient,
 			  RTC::RtpPacket* packet,

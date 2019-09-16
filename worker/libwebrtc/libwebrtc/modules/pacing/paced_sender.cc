@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::PacedSender"
-#define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV // TODO
 
 #include "modules/pacing/paced_sender.h"
 #include "modules/pacing/bitrate_prober.h"

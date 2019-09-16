@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::DelayBasedBwe"
-#define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
