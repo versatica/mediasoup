@@ -163,6 +163,7 @@ namespace RTC
 		bool ReadFrameMarking(RtpPacket::FrameMarking** frameMarking, uint8_t& length) const;
 		bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
 		bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
+		bool HasExtension(uint8_t id) const;
 		uint8_t* GetExtension(uint8_t id, uint8_t& len) const;
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
@@ -535,6 +536,39 @@ namespace RTC
 		}
 
 		return true;
+	}
+
+	inline bool RtpPacket::HasExtension(uint8_t id) const
+	{
+		if (id == 0u)
+		{
+			return false;
+		}
+		else if (HasOneByteExtensions())
+		{
+			auto it = this->mapOneByteExtensions.find(id);
+
+			return it != this->mapOneByteExtensions.end();
+		}
+		else if (HasTwoBytesExtensions())
+		{
+			auto it = this->mapTwoBytesExtensions.find(id);
+
+			if (it == this->mapTwoBytesExtensions.end())
+				return false;
+
+			auto* extension = it->second;
+
+			// In Two-Byte extensions value length may be zero. If so, return false.
+			if (extension->len == 0)
+				return false;
+
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	inline uint8_t* RtpPacket::GetExtension(uint8_t id, uint8_t& len) const
