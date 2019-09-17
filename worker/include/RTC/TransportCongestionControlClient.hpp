@@ -54,6 +54,9 @@ namespace RTC
 		uint32_t GetAvailableBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
 
+	private:
+		void MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate);
+
 		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
 
@@ -83,6 +86,7 @@ namespace RTC
 		RTC::BweType bweType;
 		uint32_t initialAvailableBitrate{ 0u };
 		uint32_t availableBitrate{ 0u };
+		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAt{ 0u };
 	};
 

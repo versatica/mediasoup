@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-// #define MS_LOG_DEV // TODO
+#define MS_LOG_DEV // TODO
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
@@ -207,24 +207,12 @@ namespace RTC
 		this->lastAvailableBitrateEventAt = DepLibUV::GetTime();
 	}
 
-	void TransportCongestionControlClient::OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate)
+	void TransportCongestionControlClient::MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
-		auto previousAvailableBitrate = this->availableBitrate;
-		uint64_t now                  = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTime();
 		bool notify{ false };
-
-		// Update availableBitrate.
-		// NOTE: Just in case.
-		if (targetTransferRate.target_rate.bps() > std::numeric_limits<uint32_t>::max())
-			this->availableBitrate = std::numeric_limits<uint32_t>::max();
-		else
-			this->availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
-
-		// TODO: This produces lot of logs with the very same availableBitrate, so why is this
-		// event called so frequently?
-		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->availableBitrate);
 
 		// Ignore if first event.
 		// NOTE: Otherwise it will make the Transport crash since this event also happens
@@ -236,8 +224,15 @@ namespace RTC
 			return;
 		}
 
+		// Emit if this is the first valid event.
+		if (!this->availableBitrateEventCalled)
+		{
+			this->availableBitrateEventCalled = true;
+
+			notify = true;
+		}
 		// Emit event if AvailableBitrateEventInterval elapsed.
-		if (now - this->lastAvailableBitrateEventAt >= AvailableBitrateEventInterval)
+		else if (now - this->lastAvailableBitrateEventAt >= AvailableBitrateEventInterval)
 		{
 			notify = true;
 		}
@@ -256,11 +251,33 @@ namespace RTC
 
 		if (notify)
 		{
+			MS_DEBUG_DEV("notifying the listener with new available bitrate:%" PRIu32, this->availableBitrate);
+
 			this->lastAvailableBitrateEventAt = now;
 
 			this->listener->OnTransportCongestionControlClientAvailableBitrate(
 			  this, this->availableBitrate, previousAvailableBitrate);
 		}
+	}
+
+	void TransportCongestionControlClient::OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate)
+	{
+		MS_TRACE();
+
+		auto previousAvailableBitrate = this->availableBitrate;
+
+		// Update availableBitrate.
+		// NOTE: Just in case.
+		if (targetTransferRate.target_rate.bps() > std::numeric_limits<uint32_t>::max())
+			this->availableBitrate = std::numeric_limits<uint32_t>::max();
+		else
+			this->availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
+
+		// TODO: This produces lot of logs with the very same availableBitrate, so why is this
+		// event called so frequently?
+		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->availableBitrate);
+
+		MayEmitAvailableBitrateEvent(previousAvailableBitrate);
 	}
 
 	// Called from PacedSender in order to send probation packets.
@@ -297,9 +314,11 @@ namespace RTC
 			  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 
 			// TODO: REMOVE
-			// MS_WARN_DEV("---- delay:%" PRIu64, delay);
+			// MS_DEBUG_DEV("---- delay:%" PRIu64, delay);
 
 			this->pacerTimer->Start(delay);
+
+			MayEmitAvailableBitrateEvent(this->availableBitrate);
 		}
 	}
 } // namespace RTC

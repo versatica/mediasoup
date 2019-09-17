@@ -63,6 +63,8 @@ PacedSender::PacedSender(PacketRouter* packet_router,
 }
 
 void PacedSender::CreateProbeCluster(int bitrate_bps, int cluster_id) {
+  MS_DEBUG_DEV("---- bitrate_bps:%d, cluster_id:%d", bitrate_bps, cluster_id);
+
   prober_.CreateProbeCluster(bitrate_bps, DepLibUV::GetTime(), cluster_id);
 }
 
@@ -162,16 +164,13 @@ int64_t PacedSender::UpdateTimeAndGetElapsedMs(int64_t now_ms) {
 }
 
 void PacedSender::Process() {
-  // TODO: REMOVE
-  // MS_DEBUG_DEV("---- START");
-
   int64_t now_ms = DepLibUV::GetTime();
   int64_t elapsed_time_ms = UpdateTimeAndGetElapsedMs(now_ms);
 
   if (paused_)
   {
     // TODO: REMOVE
-    // MS_DEBUG_DEV("---- END 1");
+    // MS_DEBUG_DEV("---- END 1: paused_");
 
     return;
   }
@@ -185,7 +184,7 @@ void PacedSender::Process() {
   if (!prober_.IsProbing())
   {
     // TODO: REMOVE
-    // MS_DEBUG_DEV("---- END 2");
+    // MS_DEBUG_DEV("---- END 2: !prober_.IsProbing()");
 
     return;
   }

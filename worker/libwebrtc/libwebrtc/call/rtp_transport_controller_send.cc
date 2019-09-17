@@ -250,6 +250,10 @@ void RtpTransportControllerSend::OnRemoteNetworkEstimate(
 
 void RtpTransportControllerSend::OnTimer(Timer* timer)
 {
+  // TODO (ibc): Must really check if we need this ugly periodic timer which is called
+  // every 5ms.
+  // NOTE: Yes, otherwise the pssss scenario does not work:
+  // https://bitbucket.org/versatica/mediasoup/issues/12/no-probation-if-no-real-media
 	UpdateControllerWithTimeInterval();
 }
 
