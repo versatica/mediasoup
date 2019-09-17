@@ -287,7 +287,7 @@ void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
 void RtpTransportControllerSend::UpdateStreamsConfig() {
   streams_config_.at_time = Timestamp::ms(DepLibUV::GetTime());
   if (controller_)
-    controller_->OnStreamsConfig(streams_config_);
+    PostUpdates(controller_->OnStreamsConfig(streams_config_));
 }
 
 void RtpTransportControllerSend::PostUpdates(NetworkControlUpdate update) {
