@@ -76,6 +76,9 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 
   pacer_.SetPacingRates(bitrate_config.start_bitrate_bps, 0);
 
+  // TODO: testing.
+  streams_config_.requests_alr_probing = true;
+
   controller_task_periodic_timer_ = new Timer(this);
 }
 
