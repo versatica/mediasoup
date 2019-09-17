@@ -16,7 +16,7 @@ namespace RTC
 		virtual ~RtpProbationGenerator();
 
 	public:
-		RTC::RtpPacket* GetNextPacket(size_t len);
+		RTC::RtpPacket* GetNextPacket(size_t size);
 
 	private:
 		// Allocated by this.

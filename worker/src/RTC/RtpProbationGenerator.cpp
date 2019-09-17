@@ -26,8 +26,7 @@ namespace RTC
 	};
 	// clang-format on
 
-	static constexpr size_t ProbationMtu{ 1200u };
-	static constexpr size_t MaxProbationPayloadLength{ ProbationMtu - sizeof(ProbationPacketHeader) };
+	static constexpr size_t MaxProbationPacketSize{ 1400u };
 
 	/* Instance methods. */
 
@@ -36,13 +35,13 @@ namespace RTC
 		MS_TRACE();
 
 		// Allocate the probation RTP packet buffer.
-		this->probationPacketBuffer = new uint8_t[ProbationMtu];
+		this->probationPacketBuffer = new uint8_t[MaxProbationPacketSize];
 
 		// Copy the generic probation RTP packet header into the buffer.
 		std::memcpy(this->probationPacketBuffer, ProbationPacketHeader, sizeof(ProbationPacketHeader));
 
 		// Create the probation RTP packet.
-		this->probationPacket = RTC::RtpPacket::Parse(this->probationPacketBuffer, ProbationMtu);
+		this->probationPacket = RTC::RtpPacket::Parse(this->probationPacketBuffer, MaxProbationPacketSize);
 
 		// Set fixed SSRC.
 		this->probationPacket->SetSsrc(RTC::RtpProbationSsrc);
@@ -107,15 +106,15 @@ namespace RTC
 		delete this->probationPacket;
 	}
 
-	RTC::RtpPacket* RtpProbationGenerator::GetNextPacket(size_t len)
+	RTC::RtpPacket* RtpProbationGenerator::GetNextPacket(size_t size)
 	{
 		MS_TRACE();
 
 		// Make the packet length fit into our available limits.
-		if (len > MaxProbationPayloadLength)
-			len = MaxProbationPayloadLength;
-		else if (len < sizeof(ProbationPacketHeader))
-			len = sizeof(ProbationPacketHeader);
+		if (size > MaxProbationPacketSize)
+			size = MaxProbationPacketSize;
+		else if (size < sizeof(ProbationPacketHeader))
+			size = sizeof(ProbationPacketHeader);
 
 		// Just send up to StepNumPackets per step.
 		// Increase RTP seq number and timestamp.
@@ -128,7 +127,8 @@ namespace RTC
 		this->probationPacket->SetSequenceNumber(seq);
 		this->probationPacket->SetTimestamp(timestamp);
 
-		this->probationPacket->SetPayloadLength(len - sizeof(ProbationPacketHeader));
+		// Set probation packet payload size.
+		this->probationPacket->SetPayloadLength(size - sizeof(ProbationPacketHeader));
 
 		return this->probationPacket;
 	}
