@@ -273,9 +273,7 @@ namespace RTC
 		else
 			this->availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
 
-		// TODO: This produces lot of logs with the very same availableBitrate, so why is this
-		// event called so frequently?
-		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->availableBitrate);
+		// MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->availableBitrate);
 
 		MayEmitAvailableBitrateEvent(previousAvailableBitrate);
 	}

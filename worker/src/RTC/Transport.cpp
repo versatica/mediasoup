@@ -2431,13 +2431,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: REMOVE
-		MS_DUMP(
-		  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu]",
-		  packet->GetSequenceNumber(),
-		  static_cast<uint16_t>(this->transportWideCcSeq + 1u),
-		  packet->GetSize());
-
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTime());
 
@@ -2497,6 +2490,14 @@ namespace RTC
 		}
 
 		this->sendProbationTransmission.Update(packet);
+
+		// TODO: REMOVE
+		MS_DUMP(
+		  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
+		  packet->GetSequenceNumber(),
+		  static_cast<uint16_t>(this->transportWideCcSeq + 1u),
+		  packet->GetSize(),
+		  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTime()));
 	}
 
 	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(
