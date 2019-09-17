@@ -126,14 +126,6 @@ void BitrateProber::CreateProbeCluster(int bitrate_bps,
   MS_ASSERT(probing_state_ != ProbingState::kDisabled, "probing disabled");
   MS_ASSERT(bitrate_bps > 0, "bitrate must be > 0");
 
-  // TODO (ibc): We need to send probation even if there is no real packets, so add
-  // this code (taken from `OnIncomingPacket()` above) also here.
-  if (probing_state_ == ProbingState::kInactive && !clusters_.empty()) {
-    // Send next probe right away.
-    next_probe_time_ms_ = -1;
-    probing_state_ = ProbingState::kActive;
-  }
-
   total_probe_count_++;
   while (!clusters_.empty() &&
          now_ms - clusters_.front().time_created_ms > kProbeClusterTimeoutMs) {
@@ -164,6 +156,14 @@ void BitrateProber::CreateProbeCluster(int bitrate_bps,
   // kInactive and wait for OnIncomingPacket to start the probing.
   if (probing_state_ != ProbingState::kActive)
     probing_state_ = ProbingState::kInactive;
+
+  // TODO (ibc): We need to send probation even if there is no real packets, so add
+  // this code (taken from `OnIncomingPacket()` above) also here.
+  if (probing_state_ == ProbingState::kInactive && !clusters_.empty()) {
+    // Send next probe right away.
+    next_probe_time_ms_ = -1;
+    probing_state_ = ProbingState::kActive;
+  }
 
   // TODO: jeje
   TODO_PRINT_PROBING_STATE();
