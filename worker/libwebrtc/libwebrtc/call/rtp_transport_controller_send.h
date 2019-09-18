@@ -22,8 +22,6 @@
 #include "modules/pacing/packet_router.h"
 #include "modules/pacing/paced_sender.h"
 
-#include "handles/Timer.hpp"
-
 #include <atomic>
 #include <map>
 #include <memory>
@@ -39,8 +37,7 @@ class RtpTransportControllerSend final
     : public RtpTransportControllerSendInterface,
       public RtcpBandwidthObserver,
       public TransportFeedbackObserver,
-      public NetworkStateEstimateObserver,
-      public Timer::Listener {
+      public NetworkStateEstimateObserver {
  public:
   RtpTransportControllerSend(
       PacketRouter* packet_router,
@@ -85,13 +82,11 @@ class RtpTransportControllerSend final
   // Implements NetworkStateEstimateObserver interface
   void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
 
-  // Implements Timer interface
-  void OnTimer(Timer* timer) override;
+  void Process();
 
  private:
   void MaybeCreateControllers();
 
-  void StartProcessPeriodicTasks();
   void UpdateControllerWithTimeInterval();
 
   void UpdateStreamsConfig();
@@ -132,7 +127,6 @@ class RtpTransportControllerSend final
   std::atomic<size_t> transport_overhead_bytes_per_packet_;
 
   bool network_available_;
-  Timer* controller_task_periodic_timer_;
 
   // TODO(perkj): |task_queue_| is supposed to replace |process_thread_|.
   // |task_queue_| is defined last to ensure all pending tasks are cancelled

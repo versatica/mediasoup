@@ -4,6 +4,7 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include <algorithm> // std::min.
 #include <limits>
 
 namespace RTC
@@ -44,12 +45,14 @@ namespace RTC
 
 		this->probationGenerator = new RTC::RtpProbationGenerator();
 
-		this->pacerTimer = new Timer(this);
+		this->processTimer = new Timer(this);
 
-		auto delay = static_cast<uint64_t>(
-		  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
-
-		this->pacerTimer->Start(delay);
+		/* clang-format off */
+		this->processTimer->Start(std::min(
+			this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess(),
+			this->controllerFactory->GetProcessInterval().ms()
+		));
+		/* clang-format on */
 	}
 
 	TransportCongestionControlClient::~TransportCongestionControlClient()
@@ -68,8 +71,8 @@ namespace RTC
 		delete this->probationGenerator;
 		this->probationGenerator = nullptr;
 
-		delete this->pacerTimer;
-		this->pacerTimer = nullptr;
+		delete this->processTimer;
+		this->processTimer = nullptr;
 	}
 
 	void TransportCongestionControlClient::TransportConnected()
@@ -291,18 +294,23 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (timer == this->pacerTimer)
+		if (timer == this->processTimer)
 		{
+			// Time to call RtpTransportControllerSend::Process().
+			this->rtpTransportControllerSend->Process();
+
 			// Time to call PacedSender::Process().
 			this->rtpTransportControllerSend->packet_sender()->Process();
 
-			auto delay = static_cast<uint64_t>(
-			  this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
+			/* clang-format off */
+			this->processTimer->Start(std::min(
+				this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess(),
+				this->controllerFactory->GetProcessInterval().ms()
+			));
+			/* clang-format on */
 
 			// TODO: REMOVE
-			// MS_DEBUG_DEV("---- delay:%" PRIu64, delay);
-
-			this->pacerTimer->Start(delay);
+			MS_DEBUG_DEV("---- delay:%" PRIu64, this->processTimer->GetTimeout());
 
 			MayEmitAvailableBitrateEvent(this->availableBitrate);
 		}

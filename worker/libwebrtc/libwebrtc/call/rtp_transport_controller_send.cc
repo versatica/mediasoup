@@ -78,12 +78,9 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 
   // TODO: testing.
   streams_config_.requests_alr_probing = true;
-
-  controller_task_periodic_timer_ = new Timer(this);
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
-  delete controller_task_periodic_timer_;
 }
 
 void RtpTransportControllerSend::UpdateControlState() {
@@ -248,7 +245,7 @@ void RtpTransportControllerSend::OnRemoteNetworkEstimate(
   controller_->OnNetworkStateEstimate(estimate);
 }
 
-void RtpTransportControllerSend::OnTimer(Timer* timer)
+void RtpTransportControllerSend::Process()
 {
   // TODO (ibc): Must really check if we need this ugly periodic timer which is called
   // every 5ms.
@@ -272,13 +269,6 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
   process_interval_ = controller_factory_override_->GetProcessInterval();
 
   UpdateControllerWithTimeInterval();
-  StartProcessPeriodicTasks();
-}
-
-void RtpTransportControllerSend::StartProcessPeriodicTasks() {
-  auto controllerTaskPeriodicInterval = process_interval_.ms();
-
-  controller_task_periodic_timer_->Start(controllerTaskPeriodicInterval, controllerTaskPeriodicInterval);
 }
 
 void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
