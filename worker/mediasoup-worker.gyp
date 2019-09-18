@@ -315,6 +315,7 @@
         'test/src/RTC/TestRtpStreamSend.cpp',
         'test/src/RTC/TestRtpStreamRecv.cpp',
         'test/src/RTC/TestSeqManager.cpp',
+        'test/src/RTC/TestTrendCalculator.cpp',
         'test/src/RTC/Codecs/TestVP8.cpp',
         'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
         'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
@@ -369,6 +370,7 @@
         'fuzzer/src/fuzzer.cpp',
         'fuzzer/src/RTC/FuzzerStunPacket.cpp',
         'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
+        'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
@@ -395,6 +397,7 @@
         # C++ include files.
         'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
+        'fuzzer/include/RTC/FuzzerTrendCalculator.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerBye.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackPs.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsAfb.hpp',
