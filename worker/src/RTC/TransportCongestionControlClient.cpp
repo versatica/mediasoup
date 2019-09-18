@@ -123,7 +123,7 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: REMOVE
-		MS_DUMP("--- REMB bitrate:%" PRIu32, bitrate);
+		MS_DEBUG_DEV("--- REMB bitrate:%" PRIu32, bitrate);
 
 		this->rtpTransportControllerSend->OnReceivedEstimatedBitrate(bitrate);
 	}
@@ -153,37 +153,24 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO (ibc): Too much questions here:
-		// * It seems that calling SetClientBitratePreferences() all the time breaks everything
-		//   since, if constraints.starting_rate is set, the BWE is reseted to that value
-		//   every time!
-		// * Also note that the initialAvailableBitrate is already given in the constructor:
-		//     bitrateConfig.start_bitrate_bps = static_cast<int>(this->initialAvailableBitrate);
-		// * Not even sure if SetClientBitratePreferences() must be called at all.
+		auto now = DepLibUV::GetTime();
+		uint32_t minBitrate{ 30000u };
 
-		auto minBitrate       = 30000u;
-		uint32_t startBitrate = std::max<uint32_t>(minBitrate, this->initialAvailableBitrate);
-		// Let's increase the max bitrate since it may oscillate.
-		uint32_t maxBitrate        = std::max<uint32_t>(startBitrate, desiredBitrate) * 1.25;
-		uint32_t maxPaddingBitrate = maxBitrate; // TODO: No idea but we want full maxBitrate.
+		// Manage it via trending and increase it a bit to avoid immediate
+		// oscillations.
+		this->desiredBitrateTrend.Update(desiredBitrate, now);
 
-		// webrtc::TargetRateConstraints constraints;
+		uint32_t maxBitrate = this->desiredBitrateTrend.GetValue() * 1.15;
 
-		// constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTime());
-		// constraints.min_data_rate = webrtc::DataRate::bps(minBitrate);
-		// constraints.max_data_rate = webrtc::DataRate::bps(maxBitrate);
-		// constraints.starting_rate = webrtc::DataRate::bps(startBitrate);
+		maxBitrate = std::max<uint32_t>(minBitrate, maxBitrate);
+
+		uint32_t maxPaddingBitrate = maxBitrate * 0.75;
 
 		MS_DEBUG_DEV(
-		  "[desiredBitrate:%" PRIu32 ", minBitrate:%" PRIu32 ", startBitrate:%" PRIu32
-		  ", maxBitrate:%" PRIu32 "]",
+		  "[desiredBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
 		  desiredBitrate,
-		  minBitrate,
-		  startBitrate,
-		  maxBitrate);
-
-		// TODO: Let's not use this.
-		// this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
+		  maxBitrate,
+		  maxPaddingBitrate);
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
 		  minBitrate, maxPaddingBitrate, maxBitrate);
@@ -251,7 +238,8 @@ namespace RTC
 
 		if (notify)
 		{
-			MS_DEBUG_DEV("notifying the listener with new available bitrate:%" PRIu32, this->availableBitrate);
+			MS_DEBUG_DEV(
+			  "notifying the listener with new available bitrate:%" PRIu32, this->availableBitrate);
 
 			this->lastAvailableBitrateEventAt = now;
 

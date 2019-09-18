@@ -7,6 +7,7 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpProbationGenerator.hpp"
+#include "RTC/TrendCalculator.hpp"
 #include "handles/Timer.hpp"
 #include <libwebrtc/api/transport/goog_cc_factory.h>
 #include <libwebrtc/api/transport/network_types.h>
@@ -88,6 +89,7 @@ namespace RTC
 		uint32_t availableBitrate{ 0u };
 		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAt{ 0u };
+		RTC::TrendCalculator desiredBitrateTrend;
 	};
 
 	/* Inline instance methods. */
