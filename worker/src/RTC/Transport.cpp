@@ -28,7 +28,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Transport::Transport(const std::string& id, Listener* listener, json& data)
-	  : id(id), listener(listener)
+	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
+	    sendProbationTransmission(100u)
 	{
 		MS_TRACE();
 
@@ -891,8 +892,8 @@ namespace RTC
 						consumer->SetExternallyManagedBitrate();
 					};
 
-					this->senderBwe = new RTC::SenderBandwidthEstimator(
-					  this, this->initialAvailableOutgoingBitrate);
+					this->senderBwe =
+					  new RTC::SenderBandwidthEstimator(this, this->initialAvailableOutgoingBitrate);
 
 					if (IsConnected())
 						this->senderBwe->TransportConnected();
@@ -2135,9 +2136,9 @@ namespace RTC
 			// MS_DUMP("  <PacedPacketInfo>");
 			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
 			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
-			// MS_DUMP("    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
-			// MS_DUMP("    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
-			// MS_DUMP("  </PacedPacketInfo>");
+			// MS_DUMP("    - probe_cluster_min_probes : %d",
+			// packetInfo.pacing_info.probe_cluster_min_probes); MS_DUMP("    - probe_cluster_min_bytes  :
+			// %d", packetInfo.pacing_info.probe_cluster_min_bytes); MS_DUMP("  </PacedPacketInfo>");
 			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
 
 			// Indicate the pacer (and prober) that a packet is to be sent.
@@ -2414,8 +2415,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Use MS_DEBUG_DEV.
-		MS_DUMP(
+		MS_DEBUG_DEV(
 		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
 		  availableBitrate,
 		  previousAvailableBitrate);
@@ -2458,9 +2458,9 @@ namespace RTC
 			// MS_DUMP("  <PacedPacketInfo>");
 			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
 			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
-			// MS_DUMP("    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
-			// MS_DUMP("    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
-			// MS_DUMP("  </PacedPacketInfo>");
+			// MS_DUMP("    - probe_cluster_min_probes : %d",
+			// packetInfo.pacing_info.probe_cluster_min_probes); MS_DUMP("    - probe_cluster_min_bytes  :
+			// %d", packetInfo.pacing_info.probe_cluster_min_bytes); MS_DUMP("  </PacedPacketInfo>");
 			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
 
 			// Indicate the pacer (and prober) that a packet is to be sent.
@@ -2517,8 +2517,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Use MS_DEBUG_DEV.
-		MS_DUMP(
+		MS_DEBUG_DEV(
 		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
 		  availableBitrate,
 		  previousAvailableBitrate);

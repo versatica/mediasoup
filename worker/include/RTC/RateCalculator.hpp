@@ -16,7 +16,7 @@ namespace RTC
 		static constexpr float DefaultBpsScale{ 8000.0f };
 
 	public:
-		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = DefaultBpsScale);
+		RateCalculator(size_t windowSize = DefaultWindowSize, float scale = DefaultBpsScale);
 		void Update(size_t size, uint64_t now);
 		uint32_t GetRate(uint64_t now);
 		size_t GetBytes() const;
@@ -86,7 +86,7 @@ namespace RTC
 	class RtpDataCounter
 	{
 	public:
-		RtpDataCounter() = default;
+		explicit RtpDataCounter(size_t windowSize = 2500);
 
 	public:
 		void Update(RTC::RtpPacket* packet);
@@ -95,11 +95,15 @@ namespace RTC
 		size_t GetBytes() const;
 
 	private:
-		RateCalculator rate{ /*windowSize*/ 2500 };
+		RateCalculator rate;
 		size_t packets{ 0 };
 	};
 
 	/* Inline instance methods. */
+
+	inline RtpDataCounter::RtpDataCounter(size_t windowSize) : rate(windowSize)
+	{
+	}
 
 	inline uint32_t RtpDataCounter::GetBitrate(uint64_t now)
 	{
