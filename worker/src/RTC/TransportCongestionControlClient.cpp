@@ -54,7 +54,9 @@ namespace RTC
 
 		/* clang-format off */
 		this->processTimer->Start(std::min(
+			// Depends on probation being done and WebRTC-Pacer-MinPacketLimitMs field trial.
 			this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess(),
+			// Fixed value (25ms), libwebrtc/api/transport/goog_cc_factory.cc.
 			this->controllerFactory->GetProcessInterval().ms()
 		));
 		/* clang-format on */
@@ -309,7 +311,9 @@ namespace RTC
 
 			/* clang-format off */
 			this->processTimer->Start(std::min(
+				// Depends on probation being done and WebRTC-Pacer-MinPacketLimitMs field trial.
 				this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess(),
+				// Fixed value (25ms), libwebrtc/api/transport/goog_cc_factory.cc.
 				this->controllerFactory->GetProcessInterval().ms()
 			));
 			/* clang-format on */
