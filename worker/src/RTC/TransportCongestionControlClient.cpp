@@ -1,11 +1,10 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-// #define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "system_wrappers/source/field_trial.h" // webrtc::field_trial.
-#include <algorithm> // std::min.
+#include "system_wrappers/source/field_trial.h" // webrtc::field_trial
 #include <limits>
 
 namespace RTC
