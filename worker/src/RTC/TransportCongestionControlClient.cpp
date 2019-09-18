@@ -4,6 +4,7 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "system_wrappers/source/field_trial.h" // webrtc::field_trial.
 #include <algorithm> // std::min.
 #include <limits>
 
@@ -12,6 +13,8 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
+	// TODO: Look for a proper value.
+	static const char FieldTrials[]{ "WebRTC-Pacer-MinPacketLimitMs/Enabled,100/" };
 
 	/* Instance methods. */
 
@@ -23,6 +26,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: Add into ClassInit static member?
+		webrtc::field_trial::InitFieldTrialsFromString(FieldTrials);
 		// TODO: Must these factories be static members?
 
 		// TODO: Create predictor factory?

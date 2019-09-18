@@ -10,11 +10,11 @@
 
 #define MS_CLASS "webrtc::PacedSender"
 // #define MS_LOG_DEV // TODO
-
 #include "modules/pacing/paced_sender.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "system_wrappers/source/field_trial.h" // webrtc::field_trial.
 
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
@@ -58,8 +58,10 @@ PacedSender::PacedSender(PacketRouter* packet_router,
       packet_counter_(0),
       account_for_audio_(false) {
   ParseFieldTrial({&min_packet_limit_ms_},
-                  field_trials_->Lookup("WebRTC-Pacer-MinPacketLimitMs"));
+                  webrtc::field_trial::FindFullName("WebRTC-Pacer-MinPacketLimitMs"));
   UpdateBudgetWithElapsedTime(min_packet_limit_ms_);
+
+  MS_DEBUG_DEV("min_packet_limit_ms_:%d", min_packet_limit_ms_.Get());
 }
 
 void PacedSender::CreateProbeCluster(int bitrate_bps, int cluster_id) {
