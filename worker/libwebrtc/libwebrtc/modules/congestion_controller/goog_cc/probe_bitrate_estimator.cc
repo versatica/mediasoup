@@ -105,8 +105,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   if (send_interval <= TimeDelta::Zero() || send_interval > kMaxProbeInterval ||
       receive_interval <= TimeDelta::Zero() ||
       receive_interval > kMaxProbeInterval) {
-    MS_WARN_TAG(
-      bwe,
+    MS_WARN_DEV(
       "probing unsuccessful, invalid send/receive interval"
       " [cluster id:%d]"
       " [send interval:%s]"
@@ -133,8 +132,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
 
   double ratio = receive_rate / send_rate;
   if (ratio > kMaxValidRatio) {
-    MS_WARN_TAG(
-      bwe,
+    MS_WARN_DEV(
       "probing unsuccessful, receive/send ratio too high"
       " [cluster id:%d, send:%s / %s = %s]"
       " [receive:%s / %s = %s]"
@@ -154,8 +152,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
 
     return absl::nullopt;
   }
-  MS_DEBUG_TAG(
-    bwe,
+  MS_DEBUG_DEV(
     "probing successful"
     " [cluster id:%d]"
     " [send:%s / %s = %s]"

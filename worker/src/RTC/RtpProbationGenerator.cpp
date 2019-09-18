@@ -41,7 +41,8 @@ namespace RTC
 		std::memcpy(this->probationPacketBuffer, ProbationPacketHeader, sizeof(ProbationPacketHeader));
 
 		// Create the probation RTP packet.
-		this->probationPacket = RTC::RtpPacket::Parse(this->probationPacketBuffer, MaxProbationPacketSize);
+		this->probationPacket =
+		  RTC::RtpPacket::Parse(this->probationPacketBuffer, MaxProbationPacketSize);
 
 		// Set fixed SSRC.
 		this->probationPacket->SetSsrc(RTC::RtpProbationSsrc);
