@@ -86,7 +86,6 @@ namespace RTC
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		Timer* inactivityCheckPeriodicTimer{ nullptr };
 		bool inactive{ false };
-		uint64_t lastPacketAt{ 0 };                   // Time last valid packet arrived.
 		TransmissionCounter transmissionCounter;      // Valid media + valid RTX.
 		RTC::RtpDataCounter mediaTransmissionCounter; // Just valid media.
 	};
