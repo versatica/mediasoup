@@ -2136,9 +2136,11 @@ namespace RTC
 			// MS_DUMP("  <PacedPacketInfo>");
 			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
 			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
-			// MS_DUMP("    - probe_cluster_min_probes : %d",
-			// packetInfo.pacing_info.probe_cluster_min_probes); MS_DUMP("    - probe_cluster_min_bytes  :
-			// %d", packetInfo.pacing_info.probe_cluster_min_bytes); MS_DUMP("  </PacedPacketInfo>");
+			// MS_DUMP(
+			//   "    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
+			// MS_DUMP(
+			//   "    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
+			// MS_DUMP("  </PacedPacketInfo>");
 			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
 
 			// Indicate the pacer (and prober) that a packet is to be sent.
@@ -2458,9 +2460,11 @@ namespace RTC
 			// MS_DUMP("  <PacedPacketInfo>");
 			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
 			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
-			// MS_DUMP("    - probe_cluster_min_probes : %d",
-			// packetInfo.pacing_info.probe_cluster_min_probes); MS_DUMP("    - probe_cluster_min_bytes  :
-			// %d", packetInfo.pacing_info.probe_cluster_min_bytes); MS_DUMP("  </PacedPacketInfo>");
+			// MS_DUMP(
+			//   "    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
+			// MS_DUMP(
+			//   "    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
+			// MS_DUMP("  </PacedPacketInfo>");
 			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
 
 			// Indicate the pacer (and prober) that a packet is to be sent.
@@ -2492,7 +2496,7 @@ namespace RTC
 		this->sendProbationTransmission.Update(packet);
 
 		// TODO: REMOVE
-		MS_DUMP(
+		MS_DEBUG_DEV(
 		  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
 		  packet->GetSequenceNumber(),
 		  static_cast<uint16_t>(this->transportWideCcSeq + 1u),
