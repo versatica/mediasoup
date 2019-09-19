@@ -126,8 +126,8 @@ namespace RTC
 			size_t contentLen = len - sizeof(CommonHeader) - sizeof(FeedbackPacket::Header) -
 			                    FeedbackRtpTransportPacket::fixedHeaderSize;
 			size_t offset{ 0u };
-			size_t count{ 0u };
-			size_t receivedPacketStatusCount{ 0u };
+			uint16_t count{ 0u };
+			uint16_t receivedPacketStatusCount{ 0u };
 
 			while (count < this->packetStatusCount && contentLen > offset)
 			{
@@ -160,7 +160,7 @@ namespace RTC
 				receivedPacketStatusCount += chunk->GetReceivedStatusCount();
 			}
 
-			if (this->packetStatusCount != count)
+			if (count != this->packetStatusCount)
 			{
 				MS_WARN_TAG(rtcp, "provided packet status count does not match with content");
 
@@ -449,6 +449,29 @@ namespace RTC
 			return packetResults;
 		}
 
+		uint8_t FeedbackRtpTransportPacket::GetPacketFractionLost() const
+		{
+			MS_TRACE();
+
+			uint16_t expected = this->packetStatusCount;
+			uint16_t lost{ 0u };
+
+			if (expected == 0u)
+				return 0u;
+
+			for (auto* chunk : this->chunks)
+			{
+				lost += chunk->GetCount() - chunk->GetReceivedStatusCount();
+			}
+
+			// NOTE: If lost equals expected, the math below would produce 256, which
+			// becomes 0 in uint8_t.
+			if (lost == expected)
+				return 255u;
+
+			return (lost << 8) / expected;
+		}
+
 		void FeedbackRtpTransportPacket::FillChunk(
 		  uint16_t previousSequenceNumber, uint16_t sequenceNumber, int16_t delta)
 		{
@@ -575,7 +598,7 @@ namespace RTC
 			auto* chunk = new OneBitVectorChunk(statuses);
 
 			this->chunks.push_back(chunk);
-			this->packetStatusCount += statuses.size();
+			this->packetStatusCount += static_cast<uint16_t>(statuses.size());
 			this->deltasAndChunksSize += 2u;
 		}
 
@@ -584,7 +607,7 @@ namespace RTC
 			auto* chunk = new TwoBitVectorChunk(statuses);
 
 			this->chunks.push_back(chunk);
-			this->packetStatusCount += statuses.size();
+			this->packetStatusCount += static_cast<uint16_t>(statuses.size());
 			this->deltasAndChunksSize += 2u;
 		}
 
@@ -609,7 +632,7 @@ namespace RTC
 		}
 
 		FeedbackRtpTransportPacket::Chunk* FeedbackRtpTransportPacket::Chunk::Parse(
-		  const uint8_t* data, size_t len, size_t count)
+		  const uint8_t* data, size_t len, uint16_t count)
 		{
 			MS_TRACE();
 
@@ -728,18 +751,14 @@ namespace RTC
 			MS_DUMP("  </RunLengthChunk>");
 		}
 
-		size_t FeedbackRtpTransportPacket::RunLengthChunk::GetReceivedStatusCount() const
+		uint16_t FeedbackRtpTransportPacket::RunLengthChunk::GetReceivedStatusCount() const
 		{
 			MS_TRACE();
 
 			if (this->status == Status::SmallDelta || this->status == Status::LargeDelta)
-			{
 				return this->count;
-			}
 			else
-			{
-				return 0;
-			}
+				return 0u;
 		}
 
 		void FeedbackRtpTransportPacket::RunLengthChunk::FillResults(
@@ -770,13 +789,13 @@ namespace RTC
 			return 2u;
 		}
 
-		FeedbackRtpTransportPacket::OneBitVectorChunk::OneBitVectorChunk(uint16_t buffer, size_t count)
+		FeedbackRtpTransportPacket::OneBitVectorChunk::OneBitVectorChunk(uint16_t buffer, uint16_t count)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(buffer & 0x8000, "invalid one bit vector chunk");
 
-			for (size_t i{ 0u }; i < 14 && count > 0; ++i, --count)
+			for (uint8_t i{ 0u }; i < 14 && count > 0; ++i, --count)
 			{
 				auto status = static_cast<Status>((buffer >> (14 - 1 - i)) & 0x01);
 
@@ -848,11 +867,11 @@ namespace RTC
 			MS_DUMP("  </OneBitVectorChunk>");
 		}
 
-		size_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetReceivedStatusCount() const
+		uint16_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetReceivedStatusCount() const
 		{
 			MS_TRACE();
 
-			size_t count{ 0 };
+			uint16_t count{ 0u };
 
 			for (auto status : this->statuses)
 			{
@@ -897,13 +916,13 @@ namespace RTC
 			return 2u;
 		}
 
-		FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(uint16_t buffer, size_t count)
+		FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(uint16_t buffer, uint16_t count)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(buffer & 0xC000, "invalid two bit vector chunk");
 
-			for (size_t i{ 0u }; i < 7 && count > 0; ++i, --count)
+			for (uint8_t i{ 0u }; i < 7 && count > 0; ++i, --count)
 			{
 				auto status = static_cast<Status>((buffer >> 2 * (7 - 1 - i)) & 0x03);
 
@@ -986,11 +1005,11 @@ namespace RTC
 			MS_DUMP("  </TwoBitVectorChunk>");
 		}
 
-		size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetReceivedStatusCount() const
+		uint16_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetReceivedStatusCount() const
 		{
 			MS_TRACE();
 
-			size_t count{ 0 };
+			uint16_t count{ 0u };
 
 			for (auto status : this->statuses)
 			{

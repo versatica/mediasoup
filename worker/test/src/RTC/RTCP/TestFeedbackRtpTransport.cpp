@@ -28,15 +28,14 @@ void validate(
 
 	for (++inputsIterator; inputsIterator != inputs.end(); ++inputsIterator, ++packetResultsIterator)
 	{
-		auto& input        = *inputsIterator;
-		auto& packetResult = *packetResultsIterator;
-
-		size_t missingPackets = input.sequenceNumber - lastInput.sequenceNumber - 1;
+		auto& input             = *inputsIterator;
+		auto& packetResult      = *packetResultsIterator;
+		uint16_t missingPackets = input.sequenceNumber - lastInput.sequenceNumber - 1;
 
 		if (missingPackets > 0)
 		{
 			// All missing packets must be represented in packetResults.
-			for (size_t i{ 0u }; i < missingPackets; ++i)
+			for (uint16_t i{ 0u }; i < missingPackets; ++i)
 			{
 				packetResult = *packetResultsIterator;
 
@@ -122,6 +121,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 16);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
+		REQUIRE(packet->GetPacketFractionLost() == 0);
 
 		SECTION("serialize packet instance")
 		{
@@ -138,6 +138,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
 				REQUIRE(packet2->GetPacketStatusCount() == 16);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
+				REQUIRE(packet2->GetPacketFractionLost() == 0);
 
 				uint8_t buffer2[1024];
 				auto len2 = packet2->Serialize(buffer2);
@@ -177,6 +178,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 51);
 		REQUIRE(packet->GetFeedbackPacketCount() == 10);
+		REQUIRE(packet->GetPacketFractionLost() > 0);
 		REQUIRE(packet->GetLatestSequenceNumber() == 1050);
 		REQUIRE(packet->GetLatestTimestamp() == 1000000216);
 
@@ -195,6 +197,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
 				REQUIRE(packet2->GetPacketStatusCount() == 51);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 10);
+				REQUIRE(packet2->GetPacketFractionLost() > 0);
 
 				uint8_t buffer2[1024];
 				auto len2 = packet2->Serialize(buffer2);
@@ -238,6 +241,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 18);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
+		REQUIRE(packet->GetPacketFractionLost() > 0);
 		REQUIRE(packet->GetLatestSequenceNumber() == 1017);
 		REQUIRE(packet->GetLatestTimestamp() == 1000000500);
 
@@ -256,6 +260,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
 				REQUIRE(packet2->GetPacketStatusCount() == 18);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
+				REQUIRE(packet2->GetPacketFractionLost() > 0);
 
 				uint8_t buffer2[1024];
 				auto len2 = packet2->Serialize(buffer2);
@@ -292,6 +297,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 2);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
+		REQUIRE(packet->GetPacketFractionLost() == 0);
 		REQUIRE(packet->GetLatestSequenceNumber() == 1001);
 		REQUIRE(packet->GetLatestTimestamp() == 1000000700);
 
@@ -310,6 +316,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
 				REQUIRE(packet2->GetPacketStatusCount() == 2);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
+				REQUIRE(packet2->GetPacketFractionLost() == 0);
 
 				uint8_t buffer2[1024];
 				auto len2 = packet2->Serialize(buffer2);
@@ -355,6 +362,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 8);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
+		REQUIRE(packet->GetPacketFractionLost() == 0);
 		REQUIRE(packet->GetLatestSequenceNumber() == 1007);
 		REQUIRE(packet->GetLatestTimestamp() == 1000000007);
 
@@ -371,6 +379,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
 			REQUIRE(packet2->GetPacketStatusCount() == 8);
 			REQUIRE(packet2->GetFeedbackPacketCount() == 1);
+			REQUIRE(packet2->GetPacketFractionLost() == 0);
 
 			uint8_t buffer2[1024];
 			auto len2 = packet2->Serialize(buffer2);
@@ -412,6 +421,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet2->GetBaseSequenceNumber() == 1008);
 		REQUIRE(packet2->GetPacketStatusCount() == 7);
 		REQUIRE(packet2->GetFeedbackPacketCount() == 2);
+		REQUIRE(packet2->GetPacketFractionLost() == 0);
 		REQUIRE(packet2->GetLatestSequenceNumber() == 1014);
 		REQUIRE(packet2->GetLatestTimestamp() == 1000000014);
 
@@ -427,6 +437,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			REQUIRE(packet3->GetBaseSequenceNumber() == 1008);
 			REQUIRE(packet3->GetPacketStatusCount() == 7);
 			REQUIRE(packet3->GetFeedbackPacketCount() == 2);
+			REQUIRE(packet3->GetPacketFractionLost() == 0);
 
 			uint8_t buffer2[1024];
 			auto len2 = packet3->Serialize(buffer2);

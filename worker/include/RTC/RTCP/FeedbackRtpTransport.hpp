@@ -85,7 +85,7 @@ namespace RTC
 			class Chunk
 			{
 			public:
-				static Chunk* Parse(const uint8_t* data, size_t len, size_t count);
+				static Chunk* Parse(const uint8_t* data, size_t len, uint16_t count);
 
 			public:
 				Chunk()          = default;
@@ -94,8 +94,8 @@ namespace RTC
 				virtual bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) = 0;
 				virtual void Dump() const                                                        = 0;
-				virtual size_t GetCount() const                                                  = 0;
-				virtual size_t GetReceivedStatusCount() const                                    = 0;
+				virtual uint16_t GetCount() const                                                = 0;
+				virtual uint16_t GetReceivedStatusCount() const                                  = 0;
 				virtual void FillResults(
 				  std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const = 0;
 				virtual size_t Serialize(uint8_t* buffer) = 0;
@@ -113,8 +113,8 @@ namespace RTC
 				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) override;
 				Status GetStatus() const;
 				void Dump() const override;
-				size_t GetCount() const override;
-				size_t GetReceivedStatusCount() const override;
+				uint16_t GetCount() const override;
+				uint16_t GetReceivedStatusCount() const override;
 				void FillResults(
 				  std::vector<struct PacketResult>& packetResults,
 				  uint16_t& currentSequenceNumber) const override;
@@ -130,14 +130,14 @@ namespace RTC
 			{
 			public:
 				OneBitVectorChunk(std::vector<Status> statuses);
-				OneBitVectorChunk(uint16_t buffer, size_t count);
+				OneBitVectorChunk(uint16_t buffer, uint16_t count);
 
 			public:
 				bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) override;
 				void Dump() const override;
-				size_t GetCount() const override;
-				size_t GetReceivedStatusCount() const override;
+				uint16_t GetCount() const override;
+				uint16_t GetReceivedStatusCount() const override;
 				void FillResults(
 				  std::vector<struct PacketResult>& packetResults,
 				  uint16_t& currentSequenceNumber) const override;
@@ -152,14 +152,14 @@ namespace RTC
 			{
 			public:
 				TwoBitVectorChunk(std::vector<Status> statuses);
-				TwoBitVectorChunk(uint16_t buffer, size_t count);
+				TwoBitVectorChunk(uint16_t buffer, uint16_t count);
 
 			public:
 				bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) override;
 				void Dump() const override;
-				size_t GetCount() const override;
-				size_t GetReceivedStatusCount() const override;
+				uint16_t GetCount() const override;
+				uint16_t GetReceivedStatusCount() const override;
 				void FillResults(
 				  std::vector<struct PacketResult>& packetResults,
 				  uint16_t& currentSequenceNumber) const override;
@@ -201,6 +201,7 @@ namespace RTC
 			uint16_t GetLatestSequenceNumber() const; // Just for locally generated packets.
 			uint64_t GetLatestTimestamp() const;      // Just for locally generated packets.
 			std::vector<struct PacketResult> GetPacketResults() const;
+			uint8_t GetPacketFractionLost() const;
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
@@ -317,7 +318,7 @@ namespace RTC
 		{
 		}
 
-		inline size_t FeedbackRtpTransportPacket::RunLengthChunk::GetCount() const
+		inline uint16_t FeedbackRtpTransportPacket::RunLengthChunk::GetCount() const
 		{
 			return this->count;
 		}
@@ -332,7 +333,7 @@ namespace RTC
 		{
 		}
 
-		inline size_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetCount() const
+		inline uint16_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetCount() const
 		{
 			return this->statuses.size();
 		}
@@ -342,7 +343,7 @@ namespace RTC
 		{
 		}
 
-		inline size_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetCount() const
+		inline uint16_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetCount() const
 		{
 			return this->statuses.size();
 		}
