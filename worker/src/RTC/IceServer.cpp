@@ -293,7 +293,7 @@ namespace RTC
 		  this->selectedTuple != nullptr,
 		  "cannot force the selected tuple if there was not a selected tuple");
 
-		auto storedTuple = HasTuple(tuple);
+		auto* storedTuple = HasTuple(tuple);
 
 		MS_ASSERT(
 		  storedTuple,
@@ -323,7 +323,7 @@ namespace RTC
 					MS_DEBUG_TAG(ice, "transition from state 'new' to 'connected'");
 
 					// Store the tuple.
-					auto storedTuple = AddTuple(tuple);
+					auto* storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(storedTuple);
@@ -337,7 +337,7 @@ namespace RTC
 					MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
 
 					// Store the tuple.
-					auto storedTuple = AddTuple(tuple);
+					auto* storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(storedTuple);
@@ -367,7 +367,7 @@ namespace RTC
 					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'connected'");
 
 					// Store the tuple.
-					auto storedTuple = AddTuple(tuple);
+					auto* storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(storedTuple);
@@ -381,7 +381,7 @@ namespace RTC
 					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
 
 					// Store the tuple.
-					auto storedTuple = AddTuple(tuple);
+					auto* storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(storedTuple);
@@ -413,7 +413,7 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'connected' to 'completed'");
 
-					auto storedTuple = HasTuple(tuple);
+					auto* storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
 					if (storedTuple == nullptr)
@@ -447,7 +447,7 @@ namespace RTC
 				}
 				else
 				{
-					auto storedTuple = HasTuple(tuple);
+					auto* storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
 					if (storedTuple == nullptr)
