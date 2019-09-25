@@ -469,7 +469,7 @@ namespace RTC
 		// Add the new tuple at the beginning of the list.
 		this->tuples.push_front(*tuple);
 
-		auto storedTuple = std::addressof(*this->tuples.begin());
+		auto* storedTuple = std::addressof(*this->tuples.begin());
 
 		// If it is UDP then we must store the remote address (until now it is
 		// just a pointer that will be freed soon).
