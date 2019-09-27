@@ -81,6 +81,7 @@ namespace RTC
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
+			Type GetType() const override;
 			size_t GetCount() const override;
 			size_t GetSize() const override;
 
@@ -211,6 +212,15 @@ namespace RTC
 			{
 				delete report;
 			}
+		}
+
+		// NOTE: We need to force this since when we parse a SenderReportPacket that
+		// contains receive report blocks we also generate a second ReceiverReportPacket
+		// from same data and len, so parent Packet::GetType() would return
+		// this->type which would be SR instead of RR.
+		inline Type ReceiverReportPacket::GetType() const
+		{
+			return Type::RR;
 		}
 
 		inline size_t ReceiverReportPacket::GetCount() const

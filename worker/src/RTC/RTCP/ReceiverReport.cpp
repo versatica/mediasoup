@@ -63,7 +63,7 @@ namespace RTC
 		 * ReceiverReportPacket::Parse()
 		 * @param  data   - Points to the begining of the incoming RTCP packet.
 		 * @param  len    - Total length of the packet.
-		 * @param  offset - points to the first Receiver Report if the incoming packet.
+		 * @param  offset - points to the first Receiver Report in the incoming packet.
 		 */
 		ReceiverReportPacket* ReceiverReportPacket::Parse(const uint8_t* data, size_t len, size_t offset)
 		{

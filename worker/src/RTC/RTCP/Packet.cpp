@@ -43,9 +43,9 @@ namespace RTC
 			MS_TRACE();
 
 			// First, Currently parsing and Last RTCP packets in the compound packet.
-			Packet *first, *current, *last;
-
-			first = current = last = nullptr;
+			Packet* first{ nullptr };
+			Packet* current{ nullptr };
+			Packet* last{ nullptr };
 
 			while (len > 0u)
 			{
@@ -204,13 +204,13 @@ namespace RTC
 
 			this->header = reinterpret_cast<CommonHeader*>(buffer);
 
-			size_t length = (this->GetSize() / 4) - 1;
+			size_t length = (GetSize() / 4) - 1;
 
 			// Fill the common header.
 			this->header->version    = 2;
 			this->header->padding    = 0;
-			this->header->count      = static_cast<uint8_t>(this->GetCount());
-			this->header->packetType = static_cast<uint8_t>(this->type);
+			this->header->count      = static_cast<uint8_t>(GetCount());
+			this->header->packetType = static_cast<uint8_t>(GetType());
 			this->header->length     = uint16_t{ htons(length) };
 
 			return sizeof(CommonHeader);
