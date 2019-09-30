@@ -172,6 +172,7 @@ namespace RTC
 		if (!bne)
 		{
 			LOG_OPENSSL_ERROR("BN_new() failed");
+
 			goto error;
 		}
 
@@ -180,6 +181,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("BN_set_word() failed");
+
 			goto error;
 		}
 
@@ -189,6 +191,7 @@ namespace RTC
 		if (!rsaKey)
 		{
 			LOG_OPENSSL_ERROR("RSA_new() failed");
+
 			goto error;
 		}
 
@@ -198,6 +201,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("RSA_generate_key_ex() failed");
+
 			goto error;
 		}
 
@@ -207,6 +211,7 @@ namespace RTC
 		if (!DtlsTransport::privateKey)
 		{
 			LOG_OPENSSL_ERROR("EVP_PKEY_new() failed");
+
 			goto error;
 		}
 
@@ -215,6 +220,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("EVP_PKEY_assign_RSA() failed");
+
 			goto error;
 		}
 		// The RSA key now belongs to the private key, so don't clean it up separately.
@@ -226,6 +232,7 @@ namespace RTC
 		if (!DtlsTransport::certificate)
 		{
 			LOG_OPENSSL_ERROR("X509_new() failed");
+
 			goto error;
 		}
 
@@ -247,6 +254,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("X509_set_pubkey() failed");
+
 			goto error;
 		}
 
@@ -256,6 +264,7 @@ namespace RTC
 		if (!certName)
 		{
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
+
 			goto error;
 		}
 
@@ -270,6 +279,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("X509_set_issuer_name() failed");
+
 			goto error;
 		}
 
@@ -279,6 +289,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("X509_sign() failed");
+
 			goto error;
 		}
 
@@ -315,6 +326,7 @@ namespace RTC
 		if (!file)
 		{
 			MS_ERROR("error reading DTLS certificate file: %s", std::strerror(errno));
+
 			goto error;
 		}
 
@@ -323,6 +335,7 @@ namespace RTC
 		if (!DtlsTransport::certificate)
 		{
 			LOG_OPENSSL_ERROR("PEM_read_X509() failed");
+
 			goto error;
 		}
 
@@ -333,6 +346,7 @@ namespace RTC
 		if (!file)
 		{
 			MS_ERROR("error reading DTLS private key file: %s", std::strerror(errno));
+
 			goto error;
 		}
 
@@ -341,6 +355,7 @@ namespace RTC
 		if (!DtlsTransport::privateKey)
 		{
 			LOG_OPENSSL_ERROR("PEM_read_PrivateKey() failed");
+
 			goto error;
 		}
 
@@ -376,6 +391,7 @@ namespace RTC
 		if (!DtlsTransport::sslCtx)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_new() failed");
+
 			goto error;
 		}
 
@@ -384,6 +400,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_use_certificate() failed");
+
 			goto error;
 		}
 
@@ -392,6 +409,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_use_PrivateKey() failed");
+
 			goto error;
 		}
 
@@ -400,6 +418,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_check_private_key() failed");
+
 			goto error;
 		}
 
@@ -433,6 +452,7 @@ namespace RTC
 		if (ret == 0)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_set_cipher_list() failed");
+
 			goto error;
 		}
 
@@ -453,12 +473,14 @@ namespace RTC
 		if (!ecdh)
 		{
 			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
+
 			goto error;
 		}
 
 		if (SSL_CTX_set_tmp_ecdh(DtlsTransport::sslCtx, ecdh) != 1)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_set_tmp_ecdh() failed");
+
 			goto error;
 		}
 
@@ -485,6 +507,7 @@ namespace RTC
 		{
 			MS_ERROR("SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'", dtlsSrtpProfiles.c_str());
 			LOG_OPENSSL_ERROR("SSL_CTX_set_tlsext_use_srtp() failed");
+
 			goto error;
 		}
 
@@ -584,6 +607,7 @@ namespace RTC
 		if (!this->ssl)
 		{
 			LOG_OPENSSL_ERROR("SSL_new() failed");
+
 			goto error;
 		}
 
@@ -595,7 +619,7 @@ namespace RTC
 		if (!this->sslBioFromNetwork)
 		{
 			LOG_OPENSSL_ERROR("BIO_new() failed");
-			SSL_free(this->ssl);
+
 			goto error;
 		}
 
@@ -604,8 +628,7 @@ namespace RTC
 		if (!this->sslBioToNetwork)
 		{
 			LOG_OPENSSL_ERROR("BIO_new() failed");
-			BIO_free(this->sslBioFromNetwork);
-			SSL_free(this->ssl);
+
 			goto error;
 		}
 
