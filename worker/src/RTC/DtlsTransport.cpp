@@ -146,11 +146,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (DtlsTransport::privateKey != nullptr)
+		if (DtlsTransport::privateKey)
 			EVP_PKEY_free(DtlsTransport::privateKey);
-		if (DtlsTransport::certificate != nullptr)
+		if (DtlsTransport::certificate)
 			X509_free(DtlsTransport::certificate);
-		if (DtlsTransport::sslCtx != nullptr)
+		if (DtlsTransport::sslCtx)
 			SSL_CTX_free(DtlsTransport::sslCtx);
 	}
 
@@ -169,7 +169,7 @@ namespace RTC
 		// Create a big number object.
 		bne = BN_new();
 
-		if (bne == nullptr)
+		if (!bne)
 		{
 			LOG_OPENSSL_ERROR("BN_new() failed");
 			goto error;
@@ -186,7 +186,7 @@ namespace RTC
 		// Generate a RSA key.
 		rsaKey = RSA_new();
 
-		if (rsaKey == nullptr)
+		if (!rsaKey)
 		{
 			LOG_OPENSSL_ERROR("RSA_new() failed");
 			goto error;
@@ -204,7 +204,7 @@ namespace RTC
 		// Create a private key object (needed to hold the RSA key).
 		DtlsTransport::privateKey = EVP_PKEY_new();
 
-		if (DtlsTransport::privateKey == nullptr)
+		if (!DtlsTransport::privateKey)
 		{
 			LOG_OPENSSL_ERROR("EVP_PKEY_new() failed");
 			goto error;
@@ -223,7 +223,7 @@ namespace RTC
 		// Create the X509 certificate.
 		DtlsTransport::certificate = X509_new();
 
-		if (DtlsTransport::certificate == nullptr)
+		if (!DtlsTransport::certificate)
 		{
 			LOG_OPENSSL_ERROR("X509_new() failed");
 			goto error;
@@ -253,7 +253,7 @@ namespace RTC
 		// Set certificate fields.
 		certName = X509_get_subject_name(DtlsTransport::certificate);
 
-		if (certName == nullptr)
+		if (!certName)
 		{
 			LOG_OPENSSL_ERROR("X509_get_subject_name() failed");
 			goto error;
@@ -289,16 +289,16 @@ namespace RTC
 
 	error:
 
-		if (bne != nullptr)
+		if (bne)
 			BN_free(bne);
 
-		if ((rsaKey != nullptr) && (DtlsTransport::privateKey == nullptr))
+		if (rsaKey && !DtlsTransport::privateKey)
 			RSA_free(rsaKey);
 
-		if (DtlsTransport::privateKey != nullptr)
+		if (DtlsTransport::privateKey)
 			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the RSA key.
 
-		if (DtlsTransport::certificate != nullptr)
+		if (DtlsTransport::certificate)
 			X509_free(DtlsTransport::certificate);
 
 		MS_THROW_ERROR("DTLS certificate and private key generation failed");
@@ -312,7 +312,7 @@ namespace RTC
 
 		file = fopen(Settings::configuration.dtlsCertificateFile.c_str(), "r");
 
-		if (file == nullptr)
+		if (!file)
 		{
 			MS_ERROR("error reading DTLS certificate file: %s", std::strerror(errno));
 			goto error;
@@ -320,7 +320,7 @@ namespace RTC
 
 		DtlsTransport::certificate = PEM_read_X509(file, nullptr, nullptr, nullptr);
 
-		if (DtlsTransport::certificate == nullptr)
+		if (!DtlsTransport::certificate)
 		{
 			LOG_OPENSSL_ERROR("PEM_read_X509() failed");
 			goto error;
@@ -330,7 +330,7 @@ namespace RTC
 
 		file = fopen(Settings::configuration.dtlsPrivateKeyFile.c_str(), "r");
 
-		if (file == nullptr)
+		if (!file)
 		{
 			MS_ERROR("error reading DTLS private key file: %s", std::strerror(errno));
 			goto error;
@@ -338,7 +338,7 @@ namespace RTC
 
 		DtlsTransport::privateKey = PEM_read_PrivateKey(file, nullptr, nullptr, nullptr);
 
-		if (DtlsTransport::privateKey == nullptr)
+		if (!DtlsTransport::privateKey)
 		{
 			LOG_OPENSSL_ERROR("PEM_read_PrivateKey() failed");
 			goto error;
@@ -373,7 +373,7 @@ namespace RTC
 #error "too old OpenSSL version"
 #endif
 
-		if (DtlsTransport::sslCtx == nullptr)
+		if (!DtlsTransport::sslCtx)
 		{
 			LOG_OPENSSL_ERROR("SSL_CTX_new() failed");
 			goto error;
@@ -492,13 +492,13 @@ namespace RTC
 
 	error:
 
-		if (DtlsTransport::sslCtx != nullptr)
+		if (DtlsTransport::sslCtx)
 		{
 			SSL_CTX_free(DtlsTransport::sslCtx);
 			DtlsTransport::sslCtx = nullptr;
 		}
 
-		if (ecdh != nullptr)
+		if (ecdh)
 			EC_KEY_free(ecdh);
 
 		MS_THROW_ERROR("SSL context creation failed");
@@ -581,7 +581,7 @@ namespace RTC
 
 		this->ssl = SSL_new(DtlsTransport::sslCtx);
 
-		if (this->ssl == nullptr)
+		if (!this->ssl)
 		{
 			LOG_OPENSSL_ERROR("SSL_new() failed");
 			goto error;
@@ -592,7 +592,7 @@ namespace RTC
 
 		this->sslBioFromNetwork = BIO_new(BIO_s_mem());
 
-		if (this->sslBioFromNetwork == nullptr)
+		if (!this->sslBioFromNetwork)
 		{
 			LOG_OPENSSL_ERROR("BIO_new() failed");
 			SSL_free(this->ssl);
@@ -601,7 +601,7 @@ namespace RTC
 
 		this->sslBioToNetwork = BIO_new(BIO_s_mem());
 
-		if (this->sslBioToNetwork == nullptr)
+		if (!this->sslBioToNetwork)
 		{
 			LOG_OPENSSL_ERROR("BIO_new() failed");
 			BIO_free(this->sslBioFromNetwork);
@@ -627,13 +627,13 @@ namespace RTC
 
 		// NOTE: At this point SSL_set_bio() was not called so we must free BIOs as
 		// well.
-		if (this->sslBioFromNetwork != nullptr)
+		if (this->sslBioFromNetwork)
 			BIO_free(this->sslBioFromNetwork);
 
-		if (this->sslBioToNetwork != nullptr)
+		if (this->sslBioToNetwork)
 			BIO_free(this->sslBioToNetwork);
 
-		if (this->ssl != nullptr)
+		if (this->ssl)
 			SSL_free(this->ssl);
 
 		// NOTE: If this is not catched by the caller the program will abort, but
@@ -652,7 +652,7 @@ namespace RTC
 			SendPendingOutgoingDtlsData();
 		}
 
-		if (this->ssl != nullptr)
+		if (this->ssl)
 		{
 			SSL_free(this->ssl);
 
@@ -1122,7 +1122,7 @@ namespace RTC
 
 		certificate = SSL_get_peer_certificate(this->ssl);
 
-		if (certificate == nullptr)
+		if (!certificate)
 		{
 			MS_WARN_TAG(dtls, "no certificate was provided by the peer");
 
@@ -1214,7 +1214,7 @@ namespace RTC
 
 		BIO_get_mem_ptr(bio, &mem); // NOLINT[cppcoreguidelines-pro-type-cstyle-cast]
 
-		if ((mem == nullptr) || (mem->data == nullptr) || (mem->length == 0u))
+		if (!mem || !mem->data || mem->length == 0u)
 		{
 			LOG_OPENSSL_ERROR("BIO_get_mem_ptr() failed");
 
@@ -1346,7 +1346,7 @@ namespace RTC
 		// Ensure that the SRTP profile has been negotiated.
 		SRTP_PROTECTION_PROFILE* sslSrtpProfile = SSL_get_selected_srtp_profile(this->ssl);
 
-		if (sslSrtpProfile == nullptr)
+		if (!sslSrtpProfile)
 			return negotiatedSrtpProfile;
 
 		// Get the negotiated SRTP profile.
