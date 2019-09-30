@@ -1065,6 +1065,10 @@ namespace RTC
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
+
+		// If DTLS was already connected, notify the parent class.
+		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
+			RTC::Transport::Connected();
 	}
 
 	inline void WebRtcTransport::OnIceServerCompleted(const RTC::IceServer* /*iceServer*/)
@@ -1082,6 +1086,10 @@ namespace RTC
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
+
+		// If DTLS was already connected, notify the parent class.
+		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
+			RTC::Transport::Connected();
 	}
 
 	inline void WebRtcTransport::OnIceServerDisconnected(const RTC::IceServer* /*iceServer*/)
@@ -1100,8 +1108,9 @@ namespace RTC
 
 		Channel::Notifier::Emit(this->id, "icestatechange", data);
 
-		// Tell the parent class.
-		RTC::Transport::Disconnected();
+		// If DTLS was already connected, notify the parent class.
+		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
+			RTC::Transport::Disconnected();
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
