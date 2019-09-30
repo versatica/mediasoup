@@ -128,13 +128,11 @@ void TcpConnection::Close()
 void TcpConnection::Dump() const
 {
 	MS_DUMP("<TcpConnection>");
-	MS_DUMP(
-	  "  [TCP, local:%s :%" PRIu16 ", remote:%s :%" PRIu16 ", status:%s]",
-	  this->localIp.c_str(),
-	  static_cast<uint16_t>(this->localPort),
-	  this->peerIp.c_str(),
-	  static_cast<uint16_t>(this->peerPort),
-	  (!this->closed) ? "open" : "closed");
+	MS_DUMP("  localIp    : %s", this->localIp.c_str());
+	MS_DUMP("  localPort  : %" PRIu16, static_cast<uint16_t>(this->localPort));
+	MS_DUMP("  remoteIp   : %s", this->peerIp.c_str());
+	MS_DUMP("  remotePort : %" PRIu16, static_cast<uint16_t>(this->peerPort));
+	MS_DUMP("  closed     : %s", !this->closed ? "open" : "closed");
 	MS_DUMP("</TcpConnection>");
 }
 

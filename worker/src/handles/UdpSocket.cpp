@@ -118,11 +118,9 @@ void UdpSocket::Close()
 void UdpSocket::Dump() const
 {
 	MS_DUMP("<UdpSocket>");
-	MS_DUMP(
-	  "  [UDP, local:%s :%" PRIu16 ", status:%s]",
-	  this->localIp.c_str(),
-	  static_cast<uint16_t>(this->localPort),
-	  (!this->closed) ? "open" : "closed");
+	MS_DUMP("  localIp   : %s", this->localIp.c_str());
+	MS_DUMP("  localPort : %" PRIu16, static_cast<uint16_t>(this->localPort));
+	MS_DUMP("  closed    : %s", !this->closed ? "open" : "closed");
 	MS_DUMP("</UdpSocket>");
 }
 
