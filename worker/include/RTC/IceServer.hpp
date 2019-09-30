@@ -47,10 +47,10 @@ namespace RTC
 		void ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple);
 		const std::string& GetUsernameFragment() const;
 		const std::string& GetPassword() const;
-		void SetUsernameFragment(const std::string& usernameFragment);
-		void SetPassword(const std::string& password);
 		IceState GetState() const;
 		RTC::TransportTuple* GetSelectedTuple() const;
+		void SetUsernameFragment(const std::string& usernameFragment);
+		void SetPassword(const std::string& password);
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
 		// This should be just called in 'connected' or completed' state
@@ -98,6 +98,16 @@ namespace RTC
 		return this->password;
 	}
 
+	inline IceServer::IceState IceServer::GetState() const
+	{
+		return this->state;
+	}
+
+	inline RTC::TransportTuple* IceServer::GetSelectedTuple() const
+	{
+		return this->selectedTuple;
+	}
+
 	inline void IceServer::SetUsernameFragment(const std::string& usernameFragment)
 	{
 		this->oldUsernameFragment = this->usernameFragment;
@@ -108,16 +118,6 @@ namespace RTC
 	{
 		this->oldPassword = this->password;
 		this->password    = password;
-	}
-
-	inline IceServer::IceState IceServer::GetState() const
-	{
-		return this->state;
-	}
-
-	inline RTC::TransportTuple* IceServer::GetSelectedTuple() const
-	{
-		return this->selectedTuple;
 	}
 } // namespace RTC
 
