@@ -302,8 +302,8 @@ namespace RTC
 		}
 
 		// Add iceSelectedTuple.
-		if (this->iceSelectedTuple != nullptr)
-			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
+		if (this->iceServer->GetSelectedTuple())
+			this->iceServer->GetSelectedTuple()->FillJson(jsonObject["iceSelectedTuple"]);
 
 		// Add dtlsParameters.
 		jsonObject["dtlsParameters"] = json::object();
@@ -396,10 +396,10 @@ namespace RTC
 				break;
 		}
 
-		if (this->iceSelectedTuple != nullptr)
+		if (this->iceServer->GetSelectedTuple())
 		{
 			// Add iceSelectedTuple.
-			this->iceSelectedTuple->FillJson(jsonObject["iceSelectedTuple"]);
+			this->iceServer->GetSelectedTuple()->FillJson(jsonObject["iceSelectedTuple"]);
 		}
 
 		// Add dtlsState.
@@ -594,8 +594,10 @@ namespace RTC
 	{
 		// clang-format off
 		return (
-			this->iceSelectedTuple != nullptr &&
-			this->dtlsTransport != nullptr &&
+			(
+				this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+				this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED
+			) &&
 			this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED
 		);
 		// clang-format on
@@ -617,9 +619,12 @@ namespace RTC
 			// 'completed'.
 			case RTC::DtlsTransport::Role::AUTO:
 			{
+				// clang-format off
 				if (
-				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+					this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+					this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED
+				)
+				// clang-format on
 				{
 					MS_DEBUG_TAG(
 					  dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
@@ -640,9 +645,12 @@ namespace RTC
 			//   https://bugs.chromium.org/p/webrtc/issues/detail?id=3661
 			case RTC::DtlsTransport::Role::CLIENT:
 			{
+				// clang-format off
 				if (
-				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+					this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+					this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED
+				)
+				// clang-format on
 				{
 					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'client'");
 
@@ -656,9 +664,12 @@ namespace RTC
 			// USE-CANDIDATE) or 'completed'.
 			case RTC::DtlsTransport::Role::SERVER:
 			{
+				// clang-format off
 				if (
-				  this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				  this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED)
+					this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
+					this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED
+				)
+				// clang-format on
 				{
 					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'server'");
 
@@ -687,7 +698,7 @@ namespace RTC
 		}
 
 		// Ensure there is sending SRTP session.
-		if (this->srtpSendSession == nullptr)
+		if (!this->srtpSendSession)
 		{
 			MS_WARN_DEV("ignoring RTP packet due to non sending SRTP session");
 
@@ -706,7 +717,7 @@ namespace RTC
 			return;
 		}
 
-		this->iceSelectedTuple->Send(data, len, onDone);
+		this->iceServer->GetSelectedTuple()->Send(data, len, onDone);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -723,7 +734,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Ensure there is sending SRTP session.
-		if (this->srtpSendSession == nullptr)
+		if (!this->srtpSendSession)
 		{
 			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
 
@@ -733,7 +744,7 @@ namespace RTC
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
 			return;
 
-		this->iceSelectedTuple->Send(data, len);
+		this->iceServer->GetSelectedTuple()->Send(data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -750,7 +761,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Ensure there is sending SRTP session.
-		if (this->srtpSendSession == nullptr)
+		if (!this->srtpSendSession)
 		{
 			MS_WARN_TAG(rtcp, "ignoring RTCP compound packet due to non sending SRTP session");
 
@@ -760,7 +771,7 @@ namespace RTC
 		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
 			return;
 
-		this->iceSelectedTuple->Send(data, len);
+		this->iceServer->GetSelectedTuple()->Send(data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -822,7 +833,7 @@ namespace RTC
 
 		RTC::StunPacket* packet = RTC::StunPacket::Parse(data, len);
 
-		if (packet == nullptr)
+		if (!packet)
 		{
 			MS_WARN_DEV("ignoring wrong STUN packet received");
 
@@ -882,7 +893,7 @@ namespace RTC
 		}
 
 		// Ensure there is receiving SRTP session.
-		if (this->srtpRecvSession == nullptr)
+		if (!this->srtpRecvSession)
 		{
 			MS_DEBUG_TAG(srtp, "ignoring RTP packet due to non receiving SRTP session");
 
@@ -902,7 +913,7 @@ namespace RTC
 		{
 			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
-			if (packet == nullptr)
+			if (!packet)
 			{
 				MS_WARN_TAG(srtp, "DecryptSrtp() failed due to an invalid RTP packet");
 			}
@@ -923,7 +934,7 @@ namespace RTC
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
-		if (packet == nullptr)
+		if (!packet)
 		{
 			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
 
@@ -951,7 +962,7 @@ namespace RTC
 		}
 
 		// Ensure there is receiving SRTP session.
-		if (this->srtpRecvSession == nullptr)
+		if (!this->srtpRecvSession)
 		{
 			MS_DEBUG_TAG(srtp, "ignoring RTCP packet due to non receiving SRTP session");
 
@@ -972,7 +983,7 @@ namespace RTC
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 
-		if (packet == nullptr)
+		if (!packet)
 		{
 			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
 
@@ -1037,15 +1048,12 @@ namespace RTC
 		 * on any candidates provided for that component.
 		 */
 
-		// Update the selected tuple.
-		this->iceSelectedTuple = tuple;
-
 		MS_DEBUG_TAG(ice, "ICE selected tuple");
 
 		// Notify the Node WebRtcTransport.
 		json data = json::object();
 
-		this->iceSelectedTuple->FillJson(data["iceSelectedTuple"]);
+		this->iceServer->GetSelectedTuple()->FillJson(data["iceSelectedTuple"]);
 
 		Channel::Notifier::Emit(this->id, "iceselectedtuplechange", data);
 	}
@@ -1096,9 +1104,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Unset the selected tuple.
-		this->iceSelectedTuple = nullptr;
-
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
 		// Notify the Node WebRtcTransport.
@@ -1141,12 +1146,12 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connected");
 
 		// Close it if it was already set and update it.
-		if (this->srtpSendSession != nullptr)
+		if (this->srtpSendSession)
 		{
 			delete this->srtpSendSession;
 			this->srtpSendSession = nullptr;
 		}
-		if (this->srtpRecvSession != nullptr)
+		if (this->srtpRecvSession)
 		{
 			delete this->srtpRecvSession;
 			this->srtpRecvSession = nullptr;
@@ -1223,14 +1228,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->iceSelectedTuple == nullptr)
+		if (!this->iceServer->GetSelectedTuple())
 		{
 			MS_WARN_TAG(dtls, "no selected tuple set, cannot send DTLS packet");
 
 			return;
 		}
 
-		this->iceSelectedTuple->Send(data, len);
+		this->iceServer->GetSelectedTuple()->Send(data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
