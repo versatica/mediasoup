@@ -1128,7 +1128,7 @@ namespace RTC
 
 				RequestKeyFrame();
 			}
-			// In full SVC just  for a keyframe when upgrading target spatial layer.
+			// In full SVC just ask for a keyframe when upgrading target spatial layer.
 			// NOTE: This is because nobody implements RTCP LRR yet.
 			else if (newTargetSpatialLayer > this->encodingContext->GetCurrentSpatialLayer())
 			{
