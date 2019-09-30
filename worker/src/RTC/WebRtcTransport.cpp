@@ -1037,7 +1037,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnIceServerSelectedTuple(
-	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* /*tuple*/)
 	{
 		MS_TRACE();
 
