@@ -227,6 +227,7 @@ namespace RTC
 		this->dtlsTransport = nullptr;
 
 		delete this->iceServer;
+		this->iceServer = nullptr;
 
 		for (auto& kv : this->udpSockets)
 		{
