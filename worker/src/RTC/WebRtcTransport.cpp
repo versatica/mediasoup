@@ -243,6 +243,7 @@ namespace RTC
 
 			delete tcpServer;
 		}
+		this->tcpServers.clear();
 
 		this->iceCandidates.clear();
 
