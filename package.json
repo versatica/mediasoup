@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.2.5",
+  "version": "3.3.0-pre1",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -12,29 +12,33 @@
     "type": "git",
     "url": "https://github.com/versatica/mediasoup.git"
   },
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/mediasoup"
+  },
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "keywords": [
     "webrtc",
     "ortc",
     "sfu",
     "nodejs"
   ],
-  "os": [
-    "!win32"
-  ],
   "engines": {
     "node": ">=8.6.0"
   },
   "scripts": {
+    "typescript:build": "node npm-scripts.js typescript:build",
+    "typescript:watch": "node npm-scripts.js typescript:watch",
     "lint": "npm run lint:node && npm run lint:worker",
-    "lint:node": "eslint -c .eslintrc.js gulpfile.js lib test",
-    "lint:worker": "make lint -C worker",
-    "format:worker": "make format -C worker",
+    "lint:node": "node npm-scripts.js lint:node",
+    "lint:worker": "node npm-scripts.js lint:worker",
+    "format:worker": "node npm-scripts.js format:worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "make -C worker && jest",
-    "test:worker": "make test -C worker",
-    "coverage:node": "make -C worker && jest --coverage && open-cli coverage/lcov-report/index.html",
-    "postinstall": "make -C worker"
+    "test:node": "npm run postinstall && node npm-scripts.js test:node",
+    "test:worker": "node npm-scripts.js test:worker",
+    "coverage": "npm run postinstall && node npm-scripts.js coverage",
+    "postinstall": "node npm-scripts.js postinstall"
   },
   "jest": {
     "verbose": true,
@@ -43,20 +47,29 @@
   },
   "dependencies": {
     "debug": "^4.1.1",
-    "h264-profile-level-id": "^1.0.0",
+    "h264-profile-level-id": "^1.0.1",
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "eslint": "^6.1.0",
-    "eslint-plugin-jest": "^22.13.6",
+    "@types/debug": "^4.1.5",
+    "@types/node": "^12.12.7",
+    "@types/random-number": "0.0.0",
+    "@types/uuid": "^3.4.6",
+    "@typescript-eslint/eslint-plugin": "^2.7.0",
+    "@typescript-eslint/parser": "^2.7.0",
+    "cross-env": "^6.0.3",
+    "eslint": "^6.6.0",
+    "eslint-plugin-jest": "^23.0.4",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
-    "jest": "^24.8.0",
+    "jest": "^24.9.0",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^5.0.0",
-    "sctp": "^0.0.18"
+    "sctp": "^0.0.18",
+    "tsc-watch": "^4.0.0",
+    "typescript": "^3.7.2"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"

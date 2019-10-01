@@ -7,11 +7,21 @@
  */
 
 #include "catch_debug_console.h"
+#include "catch_compiler_capabilities.h"
 #include "catch_stream.h"
 #include "catch_platform.h"
 #include "catch_windows_h_proxy.h"
 
-#ifdef CATCH_PLATFORM_WINDOWS
+#if defined(CATCH_CONFIG_ANDROID_LOGWRITE)
+#include <android/log.h>
+
+    namespace Catch {
+        void writeToDebugConsole( std::string const& text ) {
+            __android_log_write( ANDROID_LOG_DEBUG, "Catch", text.c_str() );
+        }
+    }
+
+#elif defined(CATCH_PLATFORM_WINDOWS)
 
     namespace Catch {
         void writeToDebugConsole( std::string const& text ) {

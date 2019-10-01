@@ -281,7 +281,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(false);
-	expect(pipeConsumer.score).toBe(undefined);
+	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
 	expect(pipeConsumer.appData).toEqual({});
 
 	expect(pipeProducer.id).toBe(audioProducer.id);
@@ -386,7 +386,7 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(true);
-	expect(pipeConsumer.score).toBe(undefined);
+	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
 	expect(pipeConsumer.appData).toEqual({});
 
 	expect(pipeProducer.id).toBe(videoProducer.id);
@@ -453,7 +453,8 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				[
 					{ type: 'nack' },
 					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'google-remb' }
+					{ type: 'google-remb' },
+					{ type: 'transport-cc' }
 				]
 			},
 			{
@@ -472,6 +473,10 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 			{
 				uri : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
 				id  : 4
+			},
+			{
+				uri : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+				id  : 5
 			}
 		]);
 	expect(videoConsumer.rtpParameters.encodings.length).toBe(1);
@@ -487,22 +492,26 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 
 test('producer.pause() and producer.resume() are transmitted to pipe Consumer', async () =>
 {
+	// NOTE: Let's use a Promise since otherwise there may be race conditions
+	// between events and await lines below.
+	let promise;
+
 	expect(videoProducer.paused).toBe(true);
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.paused).toBe(false);
 
-	await videoProducer.resume();
+	promise = new Promise((resolve) => videoConsumer.once('producerresume', resolve));
 
-	if (videoConsumer.producerPaused)
-		await new Promise((resolve) => videoConsumer.once('producerresume', resolve));
+	await videoProducer.resume();
+	await promise;
 
 	expect(videoConsumer.producerPaused).toBe(false);
 	expect(videoConsumer.paused).toBe(false);
 
-	await videoProducer.pause();
+	promise = new Promise((resolve) => videoConsumer.once('producerpause', resolve));
 
-	if (!videoConsumer.producerPaused)
-		await new Promise((resolve) => videoConsumer.once('producerpause', resolve));
+	await videoProducer.pause();
+	await promise;
 
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.paused).toBe(false);

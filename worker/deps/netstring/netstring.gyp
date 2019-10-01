@@ -6,7 +6,8 @@
       'type': 'static_library',
       'sources':
       [
-        'netstring-c/netstring.c'
+        'netstring-c/netstring.c',
+        'netstring-c/netstring.h'
       ],
       'direct_dependent_settings':
       {
@@ -18,12 +19,12 @@
       'conditions':
       [
         [ 'OS != "win"', {
-          'cflags': [ '-Wall' ]
+          'cflags': [ '-Wall', '-Wno-sign-compare' ]
         }],
         [ 'OS == "mac"', {
           'xcode_settings':
           {
-            'WARNING_CFLAGS': [ '-Wall' ]
+            'WARNING_CFLAGS': [ '-Wall', '-Wno-sign-compare' ]
           }
         }]
       ]

@@ -162,7 +162,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(data1.dtlsState).toBe(transport1.dtlsState);
 	expect(data1.sctpParameters).toEqual(transport1.sctpParameters);
 	expect(data1.sctpState).toBe(transport1.sctpState);
-	expect(data1.rtpHeaderExtensions).toBeType('object');
+	expect(data1.recvRtpHeaderExtensions).toBeType('object');
 	expect(data1.rtpListener).toBeType('object');
 
 	transport1.close();
@@ -175,7 +175,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 
 test('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(router.createWebRtcTransport())
+	await expect(router.createWebRtcTransport({}))
 		.rejects
 		.toThrow(TypeError);
 
@@ -230,7 +230,19 @@ test('webRtcTransport.getStats() succeeds', async () =>
 	expect(data[0].dtlsState).toBe('new');
 	expect(data[0].sctpState).toBe(undefined);
 	expect(data[0].bytesReceived).toBe(0);
+	expect(data[0].recvBitrate).toBe(0);
 	expect(data[0].bytesSent).toBe(0);
+	expect(data[0].sendBitrate).toBe(0);
+	expect(data[0].rtpBytesReceived).toBe(0);
+	expect(data[0].rtpRecvBitrate).toBe(0);
+	expect(data[0].rtpBytesSent).toBe(0);
+	expect(data[0].rtpSendBitrate).toBe(0);
+	expect(data[0].rtxBytesReceived).toBe(0);
+	expect(data[0].rtxRecvBitrate).toBe(0);
+	expect(data[0].rtxBytesSent).toBe(0);
+	expect(data[0].rtxSendBitrate).toBe(0);
+	expect(data[0].probationBytesSent).toBe(0);
+	expect(data[0].probationSendBitrate).toBe(0);
 	expect(data[0].iceSelectedTuple).toBe(undefined);
 	expect(data[0].maxIncomingBitrate).toBe(undefined);
 	expect(data[0].recvBitrate).toBe(0);
@@ -267,7 +279,7 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 {
 	let dtlsRemoteParameters;
 
-	await expect(transport.connect())
+	await expect(transport.connect({}))
 		.rejects
 		.toThrow(TypeError);
 
@@ -336,6 +348,44 @@ test('webRtcTransport.restartIce() succeeds', async () =>
 	expect(transport.iceParameters.usernameFragment)
 		.not.toBe(previousIceUsernameFragment);
 	expect(transport.iceParameters.password).not.toBe(previousIcePassword);
+}, 2000);
+
+test('transport.enablePacketEvent() succeed', async () =>
+{
+	await transport.enablePacketEvent([ 'foo', 'probation' ]);
+	await expect(transport.dump())
+		.resolves
+		.toMatchObject({ packetEventTypes: 'probation' });
+
+	await transport.enablePacketEvent([]);
+	await expect(transport.dump())
+		.resolves
+		.toMatchObject({ packetEventTypes: '' });
+
+	await transport.enablePacketEvent([ 'probation', 'FOO', 'BAR' ]);
+	await expect(transport.dump())
+		.resolves
+		.toMatchObject({ packetEventTypes: 'probation' });
+
+	await transport.enablePacketEvent();
+	await expect(transport.dump())
+		.resolves
+		.toMatchObject({ packetEventTypes: '' });
+}, 2000);
+
+test('transport.enablePacketEvent() with wrong arguments rejects with TypeError', async () =>
+{
+	await expect(transport.enablePacketEvent(123))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(transport.enablePacketEvent('probation'))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(transport.enablePacketEvent([ 'probation', 123.123 ]))
+		.rejects
+		.toThrow(TypeError);
 }, 2000);
 
 test('WebRtcTransport events succeed', async () =>
@@ -409,7 +459,7 @@ test('WebRtcTransport methods reject if closed', async () =>
 		.rejects
 		.toThrow(Error);
 
-	await expect(transport.connect())
+	await expect(transport.connect({}))
 		.rejects
 		.toThrow(Error);
 

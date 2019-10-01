@@ -1,10 +1,11 @@
 #define MS_CLASS "RTC::SctpAssociation"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SctpAssociation.hpp"
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memset(), std::memcpy()
 #include <string>
 
@@ -116,11 +117,13 @@ namespace RTC
 		delete[] this->messageBuffer;
 	}
 
-	void SctpAssociation::Run()
+	void SctpAssociation::TransportConnected()
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->state == SctpState::NEW, "not in new SCTP state");
+		// Just run the SCTP stack if our state is 'new'.
+		if (this->state != SctpState::NEW)
+			return;
 
 		try
 		{
@@ -286,7 +289,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DUMP_DATA(data, len);
 #endif
 
@@ -512,7 +515,7 @@ namespace RTC
 
 		const uint8_t* data = static_cast<uint8_t*>(buffer);
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DUMP_DATA(data, len);
 #endif
 

@@ -1276,7 +1276,7 @@ print_status(struct peer_connection *pc)
 			printf("unreliable (max. %u rtx).\n", channel->pr_value);
 			break;
 		default:
-			printf("unkown policy %u.\n", channel->pr_policy);
+			printf("unknown policy %u.\n", channel->pr_policy);
 			break;
 		}
 	}
@@ -1328,14 +1328,15 @@ main(int argc, char *argv[])
 	char addrbuf[INET_ADDRSTRLEN];
 
 	if (argc > 1) {
-		usrsctp_init(atoi(argv[1]), NULL, debug_printf);
+		usrsctp_init(atoi(argv[1]), NULL, debug_printf_stack);
 	} else {
-		usrsctp_init(9899, NULL, debug_printf);
+		usrsctp_init(9899, NULL, debug_printf_stack);
 	}
 #ifdef SCTP_DEBUG
 	usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_NONE);
 #endif
 	usrsctp_sysctl_set_sctp_blackhole(2);
+	usrsctp_sysctl_set_sctp_no_csum_on_loopback(0);
 
 	if ((sock = usrsctp_socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP, receive_cb, NULL, 0, &peer_connection)) == NULL) {
 		perror("socket");

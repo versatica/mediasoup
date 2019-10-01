@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_bsd_addr.h 310590 2016-12-26 11:06:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_bsd_addr.h 353480 2019-10-13 18:17:08Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_BSD_ADDR_H_
@@ -63,6 +63,10 @@ int sctp_copy_out_packet_log(uint8_t *target, int length);
 
 #if !defined(__Panda__)
 void sctp_addr_change(struct ifaddr *ifa, int cmd);
+#endif
+#if defined(__FreeBSD__)
+
+void sctp_addr_change_event_handler(void *, struct ifaddr *, int);
 #endif
 
 void sctp_add_or_del_interfaces(int (*pred)(struct ifnet *), int add);

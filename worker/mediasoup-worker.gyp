@@ -7,7 +7,9 @@
       'deps/libuv/uv.gyp:libuv',
       'deps/openssl/openssl.gyp:openssl',
       'deps/libsrtp/libsrtp.gyp:libsrtp',
-      'deps/usrsctp/usrsctp.gyp:usrsctp'
+      'deps/usrsctp/usrsctp.gyp:usrsctp',
+      'deps/libwebrtc/libwebrtc.gyp:libwebrtc',
+      'deps/libwebrtc/deps/abseil-cpp/abseil-cpp.gyp:abseil'
     ],
     # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
     # 'defines': [ 'SCTP_DEBUG' ],
@@ -16,6 +18,7 @@
       # C++ source files.
       'src/DepLibSRTP.cpp',
       'src/DepLibUV.cpp',
+      'src/DepLibWebRTC.cpp',
       'src/DepOpenSSL.cpp',
       'src/DepUsrSCTP.cpp',
       'src/Logger.cpp',
@@ -52,11 +55,14 @@
       'src/RTC/RtpListener.cpp',
       'src/RTC/RtpObserver.cpp',
       'src/RTC/RtpPacket.cpp',
+      'src/RTC/RtpProbationGenerator.cpp',
       'src/RTC/RtpStream.cpp',
       'src/RTC/RtpStreamRecv.cpp',
       'src/RTC/RtpStreamSend.cpp',
+      'src/RTC/RtxStream.cpp',
       'src/RTC/SctpAssociation.cpp',
       'src/RTC/SctpListener.cpp',
+      'src/RTC/SenderBandwidthEstimator.cpp',
       'src/RTC/SeqManager.cpp',
       'src/RTC/SimpleConsumer.cpp',
       'src/RTC/SimulcastConsumer.cpp',
@@ -66,7 +72,10 @@
       'src/RTC/TcpConnection.cpp',
       'src/RTC/TcpServer.cpp',
       'src/RTC/Transport.cpp',
+      'src/RTC/TransportCongestionControlClient.cpp',
+      'src/RTC/TransportCongestionControlServer.cpp',
       'src/RTC/TransportTuple.cpp',
+      'src/RTC/TrendCalculator.cpp',
       'src/RTC/UdpSocket.cpp',
       'src/RTC/WebRtcTransport.cpp',
       'src/RTC/Codecs/Codecs.cpp',
@@ -99,6 +108,7 @@
       'src/RTC/RTCP/FeedbackRtpSrReq.cpp',
       'src/RTC/RTCP/FeedbackRtpTllei.cpp',
       'src/RTC/RTCP/FeedbackRtpEcn.cpp',
+      'src/RTC/RTCP/FeedbackRtpTransport.cpp',
       'src/RTC/RTCP/FeedbackPsPli.cpp',
       'src/RTC/RTCP/FeedbackPsSli.cpp',
       'src/RTC/RTCP/FeedbackPsRpsi.cpp',
@@ -111,16 +121,10 @@
       'src/RTC/RTCP/XR.cpp',
       'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
       'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
-      'src/RTC/RembClient.cpp',
-      'src/RTC/RembServer/AimdRateControl.cpp',
-      'src/RTC/RembServer/InterArrival.cpp',
-      'src/RTC/RembServer/OveruseDetector.cpp',
-      'src/RTC/RembServer/OveruseEstimator.cpp',
-      'src/RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.cpp',
-      'src/RTC/RembServer/RemoteBitrateEstimatorSingleStream.cpp',
       # C++ include files.
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
+      'include/DepLibWebRTC.hpp',
       'include/DepOpenSSL.hpp',
       'include/DepUsrSCTP.hpp',
       'include/LogLevel.hpp',
@@ -139,6 +143,7 @@
       'include/Channel/Notifier.hpp',
       'include/Channel/Request.hpp',
       'include/Channel/UnixStreamSocket.hpp',
+      'include/RTC/BweType.hpp',
       'include/RTC/AudioLevelObserver.hpp',
       'include/RTC/Consumer.hpp',
       'include/RTC/DataConsumer.hpp',
@@ -161,12 +166,15 @@
       'include/RTC/RtpListener.hpp',
       'include/RTC/RtpObserver.hpp',
       'include/RTC/RtpPacket.hpp',
+      'include/RTC/RtpProbationGenerator.hpp',
       'include/RTC/RtpStream.hpp',
       'include/RTC/RtpStreamRecv.hpp',
       'include/RTC/RtpStreamSend.hpp',
+      'include/RTC/RtxStream.hpp',
       'include/RTC/SctpAssociation.hpp',
       'include/RTC/SctpDictionaries.hpp',
       'include/RTC/SctpListener.hpp',
+      'include/RTC/SenderBandwidthEstimator.hpp',
       'include/RTC/SeqManager.hpp',
       'include/RTC/SimpleConsumer.hpp',
       'include/RTC/SimulcastConsumer.hpp',
@@ -176,7 +184,10 @@
       'include/RTC/TcpConnection.hpp',
       'include/RTC/TcpServer.hpp',
       'include/RTC/Transport.hpp',
+      'include/RTC/TransportCongestionControlClient.hpp',
+      'include/RTC/TransportCongestionControlServer.hpp',
       'include/RTC/TransportTuple.hpp',
+      'include/RTC/TrendCalculator.hpp',
       'include/RTC/UdpSocket.hpp',
       'include/RTC/WebRtcTransport.hpp',
       'include/RTC/Codecs/Codecs.hpp',
@@ -199,6 +210,7 @@
       'include/RTC/RTCP/FeedbackRtpSrReq.hpp',
       'include/RTC/RTCP/FeedbackRtpTllei.hpp',
       'include/RTC/RTCP/FeedbackRtpEcn.hpp',
+      'include/RTC/RTCP/FeedbackRtpTransport.hpp',
       'include/RTC/RTCP/FeedbackPsPli.hpp',
       'include/RTC/RTCP/FeedbackPsSli.hpp',
       'include/RTC/RTCP/FeedbackPsRpsi.hpp',
@@ -210,19 +222,12 @@
       'include/RTC/RTCP/FeedbackPsRemb.hpp',
       'include/RTC/RTCP/XR.hpp',
       'include/RTC/RTCP/XrDelaySinceLastRr.hpp',
-      'include/RTC/RTCP/XrReceiverReferenceTime.hpp',
-      'include/RTC/RembClient.hpp',
-      'include/RTC/RembServer/AimdRateControl.hpp',
-      'include/RTC/RembServer/InterArrival.hpp',
-      'include/RTC/RembServer/OveruseDetector.hpp',
-      'include/RTC/RembServer/OveruseEstimator.hpp',
-      'include/RTC/RembServer/RemoteBitrateEstimator.hpp',
-      'include/RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp',
-      'include/RTC/RembServer/RemoteBitrateEstimatorSingleStream.hpp'
+      'include/RTC/RTCP/XrReceiverReferenceTime.hpp'
     ],
     'include_dirs':
     [
-      'include'
+      'include',
+      'deps/json/single_include/nlohmann'
     ],
     'conditions':
     [
@@ -271,6 +276,23 @@
         'ldflags': [ '-Wl,--export-dynamic' ]
       }],
 
+      [ 'OS == "win"', {
+        'dependencies': [ 'deps/getopt/getopt.gyp:getopt' ],
+
+        # Handle multi files with same name.
+        # https://stackoverflow.com/a/22936230/2085408
+        # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
+        'msvs_settings': {
+          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
+        },
+
+        # Output Directory setting for msvc.
+        # https://github.com/nodejs/node-gyp/issues/1242#issuecomment-310921441
+        'msvs_configuration_attributes': {
+          'OutputDirectory': '$(SolutionDir)\\out\\$(Configuration)\\'
+        }
+      }],
+
       [ 'OS != "win"', {
         'cflags': [ '-std=c++11', '-Wall', '-Wextra', '-Wno-unused-parameter', '-Wno-implicit-fallthrough' ]
       }],
@@ -314,6 +336,7 @@
         'test/src/RTC/TestRtpStreamSend.cpp',
         'test/src/RTC/TestRtpStreamRecv.cpp',
         'test/src/RTC/TestSeqManager.cpp',
+        'test/src/RTC/TestTrendCalculator.cpp',
         'test/src/RTC/Codecs/TestVP8.cpp',
         'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
         'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
@@ -329,6 +352,7 @@
         'test/src/RTC/RTCP/TestFeedbackRtpSrReq.cpp',
         'test/src/RTC/RTCP/TestFeedbackRtpTllei.cpp',
         'test/src/RTC/RTCP/TestFeedbackRtpTmmb.cpp',
+        'test/src/RTC/RTCP/TestFeedbackRtpTransport.cpp',
         'test/src/RTC/RTCP/TestBye.cpp',
         'test/src/RTC/RTCP/TestReceiverReport.cpp',
         'test/src/RTC/RTCP/TestSdes.cpp',
@@ -367,6 +391,7 @@
         'fuzzer/src/fuzzer.cpp',
         'fuzzer/src/RTC/FuzzerStunPacket.cpp',
         'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
+        'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
@@ -384,6 +409,7 @@
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpSrReq.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTllei.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTmmb.cpp',
+        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTransport.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerPacket.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
@@ -392,6 +418,7 @@
         # C++ include files.
         'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
+        'fuzzer/include/RTC/FuzzerTrendCalculator.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerBye.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackPs.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsAfb.hpp',
@@ -409,6 +436,7 @@
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpSrReq.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTllei.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTmmb.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTransport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerPacket.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerReceiverReport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerSdesReport.hpp',
@@ -419,6 +447,7 @@
       [
         'fuzzer/include'
       ],
+
       'conditions':
       [
         [ 'OS == "linux"', {

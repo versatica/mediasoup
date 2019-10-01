@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 347976 2019-05-19 17:53:36Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 353480 2019-10-13 18:17:08Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -60,6 +60,9 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 347976 2019-05-19 17:53:36Z t
 #include <netinet/sctp_callout.h>
 #else
 #include <netinet/udp.h>
+#endif
+#if defined(__FreeBSD__)
+#include <sys/eventhandler.h>
 #endif
 
 #if defined(HAVE_SCTP_PEELOFF_SOCKOPT)
@@ -92,9 +95,17 @@ sctp_init(void)
 	sctp_init_sysctls();
 #if defined(__Userspace__)
 #if defined(__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+	srand(0);
+#else
 	srand((unsigned int)time(NULL));
+#endif
+#else
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+	srandom(0);
 #else
 	srandom(getpid()); /* so inp->sctp_ep.random_numbers are truly random... */
+#endif
 #endif
 #endif
 #if defined(__Panda__)
@@ -151,10 +162,12 @@ sctp_init(void)
 	SCTP_BASE_VAR(debug_printf) = debug_printf;
 	SCTP_BASE_VAR(crc32c_offloaded) = 0;
 #endif
-	sctp_pcb_init(start_threads);
 #if defined(__Userspace__)
+	sctp_pcb_init(start_threads);
 	if (start_threads)
 		sctp_start_timer();
+#else
+	sctp_pcb_init();
 #endif
 #if defined(SCTP_PACKET_LOGGING)
 	SCTP_BASE_VAR(packet_log_writers) = 0;
@@ -165,6 +178,10 @@ sctp_init(void)
 	SCTP_BASE_VAR(sctp_main_timer_ticks) = 0;
 	sctp_start_main_timer();
 	timeout(sctp_delayed_startup, NULL, 1);
+#endif
+#if defined(__FreeBSD__)
+	EVENTHANDLER_REGISTER(rt_addrmsg, sctp_addr_change_event_handler,
+	    NULL, EVENTHANDLER_PRI_FIRST);
 #endif
 }
 
@@ -1421,9 +1438,9 @@ sctp_shutdown(struct socket *so)
 			abort_anyway:
 				op_err = sctp_generate_cause(SCTP_CAUSE_USER_INITIATED_ABT, "");
 				stcb->sctp_ep->last_abort_code = SCTP_FROM_SCTP_USRREQ + SCTP_LOC_6;
+				SCTP_INP_RUNLOCK(inp);
 				sctp_abort_an_association(stcb->sctp_ep, stcb,
 							  op_err, SCTP_SO_LOCKED);
-				SCTP_INP_RUNLOCK(inp);
 				return (0);
 			}
 		}
@@ -2013,10 +2030,7 @@ sctp_do_connect_x(struct socket *so, struct sctp_inpcb *inp, void *optval,
 	}
 	if ((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) &&
 	    (num_v4 > 0)) {
-		struct in6pcb *inp6;
-
-		inp6 = (struct in6pcb *)inp;
-		if (SCTP_IPV6_V6ONLY(inp6)) {
+		if (SCTP_IPV6_V6ONLY(inp)) {
 			/*
 			 * if IPV6_V6ONLY flag, ignore connections destined
 			 * to a v4 addr or v4-mapped addr
@@ -2045,13 +2059,13 @@ sctp_do_connect_x(struct socket *so, struct sctp_inpcb *inp, void *optval,
 	                       inp->sctp_ep.pre_open_stream_count,
 	                       inp->sctp_ep.port,
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
-			       (struct thread *)p
+	                       (struct thread *)p,
 #elif defined(__Windows__)
-			       (PKTHREAD)p
+	                       (PKTHREAD)p,
 #else
-			       (struct proc *)p
+	                       (struct proc *)p,
 #endif
-		);
+	                       SCTP_INITIALIZE_AUTH_PARAMS);
 	if (stcb == NULL) {
 		/* Gak! no memory */
 		goto out_now;
@@ -2086,9 +2100,6 @@ sctp_do_connect_x(struct socket *so, struct sctp_inpcb *inp, void *optval,
 	}
 	a_id = (sctp_assoc_t *)optval;
 	*a_id = sctp_get_associd(stcb);
-
-	/* initialize authentication parameters for the assoc */
-	sctp_initialize_auth_params(inp, stcb);
 
 	if (delay) {
 		/* doing delayed connection */
@@ -7870,7 +7881,7 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	case AF_INET6:
 	{
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
-		struct sockaddr_in6 *sin6p;
+		struct sockaddr_in6 *sin6;
 
 #endif
 		if (addr->sa_len != sizeof(struct sockaddr_in6)) {
@@ -7878,8 +7889,8 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 			return (EINVAL);
 		}
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
-		sin6p = (struct sockaddr_in6 *)addr;
-		if (p != NULL && (error = prison_remote_ip6(p->td_ucred, &sin6p->sin6_addr)) != 0) {
+		sin6 = (struct sockaddr_in6 *)addr;
+		if (p != NULL && (error = prison_remote_ip6(p->td_ucred, &sin6->sin6_addr)) != 0) {
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, error);
 			return (error);
 		}
@@ -7891,7 +7902,7 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	case AF_INET:
 	{
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
-		struct sockaddr_in *sinp;
+		struct sockaddr_in *sin;
 
 #endif
 #if !defined(__Userspace_os_Windows)
@@ -7901,8 +7912,8 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 		}
 #endif
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
-		sinp = (struct sockaddr_in *)addr;
-		if (p != NULL && (error = prison_remote_ip4(p->td_ucred, &sinp->sin_addr)) != 0) {
+		sin = (struct sockaddr_in *)addr;
+		if (p != NULL && (error = prison_remote_ip4(p->td_ucred, &sin->sin_addr)) != 0) {
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, error);
 			return (error);
 		}
@@ -8006,7 +8017,8 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	/* We are GOOD to go */
 	stcb = sctp_aloc_assoc(inp, addr, &error, 0, vrf_id,
 	                       inp->sctp_ep.pre_open_stream_count,
-	                       inp->sctp_ep.port, p);
+	                       inp->sctp_ep.port, p,
+	                       SCTP_INITIALIZE_AUTH_PARAMS);
 	if (stcb == NULL) {
 		/* Gak! no memory */
 		goto out_now;
@@ -8018,9 +8030,6 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	}
 	SCTP_SET_STATE(stcb, SCTP_STATE_COOKIE_WAIT);
 	(void)SCTP_GETTIME_TIMEVAL(&stcb->asoc.time_entered);
-
-	/* initialize authentication parameters for the assoc */
-	sctp_initialize_auth_params(inp, stcb);
 
 	sctp_send_initiate(inp, stcb, SCTP_SO_LOCKED);
 	SCTP_TCB_UNLOCK(stcb);
@@ -8173,7 +8182,8 @@ sctpconn_connect(struct socket *so, struct sockaddr *addr)
 	/* We are GOOD to go */
 	stcb = sctp_aloc_assoc(inp, addr, &error, 0, vrf_id,
 	                       inp->sctp_ep.pre_open_stream_count,
-	                       inp->sctp_ep.port, p);
+	                       inp->sctp_ep.port, p,
+	                       SCTP_INITIALIZE_AUTH_PARAMS);
 	if (stcb == NULL) {
 		/* Gak! no memory */
 		goto out_now;
@@ -8185,9 +8195,6 @@ sctpconn_connect(struct socket *so, struct sockaddr *addr)
 	}
 	SCTP_SET_STATE(stcb, SCTP_STATE_COOKIE_WAIT);
 	(void)SCTP_GETTIME_TIMEVAL(&stcb->asoc.time_entered);
-
-	/* initialize authentication parameters for the assoc */
-	sctp_initialize_auth_params(inp, stcb);
 
 	sctp_send_initiate(inp, stcb, SCTP_SO_LOCKED);
 	SCTP_TCB_UNLOCK(stcb);
@@ -8430,18 +8437,8 @@ sctp_listen(struct socket *so, struct proc *p)
 static int sctp_defered_wakeup_cnt = 0;
 
 int
-#if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
 sctp_accept(struct socket *so, struct sockaddr **addr)
 {
-#elif defined(__Panda__)
-sctp_accept(struct socket *so, struct sockaddr *addr, int *namelen,
-	    void *accept_info, int *accept_info_len)
-{
-#else
-sctp_accept(struct socket *so, struct mbuf *nam)
-{
-	struct sockaddr *addr = mtod(nam, struct sockaddr *);
-#endif
 	struct sctp_tcb *stcb;
 	struct sctp_inpcb *inp;
 	union sctp_sockstore store;
@@ -8456,28 +8453,76 @@ sctp_accept(struct socket *so, struct mbuf *nam)
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
 		return (ECONNRESET);
 	}
-	SCTP_INP_RLOCK(inp);
+	SCTP_INP_WLOCK(inp);
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_UDPTYPE) {
-		SCTP_INP_RUNLOCK(inp);
+		SCTP_INP_WUNLOCK(inp);
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EOPNOTSUPP);
 		return (EOPNOTSUPP);
 	}
 	if (so->so_state & SS_ISDISCONNECTED) {
-		SCTP_INP_RUNLOCK(inp);
+		SCTP_INP_WUNLOCK(inp);
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ECONNABORTED);
 		return (ECONNABORTED);
 	}
 	stcb = LIST_FIRST(&inp->sctp_asoc_list);
 	if (stcb == NULL) {
-		SCTP_INP_RUNLOCK(inp);
+		SCTP_INP_WUNLOCK(inp);
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
 		return (ECONNRESET);
 	}
 	SCTP_TCB_LOCK(stcb);
-	SCTP_INP_RUNLOCK(inp);
 	store = stcb->asoc.primary_destination->ro._l_addr;
 	SCTP_CLEAR_SUBSTATE(stcb, SCTP_STATE_IN_ACCEPT_QUEUE);
-	SCTP_TCB_UNLOCK(stcb);
+	/* Wake any delayed sleep action */
+	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) {
+		inp->sctp_flags &= ~SCTP_PCB_FLAGS_DONT_WAKE;
+		if (inp->sctp_flags & SCTP_PCB_FLAGS_WAKEOUTPUT) {
+			inp->sctp_flags &= ~SCTP_PCB_FLAGS_WAKEOUTPUT;
+			SOCKBUF_LOCK(&inp->sctp_socket->so_snd);
+			if (sowriteable(inp->sctp_socket)) {
+#if defined(__Userspace__)
+				/*__Userspace__ calling sowwakup_locked because of SOCKBUF_LOCK above. */
+#endif
+#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
+				sowwakeup_locked(inp->sctp_socket);
+#else
+#if defined(__APPLE__)
+				/* socket is locked */
+#endif
+				sowwakeup(inp->sctp_socket);
+#endif
+			} else {
+				SOCKBUF_UNLOCK(&inp->sctp_socket->so_snd);
+			}
+		}
+		if (inp->sctp_flags & SCTP_PCB_FLAGS_WAKEINPUT) {
+			inp->sctp_flags &= ~SCTP_PCB_FLAGS_WAKEINPUT;
+			SOCKBUF_LOCK(&inp->sctp_socket->so_rcv);
+			if (soreadable(inp->sctp_socket)) {
+				sctp_defered_wakeup_cnt++;
+#if defined(__Userspace__)
+				/*__Userspace__ calling sorwakup_locked because of SOCKBUF_LOCK above */
+#endif
+#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
+				sorwakeup_locked(inp->sctp_socket);
+#else
+#if defined(__APPLE__)
+				/* socket is locked */
+#endif
+				sorwakeup(inp->sctp_socket);
+#endif
+			} else {
+				SOCKBUF_UNLOCK(&inp->sctp_socket->so_rcv);
+			}
+		}
+	}
+	SCTP_INP_WUNLOCK(inp);
+	if (stcb->asoc.state & SCTP_STATE_ABOUT_TO_BE_FREED) {
+		sctp_free_assoc(inp, stcb, SCTP_NORMAL_PROC,
+		                SCTP_FROM_SCTP_USRREQ + SCTP_LOC_19);
+	} else {
+		SCTP_TCB_UNLOCK(stcb);
+	}
 	switch (store.sa.sa_family) {
 #ifdef INET
 	case AF_INET:
@@ -8572,60 +8617,6 @@ sctp_accept(struct socket *so, struct mbuf *nam)
 	default:
 		/* TSNH */
 		break;
-	}
-	/* Wake any delayed sleep action */
-	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) {
-		SCTP_INP_WLOCK(inp);
-		inp->sctp_flags &= ~SCTP_PCB_FLAGS_DONT_WAKE;
-		if (inp->sctp_flags & SCTP_PCB_FLAGS_WAKEOUTPUT) {
-			inp->sctp_flags &= ~SCTP_PCB_FLAGS_WAKEOUTPUT;
-			SCTP_INP_WUNLOCK(inp);
-			SOCKBUF_LOCK(&inp->sctp_socket->so_snd);
-			if (sowriteable(inp->sctp_socket)) {
-#if defined(__Userspace__)
-                            /*__Userspace__ calling sowwakup_locked because of SOCKBUF_LOCK above. */
-#endif
-#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
-				sowwakeup_locked(inp->sctp_socket);
-#else
-#if defined(__APPLE__)
-				/* socket is locked */
-#endif
-				sowwakeup(inp->sctp_socket);
-#endif
-			} else {
-				SOCKBUF_UNLOCK(&inp->sctp_socket->so_snd);
-			}
-			SCTP_INP_WLOCK(inp);
-		}
-		if (inp->sctp_flags & SCTP_PCB_FLAGS_WAKEINPUT) {
-			inp->sctp_flags &= ~SCTP_PCB_FLAGS_WAKEINPUT;
-			SCTP_INP_WUNLOCK(inp);
-			SOCKBUF_LOCK(&inp->sctp_socket->so_rcv);
-			if (soreadable(inp->sctp_socket)) {
-				sctp_defered_wakeup_cnt++;
-#if defined(__Userspace__)
-                                /*__Userspace__ calling sorwakup_locked because of SOCKBUF_LOCK above */
-#endif
-#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
-				sorwakeup_locked(inp->sctp_socket);
-#else
-#if defined(__APPLE__)
-				/* socket is locked */
-#endif
-				sorwakeup(inp->sctp_socket);
-#endif
-			} else {
-				SOCKBUF_UNLOCK(&inp->sctp_socket->so_rcv);
-			}
-			SCTP_INP_WLOCK(inp);
-		}
-		SCTP_INP_WUNLOCK(inp);
-	}
-	if (stcb->asoc.state & SCTP_STATE_ABOUT_TO_BE_FREED) {
-		SCTP_TCB_LOCK(stcb);
-		sctp_free_assoc(inp, stcb, SCTP_NORMAL_PROC,
-		                SCTP_FROM_SCTP_USRREQ + SCTP_LOC_19);
 	}
 	return (0);
 }

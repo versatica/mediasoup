@@ -1,5 +1,5 @@
 #define MS_CLASS "Worker"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Worker.hpp"
 #include "DepLibUV.hpp"
@@ -192,11 +192,11 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 	}
 }
 
-inline void Worker::OnChannelRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
+inline void Worker::OnChannelClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
-	// If the pipe is remotely closed it means that mediasoup Node process
+	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("channel remotely closed, closing myself");
 

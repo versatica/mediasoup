@@ -652,6 +652,44 @@ test('consumer.pause() and resume() succeed', async () =>
 		.toMatchObject({ paused: false });
 }, 2000);
 
+test('consumer.enablePacketEvent() succeed', async () =>
+{
+	await audioConsumer.enablePacketEvent([ 'rtp', 'pli' ]);
+	await expect(audioConsumer.dump())
+		.resolves
+		.toMatchObject({ packetEventTypes: 'rtp,pli' });
+
+	await audioConsumer.enablePacketEvent([]);
+	await expect(audioConsumer.dump())
+		.resolves
+		.toMatchObject({ packetEventTypes: '' });
+
+	await audioConsumer.enablePacketEvent([ 'nack', 'FOO', 'fir' ]);
+	await expect(audioConsumer.dump())
+		.resolves
+		.toMatchObject({ packetEventTypes: 'nack,fir' });
+
+	await audioConsumer.enablePacketEvent();
+	await expect(audioConsumer.dump())
+		.resolves
+		.toMatchObject({ packetEventTypes: '' });
+}, 2000);
+
+test('consumer.enablePacketEvent() with wrong arguments rejects with TypeError', async () =>
+{
+	await expect(audioConsumer.enablePacketEvent(123))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(audioConsumer.enablePacketEvent('rtp'))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(audioConsumer.enablePacketEvent([ 'fir', 123.123 ]))
+		.rejects
+		.toThrow(TypeError);
+}, 2000);
+
 test('Consumer emits "producerpause" and "producerresume"', async () =>
 {
 	await new Promise((resolve) =>

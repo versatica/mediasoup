@@ -1,8 +1,7 @@
 #define MS_CLASS "RTC::RtpStreamSend"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStreamSend.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
@@ -40,18 +39,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["timestamp"]   = now;
 		jsonObject["type"]        = "outbound-rtp";
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(now);
+		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
 
 		if (this->rtt != 0.0f)
 			jsonObject["roundTripTime"] = this->rtt;
+	}
+
+	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		RTC::RtpStream::SetRtx(payloadType, ssrc);
+
+		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
@@ -134,8 +141,8 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t now = DepLibUV::GetTime();
-		auto ntp     = Utils::Time::TimeMs2Ntp(now);
+		uint64_t nowMs = DepLibUV::GetTimeMs();
+		auto ntp       = Utils::Time::TimeMs2Ntp(nowMs);
 
 		// Get the compact NTP representation of the current timestamp.
 		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -168,18 +175,18 @@ namespace RTC
 		UpdateScore(report);
 	}
 
-	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
+	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		if (this->transmissionCounter.GetPacketCount() == 0u)
 			return nullptr;
 
-		auto ntp    = Utils::Time::TimeMs2Ntp(now);
+		auto ntp    = Utils::Time::TimeMs2Ntp(nowMs);
 		auto report = new RTC::RTCP::SenderReport();
 
 		// Calculate TS difference between now and maxPacketMs.
-		auto diffMs = now - this->maxPacketMs;
+		auto diffMs = nowMs - this->maxPacketMs;
 		auto diffTs = diffMs * GetClockRate() / 1000;
 
 		report->SetSsrc(GetSsrc());
@@ -190,7 +197,7 @@ namespace RTC
 		report->SetRtpTs(this->maxPacketTs + diffTs);
 
 		// Update info about last Sender Report.
-		this->lastSenderReportNtpMs = now;
+		this->lastSenderReportNtpMs = nowMs;
 		this->lastSenderReporTs     = this->maxPacketTs + diffTs;
 
 		return report;
@@ -222,51 +229,15 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void RtpStreamSend::SendProbationRtpPacket(uint16_t seq)
-	{
-		MS_TRACE();
-
-		if (this->storage.empty())
-			return;
-
-		auto* storageItem = this->buffer[seq];
-
-		if (!storageItem)
-			return;
-
-		auto* packet = storageItem->packet;
-
-		// If we use RTX and the packet has not yet been resent, encode it now.
-		if (HasRtx())
-		{
-			// Increment RTX seq.
-			++this->rtxSeq;
-
-			if (!storageItem->rtxEncoded)
-			{
-				packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
-
-				storageItem->rtxEncoded = true;
-			}
-			else
-			{
-				packet->SetSequenceNumber(this->rtxSeq);
-			}
-		}
-
-		// Retransmit as probation packet.
-		static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
-		  ->OnRtpStreamRetransmitRtpPacket(this, packet, true);
-	}
-
-	uint32_t RtpStreamSend::GetBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+	uint32_t RtpStreamSend::GetBitrate(
+	  uint64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 	{
 		MS_TRACE();
 
 		MS_ABORT("invalid method call");
 	}
 
-	uint32_t RtpStreamSend::GetSpatialLayerBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/)
+	uint32_t RtpStreamSend::GetSpatialLayerBitrate(uint64_t /*nowMs*/, uint8_t /*spatialLayer*/)
 	{
 		MS_TRACE();
 
@@ -274,7 +245,7 @@ namespace RTC
 	}
 
 	uint32_t RtpStreamSend::GetLayerBitrate(
-	  uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+	  uint64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 	{
 		MS_TRACE();
 
@@ -399,10 +370,10 @@ namespace RTC
 
 		delete storageItem->packet;
 
-		storageItem->packet       = nullptr;
-		storageItem->resentAtTime = 0;
-		storageItem->sentTimes    = 0;
-		storageItem->rtxEncoded   = false;
+		storageItem->packet     = nullptr;
+		storageItem->resentAtMs = 0;
+		storageItem->sentTimes  = 0;
+		storageItem->rtxEncoded = false;
 	}
 
 	/**
@@ -447,8 +418,9 @@ namespace RTC
 		}
 
 		// Look for each requested packet.
-		uint64_t now = DepLibUV::GetTime();
-		uint16_t rtt = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint64_t nowMs      = DepLibUV::GetTimeMs();
+		uint16_t rtt        = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint16_t currentSeq = seq;
 		bool requested{ true };
 		size_t containerIdx{ 0 };
 
@@ -466,12 +438,12 @@ namespace RTC
 
 			if (requested)
 			{
-				auto* storageItem = this->buffer[seq];
+				auto* storageItem = this->buffer[currentSeq];
 				RTC::RtpPacket* packet{ nullptr };
 				uint32_t diffMs;
 
-				// Calculate how the elapsed time between the max timestampt seen and
-				// the requested packet's timestampt (in ms).
+				// Calculate the elapsed time between the max timestampt seen and the
+				// requested packet's timestampt (in ms).
 				if (storageItem)
 				{
 					packet = storageItem->packet;
@@ -505,8 +477,8 @@ namespace RTC
 				// Don't resent the packet if it was resent in the last RTT ms.
 				// clang-format off
 				else if (
-					storageItem->resentAtTime != 0u &&
-					now - storageItem->resentAtTime <= static_cast<uint64_t>(rtt)
+					storageItem->resentAtMs != 0u &&
+					nowMs - storageItem->resentAtMs <= static_cast<uint64_t>(rtt)
 				)
 				// clang-format on
 				{
@@ -539,7 +511,7 @@ namespace RTC
 					}
 
 					// Save when this packet was resent.
-					storageItem->resentAtTime = now;
+					storageItem->resentAtMs = nowMs;
 
 					// Increase the number of times this packet was sent.
 					storageItem->sentTimes++;
@@ -556,7 +528,7 @@ namespace RTC
 
 			requested = (bitmask & 1) != 0;
 			bitmask >>= 1;
-			++seq;
+			++currentSeq;
 
 			if (!isFirstPacket)
 			{
@@ -572,8 +544,7 @@ namespace RTC
 		// If not all the requested packets was sent, log it.
 		if (!firstPacketSent || origBitmask != sentBitmask)
 		{
-			MS_DEBUG_TAG(
-			  rtx,
+			MS_WARN_DEV(
 			  "could not resend all packets [seq:%" PRIu16
 			  ", first:%s, "
 			  "bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
@@ -584,8 +555,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_DEBUG_TAG(
-			  rtx,
+			MS_DEBUG_DEV(
 			  "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
 			  seq,
 			  MS_UINT16_TO_BINARY(origBitmask));
@@ -601,32 +571,32 @@ namespace RTC
 
 		// Calculate number of packets sent in this interval.
 		auto totalSent = this->transmissionCounter.GetPacketCount();
-		auto sent      = totalSent - this->sentPrior;
+		auto sent      = totalSent - this->sentPriorScore;
 
-		this->sentPrior = totalSent;
+		this->sentPriorScore = totalSent;
 
 		// Calculate number of packets lost in this interval.
 		uint32_t totalLost = report->GetTotalLost() > 0 ? report->GetTotalLost() : 0;
 		uint32_t lost;
 
-		if (totalLost < this->lostPrior)
+		if (totalLost < this->lostPriorScore)
 			lost = 0;
 		else
-			lost = totalLost - this->lostPrior;
+			lost = totalLost - this->lostPriorScore;
 
-		this->lostPrior = totalLost;
+		this->lostPriorScore = totalLost;
 
 		// Calculate number of packets repaired in this interval.
 		auto totalRepaired = this->packetsRepaired;
-		uint32_t repaired  = totalRepaired - this->repairedPrior;
+		uint32_t repaired  = totalRepaired - this->repairedPriorScore;
 
-		this->repairedPrior = totalRepaired;
+		this->repairedPriorScore = totalRepaired;
 
 		// Calculate number of packets retransmitted in this interval.
 		auto totatRetransmitted = this->packetsRetransmitted;
-		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPrior;
+		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPriorScore;
 
-		this->retransmittedPrior = totatRetransmitted;
+		this->retransmittedPriorScore = totatRetransmitted;
 
 		// We didn't send any packet.
 		if (sent == 0)
@@ -652,7 +622,7 @@ namespace RTC
 			}
 		}
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
 		  score,
 		  "[totalSent:%zu, totalLost:%" PRIi32 ", totalRepaired:%zu",
@@ -682,10 +652,11 @@ namespace RTC
 		auto deliveredRatio = static_cast<float>(sent - lost) / static_cast<float>(sent);
 		auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
 		  score,
-		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score: %lf]",
+		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score:%" PRIu8
+		  "]",
 		  deliveredRatio,
 		  repairedRatio,
 		  repairedWeight,

@@ -11,12 +11,31 @@ public:
 	/* Struct for the data field of uv_req_t when writing data. */
 	struct UvWriteData
 	{
+		explicit UvWriteData(size_t storeSize)
+		{
+			this->store = new uint8_t[storeSize];
+		}
+
+		// Disable copy constructor because of the dynamically allocated data (store).
+		UvWriteData(const UvWriteData&) = delete;
+
+		~UvWriteData()
+		{
+			delete[] this->store;
+		}
+
 		uv_write_t req;
-		uint8_t store[1];
+		uint8_t* store{ nullptr };
+	};
+
+	enum class Role
+	{
+		PRODUCER = 1,
+		CONSUMER
 	};
 
 public:
-	UnixStreamSocket(int fd, size_t bufferSize);
+	UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::Role role);
 	UnixStreamSocket& operator=(const UnixStreamSocket&) = delete;
 	UnixStreamSocket(const UnixStreamSocket&)            = delete;
 	virtual ~UnixStreamSocket();
@@ -35,8 +54,8 @@ public:
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnUnixStreamRead()                            = 0;
-	virtual void UserOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
+	virtual void UserOnUnixStreamRead()         = 0;
+	virtual void UserOnUnixStreamSocketClosed() = 0;
 
 private:
 	// Allocated by this.
@@ -49,6 +68,7 @@ private:
 protected:
 	// Passed by argument.
 	size_t bufferSize{ 0 };
+	UnixStreamSocket::Role role;
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.

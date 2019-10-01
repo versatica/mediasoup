@@ -10,6 +10,9 @@ namespace helpers
 	inline bool readBinaryFile(const char* file, uint8_t* buffer, size_t* len)
 	{
 		std::string filePath = "test/" + std::string(file);
+#ifdef _WIN32
+		std::replace(filePath.begin(), filePath.end(), '/', '\\');
+#endif
 		std::ifstream in(filePath, std::ios::ate | std::ios::binary);
 
 		if (!in)

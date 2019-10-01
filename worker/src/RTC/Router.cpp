@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Router"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Router.hpp"
 #include "Logger.hpp"
@@ -271,7 +271,7 @@ namespace RTC
 				RTC::Transport* transport = GetTransportFromRequest(request);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
-				// notify us about their closured.
+				// notify us about their closures.
 				transport->CloseProducersAndConsumers();
 
 				// Remove it from the map and delete it.
@@ -806,10 +806,11 @@ namespace RTC
 		// Close all DataConsumers associated to the closed DataProducer.
 		auto& dataConsumers = mapDataProducerDataConsumersIt->second;
 
-		// NOTE: While iterating the set of DataConsumers, we call DataProducerClosed() on each
-		// one, which will end calling Router::OnTransportDataConsumerDataProducerClosed(),
-		// which will remove the DataConsumer from mapDataConsumerDataProducer but won't remove
-		// the closed DataConsumer from the set of DataConsumers in mapDataProducerDataConsumers
+		// NOTE: While iterating the set of DataConsumers, we call DataProducerClosed()
+		// on each one, which will end calling
+		// Router::OnTransportDataConsumerDataProducerClosed(), which will remove the
+		// DataConsumer from mapDataConsumerDataProducer but won't remove the closed
+		// DataConsumer from the set of DataConsumers in mapDataProducerDataConsumers
 		// (here will erase the complete entry in that map).
 		for (auto* dataConsumer : dataConsumers)
 		{

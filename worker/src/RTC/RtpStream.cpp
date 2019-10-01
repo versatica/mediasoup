@@ -1,8 +1,7 @@
 #define MS_CLASS "RTC::RtpStream"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStream.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/SeqManager.hpp"
 
@@ -19,7 +18,7 @@ namespace RTC
 
 	RtpStream::RtpStream(
 	  RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, uint8_t initialScore)
-	  : listener(listener), params(params), score(initialScore)
+	  : listener(listener), params(params), score(initialScore), activeSinceMs(DepLibUV::GetTimeMs())
 	{
 		MS_TRACE();
 	}
@@ -27,6 +26,8 @@ namespace RTC
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
+
+		delete this->rtxStream;
 	}
 
 	void RtpStream::FillJson(json& jsonObject) const
@@ -39,17 +40,18 @@ namespace RTC
 		// Add score.
 		jsonObject["score"] = this->score;
 
-		// Add totalSourceLoss.
-		jsonObject["totalSourceLoss"] = this->totalSourceLoss;
-
-		// Add totalReportedLoss.
-		jsonObject["totalReportedLoss"] = this->totalReportedLoss;
+		// Add rtxStream.
+		if (HasRtx())
+			this->rtxStream->FillJson(jsonObject["rtxStream"]);
 	}
 
 	void RtpStream::FillJsonStats(json& jsonObject)
 	{
 		MS_TRACE();
 
+		uint64_t nowMs = DepLibUV::GetTimeMs();
+
+		jsonObject["timestamp"]            = nowMs;
 		jsonObject["ssrc"]                 = this->params.ssrc;
 		jsonObject["kind"]                 = RtpCodecMimeType::type2String[this->params.mimeType.type];
 		jsonObject["mimeType"]             = this->params.mimeType.ToString();
@@ -71,6 +73,36 @@ namespace RTC
 			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
 	}
 
+	void RtpStream::SetRtx(uint8_t payloadType, uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		this->params.rtxPayloadType = payloadType;
+		this->params.rtxSsrc        = ssrc;
+
+		if (HasRtx())
+		{
+			delete this->rtxStream;
+			this->rtxStream = nullptr;
+		}
+
+		// Set RTX stream params.
+		RTC::RtxStream::Params params;
+
+		params.ssrc             = ssrc;
+		params.payloadType      = payloadType;
+		params.mimeType.type    = GetMimeType().type;
+		params.mimeType.subtype = RTC::RtpCodecMimeType::Subtype::RTX;
+		params.clockRate        = GetClockRate();
+		params.rrid             = GetRid();
+		params.cname            = GetCname();
+
+		// Tell the RtpCodecMimeType to update its string based on current type and subtype.
+		params.mimeType.UpdateMimeType();
+
+		this->rtxStream = new RTC::RtxStream(params);
+	}
+
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -85,7 +117,7 @@ namespace RTC
 			this->started     = true;
 			this->maxSeq      = seq - 1;
 			this->maxPacketTs = packet->GetTimestamp();
-			this->maxPacketMs = DepLibUV::GetTime();
+			this->maxPacketMs = DepLibUV::GetTimeMs();
 		}
 
 		// If not a valid packet ignore it.
@@ -104,7 +136,7 @@ namespace RTC
 		if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
 			this->maxPacketTs = packet->GetTimestamp();
-			this->maxPacketMs = DepLibUV::GetTime();
+			this->maxPacketMs = DepLibUV::GetTimeMs();
 		}
 
 		return true;
@@ -114,10 +146,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->totalSourceLoss   = 0;
-		this->totalReportedLoss = 0;
-		this->totalSentPackets  = 0;
-
 		this->scores.clear();
 
 		if (this->score != score)
@@ -125,6 +153,10 @@ namespace RTC
 			auto previousScore = this->score;
 
 			this->score = score;
+
+			// If previous score was 0 (and new one is not 0) then update activeSinceMs.
+			if (previousScore == 0u)
+				this->activeSinceMs = DepLibUV::GetTimeMs();
 
 			// Notify the listener.
 			if (notify)
@@ -173,7 +205,7 @@ namespace RTC
 				InitSeq(seq);
 
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = DepLibUV::GetTime();
+				this->maxPacketMs = DepLibUV::GetTimeMs();
 			}
 			else
 			{
@@ -252,11 +284,15 @@ namespace RTC
 			  previousScore,
 			  this->score);
 
+			// If previous score was 0 (and new one is not 0) then update activeSinceMs.
+			if (previousScore == 0u)
+				this->activeSinceMs = DepLibUV::GetTimeMs();
+
 			this->listener->OnRtpStreamScore(this, this->score, previousScore);
 		}
 		else
 		{
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
 			  "[added score:%" PRIu8 ", previous computed score:%" PRIu8 ", new computed score:%" PRIu8

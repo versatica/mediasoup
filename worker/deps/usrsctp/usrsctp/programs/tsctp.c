@@ -564,11 +564,12 @@ int main(int argc, char **argv)
 	local_addr.sin_port = htons(local_port);
 	local_addr.sin_addr.s_addr = srcAddr;
 
-	usrsctp_init(local_udp_port, NULL, debug_printf);
+	usrsctp_init(local_udp_port, NULL, debug_printf_stack);
 #ifdef SCTP_DEBUG
 	usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
 #endif
 	usrsctp_sysctl_set_sctp_blackhole(2);
+	usrsctp_sysctl_set_sctp_no_csum_on_loopback(0);
 	usrsctp_sysctl_set_sctp_enable_sack_immediately(1);
 
 	if (client) {

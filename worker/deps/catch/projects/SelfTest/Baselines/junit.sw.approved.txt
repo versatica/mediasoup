@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuitesloose text artifact
 >
-  <testsuite name="<exe-name>" errors="17" failures="132" tests="1565" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
+  <testsuite name="<exe-name>" errors="17" failures="132" tests="1639" hostname="tbd" time="{duration}" timestamp="{iso8601-timestamp}">
     <properties>
       <property name="filters" value="~[!nonportable]~[!benchmark]~[approvals]"/>
       <property name="random-seed" value="1"/>
@@ -9,6 +9,7 @@
     <testcase classname="<exe-name>.global" name="# A test name that starts with a #" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1005: Comparing pointer to int and long (NULL can be either on various systems)" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1027" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="#1027: Bitfields can be captured" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1147" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1175 - Hidden Test" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="#1238" time="{duration}"/>
@@ -231,8 +232,6 @@ Exception.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Assertions then sections/A section" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Assertions then sections/A section/Another section" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Assertions then sections/A section/Another other section" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Assorted miscellaneous tests" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="Bitfields can be captured (#1027)" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="CAPTURE can deal with complex expressions" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="CAPTURE can deal with complex expressions involving commas" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="CAPTURE parses string and character constants" time="{duration}"/>
@@ -243,6 +242,7 @@ Exception.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Character pretty printing/Low ASCII" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Commas in various macros are allowed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Comparing function pointers" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Comparison ops" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Comparison with explicitly convertible types" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Comparisons between ints where one side is computed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Comparisons between unsigned ints and negative signed ints match c++ standard behaviour" time="{duration}"/>
@@ -255,6 +255,9 @@ Matchers.tests.cpp:<line number>
 Matchers.tests.cpp:<line number>
       </failure>
     </testcase>
+    <testcase classname="<exe-name>.global" name="Copy and then generate a range/from var and iterators" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Copy and then generate a range/From a temporary container" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Copy and then generate a range/Final validation" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Custom exceptions can be translated when testing for nothrow" time="{duration}">
       <error message="throwCustom()" type="REQUIRE_NOTHROW">
 custom exception - not std
@@ -368,6 +371,7 @@ Matchers.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Exception messages can be tested for/exact match" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Exception messages can be tested for/different case" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Exception messages can be tested for/wildcarded" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Exceptions matchers" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Expected exceptions that don't throw or unexpected exceptions fail the test" time="{duration}">
       <error message="thisThrows(), std::string" type="CHECK_THROWS_AS">
 expected exception
@@ -399,10 +403,14 @@ Message.tests.cpp:<line number>
       </failure>
     </testcase>
     <testcase classname="<exe-name>.global" name="Factorials are computed" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Floating point matchers: double/Relative" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Floating point matchers: double/Relative/Some subnormal values" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: double/Margin" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: double/ULPs" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: double/Composed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: double/Constructor validation" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Floating point matchers: float/Relative" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Floating point matchers: float/Relative/Some subnormal values" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: float/Margin" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: float/ULPs" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Floating point matchers: float/Composed" time="{duration}"/>
@@ -416,6 +424,7 @@ Message.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Repeating a generator" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Number of elements in source is divisible by chunk size" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Number of elements in source is not divisible by chunk size" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Chunk size of zero" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- adapters/Chunking a generator into sized pieces/Throws on too small generators" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- simple/one" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Generators -- simple/two" time="{duration}"/>
@@ -576,6 +585,8 @@ Condition.tests.cpp:<line number>
       </failure>
     </testcase>
     <testcase classname="<exe-name>.global" name="Ordering comparison checks that should succeed" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Our PCG implementation provides expected results for known seeds/Default seeded" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Our PCG implementation provides expected results for known seeds/Specific seed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Output from all sections is reported/one" time="{duration}">
       <failure type="FAIL">
 Message from section one
@@ -619,6 +630,8 @@ Message.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Parse test names and tags/empty tag" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Parse test names and tags/empty quoted name" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Parse test names and tags/quoted string followed by tag exclusion" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Parse test names and tags/Leading and trailing spaces in test spec" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Parse test names and tags/Leading and trailing spaces in test name" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Pointers can be compared to null" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Precision of floating point stringification can be set/Floats" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Precision of floating point stringification can be set/Double" time="{duration}"/>
@@ -721,14 +734,13 @@ Matchers.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="StringRef/Substrings/non-zero-based substring" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="StringRef/Substrings/Pointer values of full refs should match" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="StringRef/Substrings/Pointer values of substring refs should not match" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="StringRef/Substrings/Past the end substring" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="StringRef/Comparisons" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="StringRef/from std::string/implicitly constructed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="StringRef/from std::string/explicitly constructed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="StringRef/from std::string/assigned" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="StringRef/to std::string/implicitly constructed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="StringRef/to std::string/explicitly constructed" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="StringRef/to std::string/assigned" time="{duration}"/>
-    <testcase classname="<exe-name>.global" name="StringRef/Counting utf-8 codepoints" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Stringifying std::chrono::duration helpers" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Stringifying std::chrono::duration with weird ratios" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Stringifying std::chrono::time_point&lt;system_clock>" time="{duration}"/>
@@ -749,6 +761,10 @@ Misc.tests.cpp:<line number>
     <testcase classname="<exe-name>.Template_Fixture" name="Template test case method with test types specified inside std::tuple - MyTypes - 0" time="{duration}"/>
     <testcase classname="<exe-name>.Template_Fixture" name="Template test case method with test types specified inside std::tuple - MyTypes - 1" time="{duration}"/>
     <testcase classname="<exe-name>.Template_Fixture" name="Template test case method with test types specified inside std::tuple - MyTypes - 2" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Template test case with test types specified inside non-copyable and non-movable std::tuple - NonCopyableAndNonMovableTypes - 0" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Template test case with test types specified inside non-copyable and non-movable std::tuple - NonCopyableAndNonMovableTypes - 1" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Template test case with test types specified inside non-default-constructible std::tuple - MyNonDefaultConstructibleTypes - 0" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Template test case with test types specified inside non-default-constructible std::tuple - MyNonDefaultConstructibleTypes - 1" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Template test case with test types specified inside std::tuple - MyTypes - 0" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Template test case with test types specified inside std::tuple - MyTypes - 1" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Template test case with test types specified inside std::tuple - MyTypes - 2" time="{duration}"/>
@@ -802,6 +818,7 @@ Misc.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="TemplateTestSig: vectors can be sized and resized - std::string,15/reserving smaller does not change size or capacity" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Test case with one argument" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Test enum bit values" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Test with special, characters &quot;in name" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="The NO_FAIL macro reports a failure but does not fail the test" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="This test 'should' fail but doesn't" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Thrown string literals are translated" time="{duration}">
@@ -820,6 +837,7 @@ Exception.tests.cpp:<line number>
     <testcase classname="<exe-name>.global" name="Tracker/successfully close one section, then find another/Re-enter - skips S1 and enters S2/Successfully close S2" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Tracker/successfully close one section, then find another/Re-enter - skips S1 and enters S2/fail S2" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Tracker/open a nested section" time="{duration}"/>
+    <testcase classname="<exe-name>.global" name="Trim strings" time="{duration}"/>
     <testcase classname="<exe-name>.global" name="Unexpected exceptions can be translated" time="{duration}">
       <error type="TEST_CASE">
 3.14

@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.h 310590 2016-12-26 11:06:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.h 351655 2019-09-01 10:39:16Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_INDATA_H_
@@ -63,7 +63,6 @@ sctp_build_readq_entry(struct sctp_tcb *stcb,
 		(_ctl)->sinfo_ppid = ppid; \
 		(_ctl)->sinfo_context = context; \
 		(_ctl)->fsn_included = 0xffffffff; \
-		(_ctl)->top_fsn = 0xffffffff; \
 		(_ctl)->sinfo_tsn = tsn; \
 		(_ctl)->sinfo_cumtsn = tsn; \
 		(_ctl)->sinfo_assoc_id = sctp_get_associd((in_it)); \

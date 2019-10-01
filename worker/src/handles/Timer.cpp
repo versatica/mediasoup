@@ -1,5 +1,5 @@
 #define MS_CLASS "Timer"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "handles/Timer.hpp"
 #include "DepLibUV.hpp"
@@ -25,7 +25,7 @@ Timer::Timer(Listener* listener) : listener(listener)
 	MS_TRACE();
 
 	this->uvHandle       = new uv_timer_t;
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	int err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);
 

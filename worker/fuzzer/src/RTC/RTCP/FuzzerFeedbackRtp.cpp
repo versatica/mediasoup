@@ -4,6 +4,7 @@
 #include "RTC/RTCP/FuzzerFeedbackRtpSrReq.hpp"
 #include "RTC/RTCP/FuzzerFeedbackRtpTllei.hpp"
 #include "RTC/RTCP/FuzzerFeedbackRtpTmmb.hpp"
+#include "RTC/RTCP/FuzzerFeedbackRtpTransport.hpp"
 
 void Fuzzer::RTC::RTCP::FeedbackRtp::Fuzz(::RTC::RTCP::Packet* packet)
 {
@@ -67,6 +68,15 @@ void Fuzzer::RTC::RTCP::FeedbackRtp::Fuzz(::RTC::RTCP::Packet* packet)
 			auto* ecn = dynamic_cast<::RTC::RTCP::FeedbackRtpEcnPacket*>(fbrtp);
 
 			Fuzzer::RTC::RTCP::FeedbackRtpEcn::Fuzz(ecn);
+
+			break;
+		}
+
+		case ::RTC::RTCP::FeedbackRtp::MessageType::TCC:
+		{
+			auto* feedback = dynamic_cast<::RTC::RTCP::FeedbackRtpTransportPacket*>(fbrtp);
+
+			Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(feedback);
 
 			break;
 		}

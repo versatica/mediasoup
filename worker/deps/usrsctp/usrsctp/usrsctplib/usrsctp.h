@@ -315,7 +315,7 @@ struct sctp_remote_error {
 	uint32_t sre_length;
 	uint16_t sre_error;
 	sctp_assoc_t sre_assoc_id;
-	uint8_t sre_data[4];
+	uint8_t sre_data[];
 };
 
 /* shutdown event */
@@ -480,6 +480,8 @@ struct sctp_event_subscribe {
 
 
 /* Flags that go into the sinfo->sinfo_flags field */
+#define SCTP_DATA_LAST_FRAG   0x0001 /* tail part of the message could not be sent */
+#define SCTP_DATA_NOT_FRAG    0x0003 /* complete message could not be sent */
 #define SCTP_NOTIFICATION     0x0010 /* next message is a notification */
 #define SCTP_COMPLETE         0x0020 /* next message is complete */
 #define SCTP_EOF              0x0100 /* Start shutdown procedures */
@@ -1021,13 +1023,6 @@ usrsctp_set_non_blocking(struct socket *, int);
 int
 usrsctp_get_non_blocking(struct socket *);
 
-int
-usrsctp_get_events(struct socket *so);
-
-int
-usrsctp_set_upcall(struct socket *so,
-		   void (*upcall)(struct socket *, void *, int), void *arg);
-
 void
 usrsctp_register_address(void *);
 
@@ -1047,7 +1042,7 @@ usrsctp_get_events(struct socket *so);
 
 
 void
-usrsctp_fire_timer(int delta);
+usrsctp_handle_timers(uint32_t delta);
 
 #define SCTP_DUMP_OUTBOUND 1
 #define SCTP_DUMP_INBOUND  0

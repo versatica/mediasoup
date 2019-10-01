@@ -2,17 +2,17 @@
 #define MS_RTC_RTP_STREAM_HPP
 
 #include "common.hpp"
-#include "json.hpp"
+#include "DepLibUV.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
-#include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RtxStream.hpp"
+#include <json.hpp>
 #include <string>
 #include <vector>
 
@@ -70,20 +70,22 @@ namespace RTC
 		uint8_t GetSpatialLayers() const;
 		uint8_t GetTemporalLayers() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
-		virtual void Pause()                                                                        = 0;
-		virtual void Resume()                                                                       = 0;
-		virtual uint32_t GetBitrate(uint64_t now)                                                   = 0;
-		virtual uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)      = 0;
-		virtual uint32_t GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer)                 = 0;
-		virtual uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+		virtual void Pause()                                                                     = 0;
+		virtual void Resume()                                                                    = 0;
+		virtual uint32_t GetBitrate(uint64_t nowMs)                                              = 0;
+		virtual uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+		virtual uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer)            = 0;
+		virtual uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 		void ResetScore(uint8_t score, bool notify);
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
+		float GetRtt() const;
 		uint64_t GetMaxPacketMs() const;
 		uint32_t GetMaxPacketTs() const;
 		uint64_t GetSenderReportNtpMs() const;
 		uint32_t GetSenderReportTs() const;
 		uint8_t GetScore() const;
+		uint64_t GetActiveMs() const;
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -116,23 +118,23 @@ namespace RTC
 		size_t nackPacketCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t firCount{ 0 };
-		size_t repairedPrior{ 0 };           // Packets repaired at last interval.
-		size_t retransmittedPrior{ 0 };      // Packets retransmitted at last interval.
-		uint32_t expectedPrior{ 0 };         // Packets expected at last interval.
+		size_t repairedPriorScore{ 0 };      // Packets repaired at last interval for score calculation.
+		size_t retransmittedPriorScore{ 0 }; // Packets retransmitted at last interval for score calculation.
 		uint64_t lastSenderReportNtpMs{ 0 }; // NTP timestamp in last Sender Report (in ms).
 		uint32_t lastSenderReporTs{ 0 };     // RTP timestamp in last Sender Report.
+		float rtt{ 0 };
+		// Instance of RtxStream.
+		RTC::RtxStream* rtxStream{ nullptr };
 
 	private:
 		// Score related.
-		uint8_t score{ 0 };
+		uint8_t score{ 0u };
 		std::vector<uint8_t> scores;
-		// RTP stream data information for score calculation.
-		int32_t totalSourceLoss{ 0 };
-		int32_t totalReportedLoss{ 0 };
-		size_t totalSentPackets{ 0 };
 		// Whether at least a RTP packet has been received.
 		bool started{ false };
-	}; // namespace RTC
+		// Last time since the stream is active.
+		uint64_t activeSinceMs{ 0u };
+	};
 
 	/* Inline instance methods. */
 
@@ -168,13 +170,7 @@ namespace RTC
 
 	inline bool RtpStream::HasRtx() const
 	{
-		return this->params.rtxSsrc != 0;
-	}
-
-	inline void RtpStream::SetRtx(uint8_t payloadType, uint32_t ssrc)
-	{
-		this->params.rtxPayloadType = payloadType;
-		this->params.rtxSsrc        = ssrc;
+		return this->rtxStream != nullptr;
 	}
 
 	inline uint32_t RtpStream::GetRtxSsrc() const
@@ -207,6 +203,11 @@ namespace RTC
 		return static_cast<float>(this->fractionLost) * 100 / 256;
 	}
 
+	inline float RtpStream::GetRtt() const
+	{
+		return this->rtt;
+	}
+
 	inline uint64_t RtpStream::GetMaxPacketMs() const
 	{
 		return this->maxPacketMs;
@@ -230,6 +231,11 @@ namespace RTC
 	inline uint8_t RtpStream::GetScore() const
 	{
 		return this->score;
+	}
+
+	inline uint64_t RtpStream::GetActiveMs() const
+	{
+		return DepLibUV::GetTimeMs() - this->activeSinceMs;
 	}
 
 	inline uint32_t RtpStream::GetExpectedPackets() const

@@ -55,13 +55,17 @@ function get_gyp()
 function get_json()
 {
 	GIT_REPO="https://github.com/nlohmann/json.git"
-	GIT_TAG="v3.6.1"
+	GIT_TAG="v3.7.2"
 	DEST="deps/json"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 
-	echo ">>> [INFO] copying json.hpp to include/ directory ..."
-	cp ${DEST}/single_include/nlohmann/json.hpp include/
+	echo ">>> [INFO] deleting large files and directories ..."
+	rm -rf \
+		${DEST}/benchmarks/ \
+		${DEST}/doc/ \
+		${DEST}/test/ \
+		${DEST}/third_party/
 }
 
 function get_netstring()
@@ -76,7 +80,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.30.1"
+	GIT_TAG="v1.33.1"
 	DEST="deps/libuv"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -99,9 +103,18 @@ function get_libsrtp()
 
 function get_usrsctp()
 {
-	GIT_REPO="https://github.com/versatica/usrsctp.git"
+	GIT_REPO="https://github.com/sctplab/usrsctp.git"
 	GIT_TAG="master"
 	DEST="deps/usrsctp/usrsctp"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
+function get_abseil_cpp()
+{
+	GIT_REPO="https://github.com/abseil/abseil-cpp"
+	GIT_TAG="93d155bc4414f6c121bb1f19dba9fdb27c8943bc"
+	DEST="libwebrtc/deps/abseil-cpp/abseil-cpp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
@@ -109,7 +122,7 @@ function get_usrsctp()
 function get_catch()
 {
 	GIT_REPO="https://github.com/catchorg/Catch2.git"
-	GIT_TAG="v2.9.1"
+	GIT_TAG="v2.10.2"
 	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -158,10 +171,19 @@ function get_fuzzer_corpora()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
+function get_win_getopt()
+{
+	GIT_REPO="git@github.com:alex85k/wingetopt.git"
+	GIT_TAG="master"
+	DEST="deps/getopt/getopt"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|catch|lcov|clang-fuzzer|fuzzer-corpora]"
+		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|usrsctp|abseil-cpp|catch|lcov|clang-fuzzer|fuzzer-corpora|win-getopt]"
 		echo
 		;;
 	gyp)
@@ -185,6 +207,9 @@ case "${DEP}" in
 	usrsctp)
 		get_usrsctp
 		;;
+	abseil-cpp)
+		get_abseil_cpp
+		;;
 	catch)
 		get_catch
 		;;
@@ -196,6 +221,9 @@ case "${DEP}" in
 		;;
 	fuzzer-corpora)
 		get_fuzzer_corpora
+		;;
+	win-getopt)
+		get_win_getopt
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2

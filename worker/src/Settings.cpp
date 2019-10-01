@@ -1,16 +1,17 @@
 #define MS_CLASS "Settings"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Settings.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "json.hpp"
+#include <json.hpp>
 #include <cctype> // isprint()
 #include <cerrno>
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
-extern "C" {
+extern "C"
+{
 #include <getopt.h>
 }
 

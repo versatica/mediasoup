@@ -1,6 +1,14 @@
 # Changelog
 
 
+### 3.3.0 (WIP)
+
+* Add transport-cc bandwidth estimation and congestion control in sender and receiver side.
+* Run in Windows.
+* Rewrite to TypeScript.
+* Tons of improvements.
+
+
 ### 3.2.5
 
 * Fix TCP leak (#325).
@@ -142,6 +150,21 @@
 ### 3.0.0
 
 * v3 is here!
+
+
+### 2.6.17
+
+* Improve build system by using all available CPU cores in parallel.
+
+
+### 2.6.16
+
+* Don't mandate server port range to be >= 99.
+
+
+### 2.6.15
+
+* Fix NACK retransmissions.
 
 
 ### 2.6.14
@@ -382,6 +405,7 @@
 ### 2.0.14
 
 * [Fix #193](https://github.com/versatica/mediasoup/issues/193): `preferTcp` not honored (thanks @artushin).
+
 
 ### 2.0.13
 

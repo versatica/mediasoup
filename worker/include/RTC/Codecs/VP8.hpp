@@ -8,7 +8,6 @@
 
 /* RFC 7741
  * VP8 Payload Descriptor
- *
 
   Single octet PictureID (M = 0)        Dual octet PictureID (M = 1)
   ==============================        ============================
@@ -27,7 +26,7 @@ T/K: |TID|Y| KEYIDX  | (OPTIONAL)       L: |   TL0PICIDX   | (OPTIONAL)
      +-+-+-+-+-+-+-+-+                     +-+-+-+-+-+-+-+-+
                                       T/K: |TID|Y| KEYIDX  | (OPTIONAL)
                                            +-+-+-+-+-+-+-+-+
-*/
+ */
 
 namespace RTC
 {

@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TcpServer"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TcpServer.hpp"
 #include "Logger.hpp"
@@ -16,7 +16,7 @@ namespace RTC
 
 	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
 	  : // This may throw.
-	    ::TcpServer::TcpServer(PortManager::BindTcp(ip), 256), listener(listener),
+	    ::TcpServer::TcpServer(RTC::PortManager::BindTcp(ip), 256), listener(listener),
 	    connListener(connListener)
 	{
 		MS_TRACE();
@@ -26,7 +26,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		PortManager::UnbindTcp(this->localIp, this->localPort);
+		RTC::PortManager::UnbindTcp(this->localIp, this->localPort);
 	}
 
 	void TcpServer::UserOnTcpConnectionAlloc(::TcpConnection** connection)
@@ -37,10 +37,11 @@ namespace RTC
 		*connection = new RTC::TcpConnection(this->connListener, 65536);
 	}
 
-	bool TcpServer::UserOnNewTcpConnection(::TcpConnection* connection)
+	bool TcpServer::UserOnNewTcpConnection(::TcpConnection* /*connection*/)
 	{
 		MS_TRACE();
 
+		// Allow just MaxTcpConnectionsPerServer.
 		if (GetNumConnections() >= MaxTcpConnectionsPerServer)
 		{
 			MS_ERROR("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);

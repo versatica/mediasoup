@@ -1,10 +1,13 @@
 #define MS_CLASS "RTC::Consumer"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Consumer.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
+#include <iterator> // std::ostream_iterator
+#include <sstream>  // std::ostringstream
 
 namespace RTC
 {
@@ -92,6 +95,11 @@ namespace RTC
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
+			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			{
+				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
 				this->rtpHeaderExtensionIds.mid = exten.id;
@@ -124,6 +132,13 @@ namespace RTC
 		for (auto& encoding : this->rtpParameters.encodings)
 		{
 			this->mediaSsrcs.push_back(encoding.ssrc);
+		}
+
+		// Fill RTX SSRCs vector.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			if (encoding.hasRtx)
+				this->rtxSsrcs.push_back(encoding.rtx.ssrc);
 		}
 
 		// Set the RTCP report generation interval.
@@ -176,6 +191,30 @@ namespace RTC
 
 		// Add producerPaused.
 		jsonObject["producerPaused"] = this->producerPaused;
+
+		// Add packetEventTypes.
+		std::vector<std::string> packetEventTypes;
+		std::ostringstream packetEventTypesStream;
+
+		if (this->packetEventTypes.rtp)
+			packetEventTypes.emplace_back("rtp");
+		if (this->packetEventTypes.nack)
+			packetEventTypes.emplace_back("nack");
+		if (this->packetEventTypes.pli)
+			packetEventTypes.emplace_back("pli");
+		if (this->packetEventTypes.fir)
+			packetEventTypes.emplace_back("fir");
+
+		if (!packetEventTypes.empty())
+		{
+			std::copy(
+			  packetEventTypes.begin(),
+			  packetEventTypes.end() - 1,
+			  std::ostream_iterator<std::string>(packetEventTypesStream, ","));
+			packetEventTypesStream << packetEventTypes.back();
+		}
+
+		jsonObject["packetEventTypes"] = packetEventTypesStream.str();
 	}
 
 	void Consumer::HandleRequest(Channel::Request* request)
@@ -244,6 +283,41 @@ namespace RTC
 
 				if (IsActive())
 					UserOnResumed();
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_ENABLE_PACKET_EVENT:
+			{
+				auto jsonTypesIt = request->data.find("types");
+
+				// Disable all if no entries.
+				if (jsonTypesIt == request->data.end() || !jsonTypesIt->is_array())
+					MS_THROW_TYPE_ERROR("wrong types (not an array)");
+
+				// Reset packetEventTypes.
+				struct PacketEventTypes newPacketEventTypes;
+
+				for (const auto& type : *jsonTypesIt)
+				{
+					if (!type.is_string())
+						MS_THROW_TYPE_ERROR("wrong type (not a string)");
+
+					std::string typeStr = type.get<std::string>();
+
+					if (typeStr == "rtp")
+						newPacketEventTypes.rtp = true;
+					else if (typeStr == "nack")
+						newPacketEventTypes.nack = true;
+					else if (typeStr == "pli")
+						newPacketEventTypes.pli = true;
+					else if (typeStr == "fir")
+						newPacketEventTypes.fir = true;
+				}
+
+				this->packetEventTypes = newPacketEventTypes;
 
 				request->Accept();
 
@@ -330,45 +404,75 @@ namespace RTC
 		this->listener->OnConsumerProducerClosed(this);
 	}
 
-	void Consumer::SetExternallyManagedBitrate()
+	void Consumer::EmitPacketEventRtpType(RTC::RtpPacket* packet, bool isRtx) const
 	{
 		MS_TRACE();
 
-		// Do nothing.
+		if (!this->packetEventTypes.rtp)
+			return;
+
+		json data = json::object();
+
+		data["type"]      = "rtp";
+		data["timestamp"] = DepLibUV::GetTimeMs();
+		data["direction"] = "out";
+
+		packet->FillJson(data["info"]);
+
+		if (isRtx)
+			data["info"]["isRtx"] = true;
+
+		Channel::Notifier::Emit(this->id, "packet", data);
 	}
 
-	uint16_t Consumer::GetBitratePriority() const
+	void Consumer::EmitPacketEventPliType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
-		// This method must be override by subclasses with layers. By default
-		// it just returns 0.
-		return 0u;
+		if (!this->packetEventTypes.pli)
+			return;
+
+		json data = json::object();
+
+		data["type"]         = "pli";
+		data["timestamp"]    = DepLibUV::GetTimeMs();
+		data["direction"]    = "in";
+		data["info"]["ssrc"] = ssrc;
+
+		Channel::Notifier::Emit(this->id, "packet", data);
 	}
 
-	uint32_t Consumer::UseAvailableBitrate(uint32_t /*bitrate*/)
+	void Consumer::EmitPacketEventFirType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
-		// This method must be override by subclasses with layers. By default
-		// it just returns 0.
-		return 0;
+		if (!this->packetEventTypes.fir)
+			return;
+
+		json data = json::object();
+
+		data["type"]         = "fir";
+		data["timestamp"]    = DepLibUV::GetTimeMs();
+		data["direction"]    = "in";
+		data["info"]["ssrc"] = ssrc;
+
+		Channel::Notifier::Emit(this->id, "packet", data);
 	}
 
-	uint32_t Consumer::IncreaseLayer(uint32_t /*bitrate*/)
+	void Consumer::EmitPacketEventNackType() const
 	{
 		MS_TRACE();
 
-		// This method must be override by subclasses with layers. By default
-		// it just returns 0.
-		return 0;
-	}
+		if (!this->packetEventTypes.nack)
+			return;
 
-	void Consumer::ApplyLayers()
-	{
-		MS_TRACE();
+		json data = json::object();
 
-		// This method must be override by subclasses with layers. By default
-		// it does nothing.
+		data["type"]      = "nack";
+		data["timestamp"] = DepLibUV::GetTimeMs();
+		data["direction"] = "in";
+		data["info"]      = json::object();
+
+		Channel::Notifier::Emit(this->id, "packet", data);
 	}
 } // namespace RTC

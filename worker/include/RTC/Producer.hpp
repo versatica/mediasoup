@@ -2,7 +2,6 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -13,9 +12,12 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
+#include <json.hpp>
 #include <map>
 #include <string>
 #include <vector>
+
+using json = nlohmann::json;
 
 namespace RTC
 {
@@ -63,6 +65,23 @@ namespace RTC
 		};
 
 	public:
+		enum class ReceiveRtpPacketResult
+		{
+			DISCARDED = 0,
+			MEDIA     = 1,
+			RETRANSMISSION
+		};
+
+	private:
+		struct PacketEventTypes
+		{
+			bool rtp{ false };
+			bool nack{ false };
+			bool pli{ false };
+			bool fir{ false };
+		};
+
+	public:
 		Producer(const std::string& id, RTC::Producer::Listener* listener, json& data);
 		virtual ~Producer();
 
@@ -76,10 +95,10 @@ namespace RTC
 		RTC::RtpParameters::Type GetType() const;
 		bool IsPaused() const;
 		std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams();
-		void ReceiveRtpPacket(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now);
+		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
 		void RequestKeyFrame(uint32_t mappedSsrc);
 
 	private:
@@ -91,6 +110,10 @@ namespace RTC
 		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
 		void PostProcessRtpPacket(RTC::RtpPacket* packet);
 		void EmitScore() const;
+		void EmitPacketEventRtpType(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitPacketEventPliType(uint32_t ssrc) const;
+		void EmitPacketEventFirType(uint32_t ssrc) const;
+		void EmitPacketEventNackType() const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -130,6 +153,7 @@ namespace RTC
 		// Video orientation.
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
+		struct PacketEventTypes packetEventTypes;
 	};
 
 	/* Inline methods. */

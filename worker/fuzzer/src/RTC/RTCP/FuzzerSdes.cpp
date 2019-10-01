@@ -2,7 +2,7 @@
 
 void Fuzzer::RTC::RTCP::Sdes::Fuzz(::RTC::RTCP::SdesPacket* packet)
 {
-	packet->Dump();
+	// packet->Dump();
 	packet->Serialize(::RTC::RTCP::Buffer);
 	packet->GetCount();
 	packet->GetSize();
@@ -15,7 +15,7 @@ void Fuzzer::RTC::RTCP::Sdes::Fuzz(::RTC::RTCP::SdesPacket* packet)
 	{
 		auto& chunk = (*it);
 
-		chunk->Dump();
+		// chunk->Dump();
 		chunk->Serialize(::RTC::RTCP::Buffer);
 		chunk->GetSize();
 		chunk->GetSsrc();
@@ -29,7 +29,7 @@ void Fuzzer::RTC::RTCP::Sdes::Fuzz(::RTC::RTCP::SdesPacket* packet)
 		{
 			auto& item = (*it2);
 
-			item->Dump();
+			// item->Dump();
 			item->Serialize(::RTC::RTCP::Buffer);
 			item->GetSize();
 

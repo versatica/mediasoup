@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 339028 2018-09-30 21:54:02Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 353303 2019-10-08 11:07:16Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -105,47 +105,52 @@ sctp_asconf_success_response(uint32_t id)
 
 static struct mbuf *
 sctp_asconf_error_response(uint32_t id, uint16_t cause, uint8_t *error_tlv,
-			   uint16_t tlv_length)
+                           uint16_t tlv_length)
 {
 	struct mbuf *m_reply = NULL;
 	struct sctp_asconf_paramhdr *aph;
 	struct sctp_error_cause *error;
+	size_t buf_len;
+	uint16_t i, param_length, cause_length, padding_length;
 	uint8_t *tlv;
 
-	m_reply = sctp_get_mbuf_for_msg((sizeof(struct sctp_asconf_paramhdr) +
-					 tlv_length +
-					 sizeof(struct sctp_error_cause)),
-					0, M_NOWAIT, 1, MT_DATA);
+	if (error_tlv == NULL) {
+		tlv_length = 0;
+	}
+	cause_length = sizeof(struct sctp_error_cause) + tlv_length;
+	param_length = sizeof(struct sctp_asconf_paramhdr) + cause_length;
+	padding_length = tlv_length % 4;
+	if (padding_length != 0) {
+		padding_length = 4 - padding_length;
+	}
+	buf_len = param_length + padding_length;
+	if (buf_len > MLEN) {
+		SCTPDBG(SCTP_DEBUG_ASCONF1,
+			"asconf_error_response: tlv_length (%xh) too big\n",
+			tlv_length);
+		return (NULL);
+	}
+	m_reply = sctp_get_mbuf_for_msg(buf_len, 0, M_NOWAIT, 1, MT_DATA);
 	if (m_reply == NULL) {
 		SCTPDBG(SCTP_DEBUG_ASCONF1,
 			"asconf_error_response: couldn't get mbuf!\n");
 		return (NULL);
 	}
 	aph = mtod(m_reply, struct sctp_asconf_paramhdr *);
-	error = (struct sctp_error_cause *)(aph + 1);
-
-	aph->correlation_id = id;
 	aph->ph.param_type = htons(SCTP_ERROR_CAUSE_IND);
+	aph->ph.param_length = htons(param_length);
+	aph->correlation_id = id;
+	error = (struct sctp_error_cause *)(aph + 1);
 	error->code = htons(cause);
-	error->length = tlv_length + sizeof(struct sctp_error_cause);
-	aph->ph.param_length = error->length +
-	    sizeof(struct sctp_asconf_paramhdr);
-
-	if (aph->ph.param_length > MLEN) {
-		SCTPDBG(SCTP_DEBUG_ASCONF1,
-			"asconf_error_response: tlv_length (%xh) too big\n",
-			tlv_length);
-		sctp_m_freem(m_reply);	/* discard */
-		return (NULL);
-	}
+	error->length = htons(cause_length);
 	if (error_tlv != NULL) {
 		tlv = (uint8_t *) (error + 1);
 		memcpy(tlv, error_tlv, tlv_length);
+		for (i = 0; i < padding_length; i++) {
+			tlv[tlv_length + i] = 0;
+		}
 	}
-	SCTP_BUF_LEN(m_reply) = aph->ph.param_length;
-	error->length = htons(error->length);
-	aph->ph.param_length = htons(aph->ph.param_length);
-
+	SCTP_BUF_LEN(m_reply) = buf_len;
 	return (m_reply);
 }
 
@@ -174,10 +179,16 @@ sctp_process_asconf_add_ip(struct sockaddr *src, struct sctp_asconf_paramhdr *ap
 #endif
 
 	aparam_length = ntohs(aph->ph.param_length);
+	if (aparam_length < sizeof(struct sctp_asconf_paramhdr) + sizeof(struct sctp_paramhdr)) {
+		return (NULL);
+	}
 	ph = (struct sctp_paramhdr *)(aph + 1);
 	param_type = ntohs(ph->param_type);
 #if defined(INET) || defined(INET6)
 	param_length = ntohs(ph->param_length);
+	if (param_length + sizeof(struct sctp_asconf_paramhdr) != aparam_length) {
+		return (NULL);
+	}
 #endif
 	sa = &store.sa;
 	switch (param_type) {
@@ -245,6 +256,7 @@ sctp_process_asconf_add_ip(struct sockaddr *src, struct sctp_asconf_paramhdr *ap
 		        "process_asconf_add_ip: using source addr ");
 		SCTPDBG_ADDR(SCTP_DEBUG_ASCONF1, src);
 	}
+	net = NULL;
 	/* add the address */
 	if (bad_address) {
 		m_reply = sctp_asconf_error_response(aph->correlation_id,
@@ -259,17 +271,19 @@ sctp_process_asconf_add_ip(struct sockaddr *src, struct sctp_asconf_paramhdr *ap
 		    SCTP_CAUSE_RESOURCE_SHORTAGE, (uint8_t *) aph,
 		    aparam_length);
 	} else {
-		/* notify upper layer */
-		sctp_ulp_notify(SCTP_NOTIFY_ASCONF_ADD_IP, stcb, 0, sa, SCTP_SO_NOT_LOCKED);
 		if (response_required) {
 			m_reply =
 			    sctp_asconf_success_response(aph->correlation_id);
 		}
-		sctp_timer_start(SCTP_TIMER_TYPE_PATHMTURAISE, stcb->sctp_ep, stcb, net);
-		sctp_timer_start(SCTP_TIMER_TYPE_HEARTBEAT, stcb->sctp_ep,
-		                 stcb, net);
-		if (send_hb) {
-			sctp_send_hb(stcb, net, SCTP_SO_NOT_LOCKED);
+		if (net != NULL) {
+			/* notify upper layer */
+			sctp_ulp_notify(SCTP_NOTIFY_ASCONF_ADD_IP, stcb, 0, sa, SCTP_SO_NOT_LOCKED);
+			sctp_timer_start(SCTP_TIMER_TYPE_PATHMTURAISE, stcb->sctp_ep, stcb, net);
+			sctp_timer_start(SCTP_TIMER_TYPE_HEARTBEAT, stcb->sctp_ep,
+					 stcb, net);
+			if (send_hb) {
+				sctp_send_hb(stcb, net, SCTP_SO_NOT_LOCKED);
+			}
 		}
 	}
 	return (m_reply);
@@ -278,7 +292,7 @@ sctp_process_asconf_add_ip(struct sockaddr *src, struct sctp_asconf_paramhdr *ap
 static int
 sctp_asconf_del_remote_addrs_except(struct sctp_tcb *stcb, struct sockaddr *src)
 {
-	struct sctp_nets *src_net, *net;
+	struct sctp_nets *src_net, *net, *nnet;
 
 	/* make sure the source address exists as a destination net */
 	src_net = sctp_findnet(stcb, src);
@@ -288,10 +302,9 @@ sctp_asconf_del_remote_addrs_except(struct sctp_tcb *stcb, struct sockaddr *src)
 	}
 
 	/* delete all destination addresses except the source */
-	TAILQ_FOREACH(net, &stcb->asoc.nets, sctp_next) {
+	TAILQ_FOREACH_SAFE(net, &stcb->asoc.nets, sctp_next, nnet) {
 		if (net != src_net) {
 			/* delete this address */
-			sctp_remove_net(stcb, net);
 			SCTPDBG(SCTP_DEBUG_ASCONF1,
 				"asconf_del_remote_addrs_except: deleting ");
 			SCTPDBG_ADDR(SCTP_DEBUG_ASCONF1,
@@ -299,6 +312,7 @@ sctp_asconf_del_remote_addrs_except(struct sctp_tcb *stcb, struct sockaddr *src)
 			/* notify upper layer */
 			sctp_ulp_notify(SCTP_NOTIFY_ASCONF_DELETE_IP, stcb, 0,
 			    (struct sockaddr *)&net->ro._l_addr, SCTP_SO_NOT_LOCKED);
+			sctp_remove_net(stcb, net);
 		}
 	}
 	return (0);
@@ -329,10 +343,16 @@ sctp_process_asconf_delete_ip(struct sockaddr *src,
 #endif
 
 	aparam_length = ntohs(aph->ph.param_length);
+	if (aparam_length < sizeof(struct sctp_asconf_paramhdr) + sizeof(struct sctp_paramhdr)) {
+		return (NULL);
+	}
 	ph = (struct sctp_paramhdr *)(aph + 1);
 	param_type = ntohs(ph->param_type);
 #if defined(INET) || defined(INET6)
 	param_length = ntohs(ph->param_length);
+	if (param_length + sizeof(struct sctp_asconf_paramhdr) != aparam_length) {
+		return (NULL);
+	}
 #endif
 	sa = &store.sa;
 	switch (param_type) {
@@ -464,10 +484,16 @@ sctp_process_asconf_set_primary(struct sockaddr *src,
 #endif
 
 	aparam_length = ntohs(aph->ph.param_length);
+	if (aparam_length < sizeof(struct sctp_asconf_paramhdr) + sizeof(struct sctp_paramhdr)) {
+		return (NULL);
+	}
 	ph = (struct sctp_paramhdr *)(aph + 1);
 	param_type = ntohs(ph->param_type);
 #if defined(INET) || defined(INET6)
 	param_length = ntohs(ph->param_length);
+	if (param_length + sizeof(struct sctp_asconf_paramhdr) != aparam_length) {
+		return (NULL);
+	}
 #endif
 	sa = &store.sa;
 	switch (param_type) {
@@ -690,8 +716,8 @@ sctp_handle_asconf(struct mbuf *m, unsigned int offset,
 		sctp_m_freem(m_ack);
 		return;
 	}
-	/* param_length is already validated in process_control... */
-	offset += ntohs(p_addr->ph.param_length);	/* skip lookup addr */
+	/* skip lookup addr */
+	offset += SCTP_SIZE32(ntohs(p_addr->ph.param_length));
 	/* get pointer to first asconf param in ASCONF */
 	aph = (struct sctp_asconf_paramhdr *)sctp_m_getptr(m, offset, sizeof(struct sctp_asconf_paramhdr), (uint8_t *)&aparam_buf);
 	if (aph == NULL) {
@@ -720,6 +746,7 @@ sctp_handle_asconf(struct mbuf *m, unsigned int offset,
 		if (param_length <= sizeof(struct sctp_paramhdr)) {
 			SCTPDBG(SCTP_DEBUG_ASCONF1, "handle_asconf: param length (%u) too short\n", param_length);
 			sctp_m_freem(m_ack);
+			return;
 		}
 		/* get the entire parameter */
 		aph = (struct sctp_asconf_paramhdr *)sctp_m_getptr(m, offset, param_length, aparam_buf);
@@ -775,8 +802,6 @@ sctp_handle_asconf(struct mbuf *m, unsigned int offset,
 		if (m_result != NULL) {
 			SCTP_BUF_NEXT(m_tail) = m_result;
 			m_tail = m_result;
-			/* update lengths, make sure it's aligned too */
-			SCTP_BUF_LEN(m_result) = SCTP_SIZE32(SCTP_BUF_LEN(m_result));
 			ack_cp->ch.chunk_length += SCTP_BUF_LEN(m_result);
 			/* set flag to force success reports */
 			error = 1;
@@ -1381,7 +1406,7 @@ sctp_asconf_queue_add(struct sctp_tcb *stcb, struct sctp_ifa *ifa,
 		if (sctp_asconf_queue_mgmt(stcb,
 					   stcb->asoc.asconf_addr_del_pending,
 					   SCTP_DEL_IP_ADDRESS) == 0) {
-			SCTPDBG(SCTP_DEBUG_ASCONF2, "asconf_queue_add: queing pending delete\n");
+			SCTPDBG(SCTP_DEBUG_ASCONF2, "asconf_queue_add: queuing pending delete\n");
 			pending_delete_queued = 1;
 			/* clear out the pending delete info */
 			stcb->asoc.asconf_del_pending = 0;
@@ -1972,12 +1997,10 @@ sctp_addr_mgmt_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 	case AF_INET:
 	{
 		struct sockaddr_in *sin;
-		struct in6pcb *inp6;
 
-		inp6 = (struct in6pcb *)&inp->ip_inp.inp;
 		/* invalid if we are a v6 only endpoint */
 		if ((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) &&
-		    SCTP_IPV6_V6ONLY(inp6))
+		    SCTP_IPV6_V6ONLY(inp))
 			return;
 
 		sin = &ifa->address.sin;
@@ -2050,10 +2073,8 @@ sctp_asconf_iterator_ep(struct sctp_inpcb *inp, void *ptr, uint32_t val SCTP_UNU
 		case AF_INET:
 		{
 			/* invalid if we are a v6 only endpoint */
-			struct in6pcb *inp6;
-			inp6 = (struct in6pcb *)&inp->ip_inp.inp;
 			if ((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) &&
-			    SCTP_IPV6_V6ONLY(inp6)) {
+			    SCTP_IPV6_V6ONLY(inp)) {
 				cnt_invalid++;
 				if (asc->cnt == cnt_invalid)
 					return (1);
@@ -2166,13 +2187,11 @@ sctp_asconf_iterator_stcb(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 		case AF_INET:
 		{
 			/* invalid if we are a v6 only endpoint */
-			struct in6pcb *inp6;
 			struct sockaddr_in *sin;
 
-			inp6 = (struct in6pcb *)&inp->ip_inp.inp;
 			/* invalid if we are a v6 only endpoint */
 			if ((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) &&
-			    SCTP_IPV6_V6ONLY(inp6))
+			    SCTP_IPV6_V6ONLY(inp))
 				continue;
 
 			sin = &ifa->address.sin;
@@ -2191,7 +2210,7 @@ sctp_asconf_iterator_stcb(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 				continue;
 			}
 			if ((inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) &&
-			    SCTP_IPV6_V6ONLY(inp6)) {
+			    SCTP_IPV6_V6ONLY(inp)) {
 				cnt_invalid++;
 				if (asc->cnt == cnt_invalid)
 					return;

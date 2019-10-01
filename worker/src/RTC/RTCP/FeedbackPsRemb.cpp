@@ -1,5 +1,5 @@
-#define MS_CLASS "RTC::RTCP::FeedbackPsRembPacket"
-// #define MS_LOG_DEV
+#define MS_CLASS "RTC::RTCP::FeedbackPsRemb"
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "Logger.hpp"
@@ -23,7 +23,7 @@ namespace RTC
 			// Check that there is space for the REMB unique identifier and basic fields.
 			// NOTE: Feedback.cpp already checked that there is space for CommonHeader and
 			// Feedback Header.
-			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8 > len)
+			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8u)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
@@ -32,7 +32,7 @@ namespace RTC
 
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			std::unique_ptr<FeedbackPsRembPacket> packet(new FeedbackPsRembPacket(commonHeader));
+			std::unique_ptr<FeedbackPsRembPacket> packet(new FeedbackPsRembPacket(commonHeader, len));
 
 			if (!packet->IsCorrect())
 				return nullptr;
@@ -40,17 +40,27 @@ namespace RTC
 			return packet.release();
 		}
 
-		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader)
+		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader, size_t availableLen)
 		  : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
 			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
+
+			if (len > availableLen)
+			{
+				MS_WARN_TAG(rtcp, "packet announced length exceeds the available buffer length, discarded");
+
+				this->isCorrect = false;
+
+				return;
+			}
+
 			// Make data point to the 4 bytes that must containt the "REMB" identifier.
 			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader) +
 			             sizeof(FeedbackPacket::Header);
 			size_t numSsrcs = data[4];
 
 			// Ensure there is space for the the announced number of SSRC feedbacks.
-			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8 + (numSsrcs * sizeof(uint32_t)))
+			if (len != sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 8u + (numSsrcs * 4u))
 			{
 				MS_WARN_TAG(
 				  rtcp, "invalid payload size (%zu bytes) for the given number of ssrcs (%zu)", len, numSsrcs);
@@ -70,7 +80,6 @@ namespace RTC
 				return;
 			}
 
-			// size_t numSsrcs  = data[12];
 			uint8_t exponent = data[5] >> 2;
 			uint64_t mantissa =
 			  (static_cast<uint32_t>(data[5] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 6);
@@ -94,7 +103,7 @@ namespace RTC
 			for (size_t n{ 0 }; n < numSsrcs; ++n)
 			{
 				this->ssrcs.push_back(Utils::Byte::Get4Bytes(data, index));
-				index += sizeof(uint32_t);
+				index += 4u;
 			}
 		}
 
@@ -104,7 +113,7 @@ namespace RTC
 
 			size_t offset     = FeedbackPsPacket::Serialize(buffer);
 			uint64_t mantissa = this->bitrate;
-			uint8_t exponent{ 0 };
+			uint8_t exponent{ 0u };
 
 			while (mantissa > 0x3FFFF /* max mantissa (18 bits) */)
 			{
@@ -127,7 +136,7 @@ namespace RTC
 			for (auto ssrc : this->ssrcs)
 			{
 				Utils::Byte::Set4Bytes(buffer, offset, ssrc);
-				offset += sizeof(ssrc);
+				offset += 4u;
 			}
 
 			return offset;
@@ -139,10 +148,10 @@ namespace RTC
 
 			MS_DUMP("<FeedbackPsRembPacket>");
 			FeedbackPsPacket::Dump();
-			MS_DUMP("  bitrate (bps): %" PRIu64, this->bitrate);
+			MS_DUMP("  bitrate (bps) : %" PRIu64, this->bitrate);
 			for (auto ssrc : this->ssrcs)
 			{
-				MS_DUMP("  ssrc: %" PRIu32, ssrc);
+				MS_DUMP("  ssrc          : %" PRIu32, ssrc);
 			}
 			MS_DUMP("</FeedbackPsRembPacket>");
 		}

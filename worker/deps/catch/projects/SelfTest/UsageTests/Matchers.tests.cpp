@@ -52,16 +52,27 @@ namespace { namespace MatchersTests {
         int i;
     };
 
+    struct DerivedException : std::exception {
+        char const* what() const noexcept override {
+            return "DerivedException::what";
+        }
+    };
+
     void doesNotThrow() {}
 
     [[noreturn]]
-    void throws(int i) {
+    void throwsSpecialException(int i) {
         throw SpecialException{i};
     }
 
     [[noreturn]]
     void throwsAsInt(int i) {
         throw i;
+    }
+
+    [[noreturn]]
+    void throwsDerivedException() {
+        throw DerivedException{};
     }
 
     class ExceptionMatcher : public Catch::MatcherBase<SpecialException> {
@@ -319,8 +330,8 @@ namespace { namespace MatchersTests {
         }
 
         TEST_CASE("Exception matchers that succeed", "[matchers][exceptions][!throws]") {
-            CHECK_THROWS_MATCHES(throws(1), SpecialException, ExceptionMatcher{1});
-            REQUIRE_THROWS_MATCHES(throws(2), SpecialException, ExceptionMatcher{2});
+            CHECK_THROWS_MATCHES(throwsSpecialException(1), SpecialException, ExceptionMatcher{1});
+            REQUIRE_THROWS_MATCHES(throwsSpecialException(2), SpecialException, ExceptionMatcher{2});
         }
 
         TEST_CASE("Exception matchers that fail", "[matchers][exceptions][!throws][.failing]") {
@@ -333,12 +344,26 @@ namespace { namespace MatchersTests {
                 REQUIRE_THROWS_MATCHES(throwsAsInt(1), SpecialException, ExceptionMatcher{1});
             }
             SECTION("Contents are wrong") {
-                CHECK_THROWS_MATCHES(throws(3), SpecialException, ExceptionMatcher{1});
-                REQUIRE_THROWS_MATCHES(throws(4), SpecialException, ExceptionMatcher{1});
+                CHECK_THROWS_MATCHES(throwsSpecialException(3), SpecialException, ExceptionMatcher{1});
+                REQUIRE_THROWS_MATCHES(throwsSpecialException(4), SpecialException, ExceptionMatcher{1});
             }
         }
 
         TEST_CASE("Floating point matchers: float", "[matchers][floating-point]") {
+            SECTION("Relative") {
+                REQUIRE_THAT(10.f,  WithinRel(11.1f, 0.1f));
+                REQUIRE_THAT(10.f, !WithinRel(11.2f, 0.1f));
+                REQUIRE_THAT( 1.f, !WithinRel(0.f, 0.99f));
+                REQUIRE_THAT(-0.f,  WithinRel(0.f));
+                SECTION("Some subnormal values") {
+                    auto v1 = std::numeric_limits<float>::min();
+                    auto v2 = v1;
+                    for (int i = 0; i < 5; ++i) {
+                        v2 = std::nextafter(v1, 0.f);
+                    }
+                    REQUIRE_THAT(v1, WithinRel(v2));
+                }
+            }
             SECTION("Margin") {
                 REQUIRE_THAT(1.f, WithinAbs(1.f, 0));
                 REQUIRE_THAT(0.f, WithinAbs(1.f, 1));
@@ -357,8 +382,9 @@ namespace { namespace MatchersTests {
                 REQUIRE_THAT(1.f, WithinULP(1.f, 0));
 
                 REQUIRE_THAT(nextafter(1.f, 2.f), WithinULP(1.f, 1));
-                REQUIRE_THAT(nextafter(1.f, 0.f), WithinULP(1.f, 1));
-                REQUIRE_THAT(nextafter(1.f, 2.f), !WithinULP(1.f, 0));
+                REQUIRE_THAT(0.f, WithinULP(nextafter(0.f, 1.f), 1));
+                REQUIRE_THAT(1.f, WithinULP(nextafter(1.f, 0.f), 1));
+                REQUIRE_THAT(1.f, !WithinULP(nextafter(1.f, 2.f), 0));
 
                 REQUIRE_THAT(1.f, WithinULP(1.f, 0));
                 REQUIRE_THAT(-0.f, WithinULP(0.f, 0));
@@ -366,17 +392,36 @@ namespace { namespace MatchersTests {
             SECTION("Composed") {
                 REQUIRE_THAT(1.f, WithinAbs(1.f, 0.5) || WithinULP(1.f, 1));
                 REQUIRE_THAT(1.f, WithinAbs(2.f, 0.5) || WithinULP(1.f, 0));
+                REQUIRE_THAT(0.0001f, WithinAbs(0.f, 0.001f) || WithinRel(0.f, 0.1f));
             }
             SECTION("Constructor validation") {
                 REQUIRE_NOTHROW(WithinAbs(1.f, 0.f));
                 REQUIRE_THROWS_AS(WithinAbs(1.f, -1.f), std::domain_error);
 
                 REQUIRE_NOTHROW(WithinULP(1.f, 0));
-                REQUIRE_THROWS_AS(WithinULP(1.f, -1), std::domain_error);
+                REQUIRE_THROWS_AS(WithinULP(1.f, static_cast<uint64_t>(-1)), std::domain_error);
+
+                REQUIRE_NOTHROW(WithinRel(1.f, 0.f));
+                REQUIRE_THROWS_AS(WithinRel(1.f, -0.2f), std::domain_error);
+                REQUIRE_THROWS_AS(WithinRel(1.f, 1.f), std::domain_error);
             }
         }
 
         TEST_CASE("Floating point matchers: double", "[matchers][floating-point]") {
+            SECTION("Relative") {
+                REQUIRE_THAT(10., WithinRel(11.1, 0.1));
+                REQUIRE_THAT(10., !WithinRel(11.2, 0.1));
+                REQUIRE_THAT(1., !WithinRel(0., 0.99));
+                REQUIRE_THAT(-0., WithinRel(0.));
+                SECTION("Some subnormal values") {
+                    auto v1 = std::numeric_limits<double>::min();
+                    auto v2 = v1;
+                    for (int i = 0; i < 5; ++i) {
+                        v2 = std::nextafter(v1, 0);
+                    }
+                    REQUIRE_THAT(v1, WithinRel(v2));
+                }
+            }
             SECTION("Margin") {
                 REQUIRE_THAT(1., WithinAbs(1., 0));
                 REQUIRE_THAT(0., WithinAbs(1., 1));
@@ -393,8 +438,9 @@ namespace { namespace MatchersTests {
                 REQUIRE_THAT(1., WithinULP(1., 0));
 
                 REQUIRE_THAT(nextafter(1., 2.), WithinULP(1., 1));
-                REQUIRE_THAT(nextafter(1., 0.), WithinULP(1., 1));
-                REQUIRE_THAT(nextafter(1., 2.), !WithinULP(1., 0));
+                REQUIRE_THAT(0.,  WithinULP(nextafter(0., 1.), 1));
+                REQUIRE_THAT(1.,  WithinULP(nextafter(1., 0.), 1));
+                REQUIRE_THAT(1., !WithinULP(nextafter(1., 2.), 0));
 
                 REQUIRE_THAT(1., WithinULP(1., 0));
                 REQUIRE_THAT(-0., WithinULP(0., 0));
@@ -402,13 +448,17 @@ namespace { namespace MatchersTests {
             SECTION("Composed") {
                 REQUIRE_THAT(1., WithinAbs(1., 0.5) || WithinULP(2., 1));
                 REQUIRE_THAT(1., WithinAbs(2., 0.5) || WithinULP(1., 0));
+                REQUIRE_THAT(0.0001, WithinAbs(0., 0.001) || WithinRel(0., 0.1));
             }
             SECTION("Constructor validation") {
                 REQUIRE_NOTHROW(WithinAbs(1., 0.));
                 REQUIRE_THROWS_AS(WithinAbs(1., -1.), std::domain_error);
 
                 REQUIRE_NOTHROW(WithinULP(1., 0));
-                REQUIRE_THROWS_AS(WithinULP(1., -1), std::domain_error);
+
+                REQUIRE_NOTHROW(WithinRel(1., 0.));
+                REQUIRE_THROWS_AS(WithinRel(1., -0.2), std::domain_error);
+                REQUIRE_THROWS_AS(WithinRel(1., 1.), std::domain_error);
             }
         }
 
@@ -416,6 +466,13 @@ namespace { namespace MatchersTests {
             REQUIRE_THAT(NAN, !WithinAbs(NAN, 0));
             REQUIRE_THAT(NAN, !(WithinAbs(NAN, 100) || WithinULP(NAN, 123)));
             REQUIRE_THAT(NAN, !WithinULP(NAN, 123));
+            REQUIRE_THAT(INFINITY, WithinRel(INFINITY));
+            REQUIRE_THAT(-INFINITY, !WithinRel(INFINITY));
+            REQUIRE_THAT(1., !WithinRel(INFINITY));
+            REQUIRE_THAT(INFINITY, !WithinRel(1.));
+            REQUIRE_THAT(NAN, !WithinRel(NAN));
+            REQUIRE_THAT(1., !WithinRel(NAN));
+            REQUIRE_THAT(NAN, !WithinRel(1.));
         }
 
         TEST_CASE("Arbitrary predicate matcher", "[matchers][generic]") {
@@ -487,6 +544,13 @@ namespace { namespace MatchersTests {
                 std::vector<double> v1({2., 4., 6.}), v2({1., 3., 5.});
                 CHECK_THAT(v1, Approx(v2));
             }
+        }
+
+        TEST_CASE("Exceptions matchers", "[matchers][exceptions][!throws]") {
+            REQUIRE_THROWS_MATCHES(throwsDerivedException(),  DerivedException,  Message("DerivedException::what"));
+            REQUIRE_THROWS_MATCHES(throwsDerivedException(),  DerivedException, !Message("derivedexception::what"));
+            REQUIRE_THROWS_MATCHES(throwsSpecialException(2), SpecialException, !Message("DerivedException::what"));
+            REQUIRE_THROWS_MATCHES(throwsSpecialException(2), SpecialException,  Message("SpecialException::what"));
         }
 
 } } // namespace MatchersTests

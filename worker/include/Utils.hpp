@@ -6,6 +6,12 @@
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <string>
+#ifdef _WIN32
+#include <ws2ipdef.h>
+// https://stackoverflow.com/a/24550632/2085408
+#include <intrin.h>
+#define __builtin_popcount __popcnt
+#endif
 
 namespace Utils
 {
@@ -241,6 +247,13 @@ namespace Utils
 		// This seems to produce better results.
 		Crypto::seed = uint32_t{ ((214013 * Crypto::seed) + 2531011) };
 
+		// Special case.
+		if (max == 4294967295)
+			--max;
+
+		if (min > max)
+			min = max;
+
 		return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
 	}
 
@@ -304,6 +317,7 @@ namespace Utils
 		static uint64_t Ntp2TimeMs(Time::Ntp ntp);
 		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp);
 		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2);
+		static uint32_t TimeMsToAbsSendTime(uint64_t ms);
 	};
 
 	inline Time::Ntp Time::TimeMs2Ntp(uint64_t ms)
@@ -343,6 +357,11 @@ namespace Utils
 	inline uint32_t Time::LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2)
 	{
 		return IsNewerTimestamp(timestamp1, timestamp2) ? timestamp1 : timestamp2;
+	}
+
+	inline uint32_t Time::TimeMsToAbsSendTime(uint64_t ms)
+	{
+		return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
 	}
 } // namespace Utils
 
