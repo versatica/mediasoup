@@ -245,7 +245,7 @@ namespace RTC
 
 	inline uint64_t RtpStream::GetActiveTime() const
 	{
-		return DepLibUV::GetTime() - this->activeSince;
+		return DepLibUV::GetTimeMs() - this->activeSince;
 	}
 
 	inline uint32_t RtpStream::GetExpectedPackets() const

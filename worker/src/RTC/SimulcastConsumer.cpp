@@ -405,7 +405,7 @@ namespace RTC
 
 		uint32_t usedBitrate{ 0u };
 		uint8_t maxProducerScore{ 0u };
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
@@ -579,7 +579,7 @@ namespace RTC
 		uint32_t requiredBitrate{ 0u };
 		auto* producerRtpStream = GetProducerProvisionalTargetRtpStream();
 		int16_t temporalLayer   = this->provisionalTargetTemporalLayer + 1;
-		auto now                = DepLibUV::GetTime();
+		auto now                = DepLibUV::GetTimeMs();
 
 		MS_ASSERT(producerRtpStream, "no Producer provisional target stream");
 
@@ -672,7 +672,7 @@ namespace RTC
 		int16_t desiredTemporalLayer{ -1 };
 		uint32_t desiredBitrate{ 0u };
 		uint8_t maxProducerScore{ 0u };
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{

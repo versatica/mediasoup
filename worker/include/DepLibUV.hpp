@@ -12,8 +12,9 @@ public:
 	static void PrintVersion();
 	static void RunLoop();
 	static uv_loop_t* GetLoop();
-	static uint64_t GetTime();
-	static void UpdateTime();
+	static uint64_t GetTimeMs();
+	static uint64_t GetTimeUs();
+	static uint64_t GetTimeNs();
 
 private:
 	static uv_loop_t* loop;
@@ -26,14 +27,19 @@ inline uv_loop_t* DepLibUV::GetLoop()
 	return DepLibUV::loop;
 }
 
-inline uint64_t DepLibUV::GetTime()
+inline uint64_t DepLibUV::GetTimeMs()
 {
-	return uv_now(DepLibUV::loop);
+	return static_cast<uint64_t>(uv_hrtime() / 1000000u);
 }
 
-inline void DepLibUV::UpdateTime()
+inline uint64_t DepLibUV::GetTimeUs()
 {
-	uv_update_time(DepLibUV::loop);
+	return static_cast<uint64_t>(uv_hrtime() / 1000u);
+}
+
+inline uint64_t DepLibUV::GetTimeNs()
+{
+	return uv_hrtime();
 }
 
 #endif

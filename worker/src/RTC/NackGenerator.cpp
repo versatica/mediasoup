@@ -213,7 +213,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTimeMs();
 		std::vector<uint16_t> nackBatch;
 
 		auto it = this->nackList.begin();

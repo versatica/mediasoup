@@ -375,7 +375,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 
 		jsonArray.emplace_back(json::value_t::object);
 		auto& jsonObject = jsonArray[0];
@@ -384,7 +384,7 @@ namespace RTC
 		jsonObject["transportId"] = this->id;
 
 		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTime();
+		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
 
 		if (this->sctpAssociation)
 		{
@@ -1280,7 +1280,7 @@ namespace RTC
 		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
 		packet->SetTransportWideCc01ExtensionId(this->rtpHeaderExtensionIds.transportWideCc01);
 
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
@@ -1557,7 +1557,7 @@ namespace RTC
 							// if (this->tccClient)
 							// {
 							// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
-							// DepLibUV::GetTime());
+							// DepLibUV::GetTimeMs());
 							// }
 
 							continue;
@@ -2147,7 +2147,7 @@ namespace RTC
 			this->tccClient->InsertPacket(packetInfo);
 
 			// TODO
-			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTimeMs());
 
 			auto* senderBwe    = this->senderBwe;
 			auto wideSeqNumber = this->transportWideCcSeq;
@@ -2155,10 +2155,10 @@ namespace RTC
 			SendRtpPacket(packet, [&packetInfo, wideSeqNumber, tccClient, senderBwe](bool sent) {
 				if (sent)
 				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
 					// TODO
-					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTime());
+					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTimeMs());
 				}
 			});
 		}
@@ -2175,7 +2175,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(DepLibUV::GetTime());
+		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
 
 		// TODO: Use senderBwe instead.
 		// Update transport wide sequence number if present.
@@ -2197,7 +2197,7 @@ namespace RTC
 			this->tccClient->InsertPacket(packetInfo);
 
 			// TODO
-			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTimeMs());
 
 			auto* senderBwe    = this->senderBwe;
 			auto wideSeqNumber = this->transportWideCcSeq;
@@ -2205,10 +2205,10 @@ namespace RTC
 			SendRtpPacket(packet, [&packetInfo, wideSeqNumber, tccClient, senderBwe](bool sent) {
 				if (sent)
 				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
 					// TODO
-					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTime());
+					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTimeMs());
 				}
 			});
 		}
@@ -2434,7 +2434,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(DepLibUV::GetTime());
+		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
 
 		// Update transport wide sequence number if present.
 		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
@@ -2471,7 +2471,7 @@ namespace RTC
 			this->tccClient->InsertPacket(packetInfo);
 
 			// TODO
-			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTimeMs());
 
 			auto* senderBwe = this->senderBwe;
 			uint16_t transportWideCcSeq;
@@ -2484,15 +2484,15 @@ namespace RTC
 			  packet->GetSequenceNumber(),
 			  transportWideCcSeq,
 			  packet->GetSize(),
-			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTime()));
+			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
 
 			SendRtpPacket(packet, [&packetInfo, transportWideCcSeq, tccClient, senderBwe](bool sent) {
 				if (sent)
 				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
 					// TODO
-					senderBwe->RtpPacketSent(transportWideCcSeq, DepLibUV::GetTime());
+					senderBwe->RtpPacketSent(transportWideCcSeq, DepLibUV::GetTimeMs());
 				}
 			});
 		}
@@ -2539,7 +2539,7 @@ namespace RTC
 		if (timer == this->rtcpTimer)
 		{
 			auto interval = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			uint64_t now  = DepLibUV::GetTime();
+			uint64_t now  = DepLibUV::GetTimeMs();
 
 			SendRtcp(now);
 

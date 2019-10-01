@@ -210,7 +210,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTimeMs();
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
@@ -470,7 +470,7 @@ namespace RTC
 		if (this->lastSrReceived != 0)
 		{
 			// Get delay in milliseconds.
-			auto delayMs = static_cast<uint32_t>(DepLibUV::GetTime() - this->lastSrReceived);
+			auto delayMs = static_cast<uint32_t>(DepLibUV::GetTimeMs() - this->lastSrReceived);
 			// Express delay in units of 1/65536 seconds.
 			uint32_t dlsr = (delayMs / 1000) << 16;
 
@@ -492,7 +492,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastSrReceived  = DepLibUV::GetTime();
+		this->lastSrReceived  = DepLibUV::GetTimeMs();
 		this->lastSrTimestamp = report->GetNtpSec() << 16;
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 
@@ -516,7 +516,7 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTimeMs();
 		auto ntp     = Utils::Time::TimeMs2Ntp(now);
 
 		// Get the compact NTP representation of the current timestamp.
@@ -610,7 +610,7 @@ namespace RTC
 			return;
 
 		auto transit =
-		  static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
+		  static_cast<int>(DepLibUV::GetTimeMs() - (rtpTimestamp * 1000 / this->params.clockRate));
 		int d = transit - this->transit;
 
 		this->transit = transit;

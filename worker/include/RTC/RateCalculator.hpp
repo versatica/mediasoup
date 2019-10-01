@@ -68,7 +68,7 @@ namespace RTC
 
 	inline void RateCalculator::Reset()
 	{
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTimeMs();
 
 		Reset(now);
 	}

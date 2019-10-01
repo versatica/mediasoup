@@ -39,7 +39,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTimeMs();
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
@@ -133,7 +133,7 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTimeMs();
 		auto ntp     = Utils::Time::TimeMs2Ntp(now);
 
 		// Get the compact NTP representation of the current timestamp.
@@ -409,7 +409,7 @@ namespace RTC
 		}
 
 		// Look for each requested packet.
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTimeMs();
 		uint16_t rtt = (this->rtt != 0u ? this->rtt : DefaultRtt);
 		bool requested{ true };
 		size_t containerIdx{ 0 };

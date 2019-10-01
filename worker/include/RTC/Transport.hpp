@@ -255,12 +255,12 @@ namespace RTC
 
 	inline void Transport::DataReceived(size_t len)
 	{
-		this->recvTransmission.Update(len, DepLibUV::GetTime());
+		this->recvTransmission.Update(len, DepLibUV::GetTimeMs());
 	}
 
 	inline void Transport::DataSent(size_t len)
 	{
-		this->sendTransmission.Update(len, DepLibUV::GetTime());
+		this->sendTransmission.Update(len, DepLibUV::GetTimeMs());
 	}
 } // namespace RTC
 

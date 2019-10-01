@@ -162,7 +162,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 		uint32_t minBitrate{ 30000u };
 
 		// Manage it via trending and increase it a bit to avoid immediate
@@ -200,14 +200,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastAvailableBitrateEventAt = DepLibUV::GetTime();
+		this->lastAvailableBitrateEventAt = DepLibUV::GetTimeMs();
 	}
 
 	void TransportCongestionControlClient::MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t now = DepLibUV::GetTimeMs();
 		bool notify{ false };
 
 		// Ignore if first event.

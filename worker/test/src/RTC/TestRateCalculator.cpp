@@ -26,7 +26,7 @@ void validate(RateCalculator& rate, uint64_t timeBase, std::vector<data>& input)
 
 SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 {
-	uint64_t now = DepLibUV::GetTime();
+	uint64_t now = DepLibUV::GetTimeMs();
 
 	SECTION("receive single item per 1000 ms")
 	{

@@ -300,7 +300,7 @@ namespace RTC
 		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0u)
 			return 0u;
 
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 		int16_t prioritySpatialLayer{ -1 };
 		int16_t spatialLayer{ 0 };
 
@@ -362,7 +362,7 @@ namespace RTC
 		}
 
 		uint32_t usedBitrate{ 0u };
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)
@@ -514,7 +514,7 @@ namespace RTC
 
 		uint32_t requiredBitrate{ 0u };
 		int16_t temporalLayer = this->provisionalTargetTemporalLayer + 1;
-		auto now              = DepLibUV::GetTime();
+		auto now              = DepLibUV::GetTimeMs();
 
 		for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 		{
@@ -611,7 +611,7 @@ namespace RTC
 		int16_t desiredSpatialLayer{ -1 };
 		int16_t desiredTemporalLayer{ -1 };
 		uint32_t desiredBitrate{ 0u };
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
@@ -1045,7 +1045,7 @@ namespace RTC
 		newTargetSpatialLayer  = -1;
 		newTargetTemporalLayer = -1;
 
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)

@@ -18,7 +18,7 @@ namespace RTC
 
 	RtpStream::RtpStream(
 	  RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, uint8_t initialScore)
-	  : listener(listener), params(params), score(initialScore), activeSince(DepLibUV::GetTime())
+	  : listener(listener), params(params), score(initialScore), activeSince(DepLibUV::GetTimeMs())
 	{
 		MS_TRACE();
 	}
@@ -84,7 +84,7 @@ namespace RTC
 			this->started     = true;
 			this->maxSeq      = seq - 1;
 			this->maxPacketTs = packet->GetTimestamp();
-			this->maxPacketMs = DepLibUV::GetTime();
+			this->maxPacketMs = DepLibUV::GetTimeMs();
 		}
 
 		// If not a valid packet ignore it.
@@ -103,7 +103,7 @@ namespace RTC
 		if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
 			this->maxPacketTs = packet->GetTimestamp();
-			this->maxPacketMs = DepLibUV::GetTime();
+			this->maxPacketMs = DepLibUV::GetTimeMs();
 		}
 
 		return true;
@@ -127,7 +127,7 @@ namespace RTC
 
 			// If previous score was 0 (and new one is not 0) then update activeSince.
 			if (previousScore == 0u)
-				this->activeSince = DepLibUV::GetTime();
+				this->activeSince = DepLibUV::GetTimeMs();
 
 			// Notify the listener.
 			if (notify)
@@ -176,7 +176,7 @@ namespace RTC
 				InitSeq(seq);
 
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = DepLibUV::GetTime();
+				this->maxPacketMs = DepLibUV::GetTimeMs();
 			}
 			else
 			{
@@ -257,7 +257,7 @@ namespace RTC
 
 			// If previous score was 0 (and new one is not 0) then update activeSince.
 			if (previousScore == 0u)
-				this->activeSince = DepLibUV::GetTime();
+				this->activeSince = DepLibUV::GetTimeMs();
 
 			this->listener->OnRtpStreamScore(this, this->score, previousScore);
 		}

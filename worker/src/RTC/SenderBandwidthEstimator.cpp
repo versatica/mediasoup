@@ -31,7 +31,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->availableBitrate            = this->initialAvailableBitrate;
-		this->lastAvailableBitrateEventAt = DepLibUV::GetTime();
+		this->lastAvailableBitrateEventAt = DepLibUV::GetTimeMs();
 	}
 
 	void SenderBandwidthEstimator::TransportDisconnected()
@@ -97,6 +97,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastAvailableBitrateEventAt = DepLibUV::GetTime();
+		this->lastAvailableBitrateEventAt = DepLibUV::GetTimeMs();
 	}
 } // namespace RTC

@@ -247,7 +247,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
   uint32_t timestamp = send_time_24bits << kAbsSendTimeInterArrivalUpshift;
   int64_t send_time_ms = static_cast<int64_t>(timestamp) * kTimestampToMs;
 
-  int64_t now_ms = DepLibUV::GetTime();
+  int64_t now_ms = DepLibUV::GetTimeMs();
   // TODO(holmer): SSRCs are only needed for REMB, should be broken out from
   // here.
 

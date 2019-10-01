@@ -1077,7 +1077,7 @@ namespace RTC
 				{
 					extenLen = 3u;
 
-					auto now         = DepLibUV::GetTime();
+					auto now         = DepLibUV::GetTimeMs();
 					auto absSendTime = Utils::Time::TimeMsToAbsSendTime(now);
 
 					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);

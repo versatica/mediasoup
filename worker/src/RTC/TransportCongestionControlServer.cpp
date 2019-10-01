@@ -237,7 +237,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto now = DepLibUV::GetTime();
+		auto now = DepLibUV::GetTimeMs();
 
 		// May fix unlimitedRembCounter.
 		if (this->unlimitedRembCounter > 0u && this->maxIncomingBitrate != 0u)
