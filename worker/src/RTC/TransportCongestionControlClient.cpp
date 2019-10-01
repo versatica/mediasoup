@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
@@ -318,7 +318,7 @@ namespace RTC
 			/* clang-format on */
 
 			// TODO: REMOVE
-			MS_DEBUG_DEV("---- delay:%" PRIu64, this->processTimer->GetTimeout());
+			// MS_DEBUG_DEV("---- delay:%" PRIu64, this->processTimer->GetTimeout());
 
 			MayEmitAvailableBitrateEvent(this->availableBitrate);
 		}

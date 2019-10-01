@@ -2478,6 +2478,14 @@ namespace RTC
 
 			packet->ReadTransportWideCc01(transportWideCcSeq);
 
+			// TODO: REMOVE
+			MS_DUMP(
+			  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
+			  packet->GetSequenceNumber(),
+			  transportWideCcSeq,
+			  packet->GetSize(),
+			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTime()));
+
 			SendRtpPacket(packet, [&packetInfo, transportWideCcSeq, tccClient, senderBwe](bool sent) {
 				if (sent)
 				{
@@ -2494,14 +2502,6 @@ namespace RTC
 		}
 
 		this->sendProbationTransmission.Update(packet);
-
-		// TODO: REMOVE
-		MS_DEBUG_DEV(
-		  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
-		  packet->GetSequenceNumber(),
-		  static_cast<uint16_t>(this->transportWideCcSeq + 1u),
-		  packet->GetSize(),
-		  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTime()));
 	}
 
 	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(
