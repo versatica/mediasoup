@@ -1082,6 +1082,10 @@ namespace RTC
 
 				request->Accept();
 
+				// This may be the latest active Consumer with BWE. If so we have to stop probation.
+				if (this->tccClient)
+					ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
+
 				break;
 			}
 
@@ -2023,7 +2027,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::ComputeOutgoingDesiredBitrate()
+	void Transport::ComputeOutgoingDesiredBitrate(bool forceBitrate)
 	{
 		MS_TRACE();
 
@@ -2042,7 +2046,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
 
-		this->tccClient->SetDesiredBitrate(totalDesiredBitrate);
+		this->tccClient->SetDesiredBitrate(totalDesiredBitrate, forceBitrate);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2238,8 +2242,24 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
+		// TODO: do it with this->senderBwe.
+
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
+	}
+
+	inline void Transport::OnConsumerNeedZeroBitrate(RTC::Consumer* /*consumer*/)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
+		// TODO: do it with this->senderBwe.
+
+		DistributeAvailableOutgoingBitrate();
+
+		// This may be the latest active Consumer with BWE. If so we have to stop probation.
+		ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
 	}
 
 	inline void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)
@@ -2264,6 +2284,10 @@ namespace RTC
 
 		// Delete it.
 		delete consumer;
+
+		// This may be the latest active Consumer with BWE. If so we have to stop probation.
+		if (this->tccClient)
+			ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
 	}
 
 	inline void Transport::OnDataProducerSctpMessageReceived(

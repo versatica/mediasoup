@@ -92,6 +92,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		auto now = DepLibUV::GetTimeMs();
+
+		this->desiredBitrateTrend.ForceUpdate(0u, now);
 		this->rtpTransportControllerSend->OnNetworkAvailability(false);
 	}
 
@@ -158,22 +161,27 @@ namespace RTC
 		// this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess());
 	}
 
-	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate)
+	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate, bool force)
 	{
 		MS_TRACE();
 
 		auto now = DepLibUV::GetTimeMs();
-		uint32_t minBitrate{ 30000u };
+		uint32_t minBitrate{ 50000u };
+		uint32_t maxBitrate;
+		uint32_t maxPaddingBitrate;
 
-		// Manage it via trending and increase it a bit to avoid immediate
-		// oscillations.
-		this->desiredBitrateTrend.Update(desiredBitrate, now);
+		// Manage it via trending and increase it a bit to avoid immediate oscillations.
+		if (!force)
+			this->desiredBitrateTrend.Update(desiredBitrate, now);
+		else
+			this->desiredBitrateTrend.ForceUpdate(desiredBitrate, now);
 
-		uint32_t maxBitrate = this->desiredBitrateTrend.GetValue() * 1.15;
+		maxBitrate = std::max<uint32_t>(minBitrate, this->desiredBitrateTrend.GetValue() * 1.25);
 
-		maxBitrate = std::max<uint32_t>(minBitrate, maxBitrate);
-
-		uint32_t maxPaddingBitrate = maxBitrate * 0.75;
+		if (this->desiredBitrateTrend.GetValue() != 0u)
+			maxPaddingBitrate = maxBitrate * 0.75;
+		else
+			maxPaddingBitrate = minBitrate * 0.25;
 
 		MS_DEBUG_DEV(
 		  "[desiredBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",

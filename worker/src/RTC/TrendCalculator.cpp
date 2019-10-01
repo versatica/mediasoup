@@ -45,4 +45,13 @@ namespace RTC
 			  this->highestValue - (this->highestValue * DecreaseFactorPerSecond * (elapsedTime / 1000.0)));
 		}
 	}
+
+	void TrendCalculator::ForceUpdate(uint32_t value, uint64_t now)
+	{
+		MS_TRACE();
+
+		this->value                 = value;
+		this->highestValue          = value;
+		this->highestValueUpdatedAt = now;
+	}
 } // namespace RTC

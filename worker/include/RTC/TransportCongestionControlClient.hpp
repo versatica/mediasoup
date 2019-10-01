@@ -51,7 +51,7 @@ namespace RTC
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, float rtt, uint64_t now);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
-		void SetDesiredBitrate(uint32_t desiredBitrate);
+		void SetDesiredBitrate(uint32_t desiredBitrate, bool force);
 		uint32_t GetAvailableBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
 

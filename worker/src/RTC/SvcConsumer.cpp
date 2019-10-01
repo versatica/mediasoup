@@ -899,10 +899,8 @@ namespace RTC
 
 		UpdateTargetLayers(-1, -1);
 
-		// Tell the transport so it can distribute available bitrate into other
-		// consumers.
 		if (this->externallyManagedBitrate)
-			this->listener->OnConsumerNeedBitrateChange(this);
+			this->listener->OnConsumerNeedZeroBitrate(this);
 	}
 
 	void SvcConsumer::UserOnResumed()

@@ -137,7 +137,7 @@ namespace RTC
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendSctpData(const uint8_t* data, size_t len)             = 0;
 		void DistributeAvailableOutgoingBitrate();
-		void ComputeOutgoingDesiredBitrate();
+		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
@@ -160,6 +160,7 @@ namespace RTC
 		void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) override;
 		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
+		void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) override;
 		void OnConsumerProducerClosed(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */

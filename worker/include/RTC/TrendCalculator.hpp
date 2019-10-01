@@ -13,6 +13,7 @@ namespace RTC
 	public:
 		uint32_t GetValue() const;
 		void Update(uint32_t value, uint64_t now);
+		void ForceUpdate(uint32_t value, uint64_t now);
 
 	private:
 		uint32_t value{ 0u };

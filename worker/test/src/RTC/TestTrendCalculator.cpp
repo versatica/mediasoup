@@ -34,5 +34,11 @@ SCENARIO("TrendCalculator", "[rtc]")
 
 		REQUIRE(trendA.GetValue() == 2000u);
 		REQUIRE(trendB.GetValue() == 2000u);
+
+		trendA.ForceUpdate(0u, 5500u);
+		trendB.ForceUpdate(100u, 5000u);
+
+		REQUIRE(trendA.GetValue() == 0u);
+		REQUIRE(trendB.GetValue() == 100u);
 	}
 }
