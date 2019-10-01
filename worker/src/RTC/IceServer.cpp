@@ -40,6 +40,7 @@ namespace RTC
 
 				response->Serialize(StunSerializeBuffer);
 				this->listener->OnIceServerSendStunPacket(this, response, tuple);
+
 				delete response;
 			}
 			else
@@ -249,24 +250,23 @@ namespace RTC
 			if (storedTuple->Compare(tuple))
 			{
 				removedTuple = storedTuple;
+
 				break;
 			}
 		}
 
 		// If not found, ignore.
-		if (removedTuple == nullptr)
+		if (!removedTuple)
 			return;
+
+		// Remove from the list of tuples.
+		this->tuples.erase(it);
 
 		// If this is not the selected tuple just remove it.
 		if (removedTuple != this->selectedTuple)
-		{
-			this->tuples.erase(it);
-
 			return;
-		}
 
 		// Otherwise this was the selected tuple.
-		this->tuples.erase(it);
 		this->selectedTuple = nullptr;
 
 		// Mark the first tuple as selected tuple (if any).
@@ -289,10 +289,9 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		  this->selectedTuple != nullptr,
-		  "cannot force the selected tuple if there was not a selected tuple");
+		  this->selectedTuple, "cannot force the selected tuple if there was not a selected tuple");
 
-		auto storedTuple = HasTuple(tuple);
+		auto* storedTuple = HasTuple(tuple);
 
 		MS_ASSERT(
 		  storedTuple,
@@ -315,14 +314,14 @@ namespace RTC
 				  this->tuples.empty(), "state is 'new' but there are %zu tuples", this->tuples.size());
 
 				// There shouldn't be a selected tuple.
-				MS_ASSERT(this->selectedTuple == nullptr, "state is 'new' but there is selected tuple");
+				MS_ASSERT(!this->selectedTuple, "state is 'new' but there is selected tuple");
 
 				if (!hasUseCandidate)
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'new' to 'connected'");
 
 					// Store the tuple.
-					auto storedTuple = AddTuple(tuple);
+					auto* storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(storedTuple);
@@ -336,7 +335,7 @@ namespace RTC
 					MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
 
 					// Store the tuple.
-					auto storedTuple = AddTuple(tuple);
+					auto* storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(storedTuple);
@@ -358,15 +357,14 @@ namespace RTC
 				  this->tuples.size());
 
 				// There shouldn't be a selected tuple.
-				MS_ASSERT(
-				  this->selectedTuple == nullptr, "state is 'disconnected' but there is selected tuple");
+				MS_ASSERT(!this->selectedTuple, "state is 'disconnected' but there is selected tuple");
 
 				if (!hasUseCandidate)
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'connected'");
 
 					// Store the tuple.
-					auto storedTuple = AddTuple(tuple);
+					auto* storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(storedTuple);
@@ -380,7 +378,7 @@ namespace RTC
 					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
 
 					// Store the tuple.
-					auto storedTuple = AddTuple(tuple);
+					auto* storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
 					SetSelectedTuple(storedTuple);
@@ -399,23 +397,22 @@ namespace RTC
 				MS_ASSERT(!this->tuples.empty(), "state is 'connected' but there are no tuples");
 
 				// There should be a selected tuple.
-				MS_ASSERT(
-				  this->selectedTuple != nullptr, "state is 'connected' but there is not selected tuple");
+				MS_ASSERT(this->selectedTuple, "state is 'connected' but there is not selected tuple");
 
 				if (!hasUseCandidate)
 				{
 					// If a new tuple store it.
-					if (HasTuple(tuple) == nullptr)
+					if (!HasTuple(tuple))
 						AddTuple(tuple);
 				}
 				else
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'connected' to 'completed'");
 
-					auto storedTuple = HasTuple(tuple);
+					auto* storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
-					if (storedTuple == nullptr)
+					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
@@ -435,21 +432,20 @@ namespace RTC
 				MS_ASSERT(!this->tuples.empty(), "state is 'completed' but there are no tuples");
 
 				// There should be a selected tuple.
-				MS_ASSERT(
-				  this->selectedTuple != nullptr, "state is 'completed' but there is not selected tuple");
+				MS_ASSERT(this->selectedTuple, "state is 'completed' but there is not selected tuple");
 
 				if (!hasUseCandidate)
 				{
 					// If a new tuple store it.
-					if (HasTuple(tuple) == nullptr)
+					if (!HasTuple(tuple))
 						AddTuple(tuple);
 				}
 				else
 				{
-					auto storedTuple = HasTuple(tuple);
+					auto* storedTuple = HasTuple(tuple);
 
 					// If a new tuple store it.
-					if (storedTuple == nullptr)
+					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
 					// Mark it as selected tuple.
@@ -468,7 +464,7 @@ namespace RTC
 		// Add the new tuple at the beginning of the list.
 		this->tuples.push_front(*tuple);
 
-		auto storedTuple = std::addressof(*this->tuples.begin());
+		auto* storedTuple = std::addressof(*this->tuples.begin());
 
 		// If it is UDP then we must store the remote address (until now it is
 		// just a pointer that will be freed soon).
@@ -485,7 +481,7 @@ namespace RTC
 
 		// If there is no selected tuple yet then we know that the tuples list
 		// is empty.
-		if (this->selectedTuple == nullptr)
+		if (!this->selectedTuple)
 			return nullptr;
 
 		// Check the current selected tuple.

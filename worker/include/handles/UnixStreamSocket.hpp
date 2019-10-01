@@ -35,8 +35,8 @@ public:
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnUnixStreamRead()                            = 0;
-	virtual void UserOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
+	virtual void UserOnUnixStreamRead()         = 0;
+	virtual void UserOnUnixStreamSocketClosed() = 0;
 
 private:
 	// Allocated by this.

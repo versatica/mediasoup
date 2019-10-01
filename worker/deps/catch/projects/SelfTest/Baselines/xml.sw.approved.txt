@@ -43,6 +43,25 @@
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="#1027: Bitfields can be captured" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          y.v == 0
+        </Original>
+        <Expanded>
+          0 == 0
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          0 == y.v
+        </Original>
+        <Expanded>
+          0 == 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="#1147" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
         <Original>
@@ -2180,25 +2199,6 @@ Nor would this
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
-    <TestCase name="Bitfields can be captured (#1027)" filename="projects/<exe-name>/UsageTests/Tricky.tests.cpp" >
-      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Tricky.tests.cpp" >
-        <Original>
-          y.v == 0
-        </Original>
-        <Expanded>
-          0 == 0
-        </Expanded>
-      </Expression>
-      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Tricky.tests.cpp" >
-        <Original>
-          0 == y.v
-        </Original>
-        <Expanded>
-          0 == 0
-        </Expanded>
-      </Expression>
-      <OverallResult success="true"/>
-    </TestCase>
     <TestCase name="CAPTURE can deal with complex expressions" tags="[capture][messages]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
       <Info>
         a := 1
@@ -4259,6 +4259,48 @@ Nor would this
           <OverallResults successes="3" failures="0" expectedFailures="0"/>
         </Section>
         <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Chunk size of zero" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.size() == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Chunk size of zero" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.size() == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Section name="Chunk size of zero" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+          <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+            <Original>
+              chunk2.size() == 0
+            </Original>
+            <Expanded>
+              0 == 0
+            </Expanded>
+          </Expression>
+          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        </Section>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="Chunking a generator into sized pieces" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
         <Section name="Throws on too small generators" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
@@ -9853,6 +9895,39 @@ Message from section two
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="Template test case with test types specified inside non-default-constructible std::tuple - MyNonDefaultConstructibleTypes - 0" tags="[list][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          sizeof(TestType) > 0
+        </Original>
+        <Expanded>
+          1 > 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Template test case with test types specified inside non-default-constructible std::tuple - MyNonDefaultConstructibleTypes - 1" tags="[list][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          sizeof(TestType) > 0
+        </Original>
+        <Expanded>
+          1 > 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Template test case with test types specified inside non-default-constructible std::tuple - MyNonDefaultConstructibleTypes - 2" tags="[list][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+        <Original>
+          sizeof(TestType) > 0
+        </Original>
+        <Expanded>
+          4 > 0
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="Template test case with test types specified inside std::tuple - MyTypes - 0" tags="[list][template]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
         <Original>
@@ -14692,7 +14767,7 @@ loose text artifact
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <OverallResults successes="1395" failures="149" expectedFailures="21"/>
+    <OverallResults successes="1401" failures="149" expectedFailures="21"/>
   </Group>
-  <OverallResults successes="1395" failures="148" expectedFailures="21"/>
+  <OverallResults successes="1401" failures="148" expectedFailures="21"/>
 </Catch>

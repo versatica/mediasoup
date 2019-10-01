@@ -50,8 +50,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 	SECTION("parse packet")
 	{
 		SdesPacket* packet = SdesPacket::Parse(buffer, sizeof(buffer));
-
-		SdesChunk* chunk = *(packet->Begin());
+		SdesChunk* chunk   = *(packet->Begin());
 
 		REQUIRE(chunk);
 

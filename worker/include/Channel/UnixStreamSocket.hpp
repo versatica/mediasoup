@@ -2,9 +2,9 @@
 #define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "handles/UnixStreamSocket.hpp"
+#include <json.hpp>
 
 namespace Channel
 {
@@ -15,7 +15,7 @@ namespace Channel
 		{
 		public:
 			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
-			virtual void OnChannelRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
+			virtual void OnChannelClosed(Channel::UnixStreamSocket* channel) = 0;
 		};
 
 	public:
@@ -30,7 +30,7 @@ namespace Channel
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
-		void UserOnUnixStreamSocketClosed(bool isClosedByPeer) override;
+		void UserOnUnixStreamSocketClosed() override;
 
 	private:
 		// Passed by argument.

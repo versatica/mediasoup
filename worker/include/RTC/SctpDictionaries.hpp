@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_DICTIONARIES_HPP
 
 #include "common.hpp"
-#include "json.hpp"
+#include <json.hpp>
 #include <string>
 
 using json = nlohmann::json;
@@ -12,7 +12,7 @@ namespace RTC
 	class SctpStreamParameters
 	{
 	public:
-		SctpStreamParameters(){};
+		SctpStreamParameters() = default;
 		explicit SctpStreamParameters(json& data);
 
 		void FillJson(json& jsonObject) const;

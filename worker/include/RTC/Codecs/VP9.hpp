@@ -8,7 +8,6 @@
 
 /* https://tools.ietf.org/html/draft-ietf-payload-vp9-06
  * VP9 Payload Descriptor
- *
 
    Flexible mode (with the F bit below set to 1)
    =============================================
@@ -47,8 +46,7 @@ L:   | TID |U| SID |D| (CONDITIONALLY RECOMMENDED)
 V:   | SS            |
      | ..            |
      +-+-+-+-+-+-+-+-+
-
-*/
+ */
 
 namespace RTC
 {

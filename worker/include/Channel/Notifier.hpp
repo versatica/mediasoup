@@ -2,8 +2,8 @@
 #define MS_CHANNEL_NOTIFIER_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/UnixStreamSocket.hpp"
+#include <json.hpp>
 #include <string>
 
 namespace Channel

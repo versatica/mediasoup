@@ -2,30 +2,113 @@
 // #define MS_LOG_DEV
 
 #include "RTC/Transport.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
+#include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
+// TODO: Should not include directly libwebrtc from here.
+#include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
+#include <map>                                                   // std::multimap
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	Transport::Transport(const std::string& id, Listener* listener) : id(id), listener(listener)
+	Transport::Transport(const std::string& id, Listener* listener, json& data)
+	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
+	    sendProbationTransmission(100u)
 	{
 		MS_TRACE();
+
+		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
+
+		if (jsonInitialAvailableOutgoingBitrateIt != data.end())
+		{
+			if (!jsonInitialAvailableOutgoingBitrateIt->is_number_unsigned())
+				MS_THROW_TYPE_ERROR("wrong initialAvailableOutgoingBitrate (not a number)");
+
+			this->initialAvailableOutgoingBitrate = jsonInitialAvailableOutgoingBitrateIt->get<uint32_t>();
+		}
+
+		auto jsonEnableSctpIt = data.find("enableSctp");
+
+		// clang-format off
+		if (
+			jsonEnableSctpIt != data.end() &&
+			jsonEnableSctpIt->is_boolean() &&
+			jsonEnableSctpIt->get<bool>()
+		)
+		// clang-format on
+		{
+			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
+			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
+			auto jsonIsDataChannelIt      = data.find("isDataChannel");
+
+			// numSctpStreams is mandatory.
+			// clang-format off
+			if (
+				jsonNumSctpStreamsIt == data.end() ||
+				!jsonNumSctpStreamsIt->is_object()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not an object)");
+			}
+
+			auto jsonOSIt  = jsonNumSctpStreamsIt->find("OS");
+			auto jsonMISIt = jsonNumSctpStreamsIt->find("MIS");
+
+			// numSctpStreams.OS and numSctpStreams.MIS are mandatory.
+			// clang-format off
+			if (
+				jsonOSIt == jsonNumSctpStreamsIt->end() ||
+				!jsonOSIt->is_number_unsigned() ||
+				jsonMISIt == jsonNumSctpStreamsIt->end() ||
+				!jsonMISIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong numSctpStreams.OS and/or numSctpStreams.MIS (not a number)");
+			}
+
+			auto os  = jsonOSIt->get<uint16_t>();
+			auto mis = jsonMISIt->get<uint16_t>();
+
+			// maxSctpMessageSize is mandatory.
+			// clang-format off
+			if (
+				jsonMaxSctpMessageSizeIt == data.end() ||
+				!jsonMaxSctpMessageSizeIt->is_number_unsigned()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
+			}
+
+			auto maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
+
+			// isDataChannel is optional.
+			bool isDataChannel{ false };
+
+			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
+				isDataChannel = jsonIsDataChannelIt->get<bool>();
+
+			this->sctpAssociation =
+			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
+		}
 
 		// Create the RTCP timer.
 		this->rtcpTimer = new Timer(this);
@@ -34,6 +117,9 @@ namespace RTC
 	Transport::~Transport()
 	{
 		MS_TRACE();
+
+		// Set the destroying flag.
+		this->destroying = true;
 
 		// The destructor must delete and clear everything silently.
 
@@ -55,6 +141,7 @@ namespace RTC
 		}
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
+		this->mapRtxSsrcConsumer.clear();
 
 		// Delete all DataProducers.
 		for (auto& kv : this->mapDataProducers)
@@ -74,8 +161,25 @@ namespace RTC
 		}
 		this->mapDataConsumers.clear();
 
+		// Delete SCTP association.
+		delete this->sctpAssociation;
+		this->sctpAssociation = nullptr;
+
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
+		this->rtcpTimer = nullptr;
+
+		// Delete Transport-CC client.
+		delete this->tccClient;
+		this->tccClient = nullptr;
+
+		// Delete Transport-CC server.
+		delete this->tccServer;
+		this->tccServer = nullptr;
+
+		// Delete Sender BWE.
+		delete this->senderBwe;
+		this->senderBwe = nullptr;
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -112,6 +216,7 @@ namespace RTC
 		}
 		this->mapConsumers.clear();
 		this->mapSsrcConsumer.clear();
+		this->mapRtxSsrcConsumer.clear();
 
 		// Delete all DataProducers.
 		for (auto& kv : this->mapDataProducers)
@@ -179,6 +284,18 @@ namespace RTC
 			(*jsonMapSsrcConsumerId)[std::to_string(ssrc)] = consumer->id;
 		}
 
+		// Add mapRtxSsrcConsumerId.
+		jsonObject["mapRtxSsrcConsumerId"] = json::object();
+		auto jsonMapRtxSsrcConsumerId      = jsonObject.find("mapRtxSsrcConsumerId");
+
+		for (auto& kv : this->mapRtxSsrcConsumer)
+		{
+			auto ssrc      = kv.first;
+			auto* consumer = kv.second;
+
+			(*jsonMapRtxSsrcConsumerId)[std::to_string(ssrc)] = consumer->id;
+		}
+
 		// Add dataProducerIds.
 		jsonObject["dataProducerIds"] = json::array();
 		auto jsonDataProducerIdsIt    = jsonObject.find("dataProducerIds");
@@ -200,6 +317,26 @@ namespace RTC
 
 			jsonDataConsumerIdsIt->emplace_back(dataConsumerId);
 		}
+
+		// Add headerExtensionIds.
+		jsonObject["rtpHeaderExtensions"] = json::object();
+		auto jsonRtpHeaderExtensionsIt    = jsonObject.find("rtpHeaderExtensions");
+
+		if (this->rtpHeaderExtensionIds.mid != 0u)
+			(*jsonRtpHeaderExtensionsIt)["mid"] = this->rtpHeaderExtensionIds.mid;
+
+		if (this->rtpHeaderExtensionIds.rid != 0u)
+			(*jsonRtpHeaderExtensionsIt)["rid"] = this->rtpHeaderExtensionIds.rid;
+
+		if (this->rtpHeaderExtensionIds.rrid != 0u)
+			(*jsonRtpHeaderExtensionsIt)["rrid"] = this->rtpHeaderExtensionIds.rrid;
+
+		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
+			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
+
+		if (this->rtpHeaderExtensionIds.transportWideCc01 != 0u)
+			(*jsonRtpHeaderExtensionsIt)["transportWideCc01"] =
+			  this->rtpHeaderExtensionIds.transportWideCc01;
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
@@ -234,6 +371,104 @@ namespace RTC
 		}
 	}
 
+	void Transport::FillJsonStats(json& jsonArray)
+	{
+		MS_TRACE();
+
+		auto now = DepLibUV::GetTime();
+
+		jsonArray.emplace_back(json::value_t::object);
+		auto& jsonObject = jsonArray[0];
+
+		// Add transportId.
+		jsonObject["transportId"] = this->id;
+
+		// Add timestamp.
+		jsonObject["timestamp"] = DepLibUV::GetTime();
+
+		if (this->sctpAssociation)
+		{
+			// Add sctpState.
+			switch (this->sctpAssociation->GetState())
+			{
+				case RTC::SctpAssociation::SctpState::NEW:
+					jsonObject["sctpState"] = "new";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTING:
+					jsonObject["sctpState"] = "connecting";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTED:
+					jsonObject["sctpState"] = "connected";
+					break;
+				case RTC::SctpAssociation::SctpState::FAILED:
+					jsonObject["sctpState"] = "failed";
+					break;
+				case RTC::SctpAssociation::SctpState::CLOSED:
+					jsonObject["sctpState"] = "closed";
+					break;
+			}
+		}
+
+		// Add bytesReceived.
+		jsonObject["bytesReceived"] = this->recvTransmission.GetBytes();
+
+		// Add recvBitrate.
+		jsonObject["recvBitrate"] = this->recvTransmission.GetRate(now);
+
+		// Add bytesSent.
+		jsonObject["bytesSent"] = this->sendTransmission.GetBytes();
+
+		// Add sendBitrate.
+		jsonObject["sendBitrate"] = this->sendTransmission.GetRate(now);
+
+		// Add rtpBytesReceived.
+		jsonObject["rtpBytesReceived"] = this->recvRtpTransmission.GetBytes();
+
+		// Add rtpRecvBitrate.
+		jsonObject["rtpRecvBitrate"] = this->recvRtpTransmission.GetBitrate(now);
+
+		// Add rtpBytesSent.
+		jsonObject["rtpBytesSent"] = this->sendRtpTransmission.GetBytes();
+
+		// Add rtpSendBitrate.
+		jsonObject["rtpSendBitrate"] = this->sendRtpTransmission.GetBitrate(now);
+
+		// Add rtxBytesReceived.
+		jsonObject["rtxBytesReceived"] = this->recvRtxTransmission.GetBytes();
+
+		// Add rtxRecvBitrate.
+		jsonObject["rtxRecvBitrate"] = this->recvRtxTransmission.GetBitrate(now);
+
+		// Add rtxBytesSent.
+		jsonObject["rtxBytesSent"] = this->sendRtxTransmission.GetBytes();
+
+		// Add rtxSendBitrate.
+		jsonObject["rtxSendBitrate"] = this->sendRtxTransmission.GetBitrate(now);
+
+		// Add probationBytesSent.
+		jsonObject["probationBytesSent"] = this->sendProbationTransmission.GetBytes();
+
+		// Add probationSendBitrate.
+		jsonObject["probationSendBitrate"] = this->sendProbationTransmission.GetBitrate(now);
+
+		// Add availableOutgoingBitrate.
+		if (this->tccClient)
+			jsonObject["availableOutgoingBitrate"] = this->tccClient->GetAvailableBitrate();
+
+		// Add availableIncomingBitrate.
+		if (this->tccServer && this->tccServer->GetAvailableBitrate() != 0u)
+			jsonObject["availableIncomingBitrate"] = this->tccServer->GetAvailableBitrate();
+
+		// TODO
+		// Add availableOutgoingBitrate_2.
+		if (this->senderBwe)
+			jsonObject["availableOutgoingBitrate_2"] = this->senderBwe->GetAvailableBitrate();
+
+		// Add maxIncomingBitrate.
+		if (this->maxIncomingBitrate != 0u)
+			jsonObject["maxIncomingBitrate"] = this->maxIncomingBitrate;
+	}
+
 	void Transport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
@@ -258,6 +493,25 @@ namespace RTC
 				FillJsonStats(data);
 
 				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE:
+			{
+				auto jsonBitrateIt = request->data.find("bitrate");
+
+				if (jsonBitrateIt == request->data.end() || !jsonBitrateIt->is_number_unsigned())
+					MS_THROW_TYPE_ERROR("missing bitrate");
+
+				this->maxIncomingBitrate = jsonBitrateIt->get<uint32_t>();
+
+				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
+
+				request->Accept();
+
+				if (this->tccServer)
+					this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 
 				break;
 			}
@@ -323,6 +577,10 @@ namespace RTC
 				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
 					this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
 
+				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
+					this->rtpHeaderExtensionIds.transportWideCc01 =
+					  producerRtpHeaderExtensionIds.transportWideCc01;
+
 				// Create status response.
 				json data = json::object();
 
@@ -330,8 +588,77 @@ namespace RTC
 
 				request->Accept(data);
 
-				// Tell the subclass.
-				UserOnNewProducer(producer);
+				// Check if TransportCongestionControlServer or REMB server must be
+				// created.
+				auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+				auto& codecs                = producer->GetRtpParameters().codecs;
+
+				// Set TransportCongestionControlServer.
+				if (!this->tccServer)
+				{
+					bool createTccServer{ false };
+					RTC::BweType bweType;
+
+					// Use transport-cc if:
+					// - there is transport-wide-cc-01 RTP header extension, and
+					// - there is "transport-cc" in codecs RTCP feedback.
+					//
+					// clang-format off
+					if (
+						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "transport-cc";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
+
+						createTccServer = true;
+						bweType         = RTC::BweType::TRANSPORT_CC;
+					}
+					// Use REMB if:
+					// - there is abs-send-time RTP header extension, and
+					// - there is "remb" in codecs RTCP feedback.
+					//
+					// clang-format off
+					else if (
+						rtpHeaderExtensionIds.absSendTime != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "goog-remb";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
+
+						createTccServer = true;
+						bweType         = RTC::BweType::REMB;
+					}
+
+					if (createTccServer)
+					{
+						this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
+
+						if (this->maxIncomingBitrate != 0u)
+							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+
+						if (IsConnected())
+							this->tccServer->TransportConnected();
+					}
+				}
 
 				break;
 			}
@@ -423,6 +750,11 @@ namespace RTC
 					this->mapSsrcConsumer[ssrc] = consumer;
 				}
 
+				for (auto ssrc : consumer->GetRtxSsrcs())
+				{
+					this->mapRtxSsrcConsumer[ssrc] = consumer;
+				}
+
 				MS_DEBUG_DEV(
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
@@ -436,8 +768,147 @@ namespace RTC
 
 				request->Accept(data);
 
-				// Tell the subclass.
-				UserOnNewConsumer(consumer);
+				// Check if Transport Congestion Control client must be created.
+				auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
+				auto& codecs                = consumer->GetRtpParameters().codecs;
+
+				// Set TransportCongestionControlClient.
+				if (!this->tccClient)
+				{
+					bool createTccClient{ false };
+					RTC::BweType bweType;
+
+					// Use transport-cc if:
+					// - it's a simulcast or SVC Consumer, and
+					// - there is transport-wide-cc-01 RTP header extension, and
+					// - there is "transport-cc" in codecs RTCP feedback.
+					//
+					// clang-format off
+					if (
+						(
+							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+							consumer->GetType() == RTC::RtpParameters::Type::SVC
+						) &&
+						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "transport-cc";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
+
+						createTccClient = true;
+						bweType         = RTC::BweType::TRANSPORT_CC;
+					}
+					// Use REMB if:
+					// - it's a simulcast or SVC Consumer, and
+					// - there is abs-send-time RTP header extension, and
+					// - there is "remb" in codecs RTCP feedback.
+					//
+					// clang-format off
+					else if (
+						(
+							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+							consumer->GetType() == RTC::RtpParameters::Type::SVC
+						) &&
+						rtpHeaderExtensionIds.absSendTime != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "goog-remb";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
+
+						createTccClient = true;
+						bweType         = RTC::BweType::REMB;
+					}
+
+					if (createTccClient)
+					{
+						// Tell all the Consumers that we are gonna manage their bitrate.
+						for (auto& kv : this->mapConsumers)
+						{
+							auto* consumer = kv.second;
+
+							consumer->SetExternallyManagedBitrate();
+						};
+
+						this->tccClient = new RTC::TransportCongestionControlClient(
+						  this, bweType, this->initialAvailableOutgoingBitrate);
+
+						if (IsConnected())
+							this->tccClient->TransportConnected();
+					}
+				}
+
+				// TODO
+				// Create SenderBandwidthEstimator if:
+				// - not already created,
+				// - it's a simulcast or SVC Consumer, and
+				// - there is transport-wide-cc-01 RTP header extension, and
+				// - there is "transport-cc" in codecs RTCP feedback.
+				//
+				// clang-format off
+				if (
+					!this->senderBwe &&
+					(
+						consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
+						consumer->GetType() == RTC::RtpParameters::Type::SVC
+					) &&
+					rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+					std::any_of(
+						codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+						{
+							return std::any_of(
+								codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+								{
+									return fb.type == "transport-cc";
+								});
+						})
+				)
+				// clang-format on
+				{
+					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
+
+					// Tell all the Consumers that we are gonna manage their bitrate.
+					for (auto& kv : this->mapConsumers)
+					{
+						auto* consumer = kv.second;
+
+						consumer->SetExternallyManagedBitrate();
+					};
+
+					this->senderBwe =
+					  new RTC::SenderBandwidthEstimator(this, this->initialAvailableOutgoingBitrate);
+
+					if (IsConnected())
+						this->senderBwe->TransportConnected();
+				}
+
+				// If applicable, tell the new Consumer that we are gonna manage its
+				// bitrate.
+				if (this->tccClient)
+					consumer->SetExternallyManagedBitrate();
+
+				// TODO
+				// If applicable, tell the new Consumer that we are gonna manage its
+				// bitrate.
+				if (this->senderBwe)
+					consumer->SetExternallyManagedBitrate();
 
 				if (IsConnected())
 					consumer->TransportConnected();
@@ -489,7 +960,7 @@ namespace RTC
 				// Insert into the map.
 				this->mapDataProducers[dataProducerId] = dataProducer;
 
-				MS_DEBUG_DEV("Producer created [dataProducerId:%s]", dataProducerId.c_str());
+				MS_DEBUG_DEV("DataProducer created [dataProducerId:%s]", dataProducerId.c_str());
 
 				json data = json::object();
 
@@ -594,6 +1065,11 @@ namespace RTC
 				for (auto ssrc : consumer->GetMediaSsrcs())
 				{
 					this->mapSsrcConsumer.erase(ssrc);
+				}
+
+				for (auto ssrc : consumer->GetRtxSsrcs())
+				{
+					this->mapRtxSsrcConsumer.erase(ssrc);
 				}
 
 				// Notify the listener.
@@ -717,91 +1193,9 @@ namespace RTC
 		}
 	}
 
-	void Transport::CreateSctpAssociation(json& data)
-	{
-		MS_TRACE();
-
-		auto jsonEnableSctpIt = data.find("enableSctp");
-
-		// clang-format off
-		if (
-			jsonEnableSctpIt != data.end() &&
-			jsonEnableSctpIt->is_boolean() &&
-			jsonEnableSctpIt->get<bool>()
-		)
-		// clang-format on
-		{
-			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
-			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
-			auto jsonIsDataChannelIt      = data.find("isDataChannel");
-
-			// numSctpStreams is mandatory.
-			// clang-format off
-			if (
-				jsonNumSctpStreamsIt == data.end() ||
-				!jsonNumSctpStreamsIt->is_object()
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not an object)");
-			}
-
-			auto jsonOSIt  = jsonNumSctpStreamsIt->find("OS");
-			auto jsonMISIt = jsonNumSctpStreamsIt->find("MIS");
-
-			// numSctpStreams.OS and numSctpStreams.MIS are mandatory.
-			// clang-format off
-			if (
-				jsonOSIt == jsonNumSctpStreamsIt->end() ||
-				!jsonOSIt->is_number_unsigned() ||
-				jsonMISIt == jsonNumSctpStreamsIt->end() ||
-				!jsonMISIt->is_number_unsigned()
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong numSctpStreams.OS and/or numSctpStreams.MIS (not a number)");
-			}
-
-			auto os  = jsonOSIt->get<uint16_t>();
-			auto mis = jsonMISIt->get<uint16_t>();
-
-			// maxSctpMessageSize is mandatory.
-			// clang-format off
-			if (
-				jsonMaxSctpMessageSizeIt == data.end() ||
-				!jsonMaxSctpMessageSizeIt->is_number_unsigned()
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
-			}
-
-			auto maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
-
-			// isDataChannel is optional.
-			bool isDataChannel{ false };
-
-			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
-				isDataChannel = jsonIsDataChannelIt->get<bool>();
-
-			this->sctpAssociation =
-			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
-		}
-	}
-
-	void Transport::DestroySctpAssociation()
-	{
-		MS_TRACE();
-
-		delete this->sctpAssociation;
-	}
-
 	void Transport::Connected()
 	{
 		MS_TRACE();
-
-		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
 		// Tell all Consumers.
 		for (auto& kv : this->mapConsumers)
@@ -821,15 +1215,27 @@ namespace RTC
 
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
-			this->sctpAssociation->Run();
+			this->sctpAssociation->TransportConnected();
+
+		// Start the RTCP timer.
+		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+
+		// Tell the TransportCongestionControlClient.
+		if (this->tccClient)
+			this->tccClient->TransportConnected();
+
+		// Tell the TransportCongestionControlServer.
+		if (this->tccServer)
+			this->tccServer->TransportConnected();
+
+		// Tell the SenderBandwidthEstimator.
+		if (this->senderBwe)
+			this->senderBwe->TransportConnected();
 	}
 
 	void Transport::Disconnected()
 	{
 		MS_TRACE();
-
-		// Stop the RTCP timer.
-		this->rtcpTimer->Stop();
 
 		// Tell all Consumers.
 		for (auto& kv : this->mapConsumers)
@@ -846,277 +1252,109 @@ namespace RTC
 
 			dataConsumer->TransportDisconnected();
 		}
+
+		// Stop the RTCP timer.
+		this->rtcpTimer->Stop();
+
+		// Tell the TransportCongestionControlClient.
+		if (this->tccClient)
+			this->tccClient->TransportDisconnected();
+
+		// Tell the TransportCongestionControlServer.
+		if (this->tccServer)
+			this->tccServer->TransportDisconnected();
+
+		// Tell the SenderBandwidthEstimator.
+		if (this->senderBwe)
+			this->senderBwe->TransportDisconnected();
+	}
+
+	void Transport::ReceiveRtpPacket(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// Apply the Transport RTP header extension ids so the RTP listener can use them.
+		packet->SetMidExtensionId(this->rtpHeaderExtensionIds.mid);
+		packet->SetRidExtensionId(this->rtpHeaderExtensionIds.rid);
+		packet->SetRepairedRidExtensionId(this->rtpHeaderExtensionIds.rrid);
+		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
+		packet->SetTransportWideCc01ExtensionId(this->rtpHeaderExtensionIds.transportWideCc01);
+
+		auto now = DepLibUV::GetTime();
+
+		// Feed the TransportCongestionControlServer.
+		if (this->tccServer)
+			this->tccServer->IncomingPacket(now, packet);
+
+		// Get the associated Producer.
+		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
+
+		if (!producer)
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
+			  packet->GetSsrc(),
+			  packet->GetPayloadType());
+
+			delete packet;
+
+			return;
+		}
+
+		// MS_DEBUG_DEV(
+		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
+		//   packet->GetSsrc(),
+		//   packet->GetPayloadType(),
+		//   producer->id.c_str());
+
+		// Pass the RTP packet to the corresponding Producer.
+		auto result = producer->ReceiveRtpPacket(packet);
+
+		switch (result)
+		{
+			case RTC::Producer::ReceiveRtpPacketResult::MEDIA:
+				this->recvRtpTransmission.Update(packet);
+				break;
+			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
+				this->recvRtxTransmission.Update(packet);
+				break;
+			default:;
+		}
+
+		delete packet;
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
-		switch (packet->GetType())
+		// Handle each RTCP packet.
+		while (packet)
 		{
-			case RTC::RTCP::Type::RR:
-			{
-				auto* rr = static_cast<RTC::RTCP::ReceiverReportPacket*>(packet);
+			HandleRtcpPacket(packet);
 
-				for (auto it = rr->Begin(); it != rr->End(); ++it)
-				{
-					auto& report   = (*it);
-					auto* consumer = GetConsumerByMediaSsrc(report->GetSsrc());
+			auto* previousPacket = packet;
 
-					if (consumer == nullptr)
-					{
-						MS_DEBUG_TAG(
-						  rtcp,
-						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
-						  report->GetSsrc());
+			packet = packet->GetNext();
 
-						continue;
-					}
-
-					consumer->ReceiveRtcpReceiverReport(report);
-				}
-
-				break;
-			}
-
-			case RTC::RTCP::Type::PSFB:
-			{
-				auto* feedback = static_cast<RTC::RTCP::FeedbackPsPacket*>(packet);
-
-				switch (feedback->GetMessageType())
-				{
-					case RTC::RTCP::FeedbackPs::MessageType::PLI:
-					case RTC::RTCP::FeedbackPs::MessageType::FIR:
-					{
-						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
-
-						if (consumer == nullptr)
-						{
-							MS_DEBUG_TAG(
-							  rtcp,
-							  "no Consumer found for received %s Feedback packet "
-							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-							  feedback->GetMediaSsrc(),
-							  feedback->GetMediaSsrc());
-
-							break;
-						}
-
-						MS_DEBUG_2TAGS(
-						  rtcp,
-						  rtx,
-						  "%s received, requesting key frame for Consumer "
-						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-						  feedback->GetMediaSsrc(),
-						  feedback->GetMediaSsrc());
-
-						consumer->ReceiveKeyFrameRequest(feedback->GetMessageType(), feedback->GetMediaSsrc());
-
-						break;
-					}
-
-					case RTC::RTCP::FeedbackPs::MessageType::AFB:
-					{
-						auto* afb = static_cast<RTC::RTCP::FeedbackPsAfbPacket*>(feedback);
-
-						// Store REMB info.
-						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
-						{
-							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
-
-							// Pass it to the subclass.
-							UserOnRembFeedback(remb);
-
-							break;
-						}
-						else
-						{
-							MS_DEBUG_TAG(
-							  rtcp,
-							  "ignoring unsupported %s Feedback PS AFB packet "
-							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-							  feedback->GetMediaSsrc(),
-							  feedback->GetMediaSsrc());
-
-							break;
-						}
-					}
-
-					default:
-					{
-						MS_DEBUG_TAG(
-						  rtcp,
-						  "ignoring unsupported %s Feedback packet "
-						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-						  feedback->GetMediaSsrc(),
-						  feedback->GetMediaSsrc());
-					}
-				}
-
-				break;
-			}
-
-			case RTC::RTCP::Type::RTPFB:
-			{
-				auto* feedback = static_cast<RTC::RTCP::FeedbackRtpPacket*>(packet);
-				auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
-
-				if (consumer == nullptr)
-				{
-					MS_DEBUG_TAG(
-					  rtcp,
-					  "no Consumer found for received Feedback packet "
-					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-					  feedback->GetMediaSsrc(),
-					  feedback->GetMediaSsrc());
-
-					break;
-				}
-
-				switch (feedback->GetMessageType())
-				{
-					case RTC::RTCP::FeedbackRtp::MessageType::NACK:
-					{
-						auto* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
-
-						consumer->ReceiveNack(nackPacket);
-
-						break;
-					}
-
-					default:
-					{
-						MS_DEBUG_TAG(
-						  rtcp,
-						  "ignoring unsupported %s Feedback packet "
-						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  RTC::RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-						  feedback->GetMediaSsrc(),
-						  feedback->GetMediaSsrc());
-					}
-				}
-
-				break;
-			}
-
-			case RTC::RTCP::Type::SR:
-			{
-				auto* sr = static_cast<RTC::RTCP::SenderReportPacket*>(packet);
-
-				// Even if Sender Report packet can only contains one report...
-				for (auto it = sr->Begin(); it != sr->End(); ++it)
-				{
-					auto& report = (*it);
-					// Get the producer associated to the SSRC indicated in the report.
-					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
-
-					if (producer == nullptr)
-					{
-						MS_DEBUG_TAG(
-						  rtcp,
-						  "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
-						  report->GetSsrc());
-
-						continue;
-					}
-
-					producer->ReceiveRtcpSenderReport(report);
-				}
-
-				break;
-			}
-
-			case RTC::RTCP::Type::SDES:
-			{
-				auto* sdes = static_cast<RTC::RTCP::SdesPacket*>(packet);
-
-				for (auto it = sdes->Begin(); it != sdes->End(); ++it)
-				{
-					auto& chunk = (*it);
-					// Get the producer associated to the SSRC indicated in the report.
-					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
-
-					if (producer == nullptr)
-					{
-						MS_DEBUG_TAG(
-						  rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
-
-						continue;
-					}
-				}
-
-				break;
-			}
-
-			case RTC::RTCP::Type::BYE:
-			{
-				MS_DEBUG_TAG(rtcp, "ignoring received RTCP BYE");
-
-				break;
-			}
-
-			case RTC::RTCP::Type::XR:
-			{
-				auto* xr = static_cast<RTC::RTCP::ExtendedReportPacket*>(packet);
-
-				for (auto it = xr->Begin(); it != xr->End(); ++it)
-				{
-					auto& report = (*it);
-
-					switch (report->GetType())
-					{
-						case RTC::RTCP::ExtendedReportBlock::Type::DLRR:
-						{
-							auto* dlrr = static_cast<RTC::RTCP::DelaySinceLastRr*>(report);
-
-							for (auto it2 = dlrr->Begin(); it2 != dlrr->End(); ++it2)
-							{
-								auto& ssrcInfo = (*it2);
-
-								// SSRC should be filled in the sub-block.
-								if (ssrcInfo->GetSsrc() == 0)
-									ssrcInfo->SetSsrc(xr->GetSsrc());
-
-								auto* producer = this->rtpListener.GetProducer(ssrcInfo->GetSsrc());
-
-								if (producer == nullptr)
-								{
-									MS_WARN_TAG(
-									  rtcp,
-									  "no Producer found for received Sender Extended Report [ssrc:%" PRIu32 "]",
-									  ssrcInfo->GetSsrc());
-
-									continue;
-								}
-
-								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
-							}
-
-							break;
-						}
-
-						default:
-						{
-							break;
-						}
-					}
-				}
-
-				break;
-			}
-
-			default:
-			{
-				MS_DEBUG_TAG(
-				  rtcp,
-				  "unhandled RTCP type received [type:%" PRIu8 "]",
-				  static_cast<uint8_t>(packet->GetType()));
-			}
+			delete previousPacket;
 		}
+	}
+
+	void Transport::ReceiveSctpData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!this->sctpAssociation)
+		{
+			MS_DEBUG_TAG(sctp, "ignoring SCTP packet (SCTP not enabled)");
+
+			return;
+		}
+
+		// Pass it to the SctpAssociation.
+		this->sctpAssociation->ProcessSctpData(data, len);
 	}
 
 	void Transport::SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const
@@ -1201,6 +1439,20 @@ namespace RTC
 		return consumer;
 	}
 
+	inline RTC::Consumer* Transport::GetConsumerByRtxSsrc(uint32_t ssrc) const
+	{
+		MS_TRACE();
+
+		auto mapRtxSsrcConsumerIt = this->mapRtxSsrcConsumer.find(ssrc);
+
+		if (mapRtxSsrcConsumerIt == this->mapRtxSsrcConsumer.end())
+			return nullptr;
+
+		auto* consumer = mapRtxSsrcConsumerIt->second;
+
+		return consumer;
+	}
+
 	void Transport::SetNewDataProducerIdFromRequest(
 	  Channel::Request* request, std::string& dataProducerId) const
 	{
@@ -1271,6 +1523,329 @@ namespace RTC
 		return dataConsumer;
 	}
 
+	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		switch (packet->GetType())
+		{
+			case RTC::RTCP::Type::RR:
+			{
+				auto* rr = static_cast<RTC::RTCP::ReceiverReportPacket*>(packet);
+
+				for (auto it = rr->Begin(); it != rr->End(); ++it)
+				{
+					auto& report   = *it;
+					auto* consumer = GetConsumerByMediaSsrc(report->GetSsrc());
+
+					if (!consumer)
+					{
+						// Special case for the RTP probator.
+						if (report->GetSsrc() == RTC::RtpProbationSsrc)
+						{
+							// TODO: We should pass the RR to the tccClient (and in fact just RR for the
+							// probation stream).
+
+							// TODO: Convert report to ReportBlock and pass to tccClient.
+							// RTCPReportBlock in libwebrtc/libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h
+							//
+							// NOTE: consumer->GetRtt() is already implemented.
+							//
+							// NOTE: Better pass our RR to the tccClient and convert there to webrtc
+							// class.
+							//
+							// if (this->tccClient)
+							// {
+							// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
+							// DepLibUV::GetTime());
+							// }
+
+							continue;
+						}
+
+						MS_DEBUG_TAG(
+						  rtcp,
+						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
+						  report->GetSsrc());
+
+						continue;
+					}
+
+					consumer->ReceiveRtcpReceiverReport(report);
+				}
+
+				break;
+			}
+
+			case RTC::RTCP::Type::PSFB:
+			{
+				auto* feedback = static_cast<RTC::RTCP::FeedbackPsPacket*>(packet);
+
+				switch (feedback->GetMessageType())
+				{
+					case RTC::RTCP::FeedbackPs::MessageType::PLI:
+					case RTC::RTCP::FeedbackPs::MessageType::FIR:
+					{
+						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
+
+						if (!consumer)
+						{
+							MS_DEBUG_TAG(
+							  rtcp,
+							  "no Consumer found for received %s Feedback packet "
+							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+							  feedback->GetMediaSsrc(),
+							  feedback->GetMediaSsrc());
+
+							break;
+						}
+
+						MS_DEBUG_2TAGS(
+						  rtcp,
+						  rtx,
+						  "%s received, requesting key frame for Consumer "
+						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  feedback->GetMediaSsrc(),
+						  feedback->GetMediaSsrc());
+
+						consumer->ReceiveKeyFrameRequest(feedback->GetMessageType(), feedback->GetMediaSsrc());
+
+						break;
+					}
+
+					case RTC::RTCP::FeedbackPs::MessageType::AFB:
+					{
+						auto* afb = static_cast<RTC::RTCP::FeedbackPsAfbPacket*>(feedback);
+
+						// Store REMB info.
+						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
+						{
+							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
+
+							// Pass it to the TCC client.
+							if (this->tccClient)
+								this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
+
+							break;
+						}
+						else
+						{
+							MS_DEBUG_TAG(
+							  rtcp,
+							  "ignoring unsupported %s Feedback PS AFB packet "
+							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+							  feedback->GetMediaSsrc(),
+							  feedback->GetMediaSsrc());
+
+							break;
+						}
+					}
+
+					default:
+					{
+						MS_DEBUG_TAG(
+						  rtcp,
+						  "ignoring unsupported %s Feedback packet "
+						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  feedback->GetMediaSsrc(),
+						  feedback->GetMediaSsrc());
+					}
+				}
+
+				break;
+			}
+
+			case RTC::RTCP::Type::RTPFB:
+			{
+				auto* feedback = static_cast<RTC::RTCP::FeedbackRtpPacket*>(packet);
+				auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
+
+				// If no Consumer is found and this is not a Transport Feedback for the
+				// probation SSRC or any Consumer RTX SSRC ignore it.
+				//
+				// clang-format off
+				if (
+					!consumer &&
+					(
+						(feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC) &&
+						(
+						 feedback->GetMediaSsrc() != RTC::RtpProbationSsrc ||
+						 !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())
+						)
+					)
+				)
+				// clang-format on
+				{
+					MS_DEBUG_TAG(
+					  rtcp,
+					  "no Consumer found for received Feedback packet "
+					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+					  feedback->GetMediaSsrc(),
+					  feedback->GetMediaSsrc());
+
+					break;
+				}
+
+				switch (feedback->GetMessageType())
+				{
+					case RTC::RTCP::FeedbackRtp::MessageType::NACK:
+					{
+						auto* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+
+						consumer->ReceiveNack(nackPacket);
+
+						break;
+					}
+
+					case RTC::RTCP::FeedbackRtp::MessageType::TCC:
+					{
+						auto* feedback = static_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
+
+						// TODO: REMOVE
+						// feedback->Dump();
+						// MS_DUMP_DATA(feedback->GetData(), feedback->GetSize());
+
+						if (this->tccClient)
+							this->tccClient->ReceiveRtcpTransportFeedback(feedback);
+
+						// TODO
+						// Pass it to the SenderBandwidthEstimator client.
+						if (this->senderBwe)
+							this->senderBwe->ReceiveRtcpTransportFeedback(feedback);
+
+						break;
+					}
+
+					default:
+					{
+						MS_DEBUG_TAG(
+						  rtcp,
+						  "ignoring unsupported %s Feedback packet "
+						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+						  RTC::RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
+						  feedback->GetMediaSsrc(),
+						  feedback->GetMediaSsrc());
+					}
+				}
+
+				break;
+			}
+
+			case RTC::RTCP::Type::SR:
+			{
+				auto* sr = static_cast<RTC::RTCP::SenderReportPacket*>(packet);
+
+				// Even if Sender Report packet can only contains one report.
+				for (auto it = sr->Begin(); it != sr->End(); ++it)
+				{
+					auto& report   = *it;
+					auto* producer = this->rtpListener.GetProducer(report->GetSsrc());
+
+					if (!producer)
+					{
+						MS_DEBUG_TAG(
+						  rtcp,
+						  "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
+						  report->GetSsrc());
+
+						continue;
+					}
+
+					producer->ReceiveRtcpSenderReport(report);
+				}
+
+				break;
+			}
+
+			case RTC::RTCP::Type::SDES:
+			{
+				auto* sdes = static_cast<RTC::RTCP::SdesPacket*>(packet);
+
+				for (auto it = sdes->Begin(); it != sdes->End(); ++it)
+				{
+					auto& chunk    = *it;
+					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
+
+					if (!producer)
+					{
+						MS_DEBUG_TAG(
+						  rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
+
+						continue;
+					}
+				}
+
+				break;
+			}
+
+			case RTC::RTCP::Type::BYE:
+			{
+				MS_DEBUG_TAG(rtcp, "ignoring received RTCP BYE");
+
+				break;
+			}
+
+			case RTC::RTCP::Type::XR:
+			{
+				auto* xr = static_cast<RTC::RTCP::ExtendedReportPacket*>(packet);
+
+				for (auto it = xr->Begin(); it != xr->End(); ++it)
+				{
+					auto& report = *it;
+
+					switch (report->GetType())
+					{
+						case RTC::RTCP::ExtendedReportBlock::Type::DLRR:
+						{
+							auto* dlrr = static_cast<RTC::RTCP::DelaySinceLastRr*>(report);
+
+							for (auto it2 = dlrr->Begin(); it2 != dlrr->End(); ++it2)
+							{
+								auto& ssrcInfo = *it2;
+
+								// SSRC should be filled in the sub-block.
+								if (ssrcInfo->GetSsrc() == 0)
+									ssrcInfo->SetSsrc(xr->GetSsrc());
+
+								auto* producer = this->rtpListener.GetProducer(ssrcInfo->GetSsrc());
+
+								if (!producer)
+								{
+									MS_WARN_TAG(
+									  rtcp,
+									  "no Producer found for received Sender Extended Report [ssrc:%" PRIu32 "]",
+									  ssrcInfo->GetSsrc());
+
+									continue;
+								}
+
+								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
+							}
+
+							break;
+						}
+
+						default:;
+					}
+				}
+
+				break;
+			}
+
+			default:
+			{
+				MS_DEBUG_TAG(
+				  rtcp,
+				  "unhandled RTCP type received [type:%" PRIu8 "]",
+				  static_cast<uint8_t>(packet->GetType()));
+			}
+		}
+	}
+
 	void Transport::SendRtcp(uint64_t now)
 	{
 		MS_TRACE();
@@ -1281,7 +1856,7 @@ namespace RTC
 		{
 			auto* consumer = kv.second;
 
-			for (auto& rtpStream : consumer->GetRtpStreams())
+			for (auto* rtpStream : consumer->GetRtpStreams())
 			{
 				// Reset the Compound packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
@@ -1322,6 +1897,152 @@ namespace RTC
 			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
 		}
+	}
+
+	void Transport::DistributeAvailableOutgoingBitrate()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
+		// TODO: do it with this->senderBwe.
+
+		std::multimap<uint16_t, RTC::Consumer*> multimapPriorityConsumer;
+		uint16_t totalPriorities{ 0u };
+
+		// Fill the map with Consumers and their priority (if > 0).
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+			auto priority  = consumer->GetBitratePriority();
+
+			if (priority > 0u)
+			{
+				multimapPriorityConsumer.emplace(priority, consumer);
+				totalPriorities += priority;
+			}
+		}
+
+		// Nobody wants bitrate. Exit.
+		if (totalPriorities == 0u)
+			return;
+
+		uint32_t availableBitrate;
+
+		availableBitrate = this->tccClient->GetAvailableBitrate();
+
+		this->tccClient->RescheduleNextAvailableBitrateEvent();
+
+		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+
+		uint32_t remainingBitrate = availableBitrate;
+
+		// First of all, redistribute the available bitrate by taking into account
+		// Consumers' priorities.
+		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+		{
+			auto priority    = it->first;
+			auto* consumer   = it->second;
+			uint32_t bitrate = (availableBitrate * priority) / totalPriorities;
+
+			MS_DEBUG_DEV(
+			  "main bitrate for Consumer [priority:%" PRIu16 ", bitrate:%" PRIu32 ", consumerId:%s]",
+			  priority,
+			  bitrate,
+			  consumer->id.c_str());
+
+			uint32_t usedBitrate;
+			auto bweType = this->tccClient->GetBweType();
+
+			switch (bweType)
+			{
+				case RTC::BweType::TRANSPORT_CC:
+					usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ false);
+					break;
+				case RTC::BweType::REMB:
+					usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ true);
+					break;
+			}
+
+			if (usedBitrate <= remainingBitrate)
+				remainingBitrate -= usedBitrate;
+			else
+				remainingBitrate = 0u;
+		}
+
+		MS_DEBUG_DEV("after first main iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
+
+		// Then redistribute the remaining bitrate by allowing Consumers to increase
+		// layer by layer.
+		while (remainingBitrate >= 2000u)
+		{
+			auto previousRemainingBitrate = remainingBitrate;
+
+			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+			{
+				auto* consumer = it->second;
+
+				MS_DEBUG_DEV(
+				  "layer bitrate for Consumer [bitrate:%" PRIu32 ", consumerId:%s]",
+				  remainingBitrate,
+				  consumer->id.c_str());
+
+				uint32_t usedBitrate;
+				auto bweType = this->tccClient->GetBweType();
+
+				switch (bweType)
+				{
+					case RTC::BweType::TRANSPORT_CC:
+						usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ false);
+						break;
+					case RTC::BweType::REMB:
+						usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ true);
+				}
+
+				MS_ASSERT(usedBitrate <= remainingBitrate, "Consumer used more layer bitrate than given");
+
+				remainingBitrate -= usedBitrate;
+
+				// No more.
+				if (remainingBitrate < 2000u)
+					break;
+			}
+
+			// If no Consumer used bitrate, exit the loop.
+			if (remainingBitrate == previousRemainingBitrate)
+				break;
+		}
+
+		MS_DEBUG_DEV("after layer-by-layer iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
+
+		// Finally instruct Consumers to apply their computed layers.
+		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+		{
+			auto* consumer = it->second;
+
+			consumer->ApplyLayers();
+		}
+	}
+
+	void Transport::ComputeOutgoingDesiredBitrate()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
+		// TODO: do it with this->senderBwe.
+
+		uint32_t totalDesiredBitrate{ 0u };
+
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer      = kv.second;
+			auto desiredBitrate = consumer->GetDesiredBitrate();
+
+			totalDesiredBitrate += desiredBitrate;
+		}
+
+		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
+
+		this->tccClient->SetDesiredBitrate(totalDesiredBitrate);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -1385,34 +2106,118 @@ namespace RTC
 		  this, producer, mappedSsrc, worstRemoteFractionLost);
 	}
 
-	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)
+	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		SendRtpPacket(packet, consumer);
-	}
-
-	inline void Transport::OnConsumerRetransmitRtpPacket(
-	  RTC::Consumer* consumer, RTC::RtpPacket* packet, bool probation)
-	{
-		MS_TRACE();
-
-		// Update http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time if present.
+		// TODO: Use senderBwe instead.
+		// Update transport wide sequence number if present.
+		if (this->tccClient && packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
-			uint8_t extenLen;
-			uint8_t* extenValue = packet->GetExtension(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen);
+			this->transportWideCcSeq++;
 
-			if (extenValue && extenLen == 3)
-			{
-				auto now         = DepLibUV::GetTime();
-				auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
+			auto* tccClient = this->tccClient;
+			webrtc::RtpPacketSendInfo packetInfo;
 
-				Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
-			}
+			packetInfo.ssrc                      = packet->GetSsrc();
+			packetInfo.transport_sequence_number = this->transportWideCcSeq;
+			packetInfo.has_rtp_sequence_number   = true;
+			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+			packetInfo.length                    = packet->GetSize();
+			packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
+
+			// TODO: TMP
+			// MS_DUMP("<webrtc::RtpPacketSendInfo>");
+			// MS_DUMP("  - ssrc                      : %" PRIu32, packetInfo.ssrc);
+			// MS_DUMP("  - transport_sequence_number : %" PRIu16, packetInfo.transport_sequence_number);
+			// MS_DUMP("  - has_rtp_sequence_number   : true");
+			// MS_DUMP("  - rtp_sequence_number       : %" PRIu16, packetInfo.rtp_sequence_number);
+			// MS_DUMP("  - length                    : %zu", packetInfo.length);
+			// MS_DUMP("  <PacedPacketInfo>");
+			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
+			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
+			// MS_DUMP(
+			//   "    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
+			// MS_DUMP(
+			//   "    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
+			// MS_DUMP("  </PacedPacketInfo>");
+			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
+
+			// Indicate the pacer (and prober) that a packet is to be sent.
+			this->tccClient->InsertPacket(packetInfo);
+
+			// TODO
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+
+			auto* senderBwe    = this->senderBwe;
+			auto wideSeqNumber = this->transportWideCcSeq;
+
+			SendRtpPacket(packet, [&packetInfo, wideSeqNumber, tccClient, senderBwe](bool sent) {
+				if (sent)
+				{
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+
+					// TODO
+					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTime());
+				}
+			});
+		}
+		else
+		{
+			SendRtpPacket(packet);
 		}
 
-		SendRtpPacket(packet, consumer, true, probation);
+		this->sendRtpTransmission.Update(packet);
+	}
+
+	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		// Update abs-send-time if present.
+		packet->UpdateAbsSendTime(DepLibUV::GetTime());
+
+		// TODO: Use senderBwe instead.
+		// Update transport wide sequence number if present.
+		if (this->tccClient && packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
+		{
+			this->transportWideCcSeq++;
+
+			auto* tccClient = this->tccClient;
+			webrtc::RtpPacketSendInfo packetInfo;
+
+			packetInfo.ssrc                      = packet->GetSsrc();
+			packetInfo.transport_sequence_number = this->transportWideCcSeq;
+			packetInfo.has_rtp_sequence_number   = true;
+			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+			packetInfo.length                    = packet->GetSize();
+			packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
+
+			// Indicate the pacer (and prober) that a packet is to be sent.
+			this->tccClient->InsertPacket(packetInfo);
+
+			// TODO
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+
+			auto* senderBwe    = this->senderBwe;
+			auto wideSeqNumber = this->transportWideCcSeq;
+
+			SendRtpPacket(packet, [&packetInfo, wideSeqNumber, tccClient, senderBwe](bool sent) {
+				if (sent)
+				{
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+
+					// TODO
+					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTime());
+				}
+			});
+		}
+		else
+		{
+			SendRtpPacket(packet);
+		}
+
+		this->sendRtxTransmission.Update(packet);
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
@@ -1429,6 +2234,14 @@ namespace RTC
 		this->listener->OnTransportConsumerKeyFrameRequested(this, consumer, mappedSsrc);
 	}
 
+	inline void Transport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
+	{
+		MS_TRACE();
+
+		DistributeAvailableOutgoingBitrate();
+		ComputeOutgoingDesiredBitrate();
+	}
+
 	inline void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
@@ -1439,6 +2252,11 @@ namespace RTC
 		for (auto ssrc : consumer->GetMediaSsrcs())
 		{
 			this->mapSsrcConsumer.erase(ssrc);
+		}
+
+		for (auto ssrc : consumer->GetRtxSsrcs())
+		{
+			this->mapRtxSsrcConsumer.erase(ssrc);
 		}
 
 		// Notify the listener.
@@ -1558,8 +2376,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Pass it to the subclass.
-		UserOnSendSctpData(data, len);
+		// Ignore if destroying.
+		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
+		// its destructor is called first and then the parent Transport's destructor,
+		// and we would end here calling SendSctpData() which is an abstract method.
+		if (this->destroying)
+			return;
+
+		if (this->sctpAssociation)
+			SendSctpData(data, len);
 	}
 
 	inline void Transport::OnSctpAssociationMessageReceived(
@@ -1573,7 +2398,7 @@ namespace RTC
 
 		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(streamId);
 
-		if (dataProducer == nullptr)
+		if (!dataProducer)
 		{
 			MS_WARN_TAG(
 			  sctp, "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]", streamId);
@@ -1585,10 +2410,132 @@ namespace RTC
 		dataProducer->ReceiveSctpMessage(ppid, msg, len);
 	}
 
+	inline void Transport::OnTransportCongestionControlClientAvailableBitrate(
+	  RTC::TransportCongestionControlClient* /*tccClient*/,
+	  uint32_t availableBitrate,
+	  uint32_t previousAvailableBitrate)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_DEV(
+		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
+		  availableBitrate,
+		  previousAvailableBitrate);
+
+		DistributeAvailableOutgoingBitrate();
+		ComputeOutgoingDesiredBitrate();
+	}
+
+	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(
+	  RTC::TransportCongestionControlClient* tccClient,
+	  RTC::RtpPacket* packet,
+	  const webrtc::PacedPacketInfo& pacingInfo)
+	{
+		MS_TRACE();
+
+		// Update abs-send-time if present.
+		packet->UpdateAbsSendTime(DepLibUV::GetTime());
+
+		// Update transport wide sequence number if present.
+		if (packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
+		{
+			this->transportWideCcSeq++;
+
+			webrtc::RtpPacketSendInfo packetInfo;
+
+			packetInfo.ssrc                      = packet->GetSsrc();
+			packetInfo.transport_sequence_number = this->transportWideCcSeq;
+			packetInfo.has_rtp_sequence_number   = true;
+			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+			packetInfo.length                    = packet->GetSize();
+			packetInfo.pacing_info               = pacingInfo;
+
+			// TODO: TMP
+			// MS_DUMP("<webrtc::RtpPacketSendInfo>");
+			// MS_DUMP("  - ssrc                      : %" PRIu32, packetInfo.ssrc);
+			// MS_DUMP("  - transport_sequence_number : %" PRIu16, packetInfo.transport_sequence_number);
+			// MS_DUMP("  - has_rtp_sequence_number   : true");
+			// MS_DUMP("  - rtp_sequence_number       : %" PRIu16, packetInfo.rtp_sequence_number);
+			// MS_DUMP("  - length                    : %zu", packetInfo.length);
+			// MS_DUMP("  <PacedPacketInfo>");
+			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
+			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
+			// MS_DUMP(
+			//   "    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
+			// MS_DUMP(
+			//   "    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
+			// MS_DUMP("  </PacedPacketInfo>");
+			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
+
+			// Indicate the pacer (and prober) that a packet is to be sent.
+			this->tccClient->InsertPacket(packetInfo);
+
+			// TODO
+			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTime());
+
+			auto* senderBwe = this->senderBwe;
+			uint16_t transportWideCcSeq;
+
+			packet->ReadTransportWideCc01(transportWideCcSeq);
+
+			// TODO: REMOVE
+			MS_DUMP(
+			  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
+			  packet->GetSequenceNumber(),
+			  transportWideCcSeq,
+			  packet->GetSize(),
+			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTime()));
+
+			SendRtpPacket(packet, [&packetInfo, transportWideCcSeq, tccClient, senderBwe](bool sent) {
+				if (sent)
+				{
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTime());
+
+					// TODO
+					senderBwe->RtpPacketSent(transportWideCcSeq, DepLibUV::GetTime());
+				}
+			});
+		}
+		else
+		{
+			SendRtpPacket(packet);
+		}
+
+		this->sendProbationTransmission.Update(packet);
+	}
+
+	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(
+	  RTC::TransportCongestionControlServer* /*tccServer*/, RTC::RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		packet->Serialize(RTC::RTCP::Buffer);
+
+		SendRtcpPacket(packet);
+	}
+
+	inline void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
+	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
+	  uint32_t availableBitrate,
+	  uint32_t previousAvailableBitrate)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_DEV(
+		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
+		  availableBitrate,
+		  previousAvailableBitrate);
+
+		// TODO: Uncomment.
+		// DistributeAvailableOutgoingBitrate();
+		// ComputeOutgoingDesiredBitrate();
+	}
+
 	inline void Transport::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
 
+		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
 			auto interval = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
@@ -1624,6 +2571,7 @@ namespace RTC
 			 * of all participants.
 			 */
 			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
+
 			this->rtcpTimer->Start(interval);
 		}
 	}

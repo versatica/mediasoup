@@ -7,6 +7,7 @@
 #include "Utils.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
 #include "RTC/FuzzerStunPacket.hpp"
+#include "RTC/FuzzerTrendCalculator.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>
@@ -24,6 +25,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	// Trick to initialize our stuff just once.
 	static int unused = Init();
 
+	// Avoid [-Wunused-variable].
+	unused++;
+
 	if (fuzzStun)
 		Fuzzer::RTC::StunPacket::Fuzz(data, len);
 
@@ -32,6 +36,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 
 	if (fuzzRtcp)
 		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
+
+	Fuzzer::RTC::TrendCalculator::Fuzz(data, len);
 
 	return 0;
 }

@@ -81,14 +81,13 @@ namespace RTC
 		                               // sender report arrival.
 		uint32_t transit{ 0 };         // Relative transit time for prev packet.
 		uint32_t jitter{ 0 };
-		float rtt{ 0 };
 		uint8_t firSeqNumber{ 0 };
 		uint32_t reportedPacketLost{ 0 };
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		Timer* inactivityCheckPeriodicTimer{ nullptr };
-		bool inactive{ false };     // Stream is inactive.
-		uint64_t lastPacketAt{ 0 }; // Time last valid packet arrived.
-		TransmissionCounter transmissionCounter;
+		bool inactive{ false };
+		TransmissionCounter transmissionCounter;      // Valid media + valid RTX.
+		RTC::RtpDataCounter mediaTransmissionCounter; // Just valid media.
 	};
 
 	/* Inline instance methods */

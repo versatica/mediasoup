@@ -11,7 +11,7 @@ void Fuzzer::RTC::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	if (!packet)
 		return;
 
-	packet->Dump();
+	// packet->Dump();
 	packet->GetClass();
 	packet->GetMethod();
 	packet->GetData();

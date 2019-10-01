@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV
 
 #include "RTC/RtpStreamSend.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
@@ -220,43 +219,6 @@ namespace RTC
 	void RtpStreamSend::Resume()
 	{
 		MS_TRACE();
-	}
-
-	void RtpStreamSend::SendProbationRtpPacket(uint16_t seq)
-	{
-		MS_TRACE();
-
-		if (this->storage.empty())
-			return;
-
-		auto* storageItem = this->buffer[seq];
-
-		if (!storageItem)
-			return;
-
-		auto* packet = storageItem->packet;
-
-		// If we use RTX and the packet has not yet been resent, encode it now.
-		if (HasRtx())
-		{
-			// Increment RTX seq.
-			++this->rtxSeq;
-
-			if (!storageItem->rtxEncoded)
-			{
-				packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
-
-				storageItem->rtxEncoded = true;
-			}
-			else
-			{
-				packet->SetSequenceNumber(this->rtxSeq);
-			}
-		}
-
-		// Retransmit as probation packet.
-		static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
-		  ->OnRtpStreamRetransmitRtpPacket(this, packet, true);
 	}
 
 	uint32_t RtpStreamSend::GetBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
@@ -685,7 +647,8 @@ namespace RTC
 #ifdef MS_LOG_DEV
 		MS_DEBUG_TAG(
 		  score,
-		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score: %lf]",
+		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score:%" PRIu8
+		  "]",
 		  deliveredRatio,
 		  repairedRatio,
 		  repairedWeight,

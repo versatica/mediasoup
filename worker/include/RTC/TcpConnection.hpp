@@ -21,7 +21,7 @@ namespace RTC
 		~TcpConnection() override;
 
 	public:
-		void Send(const uint8_t* data, size_t len);
+		void Send(const uint8_t* data, size_t len, onSendHandler& onDone);
 		size_t GetRecvBytes() const;
 		size_t GetSentBytes() const;
 

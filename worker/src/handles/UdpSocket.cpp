@@ -40,6 +40,7 @@ inline static void onSend(uv_udp_send_t* req, int status)
 	auto* sendData = static_cast<UdpSocket::UvSendData*>(req->data);
 	auto* handle   = req->handle;
 	auto* socket   = static_cast<UdpSocket*>(handle->data);
+	auto* onDone   = sendData->onDone;
 
 	// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 	std::free(sendData);
@@ -47,9 +48,7 @@ inline static void onSend(uv_udp_send_t* req, int status)
 	if (socket == nullptr)
 		return;
 
-	// Just notify the UdpSocket when error.
-	if (status != 0)
-		socket->OnUvSendError(status);
+	socket->OnUvSend(status, *onDone);
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -66,7 +65,7 @@ UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 
 	int err;
 
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	err = uv_udp_recv_start(
 	  this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
@@ -119,23 +118,29 @@ void UdpSocket::Close()
 void UdpSocket::Dump() const
 {
 	MS_DUMP("<UdpSocket>");
-	MS_DUMP(
-	  "  [UDP, local:%s :%" PRIu16 ", status:%s]",
-	  this->localIp.c_str(),
-	  static_cast<uint16_t>(this->localPort),
-	  (!this->closed) ? "open" : "closed");
+	MS_DUMP("  localIp   : %s", this->localIp.c_str());
+	MS_DUMP("  localPort : %" PRIu16, static_cast<uint16_t>(this->localPort));
+	MS_DUMP("  closed    : %s", !this->closed ? "open" : "closed");
 	MS_DUMP("</UdpSocket>");
 }
 
-void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr)
+void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendHandler& onDone)
 {
 	MS_TRACE();
 
 	if (this->closed)
+	{
+		onDone(false);
+
 		return;
+	}
 
 	if (len == 0)
+	{
+		onDone(false);
+
 		return;
+	}
 
 	// First try uv_udp_try_send(). In case it can not directly send the datagram
 	// then build a uv_req_t and use uv_udp_send().
@@ -149,6 +154,8 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 		// Update sent bytes.
 		this->sentBytes += sent;
 
+		onDone(true);
+
 		return;
 	}
 	if (sent >= 0)
@@ -158,12 +165,16 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 		// Update sent bytes.
 		this->sentBytes += sent;
 
+		onDone(false);
+
 		return;
 	}
 	// Error,
 	if (sent != UV_EAGAIN)
 	{
 		MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
+
+		onDone(false);
 
 		return;
 	}
@@ -175,7 +186,8 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	auto* sendData = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));
 
 	std::memcpy(sendData->store, data, len);
-	sendData->req.data = (void*)sendData;
+	sendData->req.data = static_cast<void*>(sendData);
+	sendData->onDone   = &onDone;
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(sendData->store), len);
 
@@ -190,61 +202,13 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(sendData);
+		onDone(false);
 	}
 	else
 	{
 		// Update sent bytes.
 		this->sentBytes += len;
 	}
-}
-
-void UdpSocket::Send(const uint8_t* data, size_t len, const std::string& ip, uint16_t port)
-{
-	MS_TRACE();
-
-	if (this->closed)
-		return;
-
-	int err;
-
-	if (len == 0)
-		return;
-
-	struct sockaddr_storage addr; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-	switch (Utils::IP::GetFamily(ip))
-	{
-		case AF_INET:
-		{
-			err = uv_ip4_addr(
-			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in*>(&addr));
-
-			if (err != 0)
-				MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
-
-			break;
-		}
-
-		case AF_INET6:
-		{
-			err = uv_ip6_addr(
-			  ip.c_str(), static_cast<int>(port), reinterpret_cast<struct sockaddr_in6*>(&addr));
-
-			if (err != 0)
-				MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
-
-			break;
-		}
-
-		default:
-		{
-			MS_ERROR("invalid destination IP '%s'", ip.c_str());
-
-			return;
-		}
-	}
-
-	Send(data, len, reinterpret_cast<struct sockaddr*>(&addr));
 }
 
 bool UdpSocket::SetLocalAddress()
@@ -319,14 +283,27 @@ inline void UdpSocket::OnUvRecv(
 	}
 }
 
-inline void UdpSocket::OnUvSendError(int error) // NOLINT(misc-unused-parameters)
+inline void UdpSocket::OnUvSend(int status, onSendHandler& onDone)
 {
 	MS_TRACE();
 
 	if (this->closed)
-		return;
+	{
+		onDone(false);
 
+		return;
+	}
+
+	if (status == 0)
+	{
+		onDone(true);
+	}
+	else
+	{
 #ifdef MS_LOG_DEV
-	MS_DEBUG_DEV("send error: %s", uv_strerror(error));
+		MS_DEBUG_DEV("send error: %s", uv_strerror(status));
 #endif
+
+		onDone(false);
+	}
 }

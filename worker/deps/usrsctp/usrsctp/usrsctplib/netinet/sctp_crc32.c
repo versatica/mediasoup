@@ -34,10 +34,13 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_crc32.c 327200 2017-12-26 12:35:02Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_crc32.c 349151 2019-06-17 19:49:08Z delphij $");
 
 #include "opt_sctp.h"
 
+#if defined(__FreeBSD__)
+#include <sys/gsb_crc32.h>
+#endif
 #ifdef SCTP
 #include <netinet/sctp_os.h>
 #include <netinet/sctp.h>

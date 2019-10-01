@@ -25,13 +25,12 @@ namespace RTC
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
-		void SetExternallyManagedBitrate() override;
 		uint16_t GetBitratePriority() const override;
-		uint32_t UseAvailableBitrate(uint32_t bitrate) override;
-		uint32_t IncreaseLayer(uint32_t bitrate) override;
+		uint32_t UseAvailableBitrate(uint32_t bitrate, bool considerLoss) override;
+		uint32_t IncreaseTemporalLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
+		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void SendProbationRtpPacket(uint16_t seq) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
@@ -39,6 +38,7 @@ namespace RTC
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
 		uint32_t GetTransmissionRate(uint64_t now) override;
+		float GetRtt() const override;
 
 	private:
 		void UserOnTransportConnected() override;
@@ -57,13 +57,13 @@ namespace RTC
 		void EmitLayersChange() const;
 		RTC::RtpStream* GetProducerCurrentRtpStream() const;
 		RTC::RtpStream* GetProducerTargetRtpStream() const;
+		RTC::RtpStream* GetProducerProvisionalTargetRtpStream() const;
 		RTC::RtpStream* GetProducerTsReferenceRtpStream() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(
-		  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet, bool probation = false) override;
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
 	private:
 		// Allocated by this.
@@ -83,10 +83,9 @@ namespace RTC
 		int16_t currentSpatialLayer{ -1 };
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		bool externallyManagedBitrate{ false };
-		uint32_t tsOffset{ 0 }; // RTP Timestamp offset.
+		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		std::map<uint32_t, uint32_t> tsExtraOffsets;
-		uint16_t tsExtraOffetPacketCount{ 0 };
+		uint16_t tsExtraOffetPacketCount{ 0u };
 	};
 
 	/* Inline methods. */
@@ -101,7 +100,7 @@ namespace RTC
 				this->producerRtpStreams.end(),
 				[](const RTC::RtpStream* rtpStream)
 				{
-					return (rtpStream != nullptr && rtpStream->GetScore() > 0);
+					return (rtpStream != nullptr && rtpStream->GetScore() > 0u);
 				}
 			)
 		);

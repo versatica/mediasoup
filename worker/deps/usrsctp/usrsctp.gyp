@@ -21,8 +21,7 @@
     ],
     'direct_dependent_settings': {
       'include_dirs': [
-        'usrsctp/usrsctplib',
-        'usrsctp/usrsctplib/netinet',
+        'usrsctp/usrsctplib'
       ],
     },
     'include_dirs': [

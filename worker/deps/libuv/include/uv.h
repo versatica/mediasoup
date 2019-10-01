@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+#if defined(BUILDING_UV_SHARED) && defined(USING_UV_SHARED)
+#error "Define either BUILDING_UV_SHARED or USING_UV_SHARED, not both."
+#endif
+
 #ifdef _WIN32
   /* Windows - set up dll import/export decorators. */
 # if defined(BUILDING_UV_SHARED)
@@ -143,6 +147,7 @@ extern "C" {
   XX(EREMOTEIO, "remote I/O error")                                           \
   XX(ENOTTY, "inappropriate ioctl for device")                                \
   XX(EFTYPE, "inappropriate file type or format")                             \
+  XX(EILSEQ, "illegal byte sequence")                                         \
 
 #define UV_HANDLE_TYPE_MAP(XX)                                                \
   XX(ASYNC, async)                                                            \
@@ -231,11 +236,13 @@ typedef struct uv_fs_s uv_fs_t;
 typedef struct uv_work_s uv_work_t;
 
 /* None of the above. */
+typedef struct uv_env_item_s uv_env_item_t;
 typedef struct uv_cpu_info_s uv_cpu_info_t;
 typedef struct uv_interface_address_s uv_interface_address_t;
 typedef struct uv_dirent_s uv_dirent_t;
 typedef struct uv_passwd_s uv_passwd_t;
 typedef struct uv_utsname_s uv_utsname_t;
+typedef struct uv_statfs_s uv_statfs_t;
 
 typedef enum {
   UV_LOOP_BLOCK_SIGNAL
@@ -557,6 +564,7 @@ UV_EXTERN int uv_tcp_getsockname(const uv_tcp_t* handle,
 UV_EXTERN int uv_tcp_getpeername(const uv_tcp_t* handle,
                                  struct sockaddr* name,
                                  int* namelen);
+UV_EXTERN int uv_tcp_close_reset(uv_tcp_t* handle, uv_close_cb close_cb);
 UV_EXTERN int uv_tcp_connect(uv_connect_t* req,
                              uv_tcp_t* handle,
                              const struct sockaddr* addr,
@@ -643,6 +651,11 @@ UV_EXTERN int uv_udp_set_membership(uv_udp_t* handle,
                                     const char* multicast_addr,
                                     const char* interface_addr,
                                     uv_membership membership);
+UV_EXTERN int uv_udp_set_source_membership(uv_udp_t* handle,
+                                           const char* multicast_addr,
+                                           const char* interface_addr,
+                                           const char* source_addr,
+                                           uv_membership membership);
 UV_EXTERN int uv_udp_set_multicast_loop(uv_udp_t* handle, int on);
 UV_EXTERN int uv_udp_set_multicast_ttl(uv_udp_t* handle, int ttl);
 UV_EXTERN int uv_udp_set_multicast_interface(uv_udp_t* handle,
@@ -1070,6 +1083,17 @@ struct uv_utsname_s {
      to as meaningless in the docs. */
 };
 
+struct uv_statfs_s {
+  uint64_t f_type;
+  uint64_t f_bsize;
+  uint64_t f_blocks;
+  uint64_t f_bfree;
+  uint64_t f_bavail;
+  uint64_t f_files;
+  uint64_t f_ffree;
+  uint64_t f_spare[4];
+};
+
 typedef enum {
   UV_DIRENT_UNKNOWN,
   UV_DIRENT_FILE,
@@ -1150,6 +1174,13 @@ UV_EXTERN int uv_interface_addresses(uv_interface_address_t** addresses,
 UV_EXTERN void uv_free_interface_addresses(uv_interface_address_t* addresses,
                                            int count);
 
+struct uv_env_item_s {
+  char* name;
+  char* value;
+};
+
+UV_EXTERN int uv_os_environ(uv_env_item_t** envitems, int* count);
+UV_EXTERN void uv_os_free_environ(uv_env_item_t* envitems, int count);
 UV_EXTERN int uv_os_getenv(const char* name, char* buffer, size_t* size);
 UV_EXTERN int uv_os_setenv(const char* name, const char* value);
 UV_EXTERN int uv_os_unsetenv(const char* name);
@@ -1205,7 +1236,8 @@ typedef enum {
   UV_FS_LCHOWN,
   UV_FS_OPENDIR,
   UV_FS_READDIR,
-  UV_FS_CLOSEDIR
+  UV_FS_CLOSEDIR,
+  UV_FS_STATFS
 } uv_fs_type;
 
 struct uv_dir_s {
@@ -1432,6 +1464,10 @@ UV_EXTERN int uv_fs_lchown(uv_loop_t* loop,
                            const char* path,
                            uv_uid_t uid,
                            uv_gid_t gid,
+                           uv_fs_cb cb);
+UV_EXTERN int uv_fs_statfs(uv_loop_t* loop,
+                           uv_fs_t* req,
+                           const char* path,
                            uv_fs_cb cb);
 
 

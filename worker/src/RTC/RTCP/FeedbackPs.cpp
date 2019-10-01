@@ -22,7 +22,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) > len)
+			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 

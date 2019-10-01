@@ -2,7 +2,6 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -13,6 +12,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include <json.hpp>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -26,8 +26,7 @@ namespace RTC
 		{
 		public:
 			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
-			virtual void OnConsumerRetransmitRtpPacket(
-			  RTC::Consumer* consumer, RTC::RtpPacket* packet, bool probation = false)             = 0;
+			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
 			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
@@ -51,6 +50,7 @@ namespace RTC
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		RTC::RtpParameters::Type GetType() const;
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
+		const std::vector<uint32_t>& GetRtxSsrcs() const;
 		virtual bool IsActive() const;
 		void TransportConnected();
 		void TransportDisconnected();
@@ -64,14 +64,14 @@ namespace RTC
 		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
 		virtual void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) = 0;
 		void ProducerClosed();
-		virtual void SetExternallyManagedBitrate();
-		virtual uint16_t GetBitratePriority() const;
-		virtual uint32_t UseAvailableBitrate(uint32_t bitrate);
-		virtual uint32_t IncreaseLayer(uint32_t bitrate);
-		virtual void ApplyLayers();
-		virtual void SendRtpPacket(RTC::RtpPacket* packet)       = 0;
-		virtual void SendProbationRtpPacket(uint16_t seq)        = 0;
-		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams() = 0;
+		void SetExternallyManagedBitrate();
+		virtual uint16_t GetBitratePriority() const                                 = 0;
+		virtual uint32_t UseAvailableBitrate(uint32_t bitrate, bool considerLoss)   = 0;
+		virtual uint32_t IncreaseTemporalLayer(uint32_t bitrate, bool considerLoss) = 0;
+		virtual void ApplyLayers()                                                  = 0;
+		virtual uint32_t GetDesiredBitrate() const                                  = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet)                          = 0;
+		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams()                    = 0;
 		virtual void GetRtcp(
 		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
@@ -80,6 +80,7 @@ namespace RTC
 		  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)          = 0;
 		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) = 0;
 		virtual uint32_t GetTransmissionRate(uint64_t now)                        = 0;
+		virtual float GetRtt() const                                              = 0;
 
 	private:
 		virtual void UserOnTransportConnected()    = 0;
@@ -101,12 +102,14 @@ namespace RTC
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
-		uint64_t lastRtcpSentTime{ 0 };
-		uint16_t maxRtcpInterval{ 0 };
+		uint64_t lastRtcpSentTime{ 0u };
+		uint16_t maxRtcpInterval{ 0u };
+		bool externallyManagedBitrate{ false };
 
 	private:
 		// Others.
 		std::vector<uint32_t> mediaSsrcs;
+		std::vector<uint32_t> rtxSsrcs;
 		bool transportConnected{ false };
 		bool paused{ false };
 		bool producerPaused{ false };
@@ -140,12 +143,23 @@ namespace RTC
 		return this->mediaSsrcs;
 	}
 
+	inline const std::vector<uint32_t>& Consumer::GetRtxSsrcs() const
+	{
+		return this->rtxSsrcs;
+	}
+
 	inline bool Consumer::IsActive() const
 	{
 		// The parent Consumer just checks whether Consumer and Producer are
 		// not paused and the transport connected.
+		// clang-format off
 		return (
-		  this->transportConnected && !this->paused && !this->producerPaused && !this->producerClosed);
+			this->transportConnected &&
+			!this->paused &&
+			!this->producerPaused &&
+			!this->producerClosed
+		);
+		// clang-format on
 	}
 
 	inline bool Consumer::IsPaused() const
@@ -156,6 +170,11 @@ namespace RTC
 	inline bool Consumer::IsProducerPaused() const
 	{
 		return this->producerPaused;
+	}
+
+	inline void Consumer::SetExternallyManagedBitrate()
+	{
+		this->externallyManagedBitrate = true;
 	}
 } // namespace RTC
 

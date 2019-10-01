@@ -184,6 +184,11 @@ namespace RTC
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
+			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			{
+				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
+			}
+
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			if (this->rtpHeaderExtensionIds.frameMarking07 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07)
 			{
@@ -454,7 +459,7 @@ namespace RTC
 		}
 	}
 
-	void Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
+	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -470,15 +475,19 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
-			return;
+			return ReceiveRtpPacketResult::DISCARDED;
 		}
 
 		// Pre-process the packet.
 		PreProcessRtpPacket(packet);
 
+		ReceiveRtpPacketResult result;
+
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
 		{
+			result = ReceiveRtpPacketResult::MEDIA;
+
 			// Process the packet.
 			if (!rtpStream->ReceivePacket(packet))
 			{
@@ -486,15 +495,17 @@ namespace RTC
 				if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
 					NotifyNewRtpStream(rtpStream);
 
-				return;
+				return result;
 			}
 		}
 		// RTX packet.
 		else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
 		{
+			result = ReceiveRtpPacketResult::RETRANSMISSION;
+
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
-				return;
+				return result;
 		}
 		// Should not happen.
 		else
@@ -534,16 +545,18 @@ namespace RTC
 
 		// If paused stop here.
 		if (this->paused)
-			return;
+			return result;
 
 		// Mangle the packet before providing the listener with it.
 		if (!MangleRtpPacket(packet, rtpStream))
-			return;
+			return ReceiveRtpPacketResult::DISCARDED;
 
 		// Post-process the packet.
 		PostProcessRtpPacket(packet);
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
+
+		return result;
 	}
 
 	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
@@ -1061,18 +1074,33 @@ namespace RTC
 			else if (this->kind == RTC::Media::Kind::VIDEO)
 			{
 				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
-				// NOTE: Just if this is simulcast or SVC.
-				if (this->type == RTC::RtpParameters::Type::SIMULCAST || this->type == RTC::RtpParameters::Type::SVC)
 				{
 					extenLen = 3u;
 
 					auto now         = DepLibUV::GetTime();
-					auto absSendTime = static_cast<uint32_t>(((now << 18) + 500) / 1000) & 0x00FFFFFF;
+					auto absSendTime = Utils::Time::TimeMsToAbsSendTime(now);
 
 					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
 
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
+				// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
+				{
+					extenLen = 2u;
+
+					// NOTE: Add value 0. The sending Transport will update it.
+					uint16_t wideSeqNumber = 0u;
+
+					Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
+					  extenLen,
+					  bufferPtr);
 
 					bufferPtr += extenLen;
 				}
@@ -1143,6 +1171,8 @@ namespace RTC
 			// be interested in after passing it to the Router).
 			packet->SetAbsSendTimeExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
+			packet->SetTransportWideCc01ExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01));
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			packet->SetFrameMarking07ExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07));

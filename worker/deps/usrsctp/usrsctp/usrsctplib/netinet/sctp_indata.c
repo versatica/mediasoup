@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 345494 2019-03-25 09:47:22Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 350216 2019-07-22 18:11:35Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -927,6 +927,12 @@ restart:
 			/* Can't add more */
 			break;
 		}
+	}
+	if (cnt_added && strm->pd_api_started) {
+#if defined(__Userspace__)
+		sctp_invoke_recv_callback(stcb->sctp_ep, stcb, control, SCTP_READ_LOCK_NOT_HELD);
+#endif
+		sctp_wakeup_the_read_socket(stcb->sctp_ep, stcb, SCTP_SO_NOT_LOCKED);
 	}
 	if ((control->length > pd_point) && (strm->pd_api_started == 0)) {
 		strm->pd_api_started = 1;
