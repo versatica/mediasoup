@@ -299,8 +299,8 @@ void RtpTransportControllerSend::PostUpdates(NetworkControlUpdate update) {
                           update.pacer_config->pad_rate().bps());
   }
 
-    // TODO: TEMPORAL: this removes any probation.
-  update.probe_cluster_configs.clear();
+  // TODO: REMOVE: this removes any probation.
+  // update.probe_cluster_configs.clear();
 
   for (const auto& probe : update.probe_cluster_configs) {
     int64_t bitrate_bps = probe.target_data_rate.bps();
