@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::DelayBasedBwe"
-// #define MS_LOG_DEV // TODO
+#define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
@@ -211,7 +211,7 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
     DataRate bitrate = result.updated ? result.target_bitrate : prev_bitrate_;
 
     MS_DEBUG_DEV(
-      "[at_time:%lld, target_bitrate_bps: %lld, detector_state: %s]",
+      "[at_time:%lld, target_bitrate_bps:%lld, detector_state:%s]",
       at_time.ms(), bitrate.bps(), BandwidthUsage2String(detector_state).c_str());
 
     prev_bitrate_ = bitrate;

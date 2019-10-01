@@ -194,6 +194,8 @@ std::vector<ProbeClusterConfig> ProbeController::SetBitrates(
 std::vector<ProbeClusterConfig> ProbeController::OnMaxTotalAllocatedBitrate(
     int64_t max_total_allocated_bitrate,
     int64_t at_time_ms) {
+  MS_DEBUG_DEV("[max_total_allocated_bitrate:%" PRIi64 "]", max_total_allocated_bitrate);
+
   const bool in_alr = alr_start_time_ms_.has_value();
   const bool allow_allocation_probe =
       allocation_probing_only_in_alr_ ? in_alr : true;
@@ -344,6 +346,8 @@ std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
 }
 
 void ProbeController::SetMaxBitrate(int64_t max_bitrate_bps) {
+  MS_DEBUG_DEV("[max_bitrate_bps:%" PRIi64 "]", max_bitrate_bps);
+
   max_bitrate_bps_ = max_bitrate_bps;
 }
 

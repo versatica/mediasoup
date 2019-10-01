@@ -61,13 +61,11 @@ PacedSender::PacedSender(PacketRouter* packet_router,
   ParseFieldTrial({&min_packet_limit_ms_},
                   webrtc::field_trial::FindFullName("WebRTC-Pacer-MinPacketLimitMs"));
   UpdateBudgetWithElapsedTime(min_packet_limit_ms_);
-
-  // TODO: REMOVE
-  // MS_DEBUG_DEV("min_packet_limit_ms_:%d", min_packet_limit_ms_.Get());
 }
 
 void PacedSender::CreateProbeCluster(int bitrate_bps, int cluster_id) {
-  MS_DEBUG_DEV("---- bitrate_bps:%d, cluster_id:%d", bitrate_bps, cluster_id);
+  // TODO: REMOVE
+  // MS_DEBUG_DEV("---- bitrate_bps:%d, cluster_id:%d", bitrate_bps, cluster_id);
 
   prober_.CreateProbeCluster(bitrate_bps, DepLibUV::GetTimeMs(), cluster_id);
 }
@@ -197,24 +195,22 @@ void PacedSender::Process() {
   // Check if we should send padding.
   while (true)
   {
-    // TODO: REMOVE
-    if (!prober_.IsProbing())
-      MS_DEBUG_DEV("---- upps... !prober_.IsProbing()");
-
     size_t padding_bytes_to_add =
       PaddingBytesToAdd(recommended_probe_size, bytes_sent);
 
     if (padding_bytes_to_add == 0)
       break;
 
-    MS_DEBUG_DEV(
-      "[recommended_probe_size:%zu, padding_bytes_to_add:%zu]",
-      *recommended_probe_size, padding_bytes_to_add);
+    // TODO: REMOVE
+    // MS_DEBUG_DEV(
+    //   "[recommended_probe_size:%zu, padding_bytes_to_add:%zu]",
+    //   *recommended_probe_size, padding_bytes_to_add);
 
     padding_packet =
       packet_router_->GeneratePadding(padding_bytes_to_add);
 
-    MS_DEBUG_DEV("sending padding packet [size:%zu]", padding_packet->GetSize());
+    // TODO: REMOVE.
+    // MS_DEBUG_DEV("sending padding packet [size:%zu]", padding_packet->GetSize());
 
     packet_router_->SendPacket(padding_packet, pacing_info);
     bytes_sent += padding_packet->GetSize();

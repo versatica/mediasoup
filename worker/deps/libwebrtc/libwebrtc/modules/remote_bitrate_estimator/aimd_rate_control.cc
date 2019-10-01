@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::AimdRateControl"
-// #define MS_LOG_DEV
+#define MS_LOG_DEV // TODO
 
 #include "modules/remote_bitrate_estimator/aimd_rate_control.h"
 #include "api/transport/network_types.h"
@@ -122,6 +122,8 @@ void AimdRateControl::SetStartBitrate(DataRate start_bitrate) {
 }
 
 void AimdRateControl::SetMinBitrate(DataRate min_bitrate) {
+  MS_DEBUG_DEV("[min_bitrate:%" PRIi64 "]", min_bitrate.bps());
+
   min_configured_bitrate_ = min_bitrate;
   current_bitrate_ = std::max(min_bitrate, current_bitrate_);
 }
