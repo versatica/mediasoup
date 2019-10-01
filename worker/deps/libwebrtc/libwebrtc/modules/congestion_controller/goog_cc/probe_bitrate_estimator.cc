@@ -115,9 +115,9 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   // TODO: TMP WIP cerdo to avoid that send_interval or receive_interval is zero.
   //
   // if (send_interval <= TimeDelta::Zero())
-  //   send_interval = TimeDelta::ms(1u);
+  //   send_interval = TimeDelta::us(1u);
   // if (receive_interval <= TimeDelta::Zero())
-  //   receive_interval = TimeDelta::ms(1u);
+  //   receive_interval = TimeDelta::us(1u);
 
   if (send_interval <= TimeDelta::Zero() || send_interval > kMaxProbeInterval ||
       receive_interval <= TimeDelta::Zero() ||
