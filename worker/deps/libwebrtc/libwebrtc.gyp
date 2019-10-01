@@ -3,8 +3,8 @@
     'dependencies':
     [
       'deps/abseil-cpp/abseil-cpp.gyp:abseil',
-      '../deps/libuv/uv.gyp:libuv',
-      '../deps/openssl/openssl.gyp:openssl'
+      '../libuv/uv.gyp:libuv',
+      '../openssl/openssl.gyp:openssl'
     ],
     'direct_dependent_settings': {
       'include_dirs':
@@ -128,8 +128,8 @@
     'include_dirs':
     [
       'libwebrtc',
-      '../include',
-      '../deps/json/single_include/nlohmann'
+      '../../include',
+      '../json/single_include/nlohmann'
     ],
     'conditions':
     [

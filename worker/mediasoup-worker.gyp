@@ -8,8 +8,8 @@
       'deps/openssl/openssl.gyp:openssl',
       'deps/libsrtp/libsrtp.gyp:libsrtp',
       'deps/usrsctp/usrsctp.gyp:usrsctp',
-      'libwebrtc/libwebrtc.gyp:libwebrtc',
-      'libwebrtc/deps/abseil-cpp/abseil-cpp.gyp:abseil'
+      'deps/libwebrtc/libwebrtc.gyp:libwebrtc',
+      'deps/libwebrtc/deps/abseil-cpp/abseil-cpp.gyp:abseil'
     ],
     # TODO: SCTP_DEBUG must be dynamic based on a condition variable in common.gyp.
     # 'defines': [ 'SCTP_DEBUG' ],
