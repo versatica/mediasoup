@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::BitrateProber"
-// #define MS_LOG_DEV // TODO
+#define MS_LOG_DEV // TODO
 
 #include "modules/pacing/bitrate_prober.h"
 

@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::ProbeBitrateEstimator"
-// #define MS_LOG_DEV // TODO
+#define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -102,6 +102,23 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   TimeDelta send_interval = cluster->last_send - cluster->first_send;
   TimeDelta receive_interval = cluster->last_receive - cluster->first_receive;
 
+  // // TODO: TMP
+  // MS_WARN_DEV(
+  //   "-------------- probing cluster result"
+  //   " [cluster id:%d]"
+  //   " [send interval:%s]"
+  //   " [receive interval:%s]",
+  //   cluster_id,
+  //   ToString(send_interval).c_str(),
+  //   ToString(receive_interval).c_str());
+
+  // TODO: TMP WIP cerdo to avoid that send_interval or receive_interval is zero.
+  //
+  // if (send_interval <= TimeDelta::Zero())
+  //   send_interval = TimeDelta::ms(1u);
+  // if (receive_interval <= TimeDelta::Zero())
+  //   receive_interval = TimeDelta::ms(1u);
+
   if (send_interval <= TimeDelta::Zero() || send_interval > kMaxProbeInterval ||
       receive_interval <= TimeDelta::Zero() ||
       receive_interval > kMaxProbeInterval) {
@@ -152,6 +169,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
 
     return absl::nullopt;
   }
+
   MS_DEBUG_DEV(
     "probing successful"
     " [cluster id:%d]"
@@ -164,7 +182,6 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
     ToString(receive_size).c_str(),
     ToString(receive_interval).c_str(),
     ToString(receive_rate).c_str());
-
 
   DataRate res = std::min(send_rate, receive_rate);
   // If we're receiving at significantly lower bitrate than we were sending at,
