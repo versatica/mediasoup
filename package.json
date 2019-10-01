@@ -49,7 +49,7 @@
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "eslint": "^6.5.0",
+    "eslint": "^6.5.1",
     "eslint-plugin-jest": "^22.17.0",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
