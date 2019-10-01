@@ -70,7 +70,7 @@ TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
 	MS_TRACE();
 
 	this->uvHandle       = new uv_tcp_t;
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
 }
@@ -111,7 +111,7 @@ void TcpConnection::Close()
 		// Use uv_shutdown() so pending data to be written will be sent to the peer
 		// before closing.
 		auto req  = new uv_shutdown_t;
-		req->data = (void*)this;
+		req->data = static_cast<void*>(this);
 		err       = uv_shutdown(
       req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 
@@ -241,7 +241,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
 	std::memcpy(writeData->store, data + written, pendingLen);
-	writeData->req.data = (void*)writeData;
+	writeData->req.data = static_cast<void*>(writeData);
 	writeData->onDone   = &onDone;
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
@@ -342,7 +342,7 @@ void TcpConnection::Write(
 		  len2 - (static_cast<size_t>(written) - len1));
 	}
 
-	writeData->req.data = (void*)writeData;
+	writeData->req.data = static_cast<void*>(writeData);
 	writeData->onDone   = &onDone;
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);

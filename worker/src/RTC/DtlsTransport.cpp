@@ -620,6 +620,8 @@ namespace RTC
 		{
 			LOG_OPENSSL_ERROR("BIO_new() failed");
 
+			SSL_free(this->ssl);
+
 			goto error;
 		}
 
@@ -628,6 +630,9 @@ namespace RTC
 		if (!this->sslBioToNetwork)
 		{
 			LOG_OPENSSL_ERROR("BIO_new() failed");
+
+			BIO_free(this->sslBioFromNetwork);
+			SSL_free(this->ssl);
 
 			goto error;
 		}
@@ -692,14 +697,44 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		std::string state{ "new" };
+		std::string role{ "none " };
+
+		switch (this->state)
+		{
+			case DtlsState::CONNECTING:
+				state = "connecting";
+				break;
+			case DtlsState::CONNECTED:
+				state = "connected";
+				break;
+			case DtlsState::FAILED:
+				state = "failed";
+				break;
+			case DtlsState::CLOSED:
+				state = "closed";
+				break;
+			default:;
+		}
+
+		switch (this->localRole)
+		{
+			case Role::AUTO:
+				role = "auto";
+				break;
+			case Role::SERVER:
+				role = "server";
+				break;
+			case Role::CLIENT:
+				role = "client";
+				break;
+			default:;
+		}
+
 		MS_DUMP("<DtlsTransport>");
-		MS_DUMP(
-		  "  [role:%s, running:%s, handshake done:%s, connected:%s]",
-		  (this->localRole == Role::SERVER ? "server"
-		                                   : (this->localRole == Role::CLIENT ? "client" : "none")),
-		  IsRunning() ? "yes" : "no",
-		  this->handshakeDone ? "yes" : "no",
-		  this->state == DtlsState::CONNECTED ? "yes" : "no");
+		MS_DUMP("  state           : %s", state.c_str());
+		MS_DUMP("  role            : %s", role.c_str());
+		MS_DUMP("  handshake done: : %s", this->handshakeDone ? "yes" : "no");
 		MS_DUMP("</DtlsTransport>");
 	}
 
@@ -802,7 +837,8 @@ namespace RTC
 		}
 
 		// Write the received DTLS data into the sslBioFromNetwork.
-		written = BIO_write(this->sslBioFromNetwork, (const void*)data, static_cast<int>(len));
+		written =
+		  BIO_write(this->sslBioFromNetwork, static_cast<const void*>(data), static_cast<int>(len));
 
 		if (written != static_cast<int>(len))
 		{
@@ -814,7 +850,7 @@ namespace RTC
 		}
 
 		// Must call SSL_read() to process received DTLS data.
-		read = SSL_read(this->ssl, (void*)DtlsTransport::sslReadBuffer, SslReadBufferSize);
+		read = SSL_read(this->ssl, static_cast<void*>(DtlsTransport::sslReadBuffer), SslReadBufferSize);
 
 		// Send data if it's ready.
 		SendPendingOutgoingDtlsData();
@@ -865,7 +901,7 @@ namespace RTC
 
 		int written;
 
-		written = SSL_write(this->ssl, (const void*)data, static_cast<int>(len));
+		written = SSL_write(this->ssl, static_cast<const void*>(data), static_cast<int>(len));
 
 		if (written < 0)
 		{
@@ -1053,7 +1089,7 @@ namespace RTC
 
 		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
-		ret = DTLSv1_get_timeout(this->ssl, (void*)&dtlsTimeout); // NOLINT
+		ret = DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
 
 		if (ret == 0)
 			return true;

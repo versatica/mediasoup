@@ -65,7 +65,7 @@ UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 
 	int err;
 
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	err = uv_udp_recv_start(
 	  this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
@@ -186,7 +186,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	auto* sendData = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));
 
 	std::memcpy(sendData->store, data, len);
-	sendData->req.data = (void*)sendData;
+	sendData->req.data = static_cast<void*>(sendData);
 	sendData->onDone   = &onDone;
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(sendData->store), len);
