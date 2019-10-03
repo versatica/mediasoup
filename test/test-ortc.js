@@ -51,8 +51,11 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			preferredPayloadType : 100, // 100 is the first available dynamic PT.
 			clockRate            : 48000,
 			channels             : 2,
-			rtcpFeedback         : [],
-			parameters           :
+			rtcpFeedback         :
+			[
+				{ type: 'transport-cc' }
+			],
+			parameters :
 			{
 				useinbandfec : 1,
 				foo          : 'bar'
@@ -71,7 +74,8 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 				{ type: 'nack' },
 				{ type: 'nack', parameter: 'pli' },
 				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' }
+				{ type: 'goog-remb' },
+				{ type: 'transport-cc' }
 			],
 			parameters : {}
 		});
@@ -102,7 +106,8 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 				{ type: 'nack' },
 				{ type: 'nack', parameter: 'pli' },
 				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' }
+				{ type: 'goog-remb' },
+				{ type: 'transport-cc' }
 			],
 			parameters :
 			{

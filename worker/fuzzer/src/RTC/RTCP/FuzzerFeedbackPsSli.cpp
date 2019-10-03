@@ -2,7 +2,7 @@
 
 void Fuzzer::RTC::RTCP::FeedbackPsSli::Fuzz(::RTC::RTCP::FeedbackPsSliPacket* packet)
 {
-	packet->Dump();
+	// packet->Dump();
 	packet->Serialize(::RTC::RTCP::Buffer);
 	packet->GetCount();
 	packet->GetSize();
@@ -15,7 +15,7 @@ void Fuzzer::RTC::RTCP::FeedbackPsSli::Fuzz(::RTC::RTCP::FeedbackPsSliPacket* pa
 	{
 		auto& item = (*it);
 
-		item->Dump();
+		// item->Dump();
 		item->Serialize(::RTC::RTCP::Buffer);
 		item->GetSize();
 		item->GetFirst();

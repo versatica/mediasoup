@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "Settings.hpp"
-#include "json.hpp"
+#include <json.hpp>
 #include <uv.h>
 #include <string>
 #include <unordered_map>

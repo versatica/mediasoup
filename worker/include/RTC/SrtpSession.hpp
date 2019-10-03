@@ -37,9 +37,9 @@ namespace RTC
 
 	public:
 		bool EncryptRtp(const uint8_t** data, size_t* len);
-		bool DecryptSrtp(const uint8_t* data, size_t* len);
+		bool DecryptSrtp(uint8_t* data, size_t* len);
 		bool EncryptRtcp(const uint8_t** data, size_t* len);
-		bool DecryptSrtcp(const uint8_t* data, size_t* len);
+		bool DecryptSrtcp(uint8_t* data, size_t* len);
 		void RemoveStream(uint32_t ssrc);
 
 	private:

@@ -127,8 +127,12 @@ Catch's selection, by defining either `CATCH_CONFIG_CPP11_TO_STRING` or
 ## C++17 toggles
 
     CATCH_CONFIG_CPP17_UNCAUGHT_EXCEPTIONS  // Use std::uncaught_exceptions instead of std::uncaught_exception
-    CATCH_CONFIG_CPP17_STRING_VIEW          // Provide StringMaker specialization for std::string_view
-    CATCH_CONFIG_CPP17_VARIANT              // Override C++17 detection for CATCH_CONFIG_ENABLE_VARIANT_STRINGMAKER
+    CATCH_CONFIG_CPP17_STRING_VIEW          // Override std::string_view support detection(Catch provides a StringMaker specialization by default)
+    CATCH_CONFIG_CPP17_VARIANT              // Override std::variant support detection (checked by CATCH_CONFIG_ENABLE_VARIANT_STRINGMAKER)
+    CATCH_CONFIG_CPP17_OPTIONAL             // Override std::optional support detection (checked by CATCH_CONFIG_ENABLE_OPTIONAL_STRINGMAKER)
+    CATCH_CONFIG_CPP17_BYTE                 // Override std::byte support detection (Catch provides a StringMaker specialization by default)
+
+> `CATCH_CONFIG_CPP17_STRING_VIEW` was [introduced](https://github.com/catchorg/Catch2/issues/1376) in Catch 2.4.1.
 
 Catch contains basic compiler/standard detection and attempts to use
 some C++17 features whenever appropriate. This automatic detection
@@ -209,8 +213,13 @@ By default, Catch does not stringify some types from the standard library. This 
     CATCH_CONFIG_ENABLE_OPTIONAL_STRINGMAKER // Provide StringMaker specialization for std::optional (on C++17)
     CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS     // Defines all of the above
 
+> `CATCH_CONFIG_ENABLE_VARIANT_STRINGMAKER` was [introduced](https://github.com/catchorg/Catch2/issues/1380) in Catch 2.4.1.
+
+> `CATCH_CONFIG_ENABLE_OPTIONAL_STRINGMAKER` was [introduced](https://github.com/catchorg/Catch2/issues/1510) in Catch 2.6.0.
 
 ## Disabling exceptions
+
+> Introduced in Catch 2.4.0.
 
 By default, Catch2 uses exceptions to signal errors and to abort tests
 when an assertion from the `REQUIRE` family of assertions fails. We also

@@ -58,7 +58,7 @@ tidy:
 	$(PYTHON) ./scripts/clang-tidy.py \
 		-clang-tidy-binary=../node_modules/.bin/clang-tidy \
 		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
-		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp|json.hpp)' \
+		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
 		-p=. \
 		-j=2 \
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
@@ -83,6 +83,7 @@ clean-all:
 	$(RM) -rf worker/mediasoup-worker.xcodeproj
 	$(RM) -rf worker/mediasoup-worker-test.xcodeproj
 	$(RM) -rf worker/deps/*/*.xcodeproj
+	$(RM) -rf worker/libwebrtc/*/*.xcodeproj
 
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)

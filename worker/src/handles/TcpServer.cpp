@@ -32,7 +32,7 @@ TcpServer::TcpServer(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
 
 	int err;
 
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	err = uv_listen(
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),

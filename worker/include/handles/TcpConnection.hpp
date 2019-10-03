@@ -5,10 +5,6 @@
 #include <uv.h>
 #include <string>
 
-// Avoid cyclic #include problem by declaring classes instead of including
-// the corresponding header files.
-class TcpServer;
-
 class TcpConnection
 {
 public:
@@ -21,16 +17,17 @@ public:
 		virtual void OnTcpConnectionClosed(TcpConnection* connection) = 0;
 	};
 
+protected:
+	using onSendHandler = const std::function<void(bool sent)>;
+
 public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
 	struct UvWriteData
 	{
 		uv_write_t req;
+		onSendHandler* onDone;
 		uint8_t store[1];
 	};
-
-	// Let the TcpServer class directly call the destructor of TcpConnection.
-	friend class TcpServer;
 
 public:
 	explicit TcpConnection(size_t bufferSize);
@@ -49,9 +46,8 @@ public:
 	bool IsClosed() const;
 	uv_tcp_t* GetUvHandle() const;
 	void Start();
-	void Write(const uint8_t* data, size_t len);
-	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2);
-	void Write(const std::string& data);
+	void Write(const uint8_t* data, size_t len, onSendHandler& onDone);
+	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendHandler& onDone);
 	void ErrorReceiving();
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
@@ -68,7 +64,7 @@ private:
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-	void OnUvWriteError(int error);
+	void OnUvWrite(int status, onSendHandler& onDone);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
@@ -109,11 +105,6 @@ inline bool TcpConnection::IsClosed() const
 inline uv_tcp_t* TcpConnection::GetUvHandle() const
 {
 	return this->uvHandle;
-}
-
-inline void TcpConnection::Write(const std::string& data)
-{
-	Write(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 }
 
 inline const struct sockaddr* TcpConnection::GetLocalAddress() const

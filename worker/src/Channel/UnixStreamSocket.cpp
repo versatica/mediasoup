@@ -177,9 +177,9 @@ namespace Channel
 		}
 	}
 
-	void UnixStreamSocket::OnConsumerSocketRemotelyClosed(ConsumerSocket* consumerSocket)
+	void UnixStreamSocket::OnConsumerSocketClosed(ConsumerSocket* consumerSocket)
 	{
-		this->listener->OnChannelRemotelyClosed(this);
+		this->listener->OnChannelClosed(this);
 	}
 
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
@@ -323,13 +323,12 @@ namespace Channel
 		}
 	}
 
-	void ConsumerSocket::UserOnUnixStreamSocketClosed(bool isClosedByPeer)
+	void ConsumerSocket::UserOnUnixStreamSocketClosed()
 	{
 		MS_TRACE_STD();
 
 		// Notify the listener.
-		if (isClosedByPeer)
-			this->listener->OnConsumerSocketRemotelyClosed(this);
+		this->listener->OnConsumerSocketClosed(this);
 	}
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)

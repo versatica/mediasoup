@@ -387,7 +387,7 @@ $ gdb --args out/Debug/run-tests TEST_NAME
 Use the `--trace-children=yes` parameter:
 
 ```bash
-$ valgrind --trace-children=yes -v --tool=memcheck --leak-check=full --track-origins=yes --leak-resolution=high --show-reachable=yes --log-file=memcheck.log out/Debug/run-tests TEST_NAME
+$ valgrind --trace-children=yes -v --tool=memcheck --leak-check=full --track-origins=yes --leak-resolution=high --show-reachable=yes --log-file=memcheck-%p.log out/Debug/run-tests TEST_NAME
 ```
 
 ### Running benchmarks
@@ -400,6 +400,8 @@ The benchmark driver is `out/Debug/run-benchmarks` and the benchmarks are listed
 Check the [SUPPORTED_PLATFORMS file](SUPPORTED_PLATFORMS.md).
 
 ### AIX Notes
+
+AIX compilation using IBM XL C/C++ requires version 12.1 or greater.
 
 AIX support for filesystem events requires the non-default IBM `bos.ahafs`
 package to be installed.  This package provides the AIX Event Infrastructure

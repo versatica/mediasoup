@@ -32,7 +32,6 @@ namespace RTC
 			// Parsed Report. Points to an external data.
 			explicit ReceiverReport(Header* header);
 			explicit ReceiverReport(ReceiverReport* report);
-
 			// Locally generated Report. Holds the data internally.
 			ReceiverReport();
 
@@ -56,7 +55,7 @@ namespace RTC
 
 		private:
 			Header* header{ nullptr };
-			uint8_t raw[sizeof(Header)]{ 0 };
+			uint8_t raw[sizeof(Header)]{ 0u };
 		};
 
 		class ReceiverReportPacket : public Packet
@@ -69,6 +68,7 @@ namespace RTC
 
 		public:
 			ReceiverReportPacket();
+			explicit ReceiverReportPacket(CommonHeader* commonHeader);
 			~ReceiverReportPacket() override;
 
 			uint32_t GetSsrc() const;
@@ -81,12 +81,13 @@ namespace RTC
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
+			Type GetType() const override;
 			size_t GetCount() const override;
 			size_t GetSize() const override;
 
 		private:
 			// SSRC of packet sender.
-			uint32_t ssrc{ 0 };
+			uint32_t ssrc{ 0u };
 			std::vector<ReceiverReport*> reports;
 		};
 
@@ -200,12 +201,26 @@ namespace RTC
 		{
 		}
 
+		inline ReceiverReportPacket::ReceiverReportPacket(CommonHeader* commonHeader)
+		  : Packet(commonHeader)
+		{
+		}
+
 		inline ReceiverReportPacket::~ReceiverReportPacket()
 		{
 			for (auto* report : this->reports)
 			{
 				delete report;
 			}
+		}
+
+		// NOTE: We need to force this since when we parse a SenderReportPacket that
+		// contains receive report blocks we also generate a second ReceiverReportPacket
+		// from same data and len, so parent Packet::GetType() would return
+		// this->type which would be SR instead of RR.
+		inline Type ReceiverReportPacket::GetType() const
+		{
+			return Type::RR;
 		}
 
 		inline size_t ReceiverReportPacket::GetCount() const
@@ -215,7 +230,7 @@ namespace RTC
 
 		inline size_t ReceiverReportPacket::GetSize() const
 		{
-			size_t size = sizeof(Packet::CommonHeader) + sizeof(this->ssrc);
+			size_t size = sizeof(Packet::CommonHeader) + 4u /* this->ssrc */;
 
 			for (auto* report : reports)
 			{
@@ -227,12 +242,12 @@ namespace RTC
 
 		inline uint32_t ReceiverReportPacket::GetSsrc() const
 		{
-			return uint32_t{ ntohl(this->ssrc) };
+			return this->ssrc;
 		}
 
 		inline void ReceiverReportPacket::SetSsrc(uint32_t ssrc)
 		{
-			this->ssrc = uint32_t{ htonl(ssrc) };
+			this->ssrc = ssrc;
 		}
 
 		inline void ReceiverReportPacket::AddReport(ReceiverReport* report)

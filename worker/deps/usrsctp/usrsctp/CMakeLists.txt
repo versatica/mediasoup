@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2015-2015 Oleg Alexeenkov
-# Copyright (C) 2015-2018 Felix Weinrank
+# Copyright (C) 2015-2019 Felix Weinrank
 #
 # All rights reserved.
 #
@@ -29,7 +29,7 @@
 # SUCH DAMAGE.
 #
 
-project(usrsctplib)
+project(usrsctplib C)
 cmake_minimum_required(VERSION 3.0)
 
 # Debug build type as default
@@ -160,76 +160,63 @@ endif ()
 
 # SETTINGS FOR UNIX COMPILER
 if (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "AppleClang" OR CMAKE_C_COMPILER_ID MATCHES "GNU")
-	set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -std=c99 -pedantic -Wall -Wextra")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c99 -pedantic -Wall -Wextra")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -pedantic -Wall -Wextra")
 
 	check_c_compiler_flag(-Wfloat-equal has_wfloat_equal)
 	if (has_wfloat_equal)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wfloat-equal")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfloat-equal")
+		set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wfloat-equal")
 	endif ()
 
 	check_c_compiler_flag(-Wshadow has_wshadow)
 	if (has_wshadow)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wshadow")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wshadow")
 	endif ()
 
 	check_c_compiler_flag(-Wpointer-arith has_wpointer_aritih)
 	if (has_wpointer_aritih)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wpointer-arith")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpointer-arith")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wpointer-arith")
 	endif ()
 
 	check_c_compiler_flag(-Wunreachable-code has_wunreachable_code)
 	if (has_wunreachable_code)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wunreachable-code")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunreachable-code")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wunreachable-code")
 	endif ()
 
 	check_c_compiler_flag(-Winit-self has_winit_self)
 	if (has_winit_self)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Winit-self")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Winit-self")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Winit-self")
 	endif ()
 
 	check_c_compiler_flag(-Wno-unused-function has_wno_unused_function)
 	if (has_wno_unused_function)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wno-unused-function")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
 	endif ()
 
 	check_c_compiler_flag(-Wno-unused-parameter has_wno_unused_parameter)
 	if (has_wno_unused_parameter)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wno-unused-parameter")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
 	endif ()
 
 	check_c_compiler_flag(-Wno-unreachable-code has_wno_unreachable_code)
 	if (has_wno_unreachable_code)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wno-unreachable-code")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unreachable-code")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unreachable-code")
 	endif ()
 
 	check_c_compiler_flag(-Wstrict-prototypes has_wstrict_prototypes)
 	if (has_wstrict_prototypes)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wstrict-prototypes")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wstrict-prototypes")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wstrict-prototypes")
 	endif ()
 
 	if (sctp_werror)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Werror")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 	endif ()
 
 	if (sctp_sanitizer_address)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=address -fno-omit-frame-pointer -g")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer -g")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer -g")
 	endif ()
 
 	if (sctp_sanitizer_memory)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=memory -fno-omit-frame-pointer -g -fsanitize-memory-track-origins")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory -fno-omit-frame-pointer -g -fsanitize-memory-track-origins")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=memory -fno-omit-frame-pointer -g -fsanitize-memory-track-origins")
 	endif ()
 endif ()
 

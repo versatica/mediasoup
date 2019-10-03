@@ -18,7 +18,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ensure there is a single encoding.
-		if (this->consumableRtpEncodings.size() != 1)
+		if (this->consumableRtpEncodings.size() != 1u)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 
 		auto& encoding   = this->rtpParameters.encodings[0];
@@ -136,6 +136,45 @@ namespace RTC
 		// Do nothing.
 	}
 
+	uint16_t SimpleConsumer::GetBitratePriority() const
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	uint32_t SimpleConsumer::UseAvailableBitrate(uint32_t /*bitrate*/, bool /*considerLoss*/)
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	uint32_t SimpleConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	void SimpleConsumer::ApplyLayers()
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+	}
+
+	uint32_t SimpleConsumer::GetDesiredBitrate() const
+	{
+		MS_TRACE();
+
+		// SimpleConsumer does not play the BWE game.
+		return 0u;
+	}
+
 	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -221,13 +260,6 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-	void SimpleConsumer::SendProbationRtpPacket(uint16_t seq)
-	{
-		MS_TRACE();
-
-		this->rtpStream->SendProbationRtpPacket(seq);
-	}
-
 	void SimpleConsumer::GetRtcp(
 	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
@@ -304,6 +336,13 @@ namespace RTC
 			return 0u;
 
 		return this->rtpStream->GetBitrate(now);
+	}
+
+	float SimpleConsumer::GetRtt() const
+	{
+		MS_TRACE();
+
+		return this->rtpStream->GetRtt();
 	}
 
 	void SimpleConsumer::UserOnTransportConnected()
@@ -406,7 +445,7 @@ namespace RTC
 		}
 
 		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 600 : 0;
+		size_t bufferSize = params.useNack ? 600u : 0u;
 
 		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 		this->rtpStreams.push_back(this->rtpStream);
@@ -454,10 +493,10 @@ namespace RTC
 	}
 
 	inline void SimpleConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet, bool probation)
+	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		this->listener->OnConsumerRetransmitRtpPacket(this, packet, probation);
+		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
 	}
 } // namespace RTC

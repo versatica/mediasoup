@@ -2,9 +2,9 @@
 #define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "handles/UnixStreamSocket.hpp"
+#include <json.hpp>
 
 namespace Channel
 {
@@ -15,7 +15,7 @@ namespace Channel
 		{
 		public:
 			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) = 0;
-			virtual void OnConsumerSocketRemotelyClosed(ConsumerSocket* consumerSocket)             = 0;
+			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket)                     = 0;
 		};
 
 	public:
@@ -23,7 +23,7 @@ namespace Channel
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
-		void UserOnUnixStreamSocketClosed(bool isClosedByPeer) override;
+		void UserOnUnixStreamSocketClosed() override;
 
 	private:
 		// Passed by argument.
@@ -41,7 +41,7 @@ namespace Channel
 		void UserOnUnixStreamRead() override
 		{
 		}
-		void UserOnUnixStreamSocketClosed(bool isClosedByPeer) override
+		void UserOnUnixStreamSocketClosed() override
 		{
 		}
 	};
@@ -53,7 +53,7 @@ namespace Channel
 		{
 		public:
 			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
-			virtual void OnChannelRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
+			virtual void OnChannelClosed(Channel::UnixStreamSocket* channel) = 0;
 		};
 
 	public:
@@ -69,7 +69,7 @@ namespace Channel
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
 		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) override;
-		void OnConsumerSocketRemotelyClosed(ConsumerSocket* consumerSocket) override;
+		void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) override;
 
 	private:
 		// Passed by argument.

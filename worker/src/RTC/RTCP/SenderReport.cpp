@@ -19,7 +19,7 @@ namespace RTC
 			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// Packet size must be >= header size.
-			if (sizeof(Header) > len)
+			if (len < sizeof(Header))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for sender report, packet discarded");
 
@@ -61,15 +61,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::unique_ptr<SenderReportPacket> packet(new SenderReportPacket());
+			// Get the header.
+			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+
+			std::unique_ptr<SenderReportPacket> packet(new SenderReportPacket(header));
 			size_t offset = sizeof(Packet::CommonHeader);
 
 			SenderReport* report = SenderReport::Parse(data + offset, len - offset);
 
-			if (report != nullptr)
+			if (report)
 				packet->AddReport(report);
-			else
-				return packet.release();
 
 			return packet.release();
 		}

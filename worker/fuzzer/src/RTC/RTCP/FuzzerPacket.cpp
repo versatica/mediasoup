@@ -95,6 +95,7 @@ void Fuzzer::RTC::RTCP::Packet::Fuzz(const uint8_t* data, size_t len)
 		}
 
 		packet = packet->GetNext();
+
 		delete previousPacket;
 	}
 }

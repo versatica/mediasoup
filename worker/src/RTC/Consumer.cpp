@@ -92,6 +92,11 @@ namespace RTC
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
+			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			{
+				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
 				this->rtpHeaderExtensionIds.mid = exten.id;
@@ -124,6 +129,13 @@ namespace RTC
 		for (auto& encoding : this->rtpParameters.encodings)
 		{
 			this->mediaSsrcs.push_back(encoding.ssrc);
+		}
+
+		// Fill RTX SSRCs vector.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			if (encoding.hasRtx)
+				this->rtxSsrcs.push_back(encoding.rtx.ssrc);
 		}
 
 		// Set the RTCP report generation interval.
@@ -328,47 +340,5 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "producerclose");
 
 		this->listener->OnConsumerProducerClosed(this);
-	}
-
-	void Consumer::SetExternallyManagedBitrate()
-	{
-		MS_TRACE();
-
-		// Do nothing.
-	}
-
-	uint16_t Consumer::GetBitratePriority() const
-	{
-		MS_TRACE();
-
-		// This method must be override by subclasses with layers. By default
-		// it just returns 0.
-		return 0u;
-	}
-
-	uint32_t Consumer::UseAvailableBitrate(uint32_t /*bitrate*/)
-	{
-		MS_TRACE();
-
-		// This method must be override by subclasses with layers. By default
-		// it just returns 0.
-		return 0;
-	}
-
-	uint32_t Consumer::IncreaseLayer(uint32_t /*bitrate*/)
-	{
-		MS_TRACE();
-
-		// This method must be override by subclasses with layers. By default
-		// it just returns 0.
-		return 0;
-	}
-
-	void Consumer::ApplyLayers()
-	{
-		MS_TRACE();
-
-		// This method must be override by subclasses with layers. By default
-		// it does nothing.
 	}
 } // namespace RTC

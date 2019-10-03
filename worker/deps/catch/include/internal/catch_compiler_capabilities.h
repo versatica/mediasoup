@@ -184,6 +184,18 @@
     #define CATCH_INTERNAL_CONFIG_COUNTER
 #endif
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+// RTX is a special version of Windows that is real time.
+// This means that it is detected as Windows, but does not provide
+// the same set of capabilities as real Windows does.
+#if defined(UNDER_RTSS) || defined(RTX64_BUILD)
+    #define CATCH_INTERNAL_CONFIG_NO_WINDOWS_SEH
+    #define CATCH_INTERNAL_CONFIG_NO_ASYNC
+    #define CATCH_CONFIG_COLOUR_NONE
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Check if string_view is available and usable
 // The check is split apart to work around v140 (VS2015) preprocessor issue...
@@ -199,6 +211,14 @@
 #  if __has_include(<optional>) && defined(CATCH_CPP17_OR_GREATER)
 #    define CATCH_INTERNAL_CONFIG_CPP17_OPTIONAL
 #  endif // __has_include(<optional>) && defined(CATCH_CPP17_OR_GREATER)
+#endif // __has_include
+
+////////////////////////////////////////////////////////////////////////////////
+// Check if byte is available and usable
+#if defined(__has_include)
+#  if __has_include(<cstddef>) && defined(CATCH_CPP17_OR_GREATER)
+#    define CATCH_INTERNAL_CONFIG_CPP17_BYTE
+#  endif // __has_include(<cstddef>) && defined(CATCH_CPP17_OR_GREATER)
 #endif // __has_include
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,6 +276,11 @@
 #  define CATCH_CONFIG_CPP17_VARIANT
 #endif
 
+#if defined(CATCH_INTERNAL_CONFIG_CPP17_BYTE) && !defined(CATCH_CONFIG_NO_CPP17_BYTE) && !defined(CATCH_CONFIG_CPP17_BYTE)
+#  define CATCH_CONFIG_CPP17_BYTE
+#endif
+
+
 #if defined(CATCH_CONFIG_EXPERIMENTAL_REDIRECT)
 #  define CATCH_INTERNAL_CONFIG_NEW_CAPTURE
 #endif
@@ -272,7 +297,7 @@
 #  define CATCH_CONFIG_POLYFILL_ISNAN
 #endif
 
-#if defined(CATCH_INTERNAL_CONFIG_USE_ASYNC)  && !defined(CATCH_CONFIG_NO_USE_ASYNC) && !defined(CATCH_CONFIG_USE_ASYNC)
+#if defined(CATCH_INTERNAL_CONFIG_USE_ASYNC)  && !defined(CATCH_INTERNAL_CONFIG_NO_ASYNC) && !defined(CATCH_CONFIG_NO_USE_ASYNC) && !defined(CATCH_CONFIG_USE_ASYNC)
 #  define CATCH_CONFIG_USE_ASYNC
 #endif
 

@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_STREAM_HPP
 
 #include "common.hpp"
-#include "json.hpp"
+#include "DepLibUV.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
@@ -13,6 +13,7 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <json.hpp>
 #include <string>
 #include <vector>
 
@@ -79,11 +80,13 @@ namespace RTC
 		void ResetScore(uint8_t score, bool notify);
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
+		float GetRtt() const;
 		uint64_t GetMaxPacketMs() const;
 		uint32_t GetMaxPacketTs() const;
 		uint64_t GetSenderReportNtpMs() const;
 		uint32_t GetSenderReportTs() const;
 		uint8_t GetScore() const;
+		uint64_t GetActiveTime() const;
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -121,10 +124,11 @@ namespace RTC
 		uint32_t expectedPrior{ 0 };         // Packets expected at last interval.
 		uint64_t lastSenderReportNtpMs{ 0 }; // NTP timestamp in last Sender Report (in ms).
 		uint32_t lastSenderReporTs{ 0 };     // RTP timestamp in last Sender Report.
+		float rtt{ 0 };
 
 	private:
 		// Score related.
-		uint8_t score{ 0 };
+		uint8_t score{ 0u };
 		std::vector<uint8_t> scores;
 		// RTP stream data information for score calculation.
 		int32_t totalSourceLoss{ 0 };
@@ -132,6 +136,8 @@ namespace RTC
 		size_t totalSentPackets{ 0 };
 		// Whether at least a RTP packet has been received.
 		bool started{ false };
+		// Last time since the stream is active.
+		uint64_t activeSince{ 0u };
 	}; // namespace RTC
 
 	/* Inline instance methods. */
@@ -207,6 +213,11 @@ namespace RTC
 		return static_cast<float>(this->fractionLost) * 100 / 256;
 	}
 
+	inline float RtpStream::GetRtt() const
+	{
+		return this->rtt;
+	}
+
 	inline uint64_t RtpStream::GetMaxPacketMs() const
 	{
 		return this->maxPacketMs;
@@ -230,6 +241,11 @@ namespace RTC
 	inline uint8_t RtpStream::GetScore() const
 	{
 		return this->score;
+	}
+
+	inline uint64_t RtpStream::GetActiveTime() const
+	{
+		return DepLibUV::GetTimeMs() - this->activeSince;
 	}
 
 	inline uint32_t RtpStream::GetExpectedPackets() const

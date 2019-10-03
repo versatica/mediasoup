@@ -33,12 +33,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapMappedSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto* rtpStream = kv.second;
-
 			delete rtpStream;
 		}
+		this->rtpStreams.clear();
 		this->mapMappedSsrcRtpStream.clear();
 	}
 
@@ -53,13 +52,11 @@ namespace RTC
 		jsonObject["rtpStreams"] = json::array();
 		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
 
-		for (auto& kv : this->mapMappedSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreams)
 		{
-			jsonRtpStreamsIt->emplace_back(json::value_t::object);
-
 			auto& jsonEntry = (*jsonRtpStreamsIt)[jsonRtpStreamsIt->size() - 1];
-			auto* rtpStream = kv.second;
 
+			jsonRtpStreamsIt->emplace_back(json::value_t::object);
 			rtpStream->FillJson(jsonEntry);
 		}
 	}
@@ -69,10 +66,8 @@ namespace RTC
 		MS_TRACE();
 
 		// Add stats of our send streams.
-		for (auto& kv : this->mapMappedSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto* rtpStream = kv.second;
-
 			jsonArray.emplace_back(json::value_t::object);
 			rtpStream->FillJsonStats(jsonArray[jsonArray.size() - 1]);
 		}
@@ -136,6 +131,45 @@ namespace RTC
 		MS_TRACE();
 
 		// Do nothing.
+	}
+
+	uint16_t PipeConsumer::GetBitratePriority() const
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	uint32_t PipeConsumer::UseAvailableBitrate(uint32_t /*bitrate*/, bool /*considerLoss*/)
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	uint32_t PipeConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	void PipeConsumer::ApplyLayers()
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+	}
+
+	uint32_t PipeConsumer::GetDesiredBitrate() const
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0u;
 	}
 
 	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet)
@@ -225,13 +259,6 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-	void PipeConsumer::SendProbationRtpPacket(uint16_t /*seq*/)
-	{
-		MS_TRACE();
-
-		MS_ABORT("should not call this method");
-	}
-
 	void PipeConsumer::GetRtcp(
 	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
@@ -275,9 +302,8 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		for (auto& kv : this->mapMappedSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto& rtpStream   = kv.second;
 			auto fractionLost = rtpStream->GetFractionLost();
 
 			// If our fraction lost is worse than the given one, update it.
@@ -321,16 +347,29 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		uint32_t rate{ 0 };
+		uint32_t rate{ 0u };
 
-		for (auto& kv : this->mapMappedSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto& rtpStream = kv.second;
-
 			rate += rtpStream->GetBitrate(now);
 		}
 
 		return rate;
+	}
+
+	float PipeConsumer::GetRtt() const
+	{
+		MS_TRACE();
+
+		float rtt{ 0 };
+
+		for (auto* rtpStream : this->rtpStreams)
+		{
+			if (rtpStream->GetRtt() > rtt)
+				rtt = rtpStream->GetRtt();
+		}
+
+		return rtt;
 	}
 
 	void PipeConsumer::UserOnTransportConnected()
@@ -344,10 +383,8 @@ namespace RTC
 
 		if (IsActive())
 		{
-			for (auto& kv : this->mapMappedSsrcRtpStream)
+			for (auto* rtpStream : this->rtpStreams)
 			{
-				auto& rtpStream = kv.second;
-
 				rtpStream->Resume();
 			}
 
@@ -359,10 +396,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapMappedSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto& rtpStream = kv.second;
-
 			rtpStream->Pause();
 		}
 	}
@@ -371,10 +406,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapMappedSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto& rtpStream = kv.second;
-
 			rtpStream->Pause();
 		}
 	}
@@ -390,10 +423,8 @@ namespace RTC
 
 		if (IsActive())
 		{
-			for (auto& kv : this->mapMappedSsrcRtpStream)
+			for (auto* rtpStream : this->rtpStreams)
 			{
-				auto& rtpStream = kv.second;
-
 				rtpStream->Resume();
 			}
 
@@ -469,7 +500,7 @@ namespace RTC
 
 			// Create a RtpStreamSend for sending a single media stream.
 			// NOTE: PipeConsumer does not support NACK.
-			size_t bufferSize{ 0 };
+			size_t bufferSize{ 0u };
 			auto* rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
@@ -481,9 +512,9 @@ namespace RTC
 			if (rtxCodec && encoding.hasRtx)
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
-			this->mapMappedSsrcRtpStream[encoding.ssrc] = rtpStream;
 			this->rtpStreams.push_back(rtpStream);
-			this->mapRtpStreamSyncRequired[rtpStream] = false;
+			this->mapMappedSsrcRtpStream[encoding.ssrc] = rtpStream;
+			this->mapRtpStreamSyncRequired[rtpStream]   = false;
 			this->mapRtpStreamRtpSeqManager[rtpStream];
 		}
 	}
@@ -512,10 +543,10 @@ namespace RTC
 	}
 
 	inline void PipeConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet, bool probation)
+	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		this->listener->OnConsumerRetransmitRtpPacket(this, packet, probation);
+		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
 	}
 } // namespace RTC

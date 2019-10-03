@@ -36,6 +36,7 @@ set(TEST_SOURCES
         ${SELF_TEST_DIR}/UsageTests/Generators.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/Message.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/Misc.tests.cpp
+        ${SELF_TEST_DIR}/UsageTests/ToStringByte.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringChrono.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringGeneral.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringOptional.tests.cpp
@@ -308,6 +309,32 @@ include(CTest)
 add_executable(SelfTest ${TEST_SOURCES} ${IMPL_SOURCES} ${REPORTER_SOURCES} ${SURROGATE_SOURCES} ${HEADERS})
 target_include_directories(SelfTest PRIVATE ${HEADER_DIR})
 
+# It took CMake until 3.8 to abandon the doomed approach of enumerating
+# required features so we just list C++11 features to support older ones.
+target_compile_features(SelfTest
+  PRIVATE
+    cxx_alignas
+    cxx_alignof
+    cxx_attributes
+    cxx_auto_type
+    cxx_constexpr
+    cxx_defaulted_functions
+    cxx_deleted_functions
+    cxx_final
+    cxx_lambdas
+    cxx_noexcept
+    cxx_override
+    cxx_range_for
+    cxx_rvalue_references
+    cxx_static_assert
+    cxx_strong_enums
+    cxx_trailing_return_types
+    cxx_unicode_literals
+    cxx_user_literals
+    cxx_variadic_macros
+)
+
+
 if (CATCH_ENABLE_COVERAGE)
     set(ENABLE_COVERAGE ON CACHE BOOL "Enable coverage build." FORCE)
     find_package(codecov)
@@ -366,8 +393,19 @@ set_tests_properties(ListTestNamesOnly PROPERTIES
 add_test(NAME NoAssertions COMMAND $<TARGET_FILE:SelfTest> -w NoAssertions)
 set_tests_properties(NoAssertions PROPERTIES PASS_REGULAR_EXPRESSION "No assertions in test case")
 
-add_test(NAME NoTest COMMAND $<TARGET_FILE:SelfTest> -w NoTests "___nonexistent_test___")
-set_tests_properties(NoTest PROPERTIES PASS_REGULAR_EXPRESSION "No test cases matched")
+add_test(NAME NoTest COMMAND $<TARGET_FILE:SelfTest> Tracker, "___nonexistent_test___")
+set_tests_properties(NoTest PROPERTIES
+    PASS_REGULAR_EXPRESSION "No test cases matched '___nonexistent_test___'"
+    FAIL_REGULAR_EXPRESSION "No tests ran"
+)
+
+add_test(NAME WarnAboutNoTests COMMAND ${CMAKE_COMMAND} -P ${CATCH_DIR}/projects/SelfTest/WarnAboutNoTests.cmake $<TARGET_FILE:SelfTest>)
+
+add_test(NAME UnmatchedOutputFilter COMMAND $<TARGET_FILE:SelfTest> [this-tag-does-not-exist] -w NoTests)
+set_tests_properties(UnmatchedOutputFilter
+  PROPERTIES
+    PASS_REGULAR_EXPRESSION "No test cases matched '\\[this-tag-does-not-exist\\]'"
+)
 
 add_test(NAME FilteredSection-1 COMMAND $<TARGET_FILE:SelfTest> \#1394 -c RunSection)
 set_tests_properties(FilteredSection-1 PROPERTIES FAIL_REGULAR_EXPRESSION "No tests ran")
@@ -377,6 +415,12 @@ set_tests_properties(FilteredSection-2 PROPERTIES FAIL_REGULAR_EXPRESSION "No te
 # AppVeyor has a Python 2.7 in path, but doesn't have .py files as autorunnable
 add_test(NAME ApprovalTests COMMAND ${PYTHON_EXECUTABLE} ${CATCH_DIR}/scripts/approvalTests.py $<TARGET_FILE:SelfTest>)
 set_tests_properties(ApprovalTests PROPERTIES FAIL_REGULAR_EXPRESSION "Results differed")
+
+add_test(NAME RegressionCheck-1670 COMMAND $<TARGET_FILE:SelfTest> "#1670 regression check" -c A -r compact)
+set_tests_properties(RegressionCheck-1670 PROPERTIES PASS_REGULAR_EXPRESSION "Passed 1 test case with 2 assertions.")
+
+add_test(NAME VersionCheck COMMAND $<TARGET_FILE:SelfTest> -h)
+set_tests_properties(VersionCheck PROPERTIES PASS_REGULAR_EXPRESSION "Catch v${PROJECT_VERSION}")
 
 
 if (CATCH_USE_VALGRIND)

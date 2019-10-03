@@ -72,8 +72,7 @@ class TestNackGeneratorListener : public NackGenerator::Listener
 
 		auto it          = seqNumbers.begin();
 		auto firstNacked = *it;
-
-		auto numNacked = seqNumbers.size();
+		auto numNacked   = seqNumbers.size();
 
 		REQUIRE(this->currentInput.firstNacked == firstNacked);
 		REQUIRE(this->currentInput.numNacked == numNacked);
@@ -98,14 +97,12 @@ public:
 	{
 		REQUIRE(this->nackRequiredTriggered == static_cast<bool>(this->currentInput.numNacked));
 		REQUIRE(this->keyFrameRequiredTriggered == this->currentInput.keyFrameRequired);
-
-		REQUIRE(nackGenerator.GetNackListLength() == this->currentInput.nackListSize);
 	}
 
 private:
 	TestNackGeneratorInput currentInput{};
-	bool nackRequiredTriggered     = false;
-	bool keyFrameRequiredTriggered = false;
+	bool nackRequiredTriggered{ false };
+	bool keyFrameRequiredTriggered{ false };
 };
 
 // clang-format off
@@ -133,7 +130,7 @@ void validate(std::vector<TestNackGeneratorInput>& inputs)
 
 		packet->SetPayloadDescriptorHandler(tpdh);
 		packet->SetSequenceNumber(input.seq);
-		nackGenerator.ReceivePacket(packet);
+		nackGenerator.ReceivePacket(packet, /*isRecovered*/ false);
 
 		listener.Check(nackGenerator);
 	}

@@ -25,7 +25,7 @@ Timer::Timer(Listener* listener) : listener(listener)
 	MS_TRACE();
 
 	this->uvHandle       = new uv_timer_t;
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	int err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);
 

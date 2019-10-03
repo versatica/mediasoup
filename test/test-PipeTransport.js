@@ -453,7 +453,8 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				[
 					{ type: 'nack' },
 					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'google-remb' }
+					{ type: 'google-remb' },
+					{ type: 'transport-cc' }
 				]
 			},
 			{
@@ -472,6 +473,10 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 			{
 				uri : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
 				id  : 4
+			},
+			{
+				uri : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+				id  : 5
 			}
 		]);
 	expect(videoConsumer.rtpParameters.encodings.length).toBe(1);

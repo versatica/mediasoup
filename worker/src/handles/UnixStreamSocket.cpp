@@ -77,7 +77,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::
 	int err;
 
 	this->uvHandle       = new uv_pipe_t;
-	this->uvHandle->data = (void*)this;
+	this->uvHandle->data = static_cast<void*>(this);
 
 	err = uv_pipe_init(DepLibUV::GetLoop(), this->uvHandle, 0);
 
@@ -155,7 +155,7 @@ void UnixStreamSocket::Close()
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
 		auto req  = new uv_shutdown_t;
-		req->data = (void*)this;
+		req->data = static_cast<void*>(this);
 		err       = uv_shutdown(
       req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 
@@ -201,6 +201,9 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 
 		Close();
 
+		// Notify the subclass.
+		UserOnUnixStreamSocketClosed();
+
 		return;
 	}
 
@@ -210,7 +213,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	auto* writeData = static_cast<UvWriteData*>(std::malloc(sizeof(UvWriteData) + pendingLen));
 
 	std::memcpy(writeData->store, data + written, pendingLen);
-	writeData->req.data = (void*)writeData;
+	writeData->req.data = static_cast<void*>(writeData);
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
@@ -222,7 +225,12 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	  static_cast<uv_write_cb>(onWrite));
 
 	if (err != 0)
-		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
+	{
+		MS_ERROR_STD("uv_write() failed: %s", uv_strerror(err));
+
+		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
+		std::free(writeData);
+	}
 }
 
 inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
@@ -280,7 +288,7 @@ inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		Close();
 
 		// Notify the subclass.
-		UserOnUnixStreamSocketClosed(this->isClosedByPeer);
+		UserOnUnixStreamSocketClosed();
 	}
 	// Some error.
 	else
@@ -293,7 +301,7 @@ inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		Close();
 
 		// Notify the subclass.
-		UserOnUnixStreamSocketClosed(this->isClosedByPeer);
+		UserOnUnixStreamSocketClosed();
 	}
 }
 
@@ -312,5 +320,5 @@ inline void UnixStreamSocket::OnUvWriteError(int error)
 	Close();
 
 	// Notify the subclass.
-	UserOnUnixStreamSocketClosed(this->isClosedByPeer);
+	UserOnUnixStreamSocketClosed();
 }

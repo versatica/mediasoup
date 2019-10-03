@@ -7,11 +7,15 @@
 
 class UdpSocket
 {
+protected:
+	using onSendHandler = const std::function<void(bool sent)>;
+
 public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
 	{
 		uv_udp_send_t req;
+		onSendHandler* onDone;
 		uint8_t store[1];
 	};
 
@@ -27,10 +31,7 @@ public:
 public:
 	void Close();
 	virtual void Dump() const;
-	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr);
-	void Send(const std::string& data, const struct sockaddr* addr);
-	void Send(const uint8_t* data, size_t len, const std::string& ip, uint16_t port);
-	void Send(const std::string& data, const std::string& ip, uint16_t port);
+	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendHandler& onDone);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIp() const;
@@ -45,7 +46,7 @@ private:
 public:
 	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
-	void OnUvSendError(int error);
+	void OnUvSend(int status, onSendHandler& onDone);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
@@ -67,16 +68,6 @@ private:
 };
 
 /* Inline methods. */
-
-inline void UdpSocket::Send(const std::string& data, const struct sockaddr* addr)
-{
-	Send(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(), addr);
-}
-
-inline void UdpSocket::Send(const std::string& data, const std::string& ip, uint16_t port)
-{
-	Send(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(), ip, port);
-}
 
 inline const struct sockaddr* UdpSocket::GetLocalAddress() const
 {

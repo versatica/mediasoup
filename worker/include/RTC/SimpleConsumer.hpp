@@ -23,8 +23,12 @@ namespace RTC
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
+		uint16_t GetBitratePriority() const override;
+		uint32_t UseAvailableBitrate(uint32_t bitrate, bool considerLoss) override;
+		uint32_t IncreaseTemporalLayer(uint32_t bitrate, bool considerLoss) override;
+		void ApplyLayers() override;
+		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void SendProbationRtpPacket(uint16_t seq) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
@@ -32,6 +36,7 @@ namespace RTC
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
 		uint32_t GetTransmissionRate(uint64_t now) override;
+		float GetRtt() const override;
 
 	private:
 		void UserOnTransportConnected() override;
@@ -45,8 +50,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(
-		  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet, bool probation = false) override;
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
 	private:
 		// Allocated by this.
