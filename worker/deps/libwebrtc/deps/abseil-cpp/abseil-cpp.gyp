@@ -12,6 +12,16 @@
       'abseil-cpp',
     ],
     'conditions': [
+      [ 'OS != "win"', {
+        'cflags': [
+          '-std=c++11',
+          '-Wall',
+          '-Wextra',
+          '-Wno-unused-parameter',
+          '-Wno-implicit-fallthrough',
+          '-Wno-sign-compare'
+        ]
+      }],
       ['OS in "mac ios"', {
         'xcode_settings': {
           'WARNING_CFLAGS': [
@@ -32,11 +42,11 @@
           ],
         }
       }],
-      ['OS=="win"', {
+      ['OS == "win"', {
         'cflags': [
-          '/wd4005',  # macro-redefinition
-          '/wd4018',  # sign-compare
-          '/wd4068',  # unknown pragma
+          '/wd4005', # macro-redefinition
+          '/wd4018', # sign-compare
+          '/wd4068', # unknown pragma
           '/wd4702'  # unreachable code
         ],
       }]
