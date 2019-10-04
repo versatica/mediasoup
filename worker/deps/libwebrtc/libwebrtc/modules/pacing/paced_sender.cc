@@ -54,7 +54,6 @@ PacedSender::PacedSender(PacketRouter* packet_router,
       probing_send_failure_(false),
       pacing_bitrate_kbps_(0),
       time_last_process_us_(DepLibUV::GetTimeUs()),
-      last_send_time_us_(DepLibUV::GetTimeUs()),
       first_sent_packet_ms_(-1),
       packet_counter_(0),
       account_for_audio_(false) {
@@ -222,10 +221,10 @@ void PacedSender::Process() {
 
   if (bytes_sent != 0)
   {
-    auto now_us = DepLibUV::GetTimeUs();
+    auto now = DepLibUV::GetTimeUs();
 
-    OnPaddingSent(now_us, bytes_sent);
-    prober_.ProbeSent((now_us + 500) / 1000, bytes_sent);
+    OnPaddingSent(now, bytes_sent);
+    prober_.ProbeSent((now + 500) / 1000, bytes_sent);
   }
 }
 
@@ -261,7 +260,6 @@ void PacedSender::OnPacketSent(size_t size) {
 
   // Update media bytes sent.
   UpdateBudgetWithBytesSent(size);
-  last_send_time_us_ = DepLibUV::GetTimeUs();
 }
 
 PacedPacketInfo PacedSender::GetPacingInfo() {
@@ -274,11 +272,10 @@ PacedPacketInfo PacedSender::GetPacingInfo() {
   return pacing_info;
 }
 
-void PacedSender::OnPaddingSent(int64_t now_us, size_t bytes_sent) {
+void PacedSender::OnPaddingSent(int64_t now, size_t bytes_sent) {
   if (bytes_sent > 0) {
     UpdateBudgetWithBytesSent(bytes_sent);
   }
-  last_send_time_us_ = now_us;
 }
 
 void PacedSender::UpdateBudgetWithElapsedTime(int64_t delta_time_ms) {

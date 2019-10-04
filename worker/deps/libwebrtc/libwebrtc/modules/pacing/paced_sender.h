@@ -121,7 +121,6 @@ class PacedSender {
   uint32_t pacing_bitrate_kbps_;
 
   int64_t time_last_process_us_;
-  int64_t last_send_time_us_;
   int64_t first_sent_packet_ms_;
 
   uint64_t packet_counter_;
