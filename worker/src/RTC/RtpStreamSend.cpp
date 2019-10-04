@@ -39,15 +39,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTimeMs();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["timestamp"]   = now;
+		jsonObject["timestamp"]   = nowMs;
 		jsonObject["type"]        = "outbound-rtp";
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(now);
+		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
 
 		if (this->rtt != 0.0f)
 			jsonObject["roundTripTime"] = this->rtt;
@@ -133,8 +133,8 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t now = DepLibUV::GetTimeMs();
-		auto ntp     = Utils::Time::TimeMs2Ntp(now);
+		uint64_t nowMs = DepLibUV::GetTimeMs();
+		auto ntp       = Utils::Time::TimeMs2Ntp(nowMs);
 
 		// Get the compact NTP representation of the current timestamp.
 		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -167,18 +167,18 @@ namespace RTC
 		UpdateScore(report);
 	}
 
-	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t now)
+	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		if (this->transmissionCounter.GetPacketCount() == 0u)
 			return nullptr;
 
-		auto ntp    = Utils::Time::TimeMs2Ntp(now);
+		auto ntp    = Utils::Time::TimeMs2Ntp(nowMs);
 		auto report = new RTC::RTCP::SenderReport();
 
 		// Calculate TS difference between now and maxPacketMs.
-		auto diffMs = now - this->maxPacketMs;
+		auto diffMs = nowMs - this->maxPacketMs;
 		auto diffTs = diffMs * GetClockRate() / 1000;
 
 		report->SetSsrc(GetSsrc());
@@ -189,7 +189,7 @@ namespace RTC
 		report->SetRtpTs(this->maxPacketTs + diffTs);
 
 		// Update info about last Sender Report.
-		this->lastSenderReportNtpMs = now;
+		this->lastSenderReportNtpMs = nowMs;
 		this->lastSenderReporTs     = this->maxPacketTs + diffTs;
 
 		return report;
@@ -221,14 +221,15 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	uint32_t RtpStreamSend::GetBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+	uint32_t RtpStreamSend::GetBitrate(
+	  uint64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 	{
 		MS_TRACE();
 
 		MS_ABORT("invalid method call");
 	}
 
-	uint32_t RtpStreamSend::GetSpatialLayerBitrate(uint64_t /*now*/, uint8_t /*spatialLayer*/)
+	uint32_t RtpStreamSend::GetSpatialLayerBitrate(uint64_t /*nowMs*/, uint8_t /*spatialLayer*/)
 	{
 		MS_TRACE();
 
@@ -236,7 +237,7 @@ namespace RTC
 	}
 
 	uint32_t RtpStreamSend::GetLayerBitrate(
-	  uint64_t /*now*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+	  uint64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 	{
 		MS_TRACE();
 
@@ -409,8 +410,8 @@ namespace RTC
 		}
 
 		// Look for each requested packet.
-		uint64_t now = DepLibUV::GetTimeMs();
-		uint16_t rtt = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint64_t nowMs = DepLibUV::GetTimeMs();
+		uint16_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
 		bool requested{ true };
 		size_t containerIdx{ 0 };
 
@@ -468,7 +469,7 @@ namespace RTC
 				// clang-format off
 				else if (
 					storageItem->resentAtTime != 0u &&
-					now - storageItem->resentAtTime <= static_cast<uint64_t>(rtt)
+					nowMs - storageItem->resentAtTime <= static_cast<uint64_t>(rtt)
 				)
 				// clang-format on
 				{
@@ -501,7 +502,7 @@ namespace RTC
 					}
 
 					// Save when this packet was resent.
-					storageItem->resentAtTime = now;
+					storageItem->resentAtTime = nowMs;
 
 					// Increase the number of times this packet was sent.
 					storageItem->sentTimes++;

@@ -30,10 +30,10 @@ namespace RTC
 		public:
 			TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers);
 			void Update(RTC::RtpPacket* packet);
-			uint32_t GetBitrate(uint64_t now);
-			uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer);
-			uint32_t GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer);
-			uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer);
+			uint32_t GetBitrate(uint64_t nowMs);
+			uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+			uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer);
+			uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 			size_t GetPacketCount() const;
 			size_t GetBytes() const;
 
@@ -54,10 +54,10 @@ namespace RTC
 		void RequestKeyFrame();
 		void Pause() override;
 		void Resume() override;
-		uint32_t GetBitrate(uint64_t now) override;
-		uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
-		uint32_t GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer) override;
-		uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
+		uint32_t GetBitrate(uint64_t nowMs) override;
+		uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
+		uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) override;
+		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
@@ -92,24 +92,25 @@ namespace RTC
 
 	/* Inline instance methods */
 
-	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t now)
+	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t nowMs)
 	{
-		return this->transmissionCounter.GetBitrate(now);
+		return this->transmissionCounter.GetBitrate(nowMs);
 	}
 
-	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
-		return this->transmissionCounter.GetBitrate(now, spatialLayer, temporalLayer);
+		return this->transmissionCounter.GetBitrate(nowMs, spatialLayer, temporalLayer);
 	}
 
-	inline uint32_t RtpStreamRecv::GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer)
+	inline uint32_t RtpStreamRecv::GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer)
 	{
-		return this->transmissionCounter.GetSpatialLayerBitrate(now, spatialLayer);
+		return this->transmissionCounter.GetSpatialLayerBitrate(nowMs, spatialLayer);
 	}
 
-	inline uint32_t RtpStreamRecv::GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	inline uint32_t RtpStreamRecv::GetLayerBitrate(
+	  uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
-		return this->transmissionCounter.GetLayerBitrate(now, spatialLayer, temporalLayer);
+		return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 	}
 } // namespace RTC
 

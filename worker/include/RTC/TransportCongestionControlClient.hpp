@@ -47,9 +47,9 @@ namespace RTC
 		void TransportDisconnected();
 		void InsertPacket(webrtc::RtpPacketSendInfo& packetInfo);
 		webrtc::PacedPacketInfo GetPacingInfo();
-		void PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now);
+		void PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t nowMs);
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
-		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, float rtt, uint64_t now);
+		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, float rtt, uint64_t nowMs);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void SetDesiredBitrate(uint32_t desiredBitrate, bool force);
 		uint32_t GetAvailableBitrate() const;
@@ -88,7 +88,7 @@ namespace RTC
 		uint32_t initialAvailableBitrate{ 0u };
 		uint32_t availableBitrate{ 0u };
 		bool availableBitrateEventCalled{ false };
-		uint64_t lastAvailableBitrateEventAt{ 0u };
+		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		RTC::TrendCalculator desiredBitrateTrend;
 	};
 

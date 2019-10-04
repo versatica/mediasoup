@@ -34,7 +34,7 @@ namespace RTC
 		void TransportConnected();
 		void TransportDisconnected();
 		uint32_t GetAvailableBitrate() const;
-		void IncomingPacket(uint64_t now, const RTC::RtpPacket* packet);
+		void IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet);
 		void SetMaxIncomingBitrate(uint32_t bitrate);
 
 	private:
@@ -66,7 +66,7 @@ namespace RTC
 		uint32_t transportCcFeedbackSenderSsrc{ 0u };
 		uint32_t transportCcFeedbackMediaSsrc{ 0u };
 		uint32_t maxIncomingBitrate{ 0u };
-		uint64_t limitationRembSentAt{ 0u };
+		uint64_t limitationRembSentAtMs{ 0u };
 		uint8_t unlimitedRembCounter{ 0u };
 	};
 

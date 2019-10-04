@@ -92,9 +92,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 
-		this->desiredBitrateTrend.ForceUpdate(0u, now);
+		this->desiredBitrateTrend.ForceUpdate(0u, nowMs);
 		this->rtpTransportControllerSend->OnNetworkAvailability(false);
 	}
 
@@ -117,12 +117,12 @@ namespace RTC
 		return this->rtpTransportControllerSend->packet_sender()->GetPacingInfo();
 	}
 
-	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t now)
+	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		// Notify the transport feedback adapter about the sent packet.
-		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, now);
+		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowMs);
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 
 		// // TODO: Testing
@@ -141,12 +141,12 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpReceiverReport(
-	  const webrtc::RTCPReportBlock& report, float rtt, uint64_t now)
+	  const webrtc::RTCPReportBlock& report, float rtt, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
-		  { report }, static_cast<int64_t>(rtt), static_cast<int64_t>(now));
+		  { report }, static_cast<int64_t>(rtt), static_cast<int64_t>(nowMs));
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpTransportFeedback(
@@ -165,16 +165,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 		uint32_t minBitrate{ 50000u };
 		uint32_t maxBitrate;
 		uint32_t maxPaddingBitrate;
 
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
 		if (!force)
-			this->desiredBitrateTrend.Update(desiredBitrate, now);
+			this->desiredBitrateTrend.Update(desiredBitrate, nowMs);
 		else
-			this->desiredBitrateTrend.ForceUpdate(desiredBitrate, now);
+			this->desiredBitrateTrend.ForceUpdate(desiredBitrate, nowMs);
 
 		maxBitrate = std::max<uint32_t>(minBitrate, this->desiredBitrateTrend.GetValue() * 1.25);
 
@@ -208,22 +208,22 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastAvailableBitrateEventAt = DepLibUV::GetTimeMs();
+		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
 	}
 
 	void TransportCongestionControlClient::MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTimeMs();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 		bool notify{ false };
 
 		// Ignore if first event.
 		// NOTE: Otherwise it will make the Transport crash since this event also happens
 		// during the constructor of this class.
-		if (this->lastAvailableBitrateEventAt == 0u)
+		if (this->lastAvailableBitrateEventAtMs == 0u)
 		{
-			this->lastAvailableBitrateEventAt = now;
+			this->lastAvailableBitrateEventAtMs = nowMs;
 
 			return;
 		}
@@ -236,7 +236,7 @@ namespace RTC
 			notify = true;
 		}
 		// Emit event if AvailableBitrateEventInterval elapsed.
-		else if (now - this->lastAvailableBitrateEventAt >= AvailableBitrateEventInterval)
+		else if (nowMs - this->lastAvailableBitrateEventAtMs >= AvailableBitrateEventInterval)
 		{
 			notify = true;
 		}
@@ -258,7 +258,7 @@ namespace RTC
 			MS_DEBUG_DEV(
 			  "notifying the listener with new available bitrate:%" PRIu32, this->availableBitrate);
 
-			this->lastAvailableBitrateEventAt = now;
+			this->lastAvailableBitrateEventAtMs = nowMs;
 
 			this->listener->OnTransportCongestionControlClientAvailableBitrate(
 			  this, this->availableBitrate, previousAvailableBitrate);

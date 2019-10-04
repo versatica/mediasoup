@@ -598,11 +598,11 @@ namespace RTC
 		rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
 	}
 
-	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t now)
+	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
 		for (auto& kv : this->mapSsrcRtpStream)
@@ -616,7 +616,7 @@ namespace RTC
 		// Add a receiver reference time report if no present in the packet.
 		if (!packet->HasReceiverReferenceTime())
 		{
-			auto ntp    = Utils::Time::TimeMs2Ntp(now);
+			auto ntp    = Utils::Time::TimeMs2Ntp(nowMs);
 			auto report = new RTC::RTCP::ReceiverReferenceTime();
 
 			report->SetNtpSec(ntp.seconds);
@@ -624,7 +624,7 @@ namespace RTC
 			packet->AddReceiverReferenceTime(report);
 		}
 
-		this->lastRtcpSentTime = now;
+		this->lastRtcpSentTime = nowMs;
 	}
 
 	void Producer::RequestKeyFrame(uint32_t mappedSsrc)
@@ -1077,8 +1077,8 @@ namespace RTC
 				{
 					extenLen = 3u;
 
-					auto now         = DepLibUV::GetTimeMs();
-					auto absSendTime = Utils::Time::TimeMsToAbsSendTime(now);
+					auto nowMs       = DepLibUV::GetTimeMs();
+					auto absSendTime = Utils::Time::TimeMsToAbsSendTime(nowMs);
 
 					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
 

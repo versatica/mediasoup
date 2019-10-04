@@ -300,7 +300,7 @@ namespace RTC
 		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0u)
 			return 0u;
 
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 		int16_t prioritySpatialLayer{ -1 };
 		int16_t spatialLayer{ 0 };
 
@@ -312,7 +312,7 @@ namespace RTC
 				break;
 
 			// Ignore spatial layers with 0 bitrate.
-			if (this->producerRtpStream->GetSpatialLayerBitrate(now, spatialLayer) == 0u)
+			if (this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer) == 0u)
 				continue;
 
 			// Choose this layer for now.
@@ -362,7 +362,7 @@ namespace RTC
 		}
 
 		uint32_t usedBitrate{ 0u };
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)
@@ -378,7 +378,8 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				auto requiredBitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+				auto requiredBitrate =
+				  this->producerRtpStream->GetBitrate(nowMs, spatialLayer, temporalLayer);
 
 				MS_DEBUG_DEV(
 				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
@@ -514,7 +515,7 @@ namespace RTC
 
 		uint32_t requiredBitrate{ 0u };
 		int16_t temporalLayer = this->provisionalTargetTemporalLayer + 1;
-		auto now              = DepLibUV::GetTimeMs();
+		auto nowMs            = DepLibUV::GetTimeMs();
 
 		for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 		{
@@ -530,7 +531,7 @@ namespace RTC
 			}
 
 			requiredBitrate = this->producerRtpStream->GetLayerBitrate(
-			  now, this->provisionalTargetSpatialLayer, temporalLayer);
+			  nowMs, this->provisionalTargetSpatialLayer, temporalLayer);
 
 			// If active layer, end iterations here.
 			if (requiredBitrate)
@@ -611,7 +612,7 @@ namespace RTC
 		int16_t desiredSpatialLayer{ -1 };
 		int16_t desiredTemporalLayer{ -1 };
 		uint32_t desiredBitrate{ 0u };
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
@@ -621,7 +622,7 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				auto bitrate = this->producerRtpStream->GetBitrate(now, spatialLayer, temporalLayer);
+				auto bitrate = this->producerRtpStream->GetBitrate(nowMs, spatialLayer, temporalLayer);
 
 				// If layer is not active move to next spatial layer.
 				if (bitrate == 0u)
@@ -789,16 +790,17 @@ namespace RTC
 		packet->RestorePayload();
 	}
 
-	void SvcConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
+	void SvcConsumer::GetRtcp(
+	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
 
-		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		auto* report = this->rtpStream->GetRtcpSenderReport(now);
+		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
 
 		if (!report)
 			return;
@@ -810,7 +812,7 @@ namespace RTC
 
 		packet->AddSdesChunk(sdesChunk);
 
-		this->lastRtcpSentTime = now;
+		this->lastRtcpSentTime = nowMs;
 	}
 
 	void SvcConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
@@ -855,14 +857,14 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
-	uint32_t SvcConsumer::GetTransmissionRate(uint64_t now)
+	uint32_t SvcConsumer::GetTransmissionRate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		if (!IsActive())
 			return 0u;
 
-		return this->rtpStream->GetBitrate(now);
+		return this->rtpStream->GetBitrate(nowMs);
 	}
 
 	float SvcConsumer::GetRtt() const
@@ -1043,7 +1045,7 @@ namespace RTC
 		newTargetSpatialLayer  = -1;
 		newTargetTemporalLayer = -1;
 
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)
@@ -1054,7 +1056,7 @@ namespace RTC
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
 		{
-			if (!this->producerRtpStream->GetSpatialLayerBitrate(now, spatialLayer))
+			if (!this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer))
 				continue;
 
 			newTargetSpatialLayer = spatialLayer;

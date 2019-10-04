@@ -74,13 +74,13 @@ namespace RTC
 		virtual void SendRtpPacket(RTC::RtpPacket* packet)                          = 0;
 		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams()                    = 0;
 		virtual void GetRtcp(
-		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) = 0;
+		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
 		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) = 0;
 		virtual void ReceiveKeyFrameRequest(
 		  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)          = 0;
 		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) = 0;
-		virtual uint32_t GetTransmissionRate(uint64_t now)                        = 0;
+		virtual uint32_t GetTransmissionRate(uint64_t nowMs)                      = 0;
 		virtual float GetRtt() const                                              = 0;
 
 	private:

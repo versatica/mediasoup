@@ -12,13 +12,13 @@ namespace RTC
 
 	public:
 		uint32_t GetValue() const;
-		void Update(uint32_t value, uint64_t now);
-		void ForceUpdate(uint32_t value, uint64_t now);
+		void Update(uint32_t value, uint64_t nowMs);
+		void ForceUpdate(uint32_t value, uint64_t nowMs);
 
 	private:
 		uint32_t value{ 0u };
 		uint32_t highestValue{ 0u };
-		uint64_t highestValueUpdatedAt{ 0u };
+		uint64_t highestValueUpdatedAtMs{ 0u };
 	};
 
 	/* Inline instance methods. */

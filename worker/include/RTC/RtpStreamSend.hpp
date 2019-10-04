@@ -44,14 +44,14 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
-		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t now);
+		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t nowMs);
 		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 		void Pause() override;
 		void Resume() override;
-		uint32_t GetBitrate(uint64_t now) override;
-		uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
-		uint32_t GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer) override;
-		uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) override;
+		uint32_t GetBitrate(uint64_t nowMs) override;
+		uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
+		uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) override;
+		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
@@ -81,9 +81,9 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	inline uint32_t RtpStreamSend::GetBitrate(uint64_t now)
+	inline uint32_t RtpStreamSend::GetBitrate(uint64_t nowMs)
 	{
-		return this->transmissionCounter.GetBitrate(now);
+		return this->transmissionCounter.GetBitrate(nowMs);
 	}
 } // namespace RTC
 

@@ -243,9 +243,9 @@ namespace RTC
 				if (packetResult.received)
 				{
 					MS_DUMP(
-					  "    seq:%" PRIu16 ", received:yes, receivedAt:%" PRIi32,
+					  "    seq:%" PRIu16 ", received:yes, receivedAtMs:%" PRIi32,
 					  packetResult.sequenceNumber,
-					  packetResult.receivedAt);
+					  packetResult.receivedAtMs);
 				}
 				else
 				{
@@ -431,7 +431,7 @@ namespace RTC
 			}
 
 			size_t deltaIdx{ 0u };
-			int32_t currentReceivedAt = this->referenceTime * 64;
+			int32_t currentReceivedAtMs = this->referenceTime * 64;
 
 			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)
 			{
@@ -440,9 +440,9 @@ namespace RTC
 				if (!packetResult.received)
 					continue;
 
-				currentReceivedAt += this->deltas.at(deltaIdx) / 4;
-				packetResult.delta      = this->deltas.at(deltaIdx);
-				packetResult.receivedAt = currentReceivedAt;
+				currentReceivedAtMs += this->deltas.at(deltaIdx) / 4;
+				packetResult.delta        = this->deltas.at(deltaIdx);
+				packetResult.receivedAtMs = currentReceivedAtMs;
 				deltaIdx++;
 			}
 

@@ -375,7 +375,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 
 		jsonArray.emplace_back(json::value_t::object);
 		auto& jsonObject = jsonArray[0];
@@ -413,43 +413,43 @@ namespace RTC
 		jsonObject["bytesReceived"] = this->recvTransmission.GetBytes();
 
 		// Add recvBitrate.
-		jsonObject["recvBitrate"] = this->recvTransmission.GetRate(now);
+		jsonObject["recvBitrate"] = this->recvTransmission.GetRate(nowMs);
 
 		// Add bytesSent.
 		jsonObject["bytesSent"] = this->sendTransmission.GetBytes();
 
 		// Add sendBitrate.
-		jsonObject["sendBitrate"] = this->sendTransmission.GetRate(now);
+		jsonObject["sendBitrate"] = this->sendTransmission.GetRate(nowMs);
 
 		// Add rtpBytesReceived.
 		jsonObject["rtpBytesReceived"] = this->recvRtpTransmission.GetBytes();
 
 		// Add rtpRecvBitrate.
-		jsonObject["rtpRecvBitrate"] = this->recvRtpTransmission.GetBitrate(now);
+		jsonObject["rtpRecvBitrate"] = this->recvRtpTransmission.GetBitrate(nowMs);
 
 		// Add rtpBytesSent.
 		jsonObject["rtpBytesSent"] = this->sendRtpTransmission.GetBytes();
 
 		// Add rtpSendBitrate.
-		jsonObject["rtpSendBitrate"] = this->sendRtpTransmission.GetBitrate(now);
+		jsonObject["rtpSendBitrate"] = this->sendRtpTransmission.GetBitrate(nowMs);
 
 		// Add rtxBytesReceived.
 		jsonObject["rtxBytesReceived"] = this->recvRtxTransmission.GetBytes();
 
 		// Add rtxRecvBitrate.
-		jsonObject["rtxRecvBitrate"] = this->recvRtxTransmission.GetBitrate(now);
+		jsonObject["rtxRecvBitrate"] = this->recvRtxTransmission.GetBitrate(nowMs);
 
 		// Add rtxBytesSent.
 		jsonObject["rtxBytesSent"] = this->sendRtxTransmission.GetBytes();
 
 		// Add rtxSendBitrate.
-		jsonObject["rtxSendBitrate"] = this->sendRtxTransmission.GetBitrate(now);
+		jsonObject["rtxSendBitrate"] = this->sendRtxTransmission.GetBitrate(nowMs);
 
 		// Add probationBytesSent.
 		jsonObject["probationBytesSent"] = this->sendProbationTransmission.GetBytes();
 
 		// Add probationSendBitrate.
-		jsonObject["probationSendBitrate"] = this->sendProbationTransmission.GetBitrate(now);
+		jsonObject["probationSendBitrate"] = this->sendProbationTransmission.GetBitrate(nowMs);
 
 		// Add availableOutgoingBitrate.
 		if (this->tccClient)
@@ -1284,11 +1284,11 @@ namespace RTC
 		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
 		packet->SetTransportWideCc01ExtensionId(this->rtpHeaderExtensionIds.transportWideCc01);
 
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
-			this->tccServer->IncomingPacket(now, packet);
+			this->tccServer->IncomingPacket(nowMs, packet);
 
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
@@ -1850,7 +1850,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::SendRtcp(uint64_t now)
+	void Transport::SendRtcp(uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -1865,7 +1865,7 @@ namespace RTC
 				// Reset the Compound packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
 
-				consumer->GetRtcp(packet.get(), rtpStream, now);
+				consumer->GetRtcp(packet.get(), rtpStream, nowMs);
 
 				// Send the RTCP compound packet if there is a sender report.
 				if (packet->HasSenderReport())
@@ -1883,7 +1883,7 @@ namespace RTC
 		{
 			auto* producer = kv.second;
 
-			producer->GetRtcp(packet.get(), now);
+			producer->GetRtcp(packet.get(), nowMs);
 
 			// One more RR would exceed the MTU, send the compound packet now.
 			if (packet->GetSize() + sizeof(RTCP::ReceiverReport::Header) > RTC::MtuSize)
@@ -2562,10 +2562,10 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto interval = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			uint64_t now  = DepLibUV::GetTimeMs();
+			auto interval  = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			uint64_t nowMs = DepLibUV::GetTimeMs();
 
-			SendRtcp(now);
+			SendRtcp(nowMs);
 
 			// Recalculate next RTCP interval.
 			if (!this->mapConsumers.empty())
@@ -2578,7 +2578,7 @@ namespace RTC
 				{
 					auto* consumer = kv.second;
 
-					rate += consumer->GetTransmissionRate(now) / 1000;
+					rate += consumer->GetTransmissionRate(nowMs) / 1000;
 				}
 
 				// Calculate bandwidth: 360 / transmission bandwidth in kbit/s.
