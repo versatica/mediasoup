@@ -222,10 +222,10 @@ void PacedSender::Process() {
 
   if (bytes_sent != 0)
   {
-    auto now = DepLibUV::GetTimeUs();
+    auto now_us = DepLibUV::GetTimeUs();
 
-    OnPaddingSent(now, bytes_sent);
-    prober_.ProbeSent((now + 500) / 1000, bytes_sent);
+    OnPaddingSent(now_us, bytes_sent);
+    prober_.ProbeSent((now_us + 500) / 1000, bytes_sent);
   }
 }
 
@@ -274,11 +274,11 @@ PacedPacketInfo PacedSender::GetPacingInfo() {
   return pacing_info;
 }
 
-void PacedSender::OnPaddingSent(int64_t now, size_t bytes_sent) {
+void PacedSender::OnPaddingSent(int64_t now_us, size_t bytes_sent) {
   if (bytes_sent > 0) {
     UpdateBudgetWithBytesSent(bytes_sent);
   }
-  last_send_time_us_ = now;
+  last_send_time_us_ = now_us;
 }
 
 void PacedSender::UpdateBudgetWithElapsedTime(int64_t delta_time_ms) {

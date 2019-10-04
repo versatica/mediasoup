@@ -317,7 +317,7 @@ namespace RTC
 			this->rtpTransportControllerSend->packet_sender()->Process();
 
 			/* clang-format off */
-			this->processTimer->Start(std::min(
+			this->processTimer->Start(std::min<uint64_t>(
 				// Depends on probation being done and WebRTC-Pacer-MinPacketLimitMs field trial.
 				this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess(),
 				// Fixed value (25ms), libwebrtc/api/transport/goog_cc_factory.cc.
