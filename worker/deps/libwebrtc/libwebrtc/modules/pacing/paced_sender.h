@@ -96,7 +96,7 @@ class PacedSender {
   size_t PaddingBytesToAdd(absl::optional<size_t> recommended_probe_size,
                            size_t bytes_sent);
 
-  void OnPaddingSent(int64_t now, size_t bytes_sent);
+  void OnPaddingSent(int64_t now_us, size_t bytes_sent);
 
   bool Congested() const;
 
@@ -121,7 +121,6 @@ class PacedSender {
   uint32_t pacing_bitrate_kbps_;
 
   int64_t time_last_process_us_;
-  int64_t last_send_time_us_;
   int64_t first_sent_packet_ms_;
 
   uint64_t packet_counter_;

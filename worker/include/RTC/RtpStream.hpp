@@ -71,12 +71,12 @@ namespace RTC
 		uint8_t GetSpatialLayers() const;
 		uint8_t GetTemporalLayers() const;
 		virtual bool ReceivePacket(RTC::RtpPacket* packet);
-		virtual void Pause()                                                                        = 0;
-		virtual void Resume()                                                                       = 0;
-		virtual uint32_t GetBitrate(uint64_t now)                                                   = 0;
-		virtual uint32_t GetBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)      = 0;
-		virtual uint32_t GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer)                 = 0;
-		virtual uint32_t GetLayerBitrate(uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+		virtual void Pause()                                                                     = 0;
+		virtual void Resume()                                                                    = 0;
+		virtual uint32_t GetBitrate(uint64_t nowMs)                                              = 0;
+		virtual uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+		virtual uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer)            = 0;
+		virtual uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 		void ResetScore(uint8_t score, bool notify);
 		uint8_t GetFractionLost() const;
 		float GetLossPercentage() const;
@@ -86,7 +86,7 @@ namespace RTC
 		uint64_t GetSenderReportNtpMs() const;
 		uint32_t GetSenderReportTs() const;
 		uint8_t GetScore() const;
-		uint64_t GetActiveTime() const;
+		uint64_t GetActiveMs() const;
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -137,7 +137,7 @@ namespace RTC
 		// Whether at least a RTP packet has been received.
 		bool started{ false };
 		// Last time since the stream is active.
-		uint64_t activeSince{ 0u };
+		uint64_t activeSinceMs{ 0u };
 	}; // namespace RTC
 
 	/* Inline instance methods. */
@@ -243,9 +243,9 @@ namespace RTC
 		return this->score;
 	}
 
-	inline uint64_t RtpStream::GetActiveTime() const
+	inline uint64_t RtpStream::GetActiveMs() const
 	{
-		return DepLibUV::GetTimeMs() - this->activeSince;
+		return DepLibUV::GetTimeMs() - this->activeSinceMs;
 	}
 
 	inline uint32_t RtpStream::GetExpectedPackets() const

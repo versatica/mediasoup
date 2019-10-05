@@ -101,7 +101,7 @@ namespace RTC
 		}
 	}
 
-	void TransportCongestionControlServer::IncomingPacket(uint64_t now, const RTC::RtpPacket* packet)
+	void TransportCongestionControlServer::IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -124,7 +124,7 @@ namespace RTC
 				// Provide the feedback packet with the RTP packet info. If it fails,
 				// send current feedback and add the packet info to a new one.
 				auto result =
-				  this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen);
+				  this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, nowMs, this->maxRtcpPacketLen);
 
 				switch (result)
 				{
@@ -147,7 +147,7 @@ namespace RTC
 						// regenerated one.
 						SendTransportCcFeedback();
 
-						this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, now, this->maxRtcpPacketLen);
+						this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, nowMs, this->maxRtcpPacketLen);
 
 						break;
 					}
@@ -180,7 +180,7 @@ namespace RTC
 				if (!packet->ReadAbsSendTime(absSendTime))
 					break;
 
-				this->rembServer->IncomingPacket(now, packet->GetPayloadLength(), *packet, absSendTime);
+				this->rembServer->IncomingPacket(nowMs, packet->GetPayloadLength(), *packet, absSendTime);
 
 				break;
 			}
@@ -237,7 +237,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 
 		// May fix unlimitedRembCounter.
 		if (this->unlimitedRembCounter > 0u && this->maxIncomingBitrate != 0u)
@@ -251,7 +251,7 @@ namespace RTC
 				this->unlimitedRembCounter > 0u
 			) &&
 			(
-				now - this->limitationRembSentAt > LimitationRembInterval ||
+				nowMs - this->limitationRembSentAtMs > LimitationRembInterval ||
 				this->unlimitedRembCounter == UnlimitedRembNumPackets
 			)
 		)
@@ -268,7 +268,7 @@ namespace RTC
 			// Notify the listener.
 			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, &packet);
 
-			this->limitationRembSentAt = now;
+			this->limitationRembSentAtMs = nowMs;
 
 			if (this->unlimitedRembCounter > 0u)
 				this->unlimitedRembCounter--;

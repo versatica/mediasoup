@@ -48,7 +48,7 @@ namespace RTC
 		counter.Update(packet);
 	}
 
-	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(uint64_t now)
+	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -58,7 +58,7 @@ namespace RTC
 		{
 			for (auto& temporalLayerCounter : spatialLayerCounter)
 			{
-				rate += temporalLayerCounter.GetBitrate(now);
+				rate += temporalLayerCounter.GetBitrate(nowMs);
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace RTC
 	}
 
 	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(
-	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	  uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
 		MS_TRACE();
 
@@ -77,7 +77,7 @@ namespace RTC
 		// Return 0 if specified layers are not being received.
 		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
-		if (counter.GetBitrate(now) == 0)
+		if (counter.GetBitrate(nowMs) == 0)
 			return 0u;
 
 		uint32_t rate{ 0u };
@@ -89,7 +89,7 @@ namespace RTC
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
-				rate += temporalLayerCounter.GetBitrate(now);
+				rate += temporalLayerCounter.GetBitrate(nowMs);
 			}
 		}
 
@@ -98,13 +98,13 @@ namespace RTC
 		{
 			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 
-			rate += temporalLayerCounter.GetBitrate(now);
+			rate += temporalLayerCounter.GetBitrate(nowMs);
 		}
 
 		return rate;
 	}
 
-	uint32_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer)
+	uint32_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer)
 	{
 		MS_TRACE();
 
@@ -122,14 +122,14 @@ namespace RTC
 		{
 			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 
-			rate += temporalLayerCounter.GetBitrate(now);
+			rate += temporalLayerCounter.GetBitrate(nowMs);
 		}
 
 		return rate;
 	}
 
 	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
-	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	  uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
 		MS_TRACE();
 
@@ -139,7 +139,7 @@ namespace RTC
 
 		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
-		return counter.GetBitrate(now);
+		return counter.GetBitrate(nowMs);
 	}
 
 	size_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
@@ -210,16 +210,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTimeMs();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["timestamp"]   = now;
+		jsonObject["timestamp"]   = nowMs;
 		jsonObject["type"]        = "inbound-rtp";
 		jsonObject["jitter"]      = this->jitter;
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(now);
+		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
 
 		if (this->rtt != 0.0f)
 			jsonObject["roundTripTime"] = this->rtt;
@@ -234,7 +234,7 @@ namespace RTC
 				for (uint8_t tIdx = 0; tIdx < GetTemporalLayers(); ++tIdx)
 				{
 					(*jsonBitrateByLayerIt)[std::to_string(sIdx) + "." + std::to_string(tIdx)] =
-					  GetBitrate(now, sIdx, tIdx);
+					  GetBitrate(nowMs, sIdx, tIdx);
 				}
 			}
 		}
@@ -516,8 +516,8 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t now = DepLibUV::GetTimeMs();
-		auto ntp     = Utils::Time::TimeMs2Ntp(now);
+		uint64_t nowMs = DepLibUV::GetTimeMs();
+		auto ntp       = Utils::Time::TimeMs2Ntp(nowMs);
 
 		// Get the compact NTP representation of the current timestamp.
 		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;

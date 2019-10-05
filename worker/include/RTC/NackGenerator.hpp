@@ -29,7 +29,7 @@ namespace RTC
 
 			uint16_t seq{ 0u };
 			uint16_t sendAtSeq{ 0u };
-			uint64_t sentAtTime{ 0u };
+			uint64_t sentAtMs{ 0u };
 			uint8_t retries{ 0u };
 		};
 

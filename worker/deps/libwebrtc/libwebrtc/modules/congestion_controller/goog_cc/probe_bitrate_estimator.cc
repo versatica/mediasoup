@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::ProbeBitrateEstimator"
-// #define MS_LOG_DEV // TODO
+#define MS_LOG_DEV // TODO
 
 #include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -53,15 +53,18 @@ constexpr TimeDelta kMaxProbeInterval = TimeDelta::Seconds<1>();
 
 }  // namespace
 
-ProbeBitrateEstimator::ProbeBitrateEstimator()
-    {}
+ProbeBitrateEstimator::ProbeBitrateEstimator() {
+
+}
 
 ProbeBitrateEstimator::~ProbeBitrateEstimator() = default;
 
 absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
     const PacketResult& packet_feedback) {
   int cluster_id = packet_feedback.sent_packet.pacing_info.probe_cluster_id;
+
   //RTC_DCHECK_NE(cluster_id, PacedPacketInfo::kNotAProbe);
+  MS_ASSERT(cluster_id != PacedPacketInfo::kNotAProbe, "cluster_id == kNotAProbe");
 
   EraseOldClusters(packet_feedback.receive_time);
 
@@ -88,6 +91,12 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
       // packet_feedback.sent_packet.pacing_info.probe_cluster_min_probes, 0);
   // RTC_DCHECK_GT(packet_feedback.sent_packet.pacing_info.probe_cluster_min_bytes,
                 // 0);
+  MS_ASSERT(
+    packet_feedback.sent_packet.pacing_info.probe_cluster_min_probes > 0,
+    "probe_cluster_min_probes must be > 0");
+  MS_ASSERT(
+    packet_feedback.sent_packet.pacing_info.probe_cluster_min_bytes > 0,
+    "probe_cluster_min_bytes must be > 0");
 
   int min_probes =
       packet_feedback.sent_packet.pacing_info.probe_cluster_min_probes *
@@ -115,9 +124,9 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   // TODO: TMP WIP cerdo to avoid that send_interval or receive_interval is zero.
   //
   // if (send_interval <= TimeDelta::Zero())
-  //   send_interval = TimeDelta::us(1u);
+  //   send_interval = TimeDelta::ms(1u);
   // if (receive_interval <= TimeDelta::Zero())
-  //   receive_interval = TimeDelta::us(1u);
+  //   receive_interval = TimeDelta::ms(1u);
 
   if (send_interval <= TimeDelta::Zero() || send_interval > kMaxProbeInterval ||
       receive_interval <= TimeDelta::Zero() ||

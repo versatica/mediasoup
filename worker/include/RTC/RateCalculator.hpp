@@ -17,14 +17,14 @@ namespace RTC
 
 	public:
 		RateCalculator(size_t windowSize = DefaultWindowSize, float scale = DefaultBpsScale);
-		void Update(size_t size, uint64_t now);
-		uint32_t GetRate(uint64_t now);
+		void Update(size_t size, uint64_t nowMs);
+		uint32_t GetRate(uint64_t nowMs);
 		size_t GetBytes() const;
 		void Reset();
 
 	private:
-		void RemoveOldData(uint64_t now);
-		void Reset(uint64_t now);
+		void RemoveOldData(uint64_t nowMs);
+		void Reset(uint64_t nowMs);
 
 	private:
 		struct BufferItem
@@ -68,15 +68,15 @@ namespace RTC
 
 	inline void RateCalculator::Reset()
 	{
-		uint64_t now = DepLibUV::GetTimeMs();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 
-		Reset(now);
+		Reset(nowMs);
 	}
 
-	inline void RateCalculator::Reset(uint64_t now)
+	inline void RateCalculator::Reset(uint64_t nowMs)
 	{
 		this->buffer.reset(new BufferItem[this->windowSize]);
-		this->oldestTime  = now - this->windowSize;
+		this->oldestTime  = nowMs - this->windowSize;
 		this->oldestIndex = 0;
 		this->totalCount  = 0;
 		this->lastRate    = 0;
@@ -90,7 +90,7 @@ namespace RTC
 
 	public:
 		void Update(RTC::RtpPacket* packet);
-		uint32_t GetBitrate(uint64_t now);
+		uint32_t GetBitrate(uint64_t nowMs);
 		size_t GetPacketCount() const;
 		size_t GetBytes() const;
 
@@ -105,9 +105,9 @@ namespace RTC
 	{
 	}
 
-	inline uint32_t RtpDataCounter::GetBitrate(uint64_t now)
+	inline uint32_t RtpDataCounter::GetBitrate(uint64_t nowMs)
 	{
-		return this->rate.GetRate(now);
+		return this->rate.GetRate(nowMs);
 	}
 
 	inline size_t RtpDataCounter::GetPacketCount() const

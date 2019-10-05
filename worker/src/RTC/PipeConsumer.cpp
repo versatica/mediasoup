@@ -260,7 +260,7 @@ namespace RTC
 	}
 
 	void PipeConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
+	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -272,15 +272,15 @@ namespace RTC
 		// each stream in this PipeConsumer.
 		// clang-format off
 		if (
-			now != this->lastRtcpSentTime &&
-			static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval
+			nowMs != this->lastRtcpSentTime &&
+			static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval
 		)
 		// clang-format on
 		{
 			return;
 		}
 
-		auto* report = rtpStream->GetRtcpSenderReport(now);
+		auto* report = rtpStream->GetRtcpSenderReport(nowMs);
 
 		if (!report)
 			return;
@@ -292,7 +292,7 @@ namespace RTC
 
 		packet->AddSdesChunk(sdesChunk);
 
-		this->lastRtcpSentTime = now;
+		this->lastRtcpSentTime = nowMs;
 	}
 
 	void PipeConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
@@ -340,7 +340,7 @@ namespace RTC
 		rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
-	uint32_t PipeConsumer::GetTransmissionRate(uint64_t now)
+	uint32_t PipeConsumer::GetTransmissionRate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -351,7 +351,7 @@ namespace RTC
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			rate += rtpStream->GetBitrate(now);
+			rate += rtpStream->GetBitrate(nowMs);
 		}
 
 		return rate;

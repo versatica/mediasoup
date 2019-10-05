@@ -30,8 +30,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->availableBitrate            = this->initialAvailableBitrate;
-		this->lastAvailableBitrateEventAt = DepLibUV::GetTimeMs();
+		this->availableBitrate              = this->initialAvailableBitrate;
+		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
 	}
 
 	void SenderBandwidthEstimator::TransportDisconnected()
@@ -43,7 +43,7 @@ namespace RTC
 		// TODO: Reset all status (maps, etc).
 	}
 
-	void SenderBandwidthEstimator::RtpPacketToBeSent(RTC::RtpPacket* packet, uint64_t now)
+	void SenderBandwidthEstimator::RtpPacketToBeSent(RTC::RtpPacket* packet, uint64_t /*nowMs*/)
 	{
 		MS_TRACE();
 
@@ -63,7 +63,7 @@ namespace RTC
 		MS_DEBUG_DEV("[wideSeqNumber:%" PRIu16 ", size:%zu]", wideSeqNumber, packet->GetSize());
 	}
 
-	void SenderBandwidthEstimator::RtpPacketSent(uint16_t wideSeqNumber, uint64_t now)
+	void SenderBandwidthEstimator::RtpPacketSent(uint16_t wideSeqNumber, uint64_t /*nowMs*/)
 	{
 		MS_TRACE();
 
@@ -97,6 +97,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastAvailableBitrateEventAt = DepLibUV::GetTimeMs();
+		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
 	}
 } // namespace RTC

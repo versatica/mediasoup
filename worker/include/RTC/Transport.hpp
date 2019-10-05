@@ -132,7 +132,7 @@ namespace RTC
 		virtual bool IsConnected() const                                                        = 0;
 		virtual void SendRtpPacket(RTC::RtpPacket* packet, onSendHandler& onDone = [](bool) {}) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
-		void SendRtcp(uint64_t now);
+		void SendRtcp(uint64_t nowMs);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendSctpData(const uint8_t* data, size_t len)             = 0;

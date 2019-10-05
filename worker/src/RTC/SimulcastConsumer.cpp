@@ -405,7 +405,7 @@ namespace RTC
 
 		uint32_t usedBitrate{ 0u };
 		uint8_t maxProducerScore{ 0u };
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
@@ -420,7 +420,7 @@ namespace RTC
 
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
-			if (usedBitrate > 0u && producerRtpStream->GetActiveTime() < StreamMinActiveTime)
+			if (usedBitrate > 0u && producerRtpStream->GetActiveMs() < StreamMinActiveTime)
 				continue;
 
 			// We may not yet switch to this spatial layer.
@@ -439,7 +439,7 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				auto requiredBitrate = producerRtpStream->GetBitrate(now, 0u, temporalLayer);
+				auto requiredBitrate = producerRtpStream->GetBitrate(nowMs, 0u, temporalLayer);
 
 				MS_DEBUG_DEV(
 				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
@@ -579,7 +579,7 @@ namespace RTC
 		uint32_t requiredBitrate{ 0u };
 		auto* producerRtpStream = GetProducerProvisionalTargetRtpStream();
 		int16_t temporalLayer   = this->provisionalTargetTemporalLayer + 1;
-		auto now                = DepLibUV::GetTimeMs();
+		auto nowMs              = DepLibUV::GetTimeMs();
 
 		MS_ASSERT(producerRtpStream, "no Producer provisional target stream");
 
@@ -596,7 +596,7 @@ namespace RTC
 				break;
 			}
 
-			requiredBitrate = producerRtpStream->GetLayerBitrate(now, 0u, temporalLayer);
+			requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0u, temporalLayer);
 
 			// If active layer, end iterations here.
 			if (requiredBitrate)
@@ -672,7 +672,7 @@ namespace RTC
 		int16_t desiredTemporalLayer{ -1 };
 		uint32_t desiredBitrate{ 0u };
 		uint8_t maxProducerScore{ 0u };
-		auto now = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
@@ -687,7 +687,7 @@ namespace RTC
 
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
-			if (desiredBitrate > 0 && producerRtpStream->GetActiveTime() < StreamMinActiveTime)
+			if (desiredBitrate > 0 && producerRtpStream->GetActiveMs() < StreamMinActiveTime)
 				continue;
 
 			// We may not yet switch to this spatial layer.
@@ -706,7 +706,7 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				auto bitrate = producerRtpStream->GetBitrate(now, 0u, temporalLayer);
+				auto bitrate = producerRtpStream->GetBitrate(nowMs, 0u, temporalLayer);
 
 				// If layer is not active move to next spatial layer.
 				if (bitrate == 0u)
@@ -1017,16 +1017,16 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
+	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
 
-		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		auto* report = this->rtpStream->GetRtcpSenderReport(now);
+		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
 
 		if (!report)
 			return;
@@ -1038,7 +1038,7 @@ namespace RTC
 
 		packet->AddSdesChunk(sdesChunk);
 
-		this->lastRtcpSentTime = now;
+		this->lastRtcpSentTime = nowMs;
 	}
 
 	void SimulcastConsumer::NeedWorstRemoteFractionLost(
@@ -1084,14 +1084,14 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
-	uint32_t SimulcastConsumer::GetTransmissionRate(uint64_t now)
+	uint32_t SimulcastConsumer::GetTransmissionRate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		if (!IsActive())
 			return 0u;
 
-		return this->rtpStream->GetBitrate(now);
+		return this->rtpStream->GetBitrate(nowMs);
 	}
 
 	float SimulcastConsumer::GetRtt() const
@@ -1339,7 +1339,7 @@ namespace RTC
 			if (
 				this->externallyManagedBitrate &&
 				newTargetSpatialLayer != -1 &&
-				producerRtpStream->GetActiveTime() < StreamMinActiveTime
+				producerRtpStream->GetActiveMs() < StreamMinActiveTime
 			)
 			// clang-format on
 			{

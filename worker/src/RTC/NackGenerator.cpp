@@ -213,7 +213,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTimeMs();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 		std::vector<uint16_t> nackBatch;
 
 		auto it = this->nackList.begin();
@@ -226,7 +226,7 @@ namespace RTC
 			// clang-format off
 			if (
 				filter == NackFilter::SEQ &&
-				nackInfo.sentAtTime == 0 &&
+				nackInfo.sentAtMs == 0 &&
 				(
 					nackInfo.sendAtSeq == this->lastSeq ||
 					SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq)
@@ -236,7 +236,7 @@ namespace RTC
 			{
 				nackBatch.emplace_back(seq);
 				nackInfo.retries++;
-				nackInfo.sentAtTime = now;
+				nackInfo.sentAtMs = nowMs;
 
 				if (nackInfo.retries >= MaxNackRetries)
 				{
@@ -256,11 +256,11 @@ namespace RTC
 				continue;
 			}
 
-			if (filter == NackFilter::TIME && now - nackInfo.sentAtTime >= this->rtt)
+			if (filter == NackFilter::TIME && nowMs - nackInfo.sentAtMs >= this->rtt)
 			{
 				nackBatch.emplace_back(seq);
 				nackInfo.retries++;
-				nackInfo.sentAtTime = now;
+				nackInfo.sentAtMs = nowMs;
 
 				if (nackInfo.retries >= MaxNackRetries)
 				{

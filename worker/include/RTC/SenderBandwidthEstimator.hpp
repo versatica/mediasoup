@@ -27,8 +27,8 @@ namespace RTC
 	public:
 		void TransportConnected();
 		void TransportDisconnected();
-		void RtpPacketToBeSent(RTC::RtpPacket* packet, uint64_t now);
-		void RtpPacketSent(uint16_t wideSeqNumber, uint64_t now);
+		void RtpPacketToBeSent(RTC::RtpPacket* packet, uint64_t nowMs);
+		void RtpPacketSent(uint16_t wideSeqNumber, uint64_t nowMs);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		uint32_t GetAvailableBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
@@ -39,7 +39,7 @@ namespace RTC
 		// Others.
 		uint32_t initialAvailableBitrate{ 0u };
 		uint32_t availableBitrate{ 0u };
-		uint64_t lastAvailableBitrateEventAt{ 0u };
+		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 	};
 } // namespace RTC
 

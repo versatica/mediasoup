@@ -261,16 +261,16 @@ namespace RTC
 	}
 
 	void SimpleConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
+	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
 
-		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return;
 
-		auto* report = this->rtpStream->GetRtcpSenderReport(now);
+		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
 
 		if (!report)
 			return;
@@ -282,7 +282,7 @@ namespace RTC
 
 		packet->AddSdesChunk(sdesChunk);
 
-		this->lastRtcpSentTime = now;
+		this->lastRtcpSentTime = nowMs;
 	}
 
 	void SimpleConsumer::NeedWorstRemoteFractionLost(
@@ -328,14 +328,14 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
-	uint32_t SimpleConsumer::GetTransmissionRate(uint64_t now)
+	uint32_t SimpleConsumer::GetTransmissionRate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		if (!IsActive())
 			return 0u;
 
-		return this->rtpStream->GetBitrate(now);
+		return this->rtpStream->GetBitrate(nowMs);
 	}
 
 	float SimpleConsumer::GetRtt() const

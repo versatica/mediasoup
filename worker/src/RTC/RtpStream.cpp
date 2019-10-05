@@ -18,7 +18,7 @@ namespace RTC
 
 	RtpStream::RtpStream(
 	  RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, uint8_t initialScore)
-	  : listener(listener), params(params), score(initialScore), activeSince(DepLibUV::GetTimeMs())
+	  : listener(listener), params(params), score(initialScore), activeSinceMs(DepLibUV::GetTimeMs())
 	{
 		MS_TRACE();
 	}
@@ -125,9 +125,9 @@ namespace RTC
 
 			this->score = score;
 
-			// If previous score was 0 (and new one is not 0) then update activeSince.
+			// If previous score was 0 (and new one is not 0) then update activeSinceMs.
 			if (previousScore == 0u)
-				this->activeSince = DepLibUV::GetTimeMs();
+				this->activeSinceMs = DepLibUV::GetTimeMs();
 
 			// Notify the listener.
 			if (notify)
@@ -255,9 +255,9 @@ namespace RTC
 			  previousScore,
 			  this->score);
 
-			// If previous score was 0 (and new one is not 0) then update activeSince.
+			// If previous score was 0 (and new one is not 0) then update activeSinceMs.
 			if (previousScore == 0u)
-				this->activeSince = DepLibUV::GetTimeMs();
+				this->activeSinceMs = DepLibUV::GetTimeMs();
 
 			this->listener->OnRtpStreamScore(this, this->score, previousScore);
 		}

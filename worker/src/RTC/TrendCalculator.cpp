@@ -15,15 +15,15 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void TrendCalculator::Update(uint32_t value, uint64_t now)
+	void TrendCalculator::Update(uint32_t value, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		if (this->value == 0u)
 		{
-			this->value                 = value;
-			this->highestValue          = value;
-			this->highestValueUpdatedAt = now;
+			this->value                   = value;
+			this->highestValue            = value;
+			this->highestValueUpdatedAtMs = nowMs;
 
 			return;
 		}
@@ -31,14 +31,14 @@ namespace RTC
 		// If new value is bigger or equal than current one, use it.
 		if (value >= this->value)
 		{
-			this->value                 = value;
-			this->highestValue          = value;
-			this->highestValueUpdatedAt = now;
+			this->value                   = value;
+			this->highestValue            = value;
+			this->highestValueUpdatedAtMs = nowMs;
 		}
 		// Otherwise decrease current value.
 		else
 		{
-			uint64_t elapsedTime = now - this->highestValueUpdatedAt;
+			uint64_t elapsedTime = nowMs - this->highestValueUpdatedAtMs;
 
 			this->value = std::max<uint32_t>(
 			  value,
@@ -46,12 +46,12 @@ namespace RTC
 		}
 	}
 
-	void TrendCalculator::ForceUpdate(uint32_t value, uint64_t now)
+	void TrendCalculator::ForceUpdate(uint32_t value, uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		this->value                 = value;
-		this->highestValue          = value;
-		this->highestValueUpdatedAt = now;
+		this->value                   = value;
+		this->highestValue            = value;
+		this->highestValueUpdatedAtMs = nowMs;
 	}
 } // namespace RTC
