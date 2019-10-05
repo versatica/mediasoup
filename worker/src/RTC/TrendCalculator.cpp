@@ -6,11 +6,7 @@
 
 namespace RTC
 {
-	/* Static. */
-
-	static constexpr float DecreaseFactorPerSecond{ 0.05f };
-
-	TrendCalculator::TrendCalculator()
+	TrendCalculator::TrendCalculator(float decreaseFactor) : decreaseFactor(decreaseFactor)
 	{
 		MS_TRACE();
 	}
@@ -38,11 +34,12 @@ namespace RTC
 		// Otherwise decrease current value.
 		else
 		{
-			uint64_t elapsedTime = nowMs - this->highestValueUpdatedAtMs;
+			uint64_t elapsedMs = nowMs - this->highestValueUpdatedAtMs;
+			auto subtraction   = static_cast<uint32_t>(this->highestValue * this->decreaseFactor * (elapsedMs / 1000.0));
 
 			this->value = std::max<uint32_t>(
 			  value,
-			  this->highestValue - (this->highestValue * DecreaseFactorPerSecond * (elapsedTime / 1000.0)));
+			  this->highestValue > subtraction ? (this->highestValue - subtraction) : value);
 		}
 	}
 
