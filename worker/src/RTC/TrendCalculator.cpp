@@ -35,11 +35,11 @@ namespace RTC
 		else
 		{
 			uint64_t elapsedMs = nowMs - this->highestValueUpdatedAtMs;
-			auto subtraction   = static_cast<uint32_t>(this->highestValue * this->decreaseFactor * (elapsedMs / 1000.0));
+			auto subtraction =
+			  static_cast<uint32_t>(this->highestValue * this->decreaseFactor * (elapsedMs / 1000.0));
 
 			this->value = std::max<uint32_t>(
-			  value,
-			  this->highestValue > subtraction ? (this->highestValue - subtraction) : value);
+			  value, this->highestValue > subtraction ? (this->highestValue - subtraction) : value);
 		}
 	}
 

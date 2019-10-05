@@ -11,14 +11,15 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
-	static constexpr uint16_t MaxSentInfoAge{ 2000u }; // TODO: Let's see.
+	static constexpr uint16_t MaxSentInfoAge{ 2000u };                // TODO: Let's see.
 	static constexpr float DefaultRtt{ 100 };
 
 	/* Instance methods. */
 
 	SenderBandwidthEstimator::SenderBandwidthEstimator(
 	  RTC::SenderBandwidthEstimator::Listener* listener, uint32_t initialAvailableBitrate)
-	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate), rtt(DefaultRtt), sendTransmission(1000u), sendTransmissionTrend(0.15f)
+	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate), rtt(DefaultRtt),
+	    sendTransmission(1000u), sendTransmissionTrend(0.15f)
 	{
 		MS_TRACE();
 	}
@@ -110,7 +111,9 @@ namespace RTC
 			auto& sentInfo = it->second;
 
 			this->cummulativeResult.AddPacket(
-				sentInfo.size, static_cast<int64_t>(sentInfo.sentAtMs), static_cast<int64_t>(result.receivedAtMs));
+			  sentInfo.size,
+			  static_cast<int64_t>(sentInfo.sentAtMs),
+			  static_cast<int64_t>(result.receivedAtMs));
 		}
 
 		// Do nothing else if too early.
@@ -122,15 +125,16 @@ namespace RTC
 
 		// TODO: Remove.
 		MS_DEBUG_DEV(
-			"[numPackets:%zu, totalSize:%zu] "
-			"[send bps:%" PRIu32 ", recv bps:%" PRIu32 "] "
-			"[real bps:%" PRIu32 ", trend bps:%" PRIu32 "]",
-			this->cummulativeResult.GetNumPackets(),
-			this->cummulativeResult.GetTotalSize(),
-			this->cummulativeResult.GetSendBitrate(),
-			this->cummulativeResult.GetReceiveBitrate(),
-			sendBitrate,
-			sendBitrateTrend);
+		  "[numPackets:%zu, totalSize:%zu] "
+		  "[send bps:%" PRIu32 ", recv bps:%" PRIu32
+		  "] "
+		  "[real bps:%" PRIu32 ", trend bps:%" PRIu32 "]",
+		  this->cummulativeResult.GetNumPackets(),
+		  this->cummulativeResult.GetTotalSize(),
+		  this->cummulativeResult.GetSendBitrate(),
+		  this->cummulativeResult.GetReceiveBitrate(),
+		  sendBitrate,
+		  sendBitrateTrend);
 
 		// Reset cummulative result.
 		this->cummulativeResult.Reset();
@@ -157,7 +161,8 @@ namespace RTC
 		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
 	}
 
-	void SenderBandwidthEstimator::CummulativeResult::AddPacket(size_t size, int64_t sentAtMs, int64_t receivedAtMs)
+	void SenderBandwidthEstimator::CummulativeResult::AddPacket(
+	  size_t size, int64_t sentAtMs, int64_t receivedAtMs)
 	{
 		MS_TRACE();
 

@@ -103,14 +103,16 @@ namespace RTC
 
 	inline uint32_t SenderBandwidthEstimator::CummulativeResult::GetSendBitrate() const
 	{
-		auto sendIntervalMs = std::max<uint64_t>(this->lastPacketSentAtMs - this->firstPacketSentAtMs, 1u);
+		auto sendIntervalMs =
+		  std::max<uint64_t>(this->lastPacketSentAtMs - this->firstPacketSentAtMs, 1u);
 
 		return static_cast<uint32_t>(this->totalSize / sendIntervalMs) * 8 * 1000;
 	}
 
 	inline uint32_t SenderBandwidthEstimator::CummulativeResult::GetReceiveBitrate() const
 	{
-		auto recvIntervalMs = std::max<uint64_t>(this->lastPacketReceivedAtMs - this->firstPacketReceivedAtMs, 1u);
+		auto recvIntervalMs =
+		  std::max<uint64_t>(this->lastPacketReceivedAtMs - this->firstPacketReceivedAtMs, 1u);
 
 		return static_cast<uint32_t>(this->totalSize / recvIntervalMs) * 8 * 1000;
 	}
