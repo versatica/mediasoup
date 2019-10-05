@@ -461,8 +461,8 @@ namespace RTC
 
 		// TODO
 		// Add availableOutgoingBitrate_2.
-		if (this->senderBwe)
-			jsonObject["availableOutgoingBitrate_2"] = this->senderBwe->GetAvailableBitrate();
+		// if (this->senderBwe)
+		// 	jsonObject["availableOutgoingBitrate_2"] = this->senderBwe->GetAvailableBitrate();
 
 		// Add maxIncomingBitrate.
 		if (this->maxIncomingBitrate != 0u)
@@ -2150,19 +2150,22 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			// TODO
-			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTimeMs());
+			auto* senderBwe = this->senderBwe;
+			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
-			auto* senderBwe    = this->senderBwe;
-			auto wideSeqNumber = this->transportWideCcSeq;
+			sentInfo.wideSeq     = this->transportWideCcSeq;
+			sentInfo.size        = packet->GetSize();
+			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [&packetInfo, wideSeqNumber, tccClient, senderBwe](bool sent) {
+			SendRtpPacket(packet, [&packetInfo, tccClient, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
 					// TODO
-					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTimeMs());
+					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+
+					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
 		}
@@ -2200,19 +2203,22 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			// TODO
-			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTimeMs());
+			auto* senderBwe = this->senderBwe;
+			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
-			auto* senderBwe    = this->senderBwe;
-			auto wideSeqNumber = this->transportWideCcSeq;
+			sentInfo.wideSeq     = this->transportWideCcSeq;
+			sentInfo.size        = packet->GetSize();
+			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [&packetInfo, wideSeqNumber, tccClient, senderBwe](bool sent) {
+			SendRtpPacket(packet, [&packetInfo, tccClient, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
 					// TODO
-					senderBwe->RtpPacketSent(wideSeqNumber, DepLibUV::GetTimeMs());
+					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+
+					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
 		}
@@ -2494,29 +2500,31 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			// TODO
-			this->senderBwe->RtpPacketToBeSent(packet, DepLibUV::GetTimeMs());
-
 			auto* senderBwe = this->senderBwe;
-			uint16_t transportWideCcSeq;
+			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
-			packet->ReadTransportWideCc01(transportWideCcSeq);
+			sentInfo.wideSeq     = this->transportWideCcSeq;
+			sentInfo.size        = packet->GetSize();
+			sentInfo.isProbation = true;
+			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
 			// TODO: REMOVE
-			MS_DUMP(
+			MS_DEBUG_DEV(
 			  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
 			  packet->GetSequenceNumber(),
-			  transportWideCcSeq,
+			  this->transportWideCcSeq,
 			  packet->GetSize(),
 			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
 
-			SendRtpPacket(packet, [&packetInfo, transportWideCcSeq, tccClient, senderBwe](bool sent) {
+			SendRtpPacket(packet, [&packetInfo, tccClient, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
 					// TODO
-					senderBwe->RtpPacketSent(transportWideCcSeq, DepLibUV::GetTimeMs());
+					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+
+					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
 		}
