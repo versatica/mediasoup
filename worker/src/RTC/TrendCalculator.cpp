@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TrendCalculator"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TrendCalculator.hpp"
 #include "Logger.hpp"

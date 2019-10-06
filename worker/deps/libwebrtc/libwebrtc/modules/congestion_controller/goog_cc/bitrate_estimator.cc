@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::BitrateEstimator"
-// #define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/bitrate_estimator.h"
 #include "api/units/data_rate.h"

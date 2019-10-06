@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::FieldTrialParser"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "rtc_base/experiments/field_trial_parser.h"
 

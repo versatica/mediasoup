@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlServer"
-#define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "DepLibUV.hpp"
@@ -286,7 +286,7 @@ namespace RTC
 		if (this->maxIncomingBitrate != 0u)
 			availableBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		std::ostringstream ssrcsStream;
 
 		if (!ssrcs.empty())

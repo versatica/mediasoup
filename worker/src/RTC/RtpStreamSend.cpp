@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpStreamSend"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStreamSend.hpp"
 #include "Logger.hpp"
@@ -615,7 +615,7 @@ namespace RTC
 			}
 		}
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
 		  score,
 		  "[totalSent:%zu, totalLost:%" PRIi32 ", totalRepaired:%zu",
@@ -645,7 +645,7 @@ namespace RTC
 		auto deliveredRatio = static_cast<float>(sent - lost) / static_cast<float>(sent);
 		auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
 		  score,
 		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score:%" PRIu8

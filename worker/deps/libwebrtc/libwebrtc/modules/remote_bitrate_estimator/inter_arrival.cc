@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::InterArrival"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/remote_bitrate_estimator/inter_arrival.h"
 #include "modules/include/module_common_types_public.h"

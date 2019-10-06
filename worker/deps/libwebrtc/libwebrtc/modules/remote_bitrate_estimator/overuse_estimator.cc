@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::OveruseEstimator"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/remote_bitrate_estimator/overuse_estimator.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"

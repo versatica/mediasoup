@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SctpListener"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SctpListener.hpp"
 #include "Logger.hpp"

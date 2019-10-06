@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::TrendlineEstimator"
-// #define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
 

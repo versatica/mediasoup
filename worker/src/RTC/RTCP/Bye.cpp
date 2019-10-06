@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::Bye"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTCP/Bye.hpp"
 #include "Logger.hpp"

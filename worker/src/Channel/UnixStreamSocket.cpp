@@ -1,5 +1,5 @@
 #define MS_CLASS "Channel::UnixStreamSocket"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/UnixStreamSocket.hpp"
 #include "Logger.hpp"

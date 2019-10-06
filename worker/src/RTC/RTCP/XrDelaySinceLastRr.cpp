@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::XrDelaySinceLastRr"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "Logger.hpp"

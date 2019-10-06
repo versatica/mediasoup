@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::VP9"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Codecs/VP9.hpp"
 #include "Logger.hpp"

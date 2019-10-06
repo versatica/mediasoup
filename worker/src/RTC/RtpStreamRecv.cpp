@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpStreamRecv"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStreamRecv.hpp"
 #include "Logger.hpp"
@@ -325,7 +325,7 @@ namespace RTC
 			return false;
 		}
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		// Get the RTX packet sequence number for logging purposes.
 		auto rtxSeq = packet->GetSequenceNumber();
 #endif
@@ -684,7 +684,7 @@ namespace RTC
 			}
 		}
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
 		  score,
 		  "[totalExpected:%" PRIu32 ", totalReceived:%zu, totalRepaired:%zu",
@@ -716,7 +716,7 @@ namespace RTC
 		auto deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
 		auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
 		  score,
 		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score:%" PRIu8

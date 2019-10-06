@@ -1,5 +1,5 @@
 #define MS_CLASS "Channel::Request"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/Request.hpp"
 #include "Logger.hpp"

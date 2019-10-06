@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
@@ -170,7 +170,8 @@ namespace RTC
 		else
 			maxPaddingBitrate = minBitrate * 0.25;
 
-		MS_DEBUG_DEV(
+		MS_DEBUG_DEV("jejejej---------");
+		MS_WARN_DEV(
 		  "[desiredBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
 		  desiredBitrate,
 		  maxBitrate,

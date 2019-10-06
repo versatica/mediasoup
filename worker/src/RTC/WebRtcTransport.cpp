@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::WebRtcTransport"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/WebRtcTransport.hpp"
 #include "Logger.hpp"

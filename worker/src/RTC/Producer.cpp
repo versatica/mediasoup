@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Producer"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Producer.hpp"
 #include "DepLibUV.hpp"

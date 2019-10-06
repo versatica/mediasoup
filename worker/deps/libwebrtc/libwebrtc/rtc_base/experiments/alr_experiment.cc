@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::AlrExperiment"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "rtc_base/experiments/alr_experiment.h"
 #include "api/transport/field_trial_based_config.h"

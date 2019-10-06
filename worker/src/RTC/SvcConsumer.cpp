@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SvcConsumer"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SvcConsumer.hpp"
 #include "DepLibUV.hpp"

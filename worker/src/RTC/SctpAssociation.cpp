@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SctpAssociation"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SctpAssociation.hpp"
 #include "DepUsrSCTP.hpp"
@@ -288,7 +288,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DUMP_DATA(data, len);
 #endif
 
@@ -514,7 +514,7 @@ namespace RTC
 
 		const uint8_t* data = static_cast<uint8_t*>(buffer);
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DUMP_DATA(data, len);
 #endif
 

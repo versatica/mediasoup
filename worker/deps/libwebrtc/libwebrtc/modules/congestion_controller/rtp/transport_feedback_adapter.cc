@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::TransportFeedbackAdapter"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/rtp/transport_feedback_adapter.h"
 #include "api/units/timestamp.h"

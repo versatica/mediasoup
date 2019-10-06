@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::SendTimeHistory"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/rtp/send_time_history.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"

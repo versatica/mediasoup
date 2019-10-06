@@ -4,7 +4,7 @@
  */
 
 #define MS_CLASS "UnixStreamSocket"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "handles/UnixStreamSocket.hpp"
 #include "DepLibUV.hpp"

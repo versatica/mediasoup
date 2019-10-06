@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::H264"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Codecs/H264.hpp"
 #include "Logger.hpp"

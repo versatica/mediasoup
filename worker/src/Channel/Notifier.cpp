@@ -1,5 +1,5 @@
 #define MS_CLASS "Channel::Notifier"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/Notifier.hpp"
 #include "Logger.hpp"

@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::CongestionControlHandler"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/rtp/control_handler.h"
 

@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpStream"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStream.hpp"
 #include "Logger.hpp"
@@ -263,7 +263,7 @@ namespace RTC
 		}
 		else
 		{
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
 			  "[added score:%" PRIu8 ", previous computed score:%" PRIu8 ", new computed score:%" PRIu8

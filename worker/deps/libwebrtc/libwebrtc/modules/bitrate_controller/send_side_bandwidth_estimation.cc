@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::SendSideBandwidthEstimation"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/bitrate_controller/send_side_bandwidth_estimation.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"

@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::RemoteBitrateEstimatorAbsSendTime"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h"
 #include "api/transport/field_trial_based_config.h"
@@ -152,7 +152,7 @@ RemoteBitrateEstimatorAbsSendTime::FindBestProbe(
       }
     } else {
 // MS_NOTE: avoid 'unused variable' compiler warning.
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
       int send_bitrate_bps = it->mean_size * 8 * 1000 / it->send_mean_ms;
       int recv_bitrate_bps = it->mean_size * 8 * 1000 / it->recv_mean_ms;
 

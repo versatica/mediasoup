@@ -1,5 +1,5 @@
 #define MS_CLASS "Timer"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "handles/Timer.hpp"
 #include "DepLibUV.hpp"

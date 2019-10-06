@@ -1,5 +1,5 @@
 #define MS_CLASS "DepUsrSCTP"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "DepUsrSCTP.hpp"
 #include "DepLibUV.hpp"

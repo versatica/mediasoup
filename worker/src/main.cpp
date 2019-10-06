@@ -1,5 +1,5 @@
 #define MS_CLASS "mediasoup-worker"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "common.hpp"
 #include "DepLibSRTP.hpp"

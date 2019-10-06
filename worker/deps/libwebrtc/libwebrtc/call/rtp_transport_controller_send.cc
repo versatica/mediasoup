@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::RtpTransportControllerSend"
-// #define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "call/rtp_transport_controller_send.h"
 #include "api/transport/network_types.h"

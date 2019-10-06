@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::AimdRateControl"
-// #define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/remote_bitrate_estimator/aimd_rate_control.h"
 #include "api/transport/network_types.h"

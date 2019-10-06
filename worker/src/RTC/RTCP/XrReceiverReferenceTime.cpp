@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::XrReceiverReferenceTime"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "Logger.hpp"

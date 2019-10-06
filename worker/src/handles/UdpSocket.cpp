@@ -1,5 +1,5 @@
 #define MS_CLASS "UdpSocket"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "handles/UdpSocket.hpp"
 #include "Logger.hpp"
@@ -300,7 +300,7 @@ inline void UdpSocket::OnUvSend(int status, onSendHandler& onDone)
 	}
 	else
 	{
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_DEV("send error: %s", uv_strerror(status));
 #endif
 
