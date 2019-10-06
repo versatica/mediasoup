@@ -66,6 +66,7 @@ namespace RTC
 		void TransportDisconnected();
 		void RtpPacketSent(SentInfo& sentInfo);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
+		void EstimateAvailableBitrate(CummulativeResult& cummulativeResult);
 		void UpdateRtt(float rtt);
 		uint32_t GetAvailableBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();

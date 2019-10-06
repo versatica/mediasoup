@@ -90,7 +90,7 @@ namespace RTC
 		uint64_t elapsedMs = nowMs - this->cummulativeResult.GetStartedAtMs();
 
 		// Drop ongoing cummulative result if too old.
-		if (elapsedMs > 5000u)
+		if (elapsedMs > 1000u)
 			this->cummulativeResult.Reset();
 
 		for (auto& result : feedback->GetPacketResults())
@@ -129,14 +129,15 @@ namespace RTC
 		// Handle probation packets separately.
 		if (this->probationCummulativeResult.GetNumPackets() >= 2u)
 		{
-			// TODO: Remove.
-			MS_DEBUG_DEV(
-			  "probation [packets:%zu, size:%zu] "
-			  "[send bps:%" PRIu32 ", recv bps:%" PRIu32 "] ",
-			  this->probationCummulativeResult.GetNumPackets(),
-			  this->probationCummulativeResult.GetTotalSize(),
-			  this->probationCummulativeResult.GetSendBitrate(),
-			  this->probationCummulativeResult.GetReceiveBitrate());
+			// MS_DEBUG_DEV(
+			//   "probation [packets:%zu, size:%zu] "
+			//   "[send bps:%" PRIu32 ", recv bps:%" PRIu32 "] ",
+			//   this->probationCummulativeResult.GetNumPackets(),
+			//   this->probationCummulativeResult.GetTotalSize(),
+			//   this->probationCummulativeResult.GetSendBitrate(),
+			//   this->probationCummulativeResult.GetReceiveBitrate());
+
+			EstimateAvailableBitrate(this->probationCummulativeResult);
 
 			// Reset probation cummulative result.
 			this->probationCummulativeResult.Reset();
@@ -153,21 +154,53 @@ namespace RTC
 			auto sendBitrate      = this->sendTransmission.GetRate(nowMs);
 			auto sendBitrateTrend = this->sendTransmissionTrend.GetValue();
 
-			// TODO: Remove.
-			MS_DEBUG_DEV(
-			  "real+prob [packets:%zu, size:%zu] "
-			  "[send bps:%" PRIu32 ", recv bps:%" PRIu32
-			  "] "
-			  "[real bps:%" PRIu32 ", trend bps:%" PRIu32 "]",
-			  this->cummulativeResult.GetNumPackets(),
-			  this->cummulativeResult.GetTotalSize(),
-			  this->cummulativeResult.GetSendBitrate(),
-			  this->cummulativeResult.GetReceiveBitrate(),
-			  sendBitrate,
-			  sendBitrateTrend);
+			// MS_DEBUG_DEV(
+			//   "real+prob [packets:%zu, size:%zu] "
+			//   "[send bps:%" PRIu32 ", recv bps:%" PRIu32
+			//   "] "
+			//   "[real bps:%" PRIu32 ", trend bps:%" PRIu32 "]",
+			//   this->cummulativeResult.GetNumPackets(),
+			//   this->cummulativeResult.GetTotalSize(),
+			//   this->cummulativeResult.GetSendBitrate(),
+			//   this->cummulativeResult.GetReceiveBitrate(),
+			//   sendBitrate,
+			//   sendBitrateTrend);
+
+			EstimateAvailableBitrate(this->cummulativeResult);
 
 			// Reset cummulative result.
 			this->cummulativeResult.Reset();
+		}
+	}
+
+	void SenderBandwidthEstimator::EstimateAvailableBitrate(CummulativeResult& cummulativeResult)
+	{
+		MS_TRACE();
+
+		double ratio =
+		  static_cast<double>(cummulativeResult.GetReceiveBitrate()) / static_cast<double>(cummulativeResult.GetSendBitrate());
+		auto bitrate = std::min<uint32_t>(
+		  cummulativeResult.GetReceiveBitrate(), cummulativeResult.GetSendBitrate());
+
+		if (0.75f <= ratio && ratio <= 1.25f)
+		{
+			if (bitrate > this->availableBitrate)
+			{
+				this->availableBitrate = bitrate;
+
+				MS_DEBUG_DEV(
+				  "BWE UP [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
+			}
+		}
+		else
+		{
+			if (bitrate < this->availableBitrate)
+			{
+				this->availableBitrate = bitrate;
+
+				MS_DEBUG_DEV(
+				  "BWE DOWN [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
+			}
 		}
 	}
 
