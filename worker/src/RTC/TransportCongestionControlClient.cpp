@@ -170,8 +170,7 @@ namespace RTC
 		else
 			maxPaddingBitrate = minBitrate * 0.25;
 
-		MS_DEBUG_DEV("jejejej---------");
-		MS_WARN_DEV(
+		MS_DEBUG_DEV(
 		  "[desiredBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
 		  desiredBitrate,
 		  maxBitrate,
