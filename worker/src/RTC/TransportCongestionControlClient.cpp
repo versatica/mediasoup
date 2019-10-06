@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
@@ -265,7 +265,11 @@ namespace RTC
 		else
 			this->availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
 
-		// MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->availableBitrate);
+		// TODO: Hack for testing.
+		// this->availableBitrateBitrateTrend.Update(this->availableBitrate, DepLibUV::GetTimeMs());
+		// this->availableBitrate = this->availableBitrateBitrateTrend.GetValue();
+
+		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->availableBitrate);
 
 		MayEmitAvailableBitrateEvent(previousAvailableBitrate);
 	}
