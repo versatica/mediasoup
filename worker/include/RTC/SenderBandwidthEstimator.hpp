@@ -80,6 +80,7 @@ namespace RTC
 		std::map<uint16_t, SentInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> sentInfos;
 		float rtt{ 0 }; // Round trip time in ms.
 		CummulativeResult cummulativeResult;
+		CummulativeResult probationCummulativeResult;
 		RTC::RateCalculator sendTransmission;
 		RTC::TrendCalculator sendTransmissionTrend;
 	};

@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SenderBandwidthEstimator"
-// #define MS_LOG_DEV // TODO
+// #define MS_LOG_DEV
 
 #include "RTC/SenderBandwidthEstimator.hpp"
 #include "DepLibUV.hpp"
@@ -110,34 +110,65 @@ namespace RTC
 
 			auto& sentInfo = it->second;
 
-			this->cummulativeResult.AddPacket(
-			  sentInfo.size,
-			  static_cast<int64_t>(sentInfo.sentAtMs),
-			  static_cast<int64_t>(result.receivedAtMs));
+			if (!sentInfo.isProbation)
+			{
+				this->cummulativeResult.AddPacket(
+				  sentInfo.size,
+				  static_cast<int64_t>(sentInfo.sentAtMs),
+				  static_cast<int64_t>(result.receivedAtMs));
+			}
+			else
+			{
+				this->probationCummulativeResult.AddPacket(
+				  sentInfo.size,
+				  static_cast<int64_t>(sentInfo.sentAtMs),
+				  static_cast<int64_t>(result.receivedAtMs));
+			}
 		}
 
-		// Do nothing else if too early.
-		if (elapsedMs < 100u || this->cummulativeResult.GetNumPackets() < 20u)
-			return;
+		// Handle probation packets separately.
+		if (this->probationCummulativeResult.GetNumPackets() >= 2u)
+		{
+			// TODO: Remove.
+			MS_DEBUG_DEV(
+			  "probation [packets:%zu, size:%zu] "
+			  "[send bps:%" PRIu32 ", recv bps:%" PRIu32 "] ",
+			  this->probationCummulativeResult.GetNumPackets(),
+			  this->probationCummulativeResult.GetTotalSize(),
+			  this->probationCummulativeResult.GetSendBitrate(),
+			  this->probationCummulativeResult.GetReceiveBitrate());
 
-		auto sendBitrate      = this->sendTransmission.GetRate(nowMs);
-		auto sendBitrateTrend = this->sendTransmissionTrend.GetValue();
+			// Reset probation cummulative result.
+			this->probationCummulativeResult.Reset();
+		}
+		else
+		{
+			// Reset probation cummulative result.
+			this->probationCummulativeResult.Reset();
+		}
 
-		// TODO: Remove.
-		MS_DEBUG_DEV(
-		  "[numPackets:%zu, totalSize:%zu] "
-		  "[send bps:%" PRIu32 ", recv bps:%" PRIu32
-		  "] "
-		  "[real bps:%" PRIu32 ", trend bps:%" PRIu32 "]",
-		  this->cummulativeResult.GetNumPackets(),
-		  this->cummulativeResult.GetTotalSize(),
-		  this->cummulativeResult.GetSendBitrate(),
-		  this->cummulativeResult.GetReceiveBitrate(),
-		  sendBitrate,
-		  sendBitrateTrend);
+		// Handle real and probation packets all together.
+		if (elapsedMs >= 100u && this->cummulativeResult.GetNumPackets() >= 20u)
+		{
+			auto sendBitrate      = this->sendTransmission.GetRate(nowMs);
+			auto sendBitrateTrend = this->sendTransmissionTrend.GetValue();
 
-		// Reset cummulative result.
-		this->cummulativeResult.Reset();
+			// TODO: Remove.
+			MS_DEBUG_DEV(
+			  "real+prob [packets:%zu, size:%zu] "
+			  "[send bps:%" PRIu32 ", recv bps:%" PRIu32
+			  "] "
+			  "[real bps:%" PRIu32 ", trend bps:%" PRIu32 "]",
+			  this->cummulativeResult.GetNumPackets(),
+			  this->cummulativeResult.GetTotalSize(),
+			  this->cummulativeResult.GetSendBitrate(),
+			  this->cummulativeResult.GetReceiveBitrate(),
+			  sendBitrate,
+			  sendBitrateTrend);
+
+			// Reset cummulative result.
+			this->cummulativeResult.Reset();
+		}
 	}
 
 	void SenderBandwidthEstimator::UpdateRtt(float rtt)
