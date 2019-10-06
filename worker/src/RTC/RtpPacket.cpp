@@ -27,7 +27,7 @@ namespace RTC
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
-		size_t csrcListSize{ 0 };
+		size_t csrcListSize{ 0u };
 
 		if (header->csrcCount != 0u)
 		{
@@ -45,7 +45,7 @@ namespace RTC
 
 		// Check header extension.
 		HeaderExtension* headerExtension{ nullptr };
-		size_t extensionValueSize{ 0 };
+		size_t extensionValueSize{ 0u };
 
 		if (header->extension == 1u)
 		{
@@ -456,6 +456,22 @@ namespace RTC
 		MS_ASSERT(ptr == this->payload, "wrong ptr calculation");
 	}
 
+	void RtpPacket::SetPayloadLength(size_t length)
+	{
+		MS_TRACE();
+
+		// Pad desired length to 4 bytes.
+		length = static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(length)));
+
+		this->size -= this->payloadLength;
+		this->size -= size_t{ this->payloadPadding };
+		this->payloadLength  = length;
+		this->payloadPadding = 0u;
+		this->size += length;
+
+		SetPayloadPaddingFlag(false);
+	}
+
 	RtpPacket* RtpPacket::Clone(const uint8_t* buffer) const
 	{
 		MS_TRACE();
@@ -498,7 +514,7 @@ namespace RTC
 		// Copy payload.
 		uint8_t* newPayload{ ptr };
 
-		if (this->payloadLength != 0)
+		if (this->payloadLength != 0u)
 		{
 			numBytes = this->payloadLength;
 			std::memcpy(ptr, this->payload, numBytes);
@@ -553,10 +569,10 @@ namespace RTC
 		SetSequenceNumber(seq);
 
 		// Fix the payload length.
-		this->payloadLength += 2;
+		this->payloadLength += 2u;
 
 		// Fix the packet size.
-		this->size += 2;
+		this->size += 2u;
 
 		// Remove padding if present.
 		if (this->payloadPadding != 0u)
@@ -574,7 +590,7 @@ namespace RTC
 
 		// Chrome sends some RTX packets with no payload when the stream is started.
 		// Just ignore them.
-		if (this->payloadLength < 2)
+		if (this->payloadLength < 2u)
 			return false;
 
 		// Rewrite the payload type.
@@ -590,10 +606,10 @@ namespace RTC
 		std::memmove(this->payload, this->payload + 2, this->payloadLength - 2);
 
 		// Fix the payload length.
-		this->payloadLength -= 2;
+		this->payloadLength -= 2u;
 
 		// Fix the packet size.
-		this->size -= 2;
+		this->size -= 2u;
 
 		// Remove padding if present.
 		if (this->payloadPadding != 0u)
