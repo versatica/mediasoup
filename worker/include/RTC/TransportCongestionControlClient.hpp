@@ -78,7 +78,6 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		webrtc::NetworkStatePredictorFactoryInterface* predictorFactory{ nullptr };
 		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };
 		RTC::RtpProbationGenerator* probationGenerator{ nullptr };

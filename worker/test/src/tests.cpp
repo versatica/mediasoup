@@ -1,7 +1,10 @@
 #define CATCH_CONFIG_RUNNER
 
+#include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
+#include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
+#include "DepUsrSCTP.hpp"
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -28,13 +31,19 @@ int main(int argc, char* argv[])
 	// Initialize static stuff.
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
+	DepLibSRTP::ClassInit();
+	DepUsrSCTP::ClassInit();
+	DepLibWebRTC::ClassInit();
 	Utils::Crypto::ClassInit();
 
 	int status = Catch::Session().run(argc, argv);
 
 	// Free static stuff.
 	DepLibUV::ClassDestroy();
+	DepLibSRTP::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
+	DepLibWebRTC::ClassDestroy();
+	DepUsrSCTP::ClassDestroy();
 
 	return status;
 }

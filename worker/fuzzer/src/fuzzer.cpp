@@ -1,7 +1,10 @@
 #define MS_CLASS "fuzzer"
 
+#include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
+#include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
+#include "DepUsrSCTP.hpp"
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -90,6 +93,9 @@ int Init()
 	// Initialize static stuff.
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
+	DepLibSRTP::ClassInit();
+	DepUsrSCTP::ClassInit();
+	DepLibWebRTC::ClassInit();
 	Utils::Crypto::ClassInit();
 
 	return 0;

@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
+#include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
@@ -104,6 +105,7 @@ int main(int argc, char* argv[])
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
 		DepUsrSCTP::ClassInit();
+		DepLibWebRTC::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
@@ -119,6 +121,7 @@ int main(int argc, char* argv[])
 		DepLibUV::ClassDestroy();
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
+		DepLibWebRTC::ClassDestroy();
 		RTC::DtlsTransport::ClassDestroy();
 		DepUsrSCTP::ClassDestroy();
 

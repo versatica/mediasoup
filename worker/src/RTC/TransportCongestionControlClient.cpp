@@ -4,7 +4,6 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "system_wrappers/source/field_trial.h" // webrtc::field_trial
 #include <limits>
 
 namespace RTC
@@ -12,8 +11,6 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
-	// TODO: Look for a proper value.
-	static const char FieldTrials[]{ "WebRTC-Pacer-MinPacketLimitMs/Enabled,100/" };
 
 	/* Instance methods. */
 
@@ -25,13 +22,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Add into ClassInit static member?
-		webrtc::field_trial::InitFieldTrialsFromString(FieldTrials);
-		// TODO: Must these factories be static members?
-
-		// TODO: Create predictor factory?
-
-		// TODO: Create controller factory. Let's see.
 		webrtc::GoogCcFactoryConfig config;
 
 		config.feedback_only = bweType == RTC::BweType::TRANSPORT_CC;
@@ -42,8 +32,8 @@ namespace RTC
 
 		bitrateConfig.start_bitrate_bps = static_cast<int>(this->initialAvailableBitrate);
 
-		this->rtpTransportControllerSend = new webrtc::RtpTransportControllerSend(
-		  this, this->predictorFactory, this->controllerFactory, bitrateConfig);
+		this->rtpTransportControllerSend =
+		  new webrtc::RtpTransportControllerSend(this, nullptr, this->controllerFactory, bitrateConfig);
 
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
 
@@ -51,22 +41,19 @@ namespace RTC
 
 		this->processTimer = new Timer(this);
 
-		/* clang-format off */
+		// clang-format off
 		this->processTimer->Start(std::min(
 			// Depends on probation being done and WebRTC-Pacer-MinPacketLimitMs field trial.
 			this->rtpTransportControllerSend->packet_sender()->TimeUntilNextProcess(),
 			// Fixed value (25ms), libwebrtc/api/transport/goog_cc_factory.cc.
 			this->controllerFactory->GetProcessInterval().ms()
 		));
-		/* clang-format on */
+		// clang-format on
 	}
 
 	TransportCongestionControlClient::~TransportCongestionControlClient()
 	{
 		MS_TRACE();
-
-		delete this->predictorFactory;
-		this->predictorFactory = nullptr;
 
 		delete this->controllerFactory;
 		this->controllerFactory = nullptr;

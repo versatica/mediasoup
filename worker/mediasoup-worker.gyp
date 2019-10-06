@@ -18,6 +18,7 @@
       # C++ source files.
       'src/DepLibSRTP.cpp',
       'src/DepLibUV.cpp',
+      'src/DepLibWebRTC.cpp',
       'src/DepOpenSSL.cpp',
       'src/DepUsrSCTP.cpp',
       'src/Logger.cpp',
@@ -122,6 +123,7 @@
       # C++ include files.
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
+      'include/DepLibWebRTC.hpp',
       'include/DepOpenSSL.hpp',
       'include/DepUsrSCTP.hpp',
       'include/LogLevel.hpp',
