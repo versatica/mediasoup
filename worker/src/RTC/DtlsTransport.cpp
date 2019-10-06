@@ -1337,13 +1337,13 @@ namespace RTC
 			}
 		}
 
-		uint8_t srtpMaterial[srtpMasterLength * 2];
+		uint8_t* srtpMaterial = new uint8_t[srtpMasterLength * 2];
 		uint8_t* srtpLocalKey;
 		uint8_t* srtpLocalSalt;
 		uint8_t* srtpRemoteKey;
 		uint8_t* srtpRemoteSalt;
-		uint8_t srtpLocalMasterKey[srtpMasterLength];
-		uint8_t srtpRemoteMasterKey[srtpMasterLength];
+		uint8_t* srtpLocalMasterKey  = new uint8_t[srtpMasterLength];
+		uint8_t* srtpRemoteMasterKey = new uint8_t[srtpMasterLength];
 		int ret;
 
 		ret = SSL_export_keying_material(
@@ -1396,6 +1396,10 @@ namespace RTC
 		  srtpRemoteMasterKey,
 		  srtpMasterLength,
 		  this->remoteCert);
+
+		delete[] srtpMaterial;
+		delete[] srtpLocalMasterKey;
+		delete[] srtpRemoteMasterKey;
 	}
 
 	inline RTC::SrtpSession::Profile DtlsTransport::GetNegotiatedSrtpProfile()

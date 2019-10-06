@@ -274,6 +274,23 @@
         'ldflags': [ '-Wl,--export-dynamic' ]
       }],
 
+      [ 'OS == "win"', {
+        'dependencies': [ 'deps/getopt/getopt.gyp:getopt' ],
+        
+        # Handle multi files with same name.
+        # https://stackoverflow.com/a/22936230/2085408
+        # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
+        'msvs_settings': {
+          'VCCLCompilerTool': { 'ObjectFile': ['$(IntDir)\%(RelativeDir)\%(Filename).obj'], },
+        },
+
+        # Output Directory setting for msvc.
+        # https://github.com/nodejs/node-gyp/issues/1242#issuecomment-310921441
+        'msvs_configuration_attributes': {
+          'OutputDirectory': '$(SolutionDir)\\out\\$(Configuration)\\'
+        }
+      }],
+
       [ 'OS != "win"', {
         'cflags': [ '-std=c++11', '-Wall', '-Wextra', '-Wno-unused-parameter', '-Wno-implicit-fallthrough' ]
       }],
@@ -428,6 +445,7 @@
       [
         'fuzzer/include'
       ],
+
       'conditions':
       [
         [ 'OS == "linux"', {

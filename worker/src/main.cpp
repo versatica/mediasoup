@@ -22,9 +22,14 @@
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
-#include <unistd.h> // usleep()
+#ifdef _WIN32
+#define usleep Sleep
+#else
+#include <unistd.h> // getpid(), usleep()
+#endif
 
-static constexpr int ChannelFd{ 3 };
+static constexpr int ConsumerChannelFd{ 3 };
+static constexpr int ProducerChannelFd{ 4 };
 
 void IgnoreSignals();
 
@@ -48,7 +53,7 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		channel = new Channel::UnixStreamSocket(ChannelFd);
+		channel = new Channel::UnixStreamSocket(ConsumerChannelFd, ProducerChannelFd);
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -140,6 +145,7 @@ int main(int argc, char* argv[])
 
 void IgnoreSignals()
 {
+#ifndef _WIN32
 	MS_TRACE();
 
 	int err;
@@ -173,4 +179,5 @@ void IgnoreSignals()
 		if (err != 0)
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
 	}
+#endif
 }

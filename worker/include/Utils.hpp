@@ -6,6 +6,12 @@
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <string>
+#ifdef _WIN32
+#include <ws2ipdef.h>
+// https://stackoverflow.com/a/24550632/2085408
+#include <intrin.h>
+#define __builtin_popcount __popcnt
+#endif
 
 namespace Utils
 {

@@ -19,22 +19,27 @@
     "sfu",
     "nodejs"
   ],
-  "os": [
-    "!win32"
-  ],
   "engines": {
     "node": ">=8.6.0"
   },
   "scripts": {
     "lint": "npm run lint:node && npm run lint:worker",
-    "lint:node": "eslint -c .eslintrc.js gulpfile.js lib test",
-    "lint:worker": "make lint -C worker",
-    "format:worker": "make format -C worker",
+    "lint:node": "eslint -c .eslintrc.js gulpfile.js lib test worker/win-tasks.js",
+    "lint:worker": "run-script-os",
+    "lint:worker:win32": "\"\"%NODE%\"\" ./worker/win-tasks.js lint",
+    "lint:worker:default": "make lint -C worker",
+    "format:worker": "run-script-os",
+    "format:worker:win32": "\"\"%NODE%\"\" ./worker/win-tasks.js format",
+    "format:worker:default": "make format -C worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "make -C worker && jest",
-    "test:worker": "make test -C worker",
-    "coverage:node": "make -C worker && jest --coverage && open-cli coverage/lcov-report/index.html",
-    "postinstall": "make -C worker"
+    "test:node": "npm run postinstall && jest",
+    "test:worker": "run-script-os",
+    "test:worker:win32": "\"\"%NODE%\"\" ./worker/win-tasks.js test",
+    "test:worker:default": "make test -C worker",
+    "coverage:node": "npm run postinstall && jest --coverage && open-cli coverage/lcov-report/index.html",
+    "postinstall": "run-script-os",
+    "postinstall:win32": "\"\"%NODE%\"\" ./worker/win-tasks.js make",
+    "postinstall:default": "make -C worker"
   },
   "jest": {
     "verbose": true,
@@ -46,6 +51,7 @@
     "h264-profile-level-id": "^1.0.0",
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
+    "@dr.amaton/run-script-os": "^1.1.2",
     "uuid": "^3.3.3"
   },
   "devDependencies": {

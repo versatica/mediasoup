@@ -49,6 +49,16 @@
           '/wd4068', # unknown pragma
           '/wd4702'  # unreachable code
         ],
+        'defines': [
+          'NOMINMAX', # Don't define min and max macros (windows.h)
+          # Don't bloat namespace with incompatible winsock versions.
+          'WIN32_LEAN_AND_MEAN',
+          # Don't warn about usage of insecure C functions.
+          '_CRT_SECURE_NO_WARNINGS',
+          '_SCL_SECURE_NO_WARNINGS',
+          # Introduced in VS 2017 15.8, allow overaligned types in aligned_storage.
+          '_ENABLE_EXTENDED_ALIGNED_STORAGE'
+        ]
       }]
     ],
   },

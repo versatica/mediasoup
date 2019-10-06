@@ -171,10 +171,19 @@ function get_fuzzer_corpora()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
+function get_win_getopt()
+{
+	GIT_REPO="git@github.com:alex85k/wingetopt.git"
+	GIT_TAG="master"
+	DEST="deps/getopt/getopt"
+
+	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+}
+
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|usrsctp|abseil-cpp|catch|lcov|clang-fuzzer|fuzzer-corpora]"
+		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|usrsctp|abseil-cpp|catch|lcov|clang-fuzzer|fuzzer-corpora|win-getopt]"
 		echo
 		;;
 	gyp)
@@ -212,6 +221,9 @@ case "${DEP}" in
 		;;
 	fuzzer-corpora)
 		get_fuzzer_corpora
+		;;
+	win-getopt)
+		get_win_getopt
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2
