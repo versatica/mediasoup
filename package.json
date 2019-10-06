@@ -47,11 +47,11 @@
     "testRegex": "test/test.*\\.js"
   },
   "dependencies": {
+    "@dr.amaton/run-script-os": "^1.1.3",
     "debug": "^4.1.1",
     "h264-profile-level-id": "^1.0.0",
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
-    "@dr.amaton/run-script-os": "^1.1.2",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
