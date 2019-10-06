@@ -2157,7 +2157,7 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [&packetInfo, tccClient, senderBwe, &sentInfo](bool sent) {
+			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
@@ -2210,7 +2210,7 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [&packetInfo, tccClient, senderBwe, &sentInfo](bool sent) {
+			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
@@ -2516,7 +2516,7 @@ namespace RTC
 			  packet->GetSize(),
 			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
 
-			SendRtpPacket(packet, [&packetInfo, tccClient, senderBwe, &sentInfo](bool sent) {
+			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
