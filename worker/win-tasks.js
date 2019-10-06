@@ -11,71 +11,79 @@ const usage = 'usage:[-h/help/make/test/lint/format]';
 
 run();
 
-/* eslint-disable no-console */
-function run() 
+function run()
 {
-	if (process.argv.length < 3) 
+	if (process.argv.length < 3)
 	{
-		console.error(usage);
+		console.error(usage); // eslint-disable-line no-console
 
 		return;
 	}
 
 	const command = process.argv[2];
 
-	switch (command) 
+	switch (command)
 	{
 		case '-h':
 		case 'help':
 		{
-			console.log(usage);
+			console.log(usage); // eslint-disable-line no-console
+
 			break;
 		}
-		case 'make': 
+
+		case 'make':
 		{
-			if (!process.env.MEDIASOUP_WORKER_BIN) 
+			if (!process.env.MEDIASOUP_WORKER_BIN)
 			{
 				const generScript = `${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`;
 				const buildScript = `${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`;
-				
+
 				execute(`${generScript} && ${buildScript}`);
 			}
+
 			break;
 		}
-		case 'test': 
+
+		case 'test':
 		{
-			if (!process.env.MEDIASOUP_WORKER_BIN) 
+			if (!process.env.MEDIASOUP_WORKER_BIN)
 			{
 				const generScript = `${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker-test`;
 				const buildScript = `${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`;
 				const testScript = `cd worker && .\\out\\${MEDIASOUP_BUILDTYPE}\\mediasoup-worker-test.exe --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}`;
-				
+
 				execute(`${generScript} && ${buildScript} && ${testScript}`);
 			}
+
 			break;
 		}
-		case 'lint': 
+
+		case 'lint':
 		{
 			execute(`${GULP} lint:worker`);
+
 			break;
 		}
-		case 'format': 
+
+		case 'format':
 		{
 			execute(`${GULP} format:worker`);
+
 			break;
 		}
-		default: 
+
+		default:
 		{
-			console.warn('unknown command');
+			console.warn('unknown command'); // eslint-disable-line no-console
 		}
 	}
 }
-/* eslint-enable no-console */
 
-function execute(command) 
+function execute(command)
 {
 	const childProcess = exec(command);
-	
+
 	childProcess.stdout.pipe(process.stdout);
 	childProcess.stderr.pipe(process.stderr);
 }
