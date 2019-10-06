@@ -177,10 +177,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		double ratio =
-		  static_cast<double>(cummulativeResult.GetReceiveBitrate()) / static_cast<double>(cummulativeResult.GetSendBitrate());
-		auto bitrate = std::min<uint32_t>(
-		  cummulativeResult.GetReceiveBitrate(), cummulativeResult.GetSendBitrate());
+		double ratio = static_cast<double>(cummulativeResult.GetReceiveBitrate()) /
+		               static_cast<double>(cummulativeResult.GetSendBitrate());
+		auto bitrate =
+		  std::min<uint32_t>(cummulativeResult.GetReceiveBitrate(), cummulativeResult.GetSendBitrate());
 
 		if (0.75f <= ratio && ratio <= 1.25f)
 		{
@@ -188,8 +188,7 @@ namespace RTC
 			{
 				this->availableBitrate = bitrate;
 
-				MS_DEBUG_DEV(
-				  "BWE UP [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
+				MS_DEBUG_DEV("BWE UP [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
 			}
 		}
 		else
