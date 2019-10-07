@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
@@ -152,10 +152,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		static float MaxBitrateFactor{ 1.25f }; // TODO: ?
+
 		auto nowMs = DepLibUV::GetTimeMs();
 		uint32_t minBitrate{ 50000u };
 		uint32_t maxBitrate;
-		uint32_t maxPaddingBitrate;
+		uint32_t maxPaddingBitrate{ 0u };
+		uint32_t startBitrate;
 
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
 		if (!force)
@@ -163,21 +166,33 @@ namespace RTC
 		else
 			this->desiredBitrateTrend.ForceUpdate(desiredBitrate, nowMs);
 
-		maxBitrate = std::max<uint32_t>(minBitrate, this->desiredBitrateTrend.GetValue() * 1.25);
+		// TODO: faxctor?
+		maxBitrate =
+		  std::max<uint32_t>(minBitrate, this->desiredBitrateTrend.GetValue() * MaxBitrateFactor);
 
 		if (this->desiredBitrateTrend.GetValue() != 0u)
-			maxPaddingBitrate = maxBitrate * 0.75;
-		else
-			maxPaddingBitrate = minBitrate * 0.25;
+			maxPaddingBitrate = maxBitrate * 0.75; // TODO: yes?
+
+		startBitrate = std::min<uint32_t>(maxBitrate, this->availableBitrate);
 
 		MS_DEBUG_DEV(
-		  "[desiredBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
+		  "[desiredBitrate:%" PRIu32 ", startBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
 		  desiredBitrate,
+		  startBitrate,
 		  maxBitrate,
 		  maxPaddingBitrate);
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
 		  minBitrate, maxPaddingBitrate, maxBitrate);
+
+		webrtc::TargetRateConstraints constraints;
+
+		constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTimeMs());
+		constraints.min_data_rate = webrtc::DataRate::bps(minBitrate);
+		constraints.max_data_rate = webrtc::DataRate::bps(maxBitrate);
+		constraints.starting_rate = webrtc::DataRate::bps(startBitrate);
+
+		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 
 		// // TODO: Testing
 		// MS_WARN_DEV("---- delay:%lld" PRIu64,

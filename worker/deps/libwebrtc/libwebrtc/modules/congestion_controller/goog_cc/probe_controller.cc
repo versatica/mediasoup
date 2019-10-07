@@ -279,9 +279,9 @@ std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
   if (state_ == State::kWaitingForProbingResult) {
     // Continue probing if probing results indicate channel has greater
     // capacity.
-    MS_DEBUG_DEV(
-      "[measured bitrate:%" PRIi64 ", minimum to probe further:%" PRIi64 "]",
-      bitrate_bps, min_bitrate_to_probe_further_bps_);
+    // MS_DEBUG_DEV(
+    //   "[measured bitrate:%" PRIi64 ", minimum to probe further:%" PRIi64 "]",
+    //   bitrate_bps, min_bitrate_to_probe_further_bps_);
 
     if (min_bitrate_to_probe_further_bps_ != kExponentialProbingDisabled &&
         bitrate_bps > min_bitrate_to_probe_further_bps_) {
@@ -357,7 +357,7 @@ void ProbeController::SetMaxBitrate(int64_t max_bitrate_bps) {
 }
 
 void ProbeController::Reset(int64_t at_time_ms) {
-  MS_DEBUG_DEV("");
+  MS_DEBUG_DEV("resetted");
 
   network_available_ = true;
   state_ = State::kInit;
