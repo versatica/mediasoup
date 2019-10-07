@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::ProbeController"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 #include "api/units/data_rate.h"
@@ -152,6 +152,11 @@ std::vector<ProbeClusterConfig> ProbeController::SetBitrates(
   } else if (start_bitrate_bps_ == 0) {
     start_bitrate_bps_ = min_bitrate_bps;
   }
+
+  MS_DEBUG_DEV(
+    "[old_max_bitrate_bps:%lld, max_bitrate_bps:%lld]",
+    max_bitrate_bps_,
+    max_bitrate_bps);
 
   // The reason we use the variable |old_max_bitrate_pbs| is because we
   // need to set |max_bitrate_bps_| before we call InitiateProbing.
@@ -352,6 +357,8 @@ void ProbeController::SetMaxBitrate(int64_t max_bitrate_bps) {
 }
 
 void ProbeController::Reset(int64_t at_time_ms) {
+  MS_DEBUG_DEV("");
+
   network_available_ = true;
   state_ = State::kInit;
   min_bitrate_to_probe_further_bps_ = kExponentialProbingDisabled;
@@ -403,6 +410,12 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     bool probe_further) {
   int64_t max_probe_bitrate_bps =
       max_bitrate_bps_ > 0 ? max_bitrate_bps_ : kDefaultMaxProbingBitrateBps;
+
+  MS_DEBUG_DEV(
+    "[max_bitrate_bps_:%lld, max_probe_bitrate_bps:%" PRIi64 "]",
+    max_bitrate_bps_,
+    max_probe_bitrate_bps);
+
   if (limit_probes_with_allocateable_rate_ &&
       max_total_allocated_bitrate_ > 0) {
     // If a max allocated bitrate has been configured, allow probing up to 2x

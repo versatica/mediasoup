@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"

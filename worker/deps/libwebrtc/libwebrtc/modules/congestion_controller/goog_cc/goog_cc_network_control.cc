@@ -352,6 +352,10 @@ std::vector<ProbeClusterConfig> GoogCcNetworkController::ResetConstraints(
   starting_rate_ = new_constraints.starting_rate;
   ClampConstraints();
 
+  MS_DUMP(
+    "calling bandwidth_estimation_->SetBitrates() [max_data_rate_.bps_or(-1):%lld]",
+    max_data_rate_.bps_or(-1));
+
   bandwidth_estimation_->SetBitrates(starting_rate_, min_data_rate_,
                                      max_data_rate_, new_constraints.at_time);
 
