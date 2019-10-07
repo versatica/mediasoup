@@ -10,8 +10,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
-	static constexpr uint16_t MaxSentInfoAge{ 2000u };                // TODO: Let's see.
+	// static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
+	static constexpr uint16_t MaxSentInfoAge{ 2000u }; // TODO: Let's see.
 	static constexpr float DefaultRtt{ 100 };
 
 	/* Instance methods. */
@@ -83,9 +83,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO Remove.
-		// feedback->Dump();
-
 		auto nowMs         = DepLibUV::GetTimeMs();
 		uint64_t elapsedMs = nowMs - this->cummulativeResult.GetStartedAtMs();
 
@@ -151,8 +148,8 @@ namespace RTC
 		// Handle real and probation packets all together.
 		if (elapsedMs >= 100u && this->cummulativeResult.GetNumPackets() >= 20u)
 		{
-			auto sendBitrate      = this->sendTransmission.GetRate(nowMs);
-			auto sendBitrateTrend = this->sendTransmissionTrend.GetValue();
+			// auto sendBitrate      = this->sendTransmission.GetRate(nowMs);
+			// auto sendBitrateTrend = this->sendTransmissionTrend.GetValue();
 
 			// MS_DEBUG_DEV(
 			//   "real+prob [packets:%zu, size:%zu] "
@@ -176,6 +173,8 @@ namespace RTC
 	void SenderBandwidthEstimator::EstimateAvailableBitrate(CummulativeResult& cummulativeResult)
 	{
 		MS_TRACE();
+
+		auto previousAvailableBitrate = this->availableBitrate;
 
 		double ratio = static_cast<double>(cummulativeResult.GetReceiveBitrate()) /
 		               static_cast<double>(cummulativeResult.GetSendBitrate());
@@ -201,6 +200,10 @@ namespace RTC
 				  "BWE DOWN [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
 			}
 		}
+
+		// TODO: No, should wait for AvailableBitrateEventInterval and so on.
+		this->listener->OnSenderBandwidthEstimatorAvailableBitrate(
+		  this, this->availableBitrate, previousAvailableBitrate);
 	}
 
 	void SenderBandwidthEstimator::UpdateRtt(float rtt)

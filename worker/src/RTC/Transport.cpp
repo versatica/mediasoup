@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::Transport"
 // #define MS_LOG_DEV_LEVEL 3
+// #define USE_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "RTC/Transport.hpp"
 #include "Logger.hpp"
@@ -177,9 +178,11 @@ namespace RTC
 		delete this->tccServer;
 		this->tccServer = nullptr;
 
+#ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 		// Delete Sender BWE.
 		delete this->senderBwe;
 		this->senderBwe = nullptr;
+#endif
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -855,6 +858,12 @@ namespace RTC
 					}
 				}
 
+				// If applicable, tell the new Consumer that we are gonna manage its
+				// bitrate.
+				if (this->tccClient)
+					consumer->SetExternallyManagedBitrate();
+
+#ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 				// TODO
 				// Create SenderBandwidthEstimator if:
 				// - not already created,
@@ -901,14 +910,9 @@ namespace RTC
 
 				// If applicable, tell the new Consumer that we are gonna manage its
 				// bitrate.
-				if (this->tccClient)
-					consumer->SetExternallyManagedBitrate();
-
-				// TODO
-				// If applicable, tell the new Consumer that we are gonna manage its
-				// bitrate.
 				if (this->senderBwe)
 					consumer->SetExternallyManagedBitrate();
+#endif
 
 				if (IsConnected())
 					consumer->TransportConnected();
@@ -1232,9 +1236,11 @@ namespace RTC
 		if (this->tccServer)
 			this->tccServer->TransportConnected();
 
+#ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 		// Tell the SenderBandwidthEstimator.
 		if (this->senderBwe)
 			this->senderBwe->TransportConnected();
+#endif
 	}
 
 	void Transport::Disconnected()
@@ -1268,9 +1274,11 @@ namespace RTC
 		if (this->tccServer)
 			this->tccServer->TransportDisconnected();
 
+#ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 		// Tell the SenderBandwidthEstimator.
 		if (this->senderBwe)
 			this->senderBwe->TransportDisconnected();
+#endif
 	}
 
 	void Transport::ReceiveRtpPacket(RTC::RtpPacket* packet)
@@ -1709,17 +1717,14 @@ namespace RTC
 					{
 						auto* feedback = static_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
 
-						// TODO: REMOVE
-						// feedback->Dump();
-						// MS_DUMP_DATA(feedback->GetData(), feedback->GetSize());
-
 						if (this->tccClient)
 							this->tccClient->ReceiveRtcpTransportFeedback(feedback);
 
-						// TODO
+#ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 						// Pass it to the SenderBandwidthEstimator client.
 						if (this->senderBwe)
 							this->senderBwe->ReceiveRtcpTransportFeedback(feedback);
+#endif
 
 						break;
 					}
@@ -2130,26 +2135,10 @@ namespace RTC
 			packetInfo.length                    = packet->GetSize();
 			packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
 
-			// TODO: TMP
-			// MS_DUMP("<webrtc::RtpPacketSendInfo>");
-			// MS_DUMP("  - ssrc                      : %" PRIu32, packetInfo.ssrc);
-			// MS_DUMP("  - transport_sequence_number : %" PRIu16, packetInfo.transport_sequence_number);
-			// MS_DUMP("  - has_rtp_sequence_number   : true");
-			// MS_DUMP("  - rtp_sequence_number       : %" PRIu16, packetInfo.rtp_sequence_number);
-			// MS_DUMP("  - length                    : %zu", packetInfo.length);
-			// MS_DUMP("  <PacedPacketInfo>");
-			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
-			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
-			// MS_DUMP(
-			//   "    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
-			// MS_DUMP(
-			//   "    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
-			// MS_DUMP("  </PacedPacketInfo>");
-			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
-
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+#ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 			auto* senderBwe = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
@@ -2162,12 +2151,17 @@ namespace RTC
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
-					// TODO
 					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+#else
+			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+				if (sent)
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+			});
+#endif
 		}
 		else
 		{
@@ -2203,6 +2197,7 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+#ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 			auto* senderBwe = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
@@ -2215,12 +2210,17 @@ namespace RTC
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
-					// TODO
 					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+#else
+			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+				if (sent)
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+			});
+#endif
 		}
 		else
 		{
@@ -2480,26 +2480,10 @@ namespace RTC
 			packetInfo.length                    = packet->GetSize();
 			packetInfo.pacing_info               = pacingInfo;
 
-			// TODO: TMP
-			// MS_DUMP("<webrtc::RtpPacketSendInfo>");
-			// MS_DUMP("  - ssrc                      : %" PRIu32, packetInfo.ssrc);
-			// MS_DUMP("  - transport_sequence_number : %" PRIu16, packetInfo.transport_sequence_number);
-			// MS_DUMP("  - has_rtp_sequence_number   : true");
-			// MS_DUMP("  - rtp_sequence_number       : %" PRIu16, packetInfo.rtp_sequence_number);
-			// MS_DUMP("  - length                    : %zu", packetInfo.length);
-			// MS_DUMP("  <PacedPacketInfo>");
-			// MS_DUMP("    - send_bitrate_bps         : %d", packetInfo.pacing_info.send_bitrate_bps);
-			// MS_DUMP("    - probe_cluster_id         : %d", packetInfo.pacing_info.probe_cluster_id);
-			// MS_DUMP(
-			//   "    - probe_cluster_min_probes : %d", packetInfo.pacing_info.probe_cluster_min_probes);
-			// MS_DUMP(
-			//   "    - probe_cluster_min_bytes  : %d", packetInfo.pacing_info.probe_cluster_min_bytes);
-			// MS_DUMP("  </PacedPacketInfo>");
-			// MS_DUMP("</webrtc::RtpPacketSendInfo>");
-
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+#ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 			auto* senderBwe = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
@@ -2508,25 +2492,22 @@ namespace RTC
 			sentInfo.isProbation = true;
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			// TODO: REMOVE
-			MS_DEBUG_DEV(
-			  "sending probation [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
-			  packet->GetSequenceNumber(),
-			  this->transportWideCcSeq,
-			  packet->GetSize(),
-			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
-
 			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 
-					// TODO
 					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+#else
+			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+				if (sent)
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+			});
+#endif
 		}
 		else
 		{
@@ -2534,6 +2515,14 @@ namespace RTC
 		}
 
 		this->sendProbationTransmission.Update(packet);
+
+		// TODO: REMOVE
+		MS_DEBUG_DEV(
+		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
+		  packet->GetSequenceNumber(),
+		  this->transportWideCcSeq,
+		  packet->GetSize(),
+		  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
 	}
 
 	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(
