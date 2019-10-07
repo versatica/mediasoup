@@ -156,12 +156,11 @@ namespace RTC
 		else
 			this->desiredBitrateTrend.ForceUpdate(desiredBitrate, nowMs);
 
-		maxBitrate = std::max<uint32_t>(
-		  this->initialAvailableBitrate,
-		  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
-
 		if (this->desiredBitrateTrend.GetValue() > 0u)
 		{
+			maxBitrate = std::max<uint32_t>(
+			  this->initialAvailableBitrate,
+			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
 			startBitrate      = std::min<uint32_t>(maxBitrate, this->availableBitrate);
 			maxPaddingBitrate = maxBitrate * 0.75; // TODO: Let's see.
 		}
