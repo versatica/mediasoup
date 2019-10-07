@@ -1996,10 +1996,10 @@ namespace RTC
 				switch (bweType)
 				{
 					case RTC::BweType::TRANSPORT_CC:
-						usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ false);
+						usedBitrate = consumer->IncreaseLayer(remainingBitrate, /*considerLoss*/ false);
 						break;
 					case RTC::BweType::REMB:
-						usedBitrate = consumer->IncreaseTemporalLayer(remainingBitrate, /*considerLoss*/ true);
+						usedBitrate = consumer->IncreaseLayer(remainingBitrate, /*considerLoss*/ true);
 				}
 
 				MS_ASSERT(usedBitrate <= remainingBitrate, "Consumer used more layer bitrate than given");

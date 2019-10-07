@@ -152,7 +152,7 @@ namespace RTC
 		return 0u;
 	}
 
-	uint32_t SimpleConsumer::IncreaseTemporalLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
+	uint32_t SimpleConsumer::IncreaseLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
 	{
 		MS_TRACE();
 

@@ -75,10 +75,6 @@ RtpTransportControllerSend::RtpTransportControllerSend(
   MS_ASSERT(bitrate_config.start_bitrate_bps > 0, "start bitrate must be > 0");
 
   pacer_.SetPacingRates(bitrate_config.start_bitrate_bps, 0);
-
-  // TODO: Let's see.
-  // TODO: This should be enabled (if needed) in DepLibWebRTC::ClassInit().
-  // streams_config_.requests_alr_probing = true;
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {

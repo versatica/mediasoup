@@ -533,16 +533,13 @@ namespace RTC
 			return usedBitrate;
 	}
 
-	uint32_t SimulcastConsumer::IncreaseTemporalLayer(uint32_t bitrate, bool considerLoss)
+	uint32_t SimulcastConsumer::IncreaseLayer(uint32_t bitrate, bool considerLoss)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
 		if (!RTC::Consumer::IsActive())
-			return 0u;
-
-		if (this->provisionalTargetSpatialLayer == -1)
 			return 0u;
 
 		// If already in the preferred layers, do nothing.
@@ -577,31 +574,96 @@ namespace RTC
 		}
 
 		uint32_t requiredBitrate{ 0u };
-		auto* producerRtpStream = GetProducerProvisionalTargetRtpStream();
-		int16_t temporalLayer   = this->provisionalTargetTemporalLayer + 1;
-		auto nowMs              = DepLibUV::GetTimeMs();
+		int16_t spatialLayer{ 0 };
+		int16_t temporalLayer{ 0 };
+		auto nowMs = DepLibUV::GetTimeMs();
 
-		MS_ASSERT(producerRtpStream, "no Producer provisional target stream");
-
-		for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
-			// If this is higher than preferred layers, exit the loops.
+			spatialLayer = static_cast<int16_t>(sIdx);
+
+			// Ignore spatial layers lower than the one we already have.
+			if (spatialLayer < this->provisionalTargetSpatialLayer)
+				continue;
+
+			// This can be null.
+			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
+
+			// Producer stream does not exist or it's not good. Ignore.
+			if (!producerRtpStream || producerRtpStream->GetScore() < StreamGoodScore)
+				continue;
+
+			// If the stream has not been active time enough and we have an active one
+			// already, move to the next spatial layer.
 			// clang-format off
 			if (
-				this->provisionalTargetSpatialLayer >= this->preferredSpatialLayer &&
-				temporalLayer > this->preferredTemporalLayer
+				spatialLayer != this->provisionalTargetSpatialLayer &&
+				this->provisionalTargetSpatialLayer != -1 &&
+				producerRtpStream->GetActiveMs() < StreamMinActiveTime
 			)
 			// clang-format on
 			{
-				break;
+				continue;
 			}
 
-			requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0u, temporalLayer);
+			// We may not yet switch to this spatial layer.
+			if (!CanSwitchToSpatialLayer(spatialLayer))
+				continue;
 
-			// If active layer, end iterations here.
-			if (requiredBitrate)
+			temporalLayer = 0;
+
+			// Check bitrate of every temporal layer.
+			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+			{
+				// Ignore temporal layers lower than the one we already have (taking into account
+				// the spatial layer too).
+				// clang-format off
+				if (
+					spatialLayer == this->provisionalTargetSpatialLayer &&
+					temporalLayer <= this->provisionalTargetTemporalLayer
+				)
+				// clang-format on
+				{
+					continue;
+				}
+
+				requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0, temporalLayer);
+
+				// This is simulcast so we must substraxct the bitrate of the current temporal
+				// spatial layer if this is the temporal layer 0 of a higher spatial layer.
+				//
+				// clang-format off
+				if (
+					temporalLayer == 0 &&
+					this->provisionalTargetSpatialLayer > -1 &&
+					spatialLayer > this->provisionalTargetSpatialLayer
+				)
+				// clang-format on
+				{
+					auto* provisionalProducerRtpStream =
+					  this->producerRtpStreams.at(this->provisionalTargetSpatialLayer);
+					auto provisionalRequiredBitrate = provisionalProducerRtpStream->GetLayerBitrate(
+					  nowMs, 0, this->provisionalTargetTemporalLayer);
+
+					if (requiredBitrate > provisionalRequiredBitrate)
+						requiredBitrate -= provisionalRequiredBitrate;
+					else
+						requiredBitrate = 1u; // Don't set 0 since it would be ignored.
+				}
+
+				// If active layer, end iterations here. Otherwise move to next spatial layer.
+				if (requiredBitrate)
+					goto done;
+				else
+					break;
+			}
+
+			// If this is the preferred or higher spatial layer, take it and exit.
+			if (spatialLayer >= this->preferredSpatialLayer)
 				break;
 		}
+
+	done:
 
 		// No higher active layers found.
 		if (!requiredBitrate)
@@ -611,7 +673,8 @@ namespace RTC
 		if (requiredBitrate > virtualBitrate)
 			return 0u;
 
-		// Set provisional temporal target layer.
+		// Set provisional layers.
+		this->provisionalTargetSpatialLayer  = spatialLayer;
 		this->provisionalTargetTemporalLayer = temporalLayer;
 
 		MS_DEBUG_2TAGS(
@@ -716,27 +779,8 @@ namespace RTC
 				desiredSpatialLayer  = spatialLayer;
 				desiredTemporalLayer = temporalLayer;
 				desiredBitrate       = bitrate;
-
-				// If this is the preferred spatial and temporal layer, exit the loops.
-				// clang-format off
-				if (
-					desiredSpatialLayer == this->preferredSpatialLayer &&
-					desiredTemporalLayer == this->preferredTemporalLayer &&
-					producerScore >= StreamGoodScore
-				)
-				// clang-format on
-				{
-					goto done;
-				}
 			}
-
-			// If this is the preferred or higher spatial layer and has good score,
-			// take it and exit.
-			if (desiredSpatialLayer >= this->preferredSpatialLayer && producerScore >= StreamGoodScore)
-				break;
 		}
-
-	done:
 
 		// No luck.
 		if (desiredSpatialLayer == -1)
@@ -1520,17 +1564,6 @@ namespace RTC
 
 		// This may return nullptr.
 		return this->producerRtpStreams.at(this->targetSpatialLayer);
-	}
-
-	inline RTC::RtpStream* SimulcastConsumer::GetProducerProvisionalTargetRtpStream() const
-	{
-		MS_TRACE();
-
-		if (this->provisionalTargetSpatialLayer == -1)
-			return nullptr;
-
-		// This may return nullptr.
-		return this->producerRtpStreams.at(this->provisionalTargetSpatialLayer);
 	}
 
 	inline RTC::RtpStream* SimulcastConsumer::GetProducerTsReferenceRtpStream() const

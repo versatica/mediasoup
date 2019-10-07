@@ -464,7 +464,7 @@ namespace RTC
 			return usedBitrate;
 	}
 
-	uint32_t SvcConsumer::IncreaseTemporalLayer(uint32_t bitrate, bool considerLoss)
+	uint32_t SvcConsumer::IncreaseLayer(uint32_t bitrate, bool considerLoss)
 	{
 		MS_TRACE();
 
@@ -477,9 +477,6 @@ namespace RTC
 			return 0u;
 
 		if (this->producerRtpStream->GetScore() == 0u)
-			return 0u;
-
-		if (this->provisionalTargetSpatialLayer == -1)
 			return 0u;
 
 		// If already in the preferred layers, do nothing.
@@ -514,29 +511,49 @@ namespace RTC
 		}
 
 		uint32_t requiredBitrate{ 0u };
-		int16_t temporalLayer = this->provisionalTargetTemporalLayer + 1;
-		auto nowMs            = DepLibUV::GetTimeMs();
+		int16_t spatialLayer{ 0 };
+		int16_t temporalLayer{ 0 };
+		auto nowMs = DepLibUV::GetTimeMs();
 
-		for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
 		{
-			// If this is higher than preferred layers, exit the loops.
-			// clang-format off
-			if (
-				this->provisionalTargetSpatialLayer >= this->preferredSpatialLayer &&
-				temporalLayer > this->preferredTemporalLayer
-			)
-			// clang-format on
+			// Ignore spatial layers lower than the one we already have.
+			if (spatialLayer < this->provisionalTargetSpatialLayer)
+				continue;
+
+			temporalLayer = 0;
+
+			// Check bitrate of every temporal layer.
+			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				break;
+				// Ignore temporal layers lower than the one we already have (taking into account
+				// the spatial layer too).
+				// clang-format off
+				if (
+					spatialLayer == this->provisionalTargetSpatialLayer &&
+					temporalLayer <= this->provisionalTargetTemporalLayer
+				)
+				// clang-format on
+				{
+					continue;
+				}
+
+				requiredBitrate =
+				  this->producerRtpStream->GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
+
+				// If active layer, end iterations here. Otherwise move to next spatial layer.
+				if (requiredBitrate)
+					goto done;
+				else
+					break;
 			}
 
-			requiredBitrate = this->producerRtpStream->GetLayerBitrate(
-			  nowMs, this->provisionalTargetSpatialLayer, temporalLayer);
-
-			// If active layer, end iterations here.
-			if (requiredBitrate)
+			// If this is the preferred or higher spatial layer, take it and exit.
+			if (spatialLayer >= this->preferredSpatialLayer)
 				break;
 		}
+
+	done:
 
 		// No higher active layers found.
 		if (!requiredBitrate)
@@ -546,7 +563,8 @@ namespace RTC
 		if (requiredBitrate > virtualBitrate)
 			return 0u;
 
-		// Set provisional temporal target layer.
+		// Set provisional layers.
+		this->provisionalTargetSpatialLayer  = spatialLayer;
 		this->provisionalTargetTemporalLayer = temporalLayer;
 
 		MS_DEBUG_2TAGS(
@@ -632,25 +650,8 @@ namespace RTC
 				desiredSpatialLayer  = spatialLayer;
 				desiredTemporalLayer = temporalLayer;
 				desiredBitrate       = bitrate;
-
-				// If this is the preferred spatial and temporal layer, exit the loops.
-				// clang-format off
-				if (
-					desiredSpatialLayer == this->preferredSpatialLayer &&
-					desiredTemporalLayer == this->preferredTemporalLayer
-				)
-				// clang-format on
-				{
-					goto done;
-				}
 			}
-
-			// If this is the preferred or higher spatial layer, take it and exit.
-			if (desiredSpatialLayer >= this->preferredSpatialLayer)
-				break;
 		}
-
-	done:
 
 		// No luck.
 		if (desiredSpatialLayer == -1)

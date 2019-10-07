@@ -89,8 +89,6 @@ namespace RTC
 		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		RTC::TrendCalculator desiredBitrateTrend;
-		// TODO: Hack for testing.
-		RTC::TrendCalculator availableBitrateBitrateTrend;
 	};
 
 	/* Inline instance methods. */
