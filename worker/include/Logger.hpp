@@ -278,22 +278,16 @@ public:
 	#define MS_DEBUG_DEV(desc, ...) \
 		do \
 		{ \
-			if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG) \
-			{ \
-				int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
-				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
-			} \
+			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 		} \
 		while (false)
 
 	#define MS_DEBUG_DEV_STD(desc, ...) \
 		do \
 		{ \
-			if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG) \
-			{ \
-				std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
-				std::fflush(stdout); \
-			} \
+			std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+			std::fflush(stdout); \
 		} \
 		while (false)
 #else
@@ -306,22 +300,16 @@ public:
 	#define MS_WARN_DEV(desc, ...) \
 		do \
 		{ \
-			if (Settings::configuration.logLevel >= LogLevel::LOG_WARN) \
-			{ \
-				int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
-				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
-			} \
+			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 		} \
 		while (false)
 
 	#define MS_WARN_DEV_STD(desc, ...) \
 		do \
 		{ \
-			if (Settings::configuration.logLevel >= LogLevel::LOG_WARN) \
-			{ \
-				std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
-				std::fflush(stderr); \
-			} \
+			std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+			std::fflush(stderr); \
 		} \
 		while (false)
 #else
