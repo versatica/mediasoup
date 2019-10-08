@@ -41,12 +41,12 @@ namespace RTC
 
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
 
-		// TODO: Let's see.
-		// this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
-
 		this->probationGenerator = new RTC::RtpProbationGenerator();
 
 		this->processTimer = new Timer(this);
+
+		// TODO: Let's see.
+		// this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
 
 		// clang-format off
 		this->processTimer->Start(std::min(
@@ -241,6 +241,18 @@ namespace RTC
 			MS_WARN_TAG(
 			  bwe,
 			  "high BWE value decrease detected, notifying the listener [now:%" PRIu32 ", before:%" PRIu32
+			  "]",
+			  this->availableBitrate,
+			  previousAvailableBitrate);
+
+			notify = true;
+		}
+		// Also emit the event fast if we detect a high BWE value increase.
+		else if (this->availableBitrate > previousAvailableBitrate * 1.50)
+		{
+			MS_DEBUG_TAG(
+			  bwe,
+			  "high BWE value increase detected, notifying the listener [now:%" PRIu32 ", before:%" PRIu32
 			  "]",
 			  this->availableBitrate,
 			  previousAvailableBitrate);
