@@ -85,6 +85,7 @@ namespace RTC
 		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		std::map<uint32_t, uint32_t> tsExtraOffsets;
 		uint16_t tsExtraOffetPacketCount{ 0u };
+		uint64_t lastBweDowngradeAtMs{ 0u }; // Last time we moved to lower spatial layer due to BWE.
 	};
 
 	/* Inline methods. */

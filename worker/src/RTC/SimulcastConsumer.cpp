@@ -13,7 +13,9 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint8_t StreamGoodScore{ 5u };
-	static constexpr uint64_t StreamMinActiveTime{ 2000u }; // In ms.
+	static constexpr uint64_t StreamMinActiveMs{ 2000u };           // In ms.
+	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
+	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
 
 	/* Instance methods. */
 
@@ -413,6 +415,19 @@ namespace RTC
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0u;
 
+			// If this is higher than current spatial layer and we moved to to current spatial
+			// layer due to BWE limitations, check how much it has elapsed since then.
+			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
+			{
+				if (usedBitrate > 0u && spatialLayer > this->currentSpatialLayer)
+				{
+					MS_DEBUG_DEV(
+					  "avoid upgrading to spatial layer %" PRIi16 " due to recent BWE downgrade", spatialLayer);
+
+					goto done;
+				}
+			}
+
 			// Ignore spatial layers for non existing producer streams or for those
 			// with score 0.
 			if (producerScore == 0u)
@@ -420,7 +435,7 @@ namespace RTC
 
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
-			if (usedBitrate > 0u && producerRtpStream->GetActiveMs() < StreamMinActiveTime)
+			if (usedBitrate > 0u && producerRtpStream->GetActiveMs() < StreamMinActiveMs)
 				continue;
 
 			// We may not yet switch to this spatial layer.
@@ -582,6 +597,19 @@ namespace RTC
 		{
 			spatialLayer = static_cast<int16_t>(sIdx);
 
+			// If this is higher than current spatial layer and we moved to to current spatial
+			// layer due to BWE limitations, check how much it has elapsed since then.
+			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
+			{
+				if (this->provisionalTargetSpatialLayer > -1 && spatialLayer > this->currentSpatialLayer)
+				{
+					MS_DEBUG_DEV(
+					  "avoid upgrading to spatial layer %" PRIi16 " due to recent BWE downgrade", spatialLayer);
+
+					goto done;
+				}
+			}
+
 			// Ignore spatial layers lower than the one we already have.
 			if (spatialLayer < this->provisionalTargetSpatialLayer)
 				continue;
@@ -599,7 +627,7 @@ namespace RTC
 			if (
 				spatialLayer != this->provisionalTargetSpatialLayer &&
 				this->provisionalTargetSpatialLayer != -1 &&
-				producerRtpStream->GetActiveMs() < StreamMinActiveTime
+				producerRtpStream->GetActiveMs() < StreamMinActiveMs
 			)
 			// clang-format on
 			{
@@ -719,6 +747,24 @@ namespace RTC
 		// clang-format on
 		{
 			UpdateTargetLayers(provisionalTargetSpatialLayer, provisionalTargetTemporalLayer);
+
+			// If this looks like a spatial layer downgrade due to BWE limitations, set member.
+			// clang-format off
+			if (
+				this->rtpStream->GetActiveMs() > BweDowngradeMinActiveMs &&
+				this->targetSpatialLayer < this->currentSpatialLayer &&
+				this->currentSpatialLayer <= this->preferredSpatialLayer
+			)
+			// clang-format on
+			{
+				MS_DEBUG_DEV(
+				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
+				  ") due to BWE limitation",
+				  this->currentSpatialLayer,
+				  this->targetSpatialLayer);
+
+				this->lastBweDowngradeAtMs = DepLibUV::GetTimeMs();
+			}
 		}
 	}
 
@@ -750,7 +796,7 @@ namespace RTC
 
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
-			if (desiredBitrate > 0 && producerRtpStream->GetActiveMs() < StreamMinActiveTime)
+			if (desiredBitrate > 0 && producerRtpStream->GetActiveMs() < StreamMinActiveMs)
 				continue;
 
 			// We may not yet switch to this spatial layer.
@@ -1159,6 +1205,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->lastBweDowngradeAtMs = 0u;
+
 		this->rtpStream->Pause();
 
 		UpdateTargetLayers(-1, -1);
@@ -1167,6 +1215,8 @@ namespace RTC
 	void SimulcastConsumer::UserOnPaused()
 	{
 		MS_TRACE();
+
+		this->lastBweDowngradeAtMs = 0u;
 
 		this->rtpStream->Pause();
 
@@ -1364,12 +1414,21 @@ namespace RTC
 		newTargetTemporalLayer = -1;
 
 		uint8_t maxProducerScore{ 0u };
+		auto nowMs = DepLibUV::GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(sIdx);
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0u;
+
+			// If this is higher than current spatial layer and we moved to to current spatial
+			// layer due to BWE limitations, check how much it has elapsed since then.
+			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
+			{
+				if (newTargetSpatialLayer > -1 && spatialLayer > this->currentSpatialLayer)
+					continue;
+			}
 
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.
@@ -1383,7 +1442,7 @@ namespace RTC
 			if (
 				this->externallyManagedBitrate &&
 				newTargetSpatialLayer != -1 &&
-				producerRtpStream->GetActiveMs() < StreamMinActiveTime
+				producerRtpStream->GetActiveMs() < StreamMinActiveMs
 			)
 			// clang-format on
 			{

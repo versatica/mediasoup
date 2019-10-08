@@ -10,6 +10,11 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
+	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
+
 	/* Instance methods. */
 
 	SvcConsumer::SvcConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data)
@@ -373,6 +378,19 @@ namespace RTC
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
 		{
+			// If this is higher than current spatial layer and we moved to to current spatial
+			// layer due to BWE limitations, check how much it has elapsed since then.
+			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
+			{
+				if (usedBitrate > 0u && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
+				{
+					MS_DEBUG_DEV(
+					  "avoid upgrading to spatial layer %" PRIi16 " due to recent BWE downgrade", spatialLayer);
+
+					goto done;
+				}
+			}
+
 			int16_t temporalLayer{ 0 };
 
 			// Check bitrate of every temporal layer.
@@ -517,6 +535,19 @@ namespace RTC
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
 		{
+			// If this is higher than current spatial layer and we moved to to current spatial
+			// layer due to BWE limitations, check how much it has elapsed since then.
+			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
+			{
+				if (this->provisionalTargetSpatialLayer > -1 && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
+				{
+					MS_DEBUG_DEV(
+					  "avoid upgrading to spatial layer %" PRIi16 " due to recent BWE downgrade", spatialLayer);
+
+					goto done;
+				}
+			}
+
 			// Ignore spatial layers lower than the one we already have.
 			if (spatialLayer < this->provisionalTargetSpatialLayer)
 				continue;
@@ -609,6 +640,24 @@ namespace RTC
 		// clang-format on
 		{
 			UpdateTargetLayers(provisionalTargetSpatialLayer, provisionalTargetTemporalLayer);
+
+			// If this looks like a spatial layer downgrade due to BWE limitations, set member.
+			// clang-format off
+			if (
+				this->rtpStream->GetActiveMs() > BweDowngradeMinActiveMs &&
+				this->encodingContext->GetTargetSpatialLayer() < this->encodingContext->GetCurrentSpatialLayer() &&
+				this->encodingContext->GetCurrentSpatialLayer() <= this->preferredSpatialLayer
+			)
+			// clang-format on
+			{
+				MS_DEBUG_DEV(
+				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
+				  ") due to BWE limitation",
+				  this->encodingContext->GetCurrentSpatialLayer(),
+				  this->encodingContext->GetTargetSpatialLayer());
+
+				this->lastBweDowngradeAtMs = DepLibUV::GetTimeMs();
+			}
 		}
 	}
 
@@ -889,6 +938,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->lastBweDowngradeAtMs = 0u;
+
 		this->rtpStream->Pause();
 
 		UpdateTargetLayers(-1, -1);
@@ -897,6 +948,8 @@ namespace RTC
 	void SvcConsumer::UserOnPaused()
 	{
 		MS_TRACE();
+
+		this->lastBweDowngradeAtMs = 0u;
 
 		this->rtpStream->Pause();
 
@@ -1057,6 +1110,14 @@ namespace RTC
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
 		{
+			// If this is higher than current spatial layer and we moved to to current spatial
+			// layer due to BWE limitations, check how much it has elapsed since then.
+			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
+			{
+				if (newTargetSpatialLayer > -1 && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
+					continue;
+			}
+
 			if (!this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer))
 				continue;
 
