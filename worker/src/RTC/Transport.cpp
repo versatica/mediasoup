@@ -2483,6 +2483,16 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+			this->sendProbationTransmission.Update(packet);
+
+			// TODO: REMOVE
+			MS_DEBUG_DEV(
+			  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
+			  packet->GetSequenceNumber(),
+			  this->transportWideCcSeq,
+			  packet->GetSize(),
+			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
+
 #ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 			auto* senderBwe = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
@@ -2513,16 +2523,6 @@ namespace RTC
 		{
 			SendRtpPacket(packet);
 		}
-
-		this->sendProbationTransmission.Update(packet);
-
-		// TODO: REMOVE
-		MS_DEBUG_DEV(
-		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
-		  packet->GetSequenceNumber(),
-		  this->transportWideCcSeq,
-		  packet->GetSize(),
-		  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
 	}
 
 	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(
