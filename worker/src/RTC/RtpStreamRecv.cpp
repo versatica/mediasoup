@@ -413,7 +413,7 @@ namespace RTC
 				MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
 		}
 
-		auto report = new RTC::RTCP::ReceiverReport();
+		auto* report = new RTC::RTCP::ReceiverReport();
 
 		report->SetSsrc(GetSsrc());
 
