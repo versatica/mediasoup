@@ -631,18 +631,21 @@ namespace RTC
 			packet->AddReceiverReport(report);
 		}
 
-		// Add a receiver reference time report if no present in the packet.
-		// if (!packet->HasReceiverReferenceTime())
-		// {
-		// 	auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
-		// 	auto* report = new RTC::RTCP::ReceiverReferenceTime();
+		Add a receiver reference time report if no present in the packet.
+		if (!packet->HasReceiverReferenceTime())
+		{
+			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
+			auto* report = new RTC::RTCP::ReceiverReferenceTime();
 
-		// 	report->SetNtpSec(ntp.seconds);
-		// 	report->SetNtpFrac(ntp.fractions);
-		// 	packet->AddReceiverReferenceTime(report);
-		// }
+			report->SetNtpSec(ntp.seconds);
+			report->SetNtpFrac(ntp.fractions);
+			packet->AddReceiverReferenceTime(report);
+		}
 
 		this->lastRtcpSentTime = nowMs;
+
+			// TODO
+			packet->Dump();
 	}
 
 	void Producer::RequestKeyFrame(uint32_t mappedSsrc)
