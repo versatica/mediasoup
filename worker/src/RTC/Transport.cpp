@@ -20,7 +20,6 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
-// TODO: Should not include directly libwebrtc from here.
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <map>                                                   // std::multimap
 
@@ -2119,6 +2118,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+			// TODO
+			// MS_ERROR(
+			// 	"@@@@->>>> packet sent [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			// 	packet->GetSsrc(), packet->GetSequenceNumber());
+
 		// TODO: Use senderBwe instead.
 		// Update transport wide sequence number if present.
 		if (this->tccClient && packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
@@ -2174,6 +2178,11 @@ namespace RTC
 	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
+
+			// TODO
+			MS_ERROR(
+				"@@@@->>>> packet ****RETRANSMITTED**** [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				packet->GetSsrc(), packet->GetSequenceNumber());
 
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
@@ -2483,16 +2492,6 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			this->sendProbationTransmission.Update(packet);
-
-			// TODO: REMOVE
-			MS_DEBUG_DEV(
-			  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
-			  packet->GetSequenceNumber(),
-			  this->transportWideCcSeq,
-			  packet->GetSize(),
-			  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
-
 #ifdef USE_SENDER_BANDWIDTH_ESTIMATOR
 			auto* senderBwe = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
@@ -2523,6 +2522,16 @@ namespace RTC
 		{
 			SendRtpPacket(packet);
 		}
+
+		this->sendProbationTransmission.Update(packet);
+
+		// TODO: REMOVE
+		MS_DEBUG_DEV(
+		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
+		  packet->GetSequenceNumber(),
+		  this->transportWideCcSeq,
+		  packet->GetSize(),
+		  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
 	}
 
 	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(

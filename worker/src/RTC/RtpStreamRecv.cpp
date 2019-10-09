@@ -564,6 +564,9 @@ namespace RTC
 
 			this->pliCount++;
 
+				// TODO
+				MS_ERROR("<<<<-@@@@ requesting PLI to Producer");
+
 			// Notify the listener.
 			static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
 		}
@@ -792,6 +795,9 @@ namespace RTC
 			packet.AddItem(nackItem);
 
 			numPacketsRequested += nackItem->CountRequestedPackets();
+
+				// TODO
+				MS_ERROR("<<<<-@@@@ requesting NACK to Producer [item:%" PRIu16 "]", nackItem->GetPacketId());
 		}
 
 		// Ensure that the RTCP packet fits into the RTCP buffer.

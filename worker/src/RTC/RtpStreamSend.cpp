@@ -83,6 +83,11 @@ namespace RTC
 
 			this->nackPacketCount += item->CountRequestedPackets();
 
+				// TODO
+				// MS_ERROR(
+				// 	"@@@@-<<< NACK item from Consumer [seq:%" PRIu16 ", count:%zu]",
+				// 	item->GetPacketId(), item->CountRequestedPackets());
+
 			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
 
 			for (auto* storageItem : RetransmissionContainer)
