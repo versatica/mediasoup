@@ -1859,7 +1859,7 @@ namespace RTC
 		MS_TRACE();
 
 			// TODO: REMOVE
-			return;
+			// return;
 
 		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ nullptr };
 
