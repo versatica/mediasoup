@@ -1,10 +1,12 @@
 #define MS_CLASS "RTC::NackGenerator"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <utility> // std::make_pair()
+#include <iterator> // std::ostream_iterator
+#include <sstream>  // std::ostringstream
 
 namespace RTC
 {
@@ -66,8 +68,7 @@ namespace RTC
 			// It was a nacked packet.
 			if (it != this->nackList.end())
 			{
-				MS_DEBUG_TAG(
-				  rtx,
+				MS_DEBUG_DEV(
 				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", recovered:%s]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber(),
@@ -81,8 +82,7 @@ namespace RTC
 			// Out of order packet or already handled NACKed packet.
 			if (!isRecovered)
 			{
-				MS_DEBUG_TAG(
-				  rtx,
+				MS_WARN_DEV(
 				  "ignoring older packet not present in the NACK list [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
@@ -130,7 +130,10 @@ namespace RTC
 		if (!nackBatch.empty())
 			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
-		MayRunTimer();
+		// This is important. Otherwise the running timer (filter:TIME) would be
+		// interrupted and NACKs would never been sent more than once for each seq.
+		if (!this->timer->IsActive())
+			MayRunTimer();
 
 		return false;
 	}
@@ -282,6 +285,22 @@ namespace RTC
 
 			++it;
 		}
+
+#if MS_LOG_DEV_LEVEL == 3
+		if (!nackBatch.empty())
+		{
+			std::ostringstream seqsStream;
+			std::copy(nackBatch.begin(), nackBatch.end() - 1, std::ostream_iterator<uint32_t>(seqsStream, ","));
+			seqsStream << nackBatch.back();
+
+			if (filter == NackFilter::SEQ)
+				MS_DEBUG_DEV("[filter:SEQ, asking seqs:%s]", seqsStream.str().c_str());
+			else
+				MS_DEBUG_DEV("[filter:TIME, asking seqs:%s]", seqsStream.str().c_str());
+
+			this->listener->OnNackGeneratorNackRequired(nackBatch);
+		}
+#endif
 
 		return nackBatch;
 	}

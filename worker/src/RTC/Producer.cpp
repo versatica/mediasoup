@@ -469,9 +469,9 @@ namespace RTC
 		if (this->kind == RTC::Media::Kind::VIDEO && ++PACKET_LOSS_COUNTER % 40 == 0)
 		{
 			// TODO
-			MS_ERROR(
-				">>>>-|||| loosing Producer packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				packet->GetSsrc(), packet->GetSequenceNumber());
+			// MS_ERROR(
+			// 	">>>>-|||| loosing Producer packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			// 	packet->GetSsrc(), packet->GetSequenceNumber());
 
 			return ReceiveRtpPacketResult::DISCARDED;
 		}
@@ -519,11 +519,6 @@ namespace RTC
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
 				return result;
-
-			// TODO
-			MS_ERROR(
-				">>>>-@@@@ got nacked RTP from producer. After decoding it: [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				packet->GetSsrc(), packet->GetSequenceNumber());
 		}
 		// Should not happen.
 		else
@@ -631,7 +626,7 @@ namespace RTC
 			packet->AddReceiverReport(report);
 		}
 
-		Add a receiver reference time report if no present in the packet.
+		// Add a receiver reference time report if no present in the packet.
 		if (!packet->HasReceiverReferenceTime())
 		{
 			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
@@ -643,9 +638,6 @@ namespace RTC
 		}
 
 		this->lastRtcpSentTime = nowMs;
-
-			// TODO
-			packet->Dump();
 	}
 
 	void Producer::RequestKeyFrame(uint32_t mappedSsrc)

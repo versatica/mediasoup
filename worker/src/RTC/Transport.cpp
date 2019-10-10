@@ -2118,11 +2118,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-			// TODO
-			// MS_ERROR(
-			// 	"@@@@->>>> packet sent [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			// 	packet->GetSsrc(), packet->GetSequenceNumber());
-
 		// TODO: Use senderBwe instead.
 		// Update transport wide sequence number if present.
 		if (this->tccClient && packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
@@ -2178,11 +2173,6 @@ namespace RTC
 	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-
-			// TODO
-			MS_ERROR(
-				"@@@@->>>> packet ****RETRANSMITTED**** [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				packet->GetSsrc(), packet->GetSequenceNumber());
 
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
