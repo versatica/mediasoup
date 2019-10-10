@@ -441,7 +441,7 @@ namespace RTC
 		if (expectedInterval == 0 || lostInterval <= 0)
 			this->fractionLost = 0;
 		else
-			this->fractionLost = std::max<uint8_t>(((lostInterval << 8) / expectedInterval), 1u);
+			this->fractionLost = std::round(((lostInterval << 8) / expectedInterval));
 
 		// TODO: REMOVE
 		{
