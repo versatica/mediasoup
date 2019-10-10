@@ -11,9 +11,6 @@
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <cstring> // std::memcpy()
 
-// TODO
-static uint64_t PACKET_LOSS_COUNTER{ 0u };
-
 namespace RTC
 {
 	/* Instance methods. */
@@ -465,16 +462,6 @@ namespace RTC
 	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-
-		if (this->kind == RTC::Media::Kind::VIDEO && ++PACKET_LOSS_COUNTER % 40 == 0)
-		{
-			// TODO
-			// MS_ERROR(
-			// 	">>>>-|||| loosing Producer packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-			// 	packet->GetSsrc(), packet->GetSequenceNumber());
-
-			return ReceiveRtpPacketResult::DISCARDED;
-		}
 
 		// Reset current packet.
 		this->currentRtpPacket = nullptr;
