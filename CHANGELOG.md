@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 2.6.15
+
+* Fix NACK retransmissions.
+
+
 ### 2.6.14
 
 * Fix TCP leak (#325).
