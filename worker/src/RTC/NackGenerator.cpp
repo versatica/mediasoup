@@ -123,7 +123,10 @@ namespace RTC
 		if (!nackBatch.empty())
 			this->listener->OnNackGeneratorNackRequired(nackBatch);
 
-		MayRunTimer();
+		// This is important. Otherwise the running timer (filter:TIME) would be
+		// interrupted and NACKs would never been sent more than once for each seq.
+		if (!this->timer->IsActive())
+			MayRunTimer();
 
 		return false;
 	}
