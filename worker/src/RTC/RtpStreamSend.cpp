@@ -564,32 +564,32 @@ namespace RTC
 
 		// Calculate number of packets sent in this interval.
 		auto totalSent = this->transmissionCounter.GetPacketCount();
-		auto sent      = totalSent - this->sentPrior;
+		auto sent      = totalSent - this->sentPriorScore;
 
-		this->sentPrior = totalSent;
+		this->sentPriorScore = totalSent;
 
 		// Calculate number of packets lost in this interval.
 		uint32_t totalLost = report->GetTotalLost() > 0 ? report->GetTotalLost() : 0;
 		uint32_t lost;
 
-		if (totalLost < this->lostPrior)
+		if (totalLost < this->lostPriorScore)
 			lost = 0;
 		else
-			lost = totalLost - this->lostPrior;
+			lost = totalLost - this->lostPriorScore;
 
-		this->lostPrior = totalLost;
+		this->lostPriorScore = totalLost;
 
 		// Calculate number of packets repaired in this interval.
 		auto totalRepaired = this->packetsRepaired;
-		uint32_t repaired  = totalRepaired - this->repairedPrior;
+		uint32_t repaired  = totalRepaired - this->repairedPriorScore;
 
-		this->repairedPrior = totalRepaired;
+		this->repairedPriorScore = totalRepaired;
 
 		// Calculate number of packets retransmitted in this interval.
 		auto totatRetransmitted = this->packetsRetransmitted;
-		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPrior;
+		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPriorScore;
 
-		this->retransmittedPrior = totatRetransmitted;
+		this->retransmittedPriorScore = totatRetransmitted;
 
 		// We didn't send any packet.
 		if (sent == 0)

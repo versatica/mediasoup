@@ -627,15 +627,15 @@ namespace RTC
 
 		// Calculate number of packets expected in this interval.
 		auto totalExpected = GetExpectedPackets();
-		uint32_t expected  = totalExpected - this->expectedPrior;
+		uint32_t expected  = totalExpected - this->expectedPriorScore;
 
-		this->expectedPrior = totalExpected;
+		this->expectedPriorScore = totalExpected;
 
 		// Calculate number of packets received in this interval.
 		auto totalReceived = this->mediaTransmissionCounter.GetPacketCount();
-		uint32_t received  = totalReceived - this->receivedPrior;
+		uint32_t received  = totalReceived - this->receivedPriorScore;
 
-		this->receivedPrior = totalReceived;
+		this->receivedPriorScore = totalReceived;
 
 		// Calculate number of packets lost in this interval.
 		uint32_t lost;
@@ -647,15 +647,15 @@ namespace RTC
 
 		// Calculate number of packets repaired in this interval.
 		auto totalRepaired = this->packetsRepaired;
-		uint32_t repaired  = totalRepaired - this->repairedPrior;
+		uint32_t repaired  = totalRepaired - this->repairedPriorScore;
 
-		this->repairedPrior = totalRepaired;
+		this->repairedPriorScore = totalRepaired;
 
 		// Calculate number of packets retransmitted in this interval.
 		auto totatRetransmitted = this->packetsRetransmitted;
-		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPrior;
+		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPriorScore;
 
-		this->retransmittedPrior = totatRetransmitted;
+		this->retransmittedPriorScore = totatRetransmitted;
 
 		if (this->inactive)
 			return;

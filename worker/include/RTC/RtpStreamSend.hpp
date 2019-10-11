@@ -62,8 +62,8 @@ namespace RTC
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
 	private:
-		uint32_t lostPrior{ 0 }; // Packets lost at last interval.
-		uint32_t sentPrior{ 0 }; // Packets sent at last interval.
+		uint32_t lostPriorScore{ 0 }; // Packets lost at last interval for score calculation.
+		uint32_t sentPriorScore{ 0 }; // Packets sent at last interval for score calculation.
 		std::vector<StorageItem*> buffer;
 		uint16_t bufferStartIdx{ 0 };
 		size_t bufferSize{ 0 };

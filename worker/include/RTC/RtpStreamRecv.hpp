@@ -73,13 +73,16 @@ namespace RTC
 		void OnNackGeneratorKeyFrameRequired() override;
 
 	private:
-		uint32_t receivedPrior{ 0 };   // Packets received at last interval.
-		uint32_t lastSrTimestamp{ 0 }; // The middle 32 bits out of 64 in the NTP
-		                               // timestamp received in the most recent
-		                               // sender report.
-		uint64_t lastSrReceived{ 0 };  // Wallclock time representing the most recent
-		                               // sender report arrival.
-		uint32_t transit{ 0 };         // Relative transit time for prev packet.
+		uint32_t expectedPrior{ 0 };      // Packets expected at last interval.
+		uint32_t expectedPriorScore{ 0 }; // Packets expected at last interval for score calculation.
+		uint32_t receivedPrior{ 0 };      // Packets received at last interval.
+		uint32_t receivedPriorScore{ 0 }; // Packets received at last interval for score calculation.
+		uint32_t lastSrTimestamp{ 0 };    // The middle 32 bits out of 64 in the NTP
+		                                  // timestamp received in the most recent
+		                                  // sender report.
+		uint64_t lastSrReceived{ 0 };     // Wallclock time representing the most recent
+		                                  // sender report arrival.
+		uint32_t transit{ 0 };            // Relative transit time for prev packet.
 		uint32_t jitter{ 0 };
 		uint8_t firSeqNumber{ 0 };
 		uint32_t reportedPacketLost{ 0 };

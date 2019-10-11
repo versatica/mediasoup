@@ -119,9 +119,8 @@ namespace RTC
 		size_t nackPacketCount{ 0 };
 		size_t pliCount{ 0 };
 		size_t firCount{ 0 };
-		size_t repairedPrior{ 0 };           // Packets repaired at last interval.
-		size_t retransmittedPrior{ 0 };      // Packets retransmitted at last interval.
-		uint32_t expectedPrior{ 0 };         // Packets expected at last interval.
+		size_t repairedPriorScore{ 0 };      // Packets repaired at last interval for score calculation.
+		size_t retransmittedPriorScore{ 0 }; // Packets retransmitted at last interval for score calculation.
 		uint64_t lastSenderReportNtpMs{ 0 }; // NTP timestamp in last Sender Report (in ms).
 		uint32_t lastSenderReporTs{ 0 };     // RTP timestamp in last Sender Report.
 		float rtt{ 0 };
