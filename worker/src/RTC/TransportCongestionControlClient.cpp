@@ -13,7 +13,7 @@ namespace RTC
 
 	static constexpr uint32_t MinBitrate{ 30000u };
 	static constexpr float MaxBitrateIncrementFactor{ 1.25f };        // TODO: Let's see.
-	static constexpr float MaxPaddingBitrateFactor{ 0.75f }  ;        // TODO: Let's see.
+	static constexpr float MaxPaddingBitrateFactor{ 0.75f };          // TODO: Let's see.
 	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
 
 	/* Instance methods. */
@@ -162,7 +162,7 @@ namespace RTC
 			maxBitrate = std::max<uint32_t>(
 			  this->initialAvailableBitrate,
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
-			startBitrate      = std::min<uint32_t>(
+			startBitrate = std::min<uint32_t>(
 			  maxBitrate, std::max<uint32_t>(this->availableBitrate, this->initialAvailableBitrate));
 			maxPaddingBitrate = maxBitrate * MaxPaddingBitrateFactor;
 		}
@@ -174,8 +174,8 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV(
-		  "[desiredBitrate:%" PRIu32 ", startBitrate:%" PRIu32 ", minBitrate:%" PRIu32 ", maxBitrate:%" PRIu32
-		  ", maxPaddingBitrate:%" PRIu32 "]",
+		  "[desiredBitrate:%" PRIu32 ", startBitrate:%" PRIu32 ", minBitrate:%" PRIu32
+		  ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
 		  desiredBitrate,
 		  startBitrate,
 		  minBitrate,

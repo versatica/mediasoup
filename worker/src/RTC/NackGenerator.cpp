@@ -4,9 +4,9 @@
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <utility> // std::make_pair()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
+#include <utility>  // std::make_pair()
 
 namespace RTC
 {
@@ -290,7 +290,8 @@ namespace RTC
 		if (!nackBatch.empty())
 		{
 			std::ostringstream seqsStream;
-			std::copy(nackBatch.begin(), nackBatch.end() - 1, std::ostream_iterator<uint32_t>(seqsStream, ","));
+			std::copy(
+			  nackBatch.begin(), nackBatch.end() - 1, std::ostream_iterator<uint32_t>(seqsStream, ","));
 			seqsStream << nackBatch.back();
 
 			if (filter == NackFilter::SEQ)
