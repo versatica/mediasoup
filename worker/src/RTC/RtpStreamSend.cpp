@@ -112,6 +112,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO
+		MS_ERROR("<<<< Consumer requests keyframe --------------------------------------------------");
+
 		switch (messageType)
 		{
 			case RTC::RTCP::FeedbackPs::MessageType::PLI:

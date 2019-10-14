@@ -8,6 +8,9 @@
 #include "Channel/Notifier.hpp"
 #include <cmath> // std::pow()
 
+// TODO
+static uint64_t PACKET_LOSS_COUNTER{ 0u };
+
 namespace RTC
 {
 	/* Static. */
@@ -885,6 +888,14 @@ namespace RTC
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+			// TODO
+			if (++PACKET_LOSS_COUNTER % 40 == 0)
+			{
+				MS_ERROR(">>>> loosing Producer packet -----------------------");
+
+				return;
+			}
 
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
