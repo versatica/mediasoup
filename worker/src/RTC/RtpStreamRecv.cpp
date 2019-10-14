@@ -641,11 +641,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-			// IMPORTANT !!!
-			// TODO: Do nothing since this method is wrong (it screws up this->expectedPrior
-			// so it breaks RR !!!)
-			return;
-
 		// Calculate number of packets expected in this interval.
 		auto totalExpected = GetExpectedPackets();
 		uint32_t expected  = totalExpected - this->expectedPriorScore;
