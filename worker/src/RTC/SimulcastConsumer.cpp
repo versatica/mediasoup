@@ -1097,6 +1097,9 @@ namespace RTC
 			  origTimestamp);
 		}
 
+			// TODO: REMOVE
+			MS_ERROR("--- sending packet, seq:%" PRIu16, packet->GetSequenceNumber());
+
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);

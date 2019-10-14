@@ -26,9 +26,9 @@ namespace RTC
 			// Memory to hold the cloned packet (with extra space for RTX encoding).
 			uint8_t store[RTC::MtuSize + 100];
 			// Last time this packet was resent.
-			uint64_t resentAtTime{ 0 };
+			uint64_t resentAtMs{ 0u };
 			// Number of times this packet was resent.
-			uint8_t sentTimes{ 0 };
+			uint8_t sentTimes{ 0u };
 			// Whether the packet has been already RTX encoded.
 			bool rtxEncoded{ false };
 		};

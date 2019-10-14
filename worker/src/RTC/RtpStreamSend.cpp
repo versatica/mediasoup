@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpStreamSend"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStreamSend.hpp"
 #include "Logger.hpp"
@@ -59,7 +59,12 @@ namespace RTC
 
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
+		{
+				// TODO
+				MS_ERROR("--------------- packet discarded, seq:%" PRIu16, packet->GetSequenceNumber());
+
 			return false;
+		}
 
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
@@ -80,6 +85,9 @@ namespace RTC
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
+
+				// TODO
+				MS_ERROR("item->GetPacketId(): %" PRIu16, item->GetPacketId());
 
 			this->nackPacketCount += item->CountRequestedPackets();
 
@@ -365,10 +373,10 @@ namespace RTC
 
 		delete storageItem->packet;
 
-		storageItem->packet       = nullptr;
-		storageItem->resentAtTime = 0;
-		storageItem->sentTimes    = 0;
-		storageItem->rtxEncoded   = false;
+		storageItem->packet     = nullptr;
+		storageItem->resentAtMs = 0;
+		storageItem->sentTimes  = 0;
+		storageItem->rtxEncoded = false;
 	}
 
 	/**
@@ -415,6 +423,7 @@ namespace RTC
 		// Look for each requested packet.
 		uint64_t nowMs = DepLibUV::GetTimeMs();
 		uint16_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint16_t currentSeq = seq;
 		bool requested{ true };
 		size_t containerIdx{ 0 };
 
@@ -432,12 +441,12 @@ namespace RTC
 
 			if (requested)
 			{
-				auto* storageItem = this->buffer[seq];
+				auto* storageItem = this->buffer[currentSeq];
 				RTC::RtpPacket* packet{ nullptr };
 				uint32_t diffMs;
 
-				// Calculate how the elapsed time between the max timestampt seen and
-				// the requested packet's timestampt (in ms).
+				// Calculate the elapsed time between the max timestampt seen and the
+				// requested packet's timestampt (in ms).
 				if (storageItem)
 				{
 					packet = storageItem->packet;
@@ -471,8 +480,8 @@ namespace RTC
 				// Don't resent the packet if it was resent in the last RTT ms.
 				// clang-format off
 				else if (
-					storageItem->resentAtTime != 0u &&
-					nowMs - storageItem->resentAtTime <= static_cast<uint64_t>(rtt)
+					storageItem->resentAtMs != 0u &&
+					nowMs - storageItem->resentAtMs <= static_cast<uint64_t>(rtt)
 				)
 				// clang-format on
 				{
@@ -505,7 +514,7 @@ namespace RTC
 					}
 
 					// Save when this packet was resent.
-					storageItem->resentAtTime = nowMs;
+					storageItem->resentAtMs = nowMs;
 
 					// Increase the number of times this packet was sent.
 					storageItem->sentTimes++;
@@ -522,7 +531,7 @@ namespace RTC
 
 			requested = (bitmask & 1) != 0;
 			bitmask >>= 1;
-			++seq;
+			++currentSeq;
 
 			if (!isFirstPacket)
 			{
@@ -538,8 +547,7 @@ namespace RTC
 		// If not all the requested packets was sent, log it.
 		if (!firstPacketSent || origBitmask != sentBitmask)
 		{
-			MS_DEBUG_TAG(
-			  rtx,
+			MS_WARN_DEV(
 			  "could not resend all packets [seq:%" PRIu16
 			  ", first:%s, "
 			  "bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
@@ -550,8 +558,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_DEBUG_TAG(
-			  rtx,
+			MS_DEBUG_DEV(
 			  "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
 			  seq,
 			  MS_UINT16_TO_BINARY(origBitmask));
