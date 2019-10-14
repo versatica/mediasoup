@@ -696,7 +696,7 @@ namespace RTC
 		MS_TRACE();
 
 			// TODO
-			// if (++PACKET_LOSS_COUNTER % 40 == 20)
+			// if (++PACKET_LOSS_COUNTER % 40 == 20 && false)
 			// {
 			// 	MS_ERROR(">>>> loosing Consumer packet ----------------------- [seq:%" PRIu16 "]", packet->GetSequenceNumber());
 
