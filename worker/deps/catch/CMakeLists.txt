@@ -6,7 +6,7 @@ if(NOT DEFINED PROJECT_NAME)
   set(NOT_SUBPROJECT ON)
 endif()
 
-project(Catch2 LANGUAGES CXX VERSION 2.9.2)
+project(Catch2 LANGUAGES CXX VERSION 2.10.0)
 
 if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
@@ -91,6 +91,10 @@ target_include_directories(Catch2
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/single_include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+if (ANDROID)
+    target_link_libraries(Catch2 INTERFACE log)
+endif()
 
 # provide a namespaced alias for clients to 'link' against if catch is included as a sub-project
 add_library(Catch2::Catch2 ALIAS Catch2)

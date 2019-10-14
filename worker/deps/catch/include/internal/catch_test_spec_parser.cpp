@@ -7,6 +7,7 @@
 
 #include "catch_test_spec_parser.h"
 
+
 namespace Catch {
 
     TestSpecParser::TestSpecParser( ITagAliasRegistry const& tagAliases ) : m_tagAliases( &tagAliases ) {}
@@ -18,6 +19,7 @@ namespace Catch {
         m_escapeChars.clear();
         m_substring.reserve(m_arg.size());
         m_patternName.reserve(m_arg.size());
+        m_realPatternPos = 0;
         for( m_pos = 0; m_pos < m_arg.size(); ++m_pos )
             visitChar( m_arg[m_pos] );
         endMode();
@@ -28,7 +30,13 @@ namespace Catch {
         return m_testSpec;
     }
     void TestSpecParser::visitChar( char c ) {
-        if( c == ',' ) {
+        if( (m_mode != EscapedName) && (c == '\\') ) {
+            escape();
+            m_substring += c;
+            m_patternName += c;
+            m_realPatternPos++;
+            return;
+        }else if((m_mode != EscapedName) && (c == ',') )  {
             endMode();
             addFilter();
             return;
@@ -44,7 +52,10 @@ namespace Catch {
             break;
         case EscapedName:
             endMode();
-            break;
+            m_substring += c;
+            m_patternName += c;
+            m_realPatternPos++;
+            return;
         default:
         case Tag:
         case QuotedName:
@@ -54,8 +65,10 @@ namespace Catch {
         }
 
         m_substring += c;
-        if( !isControlChar( c ) )
+        if( !isControlChar( c ) ) {
             m_patternName += c;
+            m_realPatternPos++;
+        }
     }
     // Two of the processing methods return true to signal the caller to return
     // without adding the given character to the current pattern strings
@@ -72,9 +85,6 @@ namespace Catch {
         case '"':
             startNewMode( QuotedName );
             return false;
-        case '\\':
-            escape();
-            return true;
         default:
             startNewMode( Name );
             return false;
@@ -107,15 +117,17 @@ namespace Catch {
         case Tag:
             return addPattern<TestSpec::TagPattern>();
         case EscapedName:
-            return startNewMode( Name );
+            revertBackToLastMode();
+            return;
         case None:
         default:
             return startNewMode( None );
         }
     }
     void TestSpecParser::escape() {
+        saveLastMode();
         m_mode = EscapedName;
-        m_escapeChars.push_back( m_pos );
+        m_escapeChars.push_back(m_realPatternPos);
     }
     bool TestSpecParser::isControlChar( char c ) const {
         switch( m_mode ) {
@@ -141,6 +153,14 @@ namespace Catch {
         }
     }
 
+    void TestSpecParser::saveLastMode() {
+      lastMode = m_mode;
+    }
+    
+    void TestSpecParser::revertBackToLastMode() {
+      m_mode = lastMode;
+    }
+    
     TestSpec parseTestSpec( std::string const& arg ) {
         return TestSpecParser( ITagAliasRegistry::get() ).parse( arg ).testSpec();
     }

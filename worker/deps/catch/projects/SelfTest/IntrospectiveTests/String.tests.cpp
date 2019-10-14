@@ -111,6 +111,10 @@ TEST_CASE( "StringRef", "[Strings][StringRef]" ) {
         SECTION( "Pointer values of substring refs should not match" ) {
             REQUIRE( s.c_str() != ss.c_str() );
         }
+
+        SECTION("Past the end substring") {
+            REQUIRE(s.substr(s.size() + 1, 123).empty());
+        }
     }
 
     SECTION( "Comparisons" ) {
@@ -142,11 +146,6 @@ TEST_CASE( "StringRef", "[Strings][StringRef]" ) {
     SECTION( "to std::string" ) {
         StringRef sr = "a stringref";
 
-        SECTION( "implicitly constructed" ) {
-            std::string stdStr = sr;
-            REQUIRE( stdStr == "a stringref" );
-            REQUIRE( stdStr.size() == sr.size() );
-        }
         SECTION( "explicitly constructed" ) {
             std::string stdStr( sr );
             REQUIRE( stdStr == "a stringref" );
@@ -154,66 +153,9 @@ TEST_CASE( "StringRef", "[Strings][StringRef]" ) {
         }
         SECTION( "assigned" ) {
             std::string stdStr;
-            stdStr = sr;
+            stdStr = static_cast<std::string>(sr);
             REQUIRE( stdStr == "a stringref" );
             REQUIRE( stdStr.size() == sr.size() );
         }
     }
-
-    SECTION( "Counting utf-8 codepoints" ) {
-        StringRef ascii = "just a plain old boring ascii string...";
-        REQUIRE(ascii.numberOfCharacters() == ascii.size());
-
-        StringRef simpleu8 = u8"Trocha češtiny nikoho nezabila";
-        REQUIRE(simpleu8.numberOfCharacters() == 30);
-
-        StringRef emojis = u8"Here be 👾";
-        REQUIRE(emojis.numberOfCharacters() == 9);
-    }
-
 }
-
-TEST_CASE( "replaceInPlace", "[Strings][StringManip]" ) {
-    std::string letters = "abcdefcg";
-    SECTION( "replace single char" ) {
-        CHECK( Catch::replaceInPlace( letters, "b", "z" ) );
-        CHECK( letters == "azcdefcg" );
-    }
-    SECTION( "replace two chars" ) {
-        CHECK( Catch::replaceInPlace( letters, "c", "z" ) );
-        CHECK( letters == "abzdefzg" );
-    }
-    SECTION( "replace first char" ) {
-        CHECK( Catch::replaceInPlace( letters, "a", "z" ) );
-        CHECK( letters == "zbcdefcg" );
-    }
-    SECTION( "replace last char" ) {
-        CHECK( Catch::replaceInPlace( letters, "g", "z" ) );
-        CHECK( letters == "abcdefcz" );
-    }
-    SECTION( "replace all chars" ) {
-        CHECK( Catch::replaceInPlace( letters, letters, "replaced" ) );
-        CHECK( letters == "replaced" );
-    }
-    SECTION( "replace no chars" ) {
-        CHECK_FALSE( Catch::replaceInPlace( letters, "x", "z" ) );
-        CHECK( letters == letters );
-    }
-    SECTION( "escape '" ) {
-        std::string s = "didn't";
-        CHECK( Catch::replaceInPlace( s, "'", "|'" ) );
-        CHECK( s == "didn|'t" );
-    }
-}
-
-TEST_CASE( "splitString", "[Strings]" ) {
-    using namespace Catch::Matchers;
-    using Catch::splitStringRef;
-    using Catch::StringRef;
-
-    CHECK_THAT( splitStringRef("", ',' ), Equals(std::vector<StringRef>() ) );
-    CHECK_THAT( splitStringRef("abc", ',' ), Equals(std::vector<StringRef>{"abc"} ) );
-    CHECK_THAT( splitStringRef("abc,def", ',' ), Equals(std::vector<StringRef>{"abc", "def"} ) );
-}
-
-
