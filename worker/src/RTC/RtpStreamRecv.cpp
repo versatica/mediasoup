@@ -443,19 +443,6 @@ namespace RTC
 		else
 			this->fractionLost = std::round(((lostInterval << 8) / expectedInterval));
 
-		// TODO: REMOVE
-		{
-			uint32_t __diffPacketLost = this->packetsLost - prevPacketsLost;
-			uint32_t __fractionLost   = this->fractionLost;
-
-			if (__fractionLost == 0 && __diffPacketLost != 0)
-			{
-				MS_DUMP(
-					".................... __diffPacketLost:%" PRIu32 ", expectedInterval:%" PRIi32 ", receivedInterval:%" PRIu32 ", lostInterval:%" PRIi32,
-					__diffPacketLost, expectedInterval, receivedInterval, lostInterval);
-			}
-		}
-
 		// Worst remote fraction lost is not worse than local one.
 		if (worstRemoteFractionLost <= this->fractionLost)
 		{
@@ -577,9 +564,6 @@ namespace RTC
 
 			this->pliCount++;
 
-				// TODO
-				MS_ERROR("<<<<-@@@@ requesting PLI to Producer ------------------------------------------------------- PLI");
-
 			// Notify the listener.
 			static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
 		}
@@ -608,6 +592,9 @@ namespace RTC
 
 		if (this->inactivityCheckPeriodicTimer)
 			this->inactivityCheckPeriodicTimer->Stop();
+
+		if (this->params.useNack)
+			this->nackGenerator->Reset();
 	}
 
 	void RtpStreamRecv::Resume()

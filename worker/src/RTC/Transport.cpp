@@ -2515,7 +2515,6 @@ namespace RTC
 
 		this->sendProbationTransmission.Update(packet);
 
-		// TODO: REMOVE
 		MS_DEBUG_DEV(
 		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
 		  packet->GetSequenceNumber(),

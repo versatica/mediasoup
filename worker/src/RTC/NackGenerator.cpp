@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::NackGenerator"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
@@ -303,6 +303,18 @@ namespace RTC
 #endif
 
 		return nackBatch;
+	}
+
+	void NackGenerator::Reset()
+	{
+		MS_TRACE();
+
+		this->nackList.clear();
+		this->keyFrameList.clear();
+		this->recoveredList.clear();
+
+		this->started = false;
+		this->lastSeq = 0u;
 	}
 
 	inline void NackGenerator::MayRunTimer() const

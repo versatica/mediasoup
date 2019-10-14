@@ -46,6 +46,7 @@ namespace RTC
 		bool ReceivePacket(RTC::RtpPacket* packet, bool isRecovered);
 		size_t GetNackListLength() const;
 		void UpdateRtt(uint32_t rtt);
+		void Reset();
 
 	private:
 		void AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd);
