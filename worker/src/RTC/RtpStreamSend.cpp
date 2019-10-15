@@ -6,6 +6,9 @@
 #include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
 
+// TODO: REMOVE
+static std::set<uint16_t> NACKED_SEQS;
+
 namespace RTC
 {
 	/* Static. */
@@ -65,6 +68,15 @@ namespace RTC
 
 			return false;
 		}
+
+			// TODO: REMOVE
+			if (NACKED_SEQS.find(packet->GetSequenceNumber()) != NACKED_SEQS.end())
+			{
+				MS_ERROR("---- sending NACKed packet, seq:%" PRIu16, packet->GetSequenceNumber());
+
+				NACKED_SEQS.erase(packet->GetSequenceNumber());
+			}
+
 
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
@@ -441,6 +453,9 @@ namespace RTC
 
 			if (requested)
 			{
+					// TODO: REMOVE
+					NACKED_SEQS.insert(currentSeq);
+
 				auto* storageItem = this->buffer[currentSeq];
 				RTC::RtpPacket* packet{ nullptr };
 				uint32_t diffMs;

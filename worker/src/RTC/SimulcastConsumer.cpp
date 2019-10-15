@@ -1077,9 +1077,6 @@ namespace RTC
 			  origTimestamp);
 		}
 
-			// TODO: REMOVE
-			// MS_ERROR("--- trying to send packet, seq:%" PRIu16, packet->GetSequenceNumber());
-
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
