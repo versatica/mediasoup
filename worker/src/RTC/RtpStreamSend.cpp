@@ -410,8 +410,8 @@ namespace RTC
 		}
 
 		// Look for each requested packet.
-		uint64_t nowMs = DepLibUV::GetTimeMs();
-		uint16_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint64_t nowMs      = DepLibUV::GetTimeMs();
+		uint16_t rtt        = (this->rtt != 0u ? this->rtt : DefaultRtt);
 		uint16_t currentSeq = seq;
 		bool requested{ true };
 		size_t containerIdx{ 0 };
