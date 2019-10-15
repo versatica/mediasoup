@@ -7,8 +7,8 @@
 #include "RTC/SeqManager.hpp"
 
 	// TODO: REMOVE
-		static std::vector<uint16_t> SENT_SEQS;
-	static std::set<uint16_t> NACKED_SEQS;
+	static std::vector<uint16_t> SENT_SEQS;
+	static std::map<uint16_t, size_t> NACKED_SEQS;
 
 namespace RTC
 {
@@ -44,16 +44,18 @@ namespace RTC
 				MS_DUMP("<SentPackets>");
 				for (auto seq : SENT_SEQS)
 				{
-					MS_DUMP("sent packet: %" PRIu16, seq);
+					MS_DUMP("sent packet: seq:%" PRIu16, seq);
 				}
 				MS_DUMP("</SentPackets>");
 
 				MS_DUMP("");
 
 				MS_DUMP("<NackedPackets>");
-				for (auto seq : NACKED_SEQS)
+				for (auto& kv : NACKED_SEQS)
 				{
-					MS_DUMP("nacked packet: %" PRIu16, seq);
+					auto seq      = kv.first;
+					auto numNacks = kv.second;
+					MS_DUMP("nacked packet: seq:%" PRIu16 ", numNacks:%zu", seq, numNacks);
 				}
 				MS_DUMP("</NackedPackets>");
 
@@ -174,6 +176,22 @@ namespace RTC
 				// Note that this is an already RTX encoded packet if RTX is used
 				// (FillRetransmissionContainer() did it).
 				auto* packet = storageItem->packet;
+
+					// TODO: REMOVE
+					// NOTE: This just works without RTX, so disable it in lib/ortc.js line 103.
+					// Do not send the packet until nacked more than once.
+					// if (NACKED_SEQS.find(packet->GetSequenceNumber()) != NACKED_SEQS.end())
+					// {
+					// 	MS_ERROR("2---------- seq:%" PRIu16 ", numNacks:%zu", packet->GetSequenceNumber(), NACKED_SEQS[packet->GetSequenceNumber()]);
+
+					// 	if (NACKED_SEQS[packet->GetSequenceNumber()] < 4)
+					// 	{
+					// 		MS_ERROR(
+					// 			"-------------- not retransmitting seq:%" PRIu16 " on purpose", packet->GetSequenceNumber());
+
+					// 		continue;
+					// 	}
+					// }
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
@@ -518,7 +536,14 @@ namespace RTC
 			if (requested)
 			{
 					// TODO: REMOVE
-					NACKED_SEQS.insert(currentSeq);
+					{
+						if (NACKED_SEQS.find(currentSeq) == NACKED_SEQS.end())
+							NACKED_SEQS[currentSeq] = 1;
+						else
+							NACKED_SEQS[currentSeq] = NACKED_SEQS[currentSeq] + 1;
+					}
+
+					MS_ERROR("1---------- seq:%" PRIu16 ", numNacks:%zu", currentSeq, NACKED_SEQS[currentSeq]);
 
 				auto* storageItem = this->buffer[currentSeq];
 				RTC::RtpPacket* packet{ nullptr };
