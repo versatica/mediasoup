@@ -104,9 +104,6 @@ namespace RTC
 				// Mark the packet as repaired (only if this is the first retransmission).
 				if (storageItem->sentTimes == 1)
 					RTC::RtpStream::PacketRepaired(packet);
-
-					// TOOD: REMOVE
-					SENT_SEQS.push_back(packet->GetSequenceNumber());
 			}
 		}
 	}
