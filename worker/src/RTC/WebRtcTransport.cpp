@@ -9,7 +9,8 @@
 #include <cmath> // std::pow()
 
 // TODO
-static uint64_t PACKET_LOSS_COUNTER{ 0u };
+static uint64_t PRODUCER_PACKET_LOSS_COUNTER{ 0u };
+static uint64_t CONSUMER_PACKET_LOSS_COUNTER{ 0u };
 
 namespace RTC
 {
@@ -696,7 +697,7 @@ namespace RTC
 		MS_TRACE();
 
 			// TODO
-			// if (++PACKET_LOSS_COUNTER % 40 == 20 && false)
+			// if (++CONSUMER_PACKET_LOSS_COUNTER % 40 == 20)
 			// {
 			// 	MS_ERROR(">>>> loosing Consumer packet ----------------------- [seq:%" PRIu16 "]", packet->GetSequenceNumber());
 
@@ -898,7 +899,7 @@ namespace RTC
 		MS_TRACE();
 
 			// TODO
-			if (++PACKET_LOSS_COUNTER % 40 == 0)
+			if (++PRODUCER_PACKET_LOSS_COUNTER % 40 == 0)
 			{
 				// MS_ERROR(">>>> loosing Producer packet -----------------------");
 
