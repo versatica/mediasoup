@@ -580,7 +580,7 @@ namespace RTC
 		// If not found, check with RTX.
 		auto it2 = this->mapRtxSsrcRtpStream.find(report->GetSsrc());
 
-		if (it2 != this->mapSsrcRtpStream.end())
+		if (it2 != this->mapRtxSsrcRtpStream.end())
 		{
 			auto* rtpStream = it2->second;
 
