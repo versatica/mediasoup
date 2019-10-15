@@ -128,10 +128,6 @@ namespace RTC
 		// Score related.
 		uint8_t score{ 0u };
 		std::vector<uint8_t> scores;
-		// RTP stream data information for score calculation.
-		int32_t totalSourceLoss{ 0 };
-		int32_t totalReportedLoss{ 0 };
-		size_t totalSentPackets{ 0 };
 		// Whether at least a RTP packet has been received.
 		bool started{ false };
 		// Last time since the stream is active.

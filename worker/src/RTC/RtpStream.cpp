@@ -37,12 +37,6 @@ namespace RTC
 
 		// Add score.
 		jsonObject["score"] = this->score;
-
-		// Add totalSourceLoss.
-		jsonObject["totalSourceLoss"] = this->totalSourceLoss;
-
-		// Add totalReportedLoss.
-		jsonObject["totalReportedLoss"] = this->totalReportedLoss;
 	}
 
 	void RtpStream::FillJsonStats(json& jsonObject)
@@ -112,10 +106,6 @@ namespace RTC
 	void RtpStream::ResetScore(uint8_t score, bool notify)
 	{
 		MS_TRACE();
-
-		this->totalSourceLoss   = 0;
-		this->totalReportedLoss = 0;
-		this->totalSentPackets  = 0;
 
 		this->scores.clear();
 
