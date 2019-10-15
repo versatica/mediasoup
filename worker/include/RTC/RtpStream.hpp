@@ -137,7 +137,7 @@ namespace RTC
 		bool started{ false };
 		// Last time since the stream is active.
 		uint64_t activeSinceMs{ 0u };
-	}; // namespace RTC
+	};
 
 	/* Inline instance methods. */
 
