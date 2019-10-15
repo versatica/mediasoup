@@ -325,6 +325,16 @@ namespace RTC
 			return false;
 		}
 
+		if (HasRtx())
+		{
+			if (!this->rtxStream->ReceivePacket(packet))
+			{
+				MS_WARN_TAG(rtx, "RTX packet discarded");
+
+				return false;
+			}
+		}
+
 #if MS_LOG_DEV_LEVEL == 3
 		// Get the RTX packet sequence number for logging purposes.
 		auto rtxSeq = packet->GetSequenceNumber();
@@ -488,6 +498,16 @@ namespace RTC
 		return report;
 	}
 
+	RTC::RTCP::ReceiverReport* RtpStreamRecv::GetRtxRtcpReceiverReport()
+	{
+		MS_TRACE();
+
+		if (HasRtx())
+			return this->rtxStream->GetRtcpReceiverReport();
+
+		return nullptr;
+	}
+
 	void RtpStreamRecv::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
 		MS_TRACE();
@@ -507,6 +527,14 @@ namespace RTC
 
 		// Update the score with the current RR.
 		UpdateScore();
+	}
+
+	void RtpStreamRecv::ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report)
+	{
+		MS_TRACE();
+
+		if (HasRtx())
+			this->rtxStream->ReceiveRtcpSenderReport(report);
 	}
 
 	void RtpStreamRecv::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo)

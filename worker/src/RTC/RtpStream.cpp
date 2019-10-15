@@ -26,6 +26,8 @@ namespace RTC
 	RtpStream::~RtpStream()
 	{
 		MS_TRACE();
+
+		delete this->rtxStream;
 	}
 
 	void RtpStream::FillJson(json& jsonObject) const
@@ -37,6 +39,10 @@ namespace RTC
 
 		// Add score.
 		jsonObject["score"] = this->score;
+
+		// Add rtxStream.
+		if (HasRtx())
+			this->rtxStream->FillJson(jsonObject["rtxStream"]);
 	}
 
 	void RtpStream::FillJsonStats(json& jsonObject)
@@ -62,6 +68,36 @@ namespace RTC
 
 		if (this->params.rtxSsrc)
 			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
+
+		if (HasRtx())
+			this->rtxStream->FillJsonStats(jsonObject["rtxStream"]);
+	}
+
+	void RtpStream::SetRtx(uint8_t payloadType, uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		this->params.rtxPayloadType = payloadType;
+		this->params.rtxSsrc        = ssrc;
+
+		if (HasRtx())
+		{
+			delete this->rtxStream;
+			this->rtxStream = nullptr;
+		}
+
+		// Set RTX stream params.
+		RTC::RtxStream::Params params;
+
+		params.ssrc             = ssrc;
+		params.payloadType      = payloadType;
+		params.mimeType.type    = GetMimeType().type;
+		params.mimeType.subtype = RTC::RtpCodecMimeType::Subtype::RTX;
+		params.clockRate        = GetClockRate();
+		params.rrid             = GetRid();
+		params.cname            = GetCname();
+
+		this->rtxStream = new RTC::RtxStream(params);
 	}
 
 	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)

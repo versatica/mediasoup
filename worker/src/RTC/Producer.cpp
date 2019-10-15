@@ -565,19 +565,31 @@ namespace RTC
 
 		auto it = this->mapSsrcRtpStream.find(report->GetSsrc());
 
-		if (it == this->mapSsrcRtpStream.end())
+		if (it != this->mapSsrcRtpStream.end())
 		{
-			MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
+			auto* rtpStream = it->second;
+			bool first      = rtpStream->GetSenderReportNtpMs() == 0;
+
+			rtpStream->ReceiveRtcpSenderReport(report);
+
+			this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
 
 			return;
 		}
 
-		auto* rtpStream = it->second;
-		bool first      = rtpStream->GetSenderReportNtpMs() == 0;
+		// If not found, check with RTX.
+		auto it2 = this->mapRtxSsrcRtpStream.find(report->GetSsrc());
 
-		rtpStream->ReceiveRtcpSenderReport(report);
+		if (it2 != this->mapSsrcRtpStream.end())
+		{
+			auto* rtpStream = it2->second;
 
-		this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
+			rtpStream->ReceiveRtxRtcpSenderReport(report);
+
+			return;
+		}
+
+		MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
 	}
 
 	void Producer::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo)
@@ -611,6 +623,11 @@ namespace RTC
 			auto* report    = rtpStream->GetRtcpReceiverReport();
 
 			packet->AddReceiverReport(report);
+
+			auto* rtxReport = rtpStream->GetRtxRtcpReceiverReport();
+
+			if (rtxReport)
+				packet->AddReceiverReport(rtxReport);
 		}
 
 		// Add a receiver reference time report if no present in the packet.

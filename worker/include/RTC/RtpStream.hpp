@@ -11,7 +11,7 @@
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RtxStream.hpp"
 #include <json.hpp>
 #include <string>
 #include <vector>
@@ -123,6 +123,8 @@ namespace RTC
 		uint64_t lastSenderReportNtpMs{ 0 }; // NTP timestamp in last Sender Report (in ms).
 		uint32_t lastSenderReporTs{ 0 };     // RTP timestamp in last Sender Report.
 		float rtt{ 0 };
+		// Instance of RtxStream.
+		RTC::RtxStream* rtxStream{ nullptr };
 
 	private:
 		// Score related.
@@ -168,13 +170,7 @@ namespace RTC
 
 	inline bool RtpStream::HasRtx() const
 	{
-		return this->params.rtxSsrc != 0;
-	}
-
-	inline void RtpStream::SetRtx(uint8_t payloadType, uint32_t ssrc)
-	{
-		this->params.rtxPayloadType = payloadType;
-		this->params.rtxSsrc        = ssrc;
+		return this->rtxStream != nullptr;
 	}
 
 	inline uint32_t RtpStream::GetRtxSsrc() const

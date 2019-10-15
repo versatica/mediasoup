@@ -59,6 +59,7 @@
       'src/RTC/RtpStream.cpp',
       'src/RTC/RtpStreamRecv.cpp',
       'src/RTC/RtpStreamSend.cpp',
+      'src/RTC/RtxStream.cpp',
       'src/RTC/SctpAssociation.cpp',
       'src/RTC/SctpListener.cpp',
       'src/RTC/SenderBandwidthEstimator.cpp',
@@ -169,6 +170,7 @@
       'include/RTC/RtpStream.hpp',
       'include/RTC/RtpStreamRecv.hpp',
       'include/RTC/RtpStreamSend.hpp',
+      'include/RTC/RtxStream.hpp',
       'include/RTC/SctpAssociation.hpp',
       'include/RTC/SctpDictionaries.hpp',
       'include/RTC/SctpListener.hpp',
@@ -276,7 +278,7 @@
 
       [ 'OS == "win"', {
         'dependencies': [ 'deps/getopt/getopt.gyp:getopt' ],
-        
+
         # Handle multi files with same name.
         # https://stackoverflow.com/a/22936230/2085408
         # https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.vcprojectengine.vcclcompilertool.objectfile?view=visualstudiosdk-2017#Microsoft_VisualStudio_VCProjectEngine_VCCLCompilerTool_ObjectFile
