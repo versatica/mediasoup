@@ -17,11 +17,14 @@ endif(MSVC) #Temporary workaround
 set(TEST_SOURCES
         ${SELF_TEST_DIR}/TestMain.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/CmdLine.tests.cpp
+        ${SELF_TEST_DIR}/IntrospectiveTests/Details.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/GeneratorsImpl.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/InternalBenchmark.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/PartTracker.tests.cpp
+        ${SELF_TEST_DIR}/IntrospectiveTests/RandomNumberGeneration.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/Tag.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/String.tests.cpp
+        ${SELF_TEST_DIR}/IntrospectiveTests/StringManip.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/Xml.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/ToString.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/Approx.tests.cpp
@@ -148,6 +151,7 @@ set(INTERNAL_HEADERS
         ${HEADER_DIR}/internal/catch_leak_detector.h
         ${HEADER_DIR}/internal/catch_list.h
         ${HEADER_DIR}/internal/catch_matchers.h
+        ${HEADER_DIR}/internal/catch_matchers_exception.hpp
         ${HEADER_DIR}/internal/catch_matchers_floating.h
         ${HEADER_DIR}/internal/catch_matchers_generic.hpp
         ${HEADER_DIR}/internal/catch_matchers_string.h
@@ -190,7 +194,6 @@ set(INTERNAL_HEADERS
         ${HEADER_DIR}/internal/catch_to_string.hpp
         ${HEADER_DIR}/internal/catch_tostring.h
         ${HEADER_DIR}/internal/catch_totals.h
-        ${HEADER_DIR}/internal/catch_type_traits.hpp
         ${HEADER_DIR}/internal/catch_uncaught_exceptions.h
         ${HEADER_DIR}/internal/catch_user_interfaces.h
         ${HEADER_DIR}/internal/catch_version.h
@@ -227,6 +230,7 @@ set(IMPL_SOURCES
         ${HEADER_DIR}/internal/catch_list.cpp
         ${HEADER_DIR}/internal/catch_leak_detector.cpp
         ${HEADER_DIR}/internal/catch_matchers.cpp
+        ${HEADER_DIR}/internal/catch_matchers_exception.cpp
         ${HEADER_DIR}/internal/catch_matchers_floating.cpp
         ${HEADER_DIR}/internal/catch_matchers_generic.cpp
         ${HEADER_DIR}/internal/catch_matchers_string.cpp
@@ -421,6 +425,21 @@ set_tests_properties(RegressionCheck-1670 PROPERTIES PASS_REGULAR_EXPRESSION "Pa
 
 add_test(NAME VersionCheck COMMAND $<TARGET_FILE:SelfTest> -h)
 set_tests_properties(VersionCheck PROPERTIES PASS_REGULAR_EXPRESSION "Catch v${PROJECT_VERSION}")
+
+add_test(NAME LibIdentityTest COMMAND $<TARGET_FILE:SelfTest> --libidentify)
+set_tests_properties(LibIdentityTest PROPERTIES PASS_REGULAR_EXPRESSION "description:    A Catch2 test executable")
+
+add_test(NAME FilenameAsTagsTest COMMAND $<TARGET_FILE:SelfTest> -\# --list-tags)
+set_tests_properties(FilenameAsTagsTest PROPERTIES PASS_REGULAR_EXPRESSION "\\[#Approx.tests\\]")
+
+add_test(NAME EscapeSpecialCharactersInTestNames COMMAND $<TARGET_FILE:SelfTest> "Test with special\\, characters \"in name")
+set_tests_properties(EscapeSpecialCharactersInTestNames PROPERTIES PASS_REGULAR_EXPRESSION "1 assertion in 1 test case")
+
+add_test(NAME SpecialCharactersInTestNamesFromFile COMMAND $<TARGET_FILE:SelfTest> "-f ${CATCH_DIR}/projects/SelfTest/Misc/special-characters-in-file.input")
+set_tests_properties(SpecialCharactersInTestNamesFromFile PROPERTIES PASS_REGULAR_EXPRESSION "1 assertion in 1 test case")
+
+add_test(NAME RunningTestsFromFile COMMAND $<TARGET_FILE:SelfTest> "-f ${CATCH_DIR}/projects/SelfTest/Misc/plain-old-tests.input")
+set_tests_properties(RunningTestsFromFile PROPERTIES PASS_REGULAR_EXPRESSION "6 assertions in 2 test cases")
 
 
 if (CATCH_USE_VALGRIND)

@@ -94,6 +94,7 @@
 // Android somehow still does not support std::to_string
 #if defined(__ANDROID__)
 #    define CATCH_INTERNAL_CONFIG_NO_CPP11_TO_STRING
+#    define CATCH_INTERNAL_CONFIG_ANDROID_LOGWRITE
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +116,7 @@
 // Required for some versions of Cygwin to declare gettimeofday
 // see: http://stackoverflow.com/questions/36901803/gettimeofday-not-declared-in-this-scope-cygwin
 #   define _BSD_SOURCE
-// some versions of cygwin (most) do not support std::to_string. Use the libstd check. 
+// some versions of cygwin (most) do not support std::to_string. Use the libstd check.
 // https://gcc.gnu.org/onlinedocs/gcc-4.8.2/libstdc++/api/a01053_source.html line 2812-2813
 # if !((__cplusplus >= 201103L) && defined(_GLIBCXX_USE_C99) \
            && !defined(_GLIBCXX_HAVE_BROKEN_VSWPRINTF))
@@ -196,49 +197,43 @@
     #define CATCH_CONFIG_COLOUR_NONE
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-// Check if string_view is available and usable
-// The check is split apart to work around v140 (VS2015) preprocessor issue...
-#if defined(__has_include)
-#if __has_include(<string_view>) && defined(CATCH_CPP17_OR_GREATER)
-#    define CATCH_INTERNAL_CONFIG_CPP17_STRING_VIEW
-#endif
+#if defined(__UCLIBC__)
+#define CATCH_INTERNAL_CONFIG_GLOBAL_NEXTAFTER
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-// Check if optional is available and usable
+// Various stdlib support checks that require __has_include
 #if defined(__has_include)
-#  if __has_include(<optional>) && defined(CATCH_CPP17_OR_GREATER)
-#    define CATCH_INTERNAL_CONFIG_CPP17_OPTIONAL
-#  endif // __has_include(<optional>) && defined(CATCH_CPP17_OR_GREATER)
-#endif // __has_include
+  // Check if string_view is available and usable
+  #if __has_include(<string_view>) && defined(CATCH_CPP17_OR_GREATER)
+  #    define CATCH_INTERNAL_CONFIG_CPP17_STRING_VIEW
+  #endif
 
-////////////////////////////////////////////////////////////////////////////////
-// Check if byte is available and usable
-#if defined(__has_include)
-#  if __has_include(<cstddef>) && defined(CATCH_CPP17_OR_GREATER)
-#    define CATCH_INTERNAL_CONFIG_CPP17_BYTE
-#  endif // __has_include(<cstddef>) && defined(CATCH_CPP17_OR_GREATER)
-#endif // __has_include
+  // Check if optional is available and usable
+  #  if __has_include(<optional>) && defined(CATCH_CPP17_OR_GREATER)
+  #    define CATCH_INTERNAL_CONFIG_CPP17_OPTIONAL
+  #  endif // __has_include(<optional>) && defined(CATCH_CPP17_OR_GREATER)
 
-////////////////////////////////////////////////////////////////////////////////
-// Check if variant is available and usable
-#if defined(__has_include)
-#  if __has_include(<variant>) && defined(CATCH_CPP17_OR_GREATER)
-#    if defined(__clang__) && (__clang_major__ < 8)
-       // work around clang bug with libstdc++ https://bugs.llvm.org/show_bug.cgi?id=31852
-       // fix should be in clang 8, workaround in libstdc++ 8.2
-#      include <ciso646>
-#      if defined(__GLIBCXX__) && defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE < 9)
-#        define CATCH_CONFIG_NO_CPP17_VARIANT
-#      else
-#        define CATCH_INTERNAL_CONFIG_CPP17_VARIANT
-#      endif // defined(__GLIBCXX__) && defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE < 9)
-#    else
-#      define CATCH_INTERNAL_CONFIG_CPP17_VARIANT
-#    endif // defined(__clang__) && (__clang_major__ < 8)
-#  endif // __has_include(<variant>) && defined(CATCH_CPP17_OR_GREATER)
-#endif // __has_include
+  // Check if byte is available and usable
+  #  if __has_include(<cstddef>) && defined(CATCH_CPP17_OR_GREATER)
+  #    define CATCH_INTERNAL_CONFIG_CPP17_BYTE
+  #  endif // __has_include(<cstddef>) && defined(CATCH_CPP17_OR_GREATER)
+
+  // Check if variant is available and usable
+  #  if __has_include(<variant>) && defined(CATCH_CPP17_OR_GREATER)
+  #    if defined(__clang__) && (__clang_major__ < 8)
+         // work around clang bug with libstdc++ https://bugs.llvm.org/show_bug.cgi?id=31852
+         // fix should be in clang 8, workaround in libstdc++ 8.2
+  #      include <ciso646>
+  #      if defined(__GLIBCXX__) && defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE < 9)
+  #        define CATCH_CONFIG_NO_CPP17_VARIANT
+  #      else
+  #        define CATCH_INTERNAL_CONFIG_CPP17_VARIANT
+  #      endif // defined(__GLIBCXX__) && defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE < 9)
+  #    else
+  #      define CATCH_INTERNAL_CONFIG_CPP17_VARIANT
+  #    endif // defined(__clang__) && (__clang_major__ < 8)
+  #  endif // __has_include(<variant>) && defined(CATCH_CPP17_OR_GREATER)
+#endif // defined(__has_include)
 
 
 #if defined(CATCH_INTERNAL_CONFIG_COUNTER) && !defined(CATCH_CONFIG_NO_COUNTER) && !defined(CATCH_CONFIG_COUNTER)
@@ -299,6 +294,14 @@
 
 #if defined(CATCH_INTERNAL_CONFIG_USE_ASYNC)  && !defined(CATCH_INTERNAL_CONFIG_NO_ASYNC) && !defined(CATCH_CONFIG_NO_USE_ASYNC) && !defined(CATCH_CONFIG_USE_ASYNC)
 #  define CATCH_CONFIG_USE_ASYNC
+#endif
+
+#if defined(CATCH_INTERNAL_CONFIG_ANDROID_LOGWRITE) && !defined(CATCH_CONFIG_NO_ANDROID_LOGWRITE) && !defined(CATCH_CONFIG_ANDROID_LOGWRITE)
+#  define CATCH_CONFIG_ANDROID_LOGWRITE
+#endif
+
+#if defined(CATCH_INTERNAL_CONFIG_GLOBAL_NEXTAFTER) && !defined(CATCH_CONFIG_NO_GLOBAL_NEXTAFTER) && !defined(CATCH_CONFIG_GLOBAL_NEXTAFTER)
+#  define CATCH_CONFIG_GLOBAL_NEXTAFTER
 #endif
 
 #if !defined(CATCH_INTERNAL_SUPPRESS_PARENTHESES_WARNINGS)

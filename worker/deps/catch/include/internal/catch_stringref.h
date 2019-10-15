@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <string>
 #include <iosfwd>
+#include <cassert>
 
 namespace Catch {
 
@@ -23,6 +24,7 @@ namespace Catch {
     class StringRef {
     public:
         using size_type = std::size_t;
+        using const_iterator = const char*;
 
     private:
         friend struct StringRefTestAccess;
@@ -78,7 +80,9 @@ namespace Catch {
             return *this;
         }
 
-        operator std::string() const;
+        explicit operator std::string() const {
+            return std::string(m_start, m_size);
+        }
 
         void swap( StringRef& other ) noexcept;
 
@@ -86,7 +90,10 @@ namespace Catch {
         auto operator == ( StringRef const& other ) const noexcept -> bool;
         auto operator != ( StringRef const& other ) const noexcept -> bool;
 
-        auto operator[] ( size_type index ) const noexcept -> char;
+        auto operator[] ( size_type index ) const noexcept -> char {
+            assert(index < m_size);
+            return m_start[index];
+        }
 
     public: // named queries
         auto empty() const noexcept -> bool {
@@ -96,7 +103,6 @@ namespace Catch {
             return m_size;
         }
 
-        auto numberOfCharacters() const noexcept -> size_type;
         auto c_str() const -> char const*;
 
     public: // substrings and searches
@@ -106,14 +112,14 @@ namespace Catch {
         // Note that the pointer can change when if the StringRef is a substring
         auto currentData() const noexcept -> char const*;
 
+    public: // iterators
+        const_iterator begin() const { return m_start; }
+        const_iterator end() const { return m_start + m_size; }
+
     private: // ownership queries - may not be consistent between calls
         auto isOwned() const noexcept -> bool;
         auto isSubstring() const noexcept -> bool;
     };
-
-    auto operator + ( StringRef const& lhs, StringRef const& rhs ) -> std::string;
-    auto operator + ( StringRef const& lhs, char const* rhs ) -> std::string;
-    auto operator + ( char const* lhs, StringRef const& rhs ) -> std::string;
 
     auto operator += ( std::string& lhs, StringRef const& sr ) -> std::string&;
     auto operator << ( std::ostream& os, StringRef const& sr ) -> std::ostream&;
