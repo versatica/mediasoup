@@ -116,6 +116,19 @@ namespace RTC
 		}
 
 		// Set mimeType.
-		this->mimeType = type2String[this->type] + "/" + subtype2String[this->subtype];
+		this->mimeType = RtpCodecMimeType::type2String[this->type] + "/" +
+		                 RtpCodecMimeType::subtype2String[this->subtype];
+	}
+
+	void RtpCodecMimeType::UpdateMimeType()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->type != Type::UNSET, "type unset");
+		MS_ASSERT(this->subtype != Subtype::UNSET, "subtype unset");
+
+		// Set mimeType.
+		this->mimeType = RtpCodecMimeType::type2String[this->type] + "/" +
+		                 RtpCodecMimeType::subtype2String[this->subtype];
 	}
 } // namespace RTC
