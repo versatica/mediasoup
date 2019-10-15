@@ -2174,9 +2174,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-			// TODO:
-			MS_ERROR("----------- sending retransmission, seq:%" PRIu16, packet->GetSequenceNumber());
-
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
 

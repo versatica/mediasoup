@@ -1010,17 +1010,6 @@ namespace RTC
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
-			// TODO: remove.
-			MS_WARN_DEV(
-			  "sending packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp(),
-			  origSsrc,
-			  origSeq,
-			  origTimestamp);
-
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 		}

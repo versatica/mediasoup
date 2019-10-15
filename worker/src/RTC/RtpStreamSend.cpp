@@ -6,10 +6,6 @@
 #include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
 
-	// TODO: REMOVE
-	static std::vector<uint16_t> SENT_SEQS;
-	static std::map<uint16_t, size_t> NACKED_SEQS;
-
 namespace RTC
 {
 	/* Static. */
@@ -37,66 +33,6 @@ namespace RTC
 
 		// Clear the RTP buffer.
 		ClearBuffer();
-
-			// TOOD: REMOVE
-			if (this->params.useNack)
-			{
-				MS_DUMP("<SentPackets>");
-				for (auto seq : SENT_SEQS)
-				{
-					MS_DUMP("sent packet: seq:%" PRIu16, seq);
-				}
-				MS_DUMP("</SentPackets>");
-
-				MS_DUMP("");
-
-				MS_DUMP("<NackedPackets>");
-				for (auto& kv : NACKED_SEQS)
-				{
-					auto seq      = kv.first;
-					auto numNacks = kv.second;
-					MS_DUMP("nacked packet: seq:%" PRIu16 ", numNacks:%zu", seq, numNacks);
-				}
-				MS_DUMP("</NackedPackets>");
-
-				MS_DUMP("");
-
-				MS_DUMP("<Results>");
-
-				uint16_t highestSeq{ 0u };
-
-				for (auto seq : SENT_SEQS)
-				{
-					if (seq == highestSeq + 1)
-					{
-						highestSeq = seq;
-					}
-					else if (seq > highestSeq)
-					{
-						for (uint16_t missingSeq = highestSeq + 1; missingSeq < seq; ++missingSeq)
-						{
-							if (std::find(SENT_SEQS.begin(), SENT_SEQS.end(), missingSeq) != SENT_SEQS.end())
-								MS_DUMP("INFO: seq:%" PRIu16 " arrived out of order", missingSeq);
-							else if (NACKED_SEQS.find(missingSeq) != NACKED_SEQS.end())
-								MS_DUMP("INFO: seq:%" PRIu16 " arrived after nacked", missingSeq);
-							else
-								MS_DUMP("WARN: missing seq:%" PRIu16, missingSeq);
-						}
-
-						highestSeq = seq;
-					}
-					else if (seq == highestSeq)
-					{
-						MS_DUMP("WARN: sent seq:%" PRIu16 " equals highest seen seq:%" PRIu16, seq, highestSeq);
-					}
-					else if (seq < highestSeq)
-					{
-						// Ok.
-					}
-				}
-
-				MS_DUMP("</Results>");
-			}
 	}
 
 	void RtpStreamSend::FillJsonStats(json& jsonObject)
@@ -123,23 +59,7 @@ namespace RTC
 
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
-		{
-				// TODO
-				if (this->params.useNack)
-					MS_ERROR("--------------- packet discarded, seq:%" PRIu16, packet->GetSequenceNumber());
-
 			return false;
-		}
-
-			// TOOD: REMOVE
-			if (this->params.useNack)
-			{
-				SENT_SEQS.push_back(packet->GetSequenceNumber());
-
-				// TODO: REMOVE
-				if (NACKED_SEQS.find(packet->GetSequenceNumber()) != NACKED_SEQS.end())
-					MS_ERROR("---- sending NACKed packet, seq:%" PRIu16, packet->GetSequenceNumber());
-			}
 
 		// If bufferSize was given, store the packet into the buffer.
 		if (!this->storage.empty())
@@ -161,9 +81,6 @@ namespace RTC
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
-				// TODO
-				MS_ERROR("item->GetPacketId(): %" PRIu16, item->GetPacketId());
-
 			this->nackPacketCount += item->CountRequestedPackets();
 
 			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
@@ -176,22 +93,6 @@ namespace RTC
 				// Note that this is an already RTX encoded packet if RTX is used
 				// (FillRetransmissionContainer() did it).
 				auto* packet = storageItem->packet;
-
-					// TODO: REMOVE
-					// NOTE: This just works without RTX, so disable it in lib/ortc.js line 103.
-					// Do not send the packet until nacked more than once.
-					// if (NACKED_SEQS.find(packet->GetSequenceNumber()) != NACKED_SEQS.end())
-					// {
-					// 	MS_ERROR("2---------- seq:%" PRIu16 ", numNacks:%zu", packet->GetSequenceNumber(), NACKED_SEQS[packet->GetSequenceNumber()]);
-
-					// 	if (NACKED_SEQS[packet->GetSequenceNumber()] < 4)
-					// 	{
-					// 		MS_ERROR(
-					// 			"-------------- not retransmitting seq:%" PRIu16 " on purpose", packet->GetSequenceNumber());
-
-					// 		continue;
-					// 	}
-					// }
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
@@ -213,9 +114,6 @@ namespace RTC
 	void RtpStreamSend::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
 	{
 		MS_TRACE();
-
-		// TODO
-		MS_ERROR("<<<< Consumer requests keyframe -------------------------------------------------- PLI !!!");
 
 		switch (messageType)
 		{
@@ -535,16 +433,6 @@ namespace RTC
 
 			if (requested)
 			{
-					// TODO: REMOVE
-					{
-						if (NACKED_SEQS.find(currentSeq) == NACKED_SEQS.end())
-							NACKED_SEQS[currentSeq] = 1;
-						else
-							NACKED_SEQS[currentSeq] = NACKED_SEQS[currentSeq] + 1;
-					}
-
-					MS_ERROR("1---------- seq:%" PRIu16 ", numNacks:%zu", currentSeq, NACKED_SEQS[currentSeq]);
-
 				auto* storageItem = this->buffer[currentSeq];
 				RTC::RtpPacket* packet{ nullptr };
 				uint32_t diffMs;
