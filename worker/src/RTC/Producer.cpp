@@ -1093,7 +1093,7 @@ namespace RTC
 					extenLen = 2u;
 
 					// NOTE: Add value 0. The sending Transport will update it.
-					uint16_t wideSeqNumber = 0u;
+					uint16_t wideSeqNumber{ 0u };
 
 					Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
 

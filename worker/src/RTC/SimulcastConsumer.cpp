@@ -959,30 +959,6 @@ namespace RTC
 				this->tsOffset = newTs2 - ts1;
 			}
 
-			// Reset tsExtraOffsets and tsExtraOffetPacketCount.
-			this->tsExtraOffsets.clear();
-			this->tsExtraOffetPacketCount = 0u;
-
-			// When switching to a new stream it may happen that the timestamp of this
-			// keyframe is lower than the last sent. If so, apply an extra offset to
-			// "fix" it gradually.
-			if (packet->GetTimestamp() - this->tsOffset <= this->rtpStream->GetMaxPacketTs())
-			{
-				auto tsExtraOffset =
-				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + this->tsOffset + 1;
-
-				this->tsExtraOffsets[packet->GetTimestamp()] = tsExtraOffset;
-
-				MS_WARN_TAG(
-				  simulcast,
-				  "ts extra offset needed [ts in:%" PRIu32 ", ts out:%" PRIu32 ", ts max out:%" PRIu32
-				  ", ts offset:%" PRIu32 "]",
-				  packet->GetTimestamp(),
-				  packet->GetTimestamp() - this->tsOffset,
-				  this->rtpStream->GetMaxPacketTs(),
-				  this->tsOffset);
-			}
-
 			this->encodingContext->SyncRequired();
 
 			this->syncRequired = false;
@@ -1004,52 +980,6 @@ namespace RTC
 		// Update RTP seq number and timestamp based on NTP offset.
 		uint16_t seq;
 		uint32_t timestamp = packet->GetTimestamp() - this->tsOffset;
-
-		if (!this->tsExtraOffsets.empty())
-		{
-			uint32_t tsExtraOffset{ 0u };
-			auto it = this->tsExtraOffsets.find(packet->GetTimestamp());
-
-			if (it != this->tsExtraOffsets.end())
-			{
-				tsExtraOffset = it->second;
-
-				MS_DEBUG_DEV(
-				  "ts extra offset mapping found [ts in:%" PRIu32 ", ts out:%" PRIu32
-				  ", ts extra offset:%" PRIu32 "]",
-				  packet->GetTimestamp(),
-				  timestamp,
-				  tsExtraOffset);
-			}
-			else if (timestamp < this->rtpStream->GetMaxPacketTs())
-			{
-				tsExtraOffset = this->rtpStream->GetMaxPacketTs() - timestamp + 1;
-				this->tsExtraOffsets[packet->GetTimestamp()] = tsExtraOffset;
-
-				MS_DEBUG_DEV(
-				  "ts extra offset generated [ts in:%" PRIu32 ", ts out:%" PRIu32
-				  ", ts extra offset:%" PRIu32 "]",
-				  packet->GetTimestamp(),
-				  timestamp,
-				  tsExtraOffset);
-			}
-
-			timestamp += tsExtraOffset;
-
-			// Reset if more than N packets.
-			// clang-format off
-			if (
-				(tsExtraOffset && ++this->tsExtraOffetPacketCount > 200u) ||
-				this->tsExtraOffetPacketCount > 500u
-			)
-			// clang-format on
-			{
-				MS_DEBUG_DEV("cleaning ts extra map");
-
-				this->tsExtraOffsets.clear();
-				this->tsExtraOffetPacketCount = 0u;
-			}
-		}
 
 		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
