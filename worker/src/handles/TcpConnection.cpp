@@ -186,7 +186,11 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 	MS_TRACE();
 
 	if (this->closed)
+	{
+		onDone(false);
+
 		return;
+	}
 
 	if (len == 0)
 	{
@@ -472,11 +476,7 @@ inline void TcpConnection::OnUvWrite(int status, onSendHandler& onDone)
 	MS_TRACE();
 
 	if (this->closed)
-	{
-		onDone(false);
-
 		return;
-	}
 
 	if (status == 0)
 	{
