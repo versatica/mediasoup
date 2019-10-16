@@ -36,7 +36,6 @@ namespace RTC
 		virtual ~RtxStream();
 
 		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonObject);
 		uint32_t GetSsrc() const;
 		uint8_t GetPayloadType() const;
 		const RTC::RtpCodecMimeType& GetMimeType() const;

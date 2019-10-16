@@ -36,21 +36,6 @@ namespace RTC
 		this->params.FillJson(jsonObject["params"]);
 	}
 
-	void RtxStream::FillJsonStats(json& jsonObject)
-	{
-		MS_TRACE();
-
-		jsonObject["ssrc"]             = this->params.ssrc;
-		jsonObject["kind"]             = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		jsonObject["mimeType"]         = this->params.mimeType.ToString();
-		jsonObject["packetsLost"]      = this->packetsLost;
-		jsonObject["fractionLost"]     = this->fractionLost;
-		jsonObject["packetsDiscarded"] = this->packetsDiscarded;
-
-		if (!this->params.rrid.empty())
-			jsonObject["rrid"] = this->params.rrid;
-	}
-
 	bool RtxStream::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

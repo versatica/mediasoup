@@ -68,9 +68,6 @@ namespace RTC
 
 		if (this->params.rtxSsrc)
 			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
-
-		if (HasRtx())
-			this->rtxStream->FillJsonStats(jsonObject["rtxStream"]);
 	}
 
 	void RtpStream::SetRtx(uint8_t payloadType, uint32_t ssrc)
