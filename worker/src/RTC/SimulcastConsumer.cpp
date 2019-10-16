@@ -974,8 +974,8 @@ namespace RTC
 				else if (tsExtraOffset > maxTsExtraOffset)
 				{
 					MS_WARN_TAG(
-					  rtp,
-					  "cannot switch stream due to too high timestamp extra offset needed (%" PRIu32
+					  simulcast,
+					  "cannot switch stream due to too high RTP timestamp extra offset needed (%" PRIu32
 					  "), requesting keyframe",
 					  tsExtraOffset);
 
@@ -993,7 +993,7 @@ namespace RTC
 
 				if (tsExtraOffset > 0u)
 				{
-					MS_DEBUG_DEV("ts extra offset generated (%" PRIu32 ")", tsExtraOffset);
+					MS_WARN_TAG(simulcast, "RTP timestamp extra offset generated: %" PRIu32, tsExtraOffset);
 
 					// Increase the timestamp offset for the whole life of this Producer stream
 					// (until switched to a different one).
