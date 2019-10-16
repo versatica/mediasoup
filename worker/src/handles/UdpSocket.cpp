@@ -129,11 +129,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	MS_TRACE();
 
 	if (this->closed)
-	{
-		onDone(false);
-
 		return;
-	}
 
 	if (len == 0)
 	{
