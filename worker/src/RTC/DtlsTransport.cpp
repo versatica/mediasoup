@@ -934,8 +934,8 @@ namespace RTC
 		// Stop the DTLS timer.
 		this->timer->Stop();
 
-		// We need to reset the SSL instance so we need to "shutdown" it, but we don't
-		// want to send a Close Alert to the peer, so just don't call to
+		// We need to reset the SSL instance so we need to "shutdown" it, but we
+		// don't want to send a Close Alert to the peer, so just don't call
 		// SendPendingOutgoingDTLSData().
 		SSL_shutdown(this->ssl);
 

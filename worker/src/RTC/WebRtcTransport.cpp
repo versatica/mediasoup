@@ -258,6 +258,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
+
 		// Call the parent method.
 		RTC::Transport::FillJson(jsonObject);
 
@@ -369,6 +372,9 @@ namespace RTC
 	void WebRtcTransport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		// Call the parent method.
 		RTC::Transport::FillJsonStats(jsonArray);
@@ -594,6 +600,11 @@ namespace RTC
 
 	inline bool WebRtcTransport::IsConnected() const
 	{
+		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
+
 		// clang-format off
 		return (
 			(
@@ -608,6 +619,9 @@ namespace RTC
 	void WebRtcTransport::MayRunDtlsTransport()
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		// Do nothing if we have the same local DTLS role as the DTLS transport.
 		// NOTE: local role in DTLS transport can be NONE, but not ours.
@@ -799,6 +813,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
+
 		// Increase receive transmission.
 		RTC::Transport::DataReceived(len);
 
@@ -833,6 +850,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->iceServer, "no iceServer");
+
 		RTC::StunPacket* packet = RTC::StunPacket::Parse(data, len);
 
 		if (!packet)
@@ -852,6 +871,9 @@ namespace RTC
 	  const RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		// Ensure it comes from a valid tuple.
 		if (!this->iceServer->IsValidTuple(tuple))
@@ -885,6 +907,9 @@ namespace RTC
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
@@ -954,6 +979,9 @@ namespace RTC
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
@@ -1043,6 +1071,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->iceServer, "no iceServer");
+
 		/*
 		 * RFC 5245 section 11.2 "Receiving Media":
 		 *
@@ -1063,6 +1093,8 @@ namespace RTC
 	inline void WebRtcTransport::OnIceServerConnected(const RTC::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
 
 		MS_DEBUG_TAG(ice, "ICE connected");
 
@@ -1085,6 +1117,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->iceServer, "no iceServer");
+
 		MS_DEBUG_TAG(ice, "ICE completed");
 
 		// Notify the Node WebRtcTransport.
@@ -1106,6 +1140,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->iceServer, "no iceServer");
+
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
 		// Notify the Node WebRtcTransport.
@@ -1123,6 +1159,9 @@ namespace RTC
 	inline void WebRtcTransport::OnDtlsTransportConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
@@ -1144,6 +1183,9 @@ namespace RTC
 	  std::string& remoteCert)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		MS_DEBUG_TAG(dtls, "DTLS connected");
 
@@ -1198,6 +1240,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
+
 		MS_WARN_TAG(dtls, "DTLS failed");
 
 		// Notify the Node WebRtcTransport.
@@ -1211,6 +1256,9 @@ namespace RTC
 	inline void WebRtcTransport::OnDtlsTransportClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		MS_WARN_TAG(dtls, "DTLS remotely closed");
 
@@ -1230,6 +1278,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+
 		if (!this->iceServer->GetSelectedTuple())
 		{
 			MS_WARN_TAG(dtls, "no selected tuple set, cannot send DTLS packet");
@@ -1247,6 +1300,9 @@ namespace RTC
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->iceServer, "no iceServer");
+		MS_ASSERT(this->dtlsTransport, "no dtlsTransport");
 
 		// Pass it to the parent transport.
 		RTC::Transport::ReceiveSctpData(data, len);
