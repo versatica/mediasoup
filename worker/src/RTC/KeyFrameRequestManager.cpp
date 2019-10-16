@@ -140,5 +140,7 @@ inline void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFram
 	pendingKeyFrameInfo->SetRetryOnTimeout(false);
 	pendingKeyFrameInfo->Restart();
 
+	MS_DEBUG_DEV("requesting key frame on timeout");
+
 	this->listener->OnKeyFrameNeeded(this, pendingKeyFrameInfo->GetSsrc());
 }

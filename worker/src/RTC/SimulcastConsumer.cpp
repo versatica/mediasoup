@@ -869,6 +869,7 @@ namespace RTC
 		}
 
 		auto spatialLayer = this->mapMappedSsrcSpatialLayer.at(packet->GetSsrc());
+		bool shouldSwitchCurrentSpatialLayer{ false };
 
 		// Check whether this is the packet we are waiting for in order to update
 		// the current spatial layer.
@@ -878,6 +879,141 @@ namespace RTC
 			if (!packet->IsKeyFrame())
 				return;
 
+			shouldSwitchCurrentSpatialLayer = true;
+
+			// Need to resync the stream.
+			this->syncRequired = true;
+		}
+		// If the packet belongs to different spatial layer than the one being sent,
+		// drop it.
+		else if (spatialLayer != this->currentSpatialLayer)
+		{
+			return;
+		}
+
+		// If we need to sync and this is not a key frame, ignore the packet.
+		if (this->syncRequired && !packet->IsKeyFrame())
+			return;
+
+		// Whether this is the first packet after re-sync.
+		bool isSyncPacket = this->syncRequired;
+
+		// Sync sequence number and timestamp if required.
+		if (isSyncPacket)
+		{
+			if (packet->IsKeyFrame())
+				MS_DEBUG_TAG(rtp, "sync key frame received");
+
+			uint32_t tsOffset{ 0u };
+
+			// Sync our RTP stream's RTP timestamp.
+			if (spatialLayer == this->tsReferenceSpatialLayer)
+			{
+				tsOffset = 0u;
+			}
+			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
+			else
+			{
+				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+				auto* producerTargetRtpStream      = GetProducerTargetRtpStream();
+
+				// NOTE: If we are here is because we have Sender Reports for both the
+				// TS reference stream and the target one.
+				MS_ASSERT(
+				  producerTsReferenceRtpStream->GetSenderReportNtpMs(),
+				  "no Sender Report for TS reference RTP stream");
+				MS_ASSERT(
+				  producerTargetRtpStream->GetSenderReportNtpMs(), "no Sender Report for current RTP stream");
+
+				// Calculate NTP and TS stuff.
+				auto ntpMs1 = producerTsReferenceRtpStream->GetSenderReportNtpMs();
+				auto ts1    = producerTsReferenceRtpStream->GetSenderReportTs();
+				auto ntpMs2 = producerTargetRtpStream->GetSenderReportNtpMs();
+				auto ts2    = producerTargetRtpStream->GetSenderReportTs();
+				int64_t diffMs;
+
+				if (ntpMs2 >= ntpMs1)
+					diffMs = ntpMs2 - ntpMs1;
+				else
+					diffMs = -1 * (ntpMs1 - ntpMs2);
+
+				int64_t diffTs  = diffMs * this->rtpStream->GetClockRate() / 1000;
+				uint32_t newTs2 = ts2 - diffTs;
+
+				// Apply offset. This is the difference that later must be removed from the
+				// sending RTP packet.
+				tsOffset = newTs2 - ts1;
+			}
+
+			// When switching to a new stream it may happen that the timestamp of this
+			// key frame is lower than the highest timestamp sent to the remote endpoint.
+			// If so, apply an extra offset to "fix" it for the whole live of this selected
+			// Producer stream.
+			//
+			// clang-format off
+			if (
+				shouldSwitchCurrentSpatialLayer &&
+				(packet->GetTimestamp() - tsOffset <= this->rtpStream->GetMaxPacketTs())
+			)
+			// clang-format on
+			{
+				// Max delay in ms we allow for the stream when switching.
+				// https://en.wikipedia.org/wiki/Audio-to-video_synchronization#Recommendations
+				static uint32_t MaxExtraOffsetMs = 50u;
+
+				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
+				uint32_t tsExtraOffset =
+				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + tsOffset;
+
+				// NOTE: Don't ask for a key frame if already done.
+				if (this->keyFrameForTsOffsetRequested)
+				{
+					// Give up and use the theoretical offset.
+					tsExtraOffset = 0u;
+				}
+				else if (tsExtraOffset > maxTsExtraOffset)
+				{
+					MS_WARN_TAG(
+					  rtp,
+					  "cannot switch stream due to too high timestamp extra offset needed (%" PRIu32
+					  "), requesting keyframe",
+					  tsExtraOffset);
+
+					RequestKeyFrameForTargetSpatialLayer();
+					this->keyFrameForTsOffsetRequested = true;
+
+					return;
+				}
+				// It's common that, when switching spatial layer, the resulting TS for the
+				// outgoing packet matches the highest seen in the previous stream. Fix it.
+				else if (tsExtraOffset == 0u)
+				{
+					tsExtraOffset = 1u;
+				}
+
+				if (tsExtraOffset > 0u)
+				{
+					MS_DEBUG_DEV("ts extra offset generated (%" PRIu32 ")", tsExtraOffset);
+
+					// Increase the timestamp offset for the whole life of this Producer stream
+					// (until switched to a different one).
+					tsOffset -= tsExtraOffset;
+				}
+			}
+
+			this->tsOffset = tsOffset;
+
+			// Sync our RTP stream's sequence number.
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+
+			this->encodingContext->SyncRequired();
+
+			this->syncRequired                 = false;
+			this->keyFrameForTsOffsetRequested = false;
+		}
+
+		if (shouldSwitchCurrentSpatialLayer)
+		{
 			// Update current spatial layer.
 			this->currentSpatialLayer = this->targetSpatialLayer;
 
@@ -894,88 +1030,24 @@ namespace RTC
 			// Emit the score event.
 			EmitScore();
 
-			// Need to resync the stream.
-			this->syncRequired = true;
+			// Rewrite payload if needed.
+			packet->ProcessPayload(this->encodingContext.get());
 		}
-
-		// If the packet belongs to different spatial layer than the one being sent,
-		// drop it.
-		if (spatialLayer != this->currentSpatialLayer)
-			return;
-
-		// If we need to sync and this is not a key frame, ignore the packet.
-		if (this->syncRequired && !packet->IsKeyFrame())
-			return;
-
-		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = this->syncRequired;
-
-		// Sync sequence number and timestamp if required.
-		if (isSyncPacket)
+		else
 		{
-			if (packet->IsKeyFrame())
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+			auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
-			// Sync our RTP stream's sequence number.
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
-
-			// Sync our RTP stream's RTP timestamp.
-			if (spatialLayer == this->tsReferenceSpatialLayer)
+			// Rewrite payload if needed. Drop packet if necessary.
+			if (!packet->ProcessPayload(this->encodingContext.get()))
 			{
-				this->tsOffset = 0u;
-			}
-			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
-			else
-			{
-				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
-				auto* producerCurrentRtpStream     = GetProducerCurrentRtpStream();
+				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
-				// NOTE: If we are here is because we have Sender Reports for both the
-				// TS reference stream and the target one.
-				MS_ASSERT(
-				  producerTsReferenceRtpStream->GetSenderReportNtpMs(),
-				  "no Sender Report for TS reference RTP stream");
-				MS_ASSERT(
-				  producerCurrentRtpStream->GetSenderReportNtpMs(),
-				  "no Sender Report for current RTP stream");
-
-				// Calculate NTP and TS stuff.
-				auto ntpMs1 = producerTsReferenceRtpStream->GetSenderReportNtpMs();
-				auto ts1    = producerTsReferenceRtpStream->GetSenderReportTs();
-				auto ntpMs2 = producerCurrentRtpStream->GetSenderReportNtpMs();
-				auto ts2    = producerCurrentRtpStream->GetSenderReportTs();
-				int64_t diffMs;
-
-				if (ntpMs2 >= ntpMs1)
-					diffMs = ntpMs2 - ntpMs1;
-				else
-					diffMs = -1 * (ntpMs1 - ntpMs2);
-
-				int64_t diffTs  = diffMs * this->rtpStream->GetClockRate() / 1000;
-				uint32_t newTs2 = ts2 - diffTs;
-
-				// Apply offset. This is the difference that later must be removed from the
-				// sending RTP packet.
-				this->tsOffset = newTs2 - ts1;
+				return;
 			}
 
-			this->encodingContext->SyncRequired();
-
-			this->syncRequired = false;
+			if (previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer())
+				EmitLayersChange();
 		}
-
-		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
-
-		// Rewrite payload if needed. Drop packet if necessary.
-		if (!packet->ProcessPayload(this->encodingContext.get()))
-		{
-			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
-
-			return;
-		}
-
-		if (previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer())
-			EmitLayersChange();
 
 		// Update RTP seq number and timestamp based on NTP offset.
 		uint16_t seq;
@@ -1125,7 +1197,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->syncRequired = true;
+		this->syncRequired                 = true;
+		this->keyFrameForTsOffsetRequested = false;
 
 		if (IsActive())
 			MayChangeLayers();
@@ -1160,7 +1233,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->syncRequired = true;
+		this->syncRequired                 = true;
+		this->keyFrameForTsOffsetRequested = false;
 
 		if (IsActive())
 			MayChangeLayers();
