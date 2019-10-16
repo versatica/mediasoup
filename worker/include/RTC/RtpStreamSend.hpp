@@ -1,7 +1,6 @@
 #ifndef MS_RTC_RTP_STREAM_SEND_HPP
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
-#include "Utils.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
 #include <vector>
@@ -73,13 +72,6 @@ namespace RTC
 	};
 
 	/* Inline instance methods */
-
-	inline void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
-	{
-		RTC::RtpStream::SetRtx(payloadType, ssrc);
-
-		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
-	}
 
 	inline uint32_t RtpStreamSend::GetBitrate(uint64_t nowMs)
 	{

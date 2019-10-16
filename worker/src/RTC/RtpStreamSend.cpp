@@ -53,6 +53,15 @@ namespace RTC
 			jsonObject["roundTripTime"] = this->rtt;
 	}
 
+	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		RTC::RtpStream::SetRtx(payloadType, ssrc);
+
+		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
+	}
+
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
