@@ -336,13 +336,13 @@ void GoogCcNetworkController::ClampConstraints() {
     min_data_rate_ = std::max(min_data_rate_, min_total_allocated_bitrate_);
   if (max_data_rate_ < min_data_rate_) {
     MS_ERROR(
-      "max bitrate smaller than min bitrate [max_data_rate_:%lld, min_data_rate_:%lld]",
+      "max bitrate smaller than min bitrate [max_data_rate_:%" PRIi64 ", min_data_rate_:%" PRIi64 "]",
       max_data_rate_.bps(), min_data_rate_.bps());
     max_data_rate_ = min_data_rate_;
   }
   if (starting_rate_ && starting_rate_ < min_data_rate_) {
     MS_ERROR(
-      "start bitrate smaller than min bitrate [starting_rate_:%lld, min_data_rate_:%lld]",
+      "start bitrate smaller than min bitrate [starting_rate_:%" PRIi64 ", min_data_rate_:%" PRIi64 "]",
       starting_rate_->bps(), min_data_rate_.bps());
     starting_rate_ = min_data_rate_;
   }
@@ -357,7 +357,7 @@ std::vector<ProbeClusterConfig> GoogCcNetworkController::ResetConstraints(
   ClampConstraints();
 
   MS_DEBUG_DEV(
-    "calling bandwidth_estimation_->SetBitrates() [max_data_rate_.bps_or(-1):%lld]",
+    "calling bandwidth_estimation_->SetBitrates() [max_data_rate_.bps_or(-1):%" PRIi64 "]",
     max_data_rate_.bps_or(-1));
 
   bandwidth_estimation_->SetBitrates(starting_rate_, min_data_rate_,
