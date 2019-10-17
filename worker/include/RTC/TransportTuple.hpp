@@ -31,6 +31,7 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
+		void Dump() const;
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
 		void SetLocalAnnouncedIp(std::string& localAnnouncedIp);

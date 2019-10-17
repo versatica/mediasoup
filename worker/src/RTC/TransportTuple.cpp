@@ -49,4 +49,38 @@ namespace RTC
 				break;
 		}
 	}
+
+	void TransportTuple::Dump() const
+	{
+		MS_TRACE();
+
+		MS_DUMP("<TransportTuple>");
+
+		int family;
+		std::string ip;
+		uint16_t port;
+
+		Utils::IP::GetAddressInfo(GetLocalAddress(), family, ip, port);
+
+		MS_DUMP("  localIp    : %s", ip.c_str());
+		MS_DUMP("  localPort  : %" PRIu16, port);
+
+		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, ip, port);
+
+		MS_DUMP("  remoteIp   : %s", ip.c_str());
+		MS_DUMP("  remotePort : %" PRIu16, port);
+
+		switch (GetProtocol())
+		{
+			case Protocol::UDP:
+				MS_DUMP("  protocol   : udp");
+				break;
+
+			case Protocol::TCP:
+				MS_DUMP("  protocol   : tcp");
+				break;
+		}
+
+		MS_DUMP("</TransportTuple>");
+	}
 } // namespace RTC
