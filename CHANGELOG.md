@@ -1,6 +1,10 @@
 # Changelog
 
 
+### 2.6.16
+
+* Don't mandate server port range to be >= 99.
+
 ### 2.6.15
 
 * Fix NACK retransmissions.
