@@ -238,6 +238,8 @@ namespace RTC
 
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
 	{
+		MS_TRACE();
+
 		RTC::TransportTuple* removedTuple{ nullptr };
 
 		// Find the removed tuple.
@@ -262,7 +264,7 @@ namespace RTC
 		// Remove from the list of tuples.
 		this->tuples.erase(it);
 
-		// If this is not the selected tuple just remove it.
+		// If this is not the selected tuple, stop here.
 		if (removedTuple != this->selectedTuple)
 			return;
 
