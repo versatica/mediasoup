@@ -561,8 +561,8 @@ void Settings::SetRtcPorts()
 	if (maxPort % 2 == 0)
 		maxPort--;
 
-	if ((maxPort - minPort) < 99)
-		MS_THROW_ERROR("rtcMaxPort must be at least 99 ports higher than rtcMinPort");
+	if (maxPort <= minPort)
+		MS_THROW_ERROR("rtcMaxPort must be higher than rtcMinPort");
 
 	Settings::configuration.rtcMinPort = minPort;
 	Settings::configuration.rtcMaxPort = maxPort;

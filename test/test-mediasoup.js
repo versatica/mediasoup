@@ -57,10 +57,10 @@ tap.test(
 	});
 
 tap.test(
-	'mediasoup.Server() with too narrow RTC ports range must fail',
+	'mediasoup.Server() with wrong port range must fail',
 	{ timeout: 2000 }, (t) =>
 	{
-		const server = mediasoup.Server({ rtcMinPort: 2000, rtcMaxPort: 2050 });
+		const server = mediasoup.Server({ rtcMinPort: 2000, rtcMaxPort: 1800 });
 
 		server.on('close', () => t.end());
 	});
