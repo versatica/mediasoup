@@ -73,7 +73,7 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 * José Luis Millán [[github](https://github.com/jmillan/)]
 
 
-## Sponsors
+## Donate
 
 You can support mediasoup by becoming a [sponsor][donate] or making a [donation][donate]. Thanks!
 
