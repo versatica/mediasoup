@@ -993,7 +993,10 @@ namespace RTC
 
 				if (tsExtraOffset > 0u)
 				{
-					MS_WARN_TAG(simulcast, "RTP timestamp extra offset generated: %" PRIu32, tsExtraOffset);
+					MS_DEBUG_TAG(
+					  simulcast,
+					  "RTP timestamp extra offset generated for stream switching: %" PRIu32,
+					  tsExtraOffset);
 
 					// Increase the timestamp offset for the whole life of this Producer stream
 					// (until switched to a different one).
