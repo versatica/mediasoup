@@ -959,7 +959,7 @@ namespace RTC
 			{
 				// Max delay in ms we allow for the stream when switching.
 				// https://en.wikipedia.org/wiki/Audio-to-video_synchronization#Recommendations
-				static uint32_t MaxExtraOffsetMs = 50u;
+				static const uint32_t MaxExtraOffsetMs{ 50u };
 
 				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
 				uint32_t tsExtraOffset =

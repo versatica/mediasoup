@@ -148,7 +148,7 @@ namespace Channel
 		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage)
+	void UnixStreamSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, json& jsonMessage)
 	{
 		try
 		{
@@ -177,7 +177,7 @@ namespace Channel
 		}
 	}
 
-	void UnixStreamSocket::OnConsumerSocketClosed(ConsumerSocket* consumerSocket)
+	void UnixStreamSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
 	{
 		this->listener->OnChannelClosed(this);
 	}
