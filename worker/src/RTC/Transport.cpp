@@ -2160,10 +2160,25 @@ namespace RTC
 				}
 			});
 #else
-			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+			// SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+			// 	if (sent)
+			// 		tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+			// });
+
+			// THIS CRASHES ALWAYS
+			const onSendHandler onDone = [tccClient, &packetInfo](bool sent) {
+				MS_ERROR(
+					"---- onDone [wideSeq:%" PRIu16 ", sent:%s]",
+					packetInfo.transport_sequence_number, sent ? "true" : "false");
+
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
-			});
+			};
+
+			// TODO: REMOVE
+			MS_ERROR("---- onDone addr:%p", &onDone);
+
+			SendRtpPacket(packet, onDone);
 #endif
 		}
 		else
