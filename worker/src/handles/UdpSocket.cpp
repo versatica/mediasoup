@@ -128,6 +128,9 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 {
 	MS_TRACE();
 
+		// TODO: REMOVE
+		MS_ERROR("---- onDone addr:%p", &onDone);
+
 	if (this->closed)
 	{
 		onDone(false);
@@ -146,40 +149,40 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	// then build a uv_req_t and use uv_udp_send().
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
-	int sent        = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
+	// int sent        = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
 
-	// Entire datagram was sent. Done.
-	if (sent == static_cast<int>(len))
-	{
-		// Update sent bytes.
-		this->sentBytes += sent;
+	// // Entire datagram was sent. Done.
+	// if (sent == static_cast<int>(len))
+	// {
+	// 	// Update sent bytes.
+	// 	this->sentBytes += sent;
 
-		onDone(true);
+	// 	onDone(true);
 
-		return;
-	}
-	if (sent >= 0)
-	{
-		MS_WARN_DEV("datagram truncated (just %d of %zu bytes were sent)", sent, len);
+	// 	return;
+	// }
+	// if (sent >= 0)
+	// {
+	// 	MS_WARN_DEV("datagram truncated (just %d of %zu bytes were sent)", sent, len);
 
-		// Update sent bytes.
-		this->sentBytes += sent;
+	// 	// Update sent bytes.
+	// 	this->sentBytes += sent;
 
-		onDone(false);
+	// 	onDone(false);
 
-		return;
-	}
-	// Error,
-	if (sent != UV_EAGAIN)
-	{
-		MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
+	// 	return;
+	// }
+	// // Error,
+	// if (sent != UV_EAGAIN)
+	// {
+	// 	MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
 
-		onDone(false);
+	// 	onDone(false);
 
-		return;
-	}
+	// 	return;
+	// }
+
 	// Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
-
 	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
 
 	// Allocate a special UvSendData struct pointer.

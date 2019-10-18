@@ -25,6 +25,10 @@
 
 namespace RTC
 {
+	/* Class variables. */
+
+	Transport::onSendHandler Transport::defaultOnSendHandler{ [](bool) {} };
+
 	/* Instance methods. */
 
 	Transport::Transport(const std::string& id, Listener* listener, json& data)
@@ -2461,6 +2465,9 @@ namespace RTC
 	  const webrtc::PacedPacketInfo& pacingInfo)
 	{
 		MS_TRACE();
+
+			// TODO: REMOVE
+			return;
 
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
