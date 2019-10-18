@@ -2166,7 +2166,7 @@ namespace RTC
 			// });
 
 			// THIS CRASHES ALWAYS
-			const onSendHandler onDone = [tccClient, &packetInfo](bool sent) {
+			onSendHandler onDone = [tccClient, &packetInfo](bool sent) {
 				MS_ERROR(
 					"---- onDone [wideSeq:%" PRIu16 ", sent:%s]",
 					packetInfo.transport_sequence_number, sent ? "true" : "false");
