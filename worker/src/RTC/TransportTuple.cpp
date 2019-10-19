@@ -8,10 +8,6 @@
 
 namespace RTC
 {
-	/* Class variables. */
-
-	TransportTuple::onSendHandler TransportTuple::defaultOnSendHandler{ [](bool) {} };
-
 	/* Instance methods. */
 
 	void TransportTuple::FillJson(json& jsonObject) const

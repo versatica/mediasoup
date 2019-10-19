@@ -25,10 +25,6 @@
 
 namespace RTC
 {
-	/* Class variables. */
-
-	Transport::onSendHandler Transport::defaultOnSendHandler{ [](bool) {} };
-
 	/* Instance methods. */
 
 	Transport::Transport(const std::string& id, Listener* listener, json& data)
@@ -2149,7 +2145,7 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
@@ -2159,24 +2155,13 @@ namespace RTC
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+
+			SendRtpPacket(packet, onDone);
 #else
-			// SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
-			// 	if (sent)
-			// 		tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
-			// });
-
-			// THIS CRASHES ALWAYS
-			onSendHandler onDone = [tccClient, &packetInfo](bool sent) {
-				MS_ERROR(
-					"---- onDone [wideSeq:%" PRIu16 ", sent:%s]",
-					packetInfo.transport_sequence_number, sent ? "true" : "false");
-
+			auto* onDone = new onSendHandler([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
-			};
-
-			// TODO: REMOVE
-			MS_ERROR("---- onDone addr:%p", &onDone);
+			});
 
 			SendRtpPacket(packet, onDone);
 #endif
@@ -2223,7 +2208,7 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
@@ -2233,11 +2218,15 @@ namespace RTC
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+
+			SendRtpPacket(packet, onDone);
 #else
-			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 			});
+
+			SendRtpPacket(packet, onDone);
 #endif
 		}
 		else
@@ -2481,9 +2470,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-			// TODO: REMOVE
-			return;
-
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
 
@@ -2513,7 +2499,7 @@ namespace RTC
 			sentInfo.isProbation = true;
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
@@ -2523,11 +2509,15 @@ namespace RTC
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+
+			SendRtpPacket(packet, onDone);
 #else
-			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 			});
+
+			SendRtpPacket(packet, onDone);
 #endif
 		}
 		else

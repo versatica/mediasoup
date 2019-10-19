@@ -15,20 +15,16 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 {
 	auto* connection = static_cast<TcpConnection*>(handle->data);
 
-	if (connection == nullptr)
-		return;
-
-	connection->OnUvReadAlloc(suggestedSize, buf);
+	if (connection)
+		connection->OnUvReadAlloc(suggestedSize, buf);
 }
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
 	auto* connection = static_cast<TcpConnection*>(handle->data);
 
-	if (connection == nullptr)
-		return;
-
-	connection->OnUvRead(nread, buf);
+	if (connection)
+		connection->OnUvRead(nread, buf);
 }
 
 inline static void onWrite(uv_write_t* req, int status)
@@ -41,10 +37,10 @@ inline static void onWrite(uv_write_t* req, int status)
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
 	std::free(writeData);
 
-	if (connection == nullptr)
-		return;
+	if (connection)
+		connection->OnUvWrite(status, onDone);
 
-	connection->OnUvWrite(status, *onDone);
+	delete onDone;
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -181,20 +177,30 @@ void TcpConnection::Start()
 		MS_THROW_ERROR("error setting peer IP and port");
 }
 
-void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone)
+void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSendHandler* onDone)
 {
 	MS_TRACE();
 
 	if (this->closed)
 	{
-		onDone(false);
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 
 		return;
 	}
 
 	if (len == 0)
 	{
-		onDone(false);
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 
 		return;
 	}
@@ -208,7 +214,12 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 	// All the data was written. Done.
 	if (written == static_cast<int>(len))
 	{
-		onDone(true);
+		if (onDone)
+		{
+			(*onDone)(true);
+
+			delete onDone;
+		}
 
 		return;
 	}
@@ -223,7 +234,13 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 	{
 		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
-		onDone(false);
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
+
 		Close();
 
 		// Notify the listener.
@@ -242,7 +259,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 
 	std::memcpy(writeData->store, data + written, pendingLen);
 	writeData->req.data = static_cast<void*>(writeData);
-	writeData->onDone   = &onDone;
+	writeData->onDone   = onDone;
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
@@ -259,32 +276,52 @@ void TcpConnection::Write(const uint8_t* data, size_t len, onSendHandler& onDone
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(writeData);
-		onDone(false);
+
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 	}
 }
 
 void TcpConnection::Write(
-  const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendHandler& onDone)
+  const uint8_t* data1,
+  size_t len1,
+  const uint8_t* data2,
+  size_t len2,
+  TcpConnection::onSendHandler* onDone)
 {
 	MS_TRACE();
 
 	if (this->closed)
 	{
-		onDone(false);
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 
 		return;
 	}
 
 	if (len1 == 0 && len2 == 0)
 	{
-		onDone(false);
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 
 		return;
 	}
 
 	size_t totalLen = len1 + len2;
 	uv_buf_t buffers[2];
-	int written;
+	int written{ 0 };
 	int err;
 
 	// First try uv_try_write(). In case it can not directly write all the given
@@ -297,7 +334,12 @@ void TcpConnection::Write(
 	// All the data was written. Done.
 	if (written == static_cast<int>(totalLen))
 	{
-		onDone(true);
+		if (onDone)
+		{
+			(*onDone)(true);
+
+			delete onDone;
+		}
 
 		return;
 	}
@@ -312,7 +354,13 @@ void TcpConnection::Write(
 	{
 		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
 
-		onDone(false);
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
+
 		Close();
 
 		// Notify the listener.
@@ -343,7 +391,7 @@ void TcpConnection::Write(
 	}
 
 	writeData->req.data = static_cast<void*>(writeData);
-	writeData->onDone   = &onDone;
+	writeData->onDone   = onDone;
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
@@ -360,7 +408,13 @@ void TcpConnection::Write(
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(writeData);
-		onDone(false);
+
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 	}
 }
 
@@ -401,9 +455,6 @@ inline void TcpConnection::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf
 {
 	MS_TRACE();
 
-	if (this->closed)
-		return;
-
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
 	if (this->buffer == nullptr)
 		this->buffer = new uint8_t[this->bufferSize];
@@ -427,9 +478,6 @@ inline void TcpConnection::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf
 inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 {
 	MS_TRACE();
-
-	if (this->closed)
-		return;
 
 	if (nread == 0)
 		return;
@@ -471,16 +519,14 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 	}
 }
 
-inline void TcpConnection::OnUvWrite(int status, onSendHandler& onDone)
+inline void TcpConnection::OnUvWrite(int status, TcpConnection::onSendHandler* onDone)
 {
 	MS_TRACE();
 
-	if (this->closed)
-		return;
-
 	if (status == 0)
 	{
-		onDone(true);
+		if (onDone)
+			(*onDone)(true);
 	}
 	else
 	{
@@ -489,7 +535,9 @@ inline void TcpConnection::OnUvWrite(int status, onSendHandler& onDone)
 
 		MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(status));
 
-		onDone(false);
+		if (onDone)
+			(*onDone)(false);
+
 		Close();
 
 		this->listener->OnTcpConnectionClosed(this);
