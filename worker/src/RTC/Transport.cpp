@@ -2145,7 +2145,7 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
@@ -2155,11 +2155,15 @@ namespace RTC
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+
+			SendRtpPacket(packet, onDone);
 #else
-			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 			});
+
+			SendRtpPacket(packet, onDone);
 #endif
 		}
 		else
@@ -2204,7 +2208,7 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
@@ -2214,11 +2218,15 @@ namespace RTC
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+
+			SendRtpPacket(packet, onDone);
 #else
-			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 			});
+
+			SendRtpPacket(packet, onDone);
 #endif
 		}
 		else
@@ -2491,7 +2499,7 @@ namespace RTC
 			sentInfo.isProbation = true;
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			SendRtpPacket(packet, [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
@@ -2501,11 +2509,15 @@ namespace RTC
 					senderBwe->RtpPacketSent(sentInfo);
 				}
 			});
+
+			SendRtpPacket(packet, onDone);
 #else
-			SendRtpPacket(packet, [tccClient, &packetInfo](bool sent) {
+			auto* onDone = new onSendHandler([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
 			});
+
+			SendRtpPacket(packet, onDone);
 #endif
 		}
 		else

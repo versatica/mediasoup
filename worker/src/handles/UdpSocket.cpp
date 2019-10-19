@@ -18,10 +18,8 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 {
 	auto* socket = static_cast<UdpSocket*>(handle->data);
 
-	if (socket == nullptr)
-		return;
-
-	socket->OnUvRecvAlloc(suggestedSize, buf);
+	if (socket)
+		socket->OnUvRecvAlloc(suggestedSize, buf);
 }
 
 inline static void onRecv(
@@ -29,10 +27,8 @@ inline static void onRecv(
 {
 	auto* socket = static_cast<UdpSocket*>(handle->data);
 
-	if (socket == nullptr)
-		return;
-
-	socket->OnUvRecv(nread, buf, addr, flags);
+	if (socket)
+		socket->OnUvRecv(nread, buf, addr, flags);
 }
 
 inline static void onSend(uv_udp_send_t* req, int status)
@@ -45,10 +41,10 @@ inline static void onSend(uv_udp_send_t* req, int status)
 	// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 	std::free(sendData);
 
-	if (socket == nullptr)
-		return;
+	if (socket)
+		socket->OnUvSend(status, onDone);
 
-	socket->OnUvSend(status, *onDone);
+	delete onDone;
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -124,20 +120,23 @@ void UdpSocket::Dump() const
 	MS_DUMP("</UdpSocket>");
 }
 
-void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendHandler& onDone)
+void UdpSocket::Send(
+  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocket::onSendHandler* onDone)
 {
 	MS_TRACE();
 
 	if (this->closed)
 	{
-		onDone(false);
+		if (onDone)
+			(*onDone)(false);
 
 		return;
 	}
 
 	if (len == 0)
 	{
-		onDone(false);
+		if (onDone)
+			(*onDone)(false);
 
 		return;
 	}
@@ -154,7 +153,12 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 		// Update sent bytes.
 		this->sentBytes += sent;
 
-		onDone(true);
+		if (onDone)
+		{
+			(*onDone)(true);
+
+			delete onDone;
+		}
 
 		return;
 	}
@@ -165,7 +169,12 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 		// Update sent bytes.
 		this->sentBytes += sent;
 
-		onDone(false);
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 
 		return;
 	}
@@ -174,12 +183,17 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 	{
 		MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
 
-		onDone(false);
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 
 		return;
 	}
-	// Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
 
+	// Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
 	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
 
 	// Allocate a special UvSendData struct pointer.
@@ -187,7 +201,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 
 	std::memcpy(sendData->store, data, len);
 	sendData->req.data = static_cast<void*>(sendData);
-	sendData->onDone   = &onDone;
+	sendData->onDone   = onDone;
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(sendData->store), len);
 
@@ -202,7 +216,13 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 
 		// Delete the UvSendData struct (which includes the uv_req_t and the store char[]).
 		std::free(sendData);
-		onDone(false);
+
+		if (onDone)
+		{
+			(*onDone)(false);
+
+			delete onDone;
+		}
 	}
 	else
 	{
@@ -251,9 +271,6 @@ inline void UdpSocket::OnUvRecv(
 {
 	MS_TRACE();
 
-	if (this->closed)
-		return;
-
 	// NOTE: libuv calls twice to alloc & recv when a datagram is received, the
 	// second one with nread = 0 and addr = NULL. Ignore it.
 	if (nread == 0)
@@ -283,16 +300,14 @@ inline void UdpSocket::OnUvRecv(
 	}
 }
 
-inline void UdpSocket::OnUvSend(int status, onSendHandler& onDone)
+inline void UdpSocket::OnUvSend(int status, UdpSocket::onSendHandler* onDone)
 {
 	MS_TRACE();
 
-	if (this->closed)
-		return;
-
 	if (status == 0)
 	{
-		onDone(true);
+		if (onDone)
+			(*onDone)(true);
 	}
 	else
 	{
@@ -300,6 +315,7 @@ inline void UdpSocket::OnUvSend(int status, onSendHandler& onDone)
 		MS_DEBUG_DEV("send error: %s", uv_strerror(status));
 #endif
 
-		onDone(false);
+		if (onDone)
+			(*onDone)(false);
 	}
 }

@@ -154,7 +154,7 @@ namespace RTC
 		}
 	}
 
-	void TcpConnection::Send(const uint8_t* data, size_t len, onSendHandler& onDone)
+	void TcpConnection::Send(const uint8_t* data, size_t len, ::TcpConnection::onSendHandler* onDone)
 	{
 		MS_TRACE();
 

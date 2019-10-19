@@ -417,13 +417,18 @@ namespace RTC
 		return this->tuple != nullptr;
 	}
 
-	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendHandler& onDone)
+	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendHandler* onDone)
 	{
 		MS_TRACE();
 
 		if (!IsConnected())
 		{
-			onDone(false);
+			if (onDone)
+			{
+				(*onDone)(false);
+
+				delete onDone;
+			}
 
 			return;
 		}

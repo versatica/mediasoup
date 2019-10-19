@@ -7,6 +7,9 @@
 
 class TcpConnection
 {
+protected:
+	using onSendHandler = const std::function<void(bool sent)>;
+
 public:
 	class Listener
 	{
@@ -17,15 +20,12 @@ public:
 		virtual void OnTcpConnectionClosed(TcpConnection* connection) = 0;
 	};
 
-protected:
-	using onSendHandler = const std::function<void(bool sent)>;
-
 public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
 	struct UvWriteData
 	{
 		uv_write_t req;
-		onSendHandler* onDone;
+		TcpConnection::onSendHandler* onDone{ nullptr };
 		uint8_t store[1];
 	};
 
@@ -46,8 +46,13 @@ public:
 	bool IsClosed() const;
 	uv_tcp_t* GetUvHandle() const;
 	void Start();
-	void Write(const uint8_t* data, size_t len, onSendHandler& onDone);
-	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendHandler& onDone);
+	void Write(const uint8_t* data, size_t len, TcpConnection::onSendHandler* onDone);
+	void Write(
+	  const uint8_t* data1,
+	  size_t len1,
+	  const uint8_t* data2,
+	  size_t len2,
+	  TcpConnection::onSendHandler* onDone);
 	void ErrorReceiving();
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
@@ -64,7 +69,7 @@ private:
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-	void OnUvWrite(int status, onSendHandler& onDone);
+	void OnUvWrite(int status, onSendHandler* onDone);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

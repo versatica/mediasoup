@@ -15,7 +15,7 @@ public:
 	struct UvSendData
 	{
 		uv_udp_send_t req;
-		onSendHandler* onDone;
+		UdpSocket::onSendHandler* onDone{ nullptr };
 		uint8_t store[1];
 	};
 
@@ -31,7 +31,8 @@ public:
 public:
 	void Close();
 	virtual void Dump() const;
-	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendHandler& onDone);
+	void Send(
+	  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocket::onSendHandler* onDone);
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
 	const std::string& GetLocalIp() const;
@@ -46,7 +47,7 @@ private:
 public:
 	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
-	void OnUvSend(int status, onSendHandler& onDone);
+	void OnUvSend(int status, UdpSocket::onSendHandler* onDone);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

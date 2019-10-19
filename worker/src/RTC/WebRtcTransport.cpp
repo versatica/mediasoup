@@ -702,13 +702,18 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendHandler& onDone)
+	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendHandler* onDone)
 	{
 		MS_TRACE();
 
 		if (!IsConnected())
 		{
-			onDone(false);
+			if (onDone)
+			{
+				(*onDone)(false);
+
+				delete onDone;
+			}
 
 			return;
 		}
@@ -718,7 +723,12 @@ namespace RTC
 		{
 			MS_WARN_DEV("ignoring RTP packet due to non sending SRTP session");
 
-			onDone(false);
+			if (onDone)
+			{
+				(*onDone)(false);
+
+				delete onDone;
+			}
 
 			return;
 		}
@@ -728,7 +738,12 @@ namespace RTC
 
 		if (!this->srtpSendSession->EncryptRtp(&data, &len))
 		{
-			onDone(false);
+			if (onDone)
+			{
+				(*onDone)(false);
+
+				delete onDone;
+			}
 
 			return;
 		}

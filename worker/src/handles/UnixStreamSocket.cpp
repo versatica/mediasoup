@@ -19,20 +19,16 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 {
 	auto* socket = static_cast<UnixStreamSocket*>(handle->data);
 
-	if (socket == nullptr)
-		return;
-
-	socket->OnUvReadAlloc(suggestedSize, buf);
+	if (socket)
+		socket->OnUvReadAlloc(suggestedSize, buf);
 }
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
 	auto* socket = static_cast<UnixStreamSocket*>(handle->data);
 
-	if (socket == nullptr)
-		return;
-
-	socket->OnUvRead(nread, buf);
+	if (socket)
+		socket->OnUvRead(nread, buf);
 }
 
 inline static void onWrite(uv_write_t* req, int status)
@@ -44,11 +40,8 @@ inline static void onWrite(uv_write_t* req, int status)
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
 	std::free(writeData);
 
-	if (socket == nullptr)
-		return;
-
 	// Just notify the UnixStreamSocket when error.
-	if (status != 0)
+	if (socket && status != 0)
 		socket->OnUvWriteError(status);
 }
 
@@ -237,9 +230,6 @@ inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 {
 	MS_TRACE_STD();
 
-	if (this->closed)
-		return;
-
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
 	if (this->buffer == nullptr)
 		this->buffer = new uint8_t[this->bufferSize];
@@ -263,9 +253,6 @@ inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 {
 	MS_TRACE_STD();
-
-	if (this->closed)
-		return;
 
 	if (nread == 0)
 		return;
@@ -308,9 +295,6 @@ inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 inline void UnixStreamSocket::OnUvWriteError(int error)
 {
 	MS_TRACE_STD();
-
-	if (this->closed)
-		return;
 
 	if (error != UV_EPIPE && error != UV_ENOTCONN)
 		this->hasError = true;

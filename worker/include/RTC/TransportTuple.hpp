@@ -14,15 +14,15 @@ namespace RTC
 {
 	class TransportTuple
 	{
+	protected:
+		using onSendHandler = const std::function<void(bool sent)>;
+
 	public:
 		enum class Protocol
 		{
 			UDP = 1,
 			TCP
 		};
-
-	protected:
-		using onSendHandler = const std::function<void(bool sent)>;
 
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr);
@@ -35,7 +35,7 @@ namespace RTC
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
 		void SetLocalAnnouncedIp(std::string& localAnnouncedIp);
-		void Send(const uint8_t* data, size_t len, onSendHandler& onDone = [](bool) {});
+		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendHandler* onDone = nullptr);
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
 		const struct sockaddr* GetRemoteAddress() const;
@@ -111,7 +111,7 @@ namespace RTC
 	}
 
 	inline void TransportTuple::Send(
-	  const uint8_t* data, size_t len, const std::function<void(bool sent)>& onDone)
+	  const uint8_t* data, size_t len, RTC::TransportTuple::onSendHandler* onDone)
 	{
 		if (this->protocol == Protocol::UDP)
 			this->udpSocket->Send(data, len, this->udpRemoteAddr, onDone);
