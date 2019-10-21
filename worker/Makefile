@@ -5,6 +5,8 @@
 # Best effort to get Python 2 executable and also allow custom PYTHON
 # environment variable set by the user.
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
+ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh)
 
 .PHONY:	\
 	default Release Debug test test-Release test-Debug fuzzer \
@@ -19,11 +21,11 @@ endif
 
 Release:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
-	$(MAKE) BUILDTYPE=Release -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=Release -C out
 
 Debug:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
-	$(MAKE) BUILDTYPE=Debug -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=Debug -C out
 
 test:
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
@@ -34,15 +36,15 @@ endif
 
 test-Release:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) BUILDTYPE=Release -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=Release -C out
 
 test-Debug:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) BUILDTYPE=Debug -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=Debug -C out
 
 fuzzer:
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
-	$(MAKE) BUILDTYPE=Release -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=Release -C out
 
 fuzzer-docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
