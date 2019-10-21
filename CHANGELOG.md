@@ -1,9 +1,14 @@
 # Changelog
 
+### 2.6.17
+
+* Improve build system by using all available CPU cores in parallel.
+
 
 ### 2.6.16
 
 * Don't mandate server port range to be >= 99.
+
 
 ### 2.6.15
 
