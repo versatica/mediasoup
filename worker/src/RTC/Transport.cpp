@@ -18,6 +18,7 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
+#include "RTC/ShmConsumer.hpp"
 
 namespace RTC
 {
@@ -400,6 +401,14 @@ namespace RTC
 
 						break;
 					}
+
+					case RTC::RtpParameters::Type::SHM:
+					{
+						// This may throw.
+						consumer = new RTC::ShmConsumer(consumerId, this, request->data); // "fake" consumer with very limited functionality
+
+						break;
+					}
 				}
 
 				// Notify the listener.
@@ -556,6 +565,17 @@ namespace RTC
 				// Tell to the SCTP association.
 				this->sctpAssociation->HandleDataConsumer(dataConsumer);
 
+				break;
+			}
+
+
+			case Channel::Request::MethodId::TRANSPORT_CONSUME_STREAM_META:
+			{
+				if (RecvStreamMeta(request->data))
+					request->Accept();
+				else
+					request->Error("ShmTransport::RecvStreamMeta returned false");
+				
 				break;
 			}
 
@@ -1322,6 +1342,14 @@ namespace RTC
 			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
 		}
+	}
+
+	bool Transport::RecvStreamMeta(json& data) const
+	{
+		MS_TRACE();
+
+		// Do nothing, will overwrite in shm transport class
+		return false;
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)

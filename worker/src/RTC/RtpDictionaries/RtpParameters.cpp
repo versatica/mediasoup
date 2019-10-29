@@ -17,7 +17,7 @@ namespace RTC
 		{ "simple",    RtpParameters::Type::SIMPLE    },
 		{ "simulcast", RtpParameters::Type::SIMULCAST },
 		{ "svc",       RtpParameters::Type::SVC       },
-		{ "pipe",      RtpParameters::Type::PIPE      }
+		{ "pipe",      RtpParameters::Type::PIPE      }	
 	};
 	std::map<RtpParameters::Type, std::string> RtpParameters::type2String =
 	{

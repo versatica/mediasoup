@@ -1,5 +1,8 @@
 # Changelog
+### 3.2.50
 
+* Minor version leap to signify LivelyVideo mediasoup fork.
+* Lay out changes in ms worker C++ code needed to write RTP/RTCP into xcode shm. Placesholders for shm writer API calls, and no changes in Javascript lib/ yet.
 
 ### 3.2.5
 

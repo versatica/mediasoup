@@ -29,7 +29,7 @@ namespace RTC
 	                  public RTC::Consumer::Listener,
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
-	                  public RTC::SctpAssociation::Listener,
+	                  public RTC::SctpAssociation::Listener,      
 	                  public Timer::Listener
 	{
 	public:
@@ -97,6 +97,7 @@ namespace RTC
 		// Subclasses must implement this method and call the parent's one to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
+		virtual bool RecvStreamMeta(json& data) const;
 
 	protected:
 		// Must be called from the subclass.

@@ -8,6 +8,7 @@
 #include "RTC/AudioLevelObserver.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainRtpTransport.hpp"
+#include "RTC/ShmTransport.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -240,6 +241,29 @@ namespace RTC
 				json data = json::object();
 
 				pipeTransport->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::ROUTER_CREATE_SHM_TRANSPORT:
+			{
+				std::string transportId;
+
+				// This may throw
+				SetNewTransportIdFromRequest(request, transportId);
+
+				auto* shmTransport = new RTC::ShmTransport(transportId, this, request->data);
+
+				// Insert into the map.
+				this->mapTransports[transportId] = shmTransport;
+
+				MS_DEBUG_DEV("shmTransport created [transportId:%s]", transportId.c_str());
+
+				json data = json::object();
+
+				shmTransport->FillJson(data);
 
 				request->Accept(data);
 

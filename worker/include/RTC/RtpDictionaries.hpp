@@ -252,7 +252,8 @@ namespace RTC
 			SIMPLE,
 			SIMULCAST,
 			SVC,
-			PIPE
+			PIPE,
+			SHM
 		};
 
 	public:

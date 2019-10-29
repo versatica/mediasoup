@@ -109,6 +109,38 @@ namespace RTC
 					return true;
 				}
 
+				case RTC::RtpParameters::Type::SHM:
+				{
+					switch (mimeType.type)
+					{
+						case RTC::RtpCodecMimeType::Type::VIDEO:
+						{
+							switch (mimeType.subtype)
+							{
+								case RTC::RtpCodecMimeType::Subtype::H264:
+									return true;
+								default:
+									return false;
+							}
+						}
+
+						case RTC::RtpCodecMimeType::Type::AUDIO:
+						{
+							switch (mimeType.subtype)
+							{
+								case RTC::RtpCodecMimeType::Subtype::OPUS:
+									return true;
+								default:
+								  return false;
+							}
+						}
+						default:
+						{
+							return false;
+						}
+					}
+				}
+
 				default:
 				{
 					return false;
