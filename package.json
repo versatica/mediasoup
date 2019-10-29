@@ -1,6 +1,6 @@
 {
-  "name": "mediasoup",
-  "version": "3.2.5",
+  "name": "@livelyvideo/mediasoup-v3",
+  "version": "3.2.50",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -8,9 +8,14 @@
   ],
   "homepage": "https://mediasoup.org",
   "license": "ISC",
+  "publishConfig": {
+    "always-auth": true,
+    "registry": "https://npm.livelyvideo.tv"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/versatica/mediasoup.git"
+    "private": true,
+    "url": "https://github.com/LivelyVideo/mediasoup.git"
   },
   "main": "lib/index.js",
   "keywords": [
