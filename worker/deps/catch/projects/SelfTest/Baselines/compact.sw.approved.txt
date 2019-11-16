@@ -631,6 +631,74 @@ GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == 2 for: 2 == 2
 GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true
 GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == 5 for: 5 == 5
 GeneratorsImpl.tests.cpp:<line number>: passed: !(gen.next()) for: !false
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -1.0 == Approx( -1.0 ) with 1 message: 'Current expected value is -1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.9 == Approx( -0.9 ) with 1 message: 'Current expected value is -0.9'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.9'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.8 == Approx( -0.8 ) with 1 message: 'Current expected value is -0.8'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.8'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.7 == Approx( -0.7 ) with 1 message: 'Current expected value is -0.7'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.7'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.6 == Approx( -0.6 ) with 1 message: 'Current expected value is -0.6'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.6'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.5 == Approx( -0.5 ) with 1 message: 'Current expected value is -0.5'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.5'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.4 == Approx( -0.4 ) with 1 message: 'Current expected value is -0.4'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.4'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.3 == Approx( -0.3 ) with 1 message: 'Current expected value is -0.3'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.3'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.2 == Approx( -0.2 ) with 1 message: 'Current expected value is -0.2'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.2'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.1 == Approx( -0.1 ) with 1 message: 'Current expected value is -0.1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.0 == Approx( -0.0 ) with 1 message: 'Current expected value is -1.38778e-16'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -1.38778e-16'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.1 == Approx( 0.1 ) with 1 message: 'Current expected value is 0.1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.2 == Approx( 0.2 ) with 1 message: 'Current expected value is 0.2'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.2'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.3 == Approx( 0.3 ) with 1 message: 'Current expected value is 0.3'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.3'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.4 == Approx( 0.4 ) with 1 message: 'Current expected value is 0.4'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.4'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.5 == Approx( 0.5 ) with 1 message: 'Current expected value is 0.5'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.5'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.6 == Approx( 0.6 ) with 1 message: 'Current expected value is 0.6'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.6'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.7 == Approx( 0.7 ) with 1 message: 'Current expected value is 0.7'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.7'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.8 == Approx( 0.8 ) with 1 message: 'Current expected value is 0.8'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.8'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.9 == Approx( 0.9 ) with 1 message: 'Current expected value is 0.9'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.9'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx( rangeEnd ) for: 1.0 == Approx( 1.0 )
+GeneratorsImpl.tests.cpp:<line number>: passed: !(gen.next()) for: !false
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -1.0 == Approx( -1.0 ) with 1 message: 'Current expected value is -1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.7 == Approx( -0.7 ) with 1 message: 'Current expected value is -0.7'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.7'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.4 == Approx( -0.4 ) with 1 message: 'Current expected value is -0.4'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.4'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.1 == Approx( -0.1 ) with 1 message: 'Current expected value is -0.1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.2 == Approx( 0.2 ) with 1 message: 'Current expected value is 0.2'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.2'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.5 == Approx( 0.5 ) with 1 message: 'Current expected value is 0.5'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.5'
+GeneratorsImpl.tests.cpp:<line number>: passed: !(gen.next()) for: !false
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -1.0 == Approx( -1.0 ) with 1 message: 'Current expected value is -1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.7 == Approx( -0.7 ) with 1 message: 'Current expected value is -0.7'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.7'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.4 == Approx( -0.4 ) with 1 message: 'Current expected value is -0.4'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.4'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: -0.1 == Approx( -0.1 ) with 1 message: 'Current expected value is -0.1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is -0.1'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.2 == Approx( 0.2 ) with 1 message: 'Current expected value is 0.2'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.2'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == Approx(expected) for: 0.5 == Approx( 0.5 ) with 1 message: 'Current expected value is 0.5'
+GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true with 1 message: 'Current expected value is 0.5'
+GeneratorsImpl.tests.cpp:<line number>: passed: !(gen.next()) for: !false
 GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == 5 for: 5 == 5
 GeneratorsImpl.tests.cpp:<line number>: passed: gen.next() for: true
 GeneratorsImpl.tests.cpp:<line number>: passed: gen.get() == 2 for: 2 == 2
@@ -959,6 +1027,12 @@ CmdLine.tests.cpp:<line number>: passed: spec.matches( fakeTestCase( "  aardvark
 CmdLine.tests.cpp:<line number>: passed: spec.matches( fakeTestCase( " aardvark " ) ) for: true
 CmdLine.tests.cpp:<line number>: passed: spec.matches( fakeTestCase( "aardvark " ) ) for: true
 CmdLine.tests.cpp:<line number>: passed: spec.matches( fakeTestCase( "aardvark" ) ) for: true
+CmdLine.tests.cpp:<line number>: passed: spec.matches(fakeTestCase("hidden and foo", "[.][foo]")) for: true
+CmdLine.tests.cpp:<line number>: passed: !(spec.matches(fakeTestCase("only foo", "[foo]"))) for: !false
+CmdLine.tests.cpp:<line number>: passed: !(spec.matches(fakeTestCase("hidden and foo", "[.][foo]"))) for: !false
+CmdLine.tests.cpp:<line number>: passed: !(spec.matches(fakeTestCase("only foo", "[foo]"))) for: !false
+CmdLine.tests.cpp:<line number>: passed: !(spec.matches(fakeTestCase("only hidden", "[.]"))) for: !false
+CmdLine.tests.cpp:<line number>: passed: spec.matches(fakeTestCase("neither foo nor hidden", "[bar]")) for: true
 Condition.tests.cpp:<line number>: passed: p == 0 for: 0 == 0
 Condition.tests.cpp:<line number>: passed: p == pNULL for: 0 == 0
 Condition.tests.cpp:<line number>: passed: p != 0 for: 0x<hex digits> != 0
@@ -1095,37 +1169,32 @@ Matchers.tests.cpp:<line number>: passed: testStringForMatching(), EndsWith("sub
 Matchers.tests.cpp:<line number>: passed: testStringForMatching(), EndsWith(" SuBsTrInG", Catch::CaseSensitive::No) for: "this string contains 'abc' as a substring" ends with: " substring" (case insensitive)
 String.tests.cpp:<line number>: passed: empty.empty() for: true
 String.tests.cpp:<line number>: passed: empty.size() == 0 for: 0 == 0
+String.tests.cpp:<line number>: passed: empty.isNullTerminated() for: true
 String.tests.cpp:<line number>: passed: std::strcmp( empty.c_str(), "" ) == 0 for: 0 == 0
 String.tests.cpp:<line number>: passed: s.empty() == false for: false == false
 String.tests.cpp:<line number>: passed: s.size() == 5 for: 5 == 5
-String.tests.cpp:<line number>: passed: isSubstring( s ) == false for: false == false
+String.tests.cpp:<line number>: passed: s.isNullTerminated() for: true
 String.tests.cpp:<line number>: passed: std::strcmp( rawChars, "hello" ) == 0 for: 0 == 0
-String.tests.cpp:<line number>: passed: isOwned( s ) == false for: false == false
+String.tests.cpp:<line number>: passed: s.c_str()
 String.tests.cpp:<line number>: passed: s.c_str() == rawChars for: "hello" == "hello"
-String.tests.cpp:<line number>: passed: isOwned( s ) == false for: false == false
+String.tests.cpp:<line number>: passed: s.data() == rawChars for: "hello" == "hello"
 String.tests.cpp:<line number>: passed: original == "original"
-String.tests.cpp:<line number>: passed: isSubstring( original ) for: true
-String.tests.cpp:<line number>: passed: isOwned( original ) == false for: false == false
-String.tests.cpp:<line number>: passed: isOwned( original ) for: true
+String.tests.cpp:<line number>: passed: !(original.isNullTerminated()) for: !false
+String.tests.cpp:<line number>: passed: original.c_str()
+String.tests.cpp:<line number>: passed: original.data()
 String.tests.cpp:<line number>: passed: ss.empty() == false for: false == false
 String.tests.cpp:<line number>: passed: ss.size() == 5 for: 5 == 5
-String.tests.cpp:<line number>: passed: std::strcmp( ss.c_str(), "hello" ) == 0 for: 0 == 0
+String.tests.cpp:<line number>: passed: std::strncmp( ss.data(), "hello", 5 ) == 0 for: 0 == 0
 String.tests.cpp:<line number>: passed: ss == "hello" for: hello == "hello"
-String.tests.cpp:<line number>: passed: isSubstring( ss ) for: true
-String.tests.cpp:<line number>: passed: isOwned( ss ) == false for: false == false
-String.tests.cpp:<line number>: passed: rawChars == s.currentData() for: "hello world!" == "hello world!"
-String.tests.cpp:<line number>: passed: ss.c_str() != rawChars for: "hello" != "hello world!"
-String.tests.cpp:<line number>: passed: isOwned( ss ) for: true
-String.tests.cpp:<line number>: passed: isOwned(ss) == false for: false == false
-String.tests.cpp:<line number>: passed: ss == "hello" for: hello == "hello"
-String.tests.cpp:<line number>: passed: rawChars == ss.currentData() for: "hello world!" == "hello world!"
 String.tests.cpp:<line number>: passed: ss.size() == 6 for: 6 == 6
 String.tests.cpp:<line number>: passed: std::strcmp( ss.c_str(), "world!" ) == 0 for: 0 == 0
-String.tests.cpp:<line number>: passed: s.c_str() == s2.c_str() for: "hello world!" == "hello world!"
-String.tests.cpp:<line number>: passed: s.c_str() != ss.c_str() for: "hello world!" != "hello"
+String.tests.cpp:<line number>: passed: s.data() == s2.data() for: "hello world!" == "hello world!"
+String.tests.cpp:<line number>: passed: s.data() == ss.data() for: "hello world!" == "hello world!"
 String.tests.cpp:<line number>: passed: s.substr(s.size() + 1, 123).empty() for: true
-String.tests.cpp:<line number>: passed: StringRef("hello") == StringRef("hello") for: hello == hello
-String.tests.cpp:<line number>: passed: StringRef("hello") != StringRef("cello") for: hello != cello
+String.tests.cpp:<line number>: passed: std::strcmp(ss.c_str(), "world!") == 0 for: 0 == 0
+String.tests.cpp:<line number>: passed: (char*)buffer1 != (char*)buffer2 for: "Hello" != "Hello"
+String.tests.cpp:<line number>: passed: left == right for: Hello == Hello
+String.tests.cpp:<line number>: passed: left != left.substr(0, 3) for: Hello != Hel
 String.tests.cpp:<line number>: passed: sr == "a standard string" for: a standard string == "a standard string"
 String.tests.cpp:<line number>: passed: sr.size() == stdStr.size() for: 17 == 17
 String.tests.cpp:<line number>: passed: sr == "a standard string" for: a standard string == "a standard string"
@@ -1136,6 +1205,17 @@ String.tests.cpp:<line number>: passed: stdStr == "a stringref" for: "a stringre
 String.tests.cpp:<line number>: passed: stdStr.size() == sr.size() for: 11 == 11
 String.tests.cpp:<line number>: passed: stdStr == "a stringref" for: "a stringref" == "a stringref"
 String.tests.cpp:<line number>: passed: stdStr.size() == sr.size() for: 11 == 11
+String.tests.cpp:<line number>: passed: with 1 message: 'StringRef{}.size() == 0'
+String.tests.cpp:<line number>: passed: with 1 message: 'StringRef{ "abc", 3 }.size() == 3'
+String.tests.cpp:<line number>: passed: with 1 message: 'StringRef{ "abc", 3 }.isNullTerminated()'
+String.tests.cpp:<line number>: passed: with 1 message: 'StringRef{ "abc", 2 }.size() == 2'
+String.tests.cpp:<line number>: passed: with 1 message: '!(StringRef{ "abc", 2 }.isNullTerminated())'
+String.tests.cpp:<line number>: passed: with 1 message: '!(sr1.empty())'
+String.tests.cpp:<line number>: passed: with 1 message: 'sr1.size() == 3'
+String.tests.cpp:<line number>: passed: with 1 message: 'sr1.isNullTerminated()'
+String.tests.cpp:<line number>: passed: with 1 message: 'sr2.empty()'
+String.tests.cpp:<line number>: passed: with 1 message: 'sr2.size() == 0'
+String.tests.cpp:<line number>: passed: with 1 message: 'sr2.isNullTerminated()'
 ToStringChrono.tests.cpp:<line number>: passed: minute == seconds for: 1 m == 60 s
 ToStringChrono.tests.cpp:<line number>: passed: hour != seconds for: 1 h != 60 s
 ToStringChrono.tests.cpp:<line number>: passed: micro != milli for: 1 us != 1 ms
@@ -1487,48 +1567,6 @@ Xml.tests.cpp:<line number>: passed: encode( stringWithQuotes, Catch::XmlEncode:
 "don't &quot;quote&quot; me on that"
 Xml.tests.cpp:<line number>: passed: encode( "[\x01]" ) == "[\\x01]" for: "[\x01]" == "[\x01]"
 Xml.tests.cpp:<line number>: passed: encode( "[\x7F]" ) == "[\\x7F]" for: "[\x7F]" == "[\x7F]"
-Xml.tests.cpp:<line number>: passed: encode(u8"Here be üëæ") == u8"Here be üëæ" for: "Here be üëæ" == "Here be üëæ"
-Xml.tests.cpp:<line number>: passed: encode(u8"≈°≈°") == u8"≈°≈°" for: "≈°≈°" == "≈°≈°"
-Xml.tests.cpp:<line number>: passed: encode("\xDF\xBF") == "\xDF\xBF" for: "ﬂø" == "ﬂø"
-Xml.tests.cpp:<line number>: passed: encode("\xE0\xA0\x80") == "\xE0\xA0\x80" for: "‡†Ä" == "‡†Ä"
-Xml.tests.cpp:<line number>: passed: encode("\xED\x9F\xBF") == "\xED\x9F\xBF" for: "Ìüø" == "Ìüø"
-Xml.tests.cpp:<line number>: passed: encode("\xEE\x80\x80") == "\xEE\x80\x80" for: "ÓÄÄ" == "ÓÄÄ"
-Xml.tests.cpp:<line number>: passed: encode("\xEF\xBF\xBF") == "\xEF\xBF\xBF" for: "Ôøø" == "Ôøø"
-Xml.tests.cpp:<line number>: passed: encode("\xF0\x90\x80\x80") == "\xF0\x90\x80\x80" for: "êÄÄ" == "êÄÄ"
-Xml.tests.cpp:<line number>: passed: encode("\xF4\x8F\xBF\xBF") == "\xF4\x8F\xBF\xBF" for: "Ùèøø" == "Ùèøø"
-Xml.tests.cpp:<line number>: passed: encode("Here \xFF be üëæ") == u8"Here \\xFF be üëæ" for: "Here \xFF be üëæ" == "Here \xFF be üëæ"
-Xml.tests.cpp:<line number>: passed: encode("\xFF") == "\\xFF" for: "\xFF" == "\xFF"
-Xml.tests.cpp:<line number>: passed: encode("\xC5\xC5\xA0") == u8"\\xC5≈†" for: "\xC5≈†" == "\xC5≈†"
-Xml.tests.cpp:<line number>: passed: encode("\xF4\x90\x80\x80") == u8"\\xF4\\x90\\x80\\x80" for: "\xF4\x90\x80\x80" == "\xF4\x90\x80\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xC0\x80") == u8"\\xC0\\x80" for: "\xC0\x80" == "\xC0\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xF0\x80\x80\x80") == u8"\\xF0\\x80\\x80\\x80" for: "\xF0\x80\x80\x80" == "\xF0\x80\x80\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xC1\xBF") == u8"\\xC1\\xBF" for: "\xC1\xBF" == "\xC1\xBF"
-Xml.tests.cpp:<line number>: passed: encode("\xE0\x9F\xBF") == u8"\\xE0\\x9F\\xBF" for: "\xE0\x9F\xBF" == "\xE0\x9F\xBF"
-Xml.tests.cpp:<line number>: passed: encode("\xF0\x8F\xBF\xBF") == u8"\\xF0\\x8F\\xBF\\xBF" for: "\xF0\x8F\xBF\xBF" == "\xF0\x8F\xBF\xBF"
-Xml.tests.cpp:<line number>: passed: encode("\xED\xA0\x80") == "\xED\xA0\x80" for: "Ì†Ä" == "Ì†Ä"
-Xml.tests.cpp:<line number>: passed: encode("\xED\xAF\xBF") == "\xED\xAF\xBF" for: "ÌØø" == "ÌØø"
-Xml.tests.cpp:<line number>: passed: encode("\xED\xB0\x80") == "\xED\xB0\x80" for: "Ì∞Ä" == "Ì∞Ä"
-Xml.tests.cpp:<line number>: passed: encode("\xED\xBF\xBF") == "\xED\xBF\xBF" for: "Ìøø" == "Ìøø"
-Xml.tests.cpp:<line number>: passed: encode("\x80") == u8"\\x80" for: "\x80" == "\x80"
-Xml.tests.cpp:<line number>: passed: encode("\x81") == u8"\\x81" for: "\x81" == "\x81"
-Xml.tests.cpp:<line number>: passed: encode("\xBC") == u8"\\xBC" for: "\xBC" == "\xBC"
-Xml.tests.cpp:<line number>: passed: encode("\xBF") == u8"\\xBF" for: "\xBF" == "\xBF"
-Xml.tests.cpp:<line number>: passed: encode("\xF5\x80\x80\x80") == u8"\\xF5\\x80\\x80\\x80" for: "\xF5\x80\x80\x80" == "\xF5\x80\x80\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xF6\x80\x80\x80") == u8"\\xF6\\x80\\x80\\x80" for: "\xF6\x80\x80\x80" == "\xF6\x80\x80\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xF7\x80\x80\x80") == u8"\\xF7\\x80\\x80\\x80" for: "\xF7\x80\x80\x80" == "\xF7\x80\x80\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xDE") == u8"\\xDE" for: "\xDE" == "\xDE"
-Xml.tests.cpp:<line number>: passed: encode("\xDF") == u8"\\xDF" for: "\xDF" == "\xDF"
-Xml.tests.cpp:<line number>: passed: encode("\xE0") == u8"\\xE0" for: "\xE0" == "\xE0"
-Xml.tests.cpp:<line number>: passed: encode("\xEF") == u8"\\xEF" for: "\xEF" == "\xEF"
-Xml.tests.cpp:<line number>: passed: encode("\xF0") == u8"\\xF0" for: "\xF0" == "\xF0"
-Xml.tests.cpp:<line number>: passed: encode("\xF4") == u8"\\xF4" for: "\xF4" == "\xF4"
-Xml.tests.cpp:<line number>: passed: encode("\xE0\x80") == u8"\\xE0\\x80" for: "\xE0\x80" == "\xE0\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xE0\xBF") == u8"\\xE0\\xBF" for: "\xE0\xBF" == "\xE0\xBF"
-Xml.tests.cpp:<line number>: passed: encode("\xE1\x80") == u8"\\xE1\\x80" for: "\xE1\x80" == "\xE1\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xF0\x80") == u8"\\xF0\\x80" for: "\xF0\x80" == "\xF0\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xF4\x80") == u8"\\xF4\\x80" for: "\xF4\x80" == "\xF4\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xF0\x80\x80") == u8"\\xF0\\x80\\x80" for: "\xF0\x80\x80" == "\xF0\x80\x80"
-Xml.tests.cpp:<line number>: passed: encode("\xF4\x80\x80") == u8"\\xF4\\x80\\x80" for: "\xF4\x80\x80" == "\xF4\x80\x80"
 ToStringVector.tests.cpp:<line number>: passed: Catch::Detail::stringify( empty ) == "{  }" for: "{  }" == "{  }"
 ToStringVector.tests.cpp:<line number>: passed: Catch::Detail::stringify( oneValue ) == "{ 42 }" for: "{ 42 }" == "{ 42 }"
 ToStringVector.tests.cpp:<line number>: passed: Catch::Detail::stringify( twoValues ) == "{ 42, 250 }" for: "{ 42, 250 }" == "{ 42, 250 }"

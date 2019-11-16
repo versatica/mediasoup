@@ -4777,6 +4777,504 @@ with expansion:
 -------------------------------------------------------------------------------
 Generators internals
   Range
+  Positive manual step
+  Floating Point
+  Exact
+-------------------------------------------------------------------------------
+GeneratorsImpl.tests.cpp:<line number>
+...............................................................................
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -1.0 == Approx( -1.0 )
+with message:
+  Current expected value is -1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.9 == Approx( -0.9 )
+with message:
+  Current expected value is -0.9
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.9
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.8 == Approx( -0.8 )
+with message:
+  Current expected value is -0.8
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.8
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.7 == Approx( -0.7 )
+with message:
+  Current expected value is -0.7
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.7
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.6 == Approx( -0.6 )
+with message:
+  Current expected value is -0.6
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.6
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.5 == Approx( -0.5 )
+with message:
+  Current expected value is -0.5
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.5
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.4 == Approx( -0.4 )
+with message:
+  Current expected value is -0.4
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.4
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.3 == Approx( -0.3 )
+with message:
+  Current expected value is -0.3
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.3
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.2 == Approx( -0.2 )
+with message:
+  Current expected value is -0.2
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.2
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.1 == Approx( -0.1 )
+with message:
+  Current expected value is -0.1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.0 == Approx( -0.0 )
+with message:
+  Current expected value is -1.38778e-16
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -1.38778e-16
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.1 == Approx( 0.1 )
+with message:
+  Current expected value is 0.1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.2 == Approx( 0.2 )
+with message:
+  Current expected value is 0.2
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.2
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.3 == Approx( 0.3 )
+with message:
+  Current expected value is 0.3
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.3
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.4 == Approx( 0.4 )
+with message:
+  Current expected value is 0.4
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.4
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.5 == Approx( 0.5 )
+with message:
+  Current expected value is 0.5
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.5
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.6 == Approx( 0.6 )
+with message:
+  Current expected value is 0.6
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.6
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.7 == Approx( 0.7 )
+with message:
+  Current expected value is 0.7
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.7
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.8 == Approx( 0.8 )
+with message:
+  Current expected value is 0.8
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.8
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.9 == Approx( 0.9 )
+with message:
+  Current expected value is 0.9
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.9
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx( rangeEnd ) )
+with expansion:
+  1.0 == Approx( 1.0 )
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE_FALSE( gen.next() )
+with expansion:
+  !false
+
+-------------------------------------------------------------------------------
+Generators internals
+  Range
+  Positive manual step
+  Floating Point
+  Slightly over end
+-------------------------------------------------------------------------------
+GeneratorsImpl.tests.cpp:<line number>
+...............................................................................
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -1.0 == Approx( -1.0 )
+with message:
+  Current expected value is -1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.7 == Approx( -0.7 )
+with message:
+  Current expected value is -0.7
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.7
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.4 == Approx( -0.4 )
+with message:
+  Current expected value is -0.4
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.4
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.1 == Approx( -0.1 )
+with message:
+  Current expected value is -0.1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.2 == Approx( 0.2 )
+with message:
+  Current expected value is 0.2
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.2
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.5 == Approx( 0.5 )
+with message:
+  Current expected value is 0.5
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.5
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE_FALSE( gen.next() )
+with expansion:
+  !false
+
+-------------------------------------------------------------------------------
+Generators internals
+  Range
+  Positive manual step
+  Floating Point
+  Slightly under end
+-------------------------------------------------------------------------------
+GeneratorsImpl.tests.cpp:<line number>
+...............................................................................
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -1.0 == Approx( -1.0 )
+with message:
+  Current expected value is -1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.7 == Approx( -0.7 )
+with message:
+  Current expected value is -0.7
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.7
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.4 == Approx( -0.4 )
+with message:
+  Current expected value is -0.4
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.4
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  -0.1 == Approx( -0.1 )
+with message:
+  Current expected value is -0.1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is -0.1
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.2 == Approx( 0.2 )
+with message:
+  Current expected value is 0.2
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.2
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.get() == Approx(expected) )
+with expansion:
+  0.5 == Approx( 0.5 )
+with message:
+  Current expected value is 0.5
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE( gen.next() )
+with expansion:
+  true
+with message:
+  Current expected value is 0.5
+
+GeneratorsImpl.tests.cpp:<line number>: PASSED:
+  REQUIRE_FALSE( gen.next() )
+with expansion:
+  !false
+
+-------------------------------------------------------------------------------
+Generators internals
+  Range
   Negative manual step
   Integer
   Exact
@@ -6864,6 +7362,50 @@ with expansion:
   true
 
 -------------------------------------------------------------------------------
+Parse test names and tags
+  Shortened hide tags are split apart when parsing
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( spec.matches(fakeTestCase("hidden and foo", "[.][foo]")) )
+with expansion:
+  true
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK_FALSE( spec.matches(fakeTestCase("only foo", "[foo]")) )
+with expansion:
+  !false
+
+-------------------------------------------------------------------------------
+Parse test names and tags
+  Shortened hide tags also properly handle exclusion
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK_FALSE( spec.matches(fakeTestCase("hidden and foo", "[.][foo]")) )
+with expansion:
+  !false
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK_FALSE( spec.matches(fakeTestCase("only foo", "[foo]")) )
+with expansion:
+  !false
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK_FALSE( spec.matches(fakeTestCase("only hidden", "[.]")) )
+with expansion:
+  !false
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( spec.matches(fakeTestCase("neither foo nor hidden", "[bar]")) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
 Pointers can be compared to null
 -------------------------------------------------------------------------------
 Condition.tests.cpp:<line number>
@@ -7996,6 +8538,11 @@ with expansion:
   0 == 0
 
 String.tests.cpp:<line number>: PASSED:
+  REQUIRE( empty.isNullTerminated() )
+with expansion:
+  true
+
+String.tests.cpp:<line number>: PASSED:
   REQUIRE( std::strcmp( empty.c_str(), "" ) == 0 )
 with expansion:
   0 == 0
@@ -8018,27 +8565,17 @@ with expansion:
   5 == 5
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isSubstring( s ) == false )
+  REQUIRE( s.isNullTerminated() )
 with expansion:
-  false == false
+  true
 
 String.tests.cpp:<line number>: PASSED:
   REQUIRE( std::strcmp( rawChars, "hello" ) == 0 )
 with expansion:
   0 == 0
 
--------------------------------------------------------------------------------
-StringRef
-  From string literal
-  c_str() does not cause copy
--------------------------------------------------------------------------------
-String.tests.cpp:<line number>
-...............................................................................
-
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isOwned( s ) == false )
-with expansion:
-  false == false
+  REQUIRE_NOTHROW( s.c_str() )
 
 String.tests.cpp:<line number>: PASSED:
   REQUIRE( s.c_str() == rawChars )
@@ -8046,9 +8583,9 @@ with expansion:
   "hello" == "hello"
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isOwned( s ) == false )
+  REQUIRE( s.data() == rawChars )
 with expansion:
-  false == false
+  "hello" == "hello"
 
 -------------------------------------------------------------------------------
 StringRef
@@ -8061,19 +8598,15 @@ String.tests.cpp:<line number>: PASSED:
   REQUIRE( original == "original" )
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isSubstring( original ) )
+  REQUIRE_FALSE( original.isNullTerminated() )
 with expansion:
-  true
+  !false
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isOwned( original ) == false )
-with expansion:
-  false == false
+  REQUIRE_THROWS( original.c_str() )
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isOwned( original ) )
-with expansion:
-  true
+  REQUIRE_NOTHROW( original.data() )
 
 -------------------------------------------------------------------------------
 StringRef
@@ -8094,7 +8627,7 @@ with expansion:
   5 == 5
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( std::strcmp( ss.c_str(), "hello" ) == 0 )
+  REQUIRE( std::strncmp( ss.data(), "hello", 5 ) == 0 )
 with expansion:
   0 == 0
 
@@ -8102,63 +8635,6 @@ String.tests.cpp:<line number>: PASSED:
   REQUIRE( ss == "hello" )
 with expansion:
   hello == "hello"
-
--------------------------------------------------------------------------------
-StringRef
-  Substrings
-  c_str() causes copy
--------------------------------------------------------------------------------
-String.tests.cpp:<line number>
-...............................................................................
-
-String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isSubstring( ss ) )
-with expansion:
-  true
-
-String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isOwned( ss ) == false )
-with expansion:
-  false == false
-
-String.tests.cpp:<line number>: PASSED:
-  REQUIRE( rawChars == s.currentData() )
-with expansion:
-  "hello world!" == "hello world!"
-
-String.tests.cpp:<line number>: PASSED:
-  REQUIRE( ss.c_str() != rawChars )
-with expansion:
-  "hello" != "hello world!"
-
-String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isOwned( ss ) )
-with expansion:
-  true
-
--------------------------------------------------------------------------------
-StringRef
-  Substrings
-  c_str() causes copy
-  Self-assignment after substring
--------------------------------------------------------------------------------
-String.tests.cpp:<line number>
-...............................................................................
-
-String.tests.cpp:<line number>: PASSED:
-  REQUIRE( isOwned(ss) == false )
-with expansion:
-  false == false
-
-String.tests.cpp:<line number>: PASSED:
-  REQUIRE( ss == "hello" )
-with expansion:
-  hello == "hello"
-
-String.tests.cpp:<line number>: PASSED:
-  REQUIRE( rawChars == ss.currentData() )
-with expansion:
-  "hello world!" == "hello world!"
 
 -------------------------------------------------------------------------------
 StringRef
@@ -8187,22 +8663,22 @@ String.tests.cpp:<line number>
 ...............................................................................
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( s.c_str() == s2.c_str() )
+  REQUIRE( s.data() == s2.data() )
 with expansion:
   "hello world!" == "hello world!"
 
 -------------------------------------------------------------------------------
 StringRef
   Substrings
-  Pointer values of substring refs should not match
+  Pointer values of substring refs should also match
 -------------------------------------------------------------------------------
 String.tests.cpp:<line number>
 ...............................................................................
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( s.c_str() != ss.c_str() )
+  REQUIRE( s.data() == ss.data() )
 with expansion:
-  "hello world!" != "hello"
+  "hello world!" == "hello world!"
 
 -------------------------------------------------------------------------------
 StringRef
@@ -8219,20 +8695,38 @@ with expansion:
 
 -------------------------------------------------------------------------------
 StringRef
-  Comparisons
+  Substrings
+  Substring off the end are trimmed
 -------------------------------------------------------------------------------
 String.tests.cpp:<line number>
 ...............................................................................
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( StringRef("hello") == StringRef("hello") )
+  REQUIRE( std::strcmp(ss.c_str(), "world!") == 0 )
 with expansion:
-  hello == hello
+  0 == 0
+
+-------------------------------------------------------------------------------
+StringRef
+  Comparisons are deep
+-------------------------------------------------------------------------------
+String.tests.cpp:<line number>
+...............................................................................
 
 String.tests.cpp:<line number>: PASSED:
-  REQUIRE( StringRef("hello") != StringRef("cello") )
+  CHECK( (char*)buffer1 != (char*)buffer2 )
 with expansion:
-  hello != cello
+  "Hello" != "Hello"
+
+String.tests.cpp:<line number>: PASSED:
+  REQUIRE( left == right )
+with expansion:
+  Hello == Hello
+
+String.tests.cpp:<line number>: PASSED:
+  REQUIRE( left != left.substr(0, 3) )
+with expansion:
+  Hello != Hel
 
 -------------------------------------------------------------------------------
 StringRef
@@ -8323,6 +8817,64 @@ String.tests.cpp:<line number>: PASSED:
   REQUIRE( stdStr.size() == sr.size() )
 with expansion:
   11 == 11
+
+-------------------------------------------------------------------------------
+StringRef at compilation time
+  Simple constructors
+-------------------------------------------------------------------------------
+String.tests.cpp:<line number>
+...............................................................................
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  StringRef{}.size() == 0
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  StringRef{ "abc", 3 }.size() == 3
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  StringRef{ "abc", 3 }.isNullTerminated()
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  StringRef{ "abc", 2 }.size() == 2
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  !(StringRef{ "abc", 2 }.isNullTerminated())
+
+-------------------------------------------------------------------------------
+StringRef at compilation time
+  UDL construction
+-------------------------------------------------------------------------------
+String.tests.cpp:<line number>
+...............................................................................
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  !(sr1.empty())
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  sr1.size() == 3
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  sr1.isNullTerminated()
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  sr2.empty()
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  sr2.size() == 0
+
+String.tests.cpp:<line number>: PASSED:
+with message:
+  sr2.isNullTerminated()
 
 -------------------------------------------------------------------------------
 Stringifying std::chrono::duration helpers
@@ -10914,263 +11466,6 @@ with expansion:
   "[\x7F]" == "[\x7F]"
 
 -------------------------------------------------------------------------------
-XmlEncode: UTF-8
-  Valid utf-8 strings
--------------------------------------------------------------------------------
-Xml.tests.cpp:<line number>
-...............................................................................
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode(u8"Here be üëæ") == u8"Here be üëæ" )
-with expansion:
-  "Here be üëæ" == "Here be üëæ"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode(u8"≈°≈°") == u8"≈°≈°" )
-with expansion:
-  "≈°≈°" == "≈°≈°"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xDF\xBF") == "\xDF\xBF" )
-with expansion:
-  "ﬂø" == "ﬂø"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xE0\xA0\x80") == "\xE0\xA0\x80" )
-with expansion:
-  "‡†Ä" == "‡†Ä"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xED\x9F\xBF") == "\xED\x9F\xBF" )
-with expansion:
-  "Ìüø" == "Ìüø"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xEE\x80\x80") == "\xEE\x80\x80" )
-with expansion:
-  "ÓÄÄ" == "ÓÄÄ"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xEF\xBF\xBF") == "\xEF\xBF\xBF" )
-with expansion:
-  "Ôøø" == "Ôøø"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF0\x90\x80\x80") == "\xF0\x90\x80\x80" )
-with expansion:
-  "êÄÄ" == "êÄÄ"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF4\x8F\xBF\xBF") == "\xF4\x8F\xBF\xBF" )
-with expansion:
-  "Ùèøø" == "Ùèøø"
-
--------------------------------------------------------------------------------
-XmlEncode: UTF-8
-  Invalid utf-8 strings
-  Various broken strings
--------------------------------------------------------------------------------
-Xml.tests.cpp:<line number>
-...............................................................................
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("Here \xFF be üëæ") == u8"Here \\xFF be üëæ" )
-with expansion:
-  "Here \xFF be üëæ" == "Here \xFF be üëæ"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xFF") == "\\xFF" )
-with expansion:
-  "\xFF" == "\xFF"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xC5\xC5\xA0") == u8"\\xC5≈†" )
-with expansion:
-  "\xC5≈†" == "\xC5≈†"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF4\x90\x80\x80") == u8"\\xF4\\x90\\x80\\x80" )
-with expansion:
-  "\xF4\x90\x80\x80" == "\xF4\x90\x80\x80"
-
--------------------------------------------------------------------------------
-XmlEncode: UTF-8
-  Invalid utf-8 strings
-  Overlong encodings
--------------------------------------------------------------------------------
-Xml.tests.cpp:<line number>
-...............................................................................
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xC0\x80") == u8"\\xC0\\x80" )
-with expansion:
-  "\xC0\x80" == "\xC0\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF0\x80\x80\x80") == u8"\\xF0\\x80\\x80\\x80" )
-with expansion:
-  "\xF0\x80\x80\x80" == "\xF0\x80\x80\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xC1\xBF") == u8"\\xC1\\xBF" )
-with expansion:
-  "\xC1\xBF" == "\xC1\xBF"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xE0\x9F\xBF") == u8"\\xE0\\x9F\\xBF" )
-with expansion:
-  "\xE0\x9F\xBF" == "\xE0\x9F\xBF"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF0\x8F\xBF\xBF") == u8"\\xF0\\x8F\\xBF\\xBF" )
-with expansion:
-  "\xF0\x8F\xBF\xBF" == "\xF0\x8F\xBF\xBF"
-
--------------------------------------------------------------------------------
-XmlEncode: UTF-8
-  Invalid utf-8 strings
-  Surrogate pairs
--------------------------------------------------------------------------------
-Xml.tests.cpp:<line number>
-...............................................................................
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xED\xA0\x80") == "\xED\xA0\x80" )
-with expansion:
-  "Ì†Ä" == "Ì†Ä"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xED\xAF\xBF") == "\xED\xAF\xBF" )
-with expansion:
-  "ÌØø" == "ÌØø"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xED\xB0\x80") == "\xED\xB0\x80" )
-with expansion:
-  "Ì∞Ä" == "Ì∞Ä"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xED\xBF\xBF") == "\xED\xBF\xBF" )
-with expansion:
-  "Ìøø" == "Ìøø"
-
--------------------------------------------------------------------------------
-XmlEncode: UTF-8
-  Invalid utf-8 strings
-  Invalid start byte
--------------------------------------------------------------------------------
-Xml.tests.cpp:<line number>
-...............................................................................
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\x80") == u8"\\x80" )
-with expansion:
-  "\x80" == "\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\x81") == u8"\\x81" )
-with expansion:
-  "\x81" == "\x81"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xBC") == u8"\\xBC" )
-with expansion:
-  "\xBC" == "\xBC"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xBF") == u8"\\xBF" )
-with expansion:
-  "\xBF" == "\xBF"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF5\x80\x80\x80") == u8"\\xF5\\x80\\x80\\x80" )
-with expansion:
-  "\xF5\x80\x80\x80" == "\xF5\x80\x80\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF6\x80\x80\x80") == u8"\\xF6\\x80\\x80\\x80" )
-with expansion:
-  "\xF6\x80\x80\x80" == "\xF6\x80\x80\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF7\x80\x80\x80") == u8"\\xF7\\x80\\x80\\x80" )
-with expansion:
-  "\xF7\x80\x80\x80" == "\xF7\x80\x80\x80"
-
--------------------------------------------------------------------------------
-XmlEncode: UTF-8
-  Invalid utf-8 strings
-  Missing continuation byte(s)
--------------------------------------------------------------------------------
-Xml.tests.cpp:<line number>
-...............................................................................
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xDE") == u8"\\xDE" )
-with expansion:
-  "\xDE" == "\xDE"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xDF") == u8"\\xDF" )
-with expansion:
-  "\xDF" == "\xDF"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xE0") == u8"\\xE0" )
-with expansion:
-  "\xE0" == "\xE0"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xEF") == u8"\\xEF" )
-with expansion:
-  "\xEF" == "\xEF"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF0") == u8"\\xF0" )
-with expansion:
-  "\xF0" == "\xF0"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF4") == u8"\\xF4" )
-with expansion:
-  "\xF4" == "\xF4"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xE0\x80") == u8"\\xE0\\x80" )
-with expansion:
-  "\xE0\x80" == "\xE0\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xE0\xBF") == u8"\\xE0\\xBF" )
-with expansion:
-  "\xE0\xBF" == "\xE0\xBF"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xE1\x80") == u8"\\xE1\\x80" )
-with expansion:
-  "\xE1\x80" == "\xE1\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF0\x80") == u8"\\xF0\\x80" )
-with expansion:
-  "\xF0\x80" == "\xF0\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF4\x80") == u8"\\xF4\\x80" )
-with expansion:
-  "\xF4\x80" == "\xF4\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF0\x80\x80") == u8"\\xF0\\x80\\x80" )
-with expansion:
-  "\xF0\x80\x80" == "\xF0\x80\x80"
-
-Xml.tests.cpp:<line number>: PASSED:
-  CHECK( encode("\xF4\x80\x80") == u8"\\xF4\\x80\\x80" )
-with expansion:
-  "\xF4\x80\x80" == "\xF4\x80\x80"
-
--------------------------------------------------------------------------------
 array<int, N> -> toString
 -------------------------------------------------------------------------------
 ToStringVector.tests.cpp:<line number>
@@ -12957,5 +13252,5 @@ Misc.tests.cpp:<line number>: PASSED:
 
 ===============================================================================
 test cases:  304 |  214 passed |  86 failed |  4 failed as expected
-assertions: 1638 | 1469 passed | 148 failed | 21 failed as expected
+assertions: 1676 | 1507 passed | 148 failed | 21 failed as expected
 
