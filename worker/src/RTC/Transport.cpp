@@ -1977,9 +1977,7 @@ namespace RTC
 		if (totalPriorities == 0u)
 			return;
 
-		uint32_t availableBitrate;
-
-		availableBitrate = this->tccClient->GetAvailableBitrate();
+		uint32_t availableBitrate = this->tccClient->GetAvailableBitrate();
 
 		this->tccClient->RescheduleNextAvailableBitrateEvent();
 
