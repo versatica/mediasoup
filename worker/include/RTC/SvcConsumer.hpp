@@ -77,7 +77,13 @@ namespace RTC
 
 	inline bool SvcConsumer::IsActive() const
 	{
-		return (RTC::Consumer::IsActive() && this->producerRtpStream);
+		// clang-format off
+		return (
+			RTC::Consumer::IsActive() &&
+			this->producerRtpStream &&
+			this->producerRtpStream->GetScore() > 0u
+		);
+		// clang-format on
 	}
 
 	inline std::vector<RTC::RtpStreamSend*> SvcConsumer::GetRtpStreams()

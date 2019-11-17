@@ -140,19 +140,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Audio SimpleConsumer does not play the BWE game.
-		if (this->kind != RTC::Media::Kind::VIDEO)
-			return 0u;
-
-		// TODO: Yes?
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-
-		if (!IsActive())
-			return 0u;
-
-		// TODO: Use app given priority.
-
-		return 1u;
+		// SimpleConsumer does not play the BWE game.
+		return 0u;
 	}
 
 	uint32_t SimpleConsumer::IncreaseLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)

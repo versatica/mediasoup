@@ -446,6 +446,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+		MS_ASSERT(IsActive(), "should be active");
 
 		auto provisionalTargetSpatialLayer  = this->provisionalTargetSpatialLayer;
 		auto provisionalTargetTemporalLayer = this->provisionalTargetTemporalLayer;
@@ -454,7 +455,7 @@ namespace RTC
 		this->provisionalTargetSpatialLayer  = -1;
 		this->provisionalTargetTemporalLayer = -1;
 
-		if (!RTC::Consumer::IsActive())
+		if (!IsActive())
 			return;
 
 		// clang-format off
@@ -492,13 +493,7 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
-		if (!RTC::Consumer::IsActive())
-			return 0u;
-
-		if (!this->producerRtpStream)
-			return 0u;
-
-		if (this->producerRtpStream->GetScore() == 0u)
+		if (!IsActive())
 			return 0u;
 
 		int16_t desiredSpatialLayer{ -1 };

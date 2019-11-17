@@ -530,7 +530,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-		MS_ASSERT(RTC::Consumer::IsActive(), "should be active (Consumer::IsActive())");
+		MS_ASSERT(IsActive(), "should be active");
 
 		auto provisionalTargetSpatialLayer  = this->provisionalTargetSpatialLayer;
 		auto provisionalTargetTemporalLayer = this->provisionalTargetTemporalLayer;
@@ -574,7 +574,7 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
-		if (!RTC::Consumer::IsActive())
+		if (!IsActive())
 			return 0u;
 
 		int16_t desiredSpatialLayer{ -1 };
@@ -769,7 +769,7 @@ namespace RTC
 				if (this->keyFrameForTsOffsetRequested)
 				{
 					// Give up and use the theoretical offset.
-					tsExtraOffset = 1u;
+					tsExtraOffset = 0u;
 				}
 				else if (tsExtraOffset > maxTsExtraOffset)
 				{
