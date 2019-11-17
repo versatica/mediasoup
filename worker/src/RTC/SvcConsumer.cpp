@@ -292,46 +292,18 @@ namespace RTC
 		// Do nothing.
 	}
 
-	uint16_t SvcConsumer::GetBitratePriority() const
+	uint8_t SvcConsumer::GetBitratePriority() const
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
-		if (!RTC::Consumer::IsActive())
+		if (!IsActive())
 			return 0u;
 
-		// Return a 0 priority if score of producer stream is 0.
-		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0u)
-			return 0u;
+		// TODO: Use app given priority.
 
-		auto nowMs = DepLibUV::GetTimeMs();
-		int16_t prioritySpatialLayer{ -1 };
-		int16_t spatialLayer{ 0 };
-
-		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
-		{
-			// Do not choose a layer greater than the preferred one if we already found
-			// an available layer equal or less than the preferred one.
-			if (spatialLayer > this->preferredSpatialLayer && prioritySpatialLayer != -1)
-				break;
-
-			// Ignore spatial layers with 0 bitrate.
-			if (this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer) == 0u)
-				continue;
-
-			// Choose this layer for now.
-			prioritySpatialLayer = spatialLayer;
-		}
-
-		// If no spatial layer was chosen (because the producer stream was inactive),
-		// we have to return >0 anyway. Otherwise UseAvailableBitrate() won't be called
-		// and we could never switch to target & current spatial -1.
-		if (prioritySpatialLayer == -1)
-			return 1u;
-
-		// Return the choosen spatial layer plus one.
-		return static_cast<uint16_t>(prioritySpatialLayer + 1);
+		return 1u;
 	}
 
 	uint32_t SvcConsumer::UseAvailableBitrate(uint32_t bitrate, bool considerLoss)

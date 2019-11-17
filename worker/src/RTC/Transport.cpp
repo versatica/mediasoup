@@ -1957,8 +1957,7 @@ namespace RTC
 
 		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
 
-		std::multimap<uint16_t, RTC::Consumer*> multimapPriorityConsumer;
-		uint16_t totalPriorities{ 0u };
+		std::multimap<uint8_t, RTC::Consumer*> multimapPriorityConsumer;
 
 		// Fill the map with Consumers and their priority (if > 0).
 		for (auto& kv : this->mapConsumers)
@@ -1967,14 +1966,11 @@ namespace RTC
 			auto priority  = consumer->GetBitratePriority();
 
 			if (priority > 0u)
-			{
 				multimapPriorityConsumer.emplace(priority, consumer);
-				totalPriorities += priority;
-			}
 		}
 
 		// Nobody wants bitrate. Exit.
-		if (totalPriorities == 0u)
+		if (multimapPriorityConsumer.empty())
 			return;
 
 		uint32_t availableBitrate = this->tccClient->GetAvailableBitrate();
@@ -1983,48 +1979,11 @@ namespace RTC
 
 		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
-		uint32_t remainingBitrate = availableBitrate;
-
-		// First of all, redistribute the available bitrate by taking into account
-		// Consumers' priorities.
-		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
-		{
-			auto priority    = it->first;
-			auto* consumer   = it->second;
-			uint32_t bitrate = (availableBitrate * priority) / totalPriorities;
-
-			MS_DEBUG_DEV(
-			  "main bitrate for Consumer [priority:%" PRIu16 ", bitrate:%" PRIu32 ", consumerId:%s]",
-			  priority,
-			  bitrate,
-			  consumer->id.c_str());
-
-			uint32_t usedBitrate;
-			auto bweType = this->tccClient->GetBweType();
-
-			switch (bweType)
-			{
-				case RTC::BweType::TRANSPORT_CC:
-					usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ false);
-					break;
-				case RTC::BweType::REMB:
-					usedBitrate = consumer->UseAvailableBitrate(bitrate, /*considerLoss*/ true);
-					break;
-			}
-
-			if (usedBitrate <= remainingBitrate)
-				remainingBitrate -= usedBitrate;
-			else
-				remainingBitrate = 0u;
-		}
-
-		MS_DEBUG_DEV("after first main iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
-
-		// Then redistribute the remaining bitrate by allowing Consumers to increase
+		// Redistribute the available bitrate by allowing Consumers to increase
 		// layer by layer.
-		while (remainingBitrate >= 2000u)
+		while (availableBitrate > 0u)
 		{
-			auto previousRemainingBitrate = remainingBitrate;
+			auto previousAvailableBitrate = availableBitrate;
 
 			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 			{
@@ -2032,7 +1991,7 @@ namespace RTC
 
 				MS_DEBUG_DEV(
 				  "layer bitrate for Consumer [bitrate:%" PRIu32 ", consumerId:%s]",
-				  remainingBitrate,
+				  availableBitrate,
 				  consumer->id.c_str());
 
 				uint32_t usedBitrate;
@@ -2041,27 +2000,23 @@ namespace RTC
 				switch (bweType)
 				{
 					case RTC::BweType::TRANSPORT_CC:
-						usedBitrate = consumer->IncreaseLayer(remainingBitrate, /*considerLoss*/ false);
+						usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
 						break;
 					case RTC::BweType::REMB:
-						usedBitrate = consumer->IncreaseLayer(remainingBitrate, /*considerLoss*/ true);
+						usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ true);
 				}
 
-				MS_ASSERT(usedBitrate <= remainingBitrate, "Consumer used more layer bitrate than given");
+				MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
 
-				remainingBitrate -= usedBitrate;
-
-				// No more.
-				if (remainingBitrate < 2000u)
-					break;
+				availableBitrate -= usedBitrate;
 			}
 
 			// If no Consumer used bitrate, exit the loop.
-			if (remainingBitrate == previousRemainingBitrate)
+			if (availableBitrate == previousAvailableBitrate)
 				break;
 		}
 
-		MS_DEBUG_DEV("after layer-by-layer iteration [remainingBitrate:%" PRIu32 "]", remainingBitrate);
+		MS_DEBUG_DEV("after layer-by-layer iteration [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		// Finally instruct Consumers to apply their computed layers.
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)

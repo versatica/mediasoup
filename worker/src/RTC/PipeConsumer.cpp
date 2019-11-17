@@ -135,7 +135,7 @@ namespace RTC
 		// Do nothing.
 	}
 
-	uint16_t PipeConsumer::GetBitratePriority() const
+	uint8_t PipeConsumer::GetBitratePriority() const
 	{
 		MS_TRACE();
 

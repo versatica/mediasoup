@@ -136,12 +136,23 @@ namespace RTC
 		// Do nothing.
 	}
 
-	uint16_t SimpleConsumer::GetBitratePriority() const
+	uint8_t SimpleConsumer::GetBitratePriority() const
 	{
 		MS_TRACE();
 
-		// SimpleConsumer does not play the BWE game.
-		return 0u;
+		// Audio SimpleConsumer does not play the BWE game.
+		if (this->kind != RTC::Media::Kind::VIDEO)
+			return 0u;
+
+		// TODO: Yes?
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+
+		if (!IsActive())
+			return 0u;
+
+		// TODO: Use app given priority.
+
+		return 1u;
 	}
 
 	uint32_t SimpleConsumer::UseAvailableBitrate(uint32_t /*bitrate*/, bool /*considerLoss*/)

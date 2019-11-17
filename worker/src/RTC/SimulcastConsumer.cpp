@@ -332,45 +332,18 @@ namespace RTC
 			MayChangeLayers();
 	}
 
-	uint16_t SimulcastConsumer::GetBitratePriority() const
+	uint8_t SimulcastConsumer::GetBitratePriority() const
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
-		if (!RTC::Consumer::IsActive())
+		if (!IsActive())
 			return 0u;
 
-		int16_t prioritySpatialLayer{ -1 };
+		// TODO: Use app given priority.
 
-		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
-		{
-			auto spatialLayer = static_cast<int16_t>(sIdx);
-
-			// Do not choose a layer greater than the preferred one if we already found
-			// an available layer equal or less than the preferred one.
-			if (spatialLayer > this->preferredSpatialLayer && prioritySpatialLayer != -1)
-				break;
-
-			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
-
-			// Ignore spatial layers for non existing Producer streams or for those
-			// with score 0.
-			if (!producerRtpStream || producerRtpStream->GetScore() == 0)
-				continue;
-
-			// Choose this layer for now.
-			prioritySpatialLayer = spatialLayer;
-		}
-
-		// If no spatial layer was chosen (because all producer streams were inactive),
-		// we have to return >0 anyway. Otherwise UseAvailableBitrate() won't be called
-		// and we could never switch to target & current spatial -1.
-		if (prioritySpatialLayer == -1)
-			return 1u;
-
-		// Return the choosen spatial layer plus one.
-		return static_cast<uint16_t>(prioritySpatialLayer + 1);
+		return 1u;
 	}
 
 	uint32_t SimulcastConsumer::UseAvailableBitrate(uint32_t bitrate, bool considerLoss)
@@ -553,9 +526,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-
-		if (!RTC::Consumer::IsActive())
-			return 0u;
+		MS_ASSERT(IsActive(), "should be active (Consumer::IsActive())");
 
 		// If already in the preferred layers, do nothing.
 		// clang-format off
@@ -657,7 +628,7 @@ namespace RTC
 
 				requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0, temporalLayer);
 
-				// This is simulcast so we must substraxct the bitrate of the current temporal
+				// This is simulcast so we must substract the bitrate of the current temporal
 				// spatial layer if this is the temporal layer 0 of a higher spatial layer.
 				//
 				// clang-format off
@@ -728,6 +699,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+		MS_ASSERT(RTC::Consumer::IsActive(), "should be active (Consumer::IsActive())");
 
 		auto provisionalTargetSpatialLayer  = this->provisionalTargetSpatialLayer;
 		auto provisionalTargetTemporalLayer = this->provisionalTargetTemporalLayer;
@@ -735,9 +707,6 @@ namespace RTC
 		// Reset provisional target layers.
 		this->provisionalTargetSpatialLayer  = -1;
 		this->provisionalTargetTemporalLayer = -1;
-
-		if (!RTC::Consumer::IsActive())
-			return;
 
 		// clang-format off
 		if (
