@@ -12,8 +12,8 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint32_t MinBitrate{ 30000u };
-	static constexpr float MaxBitrateIncrementFactor{ 1.25f };        // TODO: Let's see.
-	static constexpr float MaxPaddingBitrateFactor{ 0.75f };          // TODO: Let's see.
+	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
+	static constexpr float MaxPaddingBitrateFactor{ 0.85f };
 	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
 
 	/* Instance methods. */

@@ -79,13 +79,12 @@ namespace RTC
 		virtual void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) = 0;
 		void ProducerClosed();
 		void SetExternallyManagedBitrate();
-		virtual uint8_t GetBitratePriority() const                                = 0;
-		virtual uint32_t UseAvailableBitrate(uint32_t bitrate, bool considerLoss) = 0;
-		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss)       = 0;
-		virtual void ApplyLayers()                                                = 0;
-		virtual uint32_t GetDesiredBitrate() const                                = 0;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet)                        = 0;
-		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams()                  = 0;
+		virtual uint8_t GetBitratePriority() const                          = 0;
+		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) = 0;
+		virtual void ApplyLayers()                                          = 0;
+		virtual uint32_t GetDesiredBitrate() const                          = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet)                  = 0;
+		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams()            = 0;
 		virtual void GetRtcp(
 		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;

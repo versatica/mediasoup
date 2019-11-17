@@ -1977,7 +1977,7 @@ namespace RTC
 
 		this->tccClient->RescheduleNextAvailableBitrateEvent();
 
-		MS_DEBUG_DEV("before iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		// Redistribute the available bitrate by allowing Consumers to increase
 		// layer by layer.
@@ -1988,14 +1988,8 @@ namespace RTC
 			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 			{
 				auto* consumer = it->second;
-
-				MS_DEBUG_DEV(
-				  "layer bitrate for Consumer [bitrate:%" PRIu32 ", consumerId:%s]",
-				  availableBitrate,
-				  consumer->id.c_str());
-
+				auto bweType   = this->tccClient->GetBweType();
 				uint32_t usedBitrate;
-				auto bweType = this->tccClient->GetBweType();
 
 				switch (bweType)
 				{
@@ -2016,7 +2010,7 @@ namespace RTC
 				break;
 		}
 
-		MS_DEBUG_DEV("after layer-by-layer iteration [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV("after layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		// Finally instruct Consumers to apply their computed layers.
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)

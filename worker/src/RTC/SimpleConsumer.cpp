@@ -155,14 +155,6 @@ namespace RTC
 		return 1u;
 	}
 
-	uint32_t SimpleConsumer::UseAvailableBitrate(uint32_t /*bitrate*/, bool /*considerLoss*/)
-	{
-		MS_TRACE();
-
-		// SimpleConsumer does not play the BWE game.
-		return 0u;
-	}
-
 	uint32_t SimpleConsumer::IncreaseLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
 	{
 		MS_TRACE();

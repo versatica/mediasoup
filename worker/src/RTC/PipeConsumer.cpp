@@ -143,14 +143,6 @@ namespace RTC
 		return 0u;
 	}
 
-	uint32_t PipeConsumer::UseAvailableBitrate(uint32_t /*bitrate*/, bool /*considerLoss*/)
-	{
-		MS_TRACE();
-
-		// PipeConsumer does not play the BWE game.
-		return 0u;
-	}
-
 	uint32_t PipeConsumer::IncreaseLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
 	{
 		MS_TRACE();

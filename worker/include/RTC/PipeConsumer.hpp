@@ -23,7 +23,6 @@ namespace RTC
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
 		uint8_t GetBitratePriority() const override;
-		uint32_t UseAvailableBitrate(uint32_t bitrate, bool considerLoss) override;
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;

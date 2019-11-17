@@ -306,165 +306,12 @@ namespace RTC
 		return 1u;
 	}
 
-	uint32_t SvcConsumer::UseAvailableBitrate(uint32_t bitrate, bool considerLoss)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-
-		this->provisionalTargetSpatialLayer  = -1;
-		this->provisionalTargetTemporalLayer = -1;
-
-		if (!RTC::Consumer::IsActive())
-			return 0u;
-
-		uint32_t virtualBitrate;
-
-		if (considerLoss)
-		{
-			// Calculate virtual available bitrate based on given bitrate and our
-			// packet lost.
-			auto lossPercentage = this->rtpStream->GetLossPercentage();
-
-			if (lossPercentage < 2)
-				virtualBitrate = 1.08 * bitrate;
-			else if (lossPercentage > 10)
-				virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
-			else
-				virtualBitrate = bitrate;
-		}
-		else
-		{
-			virtualBitrate = bitrate;
-		}
-
-		uint32_t usedBitrate{ 0u };
-		auto nowMs = DepLibUV::GetTimeMs();
-		int16_t spatialLayer{ 0 };
-
-		if (!this->producerRtpStream)
-			goto done;
-
-		if (this->producerRtpStream->GetScore() == 0u)
-			goto done;
-
-		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
-		{
-			// If this is higher than current spatial layer and we moved to to current spatial
-			// layer due to BWE limitations, check how much it has elapsed since then.
-			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
-			{
-				if (usedBitrate > 0u && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
-				{
-					MS_DEBUG_DEV(
-					  "avoid upgrading to spatial layer %" PRIi16 " due to recent BWE downgrade", spatialLayer);
-
-					goto done;
-				}
-			}
-
-			int16_t temporalLayer{ 0 };
-
-			// Check bitrate of every temporal layer.
-			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
-			{
-				auto requiredBitrate =
-				  this->producerRtpStream->GetBitrate(nowMs, spatialLayer, temporalLayer);
-
-				MS_DEBUG_DEV(
-				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
-				  ", required bitrate:%" PRIu32 "]",
-				  spatialLayer,
-				  temporalLayer,
-				  virtualBitrate,
-				  requiredBitrate);
-
-				// If layer is not active move to next spatial layer.
-				if (requiredBitrate == 0u)
-					break;
-
-				// If this layer requires more bitrate than the given one, abort the loop
-				// (so use the previous chosen layers if any).
-				if (requiredBitrate > virtualBitrate)
-					goto done;
-
-				// Set provisional layers and used bitrate.
-				this->provisionalTargetSpatialLayer  = spatialLayer;
-				this->provisionalTargetTemporalLayer = temporalLayer;
-				usedBitrate                          = requiredBitrate;
-
-				// If this is the preferred spatial and temporal layer, exit the loops.
-				// clang-format off
-				if (
-					this->provisionalTargetSpatialLayer == this->preferredSpatialLayer &&
-					this->provisionalTargetTemporalLayer == this->preferredTemporalLayer
-				)
-				// clang-format on
-				{
-					goto done;
-				}
-			}
-
-			// If this is the preferred or higher spatial layer, take it and exit.
-			if (this->provisionalTargetSpatialLayer >= this->preferredSpatialLayer)
-				break;
-		}
-
-	done:
-
-		// clang-format off
-		if (
-			this->provisionalTargetSpatialLayer != this->encodingContext->GetTargetSpatialLayer() ||
-			this->provisionalTargetTemporalLayer != this->encodingContext->GetTargetTemporalLayer()
-		)
-		// clang-format on
-		{
-			MS_DEBUG_2TAGS(
-			  bwe,
-			  svc,
-			  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtual bitrate:%" PRIu32
-			  ", used bitrate:%" PRIu32 ", consumerId:%s]",
-			  this->provisionalTargetSpatialLayer,
-			  this->provisionalTargetTemporalLayer,
-			  bitrate,
-			  virtualBitrate,
-			  usedBitrate,
-			  this->id.c_str());
-		}
-		else
-		{
-			MS_DEBUG_DEV(
-			  "choosing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIu32 ", virtual bitrate:%" PRIu32
-			  ", used bitrate:%" PRIu32 ", consumerId:%s]",
-			  this->provisionalTargetSpatialLayer,
-			  this->provisionalTargetTemporalLayer,
-			  bitrate,
-			  virtualBitrate,
-			  usedBitrate,
-			  this->id.c_str());
-		}
-
-		// Must recompute usedBitrate based on given bitrate, virtualBitrate and
-		// usedBitrate.
-		if (usedBitrate <= bitrate)
-			return usedBitrate;
-		else if (usedBitrate <= virtualBitrate)
-			return bitrate;
-		else
-			return usedBitrate;
-	}
-
 	uint32_t SvcConsumer::IncreaseLayer(uint32_t bitrate, bool considerLoss)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-
-		if (!RTC::Consumer::IsActive())
-			return 0u;
-
-		if (!this->producerRtpStream)
-			return 0u;
+		MS_ASSERT(IsActive(), "should be active");
 
 		if (this->producerRtpStream->GetScore() == 0u)
 			return 0u;
@@ -544,6 +391,14 @@ namespace RTC
 				requiredBitrate =
 				  this->producerRtpStream->GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 
+				MS_DEBUG_DEV(
+				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
+				  ", required bitrate:%" PRIu32 "]",
+				  spatialLayer,
+				  temporalLayer,
+				  virtualBitrate,
+				  requiredBitrate);
+
 				// If active layer, end iterations here. Otherwise move to next spatial layer.
 				if (requiredBitrate)
 					goto done;
@@ -570,9 +425,7 @@ namespace RTC
 		this->provisionalTargetSpatialLayer  = spatialLayer;
 		this->provisionalTargetTemporalLayer = temporalLayer;
 
-		MS_DEBUG_2TAGS(
-		  bwe,
-		  svc,
+		MS_DEBUG_DEV(
 		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
 		  ", required bitrate:%" PRIu32 "]",
 		  this->provisionalTargetSpatialLayer,
