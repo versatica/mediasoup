@@ -771,7 +771,7 @@ namespace RTC
 					{
 						MS_WARN_TAG(
 						  simulcast,
-						  "giving up on stream switch after requested keyframe for which still too high RTP timestamp extra offset is needed (%" PRIu32
+						  "giving up on proper stream switching after got a requested keyframe for which still too high RTP timestamp extra offset is needed (%" PRIu32
 						  ")",
 						  tsExtraOffset);
 
