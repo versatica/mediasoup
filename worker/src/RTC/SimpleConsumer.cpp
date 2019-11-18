@@ -140,31 +140,74 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// SimpleConsumer does not play the BWE game.
-		return 0u;
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+
+		// Audio SimpleConsumer does not play the BWE game.
+		if (this->kind != RTC::Media::Kind::VIDEO)
+			return 0u;
+
+		if (!IsActive())
+			return 0u;
+
+		return this->priority;
 	}
 
-	uint32_t SimpleConsumer::IncreaseLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
+	uint32_t SimpleConsumer::IncreaseLayer(uint32_t bitrate, bool /*considerLoss*/)
 	{
 		MS_TRACE();
 
-		// SimpleConsumer does not play the BWE game.
-		return 0u;
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+		MS_ASSERT(this->kind == RTC::Media::Kind::VIDEO, "should be video");
+		MS_ASSERT(IsActive(), "should be active");
+
+		// If this is not the first time this method is called within the same iteration,
+		// return 0 since a video SimpleConsumer does not keep state about this.
+		if (this->managingBitrate)
+			return 0u;
+
+		this->managingBitrate = true;
+
+		// Video SimpleConsumer does not really play the BWE game when. However, let's
+		// be honest and try to be nice.
+		auto nowMs          = DepLibUV::GetTimeMs();
+		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs, 0u, 0u);
+
+		if (desiredBitrate < bitrate)
+			return desiredBitrate;
+		else
+			return bitrate;
 	}
 
 	void SimpleConsumer::ApplyLayers()
 	{
 		MS_TRACE();
 
-		// SimpleConsumer does not play the BWE game.
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+		MS_ASSERT(this->kind == RTC::Media::Kind::VIDEO, "should be video");
+		MS_ASSERT(IsActive(), "should be active");
+
+		this->managingBitrate = false;
+
+		// SimpleConsumer does not play the BWE game (even if video kind).
 	}
 
 	uint32_t SimpleConsumer::GetDesiredBitrate() const
 	{
 		MS_TRACE();
 
-		// SimpleConsumer does not play the BWE game.
-		return 0u;
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+
+		// Audio SimpleConsumer does not play the BWE game.
+		if (this->kind != RTC::Media::Kind::VIDEO)
+			return 0u;
+
+		if (!IsActive())
+			return 0u;
+
+		auto nowMs          = DepLibUV::GetTimeMs();
+		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs, 0u, 0u);
+
+		return desiredBitrate;
 	}
 
 	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)

@@ -60,6 +60,7 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
+		bool managingBitrate{ false };
 	};
 
 	/* Inline methods. */
