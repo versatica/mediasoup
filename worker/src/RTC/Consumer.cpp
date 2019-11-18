@@ -301,7 +301,7 @@ namespace RTC
 				if (jsonPriorityIt == request->data.end() || !jsonPriorityIt->is_number())
 					MS_THROW_TYPE_ERROR("wrong priority (not a number)");
 
-				uint8_t priority = jsonPriorityIt->get<uint8_t>();
+				auto priority = jsonPriorityIt->get<uint8_t>();
 
 				if (priority < 1u)
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
