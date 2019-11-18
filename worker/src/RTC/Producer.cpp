@@ -345,6 +345,8 @@ namespace RTC
 
 		if (this->packetEventTypes.rtp)
 			packetEventTypes.emplace_back("rtp");
+		if (this->packetEventTypes.keyframe)
+			packetEventTypes.emplace_back("keyframe");
 		if (this->packetEventTypes.nack)
 			packetEventTypes.emplace_back("nack");
 		if (this->packetEventTypes.pli)
@@ -500,6 +502,8 @@ namespace RTC
 
 					if (typeStr == "rtp")
 						newPacketEventTypes.rtp = true;
+					else if (typeStr == "keyframe")
+						newPacketEventTypes.keyframe = true;
 					else if (typeStr == "nack")
 						newPacketEventTypes.nack = true;
 					else if (typeStr == "pli")
@@ -614,6 +618,7 @@ namespace RTC
 
 		// May emit 'packet' event.
 		EmitPacketEventRtpType(packet, isRtx);
+		EmitPacketEventKeyFrameType(packet, isRtx);
 
 		// Mangle the packet before providing the listener with it.
 		if (!MangleRtpPacket(packet, rtpStream))
@@ -1348,6 +1353,29 @@ namespace RTC
 		json data = json::object();
 
 		data["type"]      = "rtp";
+		data["timestamp"] = DepLibUV::GetTimeMs();
+		data["direction"] = "in";
+
+		packet->FillJson(data["info"]);
+
+		if (isRtx)
+			data["info"]["isRtx"] = true;
+
+		Channel::Notifier::Emit(this->id, "packet", data);
+	}
+
+	inline void Producer::EmitPacketEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx) const
+	{
+		MS_TRACE();
+
+		if (!this->packetEventTypes.keyframe)
+			return;
+		else if (!packet->IsKeyFrame())
+			return;
+
+		json data = json::object();
+
+		data["type"]      = "keyframe";
 		data["timestamp"] = DepLibUV::GetTimeMs();
 		data["direction"] = "in";
 

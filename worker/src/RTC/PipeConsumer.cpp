@@ -247,6 +247,7 @@ namespace RTC
 
 			// May emit 'packet' event.
 			EmitPacketEventRtpType(packet);
+			EmitPacketEventKeyFrameType(packet);
 		}
 		else
 		{
@@ -575,5 +576,6 @@ namespace RTC
 
 		// May emit 'packet' event.
 		EmitPacketEventRtpType(packet, rtpStream->HasRtx());
+		EmitPacketEventKeyFrameType(packet, rtpStream->HasRtx());
 	}
 } // namespace RTC

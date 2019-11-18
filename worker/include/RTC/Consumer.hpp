@@ -41,6 +41,7 @@ namespace RTC
 		struct PacketEventTypes
 		{
 			bool rtp{ false };
+			bool keyframe{ false };
 			bool nack{ false };
 			bool pli{ false };
 			bool fir{ false };
@@ -98,6 +99,7 @@ namespace RTC
 
 	protected:
 		void EmitPacketEventRtpType(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitPacketEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
 		void EmitPacketEventPliType(uint32_t ssrc) const;
 		void EmitPacketEventFirType(uint32_t ssrc) const;
 		void EmitPacketEventNackType() const;

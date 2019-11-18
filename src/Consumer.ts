@@ -51,7 +51,7 @@ export interface ConsumerOptions
 /**
  * Valid types for 'packet' event.
  */
-export type ConsumerPacketEventType = 'rtp' | 'nack' | 'pli' | 'fir';
+export type ConsumerPacketEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
 
 /**
  * 'packet' event data.
