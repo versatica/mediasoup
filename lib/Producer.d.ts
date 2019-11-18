@@ -26,7 +26,7 @@ export interface ProducerOptions {
 /**
  * Valid types for 'packet' event.
  */
-export declare type ProducerPacketEventType = 'rtp' | 'nack' | 'pli' | 'fir';
+export declare type ProducerPacketEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
 /**
  * 'packet' event data.
  */
