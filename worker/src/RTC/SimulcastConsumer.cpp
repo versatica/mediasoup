@@ -767,7 +767,16 @@ namespace RTC
 				if (this->keyFrameForTsOffsetRequested)
 				{
 					// Give up and use the theoretical offset.
-					tsExtraOffset = 0u;
+					if (tsExtraOffset > maxTsExtraOffset)
+					{
+						MS_WARN_TAG(
+						  simulcast,
+						  "giving up on stream switch after requested keyframe for which still too high RTP timestamp extra offset is needed (%" PRIu32
+						  ")",
+						  tsExtraOffset);
+
+						tsExtraOffset = 1u;
+					}
 				}
 				else if (tsExtraOffset > maxTsExtraOffset)
 				{
@@ -778,6 +787,7 @@ namespace RTC
 					  tsExtraOffset);
 
 					RequestKeyFrameForTargetSpatialLayer();
+
 					this->keyFrameForTsOffsetRequested = true;
 
 					return;
