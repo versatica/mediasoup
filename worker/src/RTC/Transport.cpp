@@ -1144,6 +1144,7 @@ namespace RTC
 			case Channel::Request::MethodId::CONSUMER_PAUSE:
 			case Channel::Request::MethodId::CONSUMER_RESUME:
 			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			case Channel::Request::MethodId::CONSUMER_SET_PRIORITY:
 			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			case Channel::Request::MethodId::CONSUMER_ENABLE_PACKET_EVENT:
 			{
@@ -1971,29 +1972,38 @@ namespace RTC
 		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		// Redistribute the available bitrate by allowing Consumers to increase
-		// layer by layer.
+		// layer by layer. Take into account the priority of each Consumer to
+		// provide it with more bitrate.
 		while (availableBitrate > 0u)
 		{
 			auto previousAvailableBitrate = availableBitrate;
 
 			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
 			{
+				auto priority  = it->first;
 				auto* consumer = it->second;
 				auto bweType   = this->tccClient->GetBweType();
-				uint32_t usedBitrate;
 
-				switch (bweType)
+				// If a Consumer has priority > 1, call IncreaseLayer() more times to
+				// provide it with more available bitrate to choose its preferred layers.
+				for (uint8_t i{ 1u }; i <= priority; ++i)
 				{
-					case RTC::BweType::TRANSPORT_CC:
-						usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
-						break;
-					case RTC::BweType::REMB:
-						usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ true);
+					uint32_t usedBitrate;
+
+					switch (bweType)
+					{
+						case RTC::BweType::TRANSPORT_CC:
+							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
+							break;
+						case RTC::BweType::REMB:
+							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ true);
+							break;
+					}
+
+					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
+
+					availableBitrate -= usedBitrate;
 				}
-
-				MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
-
-				availableBitrate -= usedBitrate;
 			}
 
 			// If no Consumer used bitrate, exit the loop.

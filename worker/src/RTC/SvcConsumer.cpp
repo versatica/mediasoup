@@ -301,9 +301,7 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		// TODO: Use app given priority.
-
-		return 1u;
+		return this->priority;
 	}
 
 	uint32_t SvcConsumer::IncreaseLayer(uint32_t bitrate, bool considerLoss)

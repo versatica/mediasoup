@@ -116,6 +116,7 @@ export default class Consumer extends EnhancedEventEmitter {
     private readonly _appData?;
     private _paused;
     private _producerPaused;
+    private _priority;
     private _score;
     private _currentLayers;
     private readonly _observer;
@@ -169,9 +170,13 @@ export default class Consumer extends EnhancedEventEmitter {
      */
     get paused(): boolean;
     /**
-     * Whether the associate Producer  is paused.
+     * Whether the associate Producer is paused.
      */
     get producerPaused(): boolean;
+    /**
+     * Current priority.
+     */
+    get priority(): number;
     /**
      * Consumer score.
      */
@@ -229,6 +234,14 @@ export default class Consumer extends EnhancedEventEmitter {
      * Set preferred video layers.
      */
     setPreferredLayers({ spatialLayer, temporalLayer }: ConsumerLayers): Promise<void>;
+    /**
+     * Set priority.
+     */
+    setPriority(priority: number): Promise<void>;
+    /**
+     * Unset priority.
+     */
+    unsetPriority(): Promise<void>;
     /**
      * Request a key frame to the Producer.
      */

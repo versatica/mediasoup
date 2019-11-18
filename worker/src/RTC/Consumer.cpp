@@ -192,6 +192,9 @@ namespace RTC
 		// Add producerPaused.
 		jsonObject["producerPaused"] = this->producerPaused;
 
+		// Add priority.
+		jsonObject["priority"] = this->priority;
+
 		// Add packetEventTypes.
 		std::vector<std::string> packetEventTypes;
 		std::ostringstream packetEventTypesStream;
@@ -287,6 +290,29 @@ namespace RTC
 					UserOnResumed();
 
 				request->Accept();
+
+				break;
+			}
+
+			case Channel::Request::MethodId::CONSUMER_SET_PRIORITY:
+			{
+				auto jsonPriorityIt = request->data.find("priority");
+
+				if (jsonPriorityIt == request->data.end() || !jsonPriorityIt->is_number())
+					MS_THROW_TYPE_ERROR("wrong priority (not a number)");
+
+				uint8_t priority = jsonPriorityIt->get<uint8_t>();
+
+				if (priority < 1u)
+					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
+
+				this->priority = priority;
+
+				json data = json::object();
+
+				data["priority"] = this->priority;
+
+				request->Accept(data);
 
 				break;
 			}

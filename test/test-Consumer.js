@@ -308,6 +308,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.type).toBe('simple');
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
+	expect(audioConsumer.priority).toBe(1);
 	expect(audioConsumer.score).toEqual({ score: 10, producerScore: 0 });
 	expect(audioConsumer.currentLayers).toBe(null);
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
@@ -387,6 +388,7 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(true);
 	expect(videoConsumer.producerPaused).toBe(true);
+	expect(videoConsumer.priority).toBe(1);
 	expect(videoConsumer.score).toEqual({ score: 10, producerScore: 0 });
 	expect(videoConsumer.currentLayers).toBe(null);
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
@@ -527,6 +529,7 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.supportedCodecPayloadTypes).toEqual([ 100 ]);
 	expect(data.paused).toBe(false);
 	expect(data.producerPaused).toBe(false);
+	expect(data.priority).toBe(1);
 
 	data = await videoConsumer.dump();
 
@@ -604,6 +607,7 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.supportedCodecPayloadTypes).toEqual([ 103 ]);
 	expect(data.paused).toBe(true);
 	expect(data.producerPaused).toBe(true);
+	expect(data.priority).toBe(1);
 }, 2000);
 
 test('consumer.getStats() succeeds', async () =>
@@ -650,6 +654,33 @@ test('consumer.pause() and resume() succeed', async () =>
 	await expect(audioConsumer.dump())
 		.resolves
 		.toMatchObject({ paused: false });
+}, 2000);
+
+test('consumer.setPriority() succeed', async () =>
+{
+	await videoConsumer.setPriority(2);
+	expect(videoConsumer.priority).toBe(2);
+}, 2000);
+
+test('consumer.setPriority() with wrong arguments rejects with TypeError', async () =>
+{
+	await expect(videoConsumer.setPriority())
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(videoConsumer.setPriority(0))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(videoConsumer.setPriority('foo'))
+		.rejects
+		.toThrow(TypeError);
+}, 2000);
+
+test('consumer.unsetPriority() succeed', async () =>
+{
+	await videoConsumer.unsetPriority();
+	expect(videoConsumer.priority).toBe(1);
 }, 2000);
 
 test('consumer.enablePacketEvent() succeed', async () =>
@@ -774,6 +805,10 @@ test('Consumer methods reject if closed', async () =>
 		.toThrow(Error);
 
 	await expect(audioConsumer.setPreferredLayers({}))
+		.rejects
+		.toThrow(Error);
+
+	await expect(audioConsumer.setPriority(2))
 		.rejects
 		.toThrow(Error);
 

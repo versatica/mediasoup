@@ -126,6 +126,7 @@ namespace RTC
 		uint64_t lastRtcpSentTime{ 0u };
 		uint16_t maxRtcpInterval{ 0u };
 		bool externallyManagedBitrate{ false };
+		uint8_t priority{ 1u };
 		struct PacketEventTypes packetEventTypes;
 
 	private:

@@ -44,6 +44,7 @@ namespace Channel
 		{ "consumer.pause",                  Request::MethodId::CONSUMER_PAUSE                     },
 		{ "consumer.resume",                 Request::MethodId::CONSUMER_RESUME                    },
 		{ "consumer.setPreferredLayers",     Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS      },
+		{ "consumer.setPriority",            Request::MethodId::CONSUMER_SET_PRIORITY              },
 		{ "consumer.requestKeyFrame",        Request::MethodId::CONSUMER_REQUEST_KEY_FRAME         },
 		{ "consumer.enablePacketEvent",      Request::MethodId::CONSUMER_ENABLE_PACKET_EVENT       },
 		{ "dataProducer.close",              Request::MethodId::DATA_PRODUCER_CLOSE                },

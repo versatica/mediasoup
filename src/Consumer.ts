@@ -168,6 +168,9 @@ export default class Consumer extends EnhancedEventEmitter
 	// Associated Producer paused flag.
 	private _producerPaused = false;
 
+	// Current priority.
+	private _priority = 1;
+
 	// Current score.
 	private _score: ConsumerScore;
 
@@ -281,11 +284,19 @@ export default class Consumer extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Whether the associate Producer  is paused.
+	 * Whether the associate Producer is paused.
 	 */
 	get producerPaused(): boolean
 	{
 		return this._producerPaused;
+	}
+
+	/**
+	 * Current priority.
+	 */
+	get priority(): number
+	{
+		return this._priority;
 	}
 
 	/**
@@ -454,6 +465,36 @@ export default class Consumer extends EnhancedEventEmitter
 
 		await this._channel.request(
 			'consumer.setPreferredLayers', this._internal, reqData);
+	}
+
+	/**
+	 * Set priority.
+	 */
+	async setPriority(priority: number): Promise<void>
+	{
+		logger.debug('setPriority()');
+
+		const reqData = { priority };
+
+		const data = await this._channel.request(
+			'consumer.setPriority', this._internal, reqData);
+
+		this._priority = data.priority;
+	}
+
+	/**
+	 * Unset priority.
+	 */
+	async unsetPriority(): Promise<void>
+	{
+		logger.debug('unsetPriority()');
+
+		const reqData = { priority: 1 };
+
+		const data = await this._channel.request(
+			'consumer.setPriority', this._internal, reqData);
+
+		this._priority = data.priority;
 	}
 
 	/**
