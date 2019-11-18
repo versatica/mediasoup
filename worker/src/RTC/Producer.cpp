@@ -617,8 +617,7 @@ namespace RTC
 			return result;
 
 		// May emit 'packet' event.
-		EmitPacketEventRtpType(packet, isRtx);
-		EmitPacketEventKeyFrameType(packet, isRtx);
+		EmitPacketEventRtpAndKeyFrameTypes(packet, isRtx);
 
 		// Mangle the packet before providing the listener with it.
 		if (!MangleRtpPacket(packet, rtpStream))
@@ -1343,48 +1342,40 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "score", data);
 	}
 
-	inline void Producer::EmitPacketEventRtpType(RTC::RtpPacket* packet, bool isRtx) const
+	inline void Producer::EmitPacketEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx) const
 	{
 		MS_TRACE();
 
-		if (!this->packetEventTypes.rtp)
-			return;
+		if (this->packetEventTypes.keyframe && packet->IsKeyFrame())
+		{
+			json data = json::object();
 
-		json data = json::object();
+			data["type"]      = "keyframe";
+			data["timestamp"] = DepLibUV::GetTimeMs();
+			data["direction"] = "in";
 
-		data["type"]      = "rtp";
-		data["timestamp"] = DepLibUV::GetTimeMs();
-		data["direction"] = "in";
+			packet->FillJson(data["info"]);
 
-		packet->FillJson(data["info"]);
+			if (isRtx)
+				data["info"]["isRtx"] = true;
 
-		if (isRtx)
-			data["info"]["isRtx"] = true;
+			Channel::Notifier::Emit(this->id, "packet", data);
+		}
+		else if (this->packetEventTypes.rtp)
+		{
+			json data = json::object();
 
-		Channel::Notifier::Emit(this->id, "packet", data);
-	}
+			data["type"]      = "rtp";
+			data["timestamp"] = DepLibUV::GetTimeMs();
+			data["direction"] = "in";
 
-	inline void Producer::EmitPacketEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx) const
-	{
-		MS_TRACE();
+			packet->FillJson(data["info"]);
 
-		if (!this->packetEventTypes.keyframe)
-			return;
-		else if (!packet->IsKeyFrame())
-			return;
+			if (isRtx)
+				data["info"]["isRtx"] = true;
 
-		json data = json::object();
-
-		data["type"]      = "keyframe";
-		data["timestamp"] = DepLibUV::GetTimeMs();
-		data["direction"] = "in";
-
-		packet->FillJson(data["info"]);
-
-		if (isRtx)
-			data["info"]["isRtx"] = true;
-
-		Channel::Notifier::Emit(this->id, "packet", data);
+			Channel::Notifier::Emit(this->id, "packet", data);
+		}
 	}
 
 	inline void Producer::EmitPacketEventPliType(uint32_t ssrc) const

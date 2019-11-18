@@ -1,7 +1,18 @@
 # Changelog
 
 
-### 3.3.0 (WIP)
+### 3.3.2
+
+* Improve "packet" event by not firing both "keyframe" and "rtp" types for the same RTP packet.
+
+
+### 3.3.1
+
+
+* Add type "keyframe" as a valid type for "packet" event in `Producers` and `Consumers`.
+
+
+### 3.3.0
 
 * Add transport-cc bandwidth estimation and congestion control in sender and receiver side.
 * Run in Windows.
