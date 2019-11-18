@@ -408,48 +408,40 @@ namespace RTC
 		this->listener->OnConsumerProducerClosed(this);
 	}
 
-	void Consumer::EmitPacketEventRtpType(RTC::RtpPacket* packet, bool isRtx) const
+	void Consumer::EmitPacketEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx) const
 	{
 		MS_TRACE();
 
-		if (!this->packetEventTypes.rtp)
-			return;
+		if (this->packetEventTypes.keyframe && packet->IsKeyFrame())
+		{
+			json data = json::object();
 
-		json data = json::object();
+			data["type"]      = "keyframe";
+			data["timestamp"] = DepLibUV::GetTimeMs();
+			data["direction"] = "out";
 
-		data["type"]      = "rtp";
-		data["timestamp"] = DepLibUV::GetTimeMs();
-		data["direction"] = "out";
+			packet->FillJson(data["info"]);
 
-		packet->FillJson(data["info"]);
+			if (isRtx)
+				data["info"]["isRtx"] = true;
 
-		if (isRtx)
-			data["info"]["isRtx"] = true;
+			Channel::Notifier::Emit(this->id, "packet", data);
+		}
+		else if (this->packetEventTypes.rtp)
+		{
+			json data = json::object();
 
-		Channel::Notifier::Emit(this->id, "packet", data);
-	}
+			data["type"]      = "rtp";
+			data["timestamp"] = DepLibUV::GetTimeMs();
+			data["direction"] = "out";
 
-	void Consumer::EmitPacketEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx) const
-	{
-		MS_TRACE();
+			packet->FillJson(data["info"]);
 
-		if (!this->packetEventTypes.keyframe)
-			return;
-		else if (!packet->IsKeyFrame())
-			return;
+			if (isRtx)
+				data["info"]["isRtx"] = true;
 
-		json data = json::object();
-
-		data["type"]      = "keyframe";
-		data["timestamp"] = DepLibUV::GetTimeMs();
-		data["direction"] = "out";
-
-		packet->FillJson(data["info"]);
-
-		if (isRtx)
-			data["info"]["isRtx"] = true;
-
-		Channel::Notifier::Emit(this->id, "packet", data);
+			Channel::Notifier::Emit(this->id, "packet", data);
+		}
 	}
 
 	void Consumer::EmitPacketEventPliType(uint32_t ssrc) const

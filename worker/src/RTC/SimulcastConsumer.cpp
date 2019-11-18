@@ -1089,8 +1089,7 @@ namespace RTC
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 
 			// May emit 'packet' event.
-			EmitPacketEventRtpType(packet);
-			EmitPacketEventKeyFrameType(packet);
+			EmitPacketEventRtpAndKeyFrameTypes(packet);
 		}
 		else
 		{
@@ -1695,7 +1694,6 @@ namespace RTC
 		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
 
 		// May emit 'packet' event.
-		EmitPacketEventRtpType(packet, this->rtpStream->HasRtx());
-		EmitPacketEventKeyFrameType(packet, this->rtpStream->HasRtx());
+		EmitPacketEventRtpAndKeyFrameTypes(packet, this->rtpStream->HasRtx());
 	}
 } // namespace RTC

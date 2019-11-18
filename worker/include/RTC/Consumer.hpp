@@ -98,7 +98,7 @@ namespace RTC
 		virtual float GetRtt() const                                              = 0;
 
 	protected:
-		void EmitPacketEventRtpType(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitPacketEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
 		void EmitPacketEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
 		void EmitPacketEventPliType(uint32_t ssrc) const;
 		void EmitPacketEventFirType(uint32_t ssrc) const;
