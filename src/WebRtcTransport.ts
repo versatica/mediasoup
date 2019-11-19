@@ -4,7 +4,7 @@ import Transport, {
 	TransportListenIp,
 	TransportProtocol,
 	TransportTuple,
-	TransportPacketEventData,
+	TransportTraceEventData,
 	SctpState
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
@@ -183,7 +183,7 @@ export default class WebRtcTransport extends Transport
 	 * @emits {iceSelectedTuple: TransportTuple} iceselectedtuplechange
 	 * @emits {dtlsState: DtlsState} dtlsstatechange
 	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportPacketEventData} packet
+	 * @emits {TransportTraceEventData} trace
 	 */
 	constructor(params: any)
 	{
@@ -303,7 +303,7 @@ export default class WebRtcTransport extends Transport
 	 * @emits {iceSelectedTuple: TransportTuple} iceselectedtuplechange
 	 * @emits {dtlsState: DtlsState} dtlsstatechange
 	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportPacketEventData} packet
+	 * @emits {TransportTraceEventData} trace
 	 */
 	get observer(): EnhancedEventEmitter
 	{
@@ -464,14 +464,14 @@ export default class WebRtcTransport extends Transport
 					break;
 				}
 
-				case 'packet':
+				case 'trace':
 				{
-					const packet = data as TransportPacketEventData;
+					const trace = data as TransportTraceEventData;
 
-					this.safeEmit('packet', packet);
+					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('packet', packet);
+					this._observer.safeEmit('trace', trace);
 
 					break;
 				}

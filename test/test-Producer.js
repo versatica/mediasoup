@@ -637,40 +637,40 @@ test('producer.pause() and resume() succeed', async () =>
 		.toMatchObject({ paused: false });
 }, 2000);
 
-test('producer.enablePacketEvent() succeed', async () =>
+test('producer.enableTraceEvent() succeed', async () =>
 {
-	await audioProducer.enablePacketEvent([ 'rtp', 'pli' ]);
+	await audioProducer.enableTraceEvent([ 'rtp', 'pli' ]);
 	await expect(audioProducer.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: 'rtp,pli' });
+		.toMatchObject({ traceEventTypes: 'rtp,pli' });
 
-	await audioProducer.enablePacketEvent([]);
+	await audioProducer.enableTraceEvent([]);
 	await expect(audioProducer.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: '' });
+		.toMatchObject({ traceEventTypes: '' });
 
-	await audioProducer.enablePacketEvent([ 'nack', 'FOO', 'fir' ]);
+	await audioProducer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
 	await expect(audioProducer.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: 'nack,fir' });
+		.toMatchObject({ traceEventTypes: 'nack,fir' });
 
-	await audioProducer.enablePacketEvent();
+	await audioProducer.enableTraceEvent();
 	await expect(audioProducer.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: '' });
+		.toMatchObject({ traceEventTypes: '' });
 }, 2000);
 
-test('producer.enablePacketEvent() with wrong arguments rejects with TypeError', async () =>
+test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(audioProducer.enablePacketEvent(123))
+	await expect(audioProducer.enableTraceEvent(123))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(audioProducer.enablePacketEvent('rtp'))
+	await expect(audioProducer.enableTraceEvent('rtp'))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(audioProducer.enablePacketEvent([ 'fir', 123.123 ]))
+	await expect(audioProducer.enableTraceEvent([ 'fir', 123.123 ]))
 		.rejects
 		.toThrow(TypeError);
 }, 2000);

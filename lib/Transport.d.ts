@@ -28,17 +28,17 @@ export interface TransportTuple {
     protocol: TransportProtocol;
 }
 /**
- * Valid types for 'packet' event.
+ * Valid types for 'trace' event.
  */
-export declare type TransportPacketEventType = 'probation' | 'bwe';
+export declare type TransportTraceEventType = 'probation' | 'bwe';
 /**
- * 'packet' event data.
+ * 'trace' event data.
  */
-export interface TransportPacketEventData {
+export interface TransportTraceEventData {
     /**
-     * Type of packet.
+     * Trace type.
      */
-    type: TransportPacketEventType;
+    type: TransportTraceEventType;
     /**
      * Event timestamp.
      */
@@ -165,9 +165,9 @@ export default class Transport extends EnhancedEventEmitter {
      */
     consumeData({ dataProducerId, appData }: DataConsumerOptions): Promise<DataConsumer>;
     /**
-     * Enable 'packet' event.
+     * Enable 'trace' event.
      */
-    enablePacketEvent(types?: TransportPacketEventType[]): Promise<void>;
+    enableTraceEvent(types?: TransportTraceEventType[]): Promise<void>;
     private _getNextSctpStreamId;
 }
 //# sourceMappingURL=Transport.d.ts.map

@@ -49,19 +49,19 @@ export interface ConsumerOptions
 }
 
 /**
- * Valid types for 'packet' event.
+ * Valid types for 'trace' event.
  */
-export type ConsumerPacketEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
+export type ConsumerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
 
 /**
- * 'packet' event data.
+ * 'trace' event data.
  */
-export interface ConsumerPacketEventData
+export interface ConsumerTraceEventData
 {
 	/**
-	 * Type of packet.
+	 * Trace type.
 	 */
-	type: ConsumerPacketEventType;
+	type: ConsumerTraceEventType;
 
 	/**
 	 * Event timestamp.
@@ -191,7 +191,7 @@ export default class Consumer extends EnhancedEventEmitter
 	 * @emits producerresume
 	 * @emits {ConsumerScore} score
 	 * @emits {ConsumerLayers | null} layerschange
-	 * @emits {ConsumerPacketEventData} packet
+	 * @emits {ConsumerTraceEventData} trace
 	 * @emits @close
 	 * @emits @producerclose
 	 */
@@ -353,7 +353,7 @@ export default class Consumer extends EnhancedEventEmitter
 	 * @emits resume
 	 * @emits {ConsumerScore} score
 	 * @emits {ConsumerLayers | null} layerschange
-	 * @emits {ConsumerPacketEventData} packet
+	 * @emits {ConsumerTraceEventData} trace
 	 */
 	get observer(): EnhancedEventEmitter
 	{
@@ -524,16 +524,16 @@ export default class Consumer extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Enable 'packet' event.
+	 * Enable 'trace' event.
 	 */
-	async enablePacketEvent(types: ConsumerPacketEventType[] = []): Promise<void>
+	async enableTraceEvent(types: ConsumerTraceEventType[] = []): Promise<void>
 	{
-		logger.debug('enablePacketEvent()');
+		logger.debug('enableTraceEvent()');
 
 		const reqData = { types };
 
 		await this._channel.request(
-			'consumer.enablePacketEvent', this._internal, reqData);
+			'consumer.enableTraceEvent', this._internal, reqData);
 	}
 
 	private _handleWorkerNotifications(): void
@@ -625,14 +625,14 @@ export default class Consumer extends EnhancedEventEmitter
 					break;
 				}
 
-				case 'packet':
+				case 'trace':
 				{
-					const packet = data as ConsumerPacketEventData;
+					const trace = data as ConsumerTraceEventData;
 
-					this.safeEmit('packet', packet);
+					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('packet', packet);
+					this._observer.safeEmit('trace', trace);
 
 					break;
 				}

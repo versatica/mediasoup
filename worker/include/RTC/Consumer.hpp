@@ -45,7 +45,7 @@ namespace RTC
 		};
 
 	private:
-		struct PacketEventTypes
+		struct TraceEventTypes
 		{
 			bool rtp{ false };
 			bool keyframe{ false };
@@ -105,11 +105,11 @@ namespace RTC
 		virtual float GetRtt() const                                              = 0;
 
 	protected:
-		void EmitPacketEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
-		void EmitPacketEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
-		void EmitPacketEventPliType(uint32_t ssrc) const;
-		void EmitPacketEventFirType(uint32_t ssrc) const;
-		void EmitPacketEventNackType() const;
+		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitTraceEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitTraceEventPliType(uint32_t ssrc) const;
+		void EmitTraceEventFirType(uint32_t ssrc) const;
+		void EmitTraceEventNackType() const;
 
 	private:
 		virtual void UserOnTransportConnected()    = 0;
@@ -135,7 +135,7 @@ namespace RTC
 		uint16_t maxRtcpInterval{ 0u };
 		bool externallyManagedBitrate{ false };
 		uint8_t priority{ 1u };
-		struct PacketEventTypes packetEventTypes;
+		struct TraceEventTypes traceEventTypes;
 
 	private:
 		// Others.

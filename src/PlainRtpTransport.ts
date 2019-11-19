@@ -3,7 +3,7 @@ import EnhancedEventEmitter from './EnhancedEventEmitter';
 import Transport, {
 	TransportListenIp,
 	TransportTuple,
-	TransportPacketEventData,
+	TransportTraceEventData,
 	SctpState
 } from './Transport';
 import Consumer, { ConsumerOptions } from './Consumer';
@@ -122,7 +122,7 @@ export default class PlainRtpTransport extends Transport
 	/**
 	 * @private
 	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportPacketEventData} packet
+	 * @emits {TransportTraceEventData} trace
 	 */
 	constructor(params: any)
 	{
@@ -185,7 +185,7 @@ export default class PlainRtpTransport extends Transport
 	 * @emits {producer: DataProducer} newdataproducer
 	 * @emits {consumer: DataConsumer} newdataconsumer
 	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportPacketEventData} packet
+	 * @emits {TransportTraceEventData} trace
 	 */
 	get observer(): EnhancedEventEmitter
 	{
@@ -300,14 +300,14 @@ export default class PlainRtpTransport extends Transport
 					break;
 				}
 
-				case 'packet':
+				case 'trace':
 				{
-					const packet = data as TransportPacketEventData;
+					const trace = data as TransportTraceEventData;
 
-					this.safeEmit('packet', packet);
+					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('packet', packet);
+					this._observer.safeEmit('trace', trace);
 
 					break;
 				}

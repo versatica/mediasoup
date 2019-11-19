@@ -32,19 +32,19 @@ export interface ProducerOptions
 }
 
 /**
- * Valid types for 'packet' event.
+ * Valid types for 'trace' event.
  */
-export type ProducerPacketEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
+export type ProducerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
 
 /**
- * 'packet' event data.
+ * 'trace' event data.
  */
-export interface ProducerPacketEventData
+export interface ProducerTraceEventData
 {
 	/**
-	 * Type of packet.
+	 * Trace type.
 	 */
-	type: ProducerPacketEventType;
+	type: ProducerTraceEventType;
 
 	/**
 	 * Event timestamp.
@@ -173,7 +173,7 @@ export default class Producer extends EnhancedEventEmitter
 	 * @emits transportclose
 	 * @emits {ProducerScore[]} score
 	 * @emits {ProducerVideoOrientation} videoorientationchange
-	 * @emits {ProducerPacketEventData} packet
+	 * @emits {ProducerTraceEventData} trace
 	 * @emits @close
 	 */
 	constructor(
@@ -296,7 +296,7 @@ export default class Producer extends EnhancedEventEmitter
 	 * @emits resume
 	 * @emits {ProducerScore[]} score
 	 * @emits {ProducerVideoOrientation} videoorientationchange
-	 * @emits {ProducerPacketEventData} packet
+	 * @emits {ProducerTraceEventData} trace
 	 */
 	get observer(): EnhancedEventEmitter
 	{
@@ -407,16 +407,16 @@ export default class Producer extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Enable 'packet' event.
+	 * Enable 'trace' event.
 	 */
-	async enablePacketEvent(types: ProducerPacketEventType[] = []): Promise<void>
+	async enableTraceEvent(types: ProducerTraceEventType[] = []): Promise<void>
 	{
-		logger.debug('enablePacketEvent()');
+		logger.debug('enableTraceEvent()');
 
 		const reqData = { types };
 
 		await this._channel.request(
-			'producer.enablePacketEvent', this._internal, reqData);
+			'producer.enableTraceEvent', this._internal, reqData);
 	}
 
 	private _handleWorkerNotifications(): void
@@ -451,14 +451,14 @@ export default class Producer extends EnhancedEventEmitter
 					break;
 				}
 
-				case 'packet':
+				case 'trace':
 				{
-					const packet = data as ProducerPacketEventData;
+					const trace = data as ProducerTraceEventData;
 
-					this.safeEmit('packet', packet);
+					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('packet', packet);
+					this._observer.safeEmit('trace', trace);
 
 					break;
 				}

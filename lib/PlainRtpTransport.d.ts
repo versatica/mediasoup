@@ -75,7 +75,7 @@ export default class PlainRtpTransport extends Transport {
     /**
      * @private
      * @emits {sctpState: SctpState} sctpstatechange
-     * @emits {TransportPacketEventData} packet
+     * @emits {TransportTraceEventData} trace
      */
     constructor(params: any);
     /**
@@ -104,7 +104,7 @@ export default class PlainRtpTransport extends Transport {
      * @emits {producer: DataProducer} newdataproducer
      * @emits {consumer: DataConsumer} newdataconsumer
      * @emits {sctpState: SctpState} sctpstatechange
-     * @emits {TransportPacketEventData} packet
+     * @emits {TransportTraceEventData} trace
      */
     get observer(): EnhancedEventEmitter;
     /**

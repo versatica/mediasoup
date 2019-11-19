@@ -101,7 +101,7 @@ namespace RTC
 		};
 
 	private:
-		struct PacketEventTypes
+		struct TraceEventTypes
 		{
 			bool probation{ false };
 			bool bwe{ false };
@@ -150,8 +150,8 @@ namespace RTC
 		virtual void SendSctpData(const uint8_t* data, size_t len)             = 0;
 		void DistributeAvailableOutgoingBitrate();
 		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
-		void EmitPacketEventProbationType(RTC::RtpPacket* packet) const;
-		void EmitPacketEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
+		void EmitTraceEventProbationType(RTC::RtpPacket* packet) const;
+		void EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
@@ -267,7 +267,7 @@ namespace RTC
 		uint16_t transportWideCcSeq{ 0u };
 		uint32_t initialAvailableOutgoingBitrate{ 600000u };
 		uint32_t maxIncomingBitrate{ 0u };
-		struct PacketEventTypes packetEventTypes;
+		struct TraceEventTypes traceEventTypes;
 	};
 
 	/* Inline instance methods. */

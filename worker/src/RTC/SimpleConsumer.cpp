@@ -287,8 +287,8 @@ namespace RTC
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 
-			// May emit 'packet' event.
-			EmitPacketEventRtpAndKeyFrameTypes(packet);
+			// May emit 'trace' event.
+			EmitTraceEventRtpAndKeyFrameTypes(packet);
 		}
 		else
 		{
@@ -354,8 +354,8 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		// May emit 'packet' event.
-		EmitPacketEventNackType();
+		// May emit 'trace' event.
+		EmitTraceEventNackType();
 
 		this->rtpStream->ReceiveNack(nackPacket);
 	}
@@ -369,14 +369,14 @@ namespace RTC
 		{
 			case RTC::RTCP::FeedbackPs::MessageType::PLI:
 			{
-				EmitPacketEventPliType(ssrc);
+				EmitTraceEventPliType(ssrc);
 
 				break;
 			}
 
 			case RTC::RTCP::FeedbackPs::MessageType::FIR:
 			{
-				EmitPacketEventFirType(ssrc);
+				EmitTraceEventFirType(ssrc);
 
 				break;
 			}
@@ -568,7 +568,7 @@ namespace RTC
 
 		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
 
-		// May emit 'packet' event.
-		EmitPacketEventRtpAndKeyFrameTypes(packet, this->rtpStream->HasRtx());
+		// May emit 'trace' event.
+		EmitTraceEventRtpAndKeyFrameTypes(packet, this->rtpStream->HasRtx());
 	}
 } // namespace RTC

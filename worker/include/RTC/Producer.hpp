@@ -73,7 +73,7 @@ namespace RTC
 		};
 
 	private:
-		struct PacketEventTypes
+		struct TraceEventTypes
 		{
 			bool rtp{ false };
 			bool keyframe{ false };
@@ -111,11 +111,11 @@ namespace RTC
 		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
 		void PostProcessRtpPacket(RTC::RtpPacket* packet);
 		void EmitScore() const;
-		void EmitPacketEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
-		void EmitPacketEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
-		void EmitPacketEventPliType(uint32_t ssrc) const;
-		void EmitPacketEventFirType(uint32_t ssrc) const;
-		void EmitPacketEventNackType() const;
+		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitTraceEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitTraceEventPliType(uint32_t ssrc) const;
+		void EmitTraceEventFirType(uint32_t ssrc) const;
+		void EmitTraceEventNackType() const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -155,7 +155,7 @@ namespace RTC
 		// Video orientation.
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
-		struct PacketEventTypes packetEventTypes;
+		struct TraceEventTypes traceEventTypes;
 	};
 
 	/* Inline methods. */

@@ -37,17 +37,17 @@ export interface ConsumerOptions {
     appData?: any;
 }
 /**
- * Valid types for 'packet' event.
+ * Valid types for 'trace' event.
  */
-export declare type ConsumerPacketEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
+export declare type ConsumerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
 /**
- * 'packet' event data.
+ * 'trace' event data.
  */
-export interface ConsumerPacketEventData {
+export interface ConsumerTraceEventData {
     /**
-     * Type of packet.
+     * Trace type.
      */
-    type: ConsumerPacketEventType;
+    type: ConsumerTraceEventType;
     /**
      * Event timestamp.
      */
@@ -129,7 +129,7 @@ export default class Consumer extends EnhancedEventEmitter {
      * @emits producerresume
      * @emits {ConsumerScore} score
      * @emits {ConsumerLayers | null} layerschange
-     * @emits {ConsumerPacketEventData} packet
+     * @emits {ConsumerTraceEventData} trace
      * @emits @close
      * @emits @producerclose
      */
@@ -207,7 +207,7 @@ export default class Consumer extends EnhancedEventEmitter {
      * @emits resume
      * @emits {ConsumerScore} score
      * @emits {ConsumerLayers | null} layerschange
-     * @emits {ConsumerPacketEventData} packet
+     * @emits {ConsumerTraceEventData} trace
      */
     get observer(): EnhancedEventEmitter;
     /**
@@ -253,9 +253,9 @@ export default class Consumer extends EnhancedEventEmitter {
      */
     requestKeyFrame(): Promise<void>;
     /**
-     * Enable 'packet' event.
+     * Enable 'trace' event.
      */
-    enablePacketEvent(types?: ConsumerPacketEventType[]): Promise<void>;
+    enableTraceEvent(types?: ConsumerTraceEventType[]): Promise<void>;
     private _handleWorkerNotifications;
 }
 //# sourceMappingURL=Consumer.d.ts.map

@@ -195,31 +195,31 @@ namespace RTC
 		// Add priority.
 		jsonObject["priority"] = this->priority;
 
-		// Add packetEventTypes.
-		std::vector<std::string> packetEventTypes;
-		std::ostringstream packetEventTypesStream;
+		// Add traceEventTypes.
+		std::vector<std::string> traceEventTypes;
+		std::ostringstream traceEventTypesStream;
 
-		if (this->packetEventTypes.rtp)
-			packetEventTypes.emplace_back("rtp");
-		if (this->packetEventTypes.keyframe)
-			packetEventTypes.emplace_back("keyframe");
-		if (this->packetEventTypes.nack)
-			packetEventTypes.emplace_back("nack");
-		if (this->packetEventTypes.pli)
-			packetEventTypes.emplace_back("pli");
-		if (this->packetEventTypes.fir)
-			packetEventTypes.emplace_back("fir");
+		if (this->traceEventTypes.rtp)
+			traceEventTypes.emplace_back("rtp");
+		if (this->traceEventTypes.keyframe)
+			traceEventTypes.emplace_back("keyframe");
+		if (this->traceEventTypes.nack)
+			traceEventTypes.emplace_back("nack");
+		if (this->traceEventTypes.pli)
+			traceEventTypes.emplace_back("pli");
+		if (this->traceEventTypes.fir)
+			traceEventTypes.emplace_back("fir");
 
-		if (!packetEventTypes.empty())
+		if (!traceEventTypes.empty())
 		{
 			std::copy(
-			  packetEventTypes.begin(),
-			  packetEventTypes.end() - 1,
-			  std::ostream_iterator<std::string>(packetEventTypesStream, ","));
-			packetEventTypesStream << packetEventTypes.back();
+			  traceEventTypes.begin(),
+			  traceEventTypes.end() - 1,
+			  std::ostream_iterator<std::string>(traceEventTypesStream, ","));
+			traceEventTypesStream << traceEventTypes.back();
 		}
 
-		jsonObject["packetEventTypes"] = packetEventTypesStream.str();
+		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
 	}
 
 	void Consumer::HandleRequest(Channel::Request* request)
@@ -317,7 +317,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_ENABLE_PACKET_EVENT:
+			case Channel::Request::MethodId::CONSUMER_ENABLE_TRACE_EVENT:
 			{
 				auto jsonTypesIt = request->data.find("types");
 
@@ -325,8 +325,8 @@ namespace RTC
 				if (jsonTypesIt == request->data.end() || !jsonTypesIt->is_array())
 					MS_THROW_TYPE_ERROR("wrong types (not an array)");
 
-				// Reset packetEventTypes.
-				struct PacketEventTypes newPacketEventTypes;
+				// Reset traceEventTypes.
+				struct TraceEventTypes newTraceEventTypes;
 
 				for (const auto& type : *jsonTypesIt)
 				{
@@ -336,18 +336,18 @@ namespace RTC
 					std::string typeStr = type.get<std::string>();
 
 					if (typeStr == "rtp")
-						newPacketEventTypes.rtp = true;
+						newTraceEventTypes.rtp = true;
 					else if (typeStr == "keyframe")
-						newPacketEventTypes.keyframe = true;
+						newTraceEventTypes.keyframe = true;
 					else if (typeStr == "nack")
-						newPacketEventTypes.nack = true;
+						newTraceEventTypes.nack = true;
 					else if (typeStr == "pli")
-						newPacketEventTypes.pli = true;
+						newTraceEventTypes.pli = true;
 					else if (typeStr == "fir")
-						newPacketEventTypes.fir = true;
+						newTraceEventTypes.fir = true;
 				}
 
-				this->packetEventTypes = newPacketEventTypes;
+				this->traceEventTypes = newTraceEventTypes;
 
 				request->Accept();
 
@@ -434,11 +434,11 @@ namespace RTC
 		this->listener->OnConsumerProducerClosed(this);
 	}
 
-	void Consumer::EmitPacketEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx) const
+	void Consumer::EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx) const
 	{
 		MS_TRACE();
 
-		if (this->packetEventTypes.keyframe && packet->IsKeyFrame())
+		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
 			json data = json::object();
 
@@ -451,9 +451,9 @@ namespace RTC
 			if (isRtx)
 				data["info"]["isRtx"] = true;
 
-			Channel::Notifier::Emit(this->id, "packet", data);
+			Channel::Notifier::Emit(this->id, "trace", data);
 		}
-		else if (this->packetEventTypes.rtp)
+		else if (this->traceEventTypes.rtp)
 		{
 			json data = json::object();
 
@@ -466,15 +466,15 @@ namespace RTC
 			if (isRtx)
 				data["info"]["isRtx"] = true;
 
-			Channel::Notifier::Emit(this->id, "packet", data);
+			Channel::Notifier::Emit(this->id, "trace", data);
 		}
 	}
 
-	void Consumer::EmitPacketEventPliType(uint32_t ssrc) const
+	void Consumer::EmitTraceEventPliType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
-		if (!this->packetEventTypes.pli)
+		if (!this->traceEventTypes.pli)
 			return;
 
 		json data = json::object();
@@ -484,14 +484,14 @@ namespace RTC
 		data["direction"]    = "in";
 		data["info"]["ssrc"] = ssrc;
 
-		Channel::Notifier::Emit(this->id, "packet", data);
+		Channel::Notifier::Emit(this->id, "trace", data);
 	}
 
-	void Consumer::EmitPacketEventFirType(uint32_t ssrc) const
+	void Consumer::EmitTraceEventFirType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
-		if (!this->packetEventTypes.fir)
+		if (!this->traceEventTypes.fir)
 			return;
 
 		json data = json::object();
@@ -501,14 +501,14 @@ namespace RTC
 		data["direction"]    = "in";
 		data["info"]["ssrc"] = ssrc;
 
-		Channel::Notifier::Emit(this->id, "packet", data);
+		Channel::Notifier::Emit(this->id, "trace", data);
 	}
 
-	void Consumer::EmitPacketEventNackType() const
+	void Consumer::EmitTraceEventNackType() const
 	{
 		MS_TRACE();
 
-		if (!this->packetEventTypes.nack)
+		if (!this->traceEventTypes.nack)
 			return;
 
 		json data = json::object();
@@ -518,6 +518,6 @@ namespace RTC
 		data["direction"] = "in";
 		data["info"]      = json::object();
 
-		Channel::Notifier::Emit(this->id, "packet", data);
+		Channel::Notifier::Emit(this->id, "trace", data);
 	}
 } // namespace RTC

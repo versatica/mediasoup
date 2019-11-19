@@ -714,40 +714,40 @@ test('consumer.unsetPriority() succeed', async () =>
 	expect(videoConsumer.priority).toBe(1);
 }, 2000);
 
-test('consumer.enablePacketEvent() succeed', async () =>
+test('consumer.enableTraceEvent() succeed', async () =>
 {
-	await audioConsumer.enablePacketEvent([ 'rtp', 'pli' ]);
+	await audioConsumer.enableTraceEvent([ 'rtp', 'pli' ]);
 	await expect(audioConsumer.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: 'rtp,pli' });
+		.toMatchObject({ traceEventTypes: 'rtp,pli' });
 
-	await audioConsumer.enablePacketEvent([]);
+	await audioConsumer.enableTraceEvent([]);
 	await expect(audioConsumer.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: '' });
+		.toMatchObject({ traceEventTypes: '' });
 
-	await audioConsumer.enablePacketEvent([ 'nack', 'FOO', 'fir' ]);
+	await audioConsumer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
 	await expect(audioConsumer.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: 'nack,fir' });
+		.toMatchObject({ traceEventTypes: 'nack,fir' });
 
-	await audioConsumer.enablePacketEvent();
+	await audioConsumer.enableTraceEvent();
 	await expect(audioConsumer.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: '' });
+		.toMatchObject({ traceEventTypes: '' });
 }, 2000);
 
-test('consumer.enablePacketEvent() with wrong arguments rejects with TypeError', async () =>
+test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(audioConsumer.enablePacketEvent(123))
+	await expect(audioConsumer.enableTraceEvent(123))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(audioConsumer.enablePacketEvent('rtp'))
+	await expect(audioConsumer.enableTraceEvent('rtp'))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(audioConsumer.enablePacketEvent([ 'fir', 123.123 ]))
+	await expect(audioConsumer.enableTraceEvent([ 'fir', 123.123 ]))
 		.rejects
 		.toThrow(TypeError);
 }, 2000);

@@ -24,17 +24,17 @@ export interface ProducerOptions {
     appData?: any;
 }
 /**
- * Valid types for 'packet' event.
+ * Valid types for 'trace' event.
  */
-export declare type ProducerPacketEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
+export declare type ProducerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
 /**
- * 'packet' event data.
+ * 'trace' event data.
  */
-export interface ProducerPacketEventData {
+export interface ProducerTraceEventData {
     /**
-     * Type of packet.
+     * Trace type.
      */
-    type: ProducerPacketEventType;
+    type: ProducerTraceEventType;
     /**
      * Event timestamp.
      */
@@ -119,7 +119,7 @@ export default class Producer extends EnhancedEventEmitter {
      * @emits transportclose
      * @emits {ProducerScore[]} score
      * @emits {ProducerVideoOrientation} videoorientationchange
-     * @emits {ProducerPacketEventData} packet
+     * @emits {ProducerTraceEventData} trace
      * @emits @close
      */
     constructor({ internal, data, channel, appData, paused }: {
@@ -179,7 +179,7 @@ export default class Producer extends EnhancedEventEmitter {
      * @emits resume
      * @emits {ProducerScore[]} score
      * @emits {ProducerVideoOrientation} videoorientationchange
-     * @emits {ProducerPacketEventData} packet
+     * @emits {ProducerTraceEventData} trace
      */
     get observer(): EnhancedEventEmitter;
     /**
@@ -209,9 +209,9 @@ export default class Producer extends EnhancedEventEmitter {
      */
     resume(): Promise<void>;
     /**
-     * Enable 'packet' event.
+     * Enable 'trace' event.
      */
-    enablePacketEvent(types?: ProducerPacketEventType[]): Promise<void>;
+    enableTraceEvent(types?: ProducerTraceEventType[]): Promise<void>;
     private _handleWorkerNotifications;
 }
 //# sourceMappingURL=Producer.d.ts.map

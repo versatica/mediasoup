@@ -40,19 +40,19 @@ export interface TransportTuple
 }
 
 /**
- * Valid types for 'packet' event.
+ * Valid types for 'trace' event.
  */
-export type TransportPacketEventType = 'probation' | 'bwe';
+export type TransportTraceEventType = 'probation' | 'bwe';
 
 /**
- * 'packet' event data.
+ * 'trace' event data.
  */
-export interface TransportPacketEventData
+export interface TransportTraceEventData
 {
 	/**
-	 * Type of packet.
+	 * Trace type.
 	 */
-	type: TransportPacketEventType;
+	type: TransportTraceEventType;
 
 	/**
 	 * Event timestamp.
@@ -666,16 +666,16 @@ export default class Transport extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Enable 'packet' event.
+	 * Enable 'trace' event.
 	 */
-	async enablePacketEvent(types: TransportPacketEventType[] = []): Promise<void>
+	async enableTraceEvent(types: TransportTraceEventType[] = []): Promise<void>
 	{
 		logger.debug('pause()');
 
 		const reqData = { types };
 
 		await this._channel.request(
-			'transport.enablePacketEvent', this._internal, reqData);
+			'transport.enableTraceEvent', this._internal, reqData);
 	}
 
 	private _getNextSctpStreamId(): number

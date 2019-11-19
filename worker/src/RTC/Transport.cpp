@@ -373,25 +373,25 @@ namespace RTC
 			this->sctpListener.FillJson(jsonObject["sctpListener"]);
 		}
 
-		// Add packetEventTypes.
-		std::vector<std::string> packetEventTypes;
-		std::ostringstream packetEventTypesStream;
+		// Add traceEventTypes.
+		std::vector<std::string> traceEventTypes;
+		std::ostringstream traceEventTypesStream;
 
-		if (this->packetEventTypes.probation)
-			packetEventTypes.emplace_back("probation");
-		if (this->packetEventTypes.bwe)
-			packetEventTypes.emplace_back("bwe");
+		if (this->traceEventTypes.probation)
+			traceEventTypes.emplace_back("probation");
+		if (this->traceEventTypes.bwe)
+			traceEventTypes.emplace_back("bwe");
 
-		if (!packetEventTypes.empty())
+		if (!traceEventTypes.empty())
 		{
 			std::copy(
-			  packetEventTypes.begin(),
-			  packetEventTypes.end() - 1,
-			  std::ostream_iterator<std::string>(packetEventTypesStream, ","));
-			packetEventTypesStream << packetEventTypes.back();
+			  traceEventTypes.begin(),
+			  traceEventTypes.end() - 1,
+			  std::ostream_iterator<std::string>(traceEventTypesStream, ","));
+			traceEventTypesStream << traceEventTypes.back();
 		}
 
-		jsonObject["packetEventTypes"] = packetEventTypesStream.str();
+		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
 	}
 
 	void Transport::FillJsonStats(json& jsonArray)
@@ -1060,7 +1060,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_ENABLE_PACKET_EVENT:
+			case Channel::Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT:
 			{
 				auto jsonTypesIt = request->data.find("types");
 
@@ -1068,8 +1068,8 @@ namespace RTC
 				if (jsonTypesIt == request->data.end() || !jsonTypesIt->is_array())
 					MS_THROW_TYPE_ERROR("wrong types (not an array)");
 
-				// Reset packetEventTypes.
-				struct PacketEventTypes newPacketEventTypes;
+				// Reset traceEventTypes.
+				struct TraceEventTypes newTraceEventTypes;
 
 				for (const auto& type : *jsonTypesIt)
 				{
@@ -1079,12 +1079,12 @@ namespace RTC
 					std::string typeStr = type.get<std::string>();
 
 					if (typeStr == "probation")
-						newPacketEventTypes.probation = true;
+						newTraceEventTypes.probation = true;
 					if (typeStr == "bwe")
-						newPacketEventTypes.bwe = true;
+						newTraceEventTypes.bwe = true;
 				}
 
-				this->packetEventTypes = newPacketEventTypes;
+				this->traceEventTypes = newTraceEventTypes;
 
 				request->Accept();
 
@@ -1154,7 +1154,7 @@ namespace RTC
 			case Channel::Request::MethodId::PRODUCER_GET_STATS:
 			case Channel::Request::MethodId::PRODUCER_PAUSE:
 			case Channel::Request::MethodId::PRODUCER_RESUME:
-			case Channel::Request::MethodId::PRODUCER_ENABLE_PACKET_EVENT:
+			case Channel::Request::MethodId::PRODUCER_ENABLE_TRACE_EVENT:
 			{
 				// This may throw.
 				RTC::Producer* producer = GetProducerFromRequest(request);
@@ -1171,7 +1171,7 @@ namespace RTC
 			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
 			case Channel::Request::MethodId::CONSUMER_SET_PRIORITY:
 			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
-			case Channel::Request::MethodId::CONSUMER_ENABLE_PACKET_EVENT:
+			case Channel::Request::MethodId::CONSUMER_ENABLE_TRACE_EVENT:
 			{
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromRequest(request);
@@ -2072,11 +2072,11 @@ namespace RTC
 		this->tccClient->SetDesiredBitrate(totalDesiredBitrate, forceBitrate);
 	}
 
-	inline void Transport::EmitPacketEventProbationType(RTC::RtpPacket* packet) const
+	inline void Transport::EmitTraceEventProbationType(RTC::RtpPacket* packet) const
 	{
 		MS_TRACE();
 
-		if (!this->packetEventTypes.probation)
+		if (!this->traceEventTypes.probation)
 			return;
 
 		json data = json::object();
@@ -2087,15 +2087,15 @@ namespace RTC
 
 		packet->FillJson(data["info"]);
 
-		Channel::Notifier::Emit(this->id, "packet", data);
+		Channel::Notifier::Emit(this->id, "trace", data);
 	}
 
-	inline void Transport::EmitPacketEventBweType(
+	inline void Transport::EmitTraceEventBweType(
 	  RTC::TransportCongestionControlClient::Bitrates& bitrates) const
 	{
 		MS_TRACE();
 
-		if (!this->packetEventTypes.bwe)
+		if (!this->traceEventTypes.bwe)
 			return;
 
 		json data = json::object();
@@ -2121,7 +2121,7 @@ namespace RTC
 				break;
 		}
 
-		Channel::Notifier::Emit(this->id, "packet", data);
+		Channel::Notifier::Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2540,8 +2540,8 @@ namespace RTC
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
 
-		// May emit 'packet' event.
-		EmitPacketEventBweType(bitrates);
+		// May emit 'trace' event.
+		EmitTraceEventBweType(bitrates);
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(
@@ -2564,8 +2564,8 @@ namespace RTC
 		{
 			this->transportWideCcSeq++;
 
-			// May emit 'packet' event.
-			EmitPacketEventProbationType(packet);
+			// May emit 'trace' event.
+			EmitTraceEventProbationType(packet);
 
 			webrtc::RtpPacketSendInfo packetInfo;
 
@@ -2611,8 +2611,8 @@ namespace RTC
 		}
 		else
 		{
-			// May emit 'packet' event.
-			EmitPacketEventProbationType(packet);
+			// May emit 'trace' event.
+			EmitTraceEventProbationType(packet);
 
 			SendRtpPacket(packet);
 		}
