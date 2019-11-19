@@ -92,6 +92,15 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			{
+				// Do nothing.
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				// Pass it to the parent class.
