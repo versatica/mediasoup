@@ -7,7 +7,7 @@
 * Make video `SimpleConsumers` play the BWE game by helping in probation generation and bitrate distribution.
 * Add `consumer.preferredLayers` getter.
 * Rename `enablePacketEvent()` and "packet" event to `enableTraceEvent()` and "trace" event (sorry SEMVER).
-* Transport: Add a new "trace" event of type "bwe" with defailed information about bitrates.
+* Transport: Add a new "trace" event of type "bwe" with detailed information about bitrates.
 
 
 ### 3.3.2
