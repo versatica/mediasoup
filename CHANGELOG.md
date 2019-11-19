@@ -1,6 +1,15 @@
 # Changelog
 
 
+### 3.3.3 (WIP)
+
+* Add `consumer.setPriority()` and `consumer.priority` API to prioritize how the estimated outgoing bitrate in a transport is distributed among all video consumers (in case there is not enough bitrate to satisfy them).
+* Make video `SimpleConsumers` play the BWE game by helping in probation generation and bitrate distribution.
+* Add `consumer.preferredLayers` getter.
+* Rename `enablePacketEvent()` and "packet" event to `enableTraceEvent()` and "trace" event (sorry SEMVER).
+* Transport: Add a new "trace" event of type "bwe" with defailed information about bitrates.
+
+
 ### 3.3.2
 
 * Improve "packet" event by not firing both "keyframe" and "rtp" types for the same RTP packet.
