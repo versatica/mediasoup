@@ -210,7 +210,12 @@ namespace RTC
 				  this->preferredTemporalLayer,
 				  this->id.c_str());
 
-				request->Accept();
+				json data = json::object();
+
+				data["spatialLayer"]  = this->preferredSpatialLayer;
+				data["temporalLayer"] = this->preferredTemporalLayer;
+
+				request->Accept(data);
 
 				// clang-format off
 				if (

@@ -118,6 +118,7 @@ export default class Consumer extends EnhancedEventEmitter {
     private _producerPaused;
     private _priority;
     private _score;
+    private _preferredLayers;
     private _currentLayers;
     private readonly _observer;
     /**
@@ -132,7 +133,7 @@ export default class Consumer extends EnhancedEventEmitter {
      * @emits @close
      * @emits @producerclose
      */
-    constructor({ internal, data, channel, appData, paused, producerPaused, score }: {
+    constructor({ internal, data, channel, appData, paused, producerPaused, score, preferredLayers }: {
         internal: any;
         data: any;
         channel: Channel;
@@ -140,6 +141,7 @@ export default class Consumer extends EnhancedEventEmitter {
         paused: boolean;
         producerPaused: boolean;
         score?: ConsumerScore;
+        preferredLayers?: ConsumerLayers;
     });
     /**
      * Consumer id.
@@ -181,6 +183,10 @@ export default class Consumer extends EnhancedEventEmitter {
      * Consumer score.
      */
     get score(): ConsumerScore;
+    /**
+     * Preferred video layers.
+     */
+    get preferredLayers(): ConsumerLayers | null;
     /**
      * Current video layers.
      */

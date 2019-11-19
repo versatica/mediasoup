@@ -37,6 +37,13 @@ namespace RTC
 			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
 		};
 
+	public:
+		struct Layers
+		{
+			int16_t spatial{ -1 };
+			int16_t temporal{ -1 };
+		};
+
 	private:
 		struct PacketEventTypes
 		{
@@ -64,6 +71,7 @@ namespace RTC
 		const RTC::RtpParameters& GetRtpParameters() const;
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
 		RTC::RtpParameters::Type GetType() const;
+		virtual Layers GetPreferredLayers() const;
 		const std::vector<uint32_t>& GetMediaSsrcs() const;
 		const std::vector<uint32_t>& GetRtxSsrcs() const;
 		virtual bool IsActive() const;
@@ -159,6 +167,14 @@ namespace RTC
 	inline RTC::RtpParameters::Type Consumer::GetType() const
 	{
 		return this->type;
+	}
+
+	inline Consumer::Layers Consumer::GetPreferredLayers() const
+	{
+		// By default return 1:1.
+		Consumer::Layers layers;
+
+		return layers;
 	}
 
 	inline const std::vector<uint32_t>& Consumer::GetMediaSsrcs() const

@@ -20,6 +20,7 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
+		RTC::Consumer::Layers GetPreferredLayers() const override;
 		bool IsActive() const override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
@@ -74,6 +75,16 @@ namespace RTC
 	};
 
 	/* Inline methods. */
+
+	inline RTC::Consumer::Layers SvcConsumer::GetPreferredLayers() const
+	{
+		RTC::Consumer::Layers layers;
+
+		layers.spatial  = this->preferredSpatialLayer;
+		layers.temporal = this->preferredTemporalLayer;
+
+		return layers;
+	}
 
 	inline bool SvcConsumer::IsActive() const
 	{

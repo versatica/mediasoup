@@ -784,6 +784,18 @@ namespace RTC
 
 				consumer->FillJsonScore(data["score"]);
 
+				auto preferredLayers = consumer->GetPreferredLayers();
+
+				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
+				{
+					data["preferredLayers"]["spatialLayer"]  = preferredLayers.spatial;
+					data["preferredLayers"]["temporalLayer"] = preferredLayers.temporal;
+				}
+				else
+				{
+					data["preferredLayers"] = nullptr;
+				}
+
 				request->Accept(data);
 
 				// Check if Transport Congestion Control client must be created.

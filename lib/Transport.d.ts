@@ -30,7 +30,7 @@ export interface TransportTuple {
 /**
  * Valid types for 'packet' event.
  */
-export declare type TransportPacketEventType = 'probation';
+export declare type TransportPacketEventType = 'probation' | 'bwe';
 /**
  * 'packet' event data.
  */

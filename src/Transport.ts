@@ -529,11 +529,12 @@ export default class Transport extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel        : this._channel,
+				channel         : this._channel,
 				appData,
-				paused         : status.paused,
-				producerPaused : status.producerPaused,
-				score          : status.score
+				paused          : status.paused,
+				producerPaused  : status.producerPaused,
+				score           : status.score,
+				preferredLayers : status.preferredLayers
 			});
 
 		this._consumers.set(consumer.id, consumer);

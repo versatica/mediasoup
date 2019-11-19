@@ -174,6 +174,9 @@ export default class Consumer extends EnhancedEventEmitter
 	// Current score.
 	private _score: ConsumerScore;
 
+	// Preferred layers.
+	private _preferredLayers: ConsumerLayers | null = null;
+
 	// Curent layers.
 	private _currentLayers: ConsumerLayers | null = null;
 
@@ -200,7 +203,8 @@ export default class Consumer extends EnhancedEventEmitter
 			appData,
 			paused,
 			producerPaused,
-			score = { score: 10, producerScore: 10 }
+			score = { score: 10, producerScore: 10 },
+			preferredLayers
 		}:
 		{
 			internal: any;
@@ -210,6 +214,7 @@ export default class Consumer extends EnhancedEventEmitter
 			paused: boolean;
 			producerPaused: boolean;
 			score?: ConsumerScore;
+			preferredLayers?: ConsumerLayers;
 		})
 	{
 		super(logger);
@@ -223,6 +228,7 @@ export default class Consumer extends EnhancedEventEmitter
 		this._paused = paused;
 		this._producerPaused = producerPaused;
 		this._score = score;
+		this._preferredLayers = preferredLayers;
 
 		this._handleWorkerNotifications();
 	}
@@ -305,6 +311,14 @@ export default class Consumer extends EnhancedEventEmitter
 	get score(): ConsumerScore
 	{
 		return this._score;
+	}
+
+	/**
+	 * Preferred video layers.
+	 */
+	get preferredLayers(): ConsumerLayers | null
+	{
+		return this._preferredLayers;
 	}
 
 	/**
@@ -463,8 +477,10 @@ export default class Consumer extends EnhancedEventEmitter
 
 		const reqData = { spatialLayer, temporalLayer };
 
-		await this._channel.request(
+		const data = await this._channel.request(
 			'consumer.setPreferredLayers', this._internal, reqData);
+
+		this._preferredLayers = data || null;
 	}
 
 	/**

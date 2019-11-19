@@ -310,6 +310,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.producerPaused).toBe(false);
 	expect(audioConsumer.priority).toBe(1);
 	expect(audioConsumer.score).toEqual({ score: 10, producerScore: 0 });
+	expect(audioConsumer.preferredLayers).toBe(null);
 	expect(audioConsumer.currentLayers).toBe(null);
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
 
@@ -390,6 +391,7 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.priority).toBe(1);
 	expect(videoConsumer.score).toEqual({ score: 10, producerScore: 0 });
+	expect(videoConsumer.preferredLayers).toEqual({ spatialLayer: 3, temporalLayer: 0 });
 	expect(videoConsumer.currentLayers).toBe(null);
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
 
@@ -654,6 +656,35 @@ test('consumer.pause() and resume() succeed', async () =>
 	await expect(audioConsumer.dump())
 		.resolves
 		.toMatchObject({ paused: false });
+}, 2000);
+
+test('consumer.setPreferredLayers() succeed', async () =>
+{
+	await audioConsumer.setPreferredLayers({ spatialLayer: 1, temporalLayer: 1 });
+	expect(audioConsumer.preferredLayers).toBe(null);
+
+	await videoConsumer.setPreferredLayers({ spatialLayer: 2, temporalLayer: 3 });
+	expect(videoConsumer.preferredLayers).toEqual({ spatialLayer: 2, temporalLayer: 0 });
+}, 2000);
+
+test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError', async () =>
+{
+	await expect(videoConsumer.setPreferredLayers({}))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(videoConsumer.setPreferredLayers({ foo: '123' }))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(videoConsumer.setPreferredLayers('foo'))
+		.rejects
+		.toThrow(TypeError);
+
+	// Missing spatialLayer.
+	await expect(videoConsumer.setPreferredLayers({ temporalLayer: 2 }))
+		.rejects
+		.toThrow(TypeError);
 }, 2000);
 
 test('consumer.setPriority() succeed', async () =>
