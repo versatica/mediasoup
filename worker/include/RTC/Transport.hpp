@@ -104,6 +104,7 @@ namespace RTC
 		struct PacketEventTypes
 		{
 			bool probation{ false };
+			bool bwe{ false };
 		};
 
 	public:
@@ -150,6 +151,7 @@ namespace RTC
 		void DistributeAvailableOutgoingBitrate();
 		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
 		void EmitPacketEventProbationType(RTC::RtpPacket* packet) const;
+		void EmitPacketEventBweType(uint32_t availableBitrate) const;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:

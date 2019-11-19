@@ -379,6 +379,8 @@ namespace RTC
 
 		if (this->packetEventTypes.probation)
 			packetEventTypes.emplace_back("probation");
+		if (this->packetEventTypes.bwe)
+			packetEventTypes.emplace_back("bwe");
 
 		if (!packetEventTypes.empty())
 		{
@@ -1057,6 +1059,8 @@ namespace RTC
 
 					if (typeStr == "probation")
 						newPacketEventTypes.probation = true;
+					if (typeStr == "bwe")
+						newPacketEventTypes.bwe = true;
 				}
 
 				this->packetEventTypes = newPacketEventTypes;
@@ -2061,6 +2065,23 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "packet", data);
 	}
 
+	inline void Transport::EmitPacketEventBweType(uint32_t availableBitrate) const
+	{
+		MS_TRACE();
+
+		if (!this->packetEventTypes.bwe)
+			return;
+
+		json data = json::object();
+
+		data["type"]                     = "bwe";
+		data["timestamp"]                = DepLibUV::GetTimeMs();
+		data["direction"]                = "out";
+		data["info"]["availableBitrate"] = availableBitrate;
+
+		Channel::Notifier::Emit(this->id, "packet", data);
+	}
+
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
 	{
 		MS_TRACE();
@@ -2480,6 +2501,9 @@ namespace RTC
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
+
+		// May emit 'packet' event.
+		EmitPacketEventBweType(availableBitrate);
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(

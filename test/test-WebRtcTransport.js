@@ -362,10 +362,10 @@ test('transport.enablePacketEvent() succeed', async () =>
 		.resolves
 		.toMatchObject({ packetEventTypes: '' });
 
-	await transport.enablePacketEvent([ 'probation', 'FOO', 'BAR' ]);
+	await transport.enablePacketEvent([ 'probation', 'FOO', 'bwe', 'BAR' ]);
 	await expect(transport.dump())
 		.resolves
-		.toMatchObject({ packetEventTypes: 'probation' });
+		.toMatchObject({ packetEventTypes: 'probation,bwe' });
 
 	await transport.enablePacketEvent();
 	await expect(transport.dump())

@@ -42,7 +42,7 @@ export interface TransportTuple
 /**
  * Valid types for 'packet' event.
  */
-export type TransportPacketEventType = 'probation';
+export type TransportPacketEventType = 'probation' | 'bwe';
 
 /**
  * 'packet' event data.
