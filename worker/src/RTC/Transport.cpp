@@ -2028,6 +2028,10 @@ namespace RTC
 					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
 
 					availableBitrate -= usedBitrate;
+
+					// Exit the loop fast if used bitrate is 0.
+					if (usedBitrate == 0u)
+						break;
 				}
 			}
 
@@ -2086,7 +2090,8 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "packet", data);
 	}
 
-	inline void Transport::EmitPacketEventBweType(uint32_t availableBitrate) const
+	inline void Transport::EmitPacketEventBweType(
+	  RTC::TransportCongestionControlClient::Bitrates& bitrates) const
 	{
 		MS_TRACE();
 
@@ -2095,10 +2100,26 @@ namespace RTC
 
 		json data = json::object();
 
-		data["type"]                     = "bwe";
-		data["timestamp"]                = DepLibUV::GetTimeMs();
-		data["direction"]                = "out";
-		data["info"]["availableBitrate"] = availableBitrate;
+		data["type"]                            = "bwe";
+		data["timestamp"]                       = DepLibUV::GetTimeMs();
+		data["direction"]                       = "out";
+		data["info"]["desiredBitrate"]          = bitrates.desiredBitrate;
+		data["info"]["effectiveDesiredBitrate"] = bitrates.effectiveDesiredBitrate;
+		data["info"]["minBitrate"]              = bitrates.minBitrate;
+		data["info"]["maxBitrate"]              = bitrates.maxBitrate;
+		data["info"]["startBitrate"]            = bitrates.startBitrate;
+		data["info"]["maxPaddingBitrate"]       = bitrates.maxPaddingBitrate;
+		data["info"]["availableBitrate"]        = bitrates.availableBitrate;
+
+		switch (this->tccClient->GetBweType())
+		{
+			case RTC::BweType::TRANSPORT_CC:
+				data["info"]["type"] = "transport-cc";
+				break;
+			case RTC::BweType::REMB:
+				data["info"]["type"] = "remb";
+				break;
+		}
 
 		Channel::Notifier::Emit(this->id, "packet", data);
 	}
@@ -2508,23 +2529,19 @@ namespace RTC
 		dataProducer->ReceiveSctpMessage(ppid, msg, len);
 	}
 
-	inline void Transport::OnTransportCongestionControlClientAvailableBitrate(
+	inline void Transport::OnTransportCongestionControlClientBitrates(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
-	  uint32_t availableBitrate,         // NOLINT(misc-unused-parameters)
-	  uint32_t previousAvailableBitrate) // NOLINT(misc-unused-parameters)
+	  RTC::TransportCongestionControlClient::Bitrates& bitrates)
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV(
-		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
-		  availableBitrate,
-		  previousAvailableBitrate);
+		MS_DEBUG_DEV("outgoing available bitrate:%" PRIu32, bitrates.availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
 
 		// May emit 'packet' event.
-		EmitPacketEventBweType(availableBitrate);
+		EmitPacketEventBweType(bitrates);
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(

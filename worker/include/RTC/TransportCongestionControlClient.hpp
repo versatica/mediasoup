@@ -21,13 +21,24 @@ namespace RTC
 	                                         public Timer::Listener
 	{
 	public:
+		struct Bitrates
+		{
+			uint32_t desiredBitrate{ 0u };
+			uint32_t effectiveDesiredBitrate{ 0u };
+			uint32_t minBitrate{ 0u };
+			uint32_t maxBitrate{ 0u };
+			uint32_t startBitrate{ 0u };
+			uint32_t maxPaddingBitrate{ 0u };
+			uint32_t availableBitrate{ 0u };
+		};
+
+	public:
 		class Listener
 		{
 		public:
-			virtual void OnTransportCongestionControlClientAvailableBitrate(
+			virtual void OnTransportCongestionControlClientBitrates(
 			  RTC::TransportCongestionControlClient* tccClient,
-			  uint32_t availableBitrate,
-			  uint32_t previousAvailableBitrate) = 0;
+			  RTC::TransportCongestionControlClient::Bitrates& bitrates) = 0;
 			virtual void OnTransportCongestionControlClientSendRtpPacket(
 			  RTC::TransportCongestionControlClient* tccClient,
 			  RTC::RtpPacket* packet,
@@ -52,6 +63,7 @@ namespace RTC
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, float rtt, uint64_t nowMs);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void SetDesiredBitrate(uint32_t desiredBitrate, bool force);
+		const Bitrates& GetBitrates() const;
 		uint32_t GetAvailableBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
 
@@ -85,7 +97,7 @@ namespace RTC
 		// Others.
 		RTC::BweType bweType;
 		uint32_t initialAvailableBitrate{ 0u };
-		uint32_t availableBitrate{ 0u };
+		Bitrates bitrates;
 		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		RTC::TrendCalculator desiredBitrateTrend;
@@ -96,6 +108,11 @@ namespace RTC
 	inline RTC::BweType TransportCongestionControlClient::GetBweType() const
 	{
 		return this->bweType;
+	}
+
+	inline const RTC::TransportCongestionControlClient::Bitrates& TransportCongestionControlClient::GetBitrates() const
+	{
+		return this->bitrates;
 	}
 } // namespace RTC
 

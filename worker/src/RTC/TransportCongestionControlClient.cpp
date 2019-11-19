@@ -89,6 +89,9 @@ namespace RTC
 
 		auto nowMs = DepLibUV::GetTimeMs();
 
+		this->bitrates.desiredBitrate          = 0u;
+		this->bitrates.effectiveDesiredBitrate = 0u;
+
 		this->desiredBitrateTrend.ForceUpdate(0u, nowMs);
 		this->rtpTransportControllerSend->OnNetworkAvailability(false);
 	}
@@ -146,10 +149,6 @@ namespace RTC
 		MS_TRACE();
 
 		auto nowMs = DepLibUV::GetTimeMs();
-		uint32_t minBitrate{ MinBitrate };
-		uint32_t maxBitrate;
-		uint32_t startBitrate;
-		uint32_t maxPaddingBitrate;
 
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
 		if (!force)
@@ -157,40 +156,45 @@ namespace RTC
 		else
 			this->desiredBitrateTrend.ForceUpdate(desiredBitrate, nowMs);
 
+		this->bitrates.desiredBitrate          = desiredBitrate;
+		this->bitrates.effectiveDesiredBitrate = this->desiredBitrateTrend.GetValue();
+		this->bitrates.minBitrate              = MinBitrate;
+
 		if (this->desiredBitrateTrend.GetValue() > 0u)
 		{
-			maxBitrate = std::max<uint32_t>(
+			this->bitrates.maxBitrate = std::max<uint32_t>(
 			  this->initialAvailableBitrate,
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
-			startBitrate = std::min<uint32_t>(
-			  maxBitrate, std::max<uint32_t>(this->availableBitrate, this->initialAvailableBitrate));
-			maxPaddingBitrate = maxBitrate * MaxPaddingBitrateFactor;
+			this->bitrates.startBitrate = std::min<uint32_t>(
+			  this->bitrates.maxBitrate,
+			  std::max<uint32_t>(this->bitrates.availableBitrate, this->initialAvailableBitrate));
+			this->bitrates.maxPaddingBitrate = this->bitrates.maxBitrate * MaxPaddingBitrateFactor;
 		}
 		else
 		{
-			maxBitrate        = this->initialAvailableBitrate;
-			startBitrate      = this->initialAvailableBitrate;
-			maxPaddingBitrate = 0u;
+			this->bitrates.maxBitrate        = this->initialAvailableBitrate;
+			this->bitrates.startBitrate      = this->initialAvailableBitrate;
+			this->bitrates.maxPaddingBitrate = 0u;
 		}
 
 		MS_DEBUG_DEV(
 		  "[desiredBitrate:%" PRIu32 ", startBitrate:%" PRIu32 ", minBitrate:%" PRIu32
 		  ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
-		  desiredBitrate,
-		  startBitrate,
-		  minBitrate,
-		  maxBitrate,
-		  maxPaddingBitrate);
+		  this->bitrates.desiredBitrate,
+		  this->bitrates.startBitrate,
+		  this->bitrates.minBitrate,
+		  this->bitrates.maxBitrate,
+		  this->bitrates.maxPaddingBitrate);
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
-		  minBitrate, maxPaddingBitrate, maxBitrate);
+		  this->bitrates.minBitrate, this->bitrates.maxPaddingBitrate, this->bitrates.maxBitrate);
 
 		webrtc::TargetRateConstraints constraints;
 
 		constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTimeMs());
-		constraints.min_data_rate = webrtc::DataRate::bps(minBitrate);
-		constraints.max_data_rate = webrtc::DataRate::bps(maxBitrate);
-		constraints.starting_rate = webrtc::DataRate::bps(startBitrate);
+		constraints.min_data_rate = webrtc::DataRate::bps(this->bitrates.minBitrate);
+		constraints.max_data_rate = webrtc::DataRate::bps(this->bitrates.maxBitrate);
+		constraints.starting_rate = webrtc::DataRate::bps(this->bitrates.startBitrate);
 
 		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 	}
@@ -199,7 +203,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return this->availableBitrate;
+		return this->bitrates.availableBitrate;
 	}
 
 	void TransportCongestionControlClient::RescheduleNextAvailableBitrateEvent()
@@ -239,25 +243,25 @@ namespace RTC
 			notify = true;
 		}
 		// Also emit the event fast if we detect a high BWE value decrease.
-		else if (this->availableBitrate < previousAvailableBitrate * 0.75)
+		else if (this->bitrates.availableBitrate < previousAvailableBitrate * 0.75)
 		{
 			MS_WARN_TAG(
 			  bwe,
 			  "high BWE value decrease detected, notifying the listener [now:%" PRIu32 ", before:%" PRIu32
 			  "]",
-			  this->availableBitrate,
+			  this->bitrates.availableBitrate,
 			  previousAvailableBitrate);
 
 			notify = true;
 		}
 		// Also emit the event fast if we detect a high BWE value increase.
-		else if (this->availableBitrate > previousAvailableBitrate * 1.50)
+		else if (this->bitrates.availableBitrate > previousAvailableBitrate * 1.50)
 		{
 			MS_DEBUG_TAG(
 			  bwe,
 			  "high BWE value increase detected, notifying the listener [now:%" PRIu32 ", before:%" PRIu32
 			  "]",
-			  this->availableBitrate,
+			  this->bitrates.availableBitrate,
 			  previousAvailableBitrate);
 
 			notify = true;
@@ -266,12 +270,12 @@ namespace RTC
 		if (notify)
 		{
 			MS_DEBUG_DEV(
-			  "notifying the listener with new available bitrate:%" PRIu32, this->availableBitrate);
+			  "notifying the listener with new available bitrate:%" PRIu32,
+			  this->bitrates.availableBitrate);
 
 			this->lastAvailableBitrateEventAtMs = nowMs;
 
-			this->listener->OnTransportCongestionControlClientAvailableBitrate(
-			  this, this->availableBitrate, previousAvailableBitrate);
+			this->listener->OnTransportCongestionControlClientBitrates(this, this->bitrates);
 		}
 	}
 
@@ -279,16 +283,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto previousAvailableBitrate = this->availableBitrate;
+		auto previousAvailableBitrate = this->bitrates.availableBitrate;
 
 		// Update availableBitrate.
 		// NOTE: Just in case.
 		if (targetTransferRate.target_rate.bps() > std::numeric_limits<uint32_t>::max())
-			this->availableBitrate = std::numeric_limits<uint32_t>::max();
+			this->bitrates.availableBitrate = std::numeric_limits<uint32_t>::max();
 		else
-			this->availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
+			this->bitrates.availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
 
-		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->availableBitrate);
+		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->bitrates.availableBitrate);
 
 		MayEmitAvailableBitrateEvent(previousAvailableBitrate);
 	}
@@ -331,7 +335,7 @@ namespace RTC
 			));
 			/* clang-format on */
 
-			MayEmitAvailableBitrateEvent(this->availableBitrate);
+			MayEmitAvailableBitrateEvent(this->bitrates.availableBitrate);
 		}
 	}
 } // namespace RTC

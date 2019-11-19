@@ -151,7 +151,7 @@ namespace RTC
 		void DistributeAvailableOutgoingBitrate();
 		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
 		void EmitPacketEventProbationType(RTC::RtpPacket* packet) const;
-		void EmitPacketEventBweType(uint32_t availableBitrate) const;
+		void EmitPacketEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
@@ -205,10 +205,9 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
-		void OnTransportCongestionControlClientAvailableBitrate(
+		void OnTransportCongestionControlClientBitrates(
 		  RTC::TransportCongestionControlClient* tccClient,
-		  uint32_t availableBitrate,
-		  uint32_t previousAvailableBitrate) override;
+		  RTC::TransportCongestionControlClient::Bitrates& bitrates) override;
 		void OnTransportCongestionControlClientSendRtpPacket(
 		  RTC::TransportCongestionControlClient* tccClient,
 		  RTC::RtpPacket* packet,
