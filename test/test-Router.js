@@ -50,7 +50,7 @@ test('worker.createRouter() succeeds', async () =>
 
 	worker.observer.once('newrouter', onObserverNewRouter);
 
-	const router = await worker.createRouter({ mediaCodecs });
+	const router = await worker.createRouter({ mediaCodecs, appData: { foo: 123 } });
 
 	expect(onObserverNewRouter).toHaveBeenCalledTimes(1);
 	expect(onObserverNewRouter).toHaveBeenCalledWith(router);
@@ -60,6 +60,7 @@ test('worker.createRouter() succeeds', async () =>
 	expect(router.rtpCapabilities.codecs).toBeType('array');
 	expect(router.rtpCapabilities.headerExtensions).toBeType('array');
 	expect(router.rtpCapabilities.fecMechanisms).toEqual([]);
+	expect(router.appData).toEqual({ foo: 123 });
 
 	await expect(worker.dump())
 		.resolves
@@ -90,11 +91,15 @@ test('worker.createRouter() succeeds', async () =>
 	expect(worker._routers.size).toBe(0);
 }, 2000);
 
-test('worker.createRouter() with wrong mediaCodecs rejects with TypeError', async () =>
+test('worker.createRouter() with wrong arguments rejects with TypeError', async () =>
 {
 	worker = await createWorker();
 
 	await expect(worker.createRouter({ mediaCodecs: {} }))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(worker.createRouter({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
 

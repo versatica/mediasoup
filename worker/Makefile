@@ -5,13 +5,15 @@
 # Best effort to prefer Python 2 executable since there are yet pending issues
 # with gyp and Python3.
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
-LCOV = ./deps/lcov/bin/lcov
+ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh)
+MEDIASOUP_BUILDTYPE ?= Release
 GULP = ../node_modules/.bin/gulp
+LCOV = ./deps/lcov/bin/lcov
 BEAR ?= bear
 JQ ?= jq
 SED ?= sed
 DOCKER ?= docker
-MEDIASOUP_BUILDTYPE ?= Release
 
 .PHONY:	\
 	default test fuzzer xcode lint format bear tidy clean clean-all \
@@ -20,13 +22,13 @@ MEDIASOUP_BUILDTYPE ?= Release
 default:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
-	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
 endif
 
 test:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
 	$(LCOV) --directory ./ --zerocounters
 	./out/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 endif
@@ -34,7 +36,7 @@ endif
 fuzzer:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
-	$(MAKE) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
 endif
 
 xcode:
@@ -58,7 +60,7 @@ tidy:
 	$(PYTHON) ./scripts/clang-tidy.py \
 		-clang-tidy-binary=../node_modules/.bin/clang-tidy \
 		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
-		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepOpenSSL.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp|json.hpp)' \
+		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
 		-p=. \
 		-j=2 \
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
@@ -83,6 +85,7 @@ clean-all:
 	$(RM) -rf worker/mediasoup-worker.xcodeproj
 	$(RM) -rf worker/mediasoup-worker-test.xcodeproj
 	$(RM) -rf worker/deps/*/*.xcodeproj
+	$(RM) -rf worker/libwebrtc/*/*.xcodeproj
 
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)

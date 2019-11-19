@@ -1,8 +1,10 @@
 #define MS_CLASS "Logger"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Logger.hpp"
+#ifndef _WIN32
 #include <unistd.h> // getpid()
+#endif
 
 /* Class variables. */
 

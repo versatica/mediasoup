@@ -33,11 +33,18 @@ afterAll(() => worker.close());
 
 test('router.createAudioLevelObserver() succeeds', async () =>
 {
+	const onObserverNewRtpObserver = jest.fn();
+
+	router.observer.once('newrtpobserver', onObserverNewRtpObserver);
+
 	audioLevelObserver = await router.createAudioLevelObserver();
 
+	expect(onObserverNewRtpObserver).toHaveBeenCalledTimes(1);
+	expect(onObserverNewRtpObserver).toHaveBeenCalledWith(audioLevelObserver);
 	expect(audioLevelObserver.id).toBeType('string');
 	expect(audioLevelObserver.closed).toBe(false);
 	expect(audioLevelObserver.paused).toBe(false);
+	expect(audioLevelObserver.appData).toEqual({});
 
 	await expect(router.dump())
 		.resolves
@@ -62,6 +69,10 @@ test('router.createAudioLevelObserver() with wrong arguments rejects with TypeEr
 		.toThrow(TypeError);
 
 	await expect(router.createAudioLevelObserver({ interval: false }))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(router.createAudioLevelObserver({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
 }, 2000);

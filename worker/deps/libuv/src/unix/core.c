@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <fcntl.h>  /* O_CLOEXEC */
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -49,29 +49,36 @@
 # include <sys/wait.h>
 #endif
 
-#ifdef __APPLE__
-# include <mach-o/dyld.h> /* _NSGetExecutablePath */
+#if defined(__APPLE__)
 # include <sys/filio.h>
-# if defined(O_CLOEXEC)
-#  define UV__O_CLOEXEC O_CLOEXEC
-# endif
-#endif
+# endif /* defined(__APPLE__) */
+
+
+#if defined(__APPLE__) && !TARGET_OS_IPHONE
+# include <crt_externs.h>
+# include <mach-o/dyld.h> /* _NSGetExecutablePath */
+# define environ (*_NSGetEnviron())
+#else /* defined(__APPLE__) && !TARGET_OS_IPHONE */
+extern char** environ;
+#endif /* !(defined(__APPLE__) && !TARGET_OS_IPHONE) */
+
 
 #if defined(__DragonFly__)      || \
     defined(__FreeBSD__)        || \
     defined(__FreeBSD_kernel__) || \
-    defined(__NetBSD__)
+    defined(__NetBSD__)         || \
+    defined(__OpenBSD__)
 # include <sys/sysctl.h>
 # include <sys/filio.h>
 # include <sys/wait.h>
-# define UV__O_CLOEXEC O_CLOEXEC
 # if defined(__FreeBSD__) && __FreeBSD__ >= 10
 #  define uv__accept4 accept4
 # endif
 # if defined(__NetBSD__)
 #  define uv__accept4(a, b, c, d) paccept((a), (b), (c), NULL, (d))
 # endif
-# if (defined(__FreeBSD__) && __FreeBSD__ >= 10) || defined(__NetBSD__)
+# if (defined(__FreeBSD__) && __FreeBSD__ >= 10) || \
+      defined(__NetBSD__) || defined(__OpenBSD__)
 #  define UV__SOCK_NONBLOCK SOCK_NONBLOCK
 #  define UV__SOCK_CLOEXEC  SOCK_CLOEXEC
 # endif
@@ -996,24 +1003,17 @@ int uv_getrusage(uv_rusage_t* rusage) {
 
 
 int uv__open_cloexec(const char* path, int flags) {
-  int err;
+#if defined(O_CLOEXEC)
   int fd;
 
-#if defined(UV__O_CLOEXEC)
-  static int no_cloexec;
+  fd = open(path, flags | O_CLOEXEC);
+  if (fd == -1)
+    return UV__ERR(errno);
 
-  if (!no_cloexec) {
-    fd = open(path, flags | UV__O_CLOEXEC);
-    if (fd != -1)
-      return fd;
-
-    if (errno != EINVAL)
-      return UV__ERR(errno);
-
-    /* O_CLOEXEC not supported. */
-    no_cloexec = 1;
-  }
-#endif
+  return fd;
+#else  /* O_CLOEXEC */
+  int err;
+  int fd;
 
   fd = open(path, flags);
   if (fd == -1)
@@ -1026,6 +1026,7 @@ int uv__open_cloexec(const char* path, int flags) {
   }
 
   return fd;
+#endif  /* O_CLOEXEC */
 }
 
 
@@ -1047,7 +1048,7 @@ int uv__dup2_cloexec(int oldfd, int newfd) {
   static int no_dup3;
   if (!no_dup3) {
     do
-      r = uv__dup3(oldfd, newfd, UV__O_CLOEXEC);
+      r = uv__dup3(oldfd, newfd, O_CLOEXEC);
     while (r == -1 && errno == EBUSY);
     if (r != -1)
       return r;
@@ -1281,6 +1282,62 @@ int uv_os_get_passwd(uv_passwd_t* pwd) {
 int uv_translate_sys_error(int sys_errno) {
   /* If < 0 then it's already a libuv error. */
   return sys_errno <= 0 ? sys_errno : -sys_errno;
+}
+
+
+int uv_os_environ(uv_env_item_t** envitems, int* count) {
+  int i, j, cnt;
+  uv_env_item_t* envitem;
+
+  *envitems = NULL;
+  *count = 0;
+
+  for (i = 0; environ[i] != NULL; i++);
+
+  *envitems = uv__calloc(i, sizeof(**envitems));
+
+  if (envitems == NULL)
+    return UV_ENOMEM;
+
+  for (j = 0, cnt = 0; j < i; j++) {
+    char* buf;
+    char* ptr;
+
+    if (environ[j] == NULL)
+      break;
+
+    buf = uv__strdup(environ[j]);
+    if (buf == NULL)
+      goto fail;
+
+    ptr = strchr(buf, '=');
+    if (ptr == NULL) {
+      uv__free(buf);
+      continue;
+    }
+
+    *ptr = '\0';
+
+    envitem = &(*envitems)[cnt];
+    envitem->name = buf;
+    envitem->value = ptr + 1;
+
+    cnt++;
+  }
+
+  *count = cnt;
+  return 0;
+
+fail:
+  for (i = 0; i < cnt; i++) {
+    envitem = &(*envitems)[cnt];
+    uv__free(envitem->name);
+  }
+  uv__free(*envitems);
+
+  *envitems = NULL;
+  *count = 0;
+  return UV_ENOMEM;
 }
 
 

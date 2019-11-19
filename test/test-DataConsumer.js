@@ -105,7 +105,7 @@ test('dataConsumer.getStats() succeeds', async () =>
 {
 	await expect(dataConsumer.getStats())
 		.resolves
-		.toStrictEqual(
+		.toMatchObject(
 			[
 				{
 					type         : 'data-consumer',

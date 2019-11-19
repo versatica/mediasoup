@@ -5,12 +5,11 @@
 #include <uv.h>
 #include <string>
 
-// Avoid cyclic #include problem by declaring classes instead of including
-// the corresponding header files.
-class TcpServer;
-
 class TcpConnection
 {
+protected:
+	using onSendCallback = const std::function<void(bool sent)>;
+
 public:
 	class Listener
 	{
@@ -25,12 +24,24 @@ public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
 	struct UvWriteData
 	{
-		uv_write_t req;
-		uint8_t store[1];
-	};
+		explicit UvWriteData(size_t storeSize)
+		{
+			this->store = new uint8_t[storeSize];
+		}
 
-	// Let the TcpServer class directly call the destructor of TcpConnection.
-	friend class TcpServer;
+		// Disable copy constructor because of the dynamically allocated data (store).
+		UvWriteData(const UvWriteData&) = delete;
+
+		~UvWriteData()
+		{
+			delete[] this->store;
+			delete this->cb;
+		}
+
+		uv_write_t req;
+		uint8_t* store{ nullptr };
+		TcpConnection::onSendCallback* cb{ nullptr };
+	};
 
 public:
 	explicit TcpConnection(size_t bufferSize);
@@ -49,9 +60,13 @@ public:
 	bool IsClosed() const;
 	uv_tcp_t* GetUvHandle() const;
 	void Start();
-	void Write(const uint8_t* data, size_t len);
-	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2);
-	void Write(const std::string& data);
+	void Write(const uint8_t* data, size_t len, TcpConnection::onSendCallback* cb);
+	void Write(
+	  const uint8_t* data1,
+	  size_t len1,
+	  const uint8_t* data2,
+	  size_t len2,
+	  TcpConnection::onSendCallback* cb);
 	void ErrorReceiving();
 	const struct sockaddr* GetLocalAddress() const;
 	int GetLocalFamily() const;
@@ -60,6 +75,8 @@ public:
 	const struct sockaddr* GetPeerAddress() const;
 	const std::string& GetPeerIp() const;
 	uint16_t GetPeerPort() const;
+	size_t GetRecvBytes() const;
+	size_t GetSentBytes() const;
 
 private:
 	bool SetPeerAddress();
@@ -68,7 +85,7 @@ private:
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-	void OnUvWriteError(int error);
+	void OnUvWrite(int status, onSendCallback* cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
@@ -95,6 +112,8 @@ private:
 	// Others.
 	struct sockaddr_storage* localAddr{ nullptr };
 	bool closed{ false };
+	size_t recvBytes{ 0 };
+	size_t sentBytes{ 0 };
 	bool isClosedByPeer{ false };
 	bool hasError{ false };
 };
@@ -109,11 +128,6 @@ inline bool TcpConnection::IsClosed() const
 inline uv_tcp_t* TcpConnection::GetUvHandle() const
 {
 	return this->uvHandle;
-}
-
-inline void TcpConnection::Write(const std::string& data)
-{
-	Write(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 }
 
 inline const struct sockaddr* TcpConnection::GetLocalAddress() const
@@ -149,6 +163,16 @@ inline const std::string& TcpConnection::GetPeerIp() const
 inline uint16_t TcpConnection::GetPeerPort() const
 {
 	return this->peerPort;
+}
+
+inline size_t TcpConnection::GetRecvBytes() const
+{
+	return this->recvBytes;
+}
+
+inline size_t TcpConnection::GetSentBytes() const
+{
+	return this->sentBytes;
 }
 
 #endif

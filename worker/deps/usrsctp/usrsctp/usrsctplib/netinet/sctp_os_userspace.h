@@ -565,11 +565,6 @@ struct sx {int dummy;};
 		SCTP_BASE_VAR(debug_printf)(__VA_ARGS__); \
 	}
 
-#if defined(__FreeBSD__)
-#ifndef in6pcb
-#define in6pcb		inpcb
-#endif
-#endif
 /* Declare all the malloc names for all the various mallocs */
 MALLOC_DECLARE(SCTP_M_MAP);
 MALLOC_DECLARE(SCTP_M_STRMI);
@@ -972,7 +967,7 @@ int sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af);
 #define IPv6_HOP_LIMIT 128
 
 /* is the endpoint v6only? */
-#define SCTP_IPV6_V6ONLY(inp)	(((struct inpcb *)inp)->inp_flags & IN6P_IPV6_V6ONLY)
+#define SCTP_IPV6_V6ONLY(sctp_inpcb)	((sctp_inpcb)->ip_inp.inp.inp_flags & IN6P_IPV6_V6ONLY)
 /* is the socket non-blocking? */
 #define SCTP_SO_IS_NBIO(so)	((so)->so_state & SS_NBIO)
 #define SCTP_SET_SO_NBIO(so)	((so)->so_state |= SS_NBIO)
@@ -1083,7 +1078,7 @@ extern void sctp_userspace_ip6_output(int *result, struct mbuf *o_pak,
 { \
 	if (stcb && stcb->sctp_ep) \
 		result = ip6_output(o_pak, \
-				    ((struct in6pcb *)(stcb->sctp_ep))->in6p_outputopts, \
+				    ((struct inpcb *)(stcb->sctp_ep))->in6p_outputopts, \
 				    (ro), 0, 0, ifp, NULL); \
 	else \
 		result = ip6_output(o_pak, NULL, (ro), 0, 0, ifp, NULL); \
@@ -1165,9 +1160,9 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
 
 #define SCTP_IS_LISTENING(inp) ((inp->sctp_flags & SCTP_PCB_FLAGS_ACCEPTING) != 0)
 
-#if defined(__Userspace_os_DragonFly) || defined(__Userspace_os_Linux) || defined(__Userspace_os_NaCl) || defined(__Userspace_os_NetBSD) || defined(__Userspace_os_Windows)
+#if defined(__Userspace_os_Darwin) || defined(__Userspace_os_DragonFly) || defined(__Userspace_os_Linux) || defined(__Userspace_os_NaCl) || defined(__Userspace_os_NetBSD) || defined(__Userspace_os_Windows) || defined(__Userspace_os_Fuchsia)
 int
-timingsafe_bcmp(const void *, const void *, size_t );
+timingsafe_bcmp(const void *, const void *, size_t);
 #endif
 
 #endif

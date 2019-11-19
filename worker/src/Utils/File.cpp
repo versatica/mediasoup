@@ -1,12 +1,18 @@
 #define MS_CLASS "Utils::File"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cerrno>
 #include <sys/stat.h> // stat()
-#include <unistd.h>   // access(), R_OK
+#ifdef _WIN32
+#include <io.h>
+#define __S_ISTYPE(mode, mask) (((mode)&_S_IFMT) == (mask))
+#define S_ISREG(mode) __S_ISTYPE((mode), _S_IFREG)
+#else
+#include <unistd.h> // access(), R_OK
+#endif
 
 namespace Utils
 {

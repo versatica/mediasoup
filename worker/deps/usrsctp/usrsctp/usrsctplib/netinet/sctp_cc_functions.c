@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_cc_functions.c 310590 2016-12-26 11:06:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_cc_functions.c 353488 2019-10-14 13:02:49Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -50,8 +50,8 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_cc_functions.c 310590 2016-12-26 11:06
 #include <netinet/sctp_timer.h>
 #include <netinet/sctp_auth.h>
 #include <netinet/sctp_asconf.h>
-#if defined(__FreeBSD__) && __FreeBSD_version >= 803000
-#include <netinet/sctp_dtrace_declare.h>
+#if defined(__FreeBSD__)
+#include <netinet/sctp_kdtrace.h>
 #endif
 
 #define SHIFT_MPTCP_MULTI_N 40
@@ -1962,7 +1962,7 @@ htcp_cong_time(struct htcp *ca)
 static inline uint32_t
 htcp_ccount(struct htcp *ca)
 {
-	return (htcp_cong_time(ca)/ca->minRTT);
+	return (ca->minRTT == 0 ? htcp_cong_time(ca) : htcp_cong_time(ca)/ca->minRTT);
 }
 
 static inline void
@@ -2410,7 +2410,7 @@ sctp_htcp_cwnd_update_after_ecn_echo(struct sctp_tcb *stcb,
 
 const struct sctp_cc_functions sctp_cc_functions[] = {
 {
-#if (defined(__Windows__) || defined(__Userspace_os_Windows)) && !defined(__MINGW32__)
+#if defined(__Windows__) || defined(__Userspace_os_Windows)
 	sctp_set_initial_cc_param,
 	sctp_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,
@@ -2431,7 +2431,7 @@ const struct sctp_cc_functions sctp_cc_functions[] = {
 #endif
 },
 {
-#if (defined(__Windows__) || defined(__Userspace_os_Windows)) && !defined(__MINGW32__)
+#if defined(__Windows__) || defined(__Userspace_os_Windows)
 	sctp_set_initial_cc_param,
 	sctp_hs_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,
@@ -2452,7 +2452,7 @@ const struct sctp_cc_functions sctp_cc_functions[] = {
 #endif
 },
 {
-#if (defined(__Windows__) || defined(__Userspace_os_Windows)) && !defined(__MINGW32__)
+#if defined(__Windows__) || defined(__Userspace_os_Windows)
 	sctp_htcp_set_initial_cc_param,
 	sctp_htcp_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,

@@ -28,8 +28,38 @@
 #ifndef __PROGRAMS_HELPER_H__
 #define __PROGRAMS_HELPER_H__
 
-void debug_printf(const char *format, ...);
-void handle_notification(union sctp_notification *notif, size_t n);
+#ifndef _WIN32
+#define SCTP_PACKED __attribute__((packed))
+#else
+#pragma pack (push, 1)
+#define SCTP_PACKED
+#endif
+
+struct sctp_chunk_header {
+	uint8_t chunk_type;	/* chunk type */
+	uint8_t chunk_flags;	/* chunk flags */
+	uint16_t chunk_length;	/* chunk length */
+	/* optional params follow */
+} SCTP_PACKED;
+
+struct sctp_init_chunk {
+	struct sctp_chunk_header ch;
+	uint32_t initiate_tag;	/* initiate tag */
+	uint32_t a_rwnd;	/* a_rwnd */
+	uint16_t num_outbound_streams;	/* OS */
+	uint16_t num_inbound_streams;	/* MIS */
+	uint32_t initial_tsn;	/* I-TSN */
+	/* optional param's follow */
+} SCTP_PACKED;
+
+#ifdef _WIN32
+#pragma pack(pop)
+#endif
+
+#undef SCTP_PACKED
+
+void
+handle_notification(union sctp_notification *notif, size_t n);
 #ifndef timersub
 #define timersub(tvp, uvp, vvp)                                   \
 	do {                                                      \
@@ -42,4 +72,16 @@ void handle_notification(union sctp_notification *notif, size_t n);
 	} while (0)
 #endif
 
-#endif /* __PROGRAMS_HELPER_H__ */ 
+void
+debug_printf_runtime(void);
+
+void
+debug_printf_stack(const char *format, ...);
+
+#define debug_printf(...)                       \
+	do {                                        \
+		fprintf(stderr, "[P]");                 \
+		debug_printf_runtime();                 \
+		fprintf(stderr, __VA_ARGS__);           \
+	} while (0)
+#endif /* __PROGRAMS_HELPER_H__ */

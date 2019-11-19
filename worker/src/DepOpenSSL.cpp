@@ -1,5 +1,5 @@
 #define MS_CLASS "DepOpenSSL"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "DepOpenSSL.hpp"
 #include "Logger.hpp"

@@ -4,6 +4,8 @@ import os
 import sys
 import re
 import string
+import glob
+import fnmatch
 
 from scriptCommon import catchPath
 
@@ -98,29 +100,47 @@ def updateReadmeFile(version):
 
 
 def updateCmakeFile(version):
-    with open(cmakePath, 'r') as file:
+    with open(cmakePath, 'rb') as file:
         lines = file.readlines()
-    with open(cmakePath, 'w') as file:
+    replacementRegex = re.compile(b'project\\(Catch2 LANGUAGES CXX VERSION \\d+\\.\\d+\\.\\d+\\)')
+    replacement = 'project(Catch2 LANGUAGES CXX VERSION {0})'.format(version.getVersionString()).encode('ascii')
+    with open(cmakePath, 'wb') as file:
         for line in lines:
-            if 'project(Catch2 LANGUAGES CXX VERSION ' in line:
-                file.write('project(Catch2 LANGUAGES CXX VERSION {0})\n'.format(version.getVersionString()))
-            else:
-                file.write(line)
+            file.write(replacementRegex.sub(replacement, line))
 
 
 def updateVersionDefine(version):
-    with open(definePath, 'r') as file:
+    # First member of the tuple is the compiled regex object, the second is replacement if it matches
+    replacementRegexes = [(re.compile(b'#define CATCH_VERSION_MAJOR \\d+'),'#define CATCH_VERSION_MAJOR {}'.format(version.majorVersion).encode('ascii')),
+                          (re.compile(b'#define CATCH_VERSION_MINOR \\d+'),'#define CATCH_VERSION_MINOR {}'.format(version.minorVersion).encode('ascii')),
+                          (re.compile(b'#define CATCH_VERSION_PATCH \\d+'),'#define CATCH_VERSION_PATCH {}'.format(version.patchNumber).encode('ascii')),
+                         ]
+    with open(definePath, 'rb') as file:
         lines = file.readlines()
-    with open(definePath, 'w') as file:
+    with open(definePath, 'wb') as file:
         for line in lines:
-            if '#define CATCH_VERSION_MAJOR' in line:
-                file.write('#define CATCH_VERSION_MAJOR {}\n'.format(version.majorVersion))
-            elif '#define CATCH_VERSION_MINOR' in line:
-                file.write('#define CATCH_VERSION_MINOR {}\n'.format(version.minorVersion))
-            elif '#define CATCH_VERSION_PATCH' in line:
-                file.write('#define CATCH_VERSION_PATCH {}\n'.format(version.patchNumber))
-            else:
-                file.write(line)
+            for replacement in replacementRegexes:
+                line = replacement[0].sub(replacement[1], line)
+            file.write(line)
+
+
+def updateVersionPlaceholder(filename, version):
+    with open(filename, 'rb') as file:
+        lines = file.readlines()
+    placeholderRegex = re.compile(b' in Catch X.Y.Z')
+    replacement = ' in Catch {}.{}.{}'.format(version.majorVersion, version.minorVersion, version.patchNumber).encode('ascii')
+    with open(filename, 'wb') as file:
+        for line in lines:
+            file.write(placeholderRegex.sub(replacement, line))
+
+
+def updateDocumentationVersionPlaceholders(version):
+    print('Updating version placeholder in documentation')
+    docsPath = os.path.join(catchPath, 'docs/')
+    for basePath, _, files in os.walk(docsPath):
+        for file in files:
+            if fnmatch.fnmatch(file, "*.md") and "contributing.md" != file:
+                updateVersionPlaceholder(os.path.join(basePath, file), version)
 
 
 def performUpdates(version):
@@ -136,10 +156,11 @@ def performUpdates(version):
     # We probably should have some kind of convention to select which reporters need to be copied automagically,
     # but this works for now
     import shutil
-    for rep in ('automake', 'tap', 'teamcity'):
+    for rep in ('automake', 'tap', 'teamcity', 'sonarqube'):
         sourceFile = os.path.join(catchPath, 'include/reporters/catch_reporter_{}.hpp'.format(rep))
         destFile = os.path.join(catchPath, 'single_include', 'catch2', 'catch_reporter_{}.hpp'.format(rep))
         shutil.copyfile(sourceFile, destFile)
 
     updateReadmeFile(version)
     updateCmakeFile(version)
+    updateDocumentationVersionPlaceholders(version)

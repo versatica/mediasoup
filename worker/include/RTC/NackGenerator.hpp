@@ -24,13 +24,13 @@ namespace RTC
 	private:
 		struct NackInfo
 		{
-			NackInfo(){};
+			NackInfo() = default;
 			explicit NackInfo(uint16_t seq, uint16_t sendAtSeq);
 
-			uint16_t seq{ 0 };
-			uint16_t sendAtSeq{ 0 };
-			uint64_t sentAtTime{ 0 };
-			uint8_t retries{ 0 };
+			uint16_t seq{ 0u };
+			uint16_t sendAtSeq{ 0u };
+			uint64_t sentAtMs{ 0u };
+			uint8_t retries{ 0u };
 		};
 
 		enum class NackFilter
@@ -43,14 +43,14 @@ namespace RTC
 		explicit NackGenerator(Listener* listener);
 		~NackGenerator() override;
 
-		bool ReceivePacket(RTC::RtpPacket* packet);
+		bool ReceivePacket(RTC::RtpPacket* packet, bool isRecovered);
 		size_t GetNackListLength() const;
+		void UpdateRtt(uint32_t rtt);
 		void Reset();
 
 	private:
-		void CleanOldNackItems(uint16_t seq);
 		void AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd);
-		void RemoveNackItemsUntilKeyFrame();
+		bool RemoveNackItemsUntilKeyFrame();
 		std::vector<uint16_t> GetNackBatch(NackFilter filter);
 		void MayRunTimer() const;
 
@@ -65,14 +65,19 @@ namespace RTC
 		Timer* timer{ nullptr };
 		// Others.
 		std::map<uint16_t, NackInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> nackList;
-		// This set is just supposed to hold zero or one entries.
 		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> keyFrameList;
+		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
 		bool started{ false };
-		uint16_t lastSeq{ 0 }; // Seq number of last valid packet.
-		uint32_t rtt{ 0 };     // Round trip time (ms).
+		uint16_t lastSeq{ 0u }; // Seq number of last valid packet.
+		uint32_t rtt{ 0u };     // Round trip time (ms).
 	};
 
 	// Inline instance methods.
+
+	inline void NackGenerator::UpdateRtt(uint32_t rtt)
+	{
+		this->rtt = rtt;
+	}
 
 	inline NackGenerator::NackInfo::NackInfo(uint16_t seq, uint16_t sendAtSeq)
 	  : seq(seq), sendAtSeq(sendAtSeq)
@@ -82,18 +87,6 @@ namespace RTC
 	inline size_t NackGenerator::GetNackListLength() const
 	{
 		return this->nackList.size();
-	}
-
-	inline void NackGenerator::Reset()
-	{
-		this->started = false;
-		this->lastSeq = 0;
-		this->rtt     = 0;
-
-		this->nackList.clear();
-		this->keyFrameList.clear();
-
-		this->timer->Stop();
 	}
 } // namespace RTC
 

@@ -39,6 +39,11 @@ apart from writing it out for `--list-tests -v high`.
 Because it isn't actually used nor documented, and brings complications
 to Catch2's internals, description support will be removed.
 
+### SourceLineInfo::empty()
+
+There should be no reason to ever have an empty `SourceLineInfo`, so the
+method will be removed.
+
 
 ## Planned changes
 
@@ -87,6 +92,17 @@ positively match a testspec.
 
 The API for Catch2's console colour will be changed to take an extra
 argument, the stream to which the colour code should be applied.
+
+
+### Type erasure in the `PredicateMatcher`
+
+Currently, the `PredicateMatcher` uses `std::function` for type erasure,
+so that type of the matcher is always `PredicateMatcher<T>`, regardless
+of the type of the predicate. Because of the high compilation overhead
+of `std::function`, and the fact that the type erasure is used only rarely,
+`PredicateMatcher` will no longer be type erased in the future. Instead,
+the predicate type will be made part of the PredicateMatcher's type.
+
 
 ---
 

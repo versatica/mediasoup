@@ -1,6 +1,34 @@
 # Changelog
 
 
+### 3.3.3
+
+* Add `consumer.setPriority()` and `consumer.priority` API to prioritize how the estimated outgoing bitrate in a transport is distributed among all video consumers (in case there is not enough bitrate to satisfy them).
+* Make video `SimpleConsumers` play the BWE game by helping in probation generation and bitrate distribution.
+* Add `consumer.preferredLayers` getter.
+* Rename `enablePacketEvent()` and "packet" event to `enableTraceEvent()` and "trace" event (sorry SEMVER).
+* Transport: Add a new "trace" event of type "bwe" with detailed information about bitrates.
+
+
+### 3.3.2
+
+* Improve "packet" event by not firing both "keyframe" and "rtp" types for the same RTP packet.
+
+
+### 3.3.1
+
+
+* Add type "keyframe" as a valid type for "packet" event in `Producers` and `Consumers`.
+
+
+### 3.3.0
+
+* Add transport-cc bandwidth estimation and congestion control in sender and receiver side.
+* Run in Windows.
+* Rewrite to TypeScript.
+* Tons of improvements.
+
+
 ### 3.2.5
 
 * Fix TCP leak (#325).
@@ -142,6 +170,21 @@
 ### 3.0.0
 
 * v3 is here!
+
+
+### 2.6.17
+
+* Improve build system by using all available CPU cores in parallel.
+
+
+### 2.6.16
+
+* Don't mandate server port range to be >= 99.
+
+
+### 2.6.15
+
+* Fix NACK retransmissions.
 
 
 ### 2.6.14
@@ -382,6 +425,7 @@
 ### 2.0.14
 
 * [Fix #193](https://github.com/versatica/mediasoup/issues/193): `preferTcp` not honored (thanks @artushin).
+
 
 ### 2.0.13
 

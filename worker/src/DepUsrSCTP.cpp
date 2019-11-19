@@ -1,5 +1,5 @@
 #define MS_CLASS "DepUsrSCTP"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "DepUsrSCTP.hpp"
 #include "DepLibUV.hpp"
@@ -9,7 +9,7 @@
 
 /* Static. */
 
-static constexpr size_t CheckerInterval{ 10 }; // In ms.
+static constexpr size_t CheckerInterval{ 10u }; // In ms.
 
 /* Static methods for usrsctp global callbacks. */
 
@@ -47,7 +47,7 @@ inline static void sctpDebug(const char* format, ...)
 /* Static variables. */
 
 DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
-uint64_t DepUsrSCTP::numSctpAssociations{ 0 };
+uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
 
 /* Static methods. */
 
@@ -82,7 +82,7 @@ void DepUsrSCTP::IncreaseSctpAssociations()
 {
 	MS_TRACE();
 
-	if (++DepUsrSCTP::numSctpAssociations == 1)
+	if (++DepUsrSCTP::numSctpAssociations == 1u)
 		DepUsrSCTP::checker->Start();
 }
 
@@ -90,9 +90,9 @@ void DepUsrSCTP::DecreaseSctpAssociations()
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepUsrSCTP::numSctpAssociations > 0, "numSctpAssociations was not higher than 0");
+	MS_ASSERT(DepUsrSCTP::numSctpAssociations > 0u, "numSctpAssociations was not higher than 0");
 
-	if (--DepUsrSCTP::numSctpAssociations == 0)
+	if (--DepUsrSCTP::numSctpAssociations == 0u)
 		DepUsrSCTP::checker->Stop();
 }
 
@@ -118,7 +118,7 @@ void DepUsrSCTP::Checker::Start()
 
 	MS_DEBUG_TAG(sctp, "usrsctp periodic check started");
 
-	this->lastCalledAt = 0;
+	this->lastCalledAtMs = 0u;
 
 	this->timer->Start(CheckerInterval, CheckerInterval);
 }
@@ -129,7 +129,7 @@ void DepUsrSCTP::Checker::Stop()
 
 	MS_DEBUG_TAG(sctp, "usrsctp periodic check stopped");
 
-	this->lastCalledAt = 0;
+	this->lastCalledAtMs = 0u;
 
 	this->timer->Stop();
 }
@@ -138,10 +138,10 @@ void DepUsrSCTP::Checker::OnTimer(Timer* /*timer*/)
 {
 	MS_TRACE();
 
-	auto now  = DepLibUV::GetTime();
-	int delta = this->lastCalledAt ? static_cast<int>(now - this->lastCalledAt) : 0;
+	auto nowMs = DepLibUV::GetTimeMs();
+	int delta  = this->lastCalledAtMs ? static_cast<int>(nowMs - this->lastCalledAtMs) : 0;
 
-	usrsctp_fire_timer(delta);
+	usrsctp_handle_timers(delta);
 
-	this->lastCalledAt = now;
+	this->lastCalledAtMs = nowMs;
 }

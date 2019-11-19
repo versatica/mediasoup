@@ -3,9 +3,9 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
-#include "json.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
+#include <json.hpp>
 #include <string>
 
 using json = nlohmann::json;
@@ -14,6 +14,9 @@ namespace RTC
 {
 	class TransportTuple
 	{
+	protected:
+		using onSendCallback = const std::function<void(bool sent)>;
+
 	public:
 		enum class Protocol
 		{
@@ -26,11 +29,13 @@ namespace RTC
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection);
 		explicit TransportTuple(const TransportTuple* tuple);
 
+	public:
 		void FillJson(json& jsonObject) const;
+		void Dump() const;
 		void StoreUdpRemoteAddress();
 		bool Compare(const TransportTuple* tuple) const;
 		void SetLocalAnnouncedIp(std::string& localAnnouncedIp);
-		void Send(const uint8_t* data, size_t len);
+		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb = nullptr);
 		Protocol GetProtocol() const;
 		const struct sockaddr* GetLocalAddress() const;
 		const struct sockaddr* GetRemoteAddress() const;
@@ -105,12 +110,13 @@ namespace RTC
 		this->localAnnouncedIp = localAnnouncedIp;
 	}
 
-	inline void TransportTuple::Send(const uint8_t* data, size_t len)
+	inline void TransportTuple::Send(
+	  const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb)
 	{
 		if (this->protocol == Protocol::UDP)
-			this->udpSocket->Send(data, len, this->udpRemoteAddr);
+			this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);
 		else
-			this->tcpConnection->Send(data, len);
+			this->tcpConnection->Send(data, len, cb);
 	}
 
 	inline const struct sockaddr* TransportTuple::GetLocalAddress() const

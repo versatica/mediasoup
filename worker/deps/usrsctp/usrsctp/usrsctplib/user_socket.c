@@ -78,7 +78,7 @@ extern int sctp_sosend(struct socket *so, struct sockaddr *addr, struct uio *uio
 extern int sctp_attach(struct socket *so, int proto, uint32_t vrf_id);
 extern int sctpconn_attach(struct socket *so, int proto, uint32_t vrf_id);
 
-static void init_sync() {
+static void init_sync(void) {
 #if defined(__Userspace_os_Windows)
 #if defined(INET) || defined(INET6)
 	WSADATA wsaData;
@@ -1579,9 +1579,6 @@ sowakeup(struct socket *so, struct sockbuf *sb)
 #endif
 	}
 	SOCKBUF_UNLOCK(sb);
-
-	if ((sb->sb_flags & SB_UPCALL) && so->so_upcall != NULL)
-		(*so->so_upcall)(so, so->so_upcallarg, M_NOWAIT);
 }
 #else /* kernel version for reference */
 /*
@@ -2422,16 +2419,20 @@ usrsctp_getsockopt(struct socket *so, int level, int option_name,
 				*option_len = (socklen_t)sizeof(struct linger);
 				return (0);
 			}
+			break;
 		case SO_ERROR:
-			if (*option_len < sizeof(int)) {
+			if (*option_len < (socklen_t)sizeof(int)) {
 				errno = EINVAL;
 				return (-1);
 			} else {
-				int *intval = (int *)option_value;
+				int *intval;
+
+				intval = (int *)option_value;
 				*intval = so->so_error;
 				*option_len = (socklen_t)sizeof(int);
 				return (0);
 			}
+			break;
 		default:
 			errno = EINVAL;
 			return (-1);
@@ -3527,7 +3528,7 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 	return;
 }
 
-void usrsctp_fire_timer(int delta)
+void usrsctp_handle_timers(uint32_t delta)
 {
 	sctp_handle_tick(delta);
 }

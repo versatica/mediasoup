@@ -8,6 +8,15 @@ This document is intended for mediasoup developers.
 The `package.json` file in the main folder includes the following scripts:
 
 
+### `num run typescript:build`
+
+Compiles mediasoup TypeScript code (`lib` folder) into ES6 JavaScript and places it into the `lib` directory.
+
+
+### `num run typescript:watch`
+
+Compiles mediasoup TypeScript code (`lib` folder) into ES6 JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
+
 ### `npm run lint`
 
 Runs both `npm run lint:node` and `npm run lint:worker`.
@@ -122,7 +131,7 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code
 
 **Requirements:**
 
-* `make bear` must have been called first.
+* `make clean-all`, then `make` and then `make bear` must have been called first.
 * [PyYAML](https://pyyaml.org/) is required.
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 

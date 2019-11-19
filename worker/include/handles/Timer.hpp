@@ -28,6 +28,8 @@ public:
 	void Stop();
 	void Reset();
 	void Restart();
+	uint64_t GetTimeout() const;
+	uint64_t GetRepeat() const;
 	bool IsActive() const;
 
 	/* Callbacks fired by UV events. */
@@ -46,6 +48,16 @@ private:
 };
 
 /* Inline methods. */
+
+inline uint64_t Timer::GetTimeout() const
+{
+	return this->timeout;
+}
+
+inline uint64_t Timer::GetRepeat() const
+{
+	return this->repeat;
+}
 
 inline bool Timer::IsActive() const
 {

@@ -4,8 +4,6 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
-#include "RTC/RembClient.hpp"
-#include "RTC/RembServer/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunPacket.hpp"
 #include "RTC/TcpConnection.hpp"
@@ -22,9 +20,7 @@ namespace RTC
 	                        public RTC::TcpServer::Listener,
 	                        public RTC::TcpConnection::Listener,
 	                        public RTC::IceServer::Listener,
-	                        public RTC::DtlsTransport::Listener,
-	                        public RTC::RembClient::Listener,
-	                        public RTC::RembServer::RemoteBitrateEstimator::Listener
+	                        public RTC::DtlsTransport::Listener
 	{
 	private:
 		struct ListenIp
@@ -45,30 +41,15 @@ namespace RTC
 	private:
 		bool IsConnected() const override;
 		void MayRunDtlsTransport();
-		void SendRtpPacket(
-		  RTC::RtpPacket* packet,
-		  RTC::Consumer* consumer,
-		  bool retransmitted = false,
-		  bool probation     = false) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
-		void DistributeAvailableOutgoingBitrate();
+		void SendSctpData(const uint8_t* data, size_t len) override;
 		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnDtlsDataReceived(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-
-		/* Pure virtual methods inherited from RTC::Transport. */
-	private:
-		void UserOnNewProducer(RTC::Producer* producer) override;
-		void UserOnNewConsumer(RTC::Consumer* consumer) override;
-		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
-		void UserOnSendSctpData(const uint8_t* data, size_t len) override;
-
-		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
-	public:
-		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
@@ -113,17 +94,6 @@ namespace RTC
 		void OnDtlsTransportApplicationDataReceived(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
-		/* Pure virtual methods inherited from RTC::RembClient::Listener. */
-	public:
-		void OnRembClientAvailableBitrate(RTC::RembClient* rembClient, uint32_t availableBitrate) override;
-
-		/* Pure virtual methods inherited from RTC::RembServer::RemoteBitrateEstimator::Listener. */
-	public:
-		void OnRembServerAvailableBitrate(
-		  const RTC::RembServer::RemoteBitrateEstimator* remoteBitrateEstimator,
-		  const std::vector<uint32_t>& ssrcs,
-		  uint32_t availableBitrate) override;
-
 	private:
 		// Allocated by this.
 		RTC::IceServer* iceServer{ nullptr };
@@ -133,16 +103,10 @@ namespace RTC
 		RTC::DtlsTransport* dtlsTransport{ nullptr };
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
-		RTC::RembClient* rembClient{ nullptr };
-		RTC::RembServer::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.
-		bool connected{ false }; // Whether connect() was succesfully called.
+		bool connectCalled{ false }; // Whether connect() was succesfully called.
 		std::vector<RTC::IceCandidate> iceCandidates;
-		RTC::TransportTuple* iceSelectedTuple{ nullptr };
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
-		uint32_t initialAvailableOutgoingBitrate{ 600000 };
-		uint32_t minimumAvailableOutgoingBitrate{ 300000 };
-		uint32_t maxIncomingBitrate{ 0 };
 	};
 } // namespace RTC
 

@@ -637,6 +637,44 @@ test('producer.pause() and resume() succeed', async () =>
 		.toMatchObject({ paused: false });
 }, 2000);
 
+test('producer.enableTraceEvent() succeed', async () =>
+{
+	await audioProducer.enableTraceEvent([ 'rtp', 'pli' ]);
+	await expect(audioProducer.dump())
+		.resolves
+		.toMatchObject({ traceEventTypes: 'rtp,pli' });
+
+	await audioProducer.enableTraceEvent([]);
+	await expect(audioProducer.dump())
+		.resolves
+		.toMatchObject({ traceEventTypes: '' });
+
+	await audioProducer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
+	await expect(audioProducer.dump())
+		.resolves
+		.toMatchObject({ traceEventTypes: 'nack,fir' });
+
+	await audioProducer.enableTraceEvent();
+	await expect(audioProducer.dump())
+		.resolves
+		.toMatchObject({ traceEventTypes: '' });
+}, 2000);
+
+test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
+{
+	await expect(audioProducer.enableTraceEvent(123))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(audioProducer.enableTraceEvent('rtp'))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(audioProducer.enableTraceEvent([ 'fir', 123.123 ]))
+		.rejects
+		.toThrow(TypeError);
+}, 2000);
+
 test('Producer emits "score"', async () =>
 {
 	// Private API.

@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2011-2013 Michael Tuexen
  * Copyright (C) 2011-2015 Colin Caughie
+ * Copyright (C) 2011-2019 Felix Weinrank
  *
  * All rights reserved.
  *
@@ -29,6 +30,10 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * Usage: st_client local_addr local_port remote_addr remote_port remote_sctp_port
+ */
+
 #ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -39,6 +44,7 @@
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -54,24 +60,30 @@
 #define MAX_PACKET_SIZE (1<<16)
 #define BUFFER_SIZE 80
 #define DISCARD_PPID 39
+#define HTTP_PPID 63
 
 #define TIMER_INTERVAL_MSECS 10
 
 static int connecting = 0;
 static int finish = 0;
 
-static unsigned get_tick_count()
+static unsigned int
+get_tick_count(void)
 {
 #ifdef _WIN32
 	return GetTickCount();
 #else
-	static const clock_t clocks_per_msec = CLOCKS_PER_SEC / 1000;
-	return clock() / clocks_per_msec;
+	struct timeval tv;
+	unsigned int milliseconds;
+
+	gettimeofday(&tv, NULL); /* get current time */
+	milliseconds = tv.tv_sec*1000LL + tv.tv_usec/1000; /* calculate milliseconds */
+	return (milliseconds);
 #endif
 }
 
 static void
-handle_packets(int sock, struct socket* s, void* sconn_addr)
+handle_events(int sock, struct socket* s, void* sconn_addr)
 {
 	char *dump_buf;
 	ssize_t length;
@@ -79,18 +91,15 @@ handle_packets(int sock, struct socket* s, void* sconn_addr)
 
 	fd_set rfds;
 	struct timeval tv;
-	int retval;
 
 	unsigned next_fire_time = get_tick_count();
 	unsigned last_fire_time = next_fire_time;
+	unsigned now = get_tick_count();
+	int wait_time;
 
 	while (!finish) {
-
-		unsigned now = get_tick_count();
-		int wait_time;
-
 		if ((int) (now - next_fire_time) > 0) {
-			usrsctp_fire_timer(now - last_fire_time);
+			usrsctp_handle_timers(now - last_fire_time);
 			last_fire_time = now;
 			next_fire_time = now + TIMER_INTERVAL_MSECS;
 		}
@@ -99,37 +108,48 @@ handle_packets(int sock, struct socket* s, void* sconn_addr)
 		tv.tv_sec = wait_time / 1000;
 		tv.tv_usec = (wait_time % 1000) * 1000;
 
-		retval = select(1, &rfds, NULL, NULL, &tv);
+		FD_ZERO(&rfds);
+		FD_SET(sock, &rfds);
 
-		length = recv(sock, buf, MAX_PACKET_SIZE, 0);
-		if (length > 0) {
-			if ((dump_buf = usrsctp_dumppacket(buf, (size_t)length, SCTP_DUMP_INBOUND)) != NULL) {
-				fprintf(stderr, "%s", dump_buf);
-				usrsctp_freedumpbuffer(dump_buf);
+		select(sock + 1, &rfds, NULL, NULL, &tv);
+
+		if (FD_ISSET(sock, &rfds)) {
+			length = recv(sock, buf, MAX_PACKET_SIZE, 0);
+
+			if (length > 0) {
+				if ((dump_buf = usrsctp_dumppacket(buf, (size_t)length, SCTP_DUMP_INBOUND)) != NULL) {
+					fprintf(stderr, "%s", dump_buf);
+					usrsctp_freedumpbuffer(dump_buf);
+				}
+				usrsctp_conninput(sconn_addr, buf, (size_t)length, 0);
 			}
-			usrsctp_conninput(sconn_addr, buf, (size_t)length, 0);
 		}
 	}
 }
 
-static void on_connect(struct socket* s)
+static void
+on_connect(struct socket* s)
 {
 	struct sctp_sndinfo sndinfo;
 	char buffer[BUFFER_SIZE];
+	int bufferlen;
 
-	memset(buffer, 'A', BUFFER_SIZE);
-	sndinfo.snd_sid = 1;
+	/* memset(buffer, 'A', BUFFER_SIZE); */
+	/* bufferlen = BUFFER_SIZE; */
+	bufferlen = snprintf(buffer, BUFFER_SIZE, "GET / HTTP/1.0\r\nUser-agent: libusrsctp\r\nConnection: close\r\n\r\n");
+	sndinfo.snd_sid = 0;
 	sndinfo.snd_flags = 0;
 	sndinfo.snd_ppid = htonl(DISCARD_PPID);
 	sndinfo.snd_context = 0;
 	sndinfo.snd_assoc_id = 0;
-	if (usrsctp_sendv(s, buffer, BUFFER_SIZE, NULL, 0, (void *)&sndinfo,
+	if (usrsctp_sendv(s, buffer, bufferlen, NULL, 0, (void *)&sndinfo,
 	                  (socklen_t)sizeof(struct sctp_sndinfo), SCTP_SENDV_SNDINFO, 0) < 0) {
 		perror("usrsctp_sendv");
 	}
 }
 
-static void on_socket_readable(struct socket* s) {
+static void
+on_socket_readable(struct socket* s) {
 	char buffer[BUFFER_SIZE];
 	union sctp_sockstore addr;
 	socklen_t fromlen = sizeof(addr);
@@ -142,7 +162,7 @@ static void on_socket_readable(struct socket* s) {
 	/* Keep reading until there is no more data */
 	for (;;) {
 		retval = usrsctp_recvv(s, buffer, sizeof(buffer), (struct sockaddr*) &addr,
-				&fromlen, &rcv_info, &infolen, &infotype, &flags);
+		                       &fromlen, &rcv_info, &infolen, &infotype, &flags);
 
 		if (retval < 0) {
 			if (errno != EWOULDBLOCK) {
@@ -172,7 +192,8 @@ static void on_socket_readable(struct socket* s) {
 	}
 }
 
-static void handle_upcall(struct socket *s, void *arg, int flags)
+static void
+handle_upcall(struct socket *s, void *arg, int flags)
 {
     int events = usrsctp_get_events(s);
 
@@ -213,7 +234,7 @@ conn_output(void *addr, void *buf, size_t length, uint8_t tos, uint8_t set_df)
 		usrsctp_freedumpbuffer(dump_buf);
 	}
 #ifdef _WIN32
-	if (send(*fdp, buf, length, 0) == SOCKET_ERROR) {
+	if (send(*fdp, buf, (int)length, 0) == SOCKET_ERROR) {
 		return (WSAGetLastError());
 #else
 	if (send(*fdp, buf, length, 0) < 0) {
@@ -240,29 +261,30 @@ main(int argc, char *argv[])
 #ifdef _WIN32
 	WSADATA wsaData;
 #endif
+	const int on = 1;
 
 	if (argc < 6) {
 		printf("Usage: st_client local_addr local_port remote_addr remote_port remote_sctp_port\n");
-		exit(EXIT_FAILURE);
+		return (-1);
 	}
 
 #ifdef _WIN32
 	if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0) {
 		printf("WSAStartup failed\n");
-		exit (EXIT_FAILURE);
+		return (-1);
 	}
 #endif
-	usrsctp_init_nothreads(0, conn_output, debug_printf);
+	usrsctp_init_nothreads(0, conn_output, debug_printf_stack);
 	/* set up a connected UDP socket */
 #ifdef _WIN32
 	if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET) {
 		printf("socket() failed with error: %ld\n", WSAGetLastError());
-        exit(1);
+		return (-1);
 	}
 #else
 	if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
 		perror("socket");
-        exit(1);
+		return (-1);
 	}
 #endif
 	memset(&sin, 0, sizeof(struct sockaddr_in));
@@ -273,17 +295,17 @@ main(int argc, char *argv[])
 	sin.sin_port = htons(atoi(argv[2]));
 	if (!inet_pton(AF_INET, argv[1], &sin.sin_addr.s_addr)){
 		printf("error: invalid address\n");
-		exit(1);
+		return (-1);
 	}
 #ifdef _WIN32
 	if (bind(fd, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
 		printf("bind() failed with error: %ld\n", WSAGetLastError());
-        exit(1);
+		return (-1);
 	}
 #else
 	if (bind(fd, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) < 0) {
 		perror("bind");
-        exit(1);
+		return (-1);
 	}
 #endif
 	memset(&sin, 0, sizeof(struct sockaddr_in));
@@ -294,17 +316,17 @@ main(int argc, char *argv[])
 	sin.sin_port = htons(atoi(argv[4]));
 	if (!inet_pton(AF_INET, argv[3], &sin.sin_addr.s_addr)){
 		printf("error: invalid address\n");
-		exit(1);
+		return (-1);
 	}
 #ifdef _WIN32
 	if (connect(fd, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
 		printf("connect() failed with error: %ld\n", WSAGetLastError());
-        exit(1);
+		return (-1);
 	}
 #else
 	if (connect(fd, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) < 0) {
 		perror("connect");
-        exit(1);
+		return (-1);
 	}
 #endif
 #ifdef SCTP_DEBUG
@@ -315,11 +337,12 @@ main(int argc, char *argv[])
 
 	if ((s = usrsctp_socket(AF_CONN, SOCK_STREAM, IPPROTO_SCTP, NULL, NULL, 0, NULL)) == NULL) {
 		perror("usrsctp_socket");
-        exit(1);
+		return (-1);
 	}
 
+	usrsctp_setsockopt(s, IPPROTO_SCTP, SCTP_RECVRCVINFO, &on, sizeof(int));
 	usrsctp_set_non_blocking(s, 1);
-    usrsctp_set_upcall(s, handle_upcall, NULL);
+	usrsctp_set_upcall(s, handle_upcall, NULL);
 
 	memset(&sconn, 0, sizeof(struct sockaddr_conn));
 	sconn.sconn_family = AF_CONN;
@@ -330,6 +353,7 @@ main(int argc, char *argv[])
 	sconn.sconn_addr = NULL;
 	if (usrsctp_bind(s, (struct sockaddr *)&sconn, sizeof(struct sockaddr_conn)) < 0) {
 		perror("usrsctp_bind");
+		return (-1);
 	}
 
 	memset(&sconn, 0, sizeof(struct sockaddr_conn));
@@ -344,12 +368,12 @@ main(int argc, char *argv[])
 
 	if (retval < 0 && errno != EWOULDBLOCK && errno != EINPROGRESS) {
 		perror("usrsctp_connect");
-		exit(1);
+		return (-1);
 	}
 
 	connecting = 1;
 
-	handle_packets(fd, s, sconn.sconn_addr);
+	handle_events(fd, s, sconn.sconn_addr);
 
-	return 0;
+	return (0);
 }

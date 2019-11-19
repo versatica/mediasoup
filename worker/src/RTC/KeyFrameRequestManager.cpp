@@ -1,5 +1,5 @@
 #define MS_CLASS "KeyFrameRequestManager"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "Logger.hpp"
@@ -139,6 +139,8 @@ inline void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFram
 	// Best effort in case the PLI/FIR was lost. Do not retry on timeout.
 	pendingKeyFrameInfo->SetRetryOnTimeout(false);
 	pendingKeyFrameInfo->Restart();
+
+	MS_DEBUG_DEV("requesting key frame on timeout");
 
 	this->listener->OnKeyFrameNeeded(this, pendingKeyFrameInfo->GetSsrc());
 }

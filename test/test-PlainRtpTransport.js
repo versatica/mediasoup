@@ -108,7 +108,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(data1.rtcpTuple).toEqual(transport1.rtcpTuple);
 	expect(data1.sctpParameters).toEqual(transport1.sctpParameters);
 	expect(data1.sctpState).toBe('new');
-	expect(data1.rtpHeaderExtensions).toBeType('object');
+	expect(data1.recvRtpHeaderExtensions).toBeType('object');
 	expect(data1.rtpListener).toBeType('object');
 
 	transport1.close();
@@ -148,7 +148,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 
 test('router.createPlainRtpTransport() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(router.createPlainRtpTransport())
+	await expect(router.createPlainRtpTransport({}))
 		.rejects
 		.toThrow(TypeError);
 
@@ -186,7 +186,19 @@ test('plaintRtpTransport.getStats() succeeds', async () =>
 	expect(data[0].transportId).toBeType('string');
 	expect(data[0].timestamp).toBeType('number');
 	expect(data[0].bytesReceived).toBe(0);
+	expect(data[0].recvBitrate).toBe(0);
 	expect(data[0].bytesSent).toBe(0);
+	expect(data[0].sendBitrate).toBe(0);
+	expect(data[0].rtpBytesReceived).toBe(0);
+	expect(data[0].rtpRecvBitrate).toBe(0);
+	expect(data[0].rtpBytesSent).toBe(0);
+	expect(data[0].rtpSendBitrate).toBe(0);
+	expect(data[0].rtxBytesReceived).toBe(0);
+	expect(data[0].rtxRecvBitrate).toBe(0);
+	expect(data[0].rtxBytesSent).toBe(0);
+	expect(data[0].rtxSendBitrate).toBe(0);
+	expect(data[0].probationBytesSent).toBe(0);
+	expect(data[0].probationSendBitrate).toBe(0);
 	expect(data[0].tuple).toBeType('object');
 	expect(data[0].tuple.localIp).toBe('4.4.4.4');
 	expect(data[0].tuple.localPort).toBeType('number');
@@ -217,7 +229,7 @@ test('plaintRtpTransport.connect() succeeds', async () =>
 
 test('plaintRtpTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(transport.connect())
+	await expect(transport.connect({}))
 		.rejects
 		.toThrow(TypeError);
 
@@ -252,7 +264,7 @@ test('PlaintRtpTransport methods reject if closed', async () =>
 		.rejects
 		.toThrow(Error);
 
-	await expect(transport.connect())
+	await expect(transport.connect({}))
 		.rejects
 		.toThrow(Error);
 }, 2000);

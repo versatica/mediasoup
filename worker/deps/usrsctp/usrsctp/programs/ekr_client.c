@@ -186,7 +186,7 @@ main(int argc, char *argv[])
 		exit (EXIT_FAILURE);
 	}
 #endif
-	usrsctp_init(0, conn_output, debug_printf);
+	usrsctp_init(0, conn_output, debug_printf_stack);
 	/* set up a connected UDP socket */
 #ifdef _WIN32
 	if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET) {

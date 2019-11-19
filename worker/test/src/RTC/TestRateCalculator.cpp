@@ -26,7 +26,7 @@ void validate(RateCalculator& rate, uint64_t timeBase, std::vector<data>& input)
 
 SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 {
-	uint64_t now = DepLibUV::GetTime();
+	uint64_t nowMs = DepLibUV::GetTimeMs();
 
 	SECTION("receive single item per 1000 ms")
 	{
@@ -39,7 +39,7 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 		};
 		// clang-format on
 
-		validate(rate, now, input);
+		validate(rate, nowMs, input);
 	}
 
 	SECTION("receive multiple items per 1000 ms")
@@ -56,7 +56,7 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 		};
 		// clang-format on
 
-		validate(rate, now, input);
+		validate(rate, nowMs, input);
 	}
 
 	SECTION("slide")
@@ -74,8 +74,8 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 		};
 		// clang-format on
 
-		validate(rate, now, input);
+		validate(rate, nowMs, input);
 
-		REQUIRE(rate.GetRate(now + 3000) == 0);
+		REQUIRE(rate.GetRate(nowMs + 3000) == 0);
 	}
 }

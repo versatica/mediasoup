@@ -5,7 +5,6 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
-#include <map>
 
 namespace RTC
 {
@@ -20,25 +19,25 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
+		RTC::Consumer::Layers GetPreferredLayers() const override;
 		bool IsActive() const override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
-		void SetExternallyManagedBitrate() override;
-		uint16_t GetBitratePriority() const override;
-		uint32_t UseAvailableBitrate(uint32_t bitrate) override;
-		uint32_t IncreaseLayer(uint32_t bitrate) override;
+		uint8_t GetBitratePriority() const override;
+		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
+		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void SendProbationRtpPacket(uint16_t seq) override;
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
+		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
-		uint32_t GetTransmissionRate(uint64_t now) override;
+		uint32_t GetTransmissionRate(uint64_t nowMs) override;
+		float GetRtt() const override;
 
 	private:
 		void UserOnTransportConnected() override;
@@ -62,8 +61,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(
-		  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet, bool probation = false) override;
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
 	private:
 		// Allocated by this.
@@ -83,13 +81,22 @@ namespace RTC
 		int16_t currentSpatialLayer{ -1 };
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		bool externallyManagedBitrate{ false };
-		uint32_t tsOffset{ 0 }; // RTP Timestamp offset.
-		std::map<uint32_t, uint32_t> tsExtraOffsets;
-		uint16_t tsExtraOffetPacketCount{ 0 };
+		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
+		bool keyFrameForTsOffsetRequested{ false };
+		uint64_t lastBweDowngradeAtMs{ 0u }; // Last time we moved to lower spatial layer due to BWE.
 	};
 
 	/* Inline methods. */
+
+	inline RTC::Consumer::Layers SimulcastConsumer::GetPreferredLayers() const
+	{
+		RTC::Consumer::Layers layers;
+
+		layers.spatial  = this->preferredSpatialLayer;
+		layers.temporal = this->preferredTemporalLayer;
+
+		return layers;
+	}
 
 	inline bool SimulcastConsumer::IsActive() const
 	{
@@ -101,7 +108,7 @@ namespace RTC
 				this->producerRtpStreams.end(),
 				[](const RTC::RtpStream* rtpStream)
 				{
-					return (rtpStream != nullptr && rtpStream->GetScore() > 0);
+					return (rtpStream != nullptr && rtpStream->GetScore() > 0u);
 				}
 			)
 		);

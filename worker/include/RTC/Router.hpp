@@ -2,7 +2,6 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
-#include "json.hpp"
 #include "Channel/Request.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
@@ -12,6 +11,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/Transport.hpp"
+#include <json.hpp>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
