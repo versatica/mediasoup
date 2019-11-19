@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.3.3 (WIP)
+### 3.3.3
 
 * Add `consumer.setPriority()` and `consumer.priority` API to prioritize how the estimated outgoing bitrate in a transport is distributed among all video consumers (in case there is not enough bitrate to satisfy them).
 * Make video `SimpleConsumers` play the BWE game by helping in probation generation and bitrate distribution.
