@@ -18,7 +18,9 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
-#include "RTC/ShmConsumer.hpp"
+#ifdef SFU_SHM
+  #include "RTC/ShmConsumer.hpp"
+#endif
 
 namespace RTC
 {
@@ -404,9 +406,10 @@ namespace RTC
 
 					case RTC::RtpParameters::Type::SHM:
 					{
+#ifdef SFU_SHM
 						// This may throw.
 						consumer = new RTC::ShmConsumer(consumerId, this, request->data); // "fake" consumer with very limited functionality
-
+#endif
 						break;
 					}
 				}

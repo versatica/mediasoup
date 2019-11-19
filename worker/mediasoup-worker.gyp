@@ -60,8 +60,6 @@
       'src/RTC/SeqManager.cpp',
       'src/RTC/SimpleConsumer.cpp',
       'src/RTC/SimulcastConsumer.cpp',
-      'src/RTC/ShmConsumer.cpp',
-      'src/RTC/ShmTransport.cpp',
       'src/RTC/SrtpSession.cpp',
       'src/RTC/StunPacket.cpp',
       'src/RTC/SvcConsumer.cpp',
@@ -172,8 +170,6 @@
       'include/RTC/SeqManager.hpp',
       'include/RTC/SimpleConsumer.hpp',
       'include/RTC/SimulcastConsumer.hpp',
-      'include/RTC/ShmConsumer.hpp',
-      'include/RTC/ShmTransport.hpp',
       'include/RTC/SrtpSession.hpp',
       'include/RTC/StunPacket.hpp',
       'include/RTC/SvcConsumer.hpp',
@@ -302,6 +298,29 @@
       [
         # C++ source files.
         'src/main.cpp'
+      ]
+    },
+    {
+      'target_name': 'mediasoup-worker-shm',
+      'defines': [ 'SFU_SHM' ],
+      'dependencies': [
+#        '/root/build/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
+         'deps/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
+      ],
+      'sources': [
+        # C++ source files.
+        'src/main.cpp',
+        'src/DepLibSfuShm.cpp',
+        'src/RTC/ShmConsumer.cpp',
+        'src/RTC/ShmTransport.cpp',
+        # C++ include files
+        'include/DepLibSfuShm.hpp',
+        'include/RTC/ShmConsumer.hpp',
+        'include/RTC/ShmTransport.hpp'
+      ],
+      'include_dirs':
+      [
+        '/root/build/ff_shm_api/include'
       ]
     },
     {

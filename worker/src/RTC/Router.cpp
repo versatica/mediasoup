@@ -8,7 +8,9 @@
 #include "RTC/AudioLevelObserver.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainRtpTransport.hpp"
-#include "RTC/ShmTransport.hpp"
+#ifdef SFU_SHM
+  #include "RTC/ShmTransport.hpp"
+#endif
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -249,6 +251,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROUTER_CREATE_SHM_TRANSPORT:
 			{
+#ifdef SFU_SHM
 				std::string transportId;
 
 				// This may throw
@@ -266,7 +269,9 @@ namespace RTC
 				shmTransport->FillJson(data);
 
 				request->Accept(data);
-
+#else
+				request->Accept();
+#endif
 				break;
 			}
 

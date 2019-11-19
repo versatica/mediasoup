@@ -3,6 +3,7 @@
 
 #include "RTC/ShmTransport.hpp"
 #include "DepLibUV.hpp"
+#include "DepLibSfuShm.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -11,14 +12,85 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	ShmTransport::ShmTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
 	  : RTC::Transport::Transport(id, listener)
 	{
 		MS_TRACE();
+/*		
+		data:
+			listenIp: {ip: ..., announcedIp: ...},
+			shm: {name: shmName},
+			log: {fileName: logName, level: logLevel},
+			channels: appData.channels (TBD)
+*/
 
-		// Setup sfushm context
-		; // this->xcodeshm = new xcodeshm();
+		// Read shm.Name
+		auto jsonShmIt = data.find("shm");
+		if (jsonShmIt == data.end())
+			MS_THROW_TYPE_ERROR("missing shm");
+		else if (!jsonShmIt->is_object())
+			MS_THROW_TYPE_ERROR("wrong shm (not an object)");
+
+		auto jsonShmNameIt = jsonShmIt->find("name");
+		if (jsonShmNameIt == data.end())
+			MS_THROW_TYPE_ERROR("missing shm.name");
+		else if (!jsonShmNameIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong shm.name (not a string)");
+
+		this->shm.assign(jsonShmNameIt->get<std::string>());
+
+		// ngxshm log name and level
+		auto jsonLogIt = data.find("log");
+		if (jsonLogIt == data.end())
+			MS_THROW_TYPE_ERROR("missing log");
+		else if(!jsonLogIt->is_object())
+			MS_THROW_TYPE_ERROR("wrong log (not an object)");
+
+		auto jsonLogNameIt = jsonLogIt->find("fileName");
+		if (jsonLogNameIt == data.end())
+		  MS_THROW_TYPE_ERROR("missing log.fileName");
+		else if (!jsonLogNameIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong log.fileName (not a string)");
+		
+		this->logname.assing(jsonLogNameIt->get<std::string>());
+
+		auto jsonLogLevelIt = jsonLogIt->find("level");
+		if (jsonLogLevelIt == data.end())
+		  MS_THROW_TYPE_ERROR("missing log.level");
+		else if (!jsonLogLevelIt->is_integer())
+			MS_THROW_TYPE_ERROR("wrong log.level (not an integer");
+
+		this->loglevel = jsonLogLevelIt->get<int>();
+
+		// data contains listenIp: {ip: ..., announcedIp: ...}
+		auto jsonListenIpIt = data.find("listenIp");
+
+		if (jsonListenIpIt == data.end())
+			MS_THROW_TYPE_ERROR("missing listenIp");
+		else if (!jsonListenIpIt->is_object())
+			MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
+
+		auto jsonIpIt = jsonListenIpIt->find("ip");
+
+		if (jsonIpIt == jsonListenIpIt->end())
+			MS_THROW_TYPE_ERROR("missing listenIp.ip");
+		else if (!jsonIpIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong listenIp.ip (not a string)");
+
+		this->listenIp.ip.assign(jsonIpIt->get<std::string>());
+
+		// This may throw.
+		Utils::IP::NormalizeIp(this->listenIp.ip);
+
+		auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
+
+		if (jsonAnnouncedIpIt != jsonListenIpIt->end())
+		{
+			if (!jsonAnnouncedIpIt->is_string())
+				MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
+
+			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
+		}
 	}
 
 	ShmTransport::~ShmTransport()
@@ -35,7 +107,30 @@ namespace RTC
 		// Call the parent method.
 		RTC::Transport::FillJson(jsonObject);
 
-		// TODO: Add shm info
+		// Add shm info
+		jsonObject["shm"] = json::object;
+		auto jsonShmIt    = jsonObject.find("shm");
+		(*jsonShmIt)["name"] = this->shm;
+		if (this->shmCtx) {
+			switch(this->shmCtx->wrt_status)
+			{
+				case DepLibSfuShm::SHM_WRT_INITIALIZED:
+					(*jsonShmIt)["writer"] = "initialized";
+					break;
+
+				case DepLibSfuShm::SHM_WRT_CLOSED:
+					(*jsonShmIt)["writer"] = "closed";
+					break;
+
+				case DepLibSfuShm::SHM_WRT_UNDEFINED:
+				default:
+					(*jsonShmIt)["writer"] = "undefined";
+					break;
+			}
+		}
+		else {
+			(*jsonShmIt)["writer"] = "null";
+		}
 
 		// Add headerExtensionIds.
 		jsonObject["rtpHeaderExtensions"] = json::object();
@@ -89,22 +184,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: confirm that this class does not have to do anything in case of TRANSPORT_CONNECT
 		switch (request->methodId)
 		{
 			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
-				// Just init shm context
-				std::string shmName;
-				auto jsonShmName = request->data.find("shm");
-
-				if (jsonShmName == request->data.end() || !jsonShmName->is_string())
-					MS_THROW_TYPE_ERROR("missing SHM name");
-				
-				// TODO: what else do I need to init shm? number of channels? assign media types to chn #?
-
-				shmName = jsonShmName->get<std::string>();
-
-				; //this->xcodeshm->initWriterContext(shmName);
 
 				request->Accept();
 
@@ -124,7 +208,7 @@ namespace RTC
 
 	inline bool ShmTransport::IsConnected() const
 	{
-		return true; // this->xcodeshm->isWriterCtxInitialized();
+		return true; //TODO: or always false? or what?
 	}
 
 	void ShmTransport::SendRtpPacket(
@@ -138,6 +222,8 @@ namespace RTC
 		auto* data = packet->GetPayload();
 		auto len   = packet->GetPayloadLength(); // length without RTP padding
 
+		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm...
+
 		switch (consumer->GetKind())
 		{
 			case RTC::Media::Kind::AUDIO:
@@ -145,9 +231,13 @@ namespace RTC
 				/* Just write out the whole opus packet without parsing into separate opus frames.
 					+----------+--------------+
 					|RTP Header| Opus Payload |
-					+----------+--------------+
-				*/
-				; //this->xcodeshm->writeChunk(packet->GetTimestamp(), data, len, SHM::MediaType:AUDIO);
+					+----------+--------------+	*/
+				this->chunk.data = data;
+				this->chunk.len = len;
+				this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
+				this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+				DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_AUDIO);
 
 				break;
 			} // audio
@@ -176,7 +266,14 @@ namespace RTC
 						  The RTP timestamp is set to the sampling timestamp of the content.
       				A 90 kHz clock rate MUST be used.
 						*/
-						; //this->xcodeshm->writeChunk(packet->GetTimestamp(), data, naluSize, SHM::MediaType:VIDEO);
+
+						this->chunk.data = data+offset;
+						this->chunk.len = naluSize;
+						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
+						this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+
+						DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_VIDEO);
 						break;
 					}
 
@@ -217,11 +314,15 @@ namespace RTC
 								break;
 							}
 							else {
-								/*
-								The RTP timestamp MUST be set to the earliest of the NALU-times of
-      					all the NAL units to be aggregated.
-								*/
-								; //this->xcodeshm->writeChunk(packet->GetTimestamp(), data + offset, naluSize, SHM::MediaType:VIDEO);
+								/* The RTP timestamp MUST be set to the earliest of the NALU-times of
+      					all the NAL units to be aggregated. */
+								this->chunk.data = data+offset;
+								this->chunk.len = len;
+								this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
+								this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+
+								DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_VIDEO);
 							}
 
 							offset += naluSize + sizeof(naluSize);
@@ -238,21 +339,18 @@ namespace RTC
 						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
 
 						uint8_t subnal   = *(data + 1) & 0x1F; // TODO: review
-						uint8_t startBit = *(data + 1) & 0x80;
-						uint8_t endBit = 0; // TODO:
+						uint8_t startBit = *(data + 1) & 0x80; // TODO: review
+						uint8_t endBit = 0; // TODO: detect end bit
 
-						if (startBit == 128) {
-						// Open chunk for writing in shm: set its seq number to invalid
 							; //startChunkSeqId = this->xcodeshm->openChunkForWrite(packet->GetTimestamp(), SHM::MediaType:VIDEO);
+						this->chunk.data = data+offset;
+						this->chunk.len = naluSize;
+						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
+						this->chunk.begin = (startBit == 128)? 1 : 0;
+						this->chunk.end = this->chunk.complete = (endBit) ? 1 : 0;
 
-						}
-						
-						; //this->xcodeshm->addChunkFragment(data + offset, naluSize, SHM::MediaType::VIDEO);
-
-						if (endBit) { // TODO: endBit is set) {
-							// complete publishing data chunk: set seqid
-							; //this->xcodeshm->PublishChunk(startChunkSeqId, SHM::MediaType::VIDEO);
-						}
+						DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_VIDEO);
 						break;
 					}
 					case 25: // STAB-B
@@ -285,11 +383,17 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
-		const uint8_t* data = packet->GetData();
+		uint8_t const* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
 		// write it out into shm, separate channel
-		; //this->xcodeshm->writeChunk(packet->GetTimestamp(), data, len, SHM::MediaType:RTCP);
+		this->chunk.data = data;
+		this->chunk.len = len;
+		this->chunk.rtp_time = 0; // packet->GetTimestamp(); TODO: RTCP packets don't seem to have timestamps or seqIds
+		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; // TODO: what instead of packet->GetSequenceNumber()?
+		this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+
+		DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_RTCP);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -302,115 +406,22 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
-		const uint8_t* data = packet->GetData();
+		uint8_t const* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
 		// write it out into shm, separate channel
-		; //this->xcodeshm->writeChunk(packet->GetTimestamp(), data, len, SHM::MediaType:RTCP);
+		this->chunk.data = data;
+		this->chunk.len = len;
+		this->chunk.rtp_time = 0; //packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; //packet->GetSequenceNumber(); // TODO: are there several seqIds in a compound packet??
+		this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+
+		DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_RTCP);
 
 		// How to check for validity looping thru all packets in a compound packet: https://tools.ietf.org/html/rfc3550#appendix-A.2
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
-	}
-
-	inline void ShmTransport::OnPacketReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		// Increase receive transmission.
-		RTC::Transport::DataReceived(len);
-
-		// Check if it's RTCP.
-		if (RTC::RTCP::Packet::IsRtcp(data, len))
-		{
-			OnRtcpDataReceived(tuple, data, len);
-		}
-		// Check if it's RTP.
-		else if (RTC::RtpPacket::IsRtp(data, len))
-		{
-			OnRtpDataReceived(tuple, data, len);
-		}
-		// Check if it's SCTP.
-		else if (RTC::SctpAssociation::IsSctp(data, len))
-		{
-			MS_DEBUG_TAG(rtp, "ignoring SCTP packet");
-		}
-		else
-		{
-			MS_WARN_DEV("ignoring received packet of unknown type");
-		}
-	}
-
-	inline void ShmTransport::OnRtpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		// If multiSource is set allow it without any checking.
-		// TODO: see if this is applicable at all
-		if (this->multiSource)
-		{
-			// Do nothing.
-		}
-		else
-		{
-			// If not yet connected do it now.
-			if (!IsConnected())
-				RTC::Transport::Connected();
-		}
-
-			// Verify that the packet's tuple matches our RTP tuple.
-// TODO: if (!this->tuple->Compare(tuple)) // instead, compare shm names...
-//			{
-//				MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
-//
-//				return;
-//			}
-//		}
-
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
-
-		if (packet == nullptr)
-		{
-			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
-
-			return;
-		}
-
-		// Apply the Transport RTP header extension ids so the RTP listener can use them.
-		packet->SetMidExtensionId(this->rtpHeaderExtensionIds.mid);
-		packet->SetRidExtensionId(this->rtpHeaderExtensionIds.rid);
-		packet->SetRepairedRidExtensionId(this->rtpHeaderExtensionIds.rrid);
-		packet->SetAbsSendTimeExtensionId(this->rtpHeaderExtensionIds.absSendTime);
-
-		// Get the associated Producer.
-		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
-
-		if (producer == nullptr)
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
-			  packet->GetSsrc(),
-			  packet->GetPayloadType());
-
-			delete packet;
-
-			return;
-		}
-
-		// MS_DEBUG_DEV(
-		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
-		//   packet->GetSsrc(),
-		//   packet->GetPayloadType(),
-		//   producer->id.c_str());
-
-		// Pass the RTP packet to the corresponding Producer
-		producer->ReceiveRtpPacket(packet);
-
-		delete packet;
 	}
 
   bool ShmTransport::RecvStreamMeta(json& data) const
@@ -420,16 +431,6 @@ namespace RTC
 
 		// TODO: write stream metadata into special channel
 		return true;
-	}
-
-	inline void ShmTransport::OnRtcpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		// Do nothing.
-
-		// TODO: see if we want to write RTCP messages into shm
 	}
 
 	void ShmTransport::UserOnNewProducer(RTC::Producer* /*producer*/)
@@ -467,9 +468,5 @@ namespace RTC
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
-
-		RTC::TransportTuple tuple(socket, remoteAddr);
-
-		OnPacketReceived(&tuple, data, len);
 	}
 } // namespace RTC

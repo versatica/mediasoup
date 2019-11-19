@@ -339,7 +339,8 @@ namespace RTC
 			RequestKeyFrame();
 	}
 
-  // Does not creat RtpStreamSend, instead creates xcode shm
+  // TODO: see if we want to communicate back to producer from here, in that case create rtpStream. 
+	// Otherwise, don't need to do anything in this function 
 	void ShmConsumer::CreateRtpStream()
 	{
 		MS_TRACE();

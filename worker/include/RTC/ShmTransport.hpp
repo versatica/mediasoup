@@ -2,9 +2,11 @@
 #define MS_RTC_SHM_TRANSPORT_HPP
 
 #include "json.hpp"
+#include "sfushm_av_media.h"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include <string>
 
 using json = nlohmann::json;
 
@@ -38,10 +40,6 @@ namespace RTC
 		  bool probation     = false) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
-		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnSctpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from RTC::Transport. */
 	private:
@@ -68,11 +66,15 @@ namespace RTC
 		bool comedia{ false };
 		bool multiSource{ false };
 
-		// shm context structures: TBD
-		// xcodeshm - shm context used for writing
-		// maybe some sort of configs, and logging structs, dunno
+		// Handle shm writes
+		std::string                  shm;      // stream file name
 
-		int32_t startChunkSeqId { -1 }; //TODO: which int
+		// TODO: channels info downloaded from input data
+
+		std::string                  logname;  // as copied from input data in ctor
+		int                          loglevel;
+		DepLibSfuShm::SfuShmMapItem *shmCtx;   // A handle to shm context so that to avoid lookup in DepLibSfuShm each time need to write smth
+		sfushm_av_frame_frag_t       chunk;    // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
 	};
 } // namespace RTC
 
