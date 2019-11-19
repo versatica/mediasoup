@@ -347,7 +347,7 @@ export default class Transport extends EnhancedEventEmitter
 	 *
 	 * @abstract
 	 */
-	async getStats(): Promise<any>
+	async getStats(): Promise<any[]>
 	{
 		// Should not happen.
 		throw new Error('method not implemented in the subclass');

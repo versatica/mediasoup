@@ -135,7 +135,7 @@ export default class Transport extends EnhancedEventEmitter {
      *
      * @abstract
      */
-    getStats(): Promise<any>;
+    getStats(): Promise<any[]>;
     /**
      * Provide the Transport remote parameters.
      *
