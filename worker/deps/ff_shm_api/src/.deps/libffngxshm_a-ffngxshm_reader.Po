@@ -1,0 +1,742 @@
+libffngxshm_a-ffngxshm_reader.o: ffngxshm_reader.c \
+ /usr/include/stdc-predef.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavcodec/avcodec.h \
+ /usr/include/errno.h /usr/include/features.h \
+ /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+ /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
+ /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/samplefmt.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/avutil.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/common.h \
+ /usr/include/inttypes.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/syslimits.h \
+ /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+ /usr/include/linux/limits.h \
+ /usr/include/x86_64-linux-gnu/bits/posix2_lim.h /usr/include/math.h \
+ /usr/include/x86_64-linux-gnu/bits/math-vector.h \
+ /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
+ /usr/include/x86_64-linux-gnu/bits/huge_val.h \
+ /usr/include/x86_64-linux-gnu/bits/huge_valf.h \
+ /usr/include/x86_64-linux-gnu/bits/huge_vall.h \
+ /usr/include/x86_64-linux-gnu/bits/inf.h \
+ /usr/include/x86_64-linux-gnu/bits/nan.h \
+ /usr/include/x86_64-linux-gnu/bits/mathdef.h \
+ /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+ /usr/include/x86_64-linux-gnu/bits/mathinline.h /usr/include/stdio.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include/stddef.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h /usr/include/libio.h \
+ /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include/stdarg.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio2.h /usr/include/stdlib.h \
+ /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+ /usr/include/x86_64-linux-gnu/bits/waitstatus.h /usr/include/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+ /usr/include/x86_64-linux-gnu/bits/byteswap-16.h \
+ /usr/include/x86_64-linux-gnu/sys/types.h /usr/include/time.h \
+ /usr/include/x86_64-linux-gnu/sys/select.h \
+ /usr/include/x86_64-linux-gnu/bits/select.h \
+ /usr/include/x86_64-linux-gnu/bits/sigset.h \
+ /usr/include/x86_64-linux-gnu/bits/time.h \
+ /usr/include/x86_64-linux-gnu/bits/select2.h \
+ /usr/include/x86_64-linux-gnu/sys/sysmacros.h \
+ /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h /usr/include/alloca.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib.h /usr/include/string.h \
+ /usr/include/xlocale.h /usr/include/x86_64-linux-gnu/bits/string.h \
+ /usr/include/x86_64-linux-gnu/bits/string2.h \
+ /usr/include/x86_64-linux-gnu/bits/string3.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/attributes.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/macros.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/version.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/avconfig.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/mem.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/error.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/rational.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/mathematics.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/intfloat.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/log.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/pixfmt.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/attributes.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/avutil.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/buffer.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/cpu.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/channel_layout.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/dict.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/frame.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/buffer.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/dict.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/samplefmt.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/hwcontext.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/frame.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/log.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/pixfmt.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/rational.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavcodec/version.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/version.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_config.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/objs/ngx_auto_headers.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_linux_config.h \
+ /usr/include/x86_64-linux-gnu/sys/time.h /usr/include/unistd.h \
+ /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+ /usr/include/x86_64-linux-gnu/bits/environments.h \
+ /usr/include/x86_64-linux-gnu/bits/confname.h /usr/include/getopt.h \
+ /usr/include/x86_64-linux-gnu/bits/unistd.h /usr/include/ctype.h \
+ /usr/include/signal.h /usr/include/x86_64-linux-gnu/bits/signum.h \
+ /usr/include/x86_64-linux-gnu/bits/siginfo.h \
+ /usr/include/x86_64-linux-gnu/bits/sigaction.h \
+ /usr/include/x86_64-linux-gnu/bits/sigcontext.h \
+ /usr/include/x86_64-linux-gnu/bits/sigstack.h \
+ /usr/include/x86_64-linux-gnu/sys/ucontext.h \
+ /usr/include/x86_64-linux-gnu/bits/sigthread.h /usr/include/pwd.h \
+ /usr/include/grp.h /usr/include/dirent.h \
+ /usr/include/x86_64-linux-gnu/bits/dirent.h /usr/include/glob.h \
+ /usr/include/x86_64-linux-gnu/sys/vfs.h \
+ /usr/include/x86_64-linux-gnu/sys/statfs.h \
+ /usr/include/x86_64-linux-gnu/bits/statfs.h \
+ /usr/include/x86_64-linux-gnu/sys/uio.h \
+ /usr/include/x86_64-linux-gnu/bits/uio.h \
+ /usr/include/x86_64-linux-gnu/sys/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/stat.h /usr/include/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl2.h \
+ /usr/include/x86_64-linux-gnu/sys/wait.h \
+ /usr/include/x86_64-linux-gnu/sys/mman.h \
+ /usr/include/x86_64-linux-gnu/bits/mman.h \
+ /usr/include/x86_64-linux-gnu/bits/mman-linux.h \
+ /usr/include/x86_64-linux-gnu/sys/resource.h \
+ /usr/include/x86_64-linux-gnu/bits/resource.h /usr/include/sched.h \
+ /usr/include/x86_64-linux-gnu/bits/sched.h \
+ /usr/include/x86_64-linux-gnu/sys/socket.h \
+ /usr/include/x86_64-linux-gnu/bits/socket.h \
+ /usr/include/x86_64-linux-gnu/bits/socket_type.h \
+ /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
+ /usr/include/x86_64-linux-gnu/asm/socket.h \
+ /usr/include/asm-generic/socket.h \
+ /usr/include/x86_64-linux-gnu/asm/sockios.h \
+ /usr/include/asm-generic/sockios.h \
+ /usr/include/x86_64-linux-gnu/bits/socket2.h /usr/include/netinet/in.h \
+ /usr/include/x86_64-linux-gnu/bits/in.h /usr/include/netinet/tcp.h \
+ /usr/include/arpa/inet.h /usr/include/netdb.h /usr/include/rpc/netdb.h \
+ /usr/include/x86_64-linux-gnu/bits/netdb.h \
+ /usr/include/x86_64-linux-gnu/sys/un.h /usr/include/malloc.h \
+ /usr/include/x86_64-linux-gnu/sys/ioctl.h \
+ /usr/include/x86_64-linux-gnu/bits/ioctls.h \
+ /usr/include/x86_64-linux-gnu/asm/ioctls.h \
+ /usr/include/asm-generic/ioctls.h /usr/include/linux/ioctl.h \
+ /usr/include/x86_64-linux-gnu/asm/ioctl.h \
+ /usr/include/asm-generic/ioctl.h \
+ /usr/include/x86_64-linux-gnu/bits/ioctl-types.h \
+ /usr/include/x86_64-linux-gnu/sys/ttydefaults.h /usr/include/crypt.h \
+ /usr/include/x86_64-linux-gnu/sys/utsname.h \
+ /usr/include/x86_64-linux-gnu/bits/utsname.h /usr/include/dlfcn.h \
+ /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/objs/ngx_auto_config.h \
+ /usr/include/semaphore.h /usr/include/x86_64-linux-gnu/bits/semaphore.h \
+ /usr/include/x86_64-linux-gnu/sys/prctl.h /usr/include/linux/prctl.h \
+ /usr/include/linux/types.h /usr/include/x86_64-linux-gnu/asm/types.h \
+ /usr/include/asm-generic/types.h /usr/include/asm-generic/int-ll64.h \
+ /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+ /usr/include/asm-generic/bitsperlong.h /usr/include/linux/posix_types.h \
+ /usr/include/linux/stddef.h \
+ /usr/include/x86_64-linux-gnu/asm/posix_types.h \
+ /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+ /usr/include/asm-generic/posix_types.h \
+ /usr/include/x86_64-linux-gnu/sys/sendfile.h \
+ /usr/include/x86_64-linux-gnu/sys/epoll.h \
+ /usr/include/x86_64-linux-gnu/bits/epoll.h \
+ /usr/include/x86_64-linux-gnu/sys/eventfd.h \
+ /usr/include/x86_64-linux-gnu/bits/eventfd.h \
+ /usr/include/x86_64-linux-gnu/sys/syscall.h \
+ /usr/include/x86_64-linux-gnu/asm/unistd.h \
+ /usr/include/x86_64-linux-gnu/asm/unistd_64.h \
+ /usr/include/x86_64-linux-gnu/bits/syscall.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_core.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_errno.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_atomic.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_thread.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_rbtree.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_time.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_socket.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_string.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_files.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_shmem.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_process.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_setaffinity.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_setproctitle.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_user.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_dlopen.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_parse.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_parse_time.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_log.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_alloc.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_palloc.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_buf.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_queue.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_array.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_list.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_hash.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_file.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_crc.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_crc32.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_murmurhash.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_regex.h \
+ /usr/include/pcre.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_radix_tree.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_times.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_rwlock.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_shmtx.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_slab.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_inet.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_cycle.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_resolver.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_process_cycle.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_conf_file.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_module.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/nginx.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_open_file_cache.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_os.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_linux.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_connection.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_syslog.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_proxy_protocol.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/nginx-shm-module/ngx_shm_av.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/nginx-shm-module/ngx_stream_shm.h \
+ /home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/nginx-shm-module/ngx_shm_build.h \
+ ../include/ffngxshm.h ../include/ffngxshm_log.h \
+ ../include/ffngxshm_log_header.h ../include/ffngxshm_reader.h \
+ ../include/ffngxshm.h
+
+/usr/include/stdc-predef.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavcodec/avcodec.h:
+
+/usr/include/errno.h:
+
+/usr/include/features.h:
+
+/usr/include/x86_64-linux-gnu/sys/cdefs.h:
+
+/usr/include/x86_64-linux-gnu/bits/wordsize.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+
+/usr/include/x86_64-linux-gnu/bits/errno.h:
+
+/usr/include/linux/errno.h:
+
+/usr/include/x86_64-linux-gnu/asm/errno.h:
+
+/usr/include/asm-generic/errno.h:
+
+/usr/include/asm-generic/errno-base.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/samplefmt.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h:
+
+/usr/include/stdint.h:
+
+/usr/include/x86_64-linux-gnu/bits/wchar.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/avutil.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/common.h:
+
+/usr/include/inttypes.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/limits.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/syslimits.h:
+
+/usr/include/limits.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/local_lim.h:
+
+/usr/include/linux/limits.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
+
+/usr/include/math.h:
+
+/usr/include/x86_64-linux-gnu/bits/math-vector.h:
+
+/usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
+
+/usr/include/x86_64-linux-gnu/bits/huge_val.h:
+
+/usr/include/x86_64-linux-gnu/bits/huge_valf.h:
+
+/usr/include/x86_64-linux-gnu/bits/huge_vall.h:
+
+/usr/include/x86_64-linux-gnu/bits/inf.h:
+
+/usr/include/x86_64-linux-gnu/bits/nan.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathdef.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathinline.h:
+
+/usr/include/stdio.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/stddef.h:
+
+/usr/include/x86_64-linux-gnu/bits/types.h:
+
+/usr/include/x86_64-linux-gnu/bits/typesizes.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/stdarg.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/sys_errlist.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio2.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/x86_64-linux-gnu/bits/waitflags.h:
+
+/usr/include/x86_64-linux-gnu/bits/waitstatus.h:
+
+/usr/include/endian.h:
+
+/usr/include/x86_64-linux-gnu/bits/endian.h:
+
+/usr/include/x86_64-linux-gnu/bits/byteswap.h:
+
+/usr/include/x86_64-linux-gnu/bits/byteswap-16.h:
+
+/usr/include/x86_64-linux-gnu/sys/types.h:
+
+/usr/include/time.h:
+
+/usr/include/x86_64-linux-gnu/sys/select.h:
+
+/usr/include/x86_64-linux-gnu/bits/select.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigset.h:
+
+/usr/include/x86_64-linux-gnu/bits/time.h:
+
+/usr/include/x86_64-linux-gnu/bits/select2.h:
+
+/usr/include/x86_64-linux-gnu/sys/sysmacros.h:
+
+/usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
+
+/usr/include/alloca.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib.h:
+
+/usr/include/string.h:
+
+/usr/include/xlocale.h:
+
+/usr/include/x86_64-linux-gnu/bits/string.h:
+
+/usr/include/x86_64-linux-gnu/bits/string2.h:
+
+/usr/include/x86_64-linux-gnu/bits/string3.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/attributes.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/macros.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/version.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/avconfig.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/mem.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/error.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/rational.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/mathematics.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/intfloat.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/log.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/pixfmt.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/attributes.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/avutil.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/buffer.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/cpu.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/channel_layout.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/dict.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/frame.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/buffer.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/dict.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/samplefmt.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/hwcontext.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/frame.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/log.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/pixfmt.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/rational.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavcodec/version.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/libavutil/version.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_config.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/objs/ngx_auto_headers.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_linux_config.h:
+
+/usr/include/x86_64-linux-gnu/sys/time.h:
+
+/usr/include/unistd.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+
+/usr/include/x86_64-linux-gnu/bits/environments.h:
+
+/usr/include/x86_64-linux-gnu/bits/confname.h:
+
+/usr/include/getopt.h:
+
+/usr/include/x86_64-linux-gnu/bits/unistd.h:
+
+/usr/include/ctype.h:
+
+/usr/include/signal.h:
+
+/usr/include/x86_64-linux-gnu/bits/signum.h:
+
+/usr/include/x86_64-linux-gnu/bits/siginfo.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigaction.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigcontext.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigstack.h:
+
+/usr/include/x86_64-linux-gnu/sys/ucontext.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigthread.h:
+
+/usr/include/pwd.h:
+
+/usr/include/grp.h:
+
+/usr/include/dirent.h:
+
+/usr/include/x86_64-linux-gnu/bits/dirent.h:
+
+/usr/include/glob.h:
+
+/usr/include/x86_64-linux-gnu/sys/vfs.h:
+
+/usr/include/x86_64-linux-gnu/sys/statfs.h:
+
+/usr/include/x86_64-linux-gnu/bits/statfs.h:
+
+/usr/include/x86_64-linux-gnu/sys/uio.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio.h:
+
+/usr/include/x86_64-linux-gnu/sys/stat.h:
+
+/usr/include/x86_64-linux-gnu/bits/stat.h:
+
+/usr/include/fcntl.h:
+
+/usr/include/x86_64-linux-gnu/bits/fcntl.h:
+
+/usr/include/x86_64-linux-gnu/bits/fcntl-linux.h:
+
+/usr/include/x86_64-linux-gnu/bits/fcntl2.h:
+
+/usr/include/x86_64-linux-gnu/sys/wait.h:
+
+/usr/include/x86_64-linux-gnu/sys/mman.h:
+
+/usr/include/x86_64-linux-gnu/bits/mman.h:
+
+/usr/include/x86_64-linux-gnu/bits/mman-linux.h:
+
+/usr/include/x86_64-linux-gnu/sys/resource.h:
+
+/usr/include/x86_64-linux-gnu/bits/resource.h:
+
+/usr/include/sched.h:
+
+/usr/include/x86_64-linux-gnu/bits/sched.h:
+
+/usr/include/x86_64-linux-gnu/sys/socket.h:
+
+/usr/include/x86_64-linux-gnu/bits/socket.h:
+
+/usr/include/x86_64-linux-gnu/bits/socket_type.h:
+
+/usr/include/x86_64-linux-gnu/bits/sockaddr.h:
+
+/usr/include/x86_64-linux-gnu/asm/socket.h:
+
+/usr/include/asm-generic/socket.h:
+
+/usr/include/x86_64-linux-gnu/asm/sockios.h:
+
+/usr/include/asm-generic/sockios.h:
+
+/usr/include/x86_64-linux-gnu/bits/socket2.h:
+
+/usr/include/netinet/in.h:
+
+/usr/include/x86_64-linux-gnu/bits/in.h:
+
+/usr/include/netinet/tcp.h:
+
+/usr/include/arpa/inet.h:
+
+/usr/include/netdb.h:
+
+/usr/include/rpc/netdb.h:
+
+/usr/include/x86_64-linux-gnu/bits/netdb.h:
+
+/usr/include/x86_64-linux-gnu/sys/un.h:
+
+/usr/include/malloc.h:
+
+/usr/include/x86_64-linux-gnu/sys/ioctl.h:
+
+/usr/include/x86_64-linux-gnu/bits/ioctls.h:
+
+/usr/include/x86_64-linux-gnu/asm/ioctls.h:
+
+/usr/include/asm-generic/ioctls.h:
+
+/usr/include/linux/ioctl.h:
+
+/usr/include/x86_64-linux-gnu/asm/ioctl.h:
+
+/usr/include/asm-generic/ioctl.h:
+
+/usr/include/x86_64-linux-gnu/bits/ioctl-types.h:
+
+/usr/include/x86_64-linux-gnu/sys/ttydefaults.h:
+
+/usr/include/crypt.h:
+
+/usr/include/x86_64-linux-gnu/sys/utsname.h:
+
+/usr/include/x86_64-linux-gnu/bits/utsname.h:
+
+/usr/include/dlfcn.h:
+
+/usr/include/x86_64-linux-gnu/bits/dlfcn.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/objs/ngx_auto_config.h:
+
+/usr/include/semaphore.h:
+
+/usr/include/x86_64-linux-gnu/bits/semaphore.h:
+
+/usr/include/x86_64-linux-gnu/sys/prctl.h:
+
+/usr/include/linux/prctl.h:
+
+/usr/include/linux/types.h:
+
+/usr/include/x86_64-linux-gnu/asm/types.h:
+
+/usr/include/asm-generic/types.h:
+
+/usr/include/asm-generic/int-ll64.h:
+
+/usr/include/x86_64-linux-gnu/asm/bitsperlong.h:
+
+/usr/include/asm-generic/bitsperlong.h:
+
+/usr/include/linux/posix_types.h:
+
+/usr/include/linux/stddef.h:
+
+/usr/include/x86_64-linux-gnu/asm/posix_types.h:
+
+/usr/include/x86_64-linux-gnu/asm/posix_types_64.h:
+
+/usr/include/asm-generic/posix_types.h:
+
+/usr/include/x86_64-linux-gnu/sys/sendfile.h:
+
+/usr/include/x86_64-linux-gnu/sys/epoll.h:
+
+/usr/include/x86_64-linux-gnu/bits/epoll.h:
+
+/usr/include/x86_64-linux-gnu/sys/eventfd.h:
+
+/usr/include/x86_64-linux-gnu/bits/eventfd.h:
+
+/usr/include/x86_64-linux-gnu/sys/syscall.h:
+
+/usr/include/x86_64-linux-gnu/asm/unistd.h:
+
+/usr/include/x86_64-linux-gnu/asm/unistd_64.h:
+
+/usr/include/x86_64-linux-gnu/bits/syscall.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_core.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_errno.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_atomic.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_thread.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_rbtree.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_time.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_socket.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_string.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_files.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_shmem.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_process.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_setaffinity.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_setproctitle.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_user.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_dlopen.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_parse.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_parse_time.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_log.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_alloc.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_palloc.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_buf.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_queue.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_array.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_list.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_hash.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_file.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_crc.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_crc32.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_murmurhash.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_regex.h:
+
+/usr/include/pcre.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_radix_tree.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_times.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_rwlock.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_shmtx.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_slab.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_inet.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_cycle.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_resolver.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_process_cycle.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_conf_file.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_module.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/nginx.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_open_file_cache.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_os.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/os/unix/ngx_linux.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_connection.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_syslog.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/core/ngx_proxy_protocol.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/nginx-shm-module/ngx_shm_av.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/nginx-shm-module/ngx_stream_shm.h:
+
+/home/vagrant/docker/ff_ngx_shm_base_build/dist/include/nginx/nginx-shm-module/ngx_shm_build.h:
+
+../include/ffngxshm.h:
+
+../include/ffngxshm_log.h:
+
+../include/ffngxshm_log_header.h:
+
+../include/ffngxshm_reader.h:
+
+../include/ffngxshm.h:

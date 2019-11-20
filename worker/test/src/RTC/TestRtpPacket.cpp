@@ -42,6 +42,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		packet->SetRidExtensionId(10);
 		extenValue = packet->GetExtension(10, extenLen);
 
+		REQUIRE(packet->HasExtension(10) == false);
 		REQUIRE(extenLen == 0);
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(packet->ReadRid(rid) == false);
@@ -107,6 +108,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		packet->SetSsrcAudioLevelExtensionId(1);
 		extenValue = packet->GetExtension(1, extenLen);
 
+		REQUIRE(packet->HasExtension(1) == true);
 		REQUIRE(extenLen == 1);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xd0);
@@ -117,6 +119,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		packet->SetAbsSendTimeExtensionId(3);
 		extenValue = packet->GetExtension(3, extenLen);
 
+		REQUIRE(packet->HasExtension(3) == true);
 		REQUIRE(extenLen == 3);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0x65);
@@ -144,6 +147,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		extenValue = clonedPacket->GetExtension(1, extenLen);
 
+		REQUIRE(packet->HasExtension(1) == false);
 		REQUIRE(extenLen == 1);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xd0);
@@ -153,6 +157,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		extenValue = clonedPacket->GetExtension(3, extenLen);
 
+		REQUIRE(packet->HasExtension(3) == false);
 		REQUIRE(extenLen == 3);
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0x65);
@@ -223,6 +228,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetPayloadLength() == 0);
+		REQUIRE(packet->GetSize() == 28);
+
+		packet->SetPayloadLength(1000);
+
+		REQUIRE(packet->GetPayloadLength() == 1000);
+		REQUIRE(packet->GetSize() == 1028);
 
 		delete packet;
 	}
@@ -263,25 +274,30 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadLength() == 0);
 
 		extenValue = packet->GetExtension(1, extenLen);
+		REQUIRE(packet->HasExtension(1) == false);
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
 
 		extenValue = packet->GetExtension(2, extenLen);
+		REQUIRE(packet->HasExtension(2) == true);
 		REQUIRE(extenValue != nullptr);
 		REQUIRE(extenLen == 1);
 		REQUIRE(extenValue[0] == 0x42);
 
 		extenValue = packet->GetExtension(3, extenLen);
+		REQUIRE(packet->HasExtension(3) == true);
 		REQUIRE(extenValue != nullptr);
 		REQUIRE(extenLen == 2);
 		REQUIRE(extenValue[0] == 0x11);
 		REQUIRE(extenValue[1] == 0x22);
 
 		extenValue = packet->GetExtension(4, extenLen);
+		REQUIRE(packet->HasExtension(4) == false);
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
 
 		extenValue = packet->GetExtension(5, extenLen);
+		REQUIRE(packet->HasExtension(5) == false);
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
 
@@ -442,11 +458,18 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(payload[6] == 0x06);
 		REQUIRE(payload[7] == 0x07);
 
+		// NOTE: This will require padding to 4 bytes.
+		packet->SetPayloadLength(14);
+
+		REQUIRE(packet->GetPayloadLength() == 16);
+		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetSize() == 44);
+
 		packet->ShiftPayload(4, 4, true);
 
-		REQUIRE(packet->GetPayloadLength() == 12);
-		REQUIRE(packet->GetPayloadPadding() == 4);
-		REQUIRE(packet->GetSize() == 44);
+		REQUIRE(packet->GetPayloadLength() == 20);
+		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetSize() == 48);
 		REQUIRE(payload[0] == 0x00);
 		REQUIRE(payload[1] == 0x01);
 		REQUIRE(payload[2] == 0x02);
@@ -455,6 +478,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(payload[9] == 0x05);
 		REQUIRE(payload[10] == 0x06);
 		REQUIRE(payload[11] == 0x07);
+
+		packet->SetPayloadLength(1000);
+
+		REQUIRE(packet->GetPayloadLength() == 1000);
+		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetSize() == 1028);
 
 		delete packet;
 	}
@@ -564,11 +593,16 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(0, extenLen) == nullptr);
+		REQUIRE(packet->HasExtension(0) == false);
 		REQUIRE(packet->GetExtension(15, extenLen) == nullptr);
+		REQUIRE(packet->HasExtension(15) == false);
 		REQUIRE(packet->GetExtension(22, extenLen) == nullptr);
+		REQUIRE(packet->HasExtension(22) == false);
 		REQUIRE(packet->GetExtension(1, extenLen));
+		REQUIRE(packet->HasExtension(1) == true);
 		REQUIRE(extenLen == 4);
 		REQUIRE(packet->GetExtension(2, extenLen));
+		REQUIRE(packet->HasExtension(2) == true);
 		REQUIRE(extenLen == 11);
 
 		extensions.clear();
@@ -594,8 +628,11 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(1, extenLen) == nullptr);
+		REQUIRE(packet->HasExtension(1) == false);
 		REQUIRE(packet->GetExtension(2, extenLen) == nullptr);
+		REQUIRE(packet->HasExtension(2) == false);
 		REQUIRE(packet->GetExtension(14, extenLen));
+		REQUIRE(packet->HasExtension(14) == true);
 		REQUIRE(extenLen == 4);
 
 		delete packet;
@@ -692,9 +729,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(0, extenLen) == nullptr);
+		REQUIRE(packet->HasExtension(0) == false);
 		REQUIRE(packet->GetExtension(1, extenLen));
+		REQUIRE(packet->HasExtension(1) == true);
 		REQUIRE(extenLen == 4);
 		REQUIRE(packet->GetExtension(22, extenLen));
+		REQUIRE(packet->HasExtension(22) == true);
 		REQUIRE(extenLen == 11);
 
 		extensions.clear();
@@ -720,8 +760,11 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(1, extenLen) == nullptr);
+		REQUIRE(packet->HasExtension(1) == false);
 		REQUIRE(packet->GetExtension(22, extenLen) == nullptr);
+		REQUIRE(packet->HasExtension(22) == false);
 		REQUIRE(packet->GetExtension(24, extenLen));
+		REQUIRE(packet->HasExtension(24) == true);
 		REQUIRE(extenLen == 4);
 
 		delete packet;

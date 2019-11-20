@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpPacket"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpPacket.hpp"
 #include "Logger.hpp"
@@ -27,7 +27,7 @@ namespace RTC
 		ptr += sizeof(Header);
 
 		// Check CSRC list.
-		size_t csrcListSize{ 0 };
+		size_t csrcListSize{ 0u };
 
 		if (header->csrcCount != 0u)
 		{
@@ -45,7 +45,7 @@ namespace RTC
 
 		// Check header extension.
 		HeaderExtension* headerExtension{ nullptr };
-		size_t extensionValueSize{ 0 };
+		size_t extensionValueSize{ 0u };
 
 		if (header->extension == 1u)
 		{
@@ -158,7 +158,7 @@ namespace RTC
 		if (HasHeaderExtension())
 		{
 			MS_DUMP(
-			  "  header extension  : id:%" PRIu16 ",length:%zu",
+			  "  header extension  : id:%" PRIu16 ", length:%zu",
 			  GetHeaderExtensionId(),
 			  GetHeaderExtensionLength());
 		}
@@ -208,25 +208,38 @@ namespace RTC
 			std::string mid;
 
 			if (ReadMid(mid))
-				MS_DUMP("  mid               : extId:%" PRIu8 ",value:%s", this->midExtensionId, mid.c_str());
+				MS_DUMP("  mid               : extId:%" PRIu8 ", value:%s", this->midExtensionId, mid.c_str());
 		}
 		if (this->ridExtensionId != 0u)
 		{
 			std::string rid;
 
 			if (ReadRid(rid))
-				MS_DUMP("  rid               : extId:%" PRIu8 ",value:%s", this->ridExtensionId, rid.c_str());
+				MS_DUMP("  rid               : extId:%" PRIu8 ", value:%s", this->ridExtensionId, rid.c_str());
 		}
 		if (this->rridExtensionId != 0u)
 		{
 			std::string rid;
 
 			if (ReadRid(rid))
-				MS_DUMP("  rrid              : extId:%" PRIu8 ",value:%s", this->rridExtensionId, rid.c_str());
+				MS_DUMP(
+				  "  rrid              : extId:%" PRIu8 ", value:%s", this->rridExtensionId, rid.c_str());
 		}
 		if (this->absSendTimeExtensionId != 0u)
 		{
 			MS_DUMP("  absSendTime       : extId:%" PRIu8, this->absSendTimeExtensionId);
+		}
+		if (this->transportWideCc01ExtensionId != 0u)
+		{
+			uint16_t wideSeqNumber;
+
+			if (ReadTransportWideCc01(wideSeqNumber))
+			{
+				MS_DUMP(
+				  "  transportWideCc01 : extId:%" PRIu8 ", value:%" PRIu16,
+				  this->transportWideCc01ExtensionId,
+				  wideSeqNumber);
+			}
 		}
 		// Remove once it becomes RFC.
 		if (this->frameMarking07ExtensionId != 0u)
@@ -245,7 +258,7 @@ namespace RTC
 			if (ReadSsrcAudioLevel(volume, voice))
 			{
 				MS_DUMP(
-				  "  ssrcAudioLevel    : extId:%" PRIu8 ",volume:%" PRIu8 ",voice:%s",
+				  "  ssrcAudioLevel    : extId:%" PRIu8 ", volume:%" PRIu8 ", voice:%s",
 				  this->ssrcAudioLevelExtensionId,
 				  volume,
 				  voice ? "true" : "false");
@@ -260,7 +273,7 @@ namespace RTC
 			if (ReadVideoOrientation(camera, flip, rotation))
 			{
 				MS_DUMP(
-				  "  videoOrientation  : extId:%" PRIu8 ",camera:%s,flip:%s,rotation:%" PRIu16,
+				  "  videoOrientation  : extId:%" PRIu8 ", camera:%s, flip:%s, rotation:%" PRIu16,
 				  this->videoOrientationExtensionId,
 				  camera ? "true" : "false",
 				  flip ? "true" : "false",
@@ -284,19 +297,79 @@ namespace RTC
 		MS_DUMP("</RtpPacket>");
 	}
 
+	void RtpPacket::FillJson(json& jsonObject) const
+	{
+		MS_TRACE();
+
+		// Add payloadType.
+		jsonObject["payloadType"] = GetPayloadType();
+
+		// Add sequenceNumber.
+		jsonObject["sequenceNumber"] = GetSequenceNumber();
+
+		// Add timestamp.
+		jsonObject["timestamp"] = GetTimestamp();
+
+		// Add marker.
+		jsonObject["marker"] = HasMarker() ? "true" : "false";
+
+		// Add ssrc.
+		jsonObject["ssrc"] = GetSsrc();
+
+		// Add isKeyFrame.
+		jsonObject["isKeyFrame"] = IsKeyFrame();
+
+		// Add size.
+		jsonObject["size"] = GetSize();
+
+		// Add payloadSize.
+		jsonObject["payloadSize"] = GetPayloadLength();
+
+		// Add spatialLayer.
+		jsonObject["spatialLayer"] = GetSpatialLayer();
+
+		// Add temporalLayer.
+		jsonObject["temporalLayer"] = GetTemporalLayer();
+
+		// Add mid.
+		std::string mid;
+
+		if (this->midExtensionId != 0u && ReadMid(mid))
+			jsonObject["mid"] = mid;
+
+		// Add rid.
+		std::string rid;
+
+		if (this->ridExtensionId != 0u && ReadRid(rid))
+			jsonObject["rid"] = rid;
+
+		// Add rrid.
+		std::string rrid;
+
+		if (this->rridExtensionId != 0u && ReadRid(rrid))
+			jsonObject["rrid"] = rrid;
+
+		// Add wideSequenceNumber.
+		uint16_t wideSequenceNumber;
+
+		if (this->transportWideCc01ExtensionId != 0u && ReadTransportWideCc01(wideSequenceNumber))
+			jsonObject["wideSequenceNumber"] = wideSequenceNumber;
+	}
+
 	void RtpPacket::SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions)
 	{
 		MS_ASSERT(type == 1u || type == 2u, "type must be 1 or 2");
 
 		// Reset extension ids.
-		this->midExtensionId              = 0;
-		this->ridExtensionId              = 0;
-		this->rridExtensionId             = 0;
-		this->absSendTimeExtensionId      = 0;
-		this->frameMarking07ExtensionId   = 0;
-		this->frameMarkingExtensionId     = 0;
-		this->ssrcAudioLevelExtensionId   = 0;
-		this->videoOrientationExtensionId = 0;
+		this->midExtensionId               = 0u;
+		this->ridExtensionId               = 0u;
+		this->rridExtensionId              = 0u;
+		this->absSendTimeExtensionId       = 0u;
+		this->transportWideCc01ExtensionId = 0u;
+		this->frameMarking07ExtensionId    = 0u;
+		this->frameMarkingExtensionId      = 0u;
+		this->ssrcAudioLevelExtensionId    = 0u;
+		this->videoOrientationExtensionId  = 0u;
 
 		// Clear the One-Byte and Two-Bytes extension elements maps.
 		this->mapOneByteExtensions.clear();
@@ -444,6 +517,22 @@ namespace RTC
 		MS_ASSERT(ptr == this->payload, "wrong ptr calculation");
 	}
 
+	void RtpPacket::SetPayloadLength(size_t length)
+	{
+		MS_TRACE();
+
+		// Pad desired length to 4 bytes.
+		length = static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(length)));
+
+		this->size -= this->payloadLength;
+		this->size -= size_t{ this->payloadPadding };
+		this->payloadLength  = length;
+		this->payloadPadding = 0u;
+		this->size += length;
+
+		SetPayloadPaddingFlag(false);
+	}
+
 	RtpPacket* RtpPacket::Clone(const uint8_t* buffer) const
 	{
 		MS_TRACE();
@@ -486,7 +575,7 @@ namespace RTC
 		// Copy payload.
 		uint8_t* newPayload{ ptr };
 
-		if (this->payloadLength != 0)
+		if (this->payloadLength != 0u)
 		{
 			numBytes = this->payloadLength;
 			std::memcpy(ptr, this->payload, numBytes);
@@ -508,14 +597,15 @@ namespace RTC
 		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Keep already set extension ids.
-		packet->midExtensionId              = this->midExtensionId;
-		packet->ridExtensionId              = this->ridExtensionId;
-		packet->rridExtensionId             = this->rridExtensionId;
-		packet->absSendTimeExtensionId      = this->absSendTimeExtensionId;
-		packet->frameMarking07ExtensionId   = this->frameMarking07ExtensionId; // Remove once RFC.
-		packet->frameMarkingExtensionId     = this->frameMarkingExtensionId;
-		packet->ssrcAudioLevelExtensionId   = this->ssrcAudioLevelExtensionId;
-		packet->videoOrientationExtensionId = this->videoOrientationExtensionId;
+		packet->midExtensionId               = this->midExtensionId;
+		packet->ridExtensionId               = this->ridExtensionId;
+		packet->rridExtensionId              = this->rridExtensionId;
+		packet->absSendTimeExtensionId       = this->absSendTimeExtensionId;
+		packet->transportWideCc01ExtensionId = this->transportWideCc01ExtensionId;
+		packet->frameMarking07ExtensionId    = this->frameMarking07ExtensionId; // Remove once RFC.
+		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
+		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
+		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
 
 		return packet;
 	}
@@ -540,10 +630,10 @@ namespace RTC
 		SetSequenceNumber(seq);
 
 		// Fix the payload length.
-		this->payloadLength += 2;
+		this->payloadLength += 2u;
 
 		// Fix the packet size.
-		this->size += 2;
+		this->size += 2u;
 
 		// Remove padding if present.
 		if (this->payloadPadding != 0u)
@@ -561,7 +651,7 @@ namespace RTC
 
 		// Chrome sends some RTX packets with no payload when the stream is started.
 		// Just ignore them.
-		if (this->payloadLength < 2)
+		if (this->payloadLength < 2u)
 			return false;
 
 		// Rewrite the payload type.
@@ -577,10 +667,10 @@ namespace RTC
 		std::memmove(this->payload, this->payload + 2, this->payloadLength - 2);
 
 		// Fix the payload length.
-		this->payloadLength -= 2;
+		this->payloadLength -= 2u;
 
 		// Fix the packet size.
-		this->size -= 2;
+		this->size -= 2u;
 
 		// Remove padding if present.
 		if (this->payloadPadding != 0u)

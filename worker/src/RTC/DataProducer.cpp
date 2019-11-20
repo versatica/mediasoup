@@ -1,7 +1,8 @@
 #define MS_CLASS "RTC::DataProducer"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataProducer.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 
@@ -64,6 +65,9 @@ namespace RTC
 
 		// Add type.
 		jsonObject["type"] = "data-producer";
+
+		// Add timestamp.
+		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
 
 		// Add label.
 		jsonObject["label"] = this->label;

@@ -32,11 +32,8 @@ gettimeofday(struct timeval *tv, void *ignore)
 #endif
 
 void
-debug_printf(const char *format, ...)
-{
+debug_printf_runtime(void) {
 	static struct timeval time_main;
-
-	va_list ap;
 	struct timeval time_now;
 	struct timeval time_delta;
 
@@ -47,7 +44,14 @@ debug_printf(const char *format, ...)
 	gettimeofday(&time_now, NULL);
 	timersub(&time_now, &time_main, &time_delta);
 
-	printf("[%u.%03u] ", (unsigned int) time_delta.tv_sec, (unsigned int) time_delta.tv_usec / 1000);
+	fprintf(stderr, "[%u.%03u] ", (unsigned int) time_delta.tv_sec, (unsigned int) time_delta.tv_usec / 1000);
+}
+
+
+void
+debug_printf_stack(const char *format, ...)
+{
+	va_list ap;
 
 	va_start(ap, format);
 	vprintf(format, ap);
@@ -59,63 +63,63 @@ handle_association_change_event(struct sctp_assoc_change *sac)
 {
 	unsigned int i, n;
 
-	printf("Association change ");
+	fprintf(stderr, "Association change ");
 	switch (sac->sac_state) {
 	case SCTP_COMM_UP:
-		printf("SCTP_COMM_UP");
+		fprintf(stderr, "SCTP_COMM_UP");
 		break;
 	case SCTP_COMM_LOST:
-		printf("SCTP_COMM_LOST");
+		fprintf(stderr, "SCTP_COMM_LOST");
 		break;
 	case SCTP_RESTART:
-		printf("SCTP_RESTART");
+		fprintf(stderr, "SCTP_RESTART");
 		break;
 	case SCTP_SHUTDOWN_COMP:
-		printf("SCTP_SHUTDOWN_COMP");
+		fprintf(stderr, "SCTP_SHUTDOWN_COMP");
 		break;
 	case SCTP_CANT_STR_ASSOC:
-		printf("SCTP_CANT_STR_ASSOC");
+		fprintf(stderr, "SCTP_CANT_STR_ASSOC");
 		break;
 	default:
-		printf("UNKNOWN");
+		fprintf(stderr, "UNKNOWN");
 		break;
 	}
-	printf(", streams (in/out) = (%u/%u)",
+	fprintf(stderr, ", streams (in/out) = (%u/%u)",
 	       sac->sac_inbound_streams, sac->sac_outbound_streams);
 	n = sac->sac_length - sizeof(struct sctp_assoc_change);
 	if (((sac->sac_state == SCTP_COMM_UP) ||
 	     (sac->sac_state == SCTP_RESTART)) && (n > 0)) {
-		printf(", supports");
+		fprintf(stderr, ", supports");
 		for (i = 0; i < n; i++) {
 			switch (sac->sac_info[i]) {
 			case SCTP_ASSOC_SUPPORTS_PR:
-				printf(" PR");
+				fprintf(stderr, " PR");
 				break;
 			case SCTP_ASSOC_SUPPORTS_AUTH:
-				printf(" AUTH");
+				fprintf(stderr, " AUTH");
 				break;
 			case SCTP_ASSOC_SUPPORTS_ASCONF:
-				printf(" ASCONF");
+				fprintf(stderr, " ASCONF");
 				break;
 			case SCTP_ASSOC_SUPPORTS_MULTIBUF:
-				printf(" MULTIBUF");
+				fprintf(stderr, " MULTIBUF");
 				break;
 			case SCTP_ASSOC_SUPPORTS_RE_CONFIG:
-				printf(" RE-CONFIG");
+				fprintf(stderr, " RE-CONFIG");
 				break;
 			default:
-				printf(" UNKNOWN(0x%02x)", sac->sac_info[i]);
+				fprintf(stderr, " UNKNOWN(0x%02x)", sac->sac_info[i]);
 				break;
 			}
 		}
 	} else if (((sac->sac_state == SCTP_COMM_LOST) ||
 	            (sac->sac_state == SCTP_CANT_STR_ASSOC)) && (n > 0)) {
-		printf(", ABORT =");
+		fprintf(stderr, ", ABORT =");
 		for (i = 0; i < n; i++) {
-			printf(" 0x%02x", sac->sac_info[i]);
+			fprintf(stderr, " 0x%02x", sac->sac_info[i]);
 		}
 	}
-	printf(".\n");
+	fprintf(stderr, ".\n");
 	return;
 }
 
@@ -155,31 +159,31 @@ handle_peer_address_change_event(struct sctp_paddr_change *spc)
 		addr = addr_buf;
 		break;
 	}
-	printf("Peer address %s is now ", addr);
+	fprintf(stderr, "Peer address %s is now ", addr);
 	switch (spc->spc_state) {
 	case SCTP_ADDR_AVAILABLE:
-		printf("SCTP_ADDR_AVAILABLE");
+		fprintf(stderr, "SCTP_ADDR_AVAILABLE");
 		break;
 	case SCTP_ADDR_UNREACHABLE:
-		printf("SCTP_ADDR_UNREACHABLE");
+		fprintf(stderr, "SCTP_ADDR_UNREACHABLE");
 		break;
 	case SCTP_ADDR_REMOVED:
-		printf("SCTP_ADDR_REMOVED");
+		fprintf(stderr, "SCTP_ADDR_REMOVED");
 		break;
 	case SCTP_ADDR_ADDED:
-		printf("SCTP_ADDR_ADDED");
+		fprintf(stderr, "SCTP_ADDR_ADDED");
 		break;
 	case SCTP_ADDR_MADE_PRIM:
-		printf("SCTP_ADDR_MADE_PRIM");
+		fprintf(stderr, "SCTP_ADDR_MADE_PRIM");
 		break;
 	case SCTP_ADDR_CONFIRMED:
-		printf("SCTP_ADDR_CONFIRMED");
+		fprintf(stderr, "SCTP_ADDR_CONFIRMED");
 		break;
 	default:
-		printf("UNKNOWN");
+		fprintf(stderr, "UNKNOWN");
 		break;
 	}
-	printf(" (error = 0x%08x).\n", spc->spc_error);
+	fprintf(stderr, " (error = 0x%08x).\n", spc->spc_error);
 	return;
 }
 
@@ -189,36 +193,36 @@ handle_send_failed_event(struct sctp_send_failed_event *ssfe)
 	size_t i, n;
 
 	if (ssfe->ssfe_flags & SCTP_DATA_UNSENT) {
-		printf("Unsent ");
+		fprintf(stderr, "Unsent ");
 	}
 	if (ssfe->ssfe_flags & SCTP_DATA_SENT) {
-		printf("Sent ");
+		fprintf(stderr, "Sent ");
 	}
 	if (ssfe->ssfe_flags & ~(SCTP_DATA_SENT | SCTP_DATA_UNSENT)) {
-		printf("(flags = %x) ", ssfe->ssfe_flags);
+		fprintf(stderr, "(flags = %x) ", ssfe->ssfe_flags);
 	}
-	printf("message with PPID = %u, SID = %u, flags: 0x%04x due to error = 0x%08x",
+	fprintf(stderr, "message with PPID = %u, SID = %u, flags: 0x%04x due to error = 0x%08x",
 	       ntohl(ssfe->ssfe_info.snd_ppid), ssfe->ssfe_info.snd_sid,
 	       ssfe->ssfe_info.snd_flags, ssfe->ssfe_error);
 	n = ssfe->ssfe_length - sizeof(struct sctp_send_failed_event);
 	for (i = 0; i < n; i++) {
-		printf(" 0x%02x", ssfe->ssfe_data[i]);
+		fprintf(stderr, " 0x%02x", ssfe->ssfe_data[i]);
 	}
-	printf(".\n");
+	fprintf(stderr, ".\n");
 	return;
 }
 
 static void
 handle_adaptation_indication(struct sctp_adaptation_event *sai)
 {
-	printf("Adaptation indication: %x.\n", sai-> sai_adaptation_ind);
+	fprintf(stderr, "Adaptation indication: %x.\n", sai-> sai_adaptation_ind);
 	return;
 }
 
 static void
 handle_shutdown_event(struct sctp_shutdown_event *sse)
 {
-	printf("Shutdown event.\n");
+	fprintf(stderr, "Shutdown event.\n");
 	/* XXX: notify all channels. */
 	return;
 }
@@ -229,31 +233,31 @@ handle_stream_reset_event(struct sctp_stream_reset_event *strrst)
 	uint32_t n, i;
 
 	n = (strrst->strreset_length - sizeof(struct sctp_stream_reset_event)) / sizeof(uint16_t);
-	printf("Stream reset event: flags = %x, ", strrst->strreset_flags);
+	fprintf(stderr, "Stream reset event: flags = %x, ", strrst->strreset_flags);
 	if (strrst->strreset_flags & SCTP_STREAM_RESET_INCOMING_SSN) {
 		if (strrst->strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN) {
-			printf("incoming/");
+			fprintf(stderr, "incoming/");
 		}
-		printf("incoming ");
+		fprintf(stderr, "incoming ");
 	}
 	if (strrst->strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN) {
-		printf("outgoing ");
+		fprintf(stderr, "outgoing ");
 	}
-	printf("stream ids = ");
+	fprintf(stderr, "stream ids = ");
 	for (i = 0; i < n; i++) {
 		if (i > 0) {
-			printf(", ");
+			fprintf(stderr, ", ");
 		}
-		printf("%d", strrst->strreset_stream_list[i]);
+		fprintf(stderr, "%d", strrst->strreset_stream_list[i]);
 	}
-	printf(".\n");
+	fprintf(stderr, ".\n");
 	return;
 }
 
 static void
 handle_stream_change_event(struct sctp_stream_change_event *strchg)
 {
-	printf("Stream change event: streams (in/out) = (%u/%u), flags = %x.\n",
+	fprintf(stderr, "Stream change event: streams (in/out) = (%u/%u), flags = %x.\n",
 	       strchg->strchange_instrms, strchg->strchange_outstrms, strchg->strchange_flags);
 	return;
 }
@@ -264,11 +268,11 @@ handle_remote_error_event(struct sctp_remote_error *sre)
 	size_t i, n;
 
 	n = sre->sre_length - sizeof(struct sctp_remote_error);
-	printf("Remote Error (error = 0x%04x): ", sre->sre_error);
+	fprintf(stderr, "Remote Error (error = 0x%04x): ", sre->sre_error);
 	for (i = 0; i < n; i++) {
-		printf(" 0x%02x", sre-> sre_data[i]);
+		fprintf(stderr, " 0x%02x", sre-> sre_data[i]);
 	}
-	printf(".\n");
+	fprintf(stderr, ".\n");
 	return;
 }
 
@@ -279,54 +283,54 @@ handle_notification(union sctp_notification *notif, size_t n)
 		return;
 	}
 
-	printf("handle_notification : ");
+	fprintf(stderr, "handle_notification : ");
 
 	switch (notif->sn_header.sn_type) {
 	case SCTP_ASSOC_CHANGE:
-		printf("SCTP_ASSOC_CHANGE\n");
+		fprintf(stderr, "SCTP_ASSOC_CHANGE\n");
 		handle_association_change_event(&(notif->sn_assoc_change));
 		break;
 	case SCTP_PEER_ADDR_CHANGE:
-		printf("SCTP_PEER_ADDR_CHANGE\n");
+		fprintf(stderr, "SCTP_PEER_ADDR_CHANGE\n");
 		handle_peer_address_change_event(&(notif->sn_paddr_change));
 		break;
 	case SCTP_REMOTE_ERROR:
-		printf("SCTP_REMOTE_ERROR\n");
+		fprintf(stderr, "SCTP_REMOTE_ERROR\n");
 		handle_remote_error_event(&(notif->sn_remote_error));
 		break;
 	case SCTP_SHUTDOWN_EVENT:
-		printf("SCTP_SHUTDOWN_EVENT\n");
+		fprintf(stderr, "SCTP_SHUTDOWN_EVENT\n");
 		handle_shutdown_event(&(notif->sn_shutdown_event));
 		break;
 	case SCTP_ADAPTATION_INDICATION:
-		printf("SCTP_ADAPTATION_INDICATION\n");
+		fprintf(stderr, "SCTP_ADAPTATION_INDICATION\n");
 		handle_adaptation_indication(&(notif->sn_adaptation_event));
 		break;
 	case SCTP_PARTIAL_DELIVERY_EVENT:
-		printf("SCTP_PARTIAL_DELIVERY_EVENT\n");
+		fprintf(stderr, "SCTP_PARTIAL_DELIVERY_EVENT\n");
 		break;
 	case SCTP_AUTHENTICATION_EVENT:
-		printf("SCTP_AUTHENTICATION_EVENT\n");
+		fprintf(stderr, "SCTP_AUTHENTICATION_EVENT\n");
 		break;
 	case SCTP_SENDER_DRY_EVENT:
-		printf("SCTP_SENDER_DRY_EVENT\n");
+		fprintf(stderr, "SCTP_SENDER_DRY_EVENT\n");
 		break;
 	case SCTP_NOTIFICATIONS_STOPPED_EVENT:
-		printf("SCTP_NOTIFICATIONS_STOPPED_EVENT\n");
+		fprintf(stderr, "SCTP_NOTIFICATIONS_STOPPED_EVENT\n");
 		break;
 	case SCTP_SEND_FAILED_EVENT:
-		printf("SCTP_SEND_FAILED_EVENT\n");
+		fprintf(stderr, "SCTP_SEND_FAILED_EVENT\n");
 		handle_send_failed_event(&(notif->sn_send_failed_event));
 		break;
 	case SCTP_STREAM_RESET_EVENT:
-		printf("SCTP_STREAM_RESET_EVENT\n");
+		fprintf(stderr, "SCTP_STREAM_RESET_EVENT\n");
 		handle_stream_reset_event(&(notif->sn_strreset_event));
 		break;
 	case SCTP_ASSOC_RESET_EVENT:
-		printf("SCTP_ASSOC_RESET_EVENT\n");
+		fprintf(stderr, "SCTP_ASSOC_RESET_EVENT\n");
 		break;
 	case SCTP_STREAM_CHANGE_EVENT:
-		printf("SCTP_STREAM_CHANGE_EVENT\n");
+		fprintf(stderr, "SCTP_STREAM_CHANGE_EVENT\n");
 		handle_stream_change_event(&(notif->sn_strchange_event));
 		break;
 	default:

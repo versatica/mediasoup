@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SrtpSession"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SrtpSession.hpp"
 #include "DepLibSRTP.hpp"
@@ -161,7 +161,7 @@ namespace RTC
 		std::memcpy(EncryptBuffer, *data, *len);
 
 		srtp_err_status_t err =
-		  srtp_protect(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
+		  srtp_protect(this->session, static_cast<void*>(EncryptBuffer), reinterpret_cast<int*>(len));
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -176,11 +176,12 @@ namespace RTC
 		return true;
 	}
 
-	bool SrtpSession::DecryptSrtp(const uint8_t* data, size_t* len)
+	bool SrtpSession::DecryptSrtp(uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
 
-		srtp_err_status_t err = srtp_unprotect(this->session, (void*)data, reinterpret_cast<int*>(len));
+		srtp_err_status_t err =
+		  srtp_unprotect(this->session, static_cast<void*>(data), reinterpret_cast<int*>(len));
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -206,8 +207,8 @@ namespace RTC
 
 		std::memcpy(EncryptBuffer, *data, *len);
 
-		srtp_err_status_t err =
-		  srtp_protect_rtcp(this->session, (void*)EncryptBuffer, reinterpret_cast<int*>(len));
+		srtp_err_status_t err = srtp_protect_rtcp(
+		  this->session, static_cast<void*>(EncryptBuffer), reinterpret_cast<int*>(len));
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -222,12 +223,12 @@ namespace RTC
 		return true;
 	}
 
-	bool SrtpSession::DecryptSrtcp(const uint8_t* data, size_t* len)
+	bool SrtpSession::DecryptSrtcp(uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
 
 		srtp_err_status_t err =
-		  srtp_unprotect_rtcp(this->session, (void*)data, reinterpret_cast<int*>(len));
+		  srtp_unprotect_rtcp(this->session, static_cast<void*>(data), reinterpret_cast<int*>(len));
 
 		if (DepLibSRTP::IsError(err))
 		{

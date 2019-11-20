@@ -19,8 +19,6 @@ namespace RTC
 
 		enum class Type : uint8_t
 		{
-			FIR   = 192,
-			NACK  = 193,
 			SR    = 200,
 			RR    = 201,
 			SDES  = 202,
@@ -60,18 +58,19 @@ namespace RTC
 
 		public:
 			explicit Packet(Type type);
+			explicit Packet(CommonHeader* commonHeader);
 			virtual ~Packet();
 
 			void SetNext(Packet* packet);
 			Packet* GetNext() const;
-			Type GetType() const;
 			const uint8_t* GetData() const;
 
 		public:
 			virtual void Dump() const                 = 0;
 			virtual size_t Serialize(uint8_t* buffer) = 0;
-			virtual size_t GetCount() const           = 0;
-			virtual size_t GetSize() const            = 0;
+			virtual Type GetType() const;
+			virtual size_t GetCount() const = 0;
+			virtual size_t GetSize() const  = 0;
 
 		private:
 			Type type;
@@ -104,6 +103,12 @@ namespace RTC
 
 		inline Packet::Packet(Type type) : type(type)
 		{
+		}
+
+		inline Packet::Packet(CommonHeader* commonHeader)
+		{
+			this->type   = RTCP::Type(commonHeader->packetType);
+			this->header = commonHeader;
 		}
 
 		inline Packet::~Packet() = default;

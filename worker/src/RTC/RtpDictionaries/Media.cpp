@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Media"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"

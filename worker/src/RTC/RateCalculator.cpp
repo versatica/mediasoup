@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RateCalculator"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RateCalculator.hpp"
 #include "Logger.hpp"
@@ -7,18 +7,18 @@
 
 namespace RTC
 {
-	void RateCalculator::Update(size_t size, uint64_t now)
+	void RateCalculator::Update(size_t size, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		// Ignore too old data. Should never happen.
-		if (now < this->oldestTime)
+		if (nowMs < this->oldestTime)
 			return;
 
 		// Increase bytes.
 		this->bytes += size;
 
-		RemoveOldData(now);
+		RemoveOldData(nowMs);
 
 		// Set data in the index before the oldest index.
 		uint32_t offset = this->windowSize - 1;
@@ -36,28 +36,28 @@ namespace RTC
 		this->lastTime = 0;
 	}
 
-	uint32_t RateCalculator::GetRate(uint64_t now)
+	uint32_t RateCalculator::GetRate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (now == this->lastTime)
+		if (nowMs == this->lastTime)
 			return this->lastRate;
 
-		RemoveOldData(now);
+		RemoveOldData(nowMs);
 
 		float scale = this->scale / this->windowSize;
 
-		this->lastTime = now;
+		this->lastTime = nowMs;
 		this->lastRate = static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
 
 		return this->lastRate;
 	}
 
-	inline void RateCalculator::RemoveOldData(uint64_t now)
+	inline void RateCalculator::RemoveOldData(uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		uint64_t newOldestTime = now - this->windowSize;
+		uint64_t newOldestTime = nowMs - this->windowSize;
 
 		// Should never happen.
 		if (newOldestTime < this->oldestTime)
@@ -77,7 +77,7 @@ namespace RTC
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (newOldestTime > this->oldestTime + this->windowSize)
 		{
-			Reset(now);
+			Reset(nowMs);
 
 			return;
 		}
@@ -100,9 +100,9 @@ namespace RTC
 
 	void RtpDataCounter::Update(RTC::RtpPacket* packet)
 	{
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		this->packets++;
-		this->rate.Update(packet->GetSize(), now);
+		this->rate.Update(packet->GetSize(), nowMs);
 	}
 } // namespace RTC

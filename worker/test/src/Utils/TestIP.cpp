@@ -2,7 +2,14 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "catch.hpp"
-
+#include <cstring> // std::memset()
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>  // htonl(), htons(), ntohl(), ntohs()
+#include <netinet/in.h> // sockaddr_in, sockaddr_in6
+#include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
+#endif
 using namespace Utils;
 
 SCENARIO("Utils::IP::GetFamily()")
@@ -79,4 +86,26 @@ SCENARIO("Utils::IP::NormalizeIp()")
 
 	ip = "";
 	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+}
+
+SCENARIO("Utils::IP::GetAddressInfo()")
+{
+	struct sockaddr_in sin;
+
+	std::memset(&sin, 0, sizeof(sin));
+
+	sin.sin_family      = AF_INET;
+	sin.sin_port        = htons(10251);
+	sin.sin_addr.s_addr = inet_addr("82.99.219.114");
+
+	auto* addr = reinterpret_cast<const struct sockaddr*>(&sin);
+	int family;
+	std::string ip;
+	uint16_t port;
+
+	IP::GetAddressInfo(addr, family, ip, port);
+
+	REQUIRE(family == AF_INET);
+	REQUIRE(ip == "82.99.219.114");
+	REQUIRE(port == 10251);
 }

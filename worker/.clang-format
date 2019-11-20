@@ -26,9 +26,12 @@ BraceWrapping:
   AfterNamespace: true
   AfterStruct: true
   AfterUnion: true
+  AfterCaseLabel: true
+  AfterExternBlock: true
   BeforeCatch: true
   BeforeElse: true
   IndentBraces: false
+BreakBeforeBraces: Allman
 BreakBeforeBinaryOperators: None
 BreakBeforeInheritanceComma: false
 BreakBeforeTernaryOperators: true
@@ -47,11 +50,11 @@ FixNamespaceComments: true
 IncludeCategories:
   - Regex:    '"common.hpp"'
     Priority: 1
-  - Regex:    '^"(Channel|RTC|handles)/'
+  - Regex:    '^"(Channel|RTC|Utils|handles)/'
     Priority: 3
   - Regex:    '"*"'
     Priority: 2
-  - Regex:    '^<(uv|openssl|srtp|json|netstring)(.|/)'
+  - Regex:    '^<(json|netstring|uv|openssl|srtp|usrsctp|libwebrtc)(.|/)'
     Priority: 4
   - Regex:    '<*>'
     Priority: 5

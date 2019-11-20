@@ -200,7 +200,7 @@ test('dataProducer.getStats() succeeds', async () =>
 {
 	await expect(dataProducer1.getStats())
 		.resolves
-		.toStrictEqual(
+		.toMatchObject(
 			[
 				{
 					type             : 'data-producer',
@@ -213,7 +213,7 @@ test('dataProducer.getStats() succeeds', async () =>
 
 	await expect(dataProducer2.getStats())
 		.resolves
-		.toStrictEqual(
+		.toMatchObject(
 			[
 				{
 					type             : 'data-producer',

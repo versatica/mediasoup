@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2015-2015 Oleg Alexeenkov
-# Copyright (C) 2015-2017 Felix Weinrank
+# Copyright (C) 2015-2019 Felix Weinrank
 #
 # All rights reserved.
 #
@@ -56,14 +56,16 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	add_definitions(-D__APPLE_USE_RFC_2292)
 endif ()
 
-if (MSYS)
-	message(STATUS "MSYS")
+if (MSYS OR MINGW)
+	message(STATUS "MSYS / MINGW")
 	add_definitions(-D__USE_MINGW_ANSI_STDIO)
+	# 0x0601 = Windows 7 API
+	add_definitions(-DWINVER=0x0601)
+	add_definitions(-D_WIN32_WINNT=0x0601)
 
 	if (CMAKE_C_COMPILER_ID MATCHES "GNU")
-		message(STATUS "MYSYS + GCC")
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wno-format")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-format")
+		message(STATUS "MSYS / MINGW + GCC")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format")
 	endif ()
 endif ()
 
@@ -79,7 +81,7 @@ find_package(Threads)
 # PROGRAMS
 #################################################
 
-set(check_programs
+list(APPEND check_programs
 	chargen_server_upcall.c
 	client.c
 	client_upcall.c
@@ -98,6 +100,7 @@ set(check_programs
 	http_client.c
 	http_client_upcall.c
 	rtcweb.c
+	st_client.c
 	test_libmgmt.c
 	test_timer.c
 	tsctp.c

@@ -1,3 +1,4 @@
+const os = require('os');
 const process = require('process');
 const { toBeType } = require('jest-tobetype');
 const mediasoup = require('../');
@@ -36,11 +37,13 @@ test('createWorker() succeeds', async () =>
 			rtcMinPort          : 0,
 			rtcMaxPort          : 9999,
 			dtlsCertificateFile : 'test/data/dtls-cert.pem',
-			dtlsPrivateKeyFile  : 'test/data/dtls-key.pem'
+			dtlsPrivateKeyFile  : 'test/data/dtls-key.pem',
+			appData             : { bar: 456 }
 		});
 	expect(worker).toBeType('object');
 	expect(worker.pid).toBeType('number');
 	expect(worker.closed).toBe(false);
+	expect(worker.appData).toEqual({ bar: 456 });
 
 	worker.close();
 	expect(worker.closed).toBe(true);
@@ -66,6 +69,10 @@ test('createWorker() with wrong settings rejects with TypeError', async () =>
 		.toThrow(TypeError);
 
 	await expect(createWorker({ dtlsPrivateKeyFile: '/notfound/priv.pem' }))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(createWorker({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
 }, 2000);
@@ -194,6 +201,11 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =>
 {
+	// Windows doesn't have some signals such as SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2
+	// so we just skip this test in Windows.
+	if (os.platform() === 'win32')
+		return;
+
 	worker = await createWorker({ logLevel: 'warn' });
 
 	await new Promise((resolve, reject) =>

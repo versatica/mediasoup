@@ -42,13 +42,20 @@
  *     MS_DEBUG_2TAGS(ice, dtls, "media connection established");
  *
  * MS_DEBUG_DEV(...)
- * MS_WARN_DEV(...)
  *
- * 	 Logs if the current source file defines the MS_LOG_DEV macro and the current
- * 	 log level is satisfied.
+ * 	 Logs if the current source file defines the MS_LOG_DEV_LEVEL macro with
+ * 	 value 3.
  *
  * 	 Example:
- * 	   MS_DEBUG_DEV("Producer closed [producerId:%" PRIu32 "]", producerId);
+ * 	   MS_DEBUG_DEV("foo:%" PRIu32, foo);
+ *
+ * MS_WARN_DEV(...)
+ *
+ * 	 Logs if the current source file defines the MS_LOG_DEV_LEVEL macro with
+ * 	 value >= 2.
+ *
+ * 	 Example:
+ * 	   MS_WARN_DEV("foo:%" PRIu32, foo);
  *
  * MS_DUMP(...)
  *
@@ -64,8 +71,8 @@
  * MS_ERROR(...)
  *
  *   Logs an error if the current log level is satisfied (or if the current
- *   source file defines the MS_LOG_DEV macro). Must just be used for internal
- *   errors that should not happen.
+ *   source file defines the MS_LOG_DEV_LEVEL macro with value >= 1). Must just
+ *   be used for internal errors that should not happen.
  *
  * MS_ABORT(...)
  *
@@ -91,10 +98,11 @@
 
 #define _MS_TAG_ENABLED(tag) Settings::configuration.logTags.tag
 #define _MS_TAG_ENABLED_2(tag1, tag2) (Settings::configuration.logTags.tag1 || Settings::configuration.logTags.tag2)
-#ifdef MS_LOG_DEV
-	#define _MS_LOG_DEV_ENABLED true
-#else
-	#define _MS_LOG_DEV_ENABLED false
+
+#if !defined(MS_LOG_DEV_LEVEL)
+	#define MS_LOG_DEV_LEVEL 0
+#elif MS_LOG_DEV_LEVEL < 0 || MS_LOG_DEV_LEVEL > 3
+	#error "invalid MS_LOG_DEV_LEVEL macro value"
 #endif
 
 // Usage:
@@ -126,7 +134,7 @@ public:
 public:
 	static const int64_t pid;
 	static Channel::UnixStreamSocket* channel;
-	static const size_t bufferSize {10000};
+	static const size_t bufferSize {50000};
 	static char buffer[];
 };
 
@@ -266,53 +274,45 @@ public:
 	} \
 	while (false)
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 	#define MS_DEBUG_DEV(desc, ...) \
 		do \
 		{ \
-			if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG) \
-			{ \
-				int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
-				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
-			} \
+			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 		} \
 		while (false)
 
 	#define MS_DEBUG_DEV_STD(desc, ...) \
 		do \
 		{ \
-			if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG) \
-			{ \
-				std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
-				std::fflush(stdout); \
-			} \
+			std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+			std::fflush(stdout); \
 		} \
 		while (false)
+#else
+	#define MS_DEBUG_DEV(desc, ...) {}
+	#define MS_DEBUG_DEV_STD(desc, ...) {}
+#endif
 
+
+#if MS_LOG_DEV_LEVEL >= 2
 	#define MS_WARN_DEV(desc, ...) \
 		do \
 		{ \
-			if (Settings::configuration.logLevel >= LogLevel::LOG_WARN) \
-			{ \
-				int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
-				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
-			} \
+			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
 		} \
 		while (false)
 
 	#define MS_WARN_DEV_STD(desc, ...) \
 		do \
 		{ \
-			if (Settings::configuration.logLevel >= LogLevel::LOG_WARN) \
-			{ \
-				std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
-				std::fflush(stderr); \
-			} \
+			std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+			std::fflush(stderr); \
 		} \
 		while (false)
 #else
-	#define MS_DEBUG_DEV(desc, ...) {}
-	#define MS_DEBUG_DEV_STD(desc, ...) {}
 	#define MS_WARN_DEV(desc, ...) {}
 	#define MS_WARN_DEV_STD(desc, ...) {}
 #endif
@@ -392,7 +392,7 @@ public:
 #define MS_ERROR(desc, ...) \
 	do \
 	{ \
-		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR || _MS_LOG_DEV_ENABLED) \
+		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR || MS_LOG_DEV_LEVEL >= 1) \
 		{ \
 			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
 			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
@@ -403,7 +403,7 @@ public:
 #define MS_ERROR_STD(desc, ...) \
 	do \
 	{ \
-		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR || _MS_LOG_DEV_ENABLED) \
+		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR || MS_LOG_DEV_LEVEL >= 1) \
 		{ \
 			std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
 			std::fflush(stderr); \
@@ -414,7 +414,7 @@ public:
 #define MS_ABORT(desc, ...) \
 	do \
 	{ \
-		std::fprintf(stderr, "ABORT" _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+		std::fprintf(stderr, "(ABORT) " _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
 		std::fflush(stderr); \
 		std::abort(); \
 	} \

@@ -1,14 +1,17 @@
 #define MS_CLASS "RTC::RtpStreamRecv"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStreamRecv.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Codecs.hpp"
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr uint64_t InactivityCheckInterval{ 1500u }; // In ms.
+
 	/* TransmissionCounter methods. */
 
 	RtpStreamRecv::TransmissionCounter::TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers)
@@ -45,7 +48,7 @@ namespace RTC
 		counter.Update(packet);
 	}
 
-	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(uint64_t now)
+	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -55,7 +58,7 @@ namespace RTC
 		{
 			for (auto& temporalLayerCounter : spatialLayerCounter)
 			{
-				rate += temporalLayerCounter.GetBitrate(now);
+				rate += temporalLayerCounter.GetBitrate(nowMs);
 			}
 		}
 
@@ -63,7 +66,7 @@ namespace RTC
 	}
 
 	uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(
-	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	  uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
 		MS_TRACE();
 
@@ -71,30 +74,37 @@ namespace RTC
 		MS_ASSERT(
 		  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
 
+		// Return 0 if specified layers are not being received.
+		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
+
+		if (counter.GetBitrate(nowMs) == 0)
+			return 0u;
+
 		uint32_t rate{ 0u };
 
-		// Return 0 if specified layers are not being received.
+		// Iterate all temporal layers of spatial layers previous to the given one.
+		for (uint8_t sIdx{ 0u }; sIdx < spatialLayer; ++sIdx)
 		{
-			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
-
-			if (counter.GetBitrate(now) == 0)
-				return 0u;
-		}
-
-		for (uint8_t sIdx{ 0u }; sIdx <= spatialLayer; ++sIdx)
-		{
-			for (uint8_t tIdx{ 0u }; tIdx <= temporalLayer; ++tIdx)
+			for (uint8_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
-				rate += temporalLayerCounter.GetBitrate(now);
+				rate += temporalLayerCounter.GetBitrate(nowMs);
 			}
+		}
+
+		// Add the given spatial layer with up to the given temporal layer.
+		for (uint8_t tIdx{ 0u }; tIdx <= temporalLayer; ++tIdx)
+		{
+			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
+
+			rate += temporalLayerCounter.GetBitrate(nowMs);
 		}
 
 		return rate;
 	}
 
-	uint32_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(uint64_t now, uint8_t spatialLayer)
+	uint32_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer)
 	{
 		MS_TRACE();
 
@@ -112,14 +122,14 @@ namespace RTC
 		{
 			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 
-			rate += temporalLayerCounter.GetBitrate(now);
+			rate += temporalLayerCounter.GetBitrate(nowMs);
 		}
 
 		return rate;
 	}
 
 	uint32_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
-	  uint64_t now, uint8_t spatialLayer, uint8_t temporalLayer)
+	  uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 	{
 		MS_TRACE();
 
@@ -129,7 +139,7 @@ namespace RTC
 
 		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
-		return counter.GetBitrate(now);
+		return counter.GetBitrate(nowMs);
 	}
 
 	size_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
@@ -183,10 +193,8 @@ namespace RTC
 		{
 			this->inactivityCheckPeriodicTimer = new Timer(this);
 
-			// First check on 2 seconds, then every 150 ms.
-			this->inactivityCheckPeriodicTimer->Start(2000, 150);
-			this->inactive     = false;
-			this->lastPacketAt = DepLibUV::GetTime();
+			this->inactivityCheckPeriodicTimer->Start(InactivityCheckInterval);
+			this->inactive = false;
 		}
 	}
 
@@ -202,19 +210,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
-		jsonObject["timestamp"]   = now;
 		jsonObject["type"]        = "inbound-rtp";
 		jsonObject["jitter"]      = this->jitter;
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(now);
-
-		if (this->rtt != 0.0f)
-			jsonObject["roundTripTime"] = this->rtt;
+		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
 
 		if (GetSpatialLayers() > 1 || GetTemporalLayers() > 1)
 		{
@@ -226,10 +230,13 @@ namespace RTC
 				for (uint8_t tIdx = 0; tIdx < GetTemporalLayers(); ++tIdx)
 				{
 					(*jsonBitrateByLayerIt)[std::to_string(sIdx) + "." + std::to_string(tIdx)] =
-					  GetBitrate(now, sIdx, tIdx);
+					  GetBitrate(nowMs, sIdx, tIdx);
 				}
 			}
 		}
+
+		if (this->rtt != 0.0f)
+			jsonObject["roundTripTime"] = this->rtt;
 	}
 
 	bool RtpStreamRecv::ReceivePacket(RTC::RtpPacket* packet)
@@ -254,11 +261,11 @@ namespace RTC
 			// If there is RTX just provide the NackGenerator with the packet.
 			if (HasRtx())
 			{
-				this->nackGenerator->ReceivePacket(packet);
+				this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ false);
 			}
 			// If there is no RTX and NackGenerator returns true it means that it
 			// was a NACKed packet.
-			else if (this->nackGenerator->ReceivePacket(packet))
+			else if (this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ false))
 			{
 				// Mark the packet as retransmitted and repaired.
 				RTC::RtpStream::PacketRetransmitted(packet);
@@ -272,17 +279,20 @@ namespace RTC
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
 
-		// Ensure the inactivityCheckPeriodicTimer runs.
-		if (this->inactivityCheckPeriodicTimer && this->inactive)
+		// Increase media transmission counter.
+		this->mediaTransmissionCounter.Update(packet);
+
+		// Not inactive anymore.
+		if (this->inactive)
 		{
-			this->inactivityCheckPeriodicTimer->Restart();
 			this->inactive = false;
 
 			ResetScore(10, /*notify*/ true);
 		}
 
-		// Update last packet arrival.
-		this->lastPacketAt = DepLibUV::GetTime();
+		// Restart the inactivityCheckPeriodicTimer.
+		if (this->inactivityCheckPeriodicTimer)
+			this->inactivityCheckPeriodicTimer->Restart();
 
 		return true;
 	}
@@ -314,14 +324,25 @@ namespace RTC
 			return false;
 		}
 
+		if (HasRtx())
+		{
+			if (!this->rtxStream->ReceivePacket(packet))
+			{
+				MS_WARN_TAG(rtx, "RTX packet discarded");
+
+				return false;
+			}
+		}
+
+#if MS_LOG_DEV_LEVEL == 3
 		// Get the RTX packet sequence number for logging purposes.
 		auto rtxSeq = packet->GetSequenceNumber();
+#endif
 
 		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
-			MS_DEBUG_TAG(
-			  rtx,
+			MS_DEBUG_DEV(
 			  "ignoring empty RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", pt:%" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
@@ -330,8 +351,7 @@ namespace RTC
 			return false;
 		}
 
-		MS_DEBUG_TAG(
-		  rtx,
+		MS_DEBUG_DEV(
 		  "received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
 		  ", seq:%" PRIu16 "]",
 		  this->params.rtxSsrc,
@@ -360,7 +380,7 @@ namespace RTC
 
 		// Pass the packet to the NackGenerator and return true just if this was a
 		// NACKed packet.
-		if (this->nackGenerator->ReceivePacket(packet))
+		if (this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true))
 		{
 			// Mark the packet as repaired.
 			RTC::RtpStream::PacketRepaired(packet);
@@ -368,17 +388,17 @@ namespace RTC
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
 
-			// Ensure the inactivityCheckPeriodicTimer runs.
-			if (this->inactivityCheckPeriodicTimer && this->inactive)
+			// Not inactive anymore.
+			if (this->inactive)
 			{
-				this->inactivityCheckPeriodicTimer->Restart();
 				this->inactive = false;
 
 				ResetScore(10, /*notify*/ true);
 			}
 
-			// Update last packet arrival.
-			this->lastPacketAt = DepLibUV::GetTime();
+			// Restart the inactivityCheckPeriodicTimer.
+			if (this->inactivityCheckPeriodicTimer)
+				this->inactivityCheckPeriodicTimer->Restart();
 
 			return true;
 		}
@@ -402,7 +422,7 @@ namespace RTC
 				MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
 		}
 
-		auto report = new RTC::RTCP::ReceiverReport();
+		auto* report = new RTC::RTCP::ReceiverReport();
 
 		report->SetSsrc(GetSsrc());
 
@@ -411,23 +431,26 @@ namespace RTC
 		// Calculate Packets Expected and Lost.
 		auto expected = GetExpectedPackets();
 
-		this->packetsLost = expected - this->transmissionCounter.GetPacketCount();
+		if (expected > this->mediaTransmissionCounter.GetPacketCount())
+			this->packetsLost = expected - this->mediaTransmissionCounter.GetPacketCount();
+		else
+			this->packetsLost = 0u;
 
 		// Calculate Fraction Lost.
 		uint32_t expectedInterval = expected - this->expectedPrior;
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->transmissionCounter.GetPacketCount() - this->receivedPrior;
+		uint32_t receivedInterval = this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior;
 
-		this->receivedPrior = transmissionCounter.GetPacketCount();
+		this->receivedPrior = this->mediaTransmissionCounter.GetPacketCount();
 
 		int32_t lostInterval = expectedInterval - receivedInterval;
 
 		if (expectedInterval == 0 || lostInterval <= 0)
 			this->fractionLost = 0;
 		else
-			this->fractionLost = (lostInterval << 8) / expectedInterval;
+			this->fractionLost = std::round(((lostInterval << 8) / expectedInterval));
 
 		// Worst remote fraction lost is not worse than local one.
 		if (worstRemoteFractionLost <= this->fractionLost)
@@ -456,7 +479,7 @@ namespace RTC
 		if (this->lastSrReceived != 0)
 		{
 			// Get delay in milliseconds.
-			auto delayMs = static_cast<uint32_t>(DepLibUV::GetTime() - this->lastSrReceived);
+			auto delayMs = static_cast<uint32_t>(DepLibUV::GetTimeMs() - this->lastSrReceived);
 			// Express delay in units of 1/65536 seconds.
 			uint32_t dlsr = (delayMs / 1000) << 16;
 
@@ -474,11 +497,21 @@ namespace RTC
 		return report;
 	}
 
+	RTC::RTCP::ReceiverReport* RtpStreamRecv::GetRtxRtcpReceiverReport()
+	{
+		MS_TRACE();
+
+		if (HasRtx())
+			return this->rtxStream->GetRtcpReceiverReport();
+
+		return nullptr;
+	}
+
 	void RtpStreamRecv::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
 	{
 		MS_TRACE();
 
-		this->lastSrReceived  = DepLibUV::GetTime();
+		this->lastSrReceived  = DepLibUV::GetTimeMs();
 		this->lastSrTimestamp = report->GetNtpSec() << 16;
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 
@@ -495,6 +528,14 @@ namespace RTC
 		UpdateScore();
 	}
 
+	void RtpStreamRecv::ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report)
+	{
+		MS_TRACE();
+
+		if (HasRtx())
+			this->rtxStream->ReceiveRtcpSenderReport(report);
+	}
+
 	void RtpStreamRecv::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo)
 	{
 		MS_TRACE();
@@ -502,8 +543,8 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t now = DepLibUV::GetTime();
-		auto ntp     = Utils::Time::TimeMs2Ntp(now);
+		uint64_t nowMs = DepLibUV::GetTimeMs();
+		auto ntp       = Utils::Time::TimeMs2Ntp(nowMs);
 
 		// Get the compact NTP representation of the current timestamp.
 		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -516,8 +557,8 @@ namespace RTC
 		// RTT in 1/2^16 second fractions.
 		uint32_t rtt{ 0 };
 
-		// If no Receiver Extended Report was received by the remote endpoint yet, ignore lastRr
-		// and dlrr values in the Sender Extended Report.
+		// If no Receiver Extended Report was received by the remote endpoint yet,
+		// ignore lastRr and dlrr values in the Sender Extended Report.
 		if (!lastRr || !dlrr)
 			rtt = 0;
 		else if (compactNtp > dlrr + lastRr)
@@ -528,6 +569,10 @@ namespace RTC
 		// RTT in milliseconds.
 		this->rtt = (rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+
+		// Tell it to the NackGenerator.
+		if (this->params.useNack)
+			this->nackGenerator->UpdateRtt(static_cast<uint32_t>(this->rtt));
 	}
 
 	void RtpStreamRecv::RequestKeyFrame()
@@ -536,10 +581,6 @@ namespace RTC
 
 		if (this->params.usePli)
 		{
-			// Reset NackGenerator.
-			if (this->params.useNack)
-				this->nackGenerator->Reset();
-
 			MS_DEBUG_2TAGS(rtcp, rtx, "sending PLI [ssrc:%" PRIu32 "]", GetSsrc());
 
 			// Sender SSRC should be 0 since there is no media sender involved, but
@@ -555,10 +596,6 @@ namespace RTC
 		}
 		else if (this->params.useFir)
 		{
-			// Reset NackGenerator.
-			if (this->params.useNack)
-				this->nackGenerator->Reset();
-
 			MS_DEBUG_2TAGS(rtcp, rtx, "sending FIR [ssrc:%" PRIu32 "]", GetSsrc());
 
 			// Sender SSRC should be 0 since there is no media sender involved, but
@@ -582,6 +619,9 @@ namespace RTC
 
 		if (this->inactivityCheckPeriodicTimer)
 			this->inactivityCheckPeriodicTimer->Stop();
+
+		if (this->params.useNack)
+			this->nackGenerator->Reset();
 	}
 
 	void RtpStreamRecv::Resume()
@@ -589,10 +629,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->inactivityCheckPeriodicTimer && !this->inactive)
-		{
 			this->inactivityCheckPeriodicTimer->Restart();
-			this->lastPacketAt = DepLibUV::GetTime();
-		}
 	}
 
 	void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)
@@ -603,7 +640,7 @@ namespace RTC
 			return;
 
 		auto transit =
-		  static_cast<int>(DepLibUV::GetTime() - (rtpTimestamp * 1000 / this->params.clockRate));
+		  static_cast<int>(DepLibUV::GetTimeMs() - (rtpTimestamp * 1000 / this->params.clockRate));
 		int d = transit - this->transit;
 
 		this->transit = transit;
@@ -620,15 +657,15 @@ namespace RTC
 
 		// Calculate number of packets expected in this interval.
 		auto totalExpected = GetExpectedPackets();
-		uint32_t expected  = totalExpected - this->expectedPrior;
+		uint32_t expected  = totalExpected - this->expectedPriorScore;
 
-		this->expectedPrior = totalExpected;
+		this->expectedPriorScore = totalExpected;
 
 		// Calculate number of packets received in this interval.
-		auto totalReceived = this->transmissionCounter.GetPacketCount();
-		uint32_t received  = totalReceived - this->receivedPrior;
+		auto totalReceived = this->mediaTransmissionCounter.GetPacketCount();
+		uint32_t received  = totalReceived - this->receivedPriorScore;
 
-		this->receivedPrior = totalReceived;
+		this->receivedPriorScore = totalReceived;
 
 		// Calculate number of packets lost in this interval.
 		uint32_t lost;
@@ -640,15 +677,15 @@ namespace RTC
 
 		// Calculate number of packets repaired in this interval.
 		auto totalRepaired = this->packetsRepaired;
-		uint32_t repaired  = totalRepaired - this->repairedPrior;
+		uint32_t repaired  = totalRepaired - this->repairedPriorScore;
 
-		this->repairedPrior = totalRepaired;
+		this->repairedPriorScore = totalRepaired;
 
 		// Calculate number of packets retransmitted in this interval.
 		auto totatRetransmitted = this->packetsRetransmitted;
-		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPrior;
+		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPriorScore;
 
-		this->retransmittedPrior = totatRetransmitted;
+		this->retransmittedPriorScore = totatRetransmitted;
 
 		if (this->inactive)
 			return;
@@ -677,7 +714,7 @@ namespace RTC
 			}
 		}
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
 		  score,
 		  "[totalExpected:%" PRIu32 ", totalReceived:%zu, totalRepaired:%zu",
@@ -709,10 +746,11 @@ namespace RTC
 		auto deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
 		auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
 
-#ifdef MS_LOG_DEV
+#if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
 		  score,
-		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score: %lf]",
+		  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32 ", score:%" PRIu8
+		  "]",
 		  deliveredRatio,
 		  repairedRatio,
 		  repairedWeight,
@@ -729,18 +767,15 @@ namespace RTC
 
 		if (timer == this->inactivityCheckPeriodicTimer)
 		{
-			auto diff = DepLibUV::GetTime() - this->lastPacketAt;
+			this->inactive = true;
 
-			if (diff > 400)
+			if (GetScore() != 0)
 			{
-				this->inactivityCheckPeriodicTimer->Stop();
-				this->inactive = true;
-
-				if (GetScore() != 0)
-					MS_WARN_2TAGS(rtp, score, "RTP inactivity detected, resetting score to 0");
-
-				ResetScore(0, /*notify*/ true);
+				MS_WARN_2TAGS(
+				  rtp, score, "RTP inactivity detected, resetting score to 0 [ssrc:%" PRIu32 "]", GetSsrc());
 			}
+
+			ResetScore(0, /*notify*/ true);
 		}
 	}
 

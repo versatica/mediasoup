@@ -164,7 +164,7 @@ handle_upcall(struct socket *sock, void *data, int flgs)
 			if (flags & MSG_NOTIFICATION) {
 				printf("Notification of length %d received.\n", (int)n);
 			} else {
-				printf("Messsage of length %d received via %p:%u on stream %u with SSN %u and TSN %u, PPID %u, context %u, flags %x.\n",
+				printf("Message of length %d received via %p:%u on stream %u with SSN %u and TSN %u, PPID %u, context %u, flags %x.\n",
 				       (int)n,
 				       addr.sconn.sconn_addr,
 				       ntohs(addr.sconn.sconn_port),
@@ -291,7 +291,7 @@ print_addresses(struct socket *sock)
 #endif
 
 int
-main(void)
+main(int argc, char *argv[])
 {
 	struct sockaddr_in sin_s, sin_c;
 	struct sockaddr_conn sconn;
@@ -313,6 +313,13 @@ main(void)
 #ifdef _WIN32
 	WSADATA wsaData;
 #endif
+	uint16_t client_port = 9900;
+	uint16_t server_port = 9901;
+
+	if (argc == 3) {
+		client_port = atoi(argv[1]);
+		server_port = atoi(argv[2]);
+	}
 
 #ifdef _WIN32
 	if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0) {
@@ -320,7 +327,7 @@ main(void)
 		exit (EXIT_FAILURE);
 	}
 #endif
-	usrsctp_init(0, conn_output, debug_printf);
+	usrsctp_init(0, conn_output, debug_printf_stack);
 	/* set up a connected UDP socket */
 #ifdef _WIN32
 	if ((fd_c = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET) {
@@ -346,14 +353,14 @@ main(void)
 #ifdef HAVE_SIN_LEN
 	sin_c.sin_len = sizeof(struct sockaddr_in);
 #endif
-	sin_c.sin_port = htons(9900);
+	sin_c.sin_port = htons(client_port);
 	sin_c.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	memset(&sin_s, 0, sizeof(struct sockaddr_in));
 	sin_s.sin_family = AF_INET;
 #ifdef HAVE_SIN_LEN
 	sin_s.sin_len = sizeof(struct sockaddr_in);
 #endif
-	sin_s.sin_port = htons(9901);
+	sin_s.sin_port = htons(server_port);
 	sin_s.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 #ifdef _WIN32
 	if (bind(fd_c, (struct sockaddr *)&sin_c, sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
@@ -515,7 +522,7 @@ main(void)
 		perror("usrsctp_accept");
 		exit(EXIT_FAILURE);
 	}
-	
+
 	usrsctp_set_upcall(s_s, handle_upcall, &fd_s);
 
 	usrsctp_close(s_l);

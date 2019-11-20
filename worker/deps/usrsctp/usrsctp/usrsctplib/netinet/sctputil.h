@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 347975 2019-05-19 17:28:00Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 352592 2019-09-22 10:40:15Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_UTIL_H_
@@ -144,7 +144,7 @@ uint32_t sctp_get_next_mtu(uint32_t);
 void
 sctp_timeout_handler(void *);
 
-uint32_t
+int
 sctp_calculate_rto(struct sctp_tcb *, struct sctp_association *,
     struct sctp_nets *, struct timeval *, int);
 

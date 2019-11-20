@@ -23,15 +23,19 @@ namespace RTC
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
+		uint8_t GetBitratePriority() const override;
+		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
+		void ApplyLayers() override;
+		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		void SendProbationRtpPacket(uint16_t seq) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
+		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
-		uint32_t GetTransmissionRate(uint64_t now) override;
+		uint32_t GetTransmissionRate(uint64_t nowMs) override;
+		float GetRtt() const override;
 
 	private:
 		void UserOnTransportConnected() override;
@@ -45,8 +49,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(
-		  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet, bool probation = false) override;
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
 	private:
 		// Allocated by this.
@@ -57,13 +60,20 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
+		bool managingBitrate{ false };
 	};
 
 	/* Inline methods. */
 
 	inline bool SimpleConsumer::IsActive() const
 	{
-		return (RTC::Consumer::IsActive() && this->producerRtpStream);
+		// clang-format off
+		return (
+			RTC::Consumer::IsActive() &&
+			this->producerRtpStream &&
+			this->producerRtpStream->GetScore() > 0u
+		);
+		// clang-format on
 	}
 
 	inline std::vector<RTC::RtpStreamSend*> SimpleConsumer::GetRtpStreams()

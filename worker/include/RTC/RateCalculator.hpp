@@ -16,15 +16,15 @@ namespace RTC
 		static constexpr float DefaultBpsScale{ 8000.0f };
 
 	public:
-		explicit RateCalculator(size_t windowSize = DefaultWindowSize, float scale = DefaultBpsScale);
-		void Update(size_t size, uint64_t now);
-		uint32_t GetRate(uint64_t now);
+		RateCalculator(size_t windowSize = DefaultWindowSize, float scale = DefaultBpsScale);
+		void Update(size_t size, uint64_t nowMs);
+		uint32_t GetRate(uint64_t nowMs);
 		size_t GetBytes() const;
 		void Reset();
 
 	private:
-		void RemoveOldData(uint64_t now);
-		void Reset(uint64_t now);
+		void RemoveOldData(uint64_t nowMs);
+		void Reset(uint64_t nowMs);
 
 	private:
 		struct BufferItem
@@ -68,15 +68,15 @@ namespace RTC
 
 	inline void RateCalculator::Reset()
 	{
-		uint64_t now = DepLibUV::GetTime();
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 
-		Reset(now);
+		Reset(nowMs);
 	}
 
-	inline void RateCalculator::Reset(uint64_t now)
+	inline void RateCalculator::Reset(uint64_t nowMs)
 	{
 		this->buffer.reset(new BufferItem[this->windowSize]);
-		this->oldestTime  = now - this->windowSize;
+		this->oldestTime  = nowMs - this->windowSize;
 		this->oldestIndex = 0;
 		this->totalCount  = 0;
 		this->lastRate    = 0;
@@ -86,24 +86,28 @@ namespace RTC
 	class RtpDataCounter
 	{
 	public:
-		RtpDataCounter() = default;
+		explicit RtpDataCounter(size_t windowSize = 2500);
 
 	public:
 		void Update(RTC::RtpPacket* packet);
-		uint32_t GetBitrate(uint64_t now);
+		uint32_t GetBitrate(uint64_t nowMs);
 		size_t GetPacketCount() const;
 		size_t GetBytes() const;
 
 	private:
-		RateCalculator rate{ /*windowSize*/ 2500 };
+		RateCalculator rate;
 		size_t packets{ 0 };
 	};
 
 	/* Inline instance methods. */
 
-	inline uint32_t RtpDataCounter::GetBitrate(uint64_t now)
+	inline RtpDataCounter::RtpDataCounter(size_t windowSize) : rate(windowSize)
 	{
-		return this->rate.GetRate(now);
+	}
+
+	inline uint32_t RtpDataCounter::GetBitrate(uint64_t nowMs)
+	{
+		return this->rate.GetRate(nowMs);
 	}
 
 	inline size_t RtpDataCounter::GetPacketCount() const

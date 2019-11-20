@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 337738 2018-08-14 08:33:47Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 353466 2019-10-13 09:35:03Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -62,12 +62,8 @@ __FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 337738 2018-08-14 08:33:47Z
 #include <netinet/icmp6.h>
 #include <netinet/udp.h>
 #endif
-
 #if defined(__APPLE__)
 #define APPLE_FILE_NO 9
-#endif
-#if !defined(__Userspace__)
-extern struct protosw inetsw[];
 #endif
 #if defined(__Panda__) || defined(__Userspace__)
 int ip6_v6only=0;
@@ -593,8 +589,7 @@ sctp6_ctlinput(int cmd, struct sockaddr *pktdst, void *d)
 		} else {
 #if defined(__FreeBSD__) && __FreeBSD_version < 500000
 			if (PRC_IS_REDIRECT(cmd) && (inp != NULL)) {
-				in6_rtchange((struct in6pcb *)inp,
-				    inet6ctlerrmap[cmd]);
+				in6_rtchange(inp, inet6ctlerrmap[cmd]);
 			}
 #endif
 			if ((stcb == NULL) && (inp != NULL)) {
@@ -771,7 +766,6 @@ static int
 sctp6_attach(struct socket *so, int proto SCTP_UNUSED, struct proc *p SCTP_UNUSED)
 #endif
 {
-	struct in6pcb *inp6;
 	int error;
 	struct sctp_inpcb *inp;
 #if !defined(__Panda__) && !defined(__Userspace__)
@@ -795,16 +789,15 @@ sctp6_attach(struct socket *so, int proto SCTP_UNUSED, struct proc *p SCTP_UNUSE
 	inp = (struct sctp_inpcb *)so->so_pcb;
 	SCTP_INP_WLOCK(inp);
 	inp->sctp_flags |= SCTP_PCB_FLAGS_BOUND_V6;	/* I'm v6! */
-	inp6 = (struct in6pcb *)inp;
 
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
-	inp6->inp_vflag |= INP_IPV6;
+	inp->ip_inp.inp.inp_vflag |= INP_IPV6;
 #else
 	inp->inp_vflag |= INP_IPV6;
 #endif
 #if !defined(__Panda__)
-	inp6->in6p_hops = -1;	/* use kernel default */
-	inp6->in6p_cksum = -1;	/* just to be sure */
+	inp->ip_inp.inp.in6p_hops = -1;	/* use kernel default */
+	inp->ip_inp.inp.in6p_cksum = -1;	/* just to be sure */
 #endif
 #ifdef INET
 	/*
@@ -812,7 +805,7 @@ sctp6_attach(struct socket *so, int proto SCTP_UNUSED, struct proc *p SCTP_UNUSE
 	 * socket as well, because the socket may be bound to an IPv6
 	 * wildcard address, which may match an IPv4-mapped IPv6 address.
 	 */
-	inp6->inp_ip_ttl = MODULE_GLOBAL(ip_defttl);
+	inp->ip_inp.inp.inp_ip_ttl = MODULE_GLOBAL(ip_defttl);
 #endif
 	SCTP_INP_WUNLOCK(inp);
 	return (0);
@@ -842,7 +835,6 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 
 #endif
 	struct sctp_inpcb *inp;
-	struct in6pcb *inp6;
 	int error;
 
 	inp = (struct sctp_inpcb *)so->so_pcb;
@@ -880,22 +872,21 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 		}
 	}
 #endif
-	inp6 = (struct in6pcb *)inp;
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
-	inp6->inp_vflag &= ~INP_IPV4;
-	inp6->inp_vflag |= INP_IPV6;
+	inp->ip_inp.inp.inp_vflag &= ~INP_IPV4;
+	inp->ip_inp.inp.inp_vflag |= INP_IPV6;
 #else
 	inp->inp_vflag &= ~INP_IPV4;
 	inp->inp_vflag |= INP_IPV6;
 #endif
-	if ((addr != NULL) && (SCTP_IPV6_V6ONLY(inp6) == 0)) {
+	if ((addr != NULL) && (SCTP_IPV6_V6ONLY(inp) == 0)) {
 		switch (addr->sa_family) {
 #ifdef INET
 		case AF_INET:
 			/* binding v4 addr to v6 socket, so reset flags */
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
-			inp6->inp_vflag |= INP_IPV4;
-			inp6->inp_vflag &= ~INP_IPV6;
+			inp->ip_inp.inp.inp_vflag |= INP_IPV4;
+			inp->ip_inp.inp.inp_vflag &= ~INP_IPV6;
 #else
 			inp->inp_vflag |= INP_IPV4;
 			inp->inp_vflag &= ~INP_IPV6;
@@ -911,7 +902,7 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 
 			if (IN6_IS_ADDR_UNSPECIFIED(&sin6_p->sin6_addr)) {
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
-				inp6->inp_vflag |= INP_IPV4;
+				inp->ip_inp.inp.inp_vflag |= INP_IPV4;
 #else
 				inp->inp_vflag |= INP_IPV4;
 #endif
@@ -922,8 +913,8 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 
 				in6_sin6_2_sin(&sin, sin6_p);
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
-				inp6->inp_vflag |= INP_IPV4;
-				inp6->inp_vflag &= ~INP_IPV6;
+				inp->ip_inp.inp.inp_vflag |= INP_IPV4;
+				inp->ip_inp.inp.inp_vflag &= ~INP_IPV6;
 #else
 				inp->inp_vflag |= INP_IPV4;
 				inp->inp_vflag &= ~INP_IPV6;
@@ -1033,7 +1024,6 @@ sctp6_send(struct socket *so, int flags, struct mbuf *m, struct mbuf *nam,
 	struct sockaddr *addr = nam ? mtod(nam, struct sockaddr *): NULL;
 #endif
 	struct sctp_inpcb *inp;
-	struct in6pcb *inp6;
 
 #ifdef INET
 	struct sockaddr_in6 *sin6;
@@ -1050,7 +1040,6 @@ sctp6_send(struct socket *so, int flags, struct mbuf *m, struct mbuf *nam,
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, EINVAL);
 		return (EINVAL);
 	}
-	inp6 = (struct in6pcb *)inp;
 	/*
 	 * For the TCP model we may get a NULL addr, if we are a connected
 	 * socket thats ok.
@@ -1070,7 +1059,7 @@ sctp6_send(struct socket *so, int flags, struct mbuf *m, struct mbuf *nam,
 	}
 #ifdef INET
 	sin6 = (struct sockaddr_in6 *)addr;
-	if (SCTP_IPV6_V6ONLY(inp6)) {
+	if (SCTP_IPV6_V6ONLY(inp)) {
 		/*
 		 * if IPV6_V6ONLY flag, we discard datagrams destined to a
 		 * v4 addr or v4-mapped addr
@@ -1169,14 +1158,10 @@ sctp6_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	struct sctp_inpcb *inp;
 	struct sctp_tcb *stcb;
 #ifdef INET
-	struct in6pcb *inp6;
 	struct sockaddr_in6 *sin6;
 	union sctp_sockstore store;
 #endif
 
-#ifdef INET
-	inp6 = (struct in6pcb *)so->so_pcb;
-#endif
 	inp = (struct sctp_inpcb *)so->so_pcb;
 	if (inp == NULL) {
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, ECONNRESET);
@@ -1240,7 +1225,7 @@ sctp6_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	}
 #ifdef INET
 	sin6 = (struct sockaddr_in6 *)addr;
-	if (SCTP_IPV6_V6ONLY(inp6)) {
+	if (SCTP_IPV6_V6ONLY(inp)) {
 		/*
 		 * if IPV6_V6ONLY flag, ignore connections destined to a v4
 		 * addr or v4-mapped addr
@@ -1294,7 +1279,8 @@ sctp6_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	/* We are GOOD to go */
 	stcb = sctp_aloc_assoc(inp, addr, &error, 0, vrf_id,
 	                       inp->sctp_ep.pre_open_stream_count,
-	                       inp->sctp_ep.port, p);
+	                       inp->sctp_ep.port, p,
+	                       SCTP_INITIALIZE_AUTH_PARAMS);
 	SCTP_ASOC_CREATE_UNLOCK(inp);
 	if (stcb == NULL) {
 		/* Gak! no memory */
@@ -1307,10 +1293,6 @@ sctp6_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	}
 	SCTP_SET_STATE(stcb, SCTP_STATE_COOKIE_WAIT);
 	(void)SCTP_GETTIME_TIMEVAL(&stcb->asoc.time_entered);
-
-	/* initialize authentication parameters for the assoc */
-	sctp_initialize_auth_params(inp, stcb);
-
 	sctp_send_initiate(inp, stcb, SCTP_SO_LOCKED);
 	SCTP_TCB_UNLOCK(stcb);
 	return (error);
@@ -1583,10 +1565,10 @@ sctp6_in6getaddr(struct socket *so, struct mbuf *nam)
 	struct sockaddr *addr = mtod(nam, struct sockaddr *);
 #endif
 #endif
-	struct in6pcb *inp6 = sotoin6pcb(so);
+	struct inpcb *inp = sotoinpcb(so);
 	int error;
 
-	if (inp6 == NULL) {
+	if (inp == NULL) {
 		SCTP_LTRACE_ERR_RET(NULL, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, EINVAL);
 		return (EINVAL);
 	}
@@ -1655,10 +1637,10 @@ sctp6_getpeeraddr(struct socket *so, struct mbuf *nam)
 #endif
 
 #endif
-	struct in6pcb *inp6 = sotoin6pcb(so);
+	struct inpcb *inp = sotoinpcb(so);
 	int error;
 
-	if (inp6 == NULL) {
+	if (inp == NULL) {
 		SCTP_LTRACE_ERR_RET(NULL, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, EINVAL);
 		return (EINVAL);
 	}

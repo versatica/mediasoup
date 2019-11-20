@@ -1,5 +1,5 @@
 #define MS_CLASS "SignalsHandler"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "handles/SignalsHandler.hpp"
 #include "DepLibUV.hpp"
@@ -58,7 +58,7 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	int err;
 	auto uvHandle = new uv_signal_t;
 
-	uvHandle->data = (void*)this;
+	uvHandle->data = static_cast<void*>(this);
 
 	err = uv_signal_init(DepLibUV::GetLoop(), uvHandle);
 

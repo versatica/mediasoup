@@ -1,5 +1,5 @@
 #define MS_CLASS "Channel::Request"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/Request.hpp"
 #include "Logger.hpp"
@@ -33,18 +33,22 @@ namespace Channel
 		{ "transport.produceData",           Request::MethodId::TRANSPORT_PRODUCE_DATA             },
 		{ "transport.consumeData",           Request::MethodId::TRANSPORT_CONSUME_DATA             },
 		{ "transport.consumeStreamMeta",     Request::MethodId::TRANSPORT_CONSUME_STREAM_META      },
+		{ "transport.enableTraceEvent",      Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT       },
 		{ "producer.close",                  Request::MethodId::PRODUCER_CLOSE                     },
 		{ "producer.dump",                   Request::MethodId::PRODUCER_DUMP                      },
 		{ "producer.getStats",               Request::MethodId::PRODUCER_GET_STATS                 },
 		{ "producer.pause",                  Request::MethodId::PRODUCER_PAUSE                     },
 		{ "producer.resume" ,                Request::MethodId::PRODUCER_RESUME                    },
+		{ "producer.enableTraceEvent",       Request::MethodId::PRODUCER_ENABLE_TRACE_EVENT        },
 		{ "consumer.close",                  Request::MethodId::CONSUMER_CLOSE                     },
 		{ "consumer.dump",                   Request::MethodId::CONSUMER_DUMP                      },
 		{ "consumer.getStats",               Request::MethodId::CONSUMER_GET_STATS                 },
 		{ "consumer.pause",                  Request::MethodId::CONSUMER_PAUSE                     },
 		{ "consumer.resume",                 Request::MethodId::CONSUMER_RESUME                    },
 		{ "consumer.setPreferredLayers",     Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS      },
+		{ "consumer.setPriority",            Request::MethodId::CONSUMER_SET_PRIORITY              },
 		{ "consumer.requestKeyFrame",        Request::MethodId::CONSUMER_REQUEST_KEY_FRAME         },
+		{ "consumer.enableTraceEvent",       Request::MethodId::CONSUMER_ENABLE_TRACE_EVENT        },
 		{ "dataProducer.close",              Request::MethodId::DATA_PRODUCER_CLOSE                },
 		{ "dataProducer.dump",               Request::MethodId::DATA_PRODUCER_DUMP                 },
 		{ "dataProducer.getStats",           Request::MethodId::DATA_PRODUCER_GET_STATS            },

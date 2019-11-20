@@ -1,5 +1,5 @@
 #define MS_CLASS "Channel::UnixStreamSocket"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/UnixStreamSocket.hpp"
 #include "Logger.hpp"
@@ -7,7 +7,8 @@
 #include <cmath>   // std::ceil()
 #include <cstdio>  // sprintf()
 #include <cstring> // std::memcpy(), std::memmove()
-extern "C" {
+extern "C"
+{
 #include <netstring.h>
 }
 
@@ -21,11 +22,15 @@ namespace Channel
 	static uint8_t WriteBuffer[NsMessageMaxLen];
 
 	/* Instance methods. */
-
-	UnixStreamSocket::UnixStreamSocket(int fd)
-	  : ::UnixStreamSocket::UnixStreamSocket(fd, NsMessageMaxLen)
+	UnixStreamSocket::UnixStreamSocket(int consumerFd, int producerFd)
+	  : consumerSocket(consumerFd, NsMessageMaxLen, this), producerSocket(producerFd, NsMessageMaxLen)
 	{
 		MS_TRACE_STD();
+	}
+
+	UnixStreamSocket ::~UnixStreamSocket()
+	{
+		MS_TRACE();
 	}
 
 	void UnixStreamSocket::SetListener(Listener* listener)
@@ -37,7 +42,7 @@ namespace Channel
 
 	void UnixStreamSocket::Send(json& jsonMessage)
 	{
-		if (IsClosed())
+		if (this->producerSocket.IsClosed())
 			return;
 
 		std::string nsPayload = jsonMessage.dump();
@@ -69,12 +74,12 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
 	{
-		if (IsClosed())
+		if (this->producerSocket.IsClosed())
 			return;
 
 		// MS_TRACE_STD();
@@ -106,12 +111,12 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
 	{
-		if (IsClosed())
+		if (this->producerSocket.IsClosed())
 			return;
 
 		size_t nsNumLen;
@@ -141,10 +146,50 @@ namespace Channel
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::UserOnUnixStreamRead()
+	void UnixStreamSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, json& jsonMessage)
+	{
+		try
+		{
+			auto* request = new Channel::Request(this, jsonMessage);
+
+			// Notify the listener.
+			try
+			{
+				this->listener->OnChannelRequest(this, request);
+			}
+			catch (const MediaSoupTypeError& error)
+			{
+				request->TypeError(error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				request->Error(error.what());
+			}
+
+			// Delete the Request.
+			delete request;
+		}
+		catch (const MediaSoupError& error)
+		{
+			MS_ERROR_STD("discarding wrong Channel request");
+		}
+	}
+
+	void UnixStreamSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
+	{
+		this->listener->OnChannelClosed(this);
+	}
+
+	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
+	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
+	{
+		MS_TRACE_STD();
+	}
+
+	void ConsumerSocket::UserOnUnixStreamRead()
 	{
 		MS_TRACE_STD();
 
@@ -244,38 +289,10 @@ namespace Channel
 
 			try
 			{
-				json jsonRequest = json::parse(jsonStart, jsonStart + jsonLen);
+				json jsonMessage = json::parse(jsonStart, jsonStart + jsonLen);
 
-				Channel::Request* request{ nullptr };
-
-				try
-				{
-					request = new Channel::Request(this, jsonRequest);
-				}
-				catch (const MediaSoupError& error)
-				{
-					MS_ERROR_STD("discarding wrong Channel request");
-				}
-
-				if (request != nullptr)
-				{
-					// Notify the listener.
-					try
-					{
-						this->listener->OnChannelRequest(this, request);
-					}
-					catch (const MediaSoupTypeError& error)
-					{
-						request->TypeError(error.what());
-					}
-					catch (const MediaSoupError& error)
-					{
-						request->Error(error.what());
-					}
-
-					// Delete the Request.
-					delete request;
-				}
+				// Notify the listener.
+				this->listener->OnConsumerSocketMessage(this, jsonMessage);
 			}
 			catch (const json::parse_error& error)
 			{
@@ -307,12 +324,17 @@ namespace Channel
 		}
 	}
 
-	void UnixStreamSocket::UserOnUnixStreamSocketClosed(bool isClosedByPeer)
+	void ConsumerSocket::UserOnUnixStreamSocketClosed()
 	{
 		MS_TRACE_STD();
 
 		// Notify the listener.
-		if (isClosedByPeer)
-			this->listener->OnChannelRemotelyClosed(this);
+		this->listener->OnConsumerSocketClosed(this);
+	}
+
+	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
+	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)
+	{
+		MS_TRACE_STD();
 	}
 } // namespace Channel

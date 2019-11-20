@@ -390,42 +390,10 @@ TEST_CASE("Commas in various macros are allowed") {
     }
 }
 
-TEST_CASE( "null deref", "[.][failing][!nonportable]" ) {
-    CHECK( false );
-    int *x = NULL;
-    *x = 1;
-}
-
 TEST_CASE( "non-copyable objects", "[.][failing]" ) {
     // Thanks to Agustin Bergé (@k-ballo on the cpplang Slack) for raising this
     std::type_info const& ti = typeid(int);
     CHECK( ti == typeid(int) );
-}
-
-// #925
-using signal_t = void (*) (void*);
-
-struct TestClass {
-    signal_t testMethod_uponComplete_arg = nullptr;
-};
-
-namespace utility {
-    inline static void synchronizing_callback( void * ) { }
-}
-
-TEST_CASE("#925: comparing function pointer to function address failed to compile", "[!nonportable]" ) {
-
-    TestClass test;
-    REQUIRE(utility::synchronizing_callback != test.testMethod_uponComplete_arg);
-}
-
-TEST_CASE( "Bitfields can be captured (#1027)" ) {
-    struct Y {
-        uint32_t v : 1;
-    };
-    Y y{ 0 };
-    REQUIRE( y.v == 0 );
-    REQUIRE( 0 == y.v );
 }
 
 TEST_CASE("#1514: stderr/stdout is not captured in tests aborted by an exception", "[output-capture][regression][.]") {

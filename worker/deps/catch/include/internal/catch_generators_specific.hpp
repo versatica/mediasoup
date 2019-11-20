@@ -10,6 +10,7 @@
 #include "catch_context.h"
 #include "catch_generators.hpp"
 #include "catch_interfaces_config.h"
+#include "catch_random_number_generator.h"
 
 #include <random>
 
@@ -18,14 +19,13 @@ namespace Generators {
 
 template <typename Float>
 class RandomFloatingGenerator final : public IGenerator<Float> {
-    // FIXME: What is the right seed?
-    std::minstd_rand m_rand;
+    Catch::SimplePcg32& m_rng;
     std::uniform_real_distribution<Float> m_dist;
     Float m_current_number;
 public:
 
     RandomFloatingGenerator(Float a, Float b):
-        m_rand(getCurrentContext().getConfig()->rngSeed()),
+        m_rng(rng()),
         m_dist(a, b) {
         static_cast<void>(next());
     }
@@ -34,20 +34,20 @@ public:
         return m_current_number;
     }
     bool next() override {
-        m_current_number = m_dist(m_rand);
+        m_current_number = m_dist(m_rng);
         return true;
     }
 };
 
 template <typename Integer>
 class RandomIntegerGenerator final : public IGenerator<Integer> {
-    std::minstd_rand m_rand;
+    Catch::SimplePcg32& m_rng;
     std::uniform_int_distribution<Integer> m_dist;
     Integer m_current_number;
 public:
 
     RandomIntegerGenerator(Integer a, Integer b):
-        m_rand(getCurrentContext().getConfig()->rngSeed()),
+        m_rng(rng()),
         m_dist(a, b) {
         static_cast<void>(next());
     }
@@ -56,7 +56,7 @@ public:
         return m_current_number;
     }
     bool next() override {
-        m_current_number = m_dist(m_rand);
+        m_current_number = m_dist(m_rng);
         return true;
     }
 };
@@ -117,7 +117,7 @@ public:
 
 template <typename T>
 GeneratorWrapper<T> range(T const& start, T const& end, T const& step) {
-    static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value, "Type must be an integer");
+    static_assert(std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, "Type must be numeric");
     return GeneratorWrapper<T>(pf::make_unique<RangeGenerator<T>>(start, end, step));
 }
 
@@ -125,6 +125,46 @@ template <typename T>
 GeneratorWrapper<T> range(T const& start, T const& end) {
     static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value, "Type must be an integer");
     return GeneratorWrapper<T>(pf::make_unique<RangeGenerator<T>>(start, end));
+}
+
+
+template <typename T>
+class IteratorGenerator final : public IGenerator<T> {
+    static_assert(!std::is_same<T, bool>::value,
+        "IteratorGenerator currently does not support bools"
+        "because of std::vector<bool> specialization");
+
+    std::vector<T> m_elems;
+    size_t m_current = 0;
+public:
+    template <typename InputIterator, typename InputSentinel>
+    IteratorGenerator(InputIterator first, InputSentinel last):m_elems(first, last) {
+        if (m_elems.empty()) {
+            Catch::throw_exception(GeneratorException("IteratorGenerator received no valid values"));
+        }
+    }
+
+    T const& get() const override {
+        return m_elems[m_current];
+    }
+
+    bool next() override {
+        ++m_current;
+        return m_current != m_elems.size();
+    }
+};
+
+template <typename InputIterator,
+          typename InputSentinel,
+          typename ResultType = typename std::iterator_traits<InputIterator>::value_type>
+GeneratorWrapper<ResultType> from_range(InputIterator from, InputSentinel to) {
+    return GeneratorWrapper<ResultType>(pf::make_unique<IteratorGenerator<ResultType>>(from, to));
+}
+
+template <typename Container,
+          typename ResultType = typename Container::value_type>
+GeneratorWrapper<ResultType> from_range(Container const& cnt) {
+    return GeneratorWrapper<ResultType>(pf::make_unique<IteratorGenerator<ResultType>>(cnt.begin(), cnt.end()));
 }
 
 

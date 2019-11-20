@@ -1,8 +1,7 @@
 #define MS_CLASS "RTC::PipeTransport"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PipeTransport.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -13,7 +12,7 @@ namespace RTC
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PipeTransport::PipeTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener)
+	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
 
@@ -50,15 +49,10 @@ namespace RTC
 		{
 			// This may throw.
 			this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
-
-			// May create SCTP association.
-			CreateSctpAssociation(data);
 		}
 		catch (const MediaSoupError& error)
 		{
 			// Must delete everything since the destructor won't be called.
-
-			DestroySctpAssociation();
 
 			delete this->udpSocket;
 			this->udpSocket = nullptr;
@@ -71,12 +65,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Must delete the SCTP association first since it will generate SCTP packets.
-		DestroySctpAssociation();
-
 		delete this->udpSocket;
+		this->udpSocket = nullptr;
 
 		delete this->tuple;
+		this->tuple = nullptr;
 	}
 
 	void PipeTransport::FillJson(json& jsonObject) const
@@ -110,17 +103,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		jsonArray.emplace_back(json::value_t::object);
+		// Call the parent method.
+		RTC::Transport::FillJsonStats(jsonArray);
+
 		auto& jsonObject = jsonArray[0];
 
 		// Add type.
 		jsonObject["type"] = "pipe-transport";
-
-		// Add transportId.
-		jsonObject["transportId"] = this->id;
-
-		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTime();
 
 		if (this->tuple != nullptr)
 		{
@@ -140,41 +129,6 @@ namespace RTC
 			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
 			(*jsonTupleIt)["protocol"]  = "udp";
 		}
-
-		if (this->sctpAssociation)
-		{
-			// Add sctpState.
-			switch (this->sctpAssociation->GetState())
-			{
-				case RTC::SctpAssociation::SctpState::NEW:
-					jsonObject["sctpState"] = "new";
-					break;
-				case RTC::SctpAssociation::SctpState::CONNECTING:
-					jsonObject["sctpState"] = "connecting";
-					break;
-				case RTC::SctpAssociation::SctpState::CONNECTED:
-					jsonObject["sctpState"] = "connected";
-					break;
-				case RTC::SctpAssociation::SctpState::FAILED:
-					jsonObject["sctpState"] = "failed";
-					break;
-				case RTC::SctpAssociation::SctpState::CLOSED:
-					jsonObject["sctpState"] = "closed";
-					break;
-			}
-		}
-
-		// Add bytesReceived.
-		jsonObject["bytesReceived"] = RTC::Transport::GetReceivedBytes();
-
-		// Add bytesSent.
-		jsonObject["bytesSent"] = RTC::Transport::GetSentBytes();
-
-		// Add recvBitrate.
-		jsonObject["recvBitrate"] = RTC::Transport::GetRecvBitrate();
-
-		// Add sendBitrate.
-		jsonObject["sendBitrate"] = RTC::Transport::GetSendBitrate();
 	}
 
 	void PipeTransport::HandleRequest(Channel::Request* request)
@@ -292,18 +246,26 @@ namespace RTC
 		return this->tuple != nullptr;
 	}
 
-	void PipeTransport::SendRtpPacket(
-	  RTC::RtpPacket* packet, RTC::Consumer* /*consumer*/, bool /*retransmitted*/, bool /*probation*/)
+	void PipeTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
+			if (cb)
+			{
+				(*cb)(false);
+
+				delete cb;
+			}
+
 			return;
+		}
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		this->tuple->Send(data, len);
+		this->tuple->Send(data, len, cb);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -334,6 +296,19 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
+
+		this->tuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
+	}
+
+	void PipeTransport::SendSctpData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!IsConnected())
+			return;
 
 		this->tuple->Send(data, len);
 
@@ -393,32 +368,8 @@ namespace RTC
 			return;
 		}
 
-		// Get the associated Producer.
-		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
-
-		if (producer == nullptr)
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
-			  packet->GetSsrc(),
-			  packet->GetPayloadType());
-
-			delete packet;
-
-			return;
-		}
-
-		// MS_DEBUG_DEV(
-		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
-		//   packet->GetSsrc(),
-		//   packet->GetPayloadType(),
-		//   producer->id.c_str());
-
-		// Pass the RTP packet to the corresponding Producer.
-		producer->ReceiveRtpPacket(packet);
-
-		delete packet;
+		// Pass the packet to the parent transport.
+		RTC::Transport::ReceiveRtpPacket(packet);
 	}
 
 	inline void PipeTransport::OnRtcpDataReceived(
@@ -446,16 +397,8 @@ namespace RTC
 			return;
 		}
 
-		// Handle each RTCP packet.
-		while (packet != nullptr)
-		{
-			ReceiveRtcpPacket(packet);
-
-			RTC::RTCP::Packet* previousPacket = packet;
-
-			packet = packet->GetNext();
-			delete previousPacket;
-		}
+		// Pass the packet to the parent transport.
+		RTC::Transport::ReceiveRtcpPacket(packet);
 	}
 
 	inline void PipeTransport::OnSctpDataReceived(
@@ -466,13 +409,6 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
-		if (!this->sctpAssociation)
-		{
-			MS_DEBUG_TAG(sctp, "ignoring SCTP packet (SCTP not enabled)");
-
-			return;
-		}
-
 		// Verify that the packet's tuple matches our tuple.
 		if (!this->tuple->Compare(tuple))
 		{
@@ -481,47 +417,8 @@ namespace RTC
 			return;
 		}
 
-		// Pass it to the SctpAssociation.
-		this->sctpAssociation->ProcessSctpData(data, len);
-	}
-
-	void PipeTransport::UserOnNewProducer(RTC::Producer* /*producer*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
-	}
-
-	void PipeTransport::UserOnNewConsumer(RTC::Consumer* /*consumer*/)
-	{
-		MS_TRACE();
-	}
-
-	void PipeTransport::UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* /*remb*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
-	}
-
-	void PipeTransport::UserOnSendSctpData(const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		if (!IsConnected())
-			return;
-
-		this->tuple->Send(data, len);
-
-		// Increase send transmission.
-		RTC::Transport::DataSent(len);
-	}
-
-	inline void PipeTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
+		// Pass it to the parent transport.
+		RTC::Transport::ReceiveSctpData(data, len);
 	}
 
 	inline void PipeTransport::OnUdpSocketPacketReceived(

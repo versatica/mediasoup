@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RTCP::Sdes"
-// #define MS_LOG_DEV
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTCP/Sdes.hpp"
 #include "Logger.hpp"
@@ -37,7 +37,7 @@ namespace RTC
 			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// data size must be >= header + length value.
-			if (sizeof(Header) > len || sizeof(uint8_t) * 2 + header->length > len)
+			if (len < sizeof(Header) || len < (1u * 2) + header->length)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for SDES item, discarded");
 
@@ -45,9 +45,7 @@ namespace RTC
 			}
 
 			if (header->type == SdesItem::Type::END)
-			{
 				return nullptr;
-			}
 
 			return new SdesItem(header);
 		}
@@ -114,16 +112,18 @@ namespace RTC
 			MS_TRACE();
 
 			// data size must be > SSRC field.
-			if (sizeof(uint32_t) /* ssrc */ > len)
+			if (len < 4u /* ssrc */)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for SDES chunk, discarded");
 
 				return nullptr;
 			}
 
-			std::unique_ptr<SdesChunk> chunk(new SdesChunk(Utils::Byte::Get4Bytes(data, 0)));
+			uint32_t ssrc = Utils::Byte::Get4Bytes(data, 0);
 
-			size_t offset = sizeof(uint32_t) /* ssrc */;
+			std::unique_ptr<SdesChunk> chunk(new SdesChunk(ssrc));
+
+			size_t offset = 4u /* ssrc */;
 
 			while (len > offset)
 			{
@@ -145,9 +145,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::memcpy(buffer, &this->ssrc, sizeof(this->ssrc));
+			// Copy the SSRC.
+			Utils::Byte::Set4Bytes(buffer, 0, this->ssrc);
 
-			size_t offset = sizeof(this->ssrc);
+			size_t offset{ 4u }; // ssrc.
 
 			for (auto* item : this->items)
 			{
@@ -170,7 +171,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<SdesChunk>");
-			MS_DUMP("  ssrc : %" PRIu32, static_cast<uint32_t>(ntohl(this->ssrc)));
+			MS_DUMP("  ssrc : %" PRIu32, this->ssrc);
 			for (auto* item : this->items)
 			{
 				item->Dump();
@@ -186,11 +187,11 @@ namespace RTC
 
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-			std::unique_ptr<SdesPacket> packet(new SdesPacket());
+			std::unique_ptr<SdesPacket> packet(new SdesPacket(header));
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
 
-			while (((count--) != 0u) && (len > offset))
+			while ((count-- != 0u) && (len > offset))
 			{
 				SdesChunk* chunk = SdesChunk::Parse(data + offset, len - offset);
 

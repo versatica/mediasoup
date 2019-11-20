@@ -178,7 +178,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 
 	await expect(dataProducer.getStats())
 		.resolves
-		.toStrictEqual(
+		.toMatchObject(
 			[
 				{
 					type             : 'data-producer',
@@ -191,7 +191,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 
 	await expect(dataConsumer.getStats())
 		.resolves
-		.toStrictEqual(
+		.toMatchObject(
 			[
 				{
 					type         : 'data-consumer',

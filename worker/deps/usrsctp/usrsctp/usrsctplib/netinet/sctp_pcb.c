@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 345504 2019-03-25 15:23:20Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 353477 2019-10-13 16:14:04Z markj $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -51,9 +51,6 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 345504 2019-03-25 15:23:20Z tuex
 #include <netinet/sctp_output.h>
 #include <netinet/sctp_timer.h>
 #include <netinet/sctp_bsd_addr.h>
-#if defined(__FreeBSD__) && __FreeBSD_version >= 1000000
-#include <netinet/sctp_dtrace_define.h>
-#endif
 #if defined(INET) || defined(INET6)
 #if !defined(__Userspace_os_Windows)
 #include <netinet/udp.h>
@@ -73,6 +70,7 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 345504 2019-03-25 15:23:20Z tuex
 #endif
 #if defined(__Userspace__)
 #include <user_socketvar.h>
+#include <user_atomic.h>
 #if !defined(__Userspace_os_Windows)
 #include <netdb.h>
 #endif
@@ -3268,7 +3266,7 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 	/* bind a ep to a socket address */
 	struct sctppcbhead *head;
 	struct sctp_inpcb *inp, *inp_tmp;
-#if defined(INET) || (defined(INET6) && defined(__APPLE__)) || defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__APPLE__)
 	struct inpcb *ip_inp;
 #endif
 	int port_reuse_active = 0;
@@ -3283,7 +3281,7 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 	lport = 0;
 	bindall = 1;
 	inp = (struct sctp_inpcb *)so->so_pcb;
-#if defined(INET) || (defined(INET6) && defined(__APPLE__)) || defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__APPLE__)
 	ip_inp = (struct inpcb *)so->so_pcb;
 #endif
 #ifdef SCTP_DEBUG
@@ -3313,7 +3311,7 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 			struct sockaddr_in *sin;
 
 			/* IPV6_V6ONLY socket? */
-			if (SCTP_IPV6_V6ONLY(ip_inp)) {
+			if (SCTP_IPV6_V6ONLY(inp)) {
 				SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, EINVAL);
 				return (EINVAL);
 			}
@@ -4260,10 +4258,7 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 #else
 	if (inp->inp_vflag & INP_IPV6) {
 #endif
-		struct in6pcb *in6p;
-
-		in6p = (struct in6pcb *)inp;
-		ip6_freepcbopts(in6p->in6p_outputopts);
+		ip6_freepcbopts(ip_pcb->in6p_outputopts);
 	}
 #endif
 #endif				/* INET6 */
@@ -4916,16 +4911,16 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
                 int *error, uint32_t override_tag, uint32_t vrf_id,
                 uint16_t o_streams, uint16_t port,
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
-		struct thread *p
+                struct thread *p,
 #elif defined(__Windows__)
-		PKTHREAD p
+                PKTHREAD p,
 #else
 #if defined(__Userspace__)
                 /*  __Userspace__ NULL proc is going to be passed here. See sctp_lower_sosend */
 #endif
-		struct proc *p
+                struct proc *p,
 #endif
-)
+                int initialize_auth_params)
 {
 	/* note the p argument is only valid in unbound sockets */
 
@@ -5182,6 +5177,9 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
 		head = &inp->sctp_tcbhash[SCTP_PCBHASH_ALLADDR(stcb->rport,
 		    inp->sctp_hashmark)];
 		LIST_INSERT_HEAD(head, stcb, sctp_tcbhash);
+	}
+	if (initialize_auth_params == SCTP_INITIALIZE_AUTH_PARAMS) {
+		sctp_initialize_auth_params(inp, stcb);
 	}
 	SCTP_INP_WUNLOCK(inp);
 	SCTPDBG(SCTP_DEBUG_PCB1, "Association %p now allocated\n", (void *)stcb);
@@ -5678,12 +5676,11 @@ sctp_free_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb, int from_inpcbfre
 			inp->sctp_flags |= SCTP_PCB_FLAGS_WAS_CONNECTED;
 			if (so) {
 				SOCKBUF_LOCK(&so->so_rcv);
-				if (so->so_rcv.sb_cc == 0) {
-					so->so_state &= ~(SS_ISCONNECTING |
-							  SS_ISDISCONNECTING |
-							  SS_ISCONFIRMING |
-							  SS_ISCONNECTED);
-				}
+				so->so_state &= ~(SS_ISCONNECTING |
+				    SS_ISDISCONNECTING |
+				    SS_ISCONFIRMING |
+				    SS_ISCONNECTED);
+				so->so_state |= SS_ISDISCONNECTED;
 #if defined(__APPLE__)
 				socantrcvmore(so);
 #else
@@ -6635,7 +6632,11 @@ sctp_netisr_hdlr(struct mbuf *m, uintptr_t source)
 #endif
 
 void
+#if defined(__Userspace__)
 sctp_pcb_init(int start_threads)
+#else
+sctp_pcb_init(void)
+#endif
 {
 	/*
 	 * SCTP initialization for the PCB structures should be called by
@@ -6849,9 +6850,7 @@ sctp_pcb_init(int start_threads)
 #endif
 #if defined(__Userspace__)
 	mbuf_initialize(NULL);
-#if !defined(__MINGW32__)
 	atomic_init();
-#endif
 #if defined(INET) || defined(INET6)
 	if (start_threads)
 		recv_thread_init();
