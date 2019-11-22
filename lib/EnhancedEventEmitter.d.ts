@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { EventEmitter } from 'events';
 import Logger from './Logger';
 export default class EnhancedEventEmitter extends EventEmitter {

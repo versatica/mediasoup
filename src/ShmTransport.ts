@@ -2,11 +2,9 @@ import Logger from './Logger';
 import EnhancedEventEmitter from './EnhancedEventEmitter';
 //import * as ortc from './ortc';
 import Transport, {
-	TransportListenIp,
-//	TransportTuple,
-	TransportTraceEventData
-//	SctpState
+	TransportListenIp
 } from './Transport';
+
 
 export interface ShmTransportOptions {
   /**
@@ -34,7 +32,6 @@ export interface ShmTransportStat
 	type: string;
 	transportId: string;
 	timestamp: number;
-	sctpState?: SctpState;
 	bytesReceived: number;
 	recvBitrate: number;
 	bytesSent: number;
@@ -67,7 +64,7 @@ export default class ShmTransport extends Transport
 	 *
 	 * @emits {sctpState: String} sctpstatechange
 	 */
-	constructor(params)
+	constructor(params: any)
 	{
 		super(params);
 
@@ -178,26 +175,9 @@ export default class ShmTransport extends Transport
 
 		const reqData = { shm };
 
-		const data =
-			await this._channel.request('transport.connect', this._internal, reqData);
+		await this._channel.request('transport.connect', this._internal, reqData);
 	}
 
-	/**
-	 *
-	 * @async
-	 * @override
-	 * @returns {Consumer}
-	 */
-	async consume({ producerId, appData = {} }: ConsumerOptions): Promise<Consumer>
-	{
-    logger.debug('consume()');
-
-		params.appData = {
-			type = 'shm'
-    };
-    
-		return super.consume({ producerId, appData});
-	}
 
 	/**
 	 * @private
@@ -205,15 +185,14 @@ export default class ShmTransport extends Transport
 	 */
 	async _handleWorkerNotifications(): Promise<void>
 	{
-		this._channel.on(this._internal.transportId, (event, data) => {
+		this._channel.on(this._internal.transportId, async (event, data) => {
 			switch (event)
 			{
 				case 'writestreammetadata':
 				{
 					const reqdata = data;
 
-          const ret =
-            await this._channel.request('transport.writestreammetadata', this._internal, reqData); //TODO: so... let's write stream metadata via transport.writemetadata command
+          await this._channel.request('transport.writestreammetadata', this._internal, reqdata); //TODO: so... let's write stream metadata via transport.writemetadata command
 					break;
 				}
 

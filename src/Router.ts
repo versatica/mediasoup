@@ -613,9 +613,9 @@ export default class Router extends EnhancedEventEmitter
 		const internal = { ...this._internal, transportId: uuidv4() };
 		const reqData = {
 			listenIp,
-			shm = {name: shmName},
-			log = {fileName: logName, level: logLevel},
-			channels = appData.channels
+			shm       : {name: shmName},
+			log       : {fileName: logName, level: logLevel}
+//			channels  appData.channels
 		};
 
 		const data =
@@ -628,8 +628,8 @@ export default class Router extends EnhancedEventEmitter
 				channel                  : this._channel,
 				appData,
 				getRouterRtpCapabilities : () => this._data.rtpCapabilities,
-				getProducerById          : (producerId) => this._producers.get(producerId),
-				getDataProducerById      : (dataProducerId) => (
+				getProducerById          : (producerId: string) => this._producers.get(producerId),
+				getDataProducerById      : (dataProducerId: string) => (
 					this._dataProducers.get(dataProducerId)
 				)
 			});

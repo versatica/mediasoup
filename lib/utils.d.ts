@@ -1,4 +1,4 @@
-declare const randomNumberGenerator: any;
+declare const randomNumberGenerator: (min?: number, max?: number, integer?: boolean) => number;
 /**
  * Clones the given object/array.
  */
