@@ -11,31 +11,31 @@ let transport;
 const mediaCodecs =
 [
 	{
-		kind      : 'audio',
-		mimeType  : 'audio/opus',
-		clockRate : 48000,
-		channels  : 2,
-		parameters:
+		kind       : 'audio',
+		mimeType   : 'audio/opus',
+		clockRate  : 48000,
+		channels   : 2,
+		parameters :
 		{
-			useinbandfec: 1,
-			foo         : 'bar'
+			useinbandfec : 1,
+			foo          : 'bar'
 		}
 	},
 	{
-		kind     : 'video',
-		mimeType : 'video/VP8',
-		clockRate: 90000
+		kind      : 'video',
+		mimeType  : 'video/VP8',
+		clockRate : 90000
 	},
 	{
-		kind      : 'video',
-		mimeType  : 'video/H264',
-		clockRate : 90000,
-		parameters:
+		kind       : 'video',
+		mimeType   : 'video/H264',
+		clockRate  : 90000,
+		parameters :
 		{
-			'level-asymmetry-allowed': 1,
-			'packetization-mode'     : 1,
-			'profile-level-id'       : '4d0032',
-			foo                      : 'bar'
+			'level-asymmetry-allowed' : 1,
+			'packetization-mode'      : 1,
+			'profile-level-id'        : '4d0032',
+			foo                       : 'bar'
 		}
 	}
 ];
@@ -52,8 +52,8 @@ beforeEach(async () =>
 {
 	transport = await router.createWebRtcTransport(
 		{
-			listenIps: [ { ip: '127.0.0.1', announcedIp: '9.9.9.1' } ],
-			enableTcp: false
+			listenIps : [ { ip: '127.0.0.1', announcedIp: '9.9.9.1' } ],
+			enableTcp : false
 		});
 });
 
@@ -72,18 +72,18 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	// Create a separate transport here.
 	const transport1 = await router.createWebRtcTransport(
 		{
-			listenIps:
+			listenIps :
 			[
 				{ ip: '127.0.0.1', announcedIp: '9.9.9.1' },
 				{ ip: '0.0.0.0', announcedIp: '9.9.9.2' },
 				{ ip: '127.0.0.1', announcedIp: null }
 			],
-			enableTcp         : true,
-			preferUdp         : true,
-			enableSctp        : true,
-			numSctpStreams    : { OS: 2048, MIS: 2048 },
-			maxSctpMessageSize: 1000000,
-			appData           : { foo: 'bar' }
+			enableTcp          : true,
+			preferUdp          : true,
+			enableSctp         : true,
+			numSctpStreams     : { OS: 2048, MIS: 2048 },
+			maxSctpMessageSize : 1000000,
+			appData            : { foo: 'bar' }
 		});
 
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
@@ -98,11 +98,11 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(transport1.iceParameters.password).toBeType('string');
 	expect(transport1.sctpParameters).toStrictEqual(
 		{
-			port          : 5000,
-			OS            : 2048,
-			MIS           : 2048,
-			maxMessageSize: 1000000,
-			isDataChannel : true
+			port           : 5000,
+			OS             : 2048,
+			MIS            : 2048,
+			maxMessageSize : 1000000,
+			isDataChannel  : true
 		});
 	expect(transport1.iceCandidates).toBeType('array');
 	expect(transport1.iceCandidates.length).toBe(6);
@@ -193,17 +193,17 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 
 	await expect(router.createWebRtcTransport(
 		{
-			listenIps: [ '127.0.0.1' ],
-			appData  : 'NOT-AN-OBJECT'
+			listenIps : [ '127.0.0.1' ],
+			appData   : 'NOT-AN-OBJECT'
 		}))
 		.rejects
 		.toThrow(TypeError);
 
 	await expect(router.createWebRtcTransport(
 		{
-			listenIps     : [ '127.0.0.1' ],
-			enableSctp    : true,
-			numSctpStreams: 'foo'
+			listenIps      : [ '127.0.0.1' ],
+			enableSctp     : true,
+			numSctpStreams : 'foo'
 		}))
 		.rejects
 		.toThrow(TypeError);
@@ -253,14 +253,14 @@ test('webRtcTransport.connect() succeeds', async () =>
 {
 	const dtlsRemoteParameters =
 	{
-		fingerprints:
+		fingerprints :
 		[
 			{
-				algorithm: 'sha-256',
-				value    : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
+				algorithm : 'sha-256',
+				value     : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
 			}
 		],
-		role: 'client'
+		role : 'client'
 	};
 
 	await expect(transport.connect({ dtlsParameters: dtlsRemoteParameters }))
@@ -285,14 +285,14 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 
 	dtlsRemoteParameters =
 	{
-		fingerprints:
+		fingerprints :
 		[
 			{
-				algorithm: 'sha-256000',
-				value    : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
+				algorithm : 'sha-256000',
+				value     : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
 			}
 		],
-		role: 'client'
+		role : 'client'
 	};
 
 	await expect(transport.connect({ dtlsParameters: dtlsRemoteParameters }))
@@ -301,14 +301,14 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 
 	dtlsRemoteParameters =
 	{
-		fingerprints:
+		fingerprints :
 		[
 			{
-				algorithm: 'sha-256',
-				value    : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
+				algorithm : 'sha-256',
+				value     : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
 			}
 		],
-		role: 'chicken'
+		role : 'chicken'
 	};
 
 	await expect(transport.connect({ dtlsParameters: dtlsRemoteParameters }))
@@ -338,9 +338,9 @@ test('webRtcTransport.restartIce() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				usernameFragment: expect.any(String),
-				password        : expect.any(String),
-				iceLite         : true
+				usernameFragment : expect.any(String),
+				password         : expect.any(String),
+				iceLite          : true
 			});
 
 	expect(transport.iceParameters.usernameFragment).toBeType('string');
@@ -405,11 +405,11 @@ test('WebRtcTransport events succeed', async () =>
 	const onIceSelectedTuple = jest.fn();
 	const iceSelectedTuple =
 	{
-		localIp   : '1.1.1.1',
-		localPort : 1111,
-		remoteIp  : '2.2.2.2',
-		remotePort: 2222,
-		protocol  : 'udp'
+		localIp    : '1.1.1.1',
+		localPort  : 1111,
+		remoteIp   : '2.2.2.2',
+		remotePort : 2222,
+		protocol   : 'udp'
 	};
 
 	transport.on('iceselectedtuplechange', onIceSelectedTuple);
@@ -478,8 +478,8 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () =>
 	const router2 = await worker.createRouter({ mediaCodecs });
 	const transport2 = await router2.createWebRtcTransport(
 		{
-			listenIps : [ '127.0.0.1' ],
-			enableSctp: true
+			listenIps  : [ '127.0.0.1' ],
+			enableSctp : true
 		});
 	const onObserverClose = jest.fn();
 

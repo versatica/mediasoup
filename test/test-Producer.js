@@ -15,31 +15,31 @@ let videoProducer;
 const mediaCodecs =
 [
 	{
-		kind      : 'audio',
-		mimeType  : 'audio/opus',
-		clockRate : 48000,
-		channels  : 2,
-		parameters:
+		kind       : 'audio',
+		mimeType   : 'audio/opus',
+		clockRate  : 48000,
+		channels   : 2,
+		parameters :
 		{
-			foo: '111'
+			foo : '111'
 		}
 	},
 	{
-		kind     : 'video',
-		mimeType : 'video/VP8',
-		clockRate: 90000
+		kind      : 'video',
+		mimeType  : 'video/VP8',
+		clockRate : 90000
 	},
 	{
-		kind        : 'video',
-		mimeType    : 'video/H264',
-		clockRate   : 90000,
-		rtcpFeedback: [], // Will be ignored.
-		parameters  :
+		kind         : 'video',
+		mimeType     : 'video/H264',
+		clockRate    : 90000,
+		rtcpFeedback : [], // Will be ignored.
+		parameters   :
 		{
-			'level-asymmetry-allowed': 1,
-			'packetization-mode'     : 1,
-			'profile-level-id'       : '4d0032',
-			foo                      : 'bar'
+			'level-asymmetry-allowed' : 1,
+			'packetization-mode'      : 1,
+			'profile-level-id'        : '4d0032',
+			foo                       : 'bar'
 		}
 	}
 ];
@@ -50,11 +50,11 @@ beforeAll(async () =>
 	router = await worker.createRouter({ mediaCodecs });
 	transport1 = await router.createWebRtcTransport(
 		{
-			listenIps: [ '127.0.0.1' ]
+			listenIps : [ '127.0.0.1' ]
 		});
 	transport2 = await router.createPlainRtpTransport(
 		{
-			listenIp: '127.0.0.1'
+			listenIp : '127.0.0.1'
 		});
 });
 
@@ -68,44 +68,44 @@ test('transport1.produce() succeeds', async () =>
 
 	audioProducer = await transport1.produce(
 		{
-			kind         : 'audio',
-			rtpParameters:
+			kind          : 'audio',
+			rtpParameters :
 			{
-				mid   : 'AUDIO',
-				codecs:
+				mid    : 'AUDIO',
+				codecs :
 				[
 					{
-						mimeType   : 'audio/opus',
-						payloadType: 111,
-						clockRate  : 48000,
-						channels   : 2,
-						parameters :
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2,
+						parameters  :
 						{
-							useinbandfec: 1,
-							usedtx      : 1,
-							foo         : 222.222,
-							bar         : '333'
+							useinbandfec : 1,
+							usedtx       : 1,
+							foo          : 222.222,
+							bar          : '333'
 						}
 					}
 				],
-				headerExtensions:
+				headerExtensions :
 				[
 					{
-						uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
-						id : 10
+						uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+						id  : 10
 					},
 					{
-						uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-						id : 12
+						uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+						id  : 12
 					}
 				],
 				// Missing encodings on purpose.
-				rtcp:
+				rtcp :
 				{
-					cname: 'audio-1'
+					cname : 'audio-1'
 				}
 			},
-			appData: { foo: 1, bar: '2' }
+			appData : { foo: 1, bar: '2' }
 		});
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
@@ -125,17 +125,17 @@ test('transport1.produce() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds: { [audioProducer.id]: [] },
-				mapConsumerIdProducerId : {}
+				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
+				mapConsumerIdProducerId  : {}
 			});
 
 	await expect(transport1.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id         : transport1.id,
-				producerIds: [ audioProducer.id ],
-				consumerIds: []
+				id          : transport1.id,
+				producerIds : [ audioProducer.id ],
+				consumerIds : []
 			});
 }, 2000);
 
@@ -147,22 +147,22 @@ test('transport2.produce() succeeds', async () =>
 
 	videoProducer = await transport2.produce(
 		{
-			kind         : 'video',
-			rtpParameters:
+			kind          : 'video',
+			rtpParameters :
 			{
-				mid   : 'VIDEO',
-				codecs:
+				mid    : 'VIDEO',
+				codecs :
 				[
 					{
-						mimeType   : 'video/h264',
-						payloadType: 112,
-						clockRate  : 90000,
-						parameters :
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
 						{
-							'packetization-mode': 1,
-							'profile-level-id'  : '4d0032'
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
 						},
-						rtcpFeedback:
+						rtcpFeedback :
 						[
 							{ type: 'nack' },
 							{ type: 'nack', parameter: 'pli' },
@@ -170,36 +170,36 @@ test('transport2.produce() succeeds', async () =>
 						]
 					},
 					{
-						mimeType   : 'video/rtx',
-						payloadType: 113,
-						clockRate  : 90000,
-						parameters : { apt: 112 }
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
 					}
 				],
-				headerExtensions:
+				headerExtensions :
 				[
 					{
-						uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
-						id : 10
+						uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+						id  : 10
 					},
 					{
-						uri: 'urn:3gpp:video-orientation',
-						id : 13
+						uri : 'urn:3gpp:video-orientation',
+						id  : 13
 					}
 				],
-				encodings:
+				encodings :
 				[
 					{ ssrc: 22222222, rtx: { ssrc: 22222223 }, scalabilityMode: 'L1T3' },
 					{ ssrc: 22222224, rtx: { ssrc: 22222225 } },
 					{ ssrc: 22222226, rtx: { ssrc: 22222227 } },
 					{ ssrc: 22222228, rtx: { ssrc: 22222229 } }
 				],
-				rtcp:
+				rtcp :
 				{
-					cname: 'video-1'
+					cname : 'video-1'
 				}
 			},
-			appData: { foo: 1, bar: '2' }
+			appData : { foo: 1, bar: '2' }
 		});
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
@@ -219,17 +219,17 @@ test('transport2.produce() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds: { [videoProducer.id]: [] },
-				mapConsumerIdProducerId : {}
+				mapProducerIdConsumerIds : { [videoProducer.id]: [] },
+				mapConsumerIdProducerId  : {}
 			});
 
 	await expect(transport2.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id         : transport2.id,
-				producerIds: [ videoProducer.id ],
-				consumerIds: []
+				id          : transport2.id,
+				producerIds : [ videoProducer.id ],
+				consumerIds : []
 			});
 }, 2000);
 
@@ -237,16 +237,16 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 {
 	await expect(transport1.produce(
 		{
-			kind         : 'chicken',
-			rtpParameters: {}
+			kind          : 'chicken',
+			rtpParameters : {}
 		}))
 		.rejects
 		.toThrow(TypeError);
 
 	await expect(transport1.produce(
 		{
-			kind         : 'audio',
-			rtpParameters: {}
+			kind          : 'audio',
+			rtpParameters : {}
 		}))
 		.rejects
 		.toThrow(TypeError);
@@ -254,13 +254,13 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 	// Missing or empty rtpParameters.codecs.
 	await expect(transport1.produce(
 		{
-			kind         : 'audio',
-			rtpParameters:
+			kind          : 'audio',
+			rtpParameters :
 			{
-				codecs          : [],
-				headerExtensions: [],
-				encodings       : [ { ssrc: '1111' } ],
-				rtcp            : { cname: 'qwerty'	}
+				codecs           : [],
+				headerExtensions : [],
+				encodings        : [ { ssrc: '1111' } ],
+				rtcp             : { cname: 'qwerty'	}
 			}
 		}))
 		.rejects
@@ -269,31 +269,31 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 	// Missing or empty rtpParameters.encodings.
 	await expect(transport1.produce(
 		{
-			kind         : 'video',
-			rtpParameters:
+			kind          : 'video',
+			rtpParameters :
 			{
-				codecs:
+				codecs :
 				[
 					{
-						mimeType   : 'video/h264',
-						payloadType: 112,
-						clockRate  : 90000,
-						parameters :
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
 						{
-							'packetization-mode': 1,
-							'profile-level-id'  : '4d0032'
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
 						}
 					},
 					{
-						mimeType   : 'video/rtx',
-						payloadType: 113,
-						clockRate  : 90000,
-						parameters : { apt: 112 }
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
 					}
 				],
-				headerExtensions: [],
-				encodings       : [],
-				rtcp            : { cname: 'qwerty' }
+				headerExtensions : [],
+				encodings        : [],
+				rtcp             : { cname: 'qwerty' }
 			}
 		}))
 		.rejects
@@ -302,36 +302,36 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 	// Wrong apt in RTX codec.
 	await expect(transport1.produce(
 		{
-			kind         : 'audio',
-			rtpParameters:
+			kind          : 'audio',
+			rtpParameters :
 			{
-				codecs:
+				codecs :
 				[
 					{
-						mimeType   : 'video/h264',
-						payloadType: 112,
-						clockRate  : 90000,
-						parameters :
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
 						{
-							'packetization-mode': 1,
-							'profile-level-id'  : '4d0032'
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
 						}
 					},
 					{
-						mimeType   : 'video/rtx',
-						payloadType: 113,
-						clockRate  : 90000,
-						parameters : { apt: 111 }
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 111 }
 					}
 				],
-				headerExtensions: [],
-				encodings       :
+				headerExtensions : [],
+				encodings        :
 				[
 					{ ssrc: 6666, rtx: { ssrc: 6667 } }
 				],
-				rtcp:
+				rtcp :
 				{
-					cname: 'video-1'
+					cname : 'video-1'
 				}
 			}
 		}))
@@ -343,20 +343,20 @@ test('transport1.produce() with unsupported codecs rejects with UnsupportedError
 {
 	await expect(transport1.produce(
 		{
-			kind         : 'audio',
-			rtpParameters:
+			kind          : 'audio',
+			rtpParameters :
 			{
-				codecs:
+				codecs :
 				[
 					{
-						mimeType   : 'audio/ISAC',
-						payloadType: 108,
-						clockRate  : 32000
+						mimeType    : 'audio/ISAC',
+						payloadType : 108,
+						clockRate   : 32000
 					}
 				],
-				headerExtensions: [],
-				encodings       : [ { ssrc: 1111 } ],
-				rtcp            : { cname: 'audio' }
+				headerExtensions : [],
+				encodings        : [ { ssrc: 1111 } ],
+				rtcp             : { cname: 'audio' }
 			}
 		}))
 		.rejects
@@ -365,30 +365,30 @@ test('transport1.produce() with unsupported codecs rejects with UnsupportedError
 	// Invalid H264 profile-level-id.
 	await expect(transport1.produce(
 		{
-			kind         : 'video',
-			rtpParameters:
+			kind          : 'video',
+			rtpParameters :
 			{
-				codecs:
+				codecs :
 				[
 					{
-						mimeType   : 'video/h264',
-						payloadType: 112,
-						clockRate  : 90000,
-						parameters :
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
 						{
-							'packetization-mode': 1,
-							'profile-level-id'  : 'CHICKEN'
+							'packetization-mode' : 1,
+							'profile-level-id'   : 'CHICKEN'
 						}
 					},
 					{
-						mimeType   : 'video/rtx',
-						payloadType: 113,
-						clockRate  : 90000,
-						parameters : { apt: 112 }
+						mimeType    : 'video/rtx',
+						payloadType : 113,
+						clockRate   : 90000,
+						parameters  : { apt: 112 }
 					}
 				],
-				headerExtensions: [],
-				encodings       :
+				headerExtensions : [],
+				encodings        :
 				[
 					{ ssrc: 6666, rtx: { ssrc: 6667 } }
 				]
@@ -402,24 +402,24 @@ test('transport.produce() with already used MID or SSRC rejects with Error', asy
 {
 	await expect(transport1.produce(
 		{
-			kind         : 'audio',
-			rtpParameters:
+			kind          : 'audio',
+			rtpParameters :
 			{
-				mid   : 'AUDIO',
-				codecs:
+				mid    : 'AUDIO',
+				codecs :
 				[
 					{
-						mimeType   : 'audio/opus',
-						payloadType: 111,
-						clockRate  : 48000,
-						channels   : 2
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2
 					}
 				],
-				headerExtensions: [],
-				encodings       : [ { ssrc: 33333333 } ],
-				rtcp            :
+				headerExtensions : [],
+				encodings        : [ { ssrc: 33333333 } ],
+				rtcp             :
 				{
-					cname: 'audio-2'
+					cname : 'audio-2'
 				}
 			}
 		}))
@@ -428,37 +428,37 @@ test('transport.produce() with already used MID or SSRC rejects with Error', asy
 
 	await expect(transport2.produce(
 		{
-			kind         : 'video',
-			rtpParameters:
+			kind          : 'video',
+			rtpParameters :
 			{
-				mid   : 'VIDEO2',
-				codecs:
+				mid    : 'VIDEO2',
+				codecs :
 				[
 					{
-						mimeType   : 'video/h264',
-						payloadType: 112,
-						clockRate  : 90000,
-						parameters :
+						mimeType    : 'video/h264',
+						payloadType : 112,
+						clockRate   : 90000,
+						parameters  :
 						{
-							'packetization-mode': 1,
-							'profile-level-id'  : '4d0032'
+							'packetization-mode' : 1,
+							'profile-level-id'   : '4d0032'
 						}
 					}
 				],
-				headerExtensions:
+				headerExtensions :
 				[
 					{
-						uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
-						id : 10
+						uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+						id  : 10
 					}
 				],
-				encodings:
+				encodings :
 				[
 					{ ssrc: 22222222 }
 				],
-				rtcp:
+				rtcp :
 				{
-					cname: 'video-1'
+					cname : 'video-1'
 				}
 			}
 		}))
@@ -470,22 +470,22 @@ test('transport.produce() with no MID and with single encoding without RID or SS
 {
 	await expect(transport1.produce(
 		{
-			kind         : 'audio',
-			rtpParameters:
+			kind          : 'audio',
+			rtpParameters :
 			{
-				codecs:
+				codecs :
 				[
 					{
-						mimeType   : 'audio/opus',
-						payloadType: 111,
-						clockRate  : 48000,
-						channels   : 2
+						mimeType    : 'audio/opus',
+						payloadType : 111,
+						clockRate   : 48000,
+						channels    : 2
 					}
 				],
-				encodings: [ {} ],
-				rtcp     :
+				encodings : [ {} ],
+				rtcp      :
 				{
-					cname: 'audio-2'
+					cname : 'audio-2'
 				}
 			}
 		}))
@@ -511,10 +511,10 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[0].parameters)
 		.toEqual(
 			{
-				useinbandfec: 1,
-				usedtx      : 1,
-				foo         : 222.222,
-				bar         : '333'
+				useinbandfec : 1,
+				usedtx       : 1,
+				foo          : 222.222,
+				bar          : '333'
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
 	expect(data.rtpParameters.headerExtensions).toBeType('array');
@@ -522,16 +522,16 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri       : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				id        : 10,
-				parameters: {},
-				encrypt   : false
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 10,
+				parameters : {},
+				encrypt    : false
 			},
 			{
-				uri       : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id        : 12,
-				parameters: {},
-				encrypt   : false
+				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id         : 12,
+				parameters : {},
+				encrypt    : false
 			}
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
@@ -556,8 +556,8 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[0].parameters)
 		.toEqual(
 			{
-				'packetization-mode': 1,
-				'profile-level-id'  : '4d0032'
+				'packetization-mode' : 1,
+				'profile-level-id'   : '4d0032'
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback)
 		.toEqual(
@@ -577,16 +577,16 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri       : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				id        : 10,
-				parameters: {},
-				encrypt   : false
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 10,
+				parameters : {},
+				encrypt    : false
 			},
 			{
-				uri       : 'urn:3gpp:video-orientation',
-				id        : 13,
-				parameters: {},
-				encrypt   : false
+				uri        : 'urn:3gpp:video-orientation',
+				id         : 13,
+				parameters : {},
+				encrypt    : false
 			}
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
@@ -594,13 +594,13 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.encodings).toEqual(
 		[
 			{
-				codecPayloadType: 112,
-				ssrc            : 22222222,
-				rtx             : { ssrc: 22222223 },
-				scalabilityMode : 'L1T3',
-				spatialLayers   : 1,
-				temporalLayers  : 3,
-				ksvc            : false
+				codecPayloadType : 112,
+				ssrc             : 22222222,
+				rtx              : { ssrc: 22222223 },
+				scalabilityMode  : 'L1T3',
+				spatialLayers    : 1,
+				temporalLayers   : 3,
+				ksvc             : false
 			},
 			{ codecPayloadType: 112, ssrc: 22222224, rtx: { ssrc: 22222225 } },
 			{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },
@@ -705,17 +705,17 @@ test('producer.close() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds: {},
-				mapConsumerIdProducerId : {}
+				mapProducerIdConsumerIds : {},
+				mapConsumerIdProducerId  : {}
 			});
 
 	await expect(transport1.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id         : transport1.id,
-				producerIds: [],
-				consumerIds: []
+				id          : transport1.id,
+				producerIds : [],
+				consumerIds : []
 			});
 }, 2000);
 

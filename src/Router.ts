@@ -337,8 +337,8 @@ export default class Router extends EnhancedEventEmitter
 			else if (typeof listenIp === 'object')
 			{
 				return {
-					ip         : listenIp.ip,
-					announcedIp: listenIp.announcedIp || undefined
+					ip          : listenIp.ip,
+					announcedIp : listenIp.announcedIp || undefined
 				};
 			}
 			else
@@ -358,7 +358,7 @@ export default class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
-			isDataChannel: true
+			isDataChannel : true
 		};
 
 		const data =
@@ -368,13 +368,13 @@ export default class Router extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel                 : this._channel,
+				channel                  : this._channel,
 				appData,
-				getRouterRtpCapabilities: (): RtpCapabilities => this._data.rtpCapabilities,
-				getProducerById         : (producerId: string): Producer => (
+				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
+				getProducerById          : (producerId: string): Producer => (
 					this._producers.get(producerId)
 				),
-				getDataProducerById: (dataProducerId: string): DataProducer => (
+				getDataProducerById : (dataProducerId: string): DataProducer => (
 					this._dataProducers.get(dataProducerId)
 				)
 			});
@@ -427,8 +427,8 @@ export default class Router extends EnhancedEventEmitter
 		{
 			listenIp =
 			{
-				ip         : listenIp.ip,
-				announcedIp: listenIp.announcedIp || undefined
+				ip          : listenIp.ip,
+				announcedIp : listenIp.announcedIp || undefined
 			};
 		}
 		else
@@ -445,7 +445,7 @@ export default class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
-			isDataChannel: false
+			isDataChannel : false
 		};
 
 		const data =
@@ -455,13 +455,13 @@ export default class Router extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel                 : this._channel,
+				channel                  : this._channel,
 				appData,
-				getRouterRtpCapabilities: (): RtpCapabilities => this._data.rtpCapabilities,
-				getProducerById         : (producerId: string): Producer => (
+				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
+				getProducerById          : (producerId: string): Producer => (
 					this._producers.get(producerId)
 				),
-				getDataProducerById: (dataProducerId: string): DataProducer => (
+				getDataProducerById : (dataProducerId: string): DataProducer => (
 					this._dataProducers.get(dataProducerId)
 				)
 			});
@@ -511,8 +511,8 @@ export default class Router extends EnhancedEventEmitter
 		{
 			listenIp =
 			{
-				ip         : listenIp.ip,
-				announcedIp: listenIp.announcedIp || undefined
+				ip          : listenIp.ip,
+				announcedIp : listenIp.announcedIp || undefined
 			};
 		}
 		else
@@ -526,7 +526,7 @@ export default class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
-			isDataChannel: false
+			isDataChannel : false
 		};
 
 		const data =
@@ -536,13 +536,13 @@ export default class Router extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel                 : this._channel,
+				channel                  : this._channel,
 				appData,
-				getRouterRtpCapabilities: (): RtpCapabilities => this._data.rtpCapabilities,
-				getProducerById         : (producerId: string): Producer => (
+				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
+				getProducerById          : (producerId: string): Producer => (
 					this._producers.get(producerId)
 				),
-				getDataProducerById: (dataProducerId: string): DataProducer => (
+				getDataProducerById : (dataProducerId: string): DataProducer => (
 					this._dataProducers.get(dataProducerId)
 				)
 			});
@@ -631,13 +631,13 @@ export default class Router extends EnhancedEventEmitter
 					[
 						localPipeTransport.connect(
 							{
-								ip  : remotePipeTransport.tuple.localIp,
-								port: remotePipeTransport.tuple.localPort
+								ip   : remotePipeTransport.tuple.localIp,
+								port : remotePipeTransport.tuple.localPort
 							}),
 						remotePipeTransport.connect(
 							{
-								ip  : localPipeTransport.tuple.localIp,
-								port: localPipeTransport.tuple.localPort
+								ip   : localPipeTransport.tuple.localIp,
+								port : localPipeTransport.tuple.localPort
 							})
 					]);
 
@@ -683,11 +683,11 @@ export default class Router extends EnhancedEventEmitter
 
 				pipeProducer = await remotePipeTransport.produce(
 					{
-						id           : producer.id,
-						kind         : pipeConsumer.kind,
-						rtpParameters: pipeConsumer.rtpParameters,
-						paused       : pipeConsumer.producerPaused,
-						appData      : producer.appData
+						id            : producer.id,
+						kind          : pipeConsumer.kind,
+						rtpParameters : pipeConsumer.rtpParameters,
+						paused        : pipeConsumer.producerPaused,
+						appData       : producer.appData
 					});
 
 				// Pipe events from the pipe Consumer to the pipe Producer.
@@ -729,11 +729,11 @@ export default class Router extends EnhancedEventEmitter
 
 				pipeDataProducer = await remotePipeTransport.produceData(
 					{
-						id                  : dataProducer.id,
-						sctpStreamParameters: pipeDataConsumer.sctpStreamParameters,
-						label               : pipeDataConsumer.label,
-						protocol            : pipeDataConsumer.protocol,
-						appData             : dataProducer.appData
+						id                   : dataProducer.id,
+						sctpStreamParameters : pipeDataConsumer.sctpStreamParameters,
+						label                : pipeDataConsumer.label,
+						protocol             : pipeDataConsumer.protocol,
+						appData              : dataProducer.appData
 					});
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.
@@ -790,9 +790,9 @@ export default class Router extends EnhancedEventEmitter
 		const audioLevelObserver = new AudioLevelObserver(
 			{
 				internal,
-				channel        : this._channel,
+				channel         : this._channel,
 				appData,
-				getProducerById: (producerId: string): Producer => (
+				getProducerById : (producerId: string): Producer => (
 					this._producers.get(producerId)
 				)
 			});

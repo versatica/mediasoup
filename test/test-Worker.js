@@ -32,13 +32,13 @@ test('createWorker() succeeds', async () =>
 	// eslint-disable-next-line require-atomic-updates
 	worker = await createWorker(
 		{
-			logLevel           : 'debug',
-			logTags            : [ 'info' ],
-			rtcMinPort         : 0,
-			rtcMaxPort         : 9999,
-			dtlsCertificateFile: 'test/data/dtls-cert.pem',
-			dtlsPrivateKeyFile : 'test/data/dtls-key.pem',
-			appData            : { bar: 456 }
+			logLevel            : 'debug',
+			logTags             : [ 'info' ],
+			rtcMinPort          : 0,
+			rtcMaxPort          : 9999,
+			dtlsCertificateFile : 'test/data/dtls-cert.pem',
+			dtlsPrivateKeyFile  : 'test/data/dtls-key.pem',
+			appData             : { bar: 456 }
 		});
 	expect(worker).toBeType('object');
 	expect(worker.pid).toBeType('number');

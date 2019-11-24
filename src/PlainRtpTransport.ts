@@ -134,10 +134,10 @@ export default class PlainRtpTransport extends Transport
 
 		this._data =
 		{
-			tuple         : data.tuple,
-			rtcpTuple     : data.rtcpTuple,
-			sctpParameters: data.sctpParameters,
-			sctpState     : data.sctpState
+			tuple          : data.tuple,
+			rtcpTuple      : data.rtcpTuple,
+			sctpParameters : data.sctpParameters,
+			sctpState      : data.sctpState
 		};
 
 		this._handleWorkerNotifications();

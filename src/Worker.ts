@@ -158,19 +158,19 @@ export default class Worker extends EnhancedEventEmitter
 			spawnArgs,
 			// options
 			{
-				env:
+				env :
 				{
-					MEDIASOUP_VERSION: '__MEDIASOUP_VERSION__'
+					MEDIASOUP_VERSION : '__MEDIASOUP_VERSION__'
 				},
 
-				detached: false,
+				detached : false,
 
-				// fd 0 (stdin)  : Just ignore it.
-				// fd 1 (stdout) : Pipe it for 3rd libraries that log their own stuff.
-				// fd 2 (stderr) : Same as stdout.
-				// fd 3 (channel): Producer Channel fd.
-				// fd 4 (channel): Consumer Channel fd.
-				stdio: [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe' ]
+				// fd 0 (stdin)   : Just ignore it.
+				// fd 1 (stdout)  : Pipe it for 3rd libraries that log their own stuff.
+				// fd 2 (stderr)  : Same as stdout.
+				// fd 3 (channel) : Producer Channel fd.
+				// fd 4 (channel) : Consumer Channel fd.
+				stdio : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe' ]
 			});
 
 		this._workerLogger = new Logger(`worker[pid:${this._child.pid}]`);
@@ -179,9 +179,9 @@ export default class Worker extends EnhancedEventEmitter
 
 		this._channel = new Channel(
 			{
-				producerSocket: this._child.stdio[3],
-				consumerSocket: this._child.stdio[4],
-				pid           : this._pid
+				producerSocket : this._child.stdio[3],
+				consumerSocket : this._child.stdio[4],
+				pid            : this._pid
 			});
 
 		this._appData = appData;
@@ -418,7 +418,7 @@ export default class Worker extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel: this._channel,
+				channel : this._channel,
 				appData
 			});
 

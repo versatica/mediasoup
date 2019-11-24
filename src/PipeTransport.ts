@@ -104,9 +104,9 @@ export default class PipeTransport extends Transport
 
 		this._data =
 		{
-			tuple         : data.tuple,
-			sctpParameters: data.sctpParameters,
-			sctpState     : data.sctpState
+			tuple          : data.tuple,
+			sctpParameters : data.sctpParameters,
+			sctpState      : data.sctpState
 		};
 
 		this._handleWorkerNotifications();
@@ -251,10 +251,10 @@ export default class PipeTransport extends Transport
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
 		const reqData =
 		{
-			kind                  : producer.kind,
+			kind                   : producer.kind,
 			rtpParameters,
-			type                  : 'pipe',
-			consumableRtpEncodings: producer.consumableRtpParameters.encodings
+			type                   : 'pipe',
+			consumableRtpEncodings : producer.consumableRtpParameters.encodings
 		};
 
 		const status =
@@ -266,10 +266,10 @@ export default class PipeTransport extends Transport
 			{
 				internal,
 				data,
-				channel       : this._channel,
+				channel        : this._channel,
 				appData,
-				paused        : status.paused,
-				producerPaused: status.producerPaused
+				paused         : status.paused,
+				producerPaused : status.producerPaused
 			});
 
 		this._consumers.set(consumer.id, consumer);

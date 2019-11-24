@@ -13,31 +13,31 @@ afterEach(() => worker && !worker.closed && worker.close());
 const mediaCodecs =
 [
 	{
-		kind      : 'audio',
-		mimeType  : 'audio/opus',
-		clockRate : 48000,
-		channels  : 2,
-		parameters:
+		kind       : 'audio',
+		mimeType   : 'audio/opus',
+		clockRate  : 48000,
+		channels   : 2,
+		parameters :
 		{
-			useinbandfec: 1,
-			foo         : 'bar'
+			useinbandfec : 1,
+			foo          : 'bar'
 		}
 	},
 	{
-		kind     : 'video',
-		mimeType : 'video/VP8',
-		clockRate: 90000
+		kind      : 'video',
+		mimeType  : 'video/VP8',
+		clockRate : 90000
 	},
 	{
-		kind        : 'video',
-		mimeType    : 'video/H264',
-		clockRate   : 90000,
-		rtcpFeedback: [], // Will be ignored.
-		parameters  :
+		kind         : 'video',
+		mimeType     : 'video/H264',
+		clockRate    : 90000,
+		rtcpFeedback : [], // Will be ignored.
+		parameters   :
 		{
-			'level-asymmetry-allowed': 1,
-			'packetization-mode'     : 1,
-			'profile-level-id'       : '4d0032'
+			'level-asymmetry-allowed' : 1,
+			'packetization-mode'      : 1,
+			'profile-level-id'        : '4d0032'
 		}
 	}
 ];
@@ -70,14 +70,14 @@ test('worker.createRouter() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id                              : router.id,
-				transportIds                    : [],
-				rtpObserverIds                  : [],
-				mapProducerIdConsumerIds        : {},
-				mapConsumerIdProducerId         : {},
-				mapProducerIdObserverIds        : {},
-				mapDataProducerIdDataConsumerIds: {},
-				mapDataConsumerIdDataProducerId : {}
+				id                               : router.id,
+				transportIds                     : [],
+				rtpObserverIds                   : [],
+				mapProducerIdConsumerIds         : {},
+				mapConsumerIdProducerId          : {},
+				mapProducerIdObserverIds         : {},
+				mapDataProducerIdDataConsumerIds : {},
+				mapDataConsumerIdDataProducerId  : {}
 			});
 
 	// Private API.

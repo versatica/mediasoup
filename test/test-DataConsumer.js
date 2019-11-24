@@ -13,14 +13,14 @@ let dataConsumer;
 
 const dataProducerParameters =
 {
-	sctpStreamParameters:
+	sctpStreamParameters :
 	{
-		streamId         : 12345,
-		ordered          : false,
-		maxPacketLifeTime: 5000
+		streamId          : 12345,
+		ordered           : false,
+		maxPacketLifeTime : 5000
 	},
-	label   : 'foo',
-	protocol: 'bar'
+	label    : 'foo',
+	protocol : 'bar'
 };
 
 beforeAll(async () =>
@@ -29,13 +29,13 @@ beforeAll(async () =>
 	router = await worker.createRouter();
 	transport1 = await router.createWebRtcTransport(
 		{
-			listenIps : [ '127.0.0.1' ],
-			enableSctp: true
+			listenIps  : [ '127.0.0.1' ],
+			enableSctp : true
 		});
 	transport2 = await router.createPlainRtpTransport(
 		{
-			listenIp  : '127.0.0.1',
-			enableSctp: true
+			listenIp   : '127.0.0.1',
+			enableSctp : true
 		});
 	dataProducer = await transport1.produceData(dataProducerParameters);
 });
@@ -50,8 +50,8 @@ test('transport.consumeData() succeeds', async () =>
 
 	dataConsumer = await transport2.consumeData(
 		{
-			dataProducerId: dataProducer.id,
-			appData       : { baz: 'LOL' }
+			dataProducerId : dataProducer.id,
+			appData        : { baz: 'LOL' }
 		});
 
 	expect(onObserverNewDataConsumer).toHaveBeenCalledTimes(1);
@@ -72,17 +72,17 @@ test('transport.consumeData() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapDataProducerIdDataConsumerIds: { [dataProducer.id]: [ dataConsumer.id ] },
-				mapDataConsumerIdDataProducerId : { [dataConsumer.id]: dataProducer.id }
+				mapDataProducerIdDataConsumerIds : { [dataProducer.id]: [ dataConsumer.id ] },
+				mapDataConsumerIdDataProducerId  : { [dataConsumer.id]: dataProducer.id }
 			});
 
 	await expect(transport2.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id             : transport2.id,
-				dataProducerIds: [],
-				dataConsumerIds: [ dataConsumer.id ]
+				id              : transport2.id,
+				dataProducerIds : [],
+				dataConsumerIds : [ dataConsumer.id ]
 			});
 }, 2000);
 
@@ -108,11 +108,11 @@ test('dataConsumer.getStats() succeeds', async () =>
 		.toMatchObject(
 			[
 				{
-					type        : 'data-consumer',
-					label       : dataConsumer.label,
-					protocol    : dataConsumer.protocol,
-					messagesSent: 0,
-					bytesSent   : 0
+					type         : 'data-consumer',
+					label        : dataConsumer.label,
+					protocol     : dataConsumer.protocol,
+					messagesSent : 0,
+					bytesSent    : 0
 				}
 			]);
 }, 2000);
@@ -131,17 +131,17 @@ test('dataConsumer.close() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapDataProducerIdDataConsumerIds: { [dataProducer.id]: [] },
-				mapDataConsumerIdDataProducerId : {}
+				mapDataProducerIdDataConsumerIds : { [dataProducer.id]: [] },
+				mapDataConsumerIdDataProducerId  : {}
 			});
 
 	await expect(transport2.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id             : transport2.id,
-				dataProducerIds: [],
-				dataConsumerIds: []
+				id              : transport2.id,
+				dataProducerIds : [],
+				dataConsumerIds : []
 			});
 }, 2000);
 
@@ -160,7 +160,7 @@ test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async (
 {
 	dataConsumer = await transport2.consumeData(
 		{
-			dataProducerId: dataProducer.id
+			dataProducerId : dataProducer.id
 		});
 
 	const onObserverClose = jest.fn();
@@ -182,7 +182,7 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 	dataProducer = await transport1.produceData(dataProducerParameters);
 	dataConsumer = await transport2.consumeData(
 		{
-			dataProducerId: dataProducer.id
+			dataProducerId : dataProducer.id
 		});
 
 	const onObserverClose = jest.fn();
@@ -202,7 +202,7 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapDataProducerIdDataConsumerIds: {},
-				mapDataConsumerIdDataProducerId : {}
+				mapDataProducerIdDataConsumerIds : {},
+				mapDataConsumerIdDataProducerId  : {}
 			});
 }, 2000);
