@@ -52,9 +52,9 @@ export function generateRouterRtpCapabilities(
 	const supportedCodecs = supportedRtpCapabilities.codecs;
 	const caps =
 	{
-		codecs           : [] as RtpCodecCapability[],
-		headerExtensions : supportedRtpCapabilities.headerExtensions,
-		fecMechanisms    : supportedRtpCapabilities.fecMechanisms
+		codecs          : [] as RtpCodecCapability[],
+		headerExtensions: supportedRtpCapabilities.headerExtensions,
+		fecMechanisms   : supportedRtpCapabilities.fecMechanisms
 	};
 
 	for (const mediaCodec of mediaCodecs)
@@ -133,14 +133,14 @@ export function generateRouterRtpCapabilities(
 
 			const rtxCodec =
 			{
-				kind                 : codec.kind,
-				mimeType             : `${codec.kind}/rtx`,
-				preferredPayloadType : pt,
-				clockRate            : codec.clockRate,
-				rtcpFeedback         : [] as RtcpFeedback[],
-				parameters           :
+				kind                : codec.kind,
+				mimeType            : `${codec.kind}/rtx`,
+				preferredPayloadType: pt,
+				clockRate           : codec.clockRate,
+				rtcpFeedback        : [] as RtcpFeedback[],
+				parameters          :
 				{
-					apt : codec.preferredPayloadType
+					apt: codec.preferredPayloadType
 				}
 			};
 
@@ -165,8 +165,8 @@ export function getProducerRtpParametersMapping(
 {
 	const rtpMapping: RtpMapping =
 	{
-		codecs    : [],
-		encodings : []
+		codecs   : [],
+		encodings: []
 	};
 
 	// Match parameters media codecs to capabilities media codecs.
@@ -235,8 +235,8 @@ export function getProducerRtpParametersMapping(
 	{
 		rtpMapping.codecs.push(
 			{
-				payloadType       : codec.payloadType,
-				mappedPayloadType : capCodec.preferredPayloadType
+				payloadType      : codec.payloadType,
+				mappedPayloadType: capCodec.preferredPayloadType
 			});
 	}
 
@@ -275,10 +275,10 @@ export function getConsumableRtpParameters(
 {
 	const consumableParams: RtpParameters =
 	{
-		codecs           : [],
-		headerExtensions : [],
-		encodings        : [],
-		rtcp             : {}
+		codecs          : [],
+		headerExtensions: [],
+		encodings       : [],
+		rtcp            : {}
 	};
 
 	for (const codec of params.codecs || [])
@@ -297,12 +297,12 @@ export function getConsumableRtpParameters(
 
 		const consumableCodec =
 		{
-			mimeType     : matchedCapCodec.mimeType,
-			clockRate    : matchedCapCodec.clockRate,
-			payloadType  : matchedCapCodec.preferredPayloadType,
-			channels     : matchedCapCodec.channels,
-			rtcpFeedback : matchedCapCodec.rtcpFeedback,
-			parameters   : codec.parameters // Keep the Producer parameters.
+			mimeType    : matchedCapCodec.mimeType,
+			clockRate   : matchedCapCodec.clockRate,
+			payloadType : matchedCapCodec.preferredPayloadType,
+			channels    : matchedCapCodec.channels,
+			rtcpFeedback: matchedCapCodec.rtcpFeedback,
+			parameters  : codec.parameters // Keep the Producer parameters.
 		};
 
 		if (!consumableCodec.channels)
@@ -320,12 +320,12 @@ export function getConsumableRtpParameters(
 		{
 			const consumableRtxCodec =
 			{
-				mimeType     : consumableCapRtxCodec.mimeType,
-				clockRate    : consumableCapRtxCodec.clockRate,
-				payloadType  : consumableCapRtxCodec.preferredPayloadType,
-				channels     : consumableCapRtxCodec.channels,
-				rtcpFeedback : consumableCapRtxCodec.rtcpFeedback,
-				parameters   : consumableCapRtxCodec.parameters
+				mimeType    : consumableCapRtxCodec.mimeType,
+				clockRate   : consumableCapRtxCodec.clockRate,
+				payloadType : consumableCapRtxCodec.preferredPayloadType,
+				channels    : consumableCapRtxCodec.channels,
+				rtcpFeedback: consumableCapRtxCodec.rtcpFeedback,
+				parameters  : consumableCapRtxCodec.parameters
 			};
 
 			if (!consumableRtxCodec.channels)
@@ -349,8 +349,8 @@ export function getConsumableRtpParameters(
 
 		const consumableExt =
 		{
-			uri : capExt.uri,
-			id  : capExt.preferredId
+			uri: capExt.uri,
+			id : capExt.preferredId
 		};
 
 		consumableParams.headerExtensions.push(consumableExt);
@@ -377,9 +377,9 @@ export function getConsumableRtpParameters(
 
 	consumableParams.rtcp =
 	{
-		cname       : params.rtcp.cname,
-		reducedSize : true,
-		mux         : true
+		cname      : params.rtcp.cname,
+		reducedSize: true,
+		mux        : true
 	};
 
 	return consumableParams;
@@ -437,10 +437,10 @@ export function getConsumerRtpParameters(
 {
 	const consumerParams: RtpParameters =
 	{
-		codecs           : [],
-		headerExtensions : [],
-		encodings        : [],
-		rtcp             : consumableParams.rtcp
+		codecs          : [],
+		headerExtensions: [],
+		encodings       : [],
+		rtcp            : consumableParams.rtcp
 	};
 
 	for (const capCodec of caps.codecs || [])
@@ -523,7 +523,7 @@ export function getConsumerRtpParameters(
 
 	const consumerEncoding: RtpEncodingParameters =
 	{
-		ssrc : utils.generateRandomNumber()
+		ssrc: utils.generateRandomNumber()
 	};
 
 	if (rtxSupported)
@@ -570,10 +570,10 @@ export function getPipeConsumerRtpParameters(
 {
 	const consumerParams: RtpParameters =
 	{
-		codecs           : [],
-		headerExtensions : [],
-		encodings        : [],
-		rtcp             : consumableParams.rtcp
+		codecs          : [],
+		headerExtensions: [],
+		encodings       : [],
+		rtcp            : consumableParams.rtcp
 	};
 
 	const consumableCodecs =

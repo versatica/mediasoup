@@ -17,13 +17,13 @@ beforeAll(async () =>
 	router = await worker.createRouter();
 	transport1 = await router.createWebRtcTransport(
 		{
-			listenIps  : [ '127.0.0.1' ],
-			enableSctp : true
+			listenIps : [ '127.0.0.1' ],
+			enableSctp: true
 		});
 	transport2 = await router.createPlainRtpTransport(
 		{
-			listenIp   : '127.0.0.1',
-			enableSctp : true
+			listenIp  : '127.0.0.1',
+			enableSctp: true
 		});
 });
 
@@ -37,13 +37,13 @@ test('transport1.produceData() succeeds', async () =>
 
 	dataProducer1 = await transport1.produceData(
 		{
-			sctpStreamParameters :
+			sctpStreamParameters:
 			{
-				streamId : 666
+				streamId: 666
 			},
-			label    : 'foo',
-			protocol : 'bar',
-			appData  : { foo: 1, bar: '2' }
+			label   : 'foo',
+			protocol: 'bar',
+			appData : { foo: 1, bar: '2' }
 		});
 
 	expect(onObserverNewDataProducer).toHaveBeenCalledTimes(1);
@@ -63,17 +63,17 @@ test('transport1.produceData() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer1.id]: [] },
-				mapDataConsumerIdDataProducerId  : {}
+				mapDataProducerIdDataConsumerIds: { [dataProducer1.id]: [] },
+				mapDataConsumerIdDataProducerId : {}
 			});
 
 	await expect(transport1.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : transport1.id,
-				dataProducerIds : [ dataProducer1.id ],
-				dataConsumerIds : []
+				id             : transport1.id,
+				dataProducerIds: [ dataProducer1.id ],
+				dataConsumerIds: []
 			});
 }, 2000);
 
@@ -85,14 +85,14 @@ test('transport2.produceData() succeeds', async () =>
 
 	dataProducer2 = await transport2.produceData(
 		{
-			sctpStreamParameters :
+			sctpStreamParameters:
 			{
-				streamId       : 777,
-				maxRetransmits : 3
+				streamId      : 777,
+				maxRetransmits: 3
 			},
-			label    : 'foo',
-			protocol : 'bar',
-			appData  : { foo: 1, bar: '2' }
+			label   : 'foo',
+			protocol: 'bar',
+			appData : { foo: 1, bar: '2' }
 		});
 
 	expect(onObserverNewDataProducer).toHaveBeenCalledTimes(1);
@@ -112,17 +112,17 @@ test('transport2.produceData() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer2.id]: [] },
-				mapDataConsumerIdDataProducerId  : {}
+				mapDataProducerIdDataConsumerIds: { [dataProducer2.id]: [] },
+				mapDataConsumerIdDataProducerId : {}
 			});
 
 	await expect(transport2.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : transport2.id,
-				dataProducerIds : [ dataProducer2.id ],
-				dataConsumerIds : []
+				id             : transport2.id,
+				dataProducerIds: [ dataProducer2.id ],
+				dataConsumerIds: []
 			});
 }, 2000);
 
@@ -135,7 +135,7 @@ test('transport1.produceData() with wrong arguments rejects with TypeError', asy
 	// Missing or empty sctpStreamParameters.streamId.
 	await expect(transport1.produceData(
 		{
-			sctpStreamParameters : { foo: 'foo' }
+			sctpStreamParameters: { foo: 'foo' }
 		}))
 		.rejects
 		.toThrow(TypeError);
@@ -145,9 +145,9 @@ test('transport.produceData() with already used streamId rejects with Error', as
 {
 	await expect(transport1.produceData(
 		{
-			sctpStreamParameters :
+			sctpStreamParameters:
 			{
-				streamId : 666
+				streamId: 666
 			}
 		}))
 		.rejects
@@ -158,11 +158,11 @@ test('transport.produceData() with ordered and maxPacketLifeTime rejects with Ty
 {
 	await expect(transport1.produceData(
 		{
-			sctpStreamParameters :
+			sctpStreamParameters:
 			{
-				streamId          : 999,
-				ordered           : true,
-				maxPacketLifeTime : 4000
+				streamId         : 999,
+				ordered          : true,
+				maxPacketLifeTime: 4000
 			}
 		}))
 		.rejects
@@ -203,11 +203,11 @@ test('dataProducer.getStats() succeeds', async () =>
 		.toMatchObject(
 			[
 				{
-					type             : 'data-producer',
-					label            : dataProducer1.label,
-					protocol         : dataProducer1.protocol,
-					messagesReceived : 0,
-					bytesReceived    : 0
+					type            : 'data-producer',
+					label           : dataProducer1.label,
+					protocol        : dataProducer1.protocol,
+					messagesReceived: 0,
+					bytesReceived   : 0
 				}
 			]);
 
@@ -216,11 +216,11 @@ test('dataProducer.getStats() succeeds', async () =>
 		.toMatchObject(
 			[
 				{
-					type             : 'data-producer',
-					label            : dataProducer2.label,
-					protocol         : dataProducer2.protocol,
-					messagesReceived : 0,
-					bytesReceived    : 0
+					type            : 'data-producer',
+					label           : dataProducer2.label,
+					protocol        : dataProducer2.protocol,
+					messagesReceived: 0,
+					bytesReceived   : 0
 				}
 			]);
 }, 2000);
@@ -239,17 +239,17 @@ test('dataProducer.close() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapDataProducerIdDataConsumerIds : {},
-				mapDataConsumerIdDataProducerId  : {}
+				mapDataProducerIdDataConsumerIds: {},
+				mapDataConsumerIdDataProducerId : {}
 			});
 
 	await expect(transport1.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : transport1.id,
-				dataProducerIds : [],
-				dataConsumerIds : []
+				id             : transport1.id,
+				dataProducerIds: [],
+				dataConsumerIds: []
 			});
 }, 2000);
 

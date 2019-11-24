@@ -448,7 +448,7 @@ export default class Transport extends EnhancedEventEmitter
 		{
 			kind,
 			rtpParameters,
-			type : status.type,
+			type: status.type,
 			consumableRtpParameters
 		};
 
@@ -456,7 +456,7 @@ export default class Transport extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel : this._channel,
+				channel: this._channel,
 				appData,
 				paused
 			});
@@ -512,10 +512,10 @@ export default class Transport extends EnhancedEventEmitter
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
 		const reqData =
 		{
-			kind                   : producer.kind,
+			kind                  : producer.kind,
 			rtpParameters,
-			type                   : producer.type,
-			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
+			type                  : producer.type,
+			consumableRtpEncodings: producer.consumableRtpParameters.encodings,
 			paused,
 			preferredLayers
 		};
@@ -529,12 +529,12 @@ export default class Transport extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel         : this._channel,
+				channel        : this._channel,
 				appData,
-				paused          : status.paused,
-				producerPaused  : status.producerPaused,
-				score           : status.score,
-				preferredLayers : status.preferredLayers
+				paused         : status.paused,
+				producerPaused : status.producerPaused,
+				score          : status.score,
+				preferredLayers: status.preferredLayers
 			});
 
 		this._consumers.set(consumer.id, consumer);
@@ -579,7 +579,7 @@ export default class Transport extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel : this._channel,
+				channel: this._channel,
 				appData
 			});
 
@@ -641,7 +641,7 @@ export default class Transport extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel : this._channel,
+				channel: this._channel,
 				appData
 			});
 

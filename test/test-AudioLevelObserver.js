@@ -11,14 +11,14 @@ let audioLevelObserver;
 const mediaCodecs =
 [
 	{
-		kind       : 'audio',
-		mimeType   : 'audio/opus',
-		clockRate  : 48000,
-		channels   : 2,
-		parameters :
+		kind      : 'audio',
+		mimeType  : 'audio/opus',
+		clockRate : 48000,
+		channels  : 2,
+		parameters:
 		{
-			useinbandfec : 1,
-			foo          : 'bar'
+			useinbandfec: 1,
+			foo         : 'bar'
 		}
 	}
 ];
@@ -50,7 +50,7 @@ test('router.createAudioLevelObserver() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				rtpObserverIds : [ audioLevelObserver.id ]
+				rtpObserverIds: [ audioLevelObserver.id ]
 			});
 }, 2000);
 

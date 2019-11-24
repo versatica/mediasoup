@@ -11,32 +11,32 @@ let transport;
 const mediaCodecs =
 [
 	{
-		kind       : 'audio',
-		mimeType   : 'audio/opus',
-		clockRate  : 48000,
-		channels   : 2,
-		parameters :
+		kind      : 'audio',
+		mimeType  : 'audio/opus',
+		clockRate : 48000,
+		channels  : 2,
+		parameters:
 		{
-			useinbandfec : 1,
-			foo          : 'bar'
+			useinbandfec: 1,
+			foo         : 'bar'
 		}
 	},
 	{
-		kind      : 'video',
-		mimeType  : 'video/VP8',
-		clockRate : 90000
+		kind     : 'video',
+		mimeType : 'video/VP8',
+		clockRate: 90000
 	},
 	{
-		kind         : 'video',
-		mimeType     : 'video/H264',
-		clockRate    : 90000,
-		rtcpFeedback : [], // Will be ignored.
-		parameters   :
+		kind        : 'video',
+		mimeType    : 'video/H264',
+		clockRate   : 90000,
+		rtcpFeedback: [], // Will be ignored.
+		parameters  :
 		{
-			'level-asymmetry-allowed' : 1,
-			'packetization-mode'      : 1,
-			'profile-level-id'        : '4d0032',
-			foo                       : 'bar'
+			'level-asymmetry-allowed': 1,
+			'packetization-mode'     : 1,
+			'profile-level-id'       : '4d0032',
+			foo                      : 'bar'
 		}
 	}
 ];
@@ -53,8 +53,8 @@ beforeEach(async () =>
 {
 	transport = await router.createPlainRtpTransport(
 		{
-			listenIp : { ip: '127.0.0.1', announcedIp: '4.4.4.4' },
-			rtcpMux  : false
+			listenIp: { ip: '127.0.0.1', announcedIp: '4.4.4.4' },
+			rtcpMux : false
 		});
 });
 
@@ -73,10 +73,10 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	// Create a separate transport here.
 	const transport1 = await router.createPlainRtpTransport(
 		{
-			listenIp   : { ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-			rtcpMux    : true,
-			enableSctp : true,
-			appData    : { foo: 'bar' }
+			listenIp  : { ip: '127.0.0.1', announcedIp: '9.9.9.1' },
+			rtcpMux   : true,
+			enableSctp: true,
+			appData   : { foo: 'bar' }
 		});
 
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
@@ -91,11 +91,11 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(transport1.rtcpTuple).toBe(undefined);
 	expect(transport1.sctpParameters).toStrictEqual(
 		{
-			port           : 5000,
-			OS             : 1024,
-			MIS            : 1024,
-			maxMessageSize : 262144,
-			isDataChannel  : false
+			port          : 5000,
+			OS            : 1024,
+			MIS           : 1024,
+			maxMessageSize: 262144,
+			isDataChannel : false
 		});
 	expect(transport1.sctpState).toBe('new');
 
@@ -120,8 +120,8 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 
 	const transport2 = await router.createPlainRtpTransport(
 		{
-			listenIp : '127.0.0.1',
-			rtcpMux  : false
+			listenIp: '127.0.0.1',
+			rtcpMux : false
 		});
 
 	expect(transport2.id).toBeType('string');
@@ -162,8 +162,8 @@ test('router.createPlainRtpTransport() with wrong arguments rejects with TypeErr
 
 	await expect(router.createPlainRtpTransport(
 		{
-			listenIp : '127.0.0.1',
-			appData  : 'NOT-AN-OBJECT'
+			listenIp: '127.0.0.1',
+			appData : 'NOT-AN-OBJECT'
 		}))
 		.rejects
 		.toThrow(TypeError);

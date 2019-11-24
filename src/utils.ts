@@ -2,9 +2,9 @@ import * as randomNumber from 'random-number';
 
 const randomNumberGenerator = randomNumber.generator(
 	{
-		min     : 100000000,
-		max     : 999999999,
-		integer : true
+		min    : 100000000,
+		max    : 999999999,
+		integer: true
 	});
 
 /**

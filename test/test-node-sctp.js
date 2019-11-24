@@ -25,10 +25,10 @@ beforeAll(async () =>
 	router = await worker.createRouter();
 	transport = await router.createPlainRtpTransport(
 		{
-			listenIp       : '127.0.0.1',
-			comedia        : true, // So we don't need to call transport.connect().
-			enableSctp     : true,
-			numSctpStreams : { OS: 256, MIS: 256 }
+			listenIp      : '127.0.0.1',
+			comedia       : true, // So we don't need to call transport.connect().
+			enableSctp    : true,
+			numSctpStreams: { OS: 256, MIS: 256 }
 		});
 
 	// Node UDP socket for SCTP.
@@ -56,11 +56,11 @@ beforeAll(async () =>
 
 				sctpSocket = sctp.connect(
 					{
-						localPort    : 5000, // Required for SCTP over UDP in mediasoup.
-						port         : 5000, // Required for SCTP over UDP in mediasoup.
-						OS           : OS,
-						MIS          : MIS,
-						udpTransport : udpSocket
+						localPort   : 5000, // Required for SCTP over UDP in mediasoup.
+						port        : 5000, // Required for SCTP over UDP in mediasoup.
+						OS          : OS,
+						MIS         : MIS,
+						udpTransport: udpSocket
 					});
 
 				resolve();
@@ -72,15 +72,15 @@ beforeAll(async () =>
 	{
 		sctpSocket = sctp.connect(
 			{
-				localPort    : 5000, // Required for SCTP over UDP in mediasoup.
-				port         : 5000, // Required for SCTP over UDP in mediasoup.
-				OS           : OS,
-				MIS          : MIS,
-				udpTransport : udpSocket,
-				udpPeer      :
+				localPort   : 5000, // Required for SCTP over UDP in mediasoup.
+				port        : 5000, // Required for SCTP over UDP in mediasoup.
+				OS          : OS,
+				MIS         : MIS,
+				udpTransport: udpSocket,
+				udpPeer     :
 				{
-					address : remoteUdpIp,
-					port    : remoteUdpPort
+					address: remoteUdpIp,
+					port   : remoteUdpPort
 				}
 			});
 	}
@@ -93,13 +93,13 @@ beforeAll(async () =>
 	// Create a DataProducer with the corresponding SCTP stream id.
 	dataProducer = await transport.produceData(
 		{
-			sctpStreamParameters :
+			sctpStreamParameters:
 			{
-				streamId : sctpSendStreamId,
-				ordered  : true
+				streamId: sctpSendStreamId,
+				ordered : true
 			},
-			label    : 'node-sctp',
-			protocol : 'foo & bar 😀😀😀'
+			label   : 'node-sctp',
+			protocol: 'foo & bar 😀😀😀'
 		});
 
 	// Create a DataConsumer to receive messages from the DataProducer over the
@@ -181,11 +181,11 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 		.toMatchObject(
 			[
 				{
-					type             : 'data-producer',
-					label            : dataProducer.label,
-					protocol         : dataProducer.protocol,
-					messagesReceived : numMessages,
-					bytesReceived    : sentMessageBytes
+					type            : 'data-producer',
+					label           : dataProducer.label,
+					protocol        : dataProducer.protocol,
+					messagesReceived: numMessages,
+					bytesReceived   : sentMessageBytes
 				}
 			]);
 
@@ -194,11 +194,11 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 		.toMatchObject(
 			[
 				{
-					type         : 'data-consumer',
-					label        : dataConsumer.label,
-					protocol     : dataConsumer.protocol,
-					messagesSent : numMessages,
-					bytesSent    : recvMessageBytes
+					type        : 'data-consumer',
+					label       : dataConsumer.label,
+					protocol    : dataConsumer.protocol,
+					messagesSent: numMessages,
+					bytesSent   : recvMessageBytes
 				}
 			]);
 }, 8000);

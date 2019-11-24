@@ -15,17 +15,17 @@ export function parse(scalabilityMode: string): ScalabilityMode
 	if (match)
 	{
 		return {
-			spatialLayers  : Number(match[1]),
-			temporalLayers : Number(match[2]),
-			ksvc           : Boolean(match[3])
+			spatialLayers : Number(match[1]),
+			temporalLayers: Number(match[2]),
+			ksvc          : Boolean(match[3])
 		};
 	}
 	else
 	{
 		return {
-			spatialLayers  : 1,
-			temporalLayers : 1,
-			ksvc           : false
+			spatialLayers : 1,
+			temporalLayers: 1,
+			ksvc          : false
 		};
 	}
 }

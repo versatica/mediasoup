@@ -241,9 +241,9 @@ export default class Channel extends EnhancedEventEmitter
 			const timeout = 1000 * (15 + (0.1 * this._sents.size));
 			const sent: Sent =
 			{
-				id      : id,
-				method  : method,
-				resolve : (data2) =>
+				id     : id,
+				method : method,
+				resolve: (data2) =>
 				{
 					if (!this._sents.delete(id))
 						return;
@@ -251,7 +251,7 @@ export default class Channel extends EnhancedEventEmitter
 					clearTimeout(sent.timer);
 					pResolve(data2);
 				},
-				reject : (error) =>
+				reject: (error) =>
 				{
 					if (!this._sents.delete(id))
 						return;
@@ -259,14 +259,14 @@ export default class Channel extends EnhancedEventEmitter
 					clearTimeout(sent.timer);
 					pReject(error);
 				},
-				timer : setTimeout(() =>
+				timer: setTimeout(() =>
 				{
 					if (!this._sents.delete(id))
 						return;
 
 					pReject(new Error('Channel request timeout'));
 				}, timeout),
-				close : () =>
+				close: () =>
 				{
 					clearTimeout(sent.timer);
 					pReject(new InvalidStateError('Channel closed'));

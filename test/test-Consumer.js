@@ -17,94 +17,94 @@ let videoConsumer;
 const mediaCodecs =
 [
 	{
-		kind       : 'audio',
-		mimeType   : 'audio/opus',
-		clockRate  : 48000,
-		channels   : 2,
-		parameters :
+		kind      : 'audio',
+		mimeType  : 'audio/opus',
+		clockRate : 48000,
+		channels  : 2,
+		parameters:
 		{
-			foo : 'bar'
+			foo: 'bar'
 		}
 	},
 	{
-		kind      : 'video',
-		mimeType  : 'video/VP8',
-		clockRate : 90000
+		kind     : 'video',
+		mimeType : 'video/VP8',
+		clockRate: 90000
 	},
 	{
-		kind       : 'video',
-		mimeType   : 'video/H264',
-		clockRate  : 90000,
-		parameters :
+		kind      : 'video',
+		mimeType  : 'video/H264',
+		clockRate : 90000,
+		parameters:
 		{
-			'level-asymmetry-allowed' : 1,
-			'packetization-mode'      : 1,
-			'profile-level-id'        : '4d0032',
-			foo                       : 'bar'
+			'level-asymmetry-allowed': 1,
+			'packetization-mode'     : 1,
+			'profile-level-id'       : '4d0032',
+			foo                      : 'bar'
 		}
 	}
 ];
 
 const audioProducerParameters =
 {
-	kind          : 'audio',
-	rtpParameters :
+	kind         : 'audio',
+	rtpParameters:
 	{
-		mid    : 'AUDIO',
-		codecs :
+		mid   : 'AUDIO',
+		codecs:
 		[
 			{
-				mimeType    : 'audio/opus',
-				payloadType : 111,
-				clockRate   : 48000,
-				channels    : 2,
-				parameters  :
+				mimeType   : 'audio/opus',
+				payloadType: 111,
+				clockRate  : 48000,
+				channels   : 2,
+				parameters :
 				{
-					useinbandfec : 1,
-					usedtx       : 1,
-					foo          : 222.222,
-					bar          : '333'
+					useinbandfec: 1,
+					usedtx      : 1,
+					foo         : 222.222,
+					bar         : '333'
 				}
 			}
 		],
-		headerExtensions :
+		headerExtensions:
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				id  : 10
+				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id : 10
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 12
+				uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id : 12
 			}
 		],
-		encodings : [ { ssrc: 11111111 } ],
-		rtcp      :
+		encodings: [ { ssrc: 11111111 } ],
+		rtcp     :
 		{
-			cname : 'FOOBAR'
+			cname: 'FOOBAR'
 		}
 	},
-	appData : { foo: 1, bar: '2' }
+	appData: { foo: 1, bar: '2' }
 };
 
 const videoProducerParameters =
 {
-	kind          : 'video',
-	rtpParameters :
+	kind         : 'video',
+	rtpParameters:
 	{
-		mid    : 'VIDEO',
-		codecs :
+		mid   : 'VIDEO',
+		codecs:
 		[
 			{
-				mimeType    : 'video/h264',
-				payloadType : 112,
-				clockRate   : 90000,
-				parameters  :
+				mimeType   : 'video/h264',
+				payloadType: 112,
+				clockRate  : 90000,
+				parameters :
 				{
-					'packetization-mode' : 1,
-					'profile-level-id'   : '4d0032'
+					'packetization-mode': 1,
+					'profile-level-id'  : '4d0032'
 				},
-				rtcpFeedback :
+				rtcpFeedback:
 				[
 					{ type: 'nack' },
 					{ type: 'nack', parameter: 'pli' },
@@ -112,132 +112,132 @@ const videoProducerParameters =
 				]
 			},
 			{
-				mimeType    : 'video/rtx',
-				payloadType : 113,
-				clockRate   : 90000,
-				parameters  : { apt: 112 }
+				mimeType   : 'video/rtx',
+				payloadType: 113,
+				clockRate  : 90000,
+				parameters : { apt: 112 }
 			}
 		],
-		headerExtensions :
+		headerExtensions:
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				id  : 10
+				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id : 10
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 13
+				uri: 'urn:3gpp:video-orientation',
+				id : 13
 			}
 		],
-		encodings :
+		encodings:
 		[
 			{ ssrc: 22222222, rtx: { ssrc: 22222223 } },
 			{ ssrc: 22222224, rtx: { ssrc: 22222225 } },
 			{ ssrc: 22222226, rtx: { ssrc: 22222227 } },
 			{ ssrc: 22222228, rtx: { ssrc: 22222229 } }
 		],
-		rtcp :
+		rtcp:
 		{
-			cname : 'FOOBAR'
+			cname: 'FOOBAR'
 		}
 	},
-	appData : { foo: 1, bar: '2' }
+	appData: { foo: 1, bar: '2' }
 };
 
 const consumerDeviceCapabilities =
 {
-	codecs :
+	codecs:
 	[
 		{
-			mimeType             : 'audio/opus',
-			kind                 : 'audio',
-			clockRate            : 48000,
-			preferredPayloadType : 100,
-			channels             : 2
+			mimeType            : 'audio/opus',
+			kind                : 'audio',
+			clockRate           : 48000,
+			preferredPayloadType: 100,
+			channels            : 2
 		},
 		{
-			mimeType             : 'video/H264',
-			kind                 : 'video',
-			clockRate            : 90000,
-			preferredPayloadType : 101,
-			rtcpFeedback         :
+			mimeType            : 'video/H264',
+			kind                : 'video',
+			clockRate           : 90000,
+			preferredPayloadType: 101,
+			rtcpFeedback        :
 			[
 				{ type: 'nack' },
 				{ type: 'nack', parameter: 'pli' },
 				{ type: 'ccm', parameter: 'fir' },
 				{ type: 'goog-remb' }
 			],
-			parameters :
+			parameters:
 			{
-				'level-asymmetry-allowed' : 1,
-				'packetization-mode'      : 1,
-				'profile-level-id'        : '4d0032'
+				'level-asymmetry-allowed': 1,
+				'packetization-mode'     : 1,
+				'profile-level-id'       : '4d0032'
 			}
 		},
 		{
-			mimeType             : 'video/rtx',
-			kind                 : 'video',
-			clockRate            : 90000,
-			preferredPayloadType : 102,
-			rtcpFeedback         : [],
-			parameters           :
+			mimeType            : 'video/rtx',
+			kind                : 'video',
+			clockRate           : 90000,
+			preferredPayloadType: 102,
+			rtcpFeedback        : [],
+			parameters          :
 			{
-				apt : 101
+				apt: 101
 			}
 		}
 	],
-	headerExtensions :
+	headerExtensions:
 	[
 		{
-			kind             : 'audio',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-			preferredId      : 1,
-			preferredEncrypt : false
+			kind            : 'audio',
+			uri             : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+			preferredId     : 1,
+			preferredEncrypt: false
 		},
 		{
-			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-			preferredId      : 1,
-			preferredEncrypt : false
+			kind            : 'video',
+			uri             : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+			preferredId     : 1,
+			preferredEncrypt: false
 		},
 		{
-			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
-			preferredId      : 2,
-			preferredEncrypt : false
+			kind            : 'video',
+			uri             : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+			preferredId     : 2,
+			preferredEncrypt: false
 		},
 		{
-			kind             : 'audio',
-			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-			preferredId      : 4,
-			preferredEncrypt : false
+			kind            : 'audio',
+			uri             : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+			preferredId     : 4,
+			preferredEncrypt: false
 		},
 		{
-			kind             : 'video',
-			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-			preferredId      : 4,
-			preferredEncrypt : false
+			kind            : 'video',
+			uri             : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+			preferredId     : 4,
+			preferredEncrypt: false
 		},
 		{
-			kind             : 'audio',
-			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-			preferredId      : 10,
-			preferredEncrypt : false
+			kind            : 'audio',
+			uri             : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+			preferredId     : 10,
+			preferredEncrypt: false
 		},
 		{
-			kind             : 'video',
-			uri              : 'urn:3gpp:video-orientation',
-			preferredId      : 11,
-			preferredEncrypt : false
+			kind            : 'video',
+			uri             : 'urn:3gpp:video-orientation',
+			preferredId     : 11,
+			preferredEncrypt: false
 		},
 		{
-			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:toffset',
-			preferredId      : 12,
-			preferredEncrypt : false
+			kind            : 'video',
+			uri             : 'urn:ietf:params:rtp-hdrext:toffset',
+			preferredId     : 12,
+			preferredEncrypt: false
 		}
 	],
-	fecMechanisms : []
+	fecMechanisms: []
 };
 
 beforeAll(async () =>
@@ -246,11 +246,11 @@ beforeAll(async () =>
 	router = await worker.createRouter({ mediaCodecs });
 	transport1 = await router.createWebRtcTransport(
 		{
-			listenIps : [ '127.0.0.1' ]
+			listenIps: [ '127.0.0.1' ]
 		});
 	transport2 = await router.createWebRtcTransport(
 		{
-			listenIps : [ '127.0.0.1' ]
+			listenIps: [ '127.0.0.1' ]
 		});
 	audioProducer = await transport1.produce(audioProducerParameters);
 	videoProducer = await transport1.produce(videoProducerParameters);
@@ -269,16 +269,16 @@ test('transport.consume() succeeds', async () =>
 
 	expect(router.canConsume(
 		{
-			producerId      : audioProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities
+			producerId     : audioProducer.id,
+			rtpCapabilities: consumerDeviceCapabilities
 		}))
 		.toBe(true);
 
 	audioConsumer = await transport2.consume(
 		{
-			producerId      : audioProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities,
-			appData         : { baz: 'LOL' }
+			producerId     : audioProducer.id,
+			rtpCapabilities: consumerDeviceCapabilities,
+			appData        : { baz: 'LOL' }
 		});
 
 	expect(onObserverNewConsumer1).toHaveBeenCalledTimes(1);
@@ -292,18 +292,18 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.rtpParameters.codecs.length).toBe(1);
 	expect(audioConsumer.rtpParameters.codecs[0]).toEqual(
 		{
-			mimeType    : 'audio/opus',
-			clockRate   : 48000,
-			payloadType : 100,
-			channels    : 2,
-			parameters  :
+			mimeType   : 'audio/opus',
+			clockRate  : 48000,
+			payloadType: 100,
+			channels   : 2,
+			parameters :
 			{
-				useinbandfec : 1,
-				usedtx       : 1,
-				foo          : 222.222,
-				bar          : '333'
+				useinbandfec: 1,
+				usedtx      : 1,
+				foo         : 222.222,
+				bar         : '333'
 			},
-			rtcpFeedback : []
+			rtcpFeedback: []
 		});
 	expect(audioConsumer.type).toBe('simple');
 	expect(audioConsumer.paused).toBe(false);
@@ -318,17 +318,17 @@ test('transport.consume() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds : { [audioProducer.id]: [ audioConsumer.id ] },
-				mapConsumerIdProducerId  : { [audioConsumer.id]: audioProducer.id }
+				mapProducerIdConsumerIds: { [audioProducer.id]: [ audioConsumer.id ] },
+				mapConsumerIdProducerId : { [audioConsumer.id]: audioProducer.id }
 			});
 
 	await expect(transport2.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : transport2.id,
-				producerIds : [],
-				consumerIds : [ audioConsumer.id ]
+				id         : transport2.id,
+				producerIds: [],
+				consumerIds: [ audioConsumer.id ]
 			});
 
 	const onObserverNewConsumer2 = jest.fn();
@@ -337,18 +337,18 @@ test('transport.consume() succeeds', async () =>
 
 	expect(router.canConsume(
 		{
-			producerId      : videoProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities
+			producerId     : videoProducer.id,
+			rtpCapabilities: consumerDeviceCapabilities
 		}))
 		.toBe(true);
 
 	videoConsumer = await transport2.consume(
 		{
-			producerId      : videoProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities,
-			paused          : true,
-			preferredLayers : { spatialLayer: 12 },
-			appData         : { baz: 'LOL' }
+			producerId     : videoProducer.id,
+			rtpCapabilities: consumerDeviceCapabilities,
+			paused         : true,
+			preferredLayers: { spatialLayer: 12 },
+			appData        : { baz: 'LOL' }
 		});
 
 	expect(onObserverNewConsumer2).toHaveBeenCalledTimes(1);
@@ -362,15 +362,15 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.rtpParameters.codecs.length).toBe(2);
 	expect(videoConsumer.rtpParameters.codecs[0]).toEqual(
 		{
-			mimeType    : 'video/H264',
-			clockRate   : 90000,
-			payloadType : 103,
-			parameters  :
+			mimeType   : 'video/H264',
+			clockRate  : 90000,
+			payloadType: 103,
+			parameters :
 			{
-				'packetization-mode' : 1,
-				'profile-level-id'   : '4d0032'
+				'packetization-mode': 1,
+				'profile-level-id'  : '4d0032'
 			},
-			rtcpFeedback :
+			rtcpFeedback:
 			[
 				{ type: 'nack' },
 				{ type: 'nack', parameter: 'pli' },
@@ -380,11 +380,11 @@ test('transport.consume() succeeds', async () =>
 		});
 	expect(videoConsumer.rtpParameters.codecs[1]).toEqual(
 		{
-			mimeType     : 'video/rtx',
-			clockRate    : 90000,
-			payloadType  : 104,
-			parameters   : { apt: 103 },
-			rtcpFeedback : []
+			mimeType    : 'video/rtx',
+			clockRate   : 90000,
+			payloadType : 104,
+			parameters  : { apt: 103 },
+			rtcpFeedback: []
 		});
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(true);
@@ -399,15 +399,15 @@ test('transport.consume() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds :
+				mapProducerIdConsumerIds:
 				{
-					[audioProducer.id] : [ audioConsumer.id ],
-					[videoProducer.id] : [ videoConsumer.id ]
+					[audioProducer.id]: [ audioConsumer.id ],
+					[videoProducer.id]: [ videoConsumer.id ]
 				},
-				mapConsumerIdProducerId :
+				mapConsumerIdProducerId:
 				{
-					[audioConsumer.id] : audioProducer.id,
-					[videoConsumer.id] : videoProducer.id
+					[audioConsumer.id]: audioProducer.id,
+					[videoConsumer.id]: videoProducer.id
 				}
 			});
 
@@ -415,9 +415,9 @@ test('transport.consume() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				id          : transport2.id,
-				producerIds : [],
-				consumerIds : expect.arrayContaining([ audioConsumer.id, videoConsumer.id ])
+				id         : transport2.id,
+				producerIds: [],
+				consumerIds: expect.arrayContaining([ audioConsumer.id, videoConsumer.id ])
 			});
 }, 2000);
 
@@ -427,17 +427,17 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 
 	invalidDeviceCapabilities =
 	{
-		codecs :
+		codecs:
 		[
 			{
-				kind                 : 'audio',
-				mimeType             : 'audio/ISAC',
-				clockRate            : 32000,
-				preferredPayloadType : 100,
-				channels             : 1
+				kind                : 'audio',
+				mimeType            : 'audio/ISAC',
+				clockRate           : 32000,
+				preferredPayloadType: 100,
+				channels            : 1
 			}
 		],
-		headerExtensions : []
+		headerExtensions: []
 	};
 
 	expect(router.canConsume(
@@ -446,16 +446,16 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 
 	await expect(transport2.consume(
 		{
-			producerId      : audioProducer.id,
-			rtpCapabilities : invalidDeviceCapabilities
+			producerId     : audioProducer.id,
+			rtpCapabilities: invalidDeviceCapabilities
 		}))
 		.rejects
 		.toThrow(UnsupportedError);
 
 	invalidDeviceCapabilities =
 	{
-		codecs           : [],
-		headerExtensions : []
+		codecs          : [],
+		headerExtensions: []
 	};
 
 	expect(router.canConsume(
@@ -464,8 +464,8 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 
 	await expect(transport2.consume(
 		{
-			producerId      : audioProducer.id,
-			rtpCapabilities : invalidDeviceCapabilities
+			producerId     : audioProducer.id,
+			rtpCapabilities: invalidDeviceCapabilities
 		}))
 		.rejects
 		.toThrow(UnsupportedError);
@@ -489,10 +489,10 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[0].parameters)
 		.toEqual(
 			{
-				useinbandfec : 1,
-				usedtx       : 1,
-				foo          : 222.222,
-				bar          : '333'
+				useinbandfec: 1,
+				usedtx      : 1,
+				foo         : 222.222,
+				bar         : '333'
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
 	expect(data.rtpParameters.headerExtensions).toBeType('array');
@@ -500,16 +500,16 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				id         : 4,
-				parameters : {},
-				encrypt    : false
+				uri       : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id        : 4,
+				parameters: {},
+				encrypt   : false
 			},
 			{
-				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id         : 10,
-				parameters : {},
-				encrypt    : false
+				uri       : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id        : 10,
+				parameters: {},
+				encrypt   : false
 			}
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
@@ -517,8 +517,8 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.encodings).toEqual(
 		[
 			{
-				codecPayloadType : 100,
-				ssrc             : audioConsumer.rtpParameters.encodings[0].ssrc
+				codecPayloadType: 100,
+				ssrc            : audioConsumer.rtpParameters.encodings[0].ssrc
 			}
 		]);
 	expect(data.type).toBe('simple');
@@ -547,8 +547,8 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[0].parameters)
 		.toEqual(
 			{
-				'packetization-mode' : 1,
-				'profile-level-id'   : '4d0032'
+				'packetization-mode': 1,
+				'profile-level-id'  : '4d0032'
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual(
 		[
@@ -562,22 +562,22 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				id         : 4,
-				parameters : {},
-				encrypt    : false
+				uri       : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id        : 4,
+				parameters: {},
+				encrypt   : false
 			},
 			{
-				uri        : 'urn:3gpp:video-orientation',
-				id         : 11,
-				parameters : {},
-				encrypt    : false
+				uri       : 'urn:3gpp:video-orientation',
+				id        : 11,
+				parameters: {},
+				encrypt   : false
 			},
 			{
-				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
-				id         : 12,
-				parameters : {},
-				encrypt    : false
+				uri       : 'urn:ietf:params:rtp-hdrext:toffset',
+				id        : 12,
+				parameters: {},
+				encrypt   : false
 			}
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
@@ -585,16 +585,16 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.encodings).toEqual(
 		[
 			{
-				codecPayloadType : 103,
-				ssrc             : videoConsumer.rtpParameters.encodings[0].ssrc,
-				rtx              :
+				codecPayloadType: 103,
+				ssrc            : videoConsumer.rtpParameters.encodings[0].ssrc,
+				rtx             :
 				{
-					ssrc : videoConsumer.rtpParameters.encodings[0].rtx.ssrc
+					ssrc: videoConsumer.rtpParameters.encodings[0].rtx.ssrc
 				},
-				scalabilityMode : 'S4T1',
-				spatialLayers   : 4,
-				temporalLayers  : 1,
-				ksvc            : false
+				scalabilityMode: 'S4T1',
+				spatialLayers  : 4,
+				temporalLayers : 1,
+				ksvc           : false
 			}
 		]);
 	expect(data.consumableRtpEncodings).toBeType('array');
@@ -620,10 +620,10 @@ test('consumer.getStats() succeeds', async () =>
 			[
 				expect.objectContaining(
 					{
-						type     : 'outbound-rtp',
-						kind     : 'audio',
-						mimeType : 'audio/opus',
-						ssrc     : audioConsumer.rtpParameters.encodings[0].ssrc
+						type    : 'outbound-rtp',
+						kind    : 'audio',
+						mimeType: 'audio/opus',
+						ssrc    : audioConsumer.rtpParameters.encodings[0].ssrc
 					})
 			]);
 
@@ -633,10 +633,10 @@ test('consumer.getStats() succeeds', async () =>
 			[
 				expect.objectContaining(
 					{
-						type     : 'outbound-rtp',
-						kind     : 'video',
-						mimeType : 'video/H264',
-						ssrc     : videoConsumer.rtpParameters.encodings[0].ssrc
+						type    : 'outbound-rtp',
+						kind    : 'video',
+						mimeType: 'video/H264',
+						ssrc    : videoConsumer.rtpParameters.encodings[0].ssrc
 					})
 			]);
 }, 2000);
@@ -803,17 +803,17 @@ test('consumer.close() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
-				mapConsumerIdProducerId  : {}
+				mapProducerIdConsumerIds: { [audioProducer.id]: [] },
+				mapConsumerIdProducerId : {}
 			});
 
 	await expect(transport2.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : transport2.id,
-				producerIds : [],
-				consumerIds : [ videoConsumer.id ]
+				id         : transport2.id,
+				producerIds: [],
+				consumerIds: [ videoConsumer.id ]
 			});
 }, 2000);
 
@@ -852,8 +852,8 @@ test('Consumer emits "producerclose" if Producer is closed', async () =>
 {
 	audioConsumer = await transport2.consume(
 		{
-			producerId      : audioProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities
+			producerId     : audioProducer.id,
+			rtpCapabilities: consumerDeviceCapabilities
 		});
 
 	const onObserverClose = jest.fn();
@@ -874,8 +874,8 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 {
 	videoConsumer = await transport2.consume(
 		{
-			producerId      : videoProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities
+			producerId     : videoProducer.id,
+			rtpCapabilities: consumerDeviceCapabilities
 		});
 
 	const onObserverClose = jest.fn();
@@ -895,7 +895,7 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds : {},
-				mapConsumerIdProducerId  : {}
+				mapProducerIdConsumerIds: {},
+				mapConsumerIdProducerId : {}
 			});
 }, 2000);

@@ -195,16 +195,16 @@ export default class WebRtcTransport extends Transport
 
 		this._data =
 		{
-			iceRole          : data.iceRole,
-			iceParameters    : data.iceParameters,
-			iceCandidates    : data.iceCandidates,
-			iceState         : data.iceState,
-			iceSelectedTuple : data.iceSelectedTuple,
-			dtlsParameters   : data.dtlsParameters,
-			dtlsState        : data.dtlsState,
-			dtlsRemoteCert   : data.dtlsRemoteCert,
-			sctpParameters   : data.sctpParameters,
-			sctpState        : data.sctpState
+			iceRole         : data.iceRole,
+			iceParameters   : data.iceParameters,
+			iceCandidates   : data.iceCandidates,
+			iceState        : data.iceState,
+			iceSelectedTuple: data.iceSelectedTuple,
+			dtlsParameters  : data.dtlsParameters,
+			dtlsState       : data.dtlsState,
+			dtlsRemoteCert  : data.dtlsRemoteCert,
+			sctpParameters  : data.sctpParameters,
+			sctpState       : data.sctpState
 		};
 
 		this._handleWorkerNotifications();

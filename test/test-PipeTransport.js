@@ -18,72 +18,72 @@ let dataConsumer;
 const mediaCodecs =
 [
 	{
-		kind      : 'audio',
-		mimeType  : 'audio/opus',
-		clockRate : 48000,
-		channels  : 2
+		kind     : 'audio',
+		mimeType : 'audio/opus',
+		clockRate: 48000,
+		channels : 2
 	},
 	{
-		kind      : 'video',
-		mimeType  : 'video/VP8',
-		clockRate : 90000
+		kind     : 'video',
+		mimeType : 'video/VP8',
+		clockRate: 90000
 	},
 	{
-		kind      : 'video',
-		mimeType  : 'video/VP8',
-		clockRate : 90000
+		kind     : 'video',
+		mimeType : 'video/VP8',
+		clockRate: 90000
 	}
 ];
 
 const audioProducerParameters =
 {
-	kind          : 'audio',
-	rtpParameters :
+	kind         : 'audio',
+	rtpParameters:
 	{
-		mid    : 'AUDIO',
-		codecs :
+		mid   : 'AUDIO',
+		codecs:
 		[
 			{
-				mimeType    : 'audio/opus',
-				payloadType : 111,
-				clockRate   : 48000,
-				channels    : 2,
-				parameters  :
+				mimeType   : 'audio/opus',
+				payloadType: 111,
+				clockRate  : 48000,
+				channels   : 2,
+				parameters :
 				{
-					useinbandfec : 1,
-					foo          : 'bar1'
+					useinbandfec: 1,
+					foo         : 'bar1'
 				}
 			}
 		],
-		headerExtensions :
+		headerExtensions:
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				id  : 10
+				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id : 10
 			}
 		],
-		encodings : [ { ssrc: 11111111 } ],
-		rtcp      :
+		encodings: [ { ssrc: 11111111 } ],
+		rtcp     :
 		{
-			cname : 'FOOBAR'
+			cname: 'FOOBAR'
 		}
 	},
-	appData : { foo: 'bar1' }
+	appData: { foo: 'bar1' }
 };
 
 const videoProducerParameters =
 {
-	kind          : 'video',
-	rtpParameters :
+	kind         : 'video',
+	rtpParameters:
 	{
-		mid    : 'VIDEO',
-		codecs :
+		mid   : 'VIDEO',
+		codecs:
 		[
 			{
-				mimeType     : 'video/VP8',
-				payloadType  : 112,
-				clockRate    : 90000,
-				rtcpFeedback :
+				mimeType    : 'video/VP8',
+				payloadType : 112,
+				clockRate   : 90000,
+				rtcpFeedback:
 				[
 					{ type: 'nack' },
 					{ type: 'nack', parameter: 'pli' },
@@ -92,64 +92,64 @@ const videoProducerParameters =
 				]
 			}
 		],
-		headerExtensions :
+		headerExtensions:
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				id  : 10
+				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id : 10
 			},
 			{
-				uri : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				id  : 11
+				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id : 11
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 13
+				uri: 'urn:3gpp:video-orientation',
+				id : 13
 			}
 		],
-		encodings :
+		encodings:
 		[
 			{ ssrc: 22222222 },
 			{ ssrc: 22222223 },
 			{ ssrc: 22222224 }
 		],
-		rtcp :
+		rtcp:
 		{
-			cname : 'FOOBAR'
+			cname: 'FOOBAR'
 		}
 	},
-	appData : { foo: 'bar2' }
+	appData: { foo: 'bar2' }
 };
 
 const dataProducerParameters =
 {
-	sctpStreamParameters :
+	sctpStreamParameters:
 	{
-		streamId          : 666,
-		ordered           : false,
-		maxPacketLifeTime : 5000
+		streamId         : 666,
+		ordered          : false,
+		maxPacketLifeTime: 5000
 	},
-	label    : 'foo',
-	protocol : 'bar'
+	label   : 'foo',
+	protocol: 'bar'
 };
 
 const consumerDeviceCapabilities =
 {
-	codecs :
+	codecs:
 	[
 		{
-			mimeType             : 'audio/opus',
-			kind                 : 'audio',
-			clockRate            : 48000,
-			preferredPayloadType : 100,
-			channels             : 2
+			mimeType            : 'audio/opus',
+			kind                : 'audio',
+			clockRate           : 48000,
+			preferredPayloadType: 100,
+			channels            : 2
 		},
 		{
-			mimeType             : 'video/VP8',
-			kind                 : 'video',
-			clockRate            : 90000,
-			preferredPayloadType : 101,
-			rtcpFeedback         :
+			mimeType            : 'video/VP8',
+			kind                : 'video',
+			clockRate           : 90000,
+			preferredPayloadType: 101,
+			rtcpFeedback        :
 			[
 				{ type: 'nack' },
 				{ type: 'ccm', parameter: 'fir' },
@@ -158,42 +158,42 @@ const consumerDeviceCapabilities =
 			]
 		},
 		{
-			mimeType             : 'video/rtx',
-			kind                 : 'video',
-			clockRate            : 90000,
-			preferredPayloadType : 102,
-			rtcpFeedback         : [],
-			parameters           :
+			mimeType            : 'video/rtx',
+			kind                : 'video',
+			clockRate           : 90000,
+			preferredPayloadType: 102,
+			rtcpFeedback        : [],
+			parameters          :
 			{
-				apt : 101
+				apt: 101
 			}
 		}
 	],
-	headerExtensions :
+	headerExtensions:
 	[
 		{
-			kind             : 'video',
-			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-			preferredId      : 4,
-			preferredEncrypt : false,
-			direction        : 'sendrecv'
+			kind            : 'video',
+			uri             : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+			preferredId     : 4,
+			preferredEncrypt: false,
+			direction       : 'sendrecv'
 		},
 		{
-			kind             : 'video',
-			uri              : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
-			preferredId      : 5,
-			preferredEncrypt : false
+			kind            : 'video',
+			uri             : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+			preferredId     : 5,
+			preferredEncrypt: false
 		},
 		{
-			kind             : 'audio',
-			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-			preferredId      : 10,
-			preferredEncrypt : false
+			kind            : 'audio',
+			uri             : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+			preferredId     : 10,
+			preferredEncrypt: false
 		}
 	],
-	sctpCapabilities :
+	sctpCapabilities:
 	{
-		numSctpStreams : 2048
+		numSctpStreams: 2048
 	}
 };
 
@@ -204,13 +204,13 @@ beforeAll(async () =>
 	router2 = await worker.createRouter({ mediaCodecs });
 	transport1 = await router1.createWebRtcTransport(
 		{
-			listenIps  : [ '127.0.0.1' ],
-			enableSctp : true
+			listenIps : [ '127.0.0.1' ],
+			enableSctp: true
 		});
 	transport2 = await router2.createWebRtcTransport(
 		{
-			listenIps  : [ '127.0.0.1' ],
-			enableSctp : true
+			listenIps : [ '127.0.0.1' ],
+			enableSctp: true
 		});
 	audioProducer = await transport1.produce(audioProducerParameters);
 	videoProducer = await transport1.produce(videoProducerParameters);
@@ -228,8 +228,8 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 
 	const { pipeConsumer, pipeProducer } = await router1.pipeToRouter(
 		{
-			producerId : audioProducer.id,
-			router     : router2
+			producerId: audioProducer.id,
+			router    : router2
 		});
 
 	dump = await router1.dump();
@@ -254,24 +254,24 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeConsumer.rtpParameters.codecs).toEqual(
 		[
 			{
-				mimeType    : 'audio/opus',
-				clockRate   : 48000,
-				payloadType : 100,
-				channels    : 2,
-				parameters  :
+				mimeType   : 'audio/opus',
+				clockRate  : 48000,
+				payloadType: 100,
+				channels   : 2,
+				parameters :
 				{
-					useinbandfec : 1,
-					foo          : 'bar1'
+					useinbandfec: 1,
+					foo         : 'bar1'
 				},
-				rtcpFeedback : []
+				rtcpFeedback: []
 			}
 		]);
 
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 10
+				uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id : 10
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -292,23 +292,23 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeProducer.rtpParameters.codecs).toEqual(
 		[
 			{
-				mimeType    : 'audio/opus',
-				clockRate   : 48000,
-				payloadType : 100,
-				channels    : 2,
-				parameters  :
+				mimeType   : 'audio/opus',
+				clockRate  : 48000,
+				payloadType: 100,
+				channels   : 2,
+				parameters :
 				{
-					useinbandfec : 1,
-					foo          : 'bar1'
+					useinbandfec: 1,
+					foo         : 'bar1'
 				},
-				rtcpFeedback : []
+				rtcpFeedback: []
 			}
 		]);
 	expect(pipeProducer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 10
+				uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id : 10
 			}
 		]);
 	expect(pipeProducer.rtpParameters.encodings).toEqual(
@@ -324,8 +324,8 @@ test('router.pipeToRouter() succeeds with video', async () =>
 
 	const { pipeConsumer, pipeProducer } = await router1.pipeToRouter(
 		{
-			producerId : videoProducer.id,
-			router     : router2
+			producerId: videoProducer.id,
+			router    : router2
 		});
 
 	dump = await router1.dump();
@@ -346,10 +346,10 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeConsumer.rtpParameters.codecs).toEqual(
 		[
 			{
-				mimeType     : 'video/VP8',
-				clockRate    : 90000,
-				payloadType  : 101,
-				rtcpFeedback :
+				mimeType    : 'video/VP8',
+				clockRate   : 90000,
+				payloadType : 101,
+				rtcpFeedback:
 				[
 					{ type: 'nack', parameter: 'pli' },
 					{ type: 'ccm', parameter: 'fir' }
@@ -360,20 +360,20 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		[
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			{
-				uri : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-				id  : 6
+				uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id : 6
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:framemarking',
-				id  : 7
+				uri: 'urn:ietf:params:rtp-hdrext:framemarking',
+				id : 7
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 11
+				uri: 'urn:3gpp:video-orientation',
+				id : 11
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 12
+				uri: 'urn:ietf:params:rtp-hdrext:toffset',
+				id : 12
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -397,10 +397,10 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeProducer.rtpParameters.codecs).toEqual(
 		[
 			{
-				mimeType     : 'video/VP8',
-				clockRate    : 90000,
-				payloadType  : 101,
-				rtcpFeedback :
+				mimeType    : 'video/VP8',
+				clockRate   : 90000,
+				payloadType : 101,
+				rtcpFeedback:
 				[
 					{ type: 'nack', parameter: 'pli' },
 					{ type: 'ccm', parameter: 'fir' }
@@ -411,20 +411,20 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		[
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			{
-				uri : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-				id  : 6
+				uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id : 6
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:framemarking',
-				id  : 7
+				uri: 'urn:ietf:params:rtp-hdrext:framemarking',
+				id : 7
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 11
+				uri: 'urn:3gpp:video-orientation',
+				id : 11
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 12
+				uri: 'urn:ietf:params:rtp-hdrext:toffset',
+				id : 12
 			}
 		]);
 	expect(pipeProducer.paused).toBe(true);
@@ -434,8 +434,8 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 {
 	videoConsumer = await transport2.consume(
 		{
-			producerId      : videoProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities
+			producerId     : videoProducer.id,
+			rtpCapabilities: consumerDeviceCapabilities
 		});
 
 	expect(videoConsumer.id).toBeType('string');
@@ -446,10 +446,10 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 	expect(videoConsumer.rtpParameters.codecs).toEqual(
 		[
 			{
-				mimeType     : 'video/VP8',
-				clockRate    : 90000,
-				payloadType  : 101,
-				rtcpFeedback :
+				mimeType    : 'video/VP8',
+				clockRate   : 90000,
+				payloadType : 101,
+				rtcpFeedback:
 				[
 					{ type: 'nack' },
 					{ type: 'ccm', parameter: 'fir' },
@@ -458,25 +458,25 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				]
 			},
 			{
-				mimeType     : 'video/rtx',
-				clockRate    : 90000,
-				payloadType  : 102,
-				rtcpFeedback : [],
-				parameters   :
+				mimeType    : 'video/rtx',
+				clockRate   : 90000,
+				payloadType : 102,
+				rtcpFeedback: [],
+				parameters  :
 				{
-					apt : 101
+					apt: 101
 				}
 			}
 		]);
 	expect(videoConsumer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				id  : 4
+				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id : 4
 			},
 			{
-				uri : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
-				id  : 5
+				uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+				id : 5
 			}
 		]);
 	expect(videoConsumer.rtpParameters.encodings.length).toBe(1);
@@ -535,8 +535,8 @@ test('router.pipeToRouter() succeeds with data', async () =>
 
 	const { pipeDataConsumer, pipeDataProducer } = await router1.pipeToRouter(
 		{
-			dataProducerId : dataProducer.id,
-			router         : router2
+			dataProducerId: dataProducer.id,
+			router        : router2
 		});
 
 	dump = await router1.dump();
@@ -578,7 +578,7 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () =>
 {
 	dataConsumer = await transport2.consumeData(
 		{
-			dataProducerId : dataProducer.id
+			dataProducerId: dataProducer.id
 		});
 
 	expect(dataConsumer.id).toBeType('string');

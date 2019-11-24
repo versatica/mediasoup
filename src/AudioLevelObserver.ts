@@ -86,7 +86,7 @@ export default class AudioLevelObserver extends RtpObserver
 					const volumes: AudioLevelObserverVolume[] = data
 						.map(({ producerId, volume }: { producerId: string; volume: number }) => (
 							{
-								producer : this._getProducerById(producerId),
+								producer: this._getProducerById(producerId),
 								volume
 							}
 						))
