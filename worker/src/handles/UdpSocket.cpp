@@ -179,16 +179,7 @@ void UdpSocket::Send(
 	// Error,
 	if (sent != UV_EAGAIN)
 	{
-		MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
-
-		if (cb)
-		{
-			(*cb)(false);
-
-			delete cb;
-		}
-
-		return;
+		MS_WARN_DEV("uv_udp_send() failed, trying uv_udp_send(): %s", uv_strerror(sent));
 	}
 
 	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
