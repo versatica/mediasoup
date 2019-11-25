@@ -4004,7 +4004,7 @@ case 86:
 	{
 		MS_TRACE();
 
-		char ipBuffer[INET6_ADDRSTRLEN+1];
+		char ipBuffer[INET6_ADDRSTRLEN + 1] = { 0 };
 		int err;
 
 		switch (addr->sa_family)
@@ -4050,7 +4050,7 @@ case 86:
 		MS_TRACE();
 
 		static sockaddr_storage addrStorage;
-		char ipBuffer[INET6_ADDRSTRLEN+1];
+		char ipBuffer[INET6_ADDRSTRLEN + 1] = { 0 };
 		int err;
 
 		switch (IP::GetFamily(ip))
@@ -4068,7 +4068,7 @@ case 86:
 				err = uv_ip4_name(
 					reinterpret_cast<const struct sockaddr_in*>(std::addressof(addrStorage)),
 					ipBuffer,
-					INET6_ADDRSTRLEN+1);
+					INET6_ADDRSTRLEN + 1);
 
 				if (err != 0)
 					MS_ABORT("uv_ipv4_name() failed: %s", uv_strerror(err));
@@ -4091,7 +4091,7 @@ case 86:
 				err = uv_ip6_name(
 					reinterpret_cast<const struct sockaddr_in6*>(std::addressof(addrStorage)),
 					ipBuffer,
-					INET6_ADDRSTRLEN+1);
+					INET6_ADDRSTRLEN + 1);
 
 				if (err != 0)
 					MS_ABORT("uv_ip6_name() failed: %s", uv_strerror(err));
