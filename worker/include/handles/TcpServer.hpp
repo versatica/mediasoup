@@ -25,13 +25,15 @@ public:
 	uint16_t GetLocalPort() const;
 	size_t GetNumConnections() const;
 
+protected:
+	void AcceptTcpConnection(TcpConnection* connection);
+
 private:
 	bool SetLocalAddress();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnTcpConnectionAlloc(TcpConnection** connection) = 0;
-	virtual bool UserOnNewTcpConnection(TcpConnection* connection)    = 0;
+	virtual void UserOnTcpConnectionAlloc()                           = 0;
 	virtual void UserOnTcpConnectionClosed(TcpConnection* connection) = 0;
 
 	/* Callbacks fired by UV events. */

@@ -12,10 +12,8 @@ inline static void onConnection(uv_stream_t* handle, int status)
 {
 	auto* server = static_cast<TcpServer*>(handle->data);
 
-	if (server == nullptr)
-		return;
-
-	server->OnUvConnection(status);
+	if (server)
+		server->OnUvConnection(status);
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -97,6 +95,48 @@ void TcpServer::Dump() const
 	MS_DUMP("</TcpServer>");
 }
 
+void TcpServer::AcceptTcpConnection(TcpConnection* connection)
+{
+	MS_TRACE();
+
+	MS_ASSERT(connection != nullptr, "TcpConnection pointer was not allocated by the user");
+
+	try
+	{
+		connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
+	}
+	catch (const MediaSoupError& error)
+	{
+		delete connection;
+
+		return;
+	}
+
+	// Accept the connection.
+	int err = uv_accept(
+	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	  reinterpret_cast<uv_stream_t*>(connection->GetUvHandle()));
+
+	if (err != 0)
+		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
+
+	// Start receiving data.
+	try
+	{
+		// NOTE: This may throw.
+		connection->Start();
+	}
+	catch (const MediaSoupError& error)
+	{
+		delete connection;
+
+		return;
+	}
+
+	// Store it.
+	this->connections.insert(connection);
+}
+
 bool TcpServer::SetLocalAddress()
 {
 	MS_TRACE();
@@ -129,8 +169,6 @@ inline void TcpServer::OnUvConnection(int status)
 	if (this->closed)
 		return;
 
-	int err;
-
 	if (status != 0)
 	{
 		MS_ERROR("error while receiving a new TCP connection: %s", uv_strerror(status));
@@ -138,49 +176,8 @@ inline void TcpServer::OnUvConnection(int status)
 		return;
 	}
 
-	// Notify the subclass so it provides an allocated derived class of TCPConnection.
-	TcpConnection* connection = nullptr;
-	UserOnTcpConnectionAlloc(&connection);
-
-	MS_ASSERT(connection != nullptr, "TcpConnection pointer was not allocated by the user");
-
-	try
-	{
-		connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
-	}
-	catch (const MediaSoupError& error)
-	{
-		delete connection;
-
-		return;
-	}
-
-	// Accept the connection.
-	err = uv_accept(
-	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  reinterpret_cast<uv_stream_t*>(connection->GetUvHandle()));
-
-	if (err != 0)
-		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
-
-	// Start receiving data.
-	try
-	{
-		// NOTE: This may throw.
-		connection->Start();
-	}
-	catch (const MediaSoupError& error)
-	{
-		delete connection;
-
-		return;
-	}
-
-	// Notify the subclass and delete the connection if not accepted by the subclass.
-	if (UserOnNewTcpConnection(connection))
-		this->connections.insert(connection);
-	else
-		delete connection;
+	// Notify the subclass about a new TCP connection attempt.
+	UserOnTcpConnectionAlloc();
 }
 
 inline void TcpServer::OnTcpConnectionClosed(TcpConnection* connection)
