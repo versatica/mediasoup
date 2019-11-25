@@ -183,6 +183,11 @@
 * v3 is here!
 
 
+### 2.6.18
+
+* Fix usage of a deallocated `RTC::TcpConnection` instance under heavy CPU usage due to mediasoup deleting the instance in the middle of a receiving iteration. 
+
+
 ### 2.6.17
 
 * Improve build system by using all available CPU cores in parallel.
