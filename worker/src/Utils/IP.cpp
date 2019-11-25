@@ -4025,7 +4025,7 @@ case 86:
 			case AF_INET6:
 			{
 				err = uv_inet_ntop(
-					AF_INET, std::addressof(reinterpret_cast<const struct sockaddr_in6*>(addr)->sin6_addr), ipBuffer, INET6_ADDRSTRLEN);
+					AF_INET6, std::addressof(reinterpret_cast<const struct sockaddr_in6*>(addr)->sin6_addr), ipBuffer, INET6_ADDRSTRLEN);
 
 				if (err)
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
