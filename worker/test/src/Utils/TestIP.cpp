@@ -22,6 +22,9 @@ SCENARIO("Utils::IP::GetFamily()")
 	ip = "127.0.0.1";
 	REQUIRE(IP::GetFamily(ip) == AF_INET);
 
+	ip = "255.255.255.255";
+	REQUIRE(IP::GetFamily(ip) == AF_INET);
+
 	ip = "1::1";
 	REQUIRE(IP::GetFamily(ip) == AF_INET6);
 
@@ -64,6 +67,10 @@ SCENARIO("Utils::IP::NormalizeIp()")
 	IP::NormalizeIp(ip);
 	REQUIRE(ip == "1.2.3.4");
 
+	ip = "255.255.255.255";
+	IP::NormalizeIp(ip);
+	REQUIRE(ip == "255.255.255.255");
+
 	ip = "aA::8";
 	IP::NormalizeIp(ip);
 	REQUIRE(ip == "aa::8");
@@ -73,6 +80,9 @@ SCENARIO("Utils::IP::NormalizeIp()")
 	REQUIRE(ip == "aa::8");
 
 	ip = "001.2.3.4";
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+
+	ip = "0255.255.255.255";
 	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 
 	ip = "1::2::3";
