@@ -163,6 +163,8 @@ void UnixStreamSocket::Close()
 
 void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 {
+	MS_TRACE_STD();
+
 	if (this->closed)
 		return;
 
@@ -189,7 +191,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	// Any other error.
 	else if (written < 0)
 	{
-		MS_WARN_DEV("uv_try_write() failed, trying uv_write(): %s", uv_strerror(written));
+		MS_ERROR_STD("uv_try_write() failed, trying uv_write(): %s", uv_strerror(written));
 
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
