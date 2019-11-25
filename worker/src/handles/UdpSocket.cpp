@@ -233,7 +233,7 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 
 		return;
 	}
-	if (sent >= 0)
+	else if (sent >= 0)
 	{
 		MS_WARN_DEV("datagram truncated (just %d of %zu bytes were sent)", sent, len);
 
@@ -242,16 +242,11 @@ void UdpSocket::Send(const uint8_t* data, size_t len, const struct sockaddr* add
 
 		return;
 	}
-	// Error,
-	if (sent != UV_EAGAIN)
+	// Any error but legit EAGAIN. Use uv_udp_send().
+	else if (sent != UV_EAGAIN)
 	{
 		MS_WARN_DEV("uv_udp_try_send() failed: %s", uv_strerror(sent));
-
-		return;
 	}
-	// Otherwise UV_EAGAIN was returned so cannot send data at first time. Use uv_udp_send().
-
-	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
 
 	// Allocate a special UvSendData struct pointer.
 	auto* sendData = static_cast<UvSendData*>(std::malloc(sizeof(UvSendData) + len));

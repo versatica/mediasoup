@@ -214,21 +214,14 @@ void TcpConnection::Write(const uint8_t* data, size_t len)
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
 	}
-	// Error. Should not happen.
+	// Another error.
 	else if (written < 0)
 	{
-		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
+		MS_WARN_DEV("uv_try_write() failed: %s", uv_strerror(written));
 
-		Close();
-
-		this->listener->OnTcpConnectionClosed(this);
-
-		return;
+		// Set written to 0 so pendingLen can be properly calculated.
+		written = 0;
 	}
-
-	// MS_DEBUG_DEV(
-	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
-	// 	static_cast<size_t>(written), len);
 
 	size_t pendingLen = len - written;
 	// Allocate a special UvWriteData struct pointer.
@@ -282,21 +275,14 @@ void TcpConnection::Write(const uint8_t* data1, size_t len1, const uint8_t* data
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
 	}
-	// Error. Should not happen.
+	// Another error.
 	else if (written < 0)
 	{
-		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
+		MS_WARN_DEV("uv_try_write() failed: %s", uv_strerror(written));
 
-		Close();
-
-		this->listener->OnTcpConnectionClosed(this);
-
-		return;
+		// Set written to 0 so pendingLen can be properly calculated.
+		written = 0;
 	}
-
-	// MS_DEBUG_DEV(
-	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
-	// 	static_cast<size_t>(written), totalLen);
 
 	size_t pendingLen = totalLen - written;
 
