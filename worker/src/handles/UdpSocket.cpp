@@ -179,7 +179,7 @@ void UdpSocket::Send(
 	// Any error but legit EAGAIN. Use uv_udp_send().
 	else if (sent != UV_EAGAIN)
 	{
-		MS_WARN_DEV("uv_udp_send() failed, trying uv_udp_send(): %s", uv_strerror(sent));
+		MS_WARN_DEV("uv_udp_try_send() failed, trying uv_udp_send(): %s", uv_strerror(sent));
 	}
 
 	auto* sendData = new UvSendData(len);
