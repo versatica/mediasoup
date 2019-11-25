@@ -229,7 +229,7 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
 	}
-	// Error. Should not happen.
+	// Any other error.
 	else if (written < 0)
 	{
 		MS_WARN_DEV("uv_try_write() failed, trying uv_write(): %s", uv_strerror(written));
@@ -333,7 +333,7 @@ void TcpConnection::Write(
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
 	}
-	// Error. Should not happen.
+	// Any other error.
 	else if (written < 0)
 	{
 		MS_WARN_DEV("uv_try_write() failed, trying uv_write(): %s", uv_strerror(written));

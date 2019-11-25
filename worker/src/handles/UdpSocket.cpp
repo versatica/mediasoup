@@ -160,7 +160,7 @@ void UdpSocket::Send(
 
 		return;
 	}
-	if (sent >= 0)
+	else if (sent >= 0)
 	{
 		MS_WARN_DEV("datagram truncated (just %d of %zu bytes were sent)", sent, len);
 
@@ -176,8 +176,8 @@ void UdpSocket::Send(
 
 		return;
 	}
-	// Error,
-	if (sent != UV_EAGAIN)
+	// Any error but legit EAGAIN. Use uv_udp_send().
+	else if (sent != UV_EAGAIN)
 	{
 		MS_WARN_DEV("uv_udp_send() failed, trying uv_udp_send(): %s", uv_strerror(sent));
 	}

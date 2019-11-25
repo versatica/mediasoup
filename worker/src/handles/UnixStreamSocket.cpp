@@ -186,7 +186,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
 	}
-	// Error. Should not happen.
+	// Any other error.
 	else if (written < 0)
 	{
 		MS_WARN_DEV("uv_try_write() failed, trying uv_write(): %s", uv_strerror(written));
