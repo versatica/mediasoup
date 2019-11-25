@@ -182,8 +182,6 @@ void UdpSocket::Send(
 		MS_WARN_DEV("uv_udp_send() failed, trying uv_udp_send(): %s", uv_strerror(sent));
 	}
 
-	// MS_DEBUG_DEV("could not send the datagram at first time, using uv_udp_send() now");
-
 	auto* sendData = new UvSendData(len);
 
 	sendData->req.data = static_cast<void*>(sendData);

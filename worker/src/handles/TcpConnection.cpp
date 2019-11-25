@@ -238,10 +238,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		written = 0;
 	}
 
-	// MS_DEBUG_DEV(
-	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
-	// 	static_cast<size_t>(written), len);
-
 	size_t pendingLen = len - written;
 	auto* writeData   = new UvWriteData(pendingLen);
 

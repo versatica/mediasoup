@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.3.5 (WIP)
+
+* Fix usage of a deallocated `RTC::TcpConnection` instance under heavy CPU usage due to mediasoup deleting the instance in the middle of a receiving iteration. Fixes #333.
+  - More details in the commit: https://github.com/versatica/mediasoup/commit/49824baf102ab6d2b01e5bca565c29b8ac0fec22
+
+
 ### 3.3.4
 
 * IPv6 fix: Use `INET6_ADDRSTRLEN` instead of `INET_ADDRSTRLEN`.
