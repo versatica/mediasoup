@@ -3,7 +3,7 @@
 
 #include "RTC/ShmTransport.hpp"
 #include "DepLibUV.hpp"
-#include "DepLibSfuShm.hpp"
+//#include "DepLibSfuShm.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -13,12 +13,13 @@ namespace RTC
 	/* Instance methods. */
 
 	ShmTransport::ShmTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener)
+	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
 /*		
 		data:
 			listenIp: {ip: ..., announcedIp: ...},
+			kind: "audio|video",
 			shm: {name: shmName},
 			log: {fileName: logName, level: logLevel},
 			channels: appData.channels (TBD)
@@ -39,6 +40,25 @@ namespace RTC
 
 		this->shm.assign(jsonShmNameIt->get<std::string>());
 
+		// media kind
+		auto jsonKindIt = jsonShmIt->find("kind");
+		if (jsonKindIt == data.end())
+			MS_THROW_TYPE_ERROR("missing kind");
+		else if (!jsonKindIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong kind (not a string)");
+
+		std::string kindStr;
+		kindStr.assign(jsonKindIt->get<std::string>());
+		if (kindStr.compare("audio") == 0) {
+			this->producerKind = RTC::Media::Kind::AUDIO;
+		}
+		else if (kindStr.compare("video") == 0) {
+			this->producerKind = RTC::Media::Kind::VIDEO;
+		}
+		else {
+			MS_THROW_TYPE_ERROR("wrong kind, must be audio or video");
+		}
+
 		// ngxshm log name and level
 		auto jsonLogIt = data.find("log");
 		if (jsonLogIt == data.end())
@@ -52,13 +72,13 @@ namespace RTC
 		else if (!jsonLogNameIt->is_string())
 			MS_THROW_TYPE_ERROR("wrong log.fileName (not a string)");
 		
-		this->logname.assing(jsonLogNameIt->get<std::string>());
+		this->logname.assign(jsonLogNameIt->get<std::string>());
 
 		auto jsonLogLevelIt = jsonLogIt->find("level");
 		if (jsonLogLevelIt == data.end())
 		  MS_THROW_TYPE_ERROR("missing log.level");
-		else if (!jsonLogLevelIt->is_integer())
-			MS_THROW_TYPE_ERROR("wrong log.level (not an integer");
+		else if (!jsonLogLevelIt->is_number())
+			MS_THROW_TYPE_ERROR("wrong log.level (not a number");
 
 		this->loglevel = jsonLogLevelIt->get<int>();
 
@@ -108,7 +128,7 @@ namespace RTC
 		RTC::Transport::FillJson(jsonObject);
 
 		// Add shm info
-		jsonObject["shm"] = json::object;
+		jsonObject["shm"] = json::object();
 		auto jsonShmIt    = jsonObject.find("shm");
 		(*jsonShmIt)["name"] = this->shm;
 		if (this->shmCtx) {
@@ -131,22 +151,6 @@ namespace RTC
 		else {
 			(*jsonShmIt)["writer"] = "null";
 		}
-
-		// Add headerExtensionIds.
-		jsonObject["rtpHeaderExtensions"] = json::object();
-		auto jsonRtpHeaderExtensionsIt    = jsonObject.find("rtpHeaderExtensions");
-
-		if (this->rtpHeaderExtensionIds.mid != 0u)
-			(*jsonRtpHeaderExtensionsIt)["mid"] = this->rtpHeaderExtensionIds.mid;
-
-		if (this->rtpHeaderExtensionIds.rid != 0u)
-			(*jsonRtpHeaderExtensionsIt)["rid"] = this->rtpHeaderExtensionIds.rid;
-
-		if (this->rtpHeaderExtensionIds.rrid != 0u)
-			(*jsonRtpHeaderExtensionsIt)["rrid"] = this->rtpHeaderExtensionIds.rrid;
-
-		if (this->rtpHeaderExtensionIds.absSendTime != 0u)
-			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->rtpHeaderExtensionIds.absSendTime;
 	}
 
 	void ShmTransport::FillJsonStats(json& jsonArray)
@@ -163,21 +167,9 @@ namespace RTC
 		jsonObject["transportId"] = this->id;
 
 		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTime();
+		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
 
-		// Add some stats on shm writing
-
-		// Add bytesReceived.
-		jsonObject["bytesReceived"] = RTC::Transport::GetReceivedBytes();
-
-		// Add bytesSent.
-		jsonObject["bytesSent"] = RTC::Transport::GetSentBytes();
-
-		// Add recvBitrate.
-		jsonObject["recvBitrate"] = RTC::Transport::GetRecvBitrate();
-
-		// Add sendBitrate.
-		jsonObject["sendBitrate"] = RTC::Transport::GetSendBitrate();
+		//TODO: Add some stats on shm writing
 	}
 
 	void ShmTransport::HandleRequest(Channel::Request* request)
@@ -211,8 +203,7 @@ namespace RTC
 		return true; //TODO: or always false? or what?
 	}
 
-	void ShmTransport::SendRtpPacket(
-	  RTC::RtpPacket* packet, RTC::Consumer* consumer, bool /*retransmitted*/, bool /*probation*/)
+	void ShmTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* /* cb */)
 	{
 		MS_TRACE();
 
@@ -224,7 +215,7 @@ namespace RTC
 
 		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm...
 
-		switch (consumer->GetKind())
+		switch (this->producerKind)
 		{
 			case RTC::Media::Kind::AUDIO:
 			{
@@ -236,8 +227,8 @@ namespace RTC
 				this->chunk.len = len;
 				this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
-				this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
-				DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_AUDIO);
+				this->chunk.begin = this->chunk.end = 1;
+				DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::AUDIO);
 
 				break;
 			} // audio
@@ -271,9 +262,9 @@ namespace RTC
 						this->chunk.len = naluSize;
 						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
-						this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+						this->chunk.begin = this->chunk.end = 1;
 
-						DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_VIDEO);
+						DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::VIDEO);
 						break;
 					}
 
@@ -320,9 +311,9 @@ namespace RTC
 								this->chunk.len = len;
 								this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
-								this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+								this->chunk.begin = this->chunk.end = 1;
 
-								DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_VIDEO);
+								DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::VIDEO);
 							}
 
 							offset += naluSize + sizeof(naluSize);
@@ -348,9 +339,9 @@ namespace RTC
 						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
 						this->chunk.begin = (startBit == 128)? 1 : 0;
-						this->chunk.end = this->chunk.complete = (endBit) ? 1 : 0;
+						this->chunk.end = (endBit) ? 1 : 0;
 
-						DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_VIDEO);
+						DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::VIDEO);
 						break;
 					}
 					case 25: // STAB-B
@@ -387,13 +378,13 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// write it out into shm, separate channel
-		this->chunk.data = data;
+		this->chunk.data = const_cast<uint8_t*> (data);
 		this->chunk.len = len;
 		this->chunk.rtp_time = 0; // packet->GetTimestamp(); TODO: RTCP packets don't seem to have timestamps or seqIds
 		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; // TODO: what instead of packet->GetSequenceNumber()?
-		this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+		this->chunk.begin = this->chunk.end = 1;
 
-		DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_RTCP);
+		DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::RTCP);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -410,13 +401,13 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// write it out into shm, separate channel
-		this->chunk.data = data;
+		this->chunk.data = const_cast<uint8_t*> (data);
 		this->chunk.len = len;
 		this->chunk.rtp_time = 0; //packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; //packet->GetSequenceNumber(); // TODO: are there several seqIds in a compound packet??
-		this->chunk.begin = this->chunk.end = this->chunk.complete = 1;
+		this->chunk.begin = this->chunk.end = 1;
 
-		DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::SHM_RTCP);
+		DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::RTCP);
 
 		// How to check for validity looping thru all packets in a compound packet: https://tools.ietf.org/html/rfc3550#appendix-A.2
 
@@ -433,29 +424,6 @@ namespace RTC
 		return true;
 	}
 
-	void ShmTransport::UserOnNewProducer(RTC::Producer* /*producer*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
-	}
-
-	void ShmTransport::UserOnNewConsumer(RTC::Consumer* /*consumer*/)
-	{
-		MS_TRACE();
-	}
-
-	void ShmTransport::UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* /*remb*/)
-	{
-		MS_TRACE();
-
-		// Do nothing.
-	}
-
-	void ShmTransport::UserOnSendSctpData(const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-	}
 
 	inline void ShmTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{

@@ -225,13 +225,6 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-	void ShmConsumer::SendProbationRtpPacket(uint16_t seq)
-	{
-		MS_TRACE();
-
-		this->rtpStream->SendProbationRtpPacket(seq);
-	}
-
 	void ShmConsumer::GetRtcp(
 	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
@@ -383,12 +376,14 @@ namespace RTC
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 	}
 
-	inline void ShmConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet, bool probation)
+	void ShmConsumer::OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
-		this->listener->OnConsumerRetransmitRtpPacket(this, packet, probation);
+		//this->listener->OnConsumerRetransmitRtpPacket(this, packet);
+
+		// May emit 'trace' event.
+		//EmitTraceEventRtpAndKeyFrameTypes(packet, this->rtpStream->HasRtx());
 	}
 
 	inline void ShmConsumer::EmitScore() const
@@ -400,5 +395,40 @@ namespace RTC
 	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
+	}
+
+	uint8_t ShmConsumer::GetBitratePriority() const
+	{
+		MS_TRACE();
+
+		// PipeConsumer does not play the BWE game.
+		return 0u;
+	}
+
+	uint32_t ShmConsumer::IncreaseLayer(uint32_t /*bitrate*/, bool /*considerLoss*/)
+	{
+		MS_TRACE();
+
+		return 0u;
+	}
+
+	void ShmConsumer::ApplyLayers()
+	{
+		MS_TRACE();
+	}
+
+	uint32_t ShmConsumer::GetDesiredBitrate() const
+	{
+		MS_TRACE();
+
+		return 0u;
+	}
+
+
+	float ShmConsumer::GetRtt() const
+	{
+		MS_TRACE();
+
+		return this->rtpStream->GetRtt();
 	}
 } // namespace RTC

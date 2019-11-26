@@ -9,9 +9,6 @@
 class DepLibSfuShm
 {
 public:
-	//static void ClassInit();
-	//static void ClassDestroy();
-  
   enum ShmWriterStatus {
     SHM_WRT_INITIALIZED,
     SHM_WRT_CLOSED,
@@ -19,17 +16,17 @@ public:
   };
 
   enum ShmChunkType {
-    SHM_VIDEO,
-    SHM_AUDIO,
-    SHM_RTCP
+    VIDEO,
+    AUDIO,
+    RTCP
   };
-
 
   // Contains shm configuration, writer context (if initialized), writer status 
   class SfuShmMapItem {
   public:
     SfuShmMapItem() = default;
     SfuShmMapItem(const char* shm_name);
+    ~SfuShmMapItem();
 
     ShmWriterStatus status() { return wrt_status; }
   public:
@@ -38,8 +35,9 @@ public:
     ShmWriterStatus          wrt_status;
   };
 
+public:
   // Find active writer for this shm, write data in, return non-0 error in case smth isn't quite right 
-  static int WriteChunk(const char* shm_name, sfushm_av_frame_frag_t* data, ShmChunkType kind);
+  static int WriteChunk(std::string shm_name, sfushm_av_frame_frag_t* data, DepLibSfuShm::ShmChunkType kind);
   static int WriteStreamMetadata(const char* shm, uint8_t *data, size_t len);
 
 	static bool IsError(int err_code);

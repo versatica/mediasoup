@@ -753,7 +753,16 @@ namespace RTC
 					{
 #ifdef SFU_SHM
 						// This may throw.
-						consumer = new RTC::ShmConsumer(consumerId, this, request->data); // "fake" consumer with very limited functionality
+						{
+							// shm writer needs to know content kind: "audio" or "video"
+							auto jsonKindIt = request->data.find("kind");
+
+							if (jsonKindIt == request->data.end() || !jsonTypeIt->is_string())
+								MS_THROW_TYPE_ERROR("missing kind");
+
+							consumer = new RTC::ShmConsumer(consumerId, this, request->data); // "fake" consumer with very limited functionality
+
+						}
 #endif
 						break;
 					}
@@ -1072,16 +1081,15 @@ namespace RTC
 				break;
 			}
 
-<<<<<<< HEAD
-
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_STREAM_META:
 			{
 				if (RecvStreamMeta(request->data))
 					request->Accept();
 				else
 					request->Error("ShmTransport::RecvStreamMeta returned false");
+				break;
+			}
 				
-=======
 			case Channel::Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT:
 			{
 				auto jsonTypesIt = request->data.find("types");
@@ -1110,7 +1118,6 @@ namespace RTC
 
 				request->Accept();
 
->>>>>>> e6734b9c4dd0e8a1b9e34d27163f626e05bbeae2
 				break;
 			}
 
@@ -1991,14 +1998,14 @@ namespace RTC
 		}
 	}
 
-<<<<<<< HEAD
 	bool Transport::RecvStreamMeta(json& data) const
 	{
 		MS_TRACE();
 
 		// Do nothing, will overwrite in shm transport class
 		return false;
-=======
+	}
+	
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
 		MS_TRACE();
@@ -2153,7 +2160,6 @@ namespace RTC
 		}
 
 		Channel::Notifier::Emit(this->id, "trace", data);
->>>>>>> e6734b9c4dd0e8a1b9e34d27163f626e05bbeae2
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)

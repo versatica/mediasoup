@@ -10,50 +10,7 @@
 
 DepLibSfuShm::SfuShmMapItem::SfuShmMapItem(const char* shm_name) : wrt_ctx(nullptr), wrt_status(SHM_WRT_UNDEFINED)
 {
-  /*
-  typedef struct {
-	uint32_t          target_buf_ms; // target number of milliseconds to store in shared memory for this channel
-	uint32_t          target_kbps;   // expected birtate in kbps
-	uint32_t          ssrc;          // source RTP SSRC. Used for correlating with RTCP messages
-	uint32_t          sample_rate;   // clock sample rate for the this channel
-	uint8_t           num_chn;       // number of audio channels
-	uint8_t           codec_id;      // codec id as one of SFUSHM_AV_VIDEO_CODEC_XXX constants
-	unsigned          video:1;       // if set the channel contains video
-	unsigned          audio:1;       // if set the channel contains audio
-} sfushm_av_chn_conf_t;
-
-typedef struct {
-	const char             *log_file_name;      // full path for the log file
-	unsigned int           log_level;           // default log level. one of SFUSHM_AV_LOG_LEVEL_XXX
-	sfushm_av_chn_conf_t   channels[SFUSHM_AV_MAX_NUM_CHANNELS]; // channels configuration
-	unsigned               redirect_stdio:1;    // if set log output will be redirected to stdout
-} sfushm_av_conf_t;
-
-// we hide the implementation details behind this context from clients of this library
-typedef struct{
-	void            *wr_ctx;
-} sfushm_av_wr_ctx_t;
-
-typedef struct {
-	sfushm_av_conf_t    conf;               // context configuration
-	char                *stream_name;       // the name of the stream to open for writing
-    unsigned int        stats_win_size;     // the writer continuously collects stats about the stream such as fps and bitrate
-                                            // it collects it as moving average. this parameter determines the window size in number of samples
-} sfushm_av_writer_init_t;
-*/
-  // Assume that we always have both audio and video in shm
-         /*
-        class SfuShmMapItem {
-    sfushm_av_writer_init_t  init_data;
-    sfushm_av_wr_ctx_t      *wrt_ctx;
-    ShmWriterStatus          wrt_status;
-  };
-      */
-    //sfushm_av_writer_init_t  init_data;
-
-  // 
-  
-  wrt_init.stream_name = shm_name; 
+  wrt_init.stream_name = const_cast<char *> (shm_name); // TODO: instead declare stream_name a const char*
   
   wrt_init.conf.channels[0].target_buf_ms = 2000; // TODO: actual values, I don't know what should be here
   wrt_init.conf.channels[0].target_kbps   = 4000;
@@ -73,7 +30,7 @@ typedef struct {
   wrt_init.conf.channels[1].video         = 1;
   wrt_init.conf.channels[1].audio         = 0;
 
-  if (SFUHSM_AV_OK != sfushm_av_open_writer( &wrt_init, &wrt_ctx))
+  if (SFUSHM_AV_OK != sfushm_av_open_writer( &wrt_init, &wrt_ctx))
     MS_THROW_ERROR("Failed to initialize sfu shm %s", shm_name);
   
   wrt_status = SHM_WRT_INITIALIZED;    
@@ -84,7 +41,7 @@ DepLibSfuShm::SfuShmMapItem::~SfuShmMapItem()
   // Call if writer is not closed
   if (SHM_WRT_CLOSED != wrt_status)
   {
-    sfushm_av_close_writer(>wr_ctx, 0)); //TODO: smth else at the last param
+    sfushm_av_close_writer(wrt_ctx, 0); //TODO: smth else at the last param
   }
 }
 
@@ -132,13 +89,13 @@ int DepLibSfuShm::GetShmWriterCtx(const char* shm_name, sfushm_av_wr_ctx_t *ctx_
   return 0;
 }
 
-int DepLibSfuShm::WriteChunk(const char* shm, sfushm_av_frame_frag_t* data, ShmChunkType kind)
+int DepLibSfuShm::WriteChunk(std::string shm, sfushm_av_frame_frag_t* data, DepLibSfuShm::ShmChunkType kind)
 {
   int err;
   // basic data checks
   sfushm_av_wr_ctx_t *wr_ctx = nullptr;
 
-  err = DepLibSfuShm::GetShmWriterCtx( shm, wr_ctx );
+  err = DepLibSfuShm::GetShmWriterCtx( shm.c_str(), wr_ctx );
   if(DepLibSfuShm::IsError(err))
   {
     // TODO: log smth
@@ -146,15 +103,15 @@ int DepLibSfuShm::WriteChunk(const char* shm, sfushm_av_frame_frag_t* data, ShmC
   }
 
   switch(kind) {
-  case SHM_VIDEO:
+  case DepLibSfuShm::ShmChunkType::VIDEO:
     err = sfushm_av_write_video( wr_ctx, data);
     break;
 
-  case SHM_AUDIO:
+  case DepLibSfuShm::ShmChunkType::AUDIO:
     err = sfushm_av_write_audio(wr_ctx, data);
     break;
 
-  case SHM_RTCP:
+  case DepLibSfuShm::ShmChunkType::RTCP:
     err = sfushm_av_write_rtcp(wr_ctx, data);
     break;
 
@@ -193,4 +150,6 @@ int DepLibSfuShm::WriteStreamMetadata(const char* shm, uint8_t *data, size_t len
     // TODO: log smth
     return -1; // the caller may need to tell the producer of this metadata that writing op failed... or just logging and error would be enough?
   }
+
+  return 0;
 }

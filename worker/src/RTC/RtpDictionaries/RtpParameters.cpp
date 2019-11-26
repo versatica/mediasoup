@@ -19,7 +19,7 @@ namespace RTC
 		{ "svc",       RtpParameters::Type::SVC       },
 		{ "pipe",      RtpParameters::Type::PIPE      }
 #ifdef SFU_SHM
-	 ,{ "shm",       RtpParameters::Type::SFU_SHM   }
+	 ,{ "shm",       RtpParameters::Type::SHM   }
 #endif	
 	};
 	std::map<RtpParameters::Type, std::string> RtpParameters::type2String =
@@ -30,7 +30,7 @@ namespace RTC
 		{ RtpParameters::Type::SVC,       "svc"       },
 		{ RtpParameters::Type::PIPE,      "pipe"      }
 #ifdef SFU_SHM
-	 ,{ RtpParameters::Type::SFU_SHM,   "shm"       }
+	 ,{ RtpParameters::Type::SHM,   "shm"       }
 #endif
 	};
 	// clang-format on

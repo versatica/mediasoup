@@ -3,9 +3,11 @@
 
 #include "json.hpp"
 #include "sfushm_av_media.h"
+#include "DepLibSfuShm.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include <string>
 
 using json = nlohmann::json;
@@ -33,20 +35,10 @@ namespace RTC
 
 	private:
 		bool IsConnected() const override;
-		void SendRtpPacket(
-		  RTC::RtpPacket* packet,
-		  RTC::Consumer* consumer,
-		  bool retransmitted = false,
-		  bool probation     = false) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
+		void SendSctpData(const uint8_t* data, size_t len) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
-
-		/* Pure virtual methods inherited from RTC::Transport. */
-	private:
-		void UserOnNewProducer(RTC::Producer* producer) override;
-		void UserOnNewConsumer(RTC::Consumer* consumer) override;
-		void UserOnRembFeedback(RTC::RTCP::FeedbackPsRembPacket* remb) override;
-		void UserOnSendSctpData(const uint8_t* data, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
@@ -73,6 +65,7 @@ namespace RTC
 
 		std::string                  logname;  // as copied from input data in ctor
 		int                          loglevel;
+		RTC::Media::Kind             producerKind;
 		DepLibSfuShm::SfuShmMapItem *shmCtx;   // A handle to shm context so that to avoid lookup in DepLibSfuShm each time need to write smth
 		sfushm_av_frame_frag_t       chunk;    // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
 	};
