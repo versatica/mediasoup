@@ -424,6 +424,16 @@ namespace RTC
 		return true;
 	}
 
+	void ShmTransport::SendSctpData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!IsConnected())
+			return;
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
+	}
 
 	inline void ShmTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{

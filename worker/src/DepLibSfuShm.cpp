@@ -8,22 +8,22 @@
 #include "Utils.hpp"
 
 
-DepLibSfuShm::SfuShmMapItem::SfuShmMapItem(const char* shm_name) : wrt_ctx(nullptr), wrt_status(SHM_WRT_UNDEFINED)
+DepLibSfuShm::SfuShmMapItem::SfuShmMapItem(const char* shm_name) : wrt_ctx(nullptr), wrt_status(SHM_WRT_UNDEFINED) // TODO: add SSRC to params, video and audio
 {
   wrt_init.stream_name = const_cast<char *> (shm_name); // TODO: instead declare stream_name a const char*
   
-  wrt_init.conf.channels[0].target_buf_ms = 2000; // TODO: actual values, I don't know what should be here
-  wrt_init.conf.channels[0].target_kbps   = 4000;
-  wrt_init.conf.channels[0].ssrc          = 0; //TODO: when will I know it?
-  wrt_init.conf.channels[0].sample_rate   = 44000;
+  wrt_init.conf.channels[0].target_buf_ms = 20000; // TODO: actual values, I don't know what should be here
+  wrt_init.conf.channels[0].target_kbps   = 128;
+  wrt_init.conf.channels[0].ssrc          = 0;
+  wrt_init.conf.channels[0].sample_rate   = 48000;
   wrt_init.conf.channels[0].num_chn       = 2;
   wrt_init.conf.channels[0].codec_id      = SFUSHM_AV_AUDIO_CODEC_OPUS;
   wrt_init.conf.channels[0].video         = 0;
   wrt_init.conf.channels[0].audio         = 1;
 
-  wrt_init.conf.channels[1].target_buf_ms = 2000; 
-  wrt_init.conf.channels[1].target_kbps   = 4000;
-  wrt_init.conf.channels[1].ssrc          = 0; //TODO: when will I know it?
+  wrt_init.conf.channels[1].target_buf_ms = 20000; 
+  wrt_init.conf.channels[1].target_kbps   = 2500;
+  wrt_init.conf.channels[1].ssrc          = 0;
   wrt_init.conf.channels[1].sample_rate   = 90000;
   wrt_init.conf.channels[1].num_chn       = 0;
   wrt_init.conf.channels[1].codec_id      = SFUSHM_AV_VIDEO_CODEC_H264;
@@ -112,7 +112,7 @@ int DepLibSfuShm::WriteChunk(std::string shm, sfushm_av_frame_frag_t* data, DepL
     break;
 
   case DepLibSfuShm::ShmChunkType::RTCP:
-    err = sfushm_av_write_rtcp(wr_ctx, data);
+    // TODO: this is not implemented in sfushm API yet err = sfushm_av_write_rtcp(wr_ctx, data);
     break;
 
   default:
@@ -144,7 +144,7 @@ int DepLibSfuShm::WriteStreamMetadata(const char* shm, uint8_t *data, size_t len
 
   // write opaque data to shared memory. this allows an external controller to set stream meta-data such as room state
   // in the shared memory.
-  err = sfushm_av_write_stream_metadata(wr_ctx, data, len);
+  err = 0; // TODO: this is not implemented in sfushm yet sfushm_av_write_stream_metadata(wr_ctx, data, len);
   if(DepLibSfuShm::IsError(err))
   {
     // TODO: log smth
