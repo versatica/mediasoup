@@ -107,6 +107,7 @@ namespace RTC
 			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
 				isDataChannel = jsonIsDataChannelIt->get<bool>();
 
+			// This may throw.
 			this->sctpAssociation =
 			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
 		}
