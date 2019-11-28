@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.3.6
+
+* `SctpAssociation.cpp`: Initialize the `usrsctp` socket in the class constructor. Fixes #348.
+
+
 ### 3.3.5
 
 * Fix usage of a deallocated `RTC::TcpConnection` instance under heavy CPU usage due to mediasoup deleting the instance in the middle of a receiving iteration. Fixes #333.
