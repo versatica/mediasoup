@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.3.7
+
+* Fix `version` getter.
+
+
 ### 3.3.6
 
 * `SctpAssociation.cpp`: Initialize the `usrsctp` socket in the class constructor. Fixes #348.
