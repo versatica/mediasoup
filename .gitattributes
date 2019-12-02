@@ -1,8 +1,10 @@
 # Tell GitHub to ignore worker dependencies and scripts when detecting the
 # project language.
-lib/* linguist-vendored
-test/* linguist-vendored
-worker/deps/* linguist-vendored
-worker/scripts/* linguist-vendored
-art/* linguist-vendored
-doc/* linguist-vendored
+art/* linguist-vendored=true
+doc/* linguist-vendored=true
+lib/* linguist-vendored=true
+test/* linguist-vendored=true
+worker/deps/* linguist-vendored=true
+worker/fuzzer/* linguist-vendored=true
+worker/scripts/* linguist-vendored=true
+worker/test/* linguist-vendored=true
