@@ -327,7 +327,7 @@
       'defines': [ 'SFU_SHM' ],
       'dependencies': [
 #        '/root/build/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
-         'deps/ff_shm_api/ff_shm_api.gyp:libngxshm'
+         'deps/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
       ],
       'sources': [
         # C++ source files.

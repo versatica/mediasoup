@@ -2,7 +2,7 @@
   'targets':
   [
     {
-      'target_name': 'libngxshm',
+      'target_name': 'ff_shm_api',
       'type': 'static_library',
 #      'dependencies':
 #      [
@@ -40,7 +40,7 @@
         'libraries': [
           #'/usr/local/lib/libngxshm.a',
           '/usr/local/lib/libngxshm.a',
-          #'-lngxshm',
+          '-lngxshm',
           '-pthread',
           '-lrt',
           '-lm',
