@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.3.9 (WIP)
+
+* Update OpenSSL to 1.1.1d.
+* Update TypeScript and ESLint NPM dependencies.
+
+
 ### 3.3.8
 
 * Update usrsctp dependency (it fixes a potential wrong memory access).
