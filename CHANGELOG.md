@@ -4,7 +4,7 @@
 ### 3.3.8
 
 * Update usrsctp dependency (it fixes a potential wrong memory access).
-  - More datails in the reported issue: https://github.com/sctplab/usrsctp/issues/408
+  - More details in the reported issue: https://github.com/sctplab/usrsctp/issues/408
 
 
 ### 3.3.7
