@@ -13,6 +13,7 @@ namespace Channel
 	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
 	{
 		{ "worker.dump",                     Request::MethodId::WORKER_DUMP                        },
+		{ "worker.getResourceUsage",         Request::MethodId::WORKER_GET_RESOURCE_USAGE          },
 		{ "worker.updateSettings",           Request::MethodId::WORKER_UPDATE_SETTINGS             },
 		{ "worker.createRouter",             Request::MethodId::WORKER_CREATE_ROUTER               },
 		{ "router.close",                    Request::MethodId::ROUTER_CLOSE                       },

@@ -55,6 +55,99 @@ export interface WorkerSettings
 
 export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
 
+/**
+ * An object with the fields of the uv_rusage_t struct.
+ *
+ * - http://docs.libuv.org/en/v1.x/misc.html#c.uv_rusage_t
+ * - http://man7.org/linux/man-pages/man2/getrusage.2.html
+ */
+export interface WorkerResourceUsage
+{
+	/* eslint-disable camelcase */
+
+	/**
+	 * User CPU time used (in ms).
+	 */
+	ru_utime: number;
+
+	/**
+	 * System CPU time used (in ms).
+	 */
+	ru_stime: number;
+
+	/**
+	 * Maximum resident set size.
+	 */
+	ru_maxrss: number;
+
+	/**
+	 * Integral shared memory size.
+	 */
+	ru_ixrss: number;
+
+	/**
+	 * Integral unshared data size.
+	 */
+	ru_idrss: number;
+
+	/**
+	 * Integral unshared stack size.
+	 */
+	ru_isrss: number;
+
+	/**
+	 * Page reclaims (soft page faults).
+	 */
+	ru_minflt: number;
+
+	/**
+	 * Page faults (hard page faults).
+	 */
+	ru_majflt: number;
+
+	/**
+	 * Swaps.
+	 */
+	ru_nswap: number;
+
+	/**
+	 * Block input operations.
+	 */
+	ru_inblock: number;
+
+	/**
+	 * Block output operations.
+	 */
+	ru_oublock: number;
+
+	/**
+	 * IPC messages sent.
+	 */
+	ru_msgsnd: number;
+
+	/**
+	 * IPC messages received.
+	 */
+	ru_msgrcv: number;
+
+	/**
+	 * Signals received.
+	 */
+	ru_nsignals: number;
+
+	/**
+	 * Voluntary context switches.
+	 */
+	ru_nvcsw: number;
+
+	/**
+	 * Involuntary context switches.
+	 */
+	ru_nivcsw: number;
+
+	/* eslint-enable camelcase */
+}
+
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -373,6 +466,16 @@ export default class Worker extends EnhancedEventEmitter
 		logger.debug('dump()');
 
 		return this._channel.request('worker.dump');
+	}
+
+	/**
+	 * Get mediasoup-worker process resource usage.
+	 */
+	async getResourceUsage(): Promise<WorkerResourceUsage>
+	{
+		logger.debug('getResourceUsage()');
+
+		return this._channel.request('worker.getResourceUsage');
 	}
 
 	/**

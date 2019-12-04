@@ -37,6 +37,78 @@ export interface WorkerSettings {
     appData?: any;
 }
 export declare type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
+/**
+ * An object with the fields of the uv_rusage_t struct.
+ *
+ * - http://docs.libuv.org/en/v1.x/misc.html#c.uv_rusage_t
+ * - http://man7.org/linux/man-pages/man2/getrusage.2.html
+ */
+export interface WorkerResourceUsage {
+    /**
+     * User CPU time used (in ms).
+     */
+    ru_utime: number;
+    /**
+     * System CPU time used (in ms).
+     */
+    ru_stime: number;
+    /**
+     * Maximum resident set size.
+     */
+    ru_maxrss: number;
+    /**
+     * Integral shared memory size.
+     */
+    ru_ixrss: number;
+    /**
+     * Integral unshared data size.
+     */
+    ru_idrss: number;
+    /**
+     * Integral unshared stack size.
+     */
+    ru_isrss: number;
+    /**
+     * Page reclaims (soft page faults).
+     */
+    ru_minflt: number;
+    /**
+     * Page faults (hard page faults).
+     */
+    ru_majflt: number;
+    /**
+     * Swaps.
+     */
+    ru_nswap: number;
+    /**
+     * Block input operations.
+     */
+    ru_inblock: number;
+    /**
+     * Block output operations.
+     */
+    ru_oublock: number;
+    /**
+     * IPC messages sent.
+     */
+    ru_msgsnd: number;
+    /**
+     * IPC messages received.
+     */
+    ru_msgrcv: number;
+    /**
+     * Signals received.
+     */
+    ru_nsignals: number;
+    /**
+     * Voluntary context switches.
+     */
+    ru_nvcsw: number;
+    /**
+     * Involuntary context switches.
+     */
+    ru_nivcsw: number;
+}
 export default class Worker extends EnhancedEventEmitter {
     private _child?;
     private readonly _workerLogger;
@@ -85,6 +157,10 @@ export default class Worker extends EnhancedEventEmitter {
      * Dump Worker.
      */
     dump(): Promise<any>;
+    /**
+     * Get mediasoup-worker process resource usage.
+     */
+    getResourceUsage(): Promise<WorkerResourceUsage>;
     /**
      * Update settings.
      */

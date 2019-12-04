@@ -1,9 +1,11 @@
 # Changelog
 
 
-### 3.3.9 (WIP)
+### 3.4.0 (WIP)
 
+* Add `worker.getResourceUsage()` API.
 * Update OpenSSL to 1.1.1d.
+* Update libuv to 1.34.0.
 * Update TypeScript and ESLint NPM dependencies.
 
 
