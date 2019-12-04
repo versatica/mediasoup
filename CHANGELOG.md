@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.4.0 (WIP)
+### 3.4.0
 
 * Add `worker.getResourceUsage()` API.
 * Update OpenSSL to 1.1.1d.

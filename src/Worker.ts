@@ -59,7 +59,7 @@ export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTag
  * An object with the fields of the uv_rusage_t struct.
  *
  * - http://docs.libuv.org/en/v1.x/misc.html#c.uv_rusage_t
- * - http://man7.org/linux/man-pages/man2/getrusage.2.html
+ * - https://linux.die.net/man/2/getrusage
  */
 export interface WorkerResourceUsage
 {
