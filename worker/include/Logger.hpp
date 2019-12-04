@@ -91,7 +91,7 @@
 #include "Settings.hpp"
 #include "Channel/UnixStreamSocket.hpp"
 #include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
-#include <cstdlib> // std::abort(), std::getenv()
+#include <cstdlib> // std::abort()
 #include <cstring>
 
 // clang-format off
