@@ -3,7 +3,7 @@
 
 ### 3.4.1
 
-* Improve mediasoup-worker build system by using `sh` instead of `bash` and default to 4 cores (thakns @smoke, PR #349)
+* Improve mediasoup-worker build system by using `sh` instead of `bash` and default to 4 cores (thanks @smoke, PR #349).
 
 
 ### 3.4.0
