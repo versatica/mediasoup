@@ -107,7 +107,7 @@ export interface ConsumerStat {
 /**
  * Consumer type.
  */
-export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
+export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe' | 'shm';
 export default class Consumer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;

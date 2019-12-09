@@ -134,7 +134,7 @@ export interface ConsumerStat
 /**
  * Consumer type.
  */
-export type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
+export type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe' | 'shm';
 
 const logger = new Logger('Consumer');
 
