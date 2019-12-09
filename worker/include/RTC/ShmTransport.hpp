@@ -61,7 +61,7 @@ namespace RTC
 		// Handle shm writes
 		std::string                  shm;      // stream file name
 
-		// TODO: channels info downloaded from input data
+		// TODO: channels info to fill in ssrc and everything else needed to setup shm writer?
 
 		std::string                  logname;  // as copied from input data in ctor
 		int                          loglevel;

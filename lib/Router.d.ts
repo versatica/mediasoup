@@ -154,7 +154,7 @@ export default class Router extends EnhancedEventEmitter {
      * @async
      * @returns {ShmTransport}
      */
-    createShmTransport({ listenIp, shmName, logName, logLevel, // TODO: what is the actual default in ffngx?
+    createShmTransport({ listenIp, shmName, logName, logLevel, // should be "error" ngx log level
     appData }: ShmTransportOptions): Promise<ShmTransport>;
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.

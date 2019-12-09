@@ -30,6 +30,8 @@ DepLibSfuShm::SfuShmMapItem::SfuShmMapItem(const char* shm_name) : wrt_ctx(nullp
   wrt_init.conf.channels[1].video         = 1;
   wrt_init.conf.channels[1].audio         = 0;
 
+// NGX_SHM_AV_UNSET_PTS is for undefined PTS
+
   if (SFUSHM_AV_OK != sfushm_av_open_writer( &wrt_init, &wrt_ctx))
     MS_THROW_ERROR("Failed to initialize sfu shm %s", shm_name);
   

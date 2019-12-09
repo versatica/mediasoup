@@ -581,8 +581,8 @@ export default class Router extends EnhancedEventEmitter
 			listenIp,
 			shmName,
 			logName = "stdout",
-			logLevel = 1, // TODO: what is the actual default in ffngx?
-			appData = {} // TODO: add appData.channels[] information, otherwise default setup TODO: maybe always default, no need to pass any data here
+			logLevel = 4, // should be "error" ngx log level
+			appData = {} // may contain data to help with shm channels config, TBD 
 		}: ShmTransportOptions
 	): Promise<ShmTransport>
 	{
@@ -615,7 +615,6 @@ export default class Router extends EnhancedEventEmitter
 			listenIp,
 			shm       : {name: shmName},
 			log       : {fileName: logName, level: logLevel}
-//			channels  appData.channels
 		};
 
 		const data =

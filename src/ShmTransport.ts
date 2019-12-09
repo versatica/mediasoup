@@ -74,27 +74,17 @@ export default class ShmTransport extends Transport
 
 		// ShmTransport data.
 		// See sfushm_av_media.h for details
-		// TODO: some may not be needed here, such as ssrc?
 		// @type {Object}
 		// - .shm
 		//   - .name
 		// - .log
 		//   - .fileName (can be 'stdout' to redirect log output)
 		//   - .level
-		// - .channels[]
-		//  - .target_buf_ms
-		//  - .target_kpbs
-		//  - .ssrc
-		//  - .sample_rate
-		//  - .num_audio_chn
-		//  - .media_type (audio or video; TODO: smth to be done with rtcp and metadata?)
-		// TODO: number of channels?
 
 		this._data =
 		{
 			shm      : data.shm,
-			log      : data.log,
-			channels : data.channels
+			log      : data.log
     };
 	}
 
@@ -190,9 +180,12 @@ export default class ShmTransport extends Transport
 			{
 				case 'writestreammetadata':
 				{
-					const reqdata = data;
+					const reqdata = {
+						shm: this._data.shm,
+						meta: data
+					}; // TODO: assume there is shm name and some JSON object, no details yet
 
-          await this._channel.request('transport.writestreammetadata', this._internal, reqdata); //TODO: so... let's write stream metadata via transport.writemetadata command
+          await this._channel.request('transport.consumeStreamMeta', this._internal, reqdata);
 					break;
 				}
 

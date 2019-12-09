@@ -16,16 +16,8 @@ namespace RTC
 	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
-/*		
-		data:
-			listenIp: {ip: ..., announcedIp: ...},
-			kind: "audio|video",
-			shm: {name: shmName},
-			log: {fileName: logName, level: logLevel},
-			channels: appData.channels (TBD)
-*/
 
-		// Read shm.Name
+		// Read shm.name
 		auto jsonShmIt = data.find("shm");
 		if (jsonShmIt == data.end())
 			MS_THROW_TYPE_ERROR("missing shm");
@@ -40,7 +32,7 @@ namespace RTC
 
 		this->shm.assign(jsonShmNameIt->get<std::string>());
 
-		// media kind
+		// media kind, matching producer media kind
 		auto jsonKindIt = jsonShmIt->find("kind");
 		if (jsonKindIt == data.end())
 			MS_THROW_TYPE_ERROR("missing kind");
@@ -200,7 +192,7 @@ namespace RTC
 
 	inline bool ShmTransport::IsConnected() const
 	{
-		return true; //TODO: or always false? or what?
+		return true; //TODO: or always false? or what? What is it used for?
 	}
 
 	void ShmTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* /* cb */)
@@ -329,15 +321,14 @@ namespace RTC
 						size_t offset{ 1 };
 						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
 
-						uint8_t subnal   = *(data + 1) & 0x1F; // TODO: review
-						uint8_t startBit = *(data + 1) & 0x80; // TODO: review
-						uint8_t endBit = 0; // TODO: detect end bit
+						uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header, subtype of FU unit, we don't use it
+						uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates start of fragmented NALU
+						uint8_t endBit = *(data + 1) & 0x40; ; // 2nd bit indicates end
 
-							; //startChunkSeqId = this->xcodeshm->openChunkForWrite(packet->GetTimestamp(), SHM::MediaType:VIDEO);
 						this->chunk.data = data+offset;
 						this->chunk.len = naluSize;
 						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
-						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
+						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
 						this->chunk.begin = (startBit == 128)? 1 : 0;
 						this->chunk.end = (endBit) ? 1 : 0;
 
@@ -418,9 +409,23 @@ namespace RTC
   bool ShmTransport::RecvStreamMeta(json& data) const
 	{
 		MS_TRACE();
-		//return true if shm name passed matches current one, and data is valid (TBD what that means)
 
-		// TODO: write stream metadata into special channel
+		// Read shm name
+		auto jsonShmIt = data.find("shm");
+		if (jsonShmIt == data.end())
+			MS_THROW_TYPE_ERROR("missing shm");
+		else if (!jsonShmIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong shm (not a string)");
+
+		std::string shmStr;
+		shmStr.assign(jsonShmIt->get<std::string>());
+		if (shmStr.compare(this->shm) != 0) {
+			MS_WARN_DEV("metadata shm %s does not match transport shm %s", shmStr.c_str(), this->shm.c_str() );
+			return false;
+		}
+
+		// TODO: write stream metadata into shm somehow
+
 		return true;
 	}
 
@@ -446,5 +451,7 @@ namespace RTC
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
+
+		// Do nothing.
 	}
 } // namespace RTC
