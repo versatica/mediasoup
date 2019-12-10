@@ -302,7 +302,7 @@ namespace RTC
 		// This must be controlled by the DataConsumer.
 		MS_ASSERT(
 		  len <= this->maxSctpMessageSize,
-		  "given message exceeds maxSctpMessageSize value [maxSctpMessageSize:%zu, len:%zu]",
+		  "given message exceeds max allowed message size [message size:%zu, max message size:%zu]",
 		  len,
 		  this->maxSctpMessageSize);
 
@@ -348,7 +348,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  sctp,
-			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", len:%zu]: %s",
+			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
 			  parameters.streamId,
 			  ppid,
 			  len,
@@ -470,7 +470,7 @@ namespace RTC
 
 		if (additionalOs == 0)
 		{
-			MS_WARN_TAG(sctp, "cannot add more outgoing streams, [OS:%" PRIu16 "]", this->os);
+			MS_WARN_TAG(sctp, "cannot add more outgoing streams [OS:%" PRIu16 "]", this->os);
 
 			return;
 		}
@@ -535,8 +535,8 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  sctp,
-			  "received different SSN while buffer not empty, buffer discarded [SSN:%" PRIu16
-			  ", lastSsnReceived:%" PRIu16 "]",
+			  "message chunk received with different SSN while buffer not empty, buffer discarded [ssn:%" PRIu16
+			  ", last ssn received:%" PRIu16 "]",
 			  ssn,
 			  this->lastSsnReceived);
 
@@ -552,7 +552,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  sctp,
-			  "received message exceeds maxSctpMessageSize value [maxSctpMessageSize:%zu, len:%zu, EOR:%u]",
+			  "ongoing received message exceeds max allowed message size [message size:%zu, max message size:%zu, eor:%u]",
 			  this->messageBufferLen + len,
 			  this->maxSctpMessageSize,
 			  eor ? 1 : 0);
@@ -565,7 +565,7 @@ namespace RTC
 		// If end of message and there is no buffered data, notify it directly.
 		if (eor && this->messageBufferLen == 0)
 		{
-			MS_DEBUG_DEV("directly notifying listener [eor:1, messageBufferLen:0]");
+			MS_DEBUG_DEV("directly notifying listener [eor:1, buffer len:0]");
 
 			this->listener->OnSctpAssociationMessageReceived(this, streamId, ppid, data, len);
 		}
@@ -575,7 +575,7 @@ namespace RTC
 			std::memcpy(this->messageBuffer + this->messageBufferLen, data, len);
 			this->messageBufferLen += len;
 
-			MS_DEBUG_DEV("notifying listener [eor:1, messageBufferLen:%zu]", this->messageBufferLen);
+			MS_DEBUG_DEV("notifying listener [eor:1, buffer len:%zu]", this->messageBufferLen);
 
 			this->listener->OnSctpAssociationMessageReceived(
 			  this, streamId, ppid, this->messageBuffer, this->messageBufferLen);
@@ -592,7 +592,7 @@ namespace RTC
 			std::memcpy(this->messageBuffer + this->messageBufferLen, data, len);
 			this->messageBufferLen += len;
 
-			MS_DEBUG_DEV("data buffered [eor:0, messageBufferLen:%zu]", this->messageBufferLen);
+			MS_DEBUG_DEV("data buffered [eor:0, buffer len:%zu]", this->messageBufferLen);
 		}
 	}
 
@@ -917,7 +917,6 @@ namespace RTC
 
 			default:
 			{
-				// TODO: Move to MS_DEBUG_TAG once we know which the cases are.
 				MS_WARN_TAG(
 				  sctp, "unhandled SCTP event received [type:%" PRIu16 "]", notification->sn_header.sn_type);
 			}
