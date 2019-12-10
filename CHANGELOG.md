@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.4.2
+
+* `SctpAssociation.cpp`: Improve/fix logs.
+* Improve Node `EventEmitter` events inline documentation.
+* `test-node-sctp.js`: Wait for SCTP association to be open before sending data.
+
+
 ### 3.4.1
 
 * Improve mediasoup-worker build system by using `sh` instead of `bash` and default to 4 cores (thanks @smoke, PR #349).
