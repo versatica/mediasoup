@@ -107,8 +107,8 @@ export default class RtpObserver extends EnhancedEventEmitter
 	 * @emits close
 	 * @emits pause
 	 * @emits resume
-	 * @emits {producer: Producer} addproducer
-	 * @emits {producer: Producer} removeproducer
+	 * @emits addproducer - (producer: Producer)
+	 * @emits removeproducer - (producer: Producer)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

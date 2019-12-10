@@ -108,11 +108,11 @@ export interface WebRtcTransportStat {
 export default class WebRtcTransport extends Transport {
     /**
      * @private
-     * @emits {iceState: string} icestatechange
-     * @emits {iceSelectedTuple: TransportTuple} iceselectedtuplechange
-     * @emits {dtlsState: DtlsState} dtlsstatechange
-     * @emits {sctpState: SctpState} sctpstatechange
-     * @emits {TransportTraceEventData} trace
+     * @emits icestatechange - (iceState: IceState)
+     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
+     * @emits dtlsstatechange - (dtlsState: DtlsState)
+     * @emits sctpstatechange - (sctpState: SctpState)
+     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
     /**
@@ -160,15 +160,15 @@ export default class WebRtcTransport extends Transport {
      *
      * @override
      * @emits close
-     * @emits {producer: Producer} newproducer
-     * @emits {consumer: Consumer} newconsumer
-     * @emits {producer: DataProducer} newdataproducer
-     * @emits {consumer: DataConsumer} newdataconsumer
-     * @emits {iceState: IceState} icestatechange
-     * @emits {iceSelectedTuple: TransportTuple} iceselectedtuplechange
-     * @emits {dtlsState: DtlsState} dtlsstatechange
-     * @emits {sctpState: SctpState} sctpstatechange
-     * @emits {TransportTraceEventData} trace
+     * @emits newproducer - (producer: Producer)
+     * @emits newconsumer - (producer: Producer)
+     * @emits newdataproducer - (dataProducer: DataProducer)
+     * @emits newdataconsumer - (dataProducer: DataProducer)
+     * @emits icestatechange - (iceState: IceState)
+     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
+     * @emits dtlsstatechange - (dtlsState: DtlsState)
+     * @emits sctpstatechange - (sctpState: SctpState)
+     * @emits trace - (trace: TransportTraceEventData)
      */
     get observer(): EnhancedEventEmitter;
     /**

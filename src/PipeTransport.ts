@@ -91,8 +91,8 @@ export default class PipeTransport extends Transport
 
 	/**
 	 * @private
-	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportTraceEventData} trace
+	 * @emits sctpstatechange - (sctpState: SctpState)
+	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
 	{
@@ -141,12 +141,12 @@ export default class PipeTransport extends Transport
 	 *
 	 * @override
 	 * @emits close
-	 * @emits {producer: Producer} newproducer
-	 * @emits {consumer: Consumer} newconsumer
-	 * @emits {producer: DataProducer} newdataproducer
-	 * @emits {consumer: DataConsumer} newdataconsumer
-	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportTraceEventData} trace
+	 * @emits newproducer - (producer: Producer)
+	 * @emits newconsumer - (producer: Producer)
+	 * @emits newdataproducer - (dataProducer: DataProducer)
+	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits sctpstatechange - (sctpState: SctpState)
+	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

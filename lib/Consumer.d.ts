@@ -127,9 +127,9 @@ export default class Consumer extends EnhancedEventEmitter {
      * @emits producerclose
      * @emits producerpause
      * @emits producerresume
-     * @emits {ConsumerScore} score
-     * @emits {ConsumerLayers | null} layerschange
-     * @emits {ConsumerTraceEventData} trace
+     * @emits score - (score: ConsumerScore)
+     * @emits layerschange - (layers: ConsumerLayers | null)
+     * @emits trace - (trace: ConsumerTraceEventData)
      * @emits @close
      * @emits @producerclose
      */
@@ -205,9 +205,9 @@ export default class Consumer extends EnhancedEventEmitter {
      * @emits close
      * @emits pause
      * @emits resume
-     * @emits {ConsumerScore} score
-     * @emits {ConsumerLayers | null} layerschange
-     * @emits {ConsumerTraceEventData} trace
+     * @emits score - (score: ConsumerScore)
+     * @emits layerschange - (layers: ConsumerLayers | null)
+     * @emits trace - (trace: ConsumerTraceEventData)
      */
     get observer(): EnhancedEventEmitter;
     /**

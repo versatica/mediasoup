@@ -171,9 +171,9 @@ export default class Producer extends EnhancedEventEmitter
 	/**
 	 * @private
 	 * @emits transportclose
-	 * @emits {ProducerScore[]} score
-	 * @emits {ProducerVideoOrientation} videoorientationchange
-	 * @emits {ProducerTraceEventData} trace
+	 * @emits score - (score: ProducerScore[])
+	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
+	 * @emits trace - (trace: ProducerTraceEventData)
 	 * @emits @close
 	 */
 	constructor(
@@ -294,9 +294,9 @@ export default class Producer extends EnhancedEventEmitter
 	 * @emits close
 	 * @emits pause
 	 * @emits resume
-	 * @emits {ProducerScore[]} score
-	 * @emits {ProducerVideoOrientation} videoorientationchange
-	 * @emits {ProducerTraceEventData} trace
+	 * @emits score - (score: ProducerScore[])
+	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
+	 * @emits trace - (trace: ProducerTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

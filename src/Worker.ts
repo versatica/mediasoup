@@ -187,10 +187,9 @@ export default class Worker extends EnhancedEventEmitter
 
 	/**
 	 * @private
-	 * @emits died
-	 * @emits @succeed
-	 * @emits @settingserror
-	 * @emits @failure
+	 * @emits died - (error: Error)
+	 * @emits @success
+	 * @emits @failure - (error: Error)
 	 */
 	constructor(
 		{
@@ -413,7 +412,7 @@ export default class Worker extends EnhancedEventEmitter
 	 * Observer.
 	 *
 	 * @emits close
-	 * @emits {router: Router} newrouter
+	 * @emits newrouter - (router: Router)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

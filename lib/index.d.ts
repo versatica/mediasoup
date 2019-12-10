@@ -18,7 +18,7 @@ declare const observer: EnhancedEventEmitter;
 /**
  * Observer.
  *
- * @emits {worker: Worker} newworker
+ * @emits newworker - (worker: Worker)
  */
 export { observer };
 /**

@@ -75,10 +75,10 @@ export default class Transport extends EnhancedEventEmitter {
      * @interface
      * @emits routerclose
      * @emits @close
-     * @emits @newproducer
-     * @emits @producerclose
-     * @emits @newdataproducer
-     * @emits @dataproducerclose
+     * @emits @newproducer - (producer: Producer)
+     * @emits @producerclose - (producer: Producer)
+     * @emits @newdataproducer - (dataProducer: DataProducer)
+     * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
     constructor({ internal, data, channel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
         internal: any;
@@ -109,10 +109,10 @@ export default class Transport extends EnhancedEventEmitter {
      * Observer.
      *
      * @emits close
-     * @emits {producer: Producer} newproducer
-     * @emits {consumer: Consumer} newconsumer
-     * @emits {producer: DataProducer} newdataproducer
-     * @emits {consumer: DataConsumer} newdataconsumer
+     * @emits newproducer - (producer: Producer)
+     * @emits newconsumer - (producer: Producer)
+     * @emits newdataproducer - (dataProducer: DataProducer)
+     * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer(): EnhancedEventEmitter;
     /**
