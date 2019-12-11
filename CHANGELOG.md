@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.4.3
+
+* `Transport.cpp`: Fix RTCP FIR processing:
+  - Instead of looking at the media ssrc in the common header, iterate FIR items and look for associated `Consumers` based on ssrcs in each FIR item.
+  - Fixes #350 (thanks @j1elo for reporting and documenting the issue).
+
+
 ### 3.4.2
 
 * `SctpAssociation.cpp`: Improve/fix logs.
