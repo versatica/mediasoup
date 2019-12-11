@@ -1657,7 +1657,6 @@ namespace RTC
 				switch (feedback->GetMessageType())
 				{
 					case RTC::RTCP::FeedbackPs::MessageType::PLI:
-					case RTC::RTCP::FeedbackPs::MessageType::FIR:
 					{
 						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
@@ -1665,25 +1664,60 @@ namespace RTC
 						{
 							MS_DEBUG_TAG(
 							  rtcp,
-							  "no Consumer found for received %s Feedback packet "
+							  "no Consumer found for received PLI Feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 							  feedback->GetMediaSsrc(),
 							  feedback->GetMediaSsrc());
 
 							break;
 						}
 
-						MS_DEBUG_2TAGS(
+						MS_DEBUG_TAG(
 						  rtcp,
-						  rtx,
-						  "%s received, requesting key frame for Consumer "
+						  "PLI received, requesting key frame for Consumer "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 						  feedback->GetMediaSsrc(),
 						  feedback->GetMediaSsrc());
 
-						consumer->ReceiveKeyFrameRequest(feedback->GetMessageType(), feedback->GetMediaSsrc());
+						consumer->ReceiveKeyFrameRequest(
+						  RTC::RTCP::FeedbackPs::MessageType::PLI, feedback->GetMediaSsrc());
+
+						break;
+					}
+
+					case RTC::RTCP::FeedbackPs::MessageType::FIR:
+					{
+						// Must iterate FIR items.
+						auto* fir = static_cast<RTC::RTCP::FeedbackPsFirPacket*>(packet);
+
+						for (auto it = fir->Begin(); it != fir->End(); ++it)
+						{
+							auto& item     = *it;
+							auto* consumer = GetConsumerByMediaSsrc(item->GetSsrc());
+
+							if (!consumer)
+							{
+								MS_DEBUG_TAG(
+								  rtcp,
+								  "no Consumer found for received FIR Feedback packet "
+								  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
+								  feedback->GetMediaSsrc(),
+								  feedback->GetMediaSsrc(),
+								  item->GetSsrc());
+
+								continue;
+							}
+
+							MS_DEBUG_TAG(
+							  rtcp,
+							  "FIR received, requesting key frame for Consumer "
+							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
+							  feedback->GetMediaSsrc(),
+							  feedback->GetMediaSsrc(),
+							  item->GetSsrc());
+
+							consumer->ReceiveKeyFrameRequest(feedback->GetMessageType(), item->GetSsrc());
+						}
 
 						break;
 					}
