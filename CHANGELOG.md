@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.4.4 (WIP)
+
+* `Transport.cpp`: Ignore RTCP SDES packets (we don't do anything with them anyway).
+
+
 ### 3.4.3
 
 * `Transport.cpp`: Fix RTCP FIR processing:

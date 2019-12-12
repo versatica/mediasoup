@@ -1867,21 +1867,12 @@ namespace RTC
 
 			case RTC::RTCP::Type::SDES:
 			{
-				auto* sdes = static_cast<RTC::RTCP::SdesPacket*>(packet);
-
-				for (auto it = sdes->Begin(); it != sdes->End(); ++it)
-				{
-					auto& chunk    = *it;
-					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
-
-					if (!producer)
-					{
-						MS_DEBUG_TAG(
-						  rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
-
-						continue;
-					}
-				}
+				// According to RFC 3550 section 6.1 "a CNAME item MUST be included in
+				// in each compound RTCP packet". So this is true even for compound
+				// packets sent by endpoints that are not sending any RTP stream to us
+				// (thus chunks in such a SDES will have an SSCR does not match with
+				// any Producer created in this Transport).
+				// Therefore, and given that we do nothing with SDES, just ignore them.
 
 				break;
 			}
