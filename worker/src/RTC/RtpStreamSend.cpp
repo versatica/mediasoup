@@ -47,9 +47,6 @@ namespace RTC
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
 		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
-
-		if (this->rtt != 0.0f)
-			jsonObject["roundTripTime"] = this->rtt;
 	}
 
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
@@ -167,6 +164,9 @@ namespace RTC
 		// RTT in milliseconds.
 		this->rtt = (rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+
+		if (this->rtt > 0.0f)
+			this->hasRtt = true;
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
