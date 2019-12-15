@@ -86,7 +86,6 @@ export interface ConsumerStat {
     timestamp: number;
     ssrc: number;
     rtxSsrc?: number;
-    rid?: string;
     kind: string;
     mimeType: string;
     packetsLost: number;

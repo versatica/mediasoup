@@ -1,9 +1,10 @@
 # Changelog
 
 
-### 3.4.4 (WIP)
+### 3.4.4
 
 * `Transport.cpp`: Ignore RTCP SDES packets (we don't do anything with them anyway).
+* `Producer` and `Consumer` stats: Always show `roundTripTime` (even if calculated value is 0) after a `roundTripTime` > 0 has been seen.
 
 
 ### 3.4.3
