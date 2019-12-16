@@ -39,8 +39,8 @@
       'link_settings': {
         'libraries': [
           #'/usr/local/lib/libngxshm.a',
-          '/usr/local/lib/libngxshm.a',
-          '-lngxshm',
+         '/usr/local/lib/libngxshm.a',
+         # '-lngxshm',
           '-pthread',
           '-lrt',
           '-lm',

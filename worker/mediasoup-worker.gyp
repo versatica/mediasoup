@@ -316,18 +316,9 @@
   [
     {
       'target_name': 'mediasoup-worker',
-      'sources':
-      [
-        # C++ source files.
-        'src/main.cpp'
-      ]
-    },
-    {
-      'target_name': 'mediasoup-worker-shm',
       'defines': [ 'SFU_SHM' ],
       'dependencies': [
-#        '/root/build/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
-         'deps/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
+        'deps/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
       ],
       'sources': [
         # C++ source files.
@@ -345,6 +336,28 @@
         '/root/build/ff_shm_api/include'
       ]
     },
+#    {
+#      'target_name': 'mediasoup-worker-shm',
+#      'defines': [ 'SFU_SHM' ],
+#      'dependencies': [
+#         'deps/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
+#      ],
+#      'sources': [
+        # C++ source files.
+#        'src/main.cpp',
+#        'src/DepLibSfuShm.cpp',
+#        'src/RTC/ShmConsumer.cpp',
+#        'src/RTC/ShmTransport.cpp',
+#        # C++ include files
+#        'include/DepLibSfuShm.hpp',
+#        'include/RTC/ShmConsumer.hpp',
+#        'include/RTC/ShmTransport.hpp'
+#      ],
+#      'include_dirs':
+#      [
+#        '/root/build/ff_shm_api/include'
+#      ]
+#    },
     {
       'target_name': 'mediasoup-worker-test',
       'defines': [ 'MS_LOG_STD', 'MS_TEST' ],
