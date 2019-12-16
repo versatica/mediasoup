@@ -1,5 +1,5 @@
 {
-  "name": "@livelyvideo/mediasoup-v3",
+  "name": "@livelyvideo/mediasoup-shm",
   "version": "3.4.23",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
