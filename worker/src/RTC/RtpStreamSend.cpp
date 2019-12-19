@@ -332,7 +332,7 @@ namespace RTC
 		// If empty do it easy.
 		if (this->buffer.empty())
 		{
-			auto store = this->storage[0].store;
+			auto* store = this->storage[0].store;
 
 			bufferItem.packet = packet->Clone(store);
 			this->buffer.push_back(bufferItem);
@@ -369,7 +369,13 @@ namespace RTC
 
 		// The packet was older than anything in the buffer, store it at the beginning.
 		if (bufferItReverse == this->buffer.rend())
+		{
+			// Special case: No space in the buffer to store it. Just ignore the packet.
+			if (this->buffer.size() == this->storage.size())
+				return;
+
 			newBufferIt = this->buffer.insert(this->buffer.begin(), bufferItem);
+		}
 
 		// If the buffer is not full use the next free storage item.
 		if (this->buffer.size() - 1 < this->storage.size())
@@ -380,7 +386,7 @@ namespace RTC
 		else
 		{
 			auto& firstBufferItem = *(this->buffer.begin());
-			auto firstPacket      = firstBufferItem.packet;
+			auto* firstPacket     = firstBufferItem.packet;
 
 			// Store points to the store used by the first packet.
 			store = const_cast<uint8_t*>(firstPacket->GetData());
