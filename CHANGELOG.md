@@ -1,5 +1,10 @@
 # Changelog
 
+### 2.6.19
+
+* `RtpStreamSend.cpp`: Fix a crash in `StorePacket()` when it receives an old packet and there is no space left in the storage buffer (thanks to zkfun for reporting it and providing us with the solution).
+* Update deps.
+
 ### 2.6.18
 
 * Fix usage of a deallocated `RTC::TcpConnection` instance under heavy CPU usage due to mediasoup deleting the instance in the middle of a receiving iteration. 

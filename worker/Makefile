@@ -6,7 +6,7 @@
 # environment variable set by the user.
 PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh)
+CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
 
 .PHONY:	\
 	default Release Debug test test-Release test-Debug fuzzer \
