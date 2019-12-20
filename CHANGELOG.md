@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.4.5
+
+* Update deps.
+* Fix text in `./github/Bug_Report.md` so it no longer references the decrepated mailing list.
+
+
 ### 3.4.4
 
 * `Transport.cpp`: Ignore RTCP SDES packets (we don't do anything with them anyway).
@@ -230,6 +236,12 @@
 ### 3.0.0
 
 * v3 is here!
+
+
+### 2.6.19
+
+* `RtpStreamSend.cpp`: Fix a crash in `StorePacket()` when it receives an old packet and there is no space left in the storage buffer (thanks to zkfun for reporting it and providing us with the solution).
+* Update deps.
 
 
 ### 2.6.18
