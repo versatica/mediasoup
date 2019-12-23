@@ -14,8 +14,29 @@
 # distribution  cleans and builds a .tgz
 # tags          builds etags file from all .c and .h files
 
-USE_OPENSSL = @USE_OPENSSL@
+DYNAMIC_PATH_VAR = @DYNAMIC_PATH_VAR@
+CRYPTO_LIBDIR = @CRYPTO_LIBDIR@
+USE_EXTERNAL_CRYPTO = @USE_EXTERNAL_CRYPTO@
 HAVE_PCAP = @HAVE_PCAP@
+
+# Specify how tests should find shared libraries on macOS and Linux
+#
+# macOS purges DYLD_LIBRARY_PATH when spawning subprocesses, so it's
+# not possible to pass this in from the outside; we have to specify
+# it for any subprocesses we call. No support for dynamic linked
+# tests on Windows.
+ifneq ($(strip $(CRYPTO_LIBDIR)),)
+	ifneq ($(OS),Windows_NT)
+		UNAME_S = $(shell uname -s)
+		ifeq ($(UNAME_S),Linux)
+			FIND_LIBRARIES = LD_LIBRARY_PATH=$(CRYPTO_LIBDIR)
+		endif
+		ifeq ($(UNAME_S),Darwin)
+			FIND_LIBRARIES = DYLD_LIBRARY_PATH=$(CRYPTO_LIBDIR)
+		endif
+		CRYPTO_LIBDIR_FORWARD = CRYPTO_LIBDIR=$(CRYPTO_LIBDIR)
+	endif
+endif
 
 .PHONY: all shared_library test
 
@@ -23,17 +44,17 @@ all: test
 
 runtest: test
 	@echo "running libsrtp2 test applications..."
-	crypto/test/cipher_driver$(EXE) -v >/dev/null
-	crypto/test/kernel_driver$(EXE) -v >/dev/null
-	test/test_srtp$(EXE) >/dev/null
-	test/rdbx_driver$(EXE) -v >/dev/null
-	test/srtp_driver$(EXE) -v >/dev/null
-	test/roc_driver$(EXE) -v >/dev/null
-	test/replay_driver$(EXE) -v >/dev/null
-	test/dtls_srtp_driver$(EXE) >/dev/null
-	cd test; $(abspath $(srcdir))/test/rtpw_test.sh -w $(abspath $(srcdir))/test/words.txt >/dev/null
-ifeq (1, $(USE_OPENSSL))
-	cd test; $(abspath $(srcdir))/test/rtpw_test_gcm.sh -w $(abspath $(srcdir))/test/words.txt >/dev/null
+	$(FIND_LIBRARIES) crypto/test/cipher_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) crypto/test/kernel_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/test_srtp$(EXE) >/dev/null
+	$(FIND_LIBRARIES) test/rdbx_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/srtp_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/roc_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/replay_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/dtls_srtp_driver$(EXE) >/dev/null
+	cd test; $(CRYPTO_LIBDIR_FORWARD) $(abspath $(srcdir))/test/rtpw_test.sh -w $(abspath $(srcdir))/test/words.txt >/dev/null
+ifeq (1, $(USE_EXTERNAL_CRYPTO))
+	cd test; $(CRYPTO_LIBDIR_FORWARD) $(abspath $(srcdir))/test/rtpw_test_gcm.sh -w $(abspath $(srcdir))/test/words.txt >/dev/null
 endif
 	@echo "libsrtp2 test applications passed."
 	$(MAKE) -C crypto runtest
@@ -47,10 +68,14 @@ runtest-valgrind: test
 # makefile variables
 
 CC	= @CC@
+CXX	= @CXX@
 INCDIR	= -Icrypto/include -I$(srcdir)/include -I$(srcdir)/crypto/include
 DEFS	= @DEFS@
 CPPFLAGS= @CPPFLAGS@
 CFLAGS	= @CFLAGS@
+CXXFLAGS= @CXXFLAGS@
+srtp-fuzzer: CFLAGS += -g
+srtp-fuzzer: CXXFLAGS += -g
 LIBS	= @LIBS@
 LDFLAGS	= -L. @LDFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCDIR) $(CPPFLAGS) $(CFLAGS)
@@ -95,7 +120,7 @@ SHAREDLIBSUFFIXNOVER = dll
 SHAREDLIBSUFFIX = $(SHAREDLIBSUFFIXNOVER)
 else ifeq (darwin,$(findstring darwin,@host@))
 SHAREDLIB_DIR = $(libdir)
-SHAREDLIB_LDFLAGS = -dynamiclib -twolevel_namespace -undefined dynamic_lookup \
+SHAREDLIB_LDFLAGS = -dynamiclib -twolevel_namespace \
 		-fno-common -headerpad_max_install_names -install_name $(libdir)/$@
 SHAREDLIBSUFFIXNOVER = dylib
 SHAREDLIBSUFFIX = $(SHAREDLIBVERSION).$(SHAREDLIBSUFFIXNOVER)
@@ -151,7 +176,7 @@ libsrtp2.so: $(srtpobj) $(cryptobj)
 		-o libsrtp2.so $^ $(LDFLAGS)
 
 # test applications
-ifneq (1, $(USE_OPENSSL))
+ifneq (1, $(USE_EXTERNAL_CRYPTO))
 AES_CALC = crypto/test/aes_calc$(EXE)
 endif
 
@@ -241,6 +266,11 @@ tags:
 libsrtp2doc:
 	$(MAKE) -C doc
 
+# fuzzer
+
+srtp-fuzzer: libsrtp2.a
+	$(MAKE) -C fuzzer
+
 .PHONY: clean superclean distclean install
 
 install:
@@ -279,6 +309,7 @@ clean:
 	rm -rf *.pict *.jpg *.dat
 	rm -rf freed allocated tmp
 	$(MAKE) -C doc clean
+	$(MAKE) -C fuzzer clean
 
 superclean: clean
 	rm -rf crypto/include/config.h config.log config.cache config.status \

@@ -17,15 +17,34 @@ LIBS	= @LIBS@
 LDFLAGS	= @LDFLAGS@ -L. -L..
 COMPILE = $(CC) $(DEFS) $(INCDIR) $(CPPFLAGS) $(CFLAGS)
 CRYPTOLIB = -lsrtp2
+CRYPTO_LIBDIR = @CRYPTO_LIBDIR@
 
 RANLIB	= @RANLIB@
+
+# Specify how tests should find shared libraries on macOS and Linux
+#
+# macOS purges DYLD_LIBRARY_PATH when spawning subprocesses, so it's
+# not possible to pass this in from the outside; we have to specify
+# it for any subprocesses we call. No support for dynamic linked
+# tests on Windows.
+ifneq ($(strip $(CRYPTO_LIBDIR)),)
+	ifneq ($(OS),Windows_NT)
+		UNAME_S = $(shell uname -s)
+		ifeq ($(UNAME_S),Linux)
+			FIND_LIBRARIES = LD_LIBRARY_PATH=$(CRYPTO_LIBDIR)
+		endif
+		ifeq ($(UNAME_S),Darwin)
+			FIND_LIBRARIES = DYLD_LIBRARY_PATH=$(CRYPTO_LIBDIR)
+		endif
+	endif
+endif
 
 # EXE defines the suffix on executables - it's .exe for cygwin, and
 # null on linux, bsd, and OS X and other OSes.  we define this so that
 # `make clean` will work on the cygwin platform
 EXE = @EXE@
 # Random source.
-USE_OPENSSL = @USE_OPENSSL@
+USE_EXTERNAL_CRYPTO = @USE_EXTERNAL_CRYPTO@
 
 ifdef ARCH
   DEFS += -D$(ARCH)=1
@@ -40,7 +59,7 @@ endif
 dummy : all runtest
 
 # test applications
-ifneq (1, $(USE_OPENSSL))
+ifneq (1, $(USE_EXTERNAL_CRYPTO))
 AES_CALC = test/aes_calc$(EXE)
 endif
 
@@ -62,17 +81,17 @@ c256=8ea2b7ca516745bfeafc49904b496089
 
 
 runtest: $(testapp)
-	test/env$(EXE) # print out information on the build environment
+	$(FIND_LIBRARIES) test/env$(EXE) # print out information on the build environment
 	@echo "running crypto test applications..."
-ifneq (1, $(USE_OPENSSL))
-	test `test/aes_calc $(k128) $(p128)` = $(c128)
-	test `test/aes_calc $(k256) $(p256)` = $(c256)
+ifneq (1, $(USE_EXTERNAL_CRYPTO))
+	$(FIND_LIBRARIES) test `test/aes_calc $(k128) $(p128)` = $(c128)
+	$(FIND_LIBRARIES) test `test/aes_calc $(k256) $(p256)` = $(c256)
 endif
-	test/cipher_driver$(EXE) -v >/dev/null
-	test/datatypes_driver$(EXE) -v >/dev/null
-	test/stat_driver$(EXE) >/dev/null
-	test/sha1_driver$(EXE) -v >/dev/null
-	test/kernel_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/cipher_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/datatypes_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/stat_driver$(EXE) >/dev/null
+	$(FIND_LIBRARIES) test/sha1_driver$(EXE) -v >/dev/null
+	$(FIND_LIBRARIES) test/kernel_driver$(EXE) -v >/dev/null
 	@echo "crypto test applications passed."
 
 

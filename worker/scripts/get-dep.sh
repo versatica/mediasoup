@@ -95,7 +95,7 @@ function get_openssl()
 function get_libsrtp()
 {
 	GIT_REPO="https://github.com/cisco/libsrtp.git"
-	GIT_TAG="v2.2.0"
+	GIT_TAG="v2.3.0"
 	DEST="deps/libsrtp/srtp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"

@@ -7,6 +7,7 @@
 {
   'variables': {
     'use_openssl%': 1,
+    'use_nss%': 0, # Not used here.
   },
   'target_defaults': {
     'defines': [
@@ -24,9 +25,10 @@
       ['use_openssl==1', {
         'defines': [
           'OPENSSL',
+          'GCM',
         ],
       }],
-      # NOTE: Avoid having to set os_posix
+      # NOTE: Avoid having to set os_posix.
       # ['os_posix==1', {
       ['OS!="win"', {
         'defines': [
@@ -86,13 +88,12 @@
     'direct_dependent_settings': {
       'include_dirs': [
         # NOTE: I don't think we must export this.
-        # './config',
         'srtp/include',
         # NOTE: I don't think we must export this.
         # 'srtp/crypto/include',
       ],
       'conditions': [
-        # NOTE: Avoid having to set os_posix
+        # NOTE: Avoid having to set os_posix.
         # ['os_posix==1', {
         ['OS!="win"', {
           'defines': [
@@ -132,19 +133,20 @@
         # includes
         'srtp/include/ekt.h',
         'srtp/include/getopt_s.h',
-        'srtp/include/rtp.h',
-        'srtp/include/rtp_priv.h',
         'srtp/include/srtp.h',
         'srtp/include/srtp_priv.h',
         'srtp/include/ut_sim.h',
         # headers
         'srtp/crypto/include/aes.h',
+        'srtp/crypto/include/aes_gcm.h',
         'srtp/crypto/include/aes_icm.h',
+        'srtp/crypto/include/aes_icm_ext.h',
         'srtp/crypto/include/alloc.h',
         'srtp/crypto/include/auth.h',
         'srtp/crypto/include/cipher.h',
+        'srtp/crypto/include/cipher_priv.h',
+        'srtp/crypto/include/cipher_types.h',
         'srtp/crypto/include/crypto_kernel.h',
-        'srtp/crypto/include/crypto_math.h',
         'srtp/crypto/include/crypto_types.h',
         'srtp/crypto/include/datatypes.h',
         'srtp/crypto/include/err.h',
@@ -192,8 +194,6 @@
             'srtp/crypto/cipher/aes_gcm_ossl.c',
             'srtp/crypto/cipher/aes_icm_ossl.c',
             'srtp/crypto/hash/hmac_ossl.c',
-            'srtp/crypto/include/aes_gcm_ossl.h',
-            'srtp/crypto/include/aes_icm_ossl.h',
           ],
         }],
       ],

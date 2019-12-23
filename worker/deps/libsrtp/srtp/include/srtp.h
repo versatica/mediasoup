@@ -682,14 +682,14 @@ srtp_err_status_t srtp_update_stream(srtp_t session,
  *
  * @param p is a pointer to the policy structure to be set
  *
- * The function call crypto_policy_set_rtp_default(&p) sets the
- * crypto_policy_t at location p to the SRTP default policy for RTP
+ * The function call srtp_crypto_policy_set_rtp_default(&p) sets the
+ * srtp_crypto_policy_t at location p to the SRTP default policy for RTP
  * protection, as defined in the specification.  This function is a
  * convenience that helps to avoid dealing directly with the policy
  * data structure.  You are encouraged to initialize policy elements
  * with this function call.  Doing so may allow your code to be
  * forward compatible with later versions of libSRTP that include more
- * elements in the crypto_policy_t datatype.
+ * elements in the srtp_crypto_policy_t datatype.
  *
  * @return void.
  *
@@ -934,7 +934,7 @@ void srtp_crypto_policy_set_aes_cm_256_null_auth(srtp_crypto_policy_t *p);
  * @param p is a pointer to the policy structure to be set
  *
  * The function call srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(&p)
- * sets the crypto_policy_t at location p to use policy
+ * sets the srtp_crypto_policy_t at location p to use policy
  * AES_CM_192_HMAC_SHA1_80 as defined in RFC 6188.  This policy uses AES-192
  * Counter Mode encryption and HMAC-SHA1 authentication, with an 80 bit
  * authentication tag.
@@ -943,7 +943,7 @@ void srtp_crypto_policy_set_aes_cm_256_null_auth(srtp_crypto_policy_t *p);
  * with the policy data structure.  You are encouraged to initialize
  * policy elements with this function call.  Doing so may allow your
  * code to be forward compatible with later versions of libSRTP that
- * include more elements in the crypto_policy_t datatype.
+ * include more elements in the srtp_crypto_policy_t datatype.
  *
  * @return void.
  *
@@ -958,7 +958,7 @@ void srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(srtp_crypto_policy_t *p);
  * @param p is a pointer to the policy structure to be set
  *
  * The function call srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32(&p)
- * sets the crypto_policy_t at location p to use policy
+ * sets the srtp_crypto_policy_t at location p to use policy
  * AES_CM_192_HMAC_SHA1_32 as defined in RFC 6188.  This policy uses AES-192
  * Counter Mode encryption and HMAC-SHA1 authentication, with an
  * authentication tag that is only 32 bits long.  This length is
@@ -970,7 +970,7 @@ void srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(srtp_crypto_policy_t *p);
  * with the policy data structure.  You are encouraged to initialize
  * policy elements with this function call.  Doing so may allow your
  * code to be forward compatible with later versions of libSRTP that
- * include more elements in the crypto_policy_t datatype.
+ * include more elements in the srtp_crypto_policy_t datatype.
  *
  * @warning This crypto policy is intended for use in SRTP, but not in
  * SRTCP.  It is recommended that a policy that uses longer
@@ -989,7 +989,7 @@ void srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32(srtp_crypto_policy_t *p);
  * @param p is a pointer to the policy structure to be set
  *
  * The function call srtp_crypto_policy_set_aes_cm_192_null_auth(&p) sets
- * the crypto_policy_t at location p to use the SRTP default cipher
+ * the srtp_crypto_policy_t at location p to use the SRTP default cipher
  * (AES-192 Counter Mode), but to use no authentication method.  This
  * policy is NOT RECOMMENDED unless it is unavoidable; see Section 7.5
  * of RFC 3711 (http://www.ietf.org/rfc/rfc3711.txt).
@@ -998,7 +998,7 @@ void srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32(srtp_crypto_policy_t *p);
  * with the policy data structure.  You are encouraged to initialize
  * policy elements with this function call.  Doing so may allow your
  * code to be forward compatible with later versions of libSRTP that
- * include more elements in the crypto_policy_t datatype.
+ * include more elements in the srtp_crypto_policy_t datatype.
  *
  * @warning This policy is NOT RECOMMENDED for SRTP unless it is
  * unavoidable, and it is NOT RECOMMENDED at all for SRTCP; see
