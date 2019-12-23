@@ -54,13 +54,13 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
-    "@types/node": "^12.12.21",
+    "@types/node": "^13.1.0",
     "@types/random-number": "0.0.0",
     "@types/uuid": "^3.4.6",
-    "@typescript-eslint/eslint-plugin": "^2.12.0",
-    "@typescript-eslint/parser": "^2.12.0",
+    "@typescript-eslint/eslint-plugin": "^2.13.0",
+    "@typescript-eslint/parser": "^2.13.0",
     "cross-env": "^6.0.3",
-    "eslint": "^6.7.2",
+    "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.1.1",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
@@ -69,7 +69,7 @@
     "open-cli": "^5.0.0",
     "sctp": "^0.0.19",
     "tsc-watch": "^4.0.0",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.4"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
