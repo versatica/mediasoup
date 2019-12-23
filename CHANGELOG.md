@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.4.6
+
+* Update libsrtp to 2.3.0.
+* Update ESLint and TypeScript deps.
+
+
 ### 3.4.5
 
 * Update deps.
