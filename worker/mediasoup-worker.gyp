@@ -369,7 +369,8 @@
       ],
       'include_dirs':
       [
-        'test/include'
+        'test/include',
+        'deps/catch/single_include/catch2'
       ],
       'xcode_settings':
       {

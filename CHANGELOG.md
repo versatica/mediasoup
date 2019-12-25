@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.4.7 (WIP)
+
+* Do not copy `catch.hpp` into `test/include/` but make the GYP `mediasoup-worker-test` target include the corresponding folder in `deps/catch`.
+
+
 ### 3.4.6
 
 * Update libsrtp to 2.3.0.

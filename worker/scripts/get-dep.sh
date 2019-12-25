@@ -126,10 +126,6 @@ function get_catch()
 	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-
-	echo ">>> [INFO] copying include file to test/include/ directory ..."
-	cd ${WORKER_PWD}
-	cp ${DEST}/single_include/catch2/catch.hpp test/include/
 }
 
 function get_lcov()
