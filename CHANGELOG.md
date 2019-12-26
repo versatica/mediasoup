@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.4.7 (WIP)
+### 3.4.7
 
 * `PortManager.cpp`: Do not limit the number of failed `bind()` attempts to 20 since it does not work well in scenarios that launch tons of `Workers` with same port range. Instead iterate all ports in the range given to the Worker.
 * Do not copy `catch.hpp` into `test/include/` but make the GYP `mediasoup-worker-test` target include the corresponding folder in `deps/catch`.
