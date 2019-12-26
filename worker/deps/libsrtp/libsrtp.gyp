@@ -1,5 +1,3 @@
-# NOTE: Inspired by https://chromium.googlesource.com/chromium/deps/libsrtp/+/master/libsrtp.gyp
-#
 # Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -11,117 +9,59 @@
   },
   'target_defaults': {
     'defines': [
+      # Config.
       'HAVE_CONFIG_H',
+      # Platform properties.
       'HAVE_STDLIB_H',
       'HAVE_STRING_H',
-      'TESTAPP_SOURCE',
+      'HAVE_STDINT_H',
+      'HAVE_INTTYPES_H',
+      'HAVE_INT8_T',
+      'HAVE_INT16_T',
+      'HAVE_INT32_T',
+      'HAVE_UINT8_T',
+      'HAVE_UINT16_T',
+      'HAVE_UINT32_T',
+      'HAVE_UINT64_T',
+    ],
+    'conditions': [
+      [ 'use_openssl == 1', {
+        'defines': [
+          'OPENSSL',
+          'GCM',
+        ],
+      }],
+      [ 'OS != "win"', {
+        'defines': [
+          'HAVE_ARPA_INET_H',
+          'HAVE_NETINET_IN_H',
+          'HAVE_SYS_TYPES_H',
+          'HAVE_UNISTD_H',
+        ],
+        'cflags': [ '-Wall', '-Wno-unused-variable', '-Wno-sign-compare' ],
+      }],
+      [ 'OS == "mac"', {
+        'xcode_settings':
+        {
+          'WARNING_CFLAGS': [ '-Wall', '-Wno-unused-variable', '-Wno-sign-compare' ],
+        }
+      }],
+      [ 'OS == "win"', {
+        'defines': [
+          'HAVE_WINSOCK2_H',
+         ],
+      }],
     ],
     'include_dirs': [
       './config',
       'srtp/include',
       'srtp/crypto/include',
     ],
-    'conditions': [
-      ['use_openssl==1', {
-        'defines': [
-          'OPENSSL',
-          'GCM',
-        ],
-      }],
-      # NOTE: Avoid having to set os_posix.
-      # ['os_posix==1', {
-      ['OS!="win"', {
-        'defines': [
-          'HAVE_INT16_T',
-          'HAVE_INT32_T',
-          'HAVE_INT8_T',
-          'HAVE_UINT16_T',
-          'HAVE_UINT32_T',
-          'HAVE_UINT64_T',
-          'HAVE_UINT8_T',
-          'HAVE_STDINT_H',
-          'HAVE_INTTYPES_H',
-          'HAVE_NETINET_IN_H',
-          'HAVE_ARPA_INET_H',
-          'HAVE_UNISTD_H',
-        ],
-        'cflags': [
-          '-Wno-unused-variable',
-        ],
-      }],
-      ['OS=="win"', {
-        'defines': [
-          'HAVE_BYTESWAP_METHODS_H',
-          # All Windows architectures are this way.
-          'SIZEOF_UNSIGNED_LONG=4',
-          'SIZEOF_UNSIGNED_LONG_LONG=8',
-          'HAVE_WINSOCK2_H',
-         ],
-      }],
-      ['target_arch=="x64" or target_arch=="ia32"', {
-        'defines': [
-          'CPU_CISC',
-        ],
-      }],
-      ['target_arch=="arm" or target_arch=="arm64" \
-       or target_arch=="mipsel" or target_arch=="mips64el"', {
-        'defines': [
-          # TODO(leozwang): CPU_RISC doesn't work properly on android/arm and
-          # mips platforms for unknown reasons, need to investigate the root
-          # cause of it. CPU_RISC is used for optimization only, and CPU_CISC
-          # should just work just fine, it has been tested on android/arm with
-          # srtp test applications and libjingle.
-          'CPU_CISC',
-        ],
-      }],
-      ['target_arch=="mipsel" or target_arch=="arm" or target_arch=="ia32"', {
-        'defines': [
-          # Define FORCE_64BIT_ALIGN to avoid alignment-related-crashes like
-          # crbug/414919. Without this, aes_cbc_alloc will allocate an
-          # aes_cbc_ctx_t not 64-bit aligned and the v128_t members of
-          # aes_cbc_ctx_t will not be 64-bit aligned, which breaks the
-          # compiler optimizations that assume 64-bit alignment of v128_t.
-          'FORCE_64BIT_ALIGN',
-        ],
-      }],
-    ],
     'direct_dependent_settings': {
       'include_dirs': [
-        # NOTE: I don't think we must export this.
         'srtp/include',
         # NOTE: I don't think we must export this.
         # 'srtp/crypto/include',
-      ],
-      'conditions': [
-        # NOTE: Avoid having to set os_posix.
-        # ['os_posix==1', {
-        ['OS!="win"', {
-          'defines': [
-            'HAVE_INT16_T',
-            'HAVE_INT32_T',
-            'HAVE_INT8_T',
-            'HAVE_UINT16_T',
-            'HAVE_UINT32_T',
-            'HAVE_UINT64_T',
-            'HAVE_UINT8_T',
-            'HAVE_STDINT_H',
-            'HAVE_INTTYPES_H',
-            'HAVE_NETINET_IN_H',
-          ],
-        }],
-        ['OS=="win"', {
-          'defines': [
-            'HAVE_BYTESWAP_METHODS_H',
-            # All Windows architectures are this way.
-            'SIZEOF_UNSIGNED_LONG=4',
-            'SIZEOF_UNSIGNED_LONG_LONG=8',
-           ],
-        }],
-        ['target_arch=="x64" or target_arch=="ia32"', {
-          'defines': [
-            'CPU_CISC',
-          ],
-        }],
       ],
     },
   },
@@ -130,13 +70,12 @@
       'target_name': 'libsrtp',
       'type': 'static_library',
       'sources': [
-        # includes
+        # Includes.
         'srtp/include/ekt.h',
-        'srtp/include/getopt_s.h',
         'srtp/include/srtp.h',
+        # Headers.
         'srtp/include/srtp_priv.h',
         'srtp/include/ut_sim.h',
-        # headers
         'srtp/crypto/include/aes.h',
         'srtp/crypto/include/aes_gcm.h',
         'srtp/crypto/include/aes_icm.h',
@@ -159,7 +98,7 @@
         'srtp/crypto/include/rdbx.h',
         'srtp/crypto/include/sha1.h',
         'srtp/crypto/include/stat.h',
-        # sources
+        # Sources.
         'srtp/srtp/ekt.c',
         'srtp/srtp/srtp.c',
         'srtp/crypto/cipher/aes.c',
@@ -181,7 +120,7 @@
         'srtp/crypto/replay/ut_sim.c',
       ],
       'conditions': [
-        ['use_openssl==1', {
+        [ 'use_openssl == 1', {
           'dependencies': [
             '<(DEPTH)/deps/openssl/openssl.gyp:openssl',
           ],
@@ -196,203 +135,6 @@
             'srtp/crypto/hash/hmac_ossl.c',
           ],
         }],
-      ],
-    }, # target libsrtp
-    {
-      'target_name': 'rdbx_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/include/getopt_s.h',
-        'srtp/test/getopt_s.c',
-        'srtp/test/rdbx_driver.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/include/getopt_s.h',
-        'srtp/include/srtp_priv.h',
-        'srtp/test/getopt_s.c',
-        'srtp/test/srtp_driver.c',
-      ],
-    },
-    {
-      'target_name': 'roc_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/include/rdbx.h',
-        'srtp/include/ut_sim.h',
-        'srtp/test/roc_driver.c',
-      ],
-    },
-    {
-      'target_name': 'replay_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/include/rdbx.h',
-        'srtp/include/ut_sim.h',
-        'srtp/test/replay_driver.c',
-      ],
-    },
-    {
-      'target_name': 'rtpw',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/include/getopt_s.h',
-        'srtp/include/rtp.h',
-        'srtp/include/srtp.h',
-        'srtp/crypto/include/datatypes.h',
-        'srtp/test/getopt_s.c',
-        'srtp/test/rtp.c',
-        'srtp/test/rtpw.c',
-      ],
-      'conditions': [
-        ['OS=="android"', {
-          'defines': [
-            'HAVE_SYS_SOCKET_H',
-          ],
-        }],
-      ],
-    },
-    {
-      'target_name': 'srtp_test_cipher_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/cipher_driver.c',
-        'srtp/include/getopt_s.h',
-        'srtp/test/getopt_s.c',
-      ],
-      'conditions': [
-        ['use_openssl==1', {
-          'dependencies': [
-            '<(DEPTH)/deps/openssl/openssl.gyp:openssl',
-          ],
-        }],
-      ],
-    },
-    {
-      'target_name': 'srtp_test_datatypes_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/datatypes_driver.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_test_stat_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/stat_driver.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_test_sha1_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/sha1_driver.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_test_kernel_driver',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/kernel_driver.c',
-        'srtp/include/getopt_s.h',
-        'srtp/test/getopt_s.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_test_aes_calc',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/aes_calc.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_test_rand_gen',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/rand_gen.c',
-        'srtp/include/getopt_s.h',
-        'srtp/test/getopt_s.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_test_rand_gen_soak',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/rand_gen_soak.c',
-        'srtp/include/getopt_s.h',
-        'srtp/test/getopt_s.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_test_env',
-      'type': 'executable',
-      'dependencies': [
-        'libsrtp',
-      ],
-      'sources': [
-        'srtp/crypto/test/env.c',
-      ],
-    },
-    {
-      'target_name': 'srtp_runtest',
-      'type': 'none',
-      'dependencies': [
-        'rdbx_driver',
-        'srtp_driver',
-        'roc_driver',
-        'replay_driver',
-        'rtpw',
-        'srtp_test_cipher_driver',
-        'srtp_test_datatypes_driver',
-        'srtp_test_stat_driver',
-        'srtp_test_sha1_driver',
-        'srtp_test_kernel_driver',
-        'srtp_test_aes_calc',
-        'srtp_test_rand_gen',
-        'srtp_test_rand_gen_soak',
-        'srtp_test_env',
       ],
     },
   ], # targets
