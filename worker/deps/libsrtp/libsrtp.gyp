@@ -51,6 +51,22 @@
           'HAVE_WINSOCK2_H',
          ],
       }],
+      [ 'target_arch == "x64" or target_arch == "ia32"', {
+        'defines': [
+          'CPU_CISC',
+        ],
+      }],
+      [ 'target_arch == "arm" or target_arch == "arm64" \
+        or target_arch == "mipsel" or target_arch == "mips64el"', {
+        'defines': [
+          # TODO(leozwang): CPU_RISC doesn't work properly on android/arm and
+          # mips platforms for unknown reasons, need to investigate the root
+          # cause of it. CPU_RISC is used for optimization only, and CPU_CISC
+          # should just work just fine, it has been tested on android/arm with
+          # srtp test applications and libjingle.
+          'CPU_CISC',
+        ],
+      }],
     ],
     'include_dirs': [
       './config',
