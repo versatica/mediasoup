@@ -1,6 +1,19 @@
 # Changelog
 
 
+### 3.4.8
+
+* `libsrtp.gyp`: Fix regression in mediasoup for Windows.
+  - `libsrtp.gyp`: Modernize it based on the new `BUILD.gn` in Chromium.
+  - `libsrtp.gyp`: Don't include "test" and other targets.
+  - Assume `HAVE_INTTYPES_H`, `HAVE_INT8_T`, etc. in Windows.
+  - Issue details: https://github.com/sctplab/usrsctp/issues/353
+* `gyp` dependency: Add support for Microsoft Visual Studio 2019.
+  - Modify our own `gyp` sources to fix the issue.
+  - CL uploaded to GYP project with the fix.
+  - Issue details: https://github.com/sctplab/usrsctp/issues/347
+
+
 ### 3.4.7
 
 * `PortManager.cpp`: Do not limit the number of failed `bind()` attempts to 20 since it does not work well in scenarios that launch tons of `Workers` with same port range. Instead iterate all ports in the range given to the Worker.
