@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "catch.hpp"
+#include <catch.hpp>
 #include <cstring> // std::memset()
 #ifdef _WIN32
 #include <winsock2.h>

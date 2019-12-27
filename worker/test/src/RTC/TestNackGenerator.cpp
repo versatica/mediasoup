@@ -1,8 +1,8 @@
 #include "common.hpp"
-#include "catch.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/NackGenerator.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <catch.hpp>
 #include <vector>
 
 using namespace RTC;

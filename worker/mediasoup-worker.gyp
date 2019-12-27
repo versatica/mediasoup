@@ -364,7 +364,6 @@
         'test/src/Utils/TestString.cpp',
         'test/src/Utils/TestTime.cpp',
         # C++ include files.
-        'test/include/catch.hpp',
         'test/include/helpers.hpp'
       ],
       'include_dirs':
