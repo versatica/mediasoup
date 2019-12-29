@@ -61,7 +61,7 @@
     "@typescript-eslint/parser": "^2.13.0",
     "cross-env": "^6.0.3",
     "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.1.1",
+    "eslint-plugin-jest": "^23.2.0",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
     "jest": "^24.9.0",
