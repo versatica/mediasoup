@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "RTC/SctpDictionaries.hpp"
 
 namespace RTC
@@ -22,7 +23,7 @@ namespace RTC
 		auto jsonMaxRetransmitsIt    = data.find("maxRetransmits");
 
 		// streamId is mandatory.
-		if (jsonStreamIdIt == data.end() || !jsonStreamIdIt->is_number_unsigned())
+		if (jsonStreamIdIt == data.end() || !Utils::Json::IsPositiveInteger(*jsonStreamIdIt))
 			MS_THROW_TYPE_ERROR("missing streamId");
 
 		this->streamId = jsonStreamIdIt->get<uint16_t>();
@@ -40,12 +41,26 @@ namespace RTC
 		}
 
 		// maxPacketLifeTime is optional.
-		if (jsonMaxPacketLifeTimeIt != data.end() && jsonMaxPacketLifeTimeIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonMaxPacketLifeTimeIt != data.end() &&
+			Utils::Json::IsPositiveInteger(*jsonMaxPacketLifeTimeIt)
+		)
+		// clang-format on
+		{
 			this->maxPacketLifeTime = jsonMaxPacketLifeTimeIt->get<uint16_t>();
+		}
 
 		// maxRetransmits is optional.
-		if (jsonMaxRetransmitsIt != data.end() && jsonMaxRetransmitsIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonMaxRetransmitsIt != data.end() &&
+			Utils::Json::IsPositiveInteger(*jsonMaxRetransmitsIt)
+		)
+		// clang-format on
+		{
 			this->maxRetransmits = jsonMaxRetransmitsIt->get<uint16_t>();
+		}
 
 		if (this->maxPacketLifeTime && this->maxRetransmits)
 			MS_THROW_TYPE_ERROR("cannot provide both maxPacketLifeTime and maxRetransmits");

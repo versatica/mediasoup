@@ -263,21 +263,33 @@ namespace RTC
 
 					auto jsonPortIt = request->data.find("port");
 
-					if (jsonPortIt == request->data.end() || !jsonPortIt->is_number_unsigned())
+					// clang-format off
+					if (
+						jsonPortIt == request->data.end() ||
+						!Utils::Json::IsPositiveInteger(*jsonPortIt)
+					)
+					// clang-format on
+					{
 						MS_THROW_TYPE_ERROR("missing port");
+					}
 
 					port = jsonPortIt->get<uint16_t>();
 
 					auto jsonRtcpPortIt = request->data.find("rtcpPort");
 
-					if (jsonRtcpPortIt != request->data.end() && jsonRtcpPortIt->is_number_unsigned())
+					// clang-format off
+					if (
+						jsonRtcpPortIt != request->data.end() &&
+						Utils::Json::IsPositiveInteger(*jsonRtcpPortIt)
+					)
+					// clang-format on
 					{
 						if (this->rtcpMux)
 							MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
 
 						rtcpPort = jsonRtcpPortIt->get<uint16_t>();
 					}
-					else if (jsonRtcpPortIt == request->data.end() || !jsonRtcpPortIt->is_number_unsigned())
+					else
 					{
 						if (!this->rtcpMux)
 							MS_THROW_TYPE_ERROR("missing rtcpPort (required with rtcpMux disabled)");

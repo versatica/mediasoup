@@ -4,6 +4,7 @@
 #include "Channel/Request.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 
 namespace Channel
 {
@@ -70,7 +71,7 @@ namespace Channel
 
 		auto jsonIdIt = jsonRequest.find("id");
 
-		if (jsonIdIt == jsonRequest.end() || !jsonIdIt->is_number_unsigned())
+		if (jsonIdIt == jsonRequest.end() || !Utils::Json::IsPositiveInteger(*jsonIdIt))
 			MS_THROW_ERROR("missing id");
 
 		this->id = jsonIdIt->get<uint32_t>();

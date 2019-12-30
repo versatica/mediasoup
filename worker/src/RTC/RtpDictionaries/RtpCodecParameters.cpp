@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -32,20 +33,41 @@ namespace RTC
 		this->mimeType.SetMimeType(jsonMimeTypeIt->get<std::string>());
 
 		// payloadType is mandatory.
-		if (jsonPayloadTypeIt == data.end() || !jsonPayloadTypeIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonPayloadTypeIt == data.end() ||
+			!Utils::Json::IsPositiveInteger(*jsonPayloadTypeIt)
+		)
+		// clang-format on
+		{
 			MS_THROW_TYPE_ERROR("missing payloadType");
+		}
 
 		this->payloadType = jsonPayloadTypeIt->get<uint8_t>();
 
 		// clockRate is mandatory.
-		if (jsonClockRateIt == data.end() || !jsonClockRateIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonClockRateIt == data.end() ||
+			!Utils::Json::IsPositiveInteger(*jsonClockRateIt)
+		)
+		// clang-format on
+		{
 			MS_THROW_TYPE_ERROR("missing clockRate");
+		}
 
 		this->clockRate = jsonClockRateIt->get<uint32_t>();
 
 		// channels is optional.
-		if (jsonChannelsIt != data.end() && jsonChannelsIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonChannelsIt != data.end() &&
+			Utils::Json::IsPositiveInteger(*jsonChannelsIt)
+		)
+		// clang-format on
+		{
 			this->channels = jsonChannelsIt->get<uint8_t>();
+		}
 
 		// parameters is optional.
 		if (jsonParametersIt != data.end() && jsonParametersIt->is_object())
@@ -114,7 +136,7 @@ namespace RTC
 			case RTC::RtpCodecMimeType::Subtype::RTX:
 			{
 				// A RTX codec must have 'apt' parameter.
-				if (!this->parameters.HasInteger(aptString))
+				if (!this->parameters.HasPositiveInteger(aptString))
 					MS_THROW_TYPE_ERROR("missing apt parameter in RTX codec");
 
 				break;

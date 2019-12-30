@@ -38,7 +38,7 @@ namespace RTC
 
 		if (jsonInitialAvailableOutgoingBitrateIt != data.end())
 		{
-			if (!jsonInitialAvailableOutgoingBitrateIt->is_number_unsigned())
+			if (!Utils::Json::IsPositiveInteger(*jsonInitialAvailableOutgoingBitrateIt))
 				MS_THROW_TYPE_ERROR("wrong initialAvailableOutgoingBitrate (not a number)");
 
 			this->initialAvailableOutgoingBitrate = jsonInitialAvailableOutgoingBitrateIt->get<uint32_t>();
@@ -76,9 +76,9 @@ namespace RTC
 			// clang-format off
 			if (
 				jsonOSIt == jsonNumSctpStreamsIt->end() ||
-				!jsonOSIt->is_number_unsigned() ||
+				!Utils::Json::IsPositiveInteger(*jsonOSIt) ||
 				jsonMISIt == jsonNumSctpStreamsIt->end() ||
-				!jsonMISIt->is_number_unsigned()
+				!Utils::Json::IsPositiveInteger(*jsonMISIt)
 			)
 			// clang-format on
 			{
@@ -92,7 +92,7 @@ namespace RTC
 			// clang-format off
 			if (
 				jsonMaxSctpMessageSizeIt == data.end() ||
-				!jsonMaxSctpMessageSizeIt->is_number_unsigned()
+				!Utils::Json::IsPositiveInteger(*jsonMaxSctpMessageSizeIt)
 			)
 			// clang-format on
 			{
@@ -520,8 +520,15 @@ namespace RTC
 			{
 				auto jsonBitrateIt = request->data.find("bitrate");
 
-				if (jsonBitrateIt == request->data.end() || !jsonBitrateIt->is_number_unsigned())
+				// clang-format off
+				if (
+					jsonBitrateIt == request->data.end() ||
+					!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
+				)
+				// clang-format on
+				{
 					MS_THROW_TYPE_ERROR("missing bitrate");
+				}
 
 				this->maxIncomingBitrate = jsonBitrateIt->get<uint32_t>();
 

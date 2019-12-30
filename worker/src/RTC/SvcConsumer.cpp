@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Codecs.hpp"
 
@@ -40,7 +41,12 @@ namespace RTC
 			auto jsonSpatialLayerIt  = jsonPreferredLayersIt->find("spatialLayer");
 			auto jsonTemporalLayerIt = jsonPreferredLayersIt->find("temporalLayer");
 
-			if (jsonSpatialLayerIt == jsonPreferredLayersIt->end() || !jsonSpatialLayerIt->is_number_unsigned())
+			// clang-format off
+			if (
+				jsonSpatialLayerIt == jsonPreferredLayersIt->end() ||
+				!Utils::Json::IsPositiveInteger(*jsonSpatialLayerIt)
+			)
+			// clang-format on
 			{
 				MS_THROW_TYPE_ERROR("missing preferredLayers.spatialLayer");
 			}
@@ -50,7 +56,12 @@ namespace RTC
 			if (this->preferredSpatialLayer > encoding.spatialLayers - 1)
 				this->preferredSpatialLayer = encoding.spatialLayers - 1;
 
-			if (jsonTemporalLayerIt != jsonPreferredLayersIt->end() && jsonTemporalLayerIt->is_number_unsigned())
+			// clang-format off
+			if (
+				jsonTemporalLayerIt != jsonPreferredLayersIt->end() &&
+				Utils::Json::IsPositiveInteger(*jsonTemporalLayerIt)
+			)
+			// clang-format on
 			{
 				this->preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
 
@@ -181,7 +192,12 @@ namespace RTC
 				auto jsonTemporalLayerIt = request->data.find("temporalLayer");
 
 				// Spatial layer.
-				if (jsonSpatialLayerIt == request->data.end() || !jsonSpatialLayerIt->is_number_unsigned())
+				// clang-format off
+				if (
+					jsonSpatialLayerIt == request->data.end() ||
+					!Utils::Json::IsPositiveInteger(*jsonSpatialLayerIt)
+				)
+				// clang-format on
 				{
 					MS_THROW_TYPE_ERROR("missing spatialLayer");
 				}
@@ -192,7 +208,12 @@ namespace RTC
 					this->preferredSpatialLayer = this->rtpStream->GetSpatialLayers() - 1;
 
 				// preferredTemporaLayer is optional.
-				if (jsonTemporalLayerIt != request->data.end() && jsonTemporalLayerIt->is_number_unsigned())
+				// clang-format off
+				if (
+					jsonTemporalLayerIt != request->data.end() &&
+					Utils::Json::IsPositiveInteger(*jsonTemporalLayerIt)
+				)
+				// clang-format on
 				{
 					this->preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
 

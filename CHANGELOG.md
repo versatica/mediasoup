@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.4.9 (WIP)
+
+* Add `Utils::Json::IsPositiveInteger()` to not rely on `is_number_unsigned()` of json lib, which is unreliable due to its design.
+* Update Node and C++ deps.
+
+
 ### 3.4.8
 
 * `libsrtp.gyp`: Fix regression in mediasoup for Windows.

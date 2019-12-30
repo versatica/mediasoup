@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -25,8 +26,15 @@ namespace RTC
 			this->cname = jsonCnameIt->get<std::string>();
 
 		// ssrc is optional.
-		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonSsrcIt != data.end() &&
+			Utils::Json::IsPositiveInteger(*jsonSsrcIt)
+		)
+		// clang-format on
+		{
 			this->ssrc = jsonSsrcIt->get<uint32_t>();
+		}
 
 		// reducedSize is optional.
 		if (jsonRedicedSizeIt != data.end() && jsonRedicedSizeIt->is_boolean())
