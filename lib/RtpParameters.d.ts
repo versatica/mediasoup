@@ -86,10 +86,10 @@ export declare type RtpHeaderExtensionDirection = 'sendrecv' | 'sendonly' | 'rec
  */
 export interface RtpHeaderExtension {
     /**
-     * Media kind. If unset, it's valid for all kinds.
+     * Media kind. If empty string, it's valid for all kinds.
      * Default any media kind.
      */
-    kind?: MediaKind;
+    kind?: MediaKind | '';
     uri: string;
     /**
      * The preferred numeric identifier that goes in the RTP packet. Must be
