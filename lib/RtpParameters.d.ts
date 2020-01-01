@@ -6,7 +6,7 @@ export interface RtpCapabilities {
     /**
      * Supported media and RTX codecs.
      */
-    codecs: RtpCodecCapability[];
+    codecs?: RtpCodecCapability[];
     /**
      * Supported RTP header extensions.
      */
