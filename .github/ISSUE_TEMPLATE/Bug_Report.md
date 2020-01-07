@@ -12,6 +12,10 @@ If you have questions or doubts about mediasoup or need support, please use the 
 > 
 > https://mediasoup.discourse.group
 
+If you got a crash in mediasoup, please try to provide a core dump into the issue report:
+>
+> https://mediasoup.org/support/#crashes-in-mediasoup-get-a-core-dump
+
 
 ### Your environment
 
