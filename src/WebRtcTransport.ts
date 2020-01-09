@@ -1,6 +1,7 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, {
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import {
+	Transport,
 	TransportListenIp,
 	TransportProtocol,
 	TransportTuple,
@@ -142,7 +143,7 @@ export interface WebRtcTransportStat
 
 const logger = new Logger('WebRtcTransport');
 
-export default class WebRtcTransport extends Transport
+export class WebRtcTransport extends Transport
 {
 	// WebRtcTransport data.
 	// - .iceRole

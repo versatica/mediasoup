@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { SctpStreamParameters } from './SctpParameters';
 export interface DataProducerOptions {
     /**
@@ -31,7 +31,7 @@ export interface DataProducerStat {
     messagesReceived: number;
     bytesReceived: number;
 }
-export default class DataProducer extends EnhancedEventEmitter {
+export declare class DataProducer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;

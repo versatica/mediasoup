@@ -1,8 +1,8 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Worker, { WorkerSettings } from './Worker';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Worker, WorkerSettings } from './Worker';
 import * as utils from './utils';
-import supportedRtpCapabilities from './supportedRtpCapabilities';
+import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { RtpCapabilities } from './RtpParameters';
 import * as types from './types';
 

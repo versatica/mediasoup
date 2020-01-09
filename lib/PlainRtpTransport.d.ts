@@ -1,6 +1,6 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, { TransportListenIp, TransportTuple, SctpState } from './Transport';
-import Consumer, { ConsumerOptions } from './Consumer';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
+import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export interface PlainRtpTransportOptions {
     /**
@@ -71,7 +71,7 @@ export interface PlainRtpTransportStat {
     tuple: TransportTuple;
     rtcpTuple?: TransportTuple;
 }
-export default class PlainRtpTransport extends Transport {
+export declare class PlainRtpTransport extends Transport {
     /**
      * @private
      * @emits sctpstatechange - (sctpState: SctpState)

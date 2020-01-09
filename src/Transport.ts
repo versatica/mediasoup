@@ -1,13 +1,13 @@
 import uuidv4 from 'uuid/v4';
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as utils from './utils';
 import * as ortc from './ortc';
-import Channel from './Channel';
-import Producer, { ProducerOptions } from './Producer';
-import Consumer, { ConsumerOptions } from './Consumer';
-import DataProducer, { DataProducerOptions } from './DataProducer';
-import DataConsumer, { DataConsumerOptions } from './DataConsumer';
+import { Channel } from './Channel';
+import { Producer, ProducerOptions } from './Producer';
+import { Consumer, ConsumerOptions } from './Consumer';
+import { DataProducer, DataProducerOptions } from './DataProducer';
+import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
 import { SctpStreamParameters } from './SctpParameters';
 
@@ -74,7 +74,7 @@ export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed'
 
 const logger = new Logger('Transport');
 
-export default class Transport extends EnhancedEventEmitter
+export class Transport extends EnhancedEventEmitter
 {
 	// Internal data.
 	// - .routerId

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
-import Logger from './Logger';
+import { Logger } from './Logger';
 
-export default class EnhancedEventEmitter extends EventEmitter
+export class EnhancedEventEmitter extends EventEmitter
 {
 	// Logger instance.
 	protected readonly _logger: Logger;

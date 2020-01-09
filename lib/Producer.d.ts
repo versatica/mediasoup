@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { MediaKind, RtpParameters } from './RtpParameters';
 export interface ProducerOptions {
     /**
@@ -105,7 +105,7 @@ export interface ProducerStat {
  * Producer type.
  */
 export declare type ProducerType = 'simple' | 'simulcast' | 'svc';
-export default class Producer extends EnhancedEventEmitter {
+export declare class Producer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;

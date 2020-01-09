@@ -1,9 +1,9 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
-import Producer, { ProducerOptions } from './Producer';
-import Consumer, { ConsumerOptions } from './Consumer';
-import DataProducer, { DataProducerOptions } from './DataProducer';
-import DataConsumer, { DataConsumerOptions } from './DataConsumer';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
+import { Producer, ProducerOptions } from './Producer';
+import { Consumer, ConsumerOptions } from './Consumer';
+import { DataProducer, DataProducerOptions } from './DataProducer';
+import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
 export interface TransportListenIp {
     /**
@@ -53,7 +53,7 @@ export interface TransportTraceEventData {
     info: any;
 }
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
-export default class Transport extends EnhancedEventEmitter {
+export declare class Transport extends EnhancedEventEmitter {
     protected readonly _internal: any;
     protected _data: any;
     protected readonly _channel: Channel;

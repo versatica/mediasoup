@@ -1,8 +1,8 @@
 import { Duplex } from 'stream';
 // @ts-ignore
 import * as netstring from 'netstring';
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
 
 interface Sent
@@ -19,7 +19,7 @@ interface Sent
 const NS_MESSAGE_MAX_LEN = 4194313;
 const NS_PAYLOAD_MAX_LEN = 4194304;
 
-export default class Channel extends EnhancedEventEmitter
+export class Channel extends EnhancedEventEmitter
 {
 	// Logger for logs from the worker process.
 	private readonly _workerLogger: Logger;

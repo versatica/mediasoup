@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, { TransportListenIp, TransportProtocol, TransportTuple, SctpState } from './Transport';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Transport, TransportListenIp, TransportProtocol, TransportTuple, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export interface WebRtcTransportOptions {
     /**
@@ -105,7 +105,7 @@ export interface WebRtcTransportStat {
     iceSelectedTuple?: TransportTuple;
     dtlsState: DtlsState;
 }
-export default class WebRtcTransport extends Transport {
+export declare class WebRtcTransport extends Transport {
     /**
      * @private
      * @emits icestatechange - (iceState: IceState)

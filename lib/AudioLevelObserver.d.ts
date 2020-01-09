@@ -1,6 +1,6 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import RtpObserver from './RtpObserver';
-import Producer from './Producer';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { RtpObserver } from './RtpObserver';
+import { Producer } from './Producer';
 export interface AudioLevelObserverOptions {
     /**
      * Maximum number of entries in the 'volumes”' event. Default 1.
@@ -31,7 +31,7 @@ export interface AudioLevelObserverVolume {
      */
     volume: number;
 }
-export default class AudioLevelObserver extends RtpObserver {
+export declare class AudioLevelObserver extends RtpObserver {
     /**
      * @private
      * @emits volumes - (volumes: AudioLevelObserverVolume[])

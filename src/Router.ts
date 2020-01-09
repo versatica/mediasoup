@@ -1,18 +1,18 @@
 import uuidv4 from 'uuid/v4';
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
-import Channel from './Channel';
-import Transport, { TransportListenIp } from './Transport';
-import WebRtcTransport, { WebRtcTransportOptions } from './WebRtcTransport';
-import PlainRtpTransport, { PlainRtpTransportOptions } from './PlainRtpTransport';
-import PipeTransport, { PipeTransportOptions } from './PipeTransport';
-import Producer from './Producer';
-import Consumer from './Consumer';
-import DataProducer from './DataProducer';
-import DataConsumer from './DataConsumer';
-import RtpObserver from './RtpObserver';
-import AudioLevelObserver, { AudioLevelObserverOptions } from './AudioLevelObserver';
+import { Channel } from './Channel';
+import { Transport, TransportListenIp } from './Transport';
+import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
+import { PlainRtpTransport, PlainRtpTransportOptions } from './PlainRtpTransport';
+import { PipeTransport, PipeTransportOptions } from './PipeTransport';
+import { Producer } from './Producer';
+import { Consumer } from './Consumer';
+import { DataProducer } from './DataProducer';
+import { DataConsumer } from './DataConsumer';
+import { RtpObserver } from './RtpObserver';
+import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 
@@ -87,7 +87,7 @@ export interface PipeToRouterResult
 
 const logger = new Logger('Router');
 
-export default class Router extends EnhancedEventEmitter
+export class Router extends EnhancedEventEmitter
 {
 	// Internal data.
 	// - .routerId

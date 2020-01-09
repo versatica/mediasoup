@@ -344,4 +344,4 @@ const supportedRtpCapabilities: RtpCapabilities =
 	fecMechanisms : []
 };
 
-export default supportedRtpCapabilities;
+export { supportedRtpCapabilities };

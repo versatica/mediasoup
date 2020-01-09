@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Worker, { WorkerSettings } from './Worker';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Worker, WorkerSettings } from './Worker';
 import { RtpCapabilities } from './RtpParameters';
 import * as types from './types';
 /**

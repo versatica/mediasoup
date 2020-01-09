@@ -1,6 +1,6 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { SctpStreamParameters } from './SctpParameters';
 
 export interface DataProducerOptions
@@ -43,7 +43,7 @@ export interface DataProducerStat
 
 const logger = new Logger('DataProducer');
 
-export default class DataProducer extends EnhancedEventEmitter
+export class DataProducer extends EnhancedEventEmitter
 {
 	// Internal data.
 	// - .routerId

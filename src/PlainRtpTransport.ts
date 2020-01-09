@@ -1,12 +1,13 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, {
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import {
+	Transport,
 	TransportListenIp,
 	TransportTuple,
 	TransportTraceEventData,
 	SctpState
 } from './Transport';
-import Consumer, { ConsumerOptions } from './Consumer';
+import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
 export interface PlainRtpTransportOptions
@@ -94,7 +95,7 @@ export interface PlainRtpTransportStat
 
 const logger = new Logger('PlainRtpTransport');
 
-export default class PlainRtpTransport extends Transport
+export class PlainRtpTransport extends Transport
 {
 	// PlainRtpTransport data.
 	// - .rtcpMux

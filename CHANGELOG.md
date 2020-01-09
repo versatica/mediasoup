@@ -4,6 +4,7 @@
 ### 3.4.9 (WIP)
 
 * Add `Utils::Json::IsPositiveInteger()` to not rely on `is_number_unsigned()` of json lib, which is unreliable due to its design.
+* Avoid ES6 `export default` and always use named `export`.
 * Update Node and C++ deps.
 
 

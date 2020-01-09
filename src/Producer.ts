@@ -1,6 +1,6 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { MediaKind, RtpParameters } from './RtpParameters';
 
 export interface ProducerOptions
@@ -135,7 +135,7 @@ export type ProducerType = 'simple' | 'simulcast' | 'svc';
 
 const logger = new Logger('Producer');
 
-export default class Producer extends EnhancedEventEmitter
+export class Producer extends EnhancedEventEmitter
 {
 	// Internal data.
 	// - .routerId

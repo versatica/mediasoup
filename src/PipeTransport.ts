@@ -1,14 +1,15 @@
 import uuidv4 from 'uuid/v4';
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
-import Transport, {
+import {
+	Transport,
 	TransportListenIp,
 	TransportTuple,
 	TransportTraceEventData,
 	SctpState
 } from './Transport';
-import Consumer, { ConsumerOptions } from './Consumer';
+import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
 export interface PipeTransportOptions
@@ -73,7 +74,7 @@ export interface PipeTransportStat
 
 const logger = new Logger('PipeTransport');
 
-export default class PipeTransport extends Transport
+export class PipeTransport extends Transport
 {
 	// PipeTransport data.
 	// - .tuple

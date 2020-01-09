@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Router, { RouterOptions } from './Router';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Router, RouterOptions } from './Router';
 export declare type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 export interface WorkerSettings {
     /**
@@ -109,7 +109,7 @@ export interface WorkerResourceUsage {
      */
     ru_nivcsw: number;
 }
-export default class Worker extends EnhancedEventEmitter {
+export declare class Worker extends EnhancedEventEmitter {
     private _child?;
     private readonly _workerLogger;
     private readonly _pid;

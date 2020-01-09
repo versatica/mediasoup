@@ -1,6 +1,6 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { ProducerStat } from './Producer';
 import {
 	MediaKind,
@@ -137,7 +137,7 @@ export type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
 
 const logger = new Logger('Consumer');
 
-export default class Consumer extends EnhancedEventEmitter
+export class Consumer extends EnhancedEventEmitter
 {
 	// Internal data.
 	// - .routerId

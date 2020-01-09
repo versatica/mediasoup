@@ -1,6 +1,6 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, { TransportListenIp, TransportTuple, SctpState } from './Transport';
-import Consumer, { ConsumerOptions } from './Consumer';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
+import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export interface PipeTransportOptions {
     /**
@@ -51,7 +51,7 @@ export interface PipeTransportStat {
     maxIncomingBitrate?: number;
     tuple: TransportTuple;
 }
-export default class PipeTransport extends Transport {
+export declare class PipeTransport extends Transport {
     /**
      * @private
      * @emits sctpstatechange - (sctpState: SctpState)

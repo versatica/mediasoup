@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { ProducerStat } from './Producer';
 import { MediaKind, RtpCapabilities, RtpParameters } from './RtpParameters';
 export interface ConsumerOptions {
@@ -107,7 +107,7 @@ export interface ConsumerStat {
  * Consumer type.
  */
 export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
-export default class Consumer extends EnhancedEventEmitter {
+export declare class Consumer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;

@@ -1,7 +1,7 @@
 import * as h264 from 'h264-profile-level-id';
 import * as utils from './utils';
 import { UnsupportedError } from './errors';
-import supportedRtpCapabilities from './supportedRtpCapabilities';
+import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { parse as parseScalabilityMode } from './scalabilityModes';
 import {
 	MediaKind,
