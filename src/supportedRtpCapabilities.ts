@@ -340,8 +340,7 @@ const supportedRtpCapabilities: RtpCapabilities =
 			preferredEncrypt : false,
 			direction        : 'sendrecv'
 		}
-	],
-	fecMechanisms : []
+	]
 };
 
 export { supportedRtpCapabilities };

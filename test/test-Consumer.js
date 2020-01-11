@@ -106,9 +106,9 @@ const videoProducerParameters =
 				},
 				rtcpFeedback :
 				[
-					{ type: 'nack' },
+					{ type: 'nack', parameter: '' },
 					{ type: 'nack', parameter: 'pli' },
-					{ type: 'goog-remb' }
+					{ type: 'goog-remb', parameter: '' }
 				]
 			},
 			{
@@ -151,39 +151,39 @@ const consumerDeviceCapabilities =
 		{
 			mimeType             : 'audio/opus',
 			kind                 : 'audio',
-			clockRate            : 48000,
 			preferredPayloadType : 100,
+			clockRate            : 48000,
 			channels             : 2
 		},
 		{
 			mimeType             : 'video/H264',
 			kind                 : 'video',
-			clockRate            : 90000,
 			preferredPayloadType : 101,
-			rtcpFeedback         :
-			[
-				{ type: 'nack' },
-				{ type: 'nack', parameter: 'pli' },
-				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' }
-			],
-			parameters :
+			clockRate            : 90000,
+			parameters           :
 			{
 				'level-asymmetry-allowed' : 1,
 				'packetization-mode'      : 1,
 				'profile-level-id'        : '4d0032'
-			}
+			},
+			rtcpFeedback :
+			[
+				{ type: 'nack', parameter: '' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb', parameter: '' }
+			]
 		},
 		{
 			mimeType             : 'video/rtx',
 			kind                 : 'video',
-			clockRate            : 90000,
 			preferredPayloadType : 102,
-			rtcpFeedback         : [],
+			clockRate            : 90000,
 			parameters           :
 			{
 				apt : 101
-			}
+			},
+			rtcpFeedback : []
 		}
 	],
 	headerExtensions :
@@ -236,8 +236,7 @@ const consumerDeviceCapabilities =
 			preferredId      : 12,
 			preferredEncrypt : false
 		}
-	],
-	fecMechanisms : []
+	]
 };
 
 beforeAll(async () =>
@@ -293,8 +292,8 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.rtpParameters.codecs[0]).toEqual(
 		{
 			mimeType    : 'audio/opus',
-			clockRate   : 48000,
 			payloadType : 100,
+			clockRate   : 48000,
 			channels    : 2,
 			parameters  :
 			{
@@ -363,8 +362,9 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.rtpParameters.codecs[0]).toEqual(
 		{
 			mimeType    : 'video/H264',
-			clockRate   : 90000,
 			payloadType : 103,
+			clockRate   : 90000,
+			channels    : 1,
 			parameters  :
 			{
 				'packetization-mode' : 1,
@@ -372,17 +372,18 @@ test('transport.consume() succeeds', async () =>
 			},
 			rtcpFeedback :
 			[
-				{ type: 'nack' },
+				{ type: 'nack', parameter: '' },
 				{ type: 'nack', parameter: 'pli' },
 				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' }
+				{ type: 'goog-remb', parameter: '' }
 			]
 		});
 	expect(videoConsumer.rtpParameters.codecs[1]).toEqual(
 		{
 			mimeType     : 'video/rtx',
-			clockRate    : 90000,
 			payloadType  : 104,
+			clockRate    : 90000,
+			channels     : 1,
 			parameters   : { apt: 103 },
 			rtcpFeedback : []
 		});
@@ -432,8 +433,8 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 			{
 				kind                 : 'audio',
 				mimeType             : 'audio/ISAC',
-				clockRate            : 32000,
 				preferredPayloadType : 100,
+				clockRate            : 32000,
 				channels             : 1
 			}
 		],

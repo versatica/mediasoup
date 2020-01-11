@@ -30,17 +30,17 @@ const mediaCodecs =
 		clockRate : 90000
 	},
 	{
-		kind         : 'video',
-		mimeType     : 'video/H264',
-		clockRate    : 90000,
-		rtcpFeedback : [], // Will be ignored.
-		parameters   :
+		kind       : 'video',
+		mimeType   : 'video/H264',
+		clockRate  : 90000,
+		parameters :
 		{
 			'level-asymmetry-allowed' : 1,
 			'packetization-mode'      : 1,
 			'profile-level-id'        : '4d0032',
 			foo                       : 'bar'
-		}
+		},
+		rtcpFeedback : [] // Will be ignored.
 	}
 ];
 

@@ -138,17 +138,17 @@ const consumerDeviceCapabilities =
 	codecs :
 	[
 		{
-			mimeType             : 'audio/opus',
 			kind                 : 'audio',
-			clockRate            : 48000,
+			mimeType             : 'audio/opus',
 			preferredPayloadType : 100,
+			clockRate            : 48000,
 			channels             : 2
 		},
 		{
-			mimeType             : 'video/VP8',
 			kind                 : 'video',
-			clockRate            : 90000,
+			mimeType             : 'video/VP8',
 			preferredPayloadType : 101,
+			clockRate            : 90000,
 			rtcpFeedback         :
 			[
 				{ type: 'nack' },
@@ -158,15 +158,15 @@ const consumerDeviceCapabilities =
 			]
 		},
 		{
-			mimeType             : 'video/rtx',
 			kind                 : 'video',
-			clockRate            : 90000,
+			mimeType             : 'video/rtx',
 			preferredPayloadType : 102,
-			rtcpFeedback         : [],
+			clockRate            : 90000,
 			parameters           :
 			{
 				apt : 101
-			}
+			},
+			rtcpFeedback : []
 		}
 	],
 	headerExtensions :
@@ -270,8 +270,10 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 10
+				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id         : 10,
+				encrypt    : false,
+				parameters : {}
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -293,8 +295,8 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 		[
 			{
 				mimeType    : 'audio/opus',
-				clockRate   : 48000,
 				payloadType : 100,
+				clockRate   : 48000,
 				channels    : 2,
 				parameters  :
 				{
@@ -307,8 +309,10 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeProducer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				id  : 10
+				uri        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+				id         : 10,
+				encrypt    : false,
+				parameters : {}
 			}
 		]);
 	expect(pipeProducer.rtpParameters.encodings).toEqual(
@@ -347,8 +351,10 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		[
 			{
 				mimeType     : 'video/VP8',
-				clockRate    : 90000,
 				payloadType  : 101,
+				clockRate    : 90000,
+				channels     : 1,
+				parameters   : {},
 				rtcpFeedback :
 				[
 					{ type: 'nack', parameter: 'pli' },
@@ -360,20 +366,28 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		[
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			{
-				uri : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-				id  : 6
+				uri        : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id         : 6,
+				encrypt    : false,
+				parameters : {}
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:framemarking',
-				id  : 7
+				uri        : 'urn:ietf:params:rtp-hdrext:framemarking',
+				id         : 7,
+				encrypt    : false,
+				parameters : {}
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 11
+				uri        : 'urn:3gpp:video-orientation',
+				id         : 11,
+				encrypt    : false,
+				parameters : {}
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 12
+				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
+				id         : 12,
+				encrypt    : false,
+				parameters : {}
 			}
 		]);
 	expect(pipeConsumer.rtpParameters.encodings).toEqual(
@@ -398,8 +412,10 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		[
 			{
 				mimeType     : 'video/VP8',
-				clockRate    : 90000,
 				payloadType  : 101,
+				clockRate    : 90000,
+				channels     : 1,
+				parameters   : {},
 				rtcpFeedback :
 				[
 					{ type: 'nack', parameter: 'pli' },
@@ -411,20 +427,28 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		[
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			{
-				uri : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-				id  : 6
+				uri        : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id         : 6,
+				encrypt    : false,
+				parameters : {}
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:framemarking',
-				id  : 7
+				uri        : 'urn:ietf:params:rtp-hdrext:framemarking',
+				id         : 7,
+				encrypt    : false,
+				parameters : {}
 			},
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 11
+				uri        : 'urn:3gpp:video-orientation',
+				id         : 11,
+				encrypt    : false,
+				parameters : {}
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 12
+				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
+				id         : 12,
+				encrypt    : false,
+				parameters : {}
 			}
 		]);
 	expect(pipeProducer.paused).toBe(true);
@@ -447,36 +471,43 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 		[
 			{
 				mimeType     : 'video/VP8',
-				clockRate    : 90000,
 				payloadType  : 101,
+				clockRate    : 90000,
+				channels     : 1,
+				parameters   : {},
 				rtcpFeedback :
 				[
-					{ type: 'nack' },
+					{ type: 'nack', parameter: '' },
 					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'google-remb' },
-					{ type: 'transport-cc' }
+					{ type: 'google-remb', parameter: '' },
+					{ type: 'transport-cc', parameter: '' }
 				]
 			},
 			{
-				mimeType     : 'video/rtx',
-				clockRate    : 90000,
-				payloadType  : 102,
-				rtcpFeedback : [],
-				parameters   :
+				mimeType    : 'video/rtx',
+				payloadType : 102,
+				clockRate   : 90000,
+				channels    : 1,
+				parameters  :
 				{
 					apt : 101
-				}
+				},
+				rtcpFeedback : []
 			}
 		]);
 	expect(videoConsumer.rtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				id  : 4
+				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+				id         : 4,
+				encrypt    : false,
+				parameters : {}
 			},
 			{
-				uri : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
-				id  : 5
+				uri        : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+				id         : 5,
+				encrypt    : false,
+				parameters : {}
 			}
 		]);
 	expect(videoConsumer.rtpParameters.encodings.length).toBe(1);

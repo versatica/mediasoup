@@ -397,14 +397,21 @@ export class Transport extends EnhancedEventEmitter
 			throw new TypeError(`a Producer with same id "${id}" already exists`);
 		else if (![ 'audio', 'video' ].includes(kind))
 			throw new TypeError(`invalid kind "${kind}"`);
-		else if (typeof rtpParameters !== 'object')
-			throw new TypeError('missing rtpParameters');
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		// If missing encodings, add one.
-		if (!rtpParameters.encodings || !Array.isArray(rtpParameters.encodings))
+		// This may throw.
+		ortc.validateRtpParameters(rtpParameters);
+
+		// If missing or empty encodings, add one.
+		if (
+			!rtpParameters.encodings ||
+			!Array.isArray(rtpParameters.encodings) ||
+			rtpParameters.encodings.length === 0
+		)
+		{
 			rtpParameters.encodings = [ {} ];
+		}
 
 		// Don't do this in PipeTransports since there we must keep CNAME value in
 		// each Producer.
@@ -495,10 +502,11 @@ export class Transport extends EnhancedEventEmitter
 
 		if (!producerId || typeof producerId !== 'string')
 			throw new TypeError('missing producerId');
-		else if (typeof rtpCapabilities !== 'object')
-			throw new TypeError('missing rtpCapabilities');
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
+
+		// This may throw.
+		ortc.validateRtpCapabilities(rtpCapabilities);
 
 		const producer = this._getProducerById(producerId);
 
@@ -564,10 +572,11 @@ export class Transport extends EnhancedEventEmitter
 
 		if (id && this._dataProducers.has(id))
 			throw new TypeError(`a DataProducer with same id "${id}" already exists`);
-		else if (typeof sctpStreamParameters !== 'object')
-			throw new TypeError('missing sctpStreamParameters');
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
+
+		// This may throw.
+		ortc.validateSctpStreamParameters(sctpStreamParameters);
 
 		const internal = { ...this._internal, dataProducerId: id || uuidv4() };
 		const reqData = { sctpStreamParameters, label, protocol };

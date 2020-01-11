@@ -1,4 +1,5 @@
-import { RtpCapabilities, RtpCodecCapability, RtpParameters } from './RtpParameters';
+import { RtpCapabilities, RtpCodecCapability, RtpHeaderExtension, RtpParameters, RtpCodecParameters, RtcpFeedback, RtpEncodingParameters, RtpHeaderExtensionParameters, RtcpParameters } from './RtpParameters';
+import { SctpCapabilities, NumSctpStreams, SctpParameters, SctpStreamParameters } from './SctpParameters';
 interface RtpMapping {
     codecs: {
         payloadType: number;
@@ -12,10 +13,88 @@ interface RtpMapping {
     }[];
 }
 /**
+ * Validates RtpCapabilities. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtpCapabilities(caps: RtpCapabilities): void;
+/**
+ * Validates RtpCodecCapability. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtpCodecCapability(codec: RtpCodecCapability): void;
+/**
+ * Validates RtcpFeedback. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtcpFeedback(fb: RtcpFeedback): void;
+/**
+ * Validates RtpHeaderExtension. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtpHeaderExtension(ext: RtpHeaderExtension): void;
+/**
+ * Validates RtpParameters. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtpParameters(params: RtpParameters): void;
+/**
+ * Validates RtpCodecParameters. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtpCodecParameters(codec: RtpCodecParameters): void;
+/**
+ * Validates RtpHeaderExtensionParameteters. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtpHeaderExtensionParameters(ext: RtpHeaderExtensionParameters): void;
+/**
+ * Validates RtpEncodingParameters. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtpEncodingParameters(encoding: RtpEncodingParameters): void;
+/**
+ * Validates RtcpParameters. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateRtcpParameters(rtcp: RtcpParameters): void;
+/**
+ * Validates SctpCapabilities. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateSctpCapabilities(caps: SctpCapabilities): void;
+/**
+ * Validates NumSctpStreams. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateNumSctpStreams(numStreams: NumSctpStreams): void;
+/**
+ * Validates SctpParameters. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateSctpParameters(params: SctpParameters): void;
+/**
+ * Validates SctpStreamParameters. It may modify given data by adding missing
+ * fields with default values.
+ * It throws if invalid.
+ */
+export declare function validateSctpStreamParameters(params: SctpStreamParameters): void;
+/**
  * Generate RTP capabilities for the Router based on the given media codecs and
  * mediasoup supported RTP capabilities.
  */
-export declare function generateRouterRtpCapabilities(mediaCodecs?: RtpCodecCapability[]): RTCRtpCapabilities;
+export declare function generateRouterRtpCapabilities(mediaCodecs?: RtpCodecCapability[]): RtpCapabilities;
 /**
  * Get a mapping of codec payloads and encodings of the given Producer RTP
  * parameters as values expected by the Router.
