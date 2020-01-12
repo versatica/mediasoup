@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 import { Logger } from './Logger';
 
+const staticLogger = new Logger('EnhancedEventEmitter');
+
 export class EnhancedEventEmitter extends EventEmitter
 {
 	// Logger instance.
@@ -11,7 +13,7 @@ export class EnhancedEventEmitter extends EventEmitter
 		super();
 		this.setMaxListeners(Infinity);
 
-		this._logger = logger || new Logger('EnhancedEventEmitter');
+		this._logger = logger || staticLogger;
 	}
 
 	safeEmit(event: string, ...args: any[]): boolean

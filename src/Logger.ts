@@ -44,4 +44,11 @@ export class Logger
 	{
 		return this._error;
 	}
+
+	destroy(): void
+	{
+		this._debug.destroy();
+		this._warn.destroy();
+		this._error.destroy();
+	}
 }

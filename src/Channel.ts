@@ -193,6 +193,9 @@ export class Channel extends EnhancedEventEmitter
 			sent.close();
 		}
 
+		// Destroy the logger so it does not leak debug instances.
+		this._logger.destroy();
+
 		// Remove event listeners but leave a fake 'error' hander to avoid
 		// propagation.
 		this._consumerSocket.removeAllListeners('end');
