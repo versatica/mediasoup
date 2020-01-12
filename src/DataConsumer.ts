@@ -77,7 +77,7 @@ export class DataConsumer extends EnhancedEventEmitter
 		}
 	)
 	{
-		super(logger);
+		super();
 
 		logger.debug('constructor()');
 

@@ -111,7 +111,6 @@ export interface WorkerResourceUsage {
 }
 export declare class Worker extends EnhancedEventEmitter {
     private _child?;
-    private readonly _workerLogger;
     private readonly _pid;
     private readonly _channel;
     private _closed;

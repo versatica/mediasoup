@@ -51,7 +51,7 @@ export class RtpObserver extends EnhancedEventEmitter
 		}
 	)
 	{
-		super(logger);
+		super();
 
 		logger.debug('constructor()');
 

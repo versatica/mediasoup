@@ -1,6 +1,5 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 export declare class Channel extends EnhancedEventEmitter {
-    private readonly _workerLogger;
     private _closed;
     private readonly _producerSocket;
     private readonly _consumerSocket;

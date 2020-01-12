@@ -216,7 +216,7 @@ export class Consumer extends EnhancedEventEmitter
 			preferredLayers?: ConsumerLayers;
 		})
 	{
-		super(logger);
+		super();
 
 		logger.debug('constructor()');
 

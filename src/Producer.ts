@@ -193,7 +193,7 @@ export class Producer extends EnhancedEventEmitter
 		}
 	)
 	{
-		super(logger);
+		super();
 
 		logger.debug('constructor()');
 

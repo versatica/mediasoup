@@ -1,19 +1,14 @@
 import { EventEmitter } from 'events';
 import { Logger } from './Logger';
 
-const staticLogger = new Logger('EnhancedEventEmitter');
+const logger = new Logger('EnhancedEventEmitter');
 
 export class EnhancedEventEmitter extends EventEmitter
 {
-	// Logger instance.
-	protected readonly _logger: Logger;
-
-	constructor(logger?: Logger)
+	constructor()
 	{
 		super();
 		this.setMaxListeners(Infinity);
-
-		this._logger = logger || staticLogger;
 	}
 
 	safeEmit(event: string, ...args: any[]): boolean
@@ -26,7 +21,7 @@ export class EnhancedEventEmitter extends EventEmitter
 		}
 		catch (error)
 		{
-			this._logger.error(
+			logger.error(
 				'safeEmit() | event listener threw an error [event:%s]:%o',
 				event, error);
 

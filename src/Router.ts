@@ -144,7 +144,7 @@ export class Router extends EnhancedEventEmitter
 		}
 	)
 	{
-		super(logger);
+		super();
 
 		logger.debug('constructor()');
 
