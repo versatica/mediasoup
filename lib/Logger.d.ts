@@ -7,5 +7,6 @@ export declare class Logger {
     get debug(): debug.Debugger;
     get warn(): debug.Debugger;
     get error(): debug.Debugger;
+    destroy(): void;
 }
 //# sourceMappingURL=Logger.d.ts.map
