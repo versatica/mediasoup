@@ -80,7 +80,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.34.0"
+	GIT_TAG="v1.34.1"
 	DEST="deps/libuv"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
