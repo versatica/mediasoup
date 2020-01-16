@@ -367,7 +367,7 @@ namespace RTC
 
 		this->transportConnected = true;
 
-		MS_DEBUG_DEV("Transport connected [consumerId:%s]", this->id.c_str());
+		MS_DEBUG_TAG(rtp, "Transport connected [consumerId:%s]", this->id.c_str());
 
 		UserOnTransportConnected();
 	}
@@ -378,7 +378,7 @@ namespace RTC
 
 		this->transportConnected = false;
 
-		MS_DEBUG_DEV("Transport disconnected [consumerId:%s]", this->id.c_str());
+		MS_DEBUG_TAG(rtp, "Transport disconnected [consumerId:%s]", this->id.c_str());
 
 		UserOnTransportDisconnected();
 	}

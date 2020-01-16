@@ -511,11 +511,13 @@ export default class Transport extends EnhancedEventEmitter
 
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
 		const consumerType = (appData && appData.xcode === true) ? "shm" : producer.type; // to create ShmConsumer, cannot copy a producer's type in case of shm transport
+		const shmData = (appData && appData.xcode === true && appData.shmname !== undefined) ? {name: appData.shmname} : {name: ""};
 		const reqData =
 		{
 			kind                   : producer.kind,
 			rtpParameters,
 			type                   : consumerType,
+			shm                    : shmData,
 			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
 			preferredLayers

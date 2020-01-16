@@ -35,6 +35,7 @@ namespace RTC
 
 	private:
 		bool IsConnected() const override;
+		bool IsFullyConnected() const;
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendSctpData(const uint8_t* data, size_t len) override;
@@ -48,6 +49,10 @@ namespace RTC
 	public:
 		void OnUdpSocketPacketReceived(
 		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
+		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnSctpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 	private:
 		// Allocated by this.
@@ -58,14 +63,14 @@ namespace RTC
 		bool comedia{ false };
 		bool multiSource{ false };
 
+		bool isTransportConnectedCalled{ false }; // to account for the fact that "shm writer initialized" is not the same as "RTC::Transport child object is connected"
 		// Handle shm writes
 		std::string                  shm;      // stream file name
 
-		// TODO: channels info to fill in ssrc and everything else needed to setup shm writer?
-
 		std::string                  logname;  // as copied from input data in ctor
 		int                          loglevel;
-		RTC::Media::Kind             producerKind;
+
+		// ShmTransport is responsible to writing RTCP packets into shm and various "metadata stuff" (TBD)
 		DepLibSfuShm::SfuShmMapItem *shmCtx;   // A handle to shm context so that to avoid lookup in DepLibSfuShm each time need to write smth
 		sfushm_av_frame_frag_t       chunk;    // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
 	};

@@ -30,7 +30,26 @@ namespace RTC
 
 		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
 
-		// Create RtpStreamSend instance for sending a single stream to the remote.
+		// Now read shm name - same as in ShmTransport ctor
+		// Read shm.name
+		auto jsonShmIt = data.find("shm");
+		if (jsonShmIt == data.end())
+			MS_THROW_TYPE_ERROR("missing shm, data: %s", nlohmann::to_string(data).c_str());
+		else if (!jsonShmIt->is_object())
+			MS_THROW_TYPE_ERROR("wrong shm (not an object)");
+
+		auto jsonShmNameIt = jsonShmIt->find("name");
+		if (jsonShmNameIt == jsonShmIt->end())
+			MS_THROW_TYPE_ERROR("missing shm.name");
+		else if (!jsonShmNameIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong shm.name (not a string)");
+
+		this->shm.assign(jsonShmNameIt->get<std::string>());
+
+		// TODO: how about shm log?
+
+		MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=- SHM CONSUMER CREATED with shm name %s", this->shm.c_str());
+
 		CreateRtpStream();
 	}
 
@@ -49,16 +68,26 @@ namespace RTC
 		RTC::Consumer::FillJson(jsonObject);
 
 		// Add rtpStream.
-		this->rtpStream->FillJson(jsonObject["rtpStream"]);
+	  this->rtpStream->FillJson(jsonObject["rtpStream"]);
+
+		// TODO: add smth about shm writes
 	}
 
 	void ShmConsumer::FillJsonStats(json& jsonArray) const
 	{
 		MS_TRACE();
+		
+		uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		// Add stats of our send stream.
-		jsonArray.emplace_back(json::value_t::object);
-		this->rtpStream->FillJsonStats(jsonArray[0]);
+	  jsonArray.emplace_back(json::value_t::object);
+		//this->rtpStream->FillJsonStats(jsonArray[0]);
+		jsonArray[0]["type"]        = "shm-writer-stats";
+
+		RTC::RtpDataCounter* ptr = const_cast<RTC::RtpDataCounter*>(&this->shmWriterCounter);
+		jsonArray[0]["packetCount"] = ptr->GetPacketCount();
+		jsonArray[0]["byteCount"]   = ptr->GetBytes();
+		jsonArray[0]["bitrate"]     = ptr->GetBitrate(nowMs);
 
 		// Add stats of our recv stream.
 		if (this->producerRtpStream)
@@ -66,18 +95,19 @@ namespace RTC
 			jsonArray.emplace_back(json::value_t::object);
 			this->producerRtpStream->FillJsonStats(jsonArray[1]);
 		}
+
+		// Shm writing stats
+		
+
 	}
 
 	void ShmConsumer::FillJsonScore(json& jsonObject) const
 	{
 		MS_TRACE();
 
-		jsonObject["score"] = this->rtpStream->GetScore();
-
-		if (this->producerRtpStream)
-			jsonObject["producerScore"] = this->producerRtpStream->GetScore();
-		else
-			jsonObject["producerScore"] = 0;
+		// NOTE: Hardcoded values
+		jsonObject["score"]         = 10;
+		jsonObject["producerScore"] = 10;
 	}
 
 	void ShmConsumer::HandleRequest(Channel::Request* request)
@@ -109,9 +139,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-
-		// Emit the score event.
-		EmitScore();
 	}
 
 	void ShmConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
@@ -119,9 +146,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-
-		// Emit the score event.
-		EmitScore();
 	}
 
 	void ShmConsumer::ProducerRtpStreamScore(
@@ -130,7 +154,6 @@ namespace RTC
 		MS_TRACE();
 
 		// Emit the score event.
-		EmitScore();
 	}
 
 	void ShmConsumer::ProducerRtcpSenderReport(RTC::RtpStream* /*rtpStream*/, bool /*first*/)
@@ -144,8 +167,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsActive())
+		if (!IsActive()) {
+/*			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- SHMCONSUMER INACTIVE: parent.IsActive %ul isPaused %ul isProducerPaused %ul producerRtpStream %ul",
+				RTC::Consumer::IsActive(),
+				IsPaused(),
+				IsProducerPaused(), 
+				(this->producerRtpStream != nullptr)); */
 			return;
+		}
 
 		auto payloadType = packet->GetPayloadType();
 
@@ -153,15 +182,17 @@ namespace RTC
 		// in the corresponding Producer.
 		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
 		{
-			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			MS_DEBUG_TAG(rtp, "payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 			return;
 		}
 
 		// If we need to sync, support key frames and this is not a key frame, ignore
 		// the packet.
-		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
+		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame()) {
+			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- need to sync but this is not keyframe, ignore packet");
 			return;
+		}
 
 		// Whether this is the first packet after re-sync.
 		bool isSyncPacket = this->syncRequired;
@@ -203,8 +234,13 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (this->rtpStream->ReceivePacket(packet))
+		//if (this->rtpStream->ReceivePacket(packet))
+		if (this->WritePacketToShm(packet))
 		{
+
+			// Increase transmission counter.
+			this->shmWriterCounter.Update(packet);
+
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 		}
@@ -225,44 +261,201 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
+	bool ShmConsumer::WritePacketToShm(RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
+		// 01/02/2020: Moved everything from ShmTranport, because only consumer knows its content type - audio or video.
+		// Transport isn't the right place for it because there can be > 1 consumer on a single transport entity
+
+		// If we have not written any packets yet, need to configure shm writer
+		if (shmWriterCounter.GetPacketCount() == 0) {
+			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=- ShmConsumer::WritePacketToShm will call DepLibSfuShm::ConfigureShmWriterCtx!!!");
+			int err = DepLibSfuShm::ConfigureShmWriterCtx(
+				this->shm.c_str(), 
+				&(this->shmCtx),
+				(this->GetKind() == RTC::Media::Kind::AUDIO ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO), 
+				packet->GetSsrc());
+			
+			if (err != 0)
+			{
+				MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=- ERROR CONFIGURING SHM! %s", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video");
+				return false;
+			}
+			else {
+				MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- SUCCESS CONFIGURING SHM! %s shm_writer_ready: %u", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video", this->shmCtx->Status() == DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY);
+			}
+		}
+
+		if ( this->shmCtx->Status() != DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY )
+		{
+			return false;
+		}
+		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm...
+
+		uint8_t const* cdata = packet->GetData();
+		uint8_t* data = const_cast<uint8_t*>(cdata);
+		size_t len          = packet->GetSize();
+
+		switch (this->GetKind())
+		{
+			case RTC::Media::Kind::AUDIO:
+			{
+				/* Just write out the whole opus packet without parsing into separate opus frames.
+					+----------+--------------+
+					|RTP Header| Opus Payload |
+					+----------+--------------+	*/
+				this->chunk.data = data;
+				this->chunk.len = len;
+				this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
+				this->chunk.begin = this->chunk.end = 1;
+				DepLibSfuShm::WriteChunk(this->shm.c_str(), shmCtx, &chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc());
+
+				break;
+			} // audio
+
+			case RTC::Media::Kind::VIDEO: //video
+			{
+				uint8_t nal = *data & 0x1F;
+
+				switch (nal)
+				{
+					// Single NAL unit packet.
+					case 7:
+					{
+						size_t offset{ 1 };
+
+						len -= 1;
+						if (len < 3) {
+							MS_WARN_TAG(rtp, "NALU data len <3: %lu", len);
+							break;
+						}
+
+						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
+
+						//TODO: Do I worry about padding?
+						/*
+						  The RTP timestamp is set to the sampling timestamp of the content.
+      				A 90 kHz clock rate MUST be used.
+						*/
+
+						this->chunk.data = data+offset;
+						this->chunk.len = naluSize;
+						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
+						this->chunk.begin = this->chunk.end = 1;
+
+						DepLibSfuShm::WriteChunk(this->shm.c_str(), shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+						break;
+					}
+
+					// Aggregation packet. Contains several NAL units in a single RTP packet
+					// STAP-A.
+					/*
+						0                   1                   2                   3
+						0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                          RTP Header                           |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                         NALU 1 Data                           |
+						:                                                               :
+						+               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|               | NALU 2 Size                   | NALU 2 HDR    |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                         NALU 2 Data                           |
+						:                                                               :
+						|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                               :...OPTIONAL RTP padding        |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						Figure 7.  An example of an RTP packet including an STAP-A
+						containing two single-time aggregation units
+					*/
+					case 24:
+					{
+						size_t offset{ 1 };
+						len -= 1;
+						// Iterate NAL units.
+						while (len >= 3)
+						{
+							auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
+
+							// Check if there is room for the indicated NAL unit size.
+							if (len < (naluSize + sizeof(naluSize))) {
+								break;
+							}
+							else {
+								/* The RTP timestamp MUST be set to the earliest of the NALU-times of
+      					all the NAL units to be aggregated. */
+								this->chunk.data = data+offset;
+								this->chunk.len = len;
+								this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
+								this->chunk.begin = this->chunk.end = 1;
+
+								DepLibSfuShm::WriteChunk(this->shm.c_str(), shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+							}
+
+							offset += naluSize + sizeof(naluSize);
+							len -= naluSize + sizeof(naluSize);
+						}
+						break;
+					}
+
+					// Fragmentation unit. Single NAL unit is spreaded accross several RTP packets.
+					// FU-A
+					case 29:
+					{
+						size_t offset{ 1 };
+						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
+
+						uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header, subtype of FU unit, we don't use it
+						uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates start of fragmented NALU
+						uint8_t endBit = *(data + 1) & 0x40; ; // 2nd bit indicates end
+
+						this->chunk.data = data+offset;
+						this->chunk.len = naluSize;
+						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
+						this->chunk.begin = (startBit == 128)? 1 : 0;
+						this->chunk.end = (endBit) ? 1 : 0;
+
+						DepLibSfuShm::WriteChunk(this->shm.c_str(), shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+						break;
+					}
+					case 25: // STAB-B
+					case 26: // MTAP-16
+					case 27: // MTAP-24
+					case 28: // FU-B
+					{
+						MS_WARN_TAG(rtp, "Unsupported NAL unit type %d", nal);
+						break;
+					}
+					default: // ignore the rest
+						break;
+				}
+				break;
+			} // video
+
+			default:
+			  // RTC::Media::Kind::ALL
+			  break;
+		}
+	
+		return true;
+	}
+
 	void ShmConsumer::GetRtcp(
 	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
-
-		if (static_cast<float>((now - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
-			return;
-
-		auto* report = this->rtpStream->GetRtcpSenderReport(now);
-
-		if (!report)
-			return;
-
-		packet->AddSenderReport(report);
-
-		// Build SDES chunk for this sender.
-		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
-
-		packet->AddSdesChunk(sdesChunk);
-
-		this->lastRtcpSentTime = now;
 	}
 
 	void ShmConsumer::NeedWorstRemoteFractionLost(
 	  uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
 	{
 		MS_TRACE();
-
-		if (!IsActive())
-			return;
-
-		auto fractionLost = this->rtpStream->GetFractionLost();
-
-		// If our fraction lost is worse than the given one, update it.
-		if (fractionLost > worstRemoteFractionLost)
-			worstRemoteFractionLost = fractionLost;
 	}
 
 	void ShmConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
@@ -271,16 +464,12 @@ namespace RTC
 
 		if (!IsActive())
 			return;
-
-		this->rtpStream->ReceiveNack(nackPacket);
 	}
 
 	void ShmConsumer::ReceiveKeyFrameRequest(
 	  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t /*ssrc*/)
 	{
 		MS_TRACE();
-
-		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
 			RequestKeyFrame();
@@ -312,14 +501,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->rtpStream->Pause();
+//		this->rtpStream->Pause();
 	}
 
 	void ShmConsumer::UserOnPaused()
 	{
 		MS_TRACE();
 
-		this->rtpStream->Pause();
+//		this->rtpStream->Pause();
 	}
 
 	void ShmConsumer::UserOnResumed()
@@ -332,12 +521,9 @@ namespace RTC
 			RequestKeyFrame();
 	}
 
-  // TODO: see if we want to communicate back to producer from here, in that case create rtpStream. 
-	// Otherwise, don't need to do anything in this function 
 	void ShmConsumer::CreateRtpStream()
 	{
-		MS_TRACE();
-
+		//TBD: simply copied from SimpleConsumer.cpp
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
@@ -353,16 +539,70 @@ namespace RTC
 		params.clockRate   = mediaCodec->clockRate;
 		params.cname       = this->rtpParameters.rtcp.cname;
 
-		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = 0;
+		// Check in band FEC in codec parameters.
+		if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)
+		{
+			MS_DEBUG_TAG(rtp, "in band FEC enabled");
 
-		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
-		this->rtpStreams.push_back(this->rtpStream);
+			params.useInBandFec = true;
+		}
+
+		// Check DTX in codec parameters.
+		if (mediaCodec->parameters.HasInteger("usedtx") && mediaCodec->parameters.GetInteger("usedtx") == 1)
+		{
+			MS_DEBUG_TAG(rtp, "DTX enabled");
+
+			params.useDtx = true;
+		}
+
+		// Check DTX in the encoding.
+		if (encoding.dtx)
+		{
+			MS_DEBUG_TAG(rtp, "DTX enabled");
+
+			params.useDtx = true;
+		}
+
+	for (auto& fb : mediaCodec->rtcpFeedback)
+	{
+		if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+		{
+			MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
+
+			params.useNack = true;
+		}
+		else if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
+		{
+			MS_DEBUG_2TAGS(rtp, rtcp, "PLI supported");
+
+			params.usePli = true;
+		}
+		else if (!params.useFir && fb.type == "ccm" && fb.parameter == "fir")
+		{
+			MS_DEBUG_2TAGS(rtp, rtcp, "FIR supported");
+
+			params.useFir = true;
+		}
+	}
+
+	// Create a RtpStreamSend for sending a single media stream.
+	size_t bufferSize = params.useNack ? 600u : 0u;
+
+	this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+	this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.
 		if (IsPaused() || IsProducerPaused())
-			this->rtpStream->Pause();
+			rtpStream->Pause();
+
+		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+
+		if (rtxCodec && encoding.hasRtx)
+			rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
+
+		this->rtpStreams.push_back(rtpStream);
 	}
+
 
 	void ShmConsumer::RequestKeyFrame()
 	{
@@ -384,11 +624,6 @@ namespace RTC
 
 		// May emit 'trace' event.
 		//EmitTraceEventRtpAndKeyFrameTypes(packet, this->rtpStream->HasRtx());
-	}
-
-	inline void ShmConsumer::EmitScore() const
-	{
-		MS_TRACE();
 	}
 
 	inline void ShmConsumer::OnRtpStreamScore(

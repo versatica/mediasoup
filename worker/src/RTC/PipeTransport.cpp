@@ -352,12 +352,12 @@ namespace RTC
 			return;
 
 		// Verify that the packet's tuple matches our tuple.
-		if (!this->tuple->Compare(tuple))
-		{
-			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
-
-			return;
-		}
+		//if (!this->tuple->Compare(tuple))
+		//{
+		//	MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
+    //
+    //	return;
+    //}
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
@@ -381,12 +381,12 @@ namespace RTC
 			return;
 
 		// Verify that the packet's tuple matches our tuple.
-		if (!this->tuple->Compare(tuple))
-		{
-			MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
-
-			return;
-		}
+		//if (!this->tuple->Compare(tuple))
+		//{
+		//	MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+    //
+	  //	return;
+	  //}
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 

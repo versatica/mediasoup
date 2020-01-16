@@ -546,7 +546,7 @@ namespace RTC
 
 				// This may throw.
 				auto* producer = new RTC::Producer(producerId, this, request->data);
-
+				
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.
 				try
@@ -555,6 +555,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
+					MS_DEBUG_TAG(rtp, "Failed to add producer, error: %s", error.what());
 					delete producer;
 
 					throw;
@@ -568,6 +569,7 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
+					MS_DEBUG_TAG(rtp, "Failed OnTransportNewProducer() call, error: %s", error.what());
 					this->rtpListener.RemoveProducer(producer);
 
 					delete producer;
@@ -760,7 +762,7 @@ namespace RTC
 							if (jsonKindIt == request->data.end() || !jsonTypeIt->is_string())
 								MS_THROW_TYPE_ERROR("missing kind");
 
-							consumer = new RTC::ShmConsumer(consumerId, this, request->data); // "fake" consumer with very limited functionality
+							consumer = new RTC::ShmConsumer(consumerId, this, request->data);
 
 						}
 #endif
@@ -963,6 +965,9 @@ namespace RTC
 
 				if (IsConnected())
 					consumer->TransportConnected();
+				else {
+					MS_DEBUG_TAG(rtp, "Channel::Request::MethodId::TRANSPORT_CONSUME received but Transport::IsConnected() == false");
+				}
 
 				break;
 			}

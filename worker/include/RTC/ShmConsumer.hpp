@@ -2,9 +2,12 @@
 #define MS_RTC_SHM_CONSUMER_HPP
 
 #include "json.hpp"
+#include "sfushm_av_media.h"
+#include "DepLibSfuShm.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
+#include "RTC/RateCalculator.hpp"
 
 using json = nlohmann::json;
 
@@ -26,19 +29,21 @@ namespace RTC
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
+		uint8_t GetBitratePriority() const override;
+		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
+		void ApplyLayers() override;
+		uint32_t GetDesiredBitrate() const override;
+
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now) override;
+		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
 		uint32_t GetTransmissionRate(uint64_t now) override;
-		uint8_t GetBitratePriority() const override;
-		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
-		void ApplyLayers() override;
-		uint32_t GetDesiredBitrate() const override;
 		float GetRtt() const override;
+		uint32_t GetBitrate(uint64_t nowMs);
 
 	private:
 		void UserOnTransportConnected() override;
@@ -47,7 +52,8 @@ namespace RTC
 		void UserOnResumed() override;
 		void CreateRtpStream();
 		void RequestKeyFrame();
-		void EmitScore() const;
+
+		bool WritePacketToShm(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -57,24 +63,42 @@ namespace RTC
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
-		// Others.
+		// Others.		// Others.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
-		RTC::RtpStream* producerRtpStream{ nullptr };
+		RTC::RtpStream* producerRtpStream{ nullptr }; // TODO: why is this needed?
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
+
+		// Shm writing: a consumer will "send" RTP packets (either audio or video) into shm
+		// RTCP packets and "app metadata" will be "sent" into shm by ShmTransport object
+		std::string                  shm;      // stream file name
+		DepLibSfuShm::SfuShmMapItem *shmCtx;   // A handle to shm context so that to avoid lookup in DepLibSfuShm each time need to write smth
+		sfushm_av_frame_frag_t       chunk;    // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
+
+		RTC::RtpDataCounter shmWriterCounter;  // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer)
+
+		// TODO: channels info to fill in ssrc and everything else needed to setup shm writer?
+		//		std::string                  logname;  // as copied from input data in ctor
+		//		int                          loglevel;
 	};
 
 	/* Inline methods. */
 
 	inline bool ShmConsumer::IsActive() const
 	{
-		return (RTC::Consumer::IsActive() && this->producerRtpStream);
+		return (RTC::Consumer::IsActive() && this->producerRtpStream); // TODO: smth about shm writer initialized?
 	}
 
 	inline std::vector<RTC::RtpStreamSend*> ShmConsumer::GetRtpStreams()
 	{
 		return this->rtpStreams;
+	}
+
+	/* Copied from RtpStreamSend */
+	inline uint32_t ShmConsumer::GetBitrate(uint64_t nowMs)
+	{
+		return this->shmWriterCounter.GetBitrate(nowMs);
 	}
 } // namespace RTC
 

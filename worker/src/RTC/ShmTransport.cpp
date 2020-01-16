@@ -1,9 +1,7 @@
 #define MS_CLASS "RTC::ShmTransport"
-// #define MS_LOG_DEV
 
 #include "RTC/ShmTransport.hpp"
 #include "DepLibUV.hpp"
-//#include "DepLibSfuShm.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -25,31 +23,12 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("wrong shm (not an object)");
 
 		auto jsonShmNameIt = jsonShmIt->find("name");
-		if (jsonShmNameIt == data.end())
+		if (jsonShmNameIt == jsonShmIt->end())
 			MS_THROW_TYPE_ERROR("missing shm.name");
 		else if (!jsonShmNameIt->is_string())
 			MS_THROW_TYPE_ERROR("wrong shm.name (not a string)");
 
 		this->shm.assign(jsonShmNameIt->get<std::string>());
-
-		// media kind, matching producer media kind
-		auto jsonKindIt = jsonShmIt->find("kind");
-		if (jsonKindIt == data.end())
-			MS_THROW_TYPE_ERROR("missing kind");
-		else if (!jsonKindIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong kind (not a string)");
-
-		std::string kindStr;
-		kindStr.assign(jsonKindIt->get<std::string>());
-		if (kindStr.compare("audio") == 0) {
-			this->producerKind = RTC::Media::Kind::AUDIO;
-		}
-		else if (kindStr.compare("video") == 0) {
-			this->producerKind = RTC::Media::Kind::VIDEO;
-		}
-		else {
-			MS_THROW_TYPE_ERROR("wrong kind, must be audio or video");
-		}
 
 		// ngxshm log name and level
 		auto jsonLogIt = data.find("log");
@@ -59,7 +38,7 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("wrong log (not an object)");
 
 		auto jsonLogNameIt = jsonLogIt->find("fileName");
-		if (jsonLogNameIt == data.end())
+		if (jsonLogNameIt == jsonLogIt->end())
 		  MS_THROW_TYPE_ERROR("missing log.fileName");
 		else if (!jsonLogNameIt->is_string())
 			MS_THROW_TYPE_ERROR("wrong log.fileName (not a string)");
@@ -67,7 +46,7 @@ namespace RTC
 		this->logname.assign(jsonLogNameIt->get<std::string>());
 
 		auto jsonLogLevelIt = jsonLogIt->find("level");
-		if (jsonLogLevelIt == data.end())
+		if (jsonLogLevelIt == jsonLogIt->end())
 		  MS_THROW_TYPE_ERROR("missing log.level");
 		else if (!jsonLogLevelIt->is_number())
 			MS_THROW_TYPE_ERROR("wrong log.level (not a number");
@@ -103,13 +82,21 @@ namespace RTC
 
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
+
+		MS_DEBUG_TAG(
+			  rtp,
+			  "ShmTransport ctor will call DepLibSfuShm::ConfigureShmWriterCtx()");
+
+ 		int err = DepLibSfuShm::ConfigureShmWriterCtx(shm.c_str(), &(this->shmCtx));
+
+		MS_DEBUG_TAG(
+			  rtp,
+			  "ShmTransport object created: [shm name:%s, logname:%s", this->shm.c_str(), this->logname.c_str());
 	}
 
 	ShmTransport::~ShmTransport()
 	{
 		MS_TRACE();
-
-		; //delete this->xcodeshm;
 	}
 
 	void ShmTransport::FillJson(json& jsonObject) const
@@ -123,26 +110,35 @@ namespace RTC
 		jsonObject["shm"] = json::object();
 		auto jsonShmIt    = jsonObject.find("shm");
 		(*jsonShmIt)["name"] = this->shm;
-		if (this->shmCtx) {
-			switch(this->shmCtx->wrt_status)
-			{
-				case DepLibSfuShm::SHM_WRT_INITIALIZED:
-					(*jsonShmIt)["writer"] = "initialized";
-					break;
 
-				case DepLibSfuShm::SHM_WRT_CLOSED:
-					(*jsonShmIt)["writer"] = "closed";
-					break;
+		//DepLibSfuShm::SfuShmMapItem* shmCtx;
 
-				case DepLibSfuShm::SHM_WRT_UNDEFINED:
-				default:
-					(*jsonShmIt)["writer"] = "undefined";
-					break;
-			}
+		//this->shmCtx = DepLibSfuShm::GetShmWriterCtx(this->shm.c_str());
+
+		switch (this->shmCtx->Status())
+		{
+			case DepLibSfuShm::SHM_WRT_READY:
+				(*jsonShmIt)["writer"] = "ready";
+				break;
+
+			case DepLibSfuShm::SHM_WRT_CLOSED:
+				(*jsonShmIt)["writer"] = "closed";
+				break;
+
+			case DepLibSfuShm::SHM_WRT_VIDEO_CHNL_CONF_MISSING:
+				(*jsonShmIt)["writer"] = "video conf missing";
+				break;
+
+			case DepLibSfuShm::SHM_WRT_AUDIO_CHNL_CONF_MISSING:
+				(*jsonShmIt)["writer"] = "audio conf missing";
+				break;
+
+			case DepLibSfuShm::SHM_WRT_UNDEFINED:
+			default:
+				(*jsonShmIt)["writer"] = "undefined";
+				break;
 		}
-		else {
-			(*jsonShmIt)["writer"] = "null";
-		}
+		//TODO: Add shm log info?
 	}
 
 	void ShmTransport::FillJsonStats(json& jsonArray)
@@ -161,18 +157,110 @@ namespace RTC
 		// Add timestamp.
 		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
 
-		//TODO: Add some stats on shm writing
+		//shm
+		jsonObject["shm-fully-connected"] = DepLibSfuShm::IsConnected(this->shm.c_str());
 	}
+
+	inline void ShmTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// Increase receive transmission.
+		RTC::Transport::DataReceived(len);
+
+		// Check if it's RTCP.
+		if (RTC::RTCP::Packet::IsRtcp(data, len))
+		{
+			OnRtcpDataReceived(tuple, data, len);
+		}
+		// Check if it's RTP.
+		else if (RTC::RtpPacket::IsRtp(data, len))
+		{
+			OnRtpDataReceived(tuple, data, len);
+		}
+		// Check if it's SCTP.
+		else if (RTC::SctpAssociation::IsSctp(data, len))
+		{
+			OnSctpDataReceived(tuple, data, len);
+		}
+		else
+		{
+			MS_WARN_DEV("ignoring received packet of unknown type");
+		}
+	}
+
+	inline void ShmTransport::OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!IsFullyConnected())
+		{
+			return;
+		}
+
+		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+
+		if (packet == nullptr)
+		{
+			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+
+			return;
+		}
+
+		// Pass the packet to the parent transport.
+		RTC::Transport::ReceiveRtpPacket(packet);
+	}
+
+	inline void ShmTransport::OnRtcpDataReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!IsFullyConnected())
+			return;
+
+		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
+
+		if (packet == nullptr)
+		{
+			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
+
+			return;
+		}
+
+		// Pass the packet to the parent transport.
+		RTC::Transport::ReceiveRtcpPacket(packet);
+	}
+
+	inline void ShmTransport::OnSctpDataReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		if (!IsFullyConnected())
+			return;
+
+		// Pass it to the parent transport.
+		RTC::Transport::ReceiveSctpData(data, len);
+	}
+
 
 	void ShmTransport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
-		// TODO: confirm that this class does not have to do anything in case of TRANSPORT_CONNECT
 		switch (request->methodId)
 		{
 			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
+				if (this->IsConnected())
+				{
+					MS_THROW_ERROR("transport_connect() already called");
+				}
+
+				this->isTransportConnectedCalled = true;
+				//TODO: shm smth?
+				MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=- SHM TRANSPORT isTransportConnectedCalled = true!");
 
 				request->Accept();
 
@@ -190,179 +278,44 @@ namespace RTC
 		}
 	}
 
+
 	inline bool ShmTransport::IsConnected() const
 	{
-		return true; //TODO: or always false? or what? What is it used for?
+		return true; //isTransportConnectedCalled; // Problem is, consumer won't ever switch into connected state if transport's IsConnected() is false,
+		// However, for the shm transport to be "fully connected" we need both audio and video ssrc to init, this is too late.
+		// Consider shmTransport always "connected" i.e. "consumers can become active right after calling transport.consume()"
+		// The actual writing into shm will be possible only if "fully connected".
+		//DepLibSfuShm::IsConnected(this->shm.c_str());
 	}
+
+
+	inline bool ShmTransport::IsFullyConnected() const
+	{
+		return DepLibSfuShm::IsConnected(this->shm.c_str());
+	}
+
 
 	void ShmTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* /* cb */)
 	{
 		MS_TRACE();
 
-		if (!IsConnected())
+		if (!IsFullyConnected())
 			return;
-
-		auto* data = packet->GetPayload();
-		auto len   = packet->GetPayloadLength(); // length without RTP padding
 
 		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm...
 
-		switch (this->producerKind)
-		{
-			case RTC::Media::Kind::AUDIO:
-			{
-				/* Just write out the whole opus packet without parsing into separate opus frames.
-					+----------+--------------+
-					|RTP Header| Opus Payload |
-					+----------+--------------+	*/
-				this->chunk.data = data;
-				this->chunk.len = len;
-				this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
-				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
-				this->chunk.begin = this->chunk.end = 1;
-				DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::AUDIO);
+		// TODO: since we can have > 1 producer and consumer on the same transport, how do I tell if packet is audio or video?!
+// removed switch() to shmconsumer!!!
 
-				break;
-			} // audio
-
-			case RTC::Media::Kind::VIDEO: //video
-			{
-				uint8_t nal = *data & 0x1F;
-
-				switch (nal)
-				{
-					// Single NAL unit packet.
-					case 7:
-					{
-						size_t offset{ 1 };
-
-						len -= 1;
-						if (len < 3) {
-							MS_WARN_TAG(rtp, "NALU data len <3: %lu", len);
-							break;
-						}
-
-						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
-
-						//TODO: Do I worry about padding?
-						/*
-						  The RTP timestamp is set to the sampling timestamp of the content.
-      				A 90 kHz clock rate MUST be used.
-						*/
-
-						this->chunk.data = data+offset;
-						this->chunk.len = naluSize;
-						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
-						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
-						this->chunk.begin = this->chunk.end = 1;
-
-						DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::VIDEO);
-						break;
-					}
-
-					// Aggregation packet. Contains several NAL units in a single RTP packet
-					// STAP-A.
-					/*
-						0                   1                   2                   3
-						0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						|                          RTP Header                           |
-						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						|STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
-						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						|                         NALU 1 Data                           |
-						:                                                               :
-						+               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						|               | NALU 2 Size                   | NALU 2 HDR    |
-						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						|                         NALU 2 Data                           |
-						:                                                               :
-						|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						|                               :...OPTIONAL RTP padding        |
-						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						Figure 7.  An example of an RTP packet including an STAP-A
-						containing two single-time aggregation units
-					*/
-					case 24:
-					{
-						size_t offset{ 1 };
-						len -= 1;
-						// Iterate NAL units.
-						while (len >= 3)
-						{
-							auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
-
-							// Check if there is room for the indicated NAL unit size.
-							if (len < (naluSize + sizeof(naluSize))) {
-								break;
-							}
-							else {
-								/* The RTP timestamp MUST be set to the earliest of the NALU-times of
-      					all the NAL units to be aggregated. */
-								this->chunk.data = data+offset;
-								this->chunk.len = len;
-								this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
-								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
-								this->chunk.begin = this->chunk.end = 1;
-
-								DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::VIDEO);
-							}
-
-							offset += naluSize + sizeof(naluSize);
-							len -= naluSize + sizeof(naluSize);
-						}
-						break;
-					}
-
-					// Fragmentation unit. Single NAL unit is spreaded accross several RTP packets.
-					// FU-A
-					case 29:
-					{
-						size_t offset{ 1 };
-						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
-
-						uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header, subtype of FU unit, we don't use it
-						uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates start of fragmented NALU
-						uint8_t endBit = *(data + 1) & 0x40; ; // 2nd bit indicates end
-
-						this->chunk.data = data+offset;
-						this->chunk.len = naluSize;
-						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
-						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
-						this->chunk.begin = (startBit == 128)? 1 : 0;
-						this->chunk.end = (endBit) ? 1 : 0;
-
-						DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::VIDEO);
-						break;
-					}
-					case 25: // STAB-B
-					case 26: // MTAP-16
-					case 27: // MTAP-24
-					case 28: // FU-B
-					{
-						MS_WARN_TAG(rtp, "Unsupported NAL unit type %d", nal);
-						break;
-					}
-					default: // ignore the rest
-						break;
-				}
-				break;
-			} // video
-
-			default:
-			  // RTC::Media::Kind::ALL
-			  break;
-		}
-		
 		// Increase send transmission.
-		RTC::Transport::DataSent(len);
+		RTC::Transport::DataSent(packet->GetSize());
 	}
 
 	void ShmTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
-		if (!IsConnected())
+		if (!IsFullyConnected())
 			return;
 
 		uint8_t const* data = packet->GetData();
@@ -375,7 +328,7 @@ namespace RTC
 		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; // TODO: what instead of packet->GetSequenceNumber()?
 		this->chunk.begin = this->chunk.end = 1;
 
-		DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::RTCP);
+		DepLibSfuShm::WriteChunk(this->shm.c_str(), this->shmCtx, &chunk, DepLibSfuShm::ShmChunkType::RTCP);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -385,7 +338,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsConnected())
+		if (!IsFullyConnected())
 			return;
 
 		uint8_t const* data = packet->GetData();
@@ -398,7 +351,7 @@ namespace RTC
 		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; //packet->GetSequenceNumber(); // TODO: are there several seqIds in a compound packet??
 		this->chunk.begin = this->chunk.end = 1;
 
-		DepLibSfuShm::WriteChunk(this->shm, &chunk, DepLibSfuShm::ShmChunkType::RTCP);
+		DepLibSfuShm::WriteChunk(this->shm.c_str(), this->shmCtx, &chunk, DepLibSfuShm::ShmChunkType::RTCP);
 
 		// How to check for validity looping thru all packets in a compound packet: https://tools.ietf.org/html/rfc3550#appendix-A.2
 
@@ -452,6 +405,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Do nothing.
+		RTC::TransportTuple tuple(socket, remoteAddr);
+
+		OnPacketReceived(&tuple, data, len);
 	}
 } // namespace RTC
