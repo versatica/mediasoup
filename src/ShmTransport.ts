@@ -1,7 +1,7 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 //import * as ortc from './ortc';
-import Transport, {
+import { Transport,
 	TransportListenIp
 } from './Transport';
 
@@ -57,7 +57,7 @@ export interface ShmTransportStat
   writer: number; // writer status: initialized, closed, undefined
 }
 
-export default class ShmTransport extends Transport
+export class ShmTransport extends Transport
 {
 	/**
 	 * @private

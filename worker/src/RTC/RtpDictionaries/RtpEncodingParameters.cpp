@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <exception>
 #include <regex>
@@ -28,15 +29,27 @@ namespace RTC
 		auto jsonScalabilityModeIt  = data.find("scalabilityMode");
 
 		// ssrc is optional.
-		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonSsrcIt != data.end() &&
+			Utils::Json::IsPositiveInteger(*jsonSsrcIt)
+		)
+		// clang-format on
+		{
 			this->ssrc = jsonSsrcIt->get<uint32_t>();
+		}
 
 		// rid is optional.
 		if (jsonRidIt != data.end() && jsonRidIt->is_string())
 			this->rid = jsonRidIt->get<std::string>();
 
 		// codecPayloadType is optional.
-		if (jsonCodecPayloadTypeIt != data.end() && jsonCodecPayloadTypeIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonCodecPayloadTypeIt != data.end() &&
+			Utils::Json::IsPositiveInteger(*jsonCodecPayloadTypeIt)
+		)
+		// clang-format on
 		{
 			this->codecPayloadType    = jsonCodecPayloadTypeIt->get<uint8_t>();
 			this->hasCodecPayloadType = true;
@@ -51,8 +64,15 @@ namespace RTC
 		}
 
 		// maxBitrate is optional.
-		if (jsonMaxBitrateIt != data.end() && jsonMaxBitrateIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonMaxBitrateIt != data.end() &&
+			Utils::Json::IsPositiveInteger(*jsonMaxBitrateIt)
+		)
+		// clang-format on
+		{
 			this->maxBitrate = jsonMaxBitrateIt->get<uint32_t>();
+		}
 
 		// maxFramerate is optional.
 		if (jsonMaxFramerateIt != data.end() && jsonMaxFramerateIt->is_number())

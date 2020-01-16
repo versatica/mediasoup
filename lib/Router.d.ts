@@ -1,17 +1,17 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { TransportListenIp } from './Transport';
-import WebRtcTransport, { WebRtcTransportOptions } from './WebRtcTransport';
-import PlainRtpTransport, { PlainRtpTransportOptions } from './PlainRtpTransport';
-import PipeTransport, { PipeTransportOptions } from './PipeTransport';
-import ShmTransport, { ShmTransportOptions } from './ShmTransport';
-import Producer from './Producer';
-import Consumer from './Consumer';
-import DataProducer from './DataProducer';
-import DataConsumer from './DataConsumer';
-import AudioLevelObserver, { AudioLevelObserverOptions } from './AudioLevelObserver';
+import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
+import { PlainRtpTransport, PlainRtpTransportOptions } from './PlainRtpTransport';
+import { PipeTransport, PipeTransportOptions } from './PipeTransport';
+import { Producer } from './Producer';
+import { Consumer } from './Consumer';
+import { DataProducer } from './DataProducer';
+import { DataConsumer } from './DataConsumer';
+import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
+import { ShmTransport, ShmTransportOptions } from './ShmTransport';
 export interface RouterOptions {
     /**
      * Router media codecs.
@@ -66,7 +66,7 @@ export interface PipeToRouterResult {
      */
     pipeDataProducer?: DataProducer;
 }
-export default class Router extends EnhancedEventEmitter {
+export declare class Router extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
@@ -113,8 +113,8 @@ export default class Router extends EnhancedEventEmitter {
      * Observer.
      *
      * @emits close
-     * @emits {transport: Transport} newtransport
-     * @emits {rtpObserver: RtpObserver} newrtpobserver
+     * @emits newtransport - (transport: Transport)
+     * @emits newrtpobserver - (rtpObserver: RtpObserver)
      */
     get observer(): EnhancedEventEmitter;
     /**

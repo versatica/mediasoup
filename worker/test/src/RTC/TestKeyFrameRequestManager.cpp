@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "catch.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "handles/Timer.hpp"
+#include <catch.hpp>
 
 using namespace RTC;
 

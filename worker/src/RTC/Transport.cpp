@@ -41,7 +41,7 @@ namespace RTC
 
 		if (jsonInitialAvailableOutgoingBitrateIt != data.end())
 		{
-			if (!jsonInitialAvailableOutgoingBitrateIt->is_number_unsigned())
+			if (!Utils::Json::IsPositiveInteger(*jsonInitialAvailableOutgoingBitrateIt))
 				MS_THROW_TYPE_ERROR("wrong initialAvailableOutgoingBitrate (not a number)");
 
 			this->initialAvailableOutgoingBitrate = jsonInitialAvailableOutgoingBitrateIt->get<uint32_t>();
@@ -79,9 +79,9 @@ namespace RTC
 			// clang-format off
 			if (
 				jsonOSIt == jsonNumSctpStreamsIt->end() ||
-				!jsonOSIt->is_number_unsigned() ||
+				!Utils::Json::IsPositiveInteger(*jsonOSIt) ||
 				jsonMISIt == jsonNumSctpStreamsIt->end() ||
-				!jsonMISIt->is_number_unsigned()
+				!Utils::Json::IsPositiveInteger(*jsonMISIt)
 			)
 			// clang-format on
 			{
@@ -95,7 +95,7 @@ namespace RTC
 			// clang-format off
 			if (
 				jsonMaxSctpMessageSizeIt == data.end() ||
-				!jsonMaxSctpMessageSizeIt->is_number_unsigned()
+				!Utils::Json::IsPositiveInteger(*jsonMaxSctpMessageSizeIt)
 			)
 			// clang-format on
 			{
@@ -110,6 +110,7 @@ namespace RTC
 			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
 				isDataChannel = jsonIsDataChannelIt->get<bool>();
 
+			// This may throw.
 			this->sctpAssociation =
 			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
 		}
@@ -522,8 +523,15 @@ namespace RTC
 			{
 				auto jsonBitrateIt = request->data.find("bitrate");
 
-				if (jsonBitrateIt == request->data.end() || !jsonBitrateIt->is_number_unsigned())
+				// clang-format off
+				if (
+					jsonBitrateIt == request->data.end() ||
+					!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
+				)
+				// clang-format on
+				{
 					MS_THROW_TYPE_ERROR("missing bitrate");
+				}
 
 				this->maxIncomingBitrate = jsonBitrateIt->get<uint32_t>();
 
@@ -1691,7 +1699,6 @@ namespace RTC
 				switch (feedback->GetMessageType())
 				{
 					case RTC::RTCP::FeedbackPs::MessageType::PLI:
-					case RTC::RTCP::FeedbackPs::MessageType::FIR:
 					{
 						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
@@ -1699,25 +1706,60 @@ namespace RTC
 						{
 							MS_DEBUG_TAG(
 							  rtcp,
-							  "no Consumer found for received %s Feedback packet "
+							  "no Consumer found for received PLI Feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 							  feedback->GetMediaSsrc(),
 							  feedback->GetMediaSsrc());
 
 							break;
 						}
 
-						MS_DEBUG_2TAGS(
+						MS_DEBUG_TAG(
 						  rtcp,
-						  rtx,
-						  "%s received, requesting key frame for Consumer "
+						  "PLI received, requesting key frame for Consumer "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
 						  feedback->GetMediaSsrc(),
 						  feedback->GetMediaSsrc());
 
-						consumer->ReceiveKeyFrameRequest(feedback->GetMessageType(), feedback->GetMediaSsrc());
+						consumer->ReceiveKeyFrameRequest(
+						  RTC::RTCP::FeedbackPs::MessageType::PLI, feedback->GetMediaSsrc());
+
+						break;
+					}
+
+					case RTC::RTCP::FeedbackPs::MessageType::FIR:
+					{
+						// Must iterate FIR items.
+						auto* fir = static_cast<RTC::RTCP::FeedbackPsFirPacket*>(packet);
+
+						for (auto it = fir->Begin(); it != fir->End(); ++it)
+						{
+							auto& item     = *it;
+							auto* consumer = GetConsumerByMediaSsrc(item->GetSsrc());
+
+							if (!consumer)
+							{
+								MS_DEBUG_TAG(
+								  rtcp,
+								  "no Consumer found for received FIR Feedback packet "
+								  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
+								  feedback->GetMediaSsrc(),
+								  feedback->GetMediaSsrc(),
+								  item->GetSsrc());
+
+								continue;
+							}
+
+							MS_DEBUG_TAG(
+							  rtcp,
+							  "FIR received, requesting key frame for Consumer "
+							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
+							  feedback->GetMediaSsrc(),
+							  feedback->GetMediaSsrc(),
+							  item->GetSsrc());
+
+							consumer->ReceiveKeyFrameRequest(feedback->GetMessageType(), item->GetSsrc());
+						}
 
 						break;
 					}
@@ -1867,21 +1909,12 @@ namespace RTC
 
 			case RTC::RTCP::Type::SDES:
 			{
-				auto* sdes = static_cast<RTC::RTCP::SdesPacket*>(packet);
-
-				for (auto it = sdes->Begin(); it != sdes->End(); ++it)
-				{
-					auto& chunk    = *it;
-					auto* producer = this->rtpListener.GetProducer(chunk->GetSsrc());
-
-					if (!producer)
-					{
-						MS_DEBUG_TAG(
-						  rtcp, "no Producer for received SDES chunk [ssrc:%" PRIu32 "]", chunk->GetSsrc());
-
-						continue;
-					}
-				}
+				// According to RFC 3550 section 6.1 "a CNAME item MUST be included in
+				// in each compound RTCP packet". So this is true even for compound
+				// packets sent by endpoints that are not sending any RTP stream to us
+				// (thus chunks in such a SDES will have an SSCR does not match with
+				// any Producer created in this Transport).
+				// Therefore, and given that we do nothing with SDES, just ignore them.
 
 				break;
 			}

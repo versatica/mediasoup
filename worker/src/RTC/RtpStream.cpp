@@ -71,6 +71,9 @@ namespace RTC
 
 		if (this->params.rtxSsrc)
 			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
+
+		if (this->hasRtt)
+			jsonObject["roundTripTime"] = this->rtt;
 	}
 
 	void RtpStream::SetRtx(uint8_t payloadType, uint32_t ssrc)

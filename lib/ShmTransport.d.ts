@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, { TransportListenIp } from './Transport';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Transport, TransportListenIp } from './Transport';
 export interface ShmTransportOptions {
     /**
      * Listening IP address.
@@ -39,7 +39,7 @@ export interface ShmTransportStat {
     shm: string;
     writer: number;
 }
-export default class ShmTransport extends Transport {
+export declare class ShmTransport extends Transport {
     /**
      * @private
      *

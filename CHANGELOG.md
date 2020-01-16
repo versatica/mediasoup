@@ -4,6 +4,104 @@
 * Minor version leap to signify LivelyVideo mediasoup fork.
 * Lay out changes in ms worker C++ code needed to write RTP/RTCP into xcode shm. Placesholders for shm writer API calls, and no changes in Javascript lib/ yet.
 
+### 3.4.9 (WIP)
+
+* Add `Utils::Json::IsPositiveInteger()` to not rely on `is_number_unsigned()` of json lib, which is unreliable due to its design.
+* Avoid ES6 `export default` and always use named `export`.
+* Update Node and C++ deps.
+
+
+### 3.4.8
+
+* `libsrtp.gyp`: Fix regression in mediasoup for Windows.
+  - `libsrtp.gyp`: Modernize it based on the new `BUILD.gn` in Chromium.
+  - `libsrtp.gyp`: Don't include "test" and other targets.
+  - Assume `HAVE_INTTYPES_H`, `HAVE_INT8_T`, etc. in Windows.
+  - Issue details: https://github.com/sctplab/usrsctp/issues/353
+* `gyp` dependency: Add support for Microsoft Visual Studio 2019.
+  - Modify our own `gyp` sources to fix the issue.
+  - CL uploaded to GYP project with the fix.
+  - Issue details: https://github.com/sctplab/usrsctp/issues/347
+
+
+### 3.4.7
+
+* `PortManager.cpp`: Do not limit the number of failed `bind()` attempts to 20 since it does not work well in scenarios that launch tons of `Workers` with same port range. Instead iterate all ports in the range given to the Worker.
+* Do not copy `catch.hpp` into `test/include/` but make the GYP `mediasoup-worker-test` target include the corresponding folder in `deps/catch`.
+
+
+### 3.4.6
+
+* Update libsrtp to 2.3.0.
+* Update ESLint and TypeScript deps.
+
+
+### 3.4.5
+
+* Update deps.
+* Fix text in `./github/Bug_Report.md` so it no longer references the decrepated mailing list.
+
+
+### 3.4.4
+
+* `Transport.cpp`: Ignore RTCP SDES packets (we don't do anything with them anyway).
+* `Producer` and `Consumer` stats: Always show `roundTripTime` (even if calculated value is 0) after a `roundTripTime` > 0 has been seen.
+
+
+### 3.4.3
+
+* `Transport.cpp`: Fix RTCP FIR processing:
+  - Instead of looking at the media ssrc in the common header, iterate FIR items and look for associated `Consumers` based on ssrcs in each FIR item.
+  - Fixes #350 (thanks @j1elo for reporting and documenting the issue).
+
+
+### 3.4.2
+
+* `SctpAssociation.cpp`: Improve/fix logs.
+* Improve Node `EventEmitter` events inline documentation.
+* `test-node-sctp.js`: Wait for SCTP association to be open before sending data.
+
+
+### 3.4.1
+
+* Improve mediasoup-worker build system by using `sh` instead of `bash` and default to 4 cores (thanks @smoke, PR #349).
+
+
+### 3.4.0
+
+* Add `worker.getResourceUsage()` API.
+* Update OpenSSL to 1.1.1d.
+* Update libuv to 1.34.0.
+* Update TypeScript and ESLint NPM dependencies.
+
+
+### 3.3.8
+
+* Update usrsctp dependency (it fixes a potential wrong memory access).
+  - More details in the reported issue: https://github.com/sctplab/usrsctp/issues/408
+
+
+### 3.3.7
+
+* Fix `version` getter.
+
+
+### 3.3.6
+
+* `SctpAssociation.cpp`: Initialize the `usrsctp` socket in the class constructor. Fixes #348.
+
+
+### 3.3.5
+
+* Fix usage of a deallocated `RTC::TcpConnection` instance under heavy CPU usage due to mediasoup deleting the instance in the middle of a receiving iteration. Fixes #333.
+  - More details in the commit: https://github.com/versatica/mediasoup/commit/49824baf102ab6d2b01e5bca565c29b8ac0fec22
+
+
+### 3.3.4
+
+* IPv6 fix: Use `INET6_ADDRSTRLEN` instead of `INET_ADDRSTRLEN`.
+
+
 ### 3.3.3
 
 * Add `consumer.setPriority()` and `consumer.priority` API to prioritize how the estimated outgoing bitrate in a transport is distributed among all video consumers (in case there is not enough bitrate to satisfy them).
@@ -173,6 +271,17 @@
 ### 3.0.0
 
 * v3 is here!
+
+
+### 2.6.19
+
+* `RtpStreamSend.cpp`: Fix a crash in `StorePacket()` when it receives an old packet and there is no space left in the storage buffer (thanks to zkfun for reporting it and providing us with the solution).
+* Update deps.
+
+
+### 2.6.18
+
+* Fix usage of a deallocated `RTC::TcpConnection` instance under heavy CPU usage due to mediasoup deleting the instance in the middle of a receiving iteration. 
 
 
 ### 2.6.17

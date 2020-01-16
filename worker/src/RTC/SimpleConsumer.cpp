@@ -436,6 +436,9 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->Pause();
+
+		if (this->externallyManagedBitrate && this->kind == RTC::Media::Kind::VIDEO)
+			this->listener->OnConsumerNeedZeroBitrate(this);
 	}
 
 	void SimpleConsumer::UserOnResumed()

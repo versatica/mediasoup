@@ -23,6 +23,7 @@ old?
 *.app
 
 # srtp things
+build
 Debug
 Makefile
 Root
@@ -35,10 +36,8 @@ crypto/test/cipher_driver
 crypto/test/datatypes_driver
 crypto/test/env
 crypto/test/kernel_driver
-crypto/test/rand_gen
 crypto/test/sha1_driver
 crypto/test/stat_driver
-crypto/test/rand_gen_soak
 tables/aes_tables
 test/dtls_srtp_driver
 test/rdbx_driver

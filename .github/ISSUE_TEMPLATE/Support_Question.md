@@ -3,7 +3,7 @@ name: 🙈 Support Question
 about: If you have any questions use the mediasoup Discourse Group
 ---
 
-We primarily use GitHub as an issue tracker. Please, use the mediasoup Discourse Group for questions and doubts regarding mediasoup and its ecosystem:
+**IMPORTANT:** We primarily use GitHub as an issue tracker. Please, use the mediasoup Discourse Group if you have questions or doubts or if you need support about mediasoup and its ecosystem:
 > 
 > https://mediasoup.discourse.group
 >

@@ -410,7 +410,7 @@ void bitvector_left_shift(bitvector_t *x, int shift)
         x->word[i] = 0;
 }
 
-int octet_string_is_eq(uint8_t *a, uint8_t *b, int len)
+int srtp_octet_string_is_eq(uint8_t *a, uint8_t *b, int len)
 {
     uint8_t *end = b + len;
     uint8_t accumulator = 0;
@@ -436,7 +436,7 @@ void srtp_cleanse(void *s, size_t len)
 
 void octet_string_set_to_zero(void *s, size_t len)
 {
-#ifdef OPENSSL
+#if defined(OPENSSL) && !defined(OPENSSL_CLEANSE_BROKEN)
     OPENSSL_cleanse(s, len);
 #else
     srtp_cleanse(s, len);

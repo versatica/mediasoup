@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { MediaKind, RtpParameters } from './RtpParameters';
 export interface ProducerOptions {
     /**
@@ -105,7 +105,7 @@ export interface ProducerStat {
  * Producer type.
  */
 export declare type ProducerType = 'simple' | 'simulcast' | 'svc';
-export default class Producer extends EnhancedEventEmitter {
+export declare class Producer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
@@ -117,9 +117,9 @@ export default class Producer extends EnhancedEventEmitter {
     /**
      * @private
      * @emits transportclose
-     * @emits {ProducerScore[]} score
-     * @emits {ProducerVideoOrientation} videoorientationchange
-     * @emits {ProducerTraceEventData} trace
+     * @emits score - (score: ProducerScore[])
+     * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
+     * @emits trace - (trace: ProducerTraceEventData)
      * @emits @close
      */
     constructor({ internal, data, channel, appData, paused }: {
@@ -177,9 +177,9 @@ export default class Producer extends EnhancedEventEmitter {
      * @emits close
      * @emits pause
      * @emits resume
-     * @emits {ProducerScore[]} score
-     * @emits {ProducerVideoOrientation} videoorientationchange
-     * @emits {ProducerTraceEventData} trace
+     * @emits score - (score: ProducerScore[])
+     * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
+     * @emits trace - (trace: ProducerTraceEventData)
      */
     get observer(): EnhancedEventEmitter;
     /**

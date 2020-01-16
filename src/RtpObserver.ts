@@ -1,11 +1,11 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
-import Producer from './Producer';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
+import { Producer } from './Producer';
 
 const logger = new Logger('RtpObserver');
 
-export default class RtpObserver extends EnhancedEventEmitter
+export class RtpObserver extends EnhancedEventEmitter
 {
 	// Internal data.
 	// - .routerId
@@ -51,7 +51,7 @@ export default class RtpObserver extends EnhancedEventEmitter
 		}
 	)
 	{
-		super(logger);
+		super();
 
 		logger.debug('constructor()');
 
@@ -107,8 +107,8 @@ export default class RtpObserver extends EnhancedEventEmitter
 	 * @emits close
 	 * @emits pause
 	 * @emits resume
-	 * @emits {producer: Producer} addproducer
-	 * @emits {producer: Producer} removeproducer
+	 * @emits addproducer - (producer: Producer)
+	 * @emits removeproducer - (producer: Producer)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

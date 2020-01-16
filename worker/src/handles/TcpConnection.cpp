@@ -229,29 +229,14 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
 	}
-	// Error. Should not happen.
+	// Any other error.
 	else if (written < 0)
 	{
-		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
+		MS_WARN_DEV("uv_try_write() failed, trying uv_write(): %s", uv_strerror(written));
 
-		if (cb)
-		{
-			(*cb)(false);
-
-			delete cb;
-		}
-
-		Close();
-
-		// Notify the listener.
-		this->listener->OnTcpConnectionClosed(this);
-
-		return;
+		// Set written to 0 so pendingLen can be properly calculated.
+		written = 0;
 	}
-
-	// MS_DEBUG_DEV(
-	// 	"could just write %zu bytes (%zu given) at first time, using uv_write() now",
-	// 	static_cast<size_t>(written), len);
 
 	size_t pendingLen = len - written;
 	auto* writeData   = new UvWriteData(pendingLen);
@@ -348,24 +333,13 @@ void TcpConnection::Write(
 		// Set written to 0 so pendingLen can be properly calculated.
 		written = 0;
 	}
-	// Error. Should not happen.
+	// Any other error.
 	else if (written < 0)
 	{
-		MS_WARN_DEV("uv_try_write() failed, closing the connection: %s", uv_strerror(written));
+		MS_WARN_DEV("uv_try_write() failed, trying uv_write(): %s", uv_strerror(written));
 
-		if (cb)
-		{
-			(*cb)(false);
-
-			delete cb;
-		}
-
-		Close();
-
-		// Notify the listener.
-		this->listener->OnTcpConnectionClosed(this);
-
-		return;
+		// Set written to 0 so pendingLen can be properly calculated.
+		written = 0;
 	}
 
 	size_t pendingLen = totalLen - written;

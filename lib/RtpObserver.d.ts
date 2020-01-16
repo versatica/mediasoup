@@ -1,7 +1,7 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
-import Producer from './Producer';
-export default class RtpObserver extends EnhancedEventEmitter {
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
+import { Producer } from './Producer';
+export declare class RtpObserver extends EnhancedEventEmitter {
     protected readonly _internal: any;
     protected readonly _channel: Channel;
     protected _closed: boolean;
@@ -47,8 +47,8 @@ export default class RtpObserver extends EnhancedEventEmitter {
      * @emits close
      * @emits pause
      * @emits resume
-     * @emits {producer: Producer} addproducer
-     * @emits {producer: Producer} removeproducer
+     * @emits addproducer - (producer: Producer)
+     * @emits removeproducer - (producer: Producer)
      */
     get observer(): EnhancedEventEmitter;
     /**

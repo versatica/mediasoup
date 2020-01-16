@@ -2,7 +2,7 @@ import debug from 'debug';
 
 const APP_NAME = 'mediasoup';
 
-export default class Logger
+export class Logger
 {
 	private readonly _debug: debug.Debugger;
 	private readonly _warn: debug.Debugger;

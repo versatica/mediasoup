@@ -20,6 +20,7 @@ namespace Channel
 		enum class MethodId
 		{
 			WORKER_DUMP = 1,
+			WORKER_GET_RESOURCE_USAGE,
 			WORKER_UPDATE_SETTINGS,
 			WORKER_CREATE_ROUTER,
 			ROUTER_CLOSE,

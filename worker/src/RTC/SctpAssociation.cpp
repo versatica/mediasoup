@@ -96,6 +96,101 @@ namespace RTC
 		// Register ourselves in usrsctp.
 		usrsctp_register_address(static_cast<void*>(this));
 
+		int ret;
+
+		this->socket = usrsctp_socket(
+		  AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, static_cast<void*>(this));
+
+		if (this->socket == nullptr)
+			MS_THROW_ERROR("usrsctp_socket() failed: %s", std::strerror(errno));
+
+		usrsctp_set_ulpinfo(this->socket, static_cast<void*>(this));
+
+		// Make the socket non-blocking.
+		ret = usrsctp_set_non_blocking(this->socket, 1);
+
+		if (ret < 0)
+			MS_THROW_ERROR("usrsctp_set_non_blocking() failed: %s", std::strerror(errno));
+
+		// Set SO_LINGER.
+		// This ensures that the usrsctp close call deletes the association. This
+		// prevents usrsctp from calling the global send callback with references to
+		// this class as the address.
+		struct linger lingerOpt; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+		lingerOpt.l_onoff  = 1;
+		lingerOpt.l_linger = 0;
+
+		ret = usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_LINGER, &lingerOpt, sizeof(lingerOpt));
+
+		if (ret < 0)
+			MS_THROW_ERROR("usrsctp_setsockopt(SO_LINGER) failed: %s", std::strerror(errno));
+
+		// Set SCTP_ENABLE_STREAM_RESET.
+		struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+		av.assoc_value =
+		  SCTP_ENABLE_RESET_STREAM_REQ | SCTP_ENABLE_RESET_ASSOC_REQ | SCTP_ENABLE_CHANGE_ASSOC_REQ;
+
+		ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_ENABLE_STREAM_RESET, &av, sizeof(av));
+
+		if (ret < 0)
+		{
+			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_ENABLE_STREAM_RESET) failed: %s", std::strerror(errno));
+		}
+
+		// Set SCTP_NODELAY.
+		uint32_t noDelay = 1;
+
+		ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_NODELAY, &noDelay, sizeof(noDelay));
+
+		if (ret < 0)
+			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_NODELAY) failed: %s", std::strerror(errno));
+
+		// Enable events.
+		struct sctp_event event; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+		std::memset(&event, 0, sizeof(event));
+		event.se_on = 1;
+
+		for (size_t i{ 0 }; i < sizeof(EventTypes) / sizeof(uint16_t); ++i)
+		{
+			event.se_type = EventTypes[i];
+
+			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_EVENT, &event, sizeof(event));
+
+			if (ret < 0)
+				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_EVENT) failed: %s", std::strerror(errno));
+		}
+
+		// Init message.
+		struct sctp_initmsg initmsg; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+		std::memset(&initmsg, 0, sizeof(initmsg));
+		initmsg.sinit_num_ostreams  = this->os;
+		initmsg.sinit_max_instreams = this->mis;
+
+		ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
+
+		if (ret < 0)
+			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_INITMSG) failed: %s", std::strerror(errno));
+
+		// Server side.
+		struct sockaddr_conn sconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+		std::memset(&sconn, 0, sizeof(sconn));
+		sconn.sconn_family = AF_CONN;
+		sconn.sconn_port   = htons(5000);
+		sconn.sconn_addr   = static_cast<void*>(this);
+#ifdef HAVE_SCONN_LEN
+		rconn.sconn_len = sizeof(sconn);
+#endif
+
+		ret = usrsctp_bind(this->socket, reinterpret_cast<struct sockaddr*>(&sconn), sizeof(sconn));
+
+		if (ret < 0)
+			MS_THROW_ERROR("usrsctp_bind() failed: %s", std::strerror(errno));
+
 		DepUsrSCTP::IncreaseSctpAssociations();
 	}
 
@@ -103,11 +198,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->socket)
-		{
-			usrsctp_set_ulpinfo(this->socket, nullptr);
-			usrsctp_close(this->socket);
-		}
+		usrsctp_set_ulpinfo(this->socket, nullptr);
+		usrsctp_close(this->socket);
 
 		// Deregister ourselves from usrsctp.
 		usrsctp_deregister_address(static_cast<void*>(this));
@@ -128,100 +220,6 @@ namespace RTC
 		try
 		{
 			int ret;
-
-			this->socket = usrsctp_socket(
-			  AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, static_cast<void*>(this));
-
-			if (this->socket == nullptr)
-				MS_THROW_ERROR("usrsctp_socket() failed: %s", std::strerror(errno));
-
-			usrsctp_set_ulpinfo(this->socket, static_cast<void*>(this));
-
-			// Make the socket non-blocking.
-			ret = usrsctp_set_non_blocking(this->socket, 1);
-
-			if (ret < 0)
-				MS_THROW_ERROR("usrsctp_set_non_blocking() failed: %s", std::strerror(errno));
-
-			// Set SO_LINGER.
-			// This ensures that the usrsctp close call deletes the association. This
-			// prevents usrsctp from calling the global send callback with references to
-			// this class as the address.
-			struct linger lingerOpt; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-			lingerOpt.l_onoff  = 1;
-			lingerOpt.l_linger = 0;
-
-			ret = usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_LINGER, &lingerOpt, sizeof(lingerOpt));
-
-			if (ret < 0)
-				MS_THROW_ERROR("usrsctp_setsockopt(SO_LINGER) failed: %s", std::strerror(errno));
-
-			// Set SCTP_ENABLE_STREAM_RESET.
-			struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-			av.assoc_value =
-			  SCTP_ENABLE_RESET_STREAM_REQ | SCTP_ENABLE_RESET_ASSOC_REQ | SCTP_ENABLE_CHANGE_ASSOC_REQ;
-
-			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_ENABLE_STREAM_RESET, &av, sizeof(av));
-
-			if (ret < 0)
-				MS_THROW_ERROR(
-				  "usrsctp_setsockopt(SCTP_ENABLE_STREAM_RESET) failed: %s", std::strerror(errno));
-
-			// Set SCTP_NODELAY.
-			uint32_t noDelay = 1;
-
-			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_NODELAY, &noDelay, sizeof(noDelay));
-
-			if (ret < 0)
-				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_NODELAY) failed: %s", std::strerror(errno));
-
-			// Enable events.
-			struct sctp_event event; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-			std::memset(&event, 0, sizeof(event));
-			event.se_on = 1;
-
-			for (size_t i{ 0 }; i < sizeof(EventTypes) / sizeof(uint16_t); ++i)
-			{
-				event.se_type = EventTypes[i];
-
-				ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_EVENT, &event, sizeof(event));
-
-				if (ret < 0)
-					MS_THROW_ERROR("usrsctp_setsockopt(SCTP_EVENT) failed: %s", std::strerror(errno));
-			}
-
-			// Init message.
-			struct sctp_initmsg initmsg; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-			std::memset(&initmsg, 0, sizeof(initmsg));
-			initmsg.sinit_num_ostreams  = this->os;
-			initmsg.sinit_max_instreams = this->mis;
-
-			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
-
-			if (ret < 0)
-				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_INITMSG) failed: %s", std::strerror(errno));
-
-			// Server side.
-			struct sockaddr_conn sconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-			std::memset(&sconn, 0, sizeof(sconn));
-			sconn.sconn_family = AF_CONN;
-			sconn.sconn_port   = htons(5000);
-			sconn.sconn_addr   = static_cast<void*>(this);
-#ifdef HAVE_SCONN_LEN
-			rconn.sconn_len = sizeof(sconn);
-#endif
-
-			ret = usrsctp_bind(this->socket, reinterpret_cast<struct sockaddr*>(&sconn), sizeof(sconn));
-
-			if (ret < 0)
-				MS_THROW_ERROR("usrsctp_bind() failed: %s", std::strerror(errno));
-
-			// Client side.
 			struct sockaddr_conn rconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			std::memset(&rconn, 0, sizeof(rconn));
@@ -304,7 +302,7 @@ namespace RTC
 		// This must be controlled by the DataConsumer.
 		MS_ASSERT(
 		  len <= this->maxSctpMessageSize,
-		  "given message exceeds maxSctpMessageSize value [maxSctpMessageSize:%zu, len:%zu]",
+		  "given message exceeds max allowed message size [message size:%zu, max message size:%zu]",
 		  len,
 		  this->maxSctpMessageSize);
 
@@ -350,7 +348,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  sctp,
-			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", len:%zu]: %s",
+			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
 			  parameters.streamId,
 			  ppid,
 			  len,
@@ -472,7 +470,7 @@ namespace RTC
 
 		if (additionalOs == 0)
 		{
-			MS_WARN_TAG(sctp, "cannot add more outgoing streams, [OS:%" PRIu16 "]", this->os);
+			MS_WARN_TAG(sctp, "cannot add more outgoing streams [OS:%" PRIu16 "]", this->os);
 
 			return;
 		}
@@ -537,8 +535,8 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  sctp,
-			  "received different SSN while buffer not empty, buffer discarded [SSN:%" PRIu16
-			  ", lastSsnReceived:%" PRIu16 "]",
+			  "message chunk received with different SSN while buffer not empty, buffer discarded [ssn:%" PRIu16
+			  ", last ssn received:%" PRIu16 "]",
 			  ssn,
 			  this->lastSsnReceived);
 
@@ -554,7 +552,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  sctp,
-			  "received message exceeds maxSctpMessageSize value [maxSctpMessageSize:%zu, len:%zu, EOR:%u]",
+			  "ongoing received message exceeds max allowed message size [message size:%zu, max message size:%zu, eor:%u]",
 			  this->messageBufferLen + len,
 			  this->maxSctpMessageSize,
 			  eor ? 1 : 0);
@@ -567,7 +565,7 @@ namespace RTC
 		// If end of message and there is no buffered data, notify it directly.
 		if (eor && this->messageBufferLen == 0)
 		{
-			MS_DEBUG_DEV("directly notifying listener [eor:1, messageBufferLen:0]");
+			MS_DEBUG_DEV("directly notifying listener [eor:1, buffer len:0]");
 
 			this->listener->OnSctpAssociationMessageReceived(this, streamId, ppid, data, len);
 		}
@@ -577,7 +575,7 @@ namespace RTC
 			std::memcpy(this->messageBuffer + this->messageBufferLen, data, len);
 			this->messageBufferLen += len;
 
-			MS_DEBUG_DEV("notifying listener [eor:1, messageBufferLen:%zu]", this->messageBufferLen);
+			MS_DEBUG_DEV("notifying listener [eor:1, buffer len:%zu]", this->messageBufferLen);
 
 			this->listener->OnSctpAssociationMessageReceived(
 			  this, streamId, ppid, this->messageBuffer, this->messageBufferLen);
@@ -594,7 +592,7 @@ namespace RTC
 			std::memcpy(this->messageBuffer + this->messageBufferLen, data, len);
 			this->messageBufferLen += len;
 
-			MS_DEBUG_DEV("data buffered [eor:0, messageBufferLen:%zu]", this->messageBufferLen);
+			MS_DEBUG_DEV("data buffered [eor:0, buffer len:%zu]", this->messageBufferLen);
 		}
 	}
 
@@ -919,7 +917,6 @@ namespace RTC
 
 			default:
 			{
-				// TODO: Move to MS_DEBUG_TAG once we know which the cases are.
 				MS_WARN_TAG(
 				  sctp, "unhandled SCTP event received [type:%" PRIu16 "]", notification->sn_header.sn_type);
 			}

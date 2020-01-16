@@ -1,9 +1,11 @@
 import { Duplex } from 'stream';
 // @ts-ignore
 import * as netstring from 'netstring';
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
+
+const logger = new Logger('Channel');
 
 interface Sent
 {
@@ -19,11 +21,8 @@ interface Sent
 const NS_MESSAGE_MAX_LEN = 4194313;
 const NS_PAYLOAD_MAX_LEN = 4194304;
 
-export default class Channel extends EnhancedEventEmitter
+export class Channel extends EnhancedEventEmitter
 {
-	// Logger for logs from the worker process.
-	private readonly _workerLogger: Logger;
-
 	// Closed flag.
 	private _closed = false;
 
@@ -57,11 +56,10 @@ export default class Channel extends EnhancedEventEmitter
 			pid: number;
 		})
 	{
-		super(new Logger(`Channel[pid:${pid}]`));
+		super();
 
-		this._logger.debug('constructor()');
+		logger.debug('constructor()');
 
-		this._workerLogger = new Logger(`worker[pid:${pid}]`);
 		this._producerSocket = producerSocket as Duplex;
 		this._consumerSocket = consumerSocket as Duplex;
 
@@ -81,7 +79,7 @@ export default class Channel extends EnhancedEventEmitter
 
 			if (this._recvBuffer.length > NS_PAYLOAD_MAX_LEN)
 			{
-				this._logger.error('receiving buffer is full, discarding all data into it');
+				logger.error('receiving buffer is full, discarding all data into it');
 
 				// Reset the buffer and exit.
 				this._recvBuffer = null;
@@ -99,7 +97,7 @@ export default class Channel extends EnhancedEventEmitter
 				}
 				catch (error)
 				{
-					this._logger.error(
+					logger.error(
 						'invalid netstring data received from the worker process: %s', String(error));
 
 					// Reset the buffer and exit.
@@ -124,17 +122,17 @@ export default class Channel extends EnhancedEventEmitter
 
 						// 68 = 'D' (a debug log).
 						case 68:
-							this._workerLogger.debug(nsPayload.toString('utf8', 1));
+							logger.debug(`[pid:${pid}] ${nsPayload.toString('utf8', 1)}`);
 							break;
 
 						// 87 = 'W' (a warn log).
 						case 87:
-							this._workerLogger.warn(nsPayload.toString('utf8', 1));
+							logger.warn(`[pid:${pid}] ${nsPayload.toString('utf8', 1)}`);
 							break;
 
 						// 69 = 'E' (an error log).
 						case 69:
-							this._workerLogger.error(nsPayload.toString('utf8', 1));
+							logger.error(`[pid:${pid} ${nsPayload.toString('utf8', 1)}`);
 							break;
 
 						// 88 = 'X' (a dump log).
@@ -151,7 +149,7 @@ export default class Channel extends EnhancedEventEmitter
 				}
 				catch (error)
 				{
-					this._logger.error(
+					logger.error(
 						'received invalid message from the worker process: %s', String(error));
 				}
 
@@ -168,11 +166,11 @@ export default class Channel extends EnhancedEventEmitter
 			}
 		});
 
-		this._consumerSocket.on('end', () => this._logger.debug('Consumer Channel ended by the worker process'));
-		this._consumerSocket.on('error', (error) => this._logger.error('Consumer Channel error: %s', String(error)));
+		this._consumerSocket.on('end', () => logger.debug('Consumer Channel ended by the worker process'));
+		this._consumerSocket.on('error', (error) => logger.error('Consumer Channel error: %s', String(error)));
 
-		this._producerSocket.on('end', () => this._logger.debug('Producer Channel ended by the worker process'));
-		this._producerSocket.on('error', (error) => this._logger.error('Producer Channel error: %s', String(error)));
+		this._producerSocket.on('end', () => logger.debug('Producer Channel ended by the worker process'));
+		this._producerSocket.on('error', (error) => logger.error('Producer Channel error: %s', String(error)));
 	}
 
 	/**
@@ -183,7 +181,7 @@ export default class Channel extends EnhancedEventEmitter
 		if (this._closed)
 			return;
 
-		this._logger.debug('close()');
+		logger.debug('close()');
 
 		this._closed = true;
 
@@ -222,7 +220,7 @@ export default class Channel extends EnhancedEventEmitter
 
 		const id = this._nextId;
 
-		this._logger.debug('request() [method:%s, id:%s]', method, id);
+		logger.debug('request() [method:%s, id:%s]', method, id);
 
 		if (this._closed)
 			throw new InvalidStateError('Channel closed');
@@ -287,7 +285,7 @@ export default class Channel extends EnhancedEventEmitter
 
 			if (!sent)
 			{
-				this._logger.error(
+				logger.error(
 					'received response does not match any sent request [id:%s]', msg.id);
 
 				return;
@@ -295,14 +293,14 @@ export default class Channel extends EnhancedEventEmitter
 
 			if (msg.accepted)
 			{
-				this._logger.debug(
+				logger.debug(
 					'request succeeded [method:%s, id:%s]', sent.method, sent.id);
 
 				sent.resolve(msg.data);
 			}
 			else if (msg.error)
 			{
-				this._logger.warn(
+				logger.warn(
 					'request failed [method:%s, id:%s]: %s',
 					sent.method, sent.id, msg.reason);
 
@@ -318,7 +316,7 @@ export default class Channel extends EnhancedEventEmitter
 			}
 			else
 			{
-				this._logger.error(
+				logger.error(
 					'received response is not accepted nor rejected [method:%s, id:%s]',
 					sent.method, sent.id);
 			}
@@ -331,7 +329,7 @@ export default class Channel extends EnhancedEventEmitter
 		// Otherwise unexpected message.
 		else
 		{
-			this._logger.error(
+			logger.error(
 				'received message is not a response nor a notification');
 		}
 	}

@@ -29,15 +29,7 @@ namespace RTC
 		RTC::PortManager::UnbindTcp(this->localIp, this->localPort);
 	}
 
-	void TcpServer::UserOnTcpConnectionAlloc(::TcpConnection** connection)
-	{
-		MS_TRACE();
-
-		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
-		*connection = new RTC::TcpConnection(this->connListener, 65536);
-	}
-
-	bool TcpServer::UserOnNewTcpConnection(::TcpConnection* /*connection*/)
+	void TcpServer::UserOnTcpConnectionAlloc()
 	{
 		MS_TRACE();
 
@@ -46,10 +38,14 @@ namespace RTC
 		{
 			MS_ERROR("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);
 
-			return false;
+			return;
 		}
 
-		return true;
+		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
+		auto* connection = new RTC::TcpConnection(this->connListener, 65536);
+
+		// Accept it.
+		AcceptTcpConnection(connection);
 	}
 
 	void TcpServer::UserOnTcpConnectionClosed(::TcpConnection* connection)

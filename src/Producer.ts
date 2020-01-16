@@ -1,6 +1,6 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { MediaKind, RtpParameters } from './RtpParameters';
 
 export interface ProducerOptions
@@ -135,7 +135,7 @@ export type ProducerType = 'simple' | 'simulcast' | 'svc';
 
 const logger = new Logger('Producer');
 
-export default class Producer extends EnhancedEventEmitter
+export class Producer extends EnhancedEventEmitter
 {
 	// Internal data.
 	// - .routerId
@@ -171,9 +171,9 @@ export default class Producer extends EnhancedEventEmitter
 	/**
 	 * @private
 	 * @emits transportclose
-	 * @emits {ProducerScore[]} score
-	 * @emits {ProducerVideoOrientation} videoorientationchange
-	 * @emits {ProducerTraceEventData} trace
+	 * @emits score - (score: ProducerScore[])
+	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
+	 * @emits trace - (trace: ProducerTraceEventData)
 	 * @emits @close
 	 */
 	constructor(
@@ -193,7 +193,7 @@ export default class Producer extends EnhancedEventEmitter
 		}
 	)
 	{
-		super(logger);
+		super();
 
 		logger.debug('constructor()');
 
@@ -294,9 +294,9 @@ export default class Producer extends EnhancedEventEmitter
 	 * @emits close
 	 * @emits pause
 	 * @emits resume
-	 * @emits {ProducerScore[]} score
-	 * @emits {ProducerVideoOrientation} videoorientationchange
-	 * @emits {ProducerTraceEventData} trace
+	 * @emits score - (score: ProducerScore[])
+	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
+	 * @emits trace - (trace: ProducerTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

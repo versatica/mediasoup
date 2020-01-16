@@ -49,8 +49,7 @@
 #endif
 
 #include <openssl/evp.h>
-#include "aes_icm_ossl.h"
-#include "aes_gcm_ossl.h"
+#include "aes_gcm.h"
 #include "alloc.h"
 #include "err.h" /* for srtp_debug */
 #include "crypto_types.h"
@@ -124,13 +123,13 @@ static srtp_err_status_t srtp_aes_gcm_openssl_alloc(srtp_cipher_t **c,
     /* setup cipher attributes */
     switch (key_len) {
     case SRTP_AES_GCM_128_KEY_LEN_WSALT:
-        (*c)->type = &srtp_aes_gcm_128_openssl;
+        (*c)->type = &srtp_aes_gcm_128;
         (*c)->algorithm = SRTP_AES_GCM_128;
         gcm->key_size = SRTP_AES_128_KEY_LEN;
         gcm->tag_len = tlen;
         break;
     case SRTP_AES_GCM_256_KEY_LEN_WSALT:
-        (*c)->type = &srtp_aes_gcm_256_openssl;
+        (*c)->type = &srtp_aes_gcm_256;
         (*c)->algorithm = SRTP_AES_GCM_256;
         gcm->key_size = SRTP_AES_256_KEY_LEN;
         gcm->tag_len = tlen;
@@ -193,6 +192,7 @@ static srtp_err_status_t srtp_aes_gcm_openssl_context_init(void *cv,
         break;
     }
 
+    EVP_CIPHER_CTX_cleanup(c->ctx);
     if (!EVP_CipherInit_ex(c->ctx, evp, NULL, key, NULL, 0)) {
         return (srtp_err_status_init_fail);
     }
@@ -218,7 +218,7 @@ static srtp_err_status_t srtp_aes_gcm_openssl_set_iv(
     c->dir = direction;
 
     debug_print(srtp_mod_aes_gcm, "setting iv: %s",
-                v128_hex_string((v128_t *)iv));
+                srtp_octet_string_hex_string(iv, 12));
 
     if (!EVP_CIPHER_CTX_ctrl(c->ctx, EVP_CTRL_GCM_SET_IVLEN, 12, 0)) {
         return (srtp_err_status_init_fail);
@@ -246,6 +246,9 @@ static srtp_err_status_t srtp_aes_gcm_openssl_set_aad(void *cv,
 {
     srtp_aes_gcm_ctx_t *c = (srtp_aes_gcm_ctx_t *)cv;
     int rv;
+
+    debug_print(srtp_mod_aes_gcm, "setting AAD: %s",
+                srtp_octet_string_hex_string(aad, aad_len));
 
     /*
      * Set dummy tag, OpenSSL requires the Tag to be set before
@@ -548,7 +551,7 @@ static const srtp_cipher_test_case_t srtp_aes_gcm_test_case_1 = {
 /*
  * This is the vector function table for this crypto engine.
  */
-const srtp_cipher_type_t srtp_aes_gcm_128_openssl = {
+const srtp_cipher_type_t srtp_aes_gcm_128 = {
     srtp_aes_gcm_openssl_alloc,
     srtp_aes_gcm_openssl_dealloc,
     srtp_aes_gcm_openssl_context_init,
@@ -565,7 +568,7 @@ const srtp_cipher_type_t srtp_aes_gcm_128_openssl = {
 /*
  * This is the vector function table for this crypto engine.
  */
-const srtp_cipher_type_t srtp_aes_gcm_256_openssl = {
+const srtp_cipher_type_t srtp_aes_gcm_256 = {
     srtp_aes_gcm_openssl_alloc,
     srtp_aes_gcm_openssl_dealloc,
     srtp_aes_gcm_openssl_context_init,

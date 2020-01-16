@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -19,8 +20,15 @@ namespace RTC
 		auto jsonSsrcIt = data.find("ssrc");
 
 		// ssrc is optional.
-		if (jsonSsrcIt != data.end() && jsonSsrcIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonSsrcIt != data.end() &&
+			Utils::Json::IsPositiveInteger(*jsonSsrcIt)
+		)
+		// clang-format on
+		{
 			this->ssrc = jsonSsrcIt->get<uint32_t>();
+		}
 	}
 
 	void RtpRtxParameters::FillJson(json& jsonObject) const

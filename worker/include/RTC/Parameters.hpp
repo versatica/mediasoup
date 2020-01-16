@@ -66,6 +66,7 @@ namespace RTC
 		void Set(json& data);
 		bool HasBoolean(const std::string& key) const;
 		bool HasInteger(const std::string& key) const;
+		bool HasPositiveInteger(const std::string& key) const;
 		bool HasDouble(const std::string& key) const;
 		bool HasString(const std::string& key) const;
 		bool HasArrayOfIntegers(const std::string& key) const;

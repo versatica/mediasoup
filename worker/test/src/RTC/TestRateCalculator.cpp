@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "catch.hpp"
 #include "RTC/RateCalculator.hpp"
+#include <catch.hpp>
 #include <vector>
 
 using namespace RTC;

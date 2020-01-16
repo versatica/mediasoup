@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "catch.hpp"
 #include "RTC/TrendCalculator.hpp"
+#include <catch.hpp>
 
 using namespace RTC;
 

@@ -1,6 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-export default class Channel extends EnhancedEventEmitter {
-    private readonly _workerLogger;
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+export declare class Channel extends EnhancedEventEmitter {
     private _closed;
     private readonly _producerSocket;
     private readonly _consumerSocket;

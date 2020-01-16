@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -34,7 +35,7 @@ namespace RTC
 		this->type = RTC::RtpHeaderExtensionUri::GetType(this->uri);
 
 		// id is mandatory.
-		if (jsonIdIt == data.end() || !jsonIdIt->is_number_unsigned())
+		if (jsonIdIt == data.end() || !Utils::Json::IsPositiveInteger(*jsonIdIt))
 			MS_THROW_TYPE_ERROR("missing id");
 
 		this->id = jsonIdIt->get<uint8_t>();

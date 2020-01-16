@@ -4,6 +4,7 @@
 #include "RTC/AudioLevelObserver.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <cmath> // std::lround()
@@ -19,8 +20,15 @@ namespace RTC
 
 		auto jsonMaxEntriesIt = data.find("maxEntries");
 
-		if (jsonMaxEntriesIt == data.end() || !jsonMaxEntriesIt->is_number_unsigned())
+		// clang-format off
+		if (
+			jsonMaxEntriesIt == data.end() ||
+			!Utils::Json::IsPositiveInteger(*jsonMaxEntriesIt)
+		)
+		// clang-format on
+		{
 			MS_THROW_TYPE_ERROR("missing maxEntries");
+		}
 
 		this->maxEntries = jsonMaxEntriesIt->get<uint16_t>();
 
@@ -39,7 +47,7 @@ namespace RTC
 
 		auto jsonIntervalIt = data.find("interval");
 
-		if (jsonIntervalIt == data.end() || !jsonIntervalIt->is_number_unsigned())
+		if (jsonIntervalIt == data.end() || !jsonIntervalIt->is_number())
 			MS_THROW_TYPE_ERROR("missing interval");
 
 		this->interval = jsonIntervalIt->get<uint16_t>();

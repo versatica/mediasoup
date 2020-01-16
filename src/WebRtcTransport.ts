@@ -1,6 +1,7 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, {
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import {
+	Transport,
 	TransportListenIp,
 	TransportProtocol,
 	TransportTuple,
@@ -142,7 +143,7 @@ export interface WebRtcTransportStat
 
 const logger = new Logger('WebRtcTransport');
 
-export default class WebRtcTransport extends Transport
+export class WebRtcTransport extends Transport
 {
 	// WebRtcTransport data.
 	// - .iceRole
@@ -179,11 +180,11 @@ export default class WebRtcTransport extends Transport
 
 	/**
 	 * @private
-	 * @emits {iceState: string} icestatechange
-	 * @emits {iceSelectedTuple: TransportTuple} iceselectedtuplechange
-	 * @emits {dtlsState: DtlsState} dtlsstatechange
-	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportTraceEventData} trace
+	 * @emits icestatechange - (iceState: IceState)
+	 * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
+	 * @emits dtlsstatechange - (dtlsState: DtlsState)
+	 * @emits sctpstatechange - (sctpState: SctpState)
+	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
 	{
@@ -295,15 +296,15 @@ export default class WebRtcTransport extends Transport
 	 *
 	 * @override
 	 * @emits close
-	 * @emits {producer: Producer} newproducer
-	 * @emits {consumer: Consumer} newconsumer
-	 * @emits {producer: DataProducer} newdataproducer
-	 * @emits {consumer: DataConsumer} newdataconsumer
-	 * @emits {iceState: IceState} icestatechange
-	 * @emits {iceSelectedTuple: TransportTuple} iceselectedtuplechange
-	 * @emits {dtlsState: DtlsState} dtlsstatechange
-	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportTraceEventData} trace
+	 * @emits newproducer - (producer: Producer)
+	 * @emits newconsumer - (producer: Producer)
+	 * @emits newdataproducer - (dataProducer: DataProducer)
+	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits icestatechange - (iceState: IceState)
+	 * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
+	 * @emits dtlsstatechange - (dtlsState: DtlsState)
+	 * @emits sctpstatechange - (sctpState: SctpState)
+	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

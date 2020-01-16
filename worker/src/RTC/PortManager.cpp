@@ -24,10 +24,6 @@ inline static void onFakeConnection(uv_stream_t* /*handle*/, int /*status*/)
 
 namespace RTC
 {
-	/* Static. */
-
-	static constexpr size_t MaxBindAttempts{ 20 };
-
 	/* Class variables. */
 
 	std::unordered_map<std::string, std::vector<bool>> PortManager::mapUdpIpPorts;
@@ -45,12 +41,11 @@ namespace RTC
 		int err;
 		int family = Utils::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
-		size_t initialPortIdx;
 		size_t portIdx;
-		size_t attempt{ 0 };
-		size_t bindAttempt{ 0 };
 		int flags{ 0 };
 		std::vector<bool>& ports = PortManager::GetPorts(transport, ip);
+		size_t attempt{ 0u };
+		size_t numAttempts = ports.size();
 		uv_handle_t* uvHandle{ nullptr };
 		uint16_t port;
 		std::string transportStr;
@@ -98,41 +93,54 @@ namespace RTC
 			}
 		}
 
-		// Choose a random port to start from.
-		initialPortIdx = static_cast<size_t>(Utils::Crypto::GetRandomUInt(
+		// Choose a random port index to start from.
+		portIdx = static_cast<size_t>(Utils::Crypto::GetRandomUInt(
 		  static_cast<uint32_t>(0), static_cast<uint32_t>(ports.size() - 1)));
-
-		portIdx = initialPortIdx;
 
 		// Iterate all ports until getting one available. Fail if none found and also
 		// if bind() fails N times in theorically available ports.
 		while (true)
 		{
+			// Increase attempt number.
 			++attempt;
 
-			if (portIdx < ports.size() - 1)
-				++portIdx;
-			else
-				portIdx = 0;
+			// If we have tried all the ports in the range throw.
+			if (attempt > numAttempts)
+			{
+				MS_THROW_ERROR(
+				  "no more available ports [transport:%s, ip:%s, numAttempt:%zu]",
+				  transportStr.c_str(),
+				  ip.c_str(),
+				  numAttempts);
+			}
+
+			// Increase current port index.
+			portIdx = (portIdx + 1) % ports.size();
+
+			// So the corresponding port is the vector position plus the RTC minimum port.
+			port = static_cast<uint16_t>(portIdx + Settings::configuration.rtcMinPort);
+
+			MS_DEBUG_DEV(
+			  "testing port [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]",
+			  transportStr.c_str(),
+			  ip.c_str(),
+			  port,
+			  attempt,
+			  numAttempts);
 
 			// Check whether this port is not available.
 			if (ports[portIdx])
 			{
 				MS_DEBUG_DEV(
-				  "port in use, trying again [%s:%s, attempt:%zu]", transportStr.c_str(), ip.c_str(), attempt);
-
-				// If we have tried all ports in the vector throw.
-				if (portIdx == initialPortIdx)
-				{
-					MS_THROW_ERROR(
-					  "no available port [%s:%s, attempt:%zu]", transportStr.c_str(), ip.c_str(), attempt);
-				}
+				  "port in use, trying again [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]",
+				  transportStr.c_str(),
+				  ip.c_str(),
+				  port,
+				  attempt,
+				  numAttempts);
 
 				continue;
 			}
-
-			// So the found port is the vector position plus the RTC minimum port.
-			port = static_cast<uint16_t>(portIdx + Settings::configuration.rtcMinPort);
 
 			// Here we already have a theorically available port. Now let's check
 			// whether no other process is binding into it.
@@ -150,8 +158,6 @@ namespace RTC
 			}
 
 			// Try to bind on it.
-			++bindAttempt;
-
 			switch (transport)
 			{
 				case Transport::UDP:
@@ -191,10 +197,12 @@ namespace RTC
 					  flags);
 
 					MS_WARN_DEV(
-					  "uv_udp_bind() failed [%s:%s, attempt:%zu]: %s",
+					  "uv_udp_bind() failed [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]: %s",
 					  transportStr.c_str(),
 					  ip.c_str(),
+					  port,
 					  attempt,
+					  numAttempts,
 					  uv_strerror(err));
 
 					break;
@@ -210,10 +218,12 @@ namespace RTC
 					if (err)
 					{
 						MS_WARN_DEV(
-						  "uv_tcp_bind() failed [%s:%s, attempt:%zu]: %s",
+						  "uv_tcp_bind() failed [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]: %s",
 						  transportStr.c_str(),
 						  ip.c_str(),
+						  port,
 						  attempt,
+						  numAttempts,
 						  uv_strerror(err));
 					}
 
@@ -227,10 +237,12 @@ namespace RTC
 						  static_cast<uv_connection_cb>(onFakeConnection));
 
 						MS_WARN_DEV(
-						  "uv_listen() failed [%s:%s, attempt:%zu]: %s",
+						  "uv_listen() failed [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]: %s",
 						  transportStr.c_str(),
 						  ip.c_str(),
+						  port,
 						  attempt,
+						  numAttempts,
 						  uv_strerror(err));
 					}
 
@@ -238,62 +250,62 @@ namespace RTC
 				}
 			}
 
-			// If it succeeded, stop here.
+			// If it succeeded, exit the loop here.
 			if (err == 0)
 				break;
 
 			// If it failed, close the handle and check the reason.
 			uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 
-			// If bind() fails due to "too many open files" throw.
-			if (err == UV_EMFILE)
+			switch (err)
 			{
-				MS_THROW_ERROR(
-				  "port bind failed due to too many open files [%s:%s, attempt:%zu]",
-				  transportStr.c_str(),
-				  ip.c_str(),
-				  attempt);
-			}
-			// If cannot bind in the given IP, throw.
-			else if (err == UV_EADDRNOTAVAIL)
-			{
-				MS_THROW_ERROR(
-				  "port bind failed due to address not available [%s:%s, attempt:%zu]",
-				  transportStr.c_str(),
-				  ip.c_str(),
-				  attempt);
-			}
-			// If bind() fails for more that MaxBindAttempts then throw.
-			else if (bindAttempt > MaxBindAttempts)
-			{
-				MS_THROW_ERROR(
-				  "port bind failed too many times [%s:%s, attempt:%zu]",
-				  transportStr.c_str(),
-				  ip.c_str(),
-				  attempt);
-			}
-			// If we have tried all the ports in the range throw.
-			else if (portIdx == initialPortIdx)
-			{
-				MS_THROW_ERROR(
-				  "no more available ports [%s:%s, attempt:%zu]", transportStr.c_str(), ip.c_str(), attempt);
-			}
-			// Otherwise try again.
-			else
-			{
-				continue;
+				// If bind() fails due to "too many open files" just throw.
+				case UV_EMFILE:
+				{
+					MS_THROW_ERROR(
+					  "port bind failed due to too many open files [transport:%s, ip:%s, port:%" PRIu16
+					  ", attempt:%zu/%zu]",
+					  transportStr.c_str(),
+					  ip.c_str(),
+					  port,
+					  attempt,
+					  numAttempts);
+
+					break;
+				}
+
+				// If cannot bind in the given IP, throw.
+				case UV_EADDRNOTAVAIL:
+				{
+					MS_THROW_ERROR(
+					  "port bind failed due to address not available [transport:%s, ip:%s, port:%" PRIu16
+					  ", attempt:%zu/%zu]",
+					  transportStr.c_str(),
+					  ip.c_str(),
+					  port,
+					  attempt,
+					  numAttempts);
+
+					break;
+				}
+
+				default:
+				{
+					// Otherwise continue in the loop to try again with next port.
+				}
 			}
 		}
 
-		// Mark the port as unavailable.
+		// If here, we got an available port. Mark it as unavailable.
 		ports[portIdx] = true;
 
 		MS_DEBUG_DEV(
-		  "bind succeeded [%s:%s, port:%" PRIu16 ", attempt:%zu]",
+		  "bind succeeded [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]",
 		  transportStr.c_str(),
 		  ip.c_str(),
 		  port,
-		  attempt);
+		  attempt,
+		  numAttempts);
 
 		return static_cast<uv_handle_t*>(uvHandle);
 	}
@@ -363,7 +375,11 @@ namespace RTC
 
 				// If the IP is already handled, return its ports vector.
 				if (it != PortManager::mapUdpIpPorts.end())
-					return it->second;
+				{
+					auto& ports = it->second;
+
+					return ports;
+				}
 
 				// Otherwise add an entry in the map and return it.
 				uint16_t numPorts =
@@ -375,7 +391,9 @@ namespace RTC
 				  std::piecewise_construct, std::make_tuple(ip), std::make_tuple(numPorts, false));
 
 				// pair.first is an iterator to the inserted value.
-				return pair.first->second;
+				auto& ports = pair.first->second;
+
+				return ports;
 			}
 
 			case Transport::TCP:
@@ -384,7 +402,11 @@ namespace RTC
 
 				// If the IP is already handled, return its ports vector.
 				if (it != PortManager::mapTcpIpPorts.end())
-					return it->second;
+				{
+					auto& ports = it->second;
+
+					return ports;
+				}
 
 				// Otherwise add an entry in the map and return it.
 				uint16_t numPorts =
@@ -396,7 +418,9 @@ namespace RTC
 				  std::piecewise_construct, std::make_tuple(ip), std::make_tuple(numPorts, false));
 
 				// pair.first is an iterator to the inserted value.
-				return pair.first->second;
+				auto& ports = pair.first->second;
+
+				return ports;
 			}
 		}
 

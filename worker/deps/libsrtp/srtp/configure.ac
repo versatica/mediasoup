@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([libsrtp2], [2.2.0], [https://github.com/cisco/libsrtp/issues])
+AC_INIT([libsrtp2], [2.3.0], [https://github.com/cisco/libsrtp/issues])
 
 dnl Must come before AC_PROG_CC
 EMPTY_CFLAGS="no"
@@ -11,6 +11,7 @@ fi
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
+AC_PROG_CXX
 AC_ARG_VAR(
   [EXTRA_CFLAGS],
   [C compiler flags appended to the regular C compiler flags instead of overriding them])
@@ -208,6 +209,13 @@ AC_ARG_ENABLE([openssl],
   [AS_HELP_STRING([--enable-openssl], [compile in OpenSSL crypto engine])],
   [], [enable_openssl=no])
 AC_MSG_RESULT([$enable_openssl])
+
+AC_MSG_CHECKING([whether to leverage NSS crypto])
+AC_ARG_ENABLE([nss],
+  [AS_HELP_STRING([--enable-nss], [compile in NSS crypto engine])],
+  [], [enable_nss=no])
+AC_MSG_RESULT([$enable_nss])
+
 if test "$enable_openssl" = "yes"; then
    AC_MSG_CHECKING([for user specified OpenSSL directory])
    AC_ARG_WITH([openssl-dir],
@@ -249,10 +257,36 @@ if test "$enable_openssl" = "yes"; then
    AC_SEARCH_LIBS([EVP_aes_128_gcm], [crypto],
      [], [AC_MSG_FAILURE([can't find openssl >= 1.0.1 crypto lib])])
 
+   AC_DEFINE([GCM], [1], [Define this to use AES-GCM.])
    AC_DEFINE([OPENSSL], [1], [Define this to use OpenSSL crypto.])
    AES_ICM_OBJS="crypto/cipher/aes_icm_ossl.o crypto/cipher/aes_gcm_ossl.o"
    HMAC_OBJS=crypto/hash/hmac_ossl.o
-   AC_SUBST([USE_OPENSSL], [1])
+   AC_SUBST([USE_EXTERNAL_CRYPTO], [1])
+
+   AC_MSG_CHECKING([if OPENSSL_cleanse is broken])
+   AC_RUN_IFELSE([AC_LANG_PROGRAM([
+     #include <stdio.h>
+     #include <openssl/crypto.h>
+   ], [
+     #define BUFFER_SIZE (16)
+     char buffer[[BUFFER_SIZE]];
+     int i;
+     for (i = 0; i < BUFFER_SIZE; i++) {
+       buffer[[i]] = i & 0xff;
+     }
+     OPENSSL_cleanse(buffer, BUFFER_SIZE);
+     for (i = 0; i < BUFFER_SIZE; i++) {
+       if (buffer[[i]]) {
+         printf("Buffer contents not zero at position %d (is %d)\n", i,
+             buffer[[i]]);
+         return 1;
+       }
+     }
+   ])], [openssl_cleanse_broken=no], [
+     openssl_cleanse_broken=yes
+     AC_DEFINE([OPENSSL_CLEANSE_BROKEN], [1], [Define this if OPENSSL_cleanse is broken.])
+   ])
+   AC_MSG_RESULT([$openssl_cleanse_broken])
 
    AC_MSG_CHECKING([whether to leverage OpenSSL KDF algorithm])
    AC_ARG_ENABLE([openssl-kdf],
@@ -264,6 +298,61 @@ if test "$enable_openssl" = "yes"; then
        [], [AC_MSG_FAILURE([can't find openssl KDF lib])])
      AC_DEFINE([OPENSSL_KDF], [1], [Define this to use OpenSSL KDF for SRTP.])
    fi
+elif test "$enable_nss" = "yes"; then
+   AC_MSG_CHECKING([for user specified NSS directory])
+   AC_ARG_WITH([nss-dir],
+      [AS_HELP_STRING([--with-nss-dir], [Location of NSS installation])],
+      [if test "x$PKG_CONFIG" != "x" && test -f $with_nss_dir/lib/pkgconfig/nss.pc; then
+         if test "x$PKG_CONFIG_PATH" = "x"; then
+           export PKG_CONFIG_PATH="$with_nss_dir/lib/pkgconfig"
+         else
+           export PKG_CONFIG_PATH="$with_nss_dir/lib/pkgconfig:$PKG_CONFIG_PATH"
+         fi
+         AC_MSG_RESULT([$with_nss_dir])
+       elif test -d $with_nss_dir/lib; then
+         CFLAGS="$CFLAGS -I$with_nss_dir/include"
+         CFLAGS="$CFLAGS -I$with_nss_dir/../public/nss"
+         if test "x$LDFLAGS" = "x"; then
+           LDFLAGS="-L$with_nss_dir/lib"
+         else
+           LDFLAGS="$LDFLAGS -L$with_nss_dir/lib"
+         fi
+         nss_skip_pkg_config=yes
+         AC_MSG_RESULT([$with_nss_dir])
+       else
+         AC_MSG_RESULT([invalid])
+         AC_MSG_FAILURE([Invalid NSS location: $with_nss_dir])
+       fi
+       AC_SUBST([CRYPTO_LIBDIR], [$with_nss_dir/lib])],
+      [AC_MSG_RESULT([no])])
+
+   if test "x$PKG_CONFIG" != "x" && test "$nss_skip_pkg_config" != "yes"; then
+     PKG_CHECK_MODULES([nss], [nss],
+       [CFLAGS="$CFLAGS $nss_CFLAGS"
+         LIBS="$nss_LIBS $LIBS"])
+   else
+     AC_CHECK_HEADERS(
+       [nss.h],
+       [], [AC_MSG_FAILURE([can't find useable NSS headers])],
+       [AC_INCLUDES_DEFAULT])
+     AC_CHECK_LIB(
+       [nspr4], [PR_GetError],
+       [], [AC_MSG_WARN([can't find libnspr4])])
+     AC_CHECK_LIB(
+       [nss3], [NSS_NoDB_Init],
+       [], [AC_MSG_FAILURE([can't find useable libnss3])])
+   fi
+
+   AC_DEFINE([GCM], [1], [Define this to use AES-GCM.])
+   AC_DEFINE([NSS], [1], [Define this to use NSS crypto.])
+   AES_ICM_OBJS="crypto/cipher/aes_icm_nss.o crypto/cipher/aes_gcm_nss.o"
+
+   # TODO(RLB): Use NSS for HMAC
+   HMAC_OBJS="crypto/hash/hmac.o crypto/hash/sha1.o"
+
+   # TODO(RLB): Use NSS for KDF
+
+   AC_SUBST([USE_EXTERNAL_CRYPTO], [1])
 else
    AES_ICM_OBJS="crypto/cipher/aes_icm.o crypto/cipher/aes.o"
    HMAC_OBJS="crypto/hash/hmac.o crypto/hash/sha1.o"
@@ -274,15 +363,18 @@ AC_SUBST([HMAC_OBJS])
 dnl Checking for PCAP
 
 PCAP_LIB=""
-AC_CHECK_LIB([pcap], [pcap_create],
-  [PCAP_LIB="-lpcap"
-   AC_DEFINE([HAVE_PCAP], [1], [Define to 1 if you have the `pcap' library (-lpcap)])
-   AC_SUBST([HAVE_PCAP], [1])])
-   
-AC_CHECK_LIB([wpcap], [pcap_create],
-  [PCAP_LIB="-lwpcap"
-   AC_DEFINE([HAVE_PCAP], [1], [Define to 1 if you have the `winpcap' library (-lwpcap)])
-   AC_SUBST([HAVE_PCAP], [1])])
+AC_ARG_ENABLE([pcap], AS_HELP_STRING([--disable-pcap], [Build without `pcap' library (-lpcap)]))
+AS_IF([test "x$enable_pcap" != "xno"], [
+  AC_CHECK_LIB([pcap], [pcap_create],
+    [PCAP_LIB="-lpcap"
+     AC_DEFINE([HAVE_PCAP], [1], [Define to 1 if you have the `pcap' library (-lpcap)])
+     AC_SUBST([HAVE_PCAP], [1])])
+
+  AC_CHECK_LIB([wpcap], [pcap_create],
+    [PCAP_LIB="-lwpcap"
+     AC_DEFINE([HAVE_PCAP], [1], [Define to 1 if you have the `winpcap' library (-lwpcap)])
+     AC_SUBST([HAVE_PCAP], [1])])
+])
 AC_SUBST([PCAP_LIB])
    
 AC_MSG_CHECKING([whether to redirect logging to stdout])
@@ -322,7 +414,7 @@ AS_IF([test "x$EXTRA_CFLAGS" != "x"],
 
 AC_CONFIG_HEADER([crypto/include/config.h:config_in.h])
 
-AC_CONFIG_FILES([Makefile crypto/Makefile doc/Makefile libsrtp2.pc])
+AC_CONFIG_FILES([Makefile crypto/Makefile doc/Makefile fuzzer/Makefile libsrtp2.pc])
 AC_OUTPUT
 
 # This is needed when building outside the source dir.

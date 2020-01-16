@@ -74,14 +74,24 @@ namespace RTC
 
 			auto jsonPayloadTypeIt = codec.find("payloadType");
 
-			if (jsonPayloadTypeIt == codec.end() || !jsonPayloadTypeIt->is_number_unsigned())
+			// clang-format off
+			if (
+				jsonPayloadTypeIt == codec.end() ||
+				!Utils::Json::IsPositiveInteger(*jsonPayloadTypeIt)
+			)
+			// clang-format on
 			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (missing payloadType)");
 			}
 
 			auto jsonMappedPayloadTypeIt = codec.find("mappedPayloadType");
 
-			if (jsonMappedPayloadTypeIt == codec.end() || !jsonMappedPayloadTypeIt->is_number_unsigned())
+			// clang-format off
+			if (
+				jsonMappedPayloadTypeIt == codec.end() ||
+				!Utils::Json::IsPositiveInteger(*jsonMappedPayloadTypeIt)
+			)
+			// clang-format on
 			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (missing mappedPayloadType)");
 			}
@@ -111,8 +121,15 @@ namespace RTC
 			// ssrc is optional.
 			auto jsonSsrcIt = encoding.find("ssrc");
 
-			if (jsonSsrcIt != encoding.end() && jsonSsrcIt->is_number_unsigned())
+			// clang-format off
+			if (
+				jsonSsrcIt != encoding.end() &&
+				Utils::Json::IsPositiveInteger(*jsonSsrcIt)
+			)
+			// clang-format on
+			{
 				encodingMapping.ssrc = jsonSsrcIt->get<uint32_t>();
+			}
 
 			// rid is optional.
 			auto jsonRidIt = encoding.find("rid");
@@ -121,7 +138,13 @@ namespace RTC
 				encodingMapping.rid = jsonRidIt->get<std::string>();
 
 			// However ssrc or rid must be present (if more than 1 encoding).
-			if (jsonEncodingsIt->size() > 1 && jsonSsrcIt == encoding.end() && jsonRidIt == encoding.end())
+			// clang-format off
+			if (
+				jsonEncodingsIt->size() > 1 &&
+				jsonSsrcIt == encoding.end() &&
+				jsonRidIt == encoding.end()
+			)
+			// clang-format on
 			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings (missing ssrc or rid)");
 			}
@@ -143,8 +166,15 @@ namespace RTC
 			// mappedSsrc is mandatory.
 			auto jsonMappedSsrcIt = encoding.find("mappedSsrc");
 
-			if (jsonMappedSsrcIt == encoding.end() || !jsonMappedSsrcIt->is_number_unsigned())
+			// clang-format off
+			if (
+				jsonMappedSsrcIt == encoding.end() ||
+				!Utils::Json::IsPositiveInteger(*jsonMappedSsrcIt)
+			)
+			// clang-format on
+			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings (missing mappedSsrc)");
+			}
 
 			encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
 		}

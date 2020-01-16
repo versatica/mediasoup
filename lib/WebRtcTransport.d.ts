@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, { TransportListenIp, TransportProtocol, TransportTuple, SctpState } from './Transport';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Transport, TransportListenIp, TransportProtocol, TransportTuple, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export interface WebRtcTransportOptions {
     /**
@@ -105,14 +105,14 @@ export interface WebRtcTransportStat {
     iceSelectedTuple?: TransportTuple;
     dtlsState: DtlsState;
 }
-export default class WebRtcTransport extends Transport {
+export declare class WebRtcTransport extends Transport {
     /**
      * @private
-     * @emits {iceState: string} icestatechange
-     * @emits {iceSelectedTuple: TransportTuple} iceselectedtuplechange
-     * @emits {dtlsState: DtlsState} dtlsstatechange
-     * @emits {sctpState: SctpState} sctpstatechange
-     * @emits {TransportTraceEventData} trace
+     * @emits icestatechange - (iceState: IceState)
+     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
+     * @emits dtlsstatechange - (dtlsState: DtlsState)
+     * @emits sctpstatechange - (sctpState: SctpState)
+     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
     /**
@@ -160,15 +160,15 @@ export default class WebRtcTransport extends Transport {
      *
      * @override
      * @emits close
-     * @emits {producer: Producer} newproducer
-     * @emits {consumer: Consumer} newconsumer
-     * @emits {producer: DataProducer} newdataproducer
-     * @emits {consumer: DataConsumer} newdataconsumer
-     * @emits {iceState: IceState} icestatechange
-     * @emits {iceSelectedTuple: TransportTuple} iceselectedtuplechange
-     * @emits {dtlsState: DtlsState} dtlsstatechange
-     * @emits {sctpState: SctpState} sctpstatechange
-     * @emits {TransportTraceEventData} trace
+     * @emits newproducer - (producer: Producer)
+     * @emits newconsumer - (producer: Producer)
+     * @emits newdataproducer - (dataProducer: DataProducer)
+     * @emits newdataconsumer - (dataProducer: DataProducer)
+     * @emits icestatechange - (iceState: IceState)
+     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
+     * @emits dtlsstatechange - (dtlsState: DtlsState)
+     * @emits sctpstatechange - (sctpState: SctpState)
+     * @emits trace - (trace: TransportTraceEventData)
      */
     get observer(): EnhancedEventEmitter;
     /**

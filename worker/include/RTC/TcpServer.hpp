@@ -25,8 +25,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from ::TcpServer. */
 	public:
-		void UserOnTcpConnectionAlloc(::TcpConnection** connection) override;
-		bool UserOnNewTcpConnection(::TcpConnection* connection) override;
+		void UserOnTcpConnectionAlloc() override;
 		void UserOnTcpConnectionClosed(::TcpConnection* connection) override;
 
 	private:
