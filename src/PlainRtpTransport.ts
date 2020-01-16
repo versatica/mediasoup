@@ -1,12 +1,13 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Transport, {
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import {
+	Transport,
 	TransportListenIp,
 	TransportTuple,
 	TransportTraceEventData,
 	SctpState
 } from './Transport';
-import Consumer, { ConsumerOptions } from './Consumer';
+import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
 export interface PlainRtpTransportOptions
@@ -94,7 +95,7 @@ export interface PlainRtpTransportStat
 
 const logger = new Logger('PlainRtpTransport');
 
-export default class PlainRtpTransport extends Transport
+export class PlainRtpTransport extends Transport
 {
 	// PlainRtpTransport data.
 	// - .rtcpMux
@@ -121,8 +122,8 @@ export default class PlainRtpTransport extends Transport
 
 	/**
 	 * @private
-	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportTraceEventData} trace
+	 * @emits sctpstatechange - (sctpState: SctpState)
+	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
 	{
@@ -180,12 +181,12 @@ export default class PlainRtpTransport extends Transport
 	 *
 	 * @override
 	 * @emits close
-	 * @emits {producer: Producer} newproducer
-	 * @emits {consumer: Consumer} newconsumer
-	 * @emits {producer: DataProducer} newdataproducer
-	 * @emits {consumer: DataConsumer} newdataconsumer
-	 * @emits {sctpState: SctpState} sctpstatechange
-	 * @emits {TransportTraceEventData} trace
+	 * @emits newproducer - (producer: Producer)
+	 * @emits newconsumer - (producer: Producer)
+	 * @emits newdataproducer - (dataProducer: DataProducer)
+	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits sctpstatechange - (sctpState: SctpState)
+	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

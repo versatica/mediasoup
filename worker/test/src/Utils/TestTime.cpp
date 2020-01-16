@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "Utils.hpp"
-#include "catch.hpp"
+#include <catch.hpp>
 
 using namespace Utils;
 

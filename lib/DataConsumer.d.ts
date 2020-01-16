@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { SctpStreamParameters } from './SctpParameters';
 export interface DataConsumerOptions {
     /**
@@ -19,7 +19,7 @@ export interface DataConsumerStat {
     messagesSent: number;
     bytesSent: number;
 }
-export default class DataConsumer extends EnhancedEventEmitter {
+export declare class DataConsumer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;

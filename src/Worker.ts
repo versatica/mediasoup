@@ -2,11 +2,11 @@ import * as process from 'process';
 import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
 import uuidv4 from 'uuid/v4';
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
-import Channel from './Channel';
-import Router, { RouterOptions } from './Router';
+import { Channel } from './Channel';
+import { Router, RouterOptions } from './Router';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -55,6 +55,99 @@ export interface WorkerSettings
 
 export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
 
+/**
+ * An object with the fields of the uv_rusage_t struct.
+ *
+ * - http://docs.libuv.org/en/v1.x/misc.html#c.uv_rusage_t
+ * - https://linux.die.net/man/2/getrusage
+ */
+export interface WorkerResourceUsage
+{
+	/* eslint-disable camelcase */
+
+	/**
+	 * User CPU time used (in ms).
+	 */
+	ru_utime: number;
+
+	/**
+	 * System CPU time used (in ms).
+	 */
+	ru_stime: number;
+
+	/**
+	 * Maximum resident set size.
+	 */
+	ru_maxrss: number;
+
+	/**
+	 * Integral shared memory size.
+	 */
+	ru_ixrss: number;
+
+	/**
+	 * Integral unshared data size.
+	 */
+	ru_idrss: number;
+
+	/**
+	 * Integral unshared stack size.
+	 */
+	ru_isrss: number;
+
+	/**
+	 * Page reclaims (soft page faults).
+	 */
+	ru_minflt: number;
+
+	/**
+	 * Page faults (hard page faults).
+	 */
+	ru_majflt: number;
+
+	/**
+	 * Swaps.
+	 */
+	ru_nswap: number;
+
+	/**
+	 * Block input operations.
+	 */
+	ru_inblock: number;
+
+	/**
+	 * Block output operations.
+	 */
+	ru_oublock: number;
+
+	/**
+	 * IPC messages sent.
+	 */
+	ru_msgsnd: number;
+
+	/**
+	 * IPC messages received.
+	 */
+	ru_msgrcv: number;
+
+	/**
+	 * Signals received.
+	 */
+	ru_nsignals: number;
+
+	/**
+	 * Voluntary context switches.
+	 */
+	ru_nvcsw: number;
+
+	/**
+	 * Involuntary context switches.
+	 */
+	ru_nivcsw: number;
+
+	/* eslint-enable camelcase */
+}
+
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -65,14 +158,12 @@ const workerBin = process.env.MEDIASOUP_WORKER_BIN
 		: path.join(__dirname, '..', 'worker', 'out', 'Release', 'mediasoup-worker');
 
 const logger = new Logger('Worker');
+const workerLogger = new Logger('Worker');
 
-export default class Worker extends EnhancedEventEmitter
+export class Worker extends EnhancedEventEmitter
 {
 	// mediasoup-worker child process.
 	private _child?: ChildProcess;
-
-	// Logger for stdout and stderr logs from the worker process.
-	private readonly _workerLogger: Logger;
 
 	// Worker process PID.
 	private readonly _pid: number;
@@ -94,10 +185,9 @@ export default class Worker extends EnhancedEventEmitter
 
 	/**
 	 * @private
-	 * @emits died
-	 * @emits @succeed
-	 * @emits @settingserror
-	 * @emits @failure
+	 * @emits died - (error: Error)
+	 * @emits @success
+	 * @emits @failure - (error: Error)
 	 */
 	constructor(
 		{
@@ -172,8 +262,6 @@ export default class Worker extends EnhancedEventEmitter
 				// fd 4 (channel) : Consumer Channel fd.
 				stdio : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe' ]
 			});
-
-		this._workerLogger = new Logger(`worker[pid:${this._child.pid}]`);
 
 		this._pid = this._child.pid;
 
@@ -269,7 +357,7 @@ export default class Worker extends EnhancedEventEmitter
 			for (const line of buffer.toString('utf8').split('\n'))
 			{
 				if (line)
-					this._workerLogger.debug(`(stdout) ${line}`);
+					workerLogger.debug(`(stdout) ${line}`);
 			}
 		});
 
@@ -279,7 +367,7 @@ export default class Worker extends EnhancedEventEmitter
 			for (const line of buffer.toString('utf8').split('\n'))
 			{
 				if (line)
-					this._workerLogger.error(`(stderr) ${line}`);
+					workerLogger.error(`(stderr) ${line}`);
 			}
 		});
 	}
@@ -320,7 +408,7 @@ export default class Worker extends EnhancedEventEmitter
 	 * Observer.
 	 *
 	 * @emits close
-	 * @emits {router: Router} newrouter
+	 * @emits newrouter - (router: Router)
 	 */
 	get observer(): EnhancedEventEmitter
 	{
@@ -373,6 +461,16 @@ export default class Worker extends EnhancedEventEmitter
 		logger.debug('dump()');
 
 		return this._channel.request('worker.dump');
+	}
+
+	/**
+	 * Get mediasoup-worker process resource usage.
+	 */
+	async getResourceUsage(): Promise<WorkerResourceUsage>
+	{
+		logger.debug('getResourceUsage()');
+
+		return this._channel.request('worker.getResourceUsage');
 	}
 
 	/**

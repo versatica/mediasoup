@@ -1,9 +1,9 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
-import Producer, { ProducerOptions } from './Producer';
-import Consumer, { ConsumerOptions } from './Consumer';
-import DataProducer, { DataProducerOptions } from './DataProducer';
-import DataConsumer, { DataConsumerOptions } from './DataConsumer';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
+import { Producer, ProducerOptions } from './Producer';
+import { Consumer, ConsumerOptions } from './Consumer';
+import { DataProducer, DataProducerOptions } from './DataProducer';
+import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
 export interface TransportListenIp {
     /**
@@ -53,7 +53,7 @@ export interface TransportTraceEventData {
     info: any;
 }
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
-export default class Transport extends EnhancedEventEmitter {
+export declare class Transport extends EnhancedEventEmitter {
     protected readonly _internal: any;
     protected _data: any;
     protected readonly _channel: Channel;
@@ -75,10 +75,10 @@ export default class Transport extends EnhancedEventEmitter {
      * @interface
      * @emits routerclose
      * @emits @close
-     * @emits @newproducer
-     * @emits @producerclose
-     * @emits @newdataproducer
-     * @emits @dataproducerclose
+     * @emits @newproducer - (producer: Producer)
+     * @emits @producerclose - (producer: Producer)
+     * @emits @newdataproducer - (dataProducer: DataProducer)
+     * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
     constructor({ internal, data, channel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
         internal: any;
@@ -109,10 +109,10 @@ export default class Transport extends EnhancedEventEmitter {
      * Observer.
      *
      * @emits close
-     * @emits {producer: Producer} newproducer
-     * @emits {consumer: Consumer} newconsumer
-     * @emits {producer: DataProducer} newdataproducer
-     * @emits {consumer: DataConsumer} newdataconsumer
+     * @emits newproducer - (producer: Producer)
+     * @emits newconsumer - (producer: Producer)
+     * @emits newdataproducer - (dataProducer: DataProducer)
+     * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer(): EnhancedEventEmitter;
     /**
@@ -135,7 +135,7 @@ export default class Transport extends EnhancedEventEmitter {
      *
      * @abstract
      */
-    getStats(): Promise<any>;
+    getStats(): Promise<any[]>;
     /**
      * Provide the Transport remote parameters.
      *

@@ -1,7 +1,7 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import RtpObserver from './RtpObserver';
-import Producer from './Producer';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { RtpObserver } from './RtpObserver';
+import { Producer } from './Producer';
 
 export interface AudioLevelObserverOptions
 {
@@ -43,11 +43,11 @@ export interface AudioLevelObserverVolume
 
 const logger = new Logger('AudioLevelObserver');
 
-export default class AudioLevelObserver extends RtpObserver
+export class AudioLevelObserver extends RtpObserver
 {
 	/**
 	 * @private
-	 * @emits {volumes: Array<Object<producer: Producer, volume: Number>>} volumes
+	 * @emits volumes - (volumes: AudioLevelObserverVolume[])
 	 * @emits silence
 	 */
 	constructor(params: any)
@@ -63,9 +63,9 @@ export default class AudioLevelObserver extends RtpObserver
 	 * @emits close
 	 * @emits pause
 	 * @emits resume
-	 * @emits {producer: Producer} addproducer
-	 * @emits {producer: Producer} removeproducer
-	 * @emits {producer: Producer} volumes
+	 * @emits addproducer - (producer: Producer)
+	 * @emits removeproducer - (producer: Producer)
+	 * @emits volumes - (volumes: AudioLevelObserverVolume[])
 	 * @emits silence
 	 */
 	get observer(): EnhancedEventEmitter

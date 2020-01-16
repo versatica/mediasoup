@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Router, { RouterOptions } from './Router';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Router, RouterOptions } from './Router';
 export declare type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 export interface WorkerSettings {
     /**
@@ -37,9 +37,80 @@ export interface WorkerSettings {
     appData?: any;
 }
 export declare type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
-export default class Worker extends EnhancedEventEmitter {
+/**
+ * An object with the fields of the uv_rusage_t struct.
+ *
+ * - http://docs.libuv.org/en/v1.x/misc.html#c.uv_rusage_t
+ * - https://linux.die.net/man/2/getrusage
+ */
+export interface WorkerResourceUsage {
+    /**
+     * User CPU time used (in ms).
+     */
+    ru_utime: number;
+    /**
+     * System CPU time used (in ms).
+     */
+    ru_stime: number;
+    /**
+     * Maximum resident set size.
+     */
+    ru_maxrss: number;
+    /**
+     * Integral shared memory size.
+     */
+    ru_ixrss: number;
+    /**
+     * Integral unshared data size.
+     */
+    ru_idrss: number;
+    /**
+     * Integral unshared stack size.
+     */
+    ru_isrss: number;
+    /**
+     * Page reclaims (soft page faults).
+     */
+    ru_minflt: number;
+    /**
+     * Page faults (hard page faults).
+     */
+    ru_majflt: number;
+    /**
+     * Swaps.
+     */
+    ru_nswap: number;
+    /**
+     * Block input operations.
+     */
+    ru_inblock: number;
+    /**
+     * Block output operations.
+     */
+    ru_oublock: number;
+    /**
+     * IPC messages sent.
+     */
+    ru_msgsnd: number;
+    /**
+     * IPC messages received.
+     */
+    ru_msgrcv: number;
+    /**
+     * Signals received.
+     */
+    ru_nsignals: number;
+    /**
+     * Voluntary context switches.
+     */
+    ru_nvcsw: number;
+    /**
+     * Involuntary context switches.
+     */
+    ru_nivcsw: number;
+}
+export declare class Worker extends EnhancedEventEmitter {
     private _child?;
-    private readonly _workerLogger;
     private readonly _pid;
     private readonly _channel;
     private _closed;
@@ -48,10 +119,9 @@ export default class Worker extends EnhancedEventEmitter {
     private readonly _observer;
     /**
      * @private
-     * @emits died
-     * @emits @succeed
-     * @emits @settingserror
-     * @emits @failure
+     * @emits died - (error: Error)
+     * @emits @success
+     * @emits @failure - (error: Error)
      */
     constructor({ logLevel, logTags, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData }: WorkerSettings);
     /**
@@ -74,7 +144,7 @@ export default class Worker extends EnhancedEventEmitter {
      * Observer.
      *
      * @emits close
-     * @emits {router: Router} newrouter
+     * @emits newrouter - (router: Router)
      */
     get observer(): EnhancedEventEmitter;
     /**
@@ -85,6 +155,10 @@ export default class Worker extends EnhancedEventEmitter {
      * Dump Worker.
      */
     dump(): Promise<any>;
+    /**
+     * Get mediasoup-worker process resource usage.
+     */
+    getResourceUsage(): Promise<WorkerResourceUsage>;
     /**
      * Update settings.
      */

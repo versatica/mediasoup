@@ -29,16 +29,16 @@ const mediaCodecs =
 		clockRate : 90000
 	},
 	{
-		kind         : 'video',
-		mimeType     : 'video/H264',
-		clockRate    : 90000,
-		rtcpFeedback : [], // Will be ignored.
-		parameters   :
+		kind       : 'video',
+		mimeType   : 'video/H264',
+		clockRate  : 90000,
+		parameters :
 		{
 			'level-asymmetry-allowed' : 1,
 			'packetization-mode'      : 1,
 			'profile-level-id'        : '4d0032'
-		}
+		},
+		rtcpFeedback : [] // Will be ignored.
 	}
 ];
 
@@ -59,7 +59,6 @@ test('worker.createRouter() succeeds', async () =>
 	expect(router.rtpCapabilities).toBeType('object');
 	expect(router.rtpCapabilities.codecs).toBeType('array');
 	expect(router.rtpCapabilities.headerExtensions).toBeType('array');
-	expect(router.rtpCapabilities.fecMechanisms).toEqual([]);
 	expect(router.appData).toEqual({ foo: 123 });
 
 	await expect(worker.dump())

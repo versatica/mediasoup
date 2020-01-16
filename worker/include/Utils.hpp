@@ -2,6 +2,7 @@
 #define MS_UTILS_HPP
 
 #include "common.hpp"
+#include <json.hpp>
 #include <openssl/hmac.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
@@ -12,6 +13,8 @@
 #include <intrin.h>
 #define __builtin_popcount __popcnt
 #endif
+
+using json = nlohmann::json;
 
 namespace Utils
 {
@@ -362,6 +365,24 @@ namespace Utils
 	inline uint32_t Time::TimeMsToAbsSendTime(uint64_t ms)
 	{
 		return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
+	}
+
+	class Json
+	{
+	public:
+		static bool IsPositiveInteger(const json& value);
+	};
+
+	/* Inline static methods. */
+
+	inline bool Json::IsPositiveInteger(const json& value)
+	{
+		if (value.is_number_unsigned())
+			return true;
+		else if (value.is_number_integer())
+			return value.get<int64_t>() >= 0;
+		else
+			return false;
 	}
 } // namespace Utils
 

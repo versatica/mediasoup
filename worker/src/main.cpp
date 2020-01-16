@@ -16,17 +16,13 @@
 #include "Channel/UnixStreamSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
+#include <uv.h>
 #include <cerrno>
 #include <csignal>  // sigaction()
 #include <cstdlib>  // std::_Exit(), std::genenv()
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
-#ifdef _WIN32
-#define usleep Sleep
-#else
-#include <unistd.h> // getpid(), usleep()
-#endif
 
 static constexpr int ConsumerChannelFd{ 3 };
 static constexpr int ProducerChannelFd{ 4 };
@@ -132,7 +128,8 @@ int main(int argc, char* argv[])
 
 		// Wait a bit so peding messages to stdout/Channel arrive to the Node
 		// process.
-		usleep(200000);
+		uv_sleep(200);
+
 		std::_Exit(EXIT_SUCCESS);
 	}
 	catch (const MediaSoupError& error)

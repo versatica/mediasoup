@@ -54,12 +54,7 @@
 #include "srtp.h"
 
 #include "cipher.h"
-
-typedef struct {
-    void *state;
-} random_source_t;
-
-srtp_err_status_t random_source_alloc(void);
+#include "cipher_priv.h"
 
 void err_check(srtp_err_status_t s)
 {
@@ -76,9 +71,9 @@ int main(int argc, char *argv[])
     int i, j;
     extern srtp_cipher_type_t srtp_aes_icm_128;
     extern srtp_cipher_type_t srtp_aes_icm_256;
-#ifdef OPENSSL
-    extern srtp_cipher_type_t srtp_aes_gcm_128_openssl;
-    extern srtp_cipher_type_t srtp_aes_gcm_256_openssl;
+#ifdef GCM
+    extern srtp_cipher_type_t srtp_aes_gcm_128;
+    extern srtp_cipher_type_t srtp_aes_gcm_256;
 #endif
     srtp_cipher_t *c;
     /* clang-format off */
@@ -107,8 +102,7 @@ int main(int argc, char *argv[])
     printf("poker   %d\n", stat_test_poker(buffer));
     printf("runs    %d\n", stat_test_runs(buffer));
 
-    for (i = 0; i < 2500; i++)
-        buffer[i] = rand();
+    srtp_cipher_rand_for_tests(buffer, 2500);
     printf("running stat_tests on rand(), expecting success\n");
     printf("monobit %d\n", stat_test_monobit(buffer));
     printf("poker   %d\n", stat_test_poker(buffer));
@@ -180,14 +174,14 @@ int main(int argc, char *argv[])
         }
     }
 
-#ifdef OPENSSL
+#ifdef GCM
     {
         printf("running stat_tests on AES-128-GCM, expecting success\n");
         /* set buffer to cipher output */
         for (i = 0; i < 2500; i++) {
             buffer[i] = 0;
         }
-        err_check(srtp_cipher_type_alloc(&srtp_aes_gcm_128_openssl, &c,
+        err_check(srtp_cipher_type_alloc(&srtp_aes_gcm_128, &c,
                                          SRTP_AES_GCM_128_KEY_LEN_WSALT, 8));
         err_check(srtp_cipher_init(c, key));
         err_check(
@@ -219,7 +213,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < 2500; i++) {
             buffer[i] = 0;
         }
-        err_check(srtp_cipher_type_alloc(&srtp_aes_gcm_256_openssl, &c,
+        err_check(srtp_cipher_type_alloc(&srtp_aes_gcm_256, &c,
                                          SRTP_AES_GCM_256_KEY_LEN_WSALT, 16));
         err_check(srtp_cipher_init(c, key));
         err_check(

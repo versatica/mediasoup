@@ -1,5 +1,5 @@
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { ProducerStat } from './Producer';
 import { MediaKind, RtpCapabilities, RtpParameters } from './RtpParameters';
 export interface ConsumerOptions {
@@ -86,7 +86,6 @@ export interface ConsumerStat {
     timestamp: number;
     ssrc: number;
     rtxSsrc?: number;
-    rid?: string;
     kind: string;
     mimeType: string;
     packetsLost: number;
@@ -108,7 +107,7 @@ export interface ConsumerStat {
  * Consumer type.
  */
 export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
-export default class Consumer extends EnhancedEventEmitter {
+export declare class Consumer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
@@ -127,9 +126,9 @@ export default class Consumer extends EnhancedEventEmitter {
      * @emits producerclose
      * @emits producerpause
      * @emits producerresume
-     * @emits {ConsumerScore} score
-     * @emits {ConsumerLayers | null} layerschange
-     * @emits {ConsumerTraceEventData} trace
+     * @emits score - (score: ConsumerScore)
+     * @emits layerschange - (layers: ConsumerLayers | null)
+     * @emits trace - (trace: ConsumerTraceEventData)
      * @emits @close
      * @emits @producerclose
      */
@@ -205,9 +204,9 @@ export default class Consumer extends EnhancedEventEmitter {
      * @emits close
      * @emits pause
      * @emits resume
-     * @emits {ConsumerScore} score
-     * @emits {ConsumerLayers | null} layerschange
-     * @emits {ConsumerTraceEventData} trace
+     * @emits score - (score: ConsumerScore)
+     * @emits layerschange - (layers: ConsumerLayers | null)
+     * @emits trace - (trace: ConsumerTraceEventData)
      */
     get observer(): EnhancedEventEmitter;
     /**

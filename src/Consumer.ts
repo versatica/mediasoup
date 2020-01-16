@@ -1,6 +1,6 @@
-import Logger from './Logger';
-import EnhancedEventEmitter from './EnhancedEventEmitter';
-import Channel from './Channel';
+import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
 import { ProducerStat } from './Producer';
 import {
 	MediaKind,
@@ -112,7 +112,6 @@ export interface ConsumerStat
 	timestamp: number;
 	ssrc: number;
 	rtxSsrc?: number;
-	rid?: string;
 	kind: string;
 	mimeType: string;
 	packetsLost: number;
@@ -138,7 +137,7 @@ export type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
 
 const logger = new Logger('Consumer');
 
-export default class Consumer extends EnhancedEventEmitter
+export class Consumer extends EnhancedEventEmitter
 {
 	// Internal data.
 	// - .routerId
@@ -189,9 +188,9 @@ export default class Consumer extends EnhancedEventEmitter
 	 * @emits producerclose
 	 * @emits producerpause
 	 * @emits producerresume
-	 * @emits {ConsumerScore} score
-	 * @emits {ConsumerLayers | null} layerschange
-	 * @emits {ConsumerTraceEventData} trace
+	 * @emits score - (score: ConsumerScore)
+	 * @emits layerschange - (layers: ConsumerLayers | null)
+	 * @emits trace - (trace: ConsumerTraceEventData)
 	 * @emits @close
 	 * @emits @producerclose
 	 */
@@ -217,7 +216,7 @@ export default class Consumer extends EnhancedEventEmitter
 			preferredLayers?: ConsumerLayers;
 		})
 	{
-		super(logger);
+		super();
 
 		logger.debug('constructor()');
 
@@ -351,9 +350,9 @@ export default class Consumer extends EnhancedEventEmitter
 	 * @emits close
 	 * @emits pause
 	 * @emits resume
-	 * @emits {ConsumerScore} score
-	 * @emits {ConsumerLayers | null} layerschange
-	 * @emits {ConsumerTraceEventData} trace
+	 * @emits score - (score: ConsumerScore)
+	 * @emits layerschange - (layers: ConsumerLayers | null)
+	 * @emits trace - (trace: ConsumerTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter
 	{

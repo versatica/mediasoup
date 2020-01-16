@@ -1,4 +1,4 @@
 import { RtpCapabilities } from './RtpParameters';
 declare const supportedRtpCapabilities: RtpCapabilities;
-export default supportedRtpCapabilities;
+export { supportedRtpCapabilities };
 //# sourceMappingURL=supportedRtpCapabilities.d.ts.map

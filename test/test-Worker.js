@@ -134,6 +134,17 @@ test('worker.dump() rejects with InvalidStateError if closed', async () =>
 	worker.close();
 }, 2000);
 
+test('worker.getResourceUsage() succeeds', async () =>
+{
+	worker = await createWorker();
+
+	await expect(worker.getResourceUsage())
+		.resolves
+		.toMatchObject({});
+
+	worker.close();
+}, 2000);
+
 test('worker.close() succeeds', async () =>
 {
 	worker = await createWorker({ logLevel: 'warn' });

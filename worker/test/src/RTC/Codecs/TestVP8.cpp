@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "catch.hpp"
 #include "RTC/Codecs/VP8.hpp"
+#include <catch.hpp>
 #include <cstring> // std::memcmp()
 
 using namespace RTC;

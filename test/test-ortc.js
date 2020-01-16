@@ -21,21 +21,21 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		},
 		{
 			kind                 : 'video',
-			preferredPayloadType : 125, // Let's force it.
 			mimeType             : 'video/VP8',
+			preferredPayloadType : 125, // Let's force it.
 			clockRate            : 90000
 		},
 		{
-			kind         : 'video',
-			mimeType     : 'video/H264',
-			clockRate    : 90000,
-			rtcpFeedback : [], // Will be ignored.
-			parameters   :
+			kind       : 'video',
+			mimeType   : 'video/H264',
+			clockRate  : 90000,
+			parameters :
 			{
 				'level-asymmetry-allowed' : 1,
 				'profile-level-id'        : '42e01f',
 				foo                       : 'bar'
-			}
+			},
+			rtcpFeedback : [] // Will be ignored.
 		}
 	];
 
@@ -51,15 +51,15 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			preferredPayloadType : 100, // 100 is the first available dynamic PT.
 			clockRate            : 48000,
 			channels             : 2,
-			rtcpFeedback         :
-			[
-				{ type: 'transport-cc' }
-			],
-			parameters :
+			parameters           :
 			{
 				useinbandfec : 1,
 				foo          : 'bar'
-			}
+			},
+			rtcpFeedback :
+			[
+				{ type: 'transport-cc', parameter: '' }
+			]
 		});
 
 	// VP8.
@@ -69,15 +69,16 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/VP8',
 			preferredPayloadType : 125,
 			clockRate            : 90000,
+			channels             : 1,
+			parameters           : {},
 			rtcpFeedback         :
 			[
-				{ type: 'nack' },
+				{ type: 'nack', parameter: '' },
 				{ type: 'nack', parameter: 'pli' },
 				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' },
-				{ type: 'transport-cc' }
-			],
-			parameters : {}
+				{ type: 'goog-remb', parameter: '' },
+				{ type: 'transport-cc', parameter: '' }
+			]
 		});
 
 	// VP8 RTX.
@@ -87,11 +88,12 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/rtx',
 			preferredPayloadType : 101, // 101 is the second available dynamic PT.
 			clockRate            : 90000,
-			rtcpFeedback         : [],
+			channels             : 1,
 			parameters           :
 			{
 				apt : 125
-			}
+			},
+			rtcpFeedback : []
 		});
 
 	// H264.
@@ -101,22 +103,23 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/H264',
 			preferredPayloadType : 102, // 102 is the second available dynamic PT.
 			clockRate            : 90000,
-			rtcpFeedback         :
-			[
-				{ type: 'nack' },
-				{ type: 'nack', parameter: 'pli' },
-				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' },
-				{ type: 'transport-cc' }
-			],
-			parameters :
+			channels             : 1,
+			parameters           :
 			{
 
 				'packetization-mode'      : 0,
 				'level-asymmetry-allowed' : 1,
 				'profile-level-id'        : '42e01f',
 				foo                       : 'bar'
-			}
+			},
+			rtcpFeedback :
+			[
+				{ type: 'nack', parameter: '' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb', parameter: '' },
+				{ type: 'transport-cc', parameter: '' }
+			]
 		});
 
 	// H264 RTX.
@@ -126,11 +129,12 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/rtx',
 			preferredPayloadType : 103,
 			clockRate            : 90000,
-			rtcpFeedback         : [],
+			channels             : 1,
 			parameters           :
 			{
 				apt : 102
-			}
+			},
+			rtcpFeedback : []
 		});
 });
 
@@ -231,30 +235,33 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		codecs :
 		[
 			{
-				mimeType     : 'video/H264',
-				payloadType  : 111,
-				clockRate    : 90000,
-				rtcpFeedback :
-				[
-					{ type: 'nack' },
-					{ type: 'nack', parameter: 'pli' },
-					{ type: 'goog-remb' }
-				],
-				parameters :
+				mimeType    : 'video/H264',
+				payloadType : 111,
+				clockRate   : 90000,
+				channels    : 1,
+				parameters  :
 				{
 					foo                  : 1234,
 					'packetization-mode' : 1,
 					'profile-level-id'   : '4d0032'
-				}
+				},
+				rtcpFeedback :
+				[
+					{ type: 'nack', parameter: '' },
+					{ type: 'nack', parameter: 'pli' },
+					{ type: 'goog-remb', parameter: '' }
+				]
 			},
 			{
 				mimeType    : 'video/rtx',
 				payloadType : 112,
 				clockRate   : 90000,
+				channels    : 1,
 				parameters  :
 				{
 					apt : 111
-				}
+				},
+				rtcpFeedback : []
 			}
 		],
 		headerExtensions :
@@ -366,35 +373,40 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType             : 'audio/opus',
 				preferredPayloadType : 100,
 				clockRate            : 48000,
-				channels             : 2
+				channels             : 2,
+				parameters           : {},
+				rtcpFeedback         : []
 			},
 			{
 				kind                 : 'video',
 				mimeType             : 'video/H264',
 				preferredPayloadType : 101,
 				clockRate            : 90000,
-				rtcpFeedback         :
-				[
-					{ type: 'nack' },
-					{ type: 'nack', parameter: 'pli' },
-					{ type: 'foo', parameter: 'FOO' }
-				],
-				parameters :
+				channels             : 1,
+				parameters           :
 				{
 					'packetization-mode' : 1,
 					'profile-level-id'   : '4d0032',
 					baz                  : 'LOLOLO'
-				}
+				},
+				rtcpFeedback :
+				[
+					{ type: 'nack', parameter: '' },
+					{ type: 'nack', parameter: 'pli' },
+					{ type: 'foo', parameter: 'FOO' }
+				]
 			},
 			{
 				kind                 : 'video',
 				mimeType             : 'video/rtx',
 				preferredPayloadType : 102,
 				clockRate            : 90000,
+				channels             : 1,
 				parameters           :
 				{
 					apt : 101
-				}
+				},
+				rtcpFeedback : []
 			}
 		],
 		headerExtensions :
@@ -403,37 +415,43 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				kind             : 'audio',
 				uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
 				preferredId      : 1,
-				preferredEncrypt : false
+				preferredEncrypt : false,
+				direction        : 'sendrecv'
 			},
 			{
 				kind             : 'video',
 				uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
 				preferredId      : 1,
-				preferredEncrypt : false
+				preferredEncrypt : false,
+				direction        : 'sendrecv'
 			},
 			{
 				kind             : 'video',
 				uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
 				preferredId      : 2,
-				preferredEncrypt : false
+				preferredEncrypt : false,
+				direction        : 'sendrecv'
 			},
 			{
 				kind             : 'audio',
 				uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
 				preferredId      : 8,
-				preferredEncrypt : false
+				preferredEncrypt : false,
+				direction        : 'sendrecv'
 			},
 			{
 				kind             : 'video',
 				uri              : 'urn:3gpp:video-orientation',
 				preferredId      : 11,
-				preferredEncrypt : false
+				preferredEncrypt : false,
+				direction        : 'sendrecv'
 			},
 			{
 				kind             : 'video',
 				uri              : 'urn:ietf:params:rtp-hdrext:toffset',
 				preferredId      : 12,
-				preferredEncrypt : false
+				preferredEncrypt : false,
+				direction        : 'sendrecv'
 			}
 		]
 	};
@@ -444,32 +462,34 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(consumerRtpParameters.codecs.length).toEqual(2);
 	expect(consumerRtpParameters.codecs[0]).toEqual(
 		{
-			mimeType     : 'video/H264',
-			payloadType  : 101,
-			clockRate    : 90000,
-			rtcpFeedback :
-			[
-				{ type: 'nack' },
-				{ type: 'nack', parameter: 'pli' },
-				{ type: 'foo', parameter: 'FOO' }
-			],
-			parameters :
+			mimeType    : 'video/H264',
+			payloadType : 101,
+			clockRate   : 90000,
+			channels    : 1,
+			parameters  :
 			{
 				foo                  : 1234,
 				'packetization-mode' : 1,
 				'profile-level-id'   : '4d0032'
-			}
+			},
+			rtcpFeedback :
+			[
+				{ type: 'nack', parameter: '' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'foo', parameter: 'FOO' }
+			]
 		});
 	expect(consumerRtpParameters.codecs[1]).toEqual(
 		{
-			mimeType     : 'video/rtx',
-			payloadType  : 102,
-			clockRate    : 90000,
-			rtcpFeedback : [],
-			parameters   :
+			mimeType    : 'video/rtx',
+			payloadType : 102,
+			clockRate   : 90000,
+			channels    : 1,
+			parameters  :
 			{
 				apt : 101
-			}
+			},
+			rtcpFeedback : []
 		});
 
 	expect(consumerRtpParameters.encodings.length).toBe(1);
@@ -481,12 +501,16 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(consumerRtpParameters.headerExtensions).toEqual(
 		[
 			{
-				uri : 'urn:3gpp:video-orientation',
-				id  : 11
+				uri        : 'urn:3gpp:video-orientation',
+				id         : 11,
+				encrypt    : false,
+				parameters : {}
 			},
 			{
-				uri : 'urn:ietf:params:rtp-hdrext:toffset',
-				id  : 12
+				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
+				id         : 12,
+				encrypt    : false,
+				parameters : {}
 			}
 		]);
 
@@ -503,20 +527,21 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(pipeConsumerRtpParameters.codecs.length).toEqual(1);
 	expect(pipeConsumerRtpParameters.codecs[0]).toEqual(
 		{
-			mimeType     : 'video/H264',
-			payloadType  : 101,
-			clockRate    : 90000,
-			rtcpFeedback :
-			[
-				{ type: 'nack', parameter: 'pli' },
-				{ type: 'ccm', parameter: 'fir' }
-			],
-			parameters :
+			mimeType    : 'video/H264',
+			payloadType : 101,
+			clockRate   : 90000,
+			channels    : 1,
+			parameters  :
 			{
 				foo                  : 1234,
 				'packetization-mode' : 1,
 				'profile-level-id'   : '4d0032'
-			}
+			},
+			rtcpFeedback :
+			[
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' }
+			]
 		});
 
 	expect(pipeConsumerRtpParameters.encodings.length).toBe(3);
@@ -575,7 +600,7 @@ test('getProducerRtpParametersMapping() with incompatible params throws Unsuppor
 				clockRate    : 90000,
 				rtcpFeedback :
 				[
-					{ type: 'nack' },
+					{ type: 'nack', parameter: '' },
 					{ type: 'nack', parameter: 'fir' }
 				]
 			}

@@ -102,11 +102,13 @@ def IsPathSection(section):
 base_non_configuration_keys = [
   # Sections that must exist inside targets and not configurations.
   'actions',
+  'all_dependent_settings',
   'configurations',
   'copies',
   'default_configuration',
   'dependencies',
   'dependencies_original',
+  'direct_dependent_settings',
   'libraries',
   'postbuilds',
   'product_dir',

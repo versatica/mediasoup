@@ -160,8 +160,15 @@ namespace RTC
 
 					auto jsonPortIt = request->data.find("port");
 
-					if (jsonPortIt == request->data.end() || !jsonPortIt->is_number_unsigned())
+					// clang-format off
+					if (
+						jsonPortIt == request->data.end() ||
+						!Utils::Json::IsPositiveInteger(*jsonPortIt)
+					)
+					// clang-format on
+					{
 						MS_THROW_TYPE_ERROR("missing port");
+					}
 
 					port = jsonPortIt->get<uint16_t>();
 

@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "catch.hpp"
 #include "RTC/SeqManager.hpp"
+#include <catch.hpp>
 #include <vector>
 
 using namespace RTC;
