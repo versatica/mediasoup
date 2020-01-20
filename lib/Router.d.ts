@@ -76,6 +76,7 @@ export declare class Router extends EnhancedEventEmitter {
     private readonly _rtpObservers;
     private readonly _dataProducers;
     private readonly _mapRouterPipeTransports;
+    private readonly _pipeToRouterQueue;
     private readonly _observer;
     /**
      * @private

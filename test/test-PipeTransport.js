@@ -634,3 +634,41 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () =>
 
 	expect(dataConsumer.closed).toBe(true);
 }, 2000);
+
+test('router.pipeToRouter() called twice generates a single PipeTransport pair', async () =>
+{
+	const routerA = await worker.createRouter({ mediaCodecs });
+	const routerB = await worker.createRouter({ mediaCodecs });
+	const transportA1 = await routerA.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
+	const transportA2 = await routerA.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
+	const audioProducer1 = await transportA1.produce(audioProducerParameters);
+	const audioProducer2 = await transportA2.produce(audioProducerParameters);
+	let dump;
+
+	await Promise.all(
+		[
+			routerA.pipeToRouter(
+				{
+					producerId : audioProducer1.id,
+					router     : routerB
+				}),
+			routerA.pipeToRouter(
+				{
+					producerId : audioProducer2.id,
+					router     : routerB
+				})
+		]);
+
+	dump = await routerA.dump();
+
+	// There shoud be 3 Transports in routerA:
+	// - WebRtcTransport for audioProducer1 and audioProducer2.
+	// - PipeTransport between routerA and routerB.
+	expect(dump.transportIds.length).toBe(3);
+
+	dump = await routerB.dump();
+
+	// There shoud be 1 Transport in routerB:
+	// - PipeTransport between routerA and routerB.
+	expect(dump.transportIds.length).toBe(1);
+}, 2000);

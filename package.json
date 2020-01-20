@@ -46,6 +46,7 @@
     "testRegex": "test/test.*\\.js"
   },
   "dependencies": {
+    "awaitqueue": "^2.0.0",
     "debug": "^4.1.1",
     "h264-profile-level-id": "^1.0.1",
     "netstring": "^0.3.0",

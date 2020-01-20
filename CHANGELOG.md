@@ -5,6 +5,8 @@
 
 * Add `Utils::Json::IsPositiveInteger()` to not rely on `is_number_unsigned()` of json lib, which is unreliable due to its design.
 * Avoid ES6 `export default` and always use named `export`.
+* `router.pipeToRouter()`: Ensure a single `PipeTransport` pair is created between `router1` and `router2`.
+   - Since the operation is async, it may happen that two simultaneous calls to `router1.pipeToRouter({ producerId: xxx, router: router2 })` would end up generating two pairs of `PipeTranports`. To prevent that, let's use an async queue.
 * Update Node and C++ deps.
 
 
