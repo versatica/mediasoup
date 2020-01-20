@@ -52,15 +52,15 @@
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
     "supports-color": "^7.1.0",
-    "uuid": "^3.3.3"
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
-    "@types/node": "^13.1.6",
+    "@types/node": "^13.1.8",
     "@types/random-number": "0.0.0",
     "@types/uuid": "^3.4.6",
-    "@typescript-eslint/eslint-plugin": "^2.15.0",
-    "@typescript-eslint/parser": "^2.15.0",
+    "@typescript-eslint/eslint-plugin": "^2.16.0",
+    "@typescript-eslint/parser": "^2.16.0",
     "cross-env": "^6.0.3",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.6.0",
@@ -71,7 +71,7 @@
     "open-cli": "^5.0.0",
     "sctp": "^0.0.19",
     "tsc-watch": "^4.0.0",
-    "typescript": "^3.7.4"
+    "typescript": "^3.7.5"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
