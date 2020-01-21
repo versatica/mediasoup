@@ -19,7 +19,9 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
+
 #ifdef SFU_SHM
+	#include "RTC/ShmTransport.hpp"
   #include "RTC/ShmConsumer.hpp"
 #endif
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
@@ -763,16 +765,8 @@ namespace RTC
 					{
 #ifdef SFU_SHM
 						// This may throw.
-						{
-							// shm writer needs to know content kind: "audio" or "video"
-							auto jsonKindIt = request->data.find("kind");
+							consumer = new RTC::ShmConsumer(consumerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
 
-							if (jsonKindIt == request->data.end() || !jsonTypeIt->is_string())
-								MS_THROW_TYPE_ERROR("missing kind");
-
-							consumer = new RTC::ShmConsumer(consumerId, this, request->data);
-
-						}
 #endif
 						break;
 					}

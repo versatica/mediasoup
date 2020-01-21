@@ -31,7 +31,9 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
 		void HandleRequest(Channel::Request* request) override;
-		bool RecvStreamMeta(json& data) const override;		
+		bool RecvStreamMeta(json& data) const override;
+		//std::string ShmName() const { return this->shm; } // will return "" if not initialized yet
+		DepLibSfuShm::SfuShmMapItem* ShmCtx() { return &this->shmCtx; }
 
 	private:
 		bool IsConnected() const override;
@@ -57,22 +59,22 @@ namespace RTC
 	private:
 		// Allocated by this.
 		// Others.
-		ListenIp listenIp;
+		ListenIp listenIp;	
 
 		bool rtcpMux{ false };
 		bool comedia{ false };
 		bool multiSource{ false };
 
 		bool isTransportConnectedCalled{ false }; // to account for the fact that "shm writer initialized" is not the same as "RTC::Transport child object is connected"
-		// Handle shm writes
-		std::string                  shm;      // stream file name
 
-		std::string                  logname;  // as copied from input data in ctor
-		int                          loglevel;
+		//std::string                  shm;      // stream file name, not really needed since we have 
+		//std::string                  logname;  // as copied from input data in ctor
+		//int                          loglevel;
 
-		// ShmTransport is responsible to writing RTCP packets into shm and various "metadata stuff" (TBD)
-		DepLibSfuShm::SfuShmMapItem *shmCtx;   // A handle to shm context so that to avoid lookup in DepLibSfuShm each time need to write smth
-		sfushm_av_frame_frag_t       chunk;    // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
+		DepLibSfuShm::SfuShmMapItem shmCtx;
+
+		// ShmTransport is responsible for writing RTCP packets into shm and various "metadata stuff" (TBD)
+		sfushm_av_frame_frag_t       chunk;    // structure holding current RTCP chunk being written into shm
 	};
 } // namespace RTC
 

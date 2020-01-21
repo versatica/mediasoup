@@ -12,7 +12,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	ShmConsumer::ShmConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data)
+	ShmConsumer::ShmConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmMapItem *shmCtx)
 	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SHM)
 	{
 		MS_TRACE();
@@ -31,24 +31,8 @@ namespace RTC
 		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Now read shm name - same as in ShmTransport ctor
-		// Read shm.name
-		auto jsonShmIt = data.find("shm");
-		if (jsonShmIt == data.end())
-			MS_THROW_TYPE_ERROR("missing shm, data: %s", nlohmann::to_string(data).c_str());
-		else if (!jsonShmIt->is_object())
-			MS_THROW_TYPE_ERROR("wrong shm (not an object)");
-
-		auto jsonShmNameIt = jsonShmIt->find("name");
-		if (jsonShmNameIt == jsonShmIt->end())
-			MS_THROW_TYPE_ERROR("missing shm.name");
-		else if (!jsonShmNameIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong shm.name (not a string)");
-
-		this->shm.assign(jsonShmNameIt->get<std::string>());
-
-		// TODO: how about shm log?
-
-		MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=- SHM CONSUMER CREATED with shm name %s", this->shm.c_str());
+		// TODO: get rid of shm name in shm consumer's data!!!
+		this->shmCtx = shmCtx;
 
 		CreateRtpStream();
 	}
@@ -269,25 +253,17 @@ namespace RTC
 
 		// If we have not written any packets yet, need to configure shm writer
 		if (shmWriterCounter.GetPacketCount() == 0) {
-			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=- ShmConsumer::WritePacketToShm will call DepLibSfuShm::ConfigureShmWriterCtx!!!");
-			int err = DepLibSfuShm::ConfigureShmWriterCtx(
-				this->shm.c_str(), 
-				&(this->shmCtx),
+			DepLibSfuShm::ShmWriterStatus stat = DepLibSfuShm::ConfigureShmWriterCtx( 
+				this->shmCtx,
 				(this->GetKind() == RTC::Media::Kind::AUDIO ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO), 
 				packet->GetSsrc());
 			
-			if (err != 0)
-			{
-				MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=- ERROR CONFIGURING SHM! %s", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video");
-				return false;
-			}
-			else {
-				MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- SUCCESS CONFIGURING SHM! %s shm_writer_ready: %u", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video", this->shmCtx->Status() == DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY);
-			}
+			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- SUCCESS CONFIGURING SHM %s this->shmCtx->Status(): %u", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video", this->shmCtx->Status() );
 		}
 
 		if ( this->shmCtx->Status() != DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY )
 		{
+			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-Skip writing %s RTP packet to SHM because this->shmCtx->Status(): %u", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video", this->shmCtx->Status() );
 			return false;
 		}
 		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm...
@@ -309,7 +285,7 @@ namespace RTC
 				this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
 				this->chunk.begin = this->chunk.end = 1;
-				DepLibSfuShm::WriteChunk(this->shm.c_str(), shmCtx, &chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc());
+				DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc());
 
 				break;
 			} // audio
@@ -345,7 +321,7 @@ namespace RTC
 						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
 						this->chunk.begin = this->chunk.end = 1;
 
-						DepLibSfuShm::WriteChunk(this->shm.c_str(), shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+						DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
 						break;
 					}
 
@@ -394,7 +370,7 @@ namespace RTC
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
 								this->chunk.begin = this->chunk.end = 1;
 
-								DepLibSfuShm::WriteChunk(this->shm.c_str(), shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+								DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
 							}
 
 							offset += naluSize + sizeof(naluSize);
@@ -421,7 +397,7 @@ namespace RTC
 						this->chunk.begin = (startBit == 128)? 1 : 0;
 						this->chunk.end = (endBit) ? 1 : 0;
 
-						DepLibSfuShm::WriteChunk(this->shm.c_str(), shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+						DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
 						break;
 					}
 					case 25: // STAB-B

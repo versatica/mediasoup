@@ -16,7 +16,7 @@ namespace RTC
 	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
-		ShmConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data);
+		ShmConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmMapItem *shmCtx);
 		~ShmConsumer() override;
 
 	public:
@@ -72,8 +72,7 @@ namespace RTC
 
 		// Shm writing: a consumer will "send" RTP packets (either audio or video) into shm
 		// RTCP packets and "app metadata" will be "sent" into shm by ShmTransport object
-		std::string                  shm;      // stream file name
-		DepLibSfuShm::SfuShmMapItem *shmCtx;   // A handle to shm context so that to avoid lookup in DepLibSfuShm each time need to write smth
+		DepLibSfuShm::SfuShmMapItem *shmCtx{ nullptr };   // A handle to shm context which will be received from ShmTransport during transport.consume()
 		sfushm_av_frame_frag_t       chunk;    // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
 
 		RTC::RtpDataCounter shmWriterCounter;  // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer)
