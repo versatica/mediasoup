@@ -132,24 +132,22 @@ DepLibSfuShm::ShmWriterStatus DepLibSfuShm::ConfigureShmWriterCtx(DepLibSfuShm::
 int DepLibSfuShm::WriteChunk(DepLibSfuShm::SfuShmMapItem *shmCtx, sfushm_av_frame_frag_t* data, DepLibSfuShm::ShmChunkType kind, uint32_t ssrc)
 {
   int err;
-  sfushm_av_wr_ctx_t *wr_ctx = nullptr;
+
+  MS_ASSERT(shmCtx != nullptr, "shmCtx must be initialized");
 
   if (shmCtx->Status() != SHM_WRT_READY)
   {
-    if (SHM_WRT_READY != DepLibSfuShm::ConfigureShmWriterCtx(shmCtx, kind, ssrc))
-    {
-      return 0;
-    }
+    return 0;  // Do not try to configure shm writer here at this point, the caller should have already tried 
   }
 
   switch (kind)
   {
     case DepLibSfuShm::ShmChunkType::VIDEO:
-      err = sfushm_av_write_video( wr_ctx, data);
+      err = sfushm_av_write_video(shmCtx->wrt_ctx, data);
       break;
 
     case DepLibSfuShm::ShmChunkType::AUDIO:
-      err = sfushm_av_write_audio(wr_ctx, data);
+      err = sfushm_av_write_audio(shmCtx->wrt_ctx, data);
       break;
 
     case DepLibSfuShm::ShmChunkType::RTCP:
@@ -164,7 +162,7 @@ int DepLibSfuShm::WriteChunk(DepLibSfuShm::SfuShmMapItem *shmCtx, sfushm_av_fram
 
   if (DepLibSfuShm::IsError(err))
   {
-    // TODO: log smth
+    MS_WARN_TAG(rtp, "Error while writing chunk to shm: %s", DepLibSfuShm::GetErrorString(err));
     return -1; // depending on err might stop writing all together, or ignore this particular packet (and do smth specific in ShmTransport.cpp)
   }
 

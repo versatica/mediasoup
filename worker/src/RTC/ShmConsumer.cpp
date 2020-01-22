@@ -284,8 +284,17 @@ namespace RTC
 				this->chunk.len = len;
 				this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
+				this->chunk.ssrc = packet->GetSsrc();
 				this->chunk.begin = this->chunk.end = 1;
-				DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc());
+
+				//MS_DEBUG_TAG(rtp, "WILL WRITE audio pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+				if(0 != DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc()))
+				{
+					MS_WARN_TAG(rtp, "FAIL writing audio pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+				}
+				//else {
+				//	MS_DEBUG_TAG(rtp, "OK writing audio pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+				//}
 
 				break;
 			} // audio
@@ -319,9 +328,17 @@ namespace RTC
 						this->chunk.len = naluSize;
 						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
+						this->chunk.ssrc = packet->GetSsrc();
 						this->chunk.begin = this->chunk.end = 1;
 
-						DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+						MS_DEBUG_TAG(rtp, "WILL WRITE video7 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						if (0 != DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
+						{
+							MS_WARN_TAG(rtp, "FAIL writing video pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						}
+						//else {
+						//	MS_DEBUG_TAG(rtp, "OK writing video pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						//}
 						break;
 					}
 
@@ -368,9 +385,17 @@ namespace RTC
 								this->chunk.len = len;
 								this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
+        				this->chunk.ssrc = packet->GetSsrc();
 								this->chunk.begin = this->chunk.end = 1;
 
-								DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+								MS_DEBUG_TAG(rtp, "WILL WRITE video24 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+								if (0 != DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
+								{
+									MS_WARN_TAG(rtp, "FAIL writing video24 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+								}
+								//else {
+								//	MS_DEBUG_TAG(rtp, "OK writing video pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+								//}
 							}
 
 							offset += naluSize + sizeof(naluSize);
@@ -394,10 +419,18 @@ namespace RTC
 						this->chunk.len = naluSize;
 						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
+						this->chunk.ssrc = packet->GetSsrc();
 						this->chunk.begin = (startBit == 128)? 1 : 0;
 						this->chunk.end = (endBit) ? 1 : 0;
-
-						DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc());
+						
+						MS_DEBUG_TAG(rtp, "WILL WRITE video29 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						if (0 != DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
+						{
+							MS_WARN_TAG(rtp, "FAIL writing video29 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						}
+//						else {
+//							MS_DEBUG_TAG(rtp, "OK writing video pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+//						}
 						break;
 					}
 					case 25: // STAB-B
@@ -415,7 +448,6 @@ namespace RTC
 			} // video
 
 			default:
-			  // RTC::Media::Kind::ALL
 			  break;
 		}
 	
