@@ -152,11 +152,6 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive()) {
-/*			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- SHMCONSUMER INACTIVE: parent.IsActive %ul isPaused %ul isProducerPaused %ul producerRtpStream %ul",
-				RTC::Consumer::IsActive(),
-				IsPaused(),
-				IsProducerPaused(), 
-				(this->producerRtpStream != nullptr)); */
 			return;
 		}
 
@@ -174,7 +169,7 @@ namespace RTC
 		// If we need to sync, support key frames and this is not a key frame, ignore
 		// the packet.
 		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame()) {
-			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- need to sync but this is not keyframe, ignore packet");
+			MS_DEBUG_TAG(rtp, "need to sync but this is not keyframe, ignore packet");
 			return;
 		}
 
@@ -248,9 +243,6 @@ namespace RTC
 	bool ShmConsumer::WritePacketToShm(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-		// 01/02/2020: Moved everything from ShmTranport, because only consumer knows its content type - audio or video.
-		// Transport isn't the right place for it because there can be > 1 consumer on a single transport entity
-
 		// If we have not written any packets yet, need to configure shm writer
 		if (shmWriterCounter.GetPacketCount() == 0) {
 			DepLibSfuShm::ShmWriterStatus stat = DepLibSfuShm::ConfigureShmWriterCtx( 
@@ -258,7 +250,7 @@ namespace RTC
 				(this->GetKind() == RTC::Media::Kind::AUDIO ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO), 
 				packet->GetSsrc());
 			
-			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- SUCCESS CONFIGURING SHM %s this->shmCtx->Status(): %u", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video", this->shmCtx->Status() );
+			MS_DEBUG_TAG(rtp, "SUCCESS CONFIGURING SHM %s this->shmCtx->Status(): %u", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video", this->shmCtx->Status() );
 		}
 
 		if ( this->shmCtx->Status() != DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY )
@@ -438,10 +430,11 @@ namespace RTC
 					case 27: // MTAP-24
 					case 28: // FU-B
 					{
-						MS_WARN_TAG(rtp, "Unsupported NAL unit type %d", nal);
+						MS_WARN_TAG(rtp, "L@@KL@@KL@@KL@@K Unsupported NAL unit type %d", nal);
 						break;
 					}
 					default: // ignore the rest
+						MS_DEBUG_TAG(rtp, "L@@KL@@KL@@KL@@K UNEXPECTED NAL in VIDEO PACKET: %d", nal);
 						break;
 				}
 				break;
