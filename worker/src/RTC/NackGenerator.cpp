@@ -298,8 +298,6 @@ namespace RTC
 				MS_DEBUG_DEV("[filter:SEQ, asking seqs:%s]", seqsStream.str().c_str());
 			else
 				MS_DEBUG_DEV("[filter:TIME, asking seqs:%s]", seqsStream.str().c_str());
-
-			this->listener->OnNackGeneratorNackRequired(nackBatch);
 		}
 #endif
 
