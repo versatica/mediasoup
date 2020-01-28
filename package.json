@@ -46,7 +46,7 @@
     "testRegex": "test/test.*\\.js"
   },
   "dependencies": {
-    "awaitqueue": "^2.0.0",
+    "awaitqueue": "^2.1.1",
     "debug": "^4.1.1",
     "h264-profile-level-id": "^1.0.1",
     "netstring": "^0.3.0",
@@ -59,9 +59,9 @@
     "@types/node": "^13.5.0",
     "@types/random-number": "0.0.0",
     "@types/uuid": "^3.4.6",
-    "@typescript-eslint/eslint-plugin": "^2.17.0",
-    "@typescript-eslint/parser": "^2.17.0",
-    "cross-env": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
+    "cross-env": "^7.0.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.6.0",
     "gulp": "^4.0.2",
