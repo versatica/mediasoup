@@ -56,9 +56,9 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
-    "@types/node": "^13.5.0",
+    "@types/node": "^13.5.2",
     "@types/random-number": "0.0.0",
-    "@types/uuid": "^3.4.6",
+    "@types/uuid": "^3.4.7",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
     "cross-env": "^7.0.0",

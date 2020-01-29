@@ -20,7 +20,7 @@ try:
     import gyp
 except ImportError:
     print('Error: you need to install gyp in deps/gyp first, run:')
-    print('  ./scripts/get_dep.sh gyp')
+    print('  ./scripts/get-dep.sh gyp')
     sys.exit(42)
 
 def host_arch():
