@@ -87,27 +87,24 @@ void DepLibSfuShm::InitializeShmWriterCtx(std::string shm_name, std::string log_
 	shmCtx->wrt_init.conf.redirect_stdio = 1;
   
   // TODO: initialize with some different values? or keep these?
+  // At this points ssrc values are still not known
   shmCtx->wrt_init.conf.channels[0].target_buf_ms = 20000;
   shmCtx->wrt_init.conf.channels[0].target_kbps   = 128;
-  shmCtx-> wrt_init.conf.channels[0].ssrc          = 0;
+  shmCtx-> wrt_init.conf.channels[0].ssrc         = 0;
   shmCtx->wrt_init.conf.channels[0].sample_rate   = 48000;
   shmCtx->wrt_init.conf.channels[0].num_chn       = 2;
   shmCtx->wrt_init.conf.channels[0].codec_id      = SFUSHM_AV_AUDIO_CODEC_OPUS;
   shmCtx->wrt_init.conf.channels[0].video         = 0; 
-  shmCtx->wrt_init.conf.channels[0].audio         = 0; // will switch to 1 when actual ssrc arrives
+  shmCtx->wrt_init.conf.channels[0].audio         = 1;
 
   shmCtx->wrt_init.conf.channels[1].target_buf_ms = 20000; 
   shmCtx->wrt_init.conf.channels[1].target_kbps   = 2500;
   shmCtx->wrt_init.conf.channels[1].ssrc          = 0;
   shmCtx->wrt_init.conf.channels[1].sample_rate   = 90000;
   shmCtx->wrt_init.conf.channels[1].codec_id      = SFUSHM_AV_VIDEO_CODEC_H264;
-  shmCtx->wrt_init.conf.channels[1].video         = 0;  // will switch to 1 when actual ssrc arrives
+  shmCtx->wrt_init.conf.channels[1].video         = 1;
   shmCtx->wrt_init.conf.channels[1].audio         = 0;
 
-   // shmCtx = new DepLibSfuShm::SfuShmMapItem(shm_name, log_name, log_level); 
-    // TODO: I don't need a map
-    //DepLibSfuShm::shmToWriterCtx[shm_name] = i;
-     //DepLibSfuShm::shmToWriterCtx[shm_name];
   MS_DEBUG_TAG(rtp, "DepLibSfuShm::SfuShmMapItem created with name %s", shmCtx->stream_name.c_str());
 }
 
@@ -162,8 +159,11 @@ int DepLibSfuShm::WriteChunk(DepLibSfuShm::SfuShmMapItem *shmCtx, sfushm_av_fram
 
   if (DepLibSfuShm::IsError(err))
   {
-    MS_WARN_TAG(rtp, "Error while writing chunk to shm: %s", DepLibSfuShm::GetErrorString(err));
+    MS_WARN_TAG(rtp, "ERROR writing chunk to shm: %d - %s", err, DepLibSfuShm::GetErrorString(err));
     return -1; // depending on err might stop writing all together, or ignore this particular packet (and do smth specific in ShmTransport.cpp)
+  }
+  else {
+    MS_DEBUG_TAG(rtp, "RET CODE writing chunk to shm: %d", err);
   }
 
   return 0;

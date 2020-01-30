@@ -213,7 +213,6 @@ namespace RTC
 		}
 
 		// Process the packet.
-		//if (this->rtpStream->ReceivePacket(packet))
 		if (this->WritePacketToShm(packet))
 		{
 
@@ -258,11 +257,11 @@ namespace RTC
 			MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-Skip writing %s RTP packet to SHM because this->shmCtx->Status(): %u", this->GetKind() == RTC::Media::Kind::AUDIO ? "audio" : "video", this->shmCtx->Status() );
 			return false;
 		}
-		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm...
+		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm
 
-		uint8_t const* cdata = packet->GetData();
+		uint8_t const* cdata = packet->GetPayload();
 		uint8_t* data = const_cast<uint8_t*>(cdata);
-		size_t len          = packet->GetSize();
+		size_t len          = packet->GetPayloadLength();
 
 		switch (this->GetKind())
 		{
@@ -272,21 +271,19 @@ namespace RTC
 					+----------+--------------+
 					|RTP Header| Opus Payload |
 					+----------+--------------+	*/
-				this->chunk.data = data;
-				this->chunk.len = len;
+				size_t offset{ 1 };
+
+				this->chunk.data = data + offset;
+				this->chunk.len = len - offset;
 				this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
 				this->chunk.ssrc = packet->GetSsrc();
 				this->chunk.begin = this->chunk.end = 1;
 
-				//MS_DEBUG_TAG(rtp, "WILL WRITE audio pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 				if(0 != DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc()))
 				{
 					MS_WARN_TAG(rtp, "FAIL writing audio pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 				}
-				//else {
-				//	MS_DEBUG_TAG(rtp, "OK writing audio pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-				//}
 
 				break;
 			} // audio
@@ -301,36 +298,23 @@ namespace RTC
 					case 7:
 					{
 						size_t offset{ 1 };
-
-						len -= 1;
-						if (len < 3) {
-							MS_WARN_TAG(rtp, "NALU data len <3: %lu", len);
+						if (len < 1) {
+							MS_WARN_TAG(rtp, "NALU data len < 1: %lu", len);
 							break;
 						}
 
-						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
-
-						//TODO: Do I worry about padding?
-						/*
-						  The RTP timestamp is set to the sampling timestamp of the content.
-      				A 90 kHz clock rate MUST be used.
-						*/
-
-						this->chunk.data = data+offset;
-						this->chunk.len = naluSize;
-						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+						this->chunk.data          = data + offset;
+						this->chunk.len           = len - offset;
+						this->chunk.rtp_time      = packet->GetTimestamp(); // TODO: see that it's based on 90 kHz clock, recalculate into actual one including cycles info from RTPStream
 						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
-						this->chunk.ssrc = packet->GetSsrc();
-						this->chunk.begin = this->chunk.end = 1;
+						this->chunk.ssrc          = packet->GetSsrc();
+						this->chunk.begin         = this->chunk.end = 1;
 
-						MS_DEBUG_TAG(rtp, "WILL WRITE video7 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						MS_DEBUG_TAG(rtp, "WILL WRITE a single video NALU: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 						if (0 != DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
 						{
-							MS_WARN_TAG(rtp, "FAIL writing video pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+							MS_WARN_TAG(rtp, "FAIL writing video NALU: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 						}
-						//else {
-						//	MS_DEBUG_TAG(rtp, "OK writing video pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-						//}
 						break;
 					}
 
@@ -354,87 +338,94 @@ namespace RTC
 						|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 						|                               :...OPTIONAL RTP padding        |
 						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						Figure 7.  An example of an RTP packet including an STAP-A
-						containing two single-time aggregation units
 					*/
 					case 24:
 					{
-						size_t offset{ 1 };
-						len -= 1;
+						size_t offset{ 1 }; // Skip over STAP-A NAL header
+						size_t payloadLen = len - 1 - sizeof(uint16_t) - 1; // skip over STAP-A NAL header, NALU size and NALU header
 						// Iterate NAL units.
-						while (len >= 3)
+						while (payloadLen > 1)
 						{
-							auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
+							uint16_t naluSize  = Utils::Byte::Get2Bytes(data, offset); 
+
+							offset += sizeof(naluSize) + 1; // skip over NALU size and NALU header
 
 							// Check if there is room for the indicated NAL unit size.
-							if (len < (naluSize + sizeof(naluSize))) {
+							if (payloadLen < naluSize) {
 								break;
 							}
 							else {
 								/* The RTP timestamp MUST be set to the earliest of the NALU-times of
       					all the NAL units to be aggregated. */
-								this->chunk.data = data+offset;
-								this->chunk.len = len;
-								this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+								this->chunk.data          = data + offset;
+								this->chunk.len           = naluSize - 1; // don't include NALU header octet
+								this->chunk.rtp_time      = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber(); // TODO: does NALU have its own seqId?
-        				this->chunk.ssrc = packet->GetSsrc();
-								this->chunk.begin = this->chunk.end = 1;
+        				this->chunk.ssrc          = packet->GetSsrc();
+								this->chunk.begin         = this->chunk.end = 1;
 
-								MS_DEBUG_TAG(rtp, "WILL WRITE video24 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+								MS_DEBUG_TAG(rtp, "WILL WRITE video STAP-A pkt: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 								if (0 != DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
 								{
-									MS_WARN_TAG(rtp, "FAIL writing video24 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+									MS_WARN_TAG(rtp, "FAIL writing STAP-A pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 								}
-								//else {
-								//	MS_DEBUG_TAG(rtp, "OK writing video pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-								//}
 							}
 
-							offset += naluSize + sizeof(naluSize);
-							len -= naluSize + sizeof(naluSize);
+							offset += payloadLen; // start reading at the next NALU size
+							payloadLen -= naluSize - 1;
 						}
 						break;
 					}
 
-					// Fragmentation unit. Single NAL unit is spreaded accross several RTP packets.
-					// FU-A
-					case 29:
+					/*
+					Fragmentation unit. Single NAL unit is spreaded accross several RTP packets.
+					FU-A
+								0                   1                   2                   3
+								0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+								| FU indicator  |   FU header   |                               |
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+								|                                                               |
+								|                         FU payload                            |
+								|                                                               |
+								|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+								|                               :...OPTIONAL RTP padding        |
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ */
+					case 28:
 					{
-						size_t offset{ 1 };
-						auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
+						size_t offset{ 2 };
+						size_t payloadLen = len - 2;
 
+						// Parse FU header octet
 						uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header, subtype of FU unit, we don't use it
 						uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates start of fragmented NALU
-						uint8_t endBit = *(data + 1) & 0x40; ; // 2nd bit indicates end
+						uint8_t endBit   = *(data + 1) & 0x40; // 2nd bit indicates the end fragment
 
-						this->chunk.data = data+offset;
-						this->chunk.len = naluSize;
-						this->chunk.rtp_time = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
+						this->chunk.data          = data + offset;
+						this->chunk.len           = payloadLen;
+						this->chunk.rtp_time      = packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
 						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = packet->GetSequenceNumber();
-						this->chunk.ssrc = packet->GetSsrc();
-						this->chunk.begin = (startBit == 128)? 1 : 0;
-						this->chunk.end = (endBit) ? 1 : 0;
+						this->chunk.ssrc          = packet->GetSsrc();
+						this->chunk.begin         = (startBit == 128)? 1 : 0;
+						this->chunk.end           = (endBit) ? 1 : 0;
 						
-						MS_DEBUG_TAG(rtp, "WILL WRITE video29 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						MS_DEBUG_TAG(rtp, "video FU-A: len %uL ts %uL seq %uL begin: %u end %u", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, this->chunk.begin, this->chunk.end);
 						if (0 != DepLibSfuShm::WriteChunk(shmCtx, &chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
 						{
-							MS_WARN_TAG(rtp, "FAIL writing video29 pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+							MS_WARN_TAG(rtp, "FAIL writing FU-A pkt to shm: len %uL ts %uL seq %uL begin: %u end %u", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, this->chunk.begin, this->chunk.end);
 						}
-//						else {
-//							MS_DEBUG_TAG(rtp, "OK writing video pkt to shm: len %uL ts %uL seq %uL", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-//						}
 						break;
 					}
 					case 25: // STAB-B
 					case 26: // MTAP-16
 					case 27: // MTAP-24
-					case 28: // FU-B
+					case 29: // FU-B
 					{
-						MS_WARN_TAG(rtp, "L@@KL@@KL@@KL@@K Unsupported NAL unit type %d", nal);
+						MS_WARN_TAG(rtp, "Unsupported NAL unit type %d in video packet", nal);
 						break;
 					}
 					default: // ignore the rest
-						MS_DEBUG_TAG(rtp, "L@@KL@@KL@@KL@@K UNEXPECTED NAL in VIDEO PACKET: %d", nal);
+						MS_DEBUG_TAG(rtp, "Unknown NAL unit type %d in video packet", nal);
 						break;
 				}
 				break;
