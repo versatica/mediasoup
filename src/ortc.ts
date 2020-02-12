@@ -121,7 +121,13 @@ export function validateRtpCodecCapability(codec: RtpCodecCapability): void
 
 	for (const key of Object.keys(codec.parameters))
 	{
-		const value = codec.parameters[key];
+		let value = codec.parameters[key];
+
+		if (value === undefined)
+		{
+			codec.parameters[key] = '';
+			value = '';
+		}
 
 		if (typeof value !== 'string' && typeof value !== 'number')
 		{
@@ -298,7 +304,13 @@ export function validateRtpCodecParameters(codec: RtpCodecParameters): void
 
 	for (const key of Object.keys(codec.parameters))
 	{
-		const value = codec.parameters[key];
+		let value = codec.parameters[key];
+
+		if (value === undefined)
+		{
+			codec.parameters[key] = '';
+			value = '';
+		}
 
 		if (typeof value !== 'string' && typeof value !== 'number')
 		{
@@ -357,7 +369,13 @@ export function validateRtpHeaderExtensionParameters(
 
 	for (const key of Object.keys(ext.parameters))
 	{
-		const value = ext.parameters[key];
+		let value = ext.parameters[key];
+
+		if (value === undefined)
+		{
+			ext.parameters[key] = '';
+			value = '';
+		}
 
 		if (typeof value !== 'string' && typeof value !== 'number')
 			throw new TypeError('invalid header extension parameter');
