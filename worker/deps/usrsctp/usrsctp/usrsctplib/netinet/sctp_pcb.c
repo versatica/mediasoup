@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 353477 2019-10-13 16:14:04Z markj $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 357830 2020-02-12 17:05:10Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -3189,7 +3189,6 @@ sctp_move_pcb_and_assoc(struct sctp_inpcb *old_inp, struct sctp_inpcb *new_inp,
 	stcb->asoc.strreset_timer.ep = (void *)new_inp;
 	stcb->asoc.shut_guard_timer.ep = (void *)new_inp;
 	stcb->asoc.autoclose_timer.ep = (void *)new_inp;
-	stcb->asoc.delayed_event_timer.ep = (void *)new_inp;
 	stcb->asoc.delete_prim_timer.ep = (void *)new_inp;
 	/* now what about the nets? */
 	TAILQ_FOREACH(net, &stcb->asoc.nets, sctp_next) {
@@ -3931,7 +3930,7 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 	}
 	/* First time through we have the socket lock, after that no more. */
 	sctp_timer_stop(SCTP_TIMER_TYPE_NEWCOOKIE, inp, NULL, NULL,
-			SCTP_FROM_SCTP_PCB + SCTP_LOC_1);
+	                SCTP_FROM_SCTP_PCB + SCTP_LOC_1);
 
 	if (inp->control) {
 		sctp_m_freem(inp->control);
@@ -4106,7 +4105,7 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 				SCTP_CLEAR_SUBSTATE(asoc, SCTP_STATE_IN_ACCEPT_QUEUE);
 				sctp_timer_start(SCTP_TIMER_TYPE_ASOCKILL, inp, asoc, NULL);
 			}
-		        cnt++;
+			cnt++;
 			SCTP_TCB_UNLOCK(asoc);
 			continue;
 		}
@@ -4135,7 +4134,6 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 	}
 	if (cnt) {
 		/* Ok we have someone out there that will kill us */
-		(void)SCTP_OS_TIMER_STOP(&inp->sctp_ep.signature_change.timer);
 #ifdef SCTP_LOG_CLOSING
 		sctp_log_closing(inp, NULL, 3);
 #endif
@@ -4154,7 +4152,6 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 	if ((inp->refcount) ||
 	    (being_refed) ||
 	    (inp->sctp_flags & SCTP_PCB_FLAGS_CLOSE_IP)) {
-		(void)SCTP_OS_TIMER_STOP(&inp->sctp_ep.signature_change.timer);
 #ifdef SCTP_LOG_CLOSING
 		sctp_log_closing(inp, NULL, 4);
 #endif
@@ -5168,7 +5165,6 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
 	SCTP_OS_TIMER_INIT(&asoc->asconf_timer.timer);
 	SCTP_OS_TIMER_INIT(&asoc->shut_guard_timer.timer);
 	SCTP_OS_TIMER_INIT(&asoc->autoclose_timer.timer);
-	SCTP_OS_TIMER_INIT(&asoc->delayed_event_timer.timer);
 	SCTP_OS_TIMER_INIT(&asoc->delete_prim_timer.timer);
 
 	LIST_INSERT_HEAD(&inp->sctp_asoc_list, stcb, sctp_tcblist);
@@ -5190,8 +5186,10 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
 void
 sctp_remove_net(struct sctp_tcb *stcb, struct sctp_nets *net)
 {
+	struct sctp_inpcb *inp;
 	struct sctp_association *asoc;
 
+	inp = stcb->sctp_ep;
 	asoc = &stcb->asoc;
 	asoc->numnets--;
 	TAILQ_REMOVE(&asoc->nets, net, sctp_next);
@@ -5239,6 +5237,11 @@ out:
 		sctp_free_remote_addr(stcb->asoc.alternate);
 		stcb->asoc.alternate = NULL;
 	}
+	sctp_timer_stop(SCTP_TIMER_TYPE_PATHMTURAISE, inp, stcb, net,
+	                SCTP_FROM_SCTP_PCB + SCTP_LOC_9);
+	sctp_timer_stop(SCTP_TIMER_TYPE_HEARTBEAT, inp, stcb, net,
+	                SCTP_FROM_SCTP_PCB + SCTP_LOC_10);
+	net->dest_state |= SCTP_ADDR_BEING_DELETED;
 	sctp_free_remote_addr(net);
 }
 
@@ -5392,9 +5395,6 @@ sctp_add_vtag_to_timewait(uint32_t tag, uint32_t time, uint16_t lport, uint16_t 
 		SCTP_MALLOC(twait_block, struct sctp_tagblock *,
 		    sizeof(struct sctp_tagblock), SCTP_M_TIMW);
 		if (twait_block == NULL) {
-#ifdef INVARIANTS
-			panic("Can not alloc tagblock");
-#endif
 			return;
 		}
 		memset(twait_block, 0, sizeof(struct sctp_tagblock));
@@ -5511,6 +5511,35 @@ sctp_free_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb, int from_inpcbfre
 	else
 		so = inp->sctp_socket;
 
+	if ((inp->sctp_flags & SCTP_PCB_FLAGS_TCPTYPE) ||
+	    (inp->sctp_flags & SCTP_PCB_FLAGS_IN_TCPPOOL)) {
+		/*
+		 * For TCP type we need special handling when we are
+		 * connected. We also include the peel'ed off ones to.
+		 */
+		if (inp->sctp_flags & SCTP_PCB_FLAGS_CONNECTED) {
+			inp->sctp_flags &= ~SCTP_PCB_FLAGS_CONNECTED;
+			inp->sctp_flags |= SCTP_PCB_FLAGS_WAS_CONNECTED;
+			if (so) {
+				SOCKBUF_LOCK(&so->so_rcv);
+				so->so_state &= ~(SS_ISCONNECTING |
+				    SS_ISDISCONNECTING |
+				    SS_ISCONFIRMING |
+				    SS_ISCONNECTED);
+				so->so_state |= SS_ISDISCONNECTED;
+#if defined(__APPLE__)
+				socantrcvmore(so);
+#else
+				socantrcvmore_locked(so);
+#endif
+				socantsendmore(so);
+				sctp_sowwakeup(inp, so);
+				sctp_sorwakeup(inp, so);
+				SCTP_SOWAKEUP(so);
+			}
+		}
+	}
+
 	/*
 	 * We used timer based freeing if a reader or writer is in the way.
 	 * So we first check if we are actually being called from a timer,
@@ -5533,37 +5562,8 @@ sctp_free_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb, int from_inpcbfre
 			return (0);
 		}
 	}
-	/* now clean up any other timers */
-	(void)SCTP_OS_TIMER_STOP(&asoc->dack_timer.timer);
-	asoc->dack_timer.self = NULL;
-	(void)SCTP_OS_TIMER_STOP(&asoc->strreset_timer.timer);
-	/*-
-	 * For stream reset we don't blast this unless
-	 * it is a str-reset timer, it might be the
-	 * free-asoc timer which we DON'T want to
-	 * disturb.
-	 */
-	if (asoc->strreset_timer.type == SCTP_TIMER_TYPE_STRRESET)
-		asoc->strreset_timer.self = NULL;
-	(void)SCTP_OS_TIMER_STOP(&asoc->asconf_timer.timer);
-	asoc->asconf_timer.self = NULL;
-	(void)SCTP_OS_TIMER_STOP(&asoc->autoclose_timer.timer);
-	asoc->autoclose_timer.self = NULL;
-	(void)SCTP_OS_TIMER_STOP(&asoc->shut_guard_timer.timer);
-	asoc->shut_guard_timer.self = NULL;
-	(void)SCTP_OS_TIMER_STOP(&asoc->delayed_event_timer.timer);
-	asoc->delayed_event_timer.self = NULL;
-	/* Mobility adaptation */
-	(void)SCTP_OS_TIMER_STOP(&asoc->delete_prim_timer.timer);
-	asoc->delete_prim_timer.self = NULL;
-	TAILQ_FOREACH(net, &asoc->nets, sctp_next) {
-		(void)SCTP_OS_TIMER_STOP(&net->rxt_timer.timer);
-		net->rxt_timer.self = NULL;
-		(void)SCTP_OS_TIMER_STOP(&net->pmtu_timer.timer);
-		net->pmtu_timer.self = NULL;
-		(void)SCTP_OS_TIMER_STOP(&net->hb_timer.timer);
-		net->hb_timer.self = NULL;
-	}
+	/* Now clean up any other timers */
+	sctp_stop_association_timers(stcb, false);
 	/* Now the read queue needs to be cleaned up (only once) */
 	if ((stcb->asoc.state & SCTP_STATE_ABOUT_TO_BE_FREED) == 0) {
 		SCTP_ADD_SUBSTATE(stcb, SCTP_STATE_ABOUT_TO_BE_FREED);
@@ -5665,35 +5665,6 @@ sctp_free_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb, int from_inpcbfre
 		/* nothing around */
 		so = NULL;
 
-	if ((inp->sctp_flags & SCTP_PCB_FLAGS_TCPTYPE) ||
-	    (inp->sctp_flags & SCTP_PCB_FLAGS_IN_TCPPOOL)) {
-		/*
-		 * For TCP type we need special handling when we are
-		 * connected. We also include the peel'ed off ones to.
-		 */
-		if (inp->sctp_flags & SCTP_PCB_FLAGS_CONNECTED) {
-			inp->sctp_flags &= ~SCTP_PCB_FLAGS_CONNECTED;
-			inp->sctp_flags |= SCTP_PCB_FLAGS_WAS_CONNECTED;
-			if (so) {
-				SOCKBUF_LOCK(&so->so_rcv);
-				so->so_state &= ~(SS_ISCONNECTING |
-				    SS_ISDISCONNECTING |
-				    SS_ISCONFIRMING |
-				    SS_ISCONNECTED);
-				so->so_state |= SS_ISDISCONNECTED;
-#if defined(__APPLE__)
-				socantrcvmore(so);
-#else
-				socantrcvmore_locked(so);
-#endif
-				socantsendmore(so);
-				sctp_sowwakeup(inp, so);
-				sctp_sorwakeup(inp, so);
-				SCTP_SOWAKEUP(so);
-			}
-		}
-	}
-
 	/* Make it invalid too, that way if its
 	 * about to run it will abort and return.
 	 */
@@ -5732,20 +5703,8 @@ sctp_free_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb, int from_inpcbfre
 	/* Now restop the timers to be sure
 	 * this is paranoia at is finest!
 	 */
-	(void)SCTP_OS_TIMER_STOP(&asoc->strreset_timer.timer);
-	(void)SCTP_OS_TIMER_STOP(&asoc->dack_timer.timer);
-	(void)SCTP_OS_TIMER_STOP(&asoc->strreset_timer.timer);
-	(void)SCTP_OS_TIMER_STOP(&asoc->asconf_timer.timer);
-	(void)SCTP_OS_TIMER_STOP(&asoc->shut_guard_timer.timer);
-	(void)SCTP_OS_TIMER_STOP(&asoc->autoclose_timer.timer);
-	(void)SCTP_OS_TIMER_STOP(&asoc->delayed_event_timer.timer);
-	TAILQ_FOREACH(net, &asoc->nets, sctp_next) {
-		(void)SCTP_OS_TIMER_STOP(&net->rxt_timer.timer);
-		(void)SCTP_OS_TIMER_STOP(&net->pmtu_timer.timer);
-		(void)SCTP_OS_TIMER_STOP(&net->hb_timer.timer);
-	}
+	sctp_stop_association_timers(stcb, true);
 
-	asoc->strreset_timer.type = SCTP_TIMER_TYPE_NONE;
 	/*
 	 * The chunk lists and such SHOULD be empty but we check them just
 	 * in case.
@@ -6845,7 +6804,6 @@ sctp_pcb_init(void)
 #if defined(_SCTP_NEEDS_CALLOUT_) || defined(_USER_SCTP_NEEDS_CALLOUT_)
 	/* allocate the lock for the callout/timer queue */
 	SCTP_TIMERQ_LOCK_INIT();
-	SCTP_TIMERWAIT_LOCK_INIT();
 	TAILQ_INIT(&SCTP_BASE_INFO(callqueue));
 #endif
 #if defined(__Userspace__)
@@ -7041,7 +6999,6 @@ retry:
 	/* free the locks and mutexes */
 #if defined(__APPLE__)
 	SCTP_TIMERQ_LOCK_DESTROY();
-	SCTP_TIMERWAIT_LOCK_DESTROY();
 #endif
 #ifdef SCTP_PACKET_LOGGING
 	SCTP_IP_PKTLOG_DESTROY();
@@ -7068,7 +7025,6 @@ retry:
 #endif
 #if defined(__Userspace__)
 	SCTP_TIMERQ_LOCK_DESTROY();
-	SCTP_TIMERWAIT_LOCK_DESTROY();
 	SCTP_ZONE_DESTROY(zone_mbuf);
 	SCTP_ZONE_DESTROY(zone_clust);
 	SCTP_ZONE_DESTROY(zone_ext_refcnt);
@@ -7247,7 +7203,7 @@ sctp_load_addresses_from_init(struct sctp_tcb *stcb, struct mbuf *m,
 		if (offset + plen > limit) {
 			break;
 		}
-		if (plen == 0) {
+		if (plen < sizeof(struct sctp_paramhdr)) {
 			break;
 		}
 #ifdef INET
@@ -7462,6 +7418,9 @@ sctp_load_addresses_from_init(struct sctp_tcb *stcb, struct mbuf *m,
 			}
 			if (plen > sizeof(lstore)) {
 				return (-23);
+			}
+			if (plen < sizeof(struct sctp_asconf_addrv4_param)) {
+				return (-101);
 			}
 			phdr = sctp_get_next_param(m, offset,
 						   (struct sctp_paramhdr *)&lstore,
@@ -8068,7 +8027,8 @@ sctp_drain_mbufs(struct sctp_tcb *stcb)
 		 * asoc->highest_tsn_inside_map?
 		 */
 		asoc->last_revoke_count = cnt;
-		(void)SCTP_OS_TIMER_STOP(&stcb->asoc.dack_timer.timer);
+		sctp_timer_stop(SCTP_TIMER_TYPE_RECV, stcb->sctp_ep, stcb, NULL,
+		                SCTP_FROM_SCTP_PCB + SCTP_LOC_11);
 		/*sa_ignore NO_NULL_CHK*/
 		sctp_send_sack(stcb, SCTP_SO_NOT_LOCKED);
 		sctp_chunk_output(stcb->sctp_ep, stcb, SCTP_OUTPUT_FROM_DRAIN, SCTP_SO_NOT_LOCKED);
@@ -8177,7 +8137,7 @@ sctp_initiate_iterator(inp_func inpf,
 		    SCTP_M_ITER);
 	if (it == NULL) {
 		SCTP_LTRACE_ERR_RET(NULL, NULL, NULL, SCTP_FROM_SCTP_PCB, ENOMEM);
-		return (ENOMEM);
+		return (-1);
 	}
 	memset(it, 0, sizeof(*it));
 	it->function_assoc = af;

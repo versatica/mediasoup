@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 343089 2019-01-16 11:33:47Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 357500 2020-02-04 12:34:16Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_CONSTANTS_H_
@@ -827,7 +827,7 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_LOC_33 0x00000021
 #define SCTP_LOC_34 0x00000022
 #define SCTP_LOC_35 0x00000023
-
+#define SCTP_LOC_36 0x00000024
 
 /* Free assoc codes */
 #define SCTP_NORMAL_PROC      0

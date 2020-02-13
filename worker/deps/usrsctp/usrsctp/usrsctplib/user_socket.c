@@ -361,21 +361,21 @@ void
 soisdisconnecting(struct socket *so)
 {
 
-        /*
-         * Note: This code assumes that SOCK_LOCK(so) and
-         * SOCKBUF_LOCK(&so->so_rcv) are the same.
-         */
-        SOCKBUF_LOCK(&so->so_rcv);
-        so->so_state &= ~SS_ISCONNECTING;
-        so->so_state |= SS_ISDISCONNECTING;
-        so->so_rcv.sb_state |= SBS_CANTRCVMORE;
-        sorwakeup_locked(so);
-        SOCKBUF_LOCK(&so->so_snd);
-        so->so_snd.sb_state |= SBS_CANTSENDMORE;
-        sowwakeup_locked(so);
-        wakeup("dummy",so);
-        /* requires 2 args but this was in orig */
-        /* wakeup(&so->so_timeo); */
+	/*
+	 * Note: This code assumes that SOCK_LOCK(so) and
+	 * SOCKBUF_LOCK(&so->so_rcv) are the same.
+	 */
+	SOCKBUF_LOCK(&so->so_rcv);
+	so->so_state &= ~SS_ISCONNECTING;
+	so->so_state |= SS_ISDISCONNECTING;
+	so->so_rcv.sb_state |= SBS_CANTRCVMORE;
+	sorwakeup_locked(so);
+	SOCKBUF_LOCK(&so->so_snd);
+	so->so_snd.sb_state |= SBS_CANTSENDMORE;
+	sowwakeup_locked(so);
+	wakeup("dummy",so);
+	/* requires 2 args but this was in orig */
+	/* wakeup(&so->so_timeo); */
 }
 
 
@@ -580,13 +580,13 @@ struct sctp_generic_sendmsg_args {
 };
 
 struct sctp_generic_recvmsg_args {
-        int sd;
-        struct iovec *iov;
-        int iovlen;
-        struct sockaddr *from;
-        socklen_t *fromlenaddr; /* was __socklen_t */
-        struct sctp_sndrcvinfo *sinfo;
-        int *msg_flags;
+	int sd;
+	struct iovec *iov;
+	int iovlen;
+	struct sockaddr *from;
+	socklen_t *fromlenaddr; /* was __socklen_t */
+	struct sctp_sndrcvinfo *sinfo;
+	int *msg_flags;
 };
 
 
@@ -965,52 +965,51 @@ userspace_sctp_sendmbuf(struct socket *so,
     u_int32_t context)
 {
 
-    struct sctp_sndrcvinfo sndrcvinfo, *sinfo = &sndrcvinfo;
-    /*    struct uio auio;
-          struct iovec iov[1]; */
-    int error = 0;
-    int uflags = 0;
-    ssize_t retval;
+	struct sctp_sndrcvinfo sndrcvinfo, *sinfo = &sndrcvinfo;
+	/*    struct uio auio;
+	      struct iovec iov[1]; */
+	int error = 0;
+	int uflags = 0;
+	ssize_t retval;
 
-    sinfo->sinfo_ppid = ppid;
-    sinfo->sinfo_flags = flags;
-    sinfo->sinfo_stream = stream_no;
-    sinfo->sinfo_timetolive = timetolive;
-    sinfo->sinfo_context = context;
-    sinfo->sinfo_assoc_id = 0;
+	sinfo->sinfo_ppid = ppid;
+	sinfo->sinfo_flags = flags;
+	sinfo->sinfo_stream = stream_no;
+	sinfo->sinfo_timetolive = timetolive;
+	sinfo->sinfo_context = context;
+	sinfo->sinfo_assoc_id = 0;
 
-    /* Perform error checks on destination (to) */
-    if (tolen > SOCK_MAXADDRLEN){
-        error = (ENAMETOOLONG);
-        goto sendmsg_return;
-    }
-    if (tolen < (socklen_t)offsetof(struct sockaddr, sa_data)){
-        error = (EINVAL);
-        goto sendmsg_return;
-    }
-    /* Adding the following as part of defensive programming, in case the application
-       does not do it when preparing the destination address.*/
+	/* Perform error checks on destination (to) */
+	if (tolen > SOCK_MAXADDRLEN){
+		error = (ENAMETOOLONG);
+		goto sendmsg_return;
+	}
+	if (tolen < (socklen_t)offsetof(struct sockaddr, sa_data)){
+		error = (EINVAL);
+		goto sendmsg_return;
+	}
+	/* Adding the following as part of defensive programming, in case the application
+	   does not do it when preparing the destination address.*/
 #ifdef HAVE_SA_LEN
-    to->sa_len = tolen;
+	to->sa_len = tolen;
 #endif
 
-    error = sctp_lower_sosend(so, to, NULL/*uio*/,
-                              (struct mbuf *)mbufdata, (struct mbuf *)NULL,
-                              uflags, sinfo);
+	error = sctp_lower_sosend(so, to, NULL/*uio*/,
+	                         (struct mbuf *)mbufdata, (struct mbuf *)NULL,
+	                         uflags, sinfo);
 sendmsg_return:
-    /* TODO: Needs a condition for non-blocking when error is EWOULDBLOCK */
-    if (0 == error)
-        retval = len;
-    else if (error == EWOULDBLOCK) {
-        errno = EWOULDBLOCK;
-        retval = -1;
-    } else {
-        SCTP_PRINTF("%s: error = %d\n", __func__, error);
-        errno = error;
-        retval = -1;
-    }
-    return (retval);
-
+	/* TODO: Needs a condition for non-blocking when error is EWOULDBLOCK */
+	if (0 == error)
+		retval = len;
+	else if (error == EWOULDBLOCK) {
+		errno = EWOULDBLOCK;
+		retval = -1;
+	} else {
+		SCTP_PRINTF("%s: error = %d\n", __func__, error);
+		errno = error;
+		retval = -1;
+	}
+	return (retval);
 }
 
 

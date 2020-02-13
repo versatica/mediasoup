@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 353303 2019-10-08 11:07:16Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 357197 2020-01-28 10:09:05Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -110,7 +110,7 @@ sctp_asconf_error_response(uint32_t id, uint16_t cause, uint8_t *error_tlv,
 	struct mbuf *m_reply = NULL;
 	struct sctp_asconf_paramhdr *aph;
 	struct sctp_error_cause *error;
-	size_t buf_len;
+	uint32_t buf_len;
 	uint16_t i, param_length, cause_length, padding_length;
 	uint8_t *tlv;
 

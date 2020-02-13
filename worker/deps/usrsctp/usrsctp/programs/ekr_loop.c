@@ -274,7 +274,7 @@ main(int argc, char *argv[])
 #else
 	pthread_t tid_c, tid_s;
 #endif
-	int i, j, cur_buf_size, snd_buf_size, rcv_buf_size;
+	int i, j, cur_buf_size, snd_buf_size, rcv_buf_size, sendv_retries_left;
 	socklen_t opt_len;
 	struct sctp_sndinfo sndinfo;
 	char *line;
@@ -491,6 +491,8 @@ main(int argc, char *argv[])
 	sndinfo.snd_context = 0;
 	sndinfo.snd_assoc_id = 0;
 
+
+
 	for (i = 0; i < NUMBER_OF_STEPS; i++) {
 		j = 0;
 		if (i % 2) {
@@ -499,25 +501,38 @@ main(int argc, char *argv[])
 			sndinfo.snd_flags = 0;
 		}
 		/* Send a 1 MB message */
+		sendv_retries_left = 120;
 		debug_printf("usrscp_sendv - step %d - call %d flags %x\n", i, ++j, sndinfo.snd_flags);
-		if (usrsctp_sendv(s_c, line, LINE_LENGTH, NULL, 0, (void *)&sndinfo,
+		while (usrsctp_sendv(s_c, line, LINE_LENGTH, NULL, 0, (void *)&sndinfo,
 				 (socklen_t)sizeof(struct sctp_sndinfo), SCTP_SENDV_SNDINFO, 0) < 0) {
-			perror("usrsctp_sendv");
-			exit(EXIT_FAILURE);
+			fprintf(stderr,"usrsctp_sendv - errno: %d - %s\n", errno, strerror(errno));
+			if (errno != EWOULDBLOCK || !sendv_retries_left) {
+				exit(EXIT_FAILURE);
+			}
+			sendv_retries_left--;
+#ifdef _WIN32
+			Sleep(1000);
+#else
+			sleep(1);
+#endif
 		}
 		/* Send a 1 MB message */
+		sendv_retries_left = 120;
 		debug_printf("usrscp_sendv - step %d - call %d flags %x\n", i, ++j, sndinfo.snd_flags);
-		if (usrsctp_sendv(s_c, line, LINE_LENGTH, NULL, 0, (void *)&sndinfo,
+		while (usrsctp_sendv(s_c, line, LINE_LENGTH, NULL, 0, (void *)&sndinfo,
 				 (socklen_t)sizeof(struct sctp_sndinfo), SCTP_SENDV_SNDINFO, 0) < 0) {
-			perror("usrsctp_sendv");
-			exit(EXIT_FAILURE);
+			fprintf(stderr,"usrsctp_sendv - errno: %d - %s\n", errno, strerror(errno));
+			if (errno != EWOULDBLOCK || !sendv_retries_left) {
+				exit(EXIT_FAILURE);
+			}
+			sendv_retries_left--;
+#ifdef _WIN32
+			Sleep(1000);
+#else
+			sleep(1);
+#endif
 		}
 		debug_printf("Sending done, sleeping\n");
-#ifdef _WIN32
-		Sleep(1000);
-#else
-		sleep(1);
-#endif
 	}
 	free(line);
 	usrsctp_shutdown(s_c, SHUT_WR);

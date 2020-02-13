@@ -76,7 +76,6 @@ void WakeAllXPConditionVariable(userland_cond_t *);
 typedef CONDITION_VARIABLE userland_cond_t;
 #endif
 typedef HANDLE userland_thread_t;
-typedef DWORD userland_thread_id_t;
 #define ADDRESS_FAMILY	unsigned __int8
 #define IPVERSION  4
 #define MAXTTL     255
@@ -284,7 +283,6 @@ typedef char* caddr_t;
 typedef pthread_mutex_t userland_mutex_t;
 typedef pthread_cond_t userland_cond_t;
 typedef pthread_t userland_thread_t;
-typedef pthread_t userland_thread_id_t;
 #endif
 
 #if defined(__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
@@ -438,6 +436,7 @@ struct sx {int dummy;};
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 /* #include <sys/param.h>  in FreeBSD defines MSIZE */
 /* #include <sys/ktr.h> */
 /* #include <sys/systm.h> */
@@ -1036,9 +1035,6 @@ sctp_userspace_thread_create(userland_thread_t *thread, start_routine_t start_ro
 
 void
 sctp_userspace_set_threadname(const char *name);
-
-int sctp_userspace_thread_id(userland_thread_id_t *thread);
-int sctp_userspace_thread_equal(userland_thread_id_t t1, userland_thread_id_t t2);
 
 /*
  * SCTP protocol specific mbuf flags.

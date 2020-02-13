@@ -195,7 +195,7 @@ on_socket_readable(struct socket* s) {
 static void
 handle_upcall(struct socket *s, void *arg, int flags)
 {
-    int events = usrsctp_get_events(s);
+	int events = usrsctp_get_events(s);
 
 	if (connecting) {
 		if (events & SCTP_EVENT_ERROR) {

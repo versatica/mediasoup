@@ -108,6 +108,10 @@ function get_usrsctp()
 	DEST="deps/usrsctp/usrsctp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
+
+	echo ">>> [INFO] deleting large files and directories ..."
+	rm -rf \
+		${DEST}/fuzzer/
 }
 
 function get_abseil_cpp()

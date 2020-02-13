@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 349986 2019-07-14 12:04:39Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 354018 2019-10-24 09:22:23Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_PCB_H_
@@ -304,6 +304,9 @@ struct sctp_base_info {
 	int packet_log_writers;
 	int packet_log_end;
 	uint8_t packet_log_buffer[SCTP_PACKET_LOG_SIZE];
+#endif
+#if defined(__FreeBSD__)
+	eventhandler_tag eh_tag;
 #endif
 #if defined(__APPLE__)
 	int sctp_main_timer_ticks;

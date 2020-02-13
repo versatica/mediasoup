@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 353466 2019-10-13 09:35:03Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 355264 2019-12-01 16:14:44Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -228,13 +228,15 @@ sctp6_input(struct mbuf **i_pak, int *offp, int proto)
 	SCTP_STAT_INCR_COUNTER64(sctps_inpackets);
 	/* Get IP, SCTP, and first chunk header together in the first mbuf. */
 	offset = iphlen + sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr);
-	ip6 = mtod(m, struct ip6_hdr *);
-	IP6_EXTHDR_GET(sh, struct sctphdr *, m, iphlen,
-		       (int)(sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr)));
-	if (sh == NULL) {
-		SCTP_STAT_INCR(sctps_hdrops);
-		return (IPPROTO_DONE);
+	if (m->m_len < offset) {
+		m = m_pullup(m, offset);
+		if (m == NULL) {
+			SCTP_STAT_INCR(sctps_hdrops);
+			return (IPPROTO_DONE);
+		}
 	}
+	ip6 = mtod(m, struct ip6_hdr *);
+	sh = (struct sctphdr *)(mtod(m, caddr_t) + iphlen);
 	ch = (struct sctp_chunkhdr *)((caddr_t)sh + sizeof(struct sctphdr));
 	offset -= sizeof(struct sctp_chunkhdr);
 	memset(&src, 0, sizeof(struct sockaddr_in6));
@@ -403,6 +405,13 @@ sctp6_notify(struct sctp_inpcb *inp,
 		}
 		if (net->mtu > next_mtu) {
 			net->mtu = next_mtu;
+#if defined(__FreeBSD__)
+			if (net->port) {
+				sctp_hc_set_mtu(&net->ro._l_addr, inp->fibnum, next_mtu + sizeof(struct udphdr));
+			} else {
+				sctp_hc_set_mtu(&net->ro._l_addr, inp->fibnum, next_mtu);
+			}
+#endif
 		}
 		/* Update the association MTU */
 		if (stcb->asoc.smallest_mtu > next_mtu) {
@@ -568,7 +577,6 @@ sctp6_ctlinput(int cmd, struct sockaddr *pktdst, void *d)
 			             ip6cp->ip6c_icmp6->icmp6_code,
 			             ntohl(ip6cp->ip6c_icmp6->icmp6_mtu));
 #if defined(__Userspace__)
-			upcall_socket = NULL
 			if (!(stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_SOCKET_GONE) &&
 			    (stcb->sctp_socket != NULL) {
 				struct socket *upcall_socket;
@@ -836,6 +844,7 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 #endif
 	struct sctp_inpcb *inp;
 	int error;
+	u_char vflagsav;
 
 	inp = (struct sctp_inpcb *)so->so_pcb;
 	if (inp == NULL) {
@@ -873,9 +882,11 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 	}
 #endif
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
+	vflagsav = inp->ip_inp.inp.inp_vflag;
 	inp->ip_inp.inp.inp_vflag &= ~INP_IPV4;
 	inp->ip_inp.inp.inp_vflag |= INP_IPV6;
 #else
+	vflagsav = inp->inp_vflag;
 	inp->inp_vflag &= ~INP_IPV4;
 	inp->inp_vflag |= INP_IPV6;
 #endif
@@ -920,7 +931,7 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 				inp->inp_vflag &= ~INP_IPV6;
 #endif
 				error = sctp_inpcb_bind(so, (struct sockaddr *)&sin, NULL, p);
-				return (error);
+				goto out;
 			}
 #endif
 			break;
@@ -937,7 +948,8 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 		if (addr->sa_family == AF_INET) {
 			/* can't bind v4 addr to v6 only socket! */
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, EINVAL);
-			return (EINVAL);
+			error = EINVAL;
+			goto out;
 		}
 #endif
 		sin6_p = (struct sockaddr_in6 *)addr;
@@ -946,10 +958,18 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 			/* can't bind v4-mapped addrs either! */
 			/* NOTE: we don't support SIIT */
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, EINVAL);
-			return (EINVAL);
+			error = EINVAL;
+			goto out;
 		}
 	}
 	error = sctp_inpcb_bind(so, addr, NULL, p);
+out:
+	if (error != 0)
+#if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
+		inp->ip_inp.inp.inp_vflag = vflagsav;
+#else
+		inp->inp_vflag = vflagsav;
+#endif
 	return (error);
 }
 
