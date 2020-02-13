@@ -149,7 +149,7 @@ export declare class Transport extends EnhancedEventEmitter {
     /**
      * Create a Producer.
      */
-    produce({ id, kind, rtpParameters, paused, appData }: ProducerOptions): Promise<Producer>;
+    produce({ id, kind, rtpParameters, paused, keyFrameWaitTime, appData }: ProducerOptions): Promise<Producer>;
     /**
      * Create a Consumer.
      *

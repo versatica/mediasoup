@@ -4,17 +4,16 @@
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "Logger.hpp"
 
-static uint16_t KeyFrameWaitTime{ 1000 };
-
 /* PendingKeyFrameInfo methods */
 
-RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(PendingKeyFrameInfo::Listener* listener, uint32_t ssrc)
+RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(
+  PendingKeyFrameInfo::Listener* listener, uint32_t ssrc, uint32_t keyFrameWaitTime)
   : listener(listener), ssrc(ssrc)
 {
 	MS_TRACE();
 
 	this->timer = new Timer(this);
-	this->timer->Start(KeyFrameWaitTime);
+	this->timer->Start(keyFrameWaitTime);
 }
 
 RTC::PendingKeyFrameInfo::~PendingKeyFrameInfo()
@@ -35,8 +34,9 @@ inline void RTC::PendingKeyFrameInfo::OnTimer(Timer* timer)
 
 /* KeyFrameRequestManager methods */
 
-RTC::KeyFrameRequestManager::KeyFrameRequestManager(KeyFrameRequestManager::Listener* listener)
-  : listener(listener)
+RTC::KeyFrameRequestManager::KeyFrameRequestManager(
+  KeyFrameRequestManager::Listener* listener, uint32_t keyFrameWaitTime)
+  : listener(listener), keyFrameWaitTime(keyFrameWaitTime)
 {
 	MS_TRACE();
 }
@@ -72,7 +72,8 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 		return;
 	}
 
-	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
+	this->mapSsrcPendingKeyFrameInfo[ssrc] =
+	  new PendingKeyFrameInfo(this, ssrc, this->keyFrameWaitTime);
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
@@ -93,7 +94,8 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 	}
 	else
 	{
-		this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
+		this->mapSsrcPendingKeyFrameInfo[ssrc] =
+		  new PendingKeyFrameInfo(this, ssrc, this->keyFrameWaitTime);
 	}
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
@@ -127,8 +129,6 @@ inline void RTC::KeyFrameRequestManager::OnKeyFrameRequestTimeout(PendingKeyFram
 
 	if (!pendingKeyFrameInfo->GetRetryOnTimeout())
 	{
-		auto* pendingKeyFrameInfo = it->second;
-
 		delete pendingKeyFrameInfo;
 
 		this->mapSsrcPendingKeyFrameInfo.erase(it);

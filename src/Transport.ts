@@ -387,6 +387,7 @@ export class Transport extends EnhancedEventEmitter
 			kind,
 			rtpParameters,
 			paused = false,
+			keyFrameWaitTime,
 			appData = {}
 		}: ProducerOptions
 	): Promise<Producer>
@@ -446,7 +447,7 @@ export class Transport extends EnhancedEventEmitter
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
 		const internal = { ...this._internal, producerId: id || uuidv4() };
-		const reqData = { kind, rtpParameters, rtpMapping, paused };
+		const reqData = { kind, rtpParameters, rtpMapping, keyFrameWaitTime, paused };
 
 		const status =
 			await this._channel.request('transport.produce', internal, reqData);

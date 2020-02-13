@@ -16,7 +16,7 @@ namespace RTC
 		};
 
 	public:
-		PendingKeyFrameInfo(Listener* listener, uint32_t ssrc);
+		PendingKeyFrameInfo(Listener* listener, uint32_t ssrc, uint32_t keyFrameWaitTime);
 		~PendingKeyFrameInfo();
 
 		uint32_t GetSsrc() const;
@@ -30,7 +30,7 @@ namespace RTC
 
 	private:
 		Listener* listener{ nullptr };
-		uint32_t ssrc{ 0 };
+		uint32_t ssrc;
 		Timer* timer{ nullptr };
 		bool retryOnTimeout{ true };
 	};
@@ -45,7 +45,7 @@ namespace RTC
 		};
 
 	public:
-		explicit KeyFrameRequestManager(Listener* listener);
+		explicit KeyFrameRequestManager(Listener* listener, uint32_t keyFrameWaitTime);
 		virtual ~KeyFrameRequestManager();
 
 		void KeyFrameNeeded(uint32_t ssrc);
@@ -58,6 +58,7 @@ namespace RTC
 
 	private:
 		Listener* listener{ nullptr };
+		uint32_t keyFrameWaitTime;
 		std::map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
 	};
 } // namespace RTC

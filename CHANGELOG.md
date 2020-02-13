@@ -7,6 +7,7 @@
 * Avoid ES6 `export default` and always use named `export`.
 * `router.pipeToRouter()`: Ensure a single `PipeTransport` pair is created between `router1` and `router2`.
    - Since the operation is async, it may happen that two simultaneous calls to `router1.pipeToRouter({ producerId: xxx, router: router2 })` would end up generating two pairs of `PipeTranports`. To prevent that, let's use an async queue.
+* Add `keyFrameWaitTime` option to `ProducerOptions`.
 * Update Node and C++ deps.
 
 
