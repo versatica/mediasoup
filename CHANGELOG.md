@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.4.10 (WIP)
+### 3.4.10
 
 * `ProducerOptions`: Rename `keyFrameWaitTime` option to `keyFrameRequestDelay` and make it work as expected.
 
