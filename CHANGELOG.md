@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.4.11
+
+* `IceServer.cpp`: Reject received STUN Binding request with 487 if remote peer indicates ICE-CONTROLLED into it.
+
+
 ### 3.4.10
 
 * `ProducerOptions`: Rename `keyFrameWaitTime` option to `keyFrameRequestDelay` and make it work as expected.
