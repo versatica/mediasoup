@@ -199,8 +199,7 @@ test('transport2.produce() succeeds', async () =>
 					cname : 'video-1'
 				}
 			},
-			keyFrameWaitTime : 500,
-			appData          : { foo: 1, bar: '2' }
+			appData : { foo: 1, bar: '2' }
 		});
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
@@ -335,33 +334,6 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 					cname : 'video-1'
 				}
 			}
-		}))
-		.rejects
-		.toThrow(TypeError);
-
-	// Wrong keyFrameWaitTime (less than 500).
-	await expect(transport1.produce(
-		{
-			kind          : 'video',
-			rtpParameters :
-			{
-				codecs :
-				[
-					{
-						mimeType    : 'video/h264',
-						payloadType : 112,
-						clockRate   : 90000,
-						parameters  :
-						{
-							'packetization-mode' : 1,
-							'profile-level-id'   : '4d0032'
-						}
-					}
-				],
-				encodings : [ { ssrc: 6666 } ],
-				rtcp      : { cname: 'qwerty' }
-			},
-			keyFrameWaitTime : 499
 		}))
 		.rejects
 		.toThrow(TypeError);

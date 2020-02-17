@@ -20,10 +20,9 @@ export interface ProducerOptions {
     paused?: boolean;
     /**
      * Just for video. Time (in ms) before asking the sender for a new key frame
-     * after having asked a previous one. Default 1000. Minimum valid value is
-     * 500.
+     * after having asked a previous one. Default 0.
      */
-    keyFrameWaitTime?: number;
+    keyFrameRequestDelay?: number;
     /**
      * Custom application data.
      */

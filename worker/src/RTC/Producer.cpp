@@ -259,25 +259,20 @@ namespace RTC
 		// Create a KeyFrameRequestManager.
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			auto jsonKeyFrameWaitTimeIt = data.find("keyFrameWaitTime");
-			uint32_t keyFrameWaitTime   = 1000;
+			auto jsonKeyFrameRequestDelayIt = data.find("keyFrameRequestDelay");
+			uint32_t keyFrameRequestDelay   = 0u;
 
 			// clang-format off
 			if (
-				jsonKeyFrameWaitTimeIt != data.end() &&
-				jsonKeyFrameWaitTimeIt->is_number_integer()
+				jsonKeyFrameRequestDelayIt != data.end() &&
+				jsonKeyFrameRequestDelayIt->is_number_integer()
 			)
 			// clang-format on
 			{
-				keyFrameWaitTime = jsonKeyFrameWaitTimeIt->get<uint32_t>();
+				keyFrameRequestDelay = jsonKeyFrameRequestDelayIt->get<uint32_t>();
 			}
 
-			if (keyFrameWaitTime < 500)
-			{
-				MS_THROW_TYPE_ERROR("keyFrameWaitTime must be higher or equal than 500 ms");
-			}
-
-			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameWaitTime);
+			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
 		}
 	}
 
