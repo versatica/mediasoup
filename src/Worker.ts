@@ -207,7 +207,7 @@ export class Worker extends EnhancedEventEmitter
 		let spawnBin = workerBin;
 		let spawnArgs: string[] = [];
 
-		if (process.env.MEDIASOUP_USE_VALGRIND)
+		if (process.env.MEDIASOUP_USE_VALGRIND === 'true')
 		{
 			spawnBin = process.env.MEDIASOUP_VALGRIND_BIN || 'valgrind';
 
