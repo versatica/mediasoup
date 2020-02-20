@@ -161,14 +161,11 @@ sctp_init(void)
 	SCTP_BASE_VAR(conn_output) = conn_output;
 	SCTP_BASE_VAR(debug_printf) = debug_printf;
 	SCTP_BASE_VAR(crc32c_offloaded) = 0;
-	SCTP_BASE_VAR(iterator_thread_started) = 0;
-	SCTP_BASE_VAR(timer_thread_started) = 0;
 #endif
 #if defined(__Userspace__)
 	sctp_pcb_init(start_threads);
-	if (start_threads) {
+	if (start_threads)
 		sctp_start_timer();
-	}
 #else
 	sctp_pcb_init();
 #endif
@@ -255,14 +252,12 @@ sctp_finish(void)
 	}
 #endif
 	atomic_cmpset_int(&SCTP_BASE_VAR(timer_thread_should_exit), 0, 1);
-	if (SCTP_BASE_VAR(timer_thread_started)) {
 #if defined(__Userspace_os_Windows)
-		WaitForSingleObject(SCTP_BASE_VAR(timer_thread), INFINITE);
-		CloseHandle(SCTP_BASE_VAR(timer_thread));
+	WaitForSingleObject(SCTP_BASE_VAR(timer_thread), INFINITE);
+	CloseHandle(SCTP_BASE_VAR(timer_thread));
 #else
-		pthread_join(SCTP_BASE_VAR(timer_thread), NULL);
+	pthread_join(SCTP_BASE_VAR(timer_thread), NULL);
 #endif
-	}
 #endif
 	sctp_pcb_finish();
 #if defined(__Windows__)

@@ -203,8 +203,6 @@ sctp_startup_iterator(void)
 #elif defined(__Userspace__)
 	if (sctp_userspace_thread_create(&sctp_it_ctl.thread_proc, &sctp_iterator_thread)) {
 		SCTP_PRINTF("ERROR: Creating sctp_iterator_thread failed.\n");
-	} else {
-		SCTP_BASE_VAR(iterator_thread_started) = 1;
 	}
 #endif
 }
