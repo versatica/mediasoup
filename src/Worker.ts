@@ -276,7 +276,7 @@ export class Worker extends EnhancedEventEmitter
 
 		let spawnDone = false;
 
-		// Listen for 'ready' notification.
+		// Listen for 'running' notification.
 		this._channel.once(String(this._pid), (event: string) =>
 		{
 			if (!spawnDone && event === 'running')
