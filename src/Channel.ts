@@ -98,7 +98,8 @@ export class Channel extends EnhancedEventEmitter
 				catch (error)
 				{
 					logger.error(
-						'invalid netstring data received from the worker process: %s', String(error));
+						'invalid netstring data received from the worker process: %s',
+						String(error));
 
 					// Reset the buffer and exit.
 					this._recvBuffer = undefined;
@@ -144,13 +145,15 @@ export class Channel extends EnhancedEventEmitter
 						default:
 							// eslint-disable-next-line no-console
 							console.warn(
-								`worker[pid:${pid}] unexpected data: %s`, nsPayload.toString('utf8', 1));
+								`worker[pid:${pid}] unexpected data: %s`,
+								nsPayload.toString('utf8', 1));
 					}
 				}
 				catch (error)
 				{
 					logger.error(
-						'received invalid message from the worker process: %s', String(error));
+						'received invalid message from the worker process: %s',
+						String(error));
 				}
 
 				// Remove the read payload from the buffer.
@@ -166,11 +169,21 @@ export class Channel extends EnhancedEventEmitter
 			}
 		});
 
-		this._consumerSocket.on('end', () => logger.debug('Consumer Channel ended by the worker process'));
-		this._consumerSocket.on('error', (error) => logger.error('Consumer Channel error: %s', String(error)));
+		this._consumerSocket.on('end', () => (
+			logger.debug('Consumer Channel ended by the worker process')
+		));
 
-		this._producerSocket.on('end', () => logger.debug('Producer Channel ended by the worker process'));
-		this._producerSocket.on('error', (error) => logger.error('Producer Channel error: %s', String(error)));
+		this._consumerSocket.on('error', (error) => (
+			logger.error('Consumer Channel error: %s', String(error))
+		));
+
+		this._producerSocket.on('end', () => (
+			logger.debug('Producer Channel ended by the worker process')
+		));
+
+		this._producerSocket.on('error', (error) => (
+			logger.error('Producer Channel error: %s', String(error))
+		));
 	}
 
 	/**
