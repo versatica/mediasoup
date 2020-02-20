@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.c 357705 2020-02-09 22:05:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.c 358083 2020-02-18 21:25:17Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -13531,6 +13531,9 @@ sctp_lower_sosend(struct socket *so,
 #endif
 	)
 {
+#if defined(__FreeBSD__)
+	struct epoch_tracker et;
+#endif
 	ssize_t sndlen = 0, max_len, local_add_more;
 	int error, len;
 	struct mbuf *top = NULL;
@@ -14120,7 +14123,13 @@ sctp_lower_sosend(struct socket *so,
 		atomic_add_int(&stcb->asoc.refcnt, -1);
 		free_cnt_applied = 0;
 		/* release this lock, otherwise we hang on ourselves */
+#if defined(__FreeBSD__)
+		NET_EPOCH_ENTER(et);
+#endif
 		sctp_abort_an_association(stcb->sctp_ep, stcb, mm, SCTP_SO_LOCKED);
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
+#endif
 		/* now relock the stcb so everything is sane */
 		hold_tcblock = 0;
 		stcb = NULL;
@@ -14466,7 +14475,13 @@ skip_preblock:
 					/* a collision took us forward? */
 					queue_only = 0;
 				} else {
+#if defined(__FreeBSD__)
+					NET_EPOCH_ENTER(et);
+#endif
 					sctp_send_initiate(inp, stcb, SCTP_SO_LOCKED);
+#if defined(__FreeBSD__)
+					NET_EPOCH_EXIT(et);
+#endif
 					SCTP_SET_STATE(stcb, SCTP_STATE_COOKIE_WAIT);
 					queue_only = 1;
 				}
@@ -14524,6 +14539,9 @@ skip_preblock:
 				 * the input via the net is happening
 				 * and I don't need to start output :-D
 				 */
+#if defined(__FreeBSD__)
+				NET_EPOCH_ENTER(et);
+#endif
 				if (hold_tcblock == 0) {
 					if (SCTP_TCB_TRYLOCK(stcb)) {
 						hold_tcblock = 1;
@@ -14536,6 +14554,9 @@ skip_preblock:
 							  stcb,
 							  SCTP_OUTPUT_FROM_USR_SEND, SCTP_SO_LOCKED);
 				}
+#if defined(__FreeBSD__)
+				NET_EPOCH_EXIT(et);
+#endif
 			}
 			if (hold_tcblock == 1) {
 				SCTP_TCB_UNLOCK(stcb);
@@ -14735,8 +14756,14 @@ dataless_eof:
 					         "%s:%d at %s", __FILE__, __LINE__, __func__);
 					op_err = sctp_generate_cause(SCTP_BASE_SYSCTL(sctp_diag_info_code),
 					                             msg);
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
 					sctp_abort_an_association(stcb->sctp_ep, stcb,
 					                          op_err, SCTP_SO_LOCKED);
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
+#endif
 					/* now relock the stcb so everything is sane */
 					hold_tcblock = 0;
 					stcb = NULL;
@@ -14807,6 +14834,9 @@ skip_out_eof:
 		               stcb->asoc.total_flight,
 		               stcb->asoc.chunks_on_out_queue, stcb->asoc.total_flight_count);
 	}
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
 	if ((queue_only == 0) && (nagle_applies == 0) && (stcb->asoc.peers_rwnd && un_sent)) {
 		/* we can attempt to send too. */
 		if (hold_tcblock == 0) {
@@ -14839,6 +14869,9 @@ skip_out_eof:
 		(void)sctp_med_chunk_output(inp, stcb, &stcb->asoc, &num_out,
 		                            &reason, 1, 1, &now, &now_filled, frag_point, SCTP_SO_LOCKED);
 	}
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
+#endif
 	SCTPDBG(SCTP_DEBUG_OUTPUT1, "USR Send complete qo:%d prw:%d unsent:%d tf:%d cooq:%d toqs:%d err:%d\n",
 	        queue_only, stcb->asoc.peers_rwnd, un_sent,
 		stcb->asoc.total_flight, stcb->asoc.chunks_on_out_queue,

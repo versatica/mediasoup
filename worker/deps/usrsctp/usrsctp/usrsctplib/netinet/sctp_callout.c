@@ -227,6 +227,8 @@ sctp_start_timer(void)
 	rc = sctp_userspace_thread_create(&SCTP_BASE_VAR(timer_thread), user_sctp_timer_iterate);
 	if (rc) {
 		SCTP_PRINTF("ERROR; return code from sctp_thread_create() is %d\n", rc);
+	} else {
+		SCTP_BASE_VAR(timer_thread_started) = 1;
 	}
 }
 

@@ -6871,7 +6871,7 @@ sctp_pcb_finish(void)
 	}
 #endif
 #if defined(__Userspace__)
-	if (sctp_it_ctl.thread_proc) {
+	if (SCTP_BASE_VAR(iterator_thread_started)) {
 #if defined(__Userspace_os_Windows)
 		WaitForSingleObject(sctp_it_ctl.thread_proc, INFINITE);
 		CloseHandle(sctp_it_ctl.thread_proc);

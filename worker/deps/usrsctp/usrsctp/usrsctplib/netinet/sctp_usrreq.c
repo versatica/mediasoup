@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 356270 2020-01-02 13:55:10Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 358083 2020-02-18 21:25:17Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -161,11 +161,14 @@ sctp_init(void)
 	SCTP_BASE_VAR(conn_output) = conn_output;
 	SCTP_BASE_VAR(debug_printf) = debug_printf;
 	SCTP_BASE_VAR(crc32c_offloaded) = 0;
+	SCTP_BASE_VAR(iterator_thread_started) = 0;
+	SCTP_BASE_VAR(timer_thread_started) = 0;
 #endif
 #if defined(__Userspace__)
 	sctp_pcb_init(start_threads);
-	if (start_threads)
+	if (start_threads) {
 		sctp_start_timer();
+	}
 #else
 	sctp_pcb_init();
 #endif
@@ -252,12 +255,14 @@ sctp_finish(void)
 	}
 #endif
 	atomic_cmpset_int(&SCTP_BASE_VAR(timer_thread_should_exit), 0, 1);
+	if (SCTP_BASE_VAR(timer_thread_started)) {
 #if defined(__Userspace_os_Windows)
-	WaitForSingleObject(SCTP_BASE_VAR(timer_thread), INFINITE);
-	CloseHandle(SCTP_BASE_VAR(timer_thread));
+		WaitForSingleObject(SCTP_BASE_VAR(timer_thread), INFINITE);
+		CloseHandle(SCTP_BASE_VAR(timer_thread));
 #else
-	pthread_join(SCTP_BASE_VAR(timer_thread), NULL);
+		pthread_join(SCTP_BASE_VAR(timer_thread), NULL);
 #endif
+	}
 #endif
 	sctp_pcb_finish();
 #if defined(__Windows__)
@@ -678,19 +683,22 @@ SYSCTL_PROC(_net_inet_sctp, OID_AUTO, getcred, CTLTYPE_OPAQUE | CTLFLAG_RW,
 #ifdef INET
 #if defined(__Panda__) || defined(__Windows__) || defined(__Userspace__)
 int
-#elif defined(__FreeBSD__) && __FreeBSD_version > 690000
+#elif defined(__FreeBSD__)
 static void
 #else
 static int
 #endif
 sctp_abort(struct socket *so)
 {
+#if defined(__FreeBSD__)
+	struct epoch_tracker et;
+#endif
 	struct sctp_inpcb *inp;
 	uint32_t flags;
 
 	inp = (struct sctp_inpcb *)so->so_pcb;
 	if (inp == NULL) {
-#if defined(__FreeBSD__) && __FreeBSD_version > 690000
+#if defined(__FreeBSD__)
 		return;
 #else
 		SCTP_LTRACE_ERR_RET(NULL, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
@@ -698,6 +706,9 @@ sctp_abort(struct socket *so)
 #endif
 	}
 
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
  sctp_must_try_again:
 	flags = inp->sctp_flags;
 #ifdef SCTP_LOG_CLOSING
@@ -730,7 +741,8 @@ sctp_abort(struct socket *so)
 			goto sctp_must_try_again;
 		}
 	}
-#if defined(__FreeBSD__) && __FreeBSD_version > 690000
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
 	return;
 #else
 	return (0);
@@ -891,6 +903,9 @@ sctpconn_bind(struct socket *so, struct sockaddr *addr)
 void
 sctp_close(struct socket *so)
 {
+#if defined(__FreeBSD__)
+	struct epoch_tracker et;
+#endif
 	struct sctp_inpcb *inp;
 	uint32_t flags;
 
@@ -901,6 +916,9 @@ sctp_close(struct socket *so)
 	/* Inform all the lower layer assoc that we
 	 * are done.
 	 */
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
  sctp_must_try_again:
 	flags = inp->sctp_flags;
 #ifdef SCTP_LOG_CLOSING
@@ -948,6 +966,9 @@ sctp_close(struct socket *so)
 			goto sctp_must_try_again;
 		}
 	}
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
+#endif
 	return;
 }
 
@@ -1120,9 +1141,18 @@ connected_type:
 		 * definitions) but this is not advisable. This code is used
 		 * by FreeBSD when sending a file with sendfile() though.
 		 */
+#if defined(__FreeBSD__)
+		struct epoch_tracker et;
+#endif
 		int ret;
 
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
 		ret = sctp_output(inp, inp->pkt, addr, inp->control, p, flags);
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
+#endif
 		inp->pkt = NULL;
 		inp->control = NULL;
 		return (ret);
@@ -1150,6 +1180,9 @@ sctp_disconnect(struct socket *so)
 			SCTP_INP_RUNLOCK(inp);
 			return (0);
 		} else {
+#if defined(__FreeBSD__)
+			struct epoch_tracker et;
+#endif
 			struct sctp_association *asoc;
 			struct sctp_tcb *stcb;
 
@@ -1167,6 +1200,9 @@ sctp_disconnect(struct socket *so)
 				SCTP_INP_RUNLOCK(inp);
 				return (0);
 			}
+#if defined(__FreeBSD__)
+			NET_EPOCH_ENTER(et);
+#endif
 #if defined(__Userspace__)
 			if (((so->so_options & SCTP_SO_LINGER) &&
 			     (so->so_linger == 0)) ||
@@ -1192,6 +1228,9 @@ sctp_disconnect(struct socket *so)
 				(void)sctp_free_assoc(inp, stcb, SCTP_NORMAL_PROC,
 				                      SCTP_FROM_SCTP_USRREQ + SCTP_LOC_3);
 				/* No unlock tcb assoc is gone */
+#if defined(__FreeBSD__)
+				NET_EPOCH_EXIT(et);
+#endif
 				return (0);
 			}
 			if (TAILQ_EMPTY(&asoc->send_queue) &&
@@ -1264,12 +1303,18 @@ sctp_disconnect(struct socket *so)
 					SCTP_INP_RUNLOCK(inp);
 					(void)sctp_free_assoc(inp, stcb, SCTP_NORMAL_PROC,
 					                      SCTP_FROM_SCTP_USRREQ + SCTP_LOC_5);
+#if defined(__FreeBSD__)
+					NET_EPOCH_EXIT(et);
+#endif
 					return (0);
 				} else {
 					sctp_chunk_output(inp, stcb, SCTP_OUTPUT_FROM_CLOSING, SCTP_SO_LOCKED);
 				}
 			}
 			soisdisconnecting(so);
+#if defined(__FreeBSD__)
+			NET_EPOCH_EXIT(et);
+#endif
 			SCTP_TCB_UNLOCK(stcb);
 			SCTP_INP_RUNLOCK(inp);
 			return (0);
@@ -1368,6 +1413,9 @@ sctp_shutdown(struct socket *so)
 		 * a SHUT_WR or SHUT_RDWR.
 		 * This means we put the shutdown flag against it.
 		 */
+#if defined(__FreeBSD__)
+		struct epoch_tracker et;
+#endif
 		struct sctp_tcb *stcb;
 		struct sctp_association *asoc;
 		struct sctp_nets *netp;
@@ -1406,6 +1454,9 @@ sctp_shutdown(struct socket *so)
 			SCTP_INP_RUNLOCK(inp);
 			return (0);
 		}
+#if defined(__FreeBSD__)
+		NET_EPOCH_ENTER(et);
+#endif
 		if (stcb->asoc.alternate) {
 			netp = stcb->asoc.alternate;
 		} else {
@@ -1444,6 +1495,9 @@ sctp_shutdown(struct socket *so)
 				SCTP_INP_RUNLOCK(inp);
 				sctp_abort_an_association(stcb->sctp_ep, stcb,
 							  op_err, SCTP_SO_LOCKED);
+#if defined(__FreeBSD__)
+				NET_EPOCH_EXIT(et);
+#endif
 				return (0);
 			}
 		}
@@ -1452,6 +1506,9 @@ sctp_shutdown(struct socket *so)
 		sctp_chunk_output(inp, stcb, SCTP_OUTPUT_FROM_CLOSING, SCTP_SO_LOCKED);
 		SCTP_TCB_UNLOCK(stcb);
 		SCTP_INP_RUNLOCK(inp);
+#if defined(__FreeBSD__)
+		NET_EPOCH_EXIT(et);
+#endif
 		return (0);
 	}
 }
@@ -7831,13 +7888,14 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 int
 sctp_ctloutput(struct socket *so, struct sockopt *sopt)
 {
-	void *optval = NULL;
-	size_t optsize = 0;
-	void *p;
-	int error = 0;
 #if defined(__FreeBSD__)
+	struct epoch_tracker et;
 	struct sctp_inpcb *inp;
 #endif
+	void *optval = NULL;
+	void *p;
+	size_t optsize = 0;
+	int error = 0;
 
 #if defined(__FreeBSD__)
 	if ((sopt->sopt_level == SOL_SOCKET) &&
@@ -7890,7 +7948,13 @@ sctp_ctloutput(struct socket *so, struct sockopt *sopt)
 	p = (void *)sopt->sopt_p;
 #endif
 	if (sopt->sopt_dir == SOPT_SET) {
+#if defined(__FreeBSD__)
+		NET_EPOCH_ENTER(et);
+#endif
 		error = sctp_setopt(so, sopt->sopt_name, optval, optsize, p);
+#if defined(__FreeBSD__)
+		NET_EPOCH_EXIT(et);
+#endif
 	} else if (sopt->sopt_dir == SOPT_GET) {
 		error = sctp_getopt(so, sopt->sopt_name, optval, &optsize, p);
 	} else {
@@ -7935,6 +7999,9 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 
 #endif
 #endif
+#if defined(__FreeBSD__)
+	struct epoch_tracker et;
+#endif
 #ifdef SCTP_MVRF
 	int i, fnd = 0;
 #endif
@@ -7956,7 +8023,7 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	}
 
 #if defined(__Userspace__)
-        /* TODO __Userspace__ falls into this code for IPv6 stuff at the moment... */
+	/* TODO __Userspace__ falls into this code for IPv6 stuff at the moment... */
 #endif
 #if !defined(__Windows__) && !defined(__Userspace_os_Linux) && !defined(__Userspace_os_Windows)
 	switch (addr->sa_family) {
@@ -8012,7 +8079,9 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	SCTP_INP_INCR_REF(inp);
 	SCTP_ASOC_CREATE_LOCK(inp);
 	create_lock_on = 1;
-
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
 
 	if ((inp->sctp_flags & SCTP_PCB_FLAGS_SOCKET_ALLGONE) ||
 	    (inp->sctp_flags & SCTP_PCB_FLAGS_SOCKET_GONE)) {
@@ -8117,10 +8186,12 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	sctp_send_initiate(inp, stcb, SCTP_SO_LOCKED);
 	SCTP_TCB_UNLOCK(stcb);
  out_now:
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
+#endif
 	if (create_lock_on) {
 		SCTP_ASOC_CREATE_UNLOCK(inp);
 	}
-
 	SCTP_INP_DECR_REF(inp);
 	return (error);
 }

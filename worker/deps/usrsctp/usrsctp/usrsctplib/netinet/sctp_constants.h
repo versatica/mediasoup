@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 357500 2020-02-04 12:34:16Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 358169 2020-02-20 15:37:44Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_CONSTANTS_H_
@@ -551,14 +551,13 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_TIMER_TYPE_ASCONF		10
 #define SCTP_TIMER_TYPE_SHUTDOWNGUARD	11
 #define SCTP_TIMER_TYPE_AUTOCLOSE	12
-#define SCTP_TIMER_TYPE_EVENTWAKE	13
-#define SCTP_TIMER_TYPE_STRRESET        14
-#define SCTP_TIMER_TYPE_INPKILL         15
-#define SCTP_TIMER_TYPE_ASOCKILL        16
-#define SCTP_TIMER_TYPE_ADDR_WQ         17
-#define SCTP_TIMER_TYPE_PRIM_DELETED    18
+#define SCTP_TIMER_TYPE_STRRESET	13
+#define SCTP_TIMER_TYPE_INPKILL		14
+#define SCTP_TIMER_TYPE_ASOCKILL	15
+#define SCTP_TIMER_TYPE_ADDR_WQ		16
+#define SCTP_TIMER_TYPE_PRIM_DELETED	17
 /* add new timers here - and increment LAST */
-#define SCTP_TIMER_TYPE_LAST            19
+#define SCTP_TIMER_TYPE_LAST		18
 
 #define SCTP_IS_TIMER_TYPE_VALID(t)	(((t) > SCTP_TIMER_TYPE_NONE) && \
 					 ((t) < SCTP_TIMER_TYPE_LAST))

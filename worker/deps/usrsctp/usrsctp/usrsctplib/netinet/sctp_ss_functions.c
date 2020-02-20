@@ -30,7 +30,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_ss_functions.c 345505 2019-03-25 16:40:54Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_ss_functions.c 358028 2020-02-17 18:05:03Z tuexen $");
 #endif
 
 #include <netinet/sctp_pcb.h>
@@ -521,6 +521,9 @@ sctp_ss_prio_select(struct sctp_tcb *stcb SCTP_UNUSED, struct sctp_nets *net,
 {
 	struct sctp_stream_out *strq, *strqt, *strqn;
 
+	if (asoc->ss_data.locked_on_sending) {
+		return (asoc->ss_data.locked_on_sending);
+	}
 	strqt = asoc->ss_data.last_out_stream;
 prio_again:
 	/* Find the next stream to use */
@@ -697,6 +700,9 @@ sctp_ss_fb_select(struct sctp_tcb *stcb SCTP_UNUSED, struct sctp_nets *net,
 {
 	struct sctp_stream_out *strq = NULL, *strqt;
 
+	if (asoc->ss_data.locked_on_sending) {
+		return (asoc->ss_data.locked_on_sending);
+	}
 	if (asoc->ss_data.last_out_stream == NULL ||
 	    TAILQ_FIRST(&asoc->ss_data.out.wheel) == TAILQ_LAST(&asoc->ss_data.out.wheel, sctpwheel_listhead)) {
 		strqt = TAILQ_FIRST(&asoc->ss_data.out.wheel);
@@ -905,6 +911,9 @@ sctp_ss_fcfs_select(struct sctp_tcb *stcb SCTP_UNUSED, struct sctp_nets *net,
 	struct sctp_stream_out *strq;
 	struct sctp_stream_queue_pending *sp;
 
+	if (asoc->ss_data.locked_on_sending) {
+		return (asoc->ss_data.locked_on_sending);
+	}
 	sp = TAILQ_FIRST(&asoc->ss_data.out.list);
 default_again:
 	if (sp != NULL) {

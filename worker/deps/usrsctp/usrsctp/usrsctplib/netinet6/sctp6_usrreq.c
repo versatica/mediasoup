@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 355264 2019-12-01 16:14:44Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 358083 2020-02-18 21:25:17Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -710,6 +710,9 @@ static int
 #endif
 sctp6_abort(struct socket *so)
 {
+#if defined(__FreeBSD__)
+	struct epoch_tracker et;
+#endif
 	struct sctp_inpcb *inp;
 	uint32_t flags;
 
@@ -722,6 +725,9 @@ sctp6_abort(struct socket *so)
 		return (EINVAL);
 #endif
 	}
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
  sctp_must_try_again:
 	flags = inp->sctp_flags;
 #ifdef SCTP_LOG_CLOSING
@@ -754,6 +760,7 @@ sctp6_abort(struct socket *so)
 		}
 	}
 #if (defined(__FreeBSD__) && __FreeBSD_version > 690000) || defined(__Windows__)
+	NET_EPOCH_EXIT(et);
 	return;
 #else
 	return (0);
@@ -1134,9 +1141,18 @@ connected_type:
 		 * optionaly switch back to this code (by changing back the
 		 * defininitions but this is not advisable.
 		 */
+#if defined(__FreeBSD__)
+		struct epoch_tracker et;
+#endif
 		int ret;
 
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
 		ret = sctp_output(inp, inp->pkt, addr, inp->control, p, flags);
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
+#endif
 		inp->pkt = NULL;
 		inp->control = NULL;
 		return (ret);
@@ -1172,6 +1188,9 @@ static int
 sctp6_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 {
 	struct sockaddr *addr = mtod(nam, struct sockaddr *);
+#endif
+#if defined(__FreeBSD__)
+	struct epoch_tracker et;
 #endif
 	uint32_t vrf_id;
 	int error = 0;
@@ -1313,8 +1332,14 @@ sctp6_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	}
 	SCTP_SET_STATE(stcb, SCTP_STATE_COOKIE_WAIT);
 	(void)SCTP_GETTIME_TIMEVAL(&stcb->asoc.time_entered);
+#if defined(__FreeBSD__)
+	NET_EPOCH_ENTER(et);
+#endif
 	sctp_send_initiate(inp, stcb, SCTP_SO_LOCKED);
 	SCTP_TCB_UNLOCK(stcb);
+#if defined(__FreeBSD__)
+	NET_EPOCH_EXIT(et);
+#endif
 	return (error);
 }
 
