@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.4.12 (WIP)
+
+* Update `usrsctp` library.
+  - Fixes #362 (thanks @chvarlam for reporting it).
+
+
 ### 3.4.11
 
 * `IceServer.cpp`: Reject received STUN Binding request with 487 if remote peer indicates ICE-CONTROLLED into it.
