@@ -3,6 +3,7 @@
 
 ### 3.4.12 (WIP)
 
+* TypeScript: generate `es2020` instead of `es6`.
 * Update `usrsctp` library.
   - Fixes #362 (thanks @chvarlam for reporting it).
 
