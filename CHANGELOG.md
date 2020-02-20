@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.4.12 (WIP)
+### 3.4.12
 
 * TypeScript: generate `es2020` instead of `es6`.
 * Update `usrsctp` library.
