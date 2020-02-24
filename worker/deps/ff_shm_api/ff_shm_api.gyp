@@ -3,6 +3,7 @@
   [
     {
       'target_name': 'ff_shm_api',
+      'defines': [ 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10'],
       'type': 'static_library',
 #      'dependencies':
 #      [

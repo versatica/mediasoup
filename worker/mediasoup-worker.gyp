@@ -316,7 +316,7 @@
   [
     {
       'target_name': 'mediasoup-worker',
-      'defines': [ 'SFU_SHM' ],
+      'defines': [ 'SFU_SHM', 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
       'dependencies': [
         'deps/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
       ],

@@ -14,9 +14,22 @@ namespace RTC
 	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
-		std::string shm;
-
+		/*
+			{ 
+				"listenIp": '127.0.0.1',
+				"shm": {
+					"name": "shmtest"
+				},
+				"log": {
+					"name": /var/log/sg/nginx/test_sfu_shm.log",
+					"level": 9,
+					"stdio": 1
+				}
+			}
+		*/
+		// MS_DEBUG_TAG(rtp, "===============JSON APP DATA: %s", (data.dump()).c_str());
 		// Read shm.name
+		std::string shm;
 		auto jsonShmIt = data.find("shm");
 		if (jsonShmIt == data.end())
 			MS_THROW_TYPE_ERROR("missing shm");
@@ -38,26 +51,38 @@ namespace RTC
 		else if(!jsonLogIt->is_object())
 			MS_THROW_TYPE_ERROR("wrong log (not an object)");
 
-		auto jsonLogNameIt = jsonLogIt->find("fileName");
+		auto jsonLogNameIt = jsonLogIt->find("name");
 		if (jsonLogNameIt == jsonLogIt->end())
-		  MS_THROW_TYPE_ERROR("missing log.fileName");
+		  MS_THROW_TYPE_ERROR("missing log.name");
 		else if (!jsonLogNameIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong log.fileName (not a string)");
+			MS_THROW_TYPE_ERROR("wrong log.name (not a string)");
 		
 		std::string logname;
 		logname.assign(jsonLogNameIt->get<std::string>());
 
+		auto loglevel = 9; // default log level. TODO: add log level mapping into DepLibSfuShm
 		auto jsonLogLevelIt = jsonLogIt->find("level");
-		if (jsonLogLevelIt == jsonLogIt->end())
-		  MS_THROW_TYPE_ERROR("missing log.level");
-		else if (!jsonLogLevelIt->is_number())
-			MS_THROW_TYPE_ERROR("wrong log.level (not a number");
+		if (jsonLogLevelIt != jsonLogIt->end())
+		{
+			if (!jsonLogLevelIt->is_number())
+				MS_THROW_TYPE_ERROR("wrong log.level (not a number");
+			else
+				loglevel = jsonLogLevelIt->get<int>();
+		}
 
-		int loglevel = jsonLogLevelIt->get<int>();
+		auto redirect_stdio = 0; // default, otherwise anything but 0 means redirect
+		auto jsonLogRedirectIt = jsonLogIt->find("stdio");
+		if (jsonLogRedirectIt != jsonLogIt->end())
+		{
+			if (!jsonLogRedirectIt->is_number())
+				MS_THROW_TYPE_ERROR("wrong log.stdio (not a number");
+			else
+				redirect_stdio = (jsonLogRedirectIt->get<int>() != 0) ? 1 : 0;
+		}
+
 
 		// data contains listenIp: {ip: ..., announcedIp: ...}
 		auto jsonListenIpIt = data.find("listenIp");
-
 		if (jsonListenIpIt == data.end())
 			MS_THROW_TYPE_ERROR("missing listenIp");
 		else if (!jsonListenIpIt->is_object())
@@ -85,12 +110,7 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
-		MS_DEBUG_TAG(rtp, "ShmTransport ctor will call DepLibSfuShm::InitializeShmWriterCtx()");
- 	  DepLibSfuShm::InitializeShmWriterCtx(shm, logname, loglevel, &this->shmCtx);
-
-		MS_DEBUG_TAG(
-			  rtp,
-			  "ShmTransport object created: [shm name:%s, logname:%s status: %u", shm.c_str(), logname.c_str(), this->shmCtx.Status());
+ 	  this->shmCtx.InitializeShmWriterCtx(shm, logname, loglevel, redirect_stdio);
 	}
 
 	ShmTransport::~ShmTransport()
@@ -252,11 +272,6 @@ namespace RTC
 				{
 					MS_THROW_ERROR("transport_connect() already called");
 				}
-
-				this->isTransportConnectedCalled = true;
-				//TODO: shm smth?
-				MS_DEBUG_TAG(rtp, "-=-=-=-=-=-=-=-=-=-=-=-=-=- SHM TRANSPORT isTransportConnectedCalled = true!");
-
 				request->Accept();
 
 				// Tell the parent class.
@@ -274,12 +289,15 @@ namespace RTC
 	}
 
 
+	/*
+	Transport's consumer expects 'true' from IsConnected() in order to activate.
+	ShmTransport::IsConnected() rather means that transport is initialized but it may not be "fully connected" and ready to write into shm yet.
+	To write into shm we wait until both audio and video consumers receive their first RTP packets with ssrc values.
+	Call ShmTransport::IsFullyConnected() to detect if ShmTransport is ready to write into shm.
+	*/
 	inline bool ShmTransport::IsConnected() const
 	{
-		return true; //isTransportConnectedCalled; // Problem is, consumer won't ever switch into connected state if transport's IsConnected() is false,
-		// However, for the shm transport to be "fully connected" we need both audio and video ssrc to init, this is too late.
-		// Consider shmTransport always "connected" i.e. "consumers can become active right after calling transport.consume()"
-		// The actual writing into shm will be possible only if "fully connected" i.e. status is SHM_WRT_READY
+		return true;
 	}
 
 
@@ -295,15 +313,11 @@ namespace RTC
 
 		if (!IsFullyConnected())
 			return;
-
-		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm...
-
-		// TODO: since we can have > 1 producer and consumer on the same transport, how do I tell if packet is audio or video?!
-// removed switch() to shmconsumer!!!
-
-		// Increase send transmission.
+	
+		// Increase send transmission. Consumer writes RTP packets to shm, nothing else to do here.
 		RTC::Transport::DataSent(packet->GetSize());
 	}
+
 
 	void ShmTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
 	{
@@ -315,19 +329,20 @@ namespace RTC
 		uint8_t const* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
-		// write it out into shm, separate channel
+		//TODO: write it out into shm, separate channel
 		this->chunk.data = const_cast<uint8_t*> (data);
 		this->chunk.len = len;
 		this->chunk.rtp_time = 0; // packet->GetTimestamp(); TODO: RTCP packets don't seem to have timestamps or seqIds
 		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; // TODO: what instead of packet->GetSequenceNumber()?
 		this->chunk.begin = this->chunk.end = 1;
 
-		DepLibSfuShm::WriteChunk(&this->shmCtx, &chunk, DepLibSfuShm::ShmChunkType::RTCP);
+		this->shmCtx.WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::RTCP);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
 	}
 
+	// Note: according to https://tools.ietf.org/html/rfc3550#section-6.1 all RTCP packets are compound
 	void ShmTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();
@@ -341,41 +356,26 @@ namespace RTC
 		// write it out into shm, separate channel
 		this->chunk.data = const_cast<uint8_t*> (data);
 		this->chunk.len = len;
-		this->chunk.rtp_time = 0; //packet->GetTimestamp(); // TODO: recalculate into actual one including cycles info from RTPStream
-		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; //packet->GetSequenceNumber(); // TODO: are there several seqIds in a compound packet??
+		this->chunk.rtp_time = 0;
+		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0;
 		this->chunk.begin = this->chunk.end = 1;
 
-		DepLibSfuShm::WriteChunk(&this->shmCtx, &chunk, DepLibSfuShm::ShmChunkType::RTCP);
-
 		// How to check for validity looping thru all packets in a compound packet: https://tools.ietf.org/html/rfc3550#appendix-A.2
+		this->shmCtx.WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::RTCP);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
 	}
 
+
   bool ShmTransport::RecvStreamMeta(json& data) const
 	{
 		MS_TRACE();
-/*
-		TBD: Assuming that metadata contains shm stream name, need to match with the one used by this transport
-		// Read shm name
-		auto jsonShmIt = data.find("shm");
-		if (jsonShmIt == data.end())
-			MS_THROW_TYPE_ERROR("missing shm");
-		else if (!jsonShmIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong shm (not a string)");
-
-		std::string shmStr;
-		shmStr.assign(jsonShmIt->get<std::string>());
-		if (shmStr.compare(this->shm) != 0) {
-			MS_WARN_DEV("metadata shm %s does not match transport shm %s", shmStr.c_str(), this->shm.c_str() );
-			return false;
-		}
-*/
-		// TODO: write stream metadata into shm somehow
+		// TODO: write stream metadata into shm somehow, no API yet
 
 		return true;
 	}
+
 
 	void ShmTransport::SendSctpData(const uint8_t* data, size_t len)
 	{
@@ -388,12 +388,14 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
+
 	inline void ShmTransport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
+
 
 	inline void ShmTransport::OnUdpSocketPacketReceived(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)

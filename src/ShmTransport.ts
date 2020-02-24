@@ -12,11 +12,9 @@ export interface ShmTransportOptions {
    */
   listenIp: TransportListenIp | string;
 
-  shmName: string;
+  shm: any;
 
-  logName: string;
-
-  logLevel: number;
+  log: any;
 
   /**
    * Custom application data.

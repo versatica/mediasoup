@@ -16,7 +16,7 @@ namespace RTC
 	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
-		ShmConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmMapItem *shmCtx);
+		ShmConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx);
 		~ShmConsumer() override;
 
 	public:
@@ -72,21 +72,17 @@ namespace RTC
 
 		// Shm writing: a consumer will "send" RTP packets (either audio or video) into shm
 		// RTCP packets and "app metadata" will be "sent" into shm by ShmTransport object
-		DepLibSfuShm::SfuShmMapItem *shmCtx{ nullptr };   // A handle to shm context which will be received from ShmTransport during transport.consume()
-		sfushm_av_frame_frag_t       chunk;    // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
+		DepLibSfuShm::SfuShmCtx *shmCtx{ nullptr }; // A handle to shm context which will be received from ShmTransport during transport.consume()
+		sfushm_av_frame_frag_t   chunk;             // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
 
-		RTC::RtpDataCounter shmWriterCounter;  // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer)
-
-		// TODO: channels info to fill in ssrc and everything else needed to setup shm writer?
-		//		std::string                  logname;  // as copied from input data in ctor
-		//		int                          loglevel;
+		RTC::RtpDataCounter shmWriterCounter;      // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer) TODO: move into ShmCtx
 	};
 
 	/* Inline methods. */
 
 	inline bool ShmConsumer::IsActive() const
 	{
-		return (RTC::Consumer::IsActive() && this->producerRtpStream); // TODO: smth about shm writer initialized?
+		return (RTC::Consumer::IsActive() && this->producerRtpStream);
 	}
 
 	inline std::vector<RTC::RtpStreamSend*> ShmConsumer::GetRtpStreams()

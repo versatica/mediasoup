@@ -8,7 +8,15 @@
 #include "Utils.hpp"
 
 
-DepLibSfuShm::SfuShmMapItem::~SfuShmMapItem()
+std::unordered_map<int, const char*> DepLibSfuShm::SfuShmCtx::errToString =
+	{
+		{ 0, "success (SFUSHM_AV_OK)"   },
+		{ -1, "error (SFUSHM_AV_ERR)"   },
+		{ -2, "again (SFUSHM_AV_AGAIN)" }
+	};
+
+
+DepLibSfuShm::SfuShmCtx::~SfuShmCtx()
 {
   // Call if writer is not closed
   if (SHM_WRT_CLOSED != wrt_status)
@@ -18,7 +26,21 @@ DepLibSfuShm::SfuShmMapItem::~SfuShmMapItem()
 }
 
 
-DepLibSfuShm::ShmWriterStatus DepLibSfuShm::SfuShmMapItem::SetSsrcInShmConf(uint32_t ssrc, DepLibSfuShm::ShmChunkType kind)
+void DepLibSfuShm::SfuShmCtx::CloseShmWriterCtx()
+{
+  // Call if writer is not closed
+  if (SHM_WRT_CLOSED != wrt_status)
+  {
+    sfushm_av_close_writer(wrt_ctx, 0); //TODO: smth else at the last param
+  }
+
+  // TODO: do I need this->stream_name.clear() and the rest?
+
+  //  TODO: zeromem wrt_init
+}
+
+
+DepLibSfuShm::ShmWriterStatus DepLibSfuShm::SfuShmCtx::SetSsrcInShmConf(uint32_t ssrc, DepLibSfuShm::ShmChunkType kind)
 {
   //Assuming that ssrc does not change, shm writer is initialized, nothing else to do
   if (SHM_WRT_READY == this->Status())
@@ -49,136 +71,95 @@ DepLibSfuShm::ShmWriterStatus DepLibSfuShm::SfuShmMapItem::SetSsrcInShmConf(uint
   }
 
   if (this->wrt_status == SHM_WRT_READY) {
-    MS_DEBUG_TAG(rtp, "DepLibSfuShm::SfuShmMapItem::SetSsrcInShmConf() will call sfushm_av_open_writer()");
     int err = SFUSHM_AV_OK;
     if ((err = sfushm_av_open_writer( &wrt_init, &wrt_ctx)) != SFUSHM_AV_OK) {
-      MS_DEBUG_TAG(rtp, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, DepLibSfuShm::GetErrorString(err));
+      MS_DEBUG_TAG(rtp, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
       wrt_status = SHM_WRT_UNDEFINED;
     }
     return this->Status();
   }
 
-  //MS_DEBUG_TAG(rtp, "DepLibSfuShm::SfuShmMapItem::SetSsrcInShmConf() did not initialize shm writer yet this->wrt_status %u ", this->wrt_status);
   return this->Status(); // if shm was not initialized as a result, return false
 }
 
 
-std::unordered_map<int, const char*> DepLibSfuShm::errToString =
-	{
-		{ 0, "success (SFUSHM_AV_OK)"   },
-		{ -1, "error (SFUSHM_AV_ERR)"   },
-		{ -2, "again (SFUSHM_AV_AGAIN)" }
-	};
-
-
-//std::unordered_map<const char*, DepLibSfuShm::SfuShmMapItem*> DepLibSfuShm::shmToWriterCtx;
-
-
-void DepLibSfuShm::InitializeShmWriterCtx(std::string shm_name, std::string log_name, int log_level, DepLibSfuShm::SfuShmMapItem *shmCtx)
+void DepLibSfuShm::SfuShmCtx::InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio)
 {
   MS_TRACE();
 
-  shmCtx->stream_name.assign(shm_name);
+  stream_name.assign(shm);
+  log_name.assign(log);
 
-  shmCtx->wrt_init.stream_name = "SFUTEST"; //shmCtx->stream_name.c_str()
-	shmCtx->wrt_init.stats_win_size = 300;
-	shmCtx->wrt_init.conf.log_file_name = "/var/log/sg/nginx/test_sfu_shm.log"; // log_name
-	shmCtx->wrt_init.conf.log_level = 9; // log_level
-	shmCtx->wrt_init.conf.redirect_stdio = 1;
+  wrt_init.stream_name = const_cast<char*>(stream_name.c_str());
+	wrt_init.stats_win_size = 300;
+	wrt_init.conf.log_file_name = log_name.c_str();
+	wrt_init.conf.log_level = level;
+	wrt_init.conf.redirect_stdio = stdio;
   
   // TODO: initialize with some different values? or keep these?
   // At this points ssrc values are still not known
-  shmCtx->wrt_init.conf.channels[0].target_buf_ms = 20000;
-  shmCtx->wrt_init.conf.channels[0].target_kbps   = 128;
-  shmCtx-> wrt_init.conf.channels[0].ssrc         = 0;
-  shmCtx->wrt_init.conf.channels[0].sample_rate   = 48000;
-  shmCtx->wrt_init.conf.channels[0].num_chn       = 2;
-  shmCtx->wrt_init.conf.channels[0].codec_id      = SFUSHM_AV_AUDIO_CODEC_OPUS;
-  shmCtx->wrt_init.conf.channels[0].video         = 0; 
-  shmCtx->wrt_init.conf.channels[0].audio         = 1;
+  wrt_init.conf.channels[0].target_buf_ms = 20000;
+  wrt_init.conf.channels[0].target_kbps   = 128;
+  wrt_init.conf.channels[0].ssrc         = 0;
+  wrt_init.conf.channels[0].sample_rate   = 48000;
+  wrt_init.conf.channels[0].num_chn       = 2;
+  wrt_init.conf.channels[0].codec_id      = SFUSHM_AV_AUDIO_CODEC_OPUS;
+  wrt_init.conf.channels[0].video         = 0; 
+  wrt_init.conf.channels[0].audio         = 1;
 
-  shmCtx->wrt_init.conf.channels[1].target_buf_ms = 20000; 
-  shmCtx->wrt_init.conf.channels[1].target_kbps   = 2500;
-  shmCtx->wrt_init.conf.channels[1].ssrc          = 0;
-  shmCtx->wrt_init.conf.channels[1].sample_rate   = 90000;
-  shmCtx->wrt_init.conf.channels[1].codec_id      = SFUSHM_AV_VIDEO_CODEC_H264;
-  shmCtx->wrt_init.conf.channels[1].video         = 1;
-  shmCtx->wrt_init.conf.channels[1].audio         = 0;
-
-  MS_DEBUG_TAG(rtp, "DepLibSfuShm::SfuShmMapItem created with name %s", shmCtx->stream_name.c_str());
+  wrt_init.conf.channels[1].target_buf_ms = 20000; 
+  wrt_init.conf.channels[1].target_kbps   = 2500;
+  wrt_init.conf.channels[1].ssrc          = 0;
+  wrt_init.conf.channels[1].sample_rate   = 90000;
+  wrt_init.conf.channels[1].codec_id      = SFUSHM_AV_VIDEO_CODEC_H264;
+  wrt_init.conf.channels[1].video         = 1;
+  wrt_init.conf.channels[1].audio         = 0;
 }
 
 
-DepLibSfuShm::ShmWriterStatus DepLibSfuShm::ConfigureShmWriterCtx(DepLibSfuShm::SfuShmMapItem *shmCtx, DepLibSfuShm::ShmChunkType kind, uint32_t ssrc)
-{
-  MS_TRACE();
-  
-  if (SHM_WRT_READY == shmCtx->Status()) {
-    return SHM_WRT_READY;  // fully initialized, just return
-  }
-
-  // Here ctx is allocated but not fully initialized, try to init
-  if (SHM_WRT_READY == shmCtx->SetSsrcInShmConf(ssrc, kind)) {
-    	MS_DEBUG_TAG(rtp, "DepLibSfuShm::ConfigureShmWriterCtx() SHM_WRT_READY");
-  }
-
-  return shmCtx->Status();
-}
-
-
-int DepLibSfuShm::WriteChunk(DepLibSfuShm::SfuShmMapItem *shmCtx, sfushm_av_frame_frag_t* data, DepLibSfuShm::ShmChunkType kind, uint32_t ssrc)
+int DepLibSfuShm::SfuShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, DepLibSfuShm::ShmChunkType kind, uint32_t ssrc)
 {
   int err;
 
-  MS_ASSERT(shmCtx != nullptr, "shmCtx must be initialized");
-
-  if (shmCtx->Status() != SHM_WRT_READY)
+  if (Status() != SHM_WRT_READY)
   {
-    return 0;  // Do not try to configure shm writer here at this point, the caller should have already tried 
+    return 0;
   }
 
   switch (kind)
   {
     case DepLibSfuShm::ShmChunkType::VIDEO:
-      err = sfushm_av_write_video(shmCtx->wrt_ctx, data);
+      err = sfushm_av_write_video(wrt_ctx, data);
       break;
 
     case DepLibSfuShm::ShmChunkType::AUDIO:
-      err = sfushm_av_write_audio(shmCtx->wrt_ctx, data);
+      err = sfushm_av_write_audio(wrt_ctx, data);
       break;
 
     case DepLibSfuShm::ShmChunkType::RTCP:
-      // TODO: this is not implemented in sfushm API yet err = sfushm_av_write_rtcp(wr_ctx, data);
+      // TODO: err = sfushm_av_write_rtcp(wr_ctx, data);
       break;
 
     default:
-      //TODO: LOG SMTH
       return -1;
   }
 
-
-  if (DepLibSfuShm::IsError(err))
+  if (IsError(err))
   {
-    MS_WARN_TAG(rtp, "ERROR writing chunk to shm: %d - %s", err, DepLibSfuShm::GetErrorString(err));
-    return -1; // depending on err might stop writing all together, or ignore this particular packet (and do smth specific in ShmTransport.cpp)
+    MS_WARN_TAG(rtp, "ERROR writing chunk to shm: %d - %s", err, GetErrorString(err));
+    return -1;
   }
-  else {
-    MS_DEBUG_TAG(rtp, "RET CODE writing chunk to shm: %d", err);
-  }
-
   return 0;
 }
 
 
-int DepLibSfuShm::WriteStreamMetadata(DepLibSfuShm::SfuShmMapItem *shmCtx, uint8_t *data, size_t len)
+int DepLibSfuShm::SfuShmCtx::WriteStreamMetadata(uint8_t *data, size_t len)
 {
-  // TODO: there should be shm writing API for this
-
-  if (shmCtx == nullptr || shmCtx->Status() != SHM_WRT_READY)
+  if (Status() != SHM_WRT_READY)
   {
     // TODO: log smth
     return -1;
   }
-
+  // TODO: no API for writing metadata yet
   return 0;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@livelyvideo/mediasoup-shm",
-  "version": "3.4.28",
+  "version": "3.4.30",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -52,6 +52,7 @@
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
     "supports-color": "^7.1.0",
+    "tsc": "^1.20150623.0",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
@@ -70,8 +71,8 @@
     "jest-tobetype": "^1.2.3",
     "open-cli": "^5.0.0",
     "sctp": "^0.0.19",
-    "tsc-watch": "^4.0.0",
-    "typescript": "^3.7.4"
+    "tsc-watch": "^4.1.0",
+    "typescript": "^3.7.5"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"

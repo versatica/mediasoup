@@ -148,14 +148,13 @@ export declare class Router extends EnhancedEventEmitter {
      *
      * @param {String|Object} listenIp - Listen IP string or an object with ip and
      *   optional announcedIp string.
-     * @param {String} shmName - shared memory file name
+     * @param {Object} shm - shared memory file name
      * @param {Object} [appData={}] - Custom app data.
      *
      * @async
      * @returns {ShmTransport}
      */
-    createShmTransport({ listenIp, shmName, logName, logLevel, // should be "error" ngx log level
-    appData }: ShmTransportOptions): Promise<ShmTransport>;
+    createShmTransport({ listenIp, shm, log, appData }: ShmTransportOptions): Promise<ShmTransport>;
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.
      */

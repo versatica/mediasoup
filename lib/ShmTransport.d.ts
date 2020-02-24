@@ -5,9 +5,8 @@ export interface ShmTransportOptions {
      * Listening IP address.
      */
     listenIp: TransportListenIp | string;
-    shmName: string;
-    logName: string;
-    logLevel: number;
+    shm: any;
+    log: any;
     /**
      * Custom application data.
      */

@@ -570,7 +570,7 @@ export class Router extends EnhancedEventEmitter
 	 *
 	 * @param {String|Object} listenIp - Listen IP string or an object with ip and
 	 *   optional announcedIp string.
-	 * @param {String} shmName - shared memory file name
+	 * @param {Object} shm - shared memory file name
 	 * @param {Object} [appData={}] - Custom app data.
 	 *
 	 * @async
@@ -579,11 +579,10 @@ export class Router extends EnhancedEventEmitter
 	async createShmTransport(
 		{
 			listenIp,
-			shmName,
-			logName = "stdout",
-			logLevel = 4, // should be "error" ngx log level
-			appData = {} // may contain data to help with shm channels config, TBD 
-		}: ShmTransportOptions
+			shm,
+			log,
+			appData = {}
+		} : ShmTransportOptions
 	): Promise<ShmTransport>
 	{
 		logger.debug('createShmTransport()');
@@ -613,8 +612,9 @@ export class Router extends EnhancedEventEmitter
 		const internal = { ...this._internal, transportId: uuidv4() };
 		const reqData = {
 			listenIp,
-			shm       : {name: shmName},
-			log       : {fileName: logName, level: logLevel}
+			shm,
+			log,
+			appData
 		};
 
 		const data =
