@@ -53,12 +53,12 @@
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
     "supports-color": "^7.1.0",
-    "uuid": "^3.4.0"
+    "uuid": "^7.0.1"
   },
   "devDependencies": {
-    "@types/node": "^13.7.4",
+    "@types/node": "^13.7.5",
     "@types/random-number": "0.0.0",
-    "@types/uuid": "^3.4.7",
+    "@types/uuid": "^7.0.0",
     "@typescript-eslint/eslint-plugin": "^2.21.0",
     "@typescript-eslint/parser": "^2.21.0",
     "cross-env": "^7.0.0",
