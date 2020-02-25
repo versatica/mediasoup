@@ -59,11 +59,11 @@
     "@types/node": "^13.7.4",
     "@types/random-number": "0.0.0",
     "@types/uuid": "^3.4.7",
-    "@typescript-eslint/eslint-plugin": "^2.20.0",
-    "@typescript-eslint/parser": "^2.20.0",
+    "@typescript-eslint/eslint-plugin": "^2.21.0",
+    "@typescript-eslint/parser": "^2.21.0",
     "cross-env": "^7.0.0",
     "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.7.0",
+    "eslint-plugin-jest": "^23.8.0",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
     "jest": "^25.1.0",
@@ -71,7 +71,7 @@
     "open-cli": "^5.0.0",
     "sctp": "^0.0.19",
     "tsc-watch": "^4.1.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.8.2"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
