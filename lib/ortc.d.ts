@@ -122,9 +122,9 @@ export declare function getConsumerRtpParameters(consumableParams: RtpParameters
 /**
  * Generate RTP parameters for a pipe Consumer.
  *
- * It keeps all original consumable encodings, removes RTX support and also
- * other features such as NACK.
+ * It keeps all original consumable encodings and removes support for BWE. If
+ * enableRtx is false, it also removes RTX and NACK support.
  */
-export declare function getPipeConsumerRtpParameters(consumableParams: RtpParameters): RtpParameters;
+export declare function getPipeConsumerRtpParameters(consumableParams: RtpParameters, enableRtx?: boolean): RtpParameters;
 export {};
 //# sourceMappingURL=ortc.d.ts.map

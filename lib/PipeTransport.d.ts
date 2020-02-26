@@ -21,6 +21,12 @@ export interface PipeTransportOptions {
      */
     maxSctpMessageSize?: number;
     /**
+     * Enable RTX and NACK for RTP retransmission. Useful if both Routers are
+     * located in different hosts and there is packet lost in the link. For this
+     * to work, both PipeTransports must enable this setting. Default false.
+     */
+    enableRtx?: boolean;
+    /**
      * Custom application data.
      */
     appData?: any;
@@ -52,6 +58,7 @@ export interface PipeTransportStat {
     tuple: TransportTuple;
 }
 export declare class PipeTransport extends Transport {
+    private readonly _enableRtx;
     /**
      * @private
      * @emits sctpstatechange - (sctpState: SctpState)
