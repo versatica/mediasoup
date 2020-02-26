@@ -36,6 +36,13 @@ export interface PipeTransportOptions
 	maxSctpMessageSize?: number;
 
 	/**
+	 * Enable RTX and NACK for RTP retransmission. Useful if both Routers are
+	 * located in different hosts and there is packet lost in the link. For this
+	 * to work, both PipeTransports must enable this setting. Default false.
+	 */
+	enableRtx?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: any;
@@ -90,6 +97,9 @@ export class PipeTransport extends Transport
 	//   - .maxMessageSize
 	// - .sctpState
 
+	// Custom app data.
+	private readonly _enableRtx: boolean;
+
 	/**
 	 * @private
 	 * @emits sctpstatechange - (sctpState: SctpState)
@@ -101,7 +111,7 @@ export class PipeTransport extends Transport
 
 		logger.debug('constructor()');
 
-		const { data } = params;
+		const { data, enableRtx } = params;
 
 		this._data =
 		{
@@ -109,6 +119,8 @@ export class PipeTransport extends Transport
 			sctpParameters : data.sctpParameters,
 			sctpState      : data.sctpState
 		};
+
+		this._enableRtx = enableRtx;
 
 		this._handleWorkerNotifications();
 	}
@@ -246,8 +258,8 @@ export class PipeTransport extends Transport
 			throw Error(`Producer with id "${producerId}" not found`);
 
 		// This may throw.
-		const rtpParameters =
-			ortc.getPipeConsumerRtpParameters(producer.consumableRtpParameters);
+		const rtpParameters = ortc.getPipeConsumerRtpParameters(
+			producer.consumableRtpParameters, this._enableRtx);
 
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
 		const reqData =

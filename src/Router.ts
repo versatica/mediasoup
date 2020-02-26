@@ -501,6 +501,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 1073741823,
+			enableRtx = false,
 			appData = {}
 		}: PipeTransportOptions
 	): Promise<PipeTransport>
@@ -547,6 +548,7 @@ export class Router extends EnhancedEventEmitter
 				data,
 				channel                  : this._channel,
 				appData,
+				enableRtx,
 				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer => (
 					this._producers.get(producerId)

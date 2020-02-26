@@ -1049,11 +1049,12 @@ export function getConsumerRtpParameters(
 /**
  * Generate RTP parameters for a pipe Consumer.
  *
- * It keeps all original consumable encodings, removes RTX support and also
- * other features such as NACK.
+ * It keeps all original consumable encodings and removes support for BWE. If
+ * enableRtx is false, it also removes RTX and NACK support.
  */
 export function getPipeConsumerRtpParameters(
-	consumableParams: RtpParameters
+	consumableParams: RtpParameters,
+	enableRtx = false
 ): RtpParameters
 {
 	const consumerParams: RtpParameters =
@@ -1069,15 +1070,14 @@ export function getPipeConsumerRtpParameters(
 
 	for (const codec of consumableCodecs)
 	{
-		if (isRtxCodec(codec))
+		if (!enableRtx && isRtxCodec(codec))
 			continue;
 
-		// No support for NACK, PLI, FIR and RTX in PipeTransport.
-		// Reduce RTCP feedbacks by removing NACK support and other features.
 		codec.rtcpFeedback = codec.rtcpFeedback
 			.filter((fb) => (
 				(fb.type === 'nack' && fb.parameter === 'pli') ||
-				(fb.type === 'ccm' && fb.parameter === 'fir')
+				(fb.type === 'ccm' && fb.parameter === 'fir') ||
+				(enableRtx && fb.type === 'nack' && !fb.parameter)
 			));
 
 		consumerParams.codecs.push(codec);
@@ -1093,10 +1093,10 @@ export function getPipeConsumerRtpParameters(
 	const consumableEncodings =
 		utils.clone(consumableParams.encodings) as RtpEncodingParameters[];
 
-	// No support for NACK, PLI, FIR and RTX in PipeTransport.
 	for (const encoding of consumableEncodings)
 	{
-		delete encoding.rtx;
+		if (!enableRtx)
+			delete encoding.rtx;
 
 		consumerParams.encodings.push(encoding);
 	}

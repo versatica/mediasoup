@@ -318,11 +318,20 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* /*nackPacket*/)
+	void PipeConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
 	{
 		MS_TRACE();
 
-		// Do nothing since we do not enable NACK.
+		if (!IsActive())
+			return;
+
+		// May emit 'trace' event.
+		EmitTraceEventNackType();
+
+		auto ssrc       = nackPacket->GetMediaSsrc();
+		auto* rtpStream = this->mapMappedSsrcRtpStream.at(ssrc);
+
+		rtpStream->ReceiveNack(nackPacket);
 	}
 
 	void PipeConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)
@@ -507,9 +516,13 @@ namespace RTC
 
 			for (auto& fb : mediaCodec->rtcpFeedback)
 			{
-				// NOTE: Do not consider NACK in PipeConsumer.
+				if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+				{
+					MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 
-				if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
+					params.useNack = true;
+				}
+				else if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
 				{
 					MS_DEBUG_2TAGS(rtp, rtcp, "PLI supported");
 
@@ -524,9 +537,8 @@ namespace RTC
 			}
 
 			// Create a RtpStreamSend for sending a single media stream.
-			// NOTE: PipeConsumer does not support NACK.
-			size_t bufferSize{ 0u };
-			auto* rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+			size_t bufferSize = params.useNack ? 600u : 0u;
+			auto* rtpStream   = new RTC::RtpStreamSend(this, params, bufferSize);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())

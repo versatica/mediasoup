@@ -454,6 +454,90 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeProducer.paused).toBe(true);
 }, 2000);
 
+test('router.createPipeTransport() with enableRtx succeeds', async () =>
+{
+	const pipeTransport = await router1.createPipeTransport(
+		{
+			listenIp  : '127.0.0.1',
+			enableRtx : true
+		});
+
+	const pipeConsumer =
+		await pipeTransport.consume({ producerId: videoProducer.id });
+
+	expect(pipeConsumer.id).toBeType('string');
+	expect(pipeConsumer.closed).toBe(false);
+	expect(pipeConsumer.kind).toBe('video');
+	expect(pipeConsumer.rtpParameters).toBeType('object');
+	expect(pipeConsumer.rtpParameters.mid).toBe(undefined);
+	expect(pipeConsumer.rtpParameters.codecs).toEqual(
+		[
+			{
+				mimeType     : 'video/VP8',
+				payloadType  : 101,
+				clockRate    : 90000,
+				channels     : 1,
+				parameters   : {},
+				rtcpFeedback :
+				[
+					{ type: 'nack', parameter: '' },
+					{ type: 'nack', parameter: 'pli' },
+					{ type: 'ccm', parameter: 'fir' }
+				]
+			},
+			{
+				mimeType     : 'video/rtx',
+				payloadType  : 102,
+				clockRate    : 90000,
+				channels     : 1,
+				parameters   : { apt: 101 },
+				rtcpFeedback : []
+			}
+		]);
+	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual(
+		[
+			// NOTE: Remove this once framemarking draft becomes RFC.
+			{
+				uri        : 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
+				id         : 6,
+				encrypt    : false,
+				parameters : {}
+			},
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:framemarking',
+				id         : 7,
+				encrypt    : false,
+				parameters : {}
+			},
+			{
+				uri        : 'urn:3gpp:video-orientation',
+				id         : 11,
+				encrypt    : false,
+				parameters : {}
+			},
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:toffset',
+				id         : 12,
+				encrypt    : false,
+				parameters : {}
+			}
+		]);
+	expect(pipeConsumer.rtpParameters.encodings).toEqual(
+		[
+			videoProducer.consumableRtpParameters.encodings[0],
+			videoProducer.consumableRtpParameters.encodings[1],
+			videoProducer.consumableRtpParameters.encodings[2]
+		]);
+
+	expect(pipeConsumer.type).toBe('pipe');
+	expect(pipeConsumer.paused).toBe(false);
+	expect(pipeConsumer.producerPaused).toBe(true);
+	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
+	expect(pipeConsumer.appData).toEqual({});
+
+	pipeTransport.close();
+}, 2000);
+
 test('transport.consume() for a pipe Producer succeeds', async () =>
 {
 	videoConsumer = await transport2.consume(
