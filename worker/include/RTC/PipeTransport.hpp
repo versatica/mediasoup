@@ -47,6 +47,7 @@ namespace RTC
 		RTC::TransportTuple* tuple{ nullptr };
 		// Others.
 		ListenIp listenIp;
+		bool rtx{ false };
 		struct sockaddr_storage remoteAddrStorage;
 	};
 } // namespace RTC

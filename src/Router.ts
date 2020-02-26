@@ -536,7 +536,8 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
-			isDataChannel : false
+			isDataChannel : false,
+			enableRtx
 		};
 
 		const data =
@@ -548,7 +549,6 @@ export class Router extends EnhancedEventEmitter
 				data,
 				channel                  : this._channel,
 				appData,
-				enableRtx,
 				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer => (
 					this._producers.get(producerId)

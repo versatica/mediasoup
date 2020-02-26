@@ -58,7 +58,6 @@ export interface PipeTransportStat {
     tuple: TransportTuple;
 }
 export declare class PipeTransport extends Transport {
-    private readonly _enableRtx;
     /**
      * @private
      * @emits sctpstatechange - (sctpState: SctpState)

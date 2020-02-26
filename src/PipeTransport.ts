@@ -96,9 +96,7 @@ export class PipeTransport extends Transport
 	//   - .MIS
 	//   - .maxMessageSize
 	// - .sctpState
-
-	// Custom app data.
-	private readonly _enableRtx: boolean;
+	// - .rtx
 
 	/**
 	 * @private
@@ -111,16 +109,15 @@ export class PipeTransport extends Transport
 
 		logger.debug('constructor()');
 
-		const { data, enableRtx } = params;
+		const { data } = params;
 
 		this._data =
 		{
 			tuple          : data.tuple,
 			sctpParameters : data.sctpParameters,
-			sctpState      : data.sctpState
+			sctpState      : data.sctpState,
+			rtx            : data.rtx
 		};
-
-		this._enableRtx = enableRtx;
 
 		this._handleWorkerNotifications();
 	}
@@ -259,7 +256,7 @@ export class PipeTransport extends Transport
 
 		// This may throw.
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
-			producer.consumableRtpParameters, this._enableRtx);
+			producer.consumableRtpParameters, this._data.rtx);
 
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
 		const reqData =

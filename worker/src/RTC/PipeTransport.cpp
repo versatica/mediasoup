@@ -45,6 +45,11 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
+		auto jsonEnableRtxIt = data.find("enableRtx");
+
+		if (jsonEnableRtxIt != data.end() && jsonEnableRtxIt->is_boolean())
+			this->rtx = jsonEnableRtxIt->get<bool>();
+
 		try
 		{
 			// This may throw.
@@ -78,6 +83,9 @@ namespace RTC
 
 		// Call the parent method.
 		RTC::Transport::FillJson(jsonObject);
+
+		// Add rtx.
+		jsonObject["rtx"] = this->rtx;
 
 		// Add tuple.
 		if (this->tuple != nullptr)
