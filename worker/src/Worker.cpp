@@ -89,7 +89,7 @@ void Worker::FillJsonResourceUsage(json& jsonObject) const
 	MS_TRACE();
 
 	int err;
-	uv_rusage_t uvRusage;
+	uv_rusage_t uvRusage; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	err = uv_getrusage(std::addressof(uvRusage));
 
