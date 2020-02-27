@@ -1,109 +1,204 @@
+/*
+ * Code from http://web.mit.edu/freebsd/head/contrib/wpa/src/utils/base64.c.
+ *
+ * Base64 encoding/decoding (RFC1341)
+ * Copyright (c) 2005-2011, Jouni Malinen <j@w1.fi>
+ *
+ * This software may be distributed under the terms of the BSD license.
+ * See README for more details.
+ */
+
 #define MS_CLASS "Utils::String"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <cstring> // std::memset()
 
-static const char* B64Chars =
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+/* Static. */
 
-// clang-format off
-static const int B64Index[256] =
-{
-	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  62, 63, 62, 62, 63,
-	52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 0,  0,  0,  0,  0,  0,
-	0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
-	15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0,  0,  0,  0,  63,
-	0,  26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-	41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
-};
-// clang-format on
+static constexpr size_t BufferOutSize{ 65536 };
+static unsigned char BufferOut[BufferOutSize];
+static const unsigned char Base64Table[65] =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 namespace Utils
 {
-	const std::string Utils::String::Base64Encode(const uint8_t* data, size_t len)
+	/**
+	 * @param data - Data to be encoded.
+	 * @param len - Length of the data to be encoded.
+	 * @param outLen - Pointer to output length variable.
+	 *
+	 * @returns Buffer of outLen bytes of encoded data, or nulllptr on failure.
+	 *
+	 * Returned buffer is nul terminated to make it easier to use as a C string.
+	 * The nul terminator is not included in outLen.
+	 */
+	unsigned char* Utils::String::Base64Encode(const unsigned char* data, size_t len, size_t* outLen)
 	{
 		MS_TRACE();
 
-		std::string result((len + 2) / 3 * 4, '=');
-		const char* p = reinterpret_cast<const char*>(data);
-		char* str = &result[0];
-		size_t j{ 0 };
-		size_t pad = len % 3;
-		const size_t last = len - pad;
+		unsigned char* out = BufferOut;
+		unsigned char* pos;
+		const unsigned char* end;
+		const unsigned char* in;
+		size_t olen;
+		int lineLen;
 
-		for (size_t i{ 0 }; i < last; i += 3)
+		olen = len * 4 / 3 + 4; // 3-byte blocks to 4-byte.
+		olen += olen / 72;      // line feeds.
+		olen++;                 // Nul termination.
+
+		if (olen < len)
+			return nullptr; // Integer overflow.
+
+		end     = data + len;
+		in      = data;
+		pos     = out;
+		lineLen = 0;
+
+		while (end - in >= 3)
 		{
-			int n = static_cast<int>(p[i]) << 16 | static_cast<int>(p[i + 1]) << 8 | p[i + 2];
+			*pos++ = Base64Table[in[0] >> 2];
+			*pos++ = Base64Table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
+			*pos++ = Base64Table[((in[1] & 0x0f) << 2) | (in[2] >> 6)];
+			*pos++ = Base64Table[in[2] & 0x3f];
+			in += 3;
+			lineLen += 4;
 
-			str[j++] = B64Chars[n >> 18];
-			str[j++] = B64Chars[n >> 12 & 0x3F];
-			str[j++] = B64Chars[n >> 6 & 0x3F];
-			str[j++] = B64Chars[n & 0x3F];
-		}
-
-		if (pad)
-		{
-			int n = --pad ? static_cast<int>(p[last]) << 8 | p[last + 1] : p[last];
-
-			str[j++] = B64Chars[pad ? n >> 10 & 0x3F : n >> 2];
-			str[j++] = B64Chars[pad ? n >> 4 & 0x03F : n << 4 & 0x3F];
-			str[j++] = pad ? B64Chars[n << 2 & 0x3F] : '=';
-		}
-
-		return result;
-	}
-
-	const std::string Utils::String::Base64Encode(std::string& data)
-	{
-		MS_TRACE();
-
-		return Base64Encode(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
-	}
-
-	const uint8_t* Utils::String::Base64Decode(const std::string& str)
-	{
-		MS_TRACE();
-
-		const uint8_t* data = reinterpret_cast<const uint8_t*>(str.c_str());
-		const size_t len = str.size();
-
-		if (len == 0)
-			return nullptr;
-
-		const unsigned char* p = static_cast<const unsigned char*>(data);
-		size_t j{ 0 };
-		size_t pad1 = len % 4 || p[len - 1] == '=';
-		size_t pad2 = pad1 && (len % 4 > 2 || p[len - 2] != '=');
-		const size_t last = (len - pad1) / 4 << 2;
-		std::string result(last / 4 * 3 + pad1 + pad2, '\0');
-		// const unsigned char* out = static_cast<const unsigned char*>(&result[0]);
-		char* out = &result[0];
-
-		for (size_t i = 0; i < last; i += 4)
-		{
-			int n = B64Index[p[i]] << 18 | B64Index[p[i + 1]] << 12 | B64Index[p[i + 2]] << 6 | B64Index[p[i + 3]];
-
-			out[j++] = n >> 16;
-			out[j++] = n >> 8 & 0xFF;
-			out[j++] = n & 0xFF;
-		}
-
-		if (pad1)
-		{
-			int n = B64Index[p[last]] << 18 | B64Index[p[last + 1]] << 12;
-
-			out[j++] = n >> 16;
-
-			if (pad2)
+			if (lineLen >= 72)
 			{
-				n |= B64Index[p[last + 2]] << 6;
-				out[j++] = n >> 8 & 0xFF;
+				*pos++  = '\n';
+				lineLen = 0;
 			}
 		}
 
-		return reinterpret_cast<const uint8_t*>(result.c_str());
+		if (end - in)
+		{
+			*pos++ = Base64Table[in[0] >> 2];
+
+			if (end - in == 1)
+			{
+				*pos++ = Base64Table[(in[0] & 0x03) << 4];
+				*pos++ = '=';
+			}
+			else
+			{
+				*pos++ = Base64Table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
+				*pos++ = Base64Table[(in[1] & 0x0f) << 2];
+			}
+
+			*pos++ = '=';
+			lineLen += 4;
+		}
+
+		if (lineLen)
+			*pos++ = '\n';
+
+		*pos = '\0';
+
+		if (outLen)
+			*outLen = pos - out;
+
+		return out;
+	}
+
+	unsigned char* Utils::String::Base64Encode(const std::string& data, size_t* outLen)
+	{
+		MS_TRACE();
+
+		return Base64Encode(reinterpret_cast<const unsigned char*>(data.c_str()), data.size(), outLen);
+	}
+
+	/**
+	 * @param data - Data to be decoded.
+	 * @param len - Length of the data to be decoded.
+	 * @param outLen - Pointer to output length variable.
+	 *
+	 * @returns Buffer of outLen bytes of decoded data, or nullptr on failure.
+	 */
+	unsigned char* Utils::String::Base64Decode(const unsigned char* data, size_t len, size_t* outLen)
+	{
+		MS_TRACE();
+
+		unsigned char dtable[256];
+		unsigned char* out = BufferOut;
+		unsigned char* pos;
+		unsigned char block[4];
+		unsigned char tmp;
+		size_t i;
+		size_t count;
+		size_t olen;
+		int pad{ 0 };
+
+		std::memset(dtable, 0x80, 256);
+
+		for (i = 0; i < sizeof(Base64Table) - 1; ++i)
+		{
+			dtable[Base64Table[i]] = static_cast<unsigned char>(i);
+		}
+		dtable[static_cast<unsigned char>('=')] = 0;
+
+		count = 0;
+		for (i = 0; i < len; ++i)
+		{
+			if (dtable[data[i]] != 0x80)
+				count++;
+		}
+
+		if (count == 0 || count % 4)
+			return nullptr;
+
+		olen  = count / 4 * 3;
+		pos   = out;
+		count = 0;
+
+		for (i = 0; i < len; ++i)
+		{
+			tmp = dtable[data[i]];
+
+			if (tmp == 0x80)
+				continue;
+
+			if (data[i] == '=')
+				pad++;
+
+			block[count] = tmp;
+			count++;
+
+			if (count == 4)
+			{
+				*pos++ = (block[0] << 2) | (block[1] >> 4);
+				*pos++ = (block[1] << 4) | (block[2] >> 2);
+				*pos++ = (block[2] << 6) | block[3];
+				count  = 0;
+
+				if (pad)
+				{
+					if (pad == 1)
+						pos--;
+					else if (pad == 2)
+						pos -= 2;
+					else
+					{
+						// Invalid padding.
+						return nullptr;
+					}
+
+					break;
+				}
+			}
+		}
+
+		*outLen = pos - out;
+
+		return out;
+	}
+
+	unsigned char* Utils::String::Base64Decode(const std::string& data, size_t* outLen)
+	{
+		MS_TRACE();
+
+		return Base64Decode(reinterpret_cast<const unsigned char*>(data.c_str()), data.size(), outLen);
 	}
 } // namespace Utils

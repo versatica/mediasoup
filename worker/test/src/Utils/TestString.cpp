@@ -20,17 +20,27 @@ SCENARIO("String::ToLowerCase()")
 SCENARIO("String::Base64Encode()")
 {
 	std::string data;
-	std::string base64;
+	size_t outLen;
+	unsigned char* encodedPtr;
+	unsigned char* decodedPtr;
+	std::string encoded;
+	std::string decoded;
 
-	data = "abcd";
-	base64 = String::Base64Encode(data);
-	REQUIRE(base64 == "YWJjZA==");
-	REQUIRE(std::string(reinterpret_cast<const char*>(String::Base64Decode(base64))) == data);
+	data       = "abcd";
+	encodedPtr = String::Base64Encode(data, &outLen);
+	encoded    = std::string(reinterpret_cast<char*>(encodedPtr), outLen - 1); // TODO
+	decodedPtr = String::Base64Decode(encoded, &outLen);
+	decoded    = std::string(reinterpret_cast<char*>(decodedPtr), outLen);
 
-	// TODO: This fails even in the original implementation:
-	// http://cpp.sh/3qj7c
-	data = "Iñaki";
-	base64 = String::Base64Encode(data);
-	REQUIRE(base64 == "ScOxYWtp");
-	REQUIRE(std::string(reinterpret_cast<const char*>(String::Base64Decode(base64))) == data);
+	REQUIRE(encoded == "YWJjZA==");
+	REQUIRE(decoded == data);
+
+	data       = "Iñaki";
+	encodedPtr = String::Base64Encode(data, &outLen);
+	encoded    = std::string(reinterpret_cast<char*>(encodedPtr), outLen - 1); // TODO
+	decodedPtr = String::Base64Decode(encoded, &outLen);
+	decoded    = std::string(reinterpret_cast<char*>(decodedPtr), outLen);
+
+	REQUIRE(encoded == "ScOxYWtp");
+	REQUIRE(decoded == data);
 }
