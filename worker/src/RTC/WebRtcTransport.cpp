@@ -247,11 +247,11 @@ namespace RTC
 
 		this->iceCandidates.clear();
 
-		delete this->srtpRecvSession;
-		this->srtpRecvSession = nullptr;
-
 		delete this->srtpSendSession;
 		this->srtpSendSession = nullptr;
+
+		delete this->srtpRecvSession;
+		this->srtpRecvSession = nullptr;
 	}
 
 	void WebRtcTransport::FillJson(json& jsonObject) const
@@ -1205,16 +1205,11 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connected");
 
 		// Close it if it was already set and update it.
-		if (this->srtpSendSession)
-		{
-			delete this->srtpSendSession;
-			this->srtpSendSession = nullptr;
-		}
-		if (this->srtpRecvSession)
-		{
-			delete this->srtpRecvSession;
-			this->srtpRecvSession = nullptr;
-		}
+		delete this->srtpSendSession;
+		this->srtpSendSession = nullptr;
+
+		delete this->srtpRecvSession;
+		this->srtpRecvSession = nullptr;
 
 		try
 		{
@@ -1230,6 +1225,17 @@ namespace RTC
 		{
 			this->srtpRecvSession = new RTC::SrtpSession(
 			  RTC::SrtpSession::Type::INBOUND, srtpProfile, srtpRemoteKey, srtpRemoteKeyLen);
+
+			// Notify the Node WebRtcTransport.
+			json data = json::object();
+
+			data["dtlsState"]      = "connected";
+			data["dtlsRemoteCert"] = remoteCert;
+
+			Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
+
+			// Tell the parent class.
+			RTC::Transport::Connected();
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -1238,17 +1244,6 @@ namespace RTC
 			delete this->srtpSendSession;
 			this->srtpSendSession = nullptr;
 		}
-
-		// Notify the Node WebRtcTransport.
-		json data = json::object();
-
-		data["dtlsState"]      = "connected";
-		data["dtlsRemoteCert"] = remoteCert;
-
-		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
-
-		// Tell the parent class.
-		RTC::Transport::Connected();
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportFailed(const RTC::DtlsTransport* /*dtlsTransport*/)

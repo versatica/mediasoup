@@ -384,17 +384,11 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
-					if (this->tuple != nullptr)
-					{
-						delete this->tuple;
-						this->tuple = nullptr;
-					}
+					delete this->tuple;
+					this->tuple = nullptr;
 
-					if (this->rtcpTuple != nullptr)
-					{
-						delete this->rtcpTuple;
-						this->rtcpTuple = nullptr;
-					}
+					delete this->rtcpTuple;
+					this->rtcpTuple = nullptr;
 
 					throw;
 				}

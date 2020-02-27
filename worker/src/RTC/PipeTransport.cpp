@@ -5,12 +5,15 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
 	/* Static. */
 
+	// If SRTP is enabled we mandate AES_CM_128_HMAC_SHA1_80.
 	// AES-HMAC: http://tools.ietf.org/html/rfc3711
+	static RTC::SrtpSession::Profile SrtpProfile{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80 };
 	static constexpr size_t SrtpMasterLength{ 30 };
 
 	/* Instance methods. */
@@ -93,6 +96,12 @@ namespace RTC
 
 		delete this->tuple;
 		this->tuple = nullptr;
+
+		delete this->srtpSendSession;
+		this->srtpSendSession = nullptr;
+
+		delete this->srtpRecvSession;
+		this->srtpRecvSession = nullptr;
 	}
 
 	void PipeTransport::FillJson(json& jsonObject) const
@@ -106,7 +115,7 @@ namespace RTC
 		jsonObject["rtx"] = this->rtx;
 
 		// Add srtpKey.
-		if (!this->srtpKey.empty())
+		if (HasSrtp())
 			jsonObject["srtpKey"] = this->srtpKey;
 
 		// Add tuple.
@@ -203,13 +212,13 @@ namespace RTC
 
 					auto jsonSrtpKeyIt = request->data.find("srtpKey");
 
-					if (this->srtpKey.empty() && jsonSrtpKeyIt != request->data.end())
+					if (!HasSrtp() && jsonSrtpKeyIt != request->data.end())
 					{
 						MS_THROW_TYPE_ERROR("invalid srtpKey (SRTP not enabled locally)");
 					}
 					// clang-format off
 					else if (
-						!this->srtpKey.empty() &&
+						HasSrtp() &&
 						(jsonSrtpKeyIt == request->data.end() || !jsonSrtpKeyIt->is_string())
 					)
 					// clang-format on
@@ -217,12 +226,47 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("missing srtpKey (SRTP enabled locally)");
 					}
 
-					if (!this->srtpKey.empty())
+					if (HasSrtp())
 					{
-						auto remoteSrtpKey = jsonSrtpKeyIt->get<std::string>();
+						auto srtpKey = jsonSrtpKeyIt->get<std::string>();
 
-						if (remoteSrtpKey.size() != SrtpMasterLength)
+						if (srtpKey.size() != SrtpMasterLength)
 							MS_THROW_TYPE_ERROR("invalid srtpKey length");
+
+						auto* srtpLocalKey  = new uint8_t[SrtpMasterLength];
+						auto* srtpRemoteKey = new uint8_t[SrtpMasterLength];
+
+						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), SrtpMasterLength);
+						std::memcpy(srtpRemoteKey, srtpKey.c_str(), SrtpMasterLength);
+
+						try
+						{
+							this->srtpSendSession = new RTC::SrtpSession(
+							  RTC::SrtpSession::Type::OUTBOUND, SrtpProfile, srtpLocalKey, SrtpMasterLength);
+						}
+						catch (const MediaSoupError& error)
+						{
+							delete[] srtpLocalKey;
+							delete[] srtpRemoteKey;
+
+							MS_THROW_ERROR("error creating SRTP sending session: %s", error.what());
+						}
+
+						try
+						{
+							this->srtpRecvSession = new RTC::SrtpSession(
+							  RTC::SrtpSession::Type::INBOUND, SrtpProfile, srtpRemoteKey, SrtpMasterLength);
+						}
+						catch (const MediaSoupError& error)
+						{
+							delete[] srtpLocalKey;
+							delete[] srtpRemoteKey;
+
+							MS_THROW_ERROR("error creating SRTP receiving session: %s", error.what());
+						}
+
+						delete[] srtpLocalKey;
+						delete[] srtpRemoteKey;
 					}
 
 					int err;
@@ -270,11 +314,14 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
-					if (this->tuple != nullptr)
-					{
-						delete this->tuple;
-						this->tuple = nullptr;
-					}
+					delete this->srtpSendSession;
+					this->srtpSendSession = nullptr;
+
+					delete this->srtpRecvSession;
+					this->srtpRecvSession = nullptr;
+
+					delete this->tuple;
+					this->tuple = nullptr;
 
 					throw;
 				}
@@ -301,6 +348,11 @@ namespace RTC
 		}
 	}
 
+	inline bool PipeTransport::HasSrtp() const
+	{
+		return !this->srtpKey.empty();
+	}
+
 	inline bool PipeTransport::IsConnected() const
 	{
 		return this->tuple != nullptr;
@@ -325,6 +377,18 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(&data, &len))
+		{
+			if (cb)
+			{
+				(*cb)(false);
+
+				delete cb;
+			}
+
+			return;
+		}
+
 		this->tuple->Send(data, len, cb);
 
 		// Increase send transmission.
@@ -341,6 +405,9 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &len))
+			return;
+
 		this->tuple->Send(data, len);
 
 		// Increase send transmission.
@@ -356,6 +423,9 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
+
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &len))
+			return;
 
 		this->tuple->Send(data, len);
 
@@ -419,6 +489,30 @@ namespace RTC
 			return;
 		}
 
+		// Decrypt the SRTP packet.
+		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
+		{
+			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+
+			if (!packet)
+			{
+				MS_WARN_TAG(srtp, "DecryptSrtp() failed due to an invalid RTP packet");
+			}
+			else
+			{
+				MS_WARN_TAG(
+				  srtp,
+				  "DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetPayloadType(),
+				  packet->GetSequenceNumber());
+
+				delete packet;
+			}
+
+			return;
+		}
+
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
 		if (packet == nullptr)
@@ -447,6 +541,10 @@ namespace RTC
 
 			return;
 		}
+
+		// Decrypt the SRTCP packet.
+		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &len))
+			return;
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 

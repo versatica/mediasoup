@@ -1,6 +1,7 @@
 #ifndef MS_RTC_PIPE_TRANSPORT_HPP
 #define MS_RTC_PIPE_TRANSPORT_HPP
 
+#include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
@@ -26,6 +27,7 @@ namespace RTC
 		void HandleRequest(Channel::Request* request) override;
 
 	private:
+		bool HasSrtp() const;
 		bool IsConnected() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
@@ -45,6 +47,8 @@ namespace RTC
 		// Allocated by this.
 		RTC::UdpSocket* udpSocket{ nullptr };
 		RTC::TransportTuple* tuple{ nullptr };
+		RTC::SrtpSession* srtpRecvSession{ nullptr };
+		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
 		ListenIp listenIp;
 		bool rtx{ false };
