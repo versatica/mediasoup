@@ -27,6 +27,7 @@
       'src/Utils/Crypto.cpp',
       'src/Utils/File.cpp',
       'src/Utils/IP.cpp',
+      'src/Utils/String.cpp',
       'src/handles/SignalsHandler.cpp',
       'src/handles/TcpConnection.cpp',
       'src/handles/TcpServer.cpp',
