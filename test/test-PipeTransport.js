@@ -466,6 +466,7 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 		await pipeTransport.consume({ producerId: videoProducer.id });
 
 	expect(pipeConsumer.id).toBeType('string');
+	expect(pipeTransport.srtpKey).toBeUndefined();
 	expect(pipeConsumer.closed).toBe(false);
 	expect(pipeConsumer.kind).toBe('video');
 	expect(pipeConsumer.rtpParameters).toBeType('object');
@@ -534,6 +535,60 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 	expect(pipeConsumer.producerPaused).toBe(true);
 	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
 	expect(pipeConsumer.appData).toEqual({});
+
+	pipeTransport.close();
+}, 2000);
+
+test('router.createPipeTransport() with enableSrtp succeeds', async () =>
+{
+	const pipeTransport = await router1.createPipeTransport(
+		{
+			listenIp   : '127.0.0.1',
+			enableSrtp : true
+		});
+
+	expect(pipeTransport.id).toBeType('string');
+	expect(pipeTransport.srtpKey).toBeType('string');
+	expect(pipeTransport.srtpKey.length).toBe(30);
+
+	// Missing srtpKey.
+	await expect(pipeTransport.connect(
+		{
+			ip   : '127.0.0.2',
+			port : 9999
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpKey.
+	await expect(pipeTransport.connect(
+		{
+			ip      : '127.0.0.2',
+			port    : 9999,
+			srtpKey : 1
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpKey (wrong length).
+	await expect(pipeTransport.connect(
+		{
+			ip      : '127.0.0.2',
+			port    : 9999,
+			srtpKey : 'qwerty'
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Valid srtpKey.
+	await expect(pipeTransport.connect(
+		{
+			ip      : '127.0.0.2',
+			port    : 9999,
+			srtpKey : 'o9s70sa2h4lo9ri5qpaa3joxzr4lrs'
+		}))
+		.resolves
+		.toBe(undefined);
 
 	pipeTransport.close();
 }, 2000);

@@ -502,6 +502,7 @@ export class Router extends EnhancedEventEmitter
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 1073741823,
 			enableRtx = false,
+			enableSrtp = false,
 			appData = {}
 		}: PipeTransportOptions
 	): Promise<PipeTransport>
@@ -537,7 +538,8 @@ export class Router extends EnhancedEventEmitter
 			numSctpStreams,
 			maxSctpMessageSize,
 			isDataChannel : false,
-			enableRtx
+			enableRtx,
+			enableSrtp
 		};
 
 		const data =

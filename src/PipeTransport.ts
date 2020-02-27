@@ -43,6 +43,13 @@ export interface PipeTransportOptions
 	enableRtx?: boolean;
 
 	/**
+	 * Enable SRTP. Useful to protect the RTP and RTCP traffic if both Routers
+	 * are located in different hosts. For this to work, connect() must be called
+	 * with remote SRTP parameters. Defauilt false.
+	 */
+	enableSrtp?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: any;
@@ -97,6 +104,7 @@ export class PipeTransport extends Transport
 	//   - .maxMessageSize
 	// - .sctpState
 	// - .rtx
+	// - .srtpKey
 
 	/**
 	 * @private
@@ -116,7 +124,8 @@ export class PipeTransport extends Transport
 			tuple          : data.tuple,
 			sctpParameters : data.sctpParameters,
 			sctpState      : data.sctpState,
-			rtx            : data.rtx
+			rtx            : data.rtx,
+			srtpKey        : data.srtpKey
 		};
 
 		this._handleWorkerNotifications();
@@ -144,6 +153,14 @@ export class PipeTransport extends Transport
 	get sctpState(): SctpState
 	{
 		return this._data.sctpState;
+	}
+
+	/**
+	 * SRTP key.
+	 */
+	get srtpKey(): string | undefined
+	{
+		return this._data.srtpKey;
 	}
 
 	/**
@@ -216,17 +233,19 @@ export class PipeTransport extends Transport
 	async connect(
 		{
 			ip,
-			port
+			port,
+			srtpKey
 		}:
 		{
 			ip: string;
 			port: number;
+			srtpKey?: string;
 		}
 	): Promise<void>
 	{
 		logger.debug('connect()');
 
-		const reqData = { ip, port };
+		const reqData = { ip, port, srtpKey };
 
 		const data =
 			await this._channel.request('transport.connect', this._internal, reqData);

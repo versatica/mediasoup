@@ -27,6 +27,12 @@ export interface PipeTransportOptions {
      */
     enableRtx?: boolean;
     /**
+     * Enable SRTP. Useful to protect the RTP and RTCP traffic if both Routers
+     * are located in different hosts. For this to work, connect() must be called
+     * with remote SRTP parameters. Defauilt false.
+     */
+    enableSrtp?: boolean;
+    /**
      * Custom application data.
      */
     appData?: any;
@@ -77,6 +83,10 @@ export declare class PipeTransport extends Transport {
      */
     get sctpState(): SctpState;
     /**
+     * SRTP key.
+     */
+    get srtpKey(): string | undefined;
+    /**
      * Observer.
      *
      * @override
@@ -113,9 +123,10 @@ export declare class PipeTransport extends Transport {
      *
      * @override
      */
-    connect({ ip, port }: {
+    connect({ ip, port, srtpKey }: {
         ip: string;
         port: number;
+        srtpKey?: string;
     }): Promise<void>;
     /**
      * Create a pipe Consumer.

@@ -8,6 +8,11 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	// AES-HMAC: http://tools.ietf.org/html/rfc3711
+	static constexpr size_t SrtpMasterLength{ 30 };
+
 	/* Instance methods. */
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
@@ -50,6 +55,19 @@ namespace RTC
 		if (jsonEnableRtxIt != data.end() && jsonEnableRtxIt->is_boolean())
 			this->rtx = jsonEnableRtxIt->get<bool>();
 
+		auto jsonEnableSrtpIt = data.find("enableSrtp");
+
+		// clang-format off
+		if (
+			jsonEnableSrtpIt != data.end() &&
+			jsonEnableSrtpIt->is_boolean() &&
+			jsonEnableSrtpIt->get<bool>()
+		)
+		// clang-format on
+		{
+			this->srtpKey = Utils::Crypto::GetRandomString(SrtpMasterLength);
+		}
+
 		try
 		{
 			// This may throw.
@@ -86,6 +104,10 @@ namespace RTC
 
 		// Add rtx.
 		jsonObject["rtx"] = this->rtx;
+
+		// Add srtpKey.
+		if (!this->srtpKey.empty())
+			jsonObject["srtpKey"] = this->srtpKey;
 
 		// Add tuple.
 		if (this->tuple != nullptr)
@@ -155,6 +177,7 @@ namespace RTC
 				{
 					std::string ip;
 					uint16_t port{ 0u };
+					std::string srtpKey;
 
 					auto jsonIpIt = request->data.find("ip");
 
@@ -178,7 +201,29 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("missing port");
 					}
 
-					port = jsonPortIt->get<uint16_t>();
+					auto jsonSrtpKeyIt = request->data.find("srtpKey");
+
+					if (this->srtpKey.empty() && jsonSrtpKeyIt != request->data.end())
+					{
+						MS_THROW_TYPE_ERROR("invalid srtpKey (SRTP not enabled locally)");
+					}
+					// clang-format off
+					else if (
+						!this->srtpKey.empty() &&
+						(jsonSrtpKeyIt == request->data.end() || !jsonSrtpKeyIt->is_string())
+					)
+					// clang-format on
+					{
+						MS_THROW_TYPE_ERROR("missing srtpKey (SRTP enabled locally)");
+					}
+
+					if (!this->srtpKey.empty())
+					{
+						auto remoteSrtpKey = jsonSrtpKeyIt->get<std::string>();
+
+						if (remoteSrtpKey.size() != SrtpMasterLength)
+							MS_THROW_TYPE_ERROR("invalid srtpKey length");
+					}
 
 					int err;
 

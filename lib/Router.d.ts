@@ -142,7 +142,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a PipeTransport.
      */
-    createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, enableRtx, appData }: PipeTransportOptions): Promise<PipeTransport>;
+    createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.
      */
