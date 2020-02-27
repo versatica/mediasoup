@@ -462,6 +462,26 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 			enableRtx : true
 		});
 
+	// No SRTP enabled so passing srtpKey must fail.
+	await expect(pipeTransport.connect(
+		{
+			ip      : '127.0.0.2',
+			port    : 9999,
+			srtpKey : 'o9s70sa2h4lo9ri5qpaa3joxzr4lrs'
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// No SRTP enabled so passing srtpKey must fail.
+	await expect(pipeTransport.connect(
+		{
+			ip      : '127.0.0.2',
+			port    : 9999,
+			srtpKey : 'invalid'
+		}))
+		.rejects
+		.toThrow(TypeError);
+
 	const pipeConsumer =
 		await pipeTransport.consume({ producerId: videoProducer.id });
 
