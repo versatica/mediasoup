@@ -1,7 +1,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportProtocol, TransportTuple, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-export interface WebRtcTransportOptions {
+export declare type WebRtcTransportOptions = {
     /**
      * Listening IP address or addresses in order of preference (first one is the
      * preferred one).
@@ -44,13 +44,13 @@ export interface WebRtcTransportOptions {
      * Custom application data.
      */
     appData?: any;
-}
-export interface IceParameters {
+};
+export declare type IceParameters = {
     usernameFragment: string;
     password: string;
     iceLite?: boolean;
-}
-export interface IceCandidate {
+};
+export declare type IceCandidate = {
     foundation: string;
     priority: number;
     ip: string;
@@ -58,25 +58,25 @@ export interface IceCandidate {
     port: number;
     type: 'host';
     tcpType: 'passive' | undefined;
-}
-export interface DtlsParameters {
+};
+export declare type DtlsParameters = {
     role?: DtlsRole;
     fingerprints: DtlsFingerprint[];
-}
+};
 /**
  * The hash function algorithm (as defined in the "Hash function Textual Names"
  * registry initially specified in RFC 4572 Section 8) and its corresponding
  * certificate fingerprint value (in lowercase hex string as expressed utilizing
  * the syntax of "fingerprint" in RFC 4572 Section 5).
  */
-export interface DtlsFingerprint {
+export declare type DtlsFingerprint = {
     algorithm: string;
     value: string;
-}
+};
 export declare type IceState = 'new' | 'connected' | 'completed' | 'disconnected' | 'closed';
 export declare type DtlsRole = 'auto' | 'client' | 'server';
 export declare type DtlsState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
-export interface WebRtcTransportStat {
+export declare type WebRtcTransportStat = {
     type: string;
     transportId: string;
     timestamp: number;
@@ -104,7 +104,7 @@ export interface WebRtcTransportStat {
     iceState: IceState;
     iceSelectedTuple?: TransportTuple;
     dtlsState: DtlsState;
-}
+};
 export declare class WebRtcTransport extends Transport {
     /**
      * @private

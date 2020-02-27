@@ -12,6 +12,7 @@ export * from './RtpObserver';
 export * from './AudioLevelObserver';
 export * from './RtpParameters';
 export * from './SctpParameters';
+export * from './SrtpParameters';
 export * from './errors';
 export { ScalabilityMode } from './scalabilityModes';
 //# sourceMappingURL=types.d.ts.map

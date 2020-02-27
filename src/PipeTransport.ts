@@ -12,7 +12,7 @@ import {
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
-export interface PipeTransportOptions
+export type PipeTransportOptions =
 {
 	/**
 	 * Listening IP address.
@@ -45,7 +45,7 @@ export interface PipeTransportOptions
 	/**
 	 * Enable SRTP. Useful to protect the RTP and RTCP traffic if both Routers
 	 * are located in different hosts. For this to work, connect() must be called
-	 * with remote SRTP parameters. Defauilt false.
+	 * with remote SRTP parameters. Defauit false.
 	 */
 	enableSrtp?: boolean;
 
@@ -55,7 +55,7 @@ export interface PipeTransportOptions
 	appData?: any;
 }
 
-export interface PipeTransportStat
+export type PipeTransportStat =
 {
 	// Common to all Transports.
 	type: string;
@@ -156,7 +156,7 @@ export class PipeTransport extends Transport
 	}
 
 	/**
-	 * SRTP key.
+	 * SRTP key corresponding to the SRTP crypto AES_CM_128_HMAC_SHA1_80.
 	 */
 	get srtpKey(): string | undefined
 	{

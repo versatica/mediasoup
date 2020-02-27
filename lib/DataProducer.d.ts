@@ -1,7 +1,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { SctpStreamParameters } from './SctpParameters';
-export interface DataProducerOptions {
+export declare type DataProducerOptions = {
     /**
      * DataProducer id (just for Router.pipeToRouter() method).
      */
@@ -22,15 +22,15 @@ export interface DataProducerOptions {
      * Custom application data.
      */
     appData?: any;
-}
-export interface DataProducerStat {
+};
+export declare type DataProducerStat = {
     type: string;
     timestamp: number;
     label: string;
     protocol: string;
     messagesReceived: number;
     bytesReceived: number;
-}
+};
 export declare class DataProducer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;

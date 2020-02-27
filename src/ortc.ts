@@ -22,7 +22,7 @@ import {
 	SctpStreamParameters
 } from './SctpParameters';
 
-interface RtpMapping
+type RtpMapping =
 {
 	codecs:
 	{

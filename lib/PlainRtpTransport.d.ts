@@ -2,7 +2,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-export interface PlainRtpTransportOptions {
+export declare type PlainRtpTransportOptions = {
     /**
      * Listening IP address.
      */
@@ -40,8 +40,8 @@ export interface PlainRtpTransportOptions {
      * Custom application data.
      */
     appData?: any;
-}
-export interface PlainRtpTransportStat {
+};
+export declare type PlainRtpTransportStat = {
     type: string;
     transportId: string;
     timestamp: number;
@@ -70,7 +70,7 @@ export interface PlainRtpTransportStat {
     multiSource: boolean;
     tuple: TransportTuple;
     rtcpTuple?: TransportTuple;
-}
+};
 export declare class PlainRtpTransport extends Transport {
     /**
      * @private

@@ -1,6 +1,6 @@
 import { RtpCapabilities, RtpCodecCapability, RtpHeaderExtension, RtpParameters, RtpCodecParameters, RtcpFeedback, RtpEncodingParameters, RtpHeaderExtensionParameters, RtcpParameters } from './RtpParameters';
 import { SctpCapabilities, NumSctpStreams, SctpParameters, SctpStreamParameters } from './SctpParameters';
-interface RtpMapping {
+declare type RtpMapping = {
     codecs: {
         payloadType: number;
         mappedPayloadType: number;
@@ -11,7 +11,7 @@ interface RtpMapping {
         scalabilityMode?: string;
         mappedSsrc: number;
     }[];
-}
+};
 /**
  * Validates RtpCapabilities. It may modify given data by adding missing
  * fields with default values.

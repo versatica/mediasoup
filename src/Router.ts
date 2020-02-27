@@ -18,7 +18,7 @@ import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObser
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 
-export interface RouterOptions
+export type RouterOptions =
 {
 	/**
 	 * Router media codecs.
@@ -31,7 +31,7 @@ export interface RouterOptions
 	appData?: any;
 }
 
-export interface PipeToRouterOptions
+export type PipeToRouterOptions =
 {
 	/**
 	 * The id of the Producer to consume.
@@ -64,7 +64,7 @@ export interface PipeToRouterOptions
 	numSctpStreams?: NumSctpStreams;
 }
 
-export interface PipeToRouterResult
+export type PipeToRouterResult =
 {
 	/**
 	 * The Consumer created in the current Router.

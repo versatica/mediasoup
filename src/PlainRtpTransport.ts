@@ -10,7 +10,7 @@ import {
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
-export interface PlainRtpTransportOptions
+export type PlainRtpTransportOptions =
 {
 	/**
 	 * Listening IP address.
@@ -58,7 +58,7 @@ export interface PlainRtpTransportOptions
 	appData?: any;
 }
 
-export interface PlainRtpTransportStat
+export type PlainRtpTransportStat =
 {
 	// Common to all Transports.
 	type: string;

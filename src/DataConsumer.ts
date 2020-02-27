@@ -3,7 +3,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { SctpStreamParameters } from './SctpParameters';
 
-export interface DataConsumerOptions
+export type DataConsumerOptions =
 {
 	/**
 	 * The id of the DataProducer to consume.
@@ -16,7 +16,7 @@ export interface DataConsumerOptions
 	appData?: any;
 }
 
-export interface DataConsumerStat
+export type DataConsumerStat =
 {
 	type: string;
 	timestamp: number;

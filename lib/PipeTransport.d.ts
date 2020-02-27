@@ -2,7 +2,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-export interface PipeTransportOptions {
+export declare type PipeTransportOptions = {
     /**
      * Listening IP address.
      */
@@ -29,15 +29,15 @@ export interface PipeTransportOptions {
     /**
      * Enable SRTP. Useful to protect the RTP and RTCP traffic if both Routers
      * are located in different hosts. For this to work, connect() must be called
-     * with remote SRTP parameters. Defauilt false.
+     * with remote SRTP parameters. Defauit false.
      */
     enableSrtp?: boolean;
     /**
      * Custom application data.
      */
     appData?: any;
-}
-export interface PipeTransportStat {
+};
+export declare type PipeTransportStat = {
     type: string;
     transportId: string;
     timestamp: number;
@@ -62,7 +62,7 @@ export interface PipeTransportStat {
     availableIncomingBitrate?: number;
     maxIncomingBitrate?: number;
     tuple: TransportTuple;
-}
+};
 export declare class PipeTransport extends Transport {
     /**
      * @private
@@ -83,7 +83,7 @@ export declare class PipeTransport extends Transport {
      */
     get sctpState(): SctpState;
     /**
-     * SRTP key.
+     * SRTP key corresponding to the SRTP crypto AES_CM_128_HMAC_SHA1_80.
      */
     get srtpKey(): string | undefined;
     /**

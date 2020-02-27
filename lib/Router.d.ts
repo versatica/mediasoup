@@ -11,7 +11,7 @@ import { DataConsumer } from './DataConsumer';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
-export interface RouterOptions {
+export declare type RouterOptions = {
     /**
      * Router media codecs.
      */
@@ -20,8 +20,8 @@ export interface RouterOptions {
      * Custom application data.
      */
     appData?: any;
-}
-export interface PipeToRouterOptions {
+};
+export declare type PipeToRouterOptions = {
     /**
      * The id of the Producer to consume.
      */
@@ -46,8 +46,8 @@ export interface PipeToRouterOptions {
      * SCTP streams number.
      */
     numSctpStreams?: NumSctpStreams;
-}
-export interface PipeToRouterResult {
+};
+export declare type PipeToRouterResult = {
     /**
      * The Consumer created in the current Router.
      */
@@ -64,7 +64,7 @@ export interface PipeToRouterResult {
      * The DataProducer created in the target Router.
      */
     pipeDataProducer?: DataProducer;
-}
+};
 export declare class Router extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;

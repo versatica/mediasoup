@@ -7,7 +7,7 @@ import { InvalidStateError } from './errors';
 
 const logger = new Logger('Channel');
 
-interface Sent
+type Sent =
 {
 	id: number;
 	method: string;

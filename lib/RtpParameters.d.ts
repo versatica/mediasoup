@@ -2,7 +2,7 @@
  * The RTP capabilities define what mediasoup or an endpoint can receive at
  * media level.
  */
-export interface RtpCapabilities {
+export declare type RtpCapabilities = {
     /**
      * Supported media and RTX codecs.
      */
@@ -15,7 +15,7 @@ export interface RtpCapabilities {
      * Supported FEC mechanisms.
      */
     fecMechanisms?: string[];
-}
+};
 /**
  * Media kind ('audio' or 'video').
  */
@@ -37,7 +37,7 @@ export declare type MediaKind = 'audio' | 'video';
  * require preferredPayloadType field (if unset, mediasoup will choose a random
  * one). If given, make sure it's in the 96-127 range.
  */
-export interface RtpCodecCapability {
+export declare type RtpCodecCapability = {
     /**
      * Media kind.
      */
@@ -69,7 +69,7 @@ export interface RtpCodecCapability {
      * Transport layer and codec-specific feedback messages for this codec.
      */
     rtcpFeedback?: RtcpFeedback[];
-}
+};
 /**
  * Direction of RTP header extension.
  */
@@ -84,7 +84,7 @@ export declare type RtpHeaderExtensionDirection = 'sendrecv' | 'sendonly' | 'rec
  * router.rtpCapabilities or mediasoup.getSupportedRtpCapabilities()). It's
  * ignored if present in endpoints' RTP capabilities.
  */
-export interface RtpHeaderExtension {
+export declare type RtpHeaderExtension = {
     /**
      * Media kind. If empty string, it's valid for all kinds.
      * Default any media kind.
@@ -107,7 +107,7 @@ export interface RtpHeaderExtension {
      * means that mediasoup can receive (but not send) it.
      */
     direction?: RtpHeaderExtensionDirection;
-}
+};
 /**
  * The RTP send parameters describe a media stream received by mediasoup from
  * an endpoint through its corresponding mediasoup Producer. These parameters
@@ -139,7 +139,7 @@ export interface RtpHeaderExtension {
  * the associated producer. This applies even if the producer's encodings have
  * rid set.
  */
-export interface RtpParameters {
+export declare type RtpParameters = {
     /**
      * The MID RTP extension value as defined in the BUNDLE specification.
      */
@@ -160,13 +160,13 @@ export interface RtpParameters {
      * Parameters used for RTCP.
      */
     rtcp?: RtcpParameters;
-}
+};
 /**
  * Provides information on codec settings within the RTP parameters. The list
  * of media codecs supported by mediasoup and their settings is defined in the
  * supportedRtpCapabilities.ts file.
  */
-export interface RtpCodecParameters {
+export declare type RtpCodecParameters = {
     /**
      * The codec MIME media type/subtype (e.g. 'audio/opus', 'video/VP8').
      */
@@ -194,14 +194,14 @@ export interface RtpCodecParameters {
      * Transport layer and codec-specific feedback messages for this codec.
      */
     rtcpFeedback?: RtcpFeedback[];
-}
+};
 /**
  * Provides information on RTCP feedback messages for a specific codec. Those
  * messages can be transport layer feedback messages or codec-specific feedback
  * messages. The list of RTCP feedbacks supported by mediasoup is defined in the
  * supportedRtpCapabilities.ts file.
  */
-export interface RtcpFeedback {
+export declare type RtcpFeedback = {
     /**
      * RTCP feedback type.
      */
@@ -210,12 +210,12 @@ export interface RtcpFeedback {
      * RTCP feedback parameter.
      */
     parameter?: string;
-}
+};
 /**
  * Provides information relating to an encoding, which represents a media RTP
  * stream and its associated RTX stream (if any).
  */
-export interface RtpEncodingParameters {
+export declare type RtpEncodingParameters = {
     /**
      * The media SSRC.
      */
@@ -246,7 +246,7 @@ export interface RtpEncodingParameters {
      * See webrtc-svc.
      */
     scalabilityMode?: string;
-}
+};
 /**
  * Defines a RTP header extension within the RTP parameters. The list of RTP
  * header extensions supported by mediasoup is defined in the
@@ -255,7 +255,7 @@ export interface RtpEncodingParameters {
  * mediasoup does not currently support encrypted RTP header extensions and no
  * parameters are currently considered.
  */
-export interface RtpHeaderExtensionParameters {
+export declare type RtpHeaderExtensionParameters = {
     /**
      * The URI of the RTP header extension, as defined in RFC 5285.
      */
@@ -272,7 +272,7 @@ export interface RtpHeaderExtensionParameters {
      * Configuration parameters for the header extension.
      */
     parameters?: any;
-}
+};
 /**
  * Provides information on RTCP settings within the RTP parameters.
  *
@@ -282,7 +282,7 @@ export interface RtpHeaderExtensionParameters {
  *
  * mediasoup assumes reducedSize to always be true.
  */
-export interface RtcpParameters {
+export declare type RtcpParameters = {
     /**
      * The Canonical Name (CNAME) used by RTCP (e.g. in SDES messages).
      */
@@ -296,5 +296,5 @@ export interface RtcpParameters {
      * Whether RTCP-mux is used. Default true.
      */
     mux?: boolean;
-}
+};
 //# sourceMappingURL=RtpParameters.d.ts.map
