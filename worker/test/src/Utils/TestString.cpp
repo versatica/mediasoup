@@ -27,6 +27,8 @@ SCENARIO("String::Base64Encode()")
 	REQUIRE(base64 == "YWJjZA==");
 	REQUIRE(std::string(reinterpret_cast<const char*>(String::Base64Decode(base64))) == data);
 
+	// TODO: This fails even in the original implementation:
+	// http://cpp.sh/3qj7c
 	data = "Iñaki";
 	base64 = String::Base64Encode(data);
 	REQUIRE(base64 == "ScOxYWtp");
