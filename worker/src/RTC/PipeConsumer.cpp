@@ -54,9 +54,10 @@ namespace RTC
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
+			jsonRtpStreamsIt->emplace_back(json::value_t::object);
+
 			auto& jsonEntry = (*jsonRtpStreamsIt)[jsonRtpStreamsIt->size() - 1];
 
-			jsonRtpStreamsIt->emplace_back(json::value_t::object);
 			rtpStream->FillJson(jsonEntry);
 		}
 	}
@@ -69,7 +70,10 @@ namespace RTC
 		for (auto* rtpStream : this->rtpStreams)
 		{
 			jsonArray.emplace_back(json::value_t::object);
-			rtpStream->FillJsonStats(jsonArray[jsonArray.size() - 1]);
+
+			auto& jsonEntry = jsonArray[jsonArray.size() - 1];
+
+			rtpStream->FillJsonStats(jsonEntry);
 		}
 	}
 
