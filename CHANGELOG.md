@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.4.13
+
+* Update `uuid` dep to 7.0.X (new API).
+* Fix crash due wrong array index in `PipeConsumer::FillJwon()`.
+  - Fixes #364
+
+
 ### 3.4.12
 
 * TypeScript: generate `es2020` instead of `es6`.

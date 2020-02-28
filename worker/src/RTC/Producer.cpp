@@ -415,18 +415,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		size_t rtpStreamIdx{ 0 };
-
 		for (auto& kv : this->mapSsrcRtpStream)
 		{
 			jsonArray.emplace_back(json::value_t::object);
 
-			auto& jsonEntry = jsonArray[rtpStreamIdx];
+			auto& jsonEntry = jsonArray[jsonArray.size() - 1];
 			auto* rtpStream = kv.second;
 
 			rtpStream->FillJsonStats(jsonEntry);
-
-			++rtpStreamIdx;
 		}
 	}
 
