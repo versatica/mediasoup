@@ -1,6 +1,9 @@
 #include "common.hpp"
 #include "Utils.hpp"
+#include "Logger.hpp"
 #include <catch.hpp>
+
+#define MS_CLASS "test"
 
 using namespace Utils;
 
@@ -48,4 +51,11 @@ SCENARIO("String::Base64Encode()")
 	  encoded ==
 	  "a2pzaCAyMyDDpeKIq+KIgiBpczg5IOKIq8K2IMKn4oiCwrYgaTgyM3kga2phaHNkIDIzNHUgYXNkIGthc2poZGlpNzY4MjM0MiBhc2Rramhhc2tqc2FoZCAgIGsgamFzaGQga2Fqc2RoYWtzamRoIHNrYWRoa2poa2poICAgICAgIGFza2RqaGFzZGtqYWhzIHV5cWl3ZXkgYXPDpeKIq+KIgsKi4oiewqziiKviiIIgYXNoa3NhamRoIGtqYXNkaGthanNoZGEgcyBramFoc2RramFzIDk4Nzg5N2FzODk3IDk3ODk4NjIzIDlzIGtqc2fDpeKIq+KIgiA0MzLDpeKIq8aS4oiCIMOl4oirI8KiIG91eXF3aXV5YWlzIGthanNkaGl1eWUgIGFqc2hra1NBSCBTREZZw5HDkcORIMOl4oir4oiCzqkgODcyNTM4NDdiIGFzZGJ1aWFzZGkgYXMga2FzdcWTw6bigqwKMzIx");
 	REQUIRE(decoded == data);
+
+	encoded    = "12345678912345678912345678912345678912==";
+	decodedPtr = String::Base64Decode(encoded, outLen);
+	MS_DUMP_DATA(decodedPtr, outLen);
+	REQUIRE (outLen == 28);
+	encoded    = String::Base64Encode(decodedPtr, outLen);
+	REQUIRE(encoded == "12345678912345678912345678912345678912==");
 }
