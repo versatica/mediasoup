@@ -219,6 +219,8 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("missing port");
 					}
 
+					port = jsonPortIt->get<uint16_t>();
+
 					auto jsonSrtpParametersIt = request->data.find("srtpParameters");
 
 					if (!HasSrtp() && jsonSrtpParametersIt != request->data.end())
