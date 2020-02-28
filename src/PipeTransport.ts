@@ -106,8 +106,8 @@ export class PipeTransport extends Transport
 	// - .sctpState
 	// - .rtx
 	// - .srtpParameters
-	//   - cryptoSuite
-	//   - keyBase64
+	//   - .cryptoSuite
+	//   - .keyBase64
 
 	/**
 	 * @private
