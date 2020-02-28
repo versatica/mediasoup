@@ -287,7 +287,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.closed).toBe(false);
 	expect(audioConsumer.kind).toBe('audio');
 	expect(audioConsumer.rtpParameters).toBeType('object');
-	expect(audioConsumer.rtpParameters.mid).toBe(undefined);
+	expect(audioConsumer.rtpParameters.mid).toBeUndefined();
 	expect(audioConsumer.rtpParameters.codecs.length).toBe(1);
 	expect(audioConsumer.rtpParameters.codecs[0]).toEqual(
 		{
@@ -357,7 +357,7 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.closed).toBe(false);
 	expect(videoConsumer.kind).toBe('video');
 	expect(videoConsumer.rtpParameters).toBeType('object');
-	expect(videoConsumer.rtpParameters.mid).toBe(undefined);
+	expect(videoConsumer.rtpParameters.mid).toBeUndefined();
 	expect(videoConsumer.rtpParameters.codecs.length).toBe(2);
 	expect(videoConsumer.rtpParameters.codecs[0]).toEqual(
 		{
@@ -544,7 +544,7 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[0].mimeType).toBe('video/H264');
 	expect(data.rtpParameters.codecs[0].payloadType).toBe(103);
 	expect(data.rtpParameters.codecs[0].clockRate).toBe(90000);
-	expect(data.rtpParameters.codecs[0].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[0].channels).toBeUndefined();
 	expect(data.rtpParameters.codecs[0].parameters)
 		.toEqual(
 			{

@@ -27,14 +27,14 @@ SCENARIO("String::Base64Encode()")
 
 	data       = "abcd";
 	encoded    = String::Base64Encode(data);
-	decodedPtr = String::Base64Decode(encoded, std::addressof(outLen));
+	decodedPtr = String::Base64Decode(encoded, outLen);
 	decoded    = std::string(reinterpret_cast<char*>(decodedPtr), outLen);
 	REQUIRE(encoded == "YWJjZA==");
 	REQUIRE(decoded == data);
 
 	data       = "Iñaki";
 	encoded    = String::Base64Encode(data);
-	decodedPtr = String::Base64Decode(encoded, std::addressof(outLen));
+	decodedPtr = String::Base64Decode(encoded, outLen);
 	decoded    = std::string(reinterpret_cast<char*>(decodedPtr), outLen);
 	REQUIRE(encoded == "ScOxYWtp");
 	REQUIRE(decoded == data);
@@ -42,7 +42,7 @@ SCENARIO("String::Base64Encode()")
 	data =
 	  "kjsh 23 å∫∂ is89 ∫¶ §∂¶ i823y kjahsd 234u asd kasjhdii7682342 asdkjhaskjsahd   k jashd kajsdhaksjdh skadhkjhkjh       askdjhasdkjahs uyqiwey aså∫∂¢∞¬∫∂ ashksajdh kjasdhkajshda s kjahsdkjas 987897as897 97898623 9s kjsgå∫∂ 432å∫ƒ∂ å∫#¢ ouyqwiuyais kajsdhiuye  ajshkkSAH SDFYÑÑÑ å∫∂Ω 87253847b asdbuiasdi as kasuœæ€\n321";
 	encoded    = String::Base64Encode(data);
-	decodedPtr = String::Base64Decode(encoded, std::addressof(outLen));
+	decodedPtr = String::Base64Decode(encoded, outLen);
 	decoded    = std::string(reinterpret_cast<char*>(decodedPtr), outLen);
 	REQUIRE(
 	  encoded ==

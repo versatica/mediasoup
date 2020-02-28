@@ -311,12 +311,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		]);
 
 	expect(rtpMapping.encodings[0].ssrc).toBe(11111111);
-	expect(rtpMapping.encodings[0].rid).toBe(undefined);
+	expect(rtpMapping.encodings[0].rid).toBeUndefined();
 	expect(rtpMapping.encodings[0].mappedSsrc).toBeType('number');
 	expect(rtpMapping.encodings[1].ssrc).toBe(21111111);
-	expect(rtpMapping.encodings[1].rid).toBe(undefined);
+	expect(rtpMapping.encodings[1].rid).toBeUndefined();
 	expect(rtpMapping.encodings[1].mappedSsrc).toBeType('number');
-	expect(rtpMapping.encodings[2].ssrc).toBe(undefined);
+	expect(rtpMapping.encodings[2].ssrc).toBeUndefined();
 	expect(rtpMapping.encodings[2].rid).toBe('high');
 	expect(rtpMapping.encodings[2].mappedSsrc).toBeType('number');
 
@@ -546,15 +546,15 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	expect(pipeConsumerRtpParameters.encodings.length).toBe(3);
 	expect(pipeConsumerRtpParameters.encodings[0].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[0].rtx).toBe(undefined);
+	expect(pipeConsumerRtpParameters.encodings[0].rtx).toBeUndefined();
 	expect(pipeConsumerRtpParameters.encodings[0].maxBitrate).toBeType('number');
 	expect(pipeConsumerRtpParameters.encodings[0].scalabilityMode).toBe('L1T3');
 	expect(pipeConsumerRtpParameters.encodings[1].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[1].rtx).toBe(undefined);
+	expect(pipeConsumerRtpParameters.encodings[1].rtx).toBeUndefined();
 	expect(pipeConsumerRtpParameters.encodings[1].maxBitrate).toBeType('number');
 	expect(pipeConsumerRtpParameters.encodings[1].scalabilityMode).toBe('L1T3');
 	expect(pipeConsumerRtpParameters.encodings[2].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[2].rtx).toBe(undefined);
+	expect(pipeConsumerRtpParameters.encodings[2].rtx).toBeUndefined();
 	expect(pipeConsumerRtpParameters.encodings[2].maxBitrate).toBeType('number');
 	expect(pipeConsumerRtpParameters.encodings[2].scalabilityMode).toBe('L1T3');
 

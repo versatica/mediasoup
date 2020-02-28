@@ -105,9 +105,7 @@ namespace RTC
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }
 	};
-	// clang-format on
 	std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
-	// clang-format off
 	std::vector<DtlsTransport::SrtpProfileMapEntry> DtlsTransport::srtpProfiles =
 	{
 		{ RTC::SrtpSession::Profile::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },

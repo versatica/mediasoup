@@ -11,6 +11,7 @@ import {
 } from './Transport';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import { SrtpParameters } from './SrtpParameters';
 
 export type PipeTransportOptions =
 {
@@ -104,7 +105,9 @@ export class PipeTransport extends Transport
 	//   - .maxMessageSize
 	// - .sctpState
 	// - .rtx
-	// - .srtpKey
+	// - .srtpParameters
+	//   - cryptoSuite
+	//   - keyBase64
 
 	/**
 	 * @private
@@ -125,7 +128,7 @@ export class PipeTransport extends Transport
 			sctpParameters : data.sctpParameters,
 			sctpState      : data.sctpState,
 			rtx            : data.rtx,
-			srtpKey        : data.srtpKey
+			srtpParameters : data.srtpParameters
 		};
 
 		this._handleWorkerNotifications();
@@ -156,11 +159,11 @@ export class PipeTransport extends Transport
 	}
 
 	/**
-	 * SRTP key corresponding to the SRTP crypto AES_CM_128_HMAC_SHA1_80.
+	 * SRTP parameters.
 	 */
-	get srtpKey(): string | undefined
+	get srtpParameters(): SrtpParameters | undefined
 	{
-		return this._data.srtpKey;
+		return this._data.srtpParameters;
 	}
 
 	/**
@@ -234,18 +237,18 @@ export class PipeTransport extends Transport
 		{
 			ip,
 			port,
-			srtpKey
+			srtpParameters
 		}:
 		{
 			ip: string;
 			port: number;
-			srtpKey?: string;
+			srtpParameters?: SrtpParameters;
 		}
 	): Promise<void>
 	{
 		logger.debug('connect()');
 
-		const reqData = { ip, port, srtpKey };
+		const reqData = { ip, port, srtpParameters };
 
 		const data =
 			await this._channel.request('transport.connect', this._internal, reqData);

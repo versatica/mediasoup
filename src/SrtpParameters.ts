@@ -1,5 +1,5 @@
 /**
- * SRTP parameters for PlainRtpTransport and PipeTransport.
+ * SRTP parameters.
  */
 export type SrtpParameters =
 {
@@ -11,7 +11,7 @@ export type SrtpParameters =
 	/**
 	 * SRTP keying material (master key and salt) in Base64.
 	 */
-	key: string;
+	keyBase64: string;
 }
 
 /**

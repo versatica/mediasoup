@@ -52,7 +52,9 @@ namespace RTC
 		// Others.
 		ListenIp listenIp;
 		bool rtx{ false };
+		std::string srtpCryptoSuite;
 		std::string srtpKey;
+		std::string srtpKeyBase64;
 		struct sockaddr_storage remoteAddrStorage;
 	};
 } // namespace RTC

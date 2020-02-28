@@ -11,9 +11,10 @@ namespace RTC
 {
 	/* Static. */
 
-	// If SRTP is enabled we mandate AES_CM_128_HMAC_SHA1_80.
-	// AES-HMAC: http://tools.ietf.org/html/rfc3711
+	// NOTE: We just use AES_CM_128_HMAC_SHA1_80 as SRTP crypto suite in
+	// PipeTransport.
 	static RTC::SrtpSession::Profile SrtpProfile{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80 };
+	static const std::string SrtpProfileStr{ "AES_CM_128_HMAC_SHA1_80" };
 	static constexpr size_t SrtpMasterLength{ 30 };
 
 	/* Instance methods. */
@@ -68,7 +69,9 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			this->srtpKey = Utils::Crypto::GetRandomString(SrtpMasterLength);
+			this->srtpCryptoSuite = SrtpProfileStr;
+			this->srtpKey         = Utils::Crypto::GetRandomString(SrtpMasterLength);
+			this->srtpKeyBase64   = Utils::String::Base64Encode(this->srtpKey);
 		}
 
 		try
@@ -114,9 +117,15 @@ namespace RTC
 		// Add rtx.
 		jsonObject["rtx"] = this->rtx;
 
-		// Add srtpKey.
+		// Add srtpParameters.
 		if (HasSrtp())
-			jsonObject["srtpKey"] = this->srtpKey;
+		{
+			jsonObject["srtpParameters"] = json::object();
+			auto jsonSrtpParametersIt    = jsonObject.find("srtpParameters");
+
+			(*jsonSrtpParametersIt)["cryptoSuite"] = this->srtpCryptoSuite;
+			(*jsonSrtpParametersIt)["keyBase64"]   = this->srtpKeyBase64;
+		}
 
 		// Add tuple.
 		if (this->tuple != nullptr)
@@ -210,34 +219,66 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("missing port");
 					}
 
-					auto jsonSrtpKeyIt = request->data.find("srtpKey");
+					auto jsonSrtpParametersIt = request->data.find("srtpParameters");
 
-					if (!HasSrtp() && jsonSrtpKeyIt != request->data.end())
+					if (!HasSrtp() && jsonSrtpParametersIt != request->data.end())
 					{
-						MS_THROW_TYPE_ERROR("invalid srtpKey (SRTP not enabled locally)");
+						MS_THROW_TYPE_ERROR("invalid srtpParameters (SRTP not enabled)");
 					}
-					// clang-format off
-					else if (
-						HasSrtp() &&
-						(jsonSrtpKeyIt == request->data.end() || !jsonSrtpKeyIt->is_string())
-					)
-					// clang-format on
+					else if (HasSrtp())
 					{
-						MS_THROW_TYPE_ERROR("missing srtpKey (SRTP enabled locally)");
-					}
+						// clang-format off
+						if (
+							jsonSrtpParametersIt == request->data.end() ||
+							!jsonSrtpParametersIt->is_object()
+						)
+						// clang-format on
+						{
+							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
+						}
 
-					if (HasSrtp())
-					{
-						auto srtpKey = jsonSrtpKeyIt->get<std::string>();
+						auto jsonCryptoSuiteIt = jsonSrtpParametersIt->find("cryptoSuite");
 
-						if (srtpKey.size() != SrtpMasterLength)
-							MS_THROW_TYPE_ERROR("invalid srtpKey length");
+						// clang-format off
+						if (
+							jsonCryptoSuiteIt == jsonSrtpParametersIt->end() ||
+							!jsonCryptoSuiteIt->is_string()
+						)
+						// clang-format on
+						{
+							MS_THROW_TYPE_ERROR("missing srtpParameters.cryptoSuite)");
+						}
+
+						// NOTE: We just use AES_CM_128_HMAC_SHA1_80 as SRTP crypto suite in
+						// PipeTransport.
+						if (jsonCryptoSuiteIt->get<std::string>() != SrtpProfileStr)
+							MS_THROW_TYPE_ERROR("invalid srtpParameters.cryptoSuite");
+
+						auto jsonKeyBase64It = jsonSrtpParametersIt->find("keyBase64");
+
+						// clang-format off
+						if (
+							jsonKeyBase64It == jsonSrtpParametersIt->end() ||
+							!jsonKeyBase64It->is_string()
+						)
+						// clang-format on
+						{
+							MS_THROW_TYPE_ERROR("missing srtpParameters.keyBase64)");
+						}
+
+						auto srtpKeyBase64 = jsonKeyBase64It->get<std::string>();
+						size_t outLen;
+						// This may throw.
+						auto* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
+
+						if (outLen != SrtpMasterLength)
+							MS_THROW_TYPE_ERROR("invalid decoded SRTP key length");
 
 						auto* srtpLocalKey  = new uint8_t[SrtpMasterLength];
 						auto* srtpRemoteKey = new uint8_t[SrtpMasterLength];
 
 						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), SrtpMasterLength);
-						std::memcpy(srtpRemoteKey, srtpKey.c_str(), SrtpMasterLength);
+						std::memcpy(srtpRemoteKey, srtpKey, SrtpMasterLength);
 
 						try
 						{

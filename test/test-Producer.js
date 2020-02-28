@@ -552,7 +552,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[0].mimeType).toBe('video/H264');
 	expect(data.rtpParameters.codecs[0].payloadType).toBe(112);
 	expect(data.rtpParameters.codecs[0].clockRate).toBe(90000);
-	expect(data.rtpParameters.codecs[0].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[0].channels).toBeUndefined();
 	expect(data.rtpParameters.codecs[0].parameters)
 		.toEqual(
 			{
@@ -569,7 +569,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[1].mimeType).toBe('video/rtx');
 	expect(data.rtpParameters.codecs[1].payloadType).toBe(113);
 	expect(data.rtpParameters.codecs[1].clockRate).toBe(90000);
-	expect(data.rtpParameters.codecs[1].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[1].channels).toBeUndefined();
 	expect(data.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
 	expect(data.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
 	expect(data.rtpParameters.headerExtensions).toBeType('array');

@@ -2,6 +2,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import { SrtpParameters } from './SrtpParameters';
 export declare type PipeTransportOptions = {
     /**
      * Listening IP address.
@@ -83,9 +84,9 @@ export declare class PipeTransport extends Transport {
      */
     get sctpState(): SctpState;
     /**
-     * SRTP key corresponding to the SRTP crypto AES_CM_128_HMAC_SHA1_80.
+     * SRTP parameters.
      */
-    get srtpKey(): string | undefined;
+    get srtpParameters(): SrtpParameters | undefined;
     /**
      * Observer.
      *
@@ -123,10 +124,10 @@ export declare class PipeTransport extends Transport {
      *
      * @override
      */
-    connect({ ip, port, srtpKey }: {
+    connect({ ip, port, srtpParameters }: {
         ip: string;
         port: number;
-        srtpKey?: string;
+        srtpParameters?: SrtpParameters;
     }): Promise<void>;
     /**
      * Create a pipe Consumer.

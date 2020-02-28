@@ -53,8 +53,8 @@ test('transport1.produceData() succeeds', async () =>
 	expect(dataProducer1.sctpStreamParameters).toBeType('object');
 	expect(dataProducer1.sctpStreamParameters.streamId).toBe(666);
 	expect(dataProducer1.sctpStreamParameters.ordered).toBe(true);
-	expect(dataProducer1.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
-	expect(dataProducer1.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(dataProducer1.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
+	expect(dataProducer1.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(dataProducer1.label).toBe('foo');
 	expect(dataProducer1.protocol).toBe('bar');
 	expect(dataProducer1.appData).toEqual({ foo: 1, bar: '2' });
@@ -102,7 +102,7 @@ test('transport2.produceData() succeeds', async () =>
 	expect(dataProducer2.sctpStreamParameters).toBeType('object');
 	expect(dataProducer2.sctpStreamParameters.streamId).toBe(777);
 	expect(dataProducer2.sctpStreamParameters.ordered).toBe(false);
-	expect(dataProducer2.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
+	expect(dataProducer2.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
 	expect(dataProducer2.sctpStreamParameters.maxRetransmits).toBe(3);
 	expect(dataProducer2.label).toBe('foo');
 	expect(dataProducer2.protocol).toBe('bar');
@@ -179,8 +179,8 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(data.sctpStreamParameters).toBeType('object');
 	expect(data.sctpStreamParameters.streamId).toBe(666);
 	expect(data.sctpStreamParameters.ordered).toBe(true);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
-	expect(data.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(data.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
+	expect(data.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 
@@ -190,7 +190,7 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(data.sctpStreamParameters).toBeType('object');
 	expect(data.sctpStreamParameters.streamId).toBe(777);
 	expect(data.sctpStreamParameters.ordered).toBe(false);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(undefined);
+	expect(data.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
 	expect(data.sctpStreamParameters.maxRetransmits).toBe(3);
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');

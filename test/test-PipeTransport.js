@@ -250,7 +250,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeConsumer.closed).toBe(false);
 	expect(pipeConsumer.kind).toBe('audio');
 	expect(pipeConsumer.rtpParameters).toBeType('object');
-	expect(pipeConsumer.rtpParameters.mid).toBe(undefined);
+	expect(pipeConsumer.rtpParameters.mid).toBeUndefined();
 	expect(pipeConsumer.rtpParameters.codecs).toEqual(
 		[
 			{
@@ -290,7 +290,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeProducer.closed).toBe(false);
 	expect(pipeProducer.kind).toBe('audio');
 	expect(pipeProducer.rtpParameters).toBeType('object');
-	expect(pipeProducer.rtpParameters.mid).toBe(undefined);
+	expect(pipeProducer.rtpParameters.mid).toBeUndefined();
 	expect(pipeProducer.rtpParameters.codecs).toEqual(
 		[
 			{
@@ -346,7 +346,7 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeConsumer.closed).toBe(false);
 	expect(pipeConsumer.kind).toBe('video');
 	expect(pipeConsumer.rtpParameters).toBeType('object');
-	expect(pipeConsumer.rtpParameters.mid).toBe(undefined);
+	expect(pipeConsumer.rtpParameters.mid).toBeUndefined();
 	expect(pipeConsumer.rtpParameters.codecs).toEqual(
 		[
 			{
@@ -407,7 +407,7 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeProducer.closed).toBe(false);
 	expect(pipeProducer.kind).toBe('video');
 	expect(pipeProducer.rtpParameters).toBeType('object');
-	expect(pipeProducer.rtpParameters.mid).toBe(undefined);
+	expect(pipeProducer.rtpParameters.mid).toBeUndefined();
 	expect(pipeProducer.rtpParameters.codecs).toEqual(
 		[
 			{
@@ -462,22 +462,28 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 			enableRtx : true
 		});
 
-	// No SRTP enabled so passing srtpKey must fail.
+	expect(pipeTransport.srtpParameters).toBeUndefined();
+
+	// No SRTP enabled so passing srtpParameters must fail.
 	await expect(pipeTransport.connect(
 		{
-			ip      : '127.0.0.2',
-			port    : 9999,
-			srtpKey : 'o9s70sa2h4lo9ri5qpaa3joxzr4lrs'
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
 		}))
 		.rejects
 		.toThrow(TypeError);
 
-	// No SRTP enabled so passing srtpKey must fail.
+	// No SRTP enabled so passing srtpParameters (even if invalid) must fail.
 	await expect(pipeTransport.connect(
 		{
-			ip      : '127.0.0.2',
-			port    : 9999,
-			srtpKey : 'invalid'
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters : 'invalid'
 		}))
 		.rejects
 		.toThrow(TypeError);
@@ -486,11 +492,10 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 		await pipeTransport.consume({ producerId: videoProducer.id });
 
 	expect(pipeConsumer.id).toBeType('string');
-	expect(pipeTransport.srtpKey).toBeUndefined();
 	expect(pipeConsumer.closed).toBe(false);
 	expect(pipeConsumer.kind).toBe('video');
 	expect(pipeConsumer.rtpParameters).toBeType('object');
-	expect(pipeConsumer.rtpParameters.mid).toBe(undefined);
+	expect(pipeConsumer.rtpParameters.mid).toBeUndefined();
 	expect(pipeConsumer.rtpParameters.codecs).toEqual(
 		[
 			{
@@ -568,10 +573,10 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 		});
 
 	expect(pipeTransport.id).toBeType('string');
-	expect(pipeTransport.srtpKey).toBeType('string');
-	expect(pipeTransport.srtpKey.length).toBe(30);
+	expect(pipeTransport.srtpParameters).toBeType('object');
+	expect(pipeTransport.srtpParameters.keyBase64.length).toBe(40);
 
-	// Missing srtpKey.
+	// Missing srtpParameters.
 	await expect(pipeTransport.connect(
 		{
 			ip   : '127.0.0.2',
@@ -580,35 +585,97 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 		.rejects
 		.toThrow(TypeError);
 
-	// Invalid srtpKey.
+	// Invalid srtpParameters.
 	await expect(pipeTransport.connect(
 		{
-			ip      : '127.0.0.2',
-			port    : 9999,
-			srtpKey : 1
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters : 1
 		}))
 		.rejects
 		.toThrow(TypeError);
 
-	// Invalid srtpKey (wrong length).
+	// Missing srtpParameters.cryptoSuite.
 	await expect(pipeTransport.connect(
 		{
-			ip      : '127.0.0.2',
-			port    : 9999,
-			srtpKey : 'qwerty'
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				keyBase64 : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
 		}))
 		.rejects
 		.toThrow(TypeError);
 
-	// Valid srtpKey.
+	// Missing srtpParameters.keyBase64.
 	await expect(pipeTransport.connect(
 		{
-			ip      : '127.0.0.2',
-			port    : 9999,
-			srtpKey : 'o9s70sa2h4lo9ri5qpaa3joxzr4lrs'
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpParameters.cryptoSuite.
+	await expect(pipeTransport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'FOO',
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpParameters.cryptoSuite.
+	await expect(pipeTransport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 123,
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpParameters.keyBase64.
+	await expect(pipeTransport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				keyBase64   : []
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Valid srtpParameters.
+	await expect(pipeTransport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
 		}))
 		.resolves
-		.toBe(undefined);
+		.toBeUndefined();
 
 	pipeTransport.close();
 }, 2000);
@@ -625,7 +692,7 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 	expect(videoConsumer.closed).toBe(false);
 	expect(videoConsumer.kind).toBe('video');
 	expect(videoConsumer.rtpParameters).toBeType('object');
-	expect(videoConsumer.rtpParameters.mid).toBe(undefined);
+	expect(videoConsumer.rtpParameters.mid).toBeUndefined();
 	expect(videoConsumer.rtpParameters.codecs).toEqual(
 		[
 			{
@@ -749,7 +816,7 @@ test('router.pipeToRouter() succeeds with data', async () =>
 	expect(pipeDataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(pipeDataConsumer.sctpStreamParameters.ordered).toBe(false);
 	expect(pipeDataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(pipeDataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(pipeDataConsumer.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(pipeDataConsumer.label).toBe('foo');
 	expect(pipeDataConsumer.protocol).toBe('bar');
 
@@ -759,7 +826,7 @@ test('router.pipeToRouter() succeeds with data', async () =>
 	expect(pipeDataProducer.sctpStreamParameters.streamId).toBeType('number');
 	expect(pipeDataProducer.sctpStreamParameters.ordered).toBe(false);
 	expect(pipeDataProducer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(pipeDataProducer.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(pipeDataProducer.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(pipeDataProducer.label).toBe('foo');
 	expect(pipeDataProducer.protocol).toBe('bar');
 }, 2000);
@@ -777,7 +844,7 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () =>
 	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
 	expect(dataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(dataConsumer.label).toBe('foo');
 	expect(dataConsumer.protocol).toBe('bar');
 }, 2000);

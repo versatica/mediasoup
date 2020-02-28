@@ -1,5 +1,5 @@
 /*
- * Code from http://web.mit.edu/freebsd/head/contrib/wpa/src/utils/base64.c.
+ * Code from http://web.mit.edu/freebsd/head/contrib/wpa/src/utils/base64.c
  *
  * Base64 encoding/decoding (RFC1341)
  * Copyright (c) 2005-2011, Jouni Malinen <j@w1.fi>
@@ -39,6 +39,8 @@ namespace Utils
 
 		if (olen < len)
 			MS_THROW_TYPE_ERROR("integer overflow");
+		else if (olen > BufferOutSize - 1)
+			MS_THROW_TYPE_ERROR("data too big");
 
 		end = data + len;
 		in  = data;
@@ -83,7 +85,7 @@ namespace Utils
 		return Base64Encode(data, str.size());
 	}
 
-	uint8_t* Utils::String::Base64Decode(const uint8_t* data, size_t len, size_t* outLen)
+	uint8_t* Utils::String::Base64Decode(const uint8_t* data, size_t len, size_t& outLen)
 	{
 		MS_TRACE();
 
@@ -96,6 +98,10 @@ namespace Utils
 		size_t count;
 		size_t olen;
 		int pad{ 0 };
+
+		// NOTE: This is not really accurate but anyway.
+		if (len > BufferOutSize - 1)
+			MS_THROW_TYPE_ERROR("data too big");
 
 		std::memset(dtable, 0x80, 256);
 
@@ -153,12 +159,12 @@ namespace Utils
 			}
 		}
 
-		*outLen = pos - out;
+		outLen = pos - out;
 
 		return out;
 	}
 
-	uint8_t* Utils::String::Base64Decode(const std::string& str, size_t* outLen)
+	uint8_t* Utils::String::Base64Decode(const std::string& str, size_t& outLen)
 	{
 		MS_TRACE();
 

@@ -63,7 +63,7 @@ test('transport.consumeData() succeeds', async () =>
 	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
 	expect(dataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(dataConsumer.label).toBe('foo');
 	expect(dataConsumer.protocol).toBe('bar');
 	expect(dataConsumer.appData).toEqual({ baz: 'LOL' });
@@ -96,7 +96,7 @@ test('dataConsumer.dump() succeeds', async () =>
 		.toBe(dataConsumer.sctpStreamParameters.streamId);
 	expect(data.sctpStreamParameters.ordered).toBe(false);
 	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(data.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(data.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 }, 2000);
