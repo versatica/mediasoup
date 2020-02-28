@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.5.0 (pre)
+
+* `PipeTransport`: Add support for RTP retransmission (RTX + NACK) and SRTP. Useful when connecting two mediasoup servers running in different hosts.
+* Fix vulnarability in IPv6 parser.
+
 ### 3.4.13
 
 * Update `uuid` dep to 7.0.X (new API).

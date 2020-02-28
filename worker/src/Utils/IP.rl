@@ -35,7 +35,7 @@ namespace Utils
 			include grammar "grammar.rl";
 
 			main := IPv4address @on_ipv4 |
-			        IPv6address @on_ipv6;
+							IPv6address @on_ipv6;
 		}%%
 
 		/**
@@ -128,12 +128,16 @@ namespace Utils
 			case AF_INET:
 			{
 				err = uv_ip4_addr(
-				  ip.c_str(),
-				  0,
-				  reinterpret_cast<struct sockaddr_in*>(&addrStorage));
+					ip.c_str(),
+					0,
+					reinterpret_cast<struct sockaddr_in*>(&addrStorage));
 
 				if (err != 0)
-					MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+				{
+					MS_THROW_TYPE_ERROR(
+						"uv_ip4_addr() failed [ip:'%s']: %s",
+						ip.c_str(), uv_strerror(err));
+				}
 
 				err = uv_ip4_name(
 					reinterpret_cast<const struct sockaddr_in*>(std::addressof(addrStorage)),
@@ -141,7 +145,11 @@ namespace Utils
 					sizeof(ipBuffer));
 
 				if (err != 0)
-					MS_ABORT("uv_ipv4_name() failed: %s", uv_strerror(err));
+				{
+					MS_THROW_TYPE_ERROR(
+						"uv_ipv4_name() failed [ip:'%s']: %s",
+						ip.c_str(), uv_strerror(err));
+				}
 
 				ip.assign(ipBuffer);
 
@@ -153,10 +161,14 @@ namespace Utils
 				err = uv_ip6_addr(
 					ip.c_str(),
 					0,
-				  reinterpret_cast<struct sockaddr_in6*>(&addrStorage));
+					reinterpret_cast<struct sockaddr_in6*>(&addrStorage));
 
 				if (err != 0)
-					MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+				{
+					MS_THROW_TYPE_ERROR(
+						"uv_ip6_addr() failed [ip:'%s']: %s",
+						ip.c_str(), uv_strerror(err));
+				}
 
 				err = uv_ip6_name(
 					reinterpret_cast<const struct sockaddr_in6*>(std::addressof(addrStorage)),
@@ -164,7 +176,11 @@ namespace Utils
 					sizeof(ipBuffer));
 
 				if (err != 0)
-					MS_ABORT("uv_ip6_name() failed: %s", uv_strerror(err));
+				{
+					MS_THROW_TYPE_ERROR(
+						"uv_ipv6_name() failed [ip:'%s']: %s",
+						ip.c_str(), uv_strerror(err));
+				}
 
 				ip.assign(ipBuffer);
 

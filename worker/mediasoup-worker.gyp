@@ -391,6 +391,7 @@
       [
         # C++ source files.
         'fuzzer/src/fuzzer.cpp',
+        'fuzzer/src/FuzzerUtils.cpp',
         'fuzzer/src/RTC/FuzzerStunPacket.cpp',
         'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
         'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
@@ -418,6 +419,7 @@
         'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
         # C++ include files.
+        'fuzzer/include/FuzzerUtils.hpp',
         'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
         'fuzzer/include/RTC/FuzzerTrendCalculator.hpp',
