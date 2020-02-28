@@ -96,7 +96,6 @@ namespace Utils
 		uint8_t tmp;
 		size_t i;
 		size_t count;
-		size_t olen;
 		int pad{ 0 };
 
 		// NOTE: This is not really accurate but anyway.
@@ -119,9 +118,8 @@ namespace Utils
 		}
 
 		if (count == 0 || count % 4)
-			return nullptr;
+			MS_THROW_TYPE_ERROR("invalid data");
 
-		olen  = count / 4 * 3;
 		pos   = out;
 		count = 0;
 

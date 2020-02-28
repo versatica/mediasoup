@@ -298,7 +298,7 @@ namespace Utils
 		static std::string Base64Encode(const uint8_t* data, size_t len);
 		static std::string Base64Encode(const std::string& str);
 		static uint8_t* Base64Decode(const uint8_t* data, size_t len, size_t& outLen);
-		static uint8_t* Base64Decode(const std::string& data, size_t& outLen);
+		static uint8_t* Base64Decode(const std::string& str, size_t& outLen);
 	};
 
 	inline void String::ToLowerCase(std::string& str)
