@@ -46,6 +46,14 @@ export declare type PipeToRouterOptions = {
      * SCTP streams number.
      */
     numSctpStreams?: NumSctpStreams;
+    /**
+     * Enable RTX and NACK for RTP retransmission.
+     */
+    enableRtx?: boolean;
+    /**
+     * Enable SRTP.
+     */
+    enableSrtp?: boolean;
 };
 export declare type PipeToRouterResult = {
     /**
@@ -150,7 +158,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.
      */
-    pipeToRouter({ producerId, dataProducerId, router, listenIp, enableSctp, numSctpStreams }: PipeToRouterOptions): Promise<PipeToRouterResult>;
+    pipeToRouter({ producerId, dataProducerId, router, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }: PipeToRouterOptions): Promise<PipeToRouterResult>;
     /**
      * Create an AudioLevelObserver.
      */

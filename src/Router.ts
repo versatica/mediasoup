@@ -62,6 +62,16 @@ export type PipeToRouterOptions =
 	 * SCTP streams number.
 	 */
 	numSctpStreams?: NumSctpStreams;
+
+	/**
+	 * Enable RTX and NACK for RTP retransmission.
+	 */
+	enableRtx?: boolean;
+
+	/**
+	 * Enable SRTP.
+	 */
+	enableSrtp?: boolean;
 }
 
 export type PipeToRouterResult =
@@ -604,7 +614,9 @@ export class Router extends EnhancedEventEmitter
 			router,
 			listenIp = '127.0.0.1',
 			enableSctp = true,
-			numSctpStreams = { OS: 1024, MIS: 1024 }
+			numSctpStreams = { OS: 1024, MIS: 1024 },
+			enableRtx = false,
+			enableSrtp = false
 		}: PipeToRouterOptions
 	): Promise<PipeToRouterResult>
 	{
@@ -660,8 +672,11 @@ export class Router extends EnhancedEventEmitter
 				{
 					pipeTransportPair = await Promise.all(
 						[
-							this.createPipeTransport({ listenIp, enableSctp, numSctpStreams }),
-							router.createPipeTransport({ listenIp, enableSctp, numSctpStreams })
+							this.createPipeTransport(
+								{ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }),
+
+							router.createPipeTransport(
+								{ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp })
 						]);
 
 					localPipeTransport = pipeTransportPair[0];
@@ -671,13 +686,16 @@ export class Router extends EnhancedEventEmitter
 						[
 							localPipeTransport.connect(
 								{
-									ip   : remotePipeTransport.tuple.localIp,
-									port : remotePipeTransport.tuple.localPort
+									ip             : remotePipeTransport.tuple.localIp,
+									port           : remotePipeTransport.tuple.localPort,
+									srtpParameters : remotePipeTransport.srtpParameters
 								}),
+
 							remotePipeTransport.connect(
 								{
-									ip   : localPipeTransport.tuple.localIp,
-									port : localPipeTransport.tuple.localPort
+									ip             : localPipeTransport.tuple.localIp,
+									port           : localPipeTransport.tuple.localPort,
+									srtpParameters : localPipeTransport.srtpParameters
 								})
 						]);
 
