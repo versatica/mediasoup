@@ -115,7 +115,7 @@ namespace RTC
 		RTC::Transport::FillJson(jsonObject);
 
 		// Add tuple.
-		if (this->tuple != nullptr)
+		if (this->tuple)
 		{
 			this->tuple->FillJson(jsonObject["tuple"]);
 		}
@@ -159,7 +159,7 @@ namespace RTC
 		// Add type.
 		jsonObject["type"] = "pipe-transport";
 
-		if (this->tuple != nullptr)
+		if (this->tuple)
 		{
 			this->tuple->FillJson(jsonObject["tuple"]);
 		}
@@ -188,7 +188,7 @@ namespace RTC
 			case Channel::Request::MethodId::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
-				if (this->tuple != nullptr)
+				if (this->tuple)
 					MS_THROW_ERROR("connect() already called");
 
 				try
@@ -333,7 +333,7 @@ namespace RTC
 							  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
 
 							if (err != 0)
-								MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+								MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
 
 							break;
 						}
@@ -346,7 +346,7 @@ namespace RTC
 							  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
 
 							if (err != 0)
-								MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+								MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
 
 							break;
 						}
@@ -402,7 +402,7 @@ namespace RTC
 
 	inline bool PipeTransport::IsConnected() const
 	{
-		return this->tuple != nullptr;
+		return this->tuple;
 	}
 
 	inline bool PipeTransport::HasSrtp() const
@@ -533,14 +533,6 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
-		// Verify that the packet's tuple matches our tuple.
-		if (!this->tuple->Compare(tuple))
-		{
-			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
-
-			return;
-		}
-
 		// Decrypt the SRTP packet.
 		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
 		{
@@ -561,6 +553,14 @@ namespace RTC
 
 				delete packet;
 			}
+
+			return;
+		}
+
+		// Verify that the packet's tuple matches our tuple.
+		if (!this->tuple->Compare(tuple))
+		{
+			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
 
 			return;
 		}
@@ -586,6 +586,12 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
+		// Decrypt the SRTCP packet.
+		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &len))
+		{
+			return;
+		}
+
 		// Verify that the packet's tuple matches our tuple.
 		if (!this->tuple->Compare(tuple))
 		{
@@ -593,10 +599,6 @@ namespace RTC
 
 			return;
 		}
-
-		// Decrypt the SRTCP packet.
-		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &len))
-			return;
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 

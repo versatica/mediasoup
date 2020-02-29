@@ -85,6 +85,8 @@ export declare type PlainRtpTransportStat = {
 export declare class PlainRtpTransport extends Transport {
     /**
      * @private
+     * @emits tuple - (tuple: TransportTuple)
+     * @emits rtcpTuple - (rtcpTuple: TransportTuple)
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
@@ -96,7 +98,7 @@ export declare class PlainRtpTransport extends Transport {
     /**
      * Transport RTCP tuple.
      */
-    get rtcpTuple(): TransportTuple;
+    get rtcpTuple(): TransportTuple | undefined;
     /**
      * SCTP parameters.
      */
@@ -118,6 +120,8 @@ export declare class PlainRtpTransport extends Transport {
      * @emits newconsumer - (producer: Producer)
      * @emits newdataproducer - (dataProducer: DataProducer)
      * @emits newdataconsumer - (dataProducer: DataProducer)
+     * @emits tuple - (tuple: TransportTuple)
+     * @emits rtcpTuple - (rtcpTuple: TransportTuple)
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
@@ -147,8 +151,8 @@ export declare class PlainRtpTransport extends Transport {
      * @override
      */
     connect({ ip, port, rtcpPort, srtpParameters }: {
-        ip: string;
-        port: number;
+        ip?: string;
+        port?: number;
         rtcpPort?: number;
         srtpParameters?: SrtpParameters;
     }): Promise<void>;

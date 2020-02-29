@@ -138,6 +138,8 @@ export class PlainRtpTransport extends Transport
 
 	/**
 	 * @private
+	 * @emits tuple - (tuple: TransportTuple)
+	 * @emits rtcpTuple - (rtcpTuple: TransportTuple)
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
@@ -172,7 +174,7 @@ export class PlainRtpTransport extends Transport
 	/**
 	 * Transport RTCP tuple.
 	 */
-	get rtcpTuple(): TransportTuple
+	get rtcpTuple(): TransportTuple | undefined
 	{
 		return this._data.rtcpTuple;
 	}
@@ -210,6 +212,8 @@ export class PlainRtpTransport extends Transport
 	 * @emits newconsumer - (producer: Producer)
 	 * @emits newdataproducer - (dataProducer: DataProducer)
 	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits tuple - (tuple: TransportTuple)
+	 * @emits rtcpTuple - (rtcpTuple: TransportTuple)
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
@@ -276,8 +280,8 @@ export class PlainRtpTransport extends Transport
 			srtpParameters
 		}:
 		{
-			ip: string;
-			port: number;
+			ip?: string;
+			port?: number;
 			rtcpPort?: number;
 			srtpParameters?: SrtpParameters;
 		}
@@ -291,8 +295,12 @@ export class PlainRtpTransport extends Transport
 			await this._channel.request('transport.connect', this._internal, reqData);
 
 		// Update data.
-		this._data.tuple = data.tuple;
-		this._data.rtcpTuple = data.rtcpTuple;
+		if (data.tuple)
+			this._data.tuple = data.tuple;
+
+		if (data.rtcpTuple)
+			this._data.rtcpTuple = data.rtcpTuple;
+
 		this._data.srtpParameters = data.srtpParameters;
 	}
 
@@ -315,6 +323,34 @@ export class PlainRtpTransport extends Transport
 		{
 			switch (event)
 			{
+				case 'tuple':
+				{
+					const tuple = data.tuple as TransportTuple;
+
+					this._data.tuple = tuple;
+
+					this.safeEmit('tuple', tuple);
+
+					// Emit observer event.
+					this._observer.safeEmit('tuple', tuple);
+
+					break;
+				}
+
+				case 'rtcpTuple':
+				{
+					const rtcpTuple = data.rtcpTuple as TransportTuple;
+
+					this._data.rtcpTuple = rtcpTuple;
+
+					this.safeEmit('rtcpTuple', rtcpTuple);
+
+					// Emit observer event.
+					this._observer.safeEmit('rtcpTuple', rtcpTuple);
+
+					break;
+				}
+
 				case 'sctpstatechange':
 				{
 					const sctpState = data.sctpState as SctpState;

@@ -35,6 +35,7 @@ namespace RTC
 	private:
 		bool IsConnected() const override;
 		bool HasSrtp() const;
+		bool IsSrtpReady() const;
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
@@ -69,6 +70,7 @@ namespace RTC
 		};
 		std::string srtpKey;
 		std::string srtpKeyBase64;
+		bool connectCalled{ false }; // Whether connect() was succesfully called.
 	};
 } // namespace RTC
 
