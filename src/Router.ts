@@ -417,6 +417,8 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
+			enableSrtp = false,
+			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 			appData = {}
 		}: PlainRtpTransportOptions
 	): Promise<PlainRtpTransport>
@@ -454,7 +456,9 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
-			isDataChannel : false
+			isDataChannel : false,
+			enableSrtp,
+			srtpCryptoSuite
 		};
 
 		const data =

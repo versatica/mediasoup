@@ -8,6 +8,24 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	// NOTE: PlainRtpTransport allows AES_CM_128_HMAC_SHA1_80 and
+	// AES_CM_128_HMAC_SHA1_32 SRTP crypto suites.
+	// clang-format off
+	std::map<std::string, RTC::SrtpSession::CryptoSuite> PlainRtpTransport::string2SrtpCryptoSuite =
+	{
+		{ "AES_CM_128_HMAC_SHA1_80", RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80 },
+		{ "AES_CM_128_HMAC_SHA1_32", RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32 }
+	};
+	std::map<RTC::SrtpSession::CryptoSuite, std::string> PlainRtpTransport::srtpCryptoSuite2String =
+	{
+		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "AES_CM_128_HMAC_SHA1_80" },
+		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "AES_CM_128_HMAC_SHA1_32" }
+	};
+	// clang-format on
+	size_t PlainRtpTransport::srtpMasterLength{ 30 };
+
 	/* Instance methods. */
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
@@ -83,6 +101,34 @@ namespace RTC
 			}
 		}
 
+		auto jsonEnableSrtpIt = data.find("enableSrtp");
+
+		// clang-format off
+		if (
+			jsonEnableSrtpIt != data.end() &&
+			jsonEnableSrtpIt->is_boolean() &&
+			jsonEnableSrtpIt->get<bool>()
+		)
+		// clang-format on
+		{
+			auto jsonSrtpCryptoSuiteIt = data.find("srtpCryptoSuite");
+
+			if (jsonSrtpCryptoSuiteIt == data.end() || !jsonSrtpCryptoSuiteIt->is_string())
+				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite)");
+
+			// Ensure it's a crypto suite supported by us.
+			auto it =
+			  PlainRtpTransport::string2SrtpCryptoSuite.find(jsonSrtpCryptoSuiteIt->get<std::string>());
+
+			if (it == PlainRtpTransport::string2SrtpCryptoSuite.end())
+				MS_THROW_TYPE_ERROR("invalid/unsupported srtpCryptoSuite");
+
+			// NOTE: The SRTP crypto suite may change later on connect().
+			this->srtpCryptoSuite = it->second;
+			this->srtpKey         = Utils::Crypto::GetRandomString(PlainRtpTransport::srtpMasterLength);
+			this->srtpKeyBase64   = Utils::String::Base64Encode(this->srtpKey);
+		}
+
 		try
 		{
 			// This may throw.
@@ -121,6 +167,12 @@ namespace RTC
 
 		delete this->rtcpTuple;
 		this->rtcpTuple = nullptr;
+
+		delete this->srtpSendSession;
+		this->srtpSendSession = nullptr;
+
+		delete this->srtpRecvSession;
+		this->srtpRecvSession = nullptr;
 	}
 
 	void PlainRtpTransport::FillJson(json& jsonObject) const
@@ -178,6 +230,17 @@ namespace RTC
 				(*jsonRtcpTupleIt)["localPort"] = this->rtcpUdpSocket->GetLocalPort();
 				(*jsonRtcpTupleIt)["protocol"]  = "udp";
 			}
+		}
+
+		// Add srtpParameters.
+		if (HasSrtp())
+		{
+			jsonObject["srtpParameters"] = json::object();
+			auto jsonSrtpParametersIt    = jsonObject.find("srtpParameters");
+
+			(*jsonSrtpParametersIt)["cryptoSuite"] =
+			  PlainRtpTransport::srtpCryptoSuite2String[this->srtpCryptoSuite];
+			(*jsonSrtpParametersIt)["keyBase64"] = this->srtpKeyBase64;
 		}
 	}
 
@@ -250,6 +313,7 @@ namespace RTC
 					std::string ip;
 					uint16_t port{ 0u };
 					uint16_t rtcpPort{ 0u };
+					std::string srtpKeyBase64;
 
 					auto jsonIpIt = request->data.find("ip");
 
@@ -293,6 +357,109 @@ namespace RTC
 					{
 						if (!this->rtcpMux)
 							MS_THROW_TYPE_ERROR("missing rtcpPort (required with rtcpMux disabled)");
+					}
+
+					auto jsonSrtpParametersIt = request->data.find("srtpParameters");
+
+					if (!HasSrtp() && jsonSrtpParametersIt != request->data.end())
+					{
+						MS_THROW_TYPE_ERROR("invalid srtpParameters (SRTP not enabled)");
+					}
+					else if (HasSrtp())
+					{
+						// clang-format off
+						if (
+							jsonSrtpParametersIt == request->data.end() ||
+							!jsonSrtpParametersIt->is_object()
+						)
+						// clang-format on
+						{
+							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
+						}
+
+						auto jsonCryptoSuiteIt = jsonSrtpParametersIt->find("cryptoSuite");
+
+						// clang-format off
+						if (
+							jsonCryptoSuiteIt == jsonSrtpParametersIt->end() ||
+							!jsonCryptoSuiteIt->is_string()
+						)
+						// clang-format on
+						{
+							MS_THROW_TYPE_ERROR("missing srtpParameters.cryptoSuite)");
+						}
+
+						// Ensure it's a crypto suite supported by us.
+						auto it =
+						  PlainRtpTransport::string2SrtpCryptoSuite.find(jsonCryptoSuiteIt->get<std::string>());
+
+						if (it == PlainRtpTransport::string2SrtpCryptoSuite.end())
+							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
+
+						// Update out SRTP crypto suite wuth the one used by the remote.
+						this->srtpCryptoSuite = it->second;
+
+						auto jsonKeyBase64It = jsonSrtpParametersIt->find("keyBase64");
+
+						// clang-format off
+						if (
+							jsonKeyBase64It == jsonSrtpParametersIt->end() ||
+							!jsonKeyBase64It->is_string()
+						)
+						// clang-format on
+						{
+							MS_THROW_TYPE_ERROR("missing srtpParameters.keyBase64)");
+						}
+
+						srtpKeyBase64 = jsonKeyBase64It->get<std::string>();
+
+						size_t outLen;
+						// This may throw.
+						auto* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
+
+						if (outLen != PlainRtpTransport::srtpMasterLength)
+							MS_THROW_TYPE_ERROR("invalid decoded SRTP key length");
+
+						auto* srtpLocalKey  = new uint8_t[PlainRtpTransport::srtpMasterLength];
+						auto* srtpRemoteKey = new uint8_t[PlainRtpTransport::srtpMasterLength];
+
+						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), PlainRtpTransport::srtpMasterLength);
+						std::memcpy(srtpRemoteKey, srtpKey, PlainRtpTransport::srtpMasterLength);
+
+						try
+						{
+							this->srtpSendSession = new RTC::SrtpSession(
+							  RTC::SrtpSession::Type::OUTBOUND,
+							  this->srtpCryptoSuite,
+							  srtpLocalKey,
+							  PlainRtpTransport::srtpMasterLength);
+						}
+						catch (const MediaSoupError& error)
+						{
+							delete[] srtpLocalKey;
+							delete[] srtpRemoteKey;
+
+							MS_THROW_ERROR("error creating SRTP sending session: %s", error.what());
+						}
+
+						try
+						{
+							this->srtpRecvSession = new RTC::SrtpSession(
+							  RTC::SrtpSession::Type::INBOUND,
+							  this->srtpCryptoSuite,
+							  srtpRemoteKey,
+							  PlainRtpTransport::srtpMasterLength);
+						}
+						catch (const MediaSoupError& error)
+						{
+							delete[] srtpLocalKey;
+							delete[] srtpRemoteKey;
+
+							MS_THROW_ERROR("error creating SRTP receiving session: %s", error.what());
+						}
+
+						delete[] srtpLocalKey;
+						delete[] srtpRemoteKey;
 					}
 
 					int err;
@@ -390,6 +557,12 @@ namespace RTC
 					delete this->rtcpTuple;
 					this->rtcpTuple = nullptr;
 
+					delete this->srtpSendSession;
+					this->srtpSendSession = nullptr;
+
+					delete this->srtpRecvSession;
+					this->srtpRecvSession = nullptr;
+
 					throw;
 				}
 
@@ -400,6 +573,16 @@ namespace RTC
 
 				if (!this->rtcpMux)
 					this->rtcpTuple->FillJson(data["rtcpTuple"]);
+
+				if (HasSrtp())
+				{
+					data["srtpParameters"]    = json::object();
+					auto jsonSrtpParametersIt = data.find("srtpParameters");
+
+					(*jsonSrtpParametersIt)["cryptoSuite"] =
+					  PlainRtpTransport::srtpCryptoSuite2String[this->srtpCryptoSuite];
+					(*jsonSrtpParametersIt)["keyBase64"] = this->srtpKeyBase64;
+				}
 
 				request->Accept(data);
 
@@ -423,6 +606,11 @@ namespace RTC
 		return this->tuple != nullptr;
 	}
 
+	inline bool PlainRtpTransport::HasSrtp() const
+	{
+		return !this->srtpKey.empty();
+	}
+
 	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
@@ -442,6 +630,18 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(&data, &len))
+		{
+			if (cb)
+			{
+				(*cb)(false);
+
+				delete cb;
+			}
+
+			return;
+		}
+
 		this->tuple->Send(data, len, cb);
 
 		// Increase send transmission.
@@ -457,6 +657,9 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
+
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &len))
+			return;
 
 		if (this->rtcpMux)
 			this->tuple->Send(data, len);
@@ -476,6 +679,9 @@ namespace RTC
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
+
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &len))
+			return;
 
 		if (this->rtcpMux)
 			this->tuple->Send(data, len);
@@ -532,6 +738,9 @@ namespace RTC
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+		// TODO: Check SRTP and connect() called, but may be it was called just to provide
+		// us with the remote SRTP parameters, etc.
 
 		// If multiSource is set allow it without any checking.
 		if (this->multiSource)

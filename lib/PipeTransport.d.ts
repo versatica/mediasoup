@@ -30,7 +30,7 @@ export declare type PipeTransportOptions = {
     /**
      * Enable SRTP. Useful to protect the RTP and RTCP traffic if both Routers
      * are located in different hosts. For this to work, connect() must be called
-     * with remote SRTP parameters. Defauit false.
+     * with remote SRTP parameters. Default false.
      */
     enableSrtp?: boolean;
     /**

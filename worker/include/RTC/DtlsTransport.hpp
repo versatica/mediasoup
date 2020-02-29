@@ -53,9 +53,9 @@ namespace RTC
 		};
 
 	private:
-		struct SrtpProfileMapEntry
+		struct SrtpCryptoSuiteMapEntry
 		{
-			RTC::SrtpSession::Profile profile;
+			RTC::SrtpSession::CryptoSuite cryptoSuite;
 			const char* name;
 		};
 
@@ -72,7 +72,7 @@ namespace RTC
 			// NOTE: The caller MUST NOT call any method during this callback.
 			virtual void OnDtlsTransportConnected(
 			  const RTC::DtlsTransport* dtlsTransport,
-			  RTC::SrtpSession::Profile srtpProfile,
+			  RTC::SrtpSession::CryptoSuite srtpCryptoSuite,
 			  uint8_t* srtpLocalKey,
 			  size_t srtpLocalKeyLen,
 			  uint8_t* srtpRemoteKey,
@@ -114,7 +114,7 @@ namespace RTC
 		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
 		static std::map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
 		static std::vector<Fingerprint> localFingerprints;
-		static std::vector<SrtpProfileMapEntry> srtpProfiles;
+		static std::vector<SrtpCryptoSuiteMapEntry> srtpCryptoSuites;
 
 	public:
 		explicit DtlsTransport(Listener* listener);
@@ -138,8 +138,8 @@ namespace RTC
 		bool SetTimeout();
 		bool ProcessHandshake();
 		bool CheckRemoteFingerprint();
-		void ExtractSrtpKeys(RTC::SrtpSession::Profile srtpProfile);
-		RTC::SrtpSession::Profile GetNegotiatedSrtpProfile();
+		void ExtractSrtpKeys(RTC::SrtpSession::CryptoSuite srtpCryptoSuite);
+		RTC::SrtpSession::CryptoSuite GetNegotiatedSrtpCryptoSuite();
 
 		/* Callbacks fired by OpenSSL events. */
 	public:

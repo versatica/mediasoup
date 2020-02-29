@@ -54,7 +54,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SrtpSession::SrtpSession(Type type, Profile profile, uint8_t* key, size_t keyLen)
+	SrtpSession::SrtpSession(Type type, CryptoSuite cryptoSuite, uint8_t* key, size_t keyLen)
 	{
 		MS_TRACE();
 
@@ -63,9 +63,9 @@ namespace RTC
 		// Set all policy fields to 0.
 		std::memset(&policy, 0, sizeof(srtp_policy_t));
 
-		switch (profile)
+		switch (cryptoSuite)
 		{
-			case Profile::AES_CM_128_HMAC_SHA1_80:
+			case CryptoSuite::AES_CM_128_HMAC_SHA1_80:
 			{
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
@@ -73,7 +73,7 @@ namespace RTC
 				break;
 			}
 
-			case Profile::AES_CM_128_HMAC_SHA1_32:
+			case CryptoSuite::AES_CM_128_HMAC_SHA1_32:
 			{
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
 				// NOTE: Must be 80 for RTCP.
@@ -82,7 +82,7 @@ namespace RTC
 				break;
 			}
 
-			case Profile::AEAD_AES_256_GCM:
+			case CryptoSuite::AEAD_AES_256_GCM:
 			{
 				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
 				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtcp);
@@ -90,7 +90,7 @@ namespace RTC
 				break;
 			}
 
-			case Profile::AEAD_AES_128_GCM:
+			case CryptoSuite::AEAD_AES_128_GCM:
 			{
 				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
 				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtcp);
@@ -100,7 +100,7 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("unknown SRTP profile");
+				MS_ABORT("unknown SRTP crypto suite");
 			}
 		}
 

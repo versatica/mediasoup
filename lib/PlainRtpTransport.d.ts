@@ -2,6 +2,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 export declare type PlainRtpTransportOptions = {
     /**
      * Listening IP address.
@@ -36,6 +37,16 @@ export declare type PlainRtpTransportOptions = {
      * Default 262144.
      */
     maxSctpMessageSize?: number;
+    /**
+     * Enable SRTP. For this to work, connect() must be called
+     * with remote SRTP parameters. Default false.
+     */
+    enableSrtp?: boolean;
+    /**
+     * The SRTP crypto suite to be used if enableSrtp is set. Default
+     * 'AES_CM_128_HMAC_SHA1_80'.
+     */
+    srtpCryptoSuite?: SrtpCryptoSuite;
     /**
      * Custom application data.
      */
@@ -95,6 +106,10 @@ export declare class PlainRtpTransport extends Transport {
      */
     get sctpState(): SctpState;
     /**
+     * SRTP parameters.
+     */
+    get srtpParameters(): SrtpParameters | undefined;
+    /**
      * Observer.
      *
      * @override
@@ -131,10 +146,11 @@ export declare class PlainRtpTransport extends Transport {
      *
      * @override
      */
-    connect({ ip, port, rtcpPort }: {
+    connect({ ip, port, rtcpPort, srtpParameters }: {
         ip: string;
         port: number;
         rtcpPort?: number;
+        srtpParameters?: SrtpParameters;
     }): Promise<void>;
     /**
      * Override Transport.consume() method to reject it if multiSource is set.

@@ -106,12 +106,12 @@ namespace RTC
 		{ "server", DtlsTransport::Role::SERVER }
 	};
 	std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
-	std::vector<DtlsTransport::SrtpProfileMapEntry> DtlsTransport::srtpProfiles =
+	std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
 	{
-		{ RTC::SrtpSession::Profile::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
-		{ RTC::SrtpSession::Profile::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },
-		{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
-		{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },
+		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
+		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
 	// clang-format on
 
@@ -370,7 +370,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::string dtlsSrtpProfiles;
+		std::string dtlsSrtpCryptoSuites;
 		EC_KEY* ecdh{ nullptr };
 		int ret;
 
@@ -487,23 +487,26 @@ namespace RTC
 #endif
 
 		// Set the "use_srtp" DTLS extension.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
+		for (auto it = DtlsTransport::srtpCryptoSuites.begin();
+		     it != DtlsTransport::srtpCryptoSuites.end();
+		     ++it)
 		{
-			if (it != DtlsTransport::srtpProfiles.begin())
-				dtlsSrtpProfiles += ":";
+			if (it != DtlsTransport::srtpCryptoSuites.begin())
+				dtlsSrtpCryptoSuites += ":";
 
-			SrtpProfileMapEntry* profileEntry = std::addressof(*it);
-			dtlsSrtpProfiles += profileEntry->name;
+			SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(*it);
+			dtlsSrtpCryptoSuites += cryptoSuiteEntry->name;
 		}
 
-		MS_DEBUG_2TAGS(dtls, srtp, "setting SRTP profiles for DTLS: %s", dtlsSrtpProfiles.c_str());
+		MS_DEBUG_2TAGS(dtls, srtp, "setting SRTP cryptoSuites for DTLS: %s", dtlsSrtpCryptoSuites.c_str());
 
 		// NOTE: This function returns 0 on success.
-		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, dtlsSrtpProfiles.c_str());
+		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, dtlsSrtpCryptoSuites.c_str());
 
 		if (ret != 0)
 		{
-			MS_ERROR("SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'", dtlsSrtpProfiles.c_str());
+			MS_ERROR(
+			  "SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'", dtlsSrtpCryptoSuites.c_str());
 			LOG_OPENSSL_ERROR("SSL_CTX_set_tlsext_use_srtp() failed");
 
 			goto error;
@@ -1141,20 +1144,20 @@ namespace RTC
 			return false;
 		}
 
-		// Get the negotiated SRTP profile.
-		RTC::SrtpSession::Profile srtpProfile = GetNegotiatedSrtpProfile();
+		// Get the negotiated SRTP crypto suite.
+		RTC::SrtpSession::CryptoSuite srtpCryptoSuite = GetNegotiatedSrtpCryptoSuite();
 
-		if (srtpProfile != RTC::SrtpSession::Profile::NONE)
+		if (srtpCryptoSuite != RTC::SrtpSession::CryptoSuite::NONE)
 		{
 			// Extract the SRTP keys (will notify the listener with them).
-			ExtractSrtpKeys(srtpProfile);
+			ExtractSrtpKeys(srtpCryptoSuite);
 
 			return true;
 		}
 
 		// NOTE: We assume that "use_srtp" DTLS extension is required even if
 		// there is no audio/video.
-		MS_WARN_2TAGS(dtls, srtp, "SRTP profile not negotiated");
+		MS_WARN_2TAGS(dtls, srtp, "SRTP crypto suite not negotiated");
 
 		Reset();
 
@@ -1291,7 +1294,7 @@ namespace RTC
 		return true;
 	}
 
-	inline void DtlsTransport::ExtractSrtpKeys(RTC::SrtpSession::Profile srtpProfile)
+	inline void DtlsTransport::ExtractSrtpKeys(RTC::SrtpSession::CryptoSuite srtpCryptoSuite)
 	{
 		MS_TRACE();
 
@@ -1299,10 +1302,10 @@ namespace RTC
 		size_t srtpSaltLength{ 0 };
 		size_t srtpMasterLength{ 0 };
 
-		switch (srtpProfile)
+		switch (srtpCryptoSuite)
 		{
-			case RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80:
-			case RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_32:
+			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
 			{
 				srtpKeyLength    = SrtpMasterKeyLength;
 				srtpSaltLength   = SrtpMasterSaltLength;
@@ -1311,7 +1314,7 @@ namespace RTC
 				break;
 			}
 
-			case RTC::SrtpSession::Profile::AEAD_AES_256_GCM:
+			case RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
 			{
 				srtpKeyLength    = SrtpAesGcm256MasterKeyLength;
 				srtpSaltLength   = SrtpAesGcm256MasterSaltLength;
@@ -1320,7 +1323,7 @@ namespace RTC
 				break;
 			}
 
-			case RTC::SrtpSession::Profile::AEAD_AES_128_GCM:
+			case RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
 			{
 				srtpKeyLength    = SrtpAesGcm128MasterKeyLength;
 				srtpSaltLength   = SrtpAesGcm128MasterSaltLength;
@@ -1331,7 +1334,7 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("unknown SRTP profile");
+				MS_ABORT("unknown SRTP crypto suite");
 			}
 		}
 
@@ -1388,7 +1391,7 @@ namespace RTC
 		this->state = DtlsState::CONNECTED;
 		this->listener->OnDtlsTransportConnected(
 		  this,
-		  srtpProfile,
+		  srtpCryptoSuite,
 		  srtpLocalMasterKey,
 		  srtpMasterLength,
 		  srtpRemoteMasterKey,
@@ -1400,36 +1403,37 @@ namespace RTC
 		delete[] srtpRemoteMasterKey;
 	}
 
-	inline RTC::SrtpSession::Profile DtlsTransport::GetNegotiatedSrtpProfile()
+	inline RTC::SrtpSession::CryptoSuite DtlsTransport::GetNegotiatedSrtpCryptoSuite()
 	{
 		MS_TRACE();
 
-		RTC::SrtpSession::Profile negotiatedSrtpProfile = RTC::SrtpSession::Profile::NONE;
+		RTC::SrtpSession::CryptoSuite negotiatedSrtpCryptoSuite = RTC::SrtpSession::CryptoSuite::NONE;
 
-		// Ensure that the SRTP profile has been negotiated.
-		SRTP_PROTECTION_PROFILE* sslSrtpProfile = SSL_get_selected_srtp_profile(this->ssl);
+		// Ensure that the SRTP crypto suite has been negotiated.
+		// NOTE: This is a OpenSSL type.
+		SRTP_PROTECTION_PROFILE* sslSrtpCryptoSuite = SSL_get_selected_srtp_profile(this->ssl);
 
-		if (!sslSrtpProfile)
-			return negotiatedSrtpProfile;
+		if (!sslSrtpCryptoSuite)
+			return negotiatedSrtpCryptoSuite;
 
-		// Get the negotiated SRTP profile.
-		for (auto& srtpProfile : DtlsTransport::srtpProfiles)
+		// Get the negotiated SRTP crypto suite.
+		for (auto& srtpCryptoSuite : DtlsTransport::srtpCryptoSuites)
 		{
-			SrtpProfileMapEntry* profileEntry = std::addressof(srtpProfile);
+			SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(srtpCryptoSuite);
 
-			if (std::strcmp(sslSrtpProfile->name, profileEntry->name) == 0)
+			if (std::strcmp(sslSrtpCryptoSuite->name, cryptoSuiteEntry->name) == 0)
 			{
-				MS_DEBUG_2TAGS(dtls, srtp, "chosen SRTP profile: %s", profileEntry->name);
+				MS_DEBUG_2TAGS(dtls, srtp, "chosen SRTP crypto suite: %s", cryptoSuiteEntry->name);
 
-				negotiatedSrtpProfile = profileEntry->profile;
+				negotiatedSrtpCryptoSuite = cryptoSuiteEntry->cryptoSuite;
 			}
 		}
 
 		MS_ASSERT(
-		  negotiatedSrtpProfile != RTC::SrtpSession::Profile::NONE,
-		  "chosen SRTP profile is not an available one");
+		  negotiatedSrtpCryptoSuite != RTC::SrtpSession::CryptoSuite::NONE,
+		  "chosen SRTP crypto suite is not an available one");
 
-		return negotiatedSrtpProfile;
+		return negotiatedSrtpCryptoSuite;
 	}
 
 	inline void DtlsTransport::OnSslInfo(int where, int ret)

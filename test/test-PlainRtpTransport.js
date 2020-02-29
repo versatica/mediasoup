@@ -98,6 +98,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 			isDataChannel  : false
 		});
 	expect(transport1.sctpState).toBe('new');
+	expect(transport1.srtpParameters).toBeUndefined();
 
 	const data1 = await transport1.dump();
 
@@ -169,6 +170,125 @@ test('router.createPlainRtpTransport() with wrong arguments rejects with TypeErr
 		.toThrow(TypeError);
 }, 2000);
 
+test('router.createPlainRtpTransport() with enableSrtp succeeds', async () =>
+{
+	const transport1 = await router.createPlainRtpTransport(
+		{
+			listenIp   : '127.0.0.1',
+			enableSrtp : true
+		});
+
+	expect(transport1.id).toBeType('string');
+	expect(transport1.srtpParameters).toBeType('object');
+	expect(transport1.srtpParameters.cryptoSuite).toBe('AES_CM_128_HMAC_SHA1_80');
+	expect(transport1.srtpParameters.keyBase64.length).toBe(40);
+
+	// Missing srtpParameters.
+	await expect(transport1.connect(
+		{
+			ip   : '127.0.0.2',
+			port : 9999
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpParameters.
+	await expect(transport1.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters : 1
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Missing srtpParameters.cryptoSuite.
+	await expect(transport1.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				keyBase64 : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Missing srtpParameters.keyBase64.
+	await expect(transport1.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpParameters.cryptoSuite.
+	await expect(transport1.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'FOO',
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpParameters.cryptoSuite.
+	await expect(transport1.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 123,
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Invalid srtpParameters.keyBase64.
+	await expect(transport1.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				keyBase64   : []
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// Valid srtpParameters. And let's update the crypto suite.
+	await expect(transport1.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_32',
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.resolves
+		.toBeUndefined();
+
+	expect(transport1.srtpParameters.cryptoSuite).toBe('AES_CM_128_HMAC_SHA1_32');
+
+	transport1.close();
+}, 2000);
+
 test('router.createPlainRtpTransport() with non bindable IP rejects with Error', async () =>
 {
 	await expect(router.createPlainRtpTransport({ listenIp: '8.8.8.8' }))
@@ -210,6 +330,21 @@ test('plaintRtpTransport.getStats() succeeds', async () =>
 
 test('plaintRtpTransport.connect() succeeds', async () =>
 {
+	// No SRTP enabled so passing srtpParameters must fail.
+	await expect(transport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9998,
+			rtcpPort       : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
 	await expect(transport.connect({ ip: '1.2.3.4', port: 1234, rtcpPort: 1235 }))
 		.resolves
 		.toBeUndefined();

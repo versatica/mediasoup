@@ -11,11 +11,12 @@ namespace RTC
 {
 	/* Static. */
 
-	// NOTE: We just use AES_CM_128_HMAC_SHA1_80 as SRTP crypto suite in
-	// PipeTransport.
-	static RTC::SrtpSession::Profile SrtpProfile{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80 };
-	static const std::string SrtpProfileStr{ "AES_CM_128_HMAC_SHA1_80" };
-	static constexpr size_t SrtpMasterLength{ 30 };
+	// NOTE: PipeTransport just allows AES_CM_128_HMAC_SHA1_80 SRTP crypto suite.
+	RTC::SrtpSession::CryptoSuite PipeTransport::srtpCryptoSuite{
+		RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80
+	};
+	std::string PipeTransport::srtpCryptoSuiteString{ "AES_CM_128_HMAC_SHA1_80" };
+	size_t PipeTransport::srtpMasterLength{ 30 };
 
 	/* Instance methods. */
 
@@ -69,9 +70,8 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			this->srtpCryptoSuite = SrtpProfileStr;
-			this->srtpKey         = Utils::Crypto::GetRandomString(SrtpMasterLength);
-			this->srtpKeyBase64   = Utils::String::Base64Encode(this->srtpKey);
+			this->srtpKey       = Utils::Crypto::GetRandomString(PipeTransport::srtpMasterLength);
+			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
 		}
 
 		try
@@ -114,19 +114,6 @@ namespace RTC
 		// Call the parent method.
 		RTC::Transport::FillJson(jsonObject);
 
-		// Add rtx.
-		jsonObject["rtx"] = this->rtx;
-
-		// Add srtpParameters.
-		if (HasSrtp())
-		{
-			jsonObject["srtpParameters"] = json::object();
-			auto jsonSrtpParametersIt    = jsonObject.find("srtpParameters");
-
-			(*jsonSrtpParametersIt)["cryptoSuite"] = this->srtpCryptoSuite;
-			(*jsonSrtpParametersIt)["keyBase64"]   = this->srtpKeyBase64;
-		}
-
 		// Add tuple.
 		if (this->tuple != nullptr)
 		{
@@ -144,6 +131,19 @@ namespace RTC
 
 			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
 			(*jsonTupleIt)["protocol"]  = "udp";
+		}
+
+		// Add rtx.
+		jsonObject["rtx"] = this->rtx;
+
+		// Add srtpParameters.
+		if (HasSrtp())
+		{
+			jsonObject["srtpParameters"] = json::object();
+			auto jsonSrtpParametersIt    = jsonObject.find("srtpParameters");
+
+			(*jsonSrtpParametersIt)["cryptoSuite"] = PipeTransport::srtpCryptoSuiteString;
+			(*jsonSrtpParametersIt)["keyBase64"]   = this->srtpKeyBase64;
 		}
 	}
 
@@ -195,7 +195,7 @@ namespace RTC
 				{
 					std::string ip;
 					uint16_t port{ 0u };
-					std::string srtpKey;
+					std::string srtpKeyBase64;
 
 					auto jsonIpIt = request->data.find("ip");
 
@@ -253,8 +253,10 @@ namespace RTC
 
 						// NOTE: We just use AES_CM_128_HMAC_SHA1_80 as SRTP crypto suite in
 						// PipeTransport.
-						if (jsonCryptoSuiteIt->get<std::string>() != SrtpProfileStr)
-							MS_THROW_TYPE_ERROR("invalid srtpParameters.cryptoSuite");
+						if (jsonCryptoSuiteIt->get<std::string>() != PipeTransport::srtpCryptoSuiteString)
+						{
+							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
+						}
 
 						auto jsonKeyBase64It = jsonSrtpParametersIt->find("keyBase64");
 
@@ -268,24 +270,28 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters.keyBase64)");
 						}
 
-						auto srtpKeyBase64 = jsonKeyBase64It->get<std::string>();
+						srtpKeyBase64 = jsonKeyBase64It->get<std::string>();
+
 						size_t outLen;
 						// This may throw.
 						auto* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
 
-						if (outLen != SrtpMasterLength)
+						if (outLen != PipeTransport::srtpMasterLength)
 							MS_THROW_TYPE_ERROR("invalid decoded SRTP key length");
 
-						auto* srtpLocalKey  = new uint8_t[SrtpMasterLength];
-						auto* srtpRemoteKey = new uint8_t[SrtpMasterLength];
+						auto* srtpLocalKey  = new uint8_t[PipeTransport::srtpMasterLength];
+						auto* srtpRemoteKey = new uint8_t[PipeTransport::srtpMasterLength];
 
-						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), SrtpMasterLength);
-						std::memcpy(srtpRemoteKey, srtpKey, SrtpMasterLength);
+						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), PipeTransport::srtpMasterLength);
+						std::memcpy(srtpRemoteKey, srtpKey, PipeTransport::srtpMasterLength);
 
 						try
 						{
 							this->srtpSendSession = new RTC::SrtpSession(
-							  RTC::SrtpSession::Type::OUTBOUND, SrtpProfile, srtpLocalKey, SrtpMasterLength);
+							  RTC::SrtpSession::Type::OUTBOUND,
+							  PipeTransport::srtpCryptoSuite,
+							  srtpLocalKey,
+							  PipeTransport::srtpMasterLength);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -298,7 +304,10 @@ namespace RTC
 						try
 						{
 							this->srtpRecvSession = new RTC::SrtpSession(
-							  RTC::SrtpSession::Type::INBOUND, SrtpProfile, srtpRemoteKey, SrtpMasterLength);
+							  RTC::SrtpSession::Type::INBOUND,
+							  PipeTransport::srtpCryptoSuite,
+							  srtpRemoteKey,
+							  PipeTransport::srtpMasterLength);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -357,14 +366,14 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
+					delete this->tuple;
+					this->tuple = nullptr;
+
 					delete this->srtpSendSession;
 					this->srtpSendSession = nullptr;
 
 					delete this->srtpRecvSession;
 					this->srtpRecvSession = nullptr;
-
-					delete this->tuple;
-					this->tuple = nullptr;
 
 					throw;
 				}
@@ -391,14 +400,14 @@ namespace RTC
 		}
 	}
 
-	inline bool PipeTransport::HasSrtp() const
-	{
-		return !this->srtpKey.empty();
-	}
-
 	inline bool PipeTransport::IsConnected() const
 	{
 		return this->tuple != nullptr;
+	}
+
+	inline bool PipeTransport::HasSrtp() const
+	{
+		return !this->srtpKey.empty();
 	}
 
 	void PipeTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)

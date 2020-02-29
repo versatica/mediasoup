@@ -9,6 +9,7 @@ import {
 } from './Transport';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 
 export type PlainRtpTransportOptions =
 {
@@ -51,6 +52,18 @@ export type PlainRtpTransportOptions =
 	 * Default 262144.
 	 */
 	maxSctpMessageSize?: number;
+
+	/**
+	 * Enable SRTP. For this to work, connect() must be called
+	 * with remote SRTP parameters. Default false.
+	 */
+	enableSrtp?: boolean;
+
+	/**
+	 * The SRTP crypto suite to be used if enableSrtp is set. Default
+	 * 'AES_CM_128_HMAC_SHA1_80'.
+	 */
+	srtpCryptoSuite?: SrtpCryptoSuite;
 
 	/**
 	 * Custom application data.
@@ -119,6 +132,9 @@ export class PlainRtpTransport extends Transport
 	//   - .MIS
 	//   - .maxMessageSize
 	// - .sctpState
+	// - .srtpParameters
+	//   - .cryptoSuite
+	//   - .keyBase64
 
 	/**
 	 * @private
@@ -138,7 +154,8 @@ export class PlainRtpTransport extends Transport
 			tuple          : data.tuple,
 			rtcpTuple      : data.rtcpTuple,
 			sctpParameters : data.sctpParameters,
-			sctpState      : data.sctpState
+			sctpState      : data.sctpState,
+			srtpParameters : data.srtpParameters
 		};
 
 		this._handleWorkerNotifications();
@@ -174,6 +191,14 @@ export class PlainRtpTransport extends Transport
 	get sctpState(): SctpState
 	{
 		return this._data.sctpState;
+	}
+
+	/**
+	 * SRTP parameters.
+	 */
+	get srtpParameters(): SrtpParameters | undefined
+	{
+		return this._data.srtpParameters;
 	}
 
 	/**
@@ -247,18 +272,20 @@ export class PlainRtpTransport extends Transport
 		{
 			ip,
 			port,
-			rtcpPort
+			rtcpPort,
+			srtpParameters
 		}:
 		{
 			ip: string;
 			port: number;
 			rtcpPort?: number;
+			srtpParameters?: SrtpParameters;
 		}
 	): Promise<void>
 	{
 		logger.debug('connect()');
 
-		const reqData = { ip, port, rtcpPort };
+		const reqData = { ip, port, rtcpPort, srtpParameters };
 
 		const data =
 			await this._channel.request('transport.connect', this._internal, reqData);
@@ -266,6 +293,7 @@ export class PlainRtpTransport extends Transport
 		// Update data.
 		this._data.tuple = data.tuple;
 		this._data.rtcpTuple = data.rtcpTuple;
+		this._data.srtpParameters = data.srtpParameters;
 	}
 
 	/**
