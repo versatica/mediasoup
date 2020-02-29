@@ -11,7 +11,7 @@ import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 
-export type PlainRtpTransportOptions =
+export type PlainTransportOptions =
 {
 	/**
 	 * Listening IP address.
@@ -71,7 +71,12 @@ export type PlainRtpTransportOptions =
 	appData?: any;
 }
 
-export type PlainRtpTransportStat =
+/**
+ * DEPRECATED: Use PlainTransportOptions.
+ */
+export type PlainRtpTransportOptions = PlainTransportOptions;
+
+export type PlainTransportStat =
 {
 	// Common to all Transports.
 	type: string;
@@ -98,7 +103,7 @@ export type PlainRtpTransportStat =
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
 
-	// PlainRtpTransport specific.
+	// PlainTransport specific.
 	rtcpMux: boolean;
 	comedia: boolean;
 	multiSource: boolean;
@@ -106,11 +111,16 @@ export type PlainRtpTransportStat =
 	rtcpTuple?: TransportTuple;
 }
 
-const logger = new Logger('PlainRtpTransport');
+/**
+ * DEPRECATED: Use PlainTransportOptions.
+ */
+export type PlainRtpTransportStat = PlainTransportStat;
 
-export class PlainRtpTransport extends Transport
+const logger = new Logger('PlainTransport');
+
+export class PlainTransport extends Transport
 {
-	// PlainRtpTransport data.
+	// PlainTransport data.
 	// - .rtcpMux
 	// - .comedia
 	// - .multiSource
@@ -223,7 +233,7 @@ export class PlainRtpTransport extends Transport
 	}
 
 	/**
-	 * Close the PlainRtpTransport.
+	 * Close the PlainTransport.
 	 *
 	 * @override
 	 */
@@ -256,11 +266,11 @@ export class PlainRtpTransport extends Transport
 	}
 
 	/**
-	 * Get PlainRtpTransport stats.
+	 * Get PlainTransport stats.
 	 *
 	 * @override
 	 */
-	async getStats(): Promise<PlainRtpTransportStat[]>
+	async getStats(): Promise<PlainTransportStat[]>
 	{
 		logger.debug('getStats()');
 
@@ -268,7 +278,7 @@ export class PlainRtpTransport extends Transport
 	}
 
 	/**
-	 * Provide the PlainRtpTransport remote parameters.
+	 * Provide the PlainTransport remote parameters.
 	 *
 	 * @override
 	 */
@@ -383,5 +393,16 @@ export class PlainRtpTransport extends Transport
 				}
 			}
 		});
+	}
+}
+
+/**
+ * DEPRECATED: Use PlainTransport.
+ */
+export class PlainRtpTransport extends PlainTransport
+{
+	constructor(params: any)
+	{
+		super(params);
 	}
 }

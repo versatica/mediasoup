@@ -101,7 +101,7 @@ export declare class PipeTransport extends Transport {
      */
     get observer(): EnhancedEventEmitter;
     /**
-     * Close the PlainRtpTransport.
+     * Close the PipeTransport.
      *
      * @override
      */

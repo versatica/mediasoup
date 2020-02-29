@@ -2,7 +2,7 @@ export * from './Worker';
 export * from './Router';
 export * from './Transport';
 export * from './WebRtcTransport';
-export * from './PlainRtpTransport';
+export * from './PlainTransport';
 export * from './PipeTransport';
 export * from './Producer';
 export * from './Consumer';

@@ -20,7 +20,7 @@ namespace Channel
 		{ "router.close",                    Request::MethodId::ROUTER_CLOSE                       },
 		{ "router.dump",                     Request::MethodId::ROUTER_DUMP                        },
 		{ "router.createWebRtcTransport",    Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT     },
-		{ "router.createPlainRtpTransport",  Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT  },
+		{ "router.createPlainTransport",     Request::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT      },
 		{ "router.createPipeTransport",      Request::MethodId::ROUTER_CREATE_PIPE_TRANSPORT       },
 		{ "router.createAudioLevelObserver", Request::MethodId::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER },
 		{ "transport.close",                 Request::MethodId::TRANSPORT_CLOSE                    },

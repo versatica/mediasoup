@@ -3,7 +3,7 @@ import { Transport, TransportListenIp, TransportTuple, SctpState } from './Trans
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
-export declare type PlainRtpTransportOptions = {
+export declare type PlainTransportOptions = {
     /**
      * Listening IP address.
      */
@@ -52,7 +52,11 @@ export declare type PlainRtpTransportOptions = {
      */
     appData?: any;
 };
-export declare type PlainRtpTransportStat = {
+/**
+ * DEPRECATED: Use PlainTransportOptions.
+ */
+export declare type PlainRtpTransportOptions = PlainTransportOptions;
+export declare type PlainTransportStat = {
     type: string;
     transportId: string;
     timestamp: number;
@@ -82,7 +86,11 @@ export declare type PlainRtpTransportStat = {
     tuple: TransportTuple;
     rtcpTuple?: TransportTuple;
 };
-export declare class PlainRtpTransport extends Transport {
+/**
+ * DEPRECATED: Use PlainTransportOptions.
+ */
+export declare type PlainRtpTransportStat = PlainTransportStat;
+export declare class PlainTransport extends Transport {
     /**
      * @private
      * @emits tuple - (tuple: TransportTuple)
@@ -127,7 +135,7 @@ export declare class PlainRtpTransport extends Transport {
      */
     get observer(): EnhancedEventEmitter;
     /**
-     * Close the PlainRtpTransport.
+     * Close the PlainTransport.
      *
      * @override
      */
@@ -140,13 +148,13 @@ export declare class PlainRtpTransport extends Transport {
      */
     routerClosed(): void;
     /**
-     * Get PlainRtpTransport stats.
+     * Get PlainTransport stats.
      *
      * @override
      */
-    getStats(): Promise<PlainRtpTransportStat[]>;
+    getStats(): Promise<PlainTransportStat[]>;
     /**
-     * Provide the PlainRtpTransport remote parameters.
+     * Provide the PlainTransport remote parameters.
      *
      * @override
      */
@@ -164,4 +172,10 @@ export declare class PlainRtpTransport extends Transport {
     consume(params: ConsumerOptions): Promise<Consumer>;
     private _handleWorkerNotifications;
 }
-//# sourceMappingURL=PlainRtpTransport.d.ts.map
+/**
+ * DEPRECATED: Use PlainTransport.
+ */
+export declare class PlainRtpTransport extends PlainTransport {
+    constructor(params: any);
+}
+//# sourceMappingURL=PlainTransport.d.ts.map

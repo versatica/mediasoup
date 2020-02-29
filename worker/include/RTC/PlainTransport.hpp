@@ -1,5 +1,5 @@
-#ifndef MS_RTC_PLAIN_RTP_TRANSPORT_HPP
-#define MS_RTC_PLAIN_RTP_TRANSPORT_HPP
+#ifndef MS_RTC_PLAIN_TRANSPORT_HPP
+#define MS_RTC_PLAIN_TRANSPORT_HPP
 
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
@@ -9,7 +9,7 @@
 
 namespace RTC
 {
-	class PlainRtpTransport : public RTC::Transport, public RTC::UdpSocket::Listener
+	class PlainTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
 	private:
 		struct ListenIp
@@ -24,8 +24,8 @@ namespace RTC
 		static size_t srtpMasterLength;
 
 	public:
-		PlainRtpTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
-		~PlainRtpTransport() override;
+		PlainTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		~PlainTransport() override;
 
 	public:
 		void FillJson(json& jsonObject) const override;

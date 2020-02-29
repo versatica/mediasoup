@@ -7,7 +7,7 @@ import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
 import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
-import { PlainRtpTransport, PlainRtpTransportOptions } from './PlainRtpTransport';
+import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
@@ -406,9 +406,9 @@ export class Router extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Create a PlainRtpTransport.
+	 * Create a PlainTransport.
 	 */
-	async createPlainRtpTransport(
+	async createPlainTransport(
 		{
 			listenIp,
 			rtcpMux = true,
@@ -420,10 +420,10 @@ export class Router extends EnhancedEventEmitter
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 			appData = {}
-		}: PlainRtpTransportOptions
-	): Promise<PlainRtpTransport>
+		}: PlainTransportOptions
+	): Promise<PlainTransport>
 	{
-		logger.debug('createPlainRtpTransport()');
+		logger.debug('createPlainTransport()');
 
 		if (!listenIp)
 			throw new TypeError('missing listenIp');
@@ -462,9 +462,9 @@ export class Router extends EnhancedEventEmitter
 		};
 
 		const data =
-			await this._channel.request('router.createPlainRtpTransport', internal, reqData);
+			await this._channel.request('router.createPlainTransport', internal, reqData);
 
-		const transport = new PlainRtpTransport(
+		const transport = new PlainTransport(
 			{
 				internal,
 				data,
@@ -494,6 +494,19 @@ export class Router extends EnhancedEventEmitter
 		this._observer.safeEmit('newtransport', transport);
 
 		return transport;
+	}
+
+	/**
+	 * DEPRECATED: Use createPlainTransport().
+	 */
+	async createPlainRtpTransport(
+		options: PlainTransportOptions
+	): Promise<PlainTransport>
+	{
+		logger.warn(
+			'createPlainRtpTransport() is DEPRECATED, use createPlainTransport()');
+
+		return this.createPlainTransport(options);
 	}
 
 	/**

@@ -2,7 +2,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
-import { PlainRtpTransport, PlainRtpTransportOptions } from './PlainRtpTransport';
+import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
@@ -136,9 +136,13 @@ export declare class Router extends EnhancedEventEmitter {
      */
     createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
     /**
-     * Create a PlainRtpTransport.
+     * Create a PlainTransport.
      */
-    createPlainRtpTransport({ listenIp, rtcpMux, comedia, multiSource, enableSctp, numSctpStreams, maxSctpMessageSize, enableSrtp, srtpCryptoSuite, appData }: PlainRtpTransportOptions): Promise<PlainRtpTransport>;
+    createPlainTransport({ listenIp, rtcpMux, comedia, multiSource, enableSctp, numSctpStreams, maxSctpMessageSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
+    /**
+     * DEPRECATED: Use createPlainTransport().
+     */
+    createPlainRtpTransport(options: PlainTransportOptions): Promise<PlainTransport>;
     /**
      * Create a PipeTransport.
      */

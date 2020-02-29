@@ -184,7 +184,7 @@ export class PipeTransport extends Transport
 	}
 
 	/**
-	 * Close the PlainRtpTransport.
+	 * Close the PipeTransport.
 	 *
 	 * @override
 	 */

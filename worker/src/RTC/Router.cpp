@@ -7,7 +7,7 @@
 #include "Utils.hpp"
 #include "RTC/AudioLevelObserver.hpp"
 #include "RTC/PipeTransport.hpp"
-#include "RTC/PlainRtpTransport.hpp"
+#include "RTC/PlainTransport.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -200,23 +200,23 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_RTP_TRANSPORT:
+			case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{
 				std::string transportId;
 
 				// This may throw
 				SetNewTransportIdFromRequest(request, transportId);
 
-				auto* plainRtpTransport = new RTC::PlainRtpTransport(transportId, this, request->data);
+				auto* plainTransport = new RTC::PlainTransport(transportId, this, request->data);
 
 				// Insert into the map.
-				this->mapTransports[transportId] = plainRtpTransport;
+				this->mapTransports[transportId] = plainTransport;
 
-				MS_DEBUG_DEV("PlainRtpTransport created [transportId:%s]", transportId.c_str());
+				MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
 
 				json data = json::object();
 
-				plainRtpTransport->FillJson(data);
+				plainTransport->FillJson(data);
 
 				request->Accept(data);
 

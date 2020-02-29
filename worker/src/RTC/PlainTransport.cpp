@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::PlainRtpTransport"
+#define MS_CLASS "RTC::PlainTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/PlainRtpTransport.hpp"
+#include "RTC/PlainTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -11,27 +11,26 @@ namespace RTC
 {
 	/* Static. */
 
-	// NOTE: PlainRtpTransport allows AES_CM_128_HMAC_SHA1_80 and
+	// NOTE: PlainTransport allows AES_CM_128_HMAC_SHA1_80 and
 	// AES_CM_128_HMAC_SHA1_32 SRTP crypto suites.
 	// clang-format off
-	std::map<std::string, RTC::SrtpSession::CryptoSuite> PlainRtpTransport::string2SrtpCryptoSuite =
+	std::map<std::string, RTC::SrtpSession::CryptoSuite> PlainTransport::string2SrtpCryptoSuite =
 	{
 		{ "AES_CM_128_HMAC_SHA1_80", RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80 },
 		{ "AES_CM_128_HMAC_SHA1_32", RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32 }
 	};
-	std::map<RTC::SrtpSession::CryptoSuite, std::string> PlainRtpTransport::srtpCryptoSuite2String =
+	std::map<RTC::SrtpSession::CryptoSuite, std::string> PlainTransport::srtpCryptoSuite2String =
 	{
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "AES_CM_128_HMAC_SHA1_80" },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "AES_CM_128_HMAC_SHA1_32" }
 	};
 	// clang-format on
-	size_t PlainRtpTransport::srtpMasterLength{ 30 };
+	size_t PlainTransport::srtpMasterLength{ 30 };
 
 	/* Instance methods. */
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-	PlainRtpTransport::PlainRtpTransport(
-	  const std::string& id, RTC::Transport::Listener* listener, json& data)
+	PlainTransport::PlainTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
 	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
@@ -119,14 +118,14 @@ namespace RTC
 
 			// Ensure it's a crypto suite supported by us.
 			auto it =
-			  PlainRtpTransport::string2SrtpCryptoSuite.find(jsonSrtpCryptoSuiteIt->get<std::string>());
+			  PlainTransport::string2SrtpCryptoSuite.find(jsonSrtpCryptoSuiteIt->get<std::string>());
 
-			if (it == PlainRtpTransport::string2SrtpCryptoSuite.end())
+			if (it == PlainTransport::string2SrtpCryptoSuite.end())
 				MS_THROW_TYPE_ERROR("invalid/unsupported srtpCryptoSuite");
 
 			// NOTE: The SRTP crypto suite may change later on connect().
 			this->srtpCryptoSuite = it->second;
-			this->srtpKey         = Utils::Crypto::GetRandomString(PlainRtpTransport::srtpMasterLength);
+			this->srtpKey         = Utils::Crypto::GetRandomString(PlainTransport::srtpMasterLength);
 			this->srtpKeyBase64   = Utils::String::Base64Encode(this->srtpKey);
 		}
 
@@ -153,7 +152,7 @@ namespace RTC
 		}
 	}
 
-	PlainRtpTransport::~PlainRtpTransport()
+	PlainTransport::~PlainTransport()
 	{
 		MS_TRACE();
 
@@ -176,7 +175,7 @@ namespace RTC
 		this->srtpRecvSession = nullptr;
 	}
 
-	void PlainRtpTransport::FillJson(json& jsonObject) const
+	void PlainTransport::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
 
@@ -240,12 +239,12 @@ namespace RTC
 			auto jsonSrtpParametersIt    = jsonObject.find("srtpParameters");
 
 			(*jsonSrtpParametersIt)["cryptoSuite"] =
-			  PlainRtpTransport::srtpCryptoSuite2String[this->srtpCryptoSuite];
+			  PlainTransport::srtpCryptoSuite2String[this->srtpCryptoSuite];
 			(*jsonSrtpParametersIt)["keyBase64"] = this->srtpKeyBase64;
 		}
 	}
 
-	void PlainRtpTransport::FillJsonStats(json& jsonArray)
+	void PlainTransport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();
 
@@ -291,7 +290,7 @@ namespace RTC
 			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
 	}
 
-	void PlainRtpTransport::HandleRequest(Channel::Request* request)
+	void PlainTransport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
 
@@ -348,9 +347,9 @@ namespace RTC
 
 						// Ensure it's a crypto suite supported by us.
 						auto it =
-						  PlainRtpTransport::string2SrtpCryptoSuite.find(jsonCryptoSuiteIt->get<std::string>());
+						  PlainTransport::string2SrtpCryptoSuite.find(jsonCryptoSuiteIt->get<std::string>());
 
-						if (it == PlainRtpTransport::string2SrtpCryptoSuite.end())
+						if (it == PlainTransport::string2SrtpCryptoSuite.end())
 							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
 
 						// Update out SRTP crypto suite wuth the one used by the remote.
@@ -374,14 +373,14 @@ namespace RTC
 						// This may throw.
 						auto* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
 
-						if (outLen != PlainRtpTransport::srtpMasterLength)
+						if (outLen != PlainTransport::srtpMasterLength)
 							MS_THROW_TYPE_ERROR("invalid decoded SRTP key length");
 
-						auto* srtpLocalKey  = new uint8_t[PlainRtpTransport::srtpMasterLength];
-						auto* srtpRemoteKey = new uint8_t[PlainRtpTransport::srtpMasterLength];
+						auto* srtpLocalKey  = new uint8_t[PlainTransport::srtpMasterLength];
+						auto* srtpRemoteKey = new uint8_t[PlainTransport::srtpMasterLength];
 
-						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), PlainRtpTransport::srtpMasterLength);
-						std::memcpy(srtpRemoteKey, srtpKey, PlainRtpTransport::srtpMasterLength);
+						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), PlainTransport::srtpMasterLength);
+						std::memcpy(srtpRemoteKey, srtpKey, PlainTransport::srtpMasterLength);
 
 						try
 						{
@@ -389,7 +388,7 @@ namespace RTC
 							  RTC::SrtpSession::Type::OUTBOUND,
 							  this->srtpCryptoSuite,
 							  srtpLocalKey,
-							  PlainRtpTransport::srtpMasterLength);
+							  PlainTransport::srtpMasterLength);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -405,7 +404,7 @@ namespace RTC
 							  RTC::SrtpSession::Type::INBOUND,
 							  this->srtpCryptoSuite,
 							  srtpRemoteKey,
-							  PlainRtpTransport::srtpMasterLength);
+							  PlainTransport::srtpMasterLength);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -588,7 +587,7 @@ namespace RTC
 					auto jsonSrtpParametersIt = data.find("srtpParameters");
 
 					(*jsonSrtpParametersIt)["cryptoSuite"] =
-					  PlainRtpTransport::srtpCryptoSuite2String[this->srtpCryptoSuite];
+					  PlainTransport::srtpCryptoSuite2String[this->srtpCryptoSuite];
 					(*jsonSrtpParametersIt)["keyBase64"] = this->srtpKeyBase64;
 				}
 
@@ -609,22 +608,22 @@ namespace RTC
 		}
 	}
 
-	inline bool PlainRtpTransport::IsConnected() const
+	inline bool PlainTransport::IsConnected() const
 	{
 		return this->tuple;
 	}
 
-	inline bool PlainRtpTransport::HasSrtp() const
+	inline bool PlainTransport::HasSrtp() const
 	{
 		return !this->srtpKey.empty();
 	}
 
-	inline bool PlainRtpTransport::IsSrtpReady() const
+	inline bool PlainTransport::IsSrtpReady() const
 	{
 		return HasSrtp() && this->srtpSendSession && this->srtpRecvSession;
 	}
 
-	void PlainRtpTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	void PlainTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 
@@ -661,7 +660,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	void PlainRtpTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
+	void PlainTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -683,7 +682,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	void PlainRtpTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
+	void PlainTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();
 
@@ -705,7 +704,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	void PlainRtpTransport::SendSctpData(const uint8_t* data, size_t len)
+	void PlainTransport::SendSctpData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -718,8 +717,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	inline void PlainRtpTransport::OnPacketReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void PlainTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -747,7 +745,7 @@ namespace RTC
 		}
 	}
 
-	inline void PlainRtpTransport::OnRtpDataReceived(
+	inline void PlainTransport::OnRtpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -807,7 +805,7 @@ namespace RTC
 			// If not yet connected do it now.
 			if (!wasConnected)
 			{
-				// Notify the Node PlainRtpTransport.
+				// Notify the Node PlainTransport.
 				json data = json::object();
 
 				this->tuple->FillJson(data["tuple"]);
@@ -839,7 +837,7 @@ namespace RTC
 		RTC::Transport::ReceiveRtpPacket(packet);
 	}
 
-	inline void PlainRtpTransport::OnRtcpDataReceived(
+	inline void PlainTransport::OnRtcpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -881,7 +879,7 @@ namespace RTC
 			// If not yet connected do it now.
 			if (!wasConnected)
 			{
-				// Notify the Node PlainRtpTransport.
+				// Notify the Node PlainTransport.
 				json data = json::object();
 
 				this->tuple->FillJson(data["tuple"]);
@@ -909,7 +907,7 @@ namespace RTC
 			if (!this->listenIp.announcedIp.empty())
 				this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
 
-			// Notify the Node PlainRtpTransport.
+			// Notify the Node PlainTransport.
 			json data = json::object();
 
 			this->rtcpTuple->FillJson(data["rtcpTuple"]);
@@ -944,7 +942,7 @@ namespace RTC
 		RTC::Transport::ReceiveRtcpPacket(packet);
 	}
 
-	inline void PlainRtpTransport::OnSctpDataReceived(
+	inline void PlainTransport::OnSctpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -979,7 +977,7 @@ namespace RTC
 			// If not yet connected do it now.
 			if (!wasConnected)
 			{
-				// Notify the Node PlainRtpTransport.
+				// Notify the Node PlainTransport.
 				json data = json::object();
 
 				this->tuple->FillJson(data["tuple"]);
@@ -1002,7 +1000,7 @@ namespace RTC
 		RTC::Transport::ReceiveSctpData(data, len);
 	}
 
-	inline void PlainRtpTransport::OnUdpSocketPacketReceived(
+	inline void PlainTransport::OnUdpSocketPacketReceived(
 	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();

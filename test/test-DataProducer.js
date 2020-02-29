@@ -20,7 +20,7 @@ beforeAll(async () =>
 			listenIps  : [ '127.0.0.1' ],
 			enableSctp : true
 		});
-	transport2 = await router.createPlainRtpTransport(
+	transport2 = await router.createPlainTransport(
 		{
 			listenIp   : '127.0.0.1',
 			enableSctp : true

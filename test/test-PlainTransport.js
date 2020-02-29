@@ -51,7 +51,7 @@ afterAll(() => worker.close());
 
 beforeEach(async () =>
 {
-	transport = await router.createPlainRtpTransport(
+	transport = await router.createPlainTransport(
 		{
 			listenIp : { ip: '127.0.0.1', announcedIp: '4.4.4.4' },
 			rtcpMux  : false
@@ -60,7 +60,7 @@ beforeEach(async () =>
 
 afterEach(() => transport.close());
 
-test('router.createPlainRtpTransport() succeeds', async () =>
+test('router.createPlainTransport() succeeds', async () =>
 {
 	await expect(router.dump())
 		.resolves
@@ -71,7 +71,7 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	router.observer.once('newtransport', onObserverNewTransport);
 
 	// Create a separate transport here.
-	const transport1 = await router.createPlainRtpTransport(
+	const transport1 = await router.createPlainTransport(
 		{
 			listenIp   : { ip: '127.0.0.1', announcedIp: '9.9.9.1' },
 			rtcpMux    : true,
@@ -115,11 +115,11 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	transport1.close();
 	expect(transport1.closed).toBe(true);
 
-	await expect(router.createPlainRtpTransport({ listenIp: '127.0.0.1' }))
+	await expect(router.createPlainTransport({ listenIp: '127.0.0.1' }))
 		.resolves
 		.toBeType('object');
 
-	const transport2 = await router.createPlainRtpTransport(
+	const transport2 = await router.createPlainTransport(
 		{
 			listenIp : '127.0.0.1',
 			rtcpMux  : false
@@ -147,21 +147,21 @@ test('router.createPlainRtpTransport() succeeds', async () =>
 	expect(data2.sctpState).toBeUndefined();
 }, 2000);
 
-test('router.createPlainRtpTransport() with wrong arguments rejects with TypeError', async () =>
+test('router.createPlainTransport() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(router.createPlainRtpTransport({}))
+	await expect(router.createPlainTransport({}))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(router.createPlainRtpTransport({ listenIp: '123' }))
+	await expect(router.createPlainTransport({ listenIp: '123' }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(router.createPlainRtpTransport({ listenIp: [ '127.0.0.1' ] }))
+	await expect(router.createPlainTransport({ listenIp: [ '127.0.0.1' ] }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(router.createPlainRtpTransport(
+	await expect(router.createPlainTransport(
 		{
 			listenIp : '127.0.0.1',
 			appData  : 'NOT-AN-OBJECT'
@@ -170,9 +170,9 @@ test('router.createPlainRtpTransport() with wrong arguments rejects with TypeErr
 		.toThrow(TypeError);
 }, 2000);
 
-test('router.createPlainRtpTransport() with enableSrtp succeeds', async () =>
+test('router.createPlainTransport() with enableSrtp succeeds', async () =>
 {
-	const transport1 = await router.createPlainRtpTransport(
+	const transport1 = await router.createPlainTransport(
 		{
 			listenIp   : '127.0.0.1',
 			enableSrtp : true
@@ -289,9 +289,9 @@ test('router.createPlainRtpTransport() with enableSrtp succeeds', async () =>
 	transport1.close();
 }, 2000);
 
-test('router.createPlainRtpTransport() with non bindable IP rejects with Error', async () =>
+test('router.createPlainTransport() with non bindable IP rejects with Error', async () =>
 {
-	await expect(router.createPlainRtpTransport({ listenIp: '8.8.8.8' }))
+	await expect(router.createPlainTransport({ listenIp: '8.8.8.8' }))
 		.rejects
 		.toThrow(Error);
 }, 2000);
@@ -409,7 +409,7 @@ test('PlaintRtpTransport emits "routerclose" if Router is closed', async () =>
 	// We need different Router and PlaintRtpTransport instances here.
 	const router2 = await worker.createRouter({ mediaCodecs });
 	const transport2 =
-		await router2.createPlainRtpTransport({ listenIp: '127.0.0.1' });
+		await router2.createPlainTransport({ listenIp: '127.0.0.1' });
 	const onObserverClose = jest.fn();
 
 	transport2.observer.once('close', onObserverClose);
