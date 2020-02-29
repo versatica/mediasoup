@@ -6,11 +6,19 @@
 
 void Fuzzer::Utils::Fuzz(const uint8_t* data, size_t len)
 {
-	uint8_t data2[len + 64];
+	uint8_t data2[len + INET6_ADDRSTRLEN * 3]; // For some fuzzers below.
 	std::memcpy(data2, data, len);
 
-	// IP class.
-	::Utils::IP::GetFamily(reinterpret_cast<const char*>(data2), len);
+	/* IP class. */
+
+	std::string ip;
+	ip = std::string(reinterpret_cast<const char*>(data2), INET6_ADDRSTRLEN / 2);
+	::Utils::IP::GetFamily(ip);
+	ip = std::string(reinterpret_cast<const char*>(data2), INET6_ADDRSTRLEN);
+	::Utils::IP::GetFamily(ip);
+	ip = std::string(reinterpret_cast<const char*>(data2), INET6_ADDRSTRLEN * 2);
+	::Utils::IP::GetFamily(ip);
+
 	// Protect with try/catch since throws are legit.
 	try
 	{
@@ -21,7 +29,8 @@ void Fuzzer::Utils::Fuzz(const uint8_t* data, size_t len)
 	{
 	}
 
-	// Byte class.
+	/* Byte class. */
+
 	::Utils::Byte::Get1Byte(data2, len);
 	::Utils::Byte::Get2Bytes(data2, len);
 	::Utils::Byte::Get3Bytes(data2, len);
@@ -35,15 +44,18 @@ void Fuzzer::Utils::Fuzz(const uint8_t* data, size_t len)
 	::Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(len));
 	::Utils::Byte::PadTo4Bytes(static_cast<uint32_t>(len));
 
-	// Bits class.
+	/* Bits class. */
+
 	::Utils::Bits::CountSetBits(static_cast<uint16_t>(len));
 
-	// Crypto class.
+	/* Crypto class. */
+
 	::Utils::Crypto::GetRandomUInt(static_cast<uint32_t>(len), static_cast<uint32_t>(len + 1000000));
 	::Utils::Crypto::GetRandomString(len);
 	::Utils::Crypto::GetCRC32(data2, len);
 
-	// String class.
+	/* String class. */
+
 	// Protect with try/catch since throws are legit.
 	try
 	{
@@ -55,7 +67,8 @@ void Fuzzer::Utils::Fuzz(const uint8_t* data, size_t len)
 	{
 	}
 
-	// Time class.
+	/* Time class. */
+
 	auto ntp = ::Utils::Time::TimeMs2Ntp(static_cast<uint64_t>(len));
 	::Utils::Time::Ntp2TimeMs(ntp);
 	::Utils::Time::IsNewerTimestamp(static_cast<uint32_t>(len), static_cast<uint32_t>(len * len));

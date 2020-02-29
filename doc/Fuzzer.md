@@ -80,7 +80,7 @@ $ MS_FUZZ_UTILS=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup
 * Detect memory leaks and fuzz everything with log level "warn":
 
 ```bash
-$ MS_FUZZ_LOG_LEVEL=warn LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus
+$ MS_FUZZ_LOG_LEVEL=warn LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 ```
 
 * Verify that a specific crash is fixed:

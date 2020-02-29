@@ -8,15 +8,19 @@
 
 namespace Utils
 {
-	int IP::GetFamily(const char* ip, size_t ipLen)
+	int IP::GetFamily(const std::string& ip)
 	{
 		MS_TRACE();
 
-		static char IpBuffer[INET6_ADDRSTRLEN];
+		if (ip.size() >= INET6_ADDRSTRLEN)
+			return AF_UNSPEC;
 
-		if (uv_inet_pton(AF_INET, ip, IpBuffer) == 0)
+		auto ipPtr                      = ip.c_str();
+		char ipBuffer[INET6_ADDRSTRLEN] = { 0 };
+
+		if (uv_inet_pton(AF_INET, ipPtr, ipBuffer) == 0)
 			return AF_INET;
-		else if (uv_inet_pton(AF_INET6, ip, IpBuffer) == 0)
+		else if (uv_inet_pton(AF_INET6, ipPtr, ipBuffer) == 0)
 			return AF_INET6;
 		else
 			return AF_UNSPEC;
@@ -135,7 +139,7 @@ namespace Utils
 
 			default:
 			{
-				MS_THROW_TYPE_ERROR("invalid ip '%s'", ip.c_str());
+				MS_THROW_TYPE_ERROR("invalid IP '%s'", ip.c_str());
 			}
 		}
 	}

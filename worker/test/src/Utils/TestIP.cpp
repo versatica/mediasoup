@@ -31,6 +31,9 @@ SCENARIO("Utils::IP::GetFamily()")
 	ip = "a:b:c:D::0";
 	REQUIRE(IP::GetFamily(ip) == AF_INET6);
 
+	ip = "0000:0000:0000:0000:0000:ffff:192.168.100.228";
+	REQUIRE(IP::GetFamily(ip) == AF_INET6);
+
 	ip = "::0:";
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
@@ -62,6 +65,9 @@ SCENARIO("Utils::IP::GetFamily()")
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
 	ip = "";
+	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+
+	ip = "0000:0000:0000:0000:0000:ffff:192.168.100.228.4567";
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 }
 

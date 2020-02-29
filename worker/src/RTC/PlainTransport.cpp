@@ -302,12 +302,6 @@ namespace RTC
 				if (this->connectCalled)
 					MS_THROW_ERROR("connect() already called");
 
-				// Reject if comedia mode or multiSource is set.
-				if (this->comedia)
-					MS_THROW_ERROR("cannot call connect() when comedia mode is set");
-				else if (this->multiSource)
-					MS_THROW_ERROR("cannot call connect() when multiSource is set");
-
 				try
 				{
 					std::string ip;

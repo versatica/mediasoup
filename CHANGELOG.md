@@ -3,9 +3,9 @@
 
 ### 3.5.0 (pre)
 
-* `PipeTransport`: Add support for RTP retransmission (RTX + NACK) and SRTP. Useful when connecting two mediasoup servers running in different hosts.
-* `PlainRtpTransport`: Add support for SRTP.
-* Rename `PlainRtpTransport` to `PlainTransport` everywhere (classes, methods, TypeScript types, etc). Keep previous names and mark them as deprecated.
+* `PipeTransport`: Add support for SRTP and RTP retransmission (RTX + NACK). Useful when connecting two mediasoup servers running in different hosts via pipe transports.
+* `PlainTransport`: Add support for SRTP.
+* Rename `PlainRtpTransport` to `PlainTransport` everywhere (classes, methods, TypeScript types, etc). Keep previous names and mark them as DEPRECATED.
 * Fix vulnarability in IPv6 parser.
 
 

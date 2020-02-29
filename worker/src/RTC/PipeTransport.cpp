@@ -197,30 +197,6 @@ namespace RTC
 					uint16_t port{ 0u };
 					std::string srtpKeyBase64;
 
-					auto jsonIpIt = request->data.find("ip");
-
-					if (jsonIpIt == request->data.end() || !jsonIpIt->is_string())
-						MS_THROW_TYPE_ERROR("missing ip");
-
-					ip = jsonIpIt->get<std::string>();
-
-					// This may throw.
-					Utils::IP::NormalizeIp(ip);
-
-					auto jsonPortIt = request->data.find("port");
-
-					// clang-format off
-					if (
-						jsonPortIt == request->data.end() ||
-						!Utils::Json::IsPositiveInteger(*jsonPortIt)
-					)
-					// clang-format on
-					{
-						MS_THROW_TYPE_ERROR("missing port");
-					}
-
-					port = jsonPortIt->get<uint16_t>();
-
 					auto jsonSrtpParametersIt = request->data.find("srtpParameters");
 
 					if (!HasSrtp() && jsonSrtpParametersIt != request->data.end())
@@ -320,6 +296,30 @@ namespace RTC
 						delete[] srtpLocalKey;
 						delete[] srtpRemoteKey;
 					}
+
+					auto jsonIpIt = request->data.find("ip");
+
+					if (jsonIpIt == request->data.end() || !jsonIpIt->is_string())
+						MS_THROW_TYPE_ERROR("missing ip");
+
+					ip = jsonIpIt->get<std::string>();
+
+					// This may throw.
+					Utils::IP::NormalizeIp(ip);
+
+					auto jsonPortIt = request->data.find("port");
+
+					// clang-format off
+					if (
+						jsonPortIt == request->data.end() ||
+						!Utils::Json::IsPositiveInteger(*jsonPortIt)
+					)
+					// clang-format on
+					{
+						MS_THROW_TYPE_ERROR("missing port");
+					}
+
+					port = jsonPortIt->get<uint16_t>();
 
 					int err;
 
