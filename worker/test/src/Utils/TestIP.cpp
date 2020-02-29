@@ -31,14 +31,11 @@ SCENARIO("Utils::IP::GetFamily()")
 	ip = "a:b:c:D::0";
 	REQUIRE(IP::GetFamily(ip) == AF_INET6);
 
-	// NOTE: This is problematic since it's detected as valid IPv6 by our Ragel
-	// parser but then it fails in NormalizeIp() in uv_ip6_addr().
 	ip = "::0:";
-	REQUIRE(IP::GetFamily(ip) == AF_INET6);
+	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
-	// NOTE: The same.
 	ip = "3::3:1:";
-	REQUIRE(IP::GetFamily(ip) == AF_INET6);
+	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
 	ip = "chicken";
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);

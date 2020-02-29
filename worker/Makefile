@@ -11,7 +11,6 @@ MEDIASOUP_BUILDTYPE ?= Release
 GULP = ../node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
 BEAR ?= bear
-JQ ?= jq
 SED ?= sed
 DOCKER ?= docker
 
@@ -50,9 +49,7 @@ format:
 
 bear:
 	$(MAKE) clean
-	$(BEAR) -o compile_commands_template.tmp.json $(MAKE)
-	$(JQ) 'del(.[] | select(.file == "$(PWD)/src/Utils/IP.cpp"))' compile_commands_template.tmp.json > compile_commands_template.json
-	$(RM) -f compile_commands_template.tmp.json
+	$(BEAR) -o compile_commands_template.json $(MAKE)
 	$(SED) -i "s|$(PWD)|PATH|g" compile_commands_template.json
 
 tidy:
