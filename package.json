@@ -70,7 +70,7 @@
     "jest-tobetype": "^1.2.3",
     "open-cli": "^5.0.0",
     "sctp": "^0.0.19",
-    "tsc-watch": "^4.2.2",
+    "tsc-watch": "^4.2.3",
     "typescript": "^3.8.3"
   },
   "optionalDependencies": {
