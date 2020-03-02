@@ -65,7 +65,7 @@ namespace RTC
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.		// Others.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
-		RTC::RtpStream* producerRtpStream{ nullptr }; // TODO: why is this needed?
+		RTC::RtpStream* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;

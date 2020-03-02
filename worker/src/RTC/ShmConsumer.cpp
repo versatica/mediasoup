@@ -144,7 +144,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Do nothing.
+		if (!this->producerRtpStream || !this->producerRtpStream->GetSenderReportNtpMs() || !this->producerRtpStream->GetSenderReportTs())
+		{
+			MS_DEBUG_TAG(rtp, "Producer stream failed to read SR RTCP msg");
+			return;
+		}
+		else {
+			uint64_t lastSenderReportNtpMs = this->producerRtpStream->GetSenderReportNtpMs(); // NTP timestamp in last Sender Report (in ms).
+			uint32_t lastSenderReporTs     = this->producerRtpStream->GetSenderReportTs();    // RTP timestamp in last Sender Report.
+
+			//TODO: need sfu shm API to write this data
+			MS_DEBUG_TAG(rtp, "RTCP SR: NTP(ms)=%" PRIu64 " RtpTs=%" PRIu32, lastSenderReportNtpMs, lastSenderReporTs);
+		}
 	}
 
 	void ShmConsumer::SendRtpPacket(RTC::RtpPacket* packet)
