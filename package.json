@@ -1,6 +1,6 @@
 {
   "name": "@livelyvideo/mediasoup-shm",
-  "version": "3.4.30",
+  "version": "3.4.31",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -78,3 +78,4 @@
     "clang-tools-prebuilt": "^0.1.4"
   }
 }
+
