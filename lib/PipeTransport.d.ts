@@ -89,7 +89,7 @@ export declare class PipeTransport extends Transport {
     /**
      * SCTP state.
      */
-    get sctpState(): SctpState;
+    get sctpState(): SctpState | undefined;
     /**
      * SRTP parameters.
      */

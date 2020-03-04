@@ -267,7 +267,7 @@ export class WebRtcTransport extends Transport
 	/**
 	 * SCTP state.
 	 */
-	get sctpState(): SctpState
+	get sctpState(): SctpState | undefined
 	{
 		return this._data.sctpState;
 	}

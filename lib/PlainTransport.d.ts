@@ -124,7 +124,7 @@ export declare class PlainTransport extends Transport {
     /**
      * SCTP state.
      */
-    get sctpState(): SctpState;
+    get sctpState(): SctpState | undefined;
     /**
      * SRTP parameters.
      */

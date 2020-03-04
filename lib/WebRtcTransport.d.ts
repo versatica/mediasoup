@@ -166,7 +166,7 @@ export declare class WebRtcTransport extends Transport {
     /**
      * SCTP state.
      */
-    get sctpState(): SctpState;
+    get sctpState(): SctpState | undefined;
     /**
      * Observer.
      *

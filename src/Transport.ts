@@ -533,7 +533,8 @@ export class Transport extends EnhancedEventEmitter
 		// We use up to 8 bytes for MID (string).
 		if (this._nextMidForConsumers === 100000000)
 		{
-			logger.error(`consume() | reaching max MID value "${this._nextMidForConsumers}"`);
+			logger.error(
+				`consume() | reaching max MID value "${this._nextMidForConsumers}"`);
 
 			this._nextMidForConsumers = 0;
 		}
