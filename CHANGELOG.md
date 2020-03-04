@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.5.1 (WIP)
+
+* `PlainTransport`: Fix event name: 'rtcpTuple' => 'rtcptuple'.
+
+
 ### 3.5.0
 
 * `PipeTransport`: Add support for SRTP and RTP retransmission (RTX + NACK). Useful when connecting two mediasoup servers running in different hosts via pipe transports.
