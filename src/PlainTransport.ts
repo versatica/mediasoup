@@ -342,10 +342,10 @@ export class PlainTransport extends Transport
 
 					this._data.rtcpTuple = rtcpTuple;
 
-					this.safeEmit('rtcpTuple', rtcpTuple);
+					this.safeEmit('rtcptuple', rtcpTuple);
 
 					// Emit observer event.
-					this._observer.safeEmit('rtcpTuple', rtcpTuple);
+					this._observer.safeEmit('rtcptuple', rtcpTuple);
 
 					break;
 				}
