@@ -27,6 +27,7 @@ namespace RTC
 	// clang-format on
 
 	static constexpr size_t MaxProbationPacketSize{ 1400u };
+	static const std::string MidValue{ "probator" };
 
 	/* Instance methods. */
 
@@ -59,6 +60,18 @@ namespace RTC
 		uint8_t extenLen;
 		uint8_t* bufferPtr{ buffer };
 
+		// Add urn:ietf:params:rtp-hdrext:sdes:mid.
+		{
+			extenLen = MidValue.size();
+
+			extensions.emplace_back(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID), extenLen, bufferPtr);
+
+			std::memcpy(bufferPtr, MidValue.c_str(), extenLen);
+
+			bufferPtr += extenLen;
+		}
+
 		// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
 		// NOTE: Just the corresponding id and space for its value.
 		{
@@ -86,6 +99,10 @@ namespace RTC
 
 		// Set the extensions into the packet using One-Byte format.
 		this->probationPacket->SetExtensions(1, extensions);
+
+		// Set our urn:ietf:params:rtp-hdrext:sdes:mid extension id.
+		this->probationPacket->SetMidExtensionId(
+		  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID));
 
 		// Set our abs-send-time extension id.
 		this->probationPacket->SetAbsSendTimeExtensionId(

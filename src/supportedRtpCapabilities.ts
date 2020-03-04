@@ -252,14 +252,14 @@ const supportedRtpCapabilities: RtpCapabilities =
 			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
 			preferredId      : 1,
 			preferredEncrypt : false,
-			direction        : 'recvonly'
+			direction        : 'sendrecv'
 		},
 		{
 			kind             : 'video',
 			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
 			preferredId      : 1,
 			preferredEncrypt : false,
-			direction        : 'recvonly'
+			direction        : 'sendrecv'
 		},
 		{
 			kind             : 'video',

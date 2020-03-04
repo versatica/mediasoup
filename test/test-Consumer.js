@@ -287,7 +287,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.closed).toBe(false);
 	expect(audioConsumer.kind).toBe('audio');
 	expect(audioConsumer.rtpParameters).toBeType('object');
-	expect(audioConsumer.rtpParameters.mid).toBeUndefined();
+	expect(audioConsumer.rtpParameters.mid).toBe('0');
 	expect(audioConsumer.rtpParameters.codecs.length).toBe(1);
 	expect(audioConsumer.rtpParameters.codecs[0]).toEqual(
 		{
@@ -357,7 +357,7 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.closed).toBe(false);
 	expect(videoConsumer.kind).toBe('video');
 	expect(videoConsumer.rtpParameters).toBeType('object');
-	expect(videoConsumer.rtpParameters.mid).toBeUndefined();
+	expect(videoConsumer.rtpParameters.mid).toBe('1');
 	expect(videoConsumer.rtpParameters.codecs.length).toBe(2);
 	expect(videoConsumer.rtpParameters.codecs[0]).toEqual(
 		{
@@ -497,9 +497,15 @@ test('consumer.dump() succeeds', async () =>
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
 	expect(data.rtpParameters.headerExtensions).toBeType('array');
-	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions.length).toBe(3);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 1,
+				encrypt    : false,
+				parameters : {}
+			},
 			{
 				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
 				id         : 4,
@@ -559,9 +565,15 @@ test('consumer.dump() succeeds', async () =>
 			{ type: 'goog-remb' }
 		]);
 	expect(data.rtpParameters.headerExtensions).toBeType('array');
-	expect(data.rtpParameters.headerExtensions.length).toBe(3);
+	expect(data.rtpParameters.headerExtensions.length).toBe(4);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 1,
+				encrypt    : false,
+				parameters : {}
+			},
 			{
 				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
 				id         : 4,

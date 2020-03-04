@@ -1083,9 +1083,10 @@ export function getPipeConsumerRtpParameters(
 		consumerParams.codecs.push(codec);
 	}
 
-	// Reduce RTP extensions by disabling transport BWE related ones.
+	// Reduce RTP extensions by disabling transport MID and BWE related ones.
 	consumerParams.headerExtensions = consumableParams.headerExtensions
 		.filter((ext) => (
+			ext.uri !== 'urn:ietf:params:rtp-hdrext:sdes:mid' &&
 			ext.uri !== 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' &&
 			ext.uri !== 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 		));

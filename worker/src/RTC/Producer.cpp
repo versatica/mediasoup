@@ -1183,6 +1183,16 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* bufferPtr{ buffer };
 
+			// Add urn:ietf:params:rtp-hdrext:sdes:mid.
+			{
+				extenLen = RTC::MidMaxLength;
+
+				extensions.emplace_back(
+				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID), extenLen, bufferPtr);
+
+				bufferPtr += extenLen;
+			}
+
 			if (this->kind == RTC::Media::Kind::AUDIO)
 			{
 				// Proxy urn:ietf:params:rtp-hdrext:ssrc-audio-level.
@@ -1299,6 +1309,7 @@ namespace RTC
 
 			// Assign mediasoup RTP header extension ids (just those that mediasoup may
 			// be interested in after passing it to the Router).
+			packet->SetMidExtensionId(static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID));
 			packet->SetAbsSendTimeExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
 			packet->SetTransportWideCc01ExtensionId(

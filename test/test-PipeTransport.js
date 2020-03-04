@@ -692,7 +692,7 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 	expect(videoConsumer.closed).toBe(false);
 	expect(videoConsumer.kind).toBe('video');
 	expect(videoConsumer.rtpParameters).toBeType('object');
-	expect(videoConsumer.rtpParameters.mid).toBeUndefined();
+	expect(videoConsumer.rtpParameters.mid).toBe('0');
 	expect(videoConsumer.rtpParameters.codecs).toEqual(
 		[
 			{

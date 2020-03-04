@@ -633,6 +633,12 @@ namespace RTC
 
 		for (auto* consumer : consumers)
 		{
+			// Update MID RTP extension value.
+			auto& mid = consumer->GetRtpParameters().mid;
+
+			if (!mid.empty())
+				packet->UpdateMid(mid);
+
 			consumer->SendRtpPacket(packet);
 		}
 

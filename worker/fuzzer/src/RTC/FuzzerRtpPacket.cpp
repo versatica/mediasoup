@@ -58,6 +58,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(5);
 	packet->GetExtension(5, extenLen);
 	packet->ReadMid(mid);
+	packet->UpdateMid(mid);
 
 	packet->SetRidExtensionId(6);
 	packet->HasExtension(6);

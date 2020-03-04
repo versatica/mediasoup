@@ -17,6 +17,9 @@ namespace RTC
 	constexpr size_t RtpBufferSize{ 65536u };
 	// Max MTU size.
 	constexpr size_t MtuSize{ 1500u };
+	// MID header extension max length (just used when setting/updating MID
+	// extension).
+	constexpr uint8_t MidMaxLength{ 8u };
 
 	class RtpPacket
 	{
@@ -159,6 +162,7 @@ namespace RTC
 		void SetSsrcAudioLevelExtensionId(uint8_t id);
 		void SetVideoOrientationExtensionId(uint8_t id);
 		bool ReadMid(std::string& mid) const;
+		bool UpdateMid(const std::string& mid);
 		bool ReadRid(std::string& rid) const;
 		bool ReadAbsSendTime(uint32_t& absSendtime) const;
 		bool ReadTransportWideCc01(uint16_t& wideSeqNumber) const;
@@ -169,6 +173,7 @@ namespace RTC
 		bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
 		bool HasExtension(uint8_t id) const;
 		uint8_t* GetExtension(uint8_t id, uint8_t& len) const;
+		bool SetExtensionLength(uint8_t id, uint8_t len);
 		uint8_t* GetPayload() const;
 		size_t GetPayloadLength() const;
 		void SetPayloadLength(size_t length);
@@ -592,6 +597,7 @@ namespace RTC
 
 			auto* extension = it->second;
 
+			// In One-Byte extensions value length 0 means 1.
 			len = extension->len + 1;
 
 			return extension->value;

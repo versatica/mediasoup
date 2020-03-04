@@ -501,6 +501,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(consumerRtpParameters.headerExtensions).toEqual(
 		[
 			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 1,
+				encrypt    : false,
+				parameters : {}
+			},
+			{
 				uri        : 'urn:3gpp:video-orientation',
 				id         : 11,
 				encrypt    : false,
