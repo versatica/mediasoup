@@ -149,7 +149,7 @@ export class PlainTransport extends Transport
 	/**
 	 * @private
 	 * @emits tuple - (tuple: TransportTuple)
-	 * @emits rtcpTuple - (rtcpTuple: TransportTuple)
+	 * @emits rtcptuple - (rtcpTuple: TransportTuple)
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
@@ -223,7 +223,7 @@ export class PlainTransport extends Transport
 	 * @emits newdataproducer - (dataProducer: DataProducer)
 	 * @emits newdataconsumer - (dataProducer: DataProducer)
 	 * @emits tuple - (tuple: TransportTuple)
-	 * @emits rtcpTuple - (rtcpTuple: TransportTuple)
+	 * @emits rtcptuple - (rtcpTuple: TransportTuple)
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
@@ -347,16 +347,16 @@ export class PlainTransport extends Transport
 					break;
 				}
 
-				case 'rtcpTuple':
+				case 'rtcptuple':
 				{
 					const rtcpTuple = data.rtcpTuple as TransportTuple;
 
 					this._data.rtcpTuple = rtcpTuple;
 
-					this.safeEmit('rtcpTuple', rtcpTuple);
+					this.safeEmit('rtcptuple', rtcpTuple);
 
 					// Emit observer event.
-					this._observer.safeEmit('rtcpTuple', rtcpTuple);
+					this._observer.safeEmit('rtcptuple', rtcpTuple);
 
 					break;
 				}

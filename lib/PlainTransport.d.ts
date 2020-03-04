@@ -94,7 +94,7 @@ export declare class PlainTransport extends Transport {
     /**
      * @private
      * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcpTuple - (rtcpTuple: TransportTuple)
+     * @emits rtcptuple - (rtcpTuple: TransportTuple)
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
@@ -129,7 +129,7 @@ export declare class PlainTransport extends Transport {
      * @emits newdataproducer - (dataProducer: DataProducer)
      * @emits newdataconsumer - (dataProducer: DataProducer)
      * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcpTuple - (rtcpTuple: TransportTuple)
+     * @emits rtcptuple - (rtcpTuple: TransportTuple)
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
