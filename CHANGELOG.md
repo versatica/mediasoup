@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.5.1 (WIP)
+### 3.5.1
 
 * `PlainTransport`: Fix event name: 'rtcpTuple' => 'rtcptuple'.
 
