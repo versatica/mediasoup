@@ -65,6 +65,13 @@ export declare type PipeTransportStat = {
     tuple: TransportTuple;
 };
 export declare class PipeTransport extends Transport {
+    protected readonly _data: {
+        tuple: TransportTuple;
+        sctpParameters?: SctpParameters;
+        sctpState?: SctpState;
+        rtx: boolean;
+        srtpParameters?: SrtpParameters;
+    };
     /**
      * @private
      * @emits sctpstatechange - (sctpState: SctpState)

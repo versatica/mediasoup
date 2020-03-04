@@ -5,6 +5,7 @@ import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
 import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
+import { SctpParameters } from './SctpParameters';
 export interface TransportListenIp {
     /**
      * Listening IPv4 or IPv6.
@@ -54,8 +55,14 @@ export interface TransportTraceEventData {
 }
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 export declare class Transport extends EnhancedEventEmitter {
-    protected readonly _internal: any;
-    protected _data: any;
+    protected readonly _internal: {
+        routerId: string;
+        transportId: string;
+    };
+    protected readonly _data: {
+        sctpParameters?: SctpParameters;
+        sctpState?: SctpState;
+    };
     protected readonly _channel: Channel;
     protected _closed: boolean;
     private readonly _appData?;

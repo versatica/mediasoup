@@ -2,7 +2,10 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { Producer } from './Producer';
 export declare class RtpObserver extends EnhancedEventEmitter {
-    protected readonly _internal: any;
+    protected readonly _internal: {
+        routerId: string;
+        rtpObserverId: string;
+    };
     protected readonly _channel: Channel;
     protected _closed: boolean;
     protected _paused: boolean;

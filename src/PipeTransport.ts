@@ -82,7 +82,6 @@ export type PipeTransportStat =
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
-
 	// PipeTransport specific.
 	tuple: TransportTuple;
 }
@@ -92,22 +91,14 @@ const logger = new Logger('PipeTransport');
 export class PipeTransport extends Transport
 {
 	// PipeTransport data.
-	// - .tuple
-	//   - .localIp
-	//   - .localPort
-	//   - .remoteIp
-	//   - .remotePort
-	//   - .protocol
-	// - .sctpParameters
-	//   - .port
-	//   - .OS
-	//   - .MIS
-	//   - .maxMessageSize
-	// - .sctpState
-	// - .rtx
-	// - .srtpParameters
-	//   - .cryptoSuite
-	//   - .keyBase64
+	protected readonly _data:
+	{
+		tuple: TransportTuple;
+		sctpParameters?: SctpParameters;
+		sctpState?: SctpState;
+		rtx: boolean;
+		srtpParameters?: SrtpParameters;
+	};
 
 	/**
 	 * @private

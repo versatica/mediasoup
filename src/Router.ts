@@ -102,8 +102,10 @@ const logger = new Logger('Router');
 export class Router extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	private readonly _internal: any;
+	private readonly _internal:
+	{
+		routerId: string;
+	};
 
 	// Router data.
 	// - .rtpCapabilities

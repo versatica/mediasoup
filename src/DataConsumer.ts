@@ -31,17 +31,21 @@ const logger = new Logger('DataConsumer');
 export class DataConsumer extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	// - .transportId
-	// - .dataConsumerId
-	// - .dataProducerId
-	private readonly _internal: any;
+	private readonly _internal:
+	{
+		routerId: string;
+		transportId: string;
+		dataProducerId: string;
+		dataConsumerId: string;
+	};
 
 	// DataConsumer data.
-	// - .sctpStreamParameters
-	// - .label
-	// - .protocol
-	private readonly _data: any;
+	private readonly _data:
+	{
+		sctpStreamParameters: SctpStreamParameters;
+		label: string;
+		protocol: string;
+	};
 
 	// Channel instance.
 	private readonly _channel: Channel;

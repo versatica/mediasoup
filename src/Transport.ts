@@ -9,7 +9,7 @@ import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
 import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
-import { SctpStreamParameters } from './SctpParameters';
+import { SctpParameters, SctpStreamParameters } from './SctpParameters';
 
 export interface TransportListenIp
 {
@@ -77,12 +77,18 @@ const logger = new Logger('Transport');
 export class Transport extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	// - .transportId
-	protected readonly _internal: any;
+	protected readonly _internal:
+	{
+		routerId: string;
+		transportId: string;
+	};
 
-	// Transport data.
-	protected _data: any;
+	// Transport data. This is set by the subclass.
+	protected readonly _data:
+	{
+		sctpParameters?: SctpParameters;
+		sctpState?: SctpState;
+	};
 
 	// Channel instance.
 	protected readonly _channel: Channel;

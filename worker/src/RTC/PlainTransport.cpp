@@ -906,7 +906,7 @@ namespace RTC
 
 			this->rtcpTuple->FillJson(data["rtcpTuple"]);
 
-			Channel::Notifier::Emit(this->id, "rtcpTuple", data);
+			Channel::Notifier::Emit(this->id, "rtcptuple", data);
 		}
 		// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
 		else if (this->rtcpMux && !this->tuple->Compare(tuple))

@@ -140,17 +140,21 @@ const logger = new Logger('Consumer');
 export class Consumer extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	// - .transportId
-	// - .consumerId
-	// - .producerId
-	private readonly _internal: any;
+	private readonly _internal:
+	{
+		routerId: string;
+		transportId: string;
+		consumerId: string;
+		producerId: string;
+	};
 
 	// Consumer data.
-	// - .kind
-	// - .rtpParameters
-	// - .type
-	private readonly _data: any;
+	private readonly _data:
+	{
+		kind: MediaKind;
+		rtpParameters: RtpParameters;
+		type: ConsumerType;
+	};
 
 	// Channel instance.
 	private readonly _channel: Channel;

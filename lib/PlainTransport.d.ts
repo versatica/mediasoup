@@ -91,10 +91,20 @@ export declare type PlainTransportStat = {
  */
 export declare type PlainRtpTransportStat = PlainTransportStat;
 export declare class PlainTransport extends Transport {
+    protected readonly _data: {
+        rtcpMux?: boolean;
+        comedia?: boolean;
+        multiSource?: boolean;
+        tuple: TransportTuple;
+        rtcpTuple?: TransportTuple;
+        sctpParameters?: SctpParameters;
+        sctpState?: SctpState;
+        srtpParameters?: SrtpParameters;
+    };
     /**
      * @private
      * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcpTuple - (rtcpTuple: TransportTuple)
+     * @emits rtcptuple - (rtcpTuple: TransportTuple)
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
@@ -129,7 +139,7 @@ export declare class PlainTransport extends Transport {
      * @emits newdataproducer - (dataProducer: DataProducer)
      * @emits newdataconsumer - (dataProducer: DataProducer)
      * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcpTuple - (rtcpTuple: TransportTuple)
+     * @emits rtcptuple - (rtcpTuple: TransportTuple)
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */

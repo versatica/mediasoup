@@ -102,7 +102,6 @@ export type PlainTransportStat =
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
-
 	// PlainTransport specific.
 	rtcpMux: boolean;
 	comedia: boolean;
@@ -121,35 +120,22 @@ const logger = new Logger('PlainTransport');
 export class PlainTransport extends Transport
 {
 	// PlainTransport data.
-	// - .rtcpMux
-	// - .comedia
-	// - .multiSource
-	// - .tuple
-	//   - .localIp
-	//   - .localPort
-	//   - .remoteIp
-	//   - .remotePort
-	//   - .protocol
-	// - .rtcpTuple
-	//   - .localIp
-	//   - .localPort
-	//   - .remoteIp
-	//   - .remotePort
-	//   - .protocol
-	// - .sctpParameters
-	//   - .port
-	//   - .OS
-	//   - .MIS
-	//   - .maxMessageSize
-	// - .sctpState
-	// - .srtpParameters
-	//   - .cryptoSuite
-	//   - .keyBase64
+	protected readonly _data:
+	{
+		rtcpMux?: boolean;
+		comedia?: boolean;
+		multiSource?: boolean;
+		tuple: TransportTuple;
+		rtcpTuple?: TransportTuple;
+		sctpParameters?: SctpParameters;
+		sctpState?: SctpState;
+		srtpParameters?: SrtpParameters;
+	};
 
 	/**
 	 * @private
 	 * @emits tuple - (tuple: TransportTuple)
-	 * @emits rtcpTuple - (rtcpTuple: TransportTuple)
+	 * @emits rtcptuple - (rtcpTuple: TransportTuple)
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
@@ -163,6 +149,9 @@ export class PlainTransport extends Transport
 
 		this._data =
 		{
+			rtcpMux        : data.rtcpMux,
+			comedia        : data.comedia,
+			multiSource    : data.multiSource,
 			tuple          : data.tuple,
 			rtcpTuple      : data.rtcpTuple,
 			sctpParameters : data.sctpParameters,
@@ -223,7 +212,7 @@ export class PlainTransport extends Transport
 	 * @emits newdataproducer - (dataProducer: DataProducer)
 	 * @emits newdataconsumer - (dataProducer: DataProducer)
 	 * @emits tuple - (tuple: TransportTuple)
-	 * @emits rtcpTuple - (rtcpTuple: TransportTuple)
+	 * @emits rtcptuple - (rtcpTuple: TransportTuple)
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
@@ -347,7 +336,7 @@ export class PlainTransport extends Transport
 					break;
 				}
 
-				case 'rtcpTuple':
+				case 'rtcptuple':
 				{
 					const rtcpTuple = data.rtcpTuple as TransportTuple;
 

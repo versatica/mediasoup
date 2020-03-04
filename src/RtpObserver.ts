@@ -8,9 +8,11 @@ const logger = new Logger('RtpObserver');
 export class RtpObserver extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	// - .rtpObserverId
-	protected readonly _internal: any;
+	protected readonly _internal:
+	{
+		routerId: string;
+		rtpObserverId: string;
+	};
 
 	// Channel instance.
 	protected readonly _channel: Channel;
