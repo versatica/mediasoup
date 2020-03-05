@@ -166,6 +166,6 @@ export declare class Worker extends EnhancedEventEmitter {
     /**
      * Create a Router.
      */
-    createRouter({ mediaCodecs, enableMidForConsumers, appData }?: RouterOptions): Promise<Router>;
+    createRouter({ mediaCodecs, appData }?: RouterOptions): Promise<Router>;
 }
 //# sourceMappingURL=Worker.d.ts.map

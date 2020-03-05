@@ -94,9 +94,7 @@ export declare function validateSctpStreamParameters(params: SctpStreamParameter
  * Generate RTP capabilities for the Router based on the given media codecs and
  * mediasoup supported RTP capabilities.
  */
-export declare function generateRouterRtpCapabilities(mediaCodecs?: RtpCodecCapability[], { enableMidForConsumers }?: {
-    enableMidForConsumers?: boolean;
-}): RtpCapabilities;
+export declare function generateRouterRtpCapabilities(mediaCodecs?: RtpCodecCapability[]): RtpCapabilities;
 /**
  * Get a mapping of codec payloads and encodings of the given Producer RTP
  * parameters as values expected by the Router.

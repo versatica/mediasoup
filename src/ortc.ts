@@ -555,13 +555,7 @@ export function validateSctpStreamParameters(params: SctpStreamParameters): void
  * mediasoup supported RTP capabilities.
  */
 export function generateRouterRtpCapabilities(
-	mediaCodecs: RtpCodecCapability[] = [],
-	{
-		enableMidForConsumers = true
-	}:
-	{
-		enableMidForConsumers?: boolean;
-	} = {}
+	mediaCodecs: RtpCodecCapability[] = []
 ): RtpCapabilities
 {
 	// Normalize supported RTP capabilities.
@@ -578,15 +572,6 @@ export function generateRouterRtpCapabilities(
 		codecs           : [],
 		headerExtensions : clonedSupportedRtpCapabilities.headerExtensions
 	};
-
-	if (!enableMidForConsumers)
-	{
-		for (const ext of caps.headerExtensions)
-		{
-			if (ext.uri === 'urn:ietf:params:rtp-hdrext:sdes:mid')
-				ext.direction = 'recvonly';
-		}
-	}
 
 	for (const mediaCodec of mediaCodecs)
 	{
