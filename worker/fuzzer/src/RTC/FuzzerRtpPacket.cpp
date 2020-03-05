@@ -162,6 +162,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetExtension(14, extenLen);
 	packet->ReadTransportWideCc01(wideSeqNumber);
 	packet->UpdateTransportWideCc01(12345u);
+	packet->SetExtensionLength(14, 2);
 
 	packet->SetSsrcAudioLevelExtensionId(11);
 	packet->HasExtension(11);

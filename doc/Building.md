@@ -81,22 +81,14 @@ $ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
 ```
 
 
-### `make test`
+### `make clean`
 
-Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
+Cleans built objects and binaries.
 
 
-### `make fuzzer`
+### `make clean-all`
 
-Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug").
-
-**Requirements:**
-
-* Linux with fuzzer capable clang++.
-* `CC` environment variable must point to "clang".
-* `CXX` environment variable must point to "clang++".
-
-Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
+Cleans all objects and binaries, including those generated for library dependencies (such as libuv, openssl, libsrtp, etc).
 
 
 ### `make xcode`
@@ -112,6 +104,11 @@ Validates mediasoup-worker C++ files using [clang-format](https://clang.llvm.org
 ### `make format`
 
 Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
+
+
+### `make test`
+
+Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
 
 
 ### `make bear`
@@ -136,14 +133,22 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 
 
-### `make clean`
+### `make fuzzer`
 
-Cleans built objects and binaries.
+Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug").
+
+**Requirements:**
+
+* Linux with fuzzer capable clang++.
+* `CC` environment variable must point to "clang".
+* `CXX` environment variable must point to "clang++".
+
+Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
 
 
-### `make clean-all`
+### `make fuzzer-run-all`
 
-Cleans all objects and binaries, including those generated for library dependencies (such as libuv, openssl, libsrtp, etc).
+Runs all fuzzer cases.
 
 
 ### `make docker-build`

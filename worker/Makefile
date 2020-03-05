@@ -15,53 +15,14 @@ SED ?= sed
 DOCKER ?= docker
 
 .PHONY:	\
-	default test fuzzer xcode lint format bear tidy clean clean-all \
-	docker-build docker-run
+	default clean clean-all xcode lint format test bear tidy \
+	fuzzer fuzzer-run-all docker-build docker-run
 
 default:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
 	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
 endif
-
-test:
-ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
-	$(LCOV) --directory ./ --zerocounters
-	./out/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
-endif
-
-fuzzer:
-ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
-endif
-
-xcode:
-	$(PYTHON) ./scripts/configure.py --format=xcode
-
-lint:
-	$(GULP) lint:worker
-
-format:
-	$(GULP) format:worker
-
-bear:
-	$(MAKE) clean
-	$(BEAR) -o compile_commands_template.json $(MAKE)
-	$(SED) -i "s|$(PWD)|PATH|g" compile_commands_template.json
-
-tidy:
-	$(SED) "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
-	$(PYTHON) ./scripts/clang-tidy.py \
-		-clang-tidy-binary=../node_modules/.bin/clang-tidy \
-		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
-		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
-		-p=. \
-		-j=2 \
-		-checks=$(MEDIASOUP_TIDY_CHECKS) \
-		-quiet
 
 clean:
 	$(RM) -rf out/Release/mediasoup-worker
@@ -84,6 +45,48 @@ clean-all:
 	$(RM) -rf worker/deps/*/*.xcodeproj
 	$(RM) -rf worker/libwebrtc/*/*.xcodeproj
 
+xcode:
+	$(PYTHON) ./scripts/configure.py --format=xcode
+
+lint:
+	$(GULP) lint:worker
+
+format:
+	$(GULP) format:worker
+
+test:
+ifeq ($(MEDIASOUP_WORKER_BIN),)
+	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	$(LCOV) --directory ./ --zerocounters
+	./out/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+endif
+
+bear:
+	$(MAKE) clean
+	$(BEAR) -o compile_commands_template.json $(MAKE)
+	$(SED) -i "s|$(PWD)|PATH|g" compile_commands_template.json
+
+tidy:
+	$(SED) "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
+	$(PYTHON) ./scripts/clang-tidy.py \
+		-clang-tidy-binary=../node_modules/.bin/clang-tidy \
+		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
+		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
+		-p=. \
+		-j=2 \
+		-checks=$(MEDIASOUP_TIDY_CHECKS) \
+		-quiet
+
+fuzzer:
+ifeq ($(MEDIASOUP_WORKER_BIN),)
+	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+endif
+
+fuzzer-run-all:
+	LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
 	$(DOCKER) build -f Dockerfile --no-cache --tag mediasoup/docker:latest .
@@ -94,6 +97,7 @@ endif
 docker-run:
 	$(DOCKER) run \
 		--name=mediasoupDocker -it --rm \
+		--privileged \
 		--cap-add SYS_PTRACE \
 		-v $(shell pwd)/../:/mediasoup \
 		mediasoup/docker:latest
