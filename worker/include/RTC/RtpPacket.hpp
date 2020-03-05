@@ -165,8 +165,8 @@ namespace RTC
 		bool UpdateMid(const std::string& mid);
 		bool ReadRid(std::string& rid) const;
 		bool ReadAbsSendTime(uint32_t& absSendtime) const;
-		bool ReadTransportWideCc01(uint16_t& wideSeqNumber) const;
 		bool UpdateAbsSendTime(uint64_t ms);
+		bool ReadTransportWideCc01(uint16_t& wideSeqNumber) const;
 		bool UpdateTransportWideCc01(uint16_t wideSeqNumber);
 		bool ReadFrameMarking(RtpPacket::FrameMarking** frameMarking, uint8_t& length) const;
 		bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
@@ -438,19 +438,6 @@ namespace RTC
 		return true;
 	}
 
-	inline bool RtpPacket::ReadTransportWideCc01(uint16_t& wideSeqNumber) const
-	{
-		uint8_t extenLen;
-		uint8_t* extenValue = GetExtension(this->transportWideCc01ExtensionId, extenLen);
-
-		if (!extenValue || extenLen != 2u)
-			return false;
-
-		wideSeqNumber = Utils::Byte::Get2Bytes(extenValue, 0);
-
-		return true;
-	}
-
 	inline bool RtpPacket::UpdateAbsSendTime(uint64_t ms)
 	{
 		uint8_t extenLen;
@@ -462,6 +449,19 @@ namespace RTC
 		auto absSendTime = Utils::Time::TimeMsToAbsSendTime(ms);
 
 		Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
+
+		return true;
+	}
+
+	inline bool RtpPacket::ReadTransportWideCc01(uint16_t& wideSeqNumber) const
+	{
+		uint8_t extenLen;
+		uint8_t* extenValue = GetExtension(this->transportWideCc01ExtensionId, extenLen);
+
+		if (!extenValue || extenLen != 2u)
+			return false;
+
+		wideSeqNumber = Utils::Byte::Get2Bytes(extenValue, 0);
 
 		return true;
 	}

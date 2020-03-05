@@ -15,19 +15,24 @@ namespace RTC
 
 	// clang-format off
 	// Probation RTP header.
+	// Caution: This must have an exact size for the RTP extensions to be added
+	// and must align extensions to 4 bytes.
 	static uint8_t ProbationPacketHeader[] =
 	{
 		0b10010000, 0b01111111, 0, 0, // PayloadType: 127, Sequence Number: 0
 		0, 0, 0, 0,                   // Timestamp: 0
 		0, 0, 0, 0,                   // SSRC: 0
-		0xBE, 0xDE, 0, 2,             // Header Extension (One-Byte Extensions)
-		0, 0, 0, 0,                   // Space for abs-send-time extension.
-		0, 0, 0, 0                    // Space for transport-wide-cc-01 extension.
+		0xBE, 0xDE, 0, 4,             // Header Extension (One-Byte Extensions)
+		0, 0, 0, 0,                   // Space for MID extension
+		0, 0, 0, 0,
+		0,
+		0, 0, 0, 0,                   // Space for abs-send-time extension
+		0, 0, 0                       // Space for transport-wide-cc-01 extension
 	};
 	// clang-format on
 
 	static constexpr size_t MaxProbationPacketSize{ 1400u };
-	static const std::string MidValue{ "probator" };
+	static const std::string MidValue{ "probator" }; // 8 bytes, same as RTC::MidMaxLength.
 
 	/* Instance methods. */
 
