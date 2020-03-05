@@ -90,6 +90,26 @@ test('worker.createRouter() succeeds', async () =>
 	expect(worker._routers.size).toBe(0);
 }, 2000);
 
+test('worker.createRouter() with enableMidForConsumers: false succeeds', async () =>
+{
+	worker = await createWorker();
+
+	const router =
+		await worker.createRouter({ mediaCodecs, enableMidForConsumers: false });
+
+	const midExts = router.rtpCapabilities.headerExtensions
+		.filter((ext) => ext.uri === 'urn:ietf:params:rtp-hdrext:sdes:mid');
+
+	expect(midExts.length).toBe(2);
+
+	for (const ext of midExts)
+	{
+		expect(ext.direction).toBe('recvonly');
+	}
+
+	worker.close();
+}, 2000);
+
 test('worker.createRouter() with wrong arguments rejects with TypeError', async () =>
 {
 	worker = await createWorker();

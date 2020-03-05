@@ -555,7 +555,13 @@ export function validateSctpStreamParameters(params: SctpStreamParameters): void
  * mediasoup supported RTP capabilities.
  */
 export function generateRouterRtpCapabilities(
-	mediaCodecs: RtpCodecCapability[] = []
+	mediaCodecs: RtpCodecCapability[] = [],
+	{
+		enableMidForConsumers = true
+	}:
+	{
+		enableMidForConsumers?: boolean;
+	} = {}
 ): RtpCapabilities
 {
 	// Normalize supported RTP capabilities.
@@ -564,20 +570,31 @@ export function generateRouterRtpCapabilities(
 	if (!Array.isArray(mediaCodecs))
 		throw new TypeError('mediaCodecs must be an Array');
 
+	const clonedSupportedRtpCapabilities =
+		utils.clone(supportedRtpCapabilities) as RtpCapabilities;
 	const dynamicPayloadTypes = utils.clone(DynamicPayloadTypes) as number[];
-	const supportedCodecs = supportedRtpCapabilities.codecs;
 	const caps: RtpCapabilities =
 	{
 		codecs           : [],
-		headerExtensions : supportedRtpCapabilities.headerExtensions
+		headerExtensions : clonedSupportedRtpCapabilities.headerExtensions
 	};
+
+	if (!enableMidForConsumers)
+	{
+		for (const ext of caps.headerExtensions)
+		{
+			if (ext.uri === 'urn:ietf:params:rtp-hdrext:sdes:mid')
+				ext.direction = 'recvonly';
+		}
+	}
 
 	for (const mediaCodec of mediaCodecs)
 	{
 		// This may throw.
 		validateRtpCodecCapability(mediaCodec);
 
-		const matchedSupportedCodec = supportedCodecs
+		const matchedSupportedCodec = clonedSupportedRtpCapabilities
+			.codecs
 			.find((supportedCodec) => (
 				matchCodecs(mediaCodec, supportedCodec, { strict: false }))
 			);

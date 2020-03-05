@@ -26,6 +26,12 @@ export type RouterOptions =
 	mediaCodecs?: RtpCodecCapability[];
 
 	/**
+	 * Enable MID RTP extension for Consumers. If enabled, MID RTP extension
+	 * will be negotiated with Consumer endpoints. Default true.
+	 */
+	enableMidForConsumers?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: any;
@@ -108,8 +114,10 @@ export class Router extends EnhancedEventEmitter
 	};
 
 	// Router data.
-	// - .rtpCapabilities
-	private readonly _data: any;
+	private readonly _data:
+	{
+		rtpCapabilities: RtpCapabilities;
+	}
 
 	// Channel instance.
 	private readonly _channel: Channel;

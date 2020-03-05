@@ -496,6 +496,7 @@ export class Worker extends EnhancedEventEmitter
 	async createRouter(
 		{
 			mediaCodecs,
+			enableMidForConsumers = true,
 			appData = {}
 		}: RouterOptions = {}): Promise<Router>
 	{
@@ -505,7 +506,8 @@ export class Worker extends EnhancedEventEmitter
 			throw new TypeError('if given, appData must be an object');
 
 		// This may throw.
-		const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
+		const rtpCapabilities = ortc.generateRouterRtpCapabilities(
+			mediaCodecs, { enableMidForConsumers });
 
 		const internal = { routerId: uuidv4() };
 
