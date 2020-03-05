@@ -111,9 +111,16 @@ export function validateRtpCodecCapability(codec: RtpCodecCapability): void
 	if (typeof codec.clockRate !== 'number')
 		throw new TypeError('missing codec.clockRate');
 
-	// channels is optional. If unset, set it to 1.
-	if (typeof codec.channels !== 'number')
-		codec.channels = 1;
+	// channels is optional. If unset, set it to 1 (just if audio).
+	if (codec.kind === 'audio')
+	{
+		if (typeof codec.channels !== 'number')
+			codec.channels = 1;
+	}
+	else
+	{
+		delete codec.channels;
+	}
 
 	// parameters is optional. If unset, set it to an empty object.
 	if (!codec.parameters || typeof codec.parameters !== 'object')
@@ -294,9 +301,18 @@ export function validateRtpCodecParameters(codec: RtpCodecParameters): void
 	if (typeof codec.clockRate !== 'number')
 		throw new TypeError('missing codec.clockRate');
 
-	// channels is optional. If unset, set it to 1.
-	if (typeof codec.channels !== 'number')
-		codec.channels = 1;
+	const kind = mimeTypeMatch[1].toLowerCase() as MediaKind;
+
+	// channels is optional. If unset, set it to 1 (just if audio).
+	if (kind === 'audio')
+	{
+		if (typeof codec.channels !== 'number')
+			codec.channels = 1;
+	}
+	else
+	{
+		delete codec.channels;
+	}
 
 	// parameters is optional. If unset, set it to an empty object.
 	if (!codec.parameters || typeof codec.parameters !== 'object')
@@ -646,7 +662,6 @@ export function generateRouterRtpCapabilities(
 				mimeType             : `${codec.kind}/rtx`,
 				preferredPayloadType : pt,
 				clockRate            : codec.clockRate,
-				channels             : 1,
 				parameters           :
 				{
 					apt : codec.preferredPayloadType
@@ -824,7 +839,6 @@ export function getConsumableRtpParameters(
 				mimeType     : consumableCapRtxCodec.mimeType,
 				payloadType  : consumableCapRtxCodec.preferredPayloadType,
 				clockRate    : consumableCapRtxCodec.clockRate,
-				channels     : 1,
 				parameters   : consumableCapRtxCodec.parameters,
 				rtcpFeedback : consumableCapRtxCodec.rtcpFeedback
 			};

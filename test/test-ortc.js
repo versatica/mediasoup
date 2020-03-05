@@ -69,7 +69,6 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/VP8',
 			preferredPayloadType : 125,
 			clockRate            : 90000,
-			channels             : 1,
 			parameters           : {},
 			rtcpFeedback         :
 			[
@@ -88,7 +87,6 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/rtx',
 			preferredPayloadType : 101, // 101 is the second available dynamic PT.
 			clockRate            : 90000,
-			channels             : 1,
 			parameters           :
 			{
 				apt : 125
@@ -103,7 +101,6 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/H264',
 			preferredPayloadType : 102, // 102 is the second available dynamic PT.
 			clockRate            : 90000,
-			channels             : 1,
 			parameters           :
 			{
 
@@ -129,7 +126,6 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/rtx',
 			preferredPayloadType : 103,
 			clockRate            : 90000,
-			channels             : 1,
 			parameters           :
 			{
 				apt : 102
@@ -238,7 +234,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType    : 'video/H264',
 				payloadType : 111,
 				clockRate   : 90000,
-				channels    : 1,
 				parameters  :
 				{
 					foo                  : 1234,
@@ -256,7 +251,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType    : 'video/rtx',
 				payloadType : 112,
 				clockRate   : 90000,
-				channels    : 1,
 				parameters  :
 				{
 					apt : 111
@@ -382,7 +376,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType             : 'video/H264',
 				preferredPayloadType : 101,
 				clockRate            : 90000,
-				channels             : 1,
 				parameters           :
 				{
 					'packetization-mode' : 1,
@@ -401,7 +394,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType             : 'video/rtx',
 				preferredPayloadType : 102,
 				clockRate            : 90000,
-				channels             : 1,
 				parameters           :
 				{
 					apt : 101
@@ -465,7 +457,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			mimeType    : 'video/H264',
 			payloadType : 101,
 			clockRate   : 90000,
-			channels    : 1,
 			parameters  :
 			{
 				foo                  : 1234,
@@ -484,7 +475,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			mimeType    : 'video/rtx',
 			payloadType : 102,
 			clockRate   : 90000,
-			channels    : 1,
 			parameters  :
 			{
 				apt : 101
@@ -536,7 +526,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			mimeType    : 'video/H264',
 			payloadType : 101,
 			clockRate   : 90000,
-			channels    : 1,
 			parameters  :
 			{
 				foo                  : 1234,

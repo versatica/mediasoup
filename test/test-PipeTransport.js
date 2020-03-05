@@ -353,7 +353,6 @@ test('router.pipeToRouter() succeeds with video', async () =>
 				mimeType     : 'video/VP8',
 				payloadType  : 101,
 				clockRate    : 90000,
-				channels     : 1,
 				parameters   : {},
 				rtcpFeedback :
 				[
@@ -414,7 +413,6 @@ test('router.pipeToRouter() succeeds with video', async () =>
 				mimeType     : 'video/VP8',
 				payloadType  : 101,
 				clockRate    : 90000,
-				channels     : 1,
 				parameters   : {},
 				rtcpFeedback :
 				[
@@ -502,7 +500,6 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 				mimeType     : 'video/VP8',
 				payloadType  : 101,
 				clockRate    : 90000,
-				channels     : 1,
 				parameters   : {},
 				rtcpFeedback :
 				[
@@ -515,7 +512,6 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 				mimeType     : 'video/rtx',
 				payloadType  : 102,
 				clockRate    : 90000,
-				channels     : 1,
 				parameters   : { apt: 101 },
 				rtcpFeedback : []
 			}
@@ -699,7 +695,6 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				mimeType     : 'video/VP8',
 				payloadType  : 101,
 				clockRate    : 90000,
-				channels     : 1,
 				parameters   : {},
 				rtcpFeedback :
 				[
@@ -713,7 +708,6 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				mimeType    : 'video/rtx',
 				payloadType : 102,
 				clockRate   : 90000,
-				channels    : 1,
 				parameters  :
 				{
 					apt : 101

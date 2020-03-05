@@ -364,7 +364,6 @@ test('transport.consume() succeeds', async () =>
 			mimeType    : 'video/H264',
 			payloadType : 103,
 			clockRate   : 90000,
-			channels    : 1,
 			parameters  :
 			{
 				'packetization-mode' : 1,
@@ -383,7 +382,6 @@ test('transport.consume() succeeds', async () =>
 			mimeType     : 'video/rtx',
 			payloadType  : 104,
 			clockRate    : 90000,
-			channels     : 1,
 			parameters   : { apt: 103 },
 			rtcpFeedback : []
 		});
