@@ -10,12 +10,12 @@ The `package.json` file in the main folder includes the following scripts:
 
 ### `num run typescript:build`
 
-Compiles mediasoup TypeScript code (`lib` folder) into ES6 JavaScript and places it into the `lib` directory.
+Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript and places it into the `lib` directory.
 
 
 ### `num run typescript:watch`
 
-Compiles mediasoup TypeScript code (`lib` folder) into ES6 JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
+Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
 
 ### `npm run lint`
 
@@ -115,11 +115,12 @@ Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or 
 
 Generates the `worker/compile_commands_template.json` file which is a ["Clang compilation database"](https://clang.llvm.org/docs/JSONCompilationDatabase.html).
 
-It requires [Bear](https://github.com/rizsotto/Bear). Install it in Debian/Ubuntu via `apt install bear` and in OSX via `brew install bear`.
+**Requirements:**
 
-**NOTE:** For now, Bear version must be 2.1.X.
-
-**NOTE:** Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean-all && make` before running `make bear`.
+* [Bear](https://github.com/rizsotto/Bear) is required.
+  - Install it in Debian/Ubuntu via `apt install bear` and in OSX via `brew install bear`.
+  - For now, Bear version must be 2.1.X.
+* Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean-all && make` before running `make bear`.
 
 
 ### `make tidy`
