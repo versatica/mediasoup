@@ -296,7 +296,7 @@ test('router.createPlainTransport() with non bindable IP rejects with Error', as
 		.toThrow(Error);
 }, 2000);
 
-test('plaintRtpTransport.getStats() succeeds', async () =>
+test('plainTransport.getStats() succeeds', async () =>
 {
 	const data = await transport.getStats();
 
@@ -328,7 +328,7 @@ test('plaintRtpTransport.getStats() succeeds', async () =>
 	expect(data[0].sendBitrate).toBe(0);
 }, 2000);
 
-test('plaintRtpTransport.connect() succeeds', async () =>
+test('plainTransport.connect() succeeds', async () =>
 {
 	// No SRTP enabled so passing srtpParameters must fail.
 	await expect(transport.connect(
@@ -362,7 +362,7 @@ test('plaintRtpTransport.connect() succeeds', async () =>
 	expect(transport.rtcpTuple.protocol).toBe('udp');
 }, 2000);
 
-test('plaintRtpTransport.connect() with wrong arguments rejects with TypeError', async () =>
+test('plainTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
 	await expect(transport.connect({}))
 		.rejects
@@ -381,7 +381,7 @@ test('plaintRtpTransport.connect() with wrong arguments rejects with TypeError',
 		.toThrow(TypeError);
 }, 2000);
 
-test('PlaintRtpTransport methods reject if closed', async () =>
+test('PlainTransport methods reject if closed', async () =>
 {
 	const onObserverClose = jest.fn();
 
@@ -404,9 +404,9 @@ test('PlaintRtpTransport methods reject if closed', async () =>
 		.toThrow(Error);
 }, 2000);
 
-test('PlaintRtpTransport emits "routerclose" if Router is closed', async () =>
+test('PlainTransport emits "routerclose" if Router is closed', async () =>
 {
-	// We need different Router and PlaintRtpTransport instances here.
+	// We need different Router and PlainTransport instances here.
 	const router2 = await worker.createRouter({ mediaCodecs });
 	const transport2 =
 		await router2.createPlainTransport({ listenIp: '127.0.0.1' });
@@ -424,7 +424,7 @@ test('PlaintRtpTransport emits "routerclose" if Router is closed', async () =>
 	expect(transport2.closed).toBe(true);
 }, 2000);
 
-test('PlaintRtpTransport emits "routerclose" if Worker is closed', async () =>
+test('PlainTransport emits "routerclose" if Worker is closed', async () =>
 {
 	const onObserverClose = jest.fn();
 
