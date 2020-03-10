@@ -50,6 +50,9 @@ namespace RTC
 		this->probationPacket =
 		  RTC::RtpPacket::Parse(this->probationPacketBuffer, MaxProbationPacketSize);
 
+		// Sex fixed codec payload type.
+		this->probationPacket->SetPayloadType(RTC::RtpProbationCodecPayloadType);
+
 		// Set fixed SSRC.
 		this->probationPacket->SetSsrc(RTC::RtpProbationSsrc);
 
