@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.5.2
+
+* Enable MID RTP extension in mediasoup to receivers direction (for consumers).
+  - This **requires** mediasoup-client 3.5.2 to work.
+
+
 ### 3.5.1
 
 * `PlainTransport`: Fix event name: 'rtcpTuple' => 'rtcptuple'.
