@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.5.4 (WIP)
+
+* Update libuv to 1.35.0.
+
+
 ### 3.5.3
 
 * `PlainTransport`: Remove `multiSource` option. It was a hack nobody should use.
