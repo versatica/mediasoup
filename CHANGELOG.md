@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.5.3
+
+* `PlainTransport`: Remove `multiSource` option. It was a hack nobody should use.
+
+
 ### 3.5.2
 
 * Enable MID RTP extension in mediasoup to receivers direction (for consumers).
