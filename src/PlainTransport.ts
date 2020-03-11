@@ -7,7 +7,6 @@ import {
 	TransportTraceEventData,
 	SctpState
 } from './Transport';
-import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 
@@ -25,17 +24,11 @@ export type PlainTransportOptions =
 
 	/**
 	 * Whether remote IP:port should be auto-detected based on first RTP/RTCP
-	 * packet received. If enabled, connect() method must not be called. This
-	 * option is ignored if multiSource is set. Default false.
+	 * packet received. If enabled, connect() method must not be called unless
+	 * SRTP is enabled. If so, it must be called with just remote SRTP parameters.
+	 * Default false.
 	 */
 	comedia?: boolean;
-
-	/**
-	 * Whether RTP/RTCP from different remote IPs:ports is allowed. If set, the
-	 * transport will just be valid for receiving media (consume() cannot be
-	 * called on it) and connect() must not be called. Default false.
-	 */
-	multiSource?: boolean;
 
 	/**
 	 * Create a SCTP association. Default false.
@@ -105,7 +98,6 @@ export type PlainTransportStat =
 	// PlainTransport specific.
 	rtcpMux: boolean;
 	comedia: boolean;
-	multiSource: boolean;
 	tuple: TransportTuple;
 	rtcpTuple?: TransportTuple;
 }
@@ -124,7 +116,6 @@ export class PlainTransport extends Transport
 	{
 		rtcpMux?: boolean;
 		comedia?: boolean;
-		multiSource?: boolean;
 		tuple: TransportTuple;
 		rtcpTuple?: TransportTuple;
 		sctpParameters?: SctpParameters;
@@ -151,7 +142,6 @@ export class PlainTransport extends Transport
 		{
 			rtcpMux        : data.rtcpMux,
 			comedia        : data.comedia,
-			multiSource    : data.multiSource,
 			tuple          : data.tuple,
 			rtcpTuple      : data.rtcpTuple,
 			sctpParameters : data.sctpParameters,
@@ -301,19 +291,6 @@ export class PlainTransport extends Transport
 			this._data.rtcpTuple = data.rtcpTuple;
 
 		this._data.srtpParameters = data.srtpParameters;
-	}
-
-	/**
-	 * Override Transport.consume() method to reject it if multiSource is set.
-	 *
-	 * @override
-	 */
-	async consume(params: ConsumerOptions): Promise<Consumer>
-	{
-		if (this._data.multiSource)
-			throw new Error('cannot call consume() with multiSource set');
-
-		return super.consume(params);
 	}
 
 	private _handleWorkerNotifications(): void

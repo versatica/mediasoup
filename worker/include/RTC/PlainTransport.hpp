@@ -62,7 +62,6 @@ namespace RTC
 		ListenIp listenIp;
 		bool rtcpMux{ true };
 		bool comedia{ false };
-		bool multiSource{ false };
 		struct sockaddr_storage remoteAddrStorage;
 		struct sockaddr_storage rtcpRemoteAddrStorage;
 		RTC::SrtpSession::CryptoSuite srtpCryptoSuite{

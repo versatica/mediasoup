@@ -1,6 +1,5 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
-import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 export declare type PlainTransportOptions = {
@@ -14,16 +13,11 @@ export declare type PlainTransportOptions = {
     rtcpMux?: boolean;
     /**
      * Whether remote IP:port should be auto-detected based on first RTP/RTCP
-     * packet received. If enabled, connect() method must not be called. This
-     * option is ignored if multiSource is set. Default false.
+     * packet received. If enabled, connect() method must not be called unless
+     * SRTP is enabled. If so, it must be called with just remote SRTP parameters.
+     * Default false.
      */
     comedia?: boolean;
-    /**
-     * Whether RTP/RTCP from different remote IPs:ports is allowed. If set, the
-     * transport will just be valid for receiving media (consume() cannot be
-     * called on it) and connect() must not be called. Default false.
-     */
-    multiSource?: boolean;
     /**
      * Create a SCTP association. Default false.
      */
@@ -82,7 +76,6 @@ export declare type PlainTransportStat = {
     maxIncomingBitrate?: number;
     rtcpMux: boolean;
     comedia: boolean;
-    multiSource: boolean;
     tuple: TransportTuple;
     rtcpTuple?: TransportTuple;
 };
@@ -94,7 +87,6 @@ export declare class PlainTransport extends Transport {
     protected readonly _data: {
         rtcpMux?: boolean;
         comedia?: boolean;
-        multiSource?: boolean;
         tuple: TransportTuple;
         rtcpTuple?: TransportTuple;
         sctpParameters?: SctpParameters;
@@ -174,12 +166,6 @@ export declare class PlainTransport extends Transport {
         rtcpPort?: number;
         srtpParameters?: SrtpParameters;
     }): Promise<void>;
-    /**
-     * Override Transport.consume() method to reject it if multiSource is set.
-     *
-     * @override
-     */
-    consume(params: ConsumerOptions): Promise<Consumer>;
     private _handleWorkerNotifications;
 }
 /**

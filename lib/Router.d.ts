@@ -146,7 +146,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a PlainTransport.
      */
-    createPlainTransport({ listenIp, rtcpMux, comedia, multiSource, enableSctp, numSctpStreams, maxSctpMessageSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
+    createPlainTransport({ listenIp, rtcpMux, comedia, enableSctp, numSctpStreams, maxSctpMessageSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
     /**
      * DEPRECATED: Use createPlainTransport().
      */

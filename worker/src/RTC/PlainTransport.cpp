@@ -84,23 +84,6 @@ namespace RTC
 			this->comedia = jsonComediaIt->get<bool>();
 		}
 
-		auto jsonMultiSourceIt = data.find("multiSource");
-
-		if (jsonMultiSourceIt != data.end())
-		{
-			if (!jsonMultiSourceIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong multiSource (not a boolean)");
-
-			this->multiSource = jsonMultiSourceIt->get<bool>();
-
-			// If multiSource is set disable RTCP-mux and comedia mode.
-			if (this->multiSource)
-			{
-				this->rtcpMux = false;
-				this->comedia = false;
-			}
-		}
-
 		auto jsonEnableSrtpIt = data.find("enableSrtp");
 
 		// clang-format off
@@ -188,9 +171,6 @@ namespace RTC
 		// Add comedia.
 		jsonObject["comedia"] = this->comedia;
 
-		// Add multiSource.
-		jsonObject["multiSource"] = this->multiSource;
-
 		// Add tuple.
 		if (this->tuple)
 		{
@@ -261,9 +241,6 @@ namespace RTC
 
 		// Add comedia.
 		jsonObject["comedia"] = this->comedia;
-
-		// Add multiSource.
-		jsonObject["multiSource"] = this->multiSource;
 
 		if (this->tuple)
 		{
@@ -412,7 +389,7 @@ namespace RTC
 						delete[] srtpRemoteKey;
 					}
 
-					if (!this->comedia && !this->multiSource)
+					if (!this->comedia)
 					{
 						auto jsonIpIt = request->data.find("ip");
 
@@ -771,14 +748,8 @@ namespace RTC
 			return;
 		}
 
-		// If multiSource is set allow it without any checking.
-		if (this->multiSource)
-		{
-			// Do nothing.
-		}
-		// Otherwise, if we don't have a RTP tuple yet, check whether comedia mode
-		// is set,
-		else if (!this->tuple)
+		// If we don't have a RTP tuple yet, check whether comedia mode is set.
+		if (!this->tuple)
 		{
 			if (!this->comedia)
 			{
@@ -845,14 +816,9 @@ namespace RTC
 			return;
 		}
 
-		// If multiSource is set allow it without any checking.
-		if (this->multiSource)
-		{
-			// Just allow it.
-		}
-		// Otherwise, if we don't have a RTP tuple yet, check whether RTCP-mux
-		// and comedia mode are set.
-		else if (this->rtcpMux && !this->tuple)
+		// If we don't have a RTP tuple yet, check whether RTCP-mux and comedia
+		// mode are set.
+		if (this->rtcpMux && !this->tuple)
 		{
 			if (!this->comedia)
 			{
@@ -941,16 +907,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// If multiSource reject it.
-		if (this->multiSource)
-		{
-			MS_DEBUG_TAG(sctp, "ignoring SCTP packet in multiSource mode");
-
-			return;
-		}
-		// Otherwise, if we don't have a RTP tuple yet, check whether comedia mode
-		// is set,
-		else if (!this->tuple)
+		// If we don't have a RTP tuple yet, check whether comedia mode is set.
+		if (!this->tuple)
 		{
 			if (!this->comedia)
 			{
