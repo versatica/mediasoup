@@ -445,7 +445,7 @@ namespace RTC
 
 		// Set ciphers.
 		ret = SSL_CTX_set_cipher_list(
-		  DtlsTransport::sslCtx, "ALL:!ADH:!LOW:!EXP:!MD5:!aNULL:!eNULL:@STRENGTH");
+		  DtlsTransport::sslCtx, "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
 
 		if (ret == 0)
 		{
