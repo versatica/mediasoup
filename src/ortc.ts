@@ -984,8 +984,11 @@ export function getConsumerRtpParameters(
 
 	consumerParams.headerExtensions = consumableParams.headerExtensions
 		.filter((ext) => (
-			(caps.headerExtensions)
-				.some((capExt) => capExt.preferredId === ext.id)
+			caps.headerExtensions
+				.some((capExt) => (
+					capExt.preferredId === ext.id &&
+					capExt.uri === ext.uri
+				))
 		));
 
 	// Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
