@@ -9,9 +9,7 @@
 
 /* Static. */
 
-// This value will make libuv to use uv__udp_recvmmsg() internally, which is
-// more efficient.
-static constexpr size_t ReadBufferSize{ 65536 * 2 };
+static constexpr size_t ReadBufferSize{ 65536 };
 static uint8_t ReadBuffer[ReadBufferSize];
 
 /* Static methods for UV callbacks. */

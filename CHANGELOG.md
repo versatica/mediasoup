@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.5.5
+
+* `UdpSocket.cpp`: Revert `uv__udp_recvmmsg()` usage since it notifies about received UDP packets in reverse order. Feature on hold until fixed. 
+
+
 ### 3.5.4
 
 * `Transport.cpp`: Enable transport congestion client for the first video Consumer, no matter it's uses simulcast, SVC or a single stream.
