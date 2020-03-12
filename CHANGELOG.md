@@ -5,6 +5,7 @@
 
 * Update libuv to 1.35.0.
 * `Transport.cpp`: Enable transport congestion client for the first video Consumer, no matter it's uses simulcast, SVC or a single stream.
+* `UdpSocket.cpp`: Ensure the new libuv's `uv__udp_recvmmsg()` is used, which is more efficient.
 
 
 ### 3.5.3
