@@ -607,11 +607,16 @@ enum uv_udp_flags {
    */
   UV_UDP_REUSEADDR = 4,
   /*
-   * Indicates that the message was received by recvmmsg and that it's not at
-   * the beginning of the buffer allocated by alloc_cb - so the buffer provided
+   * Indicates that the message was received by recvmmsg, so the buffer provided
    * must not be freed by the recv_cb callback.
    */
-  UV_UDP_MMSG_CHUNK = 8
+  UV_UDP_MMSG_CHUNK = 8,
+
+  /*
+   * Indicates that the message was received by recvmmsg, and this is not a
+   * chunk, but the buffer that needs to be freed.
+   */
+  UV_UDP_MMSG_FREE_BUF = 16
 };
 
 typedef void (*uv_udp_send_cb)(uv_udp_send_t* req, int status);

@@ -9,7 +9,9 @@
 
 /* Static. */
 
-static constexpr size_t ReadBufferSize{ 65536 };
+// This value will make libuv to use uv__udp_recvmmsg() internally, which is
+// more efficient.
+static constexpr size_t ReadBufferSize{ 65536 * 2 };
 static uint8_t ReadBuffer[ReadBufferSize];
 
 /* Static methods for UV callbacks. */
@@ -255,6 +257,10 @@ inline void UdpSocket::OnUvRecv(
 	// NOTE: libuv calls twice to alloc & recv when a datagram is received, the
 	// second one with nread = 0 and addr = NULL. Ignore it.
 	if (nread == 0)
+		return;
+
+	// Ignore if UV_UDP_MMSG_FREE_BUF since we use a static buffer.
+	if ((flags & UV_UDP_MMSG_FREE_BUF) != 0u)
 		return;
 
 	// Check flags.
