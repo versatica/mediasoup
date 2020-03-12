@@ -243,6 +243,9 @@ inline void UdpSocket::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
+	// TODO: REMOVE
+	// MS_DUMP("--- OnUvRecvAlloc()");
+
 	// Tell UV to write into the static buffer.
 	buf->base = reinterpret_cast<char*>(ReadBuffer);
 	// Give UV all the buffer space.
@@ -253,6 +256,14 @@ inline void UdpSocket::OnUvRecv(
   ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
 	MS_TRACE();
+
+	// TODO: REMOVE
+	// MS_DUMP(
+	// 	"--- OnUvRecv() [nread:%zu, buf:%d, UV_UDP_MMSG_CHUNK:%d, UV_UDP_MMSG_FREE_BUF:%d]",
+	// 	nread,
+	// 	buf ? 1 : 0,
+	// 	(flags & UV_UDP_MMSG_CHUNK) != 0u,
+	// 	(flags & UV_UDP_MMSG_FREE_BUF) != 0u);
 
 	// NOTE: libuv calls twice to alloc & recv when a datagram is received, the
 	// second one with nread = 0 and addr = NULL. Ignore it.
