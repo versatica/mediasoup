@@ -817,16 +817,13 @@ namespace RTC
 					RTC::BweType bweType;
 
 					// Use transport-cc if:
-					// - it's a simulcast or SVC Consumer, and
+					// - it's a video Consumer, and
 					// - there is transport-wide-cc-01 RTP header extension, and
 					// - there is "transport-cc" in codecs RTCP feedback.
 					//
 					// clang-format off
 					if (
-						(
-							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-							consumer->GetType() == RTC::RtpParameters::Type::SVC
-						) &&
+						consumer->GetKind() == RTC::Media::Kind::VIDEO &&
 						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
 						std::any_of(
 							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
@@ -846,16 +843,13 @@ namespace RTC
 						bweType         = RTC::BweType::TRANSPORT_CC;
 					}
 					// Use REMB if:
-					// - it's a simulcast or SVC Consumer, and
+					// - it's a video Consumer, and
 					// - there is abs-send-time RTP header extension, and
 					// - there is "remb" in codecs RTCP feedback.
 					//
 					// clang-format off
 					else if (
-						(
-							consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-							consumer->GetType() == RTC::RtpParameters::Type::SVC
-						) &&
+						consumer->GetKind() == RTC::Media::Kind::VIDEO &&
 						rtpHeaderExtensionIds.absSendTime != 0u &&
 						std::any_of(
 							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
@@ -901,17 +895,14 @@ namespace RTC
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 				// Create SenderBandwidthEstimator if:
 				// - not already created,
-				// - it's a simulcast or SVC Consumer, and
+				// - it's a video Consumer, and
 				// - there is transport-wide-cc-01 RTP header extension, and
 				// - there is "transport-cc" in codecs RTCP feedback.
 				//
 				// clang-format off
 				if (
 					!this->senderBwe &&
-					(
-						consumer->GetType() == RTC::RtpParameters::Type::SIMULCAST ||
-						consumer->GetType() == RTC::RtpParameters::Type::SVC
-					) &&
+					consumer->GetKind() == RTC::Media::Kind::VIDEO &&
 					rtpHeaderExtensionIds.transportWideCc01 != 0u &&
 					std::any_of(
 						codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
