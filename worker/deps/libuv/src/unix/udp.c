@@ -190,7 +190,6 @@ static int uv__udp_recvmmsg(uv_udp_t* handle, uv_buf_t* buf) {
   size_t chunks;
   int flags;
   size_t k;
-  ssize_t k2;
 
   /* prepare structures for recvmmsg */
   chunks = buf->len / UV__UDP_DGRAM_MAXSIZE;
@@ -215,28 +214,23 @@ static int uv__udp_recvmmsg(uv_udp_t* handle, uv_buf_t* buf) {
     else
       handle->recv_cb(handle, UV__ERR(errno), buf, NULL, 0);
   } else {
-    /* count to zero, so the buffer base comes last */
-    for (k2 = 0; k2 < nread && handle->recv_cb != NULL; k2++) {
+    /* pass each chunk to the application */
+    for (k = 0; k < (size_t) nread && handle->recv_cb != NULL; k++) {
       flags = UV_UDP_MMSG_CHUNK;
-      if (msgs[k2].msg_hdr.msg_flags & MSG_TRUNC)
+      if (msgs[k].msg_hdr.msg_flags & MSG_TRUNC)
         flags |= UV_UDP_PARTIAL;
 
-      chunk_buf = uv_buf_init(iov[k2].iov_base, iov[k2].iov_len);
+      chunk_buf = uv_buf_init(iov[k].iov_base, iov[k].iov_len);
       handle->recv_cb(handle,
-                      msgs[k2].msg_len,
+                      msgs[k].msg_len,
                       &chunk_buf,
-                      msgs[k2].msg_hdr.msg_name,
+                      msgs[k].msg_hdr.msg_name,
                       flags);
     }
 
-    if (handle->recv_cb != NULL) {
-      chunk_buf = uv_buf_init(iov[0].iov_base, iov[0].iov_len);
-      handle->recv_cb(handle,
-                      msgs[0].msg_len,
-                      &chunk_buf,
-                      msgs[0].msg_hdr.msg_name,
-                      UV_UDP_MMSG_FREE_BUF);
-    }
+    /* one last callback so the original buffer is freed */
+    if (handle->recv_cb != NULL)
+      handle->recv_cb(handle, 0, buf, NULL, 0);
   }
   return nread;
 }
