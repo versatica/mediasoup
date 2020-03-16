@@ -56,7 +56,7 @@
     "uuid": "^7.0.2"
   },
   "devDependencies": {
-    "@types/node": "^13.9.0",
+    "@types/node": "^13.9.1",
     "@types/random-number": "0.0.0",
     "@types/uuid": "^7.0.0",
     "@typescript-eslint/eslint-plugin": "^2.23.0",
