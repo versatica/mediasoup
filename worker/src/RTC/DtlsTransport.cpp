@@ -157,53 +157,34 @@ namespace RTC
 		MS_TRACE();
 
 		int ret{ 0 };
-		BIGNUM* bne{ nullptr };
-		RSA* rsaKey{ nullptr };
-		int numBits{ 1024 };
+		EC_KEY* ecKey{ nullptr };
 		X509_NAME* certName{ nullptr };
 		std::string subject =
 		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
 
-		// Create a big number object.
-		bne = BN_new();
+		// Create key with curve.
+		ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
 
-		if (!bne)
+		if (ecKey == nullptr)
 		{
-			LOG_OPENSSL_ERROR("BN_new() failed");
+			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
 
 			goto error;
 		}
 
-		ret = BN_set_word(bne, RSA_F4); // RSA_F4 == 65537.
+		EC_KEY_set_asn1_flag(ecKey, OPENSSL_EC_NAMED_CURVE);
+
+		// NOTE: This can take some time.
+		ret = EC_KEY_generate_key(ecKey);
 
 		if (ret == 0)
 		{
-			LOG_OPENSSL_ERROR("BN_set_word() failed");
+			LOG_OPENSSL_ERROR("EC_KEY_generate_key() failed");
 
 			goto error;
 		}
 
-		// Generate a RSA key.
-		rsaKey = RSA_new();
-
-		if (!rsaKey)
-		{
-			LOG_OPENSSL_ERROR("RSA_new() failed");
-
-			goto error;
-		}
-
-		// This takes some time.
-		ret = RSA_generate_key_ex(rsaKey, numBits, bne, nullptr);
-
-		if (ret == 0)
-		{
-			LOG_OPENSSL_ERROR("RSA_generate_key_ex() failed");
-
-			goto error;
-		}
-
-		// Create a private key object (needed to hold the RSA key).
+		// Create a private key object.
 		DtlsTransport::privateKey = EVP_PKEY_new();
 
 		if (!DtlsTransport::privateKey)
@@ -213,16 +194,17 @@ namespace RTC
 			goto error;
 		}
 
-		ret = EVP_PKEY_assign_RSA(DtlsTransport::privateKey, rsaKey); // NOLINT
+		ret = EVP_PKEY_assign_EC_KEY(DtlsTransport::privateKey, ecKey);
 
 		if (ret == 0)
 		{
-			LOG_OPENSSL_ERROR("EVP_PKEY_assign_RSA() failed");
+			LOG_OPENSSL_ERROR("EVP_PKEY_assign_EC_KEY() failed");
 
 			goto error;
 		}
-		// The RSA key now belongs to the private key, so don't clean it up separately.
-		rsaKey = nullptr;
+
+		// The EC key now belongs to the private key, so don't clean it up separately.
+		ecKey = nullptr;
 
 		// Create the X509 certificate.
 		DtlsTransport::certificate = X509_new();
@@ -291,21 +273,15 @@ namespace RTC
 			goto error;
 		}
 
-		// Free stuff and return.
-		BN_free(bne);
-
 		return;
 
 	error:
 
-		if (bne)
-			BN_free(bne);
-
-		if (rsaKey && !DtlsTransport::privateKey)
-			RSA_free(rsaKey);
+		if (ecKey)
+			EC_KEY_free(ecKey);
 
 		if (DtlsTransport::privateKey)
-			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the RSA key.
+			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the EC key.
 
 		if (DtlsTransport::certificate)
 			X509_free(DtlsTransport::certificate);
@@ -371,20 +347,12 @@ namespace RTC
 		MS_TRACE();
 
 		std::string dtlsSrtpCryptoSuites;
-		EC_KEY* ecdh{ nullptr };
 		int ret;
 
-/* Set the global DTLS context. */
+		/* Set the global DTLS context. */
 
-// Both DTLS 1.0 and 1.2 (requires OpenSSL >= 1.1.0).
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+		// Both DTLS 1.0 and 1.2 (requires OpenSSL >= 1.1.0).
 		DtlsTransport::sslCtx = SSL_CTX_new(DTLS_method());
-// Just DTLS 1.0 (requires OpenSSL >= 1.0.1).
-#elif (OPENSSL_VERSION_NUMBER >= 0x10001000L)
-		DtlsTransport::sslCtx = SSL_CTX_new(DTLSv1_method());
-#else
-#error "too old OpenSSL version"
-#endif
 
 		if (!DtlsTransport::sslCtx)
 		{
@@ -454,37 +422,13 @@ namespace RTC
 			goto error;
 		}
 
-// Enable ECDH ciphers.
-// DOC: http://en.wikibooks.org/wiki/OpenSSL/Diffie-Hellman_parameters
-// NOTE: https://code.google.com/p/chromium/issues/detail?id=406458
-// NOTE: https://bugs.ruby-lang.org/issues/12324
-//
-// Nothing to be done in OpenSSL >= 1.1.0.
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-// For OpenSSL >= 1.0.2.
-#elif (OPENSSL_VERSION_NUMBER >= 0x10002000L)
+		// Enable ECDH ciphers.
+		// DOC: http://en.wikibooks.org/wiki/OpenSSL/Diffie-Hellman_parameters
+		// NOTE: https://code.google.com/p/chromium/issues/detail?id=406458
+		// NOTE: https://bugs.ruby-lang.org/issues/12324
+
+		// For OpenSSL >= 1.0.2.
 		SSL_CTX_set_ecdh_auto(DtlsTransport::sslCtx, 1);
-// Older versions.
-#else
-		ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-
-		if (!ecdh)
-		{
-			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
-
-			goto error;
-		}
-
-		if (SSL_CTX_set_tmp_ecdh(DtlsTransport::sslCtx, ecdh) != 1)
-		{
-			LOG_OPENSSL_ERROR("SSL_CTX_set_tmp_ecdh() failed");
-
-			goto error;
-		}
-
-		EC_KEY_free(ecdh);
-		ecdh = nullptr;
-#endif
 
 		// Set the "use_srtp" DTLS extension.
 		for (auto it = DtlsTransport::srtpCryptoSuites.begin();
@@ -521,9 +465,6 @@ namespace RTC
 			SSL_CTX_free(DtlsTransport::sslCtx);
 			DtlsTransport::sslCtx = nullptr;
 		}
-
-		if (ecdh)
-			EC_KEY_free(ecdh);
 
 		MS_THROW_ERROR("SSL context creation failed");
 	}
