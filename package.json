@@ -58,9 +58,9 @@
   "devDependencies": {
     "@types/node": "^13.9.1",
     "@types/random-number": "0.0.0",
-    "@types/uuid": "^7.0.0",
-    "@typescript-eslint/eslint-plugin": "^2.23.0",
-    "@typescript-eslint/parser": "^2.23.0",
+    "@types/uuid": "^7.0.2",
+    "@typescript-eslint/eslint-plugin": "^2.24.0",
+    "@typescript-eslint/parser": "^2.24.0",
     "cross-env": "^7.0.2",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
