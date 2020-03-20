@@ -52,6 +52,8 @@
     <testCase name="Process can be configured on command line/abort/-a aborts after first failure" duration="{duration}"/>
     <testCase name="Process can be configured on command line/abort/-x 2 aborts after two failures" duration="{duration}"/>
     <testCase name="Process can be configured on command line/abort/-x must be numeric" duration="{duration}"/>
+    <testCase name="Process can be configured on command line/abort/wait-for-keypress/Accepted options" duration="{duration}"/>
+    <testCase name="Process can be configured on command line/abort/wait-for-keypress/invalid options are reported" duration="{duration}"/>
     <testCase name="Process can be configured on command line/nothrow/-e" duration="{duration}"/>
     <testCase name="Process can be configured on command line/nothrow/--nothrow" duration="{duration}"/>
     <testCase name="Process can be configured on command line/output filename/-o filename" duration="{duration}"/>
@@ -64,8 +66,9 @@
     <testCase name="Process can be configured on command line/use-colour/error" duration="{duration}"/>
     <testCase name="Process can be configured on command line/Benchmark options/samples" duration="{duration}"/>
     <testCase name="Process can be configured on command line/Benchmark options/resamples" duration="{duration}"/>
-    <testCase name="Process can be configured on command line/Benchmark options/resamples" duration="{duration}"/>
-    <testCase name="Process can be configured on command line/Benchmark options/resamples" duration="{duration}"/>
+    <testCase name="Process can be configured on command line/Benchmark options/confidence-interval" duration="{duration}"/>
+    <testCase name="Process can be configured on command line/Benchmark options/no-analysis" duration="{duration}"/>
+    <testCase name="Process can be configured on command line/Benchmark options/warmup-time" duration="{duration}"/>
     <testCase name="Test with special, characters &quot;in name" duration="{duration}"/>
   </file>
   <file path="projects/<exe-name>/IntrospectiveTests/GeneratorsImpl.tests.cpp">
@@ -142,6 +145,7 @@
   <file path="projects/<exe-name>/IntrospectiveTests/Tag.tests.cpp">
     <testCase name="Tag alias can be registered against tag patterns/The same tag alias can only be registered once" duration="{duration}"/>
     <testCase name="Tag alias can be registered against tag patterns/Tag aliases must be of the form [@name]" duration="{duration}"/>
+    <testCase name="adding a hide tag implicitly enables all others" duration="{duration}"/>
     <testCase name="shortened hide tags are split apart" duration="{duration}"/>
   </file>
   <file path="projects/<exe-name>/IntrospectiveTests/ToString.tests.cpp">
@@ -365,6 +369,7 @@ Class.tests.cpp:<line number>
     <testCase name="#809" duration="{duration}"/>
     <testCase name="#833" duration="{duration}"/>
     <testCase name="#872" duration="{duration}"/>
+    <testCase name="Lambdas in assertions" duration="{duration}"/>
     <testCase name="Optionally static assertions" duration="{duration}"/>
   </file>
   <file path="projects/<exe-name>/UsageTests/Condition.tests.cpp">
@@ -890,6 +895,7 @@ Exception.tests.cpp:<line number>
   <file path="projects/<exe-name>/UsageTests/Matchers.tests.cpp">
     <testCase name="Arbitrary predicate matcher/Function pointer" duration="{duration}"/>
     <testCase name="Arbitrary predicate matcher/Lambdas + different type" duration="{duration}"/>
+    <testCase name="Composed matchers are distinct" duration="{duration}"/>
     <testCase name="Contains string matcher" duration="{duration}">
       <failure message="CHECK_THAT(testStringForMatching(), Contains(&quot;not there&quot;, Catch::CaseSensitive::No))">
 FAILED:
