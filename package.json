@@ -68,7 +68,7 @@
     "gulp-clang-format": "^1.0.27",
     "jest": "^25.1.0",
     "jest-tobetype": "^1.2.3",
-    "open-cli": "^5.0.0",
+    "open-cli": "^6.0.0",
     "sctp": "^0.0.19",
     "tsc-watch": "^4.2.3",
     "typescript": "^3.8.3"
