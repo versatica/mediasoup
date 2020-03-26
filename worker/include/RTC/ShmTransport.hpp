@@ -2,7 +2,6 @@
 #define MS_RTC_SHM_TRANSPORT_HPP
 
 #include "json.hpp"
-#include "sfushm_av_media.h"
 #include "DepLibSfuShm.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -65,11 +64,7 @@ namespace RTC
 		bool comedia{ false };
 		bool multiSource{ false };
 
-
-		DepLibSfuShm::SfuShmCtx shmCtx;
-
-		// ShmTransport is responsible for writing RTCP packets into shm and various "metadata stuff" (TBD)
-		sfushm_av_frame_frag_t       chunk;    // structure holding current RTCP chunk being written into shm
+		DepLibSfuShm::SfuShmCtx shmCtx; // shm writer context, needed here to begin shm initialization and correctly report transport stats
 	};
 } // namespace RTC
 

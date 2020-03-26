@@ -48,25 +48,20 @@ DepLibSfuShm::ShmWriterStatus DepLibSfuShm::SfuShmCtx::SetSsrcInShmConf(uint32_t
   
   switch(kind) {
     case DepLibSfuShm::ShmChunkType::AUDIO:
-      //if (this->AudioSsrc() == ssrc) {
-      //  return false;
-      //}
+      ssrc_a = ssrc; 
       this->wrt_init.conf.channels[0].audio = 1;
       this->wrt_init.conf.channels[0].ssrc = ssrc;
       this->wrt_status = (this->wrt_status == SHM_WRT_AUDIO_CHNL_CONF_MISSING) ? SHM_WRT_READY : SHM_WRT_VIDEO_CHNL_CONF_MISSING;
+      break;
 
-      break;  
     case DepLibSfuShm::ShmChunkType::VIDEO:
-      //if (this->VideoSsrc() == ssrc) {
-      //  return false;
-      //}
+      ssrc_v = ssrc;
       this->wrt_init.conf.channels[1].video = 1;
       this->wrt_init.conf.channels[1].ssrc = ssrc;
       this->wrt_status = (this->wrt_status == SHM_WRT_VIDEO_CHNL_CONF_MISSING) ? SHM_WRT_READY : SHM_WRT_AUDIO_CHNL_CONF_MISSING;
-
       break;
+
     default:
-      // ignore RTCP and rest
       return this->Status();
   }
 
@@ -86,6 +81,8 @@ DepLibSfuShm::ShmWriterStatus DepLibSfuShm::SfuShmCtx::SetSsrcInShmConf(uint32_t
 void DepLibSfuShm::SfuShmCtx::InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio)
 {
   MS_TRACE();
+
+  memset( &wrt_init, 0, sizeof(sfushm_av_writer_init_t));
 
   stream_name.assign(shm);
   log_name.assign(log);
@@ -137,7 +134,7 @@ int DepLibSfuShm::SfuShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, DepLibSfuS
       break;
 
     case DepLibSfuShm::ShmChunkType::RTCP:
-      // TODO: err = sfushm_av_write_rtcp(wr_ctx, data);
+      //err = sfushm_av_write_rtcp(wrt_ctx, data);
       break;
 
     default:
@@ -152,6 +149,62 @@ int DepLibSfuShm::SfuShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, DepLibSfuS
   return 0;
 }
 
+int  DepLibSfuShm::SfuShmCtx::WriteRtcpPacket(sfushm_av_rtcp_msg_t* msg)
+{
+  if (Status() != SHM_WRT_READY)
+  {
+    return 0;
+  }
+  
+  int err = sfushm_av_write_rtcp(wrt_ctx, msg);
+  
+  if (IsError(err))
+  {
+    MS_WARN_TAG(rtp, "ERROR writing RTCP Sender Report to shm: %d - %s", err, GetErrorString(err));
+    return -1;
+  }
+  
+  return 0;
+}
+
+int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, DepLibSfuShm::ShmChunkType kind)
+{
+  if (Status() != SHM_WRT_READY)
+  {
+    return 0;
+  }
+  int err;
+  uint32_t ssrc;
+
+  switch(kind)
+  {
+    case DepLibSfuShm::ShmChunkType::AUDIO:
+    ssrc = ssrc_a;
+    break;
+
+    case DepLibSfuShm::ShmChunkType::VIDEO:
+    ssrc = ssrc_v;
+    break;
+
+    default:
+      return 0;
+  }
+
+  auto ntp = Utils::Time::TimeMs2Ntp(lastSenderReportNtpMs);
+  auto ntp_sec = ntp.seconds;
+  auto ntp_frac = ntp.fractions;
+
+	MS_DEBUG_TAG(rtp, "RTCP SR: SSRC=%d NTP(ms)=%" PRIu64 "(%" PRIu32 "/%" PRIu32 ") RtpTs=%" PRIu32, ssrc, lastSenderReportNtpMs, ntp_sec, ntp_frac, lastSenderReporTs);
+
+  err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, ntp_sec, ntp_frac, lastSenderReporTs, ssrc);
+
+  if (IsError(err))
+  {
+    MS_WARN_TAG(rtp, "ERROR writing RTCP Sender Report to shm: %d - %s", err, GetErrorString(err));
+    return -1;
+  }
+  return 0;
+}
 
 int DepLibSfuShm::SfuShmCtx::WriteStreamMetadata(uint8_t *data, size_t len)
 {

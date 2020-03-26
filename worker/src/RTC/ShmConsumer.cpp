@@ -150,11 +150,16 @@ namespace RTC
 			return;
 		}
 		else {
-			uint64_t lastSenderReportNtpMs = this->producerRtpStream->GetSenderReportNtpMs(); // NTP timestamp in last Sender Report (in ms).
+			uint64_t lastSenderReportNtpMs = this->producerRtpStream->GetSenderReportNtpMs(); // NTP timestamp in last Sender Report (in ms)
 			uint32_t lastSenderReporTs     = this->producerRtpStream->GetSenderReportTs();    // RTP timestamp in last Sender Report.
 
-			//TODO: need sfu shm API to write this data
-			MS_DEBUG_TAG(rtp, "RTCP SR: NTP(ms)=%" PRIu64 " RtpTs=%" PRIu32, lastSenderReportNtpMs, lastSenderReporTs);
+			if (DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY != shmCtx->Status())
+			{
+				return;
+			}
+			
+			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
+			shmCtx->WriteRtcpSenderReportTs(lastSenderReportNtpMs, lastSenderReporTs, kind);
 		}
 	}
 
@@ -265,43 +270,34 @@ namespace RTC
 
 		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm
 
-		uint8_t const* pdata = packet->GetData();
-		uint8_t const* cdata = packet->GetPayload();
-		uint8_t* data        = const_cast<uint8_t*>(cdata);
-		size_t len           = packet->GetPayloadLength();
-		uint64_t ts          = static_cast<uint64_t>(packet->GetTimestamp());
-		uint64_t seq         = static_cast<uint64_t>(packet->GetSequenceNumber());
-		uint32_t ssrc        = packet->GetSsrc();
+		uint8_t const* pktdata = packet->GetData();
+		uint8_t const* cdata   = packet->GetPayload();
+		uint8_t* data          = const_cast<uint8_t*>(cdata);
+		size_t len             = packet->GetPayloadLength();
+		uint64_t ts            = static_cast<uint64_t>(packet->GetTimestamp());
+		uint64_t seq           = static_cast<uint64_t>(packet->GetSequenceNumber());
+		uint32_t ssrc          = packet->GetSsrc();
 
 		std::memset(&chunk, 0, sizeof(chunk));
 
 		switch (this->GetKind())
 		{
+			/* Just write out the payload	*/
 			case RTC::Media::Kind::AUDIO:
 			{
 				ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::AUDIO);
 				seq = shmCtx->AdjustPktSeq(seq, DepLibSfuShm::ShmChunkType::AUDIO);
-				/* Just write out the whole opus packet without parsing into separate opus frames.
-					+----------+--------------+
-					|RTP Header| Opus Payload |
-					+----------+--------------+	*/
-				size_t offset{ 1 };
-
-				this->chunk.data = data + offset;
-				this->chunk.len = len - offset;
+				this->chunk.data = data;
+				this->chunk.len = len;
 				this->chunk.rtp_time = ts;
 				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 				this->chunk.ssrc = packet->GetSsrc();
 				this->chunk.begin = this->chunk.end = 1;
-
 				if(0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc()))
 				{
-					//MS_WARN_TAG(rtp, "FAIL writing audio pkt to shm: len %zu ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 					return false;
 				}
-				
 				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::AUDIO);
-				
 				break;
 			} // audio
 
@@ -310,60 +306,58 @@ namespace RTC
 				ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::VIDEO);
 				seq = shmCtx->AdjustPktSeq(seq, DepLibSfuShm::ShmChunkType::VIDEO);
 
-				uint8_t nal = *cdata & 0x1F;
-				uint8_t marker = pdata[1] & 0x80; // Marker bit indicates the last or the only NALU in this packet is the end of the picture data
+				uint8_t nal = *(data) & 0x1F;
+				uint8_t marker = *(pktdata + 1) & 0x80; // Marker bit indicates the last or the only NALU in this packet is the end of the picture data
 
 				// If the first video pkt, or pkt's timestamp is different from the previous video pkt written out
  				int begin_picture = (shmCtx->IsSeqUnset(DepLibSfuShm::ShmChunkType::VIDEO)) || (ts > shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
 
+				// Single NAL unit packet
+				if (nal >= 1 && nal <= 23)
+			  {
+					if (len < 1) {
+						MS_WARN_TAG(rtp, "NALU data len < 1: %lu", len);
+						break;
+					}
 
-					// Single NAL unit packet
-					if (nal >= 1 && nal <= 23)  {
-						size_t offset{ 1 };
-						if (len < 1) {
-							MS_WARN_TAG(rtp, "NALU data len < 1: %lu", len);
-							break;
-						}
-						
-						//uint8_t subnal   = *(data + offset) & 0x1F;
-						uint16_t chunksize = len - offset;
+					//Add Annex B 0x00000001 to the begininng of this packet: overwrite 3 or 4 bytes from the PTP pkt header
+					uint16_t chunksize = len;
+					if (begin_picture)
+					{
+						data[-1] = 0x01;
+						data[-2] = 0x00;
+						data[-3] = 0x00;
+						data[-4] = 0x00;
+						data -= 4;
+						chunksize += 4;
+					}
+					else {
+						data[-1] = 0x01;
+						data[-2] = 0x00;
+						data[-3] = 0x00;
+						data -= 3;
+						chunksize += 3;
+					}
+				
+					this->chunk.data          = data;
+					this->chunk.len           = chunksize;
+					this->chunk.rtp_time      = ts;
+					this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
+					this->chunk.ssrc          = ssrc;
+					this->chunk.begin         = begin_picture;
+					this->chunk.end           = (marker != 0);
 
-						//TODO: Add Annex B 0x00000001 to the begininng of this packet will overwrite pkt header data b/c we need 3 more bytes, see whether it is okay to do i.e. that data will not be used for anything else?
-						if (begin_picture)
-						{
-							data[offset - 1] = 0x01;
-							data[offset - 2] = 0x00;
-							data[offset - 3] = 0x00;
-							data[offset - 4] = 0x00;
-							offset -= 4;
-							chunksize += 4;
-						}
-						else {
-							data[offset - 1] = 0x01;
-							data[offset - 2] = 0x00;
-							data[offset - 3] = 0x00;
-							offset -= 3;
-							chunksize += 3;
-						}
-					
-						this->chunk.data          = const_cast<uint8_t*>(cdata + offset);
-						this->chunk.len           = chunksize;
-						this->chunk.rtp_time      = ts;
-						this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
-						this->chunk.ssrc          = ssrc;
-						this->chunk.begin         = begin_picture;
-						this->chunk.end           = (marker != 0);
-
-						MS_DEBUG_TAG(rtp, "video single NALU=%d%s len %zu ts %" PRIu64 " seq %" PRIu64 " begin_picture=%d end_picture=%d lastTs=%" PRIu64 " ts > lastTs is %s",
-							nal, 
-							(UINT64_UNSET == this->chunk.first_rtp_seq) ? " (seq UINT64_UNSET)" : "",
-							this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, begin_picture, marker, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), (ts > shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO)) ? "true" : "false");
-
-						if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
-						{
-							MS_WARN_TAG(rtp, "FAIL writing video NALU: len %" PRIu32 " ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-							return false;
-						}
+					//if (nal == 7 || nal == 8) { // dbg output for SPS or PPS only
+					MS_DEBUG_TAG(rtp, "video single NALU=%d%s len %zu ts %" PRIu64 " seq %" PRIu64 " begin_picture=%d end_picture=%d lastTs=%" PRIu64 " ts > lastTs is %s",
+						nal, 
+						(UINT64_UNSET == this->chunk.first_rtp_seq) ? " (seq UINT64_UNSET)" : "",
+						this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, begin_picture, marker, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), (ts > shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO)) ? "true" : "false");
+				//	}
+					if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
+					{
+						MS_WARN_TAG(rtp, "FAIL writing video NALU: len %" PRIu32 " ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						return false;
+					}
 				}
 				else {
 					switch (nal)
@@ -393,61 +387,57 @@ namespace RTC
 						case 24:
 						{
 							size_t offset{ 1 }; // Skip over STAP-A NAL header
-							size_t leftLen = len - 1 - sizeof(uint16_t) - 1; // skip over STAP-A NAL header, NALU size and NALU header
 							
 							// Iterate NAL units.
-							while (leftLen > 1)
+							while (offset < len - 3) // need to be able to read 2 bytes of NALU size
 							{
-								uint16_t chunksize;
-								uint16_t naluSize  = Utils::Byte::Get2Bytes(data, offset); 
+								uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset); 
+								if ( offset + naluSize > len) {
+									MS_WARN_TAG(rtp, "payload left to read from STAP-A is shorter than NALU size or just too short: %" PRIu32" > %" PRIu16, offset + naluSize, len);
+									break;
+								}
 
-								// Check if there is room for the indicated NAL unit size.
-								if (leftLen < naluSize || leftLen < 4) {
-									MS_WARN_TAG(rtp, "payload left to read from STAP-A is shorter than NALU size or just too short: %" PRIu32"<%" PRIu16, leftLen, naluSize);
-									break; // okay to have up to 4 bytes of padding
+								offset += 2; // skip over NALU size
+								uint8_t subnal = *(data + offset) & 0x1F; //for debugging only, NAL type
+
+								//Add Annex B
+								uint16_t chunksize = naluSize;
+								this->chunk.end = (marker != 0) && (offset + chunksize >= len - 3);
+								if (begin_picture) {
+									this->chunk.begin = 1;
+									data[offset - 1] = 0x01;
+									data[offset - 2] = 0x00;
+									data[offset - 3] = 0x00;
+									data[offset - 4] = 0x00;
+									begin_picture = 0;
+									offset -= 4;
+									chunksize += 4;
 								}
 								else {
-									offset += sizeof(naluSize) + 1; // skip over NALU size and NALU header
-									chunksize = naluSize - 1;
-
-									if (begin_picture) {
-										data[offset - 1] = 0x01;
-										data[offset - 2] = 0x00;
-										data[offset - 3] = 0x00;
-										data[offset - 4] = 0x00;
-										begin_picture = 0;
-										this->chunk.begin = 1;
-										offset -= 4;
-										chunksize += 4;
-									}
-									else {
-										data[offset - 1] = 0x01;
-										data[offset - 2] = 0x00;
-										data[offset - 3] = 0x00;
-										this->chunk.begin = 0;
-										offset -= 3;
-										chunksize += 3;
-									}
-
-									this->chunk.data          = data + offset;
-									this->chunk.len           = chunksize;
-									this->chunk.rtp_time      = ts; // all NALUs share the same timestamp, https://tools.ietf.org/html/rfc6184#section-5.7.1
-									this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
-									this->chunk.ssrc          = ssrc;
-									this->chunk.end           = (offset + chunksize >= len - 3) /* 3 is max length of RTP padding observed so far */ && (marker != 0); // if last unit in payload and marker indicates end of picture data. 
-
-									MS_DEBUG_TAG(rtp, "video STAP-A: payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64,
-										len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
-									
-									if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
-									{
-										MS_WARN_TAG(rtp, "FAIL writing STAP-A pkt to shm: len %zu ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-										return false;
-									}
+									this->chunk.begin = 0;
+									data[offset - 1] = 0x01;
+									data[offset - 2] = 0x00;
+									data[offset - 3] = 0x00;
+									offset -= 3;
+									chunksize += 3;
 								}
 
-								offset += chunksize; // start reading at the next NALU size
-								leftLen -= naluSize - 1;
+								this->chunk.data          = data + offset;
+								this->chunk.len           = chunksize;
+								this->chunk.rtp_time      = ts; // NALUs share timestamp, https://tools.ietf.org/html/rfc6184#section-5.7.1
+								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
+								this->chunk.ssrc          = ssrc;
+
+								MS_DEBUG_TAG(rtp, "video STAP-A: nal=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64,
+									subnal, len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
+								
+								if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
+								{
+									MS_WARN_TAG(rtp, "FAIL writing STAP-A pkt to shm: len %zu ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+									return false;
+								}
+								
+								offset += chunksize;
 							}
 							break;
 						}
@@ -476,47 +466,64 @@ namespace RTC
 							// Parse FU header octet
 							uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates the starting fragment
 							uint8_t endBit   = *(data + 1) & 0x40; // 2nd bit indicates the ending fragment
-							uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header, subtype of FU unit, if (subnal == 7 (SPS) && startBit == 128) then we have a key frame
+							uint8_t fuInd    = *(data) & 0xE0;     // 3 first bytes of FU indicator, use to compose NAL header for the beginning fragment 
+							uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header subtype of FU unit, use to compose NAL header for the beginning fragment, also if (subnal == 7 (SPS) && startBit == 128) then we have a key frame
 
-							size_t offset{ 2 };
-							size_t chunksize = len - 2;
-							
-							if (shmCtx->IsTsUnset(DepLibSfuShm::ShmChunkType::VIDEO) || ts == shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO))
-								begin_picture = 0;
-
+							size_t chunksize = len - 1; // skip over FU indicator
 							if (startBit == 128)
 							{
+								// Write AnnexB marker and put NAL header in place of FU header
+								data[1] = fuInd + subnal;
 								if (begin_picture)
 								{
-									data[offset - 1] = 0x01;
-									data[offset - 2] = 0x00;
-									data[offset - 3] = 0x00;
-									data[offset - 4] = 0x00;
+									data[0]  = 0x01;
+									data[-1] = 0x00;
+									data[-2] = 0x00;
+									data[-3] = 0x00;
 									this->chunk.begin = 1;
-									offset -= 4;
-									chunksize += 4;
+									begin_picture = 0;
+									data -= 3;
+									chunksize += 3;
 								}
 								else
 								{
-									data[offset - 1] = 0x01;
-									data[offset - 2] = 0x00;
-									data[offset - 3] = 0x00;
+									data[0]  = 0x01;
+									data[-1] = 0x00;
+									data[-2] = 0x00;
 									this->chunk.begin  = 0;
-									offset -= 3;
 									chunksize += 3;
 								}
 							}
+							else {
+								// if not the beginning fragment, discard FU indicator and FU header...
+								// Note from https://stackoverflow.com/questions/3493742/problem-to-decode-h264-video-over-rtp-with-ffmpeg-libavcodec:
+								// I might have to skip only 1 byte, not 2. TRY THAT
+								//data += 2;
+								//chunksize -= 2;
+								data += 1;
+								chunksize -= 1;
+								this->chunk.begin = 0;
+							}
 
-							this->chunk.data          = data + offset;
+							this->chunk.data          = data;
 							this->chunk.len           = chunksize;
 							this->chunk.rtp_time      = ts;
 							this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 							this->chunk.ssrc          = ssrc;
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
 							
-							MS_DEBUG_TAG(rtp, "video FU-A%s: len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " subnal=%" PRIu8 " startBit=%" PRIu8 " end_marker=%" PRIu8 "%s%s",
-								(UINT64_UNSET == this->chunk.first_rtp_seq) ? " (seq UINT64_UNSET)" : "",
-								this->chunk.len, this->chunk.rtp_time, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), this->chunk.first_rtp_seq, subnal, startBit, marker, this->chunk.begin ? " begin" : "", this->chunk.end ? " end": "");
+							MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 "%s%s",
+								subnal, 
+								this->chunk.len, 
+								this->chunk.rtp_time,
+								shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
+								this->chunk.first_rtp_seq,
+								startBit,
+								endBit,
+								marker,
+								this->chunk.begin ? " begin" : "",
+								this->chunk.end ? " end": "");
+							
 							if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
 							{
 								MS_WARN_TAG(rtp, "FAIL writing FU-A pkt to shm: len=%zu ts=%" PRIu64 " seq=%" PRIu64 "%s%s", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, this->chunk.begin ? " begin" : "", this->chunk.end ? " end": "");

@@ -2,7 +2,6 @@
 #define MS_RTC_SHM_CONSUMER_HPP
 
 #include "json.hpp"
-#include "sfushm_av_media.h"
 #include "DepLibSfuShm.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"

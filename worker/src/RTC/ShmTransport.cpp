@@ -326,23 +326,11 @@ namespace RTC
 		if (!IsFullyConnected())
 			return;
 
-		uint8_t const* data = packet->GetData();
-		size_t len          = packet->GetSize();
-
-		//TODO: write it out into shm, separate channel
-		this->chunk.data = const_cast<uint8_t*> (data);
-		this->chunk.len = len;
-		this->chunk.rtp_time = 0; // packet->GetTimestamp(); TODO: RTCP packets don't seem to have timestamps or seqIds
-		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0; // TODO: what instead of packet->GetSequenceNumber()?
-		this->chunk.begin = this->chunk.end = 1;
-
-		this->shmCtx.WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::RTCP);
-
 		// Increase send transmission.
-		RTC::Transport::DataSent(len);
+		RTC::Transport::DataSent(packet->GetSize());
 	}
 
-	// Note: according to https://tools.ietf.org/html/rfc3550#section-6.1 all RTCP packets are compound
+
 	void ShmTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();
@@ -350,21 +338,8 @@ namespace RTC
 		if (!IsFullyConnected())
 			return;
 
-		uint8_t const* data = packet->GetData();
-		size_t len          = packet->GetSize();
-
-		// write it out into shm, separate channel
-		this->chunk.data = const_cast<uint8_t*> (data);
-		this->chunk.len = len;
-		this->chunk.rtp_time = 0;
-		this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = 0;
-		this->chunk.begin = this->chunk.end = 1;
-
-		// How to check for validity looping thru all packets in a compound packet: https://tools.ietf.org/html/rfc3550#appendix-A.2
-		this->shmCtx.WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::RTCP);
-
 		// Increase send transmission.
-		RTC::Transport::DataSent(len);
+		RTC::Transport::DataSent(packet->GetSize());
 	}
 
 

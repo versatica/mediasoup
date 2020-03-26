@@ -1,7 +1,11 @@
 #ifndef DEP_LIBSFUSHM_HPP
 #define DEP_LIBSFUSHM_HPP
 
-#include <sfushm_av_media.h>
+//#include <sfushm_av_media.h>
+extern "C" 
+{
+#include "/root/build/ff_shm_api/include/sfushm_av_media.h"
+}
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -55,6 +59,8 @@ public:
     uint64_t LastSeq(DepLibSfuShm::ShmChunkType kind) const;
 
     int WriteChunk(sfushm_av_frame_frag_t* data, DepLibSfuShm::ShmChunkType kind = DepLibSfuShm::ShmChunkType::UNDEFINED, uint32_t ssrc = 0);
+    int WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, DepLibSfuShm::ShmChunkType kind);
+    int WriteRtcpPacket(sfushm_av_rtcp_msg_t* msg);
     int WriteStreamMetadata(uint8_t *data, size_t len);
 
 	  bool IsError(int err_code);
@@ -68,7 +74,9 @@ public:
     uint64_t           last_seq_a;   // last RTP sequence processed by this input
 	  uint64_t           last_ts_a;    // the timestamp of the last processed RTP message  
     uint64_t           last_seq_v;   // last RTP sequence processed by this input
-	  uint64_t           last_ts_v;    // the timestamp of the last processed RTP message  
+	  uint64_t           last_ts_v;    // the timestamp of the last processed RTP message
+    uint32_t           ssrc_v;       // ssrc of audio chn
+    uint32_t           ssrc_a;       // ssrc of video chn
   
     int                last_err {0}; // 
   
