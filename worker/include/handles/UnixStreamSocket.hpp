@@ -42,9 +42,15 @@ public:
 
 public:
 	void Close();
-	bool IsClosed() const;
+	bool IsClosed() const
+	{
+		return this->closed;
+	}
 	void Write(const uint8_t* data, size_t len);
-	void Write(const std::string& data);
+	void Write(const std::string& data)
+	{
+		Write(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
+	}
 
 	/* Callbacks fired by UV events. */
 public:
@@ -67,24 +73,12 @@ private:
 
 protected:
 	// Passed by argument.
-	size_t bufferSize{ 0 };
+	size_t bufferSize{ 0u };
 	UnixStreamSocket::Role role;
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.
-	size_t bufferDataLen{ 0 };
+	size_t bufferDataLen{ 0u };
 };
-
-/* Inline methods. */
-
-inline bool UnixStreamSocket::IsClosed() const
-{
-	return this->closed;
-}
-
-inline void UnixStreamSocket::Write(const std::string& data)
-{
-	Write(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
-}
 
 #endif

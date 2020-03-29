@@ -13,14 +13,6 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		bool CanBeKeyFrame(const RTC::RtpCodecMimeType& mimeType);
-		void ProcessRtpPacket(RTC::RtpPacket* packet, const RTC::RtpCodecMimeType& mimeType);
-		bool IsValidTypeForCodec(RTC::RtpParameters::Type type, const RTC::RtpCodecMimeType& mimeType);
-		EncodingContext* GetEncodingContext(
-		  const RTC::RtpCodecMimeType& mimeType, uint8_t spatialLayers, uint8_t temporalLayers);
-
-		/* Inline namespace methods. */
-
 		inline bool CanBeKeyFrame(const RTC::RtpCodecMimeType& mimeType)
 		{
 			switch (mimeType.type)
@@ -42,6 +34,45 @@ namespace RTC
 				{
 					return false;
 				}
+			}
+		}
+
+		inline void ProcessRtpPacket(RTC::RtpPacket* packet, const RTC::RtpCodecMimeType& mimeType)
+		{
+			MS_TRACE();
+
+			switch (mimeType.type)
+			{
+				case RTC::RtpCodecMimeType::Type::VIDEO:
+				{
+					switch (mimeType.subtype)
+					{
+						case RTC::RtpCodecMimeType::Subtype::VP8:
+						{
+							RTC::Codecs::VP8::ProcessRtpPacket(packet);
+
+							break;
+						}
+
+						case RTC::RtpCodecMimeType::Subtype::VP9:
+						{
+							RTC::Codecs::VP9::ProcessRtpPacket(packet);
+
+							break;
+						}
+
+						case RTC::RtpCodecMimeType::Subtype::H264:
+						{
+							RTC::Codecs::H264::ProcessRtpPacket(packet);
+
+							break;
+						}
+
+						default:;
+					}
+				}
+
+				default:;
 			}
 		}
 
