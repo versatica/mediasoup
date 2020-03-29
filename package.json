@@ -56,7 +56,7 @@
     "uuid": "^7.0.2"
   },
   "devDependencies": {
-    "@types/node": "^13.9.3",
+    "@types/node": "^13.9.5",
     "@types/random-number": "0.0.0",
     "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
@@ -66,9 +66,9 @@
     "eslint-plugin-jest": "^23.8.2",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
-    "jest": "^25.1.0",
+    "jest": "^25.2.4",
     "jest-tobetype": "^1.2.3",
-    "open-cli": "^6.0.0",
+    "open-cli": "^6.0.1",
     "sctp": "^0.0.19",
     "tsc-watch": "^4.2.3",
     "typescript": "^3.8.3"
