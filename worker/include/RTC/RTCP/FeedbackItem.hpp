@@ -48,14 +48,12 @@ namespace RTC
 
 		inline FeedbackItem::~FeedbackItem()
 		{
-			if (this->raw)
-				delete[] this->raw;
+			delete[] this->raw;
 		}
 
 		inline void FeedbackItem::Serialize()
 		{
-			if (this->raw)
-				delete[] this->raw;
+			delete[] this->raw;
 
 			this->raw = new uint8_t[this->GetSize()];
 			this->Serialize(this->raw);

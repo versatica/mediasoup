@@ -194,6 +194,7 @@ namespace RTC
 			goto error;
 		}
 
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
 		ret = EVP_PKEY_assign_EC_KEY(DtlsTransport::privateKey, ecKey);
 
 		if (ret == 0)
