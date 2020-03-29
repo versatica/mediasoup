@@ -47,7 +47,10 @@ namespace RTC
 		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 		void Pause() override;
 		void Resume() override;
-		uint32_t GetBitrate(uint64_t nowMs) override;
+		uint32_t GetBitrate(uint64_t nowMs) override
+		{
+			return this->transmissionCounter.GetBitrate(nowMs);
+		}
 		uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 		uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) override;
 		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
@@ -61,22 +64,15 @@ namespace RTC
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
 	private:
-		uint32_t lostPriorScore{ 0 }; // Packets lost at last interval for score calculation.
-		uint32_t sentPriorScore{ 0 }; // Packets sent at last interval for score calculation.
+		uint32_t lostPriorScore{ 0u }; // Packets lost at last interval for score calculation.
+		uint32_t sentPriorScore{ 0u }; // Packets sent at last interval for score calculation.
 		std::vector<StorageItem*> buffer;
-		uint16_t bufferStartIdx{ 0 };
-		size_t bufferSize{ 0 };
+		uint16_t bufferStartIdx{ 0u };
+		size_t bufferSize{ 0u };
 		std::vector<StorageItem> storage;
-		uint16_t rtxSeq{ 0 };
+		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;
 	};
-
-	/* Inline instance methods */
-
-	inline uint32_t RtpStreamSend::GetBitrate(uint64_t nowMs)
-	{
-		return this->transmissionCounter.GetBitrate(nowMs);
-	}
 } // namespace RTC
 
 #endif

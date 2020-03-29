@@ -21,10 +21,22 @@ namespace RTC
 		};
 
 	public:
-		static uv_udp_t* BindUdp(std::string& ip);
-		static uv_tcp_t* BindTcp(std::string& ip);
-		static void UnbindUdp(std::string& ip, uint16_t port);
-		static void UnbindTcp(std::string& ip, uint16_t port);
+		static uv_udp_t* BindUdp(std::string& ip)
+		{
+			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip));
+		}
+		static uv_tcp_t* BindTcp(std::string& ip)
+		{
+			return reinterpret_cast<uv_tcp_t*>(Bind(Transport::TCP, ip));
+		}
+		static void UnbindUdp(std::string& ip, uint16_t port)
+		{
+			return Unbind(Transport::UDP, ip, port);
+		}
+		static void UnbindTcp(std::string& ip, uint16_t port)
+		{
+			return Unbind(Transport::TCP, ip, port);
+		}
 		static void FillJson(json& jsonObject);
 
 	private:
@@ -36,28 +48,6 @@ namespace RTC
 		static std::unordered_map<std::string, std::vector<bool>> mapUdpIpPorts;
 		static std::unordered_map<std::string, std::vector<bool>> mapTcpIpPorts;
 	};
-
-	/* Inline static methods. */
-
-	inline uv_udp_t* PortManager::BindUdp(std::string& ip)
-	{
-		return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip));
-	}
-
-	inline uv_tcp_t* PortManager::BindTcp(std::string& ip)
-	{
-		return reinterpret_cast<uv_tcp_t*>(Bind(Transport::TCP, ip));
-	}
-
-	inline void PortManager::UnbindUdp(std::string& ip, uint16_t port)
-	{
-		return Unbind(Transport::UDP, ip, port);
-	}
-
-	inline void PortManager::UnbindTcp(std::string& ip, uint16_t port)
-	{
-		return Unbind(Transport::TCP, ip, port);
-	}
 } // namespace RTC
 
 #endif

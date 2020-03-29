@@ -53,7 +53,10 @@ namespace RTC
 		virtual ~TransportCongestionControlClient();
 
 	public:
-		RTC::BweType GetBweType() const;
+		RTC::BweType GetBweType() const
+		{
+			return this->bweType;
+		}
 		void TransportConnected();
 		void TransportDisconnected();
 		void InsertPacket(webrtc::RtpPacketSendInfo& packetInfo);
@@ -63,7 +66,10 @@ namespace RTC
 		void ReceiveRtcpReceiverReport(const webrtc::RTCPReportBlock& report, float rtt, uint64_t nowMs);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void SetDesiredBitrate(uint32_t desiredBitrate, bool force);
-		const Bitrates& GetBitrates() const;
+		const Bitrates& GetBitrates() const
+		{
+			return this->bitrates;
+		}
 		uint32_t GetAvailableBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
 
@@ -102,18 +108,6 @@ namespace RTC
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		RTC::TrendCalculator desiredBitrateTrend;
 	};
-
-	/* Inline instance methods. */
-
-	inline RTC::BweType TransportCongestionControlClient::GetBweType() const
-	{
-		return this->bweType;
-	}
-
-	inline const RTC::TransportCongestionControlClient::Bitrates& TransportCongestionControlClient::GetBitrates() const
-	{
-		return this->bitrates;
-	}
 } // namespace RTC
 
 #endif

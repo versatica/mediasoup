@@ -50,7 +50,17 @@ namespace RTC
 		};
 
 	public:
-		static bool IsSctp(const uint8_t* data, size_t len);
+		static bool IsSctp(const uint8_t* data, size_t len)
+		{
+			// clang-format off
+			return (
+				(len >= 12) &&
+				// Must have Source Port Number and Destination Port Number set to 5000 (hack).
+				(Utils::Byte::Get2Bytes(data, 0) == 5000) &&
+				(Utils::Byte::Get2Bytes(data, 2) == 5000)
+			);
+			// clang-format on
+		}
 
 	public:
 		SctpAssociation(
@@ -60,8 +70,14 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void TransportConnected();
-		size_t GetMaxSctpMessageSize() const;
-		SctpState GetState() const;
+		size_t GetMaxSctpMessageSize() const
+		{
+			return this->maxSctpMessageSize;
+		}
+		SctpState GetState() const
+		{
+			return this->state;
+		}
 		void ProcessSctpData(const uint8_t* data, size_t len);
 		void SendSctpMessage(RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len);
 		void HandleDataConsumer(RTC::DataConsumer* dataConsumer);
@@ -82,45 +98,19 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		uint16_t os{ 1024 };
-		uint16_t mis{ 1024 };
-		size_t maxSctpMessageSize{ 262144 };
+		uint16_t os{ 1024u };
+		uint16_t mis{ 1024u };
+		size_t maxSctpMessageSize{ 262144u };
 		bool isDataChannel{ false };
 		// Allocated by this.
 		uint8_t* messageBuffer{ nullptr };
 		// Others.
 		SctpState state{ SctpState::NEW };
 		struct socket* socket{ nullptr };
-		uint16_t desiredOs{ 0 };
-		size_t messageBufferLen{ 0 };
-		uint16_t lastSsnReceived{ 0 }; // Valid for us since no SCTP I-DATA support.
+		uint16_t desiredOs{ 0u };
+		size_t messageBufferLen{ 0u };
+		uint16_t lastSsnReceived{ 0u }; // Valid for us since no SCTP I-DATA support.
 	};
-
-	/* Inline static methods. */
-
-	inline bool SctpAssociation::IsSctp(const uint8_t* data, size_t len)
-	{
-		// clang-format off
-		return (
-			(len >= 12) &&
-			// Must have Source Port Number and Destination Port Number set to 5000 (hack).
-			(Utils::Byte::Get2Bytes(data, 0) == 5000) &&
-			(Utils::Byte::Get2Bytes(data, 2) == 5000)
-		);
-		// clang-format on
-	}
-
-	/* Inline instance methods. */
-
-	inline size_t SctpAssociation::GetMaxSctpMessageSize() const
-	{
-		return this->maxSctpMessageSize;
-	}
-
-	inline SctpAssociation::SctpState SctpAssociation::GetState() const
-	{
-		return this->state;
-	}
 } // namespace RTC
 
 #endif

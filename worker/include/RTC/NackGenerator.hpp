@@ -25,7 +25,9 @@ namespace RTC
 		struct NackInfo
 		{
 			NackInfo() = default;
-			explicit NackInfo(uint16_t seq, uint16_t sendAtSeq);
+			explicit NackInfo(uint16_t seq, uint16_t sendAtSeq) : seq(seq), sendAtSeq(sendAtSeq)
+			{
+			}
 
 			uint16_t seq{ 0u };
 			uint16_t sendAtSeq{ 0u };
@@ -44,8 +46,14 @@ namespace RTC
 		~NackGenerator() override;
 
 		bool ReceivePacket(RTC::RtpPacket* packet, bool isRecovered);
-		size_t GetNackListLength() const;
-		void UpdateRtt(uint32_t rtt);
+		size_t GetNackListLength() const
+		{
+			return this->nackList.size();
+		}
+		void UpdateRtt(uint32_t rtt)
+		{
+			this->rtt = rtt;
+		}
 		void Reset();
 
 	private:
@@ -71,23 +79,6 @@ namespace RTC
 		uint16_t lastSeq{ 0u }; // Seq number of last valid packet.
 		uint32_t rtt{ 0u };     // Round trip time (ms).
 	};
-
-	// Inline instance methods.
-
-	inline void NackGenerator::UpdateRtt(uint32_t rtt)
-	{
-		this->rtt = rtt;
-	}
-
-	inline NackGenerator::NackInfo::NackInfo(uint16_t seq, uint16_t sendAtSeq)
-	  : seq(seq), sendAtSeq(sendAtSeq)
-	{
-	}
-
-	inline size_t NackGenerator::GetNackListLength() const
-	{
-		return this->nackList.size();
-	}
 } // namespace RTC
 
 #endif

@@ -33,50 +33,44 @@ namespace RTC
 		};
 
 	public:
-		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority);
-		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority, std::string& announcedIp);
-		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority);
-		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority, std::string& announcedIp);
+		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
+		  : foundation("udpcandidate"), priority(priority), ip(udpSocket->GetLocalIp()),
+		    protocol(Protocol::UDP), port(udpSocket->GetLocalPort()), type(CandidateType::HOST)
+		{
+		}
+
+		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority, std::string& announcedIp)
+		  : foundation("udpcandidate"), priority(priority), ip(announcedIp), protocol(Protocol::UDP),
+		    port(udpSocket->GetLocalPort()), type(CandidateType::HOST)
+		{
+		}
+
+		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority)
+		  : foundation("tcpcandidate"), priority(priority), ip(tcpServer->GetLocalIp()),
+		    protocol(Protocol::TCP), port(tcpServer->GetLocalPort()), type(CandidateType::HOST),
+		    tcpType(TcpCandidateType::PASSIVE)
+		{
+		}
+
+		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority, std::string& announcedIp)
+		  : foundation("tcpcandidate"), priority(priority), ip(announcedIp), protocol(Protocol::TCP),
+		    port(tcpServer->GetLocalPort()), type(CandidateType::HOST),
+		    tcpType(TcpCandidateType::PASSIVE)
+		{
+		}
 
 		void FillJson(json& jsonObject) const;
 
 	private:
 		// Others.
 		std::string foundation;
-		uint32_t priority{ 0 };
+		uint32_t priority{ 0u };
 		std::string ip;
 		Protocol protocol;
-		uint16_t port{ 0 };
+		uint16_t port{ 0u };
 		CandidateType type{ CandidateType::HOST };
 		TcpCandidateType tcpType{ TcpCandidateType::PASSIVE };
 	};
-
-	/* Inline methods. */
-
-	inline IceCandidate::IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
-	  : foundation("udpcandidate"), priority(priority), ip(udpSocket->GetLocalIp()),
-	    protocol(Protocol::UDP), port(udpSocket->GetLocalPort()), type(CandidateType::HOST)
-	{
-	}
-
-	inline IceCandidate::IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority, std::string& announcedIp)
-	  : foundation("udpcandidate"), priority(priority), ip(announcedIp), protocol(Protocol::UDP),
-	    port(udpSocket->GetLocalPort()), type(CandidateType::HOST)
-	{
-	}
-
-	inline IceCandidate::IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority)
-	  : foundation("tcpcandidate"), priority(priority), ip(tcpServer->GetLocalIp()),
-	    protocol(Protocol::TCP), port(tcpServer->GetLocalPort()), type(CandidateType::HOST),
-	    tcpType(TcpCandidateType::PASSIVE)
-	{
-	}
-
-	inline IceCandidate::IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority, std::string& announcedIp)
-	  : foundation("tcpcandidate"), priority(priority), ip(announcedIp), protocol(Protocol::TCP),
-	    port(tcpServer->GetLocalPort()), type(CandidateType::HOST), tcpType(TcpCandidateType::PASSIVE)
-	{
-	}
 } // namespace RTC
 
 #endif
