@@ -190,7 +190,7 @@
       'include/RTC/TrendCalculator.hpp',
       'include/RTC/UdpSocket.hpp',
       'include/RTC/WebRtcTransport.hpp',
-      'include/RTC/Codecs/Codecs.hpp',
+      'include/RTC/Codecs/Tools.hpp',
       'include/RTC/Codecs/PayloadDescriptorHandler.hpp',
       'include/RTC/Codecs/H264.hpp',
       'include/RTC/Codecs/VP8.hpp',

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_CODECS_COMMON_HPP
-#define MS_RTC_CODECS_COMMON_HPP
+#ifndef MS_RTC_CODECS_TOOLS_HPP
+#define MS_RTC_CODECS_TOOLS_HPP
 
 #include "common.hpp"
 #include "RTC/Codecs/H264.hpp"
@@ -13,7 +13,7 @@ namespace RTC
 {
 	namespace Codecs
 	{
-		class Common
+		class Tools
 		{
 		public:
 			static bool CanBeKeyFrame(const RTC::RtpCodecMimeType& mimeType)
