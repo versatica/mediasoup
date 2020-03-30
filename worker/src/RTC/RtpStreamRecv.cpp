@@ -250,7 +250,7 @@ namespace RTC
 
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
-			RTC::Codecs::ProcessRtpPacket(packet, GetMimeType());
+			RTC::Codecs::Common::ProcessRtpPacket(packet, GetMimeType());
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)
@@ -370,7 +370,7 @@ namespace RTC
 
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
-			RTC::Codecs::ProcessRtpPacket(packet, GetMimeType());
+			RTC::Codecs::Common::ProcessRtpPacket(packet, GetMimeType());
 
 		// Mark the packet as retransmitted.
 		RTC::RtpStream::PacketRetransmitted(packet);

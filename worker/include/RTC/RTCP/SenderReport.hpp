@@ -27,27 +27,73 @@ namespace RTC
 			static SenderReport* Parse(const uint8_t* data, size_t len);
 
 		public:
-			// Parsed Report. Points to an external data.
-			explicit SenderReport(Header* header);
-			explicit SenderReport(SenderReport* report);
 			// Locally generated Report. Holds the data internally.
-			SenderReport();
+			SenderReport()
+			{
+				this->header = reinterpret_cast<Header*>(this->raw);
+			}
+			// Parsed Report. Points to an external data.
+			explicit SenderReport(Header* header) : header(header)
+			{
+			}
+			explicit SenderReport(SenderReport* report) : header(report->header)
+			{
+			}
 
 			void Dump() const;
 			size_t Serialize(uint8_t* buffer);
-			size_t GetSize() const;
-			uint32_t GetSsrc() const;
-			void SetSsrc(uint32_t ssrc);
-			uint32_t GetNtpSec() const;
-			void SetNtpSec(uint32_t ntpSec);
-			uint32_t GetNtpFrac() const;
-			void SetNtpFrac(uint32_t ntpFrac);
-			uint32_t GetRtpTs() const;
-			void SetRtpTs(uint32_t rtpTs);
-			uint32_t GetPacketCount() const;
-			void SetPacketCount(uint32_t packetCount);
-			uint32_t GetOctetCount() const;
-			void SetOctetCount(uint32_t octetCount);
+			size_t GetSize() const
+			{
+				return sizeof(Header);
+			}
+			uint32_t GetSsrc() const
+			{
+				return uint32_t{ ntohl(this->header->ssrc) };
+			}
+			void SetSsrc(uint32_t ssrc)
+			{
+				this->header->ssrc = uint32_t{ htonl(ssrc) };
+			}
+			uint32_t GetNtpSec() const
+			{
+				return uint32_t{ ntohl(this->header->ntpSec) };
+			}
+			void SetNtpSec(uint32_t ntpSec)
+			{
+				this->header->ntpSec = uint32_t{ htonl(ntpSec) };
+			}
+			uint32_t GetNtpFrac() const
+			{
+				return uint32_t{ ntohl(this->header->ntpFrac) };
+			}
+			void SetNtpFrac(uint32_t ntpFrac)
+			{
+				this->header->ntpFrac = uint32_t{ htonl(ntpFrac) };
+			}
+			uint32_t GetRtpTs() const
+			{
+				return uint32_t{ ntohl(this->header->rtpTs) };
+			}
+			void SetRtpTs(uint32_t rtpTs)
+			{
+				this->header->rtpTs = uint32_t{ htonl(rtpTs) };
+			}
+			uint32_t GetPacketCount() const
+			{
+				return uint32_t{ ntohl(this->header->packetCount) };
+			}
+			void SetPacketCount(uint32_t packetCount)
+			{
+				this->header->packetCount = uint32_t{ htonl(packetCount) };
+			}
+			uint32_t GetOctetCount() const
+			{
+				return uint32_t{ ntohl(this->header->octetCount) };
+			}
+			void SetOctetCount(uint32_t octetCount)
+			{
+				this->header->octetCount = uint32_t{ htonl(octetCount) };
+			}
 
 		private:
 			Header* header{ nullptr };
@@ -63,154 +109,56 @@ namespace RTC
 			static SenderReportPacket* Parse(const uint8_t* data, size_t len);
 
 		public:
-			SenderReportPacket();
-			explicit SenderReportPacket(CommonHeader* commonHeader);
-			~SenderReportPacket() override;
+			SenderReportPacket() : Packet(Type::SR)
+			{
+			}
+			explicit SenderReportPacket(CommonHeader* commonHeader) : Packet(commonHeader)
+			{
+			}
+			~SenderReportPacket() override
+			{
+				for (auto* report : this->reports)
+				{
+					delete report;
+				}
+			}
 
-			void AddReport(SenderReport* report);
-			Iterator Begin();
-			Iterator End();
+			void AddReport(SenderReport* report)
+			{
+				this->reports.push_back(report);
+			}
+			Iterator Begin()
+			{
+				return this->reports.begin();
+			}
+			Iterator End()
+			{
+				return this->reports.end();
+			}
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetCount() const override;
-			size_t GetSize() const override;
+			size_t GetCount() const override
+			{
+				return 0;
+			}
+			size_t GetSize() const override
+			{
+				size_t size = sizeof(Packet::CommonHeader);
+
+				for (auto* report : this->reports)
+				{
+					size += report->GetSize();
+				}
+
+				return size;
+			}
 
 		private:
 			std::vector<SenderReport*> reports;
 		};
-
-		/* Inline instance methods. */
-
-		inline SenderReport::SenderReport()
-		{
-			this->header = reinterpret_cast<Header*>(this->raw);
-		}
-
-		inline SenderReport::SenderReport(Header* header) : header(header)
-		{
-		}
-
-		inline SenderReport::SenderReport(SenderReport* report) : header(report->header)
-		{
-		}
-
-		inline size_t SenderReport::GetSize() const
-		{
-			return sizeof(Header);
-		}
-
-		inline uint32_t SenderReport::GetSsrc() const
-		{
-			return uint32_t{ ntohl(this->header->ssrc) };
-		}
-
-		inline void SenderReport::SetSsrc(uint32_t ssrc)
-		{
-			this->header->ssrc = uint32_t{ htonl(ssrc) };
-		}
-
-		inline uint32_t SenderReport::GetNtpSec() const
-		{
-			return uint32_t{ ntohl(this->header->ntpSec) };
-		}
-
-		inline void SenderReport::SetNtpSec(uint32_t ntpSec)
-		{
-			this->header->ntpSec = uint32_t{ htonl(ntpSec) };
-		}
-
-		inline uint32_t SenderReport::GetNtpFrac() const
-		{
-			return uint32_t{ ntohl(this->header->ntpFrac) };
-		}
-
-		inline void SenderReport::SetNtpFrac(uint32_t ntpFrac)
-		{
-			this->header->ntpFrac = uint32_t{ htonl(ntpFrac) };
-		}
-
-		inline uint32_t SenderReport::GetRtpTs() const
-		{
-			return uint32_t{ ntohl(this->header->rtpTs) };
-		}
-
-		inline void SenderReport::SetRtpTs(uint32_t rtpTs)
-		{
-			this->header->rtpTs = uint32_t{ htonl(rtpTs) };
-		}
-
-		inline uint32_t SenderReport::GetPacketCount() const
-		{
-			return uint32_t{ ntohl(this->header->packetCount) };
-		}
-
-		inline void SenderReport::SetPacketCount(uint32_t packetCount)
-		{
-			this->header->packetCount = uint32_t{ htonl(packetCount) };
-		}
-
-		inline uint32_t SenderReport::GetOctetCount() const
-		{
-			return uint32_t{ ntohl(this->header->octetCount) };
-		}
-
-		inline void SenderReport::SetOctetCount(uint32_t octetCount)
-		{
-			this->header->octetCount = uint32_t{ htonl(octetCount) };
-		}
-
-		/* Inline instance methods. */
-
-		inline SenderReportPacket::SenderReportPacket() : Packet(Type::SR)
-		{
-		}
-
-		inline SenderReportPacket::SenderReportPacket(CommonHeader* commonHeader) : Packet(commonHeader)
-		{
-		}
-
-		inline SenderReportPacket::~SenderReportPacket()
-		{
-			for (auto* report : this->reports)
-			{
-				delete report;
-			}
-		}
-
-		inline size_t SenderReportPacket::GetCount() const
-		{
-			return 0;
-		}
-
-		inline size_t SenderReportPacket::GetSize() const
-		{
-			size_t size = sizeof(Packet::CommonHeader);
-
-			for (auto* report : this->reports)
-			{
-				size += report->GetSize();
-			}
-
-			return size;
-		}
-
-		inline void SenderReportPacket::AddReport(SenderReport* report)
-		{
-			this->reports.push_back(report);
-		}
-
-		inline SenderReportPacket::Iterator SenderReportPacket::Begin()
-		{
-			return this->reports.begin();
-		}
-
-		inline SenderReportPacket::Iterator SenderReportPacket::End()
-		{
-			return this->reports.end();
-		}
 	} // namespace RTCP
 } // namespace RTC
 

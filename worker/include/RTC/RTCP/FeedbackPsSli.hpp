@@ -34,18 +34,39 @@ namespace RTC
 			FeedbackPsSliItem(uint16_t first, uint16_t number, uint8_t pictureId);
 			~FeedbackPsSliItem() override = default;
 
-			uint16_t GetFirst() const;
-			void SetFirst(uint16_t first);
-			uint16_t GetNumber() const;
-			void SetNumber(uint16_t number);
-			uint8_t GetPictureId() const;
-			void SetPictureId(uint8_t pictureId);
+			uint16_t GetFirst() const
+			{
+				return this->first;
+			}
+			void SetFirst(uint16_t first)
+			{
+				this->first = first;
+			}
+			uint16_t GetNumber() const
+			{
+				return this->number;
+			}
+			void SetNumber(uint16_t number)
+			{
+				this->number = number;
+			}
+			uint8_t GetPictureId() const
+			{
+				return this->pictureId;
+			}
+			void SetPictureId(uint8_t pictureId)
+			{
+				this->pictureId = pictureId;
+			}
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetSize() const override;
+			size_t GetSize() const override
+			{
+				return sizeof(Header);
+			}
 
 		private:
 			Header* header{ nullptr };
@@ -56,43 +77,6 @@ namespace RTC
 
 		// Sli packet declaration.
 		using FeedbackPsSliPacket = FeedbackPsItemsPacket<FeedbackPsSliItem>;
-
-		/* Inline instance methods. */
-
-		inline size_t FeedbackPsSliItem::GetSize() const
-		{
-			return sizeof(Header);
-		}
-
-		inline uint16_t FeedbackPsSliItem::GetFirst() const
-		{
-			return this->first;
-		}
-
-		inline void FeedbackPsSliItem::SetFirst(uint16_t first)
-		{
-			this->first = first;
-		}
-
-		inline uint16_t FeedbackPsSliItem::GetNumber() const
-		{
-			return this->number;
-		}
-
-		inline void FeedbackPsSliItem::SetNumber(uint16_t number)
-		{
-			this->number = number;
-		}
-
-		inline uint8_t FeedbackPsSliItem::GetPictureId() const
-		{
-			return this->pictureId;
-		}
-
-		inline void FeedbackPsSliItem::SetPictureId(uint8_t pictureId)
-		{
-			this->pictureId = pictureId;
-		}
 	} // namespace RTCP
 } // namespace RTC
 

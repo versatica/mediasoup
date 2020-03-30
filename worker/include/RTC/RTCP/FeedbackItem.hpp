@@ -11,17 +11,39 @@ namespace RTC
 		{
 		public:
 			template<typename Item>
-			static Item* Parse(const uint8_t* data, size_t len);
+			static Item* Parse(const uint8_t* data, size_t len)
+			{
+				// data size must be >= header.
+				if (sizeof(typename Item::Header) > len)
+					return nullptr;
+
+				auto* header =
+				  const_cast<typename Item::Header*>(reinterpret_cast<const typename Item::Header*>(data));
+
+				return new Item(header);
+			}
 
 		public:
-			bool IsCorrect() const;
+			bool IsCorrect() const
+			{
+				return this->isCorrect;
+			}
 
 		protected:
-			virtual ~FeedbackItem();
+			virtual ~FeedbackItem()
+			{
+				delete[] this->raw;
+			}
 
 		public:
 			virtual void Dump() const = 0;
-			virtual void Serialize();
+			virtual void Serialize()
+			{
+				delete[] this->raw;
+
+				this->raw = new uint8_t[this->GetSize()];
+				this->Serialize(this->raw);
+			}
 			virtual size_t Serialize(uint8_t* buffer) = 0;
 			virtual size_t GetSize() const            = 0;
 
@@ -29,40 +51,6 @@ namespace RTC
 			uint8_t* raw{ nullptr };
 			bool isCorrect{ true };
 		};
-
-		/* Inline static methods */
-		template<typename Item>
-		Item* FeedbackItem::Parse(const uint8_t* data, size_t len)
-		{
-			// data size must be >= header.
-			if (sizeof(typename Item::Header) > len)
-				return nullptr;
-
-			auto* header =
-			  const_cast<typename Item::Header*>(reinterpret_cast<const typename Item::Header*>(data));
-
-			return new Item(header);
-		}
-
-		/* Inline instance methods */
-
-		inline FeedbackItem::~FeedbackItem()
-		{
-			delete[] this->raw;
-		}
-
-		inline void FeedbackItem::Serialize()
-		{
-			delete[] this->raw;
-
-			this->raw = new uint8_t[this->GetSize()];
-			this->Serialize(this->raw);
-		}
-
-		inline bool FeedbackItem::IsCorrect() const
-		{
-			return this->isCorrect;
-		}
 	} // namespace RTCP
 } // namespace RTC
 

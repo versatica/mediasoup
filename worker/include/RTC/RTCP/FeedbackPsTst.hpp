@@ -37,20 +37,36 @@ namespace RTC
 			static const FeedbackPs::MessageType messageType;
 
 		public:
-			explicit FeedbackPsTstItem(Header* header);
-			explicit FeedbackPsTstItem(FeedbackPsTstItem* item);
+			explicit FeedbackPsTstItem(Header* header) : header(header)
+			{
+			}
+			explicit FeedbackPsTstItem(FeedbackPsTstItem* item) : header(item->header)
+			{
+			}
 			FeedbackPsTstItem(uint32_t ssrc, uint8_t sequenceNumber, uint8_t index);
 			~FeedbackPsTstItem() override = default;
 
-			uint32_t GetSsrc() const;
-			uint8_t GetSequenceNumber() const;
-			uint8_t GetIndex() const;
+			uint32_t GetSsrc() const
+			{
+				return uint32_t{ ntohl(this->header->ssrc) };
+			}
+			uint8_t GetSequenceNumber() const
+			{
+				return static_cast<uint8_t>(this->header->sequenceNumber);
+			}
+			uint8_t GetIndex() const
+			{
+				return static_cast<uint8_t>(this->header->index);
+			}
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetSize() const override;
+			size_t GetSize() const override
+			{
+				return sizeof(Header);
+			}
 
 		private:
 			Header* header{ nullptr };
@@ -71,42 +87,6 @@ namespace RTC
 		// Tst packets declaration.
 		using FeedbackPsTstrPacket = FeedbackPsItemsPacket<FeedbackPsTstrItem>;
 		using FeedbackPsTstnPacket = FeedbackPsItemsPacket<FeedbackPsTstnItem>;
-
-		/* Inline instance methods. */
-
-		template<typename T>
-		inline FeedbackPsTstItem<T>::FeedbackPsTstItem(Header* header) : header(header)
-		{
-		}
-
-		template<typename T>
-		inline FeedbackPsTstItem<T>::FeedbackPsTstItem(FeedbackPsTstItem* item) : header(item->header)
-		{
-		}
-
-		template<typename T>
-		inline size_t FeedbackPsTstItem<T>::GetSize() const
-		{
-			return sizeof(Header);
-		}
-
-		template<typename T>
-		inline uint32_t FeedbackPsTstItem<T>::GetSsrc() const
-		{
-			return uint32_t{ ntohl(this->header->ssrc) };
-		}
-
-		template<typename T>
-		inline uint8_t FeedbackPsTstItem<T>::GetSequenceNumber() const
-		{
-			return static_cast<uint8_t>(this->header->sequenceNumber);
-		}
-
-		template<typename T>
-		inline uint8_t FeedbackPsTstItem<T>::GetIndex() const
-		{
-			return static_cast<uint8_t>(this->header->index);
-		}
 	} // namespace RTCP
 } // namespace RTC
 

@@ -24,7 +24,7 @@ namespace RTC
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::Codecs::Common::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();

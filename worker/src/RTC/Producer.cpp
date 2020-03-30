@@ -49,7 +49,7 @@ namespace RTC
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		if (!RTC::Codecs::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
+		if (!RTC::Codecs::Common::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
 		{
 			MS_THROW_TYPE_ERROR(
 			  "%s codec not supported for %s",

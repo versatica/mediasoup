@@ -38,19 +38,32 @@ namespace RTC
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::FIR };
 
 		public:
-			explicit FeedbackPsFirItem(Header* header);
-			explicit FeedbackPsFirItem(FeedbackPsFirItem* item);
+			explicit FeedbackPsFirItem(Header* header) : header(header)
+			{
+			}
+			explicit FeedbackPsFirItem(FeedbackPsFirItem* item) : header(item->header)
+			{
+			}
 			FeedbackPsFirItem(uint32_t ssrc, uint8_t sequenceNumber);
 			~FeedbackPsFirItem() override = default;
 
-			uint32_t GetSsrc() const;
-			uint8_t GetSequenceNumber() const;
+			uint32_t GetSsrc() const
+			{
+				return uint32_t{ ntohl(this->header->ssrc) };
+			}
+			uint8_t GetSequenceNumber() const
+			{
+				return this->header->sequenceNumber;
+			}
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetSize() const override;
+			size_t GetSize() const override
+			{
+				return sizeof(Header);
+			}
 
 		private:
 			Header* header{ nullptr };
@@ -58,31 +71,6 @@ namespace RTC
 
 		// Fir packet declaration.
 		using FeedbackPsFirPacket = FeedbackPsItemsPacket<FeedbackPsFirItem>;
-
-		/* Inline instance methods. */
-
-		inline FeedbackPsFirItem::FeedbackPsFirItem(Header* header) : header(header)
-		{
-		}
-
-		inline FeedbackPsFirItem::FeedbackPsFirItem(FeedbackPsFirItem* item) : header(item->header)
-		{
-		}
-
-		inline size_t FeedbackPsFirItem::GetSize() const
-		{
-			return sizeof(Header);
-		}
-
-		inline uint32_t FeedbackPsFirItem::GetSsrc() const
-		{
-			return uint32_t{ ntohl(this->header->ssrc) };
-		}
-
-		inline uint8_t FeedbackPsFirItem::GetSequenceNumber() const
-		{
-			return this->header->sequenceNumber;
-		}
 	} // namespace RTCP
 } // namespace RTC
 
