@@ -45,12 +45,32 @@ namespace RTC
 
 	public:
 		void ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple);
-		const std::string& GetUsernameFragment() const;
-		const std::string& GetPassword() const;
-		IceState GetState() const;
-		RTC::TransportTuple* GetSelectedTuple() const;
-		void SetUsernameFragment(const std::string& usernameFragment);
-		void SetPassword(const std::string& password);
+		const std::string& GetUsernameFragment() const
+		{
+			return this->usernameFragment;
+		}
+		const std::string& GetPassword() const
+		{
+			return this->password;
+		}
+		IceState GetState() const
+		{
+			return this->state;
+		}
+		RTC::TransportTuple* GetSelectedTuple() const
+		{
+			return this->selectedTuple;
+		}
+		void SetUsernameFragment(const std::string& usernameFragment)
+		{
+			this->oldUsernameFragment = this->usernameFragment;
+			this->usernameFragment    = usernameFragment;
+		}
+		void SetPassword(const std::string& password)
+		{
+			this->oldPassword = this->password;
+			this->password    = password;
+		}
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
 		// This should be just called in 'connected' or completed' state
@@ -85,40 +105,6 @@ namespace RTC
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };
 	};
-
-	/* Inline instance methods. */
-
-	inline const std::string& IceServer::GetUsernameFragment() const
-	{
-		return this->usernameFragment;
-	}
-
-	inline const std::string& IceServer::GetPassword() const
-	{
-		return this->password;
-	}
-
-	inline IceServer::IceState IceServer::GetState() const
-	{
-		return this->state;
-	}
-
-	inline RTC::TransportTuple* IceServer::GetSelectedTuple() const
-	{
-		return this->selectedTuple;
-	}
-
-	inline void IceServer::SetUsernameFragment(const std::string& usernameFragment)
-	{
-		this->oldUsernameFragment = this->usernameFragment;
-		this->usernameFragment    = usernameFragment;
-	}
-
-	inline void IceServer::SetPassword(const std::string& password)
-	{
-		this->oldPassword = this->password;
-		this->password    = password;
-	}
 } // namespace RTC
 
 #endif

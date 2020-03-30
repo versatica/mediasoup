@@ -17,7 +17,10 @@ namespace RTC
 	public:
 		void Pause();
 		void Resume();
-		bool IsPaused() const;
+		bool IsPaused() const
+		{
+			return this->paused;
+		}
 		virtual void AddProducer(RTC::Producer* producer)                              = 0;
 		virtual void RemoveProducer(RTC::Producer* producer)                           = 0;
 		virtual void ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
@@ -36,11 +39,6 @@ namespace RTC
 		// Others.
 		bool paused{ false };
 	};
-
-	inline bool RtpObserver::IsPaused() const
-	{
-		return this->paused;
-	}
 } // namespace RTC
 
 #endif

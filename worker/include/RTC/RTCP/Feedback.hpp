@@ -29,18 +29,39 @@ namespace RTC
 			static std::map<typename T::MessageType, std::string> type2String;
 
 		public:
-			typename T::MessageType GetMessageType() const;
-			uint32_t GetSenderSsrc() const;
-			void SetSenderSsrc(uint32_t ssrc);
-			uint32_t GetMediaSsrc() const;
-			void SetMediaSsrc(uint32_t ssrc);
+			typename T::MessageType GetMessageType() const
+			{
+				return this->messageType;
+			}
+			uint32_t GetSenderSsrc() const
+			{
+				return uint32_t{ ntohl(this->header->senderSsrc) };
+			}
+			void SetSenderSsrc(uint32_t ssrc)
+			{
+				this->header->senderSsrc = uint32_t{ htonl(ssrc) };
+			}
+			uint32_t GetMediaSsrc() const
+			{
+				return uint32_t{ ntohl(this->header->mediaSsrc) };
+			}
+			void SetMediaSsrc(uint32_t ssrc)
+			{
+				this->header->mediaSsrc = uint32_t{ htonl(ssrc) };
+			}
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetCount() const override;
-			size_t GetSize() const override;
+			size_t GetCount() const override
+			{
+				return static_cast<size_t>(GetMessageType());
+			}
+			size_t GetSize() const override
+			{
+				return sizeof(CommonHeader) + sizeof(Header);
+			}
 
 		protected:
 			explicit FeedbackPacket(CommonHeader* commonHeader);
@@ -92,50 +113,6 @@ namespace RTC
 
 		using FeedbackPsPacket  = FeedbackPacket<RTC::RTCP::FeedbackPs>;
 		using FeedbackRtpPacket = FeedbackPacket<RTC::RTCP::FeedbackRtp>;
-
-		/* Inline instance methods. */
-
-		template<typename T>
-		inline typename T::MessageType FeedbackPacket<T>::GetMessageType() const
-		{
-			return this->messageType;
-		}
-
-		template<typename T>
-		inline size_t FeedbackPacket<T>::GetCount() const
-		{
-			return static_cast<size_t>(this->GetMessageType());
-		}
-
-		template<typename T>
-		inline size_t FeedbackPacket<T>::GetSize() const
-		{
-			return sizeof(CommonHeader) + sizeof(Header);
-		}
-
-		template<typename T>
-		inline uint32_t FeedbackPacket<T>::GetSenderSsrc() const
-		{
-			return uint32_t{ ntohl(this->header->senderSsrc) };
-		}
-
-		template<typename T>
-		inline void FeedbackPacket<T>::SetSenderSsrc(uint32_t ssrc)
-		{
-			this->header->senderSsrc = uint32_t{ htonl(ssrc) };
-		}
-
-		template<typename T>
-		inline uint32_t FeedbackPacket<T>::GetMediaSsrc() const
-		{
-			return uint32_t{ ntohl(this->header->mediaSsrc) };
-		}
-
-		template<typename T>
-		inline void FeedbackPacket<T>::SetMediaSsrc(uint32_t ssrc)
-		{
-			this->header->mediaSsrc = uint32_t{ htonl(ssrc) };
-		}
 	} // namespace RTCP
 } // namespace RTC
 

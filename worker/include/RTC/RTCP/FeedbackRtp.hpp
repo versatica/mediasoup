@@ -20,77 +20,53 @@ namespace RTC
 
 		public:
 			// Parsed Report. Points to an external data.
-			explicit FeedbackRtpItemsPacket(CommonHeader* commonHeader);
-			explicit FeedbackRtpItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0);
-			~FeedbackRtpItemsPacket();
+			explicit FeedbackRtpItemsPacket(CommonHeader* commonHeader) : FeedbackRtpPacket(commonHeader)
+			{
+			}
+			explicit FeedbackRtpItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0)
+			  : FeedbackRtpPacket(Item::messageType, senderSsrc, mediaSsrc)
+			{
+			}
+			~FeedbackRtpItemsPacket()
+			{
+				for (auto* item : this->items)
+				{
+					delete item;
+				}
+			}
 
-			void AddItem(Item* item);
-			Iterator Begin();
-			Iterator End();
+			void AddItem(Item* item)
+			{
+				this->items.push_back(item);
+			}
+			Iterator Begin()
+			{
+				return this->items.begin();
+			}
+			Iterator End()
+			{
+				return this->items.end();
+			}
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetSize() const override;
+			size_t GetSize() const override
+			{
+				size_t size = FeedbackRtpPacket::GetSize();
+
+				for (auto* item : this->items)
+				{
+					size += item->GetSize();
+				}
+
+				return size;
+			}
 
 		private:
 			std::vector<Item*> items;
 		};
-
-		/* Inline instance methods. */
-
-		template<typename Item>
-		inline FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(CommonHeader* commonHeader)
-		  : FeedbackRtpPacket(commonHeader)
-		{
-		}
-
-		template<typename Item>
-		inline FeedbackRtpItemsPacket<Item>::FeedbackRtpItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
-		  : FeedbackRtpPacket(Item::messageType, senderSsrc, mediaSsrc)
-		{
-		}
-
-		template<typename Item>
-		FeedbackRtpItemsPacket<Item>::~FeedbackRtpItemsPacket()
-		{
-			for (auto* item : this->items)
-			{
-				delete item;
-			}
-		}
-
-		template<typename Item>
-		inline size_t FeedbackRtpItemsPacket<Item>::GetSize() const
-		{
-			size_t size = FeedbackRtpPacket::GetSize();
-
-			for (auto* item : this->items)
-			{
-				size += item->GetSize();
-			}
-
-			return size;
-		}
-
-		template<typename Item>
-		inline void FeedbackRtpItemsPacket<Item>::AddItem(Item* item)
-		{
-			this->items.push_back(item);
-		}
-
-		template<typename Item>
-		inline typename FeedbackRtpItemsPacket<Item>::Iterator FeedbackRtpItemsPacket<Item>::Begin()
-		{
-			return this->items.begin();
-		}
-
-		template<typename Item>
-		inline typename FeedbackRtpItemsPacket<Item>::Iterator FeedbackRtpItemsPacket<Item>::End()
-		{
-			return this->items.end();
-		}
 	} // namespace RTCP
 } // namespace RTC
 

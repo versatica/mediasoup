@@ -56,10 +56,22 @@ namespace RTC
 		void RequestKeyFrame();
 		void Pause() override;
 		void Resume() override;
-		uint32_t GetBitrate(uint64_t nowMs) override;
-		uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
-		uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) override;
-		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
+		uint32_t GetBitrate(uint64_t nowMs) override
+		{
+			return this->transmissionCounter.GetBitrate(nowMs);
+		}
+		uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+		{
+			return this->transmissionCounter.GetBitrate(nowMs, spatialLayer, temporalLayer);
+		}
+		uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) override
+		{
+			return this->transmissionCounter.GetSpatialLayerBitrate(nowMs, spatialLayer);
+		}
+		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+		{
+			return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
+		}
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
@@ -75,48 +87,25 @@ namespace RTC
 		void OnNackGeneratorKeyFrameRequired() override;
 
 	private:
-		uint32_t expectedPrior{ 0 };      // Packets expected at last interval.
-		uint32_t expectedPriorScore{ 0 }; // Packets expected at last interval for score calculation.
-		uint32_t receivedPrior{ 0 };      // Packets received at last interval.
-		uint32_t receivedPriorScore{ 0 }; // Packets received at last interval for score calculation.
-		uint32_t lastSrTimestamp{ 0 };    // The middle 32 bits out of 64 in the NTP
-		                                  // timestamp received in the most recent
-		                                  // sender report.
-		uint64_t lastSrReceived{ 0 };     // Wallclock time representing the most recent
-		                                  // sender report arrival.
-		uint32_t transit{ 0 };            // Relative transit time for prev packet.
-		uint32_t jitter{ 0 };
-		uint8_t firSeqNumber{ 0 };
-		uint32_t reportedPacketLost{ 0 };
+		uint32_t expectedPrior{ 0u };      // Packets expected at last interval.
+		uint32_t expectedPriorScore{ 0u }; // Packets expected at last interval for score calculation.
+		uint32_t receivedPrior{ 0u };      // Packets received at last interval.
+		uint32_t receivedPriorScore{ 0u }; // Packets received at last interval for score calculation.
+		uint32_t lastSrTimestamp{ 0u };    // The middle 32 bits out of 64 in the NTP
+		                                   // timestamp received in the most recent
+		                                   // sender report.
+		uint64_t lastSrReceived{ 0u };     // Wallclock time representing the most recent
+		                                   // sender report arrival.
+		uint32_t transit{ 0u };            // Relative transit time for prev packet.
+		uint32_t jitter{ 0u };
+		uint8_t firSeqNumber{ 0u };
+		uint32_t reportedPacketLost{ 0u };
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		Timer* inactivityCheckPeriodicTimer{ nullptr };
 		bool inactive{ false };
 		TransmissionCounter transmissionCounter;      // Valid media + valid RTX.
 		RTC::RtpDataCounter mediaTransmissionCounter; // Just valid media.
 	};
-
-	/* Inline instance methods */
-
-	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t nowMs)
-	{
-		return this->transmissionCounter.GetBitrate(nowMs);
-	}
-
-	inline uint32_t RtpStreamRecv::GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
-	{
-		return this->transmissionCounter.GetBitrate(nowMs, spatialLayer, temporalLayer);
-	}
-
-	inline uint32_t RtpStreamRecv::GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer)
-	{
-		return this->transmissionCounter.GetSpatialLayerBitrate(nowMs, spatialLayer);
-	}
-
-	inline uint32_t RtpStreamRecv::GetLayerBitrate(
-	  uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
-	{
-		return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
-	}
 } // namespace RTC
 
 #endif

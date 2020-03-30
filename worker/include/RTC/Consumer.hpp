@@ -67,18 +67,60 @@ namespace RTC
 		virtual void FillJsonStats(json& jsonArray) const  = 0;
 		virtual void FillJsonScore(json& jsonObject) const = 0;
 		virtual void HandleRequest(Channel::Request* request);
-		RTC::Media::Kind GetKind() const;
-		const RTC::RtpParameters& GetRtpParameters() const;
-		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
-		RTC::RtpParameters::Type GetType() const;
-		virtual Layers GetPreferredLayers() const;
-		const std::vector<uint32_t>& GetMediaSsrcs() const;
-		const std::vector<uint32_t>& GetRtxSsrcs() const;
-		virtual bool IsActive() const;
+		RTC::Media::Kind GetKind() const
+		{
+			return this->kind;
+		}
+		const RTC::RtpParameters& GetRtpParameters() const
+		{
+			return this->rtpParameters;
+		}
+		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		{
+			return this->rtpHeaderExtensionIds;
+		}
+		RTC::RtpParameters::Type GetType() const
+		{
+			return this->type;
+		}
+		virtual Layers GetPreferredLayers() const
+		{
+			// By default return 1:1.
+			Consumer::Layers layers;
+
+			return layers;
+		}
+		const std::vector<uint32_t>& GetMediaSsrcs() const
+		{
+			return this->mediaSsrcs;
+		}
+		const std::vector<uint32_t>& GetRtxSsrcs() const
+		{
+			return this->rtxSsrcs;
+		}
+		virtual bool IsActive() const
+		{
+			// The parent Consumer just checks whether Consumer and Producer are
+			// not paused and the transport connected.
+			// clang-format off
+			return (
+				this->transportConnected &&
+				!this->paused &&
+				!this->producerPaused &&
+				!this->producerClosed
+			);
+			// clang-format on
+		}
 		void TransportConnected();
 		void TransportDisconnected();
-		bool IsPaused() const;
-		bool IsProducerPaused() const;
+		bool IsPaused() const
+		{
+			return this->paused;
+		}
+		bool IsProducerPaused() const
+		{
+			return this->producerPaused;
+		}
 		void ProducerPaused();
 		void ProducerResumed();
 		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
@@ -87,7 +129,10 @@ namespace RTC
 		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
 		virtual void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) = 0;
 		void ProducerClosed();
-		void SetExternallyManagedBitrate();
+		void SetExternallyManagedBitrate()
+		{
+			this->externallyManagedBitrate = true;
+		}
 		virtual uint8_t GetBitratePriority() const                          = 0;
 		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) = 0;
 		virtual void ApplyLayers()                                          = 0;
@@ -146,75 +191,6 @@ namespace RTC
 		bool producerPaused{ false };
 		bool producerClosed{ false };
 	};
-
-	/* Inline methods. */
-
-	inline RTC::Media::Kind Consumer::GetKind() const
-	{
-		return this->kind;
-	}
-
-	inline const RTC::RtpParameters& Consumer::GetRtpParameters() const
-	{
-		return this->rtpParameters;
-	}
-
-	inline const struct RTC::RtpHeaderExtensionIds& Consumer::GetRtpHeaderExtensionIds() const
-	{
-		return this->rtpHeaderExtensionIds;
-	}
-
-	inline RTC::RtpParameters::Type Consumer::GetType() const
-	{
-		return this->type;
-	}
-
-	inline Consumer::Layers Consumer::GetPreferredLayers() const
-	{
-		// By default return 1:1.
-		Consumer::Layers layers;
-
-		return layers;
-	}
-
-	inline const std::vector<uint32_t>& Consumer::GetMediaSsrcs() const
-	{
-		return this->mediaSsrcs;
-	}
-
-	inline const std::vector<uint32_t>& Consumer::GetRtxSsrcs() const
-	{
-		return this->rtxSsrcs;
-	}
-
-	inline bool Consumer::IsActive() const
-	{
-		// The parent Consumer just checks whether Consumer and Producer are
-		// not paused and the transport connected.
-		// clang-format off
-		return (
-			this->transportConnected &&
-			!this->paused &&
-			!this->producerPaused &&
-			!this->producerClosed
-		);
-		// clang-format on
-	}
-
-	inline bool Consumer::IsPaused() const
-	{
-		return this->paused;
-	}
-
-	inline bool Consumer::IsProducerPaused() const
-	{
-		return this->producerPaused;
-	}
-
-	inline void Consumer::SetExternallyManagedBitrate()
-	{
-		this->externallyManagedBitrate = true;
-	}
 } // namespace RTC
 
 #endif

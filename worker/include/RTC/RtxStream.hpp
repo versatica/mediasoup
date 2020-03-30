@@ -36,21 +36,48 @@ namespace RTC
 		virtual ~RtxStream();
 
 		void FillJson(json& jsonObject) const;
-		uint32_t GetSsrc() const;
-		uint8_t GetPayloadType() const;
-		const RTC::RtpCodecMimeType& GetMimeType() const;
-		uint32_t GetClockRate() const;
-		const std::string& GetRrid() const;
-		const std::string& GetCname() const;
-		uint8_t GetFractionLost() const;
-		float GetLossPercentage() const;
+		uint32_t GetSsrc() const
+		{
+			return this->params.ssrc;
+		}
+		uint8_t GetPayloadType() const
+		{
+			return this->params.payloadType;
+		}
+		const RTC::RtpCodecMimeType& GetMimeType() const
+		{
+			return this->params.mimeType;
+		}
+		uint32_t GetClockRate() const
+		{
+			return this->params.clockRate;
+		}
+		const std::string& GetRrid() const
+		{
+			return this->params.rrid;
+		}
+		const std::string& GetCname() const
+		{
+			return this->params.cname;
+		}
+		uint8_t GetFractionLost() const
+		{
+			return this->fractionLost;
+		}
+		float GetLossPercentage() const
+		{
+			return static_cast<float>(this->fractionLost) * 100 / 256;
+		}
 		bool ReceivePacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
-		uint32_t GetExpectedPackets() const;
+		uint32_t GetExpectedPackets() const
+		{
+			return (this->cycles + this->maxSeq) - this->baseSeq + 1;
+		}
 
 	private:
 		void InitSeq(uint16_t seq);
@@ -60,74 +87,27 @@ namespace RTC
 		Params params;
 		// Others.
 		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
-		uint16_t maxSeq{ 0 };      // Highest seq. number seen.
-		uint32_t cycles{ 0 };      // Shifted count of seq. number cycles.
-		uint32_t baseSeq{ 0 };     // Base seq number.
-		uint32_t badSeq{ 0 };      // Last 'bad' seq number + 1.
-		uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
-		uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
-		uint32_t packetsLost{ 0 };
-		uint8_t fractionLost{ 0 };
-		size_t packetsDiscarded{ 0 };
-		size_t packetsCount{ 0 };
+		uint16_t maxSeq{ 0u };      // Highest seq. number seen.
+		uint32_t cycles{ 0u };      // Shifted count of seq. number cycles.
+		uint32_t baseSeq{ 0u };     // Base seq number.
+		uint32_t badSeq{ 0u };      // Last 'bad' seq number + 1.
+		uint32_t maxPacketTs{ 0u }; // Highest timestamp seen.
+		uint64_t maxPacketMs{ 0u }; // When the packet with highest timestammp was seen.
+		uint32_t packetsLost{ 0u };
+		uint8_t fractionLost{ 0u };
+		size_t packetsDiscarded{ 0u };
+		size_t packetsCount{ 0u };
 
 	private:
 		// Whether at least a RTP packet has been received.
 		bool started{ false };
 		// Fields for generating Receiver Reports.
-		uint32_t expectedPrior{ 0 };
-		uint32_t receivedPrior{ 0 };
-		uint32_t lastSrTimestamp{ 0 };
-		uint64_t lastSrReceived{ 0 };
-		uint32_t reportedPacketLost{ 0 };
+		uint32_t expectedPrior{ 0u };
+		uint32_t receivedPrior{ 0u };
+		uint32_t lastSrTimestamp{ 0u };
+		uint64_t lastSrReceived{ 0u };
+		uint32_t reportedPacketLost{ 0u };
 	};
-
-	/* Inline instance methods. */
-
-	inline uint32_t RtxStream::GetSsrc() const
-	{
-		return this->params.ssrc;
-	}
-
-	inline uint8_t RtxStream::GetPayloadType() const
-	{
-		return this->params.payloadType;
-	}
-
-	inline const RTC::RtpCodecMimeType& RtxStream::GetMimeType() const
-	{
-		return this->params.mimeType;
-	}
-
-	inline uint32_t RtxStream::GetClockRate() const
-	{
-		return this->params.clockRate;
-	}
-
-	inline const std::string& RtxStream::GetRrid() const
-	{
-		return this->params.rrid;
-	}
-
-	inline const std::string& RtxStream::GetCname() const
-	{
-		return this->params.cname;
-	}
-
-	inline uint8_t RtxStream::GetFractionLost() const
-	{
-		return this->fractionLost;
-	}
-
-	inline float RtxStream::GetLossPercentage() const
-	{
-		return static_cast<float>(this->fractionLost) * 100 / 256;
-	}
-
-	inline uint32_t RtxStream::GetExpectedPackets() const
-	{
-		return (this->cycles + this->maxSeq) - this->baseSeq + 1;
-	}
 } // namespace RTC
 
 #endif

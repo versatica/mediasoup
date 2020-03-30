@@ -28,7 +28,10 @@ namespace RTC
 		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
-		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
+		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override
+		{
+			return this->rtpStreams;
+		}
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
@@ -58,13 +61,6 @@ namespace RTC
 		std::unordered_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
 		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
 	};
-
-	// Inline methods.
-
-	inline std::vector<RTC::RtpStreamSend*> PipeConsumer::GetRtpStreams()
-	{
-		return this->rtpStreams;
-	}
 } // namespace RTC
 
 #endif

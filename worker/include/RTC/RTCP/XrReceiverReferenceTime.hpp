@@ -34,71 +34,54 @@ namespace RTC
 			static ReceiverReferenceTime* Parse(const uint8_t* data, size_t len);
 
 		public:
-			// Parsed Report. Points to an external data.
-			explicit ReceiverReferenceTime(CommonHeader* header);
 			// Locally generated Report. Holds the data internally.
-			ReceiverReferenceTime();
+			ReceiverReferenceTime() : ExtendedReportBlock(RTCP::ExtendedReportBlock::Type::RRT)
+			{
+				this->body = reinterpret_cast<Body*>(this->raw);
+			}
+			// Parsed Report. Points to an external data.
+			explicit ReceiverReferenceTime(CommonHeader* header)
+			  : ExtendedReportBlock(ExtendedReportBlock::Type::RRT)
+			{
+				this->header = header;
+				this->body   = reinterpret_cast<Body*>((header) + 1);
+			}
 
 		public:
-			uint32_t GetNtpSec() const;
-			void SetNtpSec(uint32_t ntpSec);
-			uint32_t GetNtpFrac() const;
-			void SetNtpFrac(uint32_t ntpFrac);
+			uint32_t GetNtpSec() const
+			{
+				return uint32_t{ ntohl(this->body->ntpSec) };
+			}
+			void SetNtpSec(uint32_t ntpSec)
+			{
+				this->body->ntpSec = uint32_t{ htonl(ntpSec) };
+			}
+			uint32_t GetNtpFrac() const
+			{
+				return uint32_t{ ntohl(this->body->ntpFrac) };
+			}
+			void SetNtpFrac(uint32_t ntpFrac)
+			{
+				this->body->ntpFrac = uint32_t{ htonl(ntpFrac) };
+			}
 
 			/* Pure virtual methods inherited from ExtendedReportBlock. */
 		public:
 			virtual void Dump() const override;
 			virtual size_t Serialize(uint8_t* buffer) override;
-			virtual size_t GetSize() const override;
+			virtual size_t GetSize() const override
+			{
+				size_t size{ 4 }; // Common header.
+
+				size += sizeof(Body);
+
+				return size;
+			}
 
 		private:
 			Body* body{ nullptr };
 			uint8_t raw[sizeof(Body)] = { 0 };
 		};
-
-		/* Inline ReceiverReferenceTime instance methods. */
-
-		inline ReceiverReferenceTime::ReceiverReferenceTime()
-		  : ExtendedReportBlock(RTCP::ExtendedReportBlock::Type::RRT)
-		{
-			this->body = reinterpret_cast<Body*>(this->raw);
-		}
-
-		inline ReceiverReferenceTime::ReceiverReferenceTime(CommonHeader* header)
-		  : ExtendedReportBlock(ExtendedReportBlock::Type::RRT)
-		{
-			this->header = header;
-			this->body   = reinterpret_cast<Body*>((header) + 1);
-		}
-
-		inline size_t ReceiverReferenceTime::GetSize() const
-		{
-			size_t size{ 4 }; // Common header.
-
-			size += sizeof(Body);
-
-			return size;
-		}
-
-		inline uint32_t ReceiverReferenceTime::GetNtpSec() const
-		{
-			return uint32_t{ ntohl(this->body->ntpSec) };
-		}
-
-		inline void ReceiverReferenceTime::SetNtpSec(uint32_t ntpSec)
-		{
-			this->body->ntpSec = uint32_t{ htonl(ntpSec) };
-		}
-
-		inline uint32_t ReceiverReferenceTime::GetNtpFrac() const
-		{
-			return uint32_t{ ntohl(this->body->ntpFrac) };
-		}
-
-		inline void ReceiverReferenceTime::SetNtpFrac(uint32_t ntpFrac)
-		{
-			this->body->ntpFrac = uint32_t{ htonl(ntpFrac) };
-		}
 	} // namespace RTCP
 } // namespace RTC
 

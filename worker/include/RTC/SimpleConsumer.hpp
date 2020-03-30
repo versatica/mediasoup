@@ -18,7 +18,16 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
-		bool IsActive() const override;
+		bool IsActive() const override
+		{
+			// clang-format off
+			return (
+				RTC::Consumer::IsActive() &&
+				this->producerRtpStream &&
+				this->producerRtpStream->GetScore() > 0u
+			);
+			// clang-format on
+		}
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
@@ -28,7 +37,10 @@ namespace RTC
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
-		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
+		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override
+		{
+			return this->rtpStreams;
+		}
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
@@ -62,24 +74,6 @@ namespace RTC
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		bool managingBitrate{ false };
 	};
-
-	/* Inline methods. */
-
-	inline bool SimpleConsumer::IsActive() const
-	{
-		// clang-format off
-		return (
-			RTC::Consumer::IsActive() &&
-			this->producerRtpStream &&
-			this->producerRtpStream->GetScore() > 0u
-		);
-		// clang-format on
-	}
-
-	inline std::vector<RTC::RtpStreamSend*> SimpleConsumer::GetRtpStreams()
-	{
-		return this->rtpStreams;
-	}
 } // namespace RTC
 
 #endif

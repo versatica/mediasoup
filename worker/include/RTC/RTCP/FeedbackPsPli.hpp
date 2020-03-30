@@ -15,25 +15,18 @@ namespace RTC
 
 		public:
 			// Parsed Report. Points to an external data.
-			explicit FeedbackPsPliPacket(CommonHeader* commonHeader);
-			FeedbackPsPliPacket(uint32_t senderSsrc, uint32_t mediaSsrc);
+			explicit FeedbackPsPliPacket(CommonHeader* commonHeader) : FeedbackPsPacket(commonHeader)
+			{
+			}
+			FeedbackPsPliPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
+			  : FeedbackPsPacket(FeedbackPs::MessageType::PLI, senderSsrc, mediaSsrc)
+			{
+			}
 			~FeedbackPsPliPacket() override = default;
 
 		public:
 			void Dump() const override;
 		};
-
-		/* Inline instance methods. */
-
-		inline FeedbackPsPliPacket::FeedbackPsPliPacket(CommonHeader* commonHeader)
-		  : FeedbackPsPacket(commonHeader)
-		{
-		}
-
-		inline FeedbackPsPliPacket::FeedbackPsPliPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
-		  : FeedbackPsPacket(FeedbackPs::MessageType::PLI, senderSsrc, mediaSsrc)
-		{
-		}
 	} // namespace RTCP
 } // namespace RTC
 

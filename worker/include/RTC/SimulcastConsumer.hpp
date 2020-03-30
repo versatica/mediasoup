@@ -19,8 +19,31 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
 		void HandleRequest(Channel::Request* request) override;
-		RTC::Consumer::Layers GetPreferredLayers() const override;
-		bool IsActive() const override;
+		RTC::Consumer::Layers GetPreferredLayers() const override
+		{
+			RTC::Consumer::Layers layers;
+
+			layers.spatial  = this->preferredSpatialLayer;
+			layers.temporal = this->preferredTemporalLayer;
+
+			return layers;
+		}
+		bool IsActive() const override
+		{
+			// clang-format off
+			return (
+				RTC::Consumer::IsActive() &&
+				std::any_of(
+					this->producerRtpStreams.begin(),
+					this->producerRtpStreams.end(),
+					[](const RTC::RtpStream* rtpStream)
+					{
+						return (rtpStream != nullptr && rtpStream->GetScore() > 0u);
+					}
+				)
+			);
+			// clang-format on
+		}
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
@@ -31,7 +54,10 @@ namespace RTC
 		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
-		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override;
+		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override
+		{
+			return this->rtpStreams;
+		}
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
@@ -85,40 +111,6 @@ namespace RTC
 		bool keyFrameForTsOffsetRequested{ false };
 		uint64_t lastBweDowngradeAtMs{ 0u }; // Last time we moved to lower spatial layer due to BWE.
 	};
-
-	/* Inline methods. */
-
-	inline RTC::Consumer::Layers SimulcastConsumer::GetPreferredLayers() const
-	{
-		RTC::Consumer::Layers layers;
-
-		layers.spatial  = this->preferredSpatialLayer;
-		layers.temporal = this->preferredTemporalLayer;
-
-		return layers;
-	}
-
-	inline bool SimulcastConsumer::IsActive() const
-	{
-		// clang-format off
-		return (
-			RTC::Consumer::IsActive() &&
-			std::any_of(
-				this->producerRtpStreams.begin(),
-				this->producerRtpStreams.end(),
-				[](const RTC::RtpStream* rtpStream)
-				{
-					return (rtpStream != nullptr && rtpStream->GetScore() > 0u);
-				}
-			)
-		);
-		// clang-format on
-	}
-
-	inline std::vector<RTC::RtpStreamSend*> SimulcastConsumer::GetRtpStreams()
-	{
-		return this->rtpStreams;
-	}
 } // namespace RTC
 
 #endif
