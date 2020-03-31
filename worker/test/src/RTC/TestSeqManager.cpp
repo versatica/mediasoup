@@ -80,14 +80,14 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
-			{  0,  0, false, false },
-			{  1,  1, false, false },
-			{  2,  2, false, false },
-			{ 80,  3, true, false },
-			{ 81,  4, false, false },
-			{ 82,  5, false, false },
-			{ 83,  6, false, false },
-			{ 84,  7, false, false }
+			{  0, 0, false, false },
+			{  1, 1, false, false },
+			{  2, 2, false, false },
+			{ 80, 3, true, false },
+			{ 81, 4, false, false },
+			{ 82, 5, false, false },
+			{ 83, 6, false, false },
+			{ 84, 7, false, false }
 		};
 		// clang-format on
 
@@ -125,11 +125,11 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
-			{ 65533,  65533, false, false },
-			{ 65534,  65534, false, false },
-			{ 65535,  65535, false, false },
-			{     0,      0, false, false },
-			{     1,      1, false, false }
+			{ 65533, 65533, false, false },
+			{ 65534, 65534, false, false },
+			{ 65535, 65535, false, false },
+			{     0,     0, false, false },
+			{     1,     1, false, false }
 		};
 		// clang-format on
 
@@ -193,11 +193,11 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
-			{ 0,  0, false, false },
-			{ 2,  0, false,  true }, // drop.
-			{ 3,  2, false, false },
-			{ 4,  3, false, false },
-			{ 1,  1, false, false }
+			{ 0, 0, false, false },
+			{ 2, 0, false,  true }, // drop.
+			{ 3, 2, false, false },
+			{ 4, 3, false, false },
+			{ 1, 1, false, false }
 		};
 		// clang-format on
 
@@ -268,14 +268,14 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format off
 		std::vector<TestSeqManagerInput> inputs =
 		{
-			{  0,   0, false, false     },
-			{  1,   1, false, false     },
-			{  2,   2, false, false     },
-			{ 80,  23,  true, false, 20 },
-			{ 81,  24, false, false     },
-			{ 82,  25, false, false     },
-			{ 83,  26, false, false     },
-			{ 84,  27, false, false     }
+			{  0,  0, false, false     },
+			{  1,  1, false, false     },
+			{  2,  2, false, false     },
+			{ 80, 23,  true, false, 20 },
+			{ 81, 24, false, false     },
+			{ 82, 25, false, false     },
+			{ 83, 26, false, false     },
+			{ 84, 27, false, false     }
 		};
 		// clang-format on
 
