@@ -21,8 +21,8 @@ namespace RTC
 	/* Instance methods. */
 
 	SimulcastConsumer::SimulcastConsumer(
-	  const std::string& id, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SIMULCAST)
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
+	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST)
 	{
 		MS_TRACE();
 

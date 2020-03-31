@@ -11,7 +11,11 @@ namespace RTC
 	class SimulcastConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
-		SimulcastConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data);
+		SimulcastConsumer(
+		  const std::string& id,
+		  const std::string& producerId,
+		  RTC::Consumer::Listener* listener,
+		  json& data);
 		~SimulcastConsumer() override;
 
 	public:

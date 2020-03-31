@@ -477,6 +477,7 @@ test('consumer.dump() succeeds', async () =>
 	data = await audioConsumer.dump();
 
 	expect(data.id).toBe(audioConsumer.id);
+	expect(data.producerId).toBe(audioConsumer.producerId);
 	expect(data.kind).toBe(audioConsumer.kind);
 	expect(data.rtpParameters).toBeType('object');
 	expect(data.rtpParameters.codecs).toBeType('array');
@@ -541,6 +542,7 @@ test('consumer.dump() succeeds', async () =>
 	data = await videoConsumer.dump();
 
 	expect(data.id).toBe(videoConsumer.id);
+	expect(data.producerId).toBe(videoConsumer.producerId);
 	expect(data.kind).toBe(videoConsumer.kind);
 	expect(data.rtpParameters).toBeType('object');
 	expect(data.rtpParameters.codecs).toBeType('array');

@@ -13,8 +13,13 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Consumer::Consumer(const std::string& id, Listener* listener, json& data, RTC::RtpParameters::Type type)
-	  : id(id), listener(listener), type(type)
+	Consumer::Consumer(
+	  const std::string& id,
+	  const std::string& producerId,
+	  Listener* listener,
+	  json& data,
+	  RTC::RtpParameters::Type type)
+	  : id(id), producerId(producerId), listener(listener), type(type)
 	{
 		MS_TRACE();
 
@@ -159,6 +164,9 @@ namespace RTC
 
 		// Add id.
 		jsonObject["id"] = this->id;
+
+		// Add producerId.
+		jsonObject["producerId"] = this->producerId;
 
 		// Add kind.
 		jsonObject["kind"] = RTC::Media::GetString(this->kind);

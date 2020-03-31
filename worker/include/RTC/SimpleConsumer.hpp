@@ -10,7 +10,11 @@ namespace RTC
 	class SimpleConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
-		SimpleConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data);
+		SimpleConsumer(
+		  const std::string& id,
+		  const std::string& producerId,
+		  RTC::Consumer::Listener* listener,
+		  json& data);
 		~SimpleConsumer() override;
 
 	public:
