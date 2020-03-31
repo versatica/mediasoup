@@ -1,6 +1,6 @@
 {
-  "name": "mediasoup",
-  "version": "3.5.5",
+  "name": "@livelyvideo/mediasoupv3",
+  "version": "3.6.0-disable-origin-check",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
