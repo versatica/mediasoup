@@ -19,6 +19,11 @@ export declare type PlainTransportOptions = {
      */
     comedia?: boolean;
     /**
+     * Disable IP:Port check for RTP and RTCP packets.
+     * Default false.
+     */
+    disableOriginCheck?: boolean;
+    /**
      * Create a SCTP association. Default false.
      */
     enableSctp?: boolean;
@@ -76,6 +81,7 @@ export declare type PlainTransportStat = {
     maxIncomingBitrate?: number;
     rtcpMux: boolean;
     comedia: boolean;
+    disableOriginCheck: boolean;
     tuple: TransportTuple;
     rtcpTuple?: TransportTuple;
 };
@@ -87,6 +93,7 @@ export declare class PlainTransport extends Transport {
     protected readonly _data: {
         rtcpMux?: boolean;
         comedia?: boolean;
+        disableOriginCheck?: boolean;
         tuple: TransportTuple;
         rtcpTuple?: TransportTuple;
         sctpParameters?: SctpParameters;

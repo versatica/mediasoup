@@ -84,6 +84,16 @@ namespace RTC
 			this->comedia = jsonComediaIt->get<bool>();
 		}
 
+		auto jsonDisableOriginCheckIt = data.find("disableOriginCheck");
+
+		if (jsonDisableOriginCheckIt != data.end())
+		{
+			if (!jsonDisableOriginCheckIt->is_boolean())
+				MS_THROW_TYPE_ERROR("wrong disableOriginCheck (not a boolean)");
+
+			this->disableOriginCheck = jsonDisableOriginCheckIt->get<bool>();
+		}
+
 		auto jsonEnableSrtpIt = data.find("enableSrtp");
 
 		// clang-format off
@@ -782,7 +792,7 @@ namespace RTC
 		}
 		// Otherwise, if RTP tuple is set, verify that it matches the origin
 		// of the packet.
-		else if (!this->tuple->Compare(tuple))
+		else if (!this->disableOriginCheck && !this->tuple->Compare(tuple))
 		{
 			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
 
@@ -875,14 +885,14 @@ namespace RTC
 			Channel::Notifier::Emit(this->id, "rtcptuple", data);
 		}
 		// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
-		else if (this->rtcpMux && !this->tuple->Compare(tuple))
+		else if (!this->disableOriginCheck && this->rtcpMux && !this->tuple->Compare(tuple))
 		{
 			MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
 
 			return;
 		}
 		// If no RTCP-mux verify that the packet's tuple matches our RTCP tuple.
-		else if (!this->rtcpMux && !this->rtcpTuple->Compare(tuple))
+		else if (!this->disableOriginCheck && !this->rtcpMux && !this->rtcpTuple->Compare(tuple))
 		{
 			MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
 

@@ -31,6 +31,12 @@ export type PlainTransportOptions =
 	comedia?: boolean;
 
 	/**
+	 * Disable IP:Port check for RTP and RTCP packets.
+	 * Default false.
+	 */
+	disableOriginCheck?: boolean;
+
+	/**
 	 * Create a SCTP association. Default false.
 	 */
 	enableSctp?: boolean;
@@ -98,6 +104,7 @@ export type PlainTransportStat =
 	// PlainTransport specific.
 	rtcpMux: boolean;
 	comedia: boolean;
+	disableOriginCheck: boolean;
 	tuple: TransportTuple;
 	rtcpTuple?: TransportTuple;
 }
@@ -116,6 +123,7 @@ export class PlainTransport extends Transport
 	{
 		rtcpMux?: boolean;
 		comedia?: boolean;
+		disableOriginCheck?: boolean;
 		tuple: TransportTuple;
 		rtcpTuple?: TransportTuple;
 		sctpParameters?: SctpParameters;
@@ -140,13 +148,14 @@ export class PlainTransport extends Transport
 
 		this._data =
 		{
-			rtcpMux        : data.rtcpMux,
-			comedia        : data.comedia,
-			tuple          : data.tuple,
-			rtcpTuple      : data.rtcpTuple,
-			sctpParameters : data.sctpParameters,
-			sctpState      : data.sctpState,
-			srtpParameters : data.srtpParameters
+			rtcpMux            : data.rtcpMux,
+			comedia            : data.comedia,
+			disableOriginCheck : data.disableOriginCheck,
+			tuple              : data.tuple,
+			rtcpTuple          : data.rtcpTuple,
+			sctpParameters     : data.sctpParameters,
+			sctpState          : data.sctpState,
+			srtpParameters     : data.srtpParameters
 		};
 
 		this._handleWorkerNotifications();
