@@ -84,6 +84,9 @@ namespace RTC
 			{
 				MS_DEBUG_DEV("trying to send a dropped input");
 
+				// TODO: TMP
+				MS_DUMP("trying to send a dropped input [input:%u]", input);
+
 				return false;
 			}
 
@@ -95,6 +98,9 @@ namespace RTC
 		}
 
 		output = input + base;
+
+		// TODO: TMP
+		MS_DUMP("result [input:%u, output:%u]", input, output);
 
 		T idelta = input - this->maxInput;
 		T odelta = output - this->maxOutput;
