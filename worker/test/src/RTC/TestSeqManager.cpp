@@ -308,15 +308,15 @@ SCENARIO("SeqManager", "[rtc]")
 			{   128, 120, false, false },
 			{   129, 121, false, false },
 			{   130, 122, false, false },
-			// {   132, 123, false, false },
-			// {   132, 124, false, false },
-			// {   133, 125, false, false },
-			// {   134, 126, false, false },
-			// {   135, 127, false, false },
-			// {   136, 128, false, false },
-			// {   137, 129, false, false },
-			// {   138, 130, false, false },
-			// {   139, 131, false, false }
+			{   131, 123, false, false },
+			{   132, 124, false, false },
+			{   133, 125, false, false },
+			{   134, 126, false, false },
+			{   135, 127, false, false },
+			{   136, 128, false, false },
+			{   137, 129, false, false },
+			{   138, 130, false, false },
+			{   139, 131, false, false }
 		};
 		// clang-format on
 

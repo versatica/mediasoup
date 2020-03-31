@@ -41,6 +41,9 @@ namespace RTC
 	template<typename T>
 	void SeqManager<T>::Sync(T input)
 	{
+		// TODO: TMP
+		MS_DUMP("[input:%u]", input);
+
 		// Update base.
 		this->base = this->maxOutput - input;
 
@@ -54,20 +57,39 @@ namespace RTC
 	template<typename T>
 	void SeqManager<T>::Drop(T input)
 	{
+		// TODO: TMP
+		MS_DUMP("[input:%u]", input);
+
 		// Mark as dropped if 'input' is higher than anyone already processed.
 		if (SeqManager<T>::IsSeqHigherThan(input, this->maxInput))
+		{
+			// TODO: TMP
+			MS_DUMP("input dropped [input:%u]", input);
+
 			this->dropped.insert(input);
+		}
+		else
+		{
+			// TODO: TMP
+			MS_DUMP("input NOT dropped [input:%u]", input);
+		}
 	}
 
 	template<typename T>
 	void SeqManager<T>::Offset(T offset)
 	{
+		// TODO: TMP
+		MS_DUMP("[offset:%u]", offset);
+
 		this->base += offset;
 	}
 
 	template<typename T>
 	bool SeqManager<T>::Input(const T input, T& output)
 	{
+		// TODO: TMP
+		MS_DUMP("[input:%u]", input);
+
 		auto base = this->base;
 
 		// There are dropped inputs. Synchronize.
