@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.5.6
+
+* `SeqManager.cpp`: Fix video lag after a long time.
+  - Fixes #372 (thanks @penguinol for reporting it and giving the solution).
+
+
 ### 3.5.5
 
 * `UdpSocket.cpp`: Revert `uv__udp_recvmmsg()` usage since it notifies about received UDP packets in reverse order. Feature on hold until fixed. 
