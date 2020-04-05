@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.5.7 (WIP)
+
+* Update `usrsctp` library.
+
+
 ### 3.5.6
 
 * `SeqManager.cpp`: Fix video lag after a long time.

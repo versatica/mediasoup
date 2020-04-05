@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.h 324056 2017-09-27 13:05:23Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.h 359152 2020-03-19 21:01:16Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_ASCONF_H_
@@ -45,7 +45,7 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.h 324056 2017-09-27 13:05:23Z t
 /*
  * function prototypes
  */
-extern void sctp_asconf_cleanup(struct sctp_tcb *, struct sctp_nets *);
+extern void sctp_asconf_cleanup(struct sctp_tcb *);
 
 extern struct mbuf *sctp_compose_asconf(struct sctp_tcb *, int *, int);
 
