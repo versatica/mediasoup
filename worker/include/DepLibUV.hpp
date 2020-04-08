@@ -34,11 +34,11 @@ public:
 	{
 		static constexpr uint64_t MaxInt64{ std::numeric_limits<int64_t>::max() };
 
-		uint64_t time = static_cast<uint64_t>(uv_hrtime() / 1000000u);
+		uint64_t time = DepLibUV::GetTimeMs();
 
 		if (time > MaxInt64 )
 		{
-			time= MaxInt64 - 1;
+			time -= MaxInt64 - 1;
 		}
 
 		return static_cast<int64_t>(time);
@@ -49,7 +49,7 @@ public:
 	{
 		static constexpr uint64_t MaxInt64{ std::numeric_limits<int64_t>::max() };
 
-		uint64_t time = static_cast<uint64_t>(uv_hrtime() / 1000u);
+		uint64_t time = DepLibUV::GetTimeUs();
 
 		if (time > MaxInt64 )
 		{
