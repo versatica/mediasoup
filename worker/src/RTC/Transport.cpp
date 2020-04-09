@@ -1632,7 +1632,7 @@ namespace RTC
 							// if (this->tccClient)
 							// {
 							// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
-							// DepLibUV::GetTimeMs());
+							// DepLibUV::GetTimeMsInt64());
 							// }
 
 							continue;
@@ -2255,7 +2255,7 @@ namespace RTC
 			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
 					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
@@ -2267,7 +2267,7 @@ namespace RTC
 #else
 			auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
 				if (sent)
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 			});
 
 			SendRtpPacket(packet, cb);
