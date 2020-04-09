@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 357705 2020-02-09 22:05:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 359152 2020-03-19 21:01:16Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -4378,7 +4378,7 @@ again:
 			sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWN,
 					 stcb->sctp_ep, stcb, netp);
 			sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWNGUARD,
-					 stcb->sctp_ep, stcb, netp);
+					 stcb->sctp_ep, stcb, NULL);
 		} else if ((SCTP_GET_STATE(stcb) == SCTP_STATE_SHUTDOWN_RECEIVED) &&
 			   (asoc->stream_queue_cnt == 0)) {
 			struct sctp_nets *netp;
@@ -5094,7 +5094,7 @@ sctp_handle_sack(struct mbuf *m, int offset_seg, int offset_dup,
 			sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWN,
 					 stcb->sctp_ep, stcb, netp);
 			sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWNGUARD,
-					 stcb->sctp_ep, stcb, netp);
+					 stcb->sctp_ep, stcb, NULL);
 			return;
 		} else if ((SCTP_GET_STATE(stcb) == SCTP_STATE_SHUTDOWN_RECEIVED) &&
 			   (asoc->stream_queue_cnt == 0)) {

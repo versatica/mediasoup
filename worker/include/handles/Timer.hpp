@@ -28,9 +28,18 @@ public:
 	void Stop();
 	void Reset();
 	void Restart();
-	uint64_t GetTimeout() const;
-	uint64_t GetRepeat() const;
-	bool IsActive() const;
+	uint64_t GetTimeout() const
+	{
+		return this->timeout;
+	}
+	uint64_t GetRepeat() const
+	{
+		return this->repeat;
+	}
+	bool IsActive() const
+	{
+		return uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0;
+	}
 
 	/* Callbacks fired by UV events. */
 public:
@@ -43,25 +52,8 @@ private:
 	uv_timer_t* uvHandle{ nullptr };
 	// Others.
 	bool closed{ false };
-	uint64_t timeout{ 0 };
-	uint64_t repeat{ 0 };
+	uint64_t timeout{ 0u };
+	uint64_t repeat{ 0u };
 };
-
-/* Inline methods. */
-
-inline uint64_t Timer::GetTimeout() const
-{
-	return this->timeout;
-}
-
-inline uint64_t Timer::GetRepeat() const
-{
-	return this->repeat;
-}
-
-inline bool Timer::IsActive() const
-{
-	return uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0;
-}
 
 #endif

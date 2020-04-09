@@ -30,19 +30,32 @@ namespace RTC
 			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::TLLEI };
 
 		public:
-			explicit FeedbackRtpTlleiItem(Header* header);
-			explicit FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item);
+			explicit FeedbackRtpTlleiItem(Header* header) : header(header)
+			{
+			}
+			explicit FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item) : header(item->header)
+			{
+			}
 			FeedbackRtpTlleiItem(uint16_t packetId, uint16_t lostPacketBitmask);
 			~FeedbackRtpTlleiItem() override = default;
 
-			uint16_t GetPacketId() const;
-			uint16_t GetLostPacketBitmask() const;
+			uint16_t GetPacketId() const
+			{
+				return uint16_t{ ntohs(this->header->packetId) };
+			}
+			uint16_t GetLostPacketBitmask() const
+			{
+				return uint16_t{ ntohs(this->header->lostPacketBitmask) };
+			}
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetSize() const override;
+			size_t GetSize() const override
+			{
+				return sizeof(Header);
+			}
 
 		private:
 			Header* header{ nullptr };
@@ -50,32 +63,6 @@ namespace RTC
 
 		// Tllei packet declaration.
 		using FeedbackRtpTlleiPacket = FeedbackRtpItemsPacket<FeedbackRtpTlleiItem>;
-
-		/* Inline instance methods. */
-
-		inline FeedbackRtpTlleiItem::FeedbackRtpTlleiItem(Header* header) : header(header)
-		{
-		}
-
-		inline FeedbackRtpTlleiItem::FeedbackRtpTlleiItem(FeedbackRtpTlleiItem* item)
-		  : header(item->header)
-		{
-		}
-
-		inline size_t FeedbackRtpTlleiItem::GetSize() const
-		{
-			return sizeof(Header);
-		}
-
-		inline uint16_t FeedbackRtpTlleiItem::GetPacketId() const
-		{
-			return uint16_t{ ntohs(this->header->packetId) };
-		}
-
-		inline uint16_t FeedbackRtpTlleiItem::GetLostPacketBitmask() const
-		{
-			return uint16_t{ ntohs(this->header->lostPacketBitmask) };
-		}
 	} // namespace RTCP
 } // namespace RTC
 

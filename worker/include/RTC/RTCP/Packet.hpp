@@ -49,7 +49,24 @@ namespace RTC
 			};
 
 		public:
-			static bool IsRtcp(const uint8_t* data, size_t len);
+			static bool IsRtcp(const uint8_t* data, size_t len)
+			{
+				auto header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+
+				// clang-format off
+				return (
+					(len >= sizeof(CommonHeader)) &&
+					// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+					(data[0] > 127 && data[0] < 192) &&
+					// RTP Version must be 2.
+					(header->version == 2) &&
+					// RTCP packet types defined by IANA:
+					// http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
+					// RFC 5761 (RTCP-mux) states this range for secure RTCP/RTP detection.
+					(header->packetType >= 192 && header->packetType <= 223)
+				);
+				// clang-format on
+			}
 			static Packet* Parse(const uint8_t* data, size_t len);
 			static const std::string& Type2String(Type type);
 
@@ -57,86 +74,47 @@ namespace RTC
 			static std::map<Type, std::string> type2String;
 
 		public:
-			explicit Packet(Type type);
-			explicit Packet(CommonHeader* commonHeader);
-			virtual ~Packet();
+			explicit Packet(Type type) : type(type)
+			{
+			}
+			explicit Packet(CommonHeader* commonHeader)
+			{
+				this->type   = RTCP::Type(commonHeader->packetType);
+				this->header = commonHeader;
+			}
+			virtual ~Packet() = default;
 
-			void SetNext(Packet* packet);
-			Packet* GetNext() const;
-			const uint8_t* GetData() const;
+			void SetNext(Packet* packet)
+			{
+				this->next = packet;
+			}
+			Packet* GetNext() const
+			{
+				return this->next;
+			}
+			const uint8_t* GetData() const
+			{
+				return reinterpret_cast<uint8_t*>(this->header);
+			}
 
 		public:
 			virtual void Dump() const                 = 0;
 			virtual size_t Serialize(uint8_t* buffer) = 0;
-			virtual Type GetType() const;
-			virtual size_t GetCount() const = 0;
-			virtual size_t GetSize() const  = 0;
+			virtual Type GetType() const
+			{
+				return this->type;
+			}
+			virtual size_t GetCount() const
+			{
+				return 0u;
+			}
+			virtual size_t GetSize() const = 0;
 
 		private:
 			Type type;
 			Packet* next{ nullptr };
 			CommonHeader* header{ nullptr };
 		};
-
-		/* Inline static methods. */
-
-		inline bool Packet::IsRtcp(const uint8_t* data, size_t len)
-		{
-			auto header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-
-			// clang-format off
-			return (
-				(len >= sizeof(CommonHeader)) &&
-				// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-				(data[0] > 127 && data[0] < 192) &&
-				// RTP Version must be 2.
-				(header->version == 2) &&
-				// RTCP packet types defined by IANA:
-				// http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
-				// RFC 5761 (RTCP-mux) states this range for secure RTCP/RTP detection.
-				(header->packetType >= 192 && header->packetType <= 223)
-			);
-			// clang-format on
-		}
-
-		/* Inline instance methods. */
-
-		inline Packet::Packet(Type type) : type(type)
-		{
-		}
-
-		inline Packet::Packet(CommonHeader* commonHeader)
-		{
-			this->type   = RTCP::Type(commonHeader->packetType);
-			this->header = commonHeader;
-		}
-
-		inline Packet::~Packet() = default;
-
-		inline Packet* Packet::GetNext() const
-		{
-			return this->next;
-		}
-
-		inline void Packet::SetNext(Packet* packet)
-		{
-			this->next = packet;
-		}
-
-		inline Type Packet::GetType() const
-		{
-			return this->type;
-		}
-
-		inline size_t Packet::GetCount() const
-		{
-			return 0;
-		}
-
-		inline const uint8_t* Packet::GetData() const
-		{
-			return reinterpret_cast<uint8_t*>(this->header);
-		}
 	} // namespace RTCP
 } // namespace RTC
 

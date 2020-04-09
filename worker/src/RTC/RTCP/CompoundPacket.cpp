@@ -118,9 +118,32 @@ namespace RTC
 
 		void CompoundPacket::AddSenderReport(SenderReport* report)
 		{
+			MS_TRACE();
+
 			MS_ASSERT(!HasSenderReport(), "a Sender Report is already present");
 
 			this->senderReportPacket.AddReport(report);
+		}
+
+		void CompoundPacket::AddReceiverReport(ReceiverReport* report)
+		{
+			MS_TRACE();
+
+			this->receiverReportPacket.AddReport(report);
+		}
+
+		void CompoundPacket::AddSdesChunk(SdesChunk* chunk)
+		{
+			MS_TRACE();
+
+			this->sdesPacket.AddChunk(chunk);
+		}
+
+		void CompoundPacket::AddReceiverReferenceTime(ReceiverReferenceTime* report)
+		{
+			MS_TRACE();
+
+			this->xrPacket.AddReport(report);
 		}
 	} // namespace RTCP
 } // namespace RTC

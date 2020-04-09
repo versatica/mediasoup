@@ -124,8 +124,14 @@ namespace RTC
 		// Must be called from the subclass.
 		void Connected();
 		void Disconnected();
-		void DataReceived(size_t len);
-		void DataSent(size_t len);
+		void DataReceived(size_t len)
+		{
+			this->recvTransmission.Update(len, DepLibUV::GetTimeMs());
+		}
+		void DataSent(size_t len)
+		{
+			this->sendTransmission.Update(len, DepLibUV::GetTimeMs());
+		}
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
@@ -269,18 +275,6 @@ namespace RTC
 		uint32_t maxIncomingBitrate{ 0u };
 		struct TraceEventTypes traceEventTypes;
 	};
-
-	/* Inline instance methods. */
-
-	inline void Transport::DataReceived(size_t len)
-	{
-		this->recvTransmission.Update(len, DepLibUV::GetTimeMs());
-	}
-
-	inline void Transport::DataSent(size_t len)
-	{
-		this->sendTransmission.Update(len, DepLibUV::GetTimeMs());
-	}
 } // namespace RTC
 
 #endif

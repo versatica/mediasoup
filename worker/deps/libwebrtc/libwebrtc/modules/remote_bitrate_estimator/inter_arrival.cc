@@ -16,8 +16,6 @@
 
 #include "Logger.hpp"
 
-#include <cassert>
-
 namespace webrtc {
 
 static const int kBurstDeltaThresholdMs = 5;
@@ -40,9 +38,9 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
                                  uint32_t* timestamp_delta,
                                  int64_t* arrival_time_delta_ms,
                                  int* packet_size_delta) {
-  assert(timestamp_delta != NULL);
-  assert(arrival_time_delta_ms != NULL);
-  assert(packet_size_delta != NULL);
+  MS_ASSERT(timestamp_delta != nullptr, "timestamp_delta is null");
+  MS_ASSERT(arrival_time_delta_ms != nullptr, "arrival_time_delta_ms is null");
+  MS_ASSERT(packet_size_delta != nullptr, "packet_size_delta is null");
   bool calculated_deltas = false;
   if (current_timestamp_group_.IsFirstPacket()) {
     // We don't have enough data to update the filter, so we store it until we
@@ -87,7 +85,9 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
       } else {
         num_consecutive_reordered_packets_ = 0;
       }
-      assert(*arrival_time_delta_ms >= 0);
+
+      MS_ASSERT(*arrival_time_delta_ms >= 0, "arrival_time_delta_ms is < 0");
+
       *packet_size_delta = static_cast<int>(current_timestamp_group_.size) -
                            static_cast<int>(prev_timestamp_group_.size);
       calculated_deltas = true;
@@ -143,7 +143,11 @@ bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
   if (!burst_grouping_) {
     return false;
   }
-  assert(current_timestamp_group_.complete_time_ms >= 0);
+
+  MS_ASSERT(
+    current_timestamp_group_.complete_time_ms >= 0,
+    "current_timestamp_group_.complete_time_ms < 0");
+
   int64_t arrival_time_delta_ms =
       arrival_time_ms - current_timestamp_group_.complete_time_ms;
   uint32_t timestamp_diff = timestamp - current_timestamp_group_.timestamp;

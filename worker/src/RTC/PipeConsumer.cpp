@@ -5,14 +5,15 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/Codecs/Codecs.hpp"
+#include "RTC/Codecs/Tools.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	PipeConsumer::PipeConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::PIPE)
+	PipeConsumer::PipeConsumer(
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
+	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
 	{
 		MS_TRACE();
 
@@ -23,7 +24,7 @@ namespace RTC
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Create RtpStreamSend instances.
 		CreateRtpStreams();

@@ -90,12 +90,30 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
-		RTC::Media::Kind GetKind() const;
-		const RTC::RtpParameters& GetRtpParameters() const;
-		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const;
-		RTC::RtpParameters::Type GetType() const;
-		bool IsPaused() const;
-		std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams();
+		RTC::Media::Kind GetKind() const
+		{
+			return this->kind;
+		}
+		const RTC::RtpParameters& GetRtpParameters() const
+		{
+			return this->rtpParameters;
+		}
+		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		{
+			return this->rtpHeaderExtensionIds;
+		}
+		RTC::RtpParameters::Type GetType() const
+		{
+			return this->type;
+		}
+		bool IsPaused() const
+		{
+			return this->paused;
+		}
+		std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
+		{
+			return this->mapRtpStreamMappedSsrc;
+		}
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
@@ -150,45 +168,13 @@ namespace RTC
 		bool paused{ false };
 		RTC::RtpPacket* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
-		uint64_t lastRtcpSentTime{ 0 };
-		uint16_t maxRtcpInterval{ 0 };
+		uint64_t lastRtcpSentTime{ 0u };
+		uint16_t maxRtcpInterval{ 0u };
 		// Video orientation.
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
 	};
-
-	/* Inline methods. */
-
-	inline RTC::Media::Kind Producer::GetKind() const
-	{
-		return this->kind;
-	}
-
-	inline const RTC::RtpParameters& Producer::GetRtpParameters() const
-	{
-		return this->rtpParameters;
-	}
-
-	inline const struct RTC::RtpHeaderExtensionIds& Producer::GetRtpHeaderExtensionIds() const
-	{
-		return this->rtpHeaderExtensionIds;
-	}
-
-	inline RTC::RtpParameters::Type Producer::GetType() const
-	{
-		return this->type;
-	}
-
-	inline bool Producer::IsPaused() const
-	{
-		return this->paused;
-	}
-
-	inline std::map<RTC::RtpStreamRecv*, uint32_t>& Producer::GetRtpStreams()
-	{
-		return this->mapRtpStreamMappedSsrc;
-	}
 } // namespace RTC
 
 #endif

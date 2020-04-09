@@ -19,10 +19,22 @@ namespace RTC
 		PendingKeyFrameInfo(Listener* listener, uint32_t ssrc);
 		~PendingKeyFrameInfo();
 
-		uint32_t GetSsrc() const;
-		void SetRetryOnTimeout(bool notify);
-		bool GetRetryOnTimeout() const;
-		void Restart();
+		uint32_t GetSsrc() const
+		{
+			return this->ssrc;
+		}
+		void SetRetryOnTimeout(bool notify)
+		{
+			this->retryOnTimeout = notify;
+		}
+		bool GetRetryOnTimeout() const
+		{
+			return this->retryOnTimeout;
+		}
+		void Restart()
+		{
+			return this->timer->Restart();
+		}
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -48,9 +60,18 @@ namespace RTC
 		KeyFrameRequestDelayer(Listener* listener, uint32_t ssrc, uint32_t delay);
 		~KeyFrameRequestDelayer();
 
-		uint32_t GetSsrc() const;
-		bool GetKeyFrameRequested() const;
-		void SetKeyFrameRequested(bool flag);
+		uint32_t GetSsrc() const
+		{
+			return this->ssrc;
+		}
+		bool GetKeyFrameRequested() const
+		{
+			return this->keyFrameRequested;
+		}
+		void SetKeyFrameRequested(bool flag)
+		{
+			this->keyFrameRequested = flag;
+		}
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -96,40 +117,5 @@ namespace RTC
 		std::map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;
 	};
 } // namespace RTC
-
-inline uint32_t RTC::PendingKeyFrameInfo::GetSsrc() const
-{
-	return this->ssrc;
-}
-
-inline void RTC::PendingKeyFrameInfo::SetRetryOnTimeout(bool notify)
-{
-	this->retryOnTimeout = notify;
-}
-
-inline bool RTC::PendingKeyFrameInfo::GetRetryOnTimeout() const
-{
-	return this->retryOnTimeout;
-}
-
-inline void RTC::PendingKeyFrameInfo::Restart()
-{
-	return this->timer->Restart();
-}
-
-inline uint32_t RTC::KeyFrameRequestDelayer::GetSsrc() const
-{
-	return this->ssrc;
-}
-
-inline bool RTC::KeyFrameRequestDelayer::GetKeyFrameRequested() const
-{
-	return this->keyFrameRequested;
-}
-
-inline void RTC::KeyFrameRequestDelayer::SetKeyFrameRequested(bool flag)
-{
-	this->keyFrameRequested = flag;
-}
 
 #endif

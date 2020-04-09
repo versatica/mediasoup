@@ -18,11 +18,13 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
+#include <iterator>
 #include <numeric>
 #include <tuple>
 #include <cmath>
 #include <utility>
 #include <cstddef>
+#include <random>
 
 namespace Catch {
     namespace Benchmark {

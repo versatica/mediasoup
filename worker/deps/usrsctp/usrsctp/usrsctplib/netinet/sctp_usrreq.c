@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 358083 2020-02-18 21:25:17Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 359410 2020-03-28 22:35:04Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -675,8 +675,10 @@ out:
 	return (error);
 }
 
-SYSCTL_PROC(_net_inet_sctp, OID_AUTO, getcred, CTLTYPE_OPAQUE | CTLFLAG_RW,
-    0, 0, sctp_getcred, "S,ucred", "Get the ucred of a SCTP connection");
+SYSCTL_PROC(_net_inet_sctp, OID_AUTO, getcred,
+    CTLTYPE_OPAQUE | CTLFLAG_RW | CTLFLAG_NEEDGIANT,
+    0, 0, sctp_getcred, "S,ucred",
+    "Get the ucred of a SCTP connection");
 #endif				/* #if defined(__FreeBSD__) */
 
 
@@ -1258,9 +1260,9 @@ sctp_disconnect(struct socket *so)
 					}
 					sctp_send_shutdown(stcb,netp);
 					sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWN,
-							 stcb->sctp_ep, stcb, netp);
+					                 stcb->sctp_ep, stcb, netp);
 					sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWNGUARD,
-							 stcb->sctp_ep, stcb, netp);
+					                 stcb->sctp_ep, stcb, NULL);
 					sctp_chunk_output(stcb->sctp_ep, stcb, SCTP_OUTPUT_FROM_T3, SCTP_SO_LOCKED);
 				}
 			} else {
@@ -1274,16 +1276,8 @@ sctp_disconnect(struct socket *so)
 				 * we will allow user data to be sent first
 				 * and move to SHUTDOWN-PENDING
 				 */
-				struct sctp_nets *netp;
-				if (stcb->asoc.alternate) {
-					netp = stcb->asoc.alternate;
-				} else {
-					netp = stcb->asoc.primary_destination;
-				}
-
 				SCTP_ADD_SUBSTATE(stcb, SCTP_STATE_SHUTDOWN_PENDING);
-				sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWNGUARD, stcb->sctp_ep, stcb,
-						 netp);
+				sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWNGUARD, stcb->sctp_ep, stcb, NULL);
 				if ((*asoc->ss_functions.sctp_ss_is_user_msgs_incomplete)(stcb, asoc)) {
 					SCTP_ADD_SUBSTATE(stcb, SCTP_STATE_PARTIAL_MSG_LEFT);
 				}
@@ -1501,7 +1495,7 @@ sctp_shutdown(struct socket *so)
 				return (0);
 			}
 		}
-		sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWNGUARD, stcb->sctp_ep, stcb, netp);
+		sctp_timer_start(SCTP_TIMER_TYPE_SHUTDOWNGUARD, stcb->sctp_ep, stcb, NULL);
 		/* XXX: Why do this in the case where we have still data queued? */
 		sctp_chunk_output(inp, stcb, SCTP_OUTPUT_FROM_CLOSING, SCTP_SO_LOCKED);
 		SCTP_TCB_UNLOCK(stcb);
@@ -2270,7 +2264,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 			break;
 		case SCTP_AUTOCLOSE:
 			if (sctp_is_feature_on(inp, SCTP_PCB_FLAGS_AUTOCLOSE))
-				val = TICKS_TO_SEC(inp->sctp_ep.auto_close_time);
+				val = sctp_ticks_to_secs(inp->sctp_ep.auto_close_time);
 			else
 				val = 0;
 			break;
@@ -2700,7 +2694,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 			    ((inp->sctp_flags & SCTP_PCB_FLAGS_UDPTYPE) &&
 			     (sack->sack_assoc_id == SCTP_FUTURE_ASSOC))) {
 				SCTP_INP_RLOCK(inp);
-				sack->sack_delay = TICKS_TO_MSEC(inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_RECV]);
+				sack->sack_delay = sctp_ticks_to_msecs(inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_RECV]);
 				sack->sack_freq = inp->sctp_ep.sctp_sack_freq;
 				SCTP_INP_RUNLOCK(inp);
 			} else {
@@ -3221,7 +3215,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 				/* Use endpoint defaults */
 				SCTP_INP_RLOCK(inp);
 				paddrp->spp_pathmaxrxt = inp->sctp_ep.def_net_failure;
-				paddrp->spp_hbinterval = TICKS_TO_MSEC(inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_HEARTBEAT]);
+				paddrp->spp_hbinterval = sctp_ticks_to_msecs(inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_HEARTBEAT]);
 				paddrp->spp_assoc_id = SCTP_FUTURE_ASSOC;
 				/* get inp's default */
 				if (inp->sctp_ep.default_dscp & 0x01) {
@@ -3389,17 +3383,33 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 		if (net != NULL) {
 #ifdef HAVE_SA_LEN
 			memcpy(&sstat->sstat_primary.spinfo_address,
-			       &stcb->asoc.primary_destination->ro._l_addr,
-			       ((struct sockaddr *)(&stcb->asoc.primary_destination->ro._l_addr))->sa_len);
+			       &net->ro._l_addr,
+			       ((struct sockaddr *)(&net->ro._l_addr))->sa_len);
 #else
-			if (stcb->asoc.primary_destination->ro._l_addr.sa.sa_family == AF_INET) {
+			switch (stcb->asoc.primary_destination->ro._l_addr.sa.sa_family) {
+#if defined(INET)
+			case AF_INET:
 				memcpy(&sstat->sstat_primary.spinfo_address,
-				       &stcb->asoc.primary_destination->ro._l_addr,
+				       &net->ro._l_addr,
 				       sizeof(struct sockaddr_in));
-			} else {
+				break;
+#endif
+#if defined(INET6)
+			case AF_INET6:
 				memcpy(&sstat->sstat_primary.spinfo_address,
-				       &stcb->asoc.primary_destination->ro._l_addr,
+				       &net->ro._l_addr,
 				       sizeof(struct sockaddr_in6));
+				break;
+#endif
+#if defined(__Userspace__)
+			case AF_CONN:
+				memcpy(&sstat->sstat_primary.spinfo_address,
+				       &net->ro._l_addr,
+				       sizeof(struct sockaddr_conn));
+				break;
+#endif
+			default:
+				break;
 			}
 #endif
 			((struct sockaddr_in *)&sstat->sstat_primary.spinfo_address)->sin_port = stcb->rport;
@@ -3511,7 +3521,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 		SCTP_FIND_STCB(inp, stcb, sasoc->sasoc_assoc_id);
 
 		if (stcb) {
-			sasoc->sasoc_cookie_life = TICKS_TO_MSEC(stcb->asoc.cookie_life);
+			sasoc->sasoc_cookie_life = sctp_ticks_to_msecs(stcb->asoc.cookie_life);
 			sasoc->sasoc_asocmaxrxt = stcb->asoc.max_send_times;
 			sasoc->sasoc_number_peer_destinations = stcb->asoc.numnets;
 			sasoc->sasoc_peer_rwnd = stcb->asoc.peers_rwnd;
@@ -3523,7 +3533,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 			    ((inp->sctp_flags & SCTP_PCB_FLAGS_UDPTYPE) &&
 			     (sasoc->sasoc_assoc_id == SCTP_FUTURE_ASSOC))) {
 				SCTP_INP_RLOCK(inp);
-				sasoc->sasoc_cookie_life = TICKS_TO_MSEC(inp->sctp_ep.def_cookie_life);
+				sasoc->sasoc_cookie_life = sctp_ticks_to_msecs(inp->sctp_ep.def_cookie_life);
 				sasoc->sasoc_asocmaxrxt = inp->sctp_ep.max_send_times;
 				sasoc->sasoc_number_peer_destinations = 0;
 				sasoc->sasoc_peer_rwnd = 0;
@@ -4644,7 +4654,7 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 			 * The value is in ticks. Note this does not effect
 			 * old associations, only new ones.
 			 */
-			inp->sctp_ep.auto_close_time = SEC_TO_TICKS(*mopt);
+			inp->sctp_ep.auto_close_time = sctp_secs_to_ticks(*mopt);
 			break;
 		}
 		SCTP_INP_WLOCK(inp);
@@ -5146,10 +5156,12 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 		SCTP_CHECK_AND_CAST(sack, optval, struct sctp_sack_info, optsize);
 		SCTP_FIND_STCB(inp, stcb, sack->sack_assoc_id);
 		if (sack->sack_delay) {
-			if (sack->sack_delay > SCTP_MAX_SACK_DELAY)
-				sack->sack_delay = SCTP_MAX_SACK_DELAY;
-			if (MSEC_TO_TICKS(sack->sack_delay) < 1) {
-				sack->sack_delay = TICKS_TO_MSEC(1);
+			if (sack->sack_delay > SCTP_MAX_SACK_DELAY) {
+				error = EINVAL;
+				if (stcb != NULL) {
+					SCTP_TCB_UNLOCK(stcb);
+				}
+				break;
 			}
 		}
 		if (stcb) {
@@ -5168,7 +5180,7 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 			      (sack->sack_assoc_id == SCTP_ALL_ASSOC)))) {
 				SCTP_INP_WLOCK(inp);
 				if (sack->sack_delay) {
-					inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_RECV] = MSEC_TO_TICKS(sack->sack_delay);
+					inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_RECV] = sctp_msecs_to_ticks(sack->sack_delay);
 				}
 				if (sack->sack_freq) {
 					inp->sctp_ep.sctp_sack_freq = sack->sack_freq;
@@ -5222,7 +5234,7 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 		if (sca->sca_keylength == 0) {
 			size = optsize - sizeof(struct sctp_authkey);
 		} else {
-		        if (sca->sca_keylength + sizeof(struct sctp_authkey) <= optsize) {
+			if (sca->sca_keylength + sizeof(struct sctp_authkey) <= optsize) {
 				size = sca->sca_keylength;
 			} else {
 				SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
@@ -6539,14 +6551,14 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 				else if (paddrp->spp_hbinterval != 0) {
 					if (paddrp->spp_hbinterval > SCTP_MAX_HB_INTERVAL)
 						paddrp->spp_hbinterval= SCTP_MAX_HB_INTERVAL;
-					inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_HEARTBEAT] = MSEC_TO_TICKS(paddrp->spp_hbinterval);
+					inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_HEARTBEAT] = sctp_msecs_to_ticks(paddrp->spp_hbinterval);
 				}
 
 				if (paddrp->spp_flags & SPP_HB_ENABLE) {
 					if (paddrp->spp_flags & SPP_HB_TIME_IS_ZERO) {
 						inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_HEARTBEAT] = 0;
 					} else if (paddrp->spp_hbinterval) {
-						inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_HEARTBEAT] = MSEC_TO_TICKS(paddrp->spp_hbinterval);
+						inp->sctp_ep.sctp_timeoutticks[SCTP_TIMER_HEARTBEAT] = sctp_msecs_to_ticks(paddrp->spp_hbinterval);
 					}
 					sctp_feature_off(inp, SCTP_PCB_FLAGS_DONOT_HEARTBEAT);
 				} else if (paddrp->spp_flags & SPP_HB_DISABLE) {
@@ -6661,7 +6673,7 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 			if (sasoc->sasoc_asocmaxrxt)
 				stcb->asoc.max_send_times = sasoc->sasoc_asocmaxrxt;
 			if (sasoc->sasoc_cookie_life) {
-				stcb->asoc.cookie_life = MSEC_TO_TICKS(sasoc->sasoc_cookie_life);
+				stcb->asoc.cookie_life = sctp_msecs_to_ticks(sasoc->sasoc_cookie_life);
 			}
 			SCTP_TCB_UNLOCK(stcb);
 		} else {
@@ -6673,7 +6685,7 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 				if (sasoc->sasoc_asocmaxrxt)
 					inp->sctp_ep.max_send_times = sasoc->sasoc_asocmaxrxt;
 				if (sasoc->sasoc_cookie_life) {
-					inp->sctp_ep.def_cookie_life = MSEC_TO_TICKS(sasoc->sasoc_cookie_life);
+					inp->sctp_ep.def_cookie_life = sctp_msecs_to_ticks(sasoc->sasoc_cookie_life);
 				}
 				SCTP_INP_WUNLOCK(inp);
 			} else {
