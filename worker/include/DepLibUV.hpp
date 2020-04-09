@@ -36,7 +36,7 @@ public:
 
 		uint64_t time = DepLibUV::GetTimeMs();
 
-		if (time > MaxInt64 )
+		if (time > MaxInt64)
 		{
 			time -= MaxInt64 - 1;
 		}
@@ -51,7 +51,7 @@ public:
 
 		uint64_t time = DepLibUV::GetTimeUs();
 
-		if (time > MaxInt64 )
+		if (time > MaxInt64)
 		{
 			time -= MaxInt64 - 1;
 		}
