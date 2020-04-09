@@ -15,9 +15,9 @@ export function parse(scalabilityMode: string): ScalabilityMode
 	if (match)
 	{
 		return {
-			spatialLayers  : Number(match[1]),
-			temporalLayers : Number(match[2]),
-			ksvc           : Boolean(match[3])
+			spatialLayers  : parseInt(match[1]),
+			temporalLayers : parseInt(match[2]),
+			ksvc           : !!match[3]
 		};
 	}
 	else

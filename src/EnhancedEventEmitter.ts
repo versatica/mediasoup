@@ -25,7 +25,7 @@ export class EnhancedEventEmitter extends EventEmitter
 				'safeEmit() | event listener threw an error [event:%s]:%o',
 				event, error);
 
-			return Boolean(numListeners);
+			return !!numListeners;
 		}
 	}
 
