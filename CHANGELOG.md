@@ -1,9 +1,11 @@
 # Changelog
 
 
-### 3.5.7 (WIP)
+### 3.5.7
 
+* Fix crash in mediasoup-worker due to conversion from `uint64_t` to `int64_t` (used within `libwebrtc` code. Fixes #357.
 * Update `usrsctp` library.
+* Update Node deps.
 
 
 ### 3.5.6
