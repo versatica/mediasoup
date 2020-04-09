@@ -257,6 +257,7 @@
       }],
 
       [ 'OS == "linux"', {
+        'cflags': [ '-O3' ],
         'defines':
         [
           '_POSIX_C_SOURCE=200112',
@@ -265,7 +266,7 @@
       }],
 
       [ 'OS == "linux" and mediasoup_asan == "true"', {
-        'cflags': [ '-fsanitize=address' ],
+        'cflags': [ '-fsanitize=address', '-O3' ],
         'ldflags': [ '-fsanitize=address' ]
       }],
 
