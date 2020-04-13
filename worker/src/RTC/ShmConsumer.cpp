@@ -278,6 +278,8 @@ namespace RTC
 		uint64_t seq           = static_cast<uint64_t>(packet->GetSequenceNumber());
 		uint32_t ssrc          = packet->GetSsrc();
 
+		bool isKeyFrame        = packet->IsKeyFrame();
+
 		std::memset(&chunk, 0, sizeof(chunk));
 
 		switch (this->GetKind())
@@ -347,12 +349,13 @@ namespace RTC
 					this->chunk.begin         = begin_picture;
 					this->chunk.end           = (marker != 0);
 
-					//if (nal == 7 || nal == 8) { // dbg output for SPS or PPS only
-					MS_DEBUG_TAG(rtp, "video single NALU=%d%s len %zu ts %" PRIu64 " seq %" PRIu64 " begin_picture=%d end_picture=%d lastTs=%" PRIu64 " ts > lastTs is %s",
-						nal, 
+					if (nal != 1 || isKeyFrame) { // debugging key frame absense
+					MS_DEBUG_TAG(rtp, "video single NALU=%d DATA=0x%02x%02x%02x%02x%02x%02x%02x%02x LEN=%zu ts %" PRIu64 " seq %" PRIu64 " begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64 " ts > lastTs is %s",
+						nal,
+						data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],
 						(UINT64_UNSET == this->chunk.first_rtp_seq) ? " (seq UINT64_UNSET)" : "",
 						this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, begin_picture, marker, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), (ts > shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO)) ? "true" : "false");
-				//	}
+					}
 					if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
 					{
 						MS_WARN_TAG(rtp, "FAIL writing video NALU: len %" PRIu32 " ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
@@ -428,9 +431,13 @@ namespace RTC
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 								this->chunk.ssrc          = ssrc;
 
-								MS_DEBUG_TAG(rtp, "video STAP-A: nal=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64,
-									subnal, len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
-								
+								if (subnal != 1 || isKeyFrame) {
+								uint8_t* p = data + offset;
+								MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d DATA=0x%02x%02x%02x%02x%02x%02x%02x%02x payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 "chunk.begin=%d chunk.end=%d",
+									subnal, 
+									p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7],
+									len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), this->chunk.begin, this->chunk.end);
+								}
 								if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
 								{
 									MS_WARN_TAG(rtp, "FAIL writing STAP-A pkt to shm: len %zu ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
@@ -491,17 +498,14 @@ namespace RTC
 									data[-1] = 0x00;
 									data[-2] = 0x00;
 									this->chunk.begin  = 0;
-									chunksize += 3;
+									data -= 2;
+									chunksize += 2;
 								}
 							}
 							else {
-								// if not the beginning fragment, discard FU indicator and FU header...
-								// Note from https://stackoverflow.com/questions/3493742/problem-to-decode-h264-video-over-rtp-with-ffmpeg-libavcodec:
-								// I might have to skip only 1 byte, not 2. TRY THAT
-								//data += 2;
-								//chunksize -= 2;
-								data += 1;
-								chunksize -= 1;
+								// if not the beginning fragment, discard FU indicator and FU header
+								data += 2;
+								chunksize -= 2;
 								this->chunk.begin = 0;
 							}
 
@@ -512,8 +516,10 @@ namespace RTC
 							this->chunk.ssrc          = ssrc;
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
 							
-							MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 "%s%s",
+							if (subnal != 1 || isKeyFrame) {
+							MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " DATA=0x%02x%02x%02x%02x%02x%02x%02x%02x len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
 								subnal, 
+								data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],
 								this->chunk.len, 
 								this->chunk.rtp_time,
 								shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
@@ -521,8 +527,9 @@ namespace RTC
 								startBit,
 								endBit,
 								marker,
-								this->chunk.begin ? " begin" : "",
-								this->chunk.end ? " end": "");
+								this->chunk.begin,
+								this->chunk.end);
+							}
 							
 							if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
 							{
@@ -546,7 +553,7 @@ namespace RTC
 						}
 					} // case nal
 				} // if
-				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::VIDEO); // TODO: ensure that previous seqId and ts updated only for successfully written packets?
+				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::VIDEO);
 				break;
 			} // case video
 

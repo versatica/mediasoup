@@ -34,9 +34,8 @@ void DepLibSfuShm::SfuShmCtx::CloseShmWriterCtx()
     sfushm_av_close_writer(wrt_ctx, 0); //TODO: smth else at the last param
   }
 
-  // TODO: do I need this->stream_name.clear() and the rest?
-
-  //  TODO: zeromem wrt_init
+  wrt_status = SHM_WRT_CLOSED;
+  memset( &wrt_init, 0, sizeof(sfushm_av_writer_init_t));
 }
 
 
