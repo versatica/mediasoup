@@ -183,6 +183,10 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
     current_offset_ms_ +=
       mediasoup_helpers::FeedbackRtpTransport::GetBaseDeltaUs(&feedback, last_timestamp_us_) / 1000;
   }
+
+  // NOTE: Debug for https://github.com/versatica/mediasoup/issues/357.
+  int64_t prev_last_timestamp_us = last_timestamp_us_;
+
   last_timestamp_us_ =
     mediasoup_helpers::FeedbackRtpTransport::GetBaseTimeUs(&feedback);
 
@@ -215,6 +219,24 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
       // Handle this iteration's received packet.
       offset_us += packet.delta_us();
       timestamp_ms = current_offset_ms_ + (offset_us / 1000);
+
+      // NOTE: Debug for https://github.com/versatica/mediasoup/issues/357.
+      if (timestamp_ms < 0) {
+        MS_ERROR("timestamps_ms < 0 [timestamp_ms:%" PRIi64
+            ", current_offset_ms_:%" PRIi64
+            ", offset_us:%" PRIi64
+            ", last_timestamp_us_:%" PRIi64
+            ", prev_last_timestamp_us:%" PRIi64
+            ", feedback.GetReferenceTimestamp():%" PRIi64 "]",
+          timestamp_ms,
+          current_offset_ms_,
+          offset_us,
+          last_timestamp_us_,
+          prev_last_timestamp_us,
+          feedback.GetReferenceTimestamp()
+        );
+      }
+
       PacketFeedback packet_feedback(timestamp_ms, packet.sequence_number());
       if (!send_time_history_.GetFeedback(&packet_feedback, true))
         ++failed_lookups;

@@ -146,7 +146,8 @@ bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
 
   MS_ASSERT(
     current_timestamp_group_.complete_time_ms >= 0,
-    "current_timestamp_group_.complete_time_ms < 0");
+    "current_timestamp_group_.complete_time_ms < 0 [current_timestamp_group_.complete_time_ms:%" PRIi64 "]",
+    current_timestamp_group_.complete_time_ms);
 
   int64_t arrival_time_delta_ms =
       arrival_time_ms - current_timestamp_group_.complete_time_ms;
