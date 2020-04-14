@@ -297,13 +297,15 @@ namespace RTC
 				this->chunk.begin = this->chunk.end = 1;
 				if(0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc()))
 				{
+					MS_WARN_TAG(rtp, "FAIL writing audio ts %" PRIu64 " seq %" PRIu64, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 					return false;
 				}
+
 				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::AUDIO);
 				break;
 			} // audio
 
-			case RTC::Media::Kind::VIDEO: //video
+			case RTC::Media::Kind::VIDEO:
 			{
 				ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::VIDEO);
 				seq = shmCtx->AdjustPktSeq(seq, DepLibSfuShm::ShmChunkType::VIDEO);
@@ -349,16 +351,18 @@ namespace RTC
 					this->chunk.begin         = begin_picture;
 					this->chunk.end           = (marker != 0);
 
-					if (nal != 1 || isKeyFrame) { // debugging key frame absense
-					MS_DEBUG_TAG(rtp, "video single NALU=%d DATA=0x%02x%02x%02x%02x%02x%02x%02x%02x LEN=%zu ts %" PRIu64 " seq %" PRIu64 " begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64 " ts > lastTs is %s",
+					MS_DEBUG_TAG(rtp, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
 						nal,
-						data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],
-						(UINT64_UNSET == this->chunk.first_rtp_seq) ? " (seq UINT64_UNSET)" : "",
-						this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, begin_picture, marker, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), (ts > shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO)) ? "true" : "false");
-					}
+						this->chunk.len,
+						this->chunk.rtp_time,
+						this->chunk.first_rtp_seq,
+						begin_picture,
+						marker,
+						shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
+
 					if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
 					{
-						MS_WARN_TAG(rtp, "FAIL writing video NALU: len %" PRIu32 " ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
+						MS_WARN_TAG(rtp, "FAIL writing video NALU=%d: ts %" PRIu64 " seq %" PRIu64, nal, this->chunk.rtp_time, this->chunk.first_rtp_seq);
 						return false;
 					}
 				}
@@ -396,7 +400,7 @@ namespace RTC
 							{
 								uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset); 
 								if ( offset + naluSize > len) {
-									MS_WARN_TAG(rtp, "payload left to read from STAP-A is shorter than NALU size or just too short: %" PRIu32" > %" PRIu16, offset + naluSize, len);
+									MS_WARN_TAG(rtp, "payload left to read from STAP-A is too short: %" PRIu32" > %" PRIu16, offset + naluSize, len);
 									break;
 								}
 
@@ -427,17 +431,21 @@ namespace RTC
 
 								this->chunk.data          = data + offset;
 								this->chunk.len           = chunksize;
-								this->chunk.rtp_time      = ts; // NALUs share timestamp, https://tools.ietf.org/html/rfc6184#section-5.7.1
-								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
+								this->chunk.rtp_time      = ts;
+								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq; // TODO: is it okay to send several NALUs with same seq?
 								this->chunk.ssrc          = ssrc;
 
-								if (subnal != 1 || isKeyFrame) {
-								uint8_t* p = data + offset;
-								MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d DATA=0x%02x%02x%02x%02x%02x%02x%02x%02x payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 "chunk.begin=%d chunk.end=%d",
+								MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 "chunk.begin=%d chunk.end=%d",
 									subnal, 
-									p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7],
-									len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), this->chunk.begin, this->chunk.end);
-								}
+									len, 
+									naluSize, 
+									this->chunk.len, 
+									this->chunk.rtp_time,
+									this->chunk.first_rtp_seq,
+									shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
+									this->chunk.begin,
+									this->chunk.end);
+
 								if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
 								{
 									MS_WARN_TAG(rtp, "FAIL writing STAP-A pkt to shm: len %zu ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
@@ -487,25 +495,24 @@ namespace RTC
 									data[-1] = 0x00;
 									data[-2] = 0x00;
 									data[-3] = 0x00;
+									chunksize += 4;
+									data -= 3;
 									this->chunk.begin = 1;
 									begin_picture = 0;
-									data -= 3;
-									chunksize += 3;
 								}
 								else
 								{
 									data[0]  = 0x01;
 									data[-1] = 0x00;
 									data[-2] = 0x00;
-									this->chunk.begin  = 0;
+									chunksize += 3;
 									data -= 2;
-									chunksize += 2;
+									this->chunk.begin  = 0;
 								}
 							}
-							else {
-								// if not the beginning fragment, discard FU indicator and FU header
+							else { // if not the beginning fragment, discard FU indicator and FU header
+								chunksize -= 1;
 								data += 2;
-								chunksize -= 2;
 								this->chunk.begin = 0;
 							}
 
@@ -517,9 +524,8 @@ namespace RTC
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
 							
 							if (subnal != 1 || isKeyFrame) {
-							MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " DATA=0x%02x%02x%02x%02x%02x%02x%02x%02x len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
+							MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
 								subnal, 
-								data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],
 								this->chunk.len, 
 								this->chunk.rtp_time,
 								shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
@@ -551,8 +557,8 @@ namespace RTC
 							MS_DEBUG_TAG(rtp, "Unknown NAL unit type %u in video packet", nal);
 							return false;
 						}
-					} // case nal
-				} // if
+					}
+				}
 				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::VIDEO);
 				break;
 			} // case video
