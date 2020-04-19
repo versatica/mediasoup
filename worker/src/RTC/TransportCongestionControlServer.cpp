@@ -180,7 +180,11 @@ namespace RTC
 				if (!packet->ReadAbsSendTime(absSendTime))
 					break;
 
-				this->rembServer->IncomingPacket(nowMs, packet->GetPayloadLength(), *packet, absSendTime);
+				// NOTE: nowMs is uint64_t but we need to "convert" it to int64_t before
+				// we give it to libwebrtc lib.
+				auto nowMsInt64 = DepLibUV::TimeMs2TimeMsInt64(nowMs);
+
+				this->rembServer->IncomingPacket(nowMsInt64, packet->GetPayloadLength(), *packet, absSendTime);
 
 				break;
 			}

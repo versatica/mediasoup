@@ -37,9 +37,7 @@ public:
 		uint64_t time = DepLibUV::GetTimeMs();
 
 		if (time > MaxInt64)
-		{
 			time -= MaxInt64 - 1;
-		}
 
 		return static_cast<int64_t>(time);
 	}
@@ -52,9 +50,16 @@ public:
 		uint64_t time = DepLibUV::GetTimeUs();
 
 		if (time > MaxInt64)
-		{
 			time -= MaxInt64 - 1;
-		}
+
+		return static_cast<int64_t>(time);
+	}
+	static int64_t TimeMs2TimeMsInt64(uint64_t time)
+	{
+		static constexpr uint64_t MaxInt64{ std::numeric_limits<int64_t>::max() };
+
+		if (time > MaxInt64)
+			time -= MaxInt64 - 1;
 
 		return static_cast<int64_t>(time);
 	}
