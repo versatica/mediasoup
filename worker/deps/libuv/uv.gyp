@@ -41,8 +41,8 @@
       'target_name': 'libuv',
       'type': '<(uv_library)',
       'include_dirs': [
-        'include',
-        'src/',
+        'libuv/include',
+        'libuv/src/',
       ],
       'defines': [
         '<@(shared_mac_defines)',
@@ -55,7 +55,7 @@
           '<@(shared_unix_defines)',
           '<@(shared_zos_defines)',
         ],
-        'include_dirs': [ 'include' ],
+        'include_dirs': [ 'libuv/include' ],
         'conditions': [
           ['OS == "linux"', {
             'defines': [ '_POSIX_C_SOURCE=200112' ],
@@ -63,27 +63,27 @@
         ],
       },
       'sources': [
-        'common.gypi',
-        'include/uv.h',
-        'include/uv/tree.h',
-        'include/uv/errno.h',
-        'include/uv/threadpool.h',
-        'include/uv/version.h',
-        'src/fs-poll.c',
-        'src/heap-inl.h',
-        'src/idna.c',
-        'src/idna.h',
-        'src/inet.c',
-        'src/queue.h',
-        'src/random.c',
-        'src/strscpy.c',
-        'src/strscpy.h',
-        'src/threadpool.c',
-        'src/timer.c',
-        'src/uv-data-getter-setters.c',
-        'src/uv-common.c',
-        'src/uv-common.h',
-        'src/version.c'
+        'libuv/common.gypi',
+        'libuv/include/uv.h',
+        'libuv/include/uv/tree.h',
+        'libuv/include/uv/errno.h',
+        'libuv/include/uv/threadpool.h',
+        'libuv/include/uv/version.h',
+        'libuv/src/fs-poll.c',
+        'libuv/src/heap-inl.h',
+        'libuv/src/idna.c',
+        'libuv/src/idna.h',
+        'libuv/src/inet.c',
+        'libuv/src/queue.h',
+        'libuv/src/random.c',
+        'libuv/src/strscpy.c',
+        'libuv/src/strscpy.h',
+        'libuv/src/threadpool.c',
+        'libuv/src/timer.c',
+        'libuv/src/uv-data-getter-setters.c',
+        'libuv/src/uv-common.c',
+        'libuv/src/uv-common.h',
+        'libuv/src/version.c'
       ],
       'xcode_settings': {
         'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',  # -fvisibility=hidden
@@ -102,39 +102,39 @@
             '_GNU_SOURCE',
           ],
           'sources': [
-            'include/uv/win.h',
-            'src/win/async.c',
-            'src/win/atomicops-inl.h',
-            'src/win/core.c',
-            'src/win/detect-wakeup.c',
-            'src/win/dl.c',
-            'src/win/error.c',
-            'src/win/fs.c',
-            'src/win/fs-event.c',
-            'src/win/getaddrinfo.c',
-            'src/win/getnameinfo.c',
-            'src/win/handle.c',
-            'src/win/handle-inl.h',
-            'src/win/internal.h',
-            'src/win/loop-watcher.c',
-            'src/win/pipe.c',
-            'src/win/thread.c',
-            'src/win/poll.c',
-            'src/win/process.c',
-            'src/win/process-stdio.c',
-            'src/win/req-inl.h',
-            'src/win/signal.c',
-            'src/win/snprintf.c',
-            'src/win/stream.c',
-            'src/win/stream-inl.h',
-            'src/win/tcp.c',
-            'src/win/tty.c',
-            'src/win/udp.c',
-            'src/win/util.c',
-            'src/win/winapi.c',
-            'src/win/winapi.h',
-            'src/win/winsock.c',
-            'src/win/winsock.h',
+            'libuv/include/uv/win.h',
+            'libuv/src/win/async.c',
+            'libuv/src/win/atomicops-inl.h',
+            'libuv/src/win/core.c',
+            'libuv/src/win/detect-wakeup.c',
+            'libuv/src/win/dl.c',
+            'libuv/src/win/error.c',
+            'libuv/src/win/fs.c',
+            'libuv/src/win/fs-event.c',
+            'libuv/src/win/getaddrinfo.c',
+            'libuv/src/win/getnameinfo.c',
+            'libuv/src/win/handle.c',
+            'libuv/src/win/handle-inl.h',
+            'libuv/src/win/internal.h',
+            'libuv/src/win/loop-watcher.c',
+            'libuv/src/win/pipe.c',
+            'libuv/src/win/thread.c',
+            'libuv/src/win/poll.c',
+            'libuv/src/win/process.c',
+            'libuv/src/win/process-stdio.c',
+            'libuv/src/win/req-inl.h',
+            'libuv/src/win/signal.c',
+            'libuv/src/win/snprintf.c',
+            'libuv/src/win/stream.c',
+            'libuv/src/win/stream-inl.h',
+            'libuv/src/win/tcp.c',
+            'libuv/src/win/tty.c',
+            'libuv/src/win/udp.c',
+            'libuv/src/win/util.c',
+            'libuv/src/win/winapi.c',
+            'libuv/src/win/winapi.h',
+            'libuv/src/win/winsock.c',
+            'libuv/src/win/winsock.h',
           ],
           'link_settings': {
             'libraries': [
@@ -149,33 +149,33 @@
           },
         }, { # Not Windows i.e. POSIX
           'sources': [
-            'include/uv/unix.h',
-            'include/uv/linux.h',
-            'include/uv/sunos.h',
-            'include/uv/darwin.h',
-            'include/uv/bsd.h',
-            'include/uv/aix.h',
-            'src/unix/async.c',
-            'src/unix/atomic-ops.h',
-            'src/unix/core.c',
-            'src/unix/dl.c',
-            'src/unix/fs.c',
-            'src/unix/getaddrinfo.c',
-            'src/unix/getnameinfo.c',
-            'src/unix/internal.h',
-            'src/unix/loop.c',
-            'src/unix/loop-watcher.c',
-            'src/unix/pipe.c',
-            'src/unix/poll.c',
-            'src/unix/process.c',
-            'src/unix/random-devurandom.c',
-            'src/unix/signal.c',
-            'src/unix/spinlock.h',
-            'src/unix/stream.c',
-            'src/unix/tcp.c',
-            'src/unix/thread.c',
-            'src/unix/tty.c',
-            'src/unix/udp.c',
+            'libuv/include/uv/unix.h',
+            'libuv/include/uv/linux.h',
+            'libuv/include/uv/sunos.h',
+            'libuv/include/uv/darwin.h',
+            'libuv/include/uv/bsd.h',
+            'libuv/include/uv/aix.h',
+            'libuv/src/unix/async.c',
+            'libuv/src/unix/atomic-ops.h',
+            'libuv/src/unix/core.c',
+            'libuv/src/unix/dl.c',
+            'libuv/src/unix/fs.c',
+            'libuv/src/unix/getaddrinfo.c',
+            'libuv/src/unix/getnameinfo.c',
+            'libuv/src/unix/internal.h',
+            'libuv/src/unix/loop.c',
+            'libuv/src/unix/loop-watcher.c',
+            'libuv/src/unix/pipe.c',
+            'libuv/src/unix/poll.c',
+            'libuv/src/unix/process.c',
+            'libuv/src/unix/random-devurandom.c',
+            'libuv/src/unix/signal.c',
+            'libuv/src/unix/spinlock.h',
+            'libuv/src/unix/stream.c',
+            'libuv/src/unix/tcp.c',
+            'libuv/src/unix/thread.c',
+            'libuv/src/unix/tty.c',
+            'libuv/src/unix/udp.c',
           ],
           'link_settings': {
             'libraries': [ '-lm' ],
@@ -210,7 +210,7 @@
           ],
         }],
         [ 'OS in "linux mac ios android zos"', {
-          'sources': [ 'src/unix/proctitle.c' ],
+          'sources': [ 'libuv/src/unix/proctitle.c' ],
         }],
         [ 'OS != "zos"', {
           'cflags': [
@@ -225,10 +225,10 @@
         }],
         [ 'OS in "mac ios"', {
           'sources': [
-            'src/unix/darwin.c',
-            'src/unix/fsevents.c',
-            'src/unix/darwin-proctitle.c',
-            'src/unix/random-getentropy.c',
+            'libuv/src/unix/darwin.c',
+            'libuv/src/unix/fsevents.c',
+            'libuv/src/unix/darwin-proctitle.c',
+            'libuv/src/unix/random-getentropy.c',
           ],
           'defines': [
             '_DARWIN_USE_64_BIT_INODE=1',
@@ -238,14 +238,14 @@
         [ 'OS=="linux"', {
           'defines': [ '_GNU_SOURCE' ],
           'sources': [
-            'src/unix/linux-core.c',
-            'src/unix/linux-inotify.c',
-            'src/unix/linux-syscalls.c',
-            'src/unix/linux-syscalls.h',
-            'src/unix/procfs-exepath.c',
-            'src/unix/random-getrandom.c',
-            'src/unix/random-sysctl-linux.c',
-            'src/unix/sysinfo-loadavg.c',
+            'libuv/src/unix/linux-core.c',
+            'libuv/src/unix/linux-inotify.c',
+            'libuv/src/unix/linux-syscalls.c',
+            'libuv/src/unix/linux-syscalls.h',
+            'libuv/src/unix/procfs-exepath.c',
+            'libuv/src/unix/random-getrandom.c',
+            'libuv/src/unix/random-sysctl-linux.c',
+            'libuv/src/unix/sysinfo-loadavg.c',
           ],
           'link_settings': {
             'libraries': [ '-ldl', '-lrt' ],
@@ -253,16 +253,16 @@
         }],
         [ 'OS=="android"', {
           'sources': [
-            'src/unix/linux-core.c',
-            'src/unix/linux-inotify.c',
-            'src/unix/linux-syscalls.c',
-            'src/unix/linux-syscalls.h',
-            'src/unix/pthread-fixes.c',
-            'src/unix/android-ifaddrs.c',
-            'src/unix/procfs-exepath.c',
-            'src/unix/random-getrandom.c',
-            'src/unix/random-sysctl-linux.c',
-            'src/unix/sysinfo-loadavg.c',
+            'libuv/src/unix/linux-core.c',
+            'libuv/src/unix/linux-inotify.c',
+            'libuv/src/unix/linux-syscalls.c',
+            'libuv/src/unix/linux-syscalls.h',
+            'libuv/src/unix/pthread-fixes.c',
+            'libuv/src/unix/android-ifaddrs.c',
+            'libuv/src/unix/procfs-exepath.c',
+            'libuv/src/unix/random-getrandom.c',
+            'libuv/src/unix/random-sysctl-linux.c',
+            'libuv/src/unix/sysinfo-loadavg.c',
           ],
           'link_settings': {
             'libraries': [ '-ldl' ],
@@ -270,8 +270,8 @@
         }],
         [ 'OS=="solaris"', {
           'sources': [
-            'src/unix/no-proctitle.c',
-            'src/unix/sunos.c',
+            'libuv/src/unix/no-proctitle.c',
+            'libuv/src/unix/sunos.c',
           ],
           'defines': [
             '__EXTENSIONS__',
@@ -291,7 +291,7 @@
             'os_name': '<!(uname -s)',
           },
           'sources': [
-            'src/unix/aix-common.c',
+            'libuv/src/unix/aix-common.c',
           ],
           'defines': [
             '_ALL_SOURCE',
@@ -302,14 +302,14 @@
           'conditions': [
             [ '"<(os_name)"=="OS400"', {
               'sources': [
-                'src/unix/ibmi.c',
-                'src/unix/posix-poll.c',
-                'src/unix/no-fsevents.c',
-                'src/unix/no-proctitle.c',
+                'libuv/src/unix/ibmi.c',
+                'libuv/src/unix/posix-poll.c',
+                'libuv/src/unix/no-fsevents.c',
+                'libuv/src/unix/no-proctitle.c',
               ],
             }, {
               'sources': [
-                'src/unix/aix.c'
+                'libuv/src/unix/aix.c'
               ],
               'defines': [
                 'HAVE_SYS_AHAFS_EVPRODS_H'
@@ -323,33 +323,33 @@
           ]
         }],
         [ 'OS=="freebsd" or OS=="dragonflybsd"', {
-          'sources': [ 'src/unix/freebsd.c' ],
+          'sources': [ 'libuv/src/unix/freebsd.c' ],
         }],
         [ 'OS=="freebsd"', {
-          'sources': [ 'src/unix/random-getrandom.c' ],
+          'sources': [ 'libuv/src/unix/random-getrandom.c' ],
         }],
         [ 'OS=="openbsd"', {
           'sources': [
-            'src/unix/openbsd.c',
-            'src/unix/random-getentropy.c',
+            'libuv/src/unix/openbsd.c',
+            'libuv/src/unix/random-getentropy.c',
           ],
         }],
         [ 'OS=="netbsd"', {
           'link_settings': {
             'libraries': [ '-lkvm' ],
           },
-          'sources': [ 'src/unix/netbsd.c' ],
+          'sources': [ 'libuv/src/unix/netbsd.c' ],
         }],
         [ 'OS in "freebsd dragonflybsd openbsd netbsd".split()', {
           'sources': [
-            'src/unix/posix-hrtime.c',
-            'src/unix/bsd-proctitle.c'
+            'libuv/src/unix/posix-hrtime.c',
+            'libuv/src/unix/bsd-proctitle.c'
           ],
         }],
         [ 'OS in "ios mac freebsd dragonflybsd openbsd netbsd".split()', {
           'sources': [
-            'src/unix/bsd-ifaddrs.c',
-            'src/unix/kqueue.c',
+            'libuv/src/unix/bsd-ifaddrs.c',
+            'libuv/src/unix/kqueue.c',
           ],
         }],
         ['uv_library=="shared_library"', {
@@ -357,9 +357,9 @@
         }],
         ['OS=="zos"', {
           'sources': [
-            'src/unix/pthread-fixes.c',
-            'src/unix/os390.c',
-            'src/unix/os390-syscalls.c'
+            'libuv/src/unix/pthread-fixes.c',
+            'libuv/src/unix/os390.c',
+            'libuv/src/unix/os390-syscalls.c'
           ]
         }],
       ]
