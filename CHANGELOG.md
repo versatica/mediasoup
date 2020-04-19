@@ -1,6 +1,14 @@
 # Changelog
 
 
+### 3.5.8
+
+* Enable `UV_UDP_RECVMMSG`:
+  - Upgrade libuv to 1.37.0.
+  - Use `uv_udp_init_ex()` with `UV_UDP_RECVMMSG` flag.
+  - Add our own `uv.gyp` now that libuv has removed support for GYP (fixes #384).
+
+
 ### 3.5.7
 
 * Fix crash in mediasoup-worker due to conversion from `uint64_t` to `int64_t` (used within `libwebrtc` code. Fixes #357.
