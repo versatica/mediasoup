@@ -162,7 +162,8 @@ namespace RTC
 			{
 				case Transport::UDP:
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
-					err      = uv_udp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle));
+					err      = uv_udp_init_ex(
+            DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
 					break;
 
 				case Transport::TCP:
@@ -178,7 +179,7 @@ namespace RTC
 				switch (transport)
 				{
 					case Transport::UDP:
-						MS_THROW_ERROR("uv_udp_init() failed: %s", uv_strerror(err));
+						MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
 						break;
 
 					case Transport::TCP:
