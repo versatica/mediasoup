@@ -87,7 +87,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMsInt64();
 
 		this->bitrates.desiredBitrate          = 0u;
 		this->bitrates.effectiveDesiredBitrate = 0u;
@@ -111,7 +111,7 @@ namespace RTC
 		return this->rtpTransportControllerSend->packet_sender()->GetPacingInfo();
 	}
 
-	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, uint64_t nowMs)
+	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -128,12 +128,12 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpReceiverReport(
-	  const webrtc::RTCPReportBlock& report, float rtt, uint64_t nowMs)
+	  const webrtc::RTCPReportBlock& report, float rtt, int64_t nowMs)
 	{
 		MS_TRACE();
 
 		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
-		  { report }, static_cast<int64_t>(rtt), static_cast<int64_t>(nowMs));
+		  { report }, static_cast<int64_t>(rtt), nowMs);
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpTransportFeedback(
@@ -148,7 +148,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = DepLibUV::GetTimeMsInt64();
 
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
 		if (!force)
@@ -217,7 +217,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t nowMs = DepLibUV::GetTimeMs();
+		uint64_t nowMs = DepLibUV::GetTimeMsInt64();
 		bool notify{ false };
 
 		// Ignore if first event.

@@ -19,11 +19,26 @@ public:
 public:
 	void Close();
 	virtual void Dump() const;
-	const struct sockaddr* GetLocalAddress() const;
-	int GetLocalFamily() const;
-	const std::string& GetLocalIp() const;
-	uint16_t GetLocalPort() const;
-	size_t GetNumConnections() const;
+	const struct sockaddr* GetLocalAddress() const
+	{
+		return reinterpret_cast<const struct sockaddr*>(&this->localAddr);
+	}
+	int GetLocalFamily() const
+	{
+		return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
+	}
+	const std::string& GetLocalIp() const
+	{
+		return this->localIp;
+	}
+	uint16_t GetLocalPort() const
+	{
+		return this->localPort;
+	}
+	size_t GetNumConnections() const
+	{
+		return this->connections.size();
+	}
 
 protected:
 	void AcceptTcpConnection(TcpConnection* connection);
@@ -47,7 +62,7 @@ public:
 protected:
 	struct sockaddr_storage localAddr;
 	std::string localIp;
-	uint16_t localPort{ 0 };
+	uint16_t localPort{ 0u };
 
 private:
 	// Allocated by this (may be passed by argument).
@@ -56,32 +71,5 @@ private:
 	std::unordered_set<TcpConnection*> connections;
 	bool closed{ false };
 };
-
-/* Inline methods. */
-
-inline size_t TcpServer::GetNumConnections() const
-{
-	return this->connections.size();
-}
-
-inline const struct sockaddr* TcpServer::GetLocalAddress() const
-{
-	return reinterpret_cast<const struct sockaddr*>(&this->localAddr);
-}
-
-inline int TcpServer::GetLocalFamily() const
-{
-	return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
-}
-
-inline const std::string& TcpServer::GetLocalIp() const
-{
-	return this->localIp;
-}
-
-inline uint16_t TcpServer::GetLocalPort() const
-{
-	return this->localPort;
-}
 
 #endif

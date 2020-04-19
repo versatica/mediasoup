@@ -40,19 +40,15 @@ namespace RTC
 		bool DecryptSrtp(uint8_t* data, size_t* len);
 		bool EncryptRtcp(const uint8_t** data, size_t* len);
 		bool DecryptSrtcp(uint8_t* data, size_t* len);
-		void RemoveStream(uint32_t ssrc);
+		void RemoveStream(uint32_t ssrc)
+		{
+			srtp_remove_stream(this->session, uint32_t{ htonl(ssrc) });
+		}
 
 	private:
 		// Allocated by this.
 		srtp_t session{ nullptr };
 	};
-
-	/* Inline instance methods. */
-
-	inline void SrtpSession::RemoveStream(uint32_t ssrc)
-	{
-		srtp_remove_stream(this->session, uint32_t{ htonl(ssrc) });
-	}
 } // namespace RTC
 
 #endif

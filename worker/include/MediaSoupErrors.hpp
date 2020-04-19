@@ -8,26 +8,18 @@
 class MediaSoupError : public std::runtime_error
 {
 public:
-	explicit MediaSoupError(const char* description);
+	explicit MediaSoupError(const char* description) : std::runtime_error(description)
+	{
+	}
 };
-
-/* Inline methods. */
-
-inline MediaSoupError::MediaSoupError(const char* description) : std::runtime_error(description)
-{
-}
 
 class MediaSoupTypeError : public MediaSoupError
 {
 public:
-	explicit MediaSoupTypeError(const char* description);
+	explicit MediaSoupTypeError(const char* description) : MediaSoupError(description)
+	{
+	}
 };
-
-/* Inline methods. */
-
-inline MediaSoupTypeError::MediaSoupTypeError(const char* description) : MediaSoupError(description)
-{
-}
 
 // clang-format off
 #define MS_THROW_ERROR(desc, ...) \

@@ -91,6 +91,7 @@ test('dataConsumer.dump() succeeds', async () =>
 	const data = await dataConsumer.dump();
 
 	expect(data.id).toBe(dataConsumer.id);
+	expect(data.dataProducerId).toBe(dataConsumer.dataProducerId);
 	expect(data.sctpStreamParameters).toBeType('object');
 	expect(data.sctpStreamParameters.streamId)
 		.toBe(dataConsumer.sctpStreamParameters.streamId);

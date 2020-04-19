@@ -57,8 +57,14 @@ public:
 	  struct sockaddr_storage* localAddr,
 	  const std::string& localIp,
 	  uint16_t localPort);
-	bool IsClosed() const;
-	uv_tcp_t* GetUvHandle() const;
+	bool IsClosed() const
+	{
+		return this->closed;
+	}
+	uv_tcp_t* GetUvHandle() const
+	{
+		return this->uvHandle;
+	}
 	void Start();
 	void Write(const uint8_t* data, size_t len, TcpConnection::onSendCallback* cb);
 	void Write(
@@ -68,15 +74,42 @@ public:
 	  size_t len2,
 	  TcpConnection::onSendCallback* cb);
 	void ErrorReceiving();
-	const struct sockaddr* GetLocalAddress() const;
-	int GetLocalFamily() const;
-	const std::string& GetLocalIp() const;
-	uint16_t GetLocalPort() const;
-	const struct sockaddr* GetPeerAddress() const;
-	const std::string& GetPeerIp() const;
-	uint16_t GetPeerPort() const;
-	size_t GetRecvBytes() const;
-	size_t GetSentBytes() const;
+	const struct sockaddr* GetLocalAddress() const
+	{
+		return reinterpret_cast<const struct sockaddr*>(this->localAddr);
+	}
+	int GetLocalFamily() const
+	{
+		return reinterpret_cast<const struct sockaddr*>(this->localAddr)->sa_family;
+	}
+	const std::string& GetLocalIp() const
+	{
+		return this->localIp;
+	}
+	uint16_t GetLocalPort() const
+	{
+		return this->localPort;
+	}
+	const struct sockaddr* GetPeerAddress() const
+	{
+		return reinterpret_cast<const struct sockaddr*>(&this->peerAddr);
+	}
+	const std::string& GetPeerIp() const
+	{
+		return this->peerIp;
+	}
+	uint16_t GetPeerPort() const
+	{
+		return this->peerPort;
+	}
+	size_t GetRecvBytes() const
+	{
+		return this->recvBytes;
+	}
+	size_t GetSentBytes() const
+	{
+		return this->sentBytes;
+	}
 
 private:
 	bool SetPeerAddress();
@@ -93,16 +126,16 @@ protected:
 
 protected:
 	// Passed by argument.
-	size_t bufferSize{ 0 };
+	size_t bufferSize{ 0u };
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.
-	size_t bufferDataLen{ 0 };
+	size_t bufferDataLen{ 0u };
 	std::string localIp;
-	uint16_t localPort{ 0 };
+	uint16_t localPort{ 0u };
 	struct sockaddr_storage peerAddr;
 	std::string peerIp;
-	uint16_t peerPort{ 0 };
+	uint16_t peerPort{ 0u };
 
 private:
 	// Passed by argument.
@@ -112,67 +145,10 @@ private:
 	// Others.
 	struct sockaddr_storage* localAddr{ nullptr };
 	bool closed{ false };
-	size_t recvBytes{ 0 };
-	size_t sentBytes{ 0 };
+	size_t recvBytes{ 0u };
+	size_t sentBytes{ 0u };
 	bool isClosedByPeer{ false };
 	bool hasError{ false };
 };
-
-/* Inline methods. */
-
-inline bool TcpConnection::IsClosed() const
-{
-	return this->closed;
-}
-
-inline uv_tcp_t* TcpConnection::GetUvHandle() const
-{
-	return this->uvHandle;
-}
-
-inline const struct sockaddr* TcpConnection::GetLocalAddress() const
-{
-	return reinterpret_cast<const struct sockaddr*>(this->localAddr);
-}
-
-inline int TcpConnection::GetLocalFamily() const
-{
-	return reinterpret_cast<const struct sockaddr*>(this->localAddr)->sa_family;
-}
-
-inline const std::string& TcpConnection::GetLocalIp() const
-{
-	return this->localIp;
-}
-
-inline uint16_t TcpConnection::GetLocalPort() const
-{
-	return this->localPort;
-}
-
-inline const struct sockaddr* TcpConnection::GetPeerAddress() const
-{
-	return reinterpret_cast<const struct sockaddr*>(&this->peerAddr);
-}
-
-inline const std::string& TcpConnection::GetPeerIp() const
-{
-	return this->peerIp;
-}
-
-inline uint16_t TcpConnection::GetPeerPort() const
-{
-	return this->peerPort;
-}
-
-inline size_t TcpConnection::GetRecvBytes() const
-{
-	return this->recvBytes;
-}
-
-inline size_t TcpConnection::GetSentBytes() const
-{
-	return this->sentBytes;
-}
 
 #endif

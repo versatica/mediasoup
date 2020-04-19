@@ -2391,6 +2391,24 @@ with expansion:
   4294967295 (0x<hex digits>) > 4
 
 -------------------------------------------------------------------------------
+Composed matchers are distinct
+-------------------------------------------------------------------------------
+Matchers.tests.cpp:<line number>
+...............................................................................
+
+Matchers.tests.cpp:<line number>: PASSED:
+  REQUIRE_THAT( testStringForMatching2(), !composed1 )
+with expansion:
+  "some completely different text that contains one common word" not (
+  contains: "string" or contains: "random" )
+
+Matchers.tests.cpp:<line number>: PASSED:
+  REQUIRE_THAT( testStringForMatching2(), composed2 )
+with expansion:
+  "some completely different text that contains one common word" ( contains:
+  "string" or contains: "random" or contains: "different" )
+
+-------------------------------------------------------------------------------
 Contains string matcher
 -------------------------------------------------------------------------------
 Matchers.tests.cpp:<line number>
@@ -5712,6 +5730,17 @@ with expansion:
   5 != 6
 
 -------------------------------------------------------------------------------
+Lambdas in assertions
+-------------------------------------------------------------------------------
+Compilation.tests.cpp:<line number>
+...............................................................................
+
+Compilation.tests.cpp:<line number>: PASSED:
+  REQUIRE( []() { return true; }() )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
 Less-than inequalities with different epsilons
 -------------------------------------------------------------------------------
 Approx.tests.cpp:<line number>
@@ -7818,6 +7847,102 @@ with expansion:
 
 -------------------------------------------------------------------------------
 Process can be configured on command line
+  abort
+  wait-for-keypress
+  Accepted options
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({"test", "--wait-for-keypress", std::get<0>(input)}) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.waitForKeypress == std::get<1>(input) )
+with expansion:
+  0 == 0
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
+  abort
+  wait-for-keypress
+  Accepted options
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({"test", "--wait-for-keypress", std::get<0>(input)}) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.waitForKeypress == std::get<1>(input) )
+with expansion:
+  1 == 1
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
+  abort
+  wait-for-keypress
+  Accepted options
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({"test", "--wait-for-keypress", std::get<0>(input)}) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.waitForKeypress == std::get<1>(input) )
+with expansion:
+  2 == 2
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
+  abort
+  wait-for-keypress
+  Accepted options
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({"test", "--wait-for-keypress", std::get<0>(input)}) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.waitForKeypress == std::get<1>(input) )
+with expansion:
+  3 == 3
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
+  abort
+  wait-for-keypress
+  invalid options are reported
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( !result )
+with expansion:
+  true
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE_THAT( result.errorMessage(), Contains("never") && Contains("both") )
+with expansion:
+  "keypress argument must be one of: never, start, exit or both. 'sometimes'
+  not recognised" ( contains: "never" and contains: "both" )
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
   nothrow
   -e
 -------------------------------------------------------------------------------
@@ -8046,7 +8171,7 @@ with expansion:
 -------------------------------------------------------------------------------
 Process can be configured on command line
   Benchmark options
-  resamples
+  confidence-interval
 -------------------------------------------------------------------------------
 CmdLine.tests.cpp:<line number>
 ...............................................................................
@@ -8064,7 +8189,7 @@ with expansion:
 -------------------------------------------------------------------------------
 Process can be configured on command line
   Benchmark options
-  resamples
+  no-analysis
 -------------------------------------------------------------------------------
 CmdLine.tests.cpp:<line number>
 ...............................................................................
@@ -8078,6 +8203,24 @@ CmdLine.tests.cpp:<line number>: PASSED:
   REQUIRE( config.benchmarkNoAnalysis )
 with expansion:
   true
+
+-------------------------------------------------------------------------------
+Process can be configured on command line
+  Benchmark options
+  warmup-time
+-------------------------------------------------------------------------------
+CmdLine.tests.cpp:<line number>
+...............................................................................
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  CHECK( cli.parse({ "test", "--benchmark-warmup-time=10" }) )
+with expansion:
+  {?}
+
+CmdLine.tests.cpp:<line number>: PASSED:
+  REQUIRE( config.benchmarkWarmupTime == 10 )
+with expansion:
+  10 == 10
 
 -------------------------------------------------------------------------------
 Product with differing arities - std::tuple<int, double, float>
@@ -11466,6 +11609,39 @@ with expansion:
   "[\x7F]" == "[\x7F]"
 
 -------------------------------------------------------------------------------
+adding a hide tag implicitly enables all others
+-------------------------------------------------------------------------------
+Tag.tests.cpp:<line number>
+...............................................................................
+
+Tag.tests.cpp:<line number>: PASSED:
+  REQUIRE_THAT( testcase.tags, VectorContains(std::string(".")) && VectorContains(std::string("!hide")) )
+with expansion:
+  { "!hide", "." } ( Contains: "." and Contains: "!hide" )
+
+-------------------------------------------------------------------------------
+adding a hide tag implicitly enables all others
+-------------------------------------------------------------------------------
+Tag.tests.cpp:<line number>
+...............................................................................
+
+Tag.tests.cpp:<line number>: PASSED:
+  REQUIRE_THAT( testcase.tags, VectorContains(std::string(".")) && VectorContains(std::string("!hide")) )
+with expansion:
+  { "!hide", "." } ( Contains: "." and Contains: "!hide" )
+
+-------------------------------------------------------------------------------
+adding a hide tag implicitly enables all others
+-------------------------------------------------------------------------------
+Tag.tests.cpp:<line number>
+...............................................................................
+
+Tag.tests.cpp:<line number>: PASSED:
+  REQUIRE_THAT( testcase.tags, VectorContains(std::string(".")) && VectorContains(std::string("!hide")) )
+with expansion:
+  { "!hide", ".", "foo" } ( Contains: "." and Contains: "!hide" )
+
+-------------------------------------------------------------------------------
 array<int, N> -> toString
 -------------------------------------------------------------------------------
 ToStringVector.tests.cpp:<line number>
@@ -12387,7 +12563,7 @@ Tag.tests.cpp:<line number>
 Tag.tests.cpp:<line number>: PASSED:
   REQUIRE_THAT( testcase.tags, Catch::VectorContains(std::string("magic-tag")) && Catch::VectorContains(std::string(".")) )
 with expansion:
-  { ".", "magic-tag" } ( Contains: "magic-tag" and Contains: "." )
+  { "!hide", ".", "magic-tag" } ( Contains: "magic-tag" and Contains: "." )
 
 -------------------------------------------------------------------------------
 splitString
@@ -13251,6 +13427,6 @@ Misc.tests.cpp:<line number>
 Misc.tests.cpp:<line number>: PASSED:
 
 ===============================================================================
-test cases:  304 |  214 passed |  86 failed |  4 failed as expected
-assertions: 1676 | 1507 passed | 148 failed | 21 failed as expected
+test cases:  307 |  217 passed |  86 failed |  4 failed as expected
+assertions: 1694 | 1525 passed | 148 failed | 21 failed as expected
 

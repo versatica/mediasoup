@@ -49,14 +49,22 @@ namespace RTC
 			static ExtendedReportBlock* Parse(const uint8_t* data, size_t len);
 
 		public:
-			ExtendedReportBlock(Type type);
+			ExtendedReportBlock(Type type) : type(type)
+			{
+				this->header = reinterpret_cast<CommonHeader*>(this->raw);
+
+				this->header->reserved = 0;
+			}
 			virtual ~ExtendedReportBlock() = default;
 
 		public:
 			virtual void Dump() const                 = 0;
 			virtual size_t Serialize(uint8_t* buffer) = 0;
 			virtual size_t GetSize() const            = 0;
-			ExtendedReportBlock::Type GetType() const;
+			ExtendedReportBlock::Type GetType() const
+			{
+				return this->type;
+			}
 
 		protected:
 			Type type;
@@ -75,102 +83,65 @@ namespace RTC
 			static ExtendedReportPacket* Parse(const uint8_t* data, size_t len);
 
 		public:
-			ExtendedReportPacket();
-			explicit ExtendedReportPacket(CommonHeader* commonHeader);
-			~ExtendedReportPacket() override;
+			ExtendedReportPacket() : Packet(Type::XR)
+			{
+			}
+			explicit ExtendedReportPacket(CommonHeader* commonHeader) : Packet(commonHeader)
+			{
+			}
+			~ExtendedReportPacket() override
+			{
+				for (auto* report : this->reports)
+				{
+					delete report;
+				}
+			}
 
-			void AddReport(ExtendedReportBlock* report);
-			uint32_t GetSsrc() const;
-			void SetSsrc(uint32_t ssrc);
-			Iterator Begin();
-			Iterator End();
+			void AddReport(ExtendedReportBlock* report)
+			{
+				this->reports.push_back(report);
+			}
+			uint32_t GetSsrc() const
+			{
+				return this->ssrc;
+			}
+			void SetSsrc(uint32_t ssrc)
+			{
+				this->ssrc = ssrc;
+			}
+			Iterator Begin()
+			{
+				return this->reports.begin();
+			}
+			Iterator End()
+			{
+				return this->reports.end();
+			}
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetCount() const override;
-			size_t GetSize() const override;
+			size_t GetCount() const override
+			{
+				return 0;
+			}
+			size_t GetSize() const override
+			{
+				size_t size = sizeof(Packet::CommonHeader) + 4u /*ssrc*/;
+
+				for (auto* report : this->reports)
+				{
+					size += report->GetSize();
+				}
+
+				return size;
+			}
 
 		private:
 			uint32_t ssrc{ 0u };
 			std::vector<ExtendedReportBlock*> reports;
 		};
-
-		/* Inline ExtendedReportBlock instance methods. */
-
-		inline ExtendedReportBlock::ExtendedReportBlock(Type type) : type(type)
-		{
-			this->header = reinterpret_cast<CommonHeader*>(this->raw);
-
-			this->header->reserved = 0;
-		}
-
-		inline ExtendedReportBlock::Type ExtendedReportBlock::GetType() const
-		{
-			return this->type;
-		}
-
-		inline void ExtendedReportPacket::AddReport(ExtendedReportBlock* report)
-		{
-			this->reports.push_back(report);
-		}
-
-		inline uint32_t ExtendedReportPacket::GetSsrc() const
-		{
-			return this->ssrc;
-		}
-
-		inline void ExtendedReportPacket::SetSsrc(uint32_t ssrc)
-		{
-			this->ssrc = ssrc;
-		}
-
-		/* Inline ExtendedReportPacket instance methods. */
-
-		inline ExtendedReportPacket::ExtendedReportPacket() : Packet(Type::XR)
-		{
-		}
-
-		inline ExtendedReportPacket::ExtendedReportPacket(CommonHeader* commonHeader)
-		  : Packet(commonHeader)
-		{
-		}
-
-		inline ExtendedReportPacket::~ExtendedReportPacket()
-		{
-			for (auto* report : this->reports)
-			{
-				delete report;
-			}
-		}
-
-		inline ExtendedReportPacket::Iterator ExtendedReportPacket::Begin()
-		{
-			return this->reports.begin();
-		}
-
-		inline ExtendedReportPacket::Iterator ExtendedReportPacket::End()
-		{
-			return this->reports.end();
-		}
-
-		inline size_t ExtendedReportPacket::GetCount() const
-		{
-			return 0;
-		}
-
-		inline size_t ExtendedReportPacket::GetSize() const
-		{
-			size_t size = sizeof(Packet::CommonHeader) + 4u /*ssrc*/;
-
-			for (auto* report : this->reports)
-			{
-				size += report->GetSize();
-			}
-
-			return size;
-		}
 	} // namespace RTCP
 } // namespace RTC
 

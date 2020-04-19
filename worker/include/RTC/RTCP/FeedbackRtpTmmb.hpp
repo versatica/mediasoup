@@ -34,23 +34,44 @@ namespace RTC
 			static const FeedbackRtp::MessageType messageType;
 
 		public:
+			FeedbackRtpTmmbItem() = default;
 			explicit FeedbackRtpTmmbItem(const uint8_t* data);
 			explicit FeedbackRtpTmmbItem(const Header* header);
-			FeedbackRtpTmmbItem();
 			~FeedbackRtpTmmbItem() override = default;
 
-			uint32_t GetSsrc() const;
-			void SetSsrc(uint32_t ssrc);
-			uint64_t GetBitrate() const;
-			void SetBitrate(uint64_t bitrate);
-			uint16_t GetOverhead() const;
-			void SetOverhead(uint16_t overhead);
+			uint32_t GetSsrc() const
+			{
+				return this->ssrc;
+			}
+			void SetSsrc(uint32_t ssrc)
+			{
+				this->ssrc = ssrc;
+			}
+			uint64_t GetBitrate() const
+			{
+				return this->bitrate;
+			}
+			void SetBitrate(uint64_t bitrate)
+			{
+				this->bitrate = bitrate;
+			}
+			uint16_t GetOverhead() const
+			{
+				return this->overhead;
+			}
+			void SetOverhead(uint16_t overhead)
+			{
+				this->overhead = overhead;
+			}
 
 			/* Virtual methods inherited from FeedbackItem. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetSize() const override;
+			size_t GetSize() const override
+			{
+				return sizeof(Header);
+			}
 
 		private:
 			uint32_t ssrc{ 0 };
@@ -73,53 +94,6 @@ namespace RTC
 		// Tmmbn packets declaration.
 		using FeedbackRtpTmmbrPacket = FeedbackRtpItemsPacket<FeedbackRtpTmmbrItem>;
 		using FeedbackRtpTmmbnPacket = FeedbackRtpItemsPacket<FeedbackRtpTmmbnItem>;
-
-		/* Inline instance methods. */
-
-		template<typename T>
-		inline FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem() = default;
-
-		template<typename T>
-		inline size_t FeedbackRtpTmmbItem<T>::GetSize() const
-		{
-			return sizeof(Header);
-		}
-
-		template<typename T>
-		inline uint32_t FeedbackRtpTmmbItem<T>::GetSsrc() const
-		{
-			return this->ssrc;
-		}
-
-		template<typename T>
-		inline void FeedbackRtpTmmbItem<T>::SetSsrc(uint32_t ssrc)
-		{
-			this->ssrc = ssrc;
-		}
-
-		template<typename T>
-		inline uint64_t FeedbackRtpTmmbItem<T>::GetBitrate() const
-		{
-			return this->bitrate;
-		}
-
-		template<typename T>
-		inline void FeedbackRtpTmmbItem<T>::SetBitrate(uint64_t bitrate)
-		{
-			this->bitrate = bitrate;
-		}
-
-		template<typename T>
-		inline uint16_t FeedbackRtpTmmbItem<T>::GetOverhead() const
-		{
-			return this->overhead;
-		}
-
-		template<typename T>
-		inline void FeedbackRtpTmmbItem<T>::SetOverhead(uint16_t overhead)
-		{
-			this->overhead = overhead;
-		}
 	} // namespace RTCP
 } // namespace RTC
 

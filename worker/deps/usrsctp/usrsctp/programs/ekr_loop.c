@@ -263,6 +263,7 @@ main(int argc, char *argv[])
 {
 	struct sockaddr_in sin_s, sin_c;
 	struct sockaddr_conn sconn;
+	struct sctp_paddrparams paddrparams;
 #ifdef _WIN32
 	SOCKET fd_c, fd_s;
 #else
@@ -413,6 +414,17 @@ main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	debug_printf("to %d.\n", cur_buf_size);
+	memset(&paddrparams, 0, sizeof(struct sctp_paddrparams));
+	paddrparams.spp_address.ss_family = AF_CONN;
+#ifdef HAVE_SCONN_LEN
+	paddrparams.spp_address.ss_len = sizeof(struct sockaddr_conn);
+#endif
+	paddrparams.spp_flags = SPP_PMTUD_DISABLE;
+	paddrparams.spp_pathmtu = 9000;
+	if (usrsctp_setsockopt(s_c, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &paddrparams, sizeof(struct sctp_paddrparams)) < 0) {
+		perror("usrsctp_setsockopt");
+		exit(EXIT_FAILURE);
+	}
 	if ((s_l = usrsctp_socket(AF_CONN, SOCK_STREAM, IPPROTO_SCTP, receive_cb, NULL, 0, &fd_s)) == NULL) {
 		perror("usrsctp_socket");
 		exit(EXIT_FAILURE);

@@ -1,6 +1,19 @@
 # Changelog
 
 
+### 3.5.7
+
+* Fix crash in mediasoup-worker due to conversion from `uint64_t` to `int64_t` (used within `libwebrtc` code. Fixes #357.
+* Update `usrsctp` library.
+* Update Node deps.
+
+
+### 3.5.6
+
+* `SeqManager.cpp`: Fix video lag after a long time.
+  - Fixes #372 (thanks @penguinol for reporting it and giving the solution).
+
+
 ### 3.5.5
 
 * `UdpSocket.cpp`: Revert `uv__udp_recvmmsg()` usage since it notifies about received UDP packets in reverse order. Feature on hold until fixed. 
@@ -40,7 +53,7 @@
 ### 3.4.13
 
 * Update `uuid` dep to 7.0.X (new API).
-* Fix crash due wrong array index in `PipeConsumer::FillJwon()`.
+* Fix crash due wrong array index in `PipeConsumer::FillJson()`.
   - Fixes #364
 
 
@@ -99,7 +112,7 @@
 ### 3.4.5
 
 * Update deps.
-* Fix text in `./github/Bug_Report.md` so it no longer references the decrepated mailing list.
+* Fix text in `./github/Bug_Report.md` so it no longer references the deprecated mailing list.
 
 
 ### 3.4.4
@@ -458,7 +471,7 @@
 
 ### 2.5.4
 
-* `server.Room()`: Assign workers incrementally or explicitely via new `workerIdx` argument.
+* `server.Room()`: Assign workers incrementally or explicitly via new `workerIdx` argument.
 * Add `server.numWorkers` getter.
 
 
@@ -523,7 +536,7 @@
 
 ### 2.3.2
 
-* `Channel.js`: Upgrade `REQUEST_TIMEOUT` to 20 seconds to avoid timeout errors when the the Node or worker thread usage is too high (related to this [issue](https://github.com/versatica/mediasoup-client/issues/48)).
+* `Channel.js`: Upgrade `REQUEST_TIMEOUT` to 20 seconds to avoid timeout errors when the Node or worker thread usage is too high (related to this [issue](https://github.com/versatica/mediasoup-client/issues/48)).
 
 
 ### 2.3.1

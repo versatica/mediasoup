@@ -47,12 +47,17 @@ namespace RTC
 			class EncodingContext : public RTC::Codecs::EncodingContext
 			{
 			public:
-				explicit EncodingContext(RTC::Codecs::EncodingContext::Params& params);
+				explicit EncodingContext(RTC::Codecs::EncodingContext::Params& params)
+				  : RTC::Codecs::EncodingContext(params)
+				{
+				}
 				~EncodingContext() = default;
 
 				/* Pure virtual methods inherited from RTC::Codecs::EncodingContext. */
 			public:
-				void SyncRequired() override;
+				void SyncRequired() override
+				{
+				}
 			};
 
 		public:
@@ -63,50 +68,29 @@ namespace RTC
 				~PayloadDescriptorHandler() = default;
 
 			public:
-				void Dump() const override;
+				void Dump() const override
+				{
+					this->payloadDescriptor->Dump();
+				}
 				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
 				void Restore(uint8_t* data) override;
-				uint8_t GetSpatialLayer() const override;
-				uint8_t GetTemporalLayer() const override;
-				bool IsKeyFrame() const override;
+				uint8_t GetSpatialLayer() const override
+				{
+					return 0u;
+				}
+				uint8_t GetTemporalLayer() const override
+				{
+					return this->payloadDescriptor->tid;
+				}
+				bool IsKeyFrame() const override
+				{
+					return this->payloadDescriptor->isKeyFrame;
+				}
 
 			private:
 				std::unique_ptr<PayloadDescriptor> payloadDescriptor;
 			};
 		};
-
-		/* Inline EncondingContext methods. */
-
-		inline H264::EncodingContext::EncodingContext(RTC::Codecs::EncodingContext::Params& params)
-		  : RTC::Codecs::EncodingContext(params)
-		{
-		}
-
-		inline void H264::EncodingContext::SyncRequired()
-		{
-		}
-
-		/* Inline PayloadDescriptorHandler methods. */
-
-		inline void H264::PayloadDescriptorHandler::Dump() const
-		{
-			this->payloadDescriptor->Dump();
-		}
-
-		inline uint8_t H264::PayloadDescriptorHandler::GetSpatialLayer() const
-		{
-			return 0u;
-		}
-
-		inline uint8_t H264::PayloadDescriptorHandler::GetTemporalLayer() const
-		{
-			return this->payloadDescriptor->tid;
-		}
-
-		inline bool H264::PayloadDescriptorHandler::IsKeyFrame() const
-		{
-			return this->payloadDescriptor->isKeyFrame;
-		}
 	} // namespace Codecs
 } // namespace RTC
 

@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 357775 2020-02-11 20:02:20Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 359405 2020-03-28 20:25:45Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_UTIL_H_
@@ -430,5 +430,10 @@ uint32_t sctp_hc_get_mtu(union sctp_sockstore *, uint16_t);
 #endif
 void sctp_set_state(struct sctp_tcb *, int);
 void sctp_add_substate(struct sctp_tcb *, int);
+uint32_t sctp_ticks_to_msecs(uint32_t);
+uint32_t sctp_msecs_to_ticks(uint32_t);
+uint32_t sctp_ticks_to_secs(uint32_t);
+uint32_t sctp_secs_to_ticks(uint32_t);
+
 #endif				/* _KERNEL */
 #endif

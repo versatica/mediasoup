@@ -12,8 +12,13 @@ namespace RTC
 	/* Instance methods. */
 
 	DataConsumer::DataConsumer(
-	  const std::string& id, RTC::DataConsumer::Listener* listener, json& data, size_t maxSctpMessageSize)
-	  : id(id), listener(listener), maxSctpMessageSize(maxSctpMessageSize)
+	  const std::string& id,
+	  const std::string& dataProducerId,
+	  RTC::DataConsumer::Listener* listener,
+	  json& data,
+	  size_t maxSctpMessageSize)
+	  : id(id), dataProducerId(dataProducerId), listener(listener),
+	    maxSctpMessageSize(maxSctpMessageSize)
 	{
 		MS_TRACE();
 
@@ -47,6 +52,9 @@ namespace RTC
 
 		// Add id.
 		jsonObject["id"] = this->id;
+
+		// Add dataProducerId.
+		jsonObject["dataProducerId"] = this->dataProducerId;
 
 		// Add sctpStreamParameters.
 		this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);

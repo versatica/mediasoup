@@ -20,10 +20,10 @@
 #include "rtc_base/numerics/safe_minmax.h"
 
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 
 #include <inttypes.h>
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -365,7 +365,7 @@ DataRate AimdRateControl::ChangeBitrate(DataRate new_bitrate,
       break;
 
     default:
-      assert(false);
+      MS_THROW_ERROR("unknown rate control state");
   }
   return ClampBitrate(new_bitrate, estimated_throughput);
 }
@@ -436,7 +436,7 @@ void AimdRateControl::ChangeState(const RateControlInput& input,
       rate_control_state_ = kRcHold;
       break;
     default:
-      assert(false);
+      MS_THROW_ERROR("unknown input.bw_state");
   }
 }
 
