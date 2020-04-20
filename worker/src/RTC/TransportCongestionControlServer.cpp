@@ -181,8 +181,9 @@ namespace RTC
 					break;
 
 				// NOTE: nowMs is uint64_t but we need to "convert" it to int64_t before
-				// we give it to libwebrtc lib.
-				auto nowMsInt64 = DepLibUV::TimeMs2TimeMsInt64(nowMs);
+				// we give it to libwebrtc lib (althought this is implicit in the
+				// conversion so it would be converted within the method call).
+				auto nowMsInt64 = static_cast<int64_t>(nowMs);
 
 				this->rembServer->IncomingPacket(nowMsInt64, packet->GetPayloadLength(), *packet, absSendTime);
 

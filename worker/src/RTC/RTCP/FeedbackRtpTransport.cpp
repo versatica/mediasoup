@@ -116,7 +116,7 @@ namespace RTC
 
 			this->baseSequenceNumber  = Utils::Byte::Get2Bytes(data, 0);
 			this->packetStatusCount   = Utils::Byte::Get2Bytes(data, 2);
-			this->referenceTime       = parseReferenceTime(data + 4u);
+			this->referenceTime       = parseReferenceTime(data + 4);
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
 			this->size                = len;
 

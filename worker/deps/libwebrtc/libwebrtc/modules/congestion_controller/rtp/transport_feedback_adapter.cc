@@ -25,6 +25,10 @@
 #include <cmath>
 #include <utility>
 
+// TODO: Issue 357 stuff.
+static uint8_t Issue357LastFeedbackBuffer[65536];
+static size_t Issue357LastFeedbackSize{ 0u };
+
 namespace webrtc {
 namespace {
 
@@ -184,7 +188,7 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
       mediasoup_helpers::FeedbackRtpTransport::GetBaseDeltaUs(&feedback, last_timestamp_us_) / 1000;
   }
 
-  // NOTE: Debug for https://github.com/versatica/mediasoup/issues/357.
+  // TODO (issue 357).
   int64_t prev_last_timestamp_us = last_timestamp_us_;
 
   last_timestamp_us_ =
@@ -222,7 +226,7 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
 
       // NOTE: Debug for https://github.com/versatica/mediasoup/issues/357.
       if (timestamp_ms < 0) {
-        MS_ERROR("timestamps_ms < 0 [timestamp_ms:%" PRIi64
+        MS_ERROR("[ISSUE 357] timestamps_ms < 0 [timestamp_ms:%" PRIi64
             ", current_offset_ms_:%" PRIi64
             ", offset_us:%" PRIi64
             ", last_timestamp_us_:%" PRIi64
@@ -235,6 +239,24 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
           prev_last_timestamp_us,
           feedback.GetReferenceTimestamp()
         );
+
+        if (Issue357LastFeedbackSize > 0)
+        {
+          auto* previousFeedback = RTC::RTCP::FeedbackRtpTransportPacket::Parse(Issue357LastFeedbackBuffer, Issue357LastFeedbackSize);
+
+          MS_ERROR("[ISSUE 357] previousFeedback.dump():");
+          previousFeedback->Dump();
+          MS_ERROR("[ISSUE 357] MS_DUMP_DATA(previousFeedback):");
+          MS_DUMP_DATA(previousFeedback->GetData(), previousFeedback->GetSize());
+
+          delete previousFeedback;
+        }
+
+        // TODO: TMP for issue 357.
+        MS_ERROR("[ISSUE 357] feedback.dump():");
+        feedback.Dump();
+        MS_ERROR("[ISSUE 357] MS_DUMP_DATA(feedback):");
+        MS_DUMP_DATA(feedback.GetData(), feedback.GetSize());
       }
 
       PacketFeedback packet_feedback(timestamp_ms, packet.sequence_number());
@@ -254,6 +276,11 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
                   (failed_lookups > 1 ? "s" : ""));
     }
   }
+
+  // TODO (issue 357): Store this feedback.
+  std::memcpy(Issue357LastFeedbackBuffer, feedback.GetData(), feedback.GetSize());
+  Issue357LastFeedbackSize = feedback.GetSize();
+
   return packet_feedback_vector;
 }
 
