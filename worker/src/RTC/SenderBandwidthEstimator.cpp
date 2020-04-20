@@ -110,16 +110,12 @@ namespace RTC
 			if (!sentInfo.isProbation)
 			{
 				this->cummulativeResult.AddPacket(
-				  sentInfo.size,
-				  static_cast<int64_t>(sentInfo.sentAtMs),
-				  static_cast<int64_t>(result.receivedAtMs));
+				  sentInfo.size, static_cast<int64_t>(sentInfo.sentAtMs), result.receivedAtMs);
 			}
 			else
 			{
 				this->probationCummulativeResult.AddPacket(
-				  sentInfo.size,
-				  static_cast<int64_t>(sentInfo.sentAtMs),
-				  static_cast<int64_t>(result.receivedAtMs));
+				  sentInfo.size, static_cast<int64_t>(sentInfo.sentAtMs), result.receivedAtMs);
 			}
 		}
 

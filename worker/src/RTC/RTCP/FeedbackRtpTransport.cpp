@@ -243,7 +243,7 @@ namespace RTC
 				if (packetResult.received)
 				{
 					MS_DUMP(
-					  "    seq:%" PRIu16 ", received:yes, receivedAtMs:%" PRIi32,
+					  "    seq:%" PRIu16 ", received:yes, receivedAtMs:%" PRIi64,
 					  packetResult.sequenceNumber,
 					  packetResult.receivedAtMs);
 				}
@@ -431,7 +431,7 @@ namespace RTC
 			}
 
 			size_t deltaIdx{ 0u };
-			int32_t currentReceivedAtMs = this->referenceTime * 64;
+			int64_t currentReceivedAtMs = static_cast<int64_t>(this->referenceTime * 64);
 
 			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)
 			{
