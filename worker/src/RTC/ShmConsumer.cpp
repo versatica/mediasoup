@@ -157,9 +157,12 @@ namespace RTC
 			{
 				return;
 			}
-			
+
+			this->srReceived = true;
+
 			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
 			shmCtx->WriteRtcpSenderReportTs(lastSenderReportNtpMs, lastSenderReporTs, kind);
+
 		}
 	}
 
@@ -268,6 +271,14 @@ namespace RTC
 			}
 		}
 
+		if (!this->srReceived) {
+			MS_DEBUG_TAG(rtp, "RTCP SR not received yet, ignoring packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp());
+			return false;
+		}
+
 		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm
 
 		uint8_t const* pktdata = packet->GetData();
@@ -287,7 +298,7 @@ namespace RTC
 			/* Just write out the payload	*/
 			case RTC::Media::Kind::AUDIO:
 			{
-				ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::AUDIO);
+				//ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::AUDIO);
 				seq = shmCtx->AdjustPktSeq(seq, DepLibSfuShm::ShmChunkType::AUDIO);
 				this->chunk.data = data;
 				this->chunk.len = len;
@@ -351,15 +362,19 @@ namespace RTC
 					this->chunk.begin         = begin_picture;
 					this->chunk.end           = (marker != 0);
 
-					MS_DEBUG_TAG(rtp, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
-						nal,
-						this->chunk.len,
-						this->chunk.rtp_time,
-						this->chunk.first_rtp_seq,
-						begin_picture,
-						marker,
-						shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
-
+					if (nal != 1)
+					{
+						MS_DEBUG_TAG(rtp, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
+							nal,
+							this->chunk.len,
+							this->chunk.rtp_time,
+							this->chunk.first_rtp_seq,
+							isKeyFrame,
+							begin_picture,
+							marker,
+							shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
+					}
+					
 					if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
 					{
 						MS_WARN_TAG(rtp, "FAIL writing video NALU=%d: ts %" PRIu64 " seq %" PRIu64, nal, this->chunk.rtp_time, this->chunk.first_rtp_seq);
@@ -435,16 +450,20 @@ namespace RTC
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq; // TODO: is it okay to send several NALUs with same seq?
 								this->chunk.ssrc          = ssrc;
 
-								MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 "chunk.begin=%d chunk.end=%d",
-									subnal, 
-									len, 
-									naluSize, 
-									this->chunk.len, 
-									this->chunk.rtp_time,
-									this->chunk.first_rtp_seq,
-									shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
-									this->chunk.begin,
-									this->chunk.end);
+								if (subnal != 1)
+								{
+									MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
+										subnal, 
+										len, 
+										naluSize, 
+										this->chunk.len, 
+										this->chunk.rtp_time,
+										this->chunk.first_rtp_seq,
+										shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
+										isKeyFrame,
+										this->chunk.begin,
+										this->chunk.end);
+								}
 
 								if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
 								{
@@ -523,18 +542,19 @@ namespace RTC
 							this->chunk.ssrc          = ssrc;
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
 							
-							if (subnal != 1 || isKeyFrame) {
-							MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
-								subnal, 
-								this->chunk.len, 
-								this->chunk.rtp_time,
-								shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
-								this->chunk.first_rtp_seq,
-								startBit,
-								endBit,
-								marker,
-								this->chunk.begin,
-								this->chunk.end);
+							if (subnal != 1) {
+								MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
+									subnal, 
+									this->chunk.len, 
+									this->chunk.rtp_time,
+									shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
+									this->chunk.first_rtp_seq,
+									isKeyFrame,
+									startBit,
+									endBit,
+									marker,
+									this->chunk.begin,
+									this->chunk.end);
 							}
 							
 							if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
@@ -720,7 +740,7 @@ namespace RTC
 	size_t bufferSize = params.useNack ? 600u : 0u;
 
 	this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
-	this->rtpStreams.push_back(this->rtpStream);
+	//this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.
 		if (IsPaused() || IsProducerPaused())
@@ -729,9 +749,9 @@ namespace RTC
 		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 		if (rtxCodec && encoding.hasRtx)
-			rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
+			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
-		this->rtpStreams.push_back(rtpStream);
+		this->rtpStreams.push_back(this->rtpStream);
 	}
 
 

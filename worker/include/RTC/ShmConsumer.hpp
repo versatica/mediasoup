@@ -62,11 +62,14 @@ namespace RTC
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
-		// Others.		// Others.
+		// Others.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		RTC::RtpStream* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
+
+		bool srReceived{ false }; // do not send until SR received
+
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 
 		// Shm writing: a consumer will "send" RTP packets (either audio or video) into shm

@@ -6,7 +6,8 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
-
+#include "DepLibUV.hpp"
+#include <time.h>
 
 std::unordered_map<int, const char*> DepLibSfuShm::SfuShmCtx::errToString =
 	{
@@ -189,17 +190,39 @@ int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNt
       return 0;
   }
 
+  uint64_t walltime = DepLibUV::GetTimeMs();
+  struct timespec clockTime;
+  time_t ct;
+  if( clock_gettime( CLOCK_REALTIME, &clockTime) == -1 ) {
+    ct = 0;
+  }
+  ct = clockTime.tv_sec;
+  uint64_t clockTimeMs = (clockTime.tv_sec * (uint64_t) 1e9 + clockTime.tv_nsec) / 1000000.0;
+
+  /*
+.. c:function:: uint64_t uv_hrtime(void)
+
+    Returns the current high-resolution real time. This is expressed in
+    nanoseconds. It is relative to an arbitrary time in the past. It is not
+    related to the time of day and therefore not subject to clock drift. The
+    primary use is for measuring performance between intervals.  */
   auto ntp = Utils::Time::TimeMs2Ntp(lastSenderReportNtpMs);
   auto ntp_sec = ntp.seconds;
   auto ntp_frac = ntp.fractions;
 
-	MS_DEBUG_TAG(rtp, "RTCP SR: SSRC=%d NTP(ms)=%" PRIu64 "(%" PRIu32 "/%" PRIu32 ") RtpTs=%" PRIu32, ssrc, lastSenderReportNtpMs, ntp_sec, ntp_frac, lastSenderReporTs);
+	MS_DEBUG_TAG(rtp, "RTCP SR: SSRC=%d ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
+    ssrc,
+    lastSenderReportNtpMs,
+    lastSenderReporTs,
+    walltime,
+    ct,
+    clockTimeMs);
 
   err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, ntp_sec, ntp_frac, lastSenderReporTs, ssrc);
 
   if (IsError(err))
   {
-    MS_WARN_TAG(rtp, "ERROR writing RTCP Sender Report to shm: %d - %s", err, GetErrorString(err));
+    MS_WARN_TAG(rtp, "ERROR writing RTCP SR to shm: %d - %s", err, GetErrorString(err));
     return -1;
   }
   return 0;

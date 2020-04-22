@@ -111,7 +111,7 @@ inline uint64_t DepLibSfuShm::SfuShmCtx::AdjustPktTs(uint64_t ts, DepLibSfuShm::
       return ts; // do nothing
   }
 
-  if (last_seq != UINT64_UNSET) {
+  if (last_ts != UINT64_UNSET) {
   	sfushm_av_adjust_for_overflow_32_64(last_ts, &ts, MAX_PTS_DELTA);
   }
   return ts;
