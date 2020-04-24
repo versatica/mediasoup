@@ -183,7 +183,6 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
     current_offset_ms_ +=
       mediasoup_helpers::FeedbackRtpTransport::GetBaseDeltaUs(&feedback, last_timestamp_us_) / 1000;
   }
-
   last_timestamp_us_ =
     mediasoup_helpers::FeedbackRtpTransport::GetBaseTimeUs(&feedback);
 
@@ -216,7 +215,6 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
       // Handle this iteration's received packet.
       offset_us += packet.delta_us();
       timestamp_ms = current_offset_ms_ + (offset_us / 1000);
-
       PacketFeedback packet_feedback(timestamp_ms, packet.sequence_number());
       if (!send_time_history_.GetFeedback(&packet_feedback, true))
         ++failed_lookups;
@@ -234,7 +232,6 @@ std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
                   (failed_lookups > 1 ? "s" : ""));
     }
   }
-
   return packet_feedback_vector;
 }
 
