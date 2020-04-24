@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.5.9 (WIP)
+
+* Update Node deps.
+
+
 ### 3.5.8
 
 * Enable `UV_UDP_RECVMMSG`:
