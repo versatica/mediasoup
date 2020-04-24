@@ -143,6 +143,11 @@ namespace RTC
 						return true;
 					}
 
+					case RTC::RtpParameters::Type::SHM:
+					{
+						return true;
+					}
+
 					default:
 					{
 						return false;

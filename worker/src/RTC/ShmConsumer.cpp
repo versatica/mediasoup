@@ -6,14 +6,14 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
-#include "RTC/Codecs/Codecs.hpp"
+#include "RTC/Codecs/Tools.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	ShmConsumer::ShmConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx)
-	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SHM)
+	ShmConsumer::ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx)
+	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SHM)
 	{
 		MS_TRACE();
 
@@ -23,14 +23,14 @@ namespace RTC
 
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
-		if (!RTC::Codecs::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
+		if (!RTC::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
 		{
 			MS_THROW_TYPE_ERROR("%s codec not supported for svc", mediaCodec->mimeType.ToString().c_str());
 		}
 
 		//MS_DEBUG_TAG(rtp, "ShmConsumer created from data: %s media codec: %s", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
 
-		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		this->shmCtx = shmCtx;
 

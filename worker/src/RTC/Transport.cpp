@@ -765,7 +765,7 @@ namespace RTC
 					{
 #ifdef SFU_SHM
 						// This may throw.
-							consumer = new RTC::ShmConsumer(consumerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
+							consumer = new RTC::ShmConsumer(consumerId, producerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
 #endif
 						break;
 					}

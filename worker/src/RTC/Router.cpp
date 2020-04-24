@@ -7,7 +7,7 @@
 #include "Utils.hpp"
 #include "RTC/AudioLevelObserver.hpp"
 #include "RTC/PipeTransport.hpp"
-#include "RTC/PlainRtpTransport.hpp"
+#include "RTC/PlainTransport.hpp"
 #include "RTC/WebRtcTransport.hpp"
 #ifdef SFU_SHM
   #include "RTC/ShmTransport.hpp"

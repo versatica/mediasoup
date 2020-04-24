@@ -15,7 +15,7 @@ namespace RTC
 	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
-		ShmConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx);
+		ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx);
 		~ShmConsumer() override;
 
 	public:
