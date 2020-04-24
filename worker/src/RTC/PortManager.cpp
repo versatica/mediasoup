@@ -162,8 +162,15 @@ namespace RTC
 			{
 				case Transport::UDP:
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
-					err      = uv_udp_init_ex(
-            DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+#ifdef _WIN32
+					// TODO: Avoid libuv bug in Windows. Let's remove this condition once
+					// the issue is fixed.
+					//   https://github.com/libuv/libuv/issues/2806
+					err = uv_udp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle));
+#else
+					err = uv_udp_init_ex(
+					  DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+#endif
 					break;
 
 				case Transport::TCP:
