@@ -67,6 +67,9 @@ namespace Channel
 		void SendLog(char* nsPayload, size_t nsPayloadLen);
 		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
 
+	private:
+		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
+
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
 		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) override;
