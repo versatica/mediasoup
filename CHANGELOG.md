@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.5.9 (WIP)
+### 3.5.9
 
 * `libwebrtc`: Apply patch by @sspanak and @Ivaka to avoid crash. Related issue: #357.
 * `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in libuv 1.37.0.
