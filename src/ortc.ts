@@ -22,7 +22,7 @@ import {
 	SctpStreamParameters
 } from './SctpParameters';
 
-interface RtpMapping
+type RtpMapping =
 {
 	codecs:
 	{
@@ -111,9 +111,16 @@ export function validateRtpCodecCapability(codec: RtpCodecCapability): void
 	if (typeof codec.clockRate !== 'number')
 		throw new TypeError('missing codec.clockRate');
 
-	// channels is optional. If unset, set it to 1.
-	if (typeof codec.channels !== 'number')
-		codec.channels = 1;
+	// channels is optional. If unset, set it to 1 (just if audio).
+	if (codec.kind === 'audio')
+	{
+		if (typeof codec.channels !== 'number')
+			codec.channels = 1;
+	}
+	else
+	{
+		delete codec.channels;
+	}
 
 	// parameters is optional. If unset, set it to an empty object.
 	if (!codec.parameters || typeof codec.parameters !== 'object')
@@ -121,10 +128,19 @@ export function validateRtpCodecCapability(codec: RtpCodecCapability): void
 
 	for (const key of Object.keys(codec.parameters))
 	{
-		const value = codec.parameters[key];
+		let value = codec.parameters[key];
+
+		if (value === undefined)
+		{
+			codec.parameters[key] = '';
+			value = '';
+		}
 
 		if (typeof value !== 'string' && typeof value !== 'number')
-			throw new TypeError('invalid codec parameter');
+		{
+			throw new TypeError(
+				`invalid codec parameter [key:${key}s, value:${value}]`);
+		}
 
 		// Specific parameters validation.
 		if (key === 'apt')
@@ -285,9 +301,18 @@ export function validateRtpCodecParameters(codec: RtpCodecParameters): void
 	if (typeof codec.clockRate !== 'number')
 		throw new TypeError('missing codec.clockRate');
 
-	// channels is optional. If unset, set it to 1.
-	if (typeof codec.channels !== 'number')
-		codec.channels = 1;
+	const kind = mimeTypeMatch[1].toLowerCase() as MediaKind;
+
+	// channels is optional. If unset, set it to 1 (just if audio).
+	if (kind === 'audio')
+	{
+		if (typeof codec.channels !== 'number')
+			codec.channels = 1;
+	}
+	else
+	{
+		delete codec.channels;
+	}
 
 	// parameters is optional. If unset, set it to an empty object.
 	if (!codec.parameters || typeof codec.parameters !== 'object')
@@ -295,10 +320,19 @@ export function validateRtpCodecParameters(codec: RtpCodecParameters): void
 
 	for (const key of Object.keys(codec.parameters))
 	{
-		const value = codec.parameters[key];
+		let value = codec.parameters[key];
+
+		if (value === undefined)
+		{
+			codec.parameters[key] = '';
+			value = '';
+		}
 
 		if (typeof value !== 'string' && typeof value !== 'number')
-			throw new TypeError('invalid codec parameter');
+		{
+			throw new TypeError(
+				`invalid codec parameter [key:${key}s, value:${value}]`);
+		}
 
 		// Specific parameters validation.
 		if (key === 'apt')
@@ -351,7 +385,13 @@ export function validateRtpHeaderExtensionParameters(
 
 	for (const key of Object.keys(ext.parameters))
 	{
-		const value = ext.parameters[key];
+		let value = ext.parameters[key];
+
+		if (value === undefined)
+		{
+			ext.parameters[key] = '';
+			value = '';
+		}
 
 		if (typeof value !== 'string' && typeof value !== 'number')
 			throw new TypeError('invalid header extension parameter');
@@ -540,12 +580,13 @@ export function generateRouterRtpCapabilities(
 	if (!Array.isArray(mediaCodecs))
 		throw new TypeError('mediaCodecs must be an Array');
 
+	const clonedSupportedRtpCapabilities =
+		utils.clone(supportedRtpCapabilities) as RtpCapabilities;
 	const dynamicPayloadTypes = utils.clone(DynamicPayloadTypes) as number[];
-	const supportedCodecs = supportedRtpCapabilities.codecs;
 	const caps: RtpCapabilities =
 	{
 		codecs           : [],
-		headerExtensions : supportedRtpCapabilities.headerExtensions
+		headerExtensions : clonedSupportedRtpCapabilities.headerExtensions
 	};
 
 	for (const mediaCodec of mediaCodecs)
@@ -553,7 +594,8 @@ export function generateRouterRtpCapabilities(
 		// This may throw.
 		validateRtpCodecCapability(mediaCodec);
 
-		const matchedSupportedCodec = supportedCodecs
+		const matchedSupportedCodec = clonedSupportedRtpCapabilities
+			.codecs
 			.find((supportedCodec) => (
 				matchCodecs(mediaCodec, supportedCodec, { strict: false }))
 			);
@@ -620,7 +662,6 @@ export function generateRouterRtpCapabilities(
 				mimeType             : `${codec.kind}/rtx`,
 				preferredPayloadType : pt,
 				clockRate            : codec.clockRate,
-				channels             : 1,
 				parameters           :
 				{
 					apt : codec.preferredPayloadType
@@ -798,7 +839,6 @@ export function getConsumableRtpParameters(
 				mimeType     : consumableCapRtxCodec.mimeType,
 				payloadType  : consumableCapRtxCodec.preferredPayloadType,
 				clockRate    : consumableCapRtxCodec.clockRate,
-				channels     : 1,
 				parameters   : consumableCapRtxCodec.parameters,
 				rtcpFeedback : consumableCapRtxCodec.rtcpFeedback
 			};
@@ -944,8 +984,11 @@ export function getConsumerRtpParameters(
 
 	consumerParams.headerExtensions = consumableParams.headerExtensions
 		.filter((ext) => (
-			(caps.headerExtensions)
-				.some((capExt) => capExt.preferredId === ext.id)
+			caps.headerExtensions
+				.some((capExt) => (
+					capExt.preferredId === ext.id &&
+					capExt.uri === ext.uri
+				))
 		));
 
 	// Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
@@ -1025,11 +1068,12 @@ export function getConsumerRtpParameters(
 /**
  * Generate RTP parameters for a pipe Consumer.
  *
- * It keeps all original consumable encodings, removes RTX support and also
- * other features such as NACK.
+ * It keeps all original consumable encodings and removes support for BWE. If
+ * enableRtx is false, it also removes RTX and NACK support.
  */
 export function getPipeConsumerRtpParameters(
-	consumableParams: RtpParameters
+	consumableParams: RtpParameters,
+	enableRtx = false
 ): RtpParameters
 {
 	const consumerParams: RtpParameters =
@@ -1045,23 +1089,23 @@ export function getPipeConsumerRtpParameters(
 
 	for (const codec of consumableCodecs)
 	{
-		if (isRtxCodec(codec))
+		if (!enableRtx && isRtxCodec(codec))
 			continue;
 
-		// No support for NACK, PLI, FIR and RTX in PipeTransport.
-		// Reduce RTCP feedbacks by removing NACK support and other features.
 		codec.rtcpFeedback = codec.rtcpFeedback
 			.filter((fb) => (
 				(fb.type === 'nack' && fb.parameter === 'pli') ||
-				(fb.type === 'ccm' && fb.parameter === 'fir')
+				(fb.type === 'ccm' && fb.parameter === 'fir') ||
+				(enableRtx && fb.type === 'nack' && !fb.parameter)
 			));
 
 		consumerParams.codecs.push(codec);
 	}
 
-	// Reduce RTP extensions by disabling transport BWE related ones.
+	// Reduce RTP extensions by disabling transport MID and BWE related ones.
 	consumerParams.headerExtensions = consumableParams.headerExtensions
 		.filter((ext) => (
+			ext.uri !== 'urn:ietf:params:rtp-hdrext:sdes:mid' &&
 			ext.uri !== 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' &&
 			ext.uri !== 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 		));
@@ -1069,10 +1113,10 @@ export function getPipeConsumerRtpParameters(
 	const consumableEncodings =
 		utils.clone(consumableParams.encodings) as RtpEncodingParameters[];
 
-	// No support for NACK, PLI, FIR and RTX in PipeTransport.
 	for (const encoding of consumableEncodings)
 	{
-		delete encoding.rtx;
+		if (!enableRtx)
+			delete encoding.rtx;
 
 		consumerParams.encodings.push(encoding);
 	}

@@ -49,7 +49,7 @@
  * routines.
  */
 #if defined(__MINGW32__)
-#pragma GCC diagnostic push 
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 static DWORD WINAPI
@@ -68,19 +68,6 @@ sctp_userspace_thread_create(userland_thread_t *thread, start_routine_t start_ro
 	return 0;
 }
 
-int
-sctp_userspace_thread_id(userland_thread_id_t *thread)
-{
-	*thread = GetCurrentThreadId();
-	return 0;
-}
-
-int
-sctp_userspace_thread_equal(userland_thread_id_t t1, userland_thread_id_t t2)
-{
-	return (t1 == t2);
-}
-
 #if defined(__MINGW32__)
 #pragma GCC diagnostic pop
 #endif
@@ -90,19 +77,6 @@ int
 sctp_userspace_thread_create(userland_thread_t *thread, start_routine_t start_routine)
 {
 	return pthread_create(thread, NULL, start_routine, NULL);
-}
-
-int
-sctp_userspace_thread_id(userland_thread_id_t *thread)
-{
-	*thread = pthread_self();
-	return 0;
-}
-
-int
-sctp_userspace_thread_equal(userland_thread_id_t t1, userland_thread_id_t t2)
-{
-	return pthread_equal(t1, t2);
 }
 #endif
 

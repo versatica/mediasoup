@@ -68,7 +68,7 @@ namespace RTC
 				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 
 				if (err != 0)
-					MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+					MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
 
 				break;
 			}
@@ -78,7 +78,7 @@ namespace RTC
 				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 
 				if (err != 0)
-					MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
 
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
@@ -89,7 +89,7 @@ namespace RTC
 			// This cannot happen.
 			default:
 			{
-				MS_ABORT("unknown IP family");
+				MS_THROW_ERROR("unknown IP family");
 			}
 		}
 
@@ -108,7 +108,7 @@ namespace RTC
 			if (attempt > numAttempts)
 			{
 				MS_THROW_ERROR(
-				  "no more available ports [transport:%s, ip:%s, numAttempt:%zu]",
+				  "no more available ports [transport:%s, ip:'%s', numAttempt:%zu]",
 				  transportStr.c_str(),
 				  ip.c_str(),
 				  numAttempts);
@@ -121,7 +121,7 @@ namespace RTC
 			port = static_cast<uint16_t>(portIdx + Settings::configuration.rtcMinPort);
 
 			MS_DEBUG_DEV(
-			  "testing port [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]",
+			  "testing port [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
 			  transportStr.c_str(),
 			  ip.c_str(),
 			  port,
@@ -132,7 +132,7 @@ namespace RTC
 			if (ports[portIdx])
 			{
 				MS_DEBUG_DEV(
-				  "port in use, trying again [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]",
+				  "port in use, trying again [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
 				  transportStr.c_str(),
 				  ip.c_str(),
 				  port,
@@ -197,7 +197,7 @@ namespace RTC
 					  flags);
 
 					MS_WARN_DEV(
-					  "uv_udp_bind() failed [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
 					  transportStr.c_str(),
 					  ip.c_str(),
 					  port,
@@ -218,7 +218,7 @@ namespace RTC
 					if (err)
 					{
 						MS_WARN_DEV(
-						  "uv_tcp_bind() failed [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  "uv_tcp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
 						  transportStr.c_str(),
 						  ip.c_str(),
 						  port,
@@ -237,7 +237,7 @@ namespace RTC
 						  static_cast<uv_connection_cb>(onFakeConnection));
 
 						MS_WARN_DEV(
-						  "uv_listen() failed [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  "uv_listen() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
 						  transportStr.c_str(),
 						  ip.c_str(),
 						  port,
@@ -263,7 +263,7 @@ namespace RTC
 				case UV_EMFILE:
 				{
 					MS_THROW_ERROR(
-					  "port bind failed due to too many open files [transport:%s, ip:%s, port:%" PRIu16
+					  "port bind failed due to too many open files [transport:%s, ip:'%s', port:%" PRIu16
 					  ", attempt:%zu/%zu]",
 					  transportStr.c_str(),
 					  ip.c_str(),
@@ -278,7 +278,7 @@ namespace RTC
 				case UV_EADDRNOTAVAIL:
 				{
 					MS_THROW_ERROR(
-					  "port bind failed due to address not available [transport:%s, ip:%s, port:%" PRIu16
+					  "port bind failed due to address not available [transport:%s, ip:'%s', port:%" PRIu16
 					  ", attempt:%zu/%zu]",
 					  transportStr.c_str(),
 					  ip.c_str(),
@@ -300,7 +300,7 @@ namespace RTC
 		ports[portIdx] = true;
 
 		MS_DEBUG_DEV(
-		  "bind succeeded [transport:%s, ip:%s, port:%" PRIu16 ", attempt:%zu/%zu]",
+		  "bind succeeded [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
 		  transportStr.c_str(),
 		  ip.c_str(),
 		  port,

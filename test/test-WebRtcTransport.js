@@ -112,7 +112,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(iceCandidates[0].ip).toBe('9.9.9.1');
 	expect(iceCandidates[0].protocol).toBe('udp');
 	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBe(undefined);
+	expect(iceCandidates[0].tcpType).toBeUndefined();
 	expect(iceCandidates[1].ip).toBe('9.9.9.1');
 	expect(iceCandidates[1].protocol).toBe('tcp');
 	expect(iceCandidates[1].type).toBe('host');
@@ -120,7 +120,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(iceCandidates[2].ip).toBe('9.9.9.2');
 	expect(iceCandidates[2].protocol).toBe('udp');
 	expect(iceCandidates[2].type).toBe('host');
-	expect(iceCandidates[2].tcpType).toBe(undefined);
+	expect(iceCandidates[2].tcpType).toBeUndefined();
 	expect(iceCandidates[3].ip).toBe('9.9.9.2');
 	expect(iceCandidates[3].protocol).toBe('tcp');
 	expect(iceCandidates[3].type).toBe('host');
@@ -128,7 +128,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(iceCandidates[4].ip).toBe('127.0.0.1');
 	expect(iceCandidates[4].protocol).toBe('udp');
 	expect(iceCandidates[4].type).toBe('host');
-	expect(iceCandidates[4].tcpType).toBe(undefined);
+	expect(iceCandidates[4].tcpType).toBeUndefined();
 	expect(iceCandidates[5].ip).toBe('127.0.0.1');
 	expect(iceCandidates[5].protocol).toBe('tcp');
 	expect(iceCandidates[5].type).toBe('host');
@@ -140,12 +140,12 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(iceCandidates[4].priority).toBeGreaterThan(iceCandidates[5].priority);
 
 	expect(transport1.iceState).toBe('new');
-	expect(transport1.iceSelectedTuple).toBe(undefined);
+	expect(transport1.iceSelectedTuple).toBeUndefined();
 	expect(transport1.dtlsParameters).toBeType('object');
 	expect(transport1.dtlsParameters.fingerprints).toBeType('array');
 	expect(transport1.dtlsParameters.role).toBe('auto');
 	expect(transport1.dtlsState).toBe('new');
-	expect(transport1.dtlsRemoteCert).toBe(undefined);
+	expect(transport1.dtlsRemoteCert).toBeUndefined();
 	expect(transport1.sctpState).toBe('new');
 
 	const data1 = await transport1.dump();
@@ -228,7 +228,7 @@ test('webRtcTransport.getStats() succeeds', async () =>
 	expect(data[0].iceRole).toBe('controlled');
 	expect(data[0].iceState).toBe('new');
 	expect(data[0].dtlsState).toBe('new');
-	expect(data[0].sctpState).toBe(undefined);
+	expect(data[0].sctpState).toBeUndefined();
 	expect(data[0].bytesReceived).toBe(0);
 	expect(data[0].recvBitrate).toBe(0);
 	expect(data[0].bytesSent).toBe(0);
@@ -243,8 +243,8 @@ test('webRtcTransport.getStats() succeeds', async () =>
 	expect(data[0].rtxSendBitrate).toBe(0);
 	expect(data[0].probationBytesSent).toBe(0);
 	expect(data[0].probationSendBitrate).toBe(0);
-	expect(data[0].iceSelectedTuple).toBe(undefined);
-	expect(data[0].maxIncomingBitrate).toBe(undefined);
+	expect(data[0].iceSelectedTuple).toBeUndefined();
+	expect(data[0].maxIncomingBitrate).toBeUndefined();
 	expect(data[0].recvBitrate).toBe(0);
 	expect(data[0].sendBitrate).toBe(0);
 }, 2000);
@@ -265,7 +265,7 @@ test('webRtcTransport.connect() succeeds', async () =>
 
 	await expect(transport.connect({ dtlsParameters: dtlsRemoteParameters }))
 		.resolves
-		.toBe(undefined);
+		.toBeUndefined();
 
 	// Must fail if connected.
 	await expect(transport.connect({ dtlsParameters: dtlsRemoteParameters }))
@@ -326,7 +326,7 @@ test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
 {
 	await expect(transport.setMaxIncomingBitrate(100000))
 		.resolves
-		.toBe(undefined);
+		.toBeUndefined();
 }, 2000);
 
 test('webRtcTransport.restartIce() succeeds', async () =>
@@ -447,9 +447,9 @@ test('WebRtcTransport methods reject if closed', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(transport.closed).toBe(true);
 	expect(transport.iceState).toBe('closed');
-	expect(transport.iceSelectedTuple).toBe(undefined);
+	expect(transport.iceSelectedTuple).toBeUndefined();
 	expect(transport.dtlsState).toBe('closed');
-	expect(transport.sctpState).toBe(undefined);
+	expect(transport.sctpState).toBeUndefined();
 
 	await expect(transport.dump())
 		.rejects
@@ -494,7 +494,7 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(transport2.closed).toBe(true);
 	expect(transport2.iceState).toBe('closed');
-	expect(transport2.iceSelectedTuple).toBe(undefined);
+	expect(transport2.iceSelectedTuple).toBeUndefined();
 	expect(transport2.dtlsState).toBe('closed');
 	expect(transport2.sctpState).toBe('closed');
 }, 2000);
@@ -514,7 +514,7 @@ test('WebRtcTransport emits "routerclose" if Worker is closed', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(transport.closed).toBe(true);
 	expect(transport.iceState).toBe('closed');
-	expect(transport.iceSelectedTuple).toBe(undefined);
+	expect(transport.iceSelectedTuple).toBeUndefined();
 	expect(transport.dtlsState).toBe('closed');
-	expect(transport.sctpState).toBe(undefined);
+	expect(transport.sctpState).toBeUndefined();
 }, 2000);

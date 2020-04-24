@@ -312,6 +312,8 @@ Condition.tests.cpp:<line number>: passed: 4 == ul for: 4 == 4
 Condition.tests.cpp:<line number>: passed: 5 == c for: 5 == 5
 Condition.tests.cpp:<line number>: passed: 6 == uc for: 6 == 6
 Condition.tests.cpp:<line number>: passed: (std::numeric_limits<uint32_t>::max)() > ul for: 4294967295 (0x<hex digits>) > 4
+Matchers.tests.cpp:<line number>: passed: testStringForMatching2(), !composed1 for: "some completely different text that contains one common word" not ( contains: "string" or contains: "random" )
+Matchers.tests.cpp:<line number>: passed: testStringForMatching2(), composed2 for: "some completely different text that contains one common word" ( contains: "string" or contains: "random" or contains: "different" )
 Matchers.tests.cpp:<line number>: failed: testStringForMatching(), Contains("not there", Catch::CaseSensitive::No) for: "this string contains 'abc' as a substring" contains: "not there" (case insensitive)
 Matchers.tests.cpp:<line number>: failed: testStringForMatching(), Contains("STRING") for: "this string contains 'abc' as a substring" contains: "STRING"
 Generators.tests.cpp:<line number>: passed: elem % 2 == 1 for: 1 == 1
@@ -762,6 +764,7 @@ Condition.tests.cpp:<line number>: passed: data.str_hello != "goodbye" for: "hel
 Condition.tests.cpp:<line number>: passed: data.str_hello != "hell" for: "hello" != "hell"
 Condition.tests.cpp:<line number>: passed: data.str_hello != "hello1" for: "hello" != "hello1"
 Condition.tests.cpp:<line number>: passed: data.str_hello.size() != 6 for: 5 != 6
+Compilation.tests.cpp:<line number>: passed: []() { return true; }() for: true
 Approx.tests.cpp:<line number>: passed: d <= Approx( 1.24 ) for: 1.23 <= Approx( 1.24 )
 Approx.tests.cpp:<line number>: passed: d <= Approx( 1.23 ) for: 1.23 <= Approx( 1.23 )
 Approx.tests.cpp:<line number>: passed: !(d <= Approx( 1.22 )) for: !(1.23 <= Approx( 1.22 ))
@@ -1086,6 +1089,16 @@ CmdLine.tests.cpp:<line number>: passed: cli.parse({"test", "-x", "2"}) for: {?}
 CmdLine.tests.cpp:<line number>: passed: config.abortAfter == 2 for: 2 == 2
 CmdLine.tests.cpp:<line number>: passed: !result for: true
 CmdLine.tests.cpp:<line number>: passed: result.errorMessage(), Contains("convert") && Contains("oops") for: "Unable to convert 'oops' to destination type" ( contains: "convert" and contains: "oops" )
+CmdLine.tests.cpp:<line number>: passed: cli.parse({"test", "--wait-for-keypress", std::get<0>(input)}) for: {?}
+CmdLine.tests.cpp:<line number>: passed: config.waitForKeypress == std::get<1>(input) for: 0 == 0
+CmdLine.tests.cpp:<line number>: passed: cli.parse({"test", "--wait-for-keypress", std::get<0>(input)}) for: {?}
+CmdLine.tests.cpp:<line number>: passed: config.waitForKeypress == std::get<1>(input) for: 1 == 1
+CmdLine.tests.cpp:<line number>: passed: cli.parse({"test", "--wait-for-keypress", std::get<0>(input)}) for: {?}
+CmdLine.tests.cpp:<line number>: passed: config.waitForKeypress == std::get<1>(input) for: 2 == 2
+CmdLine.tests.cpp:<line number>: passed: cli.parse({"test", "--wait-for-keypress", std::get<0>(input)}) for: {?}
+CmdLine.tests.cpp:<line number>: passed: config.waitForKeypress == std::get<1>(input) for: 3 == 3
+CmdLine.tests.cpp:<line number>: passed: !result for: true
+CmdLine.tests.cpp:<line number>: passed: result.errorMessage(), Contains("never") && Contains("both") for: "keypress argument must be one of: never, start, exit or both. 'sometimes' not recognised" ( contains: "never" and contains: "both" )
 CmdLine.tests.cpp:<line number>: passed: cli.parse({"test", "-e"}) for: {?}
 CmdLine.tests.cpp:<line number>: passed: config.noThrow for: true
 CmdLine.tests.cpp:<line number>: passed: cli.parse({"test", "--nothrow"}) for: {?}
@@ -1116,6 +1129,8 @@ CmdLine.tests.cpp:<line number>: passed: cli.parse({ "test", "--benchmark-confid
 CmdLine.tests.cpp:<line number>: passed: config.benchmarkConfidenceInterval == Catch::Detail::Approx(0.99) for: 0.99 == Approx( 0.99 )
 CmdLine.tests.cpp:<line number>: passed: cli.parse({ "test", "--benchmark-no-analysis" }) for: {?}
 CmdLine.tests.cpp:<line number>: passed: config.benchmarkNoAnalysis for: true
+CmdLine.tests.cpp:<line number>: passed: cli.parse({ "test", "--benchmark-warmup-time=10" }) for: {?}
+CmdLine.tests.cpp:<line number>: passed: config.benchmarkWarmupTime == 10 for: 10 == 10
 Misc.tests.cpp:<line number>: passed: std::tuple_size<TestType>::value >= 1 for: 3 >= 1
 Misc.tests.cpp:<line number>: passed: std::tuple_size<TestType>::value >= 1 for: 2 >= 1
 Misc.tests.cpp:<line number>: passed: std::tuple_size<TestType>::value >= 1 for: 1 >= 1
@@ -1567,6 +1582,9 @@ Xml.tests.cpp:<line number>: passed: encode( stringWithQuotes, Catch::XmlEncode:
 "don't &quot;quote&quot; me on that"
 Xml.tests.cpp:<line number>: passed: encode( "[\x01]" ) == "[\\x01]" for: "[\x01]" == "[\x01]"
 Xml.tests.cpp:<line number>: passed: encode( "[\x7F]" ) == "[\\x7F]" for: "[\x7F]" == "[\x7F]"
+Tag.tests.cpp:<line number>: passed: testcase.tags, VectorContains(std::string(".")) && VectorContains(std::string("!hide")) for: { "!hide", "." } ( Contains: "." and Contains: "!hide" )
+Tag.tests.cpp:<line number>: passed: testcase.tags, VectorContains(std::string(".")) && VectorContains(std::string("!hide")) for: { "!hide", "." } ( Contains: "." and Contains: "!hide" )
+Tag.tests.cpp:<line number>: passed: testcase.tags, VectorContains(std::string(".")) && VectorContains(std::string("!hide")) for: { "!hide", ".", "foo" } ( Contains: "." and Contains: "!hide" )
 ToStringVector.tests.cpp:<line number>: passed: Catch::Detail::stringify( empty ) == "{  }" for: "{  }" == "{  }"
 ToStringVector.tests.cpp:<line number>: passed: Catch::Detail::stringify( oneValue ) == "{ 42 }" for: "{ 42 }" == "{ 42 }"
 ToStringVector.tests.cpp:<line number>: passed: Catch::Detail::stringify( twoValues ) == "{ 42, 250 }" for: "{ 42, 250 }" == "{ 42, 250 }"
@@ -1668,7 +1686,7 @@ StringManip.tests.cpp:<line number>: passed: Catch::replaceInPlace(s, "'", "|'")
 StringManip.tests.cpp:<line number>: passed: s == "didn|'t" for: "didn|'t" == "didn|'t"
 Misc.tests.cpp:<line number>: failed: false with 1 message: '3'
 Message.tests.cpp:<line number>: failed: false with 2 messages: 'hi' and 'i := 7'
-Tag.tests.cpp:<line number>: passed: testcase.tags, Catch::VectorContains(std::string("magic-tag")) && Catch::VectorContains(std::string(".")) for: { ".", "magic-tag" } ( Contains: "magic-tag" and Contains: "." )
+Tag.tests.cpp:<line number>: passed: testcase.tags, Catch::VectorContains(std::string("magic-tag")) && Catch::VectorContains(std::string(".")) for: { "!hide", ".", "magic-tag" } ( Contains: "magic-tag" and Contains: "." )
 StringManip.tests.cpp:<line number>: passed: splitStringRef("", ','), Equals(std::vector<StringRef>()) for: {  } Equals: {  }
 StringManip.tests.cpp:<line number>: passed: splitStringRef("abc", ','), Equals(std::vector<StringRef>{"abc"}) for: { abc } Equals: { abc }
 StringManip.tests.cpp:<line number>: passed: splitStringRef("abc,def", ','), Equals(std::vector<StringRef>{"abc", "def"}) for: { abc, def } Equals: { abc, def }

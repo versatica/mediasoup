@@ -1,4 +1,4 @@
-export interface SctpCapabilities
+export type SctpCapabilities =
 {
   numStreams: NumSctpStreams;
 }
@@ -25,7 +25,7 @@ export interface SctpCapabilities
  * mediasoup-client provides specific per browser/version OS and MIS values via
  * the device.sctpCapabilities getter.
  */
-export interface NumSctpStreams
+export type NumSctpStreams =
 {
 	/**
 	 * Initially requested number of outgoing SCTP streams.
@@ -38,7 +38,7 @@ export interface NumSctpStreams
 	MIS: number;
 }
 
-export interface SctpParameters
+export type SctpParameters =
 {
 	/**
 	 * Must always equal 5000.
@@ -68,7 +68,7 @@ export interface SctpParameters
  * If ordered if false, only one of maxPacketLifeTime or maxRetransmits
  * can be true.
  */
-export interface SctpStreamParameters
+export type SctpStreamParameters =
 {
 	/**
 	 * SCTP stream id.

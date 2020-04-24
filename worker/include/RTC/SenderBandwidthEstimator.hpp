@@ -39,11 +39,32 @@ namespace RTC
 			CummulativeResult() = default;
 
 		public:
-			uint64_t GetStartedAtMs() const;
-			size_t GetNumPackets() const;
-			size_t GetTotalSize() const;
-			uint32_t GetSendBitrate() const;
-			uint32_t GetReceiveBitrate() const;
+			uint64_t GetStartedAtMs() const
+			{
+				return this->firstPacketSentAtMs;
+			}
+			size_t GetNumPackets() const
+			{
+				return this->numPackets;
+			}
+			size_t GetTotalSize() const
+			{
+				return this->totalSize;
+			}
+			uint32_t GetSendBitrate() const
+			{
+				auto sendIntervalMs =
+				  std::max<uint64_t>(this->lastPacketSentAtMs - this->firstPacketSentAtMs, 1u);
+
+				return static_cast<uint32_t>(this->totalSize / sendIntervalMs) * 8 * 1000;
+			}
+			uint32_t GetReceiveBitrate() const
+			{
+				auto recvIntervalMs =
+				  std::max<uint64_t>(this->lastPacketReceivedAtMs - this->firstPacketReceivedAtMs, 1u);
+
+				return static_cast<uint32_t>(this->totalSize / recvIntervalMs) * 8 * 1000;
+			}
 			void AddPacket(size_t size, int64_t sentAtMs, int64_t receivedAtMs);
 			void Reset();
 
@@ -85,39 +106,6 @@ namespace RTC
 		RTC::RateCalculator sendTransmission;
 		RTC::TrendCalculator sendTransmissionTrend;
 	};
-
-	/* Inline methods. */
-
-	inline uint64_t SenderBandwidthEstimator::CummulativeResult::GetStartedAtMs() const
-	{
-		return this->firstPacketSentAtMs;
-	}
-
-	inline size_t SenderBandwidthEstimator::CummulativeResult::GetNumPackets() const
-	{
-		return this->numPackets;
-	}
-
-	inline size_t SenderBandwidthEstimator::CummulativeResult::GetTotalSize() const
-	{
-		return this->totalSize;
-	}
-
-	inline uint32_t SenderBandwidthEstimator::CummulativeResult::GetSendBitrate() const
-	{
-		auto sendIntervalMs =
-		  std::max<uint64_t>(this->lastPacketSentAtMs - this->firstPacketSentAtMs, 1u);
-
-		return static_cast<uint32_t>(this->totalSize / sendIntervalMs) * 8 * 1000;
-	}
-
-	inline uint32_t SenderBandwidthEstimator::CummulativeResult::GetReceiveBitrate() const
-	{
-		auto recvIntervalMs =
-		  std::max<uint64_t>(this->lastPacketReceivedAtMs - this->firstPacketReceivedAtMs, 1u);
-
-		return static_cast<uint32_t>(this->totalSize / recvIntervalMs) * 8 * 1000;
-	}
 } // namespace RTC
 
 #endif

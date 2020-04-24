@@ -287,7 +287,7 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.closed).toBe(false);
 	expect(audioConsumer.kind).toBe('audio');
 	expect(audioConsumer.rtpParameters).toBeType('object');
-	expect(audioConsumer.rtpParameters.mid).toBe(undefined);
+	expect(audioConsumer.rtpParameters.mid).toBe('0');
 	expect(audioConsumer.rtpParameters.codecs.length).toBe(1);
 	expect(audioConsumer.rtpParameters.codecs[0]).toEqual(
 		{
@@ -357,14 +357,13 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.closed).toBe(false);
 	expect(videoConsumer.kind).toBe('video');
 	expect(videoConsumer.rtpParameters).toBeType('object');
-	expect(videoConsumer.rtpParameters.mid).toBe(undefined);
+	expect(videoConsumer.rtpParameters.mid).toBe('1');
 	expect(videoConsumer.rtpParameters.codecs.length).toBe(2);
 	expect(videoConsumer.rtpParameters.codecs[0]).toEqual(
 		{
 			mimeType    : 'video/H264',
 			payloadType : 103,
 			clockRate   : 90000,
-			channels    : 1,
 			parameters  :
 			{
 				'packetization-mode' : 1,
@@ -383,7 +382,6 @@ test('transport.consume() succeeds', async () =>
 			mimeType     : 'video/rtx',
 			payloadType  : 104,
 			clockRate    : 90000,
-			channels     : 1,
 			parameters   : { apt: 103 },
 			rtcpFeedback : []
 		});
@@ -479,6 +477,7 @@ test('consumer.dump() succeeds', async () =>
 	data = await audioConsumer.dump();
 
 	expect(data.id).toBe(audioConsumer.id);
+	expect(data.producerId).toBe(audioConsumer.producerId);
 	expect(data.kind).toBe(audioConsumer.kind);
 	expect(data.rtpParameters).toBeType('object');
 	expect(data.rtpParameters.codecs).toBeType('array');
@@ -497,9 +496,15 @@ test('consumer.dump() succeeds', async () =>
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
 	expect(data.rtpParameters.headerExtensions).toBeType('array');
-	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions.length).toBe(3);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 1,
+				encrypt    : false,
+				parameters : {}
+			},
 			{
 				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
 				id         : 4,
@@ -537,6 +542,7 @@ test('consumer.dump() succeeds', async () =>
 	data = await videoConsumer.dump();
 
 	expect(data.id).toBe(videoConsumer.id);
+	expect(data.producerId).toBe(videoConsumer.producerId);
 	expect(data.kind).toBe(videoConsumer.kind);
 	expect(data.rtpParameters).toBeType('object');
 	expect(data.rtpParameters.codecs).toBeType('array');
@@ -544,7 +550,7 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[0].mimeType).toBe('video/H264');
 	expect(data.rtpParameters.codecs[0].payloadType).toBe(103);
 	expect(data.rtpParameters.codecs[0].clockRate).toBe(90000);
-	expect(data.rtpParameters.codecs[0].channels).toBe(undefined);
+	expect(data.rtpParameters.codecs[0].channels).toBeUndefined();
 	expect(data.rtpParameters.codecs[0].parameters)
 		.toEqual(
 			{
@@ -559,9 +565,15 @@ test('consumer.dump() succeeds', async () =>
 			{ type: 'goog-remb' }
 		]);
 	expect(data.rtpParameters.headerExtensions).toBeType('array');
-	expect(data.rtpParameters.headerExtensions.length).toBe(3);
+	expect(data.rtpParameters.headerExtensions.length).toBe(4);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 1,
+				encrypt    : false,
+				parameters : {}
+			},
 			{
 				uri        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
 				id         : 4,

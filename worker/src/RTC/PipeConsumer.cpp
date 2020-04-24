@@ -5,14 +5,15 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/Codecs/Codecs.hpp"
+#include "RTC/Codecs/Tools.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	PipeConsumer::PipeConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::PIPE)
+	PipeConsumer::PipeConsumer(
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
+	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
 	{
 		MS_TRACE();
 
@@ -23,7 +24,7 @@ namespace RTC
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		this->keyFrameSupported = RTC::Codecs::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Create RtpStreamSend instances.
 		CreateRtpStreams();
@@ -54,9 +55,10 @@ namespace RTC
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
+			jsonRtpStreamsIt->emplace_back(json::value_t::object);
+
 			auto& jsonEntry = (*jsonRtpStreamsIt)[jsonRtpStreamsIt->size() - 1];
 
-			jsonRtpStreamsIt->emplace_back(json::value_t::object);
 			rtpStream->FillJson(jsonEntry);
 		}
 	}
@@ -69,7 +71,10 @@ namespace RTC
 		for (auto* rtpStream : this->rtpStreams)
 		{
 			jsonArray.emplace_back(json::value_t::object);
-			rtpStream->FillJsonStats(jsonArray[jsonArray.size() - 1]);
+
+			auto& jsonEntry = jsonArray[jsonArray.size() - 1];
+
+			rtpStream->FillJsonStats(jsonEntry);
 		}
 	}
 
@@ -318,11 +323,20 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* /*nackPacket*/)
+	void PipeConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
 	{
 		MS_TRACE();
 
-		// Do nothing since we do not enable NACK.
+		if (!IsActive())
+			return;
+
+		// May emit 'trace' event.
+		EmitTraceEventNackType();
+
+		auto ssrc       = nackPacket->GetMediaSsrc();
+		auto* rtpStream = this->mapMappedSsrcRtpStream.at(ssrc);
+
+		rtpStream->ReceiveNack(nackPacket);
 	}
 
 	void PipeConsumer::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)
@@ -507,9 +521,13 @@ namespace RTC
 
 			for (auto& fb : mediaCodec->rtcpFeedback)
 			{
-				// NOTE: Do not consider NACK in PipeConsumer.
+				if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+				{
+					MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 
-				if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
+					params.useNack = true;
+				}
+				else if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
 				{
 					MS_DEBUG_2TAGS(rtp, rtcp, "PLI supported");
 
@@ -524,9 +542,8 @@ namespace RTC
 			}
 
 			// Create a RtpStreamSend for sending a single media stream.
-			// NOTE: PipeConsumer does not support NACK.
-			size_t bufferSize{ 0u };
-			auto* rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+			size_t bufferSize = params.useNack ? 600u : 0u;
+			auto* rtpStream   = new RTC::RtpStreamSend(this, params, bufferSize);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())

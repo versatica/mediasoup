@@ -2,7 +2,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
-import { PlainRtpTransport, PlainRtpTransportOptions } from './PlainRtpTransport';
+import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
@@ -12,7 +12,7 @@ import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObser
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { ShmTransport, ShmTransportOptions } from './ShmTransport';
-export interface RouterOptions {
+export declare type RouterOptions = {
     /**
      * Router media codecs.
      */
@@ -21,8 +21,8 @@ export interface RouterOptions {
      * Custom application data.
      */
     appData?: any;
-}
-export interface PipeToRouterOptions {
+};
+export declare type PipeToRouterOptions = {
     /**
      * The id of the Producer to consume.
      */
@@ -47,8 +47,16 @@ export interface PipeToRouterOptions {
      * SCTP streams number.
      */
     numSctpStreams?: NumSctpStreams;
-}
-export interface PipeToRouterResult {
+    /**
+     * Enable RTX and NACK for RTP retransmission.
+     */
+    enableRtx?: boolean;
+    /**
+     * Enable SRTP.
+     */
+    enableSrtp?: boolean;
+};
+export declare type PipeToRouterResult = {
     /**
      * The Consumer created in the current Router.
      */
@@ -65,7 +73,7 @@ export interface PipeToRouterResult {
      * The DataProducer created in the target Router.
      */
     pipeDataProducer?: DataProducer;
-}
+};
 export declare class Router extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
@@ -77,6 +85,7 @@ export declare class Router extends EnhancedEventEmitter {
     private readonly _rtpObservers;
     private readonly _dataProducers;
     private readonly _mapRouterPipeTransports;
+    private readonly _pipeToRouterQueue;
     private readonly _observer;
     /**
      * @private
@@ -136,13 +145,17 @@ export declare class Router extends EnhancedEventEmitter {
      */
     createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
     /**
-     * Create a PlainRtpTransport.
+     * Create a PlainTransport.
      */
-    createPlainRtpTransport({ listenIp, rtcpMux, comedia, multiSource, enableSctp, numSctpStreams, maxSctpMessageSize, appData }: PlainRtpTransportOptions): Promise<PlainRtpTransport>;
+    createPlainTransport({ listenIp, rtcpMux, comedia, disableOriginCheck, enableSctp, numSctpStreams, maxSctpMessageSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
+    /**
+     * DEPRECATED: Use createPlainTransport().
+     */
+    createPlainRtpTransport(options: PlainTransportOptions): Promise<PlainTransport>;
     /**
      * Create a PipeTransport.
      */
-    createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, appData }: PipeTransportOptions): Promise<PipeTransport>;
+    createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
     /**
      * Create a ShmTransport.
      *
@@ -158,7 +171,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.
      */
-    pipeToRouter({ producerId, dataProducerId, router, listenIp, enableSctp, numSctpStreams }: PipeToRouterOptions): Promise<PipeToRouterResult>;
+    pipeToRouter({ producerId, dataProducerId, router, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }: PipeToRouterOptions): Promise<PipeToRouterResult>;
     /**
      * Create an AudioLevelObserver.
      */

@@ -2,7 +2,8 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-export interface PipeTransportOptions {
+import { SrtpParameters } from './SrtpParameters';
+export declare type PipeTransportOptions = {
     /**
      * Listening IP address.
      */
@@ -21,11 +22,23 @@ export interface PipeTransportOptions {
      */
     maxSctpMessageSize?: number;
     /**
+     * Enable RTX and NACK for RTP retransmission. Useful if both Routers are
+     * located in different hosts and there is packet lost in the link. For this
+     * to work, both PipeTransports must enable this setting. Default false.
+     */
+    enableRtx?: boolean;
+    /**
+     * Enable SRTP. Useful to protect the RTP and RTCP traffic if both Routers
+     * are located in different hosts. For this to work, connect() must be called
+     * with remote SRTP parameters. Default false.
+     */
+    enableSrtp?: boolean;
+    /**
      * Custom application data.
      */
     appData?: any;
-}
-export interface PipeTransportStat {
+};
+export declare type PipeTransportStat = {
     type: string;
     transportId: string;
     timestamp: number;
@@ -50,8 +63,15 @@ export interface PipeTransportStat {
     availableIncomingBitrate?: number;
     maxIncomingBitrate?: number;
     tuple: TransportTuple;
-}
+};
 export declare class PipeTransport extends Transport {
+    protected readonly _data: {
+        tuple: TransportTuple;
+        sctpParameters?: SctpParameters;
+        sctpState?: SctpState;
+        rtx: boolean;
+        srtpParameters?: SrtpParameters;
+    };
     /**
      * @private
      * @emits sctpstatechange - (sctpState: SctpState)
@@ -69,7 +89,11 @@ export declare class PipeTransport extends Transport {
     /**
      * SCTP state.
      */
-    get sctpState(): SctpState;
+    get sctpState(): SctpState | undefined;
+    /**
+     * SRTP parameters.
+     */
+    get srtpParameters(): SrtpParameters | undefined;
     /**
      * Observer.
      *
@@ -84,7 +108,7 @@ export declare class PipeTransport extends Transport {
      */
     get observer(): EnhancedEventEmitter;
     /**
-     * Close the PlainRtpTransport.
+     * Close the PipeTransport.
      *
      * @override
      */
@@ -107,9 +131,10 @@ export declare class PipeTransport extends Transport {
      *
      * @override
      */
-    connect({ ip, port }: {
+    connect({ ip, port, srtpParameters }: {
         ip: string;
         port: number;
+        srtpParameters?: SrtpParameters;
     }): Promise<void>;
     /**
      * Create a pipe Consumer.

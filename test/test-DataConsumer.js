@@ -32,7 +32,7 @@ beforeAll(async () =>
 			listenIps  : [ '127.0.0.1' ],
 			enableSctp : true
 		});
-	transport2 = await router.createPlainRtpTransport(
+	transport2 = await router.createPlainTransport(
 		{
 			listenIp   : '127.0.0.1',
 			enableSctp : true
@@ -63,7 +63,7 @@ test('transport.consumeData() succeeds', async () =>
 	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
 	expect(dataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(dataConsumer.label).toBe('foo');
 	expect(dataConsumer.protocol).toBe('bar');
 	expect(dataConsumer.appData).toEqual({ baz: 'LOL' });
@@ -91,12 +91,13 @@ test('dataConsumer.dump() succeeds', async () =>
 	const data = await dataConsumer.dump();
 
 	expect(data.id).toBe(dataConsumer.id);
+	expect(data.dataProducerId).toBe(dataConsumer.dataProducerId);
 	expect(data.sctpStreamParameters).toBeType('object');
 	expect(data.sctpStreamParameters.streamId)
 		.toBe(dataConsumer.sctpStreamParameters.streamId);
 	expect(data.sctpStreamParameters.ordered).toBe(false);
 	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(data.sctpStreamParameters.maxRetransmits).toBe(undefined);
+	expect(data.sctpStreamParameters.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 }, 2000);

@@ -57,10 +57,14 @@ export interface ShmTransportStat
 
 export class ShmTransport extends Transport
 {
+
+	private _shm?: string;
+
+	private _log?: string;
+
 	/**
-	 * @private
+	* @private
 	 *
-	 * @emits {sctpState: String} sctpstatechange
 	 */
 	constructor(params: any)
 	{
@@ -71,19 +75,9 @@ export class ShmTransport extends Transport
 		const { data } = params;
 
 		// ShmTransport data.
-		// See sfushm_av_media.h for details
-		// @type {Object}
-		// - .shm
-		//   - .name
-		// - .log
-		//   - .fileName (can be 'stdout' to redirect log output)
-		//   - .level
+		this._shm = data.shm;
 
-		this._data =
-		{
-			shm      : data.shm,
-			log      : data.log
-    };
+		this._log = data.log;
 	}
 
 	/**
@@ -179,8 +173,9 @@ export class ShmTransport extends Transport
 				case 'writestreammetadata':
 				{
 					const reqdata = {
-						shm: this._data.shm,
-						meta: data
+						meta: data,
+						shm: this._shm,
+						log: this._log
 					}; // TODO: assume there is shm name and some JSON object, no details yet
 
           await this._channel.request('transport.consumeStreamMeta', this._internal, reqdata);

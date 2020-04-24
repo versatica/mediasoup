@@ -5,6 +5,7 @@
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
 #include "DepUsrSCTP.hpp"
+#include "FuzzerUtils.hpp"
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -17,9 +18,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-bool fuzzStun = false;
-bool fuzzRtp  = false;
-bool fuzzRtcp = false;
+bool fuzzStun  = false;
+bool fuzzRtp   = false;
+bool fuzzRtcp  = false;
+bool fuzzUtils = false;
 
 int Init();
 
@@ -40,7 +42,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzRtcp)
 		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
 
-	Fuzzer::RTC::TrendCalculator::Fuzz(data, len);
+	if (fuzzUtils)
+	{
+		Fuzzer::Utils::Fuzz(data, len);
+		Fuzzer::RTC::TrendCalculator::Fuzz(data, len);
+	}
 
 	return 0;
 }
@@ -79,13 +85,20 @@ int Init()
 
 		fuzzRtcp = true;
 	}
-	if (!fuzzStun && !fuzzRtcp && !fuzzRtp)
+	if (std::getenv("MS_FUZZ_UTILS") && std::string(std::getenv("MS_FUZZ_UTILS")) == "1")
+	{
+		std::cout << "[fuzzer] Utils fuzzers enabled" << std::endl;
+
+		fuzzUtils = true;
+	}
+	if (!fuzzUtils && !fuzzStun && !fuzzRtcp && !fuzzRtp)
 	{
 		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
-		fuzzStun = true;
-		fuzzRtp  = true;
-		fuzzRtcp = true;
+		fuzzStun  = true;
+		fuzzRtp   = true;
+		fuzzRtcp  = true;
+		fuzzUtils = true;
 	}
 
 	Settings::configuration.logLevel = logLevel;

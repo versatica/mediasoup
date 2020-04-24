@@ -10,7 +10,7 @@ import {
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
-export interface WebRtcTransportOptions
+export type WebRtcTransportOptions =
 {
 	/**
 	 * Listening IP address or addresses in order of preference (first one is the
@@ -65,14 +65,14 @@ export interface WebRtcTransportOptions
 	appData?: any;
 }
 
-export interface IceParameters
+export type IceParameters =
 {
 	usernameFragment: string;
 	password: string;
 	iceLite?: boolean;
 }
 
-export interface IceCandidate
+export type IceCandidate =
 {
 	foundation: string;
 	priority: number;
@@ -83,7 +83,7 @@ export interface IceCandidate
 	tcpType: 'passive' | undefined;
 }
 
-export interface DtlsParameters
+export type DtlsParameters =
 {
 	role?: DtlsRole;
 	fingerprints: DtlsFingerprint[];
@@ -95,7 +95,7 @@ export interface DtlsParameters
  * certificate fingerprint value (in lowercase hex string as expressed utilizing
  * the syntax of "fingerprint" in RFC 4572 Section 5).
  */
-export interface DtlsFingerprint
+export type DtlsFingerprint =
 {
 	algorithm: string;
 	value: string;
@@ -107,7 +107,7 @@ export type DtlsRole = 'auto' | 'client' | 'server';
 
 export type DtlsState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
-export interface WebRtcTransportStat
+export type WebRtcTransportStat =
 {
 	// Common to all Transports.
 	type: string;
@@ -133,7 +133,6 @@ export interface WebRtcTransportStat
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
-
 	// WebRtcTransport specific.
 	iceRole: string;
 	iceState: IceState;
@@ -146,37 +145,19 @@ const logger = new Logger('WebRtcTransport');
 export class WebRtcTransport extends Transport
 {
 	// WebRtcTransport data.
-	// - .iceRole
-	// - .iceParameters
-	//   - .usernameFragment
-	//   - .password
-	//   - .iceLite
-	// - .iceCandidates []
-	//   - .foundation
-	//   - .priority
-	//   - .ip
-	//   - .port
-	//   - .type
-	//   - .protocol
-	//   - .tcpType
-	// - .iceState
-	// - .iceSelectedTuple
-	//   - .localIp
-	//   - .localPort
-	//   - .remoteIp
-	//   - .remotePort
-	//   - .protocol
-	// - .dtlsParameters
-	//   - .role
-	//   - .fingerprints []
-	// - .dtlsState
-	// - .dtlsRemoteCert
-	// - .sctpParameters
-	//   - .port
-	//   - .OS
-	//   - .MIS
-	//   - .maxMessageSize
-	// - .sctpState
+	protected readonly _data:
+	{
+		iceRole: 'controlled';
+		iceParameters: IceParameters;
+		iceCandidates: IceCandidate[];
+		iceState: IceState;
+		iceSelectedTuple: TransportTuple;
+		dtlsParameters: DtlsParameters;
+		dtlsState: DtlsState;
+		dtlsRemoteCert?: string;
+		sctpParameters?: SctpParameters;
+		sctpState?: SctpState;
+	};
 
 	/**
 	 * @private
@@ -286,7 +267,7 @@ export class WebRtcTransport extends Transport
 	/**
 	 * SCTP state.
 	 */
-	get sctpState(): SctpState
+	get sctpState(): SctpState | undefined
 	{
 		return this._data.sctpState;
 	}

@@ -39,10 +39,11 @@ export interface ShmTransportStat {
     writer: number;
 }
 export declare class ShmTransport extends Transport {
+    private _shm?;
+    private _log?;
     /**
-     * @private
+    * @private
      *
-     * @emits {sctpState: String} sctpstatechange
      */
     constructor(params: any);
     /**

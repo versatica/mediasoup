@@ -174,9 +174,9 @@ namespace RTC
 
 	public:
 		RtpCodecMimeType mimeType;
-		uint8_t payloadType{ 0 };
-		uint32_t clockRate{ 0 };
-		uint8_t channels{ 1 };
+		uint8_t payloadType{ 0u };
+		uint32_t clockRate{ 0u };
+		uint8_t channels{ 1u };
 		RTC::Parameters parameters;
 		std::vector<RtcpFeedback> rtcpFeedback;
 	};
@@ -190,7 +190,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 
 	public:
-		uint32_t ssrc{ 0 };
+		uint32_t ssrc{ 0u };
 	};
 
 	class RtpEncodingParameters
@@ -202,18 +202,18 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 
 	public:
-		uint32_t ssrc{ 0 };
+		uint32_t ssrc{ 0u };
 		std::string rid;
-		uint8_t codecPayloadType{ 0 };
+		uint8_t codecPayloadType{ 0u };
 		bool hasCodecPayloadType{ false };
 		RtpRtxParameters rtx;
 		bool hasRtx{ false };
-		uint32_t maxBitrate{ 0 };
+		uint32_t maxBitrate{ 0u };
 		double maxFramerate{ 0 };
 		bool dtx{ false };
 		std::string scalabilityMode;
-		uint8_t spatialLayers{ 1 };
-		uint8_t temporalLayers{ 1 };
+		uint8_t spatialLayers{ 1u };
+		uint8_t temporalLayers{ 1u };
 		bool ksvc{ false };
 	};
 
@@ -228,7 +228,7 @@ namespace RTC
 	public:
 		std::string uri;
 		RtpHeaderExtensionUri::Type type;
-		uint8_t id{ 0 };
+		uint8_t id{ 0u };
 		bool encrypt{ false };
 		RTC::Parameters parameters;
 	};
@@ -243,7 +243,7 @@ namespace RTC
 
 	public:
 		std::string cname;
-		uint32_t ssrc{ 0 };
+		uint32_t ssrc{ 0u };
 		bool reducedSize{ true };
 	};
 

@@ -31,6 +31,15 @@ SCENARIO("Utils::IP::GetFamily()")
 	ip = "a:b:c:D::0";
 	REQUIRE(IP::GetFamily(ip) == AF_INET6);
 
+	ip = "0000:0000:0000:0000:0000:ffff:192.168.100.228";
+	REQUIRE(IP::GetFamily(ip) == AF_INET6);
+
+	ip = "::0:";
+	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+
+	ip = "3::3:1:";
+	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+
 	ip = "chicken";
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
@@ -56,6 +65,9 @@ SCENARIO("Utils::IP::GetFamily()")
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 
 	ip = "";
+	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+
+	ip = "0000:0000:0000:0000:0000:ffff:192.168.100.228.4567";
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 }
 
@@ -92,6 +104,12 @@ SCENARIO("Utils::IP::NormalizeIp()")
 	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 
 	ip = "0.0.0.";
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+
+	ip = "::0:";
+	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+
+	ip = "3::3:1:";
 	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 
 	ip = "";

@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 353303 2019-10-08 11:07:16Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 359195 2020-03-21 16:12:19Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -110,7 +110,7 @@ sctp_asconf_error_response(uint32_t id, uint16_t cause, uint8_t *error_tlv,
 	struct mbuf *m_reply = NULL;
 	struct sctp_asconf_paramhdr *aph;
 	struct sctp_error_cause *error;
-	size_t buf_len;
+	uint32_t buf_len;
 	uint16_t i, param_length, cause_length, padding_length;
 	uint8_t *tlv;
 
@@ -602,8 +602,7 @@ sctp_process_asconf_set_primary(struct sockaddr *src,
 				sctp_move_chunks_from_net(stcb,
 						stcb->asoc.deleted_primary);
 			}
-			sctp_delete_prim_timer(stcb->sctp_ep, stcb,
-						stcb->asoc.deleted_primary);
+			sctp_delete_prim_timer(stcb->sctp_ep, stcb);
 		}
 	} else {
 		/* couldn't set the requested primary address! */
@@ -955,12 +954,12 @@ sctp_addr_match(struct sctp_paramhdr *ph, struct sockaddr *sa)
  * Cleanup for non-responded/OP ERR'd ASCONF
  */
 void
-sctp_asconf_cleanup(struct sctp_tcb *stcb, struct sctp_nets *net)
+sctp_asconf_cleanup(struct sctp_tcb *stcb)
 {
 	/*
 	 * clear out any existing asconfs going out
 	 */
-	sctp_timer_stop(SCTP_TIMER_TYPE_ASCONF, stcb->sctp_ep, stcb, net,
+	sctp_timer_stop(SCTP_TIMER_TYPE_ASCONF, stcb->sctp_ep, stcb, NULL,
 			SCTP_FROM_SCTP_ASCONF + SCTP_LOC_2);
 	stcb->asoc.asconf_seq_out_acked = stcb->asoc.asconf_seq_out;
 	/* remove the old ASCONF on our outbound queue */
@@ -1739,7 +1738,7 @@ sctp_handle_asconf_ack(struct mbuf *m, int offset,
 
 	if (serial_num == asoc->asconf_seq_out - 1) {
 		/* stop our timer */
-		sctp_timer_stop(SCTP_TIMER_TYPE_ASCONF, stcb->sctp_ep, stcb, net,
+		sctp_timer_stop(SCTP_TIMER_TYPE_ASCONF, stcb->sctp_ep, stcb, NULL,
 				SCTP_FROM_SCTP_ASCONF + SCTP_LOC_5);
 	}
 

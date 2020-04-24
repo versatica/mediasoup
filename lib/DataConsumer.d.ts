@@ -1,7 +1,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { SctpStreamParameters } from './SctpParameters';
-export interface DataConsumerOptions {
+export declare type DataConsumerOptions = {
     /**
      * The id of the DataProducer to consume.
      */
@@ -10,15 +10,15 @@ export interface DataConsumerOptions {
      * Custom application data.
      */
     appData?: any;
-}
-export interface DataConsumerStat {
+};
+export declare type DataConsumerStat = {
     type: string;
     timestamp: number;
     label: string;
     protocol: string;
     messagesSent: number;
     bytesSent: number;
-}
+};
 export declare class DataConsumer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;

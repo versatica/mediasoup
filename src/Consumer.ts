@@ -8,7 +8,7 @@ import {
 	RtpParameters
 } from './RtpParameters';
 
-export interface ConsumerOptions
+export type ConsumerOptions =
 {
 	/**
 	 * The id of the Producer to consume.
@@ -56,7 +56,7 @@ export type ConsumerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir'
 /**
  * 'trace' event data.
  */
-export interface ConsumerTraceEventData
+export type ConsumerTraceEventData =
 {
 	/**
 	 * Trace type.
@@ -79,7 +79,7 @@ export interface ConsumerTraceEventData
 	info: any;
 }
 
-export interface ConsumerScore
+export type ConsumerScore =
 {
 	/**
 	 * The score of the RTP stream of the consumer.
@@ -92,7 +92,7 @@ export interface ConsumerScore
 	producerScore: number;
 }
 
-export interface ConsumerLayers
+export type ConsumerLayers =
 {
 	/**
 	 * The spatial layer index (from 0 to N).
@@ -105,7 +105,7 @@ export interface ConsumerLayers
 	temporalLayer?: number;
 }
 
-export interface ConsumerStat
+export type ConsumerStat =
 {
 	// Common to all RtpStreams.
 	type: string;
@@ -140,17 +140,21 @@ const logger = new Logger('Consumer');
 export class Consumer extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	// - .transportId
-	// - .consumerId
-	// - .producerId
-	private readonly _internal: any;
+	private readonly _internal:
+	{
+		routerId: string;
+		transportId: string;
+		consumerId: string;
+		producerId: string;
+	};
 
 	// Consumer data.
-	// - .kind
-	// - .rtpParameters
-	// - .type
-	private readonly _data: any;
+	private readonly _data:
+	{
+		kind: MediaKind;
+		rtpParameters: RtpParameters;
+		type: ConsumerType;
+	};
 
 	// Channel instance.
 	private readonly _channel: Channel;

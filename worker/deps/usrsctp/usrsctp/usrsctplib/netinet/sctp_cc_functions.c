@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_cc_functions.c 353488 2019-10-14 13:02:49Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_cc_functions.c 359405 2020-03-28 20:25:45Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -2000,7 +2000,7 @@ measure_rtt(struct sctp_nets *net)
 	if (net->fast_retran_ip == 0 && net->ssthresh < 0xFFFF && htcp_ccount(&net->cc_mod.htcp_ca) > 3) {
 		if (net->cc_mod.htcp_ca.maxRTT < net->cc_mod.htcp_ca.minRTT)
 			net->cc_mod.htcp_ca.maxRTT = net->cc_mod.htcp_ca.minRTT;
-		if (net->cc_mod.htcp_ca.maxRTT < srtt && srtt <= net->cc_mod.htcp_ca.maxRTT+MSEC_TO_TICKS(20))
+		if (net->cc_mod.htcp_ca.maxRTT < srtt && srtt <= net->cc_mod.htcp_ca.maxRTT+sctp_msecs_to_ticks(20))
 			net->cc_mod.htcp_ca.maxRTT = srtt;
 	}
 }
@@ -2060,7 +2060,7 @@ htcp_beta_update(struct htcp *ca, uint32_t minRTT, uint32_t maxRTT)
 		}
 	}
 
-	if (ca->modeswitch && minRTT > (uint32_t)MSEC_TO_TICKS(10) && maxRTT) {
+	if (ca->modeswitch && minRTT > sctp_msecs_to_ticks(10) && maxRTT) {
 		ca->beta = (minRTT<<7)/maxRTT;
 		if (ca->beta < BETA_MIN)
 			ca->beta = BETA_MIN;
@@ -2410,7 +2410,7 @@ sctp_htcp_cwnd_update_after_ecn_echo(struct sctp_tcb *stcb,
 
 const struct sctp_cc_functions sctp_cc_functions[] = {
 {
-#if defined(__Windows__) || defined(__Userspace_os_Windows)
+#if defined(__Windows__) || (defined(__Userspace_os_Windows) && !defined(__MINGW32__))
 	sctp_set_initial_cc_param,
 	sctp_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,
@@ -2431,7 +2431,7 @@ const struct sctp_cc_functions sctp_cc_functions[] = {
 #endif
 },
 {
-#if defined(__Windows__) || defined(__Userspace_os_Windows)
+#if defined(__Windows__) || (defined(__Userspace_os_Windows) && !defined(__MINGW32__))
 	sctp_set_initial_cc_param,
 	sctp_hs_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,
@@ -2452,7 +2452,7 @@ const struct sctp_cc_functions sctp_cc_functions[] = {
 #endif
 },
 {
-#if defined(__Windows__) || defined(__Userspace_os_Windows)
+#if defined(__Windows__) || (defined(__Userspace_os_Windows) && !defined(__MINGW32__))
 	sctp_htcp_set_initial_cc_param,
 	sctp_htcp_cwnd_update_after_sack,
 	sctp_cwnd_update_exit_pf_common,
@@ -2473,7 +2473,7 @@ const struct sctp_cc_functions sctp_cc_functions[] = {
 #endif
 },
 {
-#if defined(__Windows__) || defined(__Userspace_os_Windows)
+#if defined(__Windows__) || (defined(__Userspace_os_Windows) && !defined(__MINGW32__))
 	sctp_set_rtcc_initial_cc_param,
 	sctp_cwnd_update_rtcc_after_sack,
 	sctp_cwnd_update_exit_pf_common,

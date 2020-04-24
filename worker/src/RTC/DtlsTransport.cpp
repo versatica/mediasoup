@@ -105,15 +105,13 @@ namespace RTC
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }
 	};
-	// clang-format on
 	std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
-	// clang-format off
-	std::vector<DtlsTransport::SrtpProfileMapEntry> DtlsTransport::srtpProfiles =
+	std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
 	{
-		{ RTC::SrtpSession::Profile::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
-		{ RTC::SrtpSession::Profile::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },
-		{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
-		{ RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },
+		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
+		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
 	// clang-format on
 
@@ -159,53 +157,34 @@ namespace RTC
 		MS_TRACE();
 
 		int ret{ 0 };
-		BIGNUM* bne{ nullptr };
-		RSA* rsaKey{ nullptr };
-		int numBits{ 1024 };
+		EC_KEY* ecKey{ nullptr };
 		X509_NAME* certName{ nullptr };
 		std::string subject =
 		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
 
-		// Create a big number object.
-		bne = BN_new();
+		// Create key with curve.
+		ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
 
-		if (!bne)
+		if (ecKey == nullptr)
 		{
-			LOG_OPENSSL_ERROR("BN_new() failed");
+			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
 
 			goto error;
 		}
 
-		ret = BN_set_word(bne, RSA_F4); // RSA_F4 == 65537.
+		EC_KEY_set_asn1_flag(ecKey, OPENSSL_EC_NAMED_CURVE);
+
+		// NOTE: This can take some time.
+		ret = EC_KEY_generate_key(ecKey);
 
 		if (ret == 0)
 		{
-			LOG_OPENSSL_ERROR("BN_set_word() failed");
+			LOG_OPENSSL_ERROR("EC_KEY_generate_key() failed");
 
 			goto error;
 		}
 
-		// Generate a RSA key.
-		rsaKey = RSA_new();
-
-		if (!rsaKey)
-		{
-			LOG_OPENSSL_ERROR("RSA_new() failed");
-
-			goto error;
-		}
-
-		// This takes some time.
-		ret = RSA_generate_key_ex(rsaKey, numBits, bne, nullptr);
-
-		if (ret == 0)
-		{
-			LOG_OPENSSL_ERROR("RSA_generate_key_ex() failed");
-
-			goto error;
-		}
-
-		// Create a private key object (needed to hold the RSA key).
+		// Create a private key object.
 		DtlsTransport::privateKey = EVP_PKEY_new();
 
 		if (!DtlsTransport::privateKey)
@@ -215,16 +194,18 @@ namespace RTC
 			goto error;
 		}
 
-		ret = EVP_PKEY_assign_RSA(DtlsTransport::privateKey, rsaKey); // NOLINT
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
+		ret = EVP_PKEY_assign_EC_KEY(DtlsTransport::privateKey, ecKey);
 
 		if (ret == 0)
 		{
-			LOG_OPENSSL_ERROR("EVP_PKEY_assign_RSA() failed");
+			LOG_OPENSSL_ERROR("EVP_PKEY_assign_EC_KEY() failed");
 
 			goto error;
 		}
-		// The RSA key now belongs to the private key, so don't clean it up separately.
-		rsaKey = nullptr;
+
+		// The EC key now belongs to the private key, so don't clean it up separately.
+		ecKey = nullptr;
 
 		// Create the X509 certificate.
 		DtlsTransport::certificate = X509_new();
@@ -293,21 +274,15 @@ namespace RTC
 			goto error;
 		}
 
-		// Free stuff and return.
-		BN_free(bne);
-
 		return;
 
 	error:
 
-		if (bne)
-			BN_free(bne);
-
-		if (rsaKey && !DtlsTransport::privateKey)
-			RSA_free(rsaKey);
+		if (ecKey)
+			EC_KEY_free(ecKey);
 
 		if (DtlsTransport::privateKey)
-			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the RSA key.
+			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the EC key.
 
 		if (DtlsTransport::certificate)
 			X509_free(DtlsTransport::certificate);
@@ -372,21 +347,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::string dtlsSrtpProfiles;
-		EC_KEY* ecdh{ nullptr };
+		std::string dtlsSrtpCryptoSuites;
 		int ret;
 
-/* Set the global DTLS context. */
+		/* Set the global DTLS context. */
 
-// Both DTLS 1.0 and 1.2 (requires OpenSSL >= 1.1.0).
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+		// Both DTLS 1.0 and 1.2 (requires OpenSSL >= 1.1.0).
 		DtlsTransport::sslCtx = SSL_CTX_new(DTLS_method());
-// Just DTLS 1.0 (requires OpenSSL >= 1.0.1).
-#elif (OPENSSL_VERSION_NUMBER >= 0x10001000L)
-		DtlsTransport::sslCtx = SSL_CTX_new(DTLSv1_method());
-#else
-#error "too old OpenSSL version"
-#endif
 
 		if (!DtlsTransport::sslCtx)
 		{
@@ -447,7 +414,7 @@ namespace RTC
 
 		// Set ciphers.
 		ret = SSL_CTX_set_cipher_list(
-		  DtlsTransport::sslCtx, "ALL:!ADH:!LOW:!EXP:!MD5:!aNULL:!eNULL:@STRENGTH");
+		  DtlsTransport::sslCtx, "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
 
 		if (ret == 0)
 		{
@@ -456,56 +423,35 @@ namespace RTC
 			goto error;
 		}
 
-// Enable ECDH ciphers.
-// DOC: http://en.wikibooks.org/wiki/OpenSSL/Diffie-Hellman_parameters
-// NOTE: https://code.google.com/p/chromium/issues/detail?id=406458
-// NOTE: https://bugs.ruby-lang.org/issues/12324
-//
-// Nothing to be done in OpenSSL >= 1.1.0.
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-// For OpenSSL >= 1.0.2.
-#elif (OPENSSL_VERSION_NUMBER >= 0x10002000L)
+		// Enable ECDH ciphers.
+		// DOC: http://en.wikibooks.org/wiki/OpenSSL/Diffie-Hellman_parameters
+		// NOTE: https://code.google.com/p/chromium/issues/detail?id=406458
+		// NOTE: https://bugs.ruby-lang.org/issues/12324
+
+		// For OpenSSL >= 1.0.2.
 		SSL_CTX_set_ecdh_auto(DtlsTransport::sslCtx, 1);
-// Older versions.
-#else
-		ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-
-		if (!ecdh)
-		{
-			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
-
-			goto error;
-		}
-
-		if (SSL_CTX_set_tmp_ecdh(DtlsTransport::sslCtx, ecdh) != 1)
-		{
-			LOG_OPENSSL_ERROR("SSL_CTX_set_tmp_ecdh() failed");
-
-			goto error;
-		}
-
-		EC_KEY_free(ecdh);
-		ecdh = nullptr;
-#endif
 
 		// Set the "use_srtp" DTLS extension.
-		for (auto it = DtlsTransport::srtpProfiles.begin(); it != DtlsTransport::srtpProfiles.end(); ++it)
+		for (auto it = DtlsTransport::srtpCryptoSuites.begin();
+		     it != DtlsTransport::srtpCryptoSuites.end();
+		     ++it)
 		{
-			if (it != DtlsTransport::srtpProfiles.begin())
-				dtlsSrtpProfiles += ":";
+			if (it != DtlsTransport::srtpCryptoSuites.begin())
+				dtlsSrtpCryptoSuites += ":";
 
-			SrtpProfileMapEntry* profileEntry = std::addressof(*it);
-			dtlsSrtpProfiles += profileEntry->name;
+			SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(*it);
+			dtlsSrtpCryptoSuites += cryptoSuiteEntry->name;
 		}
 
-		MS_DEBUG_2TAGS(dtls, srtp, "setting SRTP profiles for DTLS: %s", dtlsSrtpProfiles.c_str());
+		MS_DEBUG_2TAGS(dtls, srtp, "setting SRTP cryptoSuites for DTLS: %s", dtlsSrtpCryptoSuites.c_str());
 
 		// NOTE: This function returns 0 on success.
-		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, dtlsSrtpProfiles.c_str());
+		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, dtlsSrtpCryptoSuites.c_str());
 
 		if (ret != 0)
 		{
-			MS_ERROR("SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'", dtlsSrtpProfiles.c_str());
+			MS_ERROR(
+			  "SSL_CTX_set_tlsext_use_srtp() failed when entering '%s'", dtlsSrtpCryptoSuites.c_str());
 			LOG_OPENSSL_ERROR("SSL_CTX_set_tlsext_use_srtp() failed");
 
 			goto error;
@@ -520,9 +466,6 @@ namespace RTC
 			SSL_CTX_free(DtlsTransport::sslCtx);
 			DtlsTransport::sslCtx = nullptr;
 		}
-
-		if (ecdh)
-			EC_KEY_free(ecdh);
 
 		MS_THROW_ERROR("SSL context creation failed");
 	}
@@ -1143,20 +1086,20 @@ namespace RTC
 			return false;
 		}
 
-		// Get the negotiated SRTP profile.
-		RTC::SrtpSession::Profile srtpProfile = GetNegotiatedSrtpProfile();
+		// Get the negotiated SRTP crypto suite.
+		RTC::SrtpSession::CryptoSuite srtpCryptoSuite = GetNegotiatedSrtpCryptoSuite();
 
-		if (srtpProfile != RTC::SrtpSession::Profile::NONE)
+		if (srtpCryptoSuite != RTC::SrtpSession::CryptoSuite::NONE)
 		{
 			// Extract the SRTP keys (will notify the listener with them).
-			ExtractSrtpKeys(srtpProfile);
+			ExtractSrtpKeys(srtpCryptoSuite);
 
 			return true;
 		}
 
 		// NOTE: We assume that "use_srtp" DTLS extension is required even if
 		// there is no audio/video.
-		MS_WARN_2TAGS(dtls, srtp, "SRTP profile not negotiated");
+		MS_WARN_2TAGS(dtls, srtp, "SRTP crypto suite not negotiated");
 
 		Reset();
 
@@ -1293,7 +1236,7 @@ namespace RTC
 		return true;
 	}
 
-	inline void DtlsTransport::ExtractSrtpKeys(RTC::SrtpSession::Profile srtpProfile)
+	inline void DtlsTransport::ExtractSrtpKeys(RTC::SrtpSession::CryptoSuite srtpCryptoSuite)
 	{
 		MS_TRACE();
 
@@ -1301,10 +1244,10 @@ namespace RTC
 		size_t srtpSaltLength{ 0 };
 		size_t srtpMasterLength{ 0 };
 
-		switch (srtpProfile)
+		switch (srtpCryptoSuite)
 		{
-			case RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_80:
-			case RTC::SrtpSession::Profile::AES_CM_128_HMAC_SHA1_32:
+			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
 			{
 				srtpKeyLength    = SrtpMasterKeyLength;
 				srtpSaltLength   = SrtpMasterSaltLength;
@@ -1313,7 +1256,7 @@ namespace RTC
 				break;
 			}
 
-			case RTC::SrtpSession::Profile::AEAD_AES_256_GCM:
+			case RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
 			{
 				srtpKeyLength    = SrtpAesGcm256MasterKeyLength;
 				srtpSaltLength   = SrtpAesGcm256MasterSaltLength;
@@ -1322,7 +1265,7 @@ namespace RTC
 				break;
 			}
 
-			case RTC::SrtpSession::Profile::AEAD_AES_128_GCM:
+			case RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
 			{
 				srtpKeyLength    = SrtpAesGcm128MasterKeyLength;
 				srtpSaltLength   = SrtpAesGcm128MasterSaltLength;
@@ -1333,7 +1276,7 @@ namespace RTC
 
 			default:
 			{
-				MS_ABORT("unknown SRTP profile");
+				MS_ABORT("unknown SRTP crypto suite");
 			}
 		}
 
@@ -1390,7 +1333,7 @@ namespace RTC
 		this->state = DtlsState::CONNECTED;
 		this->listener->OnDtlsTransportConnected(
 		  this,
-		  srtpProfile,
+		  srtpCryptoSuite,
 		  srtpLocalMasterKey,
 		  srtpMasterLength,
 		  srtpRemoteMasterKey,
@@ -1402,36 +1345,37 @@ namespace RTC
 		delete[] srtpRemoteMasterKey;
 	}
 
-	inline RTC::SrtpSession::Profile DtlsTransport::GetNegotiatedSrtpProfile()
+	inline RTC::SrtpSession::CryptoSuite DtlsTransport::GetNegotiatedSrtpCryptoSuite()
 	{
 		MS_TRACE();
 
-		RTC::SrtpSession::Profile negotiatedSrtpProfile = RTC::SrtpSession::Profile::NONE;
+		RTC::SrtpSession::CryptoSuite negotiatedSrtpCryptoSuite = RTC::SrtpSession::CryptoSuite::NONE;
 
-		// Ensure that the SRTP profile has been negotiated.
-		SRTP_PROTECTION_PROFILE* sslSrtpProfile = SSL_get_selected_srtp_profile(this->ssl);
+		// Ensure that the SRTP crypto suite has been negotiated.
+		// NOTE: This is a OpenSSL type.
+		SRTP_PROTECTION_PROFILE* sslSrtpCryptoSuite = SSL_get_selected_srtp_profile(this->ssl);
 
-		if (!sslSrtpProfile)
-			return negotiatedSrtpProfile;
+		if (!sslSrtpCryptoSuite)
+			return negotiatedSrtpCryptoSuite;
 
-		// Get the negotiated SRTP profile.
-		for (auto& srtpProfile : DtlsTransport::srtpProfiles)
+		// Get the negotiated SRTP crypto suite.
+		for (auto& srtpCryptoSuite : DtlsTransport::srtpCryptoSuites)
 		{
-			SrtpProfileMapEntry* profileEntry = std::addressof(srtpProfile);
+			SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(srtpCryptoSuite);
 
-			if (std::strcmp(sslSrtpProfile->name, profileEntry->name) == 0)
+			if (std::strcmp(sslSrtpCryptoSuite->name, cryptoSuiteEntry->name) == 0)
 			{
-				MS_DEBUG_2TAGS(dtls, srtp, "chosen SRTP profile: %s", profileEntry->name);
+				MS_DEBUG_2TAGS(dtls, srtp, "chosen SRTP crypto suite: %s", cryptoSuiteEntry->name);
 
-				negotiatedSrtpProfile = profileEntry->profile;
+				negotiatedSrtpCryptoSuite = cryptoSuiteEntry->cryptoSuite;
 			}
 		}
 
 		MS_ASSERT(
-		  negotiatedSrtpProfile != RTC::SrtpSession::Profile::NONE,
-		  "chosen SRTP profile is not an available one");
+		  negotiatedSrtpCryptoSuite != RTC::SrtpSession::CryptoSuite::NONE,
+		  "chosen SRTP crypto suite is not an available one");
 
-		return negotiatedSrtpProfile;
+		return negotiatedSrtpCryptoSuite;
 	}
 
 	inline void DtlsTransport::OnSslInfo(int where, int ret)

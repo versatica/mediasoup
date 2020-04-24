@@ -1,4 +1,4 @@
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as utils from './utils';
@@ -9,7 +9,7 @@ import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
 import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
-import { SctpStreamParameters } from './SctpParameters';
+import { SctpParameters, SctpStreamParameters } from './SctpParameters';
 
 export interface TransportListenIp
 {
@@ -77,12 +77,18 @@ const logger = new Logger('Transport');
 export class Transport extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	// - .transportId
-	protected readonly _internal: any;
+	protected readonly _internal:
+	{
+		routerId: string;
+		transportId: string;
+	};
 
-	// Transport data.
-	protected _data: any;
+	// Transport data. This is set by the subclass.
+	protected readonly _data:
+	{
+		sctpParameters?: SctpParameters;
+		sctpState?: SctpState;
+	};
 
 	// Channel instance.
 	protected readonly _channel: Channel;
@@ -116,6 +122,9 @@ export class Transport extends EnhancedEventEmitter
 
 	// RTCP CNAME for Producers.
 	private _cnameForProducers?: string;
+
+	// Next MID for Consumers. It's converted into string when used.
+	private _nextMidForConsumers = 0;
 
 	// Buffer with available SCTP stream ids.
 	private _sctpStreamIds?: Buffer;
@@ -387,6 +396,7 @@ export class Transport extends EnhancedEventEmitter
 			kind,
 			rtpParameters,
 			paused = false,
+			keyFrameRequestDelay,
 			appData = {}
 		}: ProducerOptions
 	): Promise<Producer>
@@ -446,7 +456,7 @@ export class Transport extends EnhancedEventEmitter
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
 		const internal = { ...this._internal, producerId: id || uuidv4() };
-		const reqData = { kind, rtpParameters, rtpMapping, paused };
+		const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused };
 
 		const status =
 			await this._channel.request('transport.produce', internal, reqData);
@@ -516,6 +526,18 @@ export class Transport extends EnhancedEventEmitter
 		// This may throw.
 		const rtpParameters = ortc.getConsumerRtpParameters(
 			producer.consumableRtpParameters, rtpCapabilities);
+
+		// Set MID.
+		rtpParameters.mid = `${this._nextMidForConsumers++}`;
+
+		// We use up to 8 bytes for MID (string).
+		if (this._nextMidForConsumers === 100000000)
+		{
+			logger.error(
+				`consume() | reaching max MID value "${this._nextMidForConsumers}"`);
+
+			this._nextMidForConsumers = 0;
+		}
 
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
 		const consumerType = (appData && appData.xcode === true) ? "shm" : producer.type; // to create ShmConsumer, cannot copy a producer's type in case of shm transport

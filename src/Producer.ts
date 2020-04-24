@@ -3,7 +3,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { MediaKind, RtpParameters } from './RtpParameters';
 
-export interface ProducerOptions
+export type ProducerOptions =
 {
 	/**
 	 * Producer id (just for Router.pipeToRouter() method).
@@ -26,6 +26,12 @@ export interface ProducerOptions
 	paused?: boolean;
 
 	/**
+	 * Just for video. Time (in ms) before asking the sender for a new key frame
+	 * after having asked a previous one. Default 0.
+	 */
+	keyFrameRequestDelay?: number;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: any;
@@ -39,7 +45,7 @@ export type ProducerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir'
 /**
  * 'trace' event data.
  */
-export interface ProducerTraceEventData
+export type ProducerTraceEventData =
 {
 	/**
 	 * Trace type.
@@ -62,7 +68,7 @@ export interface ProducerTraceEventData
 	info: any;
 }
 
-export interface ProducerScore
+export type ProducerScore =
 {
 	/**
 	 * SSRC of the RTP stream.
@@ -80,7 +86,7 @@ export interface ProducerScore
 	score: number;
 }
 
-export interface ProducerVideoOrientation
+export type ProducerVideoOrientation =
 {
 	/**
 	 * Whether the source is a video camera.
@@ -98,7 +104,7 @@ export interface ProducerVideoOrientation
 	rotation: number;
 }
 
-export interface ProducerStat
+export type ProducerStat =
 {
 	// Common to all RtpStreams.
 	type: string;
@@ -122,7 +128,6 @@ export interface ProducerStat
 	byteCount: number;
 	bitrate: number;
 	roundTripTime?: number;
-
 	// RtpStreamRecv specific.
 	jitter: number;
 	bitrateByLayer?: any;
@@ -138,17 +143,21 @@ const logger = new Logger('Producer');
 export class Producer extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	// - .transportId
-	// - .producerId
-	private readonly _internal: any;
+	private readonly _internal:
+	{
+		routerId: string;
+		transportId: string;
+		producerId: string;
+	};
 
 	// Producer data.
-	// - .kind
-	// - .rtpParameters
-	// - .type
-	// - .consumableRtpParameters
-	private readonly _data: any;
+	private readonly _data:
+	{
+		kind: MediaKind;
+		rtpParameters: RtpParameters;
+		type: ProducerType;
+		consumableRtpParameters: RtpParameters;
+	};
 
 	// Channel instance.
 	private readonly _channel: Channel;

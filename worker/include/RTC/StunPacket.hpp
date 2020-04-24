@@ -53,7 +53,20 @@ namespace RTC
 		};
 
 	public:
-		static bool IsStun(const uint8_t* data, size_t len);
+		static bool IsStun(const uint8_t* data, size_t len)
+		{
+			// clang-format off
+			return (
+				// STUN headers are 20 bytes.
+				(len >= 20) &&
+				// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+				(data[0] < 3) &&
+				// Magic cookie must match.
+				(data[4] == StunPacket::magicCookie[0]) && (data[5] == StunPacket::magicCookie[1]) &&
+				(data[6] == StunPacket::magicCookie[2]) && (data[7] == StunPacket::magicCookie[3])
+			);
+			// clang-format on
+		}
 		static StunPacket* Parse(const uint8_t* data, size_t len);
 
 	private:
@@ -65,27 +78,90 @@ namespace RTC
 		~StunPacket();
 
 		void Dump() const;
-		Class GetClass() const;
-		Method GetMethod() const;
-		const uint8_t* GetData() const;
-		size_t GetSize() const;
-		void SetUsername(const char* username, size_t len);
-		void SetPriority(uint32_t priority);
-		void SetIceControlling(uint64_t iceControlling);
-		void SetIceControlled(uint64_t iceControlled);
-		void SetUseCandidate();
-		void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
-		void SetErrorCode(uint16_t errorCode);
-		void SetMessageIntegrity(const uint8_t* messageIntegrity);
-		void SetFingerprint();
-		const std::string& GetUsername() const;
-		uint32_t GetPriority() const;
-		uint64_t GetIceControlling() const;
-		uint64_t GetIceControlled() const;
-		bool HasUseCandidate() const;
-		uint16_t GetErrorCode() const;
-		bool HasMessageIntegrity() const;
-		bool HasFingerprint() const;
+		Class GetClass() const
+		{
+			return this->klass;
+		}
+		Method GetMethod() const
+		{
+			return this->method;
+		}
+		const uint8_t* GetData() const
+		{
+			return this->data;
+		}
+		size_t GetSize() const
+		{
+			return this->size;
+		}
+		void SetUsername(const char* username, size_t len)
+		{
+			this->username.assign(username, len);
+		}
+		void SetPriority(uint32_t priority)
+		{
+			this->priority = priority;
+		}
+		void SetIceControlling(uint64_t iceControlling)
+		{
+			this->iceControlling = iceControlling;
+		}
+		void SetIceControlled(uint64_t iceControlled)
+		{
+			this->iceControlled = iceControlled;
+		}
+		void SetUseCandidate()
+		{
+			this->hasUseCandidate = true;
+		}
+		void SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
+		{
+			this->xorMappedAddress = xorMappedAddress;
+		}
+		void SetErrorCode(uint16_t errorCode)
+		{
+			this->errorCode = errorCode;
+		}
+		void SetMessageIntegrity(const uint8_t* messageIntegrity)
+		{
+			this->messageIntegrity = messageIntegrity;
+		}
+		void SetFingerprint()
+		{
+			this->hasFingerprint = true;
+		}
+		const std::string& GetUsername() const
+		{
+			return this->username;
+		}
+		uint32_t GetPriority() const
+		{
+			return this->priority;
+		}
+		uint64_t GetIceControlling() const
+		{
+			return this->iceControlling;
+		}
+		uint64_t GetIceControlled() const
+		{
+			return this->iceControlled;
+		}
+		bool HasUseCandidate() const
+		{
+			return this->hasUseCandidate;
+		}
+		uint16_t GetErrorCode() const
+		{
+			return this->errorCode;
+		}
+		bool HasMessageIntegrity() const
+		{
+			return (this->messageIntegrity ? true : false);
+		}
+		bool HasFingerprint() const
+		{
+			return this->hasFingerprint;
+		}
 		Authentication CheckAuthentication(
 		  const std::string& localUsername, const std::string& localPassword);
 		StunPacket* CreateSuccessResponse();
@@ -99,143 +175,19 @@ namespace RTC
 		Method method;                           // 2 bytes.
 		const uint8_t* transactionId{ nullptr }; // 12 bytes.
 		uint8_t* data{ nullptr };                // Pointer to binary data.
-		size_t size{ 0 };                        // The full message size (including header).
+		size_t size{ 0u };                       // The full message size (including header).
 		// STUN attributes.
 		std::string username;                               // Less than 513 bytes.
-		uint32_t priority{ 0 };                             // 4 bytes unsigned integer.
-		uint64_t iceControlling{ 0 };                       // 8 bytes unsigned integer.
-		uint64_t iceControlled{ 0 };                        // 8 bytes unsigned integer.
+		uint32_t priority{ 0u };                            // 4 bytes unsigned integer.
+		uint64_t iceControlling{ 0u };                      // 8 bytes unsigned integer.
+		uint64_t iceControlled{ 0u };                       // 8 bytes unsigned integer.
 		bool hasUseCandidate{ false };                      // 0 bytes.
 		const uint8_t* messageIntegrity{ nullptr };         // 20 bytes.
 		bool hasFingerprint{ false };                       // 4 bytes.
 		const struct sockaddr* xorMappedAddress{ nullptr }; // 8 or 20 bytes.
-		uint16_t errorCode{ 0 };                            // 4 bytes (no reason phrase).
+		uint16_t errorCode{ 0u };                           // 4 bytes (no reason phrase).
 		std::string password;
 	};
-
-	/* Inline class methods. */
-
-	inline bool StunPacket::IsStun(const uint8_t* data, size_t len)
-	{
-		// clang-format off
-		return (
-			// STUN headers are 20 bytes.
-			(len >= 20) &&
-			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-			(data[0] < 3) &&
-			// Magic cookie must match.
-			(data[4] == StunPacket::magicCookie[0]) && (data[5] == StunPacket::magicCookie[1]) &&
-			(data[6] == StunPacket::magicCookie[2]) && (data[7] == StunPacket::magicCookie[3])
-		);
-		// clang-format on
-	}
-
-	/* Inline instance methods. */
-
-	inline StunPacket::Class StunPacket::GetClass() const
-	{
-		return this->klass;
-	}
-
-	inline StunPacket::Method StunPacket::GetMethod() const
-	{
-		return this->method;
-	}
-
-	inline const uint8_t* StunPacket::GetData() const
-	{
-		return this->data;
-	}
-
-	inline size_t StunPacket::GetSize() const
-	{
-		return this->size;
-	}
-
-	inline void StunPacket::SetUsername(const char* username, size_t len)
-	{
-		this->username.assign(username, len);
-	}
-
-	inline void StunPacket::SetPriority(const uint32_t priority)
-	{
-		this->priority = priority;
-	}
-
-	inline void StunPacket::SetIceControlling(const uint64_t iceControlling)
-	{
-		this->iceControlling = iceControlling;
-	}
-
-	inline void StunPacket::SetIceControlled(const uint64_t iceControlled)
-	{
-		this->iceControlled = iceControlled;
-	}
-
-	inline void StunPacket::SetUseCandidate()
-	{
-		this->hasUseCandidate = true;
-	}
-
-	inline void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
-	{
-		this->xorMappedAddress = xorMappedAddress;
-	}
-
-	inline void StunPacket::SetErrorCode(uint16_t errorCode)
-	{
-		this->errorCode = errorCode;
-	}
-
-	inline void StunPacket::SetMessageIntegrity(const uint8_t* messageIntegrity)
-	{
-		this->messageIntegrity = messageIntegrity;
-	}
-
-	inline void StunPacket::SetFingerprint()
-	{
-		this->hasFingerprint = true;
-	}
-
-	inline const std::string& StunPacket::GetUsername() const
-	{
-		return this->username;
-	}
-
-	inline uint32_t StunPacket::GetPriority() const
-	{
-		return this->priority;
-	}
-
-	inline uint64_t StunPacket::GetIceControlling() const
-	{
-		return this->iceControlling;
-	}
-
-	inline uint64_t StunPacket::GetIceControlled() const
-	{
-		return this->iceControlled;
-	}
-
-	inline bool StunPacket::HasUseCandidate() const
-	{
-		return this->hasUseCandidate;
-	}
-
-	inline uint16_t StunPacket::GetErrorCode() const
-	{
-		return this->errorCode;
-	}
-
-	inline bool StunPacket::HasMessageIntegrity() const
-	{
-		return (this->messageIntegrity ? true : false);
-	}
-
-	inline bool StunPacket::HasFingerprint() const
-	{
-		return this->hasFingerprint;
-	}
 } // namespace RTC
 
 #endif

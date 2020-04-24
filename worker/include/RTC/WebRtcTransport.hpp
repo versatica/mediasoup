@@ -81,7 +81,7 @@ namespace RTC
 		void OnDtlsTransportConnecting(const RTC::DtlsTransport* dtlsTransport) override;
 		void OnDtlsTransportConnected(
 		  const RTC::DtlsTransport* dtlsTransport,
-		  RTC::SrtpSession::Profile srtpProfile,
+		  RTC::SrtpSession::CryptoSuite srtpCryptoSuite,
 		  uint8_t* srtpLocalKey,
 		  size_t srtpLocalKeyLen,
 		  uint8_t* srtpRemoteKey,

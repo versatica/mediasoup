@@ -511,6 +511,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		RtpPacket* packet = RtpPacket::Parse(buffer, 28);
 		std::vector<RTC::RtpPacket::GenericExtension> extensions;
 		uint8_t extenLen;
+		uint8_t* extenValue;
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -631,9 +632,21 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasExtension(1) == false);
 		REQUIRE(packet->GetExtension(2, extenLen) == nullptr);
 		REQUIRE(packet->HasExtension(2) == false);
-		REQUIRE(packet->GetExtension(14, extenLen));
+		REQUIRE((extenValue = packet->GetExtension(14, extenLen)));
 		REQUIRE(packet->HasExtension(14) == true);
 		REQUIRE(extenLen == 4);
+		REQUIRE(extenValue[0] == 0x01);
+		REQUIRE(extenValue[1] == 0x02);
+		REQUIRE(extenValue[2] == 0x03);
+		REQUIRE(extenValue[3] == 0x04);
+		REQUIRE(packet->SetExtensionLength(14, 3) == true);
+		REQUIRE((extenValue = packet->GetExtension(14, extenLen)));
+		REQUIRE(packet->HasExtension(14) == true);
+		REQUIRE(extenLen == 3);
+		REQUIRE(extenValue[0] == 0x01);
+		REQUIRE(extenValue[1] == 0x02);
+		REQUIRE(extenValue[2] == 0x03);
+		REQUIRE(extenValue[3] == 0x00);
 
 		delete packet;
 	}
@@ -661,6 +674,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		RtpPacket* packet = RtpPacket::Parse(buffer, 28);
 		std::vector<RTC::RtpPacket::GenericExtension> extensions;
 		uint8_t extenLen;
+		uint8_t* extenValue;
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -730,9 +744,21 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(0, extenLen) == nullptr);
 		REQUIRE(packet->HasExtension(0) == false);
-		REQUIRE(packet->GetExtension(1, extenLen));
+		REQUIRE((extenValue = packet->GetExtension(1, extenLen)));
 		REQUIRE(packet->HasExtension(1) == true);
 		REQUIRE(extenLen == 4);
+		REQUIRE(extenValue[0] == 0x01);
+		REQUIRE(extenValue[1] == 0x02);
+		REQUIRE(extenValue[2] == 0x03);
+		REQUIRE(extenValue[3] == 0x04);
+		REQUIRE(packet->SetExtensionLength(1, 2) == true);
+		REQUIRE((extenValue = packet->GetExtension(1, extenLen)));
+		REQUIRE(packet->HasExtension(1) == true);
+		REQUIRE(extenLen == 2);
+		REQUIRE(extenValue[0] == 0x01);
+		REQUIRE(extenValue[1] == 0x02);
+		REQUIRE(extenValue[2] == 0x00);
+		REQUIRE(extenValue[3] == 0x00);
 		REQUIRE(packet->GetExtension(22, extenLen));
 		REQUIRE(packet->HasExtension(22) == true);
 		REQUIRE(extenLen == 11);

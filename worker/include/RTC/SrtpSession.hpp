@@ -9,7 +9,7 @@ namespace RTC
 	class SrtpSession
 	{
 	public:
-		enum class Profile
+		enum class CryptoSuite
 		{
 			NONE                    = 0,
 			AES_CM_128_HMAC_SHA1_80 = 1,
@@ -32,7 +32,7 @@ namespace RTC
 		static void OnSrtpEvent(srtp_event_data_t* data);
 
 	public:
-		SrtpSession(Type type, Profile profile, uint8_t* key, size_t keyLen);
+		SrtpSession(Type type, CryptoSuite cryptoSuite, uint8_t* key, size_t keyLen);
 		~SrtpSession();
 
 	public:
@@ -40,19 +40,15 @@ namespace RTC
 		bool DecryptSrtp(uint8_t* data, size_t* len);
 		bool EncryptRtcp(const uint8_t** data, size_t* len);
 		bool DecryptSrtcp(uint8_t* data, size_t* len);
-		void RemoveStream(uint32_t ssrc);
+		void RemoveStream(uint32_t ssrc)
+		{
+			srtp_remove_stream(this->session, uint32_t{ htonl(ssrc) });
+		}
 
 	private:
 		// Allocated by this.
 		srtp_t session{ nullptr };
 	};
-
-	/* Inline instance methods. */
-
-	inline void SrtpSession::RemoveStream(uint32_t ssrc)
-	{
-		srtp_remove_stream(this->session, uint32_t{ htonl(ssrc) });
-	}
 } // namespace RTC
 
 #endif

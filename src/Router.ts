@@ -1,11 +1,13 @@
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
+import { AwaitQueue } from 'awaitqueue';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
+import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
 import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
-import { PlainRtpTransport, PlainRtpTransportOptions } from './PlainRtpTransport';
+import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
@@ -17,7 +19,7 @@ import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { ShmTransport, ShmTransportOptions } from './ShmTransport';
 
-export interface RouterOptions
+export type RouterOptions =
 {
 	/**
 	 * Router media codecs.
@@ -30,7 +32,7 @@ export interface RouterOptions
 	appData?: any;
 }
 
-export interface PipeToRouterOptions
+export type PipeToRouterOptions =
 {
 	/**
 	 * The id of the Producer to consume.
@@ -61,9 +63,19 @@ export interface PipeToRouterOptions
 	 * SCTP streams number.
 	 */
 	numSctpStreams?: NumSctpStreams;
+
+	/**
+	 * Enable RTX and NACK for RTP retransmission.
+	 */
+	enableRtx?: boolean;
+
+	/**
+	 * Enable SRTP.
+	 */
+	enableSrtp?: boolean;
 }
 
-export interface PipeToRouterResult
+export type PipeToRouterResult =
 {
 	/**
 	 * The Consumer created in the current Router.
@@ -91,12 +103,16 @@ const logger = new Logger('Router');
 export class Router extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	private readonly _internal: any;
+	private readonly _internal:
+	{
+		routerId: string;
+	};
 
 	// Router data.
-	// - .rtpCapabilities
-	private readonly _data: any;
+	private readonly _data:
+	{
+		rtpCapabilities: RtpCapabilities;
+	}
 
 	// Channel instance.
 	private readonly _channel: Channel;
@@ -121,6 +137,10 @@ export class Router extends EnhancedEventEmitter
 
 	// Router to PipeTransport map.
 	private readonly _mapRouterPipeTransports: Map<Router, PipeTransport[]> = new Map();
+
+	// AwaitQueue instance to make pipeToRouter tasks happen sequentially.
+	private readonly _pipeToRouterQueue =
+		new AwaitQueue({ ClosedErrorClass: InvalidStateError });
 
 	// Observer instance.
 	private readonly _observer = new EnhancedEventEmitter();
@@ -244,6 +264,9 @@ export class Router extends EnhancedEventEmitter
 
 		// Clear map of Router/PipeTransports.
 		this._mapRouterPipeTransports.clear();
+
+		// Close the pipeToRouter AwaitQueue instance.
+		this._pipeToRouterQueue.close();
 
 		this.emit('@close');
 
@@ -398,22 +421,24 @@ export class Router extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Create a PlainRtpTransport.
+	 * Create a PlainTransport.
 	 */
-	async createPlainRtpTransport(
+	async createPlainTransport(
 		{
 			listenIp,
 			rtcpMux = true,
 			comedia = false,
-			multiSource = false,
+			disableOriginCheck = false,
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
+			enableSrtp = false,
+			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 			appData = {}
-		}: PlainRtpTransportOptions
-	): Promise<PlainRtpTransport>
+		}: PlainTransportOptions
+	): Promise<PlainTransport>
 	{
-		logger.debug('createPlainRtpTransport()');
+		logger.debug('createPlainTransport()');
 
 		if (!listenIp)
 			throw new TypeError('missing listenIp');
@@ -442,17 +467,19 @@ export class Router extends EnhancedEventEmitter
 			listenIp,
 			rtcpMux,
 			comedia,
-			multiSource,
+			disableOriginCheck,
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
-			isDataChannel : false
+			isDataChannel : false,
+			enableSrtp,
+			srtpCryptoSuite
 		};
 
 		const data =
-			await this._channel.request('router.createPlainRtpTransport', internal, reqData);
+			await this._channel.request('router.createPlainTransport', internal, reqData);
 
-		const transport = new PlainRtpTransport(
+		const transport = new PlainTransport(
 			{
 				internal,
 				data,
@@ -485,6 +512,19 @@ export class Router extends EnhancedEventEmitter
 	}
 
 	/**
+	 * DEPRECATED: Use createPlainTransport().
+	 */
+	async createPlainRtpTransport(
+		options: PlainTransportOptions
+	): Promise<PlainTransport>
+	{
+		logger.warn(
+			'createPlainRtpTransport() is DEPRECATED, use createPlainTransport()');
+
+		return this.createPlainTransport(options);
+	}
+
+	/**
 	 * Create a PipeTransport.
 	 */
 	async createPipeTransport(
@@ -493,6 +533,8 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 1073741823,
+			enableRtx = false,
+			enableSrtp = false,
 			appData = {}
 		}: PipeTransportOptions
 	): Promise<PipeTransport>
@@ -527,7 +569,9 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
-			isDataChannel : false
+			isDataChannel : false,
+			enableRtx,
+			enableSrtp
 		};
 
 		const data =
@@ -660,7 +704,9 @@ export class Router extends EnhancedEventEmitter
 			router,
 			listenIp = '127.0.0.1',
 			enableSctp = true,
-			numSctpStreams = { OS: 1024, MIS: 1024 }
+			numSctpStreams = { OS: 1024, MIS: 1024 },
+			enableRtx = false,
+			enableSrtp = false
 		}: PipeToRouterOptions
 	): Promise<PipeToRouterResult>
 	{
@@ -691,72 +737,89 @@ export class Router extends EnhancedEventEmitter
 				throw new TypeError('DataProducer not found');
 		}
 
-		let pipeTransportPair = this._mapRouterPipeTransports.get(router);
+		// Here we may have to create a new PipeTransport pair to connect source and
+		// destination Routers. We just want to keep a PipeTransport pair for each
+		// pair of Routers. Since this operation is async, it may happen that two
+		// simultaneous calls to router1.pipeToRouter({ producerId: xxx, router: router2 })
+		// would end up generating two pairs of PipeTranports. To prevent that, let's
+		// use an async queue.
+
 		let localPipeTransport: PipeTransport;
 		let remotePipeTransport: PipeTransport;
 
-		if (pipeTransportPair)
+		await this._pipeToRouterQueue.push(async () =>
 		{
-			localPipeTransport = pipeTransportPair[0];
-			remotePipeTransport = pipeTransportPair[1];
-		}
-		else
-		{
-			try
-			{
-				pipeTransportPair = await Promise.all(
-					[
-						this.createPipeTransport({ listenIp, enableSctp, numSctpStreams }),
-						router.createPipeTransport({ listenIp, enableSctp, numSctpStreams })
-					]);
+			let pipeTransportPair = this._mapRouterPipeTransports.get(router);
 
+			if (pipeTransportPair)
+			{
 				localPipeTransport = pipeTransportPair[0];
 				remotePipeTransport = pipeTransportPair[1];
-
-				await Promise.all(
-					[
-						localPipeTransport.connect(
-							{
-								ip   : remotePipeTransport.tuple.localIp,
-								port : remotePipeTransport.tuple.localPort
-							}),
-						remotePipeTransport.connect(
-							{
-								ip   : localPipeTransport.tuple.localIp,
-								port : localPipeTransport.tuple.localPort
-							})
-					]);
-
-				localPipeTransport.observer.on('close', () =>
-				{
-					remotePipeTransport.close();
-					this._mapRouterPipeTransports.delete(router);
-				});
-
-				remotePipeTransport.observer.on('close', () =>
-				{
-					localPipeTransport.close();
-					this._mapRouterPipeTransports.delete(router);
-				});
-
-				this._mapRouterPipeTransports.set(
-					router, [ localPipeTransport, remotePipeTransport ]);
 			}
-			catch (error)
+			else
 			{
-				logger.error(
-					'pipeToRouter() | error creating PipeTransport pair:%o',
-					error);
+				try
+				{
+					pipeTransportPair = await Promise.all(
+						[
+							this.createPipeTransport(
+								{ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }),
 
-				if (localPipeTransport)
-					localPipeTransport.close();
+							router.createPipeTransport(
+								{ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp })
+						]);
 
-				if (remotePipeTransport)
-					remotePipeTransport.close();
+					localPipeTransport = pipeTransportPair[0];
+					remotePipeTransport = pipeTransportPair[1];
 
-				throw error;
+					await Promise.all(
+						[
+							localPipeTransport.connect(
+								{
+									ip             : remotePipeTransport.tuple.localIp,
+									port           : remotePipeTransport.tuple.localPort,
+									srtpParameters : remotePipeTransport.srtpParameters
+								}),
+
+							remotePipeTransport.connect(
+								{
+									ip             : localPipeTransport.tuple.localIp,
+									port           : localPipeTransport.tuple.localPort,
+									srtpParameters : localPipeTransport.srtpParameters
+								})
+						]);
+
+					localPipeTransport.observer.on('close', () =>
+					{
+						remotePipeTransport.close();
+						this._mapRouterPipeTransports.delete(router);
+					});
+
+					remotePipeTransport.observer.on('close', () =>
+					{
+						localPipeTransport.close();
+						this._mapRouterPipeTransports.delete(router);
+					});
+
+					this._mapRouterPipeTransports.set(
+						router, [ localPipeTransport, remotePipeTransport ]);
+				}
+				catch (error)
+				{
+					logger.error(
+						'pipeToRouter() | error creating PipeTransport pair:%o',
+						error);
+
+					if (localPipeTransport)
+						localPipeTransport.close();
+
+					if (remotePipeTransport)
+						remotePipeTransport.close();
+
+					throw error;
+				}
 			}
-		}
+		});
 
 		if (producer)
 		{

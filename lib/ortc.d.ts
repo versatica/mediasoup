@@ -1,6 +1,6 @@
 import { RtpCapabilities, RtpCodecCapability, RtpHeaderExtension, RtpParameters, RtpCodecParameters, RtcpFeedback, RtpEncodingParameters, RtpHeaderExtensionParameters, RtcpParameters } from './RtpParameters';
 import { SctpCapabilities, NumSctpStreams, SctpParameters, SctpStreamParameters } from './SctpParameters';
-interface RtpMapping {
+declare type RtpMapping = {
     codecs: {
         payloadType: number;
         mappedPayloadType: number;
@@ -11,7 +11,7 @@ interface RtpMapping {
         scalabilityMode?: string;
         mappedSsrc: number;
     }[];
-}
+};
 /**
  * Validates RtpCapabilities. It may modify given data by adding missing
  * fields with default values.
@@ -122,9 +122,9 @@ export declare function getConsumerRtpParameters(consumableParams: RtpParameters
 /**
  * Generate RTP parameters for a pipe Consumer.
  *
- * It keeps all original consumable encodings, removes RTX support and also
- * other features such as NACK.
+ * It keeps all original consumable encodings and removes support for BWE. If
+ * enableRtx is false, it also removes RTX and NACK support.
  */
-export declare function getPipeConsumerRtpParameters(consumableParams: RtpParameters): RtpParameters;
+export declare function getPipeConsumerRtpParameters(consumableParams: RtpParameters, enableRtx?: boolean): RtpParameters;
 export {};
 //# sourceMappingURL=ortc.d.ts.map

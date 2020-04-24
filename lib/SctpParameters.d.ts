@@ -1,6 +1,6 @@
-export interface SctpCapabilities {
+export declare type SctpCapabilities = {
     numStreams: NumSctpStreams;
-}
+};
 /**
  * Both OS and MIS are part of the SCTP INIT+ACK handshake. OS refers to the
  * initial number of outgoing SCTP streams that the server side transport creates
@@ -23,7 +23,7 @@ export interface SctpCapabilities {
  * mediasoup-client provides specific per browser/version OS and MIS values via
  * the device.sctpCapabilities getter.
  */
-export interface NumSctpStreams {
+export declare type NumSctpStreams = {
     /**
      * Initially requested number of outgoing SCTP streams.
      */
@@ -32,8 +32,8 @@ export interface NumSctpStreams {
      * Maximum number of incoming SCTP streams.
      */
     MIS: number;
-}
-export interface SctpParameters {
+};
+export declare type SctpParameters = {
     /**
      * Must always equal 5000.
      */
@@ -50,7 +50,7 @@ export interface SctpParameters {
      * Maximum allowed size for SCTP messages.
      */
     maxMessageSize: number;
-}
+};
 /**
  * SCTP stream parameters describe the reliability of a certain SCTP stream.
  * If ordered is true then maxPacketLifeTime and maxRetransmits must be
@@ -58,7 +58,7 @@ export interface SctpParameters {
  * If ordered if false, only one of maxPacketLifeTime or maxRetransmits
  * can be true.
  */
-export interface SctpStreamParameters {
+export declare type SctpStreamParameters = {
     /**
      * SCTP stream id.
      */
@@ -78,5 +78,5 @@ export interface SctpStreamParameters {
      * be retransmitted.
      */
     maxRetransmits?: number;
-}
+};
 //# sourceMappingURL=SctpParameters.d.ts.map

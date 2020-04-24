@@ -23,6 +23,7 @@ namespace RTC
 	public:
 		DataConsumer(
 		  const std::string& id,
+		  const std::string& dataProducerId,
 		  RTC::DataConsumer::Listener* listener,
 		  json& data,
 		  size_t maxSctpMessageSize);
@@ -32,8 +33,20 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
-		const RTC::SctpStreamParameters& GetSctpStreamParameters() const;
-		bool IsActive() const;
+		const RTC::SctpStreamParameters& GetSctpStreamParameters() const
+		{
+			return this->sctpStreamParameters;
+		}
+		bool IsActive() const
+		{
+			// clang-format off
+			return (
+				this->transportConnected &&
+				this->sctpAssociationConnected &&
+				!this->dataProducerClosed
+			);
+			// clang-format on
+		}
 		void TransportConnected();
 		void TransportDisconnected();
 		void SctpAssociationConnected();
@@ -44,11 +57,12 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
+		const std::string dataProducerId;
 
 	private:
 		// Passed by argument.
 		RTC::DataConsumer::Listener* listener{ nullptr };
-		size_t maxSctpMessageSize{ 0 };
+		size_t maxSctpMessageSize{ 0u };
 		// Others.
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
@@ -56,27 +70,9 @@ namespace RTC
 		bool transportConnected{ false };
 		bool sctpAssociationConnected{ false };
 		bool dataProducerClosed{ false };
-		size_t messagesSent{ 0 };
-		size_t bytesSent{ 0 };
+		size_t messagesSent{ 0u };
+		size_t bytesSent{ 0u };
 	};
-
-	/* Inline methods. */
-
-	inline const RTC::SctpStreamParameters& DataConsumer::GetSctpStreamParameters() const
-	{
-		return this->sctpStreamParameters;
-	}
-
-	inline bool DataConsumer::IsActive() const
-	{
-		// clang-format off
-		return (
-			this->transportConnected &&
-			this->sctpAssociationConnected &&
-			!this->dataProducerClosed
-		);
-		// clang-format on
-	}
 } // namespace RTC
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_PAYLOAD_DESCRIPTOR_HANDLER_HPP
-#define MS_RTC_PAYLOAD_DESCRIPTOR_HANDLER_HPP
+#ifndef MS_RTC_CODECS_PAYLOAD_DESCRIPTOR_HANDLER_HPP
+#define MS_RTC_CODECS_PAYLOAD_DESCRIPTOR_HANDLER_HPP
 
 #include "common.hpp"
 
@@ -27,21 +27,56 @@ namespace RTC
 			};
 
 		public:
-			explicit EncodingContext(RTC::Codecs::EncodingContext::Params& params);
+			explicit EncodingContext(RTC::Codecs::EncodingContext::Params& params) : params(params)
+			{
+			}
 			virtual ~EncodingContext() = default;
 
 		public:
-			uint8_t GetSpatialLayers() const;
-			uint8_t GetTemporalLayers() const;
-			bool IsKSvc() const;
-			int16_t GetTargetSpatialLayer() const;
-			int16_t GetTargetTemporalLayer() const;
-			int16_t GetCurrentSpatialLayer() const;
-			int16_t GetCurrentTemporalLayer() const;
-			void SetTargetSpatialLayer(int16_t spatialLayer);
-			void SetTargetTemporalLayer(int16_t temporalLayer);
-			void SetCurrentSpatialLayer(int16_t spatialLayer);
-			void SetCurrentTemporalLayer(int16_t temporalLayer);
+			uint8_t GetSpatialLayers() const
+			{
+				return this->params.spatialLayers;
+			}
+			uint8_t GetTemporalLayers() const
+			{
+				return this->params.temporalLayers;
+			}
+			bool IsKSvc() const
+			{
+				return this->params.ksvc;
+			}
+			int16_t GetTargetSpatialLayer() const
+			{
+				return this->targetSpatialLayer;
+			}
+			int16_t GetTargetTemporalLayer() const
+			{
+				return this->targetTemporalLayer;
+			}
+			int16_t GetCurrentSpatialLayer() const
+			{
+				return this->currentSpatialLayer;
+			}
+			int16_t GetCurrentTemporalLayer() const
+			{
+				return this->currentTemporalLayer;
+			}
+			void SetTargetSpatialLayer(int16_t spatialLayer)
+			{
+				this->targetSpatialLayer = spatialLayer;
+			}
+			void SetTargetTemporalLayer(int16_t temporalLayer)
+			{
+				this->targetTemporalLayer = temporalLayer;
+			}
+			void SetCurrentSpatialLayer(int16_t spatialLayer)
+			{
+				this->currentSpatialLayer = spatialLayer;
+			}
+			void SetCurrentTemporalLayer(int16_t temporalLayer)
+			{
+				this->currentTemporalLayer = temporalLayer;
+			}
 			virtual void SyncRequired() = 0;
 
 		private:
@@ -51,68 +86,6 @@ namespace RTC
 			int16_t currentSpatialLayer{ -1 };
 			int16_t currentTemporalLayer{ -1 };
 		};
-
-		/* Inline instance methods. */
-
-		inline EncodingContext::EncodingContext(RTC::Codecs::EncodingContext::Params& params)
-		  : params(params)
-		{
-		}
-
-		inline uint8_t EncodingContext::GetSpatialLayers() const
-		{
-			return this->params.spatialLayers;
-		}
-
-		inline uint8_t EncodingContext::GetTemporalLayers() const
-		{
-			return this->params.temporalLayers;
-		}
-
-		inline bool EncodingContext::IsKSvc() const
-		{
-			return this->params.ksvc;
-		}
-
-		inline int16_t EncodingContext::GetTargetSpatialLayer() const
-		{
-			return this->targetSpatialLayer;
-		}
-
-		inline int16_t EncodingContext::GetTargetTemporalLayer() const
-		{
-			return this->targetTemporalLayer;
-		}
-
-		inline int16_t EncodingContext::GetCurrentSpatialLayer() const
-		{
-			return this->currentSpatialLayer;
-		}
-
-		inline int16_t EncodingContext::GetCurrentTemporalLayer() const
-		{
-			return this->currentTemporalLayer;
-		}
-
-		inline void EncodingContext::SetTargetSpatialLayer(int16_t spatialLayer)
-		{
-			this->targetSpatialLayer = spatialLayer;
-		}
-
-		inline void EncodingContext::SetTargetTemporalLayer(int16_t temporalLayer)
-		{
-			this->targetTemporalLayer = temporalLayer;
-		}
-
-		inline void EncodingContext::SetCurrentSpatialLayer(int16_t spatialLayer)
-		{
-			this->currentSpatialLayer = spatialLayer;
-		}
-
-		inline void EncodingContext::SetCurrentTemporalLayer(int16_t temporalLayer)
-		{
-			this->currentTemporalLayer = temporalLayer;
-		}
 
 		class PayloadDescriptorHandler
 		{

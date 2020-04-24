@@ -184,6 +184,8 @@ namespace RTC
 
 		const std::string& Packet::Type2String(Type type)
 		{
+			MS_TRACE();
+
 			static const std::string Unknown("UNKNOWN");
 
 			auto it = Packet::type2String.find(type);

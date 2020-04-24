@@ -2,7 +2,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { ProducerStat } from './Producer';
 import { MediaKind, RtpCapabilities, RtpParameters } from './RtpParameters';
-export interface ConsumerOptions {
+export declare type ConsumerOptions = {
     /**
      * The id of the Producer to consume.
      */
@@ -35,7 +35,7 @@ export interface ConsumerOptions {
      * Custom application data.
      */
     appData?: any;
-}
+};
 /**
  * Valid types for 'trace' event.
  */
@@ -43,7 +43,7 @@ export declare type ConsumerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli'
 /**
  * 'trace' event data.
  */
-export interface ConsumerTraceEventData {
+export declare type ConsumerTraceEventData = {
     /**
      * Trace type.
      */
@@ -60,8 +60,8 @@ export interface ConsumerTraceEventData {
      * Per type information.
      */
     info: any;
-}
-export interface ConsumerScore {
+};
+export declare type ConsumerScore = {
     /**
      * The score of the RTP stream of the consumer.
      */
@@ -70,8 +70,8 @@ export interface ConsumerScore {
      * The score of the currently selected RTP stream of the producer.
      */
     producerScore: number;
-}
-export interface ConsumerLayers {
+};
+export declare type ConsumerLayers = {
     /**
      * The spatial layer index (from 0 to N).
      */
@@ -80,8 +80,8 @@ export interface ConsumerLayers {
      * The temporal layer index (from 0 to N).
      */
     temporalLayer?: number;
-}
-export interface ConsumerStat {
+};
+export declare type ConsumerStat = {
     type: string;
     timestamp: number;
     ssrc: number;
@@ -102,7 +102,7 @@ export interface ConsumerStat {
     byteCount: number;
     bitrate: number;
     roundTripTime?: number;
-}
+};
 /**
  * Consumer type.
  */

@@ -159,23 +159,21 @@ namespace RTC
 					}
 				}
 
-				// TODO: Should be rejected with 487, but this makes Chrome happy:
-				//   https://bugs.chromium.org/p/webrtc/issues/detail?id=7478
 				// The remote peer must be ICE controlling.
-				// if (packet->GetIceControlled())
-				// {
-				// 	MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
-				//
-				// 	// Reply 487 (Role Conflict).
-				// 	RTC::StunPacket* response = packet->CreateErrorResponse(487);
-				//
-				// 	response->Serialize(StunSerializeBuffer);
-				// 	this->listener->OnIceServerSendStunPacket(this, response, tuple);
-				//
-				// 	delete response;
-				//
-				// 	return;
-				// }
+				if (packet->GetIceControlled())
+				{
+					MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
+
+					// Reply 487 (Role Conflict).
+					RTC::StunPacket* response = packet->CreateErrorResponse(487);
+
+					response->Serialize(StunSerializeBuffer);
+					this->listener->OnIceServerSendStunPacket(this, response, tuple);
+
+					delete response;
+
+					return;
+				}
 
 				MS_DEBUG_DEV(
 				  "processing STUN Binding Request [Priority:%" PRIu32 ", UseCandidate:%s]",

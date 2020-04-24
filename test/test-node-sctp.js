@@ -23,7 +23,7 @@ beforeAll(async () =>
 {
 	worker = await createWorker();
 	router = await worker.createRouter();
-	transport = await router.createPlainRtpTransport(
+	transport = await router.createPlainTransport(
 		{
 			listenIp       : '127.0.0.1',
 			comedia        : true, // So we don't need to call transport.connect().

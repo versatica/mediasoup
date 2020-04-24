@@ -1,7 +1,7 @@
 const ScalabilityModeRegex =
 	new RegExp('^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1})(_KEY)?');
 
-export interface ScalabilityMode
+export type ScalabilityMode =
 {
 	spatialLayers: number;
 	temporalLayers: number;

@@ -13,27 +13,13 @@ const workerFiles =
 
 gulp.task('lint:worker', () =>
 {
-	const src = workerFiles.concat(
-		// Ignore Ragel generated files.
-		'!worker/src/Utils/IP.cpp',
-		// Ignore json.hpp.
-		'!worker/include/json.hpp'
-	);
-
-	return gulp.src(src)
+	return gulp.src(workerFiles)
 		.pipe(clangFormat.checkFormat('file', null, { verbose: true, fail: true }));
 });
 
 gulp.task('format:worker', () =>
 {
-	const src = workerFiles.concat(
-		// Ignore Ragel generated files.
-		'!worker/src/Utils/IP.cpp',
-		// Ignore json.hpp.
-		'!worker/include/json.hpp'
-	);
-
-	return gulp.src(src, { base: '.' })
+	return gulp.src(workerFiles, { base: '.' })
 		.pipe(clangFormat.format('file'))
 		.pipe(gulp.dest('.'));
 });

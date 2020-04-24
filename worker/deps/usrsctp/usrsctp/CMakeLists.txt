@@ -124,7 +124,7 @@ endif ()
 # CHECK STRUCT MEMBERS
 #################################################
 
-set(CMAKE_REQUIRED_INCLUDES "${CMAKE_SOURCE_DIR}/usrsctplib")
+set(CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/usrsctplib")
 
 check_include_file(usrsctp.h have_usrsctp_h)
 if (NOT have_usrsctp_h)
@@ -259,8 +259,9 @@ elseif (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "Appl
 	endif ()
 
 	if (sctp_build_fuzzer)
+		set(CMAKE_BUILD_TYPE "DEBUG")
 		add_definitions(-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=fuzzer-no-link")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O1 -fsanitize=fuzzer-no-link")
 	endif ()
 endif ()
 

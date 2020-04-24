@@ -35,6 +35,7 @@ switch (task)
 			execute('rmdir /s lib');
 
 		execute('tsc');
+
 		taskReplaceVersion();
 
 		break;
@@ -82,7 +83,11 @@ switch (task)
 	case 'test:node':
 	{
 		taskReplaceVersion();
-		execute('jest');
+
+		if (!process.env.TEST_FILE)
+			execute('jest');
+		else
+			execute(`jest --testPathPattern ${process.env.TEST_FILE}`);
 
 		break;
 	}
@@ -106,6 +111,7 @@ switch (task)
 	case 'coverage':
 	{
 		taskReplaceVersion();
+
 		execute('jest --coverage');
 		execute('open-cli coverage/lcov-report/index.html');
 

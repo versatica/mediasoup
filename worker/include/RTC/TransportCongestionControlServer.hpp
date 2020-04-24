@@ -30,10 +30,23 @@ namespace RTC
 		virtual ~TransportCongestionControlServer();
 
 	public:
-		RTC::BweType GetBweType() const;
+		RTC::BweType GetBweType() const
+		{
+			return this->bweType;
+		}
 		void TransportConnected();
 		void TransportDisconnected();
-		uint32_t GetAvailableBitrate() const;
+		uint32_t GetAvailableBitrate() const
+		{
+			switch (this->bweType)
+			{
+				case RTC::BweType::REMB:
+					return this->rembServer->GetAvailableBitrate();
+
+				default:
+					return 0u;
+			}
+		}
 		void IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet);
 		void SetMaxIncomingBitrate(uint32_t bitrate);
 
@@ -69,25 +82,6 @@ namespace RTC
 		uint64_t limitationRembSentAtMs{ 0u };
 		uint8_t unlimitedRembCounter{ 0u };
 	};
-
-	/* Inline instance methods. */
-
-	inline RTC::BweType TransportCongestionControlServer::GetBweType() const
-	{
-		return this->bweType;
-	}
-
-	inline uint32_t TransportCongestionControlServer::GetAvailableBitrate() const
-	{
-		switch (this->bweType)
-		{
-			case RTC::BweType::REMB:
-				return this->rembServer->GetAvailableBitrate();
-
-			default:
-				return 0u;
-		}
-	}
 } // namespace RTC
 
 #endif

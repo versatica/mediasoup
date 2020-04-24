@@ -27,6 +27,7 @@
       'src/Utils/Crypto.cpp',
       'src/Utils/File.cpp',
       'src/Utils/IP.cpp',
+      'src/Utils/String.cpp',
       'src/handles/SignalsHandler.cpp',
       'src/handles/TcpConnection.cpp',
       'src/handles/TcpServer.cpp',
@@ -47,7 +48,7 @@
       'src/RTC/NackGenerator.cpp',
       'src/RTC/PipeConsumer.cpp',
       'src/RTC/PipeTransport.cpp',
-      'src/RTC/PlainRtpTransport.cpp',
+      'src/RTC/PlainTransport.cpp',
       'src/RTC/PortManager.cpp',
       'src/RTC/Producer.cpp',
       'src/RTC/RateCalculator.cpp',
@@ -78,7 +79,6 @@
       'src/RTC/TrendCalculator.cpp',
       'src/RTC/UdpSocket.cpp',
       'src/RTC/WebRtcTransport.cpp',
-      'src/RTC/Codecs/Codecs.cpp',
       'src/RTC/Codecs/H264.cpp',
       'src/RTC/Codecs/VP8.cpp',
       'src/RTC/Codecs/VP9.cpp',
@@ -156,7 +156,7 @@
       'include/RTC/Parameters.hpp',
       'include/RTC/PipeConsumer.hpp',
       'include/RTC/PipeTransport.hpp',
-      'include/RTC/PlainRtpTransport.hpp',
+      'include/RTC/PlainTransport.hpp',
       'include/RTC/PortManager.hpp',
       'include/RTC/Producer.hpp',
       'include/RTC/RateCalculator.hpp',
@@ -190,7 +190,7 @@
       'include/RTC/TrendCalculator.hpp',
       'include/RTC/UdpSocket.hpp',
       'include/RTC/WebRtcTransport.hpp',
-      'include/RTC/Codecs/Codecs.hpp',
+      'include/RTC/Codecs/Tools.hpp',
       'include/RTC/Codecs/PayloadDescriptorHandler.hpp',
       'include/RTC/Codecs/H264.hpp',
       'include/RTC/Codecs/VP8.hpp',
@@ -256,6 +256,7 @@
       }],
 
       [ 'OS == "linux"', {
+        'cflags': [ '-O3' ],
         'defines':
         [
           '_POSIX_C_SOURCE=200112',
@@ -264,7 +265,7 @@
       }],
 
       [ 'OS == "linux" and mediasoup_asan == "true"', {
-        'cflags': [ '-fsanitize=address' ],
+        'cflags': [ '-fsanitize=address', '-O3' ],
         'ldflags': [ '-fsanitize=address' ]
       }],
 
@@ -427,6 +428,7 @@
       [
         # C++ source files.
         'fuzzer/src/fuzzer.cpp',
+        'fuzzer/src/FuzzerUtils.cpp',
         'fuzzer/src/RTC/FuzzerStunPacket.cpp',
         'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
         'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
@@ -454,6 +456,7 @@
         'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
         'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
         # C++ include files.
+        'fuzzer/include/FuzzerUtils.hpp',
         'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
         'fuzzer/include/RTC/FuzzerTrendCalculator.hpp',

@@ -1,4 +1,4 @@
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
@@ -11,8 +11,9 @@ import {
 } from './Transport';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import { SrtpParameters } from './SrtpParameters';
 
-export interface PipeTransportOptions
+export type PipeTransportOptions =
 {
 	/**
 	 * Listening IP address.
@@ -36,12 +37,26 @@ export interface PipeTransportOptions
 	maxSctpMessageSize?: number;
 
 	/**
+	 * Enable RTX and NACK for RTP retransmission. Useful if both Routers are
+	 * located in different hosts and there is packet lost in the link. For this
+	 * to work, both PipeTransports must enable this setting. Default false.
+	 */
+	enableRtx?: boolean;
+
+	/**
+	 * Enable SRTP. Useful to protect the RTP and RTCP traffic if both Routers
+	 * are located in different hosts. For this to work, connect() must be called
+	 * with remote SRTP parameters. Default false.
+	 */
+	enableSrtp?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: any;
 }
 
-export interface PipeTransportStat
+export type PipeTransportStat =
 {
 	// Common to all Transports.
 	type: string;
@@ -67,7 +82,6 @@ export interface PipeTransportStat
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
-
 	// PipeTransport specific.
 	tuple: TransportTuple;
 }
@@ -77,18 +91,14 @@ const logger = new Logger('PipeTransport');
 export class PipeTransport extends Transport
 {
 	// PipeTransport data.
-	// - .tuple
-	//   - .localIp
-	//   - .localPort
-	//   - .remoteIp
-	//   - .remotePort
-	//   - .protocol
-	// - .sctpParameters
-	//   - .port
-	//   - .OS
-	//   - .MIS
-	//   - .maxMessageSize
-	// - .sctpState
+	protected readonly _data:
+	{
+		tuple: TransportTuple;
+		sctpParameters?: SctpParameters;
+		sctpState?: SctpState;
+		rtx: boolean;
+		srtpParameters?: SrtpParameters;
+	};
 
 	/**
 	 * @private
@@ -107,7 +117,9 @@ export class PipeTransport extends Transport
 		{
 			tuple          : data.tuple,
 			sctpParameters : data.sctpParameters,
-			sctpState      : data.sctpState
+			sctpState      : data.sctpState,
+			rtx            : data.rtx,
+			srtpParameters : data.srtpParameters
 		};
 
 		this._handleWorkerNotifications();
@@ -132,9 +144,17 @@ export class PipeTransport extends Transport
 	/**
 	 * SCTP state.
 	 */
-	get sctpState(): SctpState
+	get sctpState(): SctpState | undefined
 	{
 		return this._data.sctpState;
+	}
+
+	/**
+	 * SRTP parameters.
+	 */
+	get srtpParameters(): SrtpParameters | undefined
+	{
+		return this._data.srtpParameters;
 	}
 
 	/**
@@ -155,7 +175,7 @@ export class PipeTransport extends Transport
 	}
 
 	/**
-	 * Close the PlainRtpTransport.
+	 * Close the PipeTransport.
 	 *
 	 * @override
 	 */
@@ -207,17 +227,19 @@ export class PipeTransport extends Transport
 	async connect(
 		{
 			ip,
-			port
+			port,
+			srtpParameters
 		}:
 		{
 			ip: string;
 			port: number;
+			srtpParameters?: SrtpParameters;
 		}
 	): Promise<void>
 	{
 		logger.debug('connect()');
 
-		const reqData = { ip, port };
+		const reqData = { ip, port, srtpParameters };
 
 		const data =
 			await this._channel.request('transport.connect', this._internal, reqData);
@@ -246,8 +268,8 @@ export class PipeTransport extends Transport
 			throw Error(`Producer with id "${producerId}" not found`);
 
 		// This may throw.
-		const rtpParameters =
-			ortc.getPipeConsumerRtpParameters(producer.consumableRtpParameters);
+		const rtpParameters = ortc.getPipeConsumerRtpParameters(
+			producer.consumableRtpParameters, this._data.rtx);
 
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
 		const reqData =

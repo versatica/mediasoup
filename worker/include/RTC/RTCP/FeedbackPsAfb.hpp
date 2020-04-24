@@ -23,54 +23,43 @@ namespace RTC
 		public:
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsAfbPacket(
-			  CommonHeader* commonHeader, Application application = Application::UNKNOWN);
+			  CommonHeader* commonHeader, Application application = Application::UNKNOWN)
+			  : FeedbackPsPacket(commonHeader)
+			{
+				this->size = ((static_cast<size_t>(ntohs(commonHeader->length)) + 1) * 4) -
+				             (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header));
+
+				this->data = (uint8_t*)commonHeader + sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
+
+				this->application = application;
+			}
 			FeedbackPsAfbPacket(
-			  uint32_t senderSsrc, uint32_t mediaSsrc, Application application = Application::UNKNOWN);
+			  uint32_t senderSsrc, uint32_t mediaSsrc, Application application = Application::UNKNOWN)
+			  : FeedbackPsPacket(FeedbackPs::MessageType::AFB, senderSsrc, mediaSsrc)
+			{
+				this->application = application;
+			}
 			~FeedbackPsAfbPacket() override = default;
 
-			Application GetApplication() const;
+			Application GetApplication() const
+			{
+				return this->application;
+			}
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
 			void Dump() const override;
 			size_t Serialize(uint8_t* buffer) override;
-			size_t GetSize() const override;
+			size_t GetSize() const override
+			{
+				return FeedbackPsPacket::GetSize() + this->size;
+			}
 
 		private:
 			Application application{ Application::UNKNOWN };
 			uint8_t* data{ nullptr };
 			size_t size{ 0 };
 		};
-
-		/* Inline instance methods. */
-
-		inline FeedbackPsAfbPacket::FeedbackPsAfbPacket(CommonHeader* commonHeader, Application application)
-		  : FeedbackPsPacket(commonHeader)
-		{
-			this->size = ((static_cast<size_t>(ntohs(commonHeader->length)) + 1) * 4) -
-			             (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header));
-
-			this->data = (uint8_t*)commonHeader + sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
-
-			this->application = application;
-		}
-
-		inline FeedbackPsAfbPacket::FeedbackPsAfbPacket(
-		  uint32_t senderSsrc, uint32_t mediaSsrc, Application application)
-		  : FeedbackPsPacket(FeedbackPs::MessageType::AFB, senderSsrc, mediaSsrc)
-		{
-			this->application = application;
-		}
-
-		inline FeedbackPsAfbPacket::Application FeedbackPsAfbPacket::GetApplication() const
-		{
-			return this->application;
-		}
-
-		inline size_t FeedbackPsAfbPacket::GetSize() const
-		{
-			return FeedbackPsPacket::GetSize() + this->size;
-		}
 	} // namespace RTCP
 } // namespace RTC
 

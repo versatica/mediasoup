@@ -52,10 +52,24 @@ void
 debug_printf_stack(const char *format, ...)
 {
 	va_list ap;
+	char charbuf[1024];
+	static struct timeval time_main;
+	struct timeval time_now;
+	struct timeval time_delta;
+
+	if (time_main.tv_sec == 0  && time_main.tv_usec == 0) {
+		gettimeofday(&time_main, NULL);
+	}
+
+	gettimeofday(&time_now, NULL);
+	timersub(&time_now, &time_main, &time_delta);
 
 	va_start(ap, format);
-	vprintf(format, ap);
+	//vfprintf(stderr, format, ap);
+	vsnprintf(charbuf, 1024, format, ap);
 	va_end(ap);
+
+	fprintf(stderr, "[S][%u.%03u] %s", (unsigned int) time_delta.tv_sec, (unsigned int) time_delta.tv_usec / 1000, charbuf);
 }
 
 static void

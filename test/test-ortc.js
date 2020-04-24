@@ -69,7 +69,6 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/VP8',
 			preferredPayloadType : 125,
 			clockRate            : 90000,
-			channels             : 1,
 			parameters           : {},
 			rtcpFeedback         :
 			[
@@ -88,7 +87,6 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/rtx',
 			preferredPayloadType : 101, // 101 is the second available dynamic PT.
 			clockRate            : 90000,
-			channels             : 1,
 			parameters           :
 			{
 				apt : 125
@@ -103,7 +101,6 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/H264',
 			preferredPayloadType : 102, // 102 is the second available dynamic PT.
 			clockRate            : 90000,
-			channels             : 1,
 			parameters           :
 			{
 
@@ -129,7 +126,6 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			mimeType             : 'video/rtx',
 			preferredPayloadType : 103,
 			clockRate            : 90000,
-			channels             : 1,
 			parameters           :
 			{
 				apt : 102
@@ -238,7 +234,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType    : 'video/H264',
 				payloadType : 111,
 				clockRate   : 90000,
-				channels    : 1,
 				parameters  :
 				{
 					foo                  : 1234,
@@ -256,7 +251,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType    : 'video/rtx',
 				payloadType : 112,
 				clockRate   : 90000,
-				channels    : 1,
 				parameters  :
 				{
 					apt : 111
@@ -311,12 +305,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		]);
 
 	expect(rtpMapping.encodings[0].ssrc).toBe(11111111);
-	expect(rtpMapping.encodings[0].rid).toBe(undefined);
+	expect(rtpMapping.encodings[0].rid).toBeUndefined();
 	expect(rtpMapping.encodings[0].mappedSsrc).toBeType('number');
 	expect(rtpMapping.encodings[1].ssrc).toBe(21111111);
-	expect(rtpMapping.encodings[1].rid).toBe(undefined);
+	expect(rtpMapping.encodings[1].rid).toBeUndefined();
 	expect(rtpMapping.encodings[1].mappedSsrc).toBeType('number');
-	expect(rtpMapping.encodings[2].ssrc).toBe(undefined);
+	expect(rtpMapping.encodings[2].ssrc).toBeUndefined();
 	expect(rtpMapping.encodings[2].rid).toBe('high');
 	expect(rtpMapping.encodings[2].mappedSsrc).toBeType('number');
 
@@ -382,7 +376,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType             : 'video/H264',
 				preferredPayloadType : 101,
 				clockRate            : 90000,
-				channels             : 1,
 				parameters           :
 				{
 					'packetization-mode' : 1,
@@ -401,7 +394,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				mimeType             : 'video/rtx',
 				preferredPayloadType : 102,
 				clockRate            : 90000,
-				channels             : 1,
 				parameters           :
 				{
 					apt : 101
@@ -465,7 +457,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			mimeType    : 'video/H264',
 			payloadType : 101,
 			clockRate   : 90000,
-			channels    : 1,
 			parameters  :
 			{
 				foo                  : 1234,
@@ -484,7 +475,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			mimeType    : 'video/rtx',
 			payloadType : 102,
 			clockRate   : 90000,
-			channels    : 1,
 			parameters  :
 			{
 				apt : 101
@@ -500,6 +490,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	expect(consumerRtpParameters.headerExtensions).toEqual(
 		[
+			{
+				uri        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id         : 1,
+				encrypt    : false,
+				parameters : {}
+			},
 			{
 				uri        : 'urn:3gpp:video-orientation',
 				id         : 11,
@@ -530,7 +526,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			mimeType    : 'video/H264',
 			payloadType : 101,
 			clockRate   : 90000,
-			channels    : 1,
 			parameters  :
 			{
 				foo                  : 1234,
@@ -546,15 +541,15 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	expect(pipeConsumerRtpParameters.encodings.length).toBe(3);
 	expect(pipeConsumerRtpParameters.encodings[0].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[0].rtx).toBe(undefined);
+	expect(pipeConsumerRtpParameters.encodings[0].rtx).toBeUndefined();
 	expect(pipeConsumerRtpParameters.encodings[0].maxBitrate).toBeType('number');
 	expect(pipeConsumerRtpParameters.encodings[0].scalabilityMode).toBe('L1T3');
 	expect(pipeConsumerRtpParameters.encodings[1].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[1].rtx).toBe(undefined);
+	expect(pipeConsumerRtpParameters.encodings[1].rtx).toBeUndefined();
 	expect(pipeConsumerRtpParameters.encodings[1].maxBitrate).toBeType('number');
 	expect(pipeConsumerRtpParameters.encodings[1].scalabilityMode).toBe('L1T3');
 	expect(pipeConsumerRtpParameters.encodings[2].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[2].rtx).toBe(undefined);
+	expect(pipeConsumerRtpParameters.encodings[2].rtx).toBeUndefined();
 	expect(pipeConsumerRtpParameters.encodings[2].maxBitrate).toBeType('number');
 	expect(pipeConsumerRtpParameters.encodings[2].scalabilityMode).toBe('L1T3');
 

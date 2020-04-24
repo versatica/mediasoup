@@ -83,7 +83,7 @@ test('worker.updateSettings() succeeds', async () =>
 
 	await expect(worker.updateSettings({ logLevel: 'debug', logTags: [ 'ice' ] }))
 		.resolves
-		.toBe(undefined);
+		.toBeUndefined();
 
 	worker.close();
 }, 2000);

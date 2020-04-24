@@ -8,6 +8,8 @@ namespace RTC
 {
 	// SSRC of the probation RTP stream.
 	constexpr uint32_t RtpProbationSsrc{ 1234u };
+	// Codec payload type of the probation RTP stream.
+	constexpr uint8_t RtpProbationCodecPayloadType{ 127u };
 
 	class RtpProbationGenerator
 	{

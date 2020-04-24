@@ -3,7 +3,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { SctpStreamParameters } from './SctpParameters';
 
-export interface DataProducerOptions
+export type DataProducerOptions =
 {
 	/**
 	 * DataProducer id (just for Router.pipeToRouter() method).
@@ -31,7 +31,7 @@ export interface DataProducerOptions
 	appData?: any;
 }
 
-export interface DataProducerStat
+export type DataProducerStat =
 {
 	type: string;
 	timestamp: number;
@@ -46,16 +46,20 @@ const logger = new Logger('DataProducer');
 export class DataProducer extends EnhancedEventEmitter
 {
 	// Internal data.
-	// - .routerId
-	// - .transportId
-	// - .dataProducerId
-	private readonly _internal: any;
+	private readonly _internal:
+	{
+		routerId: string;
+		transportId: string;
+		dataProducerId: string;
+	};
 
 	// DataProducer data.
-	// - .sctpStreamParameters
-	// - .label
-	// - .protocol
-	private readonly _data: any;
+	private readonly _data:
+	{
+		sctpStreamParameters: SctpStreamParameters;
+		label: string;
+		protocol: string;
+	};
 
 	// Channel instance.
 	private readonly _channel: Channel;

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_PIPE_TRANSPORT_HPP
 #define MS_RTC_PIPE_TRANSPORT_HPP
 
+#include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
@@ -16,6 +17,11 @@ namespace RTC
 			std::string announcedIp;
 		};
 
+	private:
+		static RTC::SrtpSession::CryptoSuite srtpCryptoSuite;
+		static std::string srtpCryptoSuiteString;
+		static size_t srtpMasterLength;
+
 	public:
 		PipeTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~PipeTransport() override;
@@ -27,6 +33,7 @@ namespace RTC
 
 	private:
 		bool IsConnected() const override;
+		bool HasSrtp() const;
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
@@ -45,9 +52,14 @@ namespace RTC
 		// Allocated by this.
 		RTC::UdpSocket* udpSocket{ nullptr };
 		RTC::TransportTuple* tuple{ nullptr };
+		RTC::SrtpSession* srtpRecvSession{ nullptr };
+		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
 		ListenIp listenIp;
 		struct sockaddr_storage remoteAddrStorage;
+		bool rtx{ false };
+		std::string srtpKey;
+		std::string srtpKeyBase64;
 	};
 } // namespace RTC
 

@@ -72,7 +72,7 @@ enum uio_seg {
 #endif
 
 struct proc {
-    int stub; /* struct proc is a dummy for __Userspace__ */
+	int stub; /* struct proc is a dummy for __Userspace__ */
 };
 
 MALLOC_DECLARE(M_ACCF);
@@ -83,12 +83,12 @@ MALLOC_DECLARE(M_SONAME);
  * Removing struct thread *uio_td;    owner field
 */
 struct uio {
-    struct	iovec *uio_iov;		/* scatter/gather list */
-    int		uio_iovcnt;		/* length of scatter/gather list */
-    off_t	uio_offset;		/* offset in target object */
-    ssize_t 	uio_resid;		/* remaining bytes to process */
-    enum	uio_seg uio_segflg;	/* address space */
-    enum	uio_rw uio_rw;		/* operation */
+	struct	iovec *uio_iov;		/* scatter/gather list */
+	int		uio_iovcnt;		/* length of scatter/gather list */
+	off_t	uio_offset;		/* offset in target object */
+	ssize_t 	uio_resid;		/* remaining bytes to process */
+	enum	uio_seg uio_segflg;	/* address space */
+	enum	uio_rw uio_rw;		/* operation */
 };
 
 

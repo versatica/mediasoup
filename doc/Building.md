@@ -10,12 +10,12 @@ The `package.json` file in the main folder includes the following scripts:
 
 ### `num run typescript:build`
 
-Compiles mediasoup TypeScript code (`lib` folder) into ES6 JavaScript and places it into the `lib` directory.
+Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript and places it into the `lib` directory.
 
 
 ### `num run typescript:watch`
 
-Compiles mediasoup TypeScript code (`lib` folder) into ES6 JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
+Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
 
 ### `npm run lint`
 
@@ -81,22 +81,14 @@ $ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
 ```
 
 
-### `make test`
+### `make clean`
 
-Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
+Cleans built objects and binaries.
 
 
-### `make fuzzer`
+### `make clean-all`
 
-Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug").
-
-**Requirements:**
-
-* Linux with fuzzer capable clang++.
-* `CC` environment variable must point to "clang".
-* `CXX` environment variable must point to "clang++".
-
-Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
+Cleans all objects and binaries, including those generated for library dependencies (such as libuv, openssl, libsrtp, etc).
 
 
 ### `make xcode`
@@ -114,15 +106,21 @@ Validates mediasoup-worker C++ files using [clang-format](https://clang.llvm.org
 Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
 
 
+### `make test`
+
+Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
+
+
 ### `make bear`
 
 Generates the `worker/compile_commands_template.json` file which is a ["Clang compilation database"](https://clang.llvm.org/docs/JSONCompilationDatabase.html).
 
-It requires [Bear](https://github.com/rizsotto/Bear) and [jq](https://stedolan.github.io/jq/) command-line JSON processor. Install them in Debian/Ubuntu via `apt install bear jq` and in OSX via `brew install bear jq`.
+**Requirements:**
 
-**NOTE:** For now, Bear version must be 2.1.X.
-
-**NOTE:** Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean-all && make` before running `make bear`.
+* [Bear](https://github.com/rizsotto/Bear) is required.
+  - Install it in Debian/Ubuntu via `apt install bear` and in OSX via `brew install bear`.
+  - For now, Bear version must be 2.1.X.
+* Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean-all && make` before running `make bear`.
 
 
 ### `make tidy`
@@ -136,14 +134,22 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 
 
-### `make clean`
+### `make fuzzer`
 
-Cleans built objects and binaries.
+Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug").
+
+**Requirements:**
+
+* Linux with fuzzer capable clang++.
+* `CC` environment variable must point to "clang".
+* `CXX` environment variable must point to "clang++".
+
+Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
 
 
-### `make clean-all`
+### `make fuzzer-run-all`
 
-Cleans all objects and binaries, including those generated for library dependencies (such as libuv, openssl, libsrtp, etc).
+Runs all fuzzer cases.
 
 
 ### `make docker-build`

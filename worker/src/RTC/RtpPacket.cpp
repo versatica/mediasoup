@@ -3,7 +3,7 @@
 
 #include "RTC/RtpPacket.hpp"
 #include "Logger.hpp"
-#include <cstring>  // std::memcpy(), std::memmove()
+#include <cstring>  // std::memcpy(), std::memmove(), std::memset()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
@@ -208,22 +208,30 @@ namespace RTC
 			std::string mid;
 
 			if (ReadMid(mid))
-				MS_DUMP("  mid               : extId:%" PRIu8 ", value:%s", this->midExtensionId, mid.c_str());
+			{
+				MS_DUMP(
+				  "  mid               : extId:%" PRIu8 ", value:'%s'", this->midExtensionId, mid.c_str());
+			}
 		}
 		if (this->ridExtensionId != 0u)
 		{
 			std::string rid;
 
 			if (ReadRid(rid))
-				MS_DUMP("  rid               : extId:%" PRIu8 ", value:%s", this->ridExtensionId, rid.c_str());
+			{
+				MS_DUMP(
+				  "  rid               : extId:%" PRIu8 ", value:'%s'", this->ridExtensionId, rid.c_str());
+			}
 		}
 		if (this->rridExtensionId != 0u)
 		{
 			std::string rid;
 
 			if (ReadRid(rid))
+			{
 				MS_DUMP(
-				  "  rrid              : extId:%" PRIu8 ", value:%s", this->rridExtensionId, rid.c_str());
+				  "  rrid              : extId:%" PRIu8 ", value:'%s'", this->rridExtensionId, rid.c_str());
+			}
 		}
 		if (this->absSendTimeExtensionId != 0u)
 		{
@@ -515,6 +523,97 @@ namespace RTC
 		}
 
 		MS_ASSERT(ptr == this->payload, "wrong ptr calculation");
+	}
+
+	bool RtpPacket::UpdateMid(const std::string& mid)
+	{
+		MS_TRACE();
+
+		uint8_t extenLen;
+		uint8_t* extenValue = GetExtension(this->midExtensionId, extenLen);
+
+		if (!extenValue)
+			return false;
+
+		// Here we assume that there is MidMaxLength available bytes, even if now
+		// they are padding bytes.
+		if (mid.size() > RTC::MidMaxLength)
+		{
+			MS_ERROR(
+			  "no enough space for MID value [MidMaxLength:%" PRIu8 ", mid:'%s']",
+			  RTC::MidMaxLength,
+			  mid.c_str());
+
+			return false;
+		}
+
+		std::memcpy(extenValue, mid.c_str(), mid.size());
+
+		SetExtensionLength(this->midExtensionId, mid.size());
+
+		return true;
+	}
+
+	/**
+	 * The caller is responsible of not setting a length higher than the
+	 * available one (taking into account existing padding bytes).
+	 */
+	bool RtpPacket::SetExtensionLength(uint8_t id, uint8_t len)
+	{
+		MS_TRACE();
+
+		if (len == 0u)
+		{
+			MS_ERROR("cannot set extension length to 0");
+
+			return false;
+		}
+
+		if (id == 0u)
+		{
+			return false;
+		}
+		else if (HasOneByteExtensions())
+		{
+			auto it = this->mapOneByteExtensions.find(id);
+
+			if (it == this->mapOneByteExtensions.end())
+				return false;
+
+			auto* extension = it->second;
+			auto currentLen = extension->len + 1;
+
+			// Fill with 0's if new length is minor.
+			if (len < currentLen)
+				std::memset(extension->value + len, 0, currentLen - len);
+
+			// In One-Byte extensions value length 0 means 1.
+			extension->len = len - 1;
+
+			return true;
+		}
+		else if (HasTwoBytesExtensions())
+		{
+			auto it = this->mapTwoBytesExtensions.find(id);
+
+			if (it == this->mapTwoBytesExtensions.end())
+				return false;
+
+			auto* extension = it->second;
+			auto currentLen = extension->len;
+
+			// Fill with 0's if new length is minor.
+			if (len < currentLen)
+				std::memset(extension->value + len, 0, currentLen - len);
+
+			extension->len = len;
+
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	void RtpPacket::SetPayloadLength(size_t length)

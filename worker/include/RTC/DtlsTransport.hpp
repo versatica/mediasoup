@@ -53,9 +53,9 @@ namespace RTC
 		};
 
 	private:
-		struct SrtpProfileMapEntry
+		struct SrtpCryptoSuiteMapEntry
 		{
-			RTC::SrtpSession::Profile profile;
+			RTC::SrtpSession::CryptoSuite cryptoSuite;
 			const char* name;
 		};
 
@@ -72,7 +72,7 @@ namespace RTC
 			// NOTE: The caller MUST NOT call any method during this callback.
 			virtual void OnDtlsTransportConnected(
 			  const RTC::DtlsTransport* dtlsTransport,
-			  RTC::SrtpSession::Profile srtpProfile,
+			  RTC::SrtpSession::CryptoSuite srtpCryptoSuite,
 			  uint8_t* srtpLocalKey,
 			  size_t srtpLocalKeyLen,
 			  uint8_t* srtpRemoteKey,
@@ -94,10 +94,41 @@ namespace RTC
 	public:
 		static void ClassInit();
 		static void ClassDestroy();
-		static Role StringToRole(const std::string& role);
-		static FingerprintAlgorithm GetFingerprintAlgorithm(const std::string& fingerprint);
-		static std::string& GetFingerprintAlgorithmString(FingerprintAlgorithm fingerprint);
-		static bool IsDtls(const uint8_t* data, size_t len);
+		static Role StringToRole(const std::string& role)
+		{
+			auto it = DtlsTransport::string2Role.find(role);
+
+			if (it != DtlsTransport::string2Role.end())
+				return it->second;
+			else
+				return DtlsTransport::Role::NONE;
+		}
+		static FingerprintAlgorithm GetFingerprintAlgorithm(const std::string& fingerprint)
+		{
+			auto it = DtlsTransport::string2FingerprintAlgorithm.find(fingerprint);
+
+			if (it != DtlsTransport::string2FingerprintAlgorithm.end())
+				return it->second;
+			else
+				return DtlsTransport::FingerprintAlgorithm::NONE;
+		}
+		static std::string& GetFingerprintAlgorithmString(FingerprintAlgorithm fingerprint)
+		{
+			auto it = DtlsTransport::fingerprintAlgorithm2String.find(fingerprint);
+
+			return it->second;
+		}
+		static bool IsDtls(const uint8_t* data, size_t len)
+		{
+			// clang-format off
+			return (
+				// Minimum DTLS record length is 13 bytes.
+				(len >= 13) &&
+				// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+				(data[0] > 19 && data[0] < 64)
+			);
+			// clang-format on
+		}
 
 	private:
 		static void GenerateCertificateAndPrivateKey();
@@ -114,7 +145,7 @@ namespace RTC
 		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
 		static std::map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
 		static std::vector<Fingerprint> localFingerprints;
-		static std::vector<SrtpProfileMapEntry> srtpProfiles;
+		static std::vector<SrtpCryptoSuiteMapEntry> srtpCryptoSuites;
 
 	public:
 		explicit DtlsTransport(Listener* listener);
@@ -123,23 +154,48 @@ namespace RTC
 	public:
 		void Dump() const;
 		void Run(Role localRole);
-		std::vector<Fingerprint>& GetLocalFingerprints() const;
+		std::vector<Fingerprint>& GetLocalFingerprints() const
+		{
+			return DtlsTransport::localFingerprints;
+		}
 		bool SetRemoteFingerprint(Fingerprint fingerprint);
 		void ProcessDtlsData(const uint8_t* data, size_t len);
-		DtlsState GetState() const;
-		Role GetLocalRole() const;
+		DtlsState GetState() const
+		{
+			return this->state;
+		}
+		Role GetLocalRole() const
+		{
+			return this->localRole;
+		}
 		void SendApplicationData(const uint8_t* data, size_t len);
 
 	private:
-		bool IsRunning() const;
+		bool IsRunning() const
+		{
+			switch (this->state)
+			{
+				case DtlsState::NEW:
+					return false;
+				case DtlsState::CONNECTING:
+				case DtlsState::CONNECTED:
+					return true;
+				case DtlsState::FAILED:
+				case DtlsState::CLOSED:
+					return false;
+			}
+
+			// Make GCC 4.9 happy.
+			return false;
+		}
 		void Reset();
 		bool CheckStatus(int returnCode);
 		void SendPendingOutgoingDtlsData();
 		bool SetTimeout();
 		bool ProcessHandshake();
 		bool CheckRemoteFingerprint();
-		void ExtractSrtpKeys(RTC::SrtpSession::Profile srtpProfile);
-		RTC::SrtpSession::Profile GetNegotiatedSrtpProfile();
+		void ExtractSrtpKeys(RTC::SrtpSession::CryptoSuite srtpCryptoSuite);
+		RTC::SrtpSession::CryptoSuite GetNegotiatedSrtpCryptoSuite();
 
 		/* Callbacks fired by OpenSSL events. */
 	public:
@@ -165,84 +221,6 @@ namespace RTC
 		bool handshakeDoneNow{ false };
 		std::string remoteCert;
 	};
-
-	/* Inline static methods. */
-
-	inline DtlsTransport::Role DtlsTransport::StringToRole(const std::string& role)
-	{
-		auto it = DtlsTransport::string2Role.find(role);
-
-		if (it != DtlsTransport::string2Role.end())
-			return it->second;
-		else
-			return DtlsTransport::Role::NONE;
-	}
-
-	inline DtlsTransport::FingerprintAlgorithm DtlsTransport::GetFingerprintAlgorithm(
-	  const std::string& fingerprint)
-	{
-		auto it = DtlsTransport::string2FingerprintAlgorithm.find(fingerprint);
-
-		if (it != DtlsTransport::string2FingerprintAlgorithm.end())
-			return it->second;
-		else
-			return DtlsTransport::FingerprintAlgorithm::NONE;
-	}
-
-	inline std::string& DtlsTransport::GetFingerprintAlgorithmString(
-	  DtlsTransport::FingerprintAlgorithm fingerprint)
-	{
-		auto it = DtlsTransport::fingerprintAlgorithm2String.find(fingerprint);
-
-		return it->second;
-	}
-
-	inline bool DtlsTransport::IsDtls(const uint8_t* data, size_t len)
-	{
-		// clang-format off
-		return (
-			// Minimum DTLS record length is 13 bytes.
-			(len >= 13) &&
-			// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
-			(data[0] > 19 && data[0] < 64)
-		);
-		// clang-format on
-	}
-
-	/* Inline instance methods. */
-
-	inline std::vector<DtlsTransport::Fingerprint>& DtlsTransport::GetLocalFingerprints() const
-	{
-		return DtlsTransport::localFingerprints;
-	}
-
-	inline DtlsTransport::DtlsState DtlsTransport::GetState() const
-	{
-		return this->state;
-	}
-
-	inline DtlsTransport::Role DtlsTransport::GetLocalRole() const
-	{
-		return this->localRole;
-	}
-
-	inline bool DtlsTransport::IsRunning() const
-	{
-		switch (this->state)
-		{
-			case DtlsState::NEW:
-				return false;
-			case DtlsState::CONNECTING:
-			case DtlsState::CONNECTED:
-				return true;
-			case DtlsState::FAILED:
-			case DtlsState::CLOSED:
-				return false;
-		}
-
-		// Make GCC 4.9 happy.
-		return false;
-	}
 } // namespace RTC
 
 #endif
