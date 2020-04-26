@@ -349,8 +349,8 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 		return;
 	}
 
-	std::string& dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
-	std::string& dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
+	const std::string& dtlsCertificateFile = Settings::configuration.dtlsCertificateFile;
+	const std::string& dtlsPrivateKeyFile  = Settings::configuration.dtlsPrivateKeyFile;
 
 	try
 	{
@@ -369,7 +369,4 @@ void Settings::SetDtlsCertificateAndPrivateKeyFiles()
 	{
 		MS_THROW_TYPE_ERROR("dtlsPrivateKeyFile: %s", error.what());
 	}
-
-	Settings::configuration.dtlsCertificateFile = dtlsCertificateFile;
-	Settings::configuration.dtlsPrivateKeyFile  = dtlsPrivateKeyFile;
 }
