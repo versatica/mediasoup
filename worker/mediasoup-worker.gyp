@@ -337,6 +337,7 @@
         'test/src/RTC/TestRtpStreamRecv.cpp',
         'test/src/RTC/TestSeqManager.cpp',
         'test/src/RTC/TestTrendCalculator.cpp',
+        'test/src/RTC/TestRtpEncodingParameters.cpp',
         'test/src/RTC/Codecs/TestVP8.cpp',
         'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
         'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
