@@ -41,6 +41,7 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 1);
 			REQUIRE(scalabilityMode.temporalLayers == 3);
+			REQUIRE(scalabilityMode.ksvc == false);
 	}
 
 	SECTION("parse L3T2_KEY")
@@ -49,6 +50,7 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 3);
 			REQUIRE(scalabilityMode.temporalLayers == 2);
+			REQUIRE(scalabilityMode.ksvc == true);
 	}
 
 	SECTION("parse S2T3")
@@ -57,6 +59,7 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 2);
 			REQUIRE(scalabilityMode.temporalLayers == 3);
+			REQUIRE(scalabilityMode.ksvc == false);
 	}
 
 	SECTION("parse foo")
@@ -65,6 +68,7 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 1);
 			REQUIRE(scalabilityMode.temporalLayers == 1);
+			REQUIRE(scalabilityMode.ksvc == false);
 	}
 
 	SECTION("parse ''")
@@ -73,6 +77,7 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 1);
 			REQUIRE(scalabilityMode.temporalLayers == 1);
+			REQUIRE(scalabilityMode.ksvc == false);
 	}
 
 	SECTION("parse S0T3")
@@ -81,6 +86,7 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 1);
 			REQUIRE(scalabilityMode.temporalLayers == 1);
+			REQUIRE(scalabilityMode.ksvc == false);
 	}
 
 	SECTION("parse S1T0")
@@ -89,6 +95,7 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 1);
 			REQUIRE(scalabilityMode.temporalLayers == 1);
+			REQUIRE(scalabilityMode.ksvc == false);
 	}
 
 	SECTION("parse S20T3")
@@ -97,6 +104,7 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 20);
 			REQUIRE(scalabilityMode.temporalLayers == 3);
+			REQUIRE(scalabilityMode.ksvc == false);
 	}
 
 	SECTION("parse S200T3")
@@ -105,5 +113,6 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 
 			REQUIRE(scalabilityMode.spatialLayers == 1);
 			REQUIRE(scalabilityMode.temporalLayers == 1);
+			REQUIRE(scalabilityMode.ksvc == false);
 	}
 }
