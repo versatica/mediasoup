@@ -9,7 +9,7 @@ struct scalabilityMode
 {
 	uint8_t spatialLayers  = 1;
 	uint8_t temporalLayers = 1;
-	bool ksvc = false;
+	bool ksvc              = false;
 };
 
 static struct scalabilityMode parseScalabilityMode(const std::string& scalabilityMode)
