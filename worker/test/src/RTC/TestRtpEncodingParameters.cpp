@@ -46,6 +46,15 @@ SCENARIO("parseScalabilityMode", "[rtc]")
 		REQUIRE(scalabilityMode.ksvc == false);
 	}
 
+	SECTION("parse S1T3")
+	{
+		const auto scalabilityMode = parseScalabilityMode("S1T3");
+
+		REQUIRE(scalabilityMode.spatialLayers == 1);
+		REQUIRE(scalabilityMode.temporalLayers == 3);
+		REQUIRE(scalabilityMode.ksvc == false);
+	}
+
 	SECTION("parse L3T2_KEY")
 	{
 		const auto scalabilityMode = parseScalabilityMode("L3T2_KEY");
