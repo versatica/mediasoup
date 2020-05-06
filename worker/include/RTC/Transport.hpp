@@ -119,7 +119,7 @@ namespace RTC
 		// Subclasses must implement this method and call the parent's one to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
-		virtual bool RecvStreamMeta(json& data) const;
+		virtual bool RecvStreamMeta(json& data);
 
 	protected:
 		// Must be called from the subclass.

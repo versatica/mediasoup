@@ -2026,7 +2026,7 @@ namespace RTC
 		}
 	}
 
-	bool Transport::RecvStreamMeta(json& data) const
+	bool Transport::RecvStreamMeta(json& data)
 	{
 		MS_TRACE();
 

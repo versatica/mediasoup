@@ -27,7 +27,6 @@ namespace RTC
 				}
 			}
 		*/
-		// MS_DEBUG_TAG(rtp, "===============JSON APP DATA: %s", (data.dump()).c_str());
 		// Read shm.name
 		std::string shm;
 		auto jsonShmIt = data.find("shm");
@@ -79,7 +78,6 @@ namespace RTC
 			else
 				redirect_stdio = (jsonLogRedirectIt->get<int>() != 0) ? 1 : 0;
 		}
-
 
 		// data contains listenIp: {ip: ..., announcedIp: ...}
 		auto jsonListenIpIt = data.find("listenIp");
@@ -153,7 +151,6 @@ namespace RTC
 				(*jsonShmIt)["shm_writer"] = "undefined";
 				break;
 		}
-		//TODO: Add shm log info?
 	}
 
 	void ShmTransport::FillJsonStats(json& jsonArray)
@@ -343,12 +340,35 @@ namespace RTC
 	}
 
 
-  bool ShmTransport::RecvStreamMeta(json& data) const
+  bool ShmTransport::RecvStreamMeta(json& data)
 	{
 		MS_TRACE();
-		// TODO: write stream metadata into shm somehow, no API yet
+/*
+					const reqdata = {
+						meta: ...,
+						shm: ...
+					};
+*/
 
-		return true;
+		std::string metadata;
+		auto jsonMetaIt = data.find("meta");
+		if (jsonMetaIt == data.end())
+			MS_THROW_TYPE_ERROR("missing metadata");
+		else if (!jsonMetaIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong metadata (not a string)");
+
+		metadata.assign(jsonMetaIt->get<std::string>());
+
+		std::string shm;
+		auto jsonShmIt = data.find("shm");
+		if (jsonShmIt == data.end())
+			MS_THROW_TYPE_ERROR("missing shm name");
+		else if (!jsonShmIt->is_string())
+			MS_THROW_TYPE_ERROR("wrong shm name (not a string)");
+
+		shm.assign(jsonShmIt->get<std::string>());
+
+		return this->shmCtx.WriteStreamMeta(metadata, shm);
 	}
 
 

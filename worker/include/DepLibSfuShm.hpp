@@ -60,8 +60,7 @@ public:
 
     int WriteChunk(sfushm_av_frame_frag_t* data, DepLibSfuShm::ShmChunkType kind = DepLibSfuShm::ShmChunkType::UNDEFINED, uint32_t ssrc = 0);
     int WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, DepLibSfuShm::ShmChunkType kind);
-    int WriteRtcpPacket(sfushm_av_rtcp_msg_t* msg);
-    int WriteStreamMetadata(uint8_t *data, size_t len);
+    int WriteStreamMeta(std::string metadata, std::string shm);
 
 	  bool IsError(int err_code);
 	  const char* GetErrorString(int err_code);

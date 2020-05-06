@@ -149,23 +149,6 @@ int DepLibSfuShm::SfuShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, DepLibSfuS
   return 0;
 }
 
-int  DepLibSfuShm::SfuShmCtx::WriteRtcpPacket(sfushm_av_rtcp_msg_t* msg)
-{
-  if (Status() != SHM_WRT_READY)
-  {
-    return 0;
-  }
-  
-  int err = sfushm_av_write_rtcp(wrt_ctx, msg);
-  
-  if (IsError(err))
-  {
-    MS_WARN_TAG(rtp, "ERROR writing RTCP Sender Report to shm: %d - %s", err, GetErrorString(err));
-    return -1;
-  }
-  
-  return 0;
-}
 
 int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, DepLibSfuShm::ShmChunkType kind)
 {
@@ -190,10 +173,11 @@ int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNt
       return 0;
   }
 
+  // TODO: remove all this debugging stuff after confirming that we handle RTSP SR correctly
   uint64_t walltime = DepLibUV::GetTimeMs();
   struct timespec clockTime;
   time_t ct;
-  if( clock_gettime( CLOCK_REALTIME, &clockTime) == -1 ) {
+  if (clock_gettime( CLOCK_REALTIME, &clockTime) == -1) {
     ct = 0;
   }
   ct = clockTime.tv_sec;
@@ -222,19 +206,38 @@ int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNt
 
   if (IsError(err))
   {
-    MS_WARN_TAG(rtp, "ERROR writing RTCP SR to shm: %d - %s", err, GetErrorString(err));
+    MS_WARN_TAG(rtp, "ERROR writing RTCP SR: %d - %s", err, GetErrorString(err));
     return -1;
   }
+
   return 0;
 }
 
-int DepLibSfuShm::SfuShmCtx::WriteStreamMetadata(uint8_t *data, size_t len)
+
+int DepLibSfuShm::SfuShmCtx::WriteStreamMeta(std::string metadata, std::string shm)
 {
-  if (Status() != SHM_WRT_READY)
+  int     err;
+  uint8_t data[256]; // Currently this is overkill because just 1 byte will be written successfully into shm
+
+  if (0 != this->stream_name.compare(shm))
   {
-    // TODO: log smth
+    MS_WARN_TAG(rtp, "input metadata shm name '%s' does not match '%s'", shm.c_str(), this->stream_name.c_str());
     return -1;
   }
-  // TODO: no API for writing metadata yet
+
+  if (metadata.length() > 255)
+  {
+    MS_WARN_TAG(rtp, "input metadata is too long: %s", metadata.c_str());
+  }
+  std::copy(metadata.begin(), metadata.end(), data);
+
+  err = sfushm_av_write_stream_metadata(wrt_ctx, data, metadata.length());
+
+  if (IsError(err))
+  {
+    MS_WARN_TAG(rtp, "ERROR writing stream metadata: %d - %s", err, GetErrorString(err));
+    return -1;
+  }
+
   return 0;
 }
