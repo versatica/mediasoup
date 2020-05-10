@@ -1,5 +1,10 @@
 # Changelog
 
+### 3.5.10
+
+* `SimulcastConsumer.cpp`: Fix `IncreaseLayer()` method (fixes #394).
+* Udpate Node deps.
+
 
 ### 3.5.9
 
