@@ -482,6 +482,7 @@ namespace RTC
 				//
 				// clang-format off
 				if (
+					requiredBitrate &&
 					temporalLayer == 0 &&
 					this->provisionalTargetSpatialLayer > -1 &&
 					spatialLayer > this->provisionalTargetSpatialLayer
