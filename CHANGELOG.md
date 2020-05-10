@@ -1,5 +1,10 @@
 # Changelog
 
+### 3.5.11 (WIP)
+
+* Upgrade `eslint` and `jest` major versions.
+
+
 ### 3.5.10
 
 * `SimulcastConsumer.cpp`: Fix `IncreaseLayer()` method (fixes #394).
