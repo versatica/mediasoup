@@ -9,7 +9,7 @@ language: node_js
 matrix:
   include:
   - os: linux
-    node_js: 8
+    node_js: 10
     addons:
       apt:
         sources:
@@ -20,16 +20,16 @@ matrix:
     - CC="gcc-4.9"
     - CXX="g++-4.9"
   - os: linux
-    node_js: 10
+    node_js: 12
     addons:
       apt:
         sources:
         - ubuntu-toolchain-r-test
         packages:
-        - g++-7
+        - g++-8
     env:
-    - CC="gcc-7"
-    - CXX="g++-7"
+    - CC="gcc-8"
+    - CXX="g++-8"
   - os: linux
     node_js: 12
     addons:
@@ -48,10 +48,10 @@ matrix:
         sources:
         - ubuntu-toolchain-r-test
         packages:
-        - g++-8
+        - g++-10
     env:
-    - CC="gcc-8"
-    - CXX="g++-8"
+    - CC="gcc-10"
+    - CXX="g++-10"
 
 install:
 - npm install
