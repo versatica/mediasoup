@@ -48,10 +48,10 @@ matrix:
         sources:
         - ubuntu-toolchain-r-test
         packages:
-        - g++-10
+        - g++-9
     env:
-    - CC="gcc-10"
-    - CXX="g++-10"
+    - CC="gcc-9"
+    - CXX="g++-9"
 
 install:
 - npm install
