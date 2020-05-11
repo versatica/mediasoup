@@ -88,8 +88,8 @@ namespace RTC
 			}
 
 			// Count dropped entries before 'input' in order to adapt the base.
-			size_t dropped = std::count_if(
-			  this->dropped.begin(), this->dropped.end(), [&input](T i) { return i < input; });
+			size_t dropped = this->dropped.size()
+			 - std::distance(this->dropped.upper_bound(input) , this->dropped.end());
 
 			base -= dropped;
 		}
