@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::SeqManager"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include <iterator>
 #include "RTC/SeqManager.hpp"
 #include "Logger.hpp"
 
