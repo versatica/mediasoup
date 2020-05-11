@@ -1,9 +1,11 @@
 # Changelog
 
-### 3.5.11 (WIP)
+### 3.5.11
 
-* Upgrade `eslint` and `jest` major versions.
+* `SeqManager.cpp`: Fix a bug and improve performance.
+  - Fixes issue #395 via PR #396 (credits to @penguinol).
 * Drop Node.js 8 support. Minimum supported Node.js version is now 10.
+* Upgrade `eslint` and `jest` major versions.
 
 
 ### 3.5.10
