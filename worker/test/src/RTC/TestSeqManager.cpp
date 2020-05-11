@@ -402,4 +402,26 @@ SCENARIO("SeqManager", "[rtc]")
 		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
+
+	SECTION("sync and drop some input near max-value")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 65530,  1,  true, false },
+			{ 65531,  2, false, false },
+			{ 65532,  3, false, false },
+			{ 65533,  0, false, true  },
+			{ 65534,  0, false, true  },
+			{ 65535,  4, false, false },
+			{     0,  5, false, false },
+			{     1,  6, false, false },
+			{     2,  7, false, false },
+			{     3,  8, false, false }	
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
 }
