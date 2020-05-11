@@ -3,6 +3,7 @@
 ### 3.5.11 (WIP)
 
 * Upgrade `eslint` and `jest` major versions.
+* Drop Node.js 8 support. Minimum supported Node.js version is now 10.
 
 
 ### 3.5.10
