@@ -47,8 +47,6 @@ namespace Channel
 
 		std::string nsPayload = jsonMessage.dump();
 		size_t nsPayloadLen   = nsPayload.length();
-		size_t nsNumLen;
-		size_t nsLen;
 
 		if (nsPayloadLen > NsPayloadMaxLen)
 		{
@@ -57,24 +55,7 @@ namespace Channel
 			return;
 		}
 
-		if (nsPayloadLen == 0)
-		{
-			nsNumLen       = 1;
-			WriteBuffer[0] = '0';
-			WriteBuffer[1] = ':';
-			WriteBuffer[2] = ',';
-		}
-		else
-		{
-			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload.c_str(), nsPayloadLen);
-			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
-		}
-
-		nsLen = nsNumLen + nsPayloadLen + 2;
-
-		this->producerSocket.Write(WriteBuffer, nsLen);
+		SendImpl(nsPayload.c_str(), nsPayloadLen);
 	}
 
 	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
@@ -84,9 +65,6 @@ namespace Channel
 
 		// MS_TRACE_STD();
 
-		size_t nsNumLen;
-		size_t nsLen;
-
 		if (nsPayloadLen > NsPayloadMaxLen)
 		{
 			MS_ERROR_STD("mesage too big");
@@ -94,24 +72,7 @@ namespace Channel
 			return;
 		}
 
-		if (nsPayloadLen == 0)
-		{
-			nsNumLen       = 1;
-			WriteBuffer[0] = '0';
-			WriteBuffer[1] = ':';
-			WriteBuffer[2] = ',';
-		}
-		else
-		{
-			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
-		}
-
-		nsLen = nsNumLen + nsPayloadLen + 2;
-
-		this->producerSocket.Write(WriteBuffer, nsLen);
+		SendImpl(nsPayload, nsPayloadLen);
 	}
 
 	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
@@ -119,9 +80,6 @@ namespace Channel
 		if (this->producerSocket.IsClosed())
 			return;
 
-		size_t nsNumLen;
-		size_t nsLen;
-
 		if (nsPayloadLen > NsPayloadMaxLen)
 		{
 			MS_ERROR_STD("mesage too big");
@@ -129,6 +87,12 @@ namespace Channel
 			return;
 		}
 
+		SendImpl(nsPayload, nsPayloadLen);
+	}
+
+	void UnixStreamSocket::SendImpl(const void* nsPayload, size_t nsPayloadLen)
+	{
+		size_t nsNumLen;
 		if (nsPayloadLen == 0)
 		{
 			nsNumLen       = 1;
@@ -144,8 +108,7 @@ namespace Channel
 			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
-		nsLen = nsNumLen + nsPayloadLen + 2;
-
+		size_t nsLen = nsNumLen + nsPayloadLen + 2;
 		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 

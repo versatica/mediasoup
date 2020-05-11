@@ -1,5 +1,44 @@
 # Changelog
 
+### 3.5.11 (WIP)
+
+* Upgrade `eslint` and `jest` major versions.
+* Drop Node.js 8 support. Minimum supported Node.js version is now 10.
+
+
+### 3.5.10
+
+* `SimulcastConsumer.cpp`: Fix `IncreaseLayer()` method (fixes #394).
+* Udpate Node deps.
+
+
+### 3.5.9
+
+* `libwebrtc`: Apply patch by @sspanak and @Ivaka to avoid crash. Related issue: #357.
+* `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in libuv 1.37.0.
+* Update Node deps.
+
+
+### 3.5.8
+
+* Enable `UV_UDP_RECVMMSG`:
+  - Upgrade libuv to 1.37.0.
+  - Use `uv_udp_init_ex()` with `UV_UDP_RECVMMSG` flag.
+  - Add our own `uv.gyp` now that libuv has removed support for GYP (fixes #384).
+
+
+### 3.5.7
+
+* Fix crash in mediasoup-worker due to conversion from `uint64_t` to `int64_t` (used within `libwebrtc` code. Fixes #357.
+* Update `usrsctp` library.
+* Update Node deps.
+
+
+### 3.5.6
+
+* `SeqManager.cpp`: Fix video lag after a long time.
+  - Fixes #372 (thanks @penguinol for reporting it and giving the solution).
+
 
 ### 3.5.5
 

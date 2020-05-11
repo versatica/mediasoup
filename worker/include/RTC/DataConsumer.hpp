@@ -23,6 +23,7 @@ namespace RTC
 	public:
 		DataConsumer(
 		  const std::string& id,
+		  const std::string& dataProducerId,
 		  RTC::DataConsumer::Listener* listener,
 		  json& data,
 		  size_t maxSctpMessageSize);
@@ -56,6 +57,7 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
+		const std::string dataProducerId;
 
 	private:
 		// Passed by argument.

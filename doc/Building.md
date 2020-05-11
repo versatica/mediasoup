@@ -8,12 +8,12 @@ This document is intended for mediasoup developers.
 The `package.json` file in the main folder includes the following scripts:
 
 
-### `num run typescript:build`
+### `npm run typescript:build`
 
 Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript and places it into the `lib` directory.
 
 
-### `num run typescript:watch`
+### `npm run typescript:watch`
 
 Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
 

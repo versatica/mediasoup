@@ -71,7 +71,11 @@ class InterArrival {
   };
 
   // Returns true if the packet with timestamp |timestamp| arrived in order.
-  bool PacketInOrder(uint32_t timestamp);
+  //
+  // NOTE: Change related to https://github.com/versatica/mediasoup/issues/357
+  //
+  // bool PacketInOrder(uint32_t timestamp);
+  bool PacketInOrder(uint32_t timestamp, int64_t arrival_time_ms);
 
   // Returns true if the last packet was the end of the current batch and the
   // packet with |timestamp| is the first of a new batch.

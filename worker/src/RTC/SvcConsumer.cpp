@@ -18,8 +18,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	SvcConsumer::SvcConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, listener, data, RTC::RtpParameters::Type::SVC)
+	SvcConsumer::SvcConsumer(
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
+	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SVC)
 	{
 		MS_TRACE();
 

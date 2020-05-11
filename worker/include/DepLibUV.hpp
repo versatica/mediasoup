@@ -27,6 +27,18 @@ public:
 	{
 		return uv_hrtime();
 	}
+	// Used within libwebrtc dependency which uses int64_t values for time
+	// representation.
+	static int64_t GetTimeMsInt64()
+	{
+		return static_cast<int64_t>(DepLibUV::GetTimeMs());
+	}
+	// Used within libwebrtc dependency which uses int64_t values for time
+	// representation.
+	static int64_t GetTimeUsInt64()
+	{
+		return static_cast<int64_t>(DepLibUV::GetTimeUs());
+	}
 
 private:
 	static uv_loop_t* loop;

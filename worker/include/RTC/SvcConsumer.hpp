@@ -12,7 +12,11 @@ namespace RTC
 	class SvcConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
-		SvcConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data);
+		SvcConsumer(
+		  const std::string& id,
+		  const std::string& producerId,
+		  RTC::Consumer::Listener* listener,
+		  json& data);
 		~SvcConsumer() override;
 
 	public:

@@ -196,6 +196,74 @@ Nor would this
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="#1905 -- test spec parser properly clears internal state between compound tests" tags="[command-line][test-spec]" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Original>
+          spec.matches(fakeTestCase("spec . char"))
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Original>
+          spec.matches(fakeTestCase("spec , char"))
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Original>
+          !(spec.matches(fakeTestCase(R"(spec \, char)")))
+        </Original>
+        <Expanded>
+          !false
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1912 -- test spec parser handles escaping" tags="[command-line][test-spec]" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+      <Section name="Various parentheses" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+          <Original>
+            spec.matches(fakeTestCase(R"(spec {a} char)"))
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+          <Original>
+            spec.matches(fakeTestCase(R"(spec [a] char)"))
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+          <Original>
+            !(spec.matches(fakeTestCase("differs but has similar tag", "[a]")))
+          </Original>
+          <Expanded>
+            !false
+          </Expanded>
+        </Expression>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="backslash in test name" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+          <Original>
+            spec.matches(fakeTestCase(R"(spec \ char)"))
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="#748 - captures with unexpected exceptions" tags="[!hide][!shouldfail][!throws][.][failing]" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
       <Section name="outside assertions" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
         <Info>
@@ -2107,6 +2175,49 @@ Nor would this
         </Expression>
         <OverallResults successes="2" failures="0" expectedFailures="0"/>
       </Section>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Assertion macros support bit operators and bool conversions" tags="[bitops][compilation]" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          lhs | rhs
+        </Original>
+        <Expanded>
+          Val: 1 | Val: 2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          !(lhs &amp; rhs)
+        </Original>
+        <Expanded>
+          !(Val: 1 &amp; Val: 2)
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          HasBitOperators{ 1 } &amp; HasBitOperators{ 1 }
+        </Original>
+        <Expanded>
+          Val: 1 &amp; Val: 1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          lhs ^ rhs
+        </Original>
+        <Expanded>
+          Val: 1 ^ Val: 2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          !(lhs ^ lhs)
+        </Original>
+        <Expanded>
+          !(Val: 1 ^ Val: 1)
+        </Expanded>
+      </Expression>
       <OverallResult success="true"/>
     </TestCase>
     <TestCase name="Assertions then sections" tags="[Tricky]" filename="projects/<exe-name>/UsageTests/Tricky.tests.cpp" >
@@ -13529,9 +13640,17 @@ There is no extra whitespace here
               { 1.0, 2.0, 3.0 } is approx: { 1.0, 2.0, 3.0 }
             </Expanded>
           </Expression>
-          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+          <Expression success="true" type="REQUIRE_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+            <Original>
+              v1, Approx&lt;double>({ 1., 2., 3. })
+            </Original>
+            <Expanded>
+              { 1.0, 2.0, 3.0 } is approx: { 1.0, 2.0, 3.0 }
+            </Expanded>
+          </Expression>
+          <OverallResults successes="2" failures="0" expectedFailures="0"/>
         </Section>
-        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="Vectors with elements" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
         <Section name="Different length" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13630,12 +13749,36 @@ There is no extra whitespace here
             { 1, 2, 3 } Contains: 2
           </Expanded>
         </Expression>
-        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (VectorContains&lt;int, CustomAllocator&lt;int>>(2))
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: 2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="Contains (vector)" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
           <Original>
             v, Contains(v2)
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: { 1, 2 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v, Contains&lt;int>({ 1, 2 })
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: { 1, 2 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (Contains&lt;int, std::allocator&lt;int>, CustomAllocator&lt;int>>(v2))
           </Original>
           <Expanded>
             { 1, 2, 3 } Contains: { 1, 2 }
@@ -13665,7 +13808,23 @@ There is no extra whitespace here
             {  } Contains: {  }
           </Expanded>
         </Expression>
-        <OverallResults successes="4" failures="0" expectedFailures="0"/>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (Contains&lt;int, std::allocator&lt;int>, CustomAllocator&lt;int>>(v2))
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, Contains(v6)
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: { 1, 2 }
+          </Expanded>
+        </Expression>
+        <OverallResults successes="8" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="Contains (element), composed" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13697,13 +13856,37 @@ There is no extra whitespace here
         </Expression>
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
           <Original>
+            v, Equals&lt;int>({ 1, 2, 3 })
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Equals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
             v, Equals(v2)
           </Original>
           <Expanded>
             { 1, 2, 3 } Equals: { 1, 2, 3 }
           </Expanded>
         </Expression>
-        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (Equals&lt;int, std::allocator&lt;int>, CustomAllocator&lt;int>>(v2))
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Equals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, Equals(v6)
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Equals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <OverallResults successes="6" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="UnorderedEquals" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13712,6 +13895,14 @@ There is no extra whitespace here
           </Original>
           <Expanded>
             { 1, 2, 3 } UnorderedEquals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v, UnorderedEquals&lt;int>({ 3, 2, 1 })
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } UnorderedEquals: { 3, 2, 1 }
           </Expanded>
         </Expression>
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13738,7 +13929,23 @@ There is no extra whitespace here
             { 2, 3, 1 } UnorderedEquals: { 1, 2, 3 }
           </Expanded>
         </Expression>
-        <OverallResults successes="4" failures="0" expectedFailures="0"/>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (UnorderedEquals&lt;int, std::allocator&lt;int>, CustomAllocator&lt;int>>(permuted))
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } UnorderedEquals: { 2, 3, 1 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5_permuted, UnorderedEquals(v5)
+          </Original>
+          <Expanded>
+            { 1, 3, 2 } UnorderedEquals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <OverallResults successes="7" failures="0" expectedFailures="0"/>
       </Section>
       <OverallResult success="true"/>
     </TestCase>
@@ -16048,7 +16255,7 @@ loose text artifact
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <OverallResults successes="1525" failures="149" expectedFailures="21"/>
+    <OverallResults successes="1549" failures="149" expectedFailures="21"/>
   </Group>
-  <OverallResults successes="1525" failures="148" expectedFailures="21"/>
+  <OverallResults successes="1549" failures="148" expectedFailures="21"/>
 </Catch>

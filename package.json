@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.5.5",
+  "version": "3.5.10",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -25,7 +25,7 @@
     "nodejs"
   ],
   "engines": {
-    "node": ">=8.6.0"
+    "node": ">=10"
   },
   "scripts": {
     "typescript:build": "node npm-scripts.js typescript:build",
@@ -53,23 +53,23 @@
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
     "supports-color": "^7.1.0",
-    "uuid": "^7.0.2"
+    "uuid": "^8.0.0"
   },
   "devDependencies": {
-    "@types/node": "^13.9.5",
+    "@types/node": "^13.13.5",
     "@types/random-number": "0.0.0",
-    "@types/uuid": "^7.0.2",
-    "@typescript-eslint/eslint-plugin": "^2.25.0",
-    "@typescript-eslint/parser": "^2.25.0",
+    "@types/uuid": "^7.0.3",
+    "@typescript-eslint/eslint-plugin": "^2.31.0",
+    "@typescript-eslint/parser": "^2.31.0",
     "cross-env": "^7.0.2",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
+    "eslint": "^7.0.0",
+    "eslint-plugin-jest": "^23.10.0",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
-    "jest": "^25.2.4",
+    "jest": "^26.0.1",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^6.0.1",
-    "sctp": "^0.0.19",
+    "sctp": "^0.0.21",
     "tsc-watch": "^4.2.3",
     "typescript": "^3.8.3"
   },

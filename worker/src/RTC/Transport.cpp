@@ -725,7 +725,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMPLE:
 					{
 						// This may throw.
-						consumer = new RTC::SimpleConsumer(consumerId, this, request->data);
+						consumer = new RTC::SimpleConsumer(consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -733,7 +733,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMULCAST:
 					{
 						// This may throw.
-						consumer = new RTC::SimulcastConsumer(consumerId, this, request->data);
+						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -741,7 +741,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SVC:
 					{
 						// This may throw.
-						consumer = new RTC::SvcConsumer(consumerId, this, request->data);
+						consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -749,7 +749,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::PIPE:
 					{
 						// This may throw.
-						consumer = new RTC::PipeConsumer(consumerId, this, request->data);
+						consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -1018,7 +1018,11 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId, this, request->data, this->sctpAssociation->GetMaxSctpMessageSize());
+				  dataConsumerId,
+				  dataProducerId,
+				  this,
+				  request->data,
+				  this->sctpAssociation->GetMaxSctpMessageSize());
 
 				// Notify the listener.
 				// This may throw if no DataProducer is found.
@@ -1628,7 +1632,7 @@ namespace RTC
 							// if (this->tccClient)
 							// {
 							// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
-							// DepLibUV::GetTimeMs());
+							// DepLibUV::GetTimeMsInt64());
 							// }
 
 							continue;
@@ -2251,7 +2255,7 @@ namespace RTC
 			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
 					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
@@ -2263,7 +2267,7 @@ namespace RTC
 #else
 			auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
 				if (sent)
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 			});
 
 			SendRtpPacket(packet, cb);
@@ -2319,7 +2323,7 @@ namespace RTC
 			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
 					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
@@ -2331,7 +2335,7 @@ namespace RTC
 #else
 			auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
 				if (sent)
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 			});
 
 			SendRtpPacket(packet, cb);
@@ -2615,7 +2619,7 @@ namespace RTC
 			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
 				if (sent)
 				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
 					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
@@ -2627,7 +2631,7 @@ namespace RTC
 #else
 			auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
 				if (sent)
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMs());
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 			});
 
 			SendRtpPacket(packet, cb);

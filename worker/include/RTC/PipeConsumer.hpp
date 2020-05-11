@@ -10,7 +10,11 @@ namespace RTC
 	class PipeConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
-		PipeConsumer(const std::string& id, RTC::Consumer::Listener* listener, json& data);
+		PipeConsumer(
+		  const std::string& id,
+		  const std::string& producerId,
+		  RTC::Consumer::Listener* listener,
+		  json& data);
 		~PipeConsumer() override;
 
 	public:

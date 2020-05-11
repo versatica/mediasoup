@@ -68,7 +68,7 @@ __FBSDID("$FreeBSD$");
 #define SCTP_WQ_ADDR_DESTROY()
 #define SCTP_WQ_ADDR_LOCK()
 #define SCTP_WQ_ADDR_UNLOCK()
-
+#define SCTP_WQ_ADDR_LOCK_ASSERT()
 
 #define SCTP_IPI_ADDR_INIT()
 #define SCTP_IPI_ADDR_DESTROY()
@@ -82,13 +82,10 @@ __FBSDID("$FreeBSD$");
 #define SCTP_IPI_ITERATOR_WQ_LOCK()
 #define SCTP_IPI_ITERATOR_WQ_UNLOCK()
 
-
 #define SCTP_IP_PKTLOG_INIT()
 #define SCTP_IP_PKTLOG_LOCK()
 #define SCTP_IP_PKTLOG_UNLOCK()
 #define SCTP_IP_PKTLOG_DESTROY()
-
-
 
 #define SCTP_INP_READ_INIT(_inp)
 #define SCTP_INP_READ_DESTROY(_inp)
@@ -100,9 +97,10 @@ __FBSDID("$FreeBSD$");
 #define SCTP_INP_LOCK_DESTROY(_inp)
 #define SCTP_ASOC_CREATE_LOCK_DESTROY(_inp)
 
-
 #define SCTP_INP_RLOCK(_inp)
 #define SCTP_INP_WLOCK(_inp)
+#define SCTP_INP_RLOCK_ASSERT(_inp)
+#define SCTP_INP_WLOCK_ASSERT(_inp)
 
 #define SCTP_INP_LOCK_CONTENDED(_inp) (0) /* Don't know if this is possible */
 

@@ -56,7 +56,9 @@ namespace RTC
 	{
 		// Mark as dropped if 'input' is higher than anyone already processed.
 		if (SeqManager<T>::IsSeqHigherThan(input, this->maxInput))
+		{
 			this->dropped.insert(input);
+		}
 	}
 
 	template<typename T>
@@ -74,8 +76,12 @@ namespace RTC
 		if (!this->dropped.empty())
 		{
 			// Delete dropped inputs older than input - MaxValue/2.
-			auto it = this->dropped.lower_bound(input - MaxValue / 2);
+			size_t droppedSize = this->dropped.size();
+			auto it            = this->dropped.lower_bound(input - MaxValue / 2);
+
 			this->dropped.erase(this->dropped.begin(), it);
+			this->base -= (droppedSize - this->dropped.size());
+			base = this->base;
 
 			// Check whether this input was dropped.
 			it = this->dropped.find(input);
