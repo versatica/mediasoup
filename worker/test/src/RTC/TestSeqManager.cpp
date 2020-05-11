@@ -406,7 +406,7 @@ SCENARIO("SeqManager", "[rtc]")
 	SECTION("sync and drop some input near max-value")
 	{
 		// clang-format off
-		std::vector<TestSeqManagerInput> inputs =
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
 			{ 65530,  1,  true, false },
 			{ 65531,  2, false, false },
