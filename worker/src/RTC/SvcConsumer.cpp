@@ -521,47 +521,8 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		int16_t desiredSpatialLayer{ -1 };
-		int16_t desiredTemporalLayer{ -1 };
-		uint32_t desiredBitrate{ 0u };
-		auto nowMs = DepLibUV::GetTimeMs();
-		int16_t spatialLayer{ 0 };
-
-		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
-		{
-			int16_t temporalLayer{ 0 };
-
-			// Check bitrate of every temporal layer.
-			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
-			{
-				auto bitrate = this->producerRtpStream->GetBitrate(nowMs, spatialLayer, temporalLayer);
-
-				// If layer is not active move to next spatial layer.
-				if (bitrate == 0u)
-					break;
-
-				// Set desired target layers and bitrate.
-				desiredSpatialLayer  = spatialLayer;
-				desiredTemporalLayer = temporalLayer;
-				desiredBitrate       = bitrate;
-			}
-		}
-
-		// No luck.
-		if (desiredSpatialLayer == -1)
-			return 0u;
-
-		MS_DEBUG_2TAGS(
-		  bwe,
-		  svc,
-		  "[current layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
-		  ", desired bitrate:%" PRIu32 ", consumerId:%s]",
-		  this->encodingContext->GetCurrentSpatialLayer(),
-		  this->encodingContext->GetCurrentTemporalLayer(),
-		  desiredSpatialLayer,
-		  desiredTemporalLayer,
-		  desiredBitrate,
-		  this->id.c_str());
+		auto nowMs              = DepLibUV::GetTimeMs();
+		uint32_t desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		return desiredBitrate;
 	}

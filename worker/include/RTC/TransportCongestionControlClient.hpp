@@ -107,6 +107,7 @@ namespace RTC
 		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		RTC::TrendCalculator desiredBitrateTrend;
+		RTC::TrendCalculator availableBitrateTrend;
 	};
 } // namespace RTC
 
