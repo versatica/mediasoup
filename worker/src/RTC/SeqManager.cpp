@@ -85,7 +85,7 @@ namespace RTC
 
 			// Count dropped entries before 'input' in order to adapt the base.
 			dropped = this->dropped.size();
-			it      = this->dropped.lower_bound(input);			
+			it      = this->dropped.lower_bound(input);
 
 			if (it != this->dropped.end())
 			{
