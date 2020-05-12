@@ -1,5 +1,11 @@
 # Changelog
 
+### 3.5.12
+
+* `SeqManager.cpp`: Improve performance.
+  - PR #398 (credits to @penguinol).
+
+
 ### 3.5.11
 
 * `SeqManager.cpp`: Fix a bug and improve performance.
