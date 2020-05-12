@@ -77,14 +77,14 @@ namespace RTC
 		if (!this->dropped.empty())
 		{
 			// Delete dropped inputs older than input - MaxValue/2.
-			size_t dropped = this->dropped.size();
+			size_t droppedCount = this->dropped.size();
 			auto it        = this->dropped.lower_bound(input - MaxValue / 2);
 
 			this->dropped.erase(this->dropped.begin(), it);
-			this->base -= (dropped - this->dropped.size());
+			this->base -= (droppedCount - this->dropped.size());
 
 			// Count dropped entries before 'input' in order to adapt the base.
-			dropped = this->dropped.size();
+			droppedCount = this->dropped.size();
 			it      = this->dropped.lower_bound(input);
 
 			if (it != this->dropped.end())
@@ -97,10 +97,10 @@ namespace RTC
 					return false;
 				}
 
-				dropped -= std::distance(it, this->dropped.end());
+				droppedCount -= std::distance(it, this->dropped.end());
 			}
 
-			base = this->base - dropped;
+			base = this->base - droppedCount;
 		}
 
 		output = input + base;
