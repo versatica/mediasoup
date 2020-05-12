@@ -85,21 +85,21 @@ namespace RTC
 
 			// Count dropped entries before 'input' in order to adapt the base.
 			dropped = this->dropped.size();
-			it = this->dropped.lower_bound(input);			
+			it      = this->dropped.lower_bound(input);			
 
 			if (it != this->dropped.end())
 			{
 				// Check whether this input was dropped.
-				if(*it == input)
+				if (*it == input)
 				{
 					MS_DEBUG_DEV("trying to send a dropped input");
-					
+
 					return false;
 				}
 
 				dropped -= std::distance(it, this->dropped.end());
 			}
-			
+
 			base = this->base - dropped;
 		}
 
