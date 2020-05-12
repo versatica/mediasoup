@@ -78,14 +78,14 @@ namespace RTC
 		{
 			// Delete dropped inputs older than input - MaxValue/2.
 			size_t droppedCount = this->dropped.size();
-			auto it        = this->dropped.lower_bound(input - MaxValue / 2);
+			auto it             = this->dropped.lower_bound(input - MaxValue / 2);
 
 			this->dropped.erase(this->dropped.begin(), it);
 			this->base -= (droppedCount - this->dropped.size());
 
 			// Count dropped entries before 'input' in order to adapt the base.
 			droppedCount = this->dropped.size();
-			it      = this->dropped.lower_bound(input);
+			it           = this->dropped.lower_bound(input);
 
 			if (it != this->dropped.end())
 			{
