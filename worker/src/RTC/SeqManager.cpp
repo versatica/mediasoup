@@ -4,6 +4,7 @@
 #include <iterator>
 #include "RTC/SeqManager.hpp"
 #include "Logger.hpp"
+#include <iterator>
 
 namespace RTC
 {
@@ -95,8 +96,8 @@ namespace RTC
 			}
 
 			// Count dropped entries before 'input' in order to adapt the base.
-			size_t dropped = this->dropped.size()
-			 - std::distance(this->dropped.upper_bound(input) , this->dropped.end());
+			size_t dropped =
+			  this->dropped.size() - std::distance(this->dropped.upper_bound(input), this->dropped.end());
 
 			base -= dropped;
 		}
