@@ -602,72 +602,21 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		int16_t desiredSpatialLayer{ -1 };
-		int16_t desiredTemporalLayer{ -1 };
-		uint32_t desiredBitrate{ 0u };
-		uint8_t maxProducerScore{ 0u };
 		auto nowMs = DepLibUV::GetTimeMs();
+		uint32_t desiredBitrate{ 0u };
 
-		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		for (int sIdx{ static_cast<int>(this->producerRtpStreams.size()) - 1 }; sIdx >= 0; --sIdx)
 		{
-			auto spatialLayer       = static_cast<int16_t>(sIdx);
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
-			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0u;
 
-			// Ignore spatial layers for non existing producer streams or for those
-			// with score 0.
-			if (producerScore == 0u)
+			if (!producerRtpStream)
 				continue;
 
-			// If the stream has not been active time enough and we have an active one
-			// already, move to the next spatial layer.
-			if (desiredBitrate > 0 && producerRtpStream->GetActiveMs() < StreamMinActiveMs)
-				continue;
+			desiredBitrate = producerRtpStream->GetBitrate(nowMs);
 
-			// We may not yet switch to this spatial layer.
-			if (!CanSwitchToSpatialLayer(spatialLayer))
-				continue;
-
-			// If the stream score is worse than the best seen and not good enough, ignore
-			// this stream.
-			if (producerScore < maxProducerScore && producerScore < StreamGoodScore)
-				continue;
-
-			maxProducerScore = producerScore;
-
-			int16_t temporalLayer{ 0 };
-
-			// Check bitrate of every temporal layer.
-			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
-			{
-				auto bitrate = producerRtpStream->GetBitrate(nowMs, 0u, temporalLayer);
-
-				// If layer is not active move to next spatial layer.
-				if (bitrate == 0u)
-					break;
-
-				// Set desired target layers and bitrate.
-				desiredSpatialLayer  = spatialLayer;
-				desiredTemporalLayer = temporalLayer;
-				desiredBitrate       = bitrate;
-			}
+			if (desiredBitrate)
+				break;
 		}
-
-		// No luck.
-		if (desiredSpatialLayer == -1)
-			return 0u;
-
-		MS_DEBUG_2TAGS(
-		  bwe,
-		  simulcast,
-		  "[current layers:%" PRIi16 ":%" PRIi16 ", desired layers:%" PRIi16 ":%" PRIi16
-		  ", desired bitrate:%" PRIu32 ", consumerId:%s]",
-		  this->currentSpatialLayer,
-		  this->encodingContext->GetCurrentTemporalLayer(),
-		  desiredSpatialLayer,
-		  desiredTemporalLayer,
-		  desiredBitrate,
-		  this->id.c_str());
 
 		return desiredBitrate;
 	}
