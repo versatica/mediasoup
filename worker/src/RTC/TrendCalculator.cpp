@@ -38,15 +38,6 @@ namespace RTC
 			auto subtraction =
 			  static_cast<uint32_t>(this->highestValue * this->decreaseFactor * (elapsedMs / 1000.0));
 
-			// TODO
-			// MS_ERROR(
-			// 	"value:%" PRIu32 ", highestValue:%" PRIu32 ", subtraction:%" PRIu32 ", result:%" PRIu32,
-			// 	value,
-			// 	this->highestValue,
-			// 	subtraction,
-			// 	std::max<uint32_t>(
-			// 		value, this->highestValue > subtraction ? (this->highestValue - subtraction) : value));
-
 			this->value = std::max<uint32_t>(
 			  value, this->highestValue > subtraction ? (this->highestValue - subtraction) : value);
 		}
