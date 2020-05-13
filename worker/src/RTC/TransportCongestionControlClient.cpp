@@ -160,10 +160,11 @@ namespace RTC
 		this->bitrates.effectiveDesiredBitrate = this->desiredBitrateTrend.GetValue();
 		this->bitrates.minBitrate              = MinBitrate;
 
-		MS_ERROR(
-			"--- desiredBitrate:%" PRIu32 ", effectiveDesiredBitrate:%" PRIu32,
-			desiredBitrate,
-			this->desiredBitrateTrend.GetValue());
+		// // TODO
+		// MS_ERROR(
+		// 	"--- desiredBitrate:%" PRIu32 ", effectiveDesiredBitrate:%" PRIu32,
+		// 	desiredBitrate,
+		// 	this->desiredBitrateTrend.GetValue());
 
 		if (this->desiredBitrateTrend.GetValue() > 0u)
 		{
@@ -295,20 +296,13 @@ namespace RTC
 		// Update availableBitrate.
 		// NOTE: Just in case.
 		if (targetTransferRate.target_rate.bps() > std::numeric_limits<uint32_t>::max())
-			newAvailableBitrate = std::numeric_limits<uint32_t>::max();
+			this->bitrates.availableBitrate = std::numeric_limits<uint32_t>::max();
 		else
-			newAvailableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
+			this->bitrates.availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
 
-		this->bitrates.availableBitrate = newAvailableBitrate;
-
-		// TODO: Let's see.
-		// Avoid available bitrate quick falls.
-		// this->availableBitrateTrend.Update(newAvailableBitrate, nowMs);
-		// this->bitrates.availableBitrate = this->desiredBitrateTrend.GetValue();
-
+		// TODO
 		// MS_ERROR(
-		// 	"--- newAvailableBitrate:%" PRIu32 ", availableBitrateTrend:%" PRIu32,
-		// 	newAvailableBitrate,
+		// 	"--- newAvailableBitrate:%" PRIu32,
 		// 	this->bitrates.availableBitrate);
 
 		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->bitrates.availableBitrate);

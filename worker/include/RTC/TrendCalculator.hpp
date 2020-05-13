@@ -8,7 +8,7 @@ namespace RTC
 	class TrendCalculator
 	{
 	public:
-		static constexpr float DecreaseFactor{ 0.01f }; // per second.
+		static constexpr float DecreaseFactor{ 0.05f }; // per second.
 
 	public:
 		TrendCalculator(float decreaseFactor = DecreaseFactor);
