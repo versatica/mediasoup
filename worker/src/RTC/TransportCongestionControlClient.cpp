@@ -12,7 +12,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint32_t MinBitrate{ 30000u };
-	static constexpr float MaxBitrateIncrementFactor{ 1.5f };
+	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
 	static constexpr float MaxPaddingBitrateFactor{ 0.85f };
 	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
 
@@ -160,12 +160,6 @@ namespace RTC
 		this->bitrates.effectiveDesiredBitrate = this->desiredBitrateTrend.GetValue();
 		this->bitrates.minBitrate              = MinBitrate;
 
-		// // TODO
-		// MS_ERROR(
-		// 	"--- desiredBitrate:%" PRIu32 ", effectiveDesiredBitrate:%" PRIu32,
-		// 	desiredBitrate,
-		// 	this->desiredBitrateTrend.GetValue());
-
 		if (this->desiredBitrateTrend.GetValue() > 0u)
 		{
 			this->bitrates.maxBitrate = std::max<uint32_t>(
@@ -289,9 +283,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs                    = DepLibUV::GetTimeMsInt64();
 		auto previousAvailableBitrate = this->bitrates.availableBitrate;
-		uint32_t newAvailableBitrate{ 0u };
 
 		// Update availableBitrate.
 		// NOTE: Just in case.
@@ -299,11 +291,6 @@ namespace RTC
 			this->bitrates.availableBitrate = std::numeric_limits<uint32_t>::max();
 		else
 			this->bitrates.availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
-
-		// TODO
-		// MS_ERROR(
-		// 	"--- newAvailableBitrate:%" PRIu32,
-		// 	this->bitrates.availableBitrate);
 
 		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->bitrates.availableBitrate);
 
