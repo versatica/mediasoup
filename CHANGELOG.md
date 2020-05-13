@@ -1,5 +1,10 @@
 # Changelog
 
+### 3.5.13 (WIP)
+
+* Simplify `GetDesiredBitrate()` in `SimulcastConsumer` and `SvcConsumer`.
+
+
 ### 3.5.12
 
 * `SeqManager.cpp`: Improve performance.

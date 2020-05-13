@@ -64,7 +64,7 @@ export declare type SctpStreamParameters = {
      */
     streamId: number;
     /**
-     * Whether data messages must be received in order. if true the messages will
+     * Whether data messages must be received in order. If true the messages will
      * be sent reliably. Default true.
      */
     ordered?: boolean;
