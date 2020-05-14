@@ -180,7 +180,7 @@ namespace RTC
 		// Video SimpleConsumer does not really play the BWE game when. However, let's
 		// be honest and try to be nice.
 		auto nowMs          = DepLibUV::GetTimeMs();
-		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs, 0u, 0u);
+		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		if (desiredBitrate < bitrate)
 			return desiredBitrate;
@@ -215,7 +215,7 @@ namespace RTC
 			return 0u;
 
 		auto nowMs          = DepLibUV::GetTimeMs();
-		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs, 0u, 0u);
+		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		return desiredBitrate;
 	}
