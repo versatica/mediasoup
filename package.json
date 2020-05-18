@@ -63,14 +63,14 @@
     "@typescript-eslint/parser": "^2.33.0",
     "cross-env": "^7.0.2",
     "eslint": "^7.0.0",
-    "eslint-plugin-jest": "^23.11.0",
+    "eslint-plugin-jest": "^23.13.1",
     "gulp": "^4.0.2",
     "gulp-clang-format": "^1.0.27",
     "jest": "^26.0.1",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^6.0.1",
     "sctp": "^0.0.21",
-    "tsc-watch": "^4.2.5",
+    "tsc-watch": "^4.2.6",
     "typescript": "^3.9.2"
   },
   "optionalDependencies": {

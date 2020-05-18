@@ -1,8 +1,9 @@
 # Changelog
 
-### 3.5.13 (WIP)
+### 3.5.13
 
 * Simplify `GetDesiredBitrate()` in `SimulcastConsumer` and `SvcConsumer`.
+* Update libuv to 1.38.0.
 
 
 ### 3.5.12
