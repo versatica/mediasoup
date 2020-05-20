@@ -20,7 +20,7 @@ std::unordered_map<int, const char*> DepLibSfuShm::SfuShmCtx::errToString =
 DepLibSfuShm::SfuShmCtx::~SfuShmCtx()
 {
   // Call if writer is not closed
-  if (SHM_WRT_CLOSED != wrt_status)
+  if (SHM_WRT_CLOSED != wrt_status && SHM_WRT_UNDEFINED != wrt_status)
   {
     sfushm_av_close_writer(wrt_ctx, 0); //TODO: smth else at the last param
   }

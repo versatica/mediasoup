@@ -92,17 +92,14 @@ public:
 
 inline uint64_t DepLibSfuShm::SfuShmCtx::AdjustPktTs(uint64_t ts, DepLibSfuShm::ShmChunkType kind)
 {
-  uint64_t last_seq;
   uint64_t last_ts;
   switch(kind)
   {
       case DepLibSfuShm::ShmChunkType::VIDEO:
-      last_seq = this->last_seq_v;
       last_ts = this->last_ts_v;
       break;
 
       case DepLibSfuShm::ShmChunkType::AUDIO:
-      last_seq = this->last_seq_a;
       last_ts = this->last_ts_a;
       break;
 
