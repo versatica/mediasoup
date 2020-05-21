@@ -283,6 +283,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: The same value as 'this->initialAvailableBitrate' is received periodically
+		// regardless of the real available bitrate. Skip such value except for the first time
+		// this event is called.
+		// clang-format off
+		if (
+				this->availableBitrateEventCalled &&
+				targetTransferRate.target_rate.bps() == this->initialAvailableBitrate
+		)
+		// clang-format on
+		{
+			return;
+		}
+
 		auto previousAvailableBitrate = this->bitrates.availableBitrate;
 
 		// Update availableBitrate.
