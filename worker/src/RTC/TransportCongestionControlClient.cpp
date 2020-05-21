@@ -288,8 +288,8 @@ namespace RTC
 		// this event is called.
 		// clang-format off
 		if (
-				this->availableBitrateEventCalled &&
-				targetTransferRate.target_rate.bps() == this->initialAvailableBitrate
+			this->availableBitrateEventCalled &&
+			targetTransferRate.target_rate.bps() == this->initialAvailableBitrate
 		)
 		// clang-format on
 		{
