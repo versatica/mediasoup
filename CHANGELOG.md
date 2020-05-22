@@ -1,5 +1,11 @@
 # Changelog
 
+### 3.5.14 (WIP)
+
+* Update deps, speciall `uuid` and `@types/uuid` that had a TypeScript related bug.
+* `TransportCongestionClient.cpp`: Improve sender side bandwidth estimation by do not reporting `this->initialAvailableBitrate` as available bitrate due to strange behavior in the algorithm.
+
+
 ### 3.5.13
 
 * Simplify `GetDesiredBitrate()` in `SimulcastConsumer` and `SvcConsumer`.
