@@ -58,6 +58,7 @@ install:
 
 script:
 - npm run lint
+- npm run typescript:build
 - npm test
 
 notifications:
