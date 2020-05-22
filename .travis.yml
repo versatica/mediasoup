@@ -1,6 +1,7 @@
 branches:
   only:
   - v3
+  - devel
 
 dist: xenial
 
