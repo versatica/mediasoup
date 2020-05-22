@@ -71,7 +71,7 @@
     "open-cli": "^6.0.1",
     "sctp": "^0.0.21",
     "tsc-watch": "^4.2.7",
-    "typescript": "^3.8.3"
+    "typescript": "~3.8.3"
   },
   "optionalDependencies": {
     "clang-tools-prebuilt": "^0.1.4"
