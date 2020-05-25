@@ -1,5 +1,10 @@
 # Changelog
 
+### 3.5.15
+
+* Simulcast and SVC: Better computation of desired bitrate based on `maxBitrate` field in the `producer.rtpParameters.encodings`.
+
+
 ### 3.5.14
 
 * Update deps, speciall `uuid` and `@types/uuid` that had a TypeScript related bug.
