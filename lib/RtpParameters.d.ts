@@ -248,6 +248,11 @@ export declare type RtpEncodingParameters = {
      * See webrtc-svc.
      */
     scalabilityMode?: string;
+    /**
+     * Others.
+     */
+    scaleResolutionDownBy?: number;
+    maxBitrate?: number;
 };
 /**
  * Defines a RTP header extension within the RTP parameters. The list of RTP
