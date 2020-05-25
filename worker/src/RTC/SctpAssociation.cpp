@@ -306,7 +306,7 @@ namespace RTC
 		  len,
 		  this->maxSctpMessageSize);
 
-		auto& parameters = dataConsumer->GetSctpStreamParameters();
+		const auto& parameters = dataConsumer->GetSctpStreamParameters();
 
 		// Fill stcp_sendv_spa.
 		struct sctp_sendv_spa spa; // NOLINT(cppcoreguidelines-pro-type-member-init)

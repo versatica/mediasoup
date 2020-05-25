@@ -32,7 +32,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& sctpParameters = dataProducer->GetSctpStreamParameters();
+		const auto& sctpParameters = dataProducer->GetSctpStreamParameters();
 
 		// Add entries into the streamIdTable.
 		auto streamId = sctpParameters.streamId;

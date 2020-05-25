@@ -181,7 +181,6 @@ namespace RTC
 	RtpStreamRecv::RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params)
 	  : RTC::RtpStream::RtpStream(listener, params, 10),
 	    transmissionCounter(params.spatialLayers, params.temporalLayers)
-
 	{
 		MS_TRACE();
 

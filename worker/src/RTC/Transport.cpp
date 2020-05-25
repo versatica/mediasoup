@@ -807,8 +807,8 @@ namespace RTC
 				request->Accept(data);
 
 				// Check if Transport Congestion Control client must be created.
-				auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
-				auto& codecs                = consumer->GetRtpParameters().codecs;
+				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
+				auto& codecs                      = consumer->GetRtpParameters().codecs;
 
 				// Set TransportCongestionControlClient.
 				if (!this->tccClient)
