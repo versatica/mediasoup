@@ -1,5 +1,10 @@
 # Changelog
 
+### 3.5.16 (WIP)
+
+* Update `Catch2` to v2.12.2.
+
+
 ### 3.5.15
 
 * Simulcast and SVC: Better computation of desired bitrate based on `maxBitrate` field in the `producer.rtpParameters.encodings`.
