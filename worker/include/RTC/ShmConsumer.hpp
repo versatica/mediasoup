@@ -53,6 +53,7 @@ namespace RTC
 		void RequestKeyFrame();
 
 		bool WritePacketToShm(RTC::RtpPacket* packet);
+		bool VideoOrientationChanged(RTC::RtpPacket* packet);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -74,10 +75,11 @@ namespace RTC
 
 		// Shm writing: a consumer will "send" RTP packets (either audio or video) into shm
 		// RTCP packets and "app metadata" will be "sent" into shm by ShmTransport object
-		DepLibSfuShm::SfuShmCtx *shmCtx{ nullptr }; // A handle to shm context which will be received from ShmTransport during transport.consume()
-		sfushm_av_frame_frag_t   chunk;             // structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
-
-		RTC::RtpDataCounter shmWriterCounter;      // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer) TODO: move into ShmCtx
+		DepLibSfuShm::SfuShmCtx *shmCtx{ nullptr };         // Handle to shm context which will be received from ShmTransport during transport.consume()
+		sfushm_av_frame_frag_t   chunk;                     // Structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
+		uint16_t                 rotation{ 0 };             // Current rotation value for video read from RTP packet's videoOrientationExtensionId
+		bool                     rotationDetected{ false }; // Whether video rotation data was ever picked in this stream, then we only write it into shm if there was a change
+		RTC::RtpDataCounter      shmWriterCounter;          // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer) TODO: move into ShmCtx
 	};
 
 	/* Inline methods. */

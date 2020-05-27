@@ -258,6 +258,35 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
+	bool ShmConsumer::VideoOrientationChanged(RTC::RtpPacket* packet)
+	{
+		if (this->GetKind() != RTC::Media::Kind::VIDEO)
+			return false;
+		
+		bool c;
+		bool f;
+		uint16_t r;
+
+		// If it's the first read or value changed then true
+		if (packet->ReadVideoOrientation(c, f, r))
+		{
+			if (!this->rotationDetected)
+			{
+				this->rotationDetected = true;
+				this->rotation = r;
+				return true;
+			}
+			
+			if (r != this->rotation)
+			{
+				this->rotation = r;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	bool ShmConsumer::WritePacketToShm(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -271,6 +300,7 @@ namespace RTC
 			}
 		}
 
+		// Cannot write into shm until the first RTCP Sender Report received
 		if (!this->srReceived) {
 			MS_DEBUG_TAG(rtp, "RTCP SR not received yet, ignoring packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 				packet->GetSsrc(),
@@ -279,7 +309,10 @@ namespace RTC
 			return false;
 		}
 
-		//TODO: packet->ReadVideoOrientation() will return some data which we could pass to shm
+		if (VideoOrientationChanged(packet))
+		{
+			shmCtx->WriteVideoOrientation(this->rotation);
+		}
 
 		uint8_t const* pktdata = packet->GetData();
 		uint8_t const* cdata   = packet->GetPayload();
@@ -288,7 +321,6 @@ namespace RTC
 		uint64_t ts            = static_cast<uint64_t>(packet->GetTimestamp());
 		uint64_t seq           = static_cast<uint64_t>(packet->GetSequenceNumber());
 		uint32_t ssrc          = packet->GetSsrc();
-
 		bool isKeyFrame        = packet->IsKeyFrame();
 
 		std::memset(&chunk, 0, sizeof(chunk));

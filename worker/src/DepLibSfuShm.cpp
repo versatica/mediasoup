@@ -241,3 +241,16 @@ int DepLibSfuShm::SfuShmCtx::WriteStreamMeta(std::string metadata, std::string s
 
   return 0;
 }
+
+int DepLibSfuShm::SfuShmCtx::WriteVideoOrientation(uint16_t rotation)
+{
+  int err = sfushm_av_write_video_rotation(wrt_ctx, rotation);
+
+  if (IsError(err))
+  {
+    MS_WARN_TAG(rtp, "ERROR writing video rotation: %d - %s", err, GetErrorString(err));
+    return -1;
+  }
+
+  return 0;
+}
