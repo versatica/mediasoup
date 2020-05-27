@@ -36,7 +36,7 @@ namespace RTC
 		SeqManager() = default;
 
 	public:
-		void Sync(T input);
+		void Sync(T input, bool skip = false);
 		void Drop(T input);
 		void Offset(T offset);
 		bool Input(const T input, T& output);
