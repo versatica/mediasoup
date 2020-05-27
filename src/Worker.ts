@@ -260,7 +260,9 @@ export class Worker extends EnhancedEventEmitter
 				// fd 2 (stderr)  : Same as stdout.
 				// fd 3 (channel) : Producer Channel fd.
 				// fd 4 (channel) : Consumer Channel fd.
-				stdio : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe' ]
+				// fd 3 (channel) : Producer PayloadChannel fd.
+				// fd 4 (channel) : Consumer PayloadChannel fd.
+				stdio : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe' ]
 			});
 
 		this._pid = this._child.pid;

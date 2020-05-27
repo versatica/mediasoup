@@ -10,12 +10,16 @@
 
 /* Instance methods. */
 
-Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
+Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel)
+  : channel(channel), payloadChannel(payloadChannel)
 {
 	MS_TRACE();
 
 	// Set us as Channel's listener.
 	this->channel->SetListener(this);
+
+	// Set us as PayloadChannel's listener.
+	this->payloadChannel->SetListener(this);
 
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
@@ -63,6 +67,9 @@ void Worker::Close()
 
 	// Close the Channel.
 	delete this->channel;
+
+	// Close the PayloadChannel.
+	delete this->payloadChannel;
 }
 
 void Worker::FillJson(json& jsonObject) const
@@ -273,6 +280,25 @@ inline void Worker::OnChannelClosed(Channel::UnixStreamSocket* /*socket*/)
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("channel remotely closed, closing myself");
+
+	Close();
+}
+
+inline void Worker::OnPayloadChannelNotification(
+  PayloadChannel::UnixStreamSocket* /*payloadChannel*/, PayloadChannel::Notification* notification)
+{
+	MS_TRACE();
+
+	// TODO
+}
+
+inline void Worker::OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* /*payloadChannel*/)
+{
+	MS_TRACE();
+
+	// If the pipe is remotely closed it may mean that mediasoup Node process
+	// abruptly died (SIGKILL?) so we must die.
+	MS_ERROR_STD("payloadChannel remotely closed, closing myself");
 
 	Close();
 }

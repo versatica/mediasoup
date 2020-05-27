@@ -1,12 +1,12 @@
-#ifndef MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
-#define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#define MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include "Channel/Request.hpp"
+#include "PayloadChannel/Notification.hpp"
 #include "handles/UnixStreamSocket.hpp"
 #include <json.hpp>
 
-namespace Channel
+namespace PayloadChannel
 {
 	class ConsumerSocket : public ::UnixStreamSocket
 	{
@@ -15,11 +15,14 @@ namespace Channel
 		{
 		public:
 			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) = 0;
-			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket)                     = 0;
+			virtual void OnConsumerSocketPayload(
+			  ConsumerSocket* consumerSocket, const uint8_t* payload, size_t payloadLen) = 0;
+			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket)          = 0;
 		};
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
+
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
@@ -53,8 +56,10 @@ namespace Channel
 		class Listener
 		{
 		public:
-			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
-			virtual void OnChannelClosed(Channel::UnixStreamSocket* channel) = 0;
+			virtual void OnPayloadChannelNotification(
+			  PayloadChannel::UnixStreamSocket* payloadChannel,
+			  PayloadChannel::Notification* notification)                                         = 0;
+			virtual void OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* payloadChannel) = 0;
 		};
 
 	public:
@@ -63,8 +68,7 @@ namespace Channel
 
 	public:
 		void SetListener(Listener* listener);
-		void Send(json& jsonMessage);
-		void SendLog(char* message, size_t messageLen);
+		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
 
 	private:
 		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
@@ -72,6 +76,8 @@ namespace Channel
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
 		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) override;
+		void OnConsumerSocketPayload(
+		  ConsumerSocket* consumerSocket, const uint8_t* payload, size_t payloadLen) override;
 		void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) override;
 
 	private:
@@ -80,7 +86,8 @@ namespace Channel
 		// Others.
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
+		PayloadChannel::Notification* ongoingNotification{ nullptr };
 	};
-} // namespace Channel
+} // namespace PayloadChannel
 
 #endif

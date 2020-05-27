@@ -23,7 +23,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Notifier::channel != nullptr, "channel unset");
+		MS_ASSERT(Notifier::channel, "channel unset");
 
 		json jsonNotification = json::object();
 
@@ -37,7 +37,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Notifier::channel != nullptr, "channel unset");
+		MS_ASSERT(Notifier::channel, "channel unset");
 
 		json jsonNotification = json::object();
 
