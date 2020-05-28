@@ -1056,6 +1056,18 @@ export function getConsumerRtpParameters(
 	if (scalabilityMode)
 		consumerEncoding.scalabilityMode = scalabilityMode;
 
+	// Use the maximum maxBitrate in any encoding and honor it in the Consumer's
+	// encoding.
+	const maxEncodingMaxBitrate =
+		consumableParams.encodings.reduce((maxBitrate, encoding) => (
+			encoding.maxBitrate > maxBitrate ? encoding.maxBitrate : maxBitrate), 0
+		);
+
+	if (maxEncodingMaxBitrate)
+	{
+		consumerEncoding.maxBitrate = maxEncodingMaxBitrate;
+	}
+
 	// Set a single encoding for the Consumer.
 	consumerParams.encodings.push(consumerEncoding);
 

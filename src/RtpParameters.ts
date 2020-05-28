@@ -291,6 +291,12 @@ export type RtpEncodingParameters =
 	 * See webrtc-svc.
 	 */
 	scalabilityMode?: string;
+
+	/**
+	 * Others.
+	 */
+	scaleResolutionDownBy?: number;
+	maxBitrate?: number;
 }
 
 /**
