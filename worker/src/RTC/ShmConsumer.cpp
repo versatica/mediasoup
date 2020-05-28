@@ -311,6 +311,12 @@ namespace RTC
 
 		if (VideoOrientationChanged(packet))
 		{
+			MS_DEBUG_TAG(rtp, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				this->rotation,
+				packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp());
+			
 			shmCtx->WriteVideoOrientation(this->rotation);
 		}
 
