@@ -14,9 +14,6 @@ namespace RTC
 	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
-
-		// A DirectTransport is always connected.
-		Transport::Connected();
 	}
 
 	DirectTransport::~DirectTransport()

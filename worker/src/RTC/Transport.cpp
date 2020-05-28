@@ -1085,13 +1085,15 @@ namespace RTC
 
 				request->Accept(data);
 
+				if (IsConnected())
+					dataConsumer->TransportConnected();
+
 				if (this->sctpAssociation)
 				{
-					if (IsConnected())
-						dataConsumer->TransportConnected();
-
 					if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+					{
 						dataConsumer->SctpAssociationConnected();
+					}
 
 					// Tell to the SCTP association.
 					this->sctpAssociation->HandleDataConsumer(dataConsumer);
@@ -1374,15 +1376,12 @@ namespace RTC
 			consumer->TransportConnected();
 		}
 
-		// Tell all DataConsumers of SCTP type.
-		if (this->sctpAssociation)
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
 		{
-			for (auto& kv : this->mapDataConsumers)
-			{
-				auto* dataConsumer = kv.second;
+			auto* dataConsumer = kv.second;
 
-				dataConsumer->TransportConnected();
-			}
+			dataConsumer->TransportConnected();
 		}
 
 		// Tell the SctpAssociation.

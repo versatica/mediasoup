@@ -97,7 +97,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	 * @private
 	 * @emits transportclose
 	 * @emits dataproducerclose
-	 * @emits message - (message: string | Buffer, ppid: number)
+	 * @emits message - (message: Buffer, ppid: number)
 	 * @emits @close
 	 * @emits @dataproducerclose
 	 */
@@ -312,27 +312,30 @@ export class DataConsumer extends EnhancedEventEmitter
 			}
 		});
 
-		this._payloadChannel.on(this._internal.dataConsumerId, (event: string, data?: any) =>
-		{
-			switch (event)
+		this._payloadChannel.on(
+			this._internal.dataConsumerId,
+			(event: string, data: any | undefined, payload: Buffer) =>
 			{
-				case 'message':
+				switch (event)
 				{
-					if (this._closed)
+					case 'message':
+					{
+						if (this._closed)
+							break;
+
+						const ppid = data.ppid as number;
+						const message = payload;
+
+						this.safeEmit('message', message, ppid);
+
 						break;
+					}
 
-					const { message, ppid } = data as { message: Buffer; ppid: number };
-
-					this.safeEmit('message', message, ppid);
-
-					break;
+					default:
+					{
+						logger.error('ignoring unknown event "%s"', event);
+					}
 				}
-
-				default:
-				{
-					logger.error('ignoring unknown event "%s"', event);
-				}
-			}
-		});
+			});
 	}
 }

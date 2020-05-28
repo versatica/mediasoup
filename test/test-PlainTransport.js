@@ -332,21 +332,6 @@ test('plainTransport.getStats() succeeds', async () =>
 
 test('plainTransport.connect() succeeds', async () =>
 {
-	// No SRTP enabled so passing srtpParameters must fail.
-	await expect(transport.connect(
-		{
-			ip             : '127.0.0.2',
-			port           : 9998,
-			rtcpPort       : 9999,
-			srtpParameters :
-			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
-			}
-		}))
-		.rejects
-		.toThrow(TypeError);
-
 	await expect(transport.connect({ ip: '1.2.3.4', port: 1234, rtcpPort: 1235 }))
 		.resolves
 		.toBeUndefined();
@@ -366,6 +351,21 @@ test('plainTransport.connect() succeeds', async () =>
 
 test('plainTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
+	// No SRTP enabled so passing srtpParameters must fail.
+	await expect(transport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9998,
+			rtcpPort       : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
 	await expect(transport.connect({}))
 		.rejects
 		.toThrow(TypeError);

@@ -57,7 +57,7 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * @private
      * @emits transportclose
      * @emits dataproducerclose
-     * @emits message - (message: string | Buffer, ppid: number)
+     * @emits message - (message: Buffer, ppid: number)
      * @emits @close
      * @emits @dataproducerclose
      */
