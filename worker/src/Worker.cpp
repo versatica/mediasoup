@@ -292,17 +292,7 @@ inline void Worker::OnPayloadChannelNotification(
 {
 	MS_TRACE();
 
-	// TODO: REMOVE
-	MS_DUMP(
-		">>>> NOTIFICATION RECEIVED IN C++ [event:'%s'], SENDING IT BACK TO NODE !!!!",
-		notification->event.c_str());
-
-	// TODO: REMOVE
-	std::string targetId{ "1234" };
-
-	PayloadChannel::Notifier::Emit(targetId, notification->event.c_str(), notification->payload, notification->payloadLen);
-
-	// TODO
+	MS_DEBUG_DEV("PayloadChannel notification received [event:%s]", notification->event.c_str());
 }
 
 inline void Worker::OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* /*payloadChannel*/)

@@ -253,11 +253,6 @@ export class PayloadChannel extends EnhancedEventEmitter
 				this._ongoingNotification.data,
 				payload);
 
-			// TODO: REMOVE
-			logger.warn('<<<< NOTIFICATION RECEIVED IN NODE:', this._ongoingNotification);
-			logger.warn('- buffer: %o', payload);
-			logger.warn('- buffer.toString(): %s', payload.toString('utf-8'));
-
 			// Unset ongoing notification.
 			this._ongoingNotification = undefined;
 		}
