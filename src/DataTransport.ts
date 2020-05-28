@@ -1,6 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { NotImplementedError } from './errors';
+import { UnsupportedError } from './errors';
 import { Transport, TransportTraceEventData, SctpState } from './Transport';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
@@ -178,7 +178,7 @@ export class DataTransport extends Transport
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setMaxIncomingBitrate(bitrate: number): Promise<void>
 	{
-		throw new NotImplementedError(
+		throw new UnsupportedError(
 			'setMaxIncomingBitrate() not implemented in DataTransport');
 	}
 
@@ -188,8 +188,7 @@ export class DataTransport extends Transport
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async produce(options: ProducerOptions): Promise<Producer>
 	{
-		throw new NotImplementedError(
-			'produce() not implemented in DataTransport');
+		throw new UnsupportedError('produce() not implemented in DataTransport');
 	}
 
 	/**
@@ -198,8 +197,7 @@ export class DataTransport extends Transport
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async consumer(options: ConsumerOptions): Promise<Consumer>
 	{
-		throw new NotImplementedError(
-			'consumer() not implemented in DataTransport');
+		throw new UnsupportedError('consumer() not implemented in DataTransport');
 	}
 
 	private _handleWorkerNotifications(): void
