@@ -33,3 +33,22 @@ export class InvalidStateError extends Error
 			this.stack = (new Error(message)).stack;
 	}
 }
+
+/**
+ * Error produced when calling a method that is not implemented for a certain
+ * subclass.
+ */
+export class NotImplementedError extends Error
+{
+	constructor(message: string)
+	{
+		super(message);
+
+		this.name = 'NotImplementedError';
+
+		if (Error.hasOwnProperty('captureStackTrace')) // Just in V8.
+			Error.captureStackTrace(this, NotImplementedError);
+		else
+			this.stack = (new Error(message)).stack;
+	}
+}

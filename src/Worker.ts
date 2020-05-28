@@ -534,7 +534,8 @@ export class Worker extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel : this._channel,
+				channel        : this._channel,
+				payloadChannel : this._payloadChannel,
 				appData
 			});
 

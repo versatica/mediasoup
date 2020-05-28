@@ -1,5 +1,6 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
 export declare class RtpObserver extends EnhancedEventEmitter {
     protected readonly _internal: {
@@ -7,6 +8,7 @@ export declare class RtpObserver extends EnhancedEventEmitter {
         rtpObserverId: string;
     };
     protected readonly _channel: Channel;
+    protected readonly _payloadChannel: PayloadChannel;
     protected _closed: boolean;
     protected _paused: boolean;
     private readonly _appData?;
@@ -18,9 +20,10 @@ export declare class RtpObserver extends EnhancedEventEmitter {
      * @emits routerclose
      * @emits @close
      */
-    constructor({ internal, channel, appData, getProducerById }: {
+    constructor({ internal, channel, payloadChannel, appData, getProducerById }: {
         internal: any;
         channel: Channel;
+        payloadChannel: PayloadChannel;
         appData: any;
         getProducerById: (producerId: string) => Producer;
     });

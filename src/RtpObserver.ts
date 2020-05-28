@@ -1,6 +1,7 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
 
 const logger = new Logger('RtpObserver');
@@ -16,6 +17,9 @@ export class RtpObserver extends EnhancedEventEmitter
 
 	// Channel instance.
 	protected readonly _channel: Channel;
+
+	// PayloadChannel instance.
+	protected readonly _payloadChannel: PayloadChannel;
 
 	// Closed flag.
 	protected _closed = false;
@@ -42,12 +46,14 @@ export class RtpObserver extends EnhancedEventEmitter
 		{
 			internal,
 			channel,
+			payloadChannel,
 			appData,
 			getProducerById
 		}:
 		{
 			internal: any;
 			channel: Channel;
+			payloadChannel: PayloadChannel;
 			appData: any;
 			getProducerById: (producerId: string) => Producer;
 		}
@@ -59,6 +65,7 @@ export class RtpObserver extends EnhancedEventEmitter
 
 		this._internal = internal;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 		this._getProducerById = getProducerById;
 	}

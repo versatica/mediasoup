@@ -4,6 +4,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as utils from './utils';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
@@ -93,6 +94,9 @@ export class Transport extends EnhancedEventEmitter
 	// Channel instance.
 	protected readonly _channel: Channel;
 
+	// PayloadChannel instance.
+	protected readonly _payloadChannel: PayloadChannel;
+
 	// Close flag.
 	protected _closed = false;
 
@@ -150,6 +154,7 @@ export class Transport extends EnhancedEventEmitter
 			internal,
 			data,
 			channel,
+			payloadChannel,
 			appData,
 			getRouterRtpCapabilities,
 			getProducerById,
@@ -159,6 +164,7 @@ export class Transport extends EnhancedEventEmitter
 			internal: any;
 			data: any;
 			channel: Channel;
+			payloadChannel: PayloadChannel;
 			appData: any;
 			getRouterRtpCapabilities: () => RtpCapabilities;
 			getProducerById: (producerId: string) => Producer;
@@ -173,6 +179,7 @@ export class Transport extends EnhancedEventEmitter
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 		this._getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this._getProducerById = getProducerById;
