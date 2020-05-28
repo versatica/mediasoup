@@ -252,6 +252,7 @@ namespace RTC
 		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
+		bool useRealSctp{ true };
 		Timer* rtcpTimer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };

@@ -162,7 +162,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a DataTransport.
      */
-    createDataTransport({ enableSctp, maxSctpMessageSize, appData }: DataTransportOptions): Promise<DataTransport>;
+    createDataTransport({ enableSctp, numSctpStreams, maxSctpMessageSize, appData }: DataTransportOptions): Promise<DataTransport>;
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.
      */

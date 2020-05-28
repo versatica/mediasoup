@@ -57,6 +57,7 @@ namespace RTC
 			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
 			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
 			auto jsonIsDataChannelIt      = data.find("isDataChannel");
+			auto jsonUseRealSctpIt        = data.find("useRealSctp");
 
 			// numSctpStreams is mandatory.
 			// clang-format off
@@ -107,9 +108,15 @@ namespace RTC
 			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
 				isDataChannel = jsonIsDataChannelIt->get<bool>();
 
-			// This may throw.
-			this->sctpAssociation =
-			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
+			if (jsonUseRealSctpIt != data.end() && jsonUseRealSctpIt->is_boolean())
+				this->useRealSctp = jsonUseRealSctpIt->get<bool>();
+
+			if (this->useRealSctp)
+			{
+				// This may throw.
+				this->sctpAssociation =
+				  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
+			}
 		}
 
 		// Create the RTCP timer.
@@ -345,7 +352,7 @@ namespace RTC
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 
-		if (this->sctpAssociation)
+		if (this->useRealSctp && this->sctpAssociation)
 		{
 			// Add sctpParameters.
 			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
@@ -410,7 +417,7 @@ namespace RTC
 		// Add timestamp.
 		jsonObject["timestamp"] = nowMs;
 
-		if (this->sctpAssociation)
+		if (this->useRealSctp && this->sctpAssociation)
 		{
 			// Add sctpState.
 			switch (this->sctpAssociation->GetState())
@@ -947,7 +954,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
 			{
-				if (!this->sctpAssociation)
+				if (this->useRealSctp && !this->sctpAssociation)
 					MS_THROW_ERROR("SCTP not enabled");
 
 				std::string dataProducerId;
@@ -1002,7 +1009,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
 			{
-				if (!this->sctpAssociation)
+				if (this->useRealSctp && !this->sctpAssociation)
 					MS_THROW_ERROR("SCTP not enabled");
 
 				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
@@ -1023,6 +1030,8 @@ namespace RTC
 				  this,
 				  request->data,
 				  this->sctpAssociation->GetMaxSctpMessageSize());
+
+			// TODO: Above line will throw because this->sctpAssocition does not exist.
 
 				// Notify the listener.
 				// This may throw if no DataProducer is found.

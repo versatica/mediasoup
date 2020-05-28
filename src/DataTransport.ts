@@ -4,7 +4,7 @@ import { UnsupportedError } from './errors';
 import { Transport, TransportTraceEventData, SctpState } from './Transport';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
-import { SctpParameters } from './SctpParameters';
+import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
 export type DataTransportOptions =
 {
@@ -12,6 +12,11 @@ export type DataTransportOptions =
 	 * Create a SCTP association. Default true.
 	 */
 	enableSctp?: boolean;
+
+	/**
+	 * SCTP streams number.
+	 */
+	numSctpStreams?: NumSctpStreams;
 
 	/**
 	 * Maximum size of data that can be passed to DataProducer's send() method.
