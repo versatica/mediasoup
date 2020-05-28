@@ -174,7 +174,7 @@ export declare class Transport extends EnhancedEventEmitter {
     /**
      * Create a DataConsumer.
      */
-    consumeData({ dataProducerId, appData }: DataConsumerOptions): Promise<DataConsumer>;
+    consumeData({ dataProducerId, ordered, maxPacketLifeTime, maxRetransmits, appData }: DataConsumerOptions): Promise<DataConsumer>;
     /**
      * Enable 'trace' event.
      */

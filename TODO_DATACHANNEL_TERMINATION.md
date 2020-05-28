@@ -12,3 +12,11 @@
 
 - `DirectTransport.cpp` must set `this->direct = true` and call `Transport::Connected()` in its constructor.
 
+- `transport.consumeData()` (when in SCTP) now accepts optional arguments:
+
+```ts
+ordered?: boolean;
+maxPacketLifeTime?: number;
+maxRetransmits?: number;
+```
+

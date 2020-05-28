@@ -12,6 +12,30 @@ export type DataConsumerOptions =
 	dataProducerId: string;
 
 	/**
+	 * Just if consuming over SCTP.
+	 * Whether data messages must be received in order. If true the messages will
+	 * be sent reliably. Defaults to the value in the DataProducer if it has type
+	 * 'sctp' or to true if it has type 'direct'.
+	 */
+	ordered?: boolean;
+
+	/**
+	 * Just if consuming over SCTP.
+	 * When ordered is false indicates the time (in milliseconds) after which a
+	 * SCTP packet will stop being retransmitted. Defaults to the value in the
+	 * DataProducer if it has type 'sctp' or unset if it has type 'direct'.
+	 */
+	maxPacketLifeTime?: number;
+
+	/**
+	 * Just if consuming over SCTP.
+	 * When ordered is false indicates the maximum number of times a packet will
+	 * be retransmitted. Defaults to the value in the DataProducer if it has type
+	 * 'sctp' or unset if it has type 'direct'.
+	 */
+	maxRetransmits?: number;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: any;

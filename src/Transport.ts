@@ -612,23 +612,32 @@ export class Transport extends EnhancedEventEmitter
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
+		let type: DataProducerType;
+
 		// If this is not a DirectTransport, sctpStreamParameters are required.
 		if (this.constructor.name !== 'DirectTransport')
 		{
+			type = 'sctp';
+
 			// This may throw.
 			ortc.validateSctpStreamParameters(sctpStreamParameters);
 		}
 		// If this is a DirectTransport, sctpStreamParameters must not be given.
-		else if (sctpStreamParameters)
+		else
 		{
-			throw new TypeError(
-				'cannot create a DataProducer of type SCTP in this Transport');
+			type = 'direct';
+
+			if (sctpStreamParameters)
+			{
+				logger.warn(
+					'produceData() | sctpStreamParameters are ignored when producing data on a DirectTransport');
+			}
 		}
 
 		const internal = { ...this._internal, dataProducerId: id || uuidv4() };
 		const reqData =
 		{
-			type : 'sctp' as DataProducerType,
+			type,
 			sctpStreamParameters,
 			label,
 			protocol
@@ -666,8 +675,10 @@ export class Transport extends EnhancedEventEmitter
 	async consumeData(
 		{
 			dataProducerId,
+			ordered,
+			maxPacketLifeTime,
+			maxRetransmits,
 			appData = {}
-			// TODO
 		}: DataConsumerOptions
 	): Promise<DataConsumer>
 	{
@@ -683,21 +694,56 @@ export class Transport extends EnhancedEventEmitter
 		if (!dataProducer)
 			throw Error(`DataProducer with id "${dataProducerId}" not found`);
 
-		const sctpStreamParameters =
-			utils.clone(dataProducer.sctpStreamParameters) as SctpStreamParameters;
+		let type: DataConsumerType;
+		let sctpStreamParameters: SctpStreamParameters | undefined;
+		let sctpStreamId: number;
+
+		// If this is not a DirectTransport, use sctpStreamParameters from the
+		// DataProducer (if type 'sctp') unless they are given in method parameters.
+		if (this.constructor.name !== 'DirectTransport')
+		{
+			type = 'sctp';
+			sctpStreamParameters =
+				utils.clone(dataProducer.sctpStreamParameters) as SctpStreamParameters;
+
+			// Override if given.
+			if (ordered !== undefined)
+				sctpStreamParameters.ordered = ordered;
+
+			if (maxPacketLifeTime !== undefined)
+				sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
+
+			if (maxRetransmits !== undefined)
+				sctpStreamParameters.maxRetransmits = maxRetransmits;
+
+			// This may throw.
+			sctpStreamId = this._getNextSctpStreamId();
+
+			this._sctpStreamIds[sctpStreamId] = 1;
+			sctpStreamParameters.streamId = sctpStreamId;
+		}
+		// If this is a DirectTransport, sctpStreamParameters must not be used.
+		else
+		{
+			type = 'direct';
+
+			if (
+				ordered !== undefined ||
+				maxPacketLifeTime !== undefined ||
+				maxRetransmits !== undefined
+			)
+			{
+				logger.warn(
+					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport');
+			}
+		}
 
 		const { label, protocol } = dataProducer;
-
-		// This may throw.
-		const sctpStreamId = this._getNextSctpStreamId();
-
-		this._sctpStreamIds[sctpStreamId] = 1;
-		sctpStreamParameters.streamId = sctpStreamId;
 
 		const internal = { ...this._internal, dataConsumerId: uuidv4(), dataProducerId };
 		const reqData =
 		{
-			type : 'sctp' as DataConsumerType,
+			type,
 			sctpStreamParameters,
 			label,
 			protocol
