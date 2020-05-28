@@ -42,7 +42,7 @@ export declare class DataProducer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
-    private readonly _payloadChannel?;
+    private readonly _payloadChannel;
     private _closed;
     private readonly _appData?;
     private readonly _observer;
@@ -55,7 +55,7 @@ export declare class DataProducer extends EnhancedEventEmitter {
         internal: any;
         data: any;
         channel: Channel;
-        payloadChannel?: PayloadChannel;
+        payloadChannel: PayloadChannel;
         appData: any;
     });
     /**

@@ -579,6 +579,14 @@ namespace RTC
 		}
 	}
 
+	void PlainTransport::HandleNotification(PayloadChannel::Notification* notification)
+	{
+		MS_TRACE();
+
+		// Pass it to the parent class.
+		RTC::Transport::HandleNotification(notification);
+	}
+
 	inline bool PlainTransport::IsConnected() const
 	{
 		return this->tuple;

@@ -5,6 +5,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "Channel/Request.hpp"
+#include "PayloadChannel/Notification.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -116,9 +117,10 @@ namespace RTC
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);
-		// Subclasses must implement this method and call the parent's one to
+		// Subclasses must implement these method and call the parent's one to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
+		virtual void HandleNotification(PayloadChannel::Notification* notification);
 
 	protected:
 		// Must be called from the subclass.
@@ -137,16 +139,16 @@ namespace RTC
 		void ReceiveSctpData(const uint8_t* data, size_t len);
 
 	private:
-		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;
-		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
-		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
-		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
+		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
+		RTC::Producer* GetProducerFromInternal(json& internal) const;
+		void SetNewConsumerIdFromInternal(json& internal, std::string& consumerId) const;
+		RTC::Consumer* GetConsumerFromInternal(json& internal) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
-		void SetNewDataProducerIdFromRequest(Channel::Request* request, std::string& dataProducerId) const;
-		RTC::DataProducer* GetDataProducerFromRequest(Channel::Request* request) const;
-		void SetNewDataConsumerIdFromRequest(Channel::Request* request, std::string& dataConsumerId) const;
-		RTC::DataConsumer* GetDataConsumerFromRequest(Channel::Request* request) const;
+		void SetNewDataProducerIdFromInternal(json& internal, std::string& dataProducerId) const;
+		RTC::DataProducer* GetDataProducerFromInternal(json& internal) const;
+		void SetNewDataConsumerIdFromInternal(json& internal, std::string& dataConsumerId) const;
+		RTC::DataConsumer* GetDataConsumerFromInternal(json& internal) const;
 		virtual bool IsConnected() const                                                 = 0;
 		virtual void SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* cb = nullptr) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);

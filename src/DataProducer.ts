@@ -1,6 +1,5 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { UnsupportedError } from './errors';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { SctpStreamParameters } from './SctpParameters';
@@ -74,7 +73,7 @@ export class DataProducer extends EnhancedEventEmitter
 	private readonly _channel: Channel;
 
 	// PayloadChannel instance.
-	private readonly _payloadChannel?: PayloadChannel;
+	private readonly _payloadChannel: PayloadChannel;
 
 	// Closed flag.
 	private _closed = false;
@@ -102,7 +101,7 @@ export class DataProducer extends EnhancedEventEmitter
 			internal: any;
 			data: any;
 			channel: Channel;
-			payloadChannel?: PayloadChannel;
+			payloadChannel: PayloadChannel;
 			appData: any;
 		}
 	)
@@ -264,11 +263,6 @@ export class DataProducer extends EnhancedEventEmitter
 	send(message: string | Buffer, ppid?: number): void
 	{
 		logger.debug('send()');
-
-		if (!this._payloadChannel)
-		{
-			throw new UnsupportedError('send() not supported for this DataProducer');
-		}
 
 		/*
 		 * +-------------------------------+----------+

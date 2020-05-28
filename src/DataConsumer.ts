@@ -82,7 +82,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	private readonly _channel: Channel;
 
 	// PayloadChannel instance.
-	private readonly _payloadChannel?: PayloadChannel;
+	private readonly _payloadChannel: PayloadChannel;
 
 	// Closed flag.
 	private _closed = false;
@@ -97,6 +97,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	 * @private
 	 * @emits transportclose
 	 * @emits dataproducerclose
+	 * @emits message - (message: string | Buffer, ppid: number)
 	 * @emits @close
 	 * @emits @dataproducerclose
 	 */
@@ -112,7 +113,7 @@ export class DataConsumer extends EnhancedEventEmitter
 			internal: any;
 			data: any;
 			channel: Channel;
-			payloadChannel?: PayloadChannel;
+			payloadChannel: PayloadChannel;
 			appData: any;
 		}
 	)
@@ -311,34 +312,27 @@ export class DataConsumer extends EnhancedEventEmitter
 			}
 		});
 
-		if (this._payloadChannel)
+		this._payloadChannel.on(this._internal.dataConsumerId, (event: string, data?: any) =>
 		{
-			this._payloadChannel.on(
-				this._internal.dataConsumerId, (event: string, data?: any) =>
+			switch (event)
+			{
+				case 'message':
 				{
-					switch (event)
-					{
-						case 'message':
-						{
-							if (this._closed)
-								break;
+					if (this._closed)
+						break;
 
-							const { message, ppid } = data as {
-								message: Buffer;
-								ppid: number;
-							};
+					const { message, ppid } = data as { message: Buffer; ppid: number };
 
-							this.safeEmit('message', message, ppid);
+					this.safeEmit('message', message, ppid);
 
-							break;
-						}
+					break;
+				}
 
-						default:
-						{
-							logger.error('ignoring unknown event "%s"', event);
-						}
-					}
-				});
-		}
+				default:
+				{
+					logger.error('ignoring unknown event "%s"', event);
+				}
+			}
+		});
 	}
 }

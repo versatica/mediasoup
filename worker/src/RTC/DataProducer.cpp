@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -144,7 +145,7 @@ namespace RTC
 		}
 	}
 
-	void DataProducer::ReceiveSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len)
+	void DataProducer::ReceiveMessage(uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 

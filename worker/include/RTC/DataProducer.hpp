@@ -42,7 +42,7 @@ namespace RTC
 		{
 			return this->sctpStreamParameters;
 		}
-		void ReceiveSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len);
+		void ReceiveMessage(uint32_t ppid, const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.

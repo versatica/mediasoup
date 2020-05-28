@@ -592,6 +592,14 @@ namespace RTC
 		}
 	}
 
+	void WebRtcTransport::HandleNotification(PayloadChannel::Notification* notification)
+	{
+		MS_TRACE();
+
+		// Pass it to the parent class.
+		RTC::Transport::HandleNotification(notification);
+	}
+
 	inline bool WebRtcTransport::IsConnected() const
 	{
 		MS_TRACE();

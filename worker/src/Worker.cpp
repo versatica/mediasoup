@@ -157,14 +157,14 @@ void Worker::FillJsonResourceUsage(json& jsonObject) const
 	jsonObject["ru_nivcsw"] = uvRusage.ru_nivcsw;
 }
 
-void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
+void Worker::SetNewRouterIdFromInternal(json& internal, std::string& routerId) const
 {
 	MS_TRACE();
 
-	auto jsonRouterIdIt = request->internal.find("routerId");
+	auto jsonRouterIdIt = internal.find("routerId");
 
-	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("request has no internal.routerId");
+	if (jsonRouterIdIt == internal.end() || !jsonRouterIdIt->is_string())
+		MS_THROW_ERROR("missing internal.routerId");
 
 	routerId.assign(jsonRouterIdIt->get<std::string>());
 
@@ -172,14 +172,14 @@ void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& r
 		MS_THROW_ERROR("a Router with same routerId already exists");
 }
 
-RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
+RTC::Router* Worker::GetRouterFromInternal(json& internal) const
 {
 	MS_TRACE();
 
-	auto jsonRouterIdIt = request->internal.find("routerId");
+	auto jsonRouterIdIt = internal.find("routerId");
 
-	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("request has no internal.routerId");
+	if (jsonRouterIdIt == internal.end() || !jsonRouterIdIt->is_string())
+		MS_THROW_ERROR("missing internal.routerId");
 
 	auto it = this->mapRouters.find(jsonRouterIdIt->get<std::string>());
 
@@ -234,7 +234,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 			std::string routerId;
 
 			// This may throw.
-			SetNewRouterIdFromRequest(request, routerId);
+			SetNewRouterIdFromInternal(request->internal, routerId);
 
 			auto* router = new RTC::Router(routerId);
 
@@ -250,7 +250,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 		case Channel::Request::MethodId::ROUTER_CLOSE:
 		{
 			// This may throw.
-			RTC::Router* router = GetRouterFromRequest(request);
+			RTC::Router* router = GetRouterFromInternal(request->internal);
 
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);
@@ -267,7 +267,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 		default:
 		{
 			// This may throw.
-			RTC::Router* router = GetRouterFromRequest(request);
+			RTC::Router* router = GetRouterFromInternal(request->internal);
 
 			router->HandleRequest(request);
 
@@ -293,6 +293,11 @@ inline void Worker::OnPayloadChannelNotification(
 	MS_TRACE();
 
 	MS_DEBUG_DEV("PayloadChannel notification received [event:%s]", notification->event.c_str());
+
+	// This may throw.
+	RTC::Router* router = GetRouterFromInternal(notification->internal);
+
+	router->HandleNotification(notification);
 }
 
 inline void Worker::OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* /*payloadChannel*/)
