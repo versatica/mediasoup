@@ -1,6 +1,8 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { UnsupportedError } from './errors';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { SctpStreamParameters } from './SctpParameters';
 
 export type DataProducerOptions =
@@ -12,8 +14,9 @@ export type DataProducerOptions =
 
 	/**
 	 * SCTP parameters defining how the endpoint is sending the data.
+	 * Just if messages are sent over SCTP.
 	 */
-	sctpStreamParameters: SctpStreamParameters;
+	sctpStreamParameters?: SctpStreamParameters;
 
 	/**
 	 * A label which can be used to distinguish this DataChannel from others.
@@ -41,6 +44,11 @@ export type DataProducerStat =
 	bytesReceived: number;
 }
 
+/**
+ * DataProducer type.
+ */
+export type DataProducerType = 'sctp' | 'direct';
+
 const logger = new Logger('DataProducer');
 
 export class DataProducer extends EnhancedEventEmitter
@@ -56,6 +64,7 @@ export class DataProducer extends EnhancedEventEmitter
 	// DataProducer data.
 	private readonly _data:
 	{
+		type: DataProducerType;
 		sctpStreamParameters: SctpStreamParameters;
 		label: string;
 		protocol: string;
@@ -63,6 +72,9 @@ export class DataProducer extends EnhancedEventEmitter
 
 	// Channel instance.
 	private readonly _channel: Channel;
+
+	// PayloadChannel instance.
+	private readonly _payloadChannel?: PayloadChannel;
 
 	// Closed flag.
 	private _closed = false;
@@ -83,12 +95,14 @@ export class DataProducer extends EnhancedEventEmitter
 			internal,
 			data,
 			channel,
+			payloadChannel,
 			appData
 		}:
 		{
 			internal: any;
 			data: any;
 			channel: Channel;
+			payloadChannel?: PayloadChannel;
 			appData: any;
 		}
 	)
@@ -100,6 +114,7 @@ export class DataProducer extends EnhancedEventEmitter
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 
 		this._handleWorkerNotifications();
@@ -119,6 +134,14 @@ export class DataProducer extends EnhancedEventEmitter
 	get closed(): boolean
 	{
 		return this._closed;
+	}
+
+	/**
+	 * DataProducer type.
+	 */
+	get type(): DataProducerType
+	{
+		return this._data.type;
 	}
 
 	/**
@@ -233,6 +256,53 @@ export class DataProducer extends EnhancedEventEmitter
 		logger.debug('getStats()');
 
 		return this._channel.request('dataProducer.getStats', this._internal);
+	}
+
+	/**
+	 * Send data (just valid for DataProducers created on a DirectTransport).
+	 */
+	send(message: string | Buffer, ppid?: number): void
+	{
+		logger.debug('send()');
+
+		if (!this._payloadChannel)
+		{
+			throw new UnsupportedError('send() not supported for this DataProducer');
+		}
+
+		/*
+		 * +-------------------------------+----------+
+		 * | Value                         | SCTP     |
+		 * |                               | PPID     |
+		 * +-------------------------------+----------+
+		 * | WebRTC String                 | 51       |
+		 * | WebRTC Binary Partial         | 52       |
+		 * | (Deprecated)                  |          |
+		 * | WebRTC Binary                 | 53       |
+		 * | WebRTC String Partial         | 54       |
+		 * | (Deprecated)                  |          |
+		 * | WebRTC String Empty           | 56       |
+		 * | WebRTC Binary Empty           | 57       |
+		 * +-------------------------------+----------+
+		 */
+
+		if (typeof ppid !== 'number')
+		{
+			ppid = (typeof message === 'string')
+				? message.length > 0 ? 51 : 56
+				: message.length > 0 ? 53 : 57;
+		}
+
+		// Ensure we honor PPIDs.
+		if (ppid === 56)
+			message = ' ';
+		else if (ppid === 57)
+			message = Buffer.alloc(1);
+
+		const notifData = { ppid };
+
+		this._payloadChannel.notify(
+			'dataProducer.send', this._internal, notifData, message);
 	}
 
 	private _handleWorkerNotifications(): void

@@ -389,8 +389,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
-			isDataChannel : true,
-			useRealSctp   : true
+			isDataChannel : true
 		};
 
 		const data =
@@ -479,7 +478,6 @@ export class Router extends EnhancedEventEmitter
 			numSctpStreams,
 			maxSctpMessageSize,
 			isDataChannel : false,
-			useRealSctp   : true,
 			enableSrtp,
 			srtpCryptoSuite
 		};
@@ -579,7 +577,6 @@ export class Router extends EnhancedEventEmitter
 			numSctpStreams,
 			maxSctpMessageSize,
 			isDataChannel : false,
-			useRealSctp   : true,
 			enableRtx,
 			enableSrtp
 		};
@@ -625,9 +622,7 @@ export class Router extends EnhancedEventEmitter
 	 */
 	async createDirectTransport(
 		{
-			enableSctp = true,
-			numSctpStreams = { OS: 65535, MIS: 65535 },
-			maxSctpMessageSize = 262144,
+			maxMessageSize = 262144,
 			appData = {}
 		}: DirectTransportOptions
 	): Promise<DirectTransport>
@@ -635,13 +630,7 @@ export class Router extends EnhancedEventEmitter
 		logger.debug('createDirectTransport()');
 
 		const internal = { ...this._internal, transportId: uuidv4() };
-		const reqData = {
-			enableSctp,
-			numSctpStreams,
-			maxSctpMessageSize,
-			isDataChannel : false,
-			useRealSctp   : false
-		};
+		const reqData = { maxMessageSize };
 
 		const data =
 			await this._channel.request('router.createDirectTransport', internal, reqData);

@@ -806,6 +806,7 @@ test('router.pipeToRouter() succeeds with data', async () =>
 
 	expect(pipeDataConsumer.id).toBeType('string');
 	expect(pipeDataConsumer.closed).toBe(false);
+	expect(pipeDataConsumer.type).toBe('sctp');
 	expect(pipeDataConsumer.sctpStreamParameters).toBeType('object');
 	expect(pipeDataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(pipeDataConsumer.sctpStreamParameters.ordered).toBe(false);
@@ -816,6 +817,7 @@ test('router.pipeToRouter() succeeds with data', async () =>
 
 	expect(pipeDataProducer.id).toBe(dataProducer.id);
 	expect(pipeDataProducer.closed).toBe(false);
+	expect(pipeDataProducer.type).toBe('sctp');
 	expect(pipeDataProducer.sctpStreamParameters).toBeType('object');
 	expect(pipeDataProducer.sctpStreamParameters.streamId).toBeType('number');
 	expect(pipeDataProducer.sctpStreamParameters.ordered).toBe(false);
@@ -834,6 +836,7 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () =>
 
 	expect(dataConsumer.id).toBeType('string');
 	expect(dataConsumer.closed).toBe(false);
+	expect(dataConsumer.type).toBe('sctp');
 	expect(dataConsumer.sctpStreamParameters).toBeType('object');
 	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);

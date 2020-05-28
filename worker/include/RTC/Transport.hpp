@@ -86,7 +86,7 @@ namespace RTC
 			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
 			virtual void OnTransportDataProducerClosed(
 			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
-			virtual void OnTransportDataProducerSctpMessageReceived(
+			virtual void OnTransportDataProducerMessageReceived(
 			  RTC::Transport* transport,
 			  RTC::DataProducer* dataProducer,
 			  uint32_t ppid,
@@ -185,12 +185,12 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
 	public:
-		void OnDataProducerSctpMessageReceived(
+		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
-		void OnDataConsumerSendSctpMessage(
+		void OnDataConsumerSendMessage(
 		  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
@@ -259,6 +259,7 @@ namespace RTC
 		RTC::SenderBandwidthEstimator* senderBwe{ nullptr };
 #endif
 		// Others.
+		bool direct{ false }; // Whether this Transport allows PayloadChannel comm.
 		bool destroying{ false };
 		struct RTC::RtpHeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;

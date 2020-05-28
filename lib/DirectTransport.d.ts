@@ -1,22 +1,12 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Transport, SctpState } from './Transport';
+import { Transport } from './Transport';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
-import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export declare type DirectTransportOptions = {
     /**
-     * Create a SCTP association. Default true.
+     * Maximum allowed size for messages. Default 262144.
      */
-    enableSctp?: boolean;
-    /**
-     * SCTP streams number.
-     */
-    numSctpStreams?: NumSctpStreams;
-    /**
-     * Maximum size of data that can be passed to DataProducer's send() method.
-     * Default 262144.
-     */
-    maxSctpMessageSize?: number;
+    maxMessageSize?: number;
     /**
      * Custom application data.
      */
@@ -26,7 +16,6 @@ export declare type DirectTransportStat = {
     type: string;
     transportId: string;
     timestamp: number;
-    sctpState?: SctpState;
     bytesReceived: number;
     recvBitrate: number;
     bytesSent: number;
@@ -48,24 +37,12 @@ export declare type DirectTransportStat = {
     maxIncomingBitrate?: number;
 };
 export declare class DirectTransport extends Transport {
-    protected readonly _data: {
-        sctpParameters?: SctpParameters;
-        sctpState?: SctpState;
-    };
+    protected readonly _data: {};
     /**
      * @private
-     * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
-    /**
-     * SCTP parameters.
-     */
-    get sctpParameters(): SctpParameters | undefined;
-    /**
-     * SCTP state.
-     */
-    get sctpState(): SctpState | undefined;
     /**
      * Observer.
      *
@@ -73,7 +50,6 @@ export declare class DirectTransport extends Transport {
      * @emits close
      * @emits newdataproducer - (dataProducer: DataProducer)
      * @emits newdataconsumer - (dataProducer: DataProducer)
-     * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
     get observer(): EnhancedEventEmitter;

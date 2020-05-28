@@ -830,7 +830,7 @@ namespace RTC
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
 	}
 
-	inline void Router::OnTransportDataProducerSctpMessageReceived(
+	inline void Router::OnTransportDataProducerMessageReceived(
 	  RTC::Transport* /*transport*/,
 	  RTC::DataProducer* dataProducer,
 	  uint32_t ppid,
@@ -843,7 +843,7 @@ namespace RTC
 
 		for (auto* consumer : dataConsumers)
 		{
-			consumer->SendSctpMessage(ppid, msg, len);
+			consumer->SendMessage(ppid, msg, len);
 		}
 	}
 

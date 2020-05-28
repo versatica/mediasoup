@@ -1,5 +1,6 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { SctpStreamParameters } from './SctpParameters';
 export declare type DataConsumerOptions = {
     /**
@@ -19,10 +20,15 @@ export declare type DataConsumerStat = {
     messagesSent: number;
     bytesSent: number;
 };
+/**
+ * DataConsumer type.
+ */
+export declare type DataConsumerType = 'sctp' | 'direct';
 export declare class DataConsumer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
+    private readonly _payloadChannel?;
     private _closed;
     private readonly _appData?;
     private readonly _observer;
@@ -33,10 +39,11 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * @emits @close
      * @emits @dataproducerclose
      */
-    constructor({ internal, data, channel, appData }: {
+    constructor({ internal, data, channel, payloadChannel, appData }: {
         internal: any;
         data: any;
         channel: Channel;
+        payloadChannel?: PayloadChannel;
         appData: any;
     });
     /**
@@ -52,9 +59,13 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      */
     get closed(): boolean;
     /**
+     * DataConsumer type.
+     */
+    get type(): DataConsumerType;
+    /**
      * SCTP stream parameters.
      */
-    get sctpStreamParameters(): SctpStreamParameters;
+    get sctpStreamParameters(): SctpStreamParameters | undefined;
     /**
      * DataChannel label.
      */

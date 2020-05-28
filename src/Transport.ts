@@ -7,8 +7,16 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
-import { DataProducer, DataProducerOptions } from './DataProducer';
-import { DataConsumer, DataConsumerOptions } from './DataConsumer';
+import {
+	DataProducer,
+	DataProducerOptions,
+	DataProducerType
+} from './DataProducer';
+import {
+	DataConsumer,
+	DataConsumerOptions,
+	DataConsumerType
+} from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, SctpStreamParameters } from './SctpParameters';
 
@@ -585,9 +593,9 @@ export class Transport extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Create a DataProducer that uses SCTP.
+	 * Create a DataProducer.
 	 */
-	async produceSctpData(
+	async produceData(
 		{
 			id = undefined,
 			sctpStreamParameters,
@@ -597,18 +605,34 @@ export class Transport extends EnhancedEventEmitter
 		}: DataProducerOptions
 	): Promise<DataProducer>
 	{
-		logger.debug('produceSctpData()');
+		logger.debug('produceData()');
 
 		if (id && this._dataProducers.has(id))
 			throw new TypeError(`a DataProducer with same id "${id}" already exists`);
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		// This may throw.
-		ortc.validateSctpStreamParameters(sctpStreamParameters);
+		// If this is not a DirectTransport, sctpStreamParameters are required.
+		if (this.constructor.name !== 'DirectTransport')
+		{
+			// This may throw.
+			ortc.validateSctpStreamParameters(sctpStreamParameters);
+		}
+		// If this is a DirectTransport, sctpStreamParameters must not be given.
+		else if (sctpStreamParameters)
+		{
+			throw new TypeError(
+				'cannot create a DataProducer of type SCTP in this Transport');
+		}
 
 		const internal = { ...this._internal, dataProducerId: id || uuidv4() };
-		const reqData = { sctpStreamParameters, label, protocol };
+		const reqData =
+		{
+			type : 'sctp' as DataProducerType,
+			sctpStreamParameters,
+			label,
+			protocol
+		};
 
 		const data =
 			await this._channel.request('transport.produceData', internal, reqData);
@@ -637,27 +661,17 @@ export class Transport extends EnhancedEventEmitter
 	}
 
 	/**
-	 * DEPRECATED: Use produceSctpData().
+	 * Create a DataConsumer.
 	 */
-	async produceData(options: DataProducerOptions): Promise<DataProducer>
-	{
-		logger.warn(
-			'produceData() is DEPRECATED, use produceSctpData()');
-
-		return this.produceSctpData(options);
-	}
-
-	/**
-	 * Create a DataConsumer that uses SCTP.
-	 */
-	async consumeSctpData(
+	async consumeData(
 		{
 			dataProducerId,
 			appData = {}
+			// TODO
 		}: DataConsumerOptions
 	): Promise<DataConsumer>
 	{
-		logger.debug('consumeSctpData()');
+		logger.debug('consumeData()');
 
 		if (!dataProducerId || typeof dataProducerId !== 'string')
 			throw new TypeError('missing dataProducerId');
@@ -681,7 +695,13 @@ export class Transport extends EnhancedEventEmitter
 		sctpStreamParameters.streamId = sctpStreamId;
 
 		const internal = { ...this._internal, dataConsumerId: uuidv4(), dataProducerId };
-		const reqData = { sctpStreamParameters, label, protocol };
+		const reqData =
+		{
+			type : 'sctp' as DataConsumerType,
+			sctpStreamParameters,
+			label,
+			protocol
+		};
 
 		const data =
 			await this._channel.request('transport.consumeData', internal, reqData);
@@ -712,17 +732,6 @@ export class Transport extends EnhancedEventEmitter
 		this._observer.safeEmit('newdataconsumer', dataConsumer);
 
 		return dataConsumer;
-	}
-
-	/**
-	 * DEPRECATED: Use consumeSctpData().
-	 */
-	async consumeData(options: DataConsumerOptions): Promise<DataConsumer>
-	{
-		logger.warn(
-			'consumeData() is DEPRECATED, use consumeSctpData()');
-
-		return this.consumeSctpData(options);
 	}
 
 	/**

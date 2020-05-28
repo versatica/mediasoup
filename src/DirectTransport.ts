@@ -1,28 +1,16 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { UnsupportedError } from './errors';
-import { Transport, TransportTraceEventData, SctpState } from './Transport';
+import { Transport, TransportTraceEventData } from './Transport';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
-import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
 export type DirectTransportOptions =
 {
 	/**
-	 * Create a SCTP association. Default true.
+	 * Maximum allowed size for messages. Default 262144.
 	 */
-	enableSctp?: boolean;
-
-	/**
-	 * SCTP streams number.
-	 */
-	numSctpStreams?: NumSctpStreams;
-
-	/**
-	 * Maximum size of data that can be passed to DataProducer's send() method.
-	 * Default 262144.
-	 */
-	maxSctpMessageSize?: number;
+	maxMessageSize?: number;
 
 	/**
 	 * Custom application data.
@@ -36,7 +24,6 @@ export type DirectTransportStat =
 	type: string;
 	transportId: string;
 	timestamp: number;
-	sctpState?: SctpState;
 	bytesReceived: number;
 	recvBitrate: number;
 	bytesSent: number;
@@ -65,13 +52,11 @@ export class DirectTransport extends Transport
 	// DirectTransport data.
 	protected readonly _data:
 	{
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
+		// TODO
 	};
 
 	/**
 	 * @private
-	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
@@ -82,29 +67,13 @@ export class DirectTransport extends Transport
 
 		const { data } = params;
 
-		this._data =
-		{
-			sctpParameters : data.sctpParameters,
-			sctpState      : data.sctpState
-		};
+		// TODO
+		this._data = data;
+		// {
+		//
+		// };
 
 		this._handleWorkerNotifications();
-	}
-
-	/**
-	 * SCTP parameters.
-	 */
-	get sctpParameters(): SctpParameters | undefined
-	{
-		return this._data.sctpParameters;
-	}
-
-	/**
-	 * SCTP state.
-	 */
-	get sctpState(): SctpState | undefined
-	{
-		return this._data.sctpState;
 	}
 
 	/**
@@ -114,7 +83,6 @@ export class DirectTransport extends Transport
 	 * @emits close
 	 * @emits newdataproducer - (dataProducer: DataProducer)
 	 * @emits newdataconsumer - (dataProducer: DataProducer)
-	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter
@@ -132,9 +100,6 @@ export class DirectTransport extends Transport
 		if (this._closed)
 			return;
 
-		if (this._data.sctpState)
-			this._data.sctpState = 'closed';
-
 		super.close();
 	}
 
@@ -148,9 +113,6 @@ export class DirectTransport extends Transport
 	{
 		if (this._closed)
 			return;
-
-		if (this._data.sctpState)
-			this._data.sctpState = 'closed';
 
 		super.routerClosed();
 	}
@@ -211,20 +173,6 @@ export class DirectTransport extends Transport
 		{
 			switch (event)
 			{
-				case 'sctpstatechange':
-				{
-					const sctpState = data.sctpState as SctpState;
-
-					this._data.sctpState = sctpState;
-
-					this.safeEmit('sctpstatechange', sctpState);
-
-					// Emit observer event.
-					this._observer.safeEmit('sctpstatechange', sctpState);
-
-					break;
-				}
-
 				case 'trace':
 				{
 					const trace = data as TransportTraceEventData;

@@ -22,17 +22,38 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		auto jsonTypeIt                 = data.find("type");
 		auto jsonSctpStreamParametersIt = data.find("sctpStreamParameters");
 		auto jsonLabelIt                = data.find("label");
 		auto jsonProtocolIt             = data.find("protocol");
 
-		if (jsonSctpStreamParametersIt == data.end() || !jsonSctpStreamParametersIt->is_object())
-		{
-			MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
-		}
+		if (jsonTypeIt == data.end() || !jsonTypeIt->is_string())
+			MS_THROW_TYPE_ERROR("missing type");
 
-		// This may throw.
-		this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+		this->typeString = jsonTypeIt->get<std::string>();
+
+		if (this->typeString == "sctp")
+			this->type = DataConsumer::Type::SCTP;
+		else if (this->typeString == "direct")
+			this->type = DataConsumer::Type::DIRECT;
+		else
+			MS_THROW_TYPE_ERROR("invalid type");
+
+		if (this->type == DataConsumer::Type::SCTP)
+		{
+			// clang-format off
+			if (
+				jsonSctpStreamParametersIt == data.end() ||
+				!jsonSctpStreamParametersIt->is_object()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
+			}
+
+			// This may throw.
+			this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+		}
 
 		if (jsonLabelIt != data.end() && jsonLabelIt->is_string())
 			this->label = jsonLabelIt->get<std::string>();
@@ -53,11 +74,17 @@ namespace RTC
 		// Add id.
 		jsonObject["id"] = this->id;
 
+		// Add type.
+		jsonObject["type"] = this->typeString;
+
 		// Add dataProducerId.
 		jsonObject["dataProducerId"] = this->dataProducerId;
 
 		// Add sctpStreamParameters.
-		this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+		if (this->type == DataConsumer::Type::SCTP)
+		{
+			this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+		}
 
 		// Add label.
 		jsonObject["label"] = this->label;
@@ -178,7 +205,7 @@ namespace RTC
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 
-	void DataConsumer::SendSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len)
+	void DataConsumer::SendMessage(uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
@@ -199,6 +226,6 @@ namespace RTC
 		this->messagesSent++;
 		this->bytesSent += len;
 
-		this->listener->OnDataConsumerSendSctpMessage(this, ppid, msg, len);
+		this->listener->OnDataConsumerSendMessage(this, ppid, msg, len);
 	}
 } // namespace RTC

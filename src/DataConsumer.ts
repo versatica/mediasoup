@@ -1,6 +1,7 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { SctpStreamParameters } from './SctpParameters';
 
 export type DataConsumerOptions =
@@ -26,6 +27,11 @@ export type DataConsumerStat =
 	bytesSent: number;
 }
 
+/**
+ * DataConsumer type.
+ */
+export type DataConsumerType = 'sctp' | 'direct';
+
 const logger = new Logger('DataConsumer');
 
 export class DataConsumer extends EnhancedEventEmitter
@@ -42,6 +48,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	// DataConsumer data.
 	private readonly _data:
 	{
+		type: DataConsumerType;
 		sctpStreamParameters: SctpStreamParameters;
 		label: string;
 		protocol: string;
@@ -49,6 +56,9 @@ export class DataConsumer extends EnhancedEventEmitter
 
 	// Channel instance.
 	private readonly _channel: Channel;
+
+	// PayloadChannel instance.
+	private readonly _payloadChannel?: PayloadChannel;
 
 	// Closed flag.
 	private _closed = false;
@@ -71,12 +81,14 @@ export class DataConsumer extends EnhancedEventEmitter
 			internal,
 			data,
 			channel,
+			payloadChannel,
 			appData
 		}:
 		{
 			internal: any;
 			data: any;
 			channel: Channel;
+			payloadChannel?: PayloadChannel;
 			appData: any;
 		}
 	)
@@ -88,6 +100,7 @@ export class DataConsumer extends EnhancedEventEmitter
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 
 		this._handleWorkerNotifications();
@@ -118,9 +131,17 @@ export class DataConsumer extends EnhancedEventEmitter
 	}
 
 	/**
+	 * DataConsumer type.
+	 */
+	get type(): DataConsumerType
+	{
+		return this._data.type;
+	}
+
+	/**
 	 * SCTP stream parameters.
 	 */
-	get sctpStreamParameters(): SctpStreamParameters
+	get sctpStreamParameters(): SctpStreamParameters | undefined
 	{
 		return this._data.sctpStreamParameters;
 	}
@@ -265,5 +286,35 @@ export class DataConsumer extends EnhancedEventEmitter
 				}
 			}
 		});
+
+		if (this._payloadChannel)
+		{
+			this._payloadChannel.on(
+				this._internal.dataConsumerId, (event: string, data?: any) =>
+				{
+					switch (event)
+					{
+						case 'message':
+						{
+							if (this._closed)
+								break;
+
+							const { message, ppid } = data as {
+								message: Buffer;
+								ppid: number;
+							};
+
+							this.safeEmit('message', message, ppid);
+
+							break;
+						}
+
+						default:
+						{
+							logger.error('ignoring unknown event "%s"', event);
+						}
+					}
+				});
+		}
 	}
 }

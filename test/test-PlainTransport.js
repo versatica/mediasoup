@@ -103,6 +103,7 @@ test('router.createPlainTransport() succeeds', async () =>
 	const data1 = await transport1.dump();
 
 	expect(data1.id).toBe(transport1.id);
+	expect(data1.direct).toBe(false);
 	expect(data1.producerIds).toEqual([]);
 	expect(data1.consumerIds).toEqual([]);
 	expect(data1.tuple).toEqual(transport1.tuple);
@@ -142,6 +143,7 @@ test('router.createPlainTransport() succeeds', async () =>
 	const data2 = await transport2.dump();
 
 	expect(data2.id).toBe(transport2.id);
+	expect(data2.direct).toBe(false);
 	expect(data2.tuple).toEqual(transport2.tuple);
 	expect(data2.rtcpTuple).toEqual(transport2.rtcpTuple);
 	expect(data2.sctpState).toBeUndefined();

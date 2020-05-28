@@ -163,14 +163,14 @@ export class PayloadChannel extends EnhancedEventEmitter
 	/**
 	 * @private
 	 */
-	send(
+	notify(
 		event: string,
 		internal: object,
 		data: any | undefined,
 		payload: string | Buffer
 	): void
 	{
-		logger.debug('send() [event:%s]', event);
+		logger.debug('notify() [event:%s]', event);
 
 		if (this._closed)
 			throw new InvalidStateError('PayloadChannel closed');
@@ -191,7 +191,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 		}
 		catch (error)
 		{
-			logger.warn('send() | sending notification failed: %s', String(error));
+			logger.warn('notify() | sending notification failed: %s', String(error));
 
 			return;
 		}
@@ -203,7 +203,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 		}
 		catch (error)
 		{
-			logger.warn('send() | sending payload failed: %s', String(error));
+			logger.warn('notify() | sending payload failed: %s', String(error));
 
 			return;
 		}

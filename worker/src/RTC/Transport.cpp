@@ -34,6 +34,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		auto jsonDirectIt = data.find("direct");
+
+		// clang-format off
+		if (
+			jsonDirectIt != data.end() &&
+			jsonDirectIt->is_boolean() &&
+			jsonDirectIt->get<bool>()
+		)
+		// clang-format on
+		{
+			this->direct = true;
+		}
+
 		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
 
 		if (jsonInitialAvailableOutgoingBitrateIt != data.end())
@@ -54,6 +67,9 @@ namespace RTC
 		)
 		// clang-format on
 		{
+			if (this->direct)
+				MS_THROW_TYPE_ERROR("cannot enable SCTP in a DirectTransport");
+
 			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
 			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
 			auto jsonIsDataChannelIt      = data.find("isDataChannel");
@@ -253,6 +269,9 @@ namespace RTC
 
 		// Add id.
 		jsonObject["id"] = this->id;
+
+		// Add direct.
+		jsonObject["direct"] = this->direct;
 
 		// Add producerIds.
 		jsonObject["producerIds"] = json::array();
@@ -947,7 +966,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
 			{
-				if (!this->sctpAssociation)
+				if (!this->sctpAssociation && !this->direct)
 					MS_THROW_ERROR("SCTP not enabled");
 
 				std::string dataProducerId;
@@ -1002,7 +1021,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
 			{
-				if (!this->sctpAssociation)
+				if (!this->sctpAssociation && !this->direct)
 					MS_THROW_ERROR("SCTP not enabled");
 
 				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
@@ -1022,9 +1041,7 @@ namespace RTC
 				  dataProducerId,
 				  this,
 				  request->data,
-				  this->sctpAssociation->GetMaxSctpMessageSize());
-
-			// TODO: Above line will throw because this->sctpAssocition does not exist.
+				  this->sctpAssociation ? this->sctpAssociation->GetMaxSctpMessageSize() : 0u);
 
 				// Notify the listener.
 				// This may throw if no DataProducer is found.
@@ -1053,14 +1070,17 @@ namespace RTC
 
 				request->Accept(data);
 
-				if (IsConnected())
-					dataConsumer->TransportConnected();
+				if (this->sctpAssociation)
+				{
+					if (IsConnected())
+						dataConsumer->TransportConnected();
 
-				if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
-					dataConsumer->SctpAssociationConnected();
+					if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+						dataConsumer->SctpAssociationConnected();
 
-				// Tell to the SCTP association.
-				this->sctpAssociation->HandleDataConsumer(dataConsumer);
+					// Tell to the SCTP association.
+					this->sctpAssociation->HandleDataConsumer(dataConsumer);
+				}
 
 				break;
 			}
@@ -1202,8 +1222,11 @@ namespace RTC
 
 				MS_DEBUG_DEV("DataProducer closed [dataProducerId:%s]", dataProducer->id.c_str());
 
-				// Tell the SctpAssociation so it can reset the SCTP stream.
-				this->sctpAssociation->DataProducerClosed(dataProducer);
+				if (this->sctpAssociation)
+				{
+					// Tell the SctpAssociation so it can reset the SCTP stream.
+					this->sctpAssociation->DataProducerClosed(dataProducer);
+				}
 
 				// Delete it.
 				delete dataProducer;
@@ -1226,8 +1249,11 @@ namespace RTC
 
 				MS_DEBUG_DEV("DataConsumer closed [dataConsumerId:%s]", dataConsumer->id.c_str());
 
-				// Tell the SctpAssociation so it can reset the SCTP stream.
-				this->sctpAssociation->DataConsumerClosed(dataConsumer);
+				if (this->sctpAssociation)
+				{
+					// Tell the SctpAssociation so it can reset the SCTP stream.
+					this->sctpAssociation->DataConsumerClosed(dataConsumer);
+				}
 
 				// Delete it.
 				delete dataConsumer;
@@ -1278,12 +1304,15 @@ namespace RTC
 			consumer->TransportConnected();
 		}
 
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
+		// Tell all DataConsumers of SCTP type.
+		if (this->sctpAssociation)
 		{
-			auto* dataConsumer = kv.second;
+			for (auto& kv : this->mapDataConsumers)
+			{
+				auto* dataConsumer = kv.second;
 
-			dataConsumer->TransportConnected();
+				dataConsumer->TransportConnected();
+			}
 		}
 
 		// Tell the SctpAssociation.
@@ -2415,18 +2444,20 @@ namespace RTC
 			ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
 	}
 
-	inline void Transport::OnDataProducerSctpMessageReceived(
+	inline void Transport::OnDataProducerMessageReceived(
 	  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, ppid, msg, len);
+		this->listener->OnTransportDataProducerMessageReceived(this, dataProducer, ppid, msg, len);
 	}
 
-	inline void Transport::OnDataConsumerSendSctpMessage(
+	inline void Transport::OnDataConsumerSendMessage(
 	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->sctpAssociation, "no SCTP association");
 
 		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
 	}
@@ -2441,8 +2472,11 @@ namespace RTC
 		// Notify the listener.
 		this->listener->OnTransportDataConsumerDataProducerClosed(this, dataConsumer);
 
-		// Tell the SctpAssociation so it can reset the SCTP stream.
-		this->sctpAssociation->DataConsumerClosed(dataConsumer);
+		if (this->sctpAssociation)
+		{
+			// Tell the SctpAssociation so it can reset the SCTP stream.
+			this->sctpAssociation->DataConsumerClosed(dataConsumer);
+		}
 
 		// Delete it.
 		delete dataConsumer;

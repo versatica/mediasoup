@@ -59,6 +59,7 @@ test('transport.consumeData() succeeds', async () =>
 	expect(dataConsumer.id).toBeType('string');
 	expect(dataConsumer.dataProducerId).toBe(dataProducer.id);
 	expect(dataConsumer.closed).toBe(false);
+	expect(dataConsumer.type).toBe('sctp');
 	expect(dataConsumer.sctpStreamParameters).toBeType('object');
 	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
@@ -92,6 +93,7 @@ test('dataConsumer.dump() succeeds', async () =>
 
 	expect(data.id).toBe(dataConsumer.id);
 	expect(data.dataProducerId).toBe(dataConsumer.dataProducerId);
+	expect(data.type).toBe('sctp');
 	expect(data.sctpStreamParameters).toBeType('object');
 	expect(data.sctpStreamParameters.streamId)
 		.toBe(dataConsumer.sctpStreamParameters.streamId);
