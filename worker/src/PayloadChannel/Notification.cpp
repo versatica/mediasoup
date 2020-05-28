@@ -55,8 +55,6 @@ namespace PayloadChannel
 	Notification::~Notification()
 	{
 		MS_TRACE();
-
-		delete this->payload;
 	}
 
 	void Notification::SetPayload(const uint8_t* payload, size_t payloadLen)

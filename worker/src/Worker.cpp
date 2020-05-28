@@ -8,6 +8,9 @@
 #include "Settings.hpp"
 #include "Channel/Notifier.hpp"
 
+// TODO: REMOVE
+#include "PayloadChannel/Notifier.hpp"
+
 /* Instance methods. */
 
 Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel)
@@ -288,6 +291,16 @@ inline void Worker::OnPayloadChannelNotification(
   PayloadChannel::UnixStreamSocket* /*payloadChannel*/, PayloadChannel::Notification* notification)
 {
 	MS_TRACE();
+
+	// TODO: REMOVE
+	MS_DUMP(
+		">>>> NOTIFICATION RECEIVED IN C++ [event:'%s'], SENDING IT BACK TO NODE !!!!",
+		notification->event.c_str());
+
+	// TODO: REMOVE
+	std::string targetId{ "1234" };
+
+	PayloadChannel::Notifier::Emit(targetId, notification->event.c_str(), notification->payload, notification->payloadLen);
 
 	// TODO
 }

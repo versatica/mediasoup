@@ -113,6 +113,7 @@ export declare class Worker extends EnhancedEventEmitter {
     private _child?;
     private readonly _pid;
     private readonly _channel;
+    private readonly _payloadChannel;
     private _closed;
     private readonly _appData?;
     private readonly _routers;

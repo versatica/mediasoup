@@ -94,54 +94,45 @@ namespace PayloadChannel
 		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, json& jsonMessage)
-	{
-		MS_TRACE();
-
-		if (this->ongoingNotification)
-		{
-			MS_ERROR("ongoing notification exists, discarding received message");
-
-			return;
-		}
-
-		try
-		{
-			this->ongoingNotification = new PayloadChannel::Notification(jsonMessage);
-		}
-		catch (const MediaSoupError& error)
-		{
-			MS_ERROR("discarding wrong Payload Channel notification");
-		}
-	}
-
-	void UnixStreamSocket::OnConsumerSocketPayload(
-	  ConsumerSocket* /*consumerSocket*/, const uint8_t* payload, size_t payloadLen)
+	void UnixStreamSocket::OnConsumerSocketMessage(
+	  ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)
 	{
 		MS_TRACE();
 
 		if (!this->ongoingNotification)
 		{
-			MS_ERROR("no ongoing notification, discarding received payload");
-
-			return;
+			try
+			{
+				json jsonMessage          = json::parse(msg, msg + msgLen);
+				this->ongoingNotification = new PayloadChannel::Notification(jsonMessage);
+			}
+			catch (const json::parse_error& error)
+			{
+				MS_ERROR_STD("JSON parsing error: %s", error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("discarding wrong Payload Channel notification");
+			}
 		}
-
-		this->ongoingNotification->SetPayload(payload, payloadLen);
-
-		// Notify the listener.
-		try
+		else
 		{
-			this->listener->OnPayloadChannelNotification(this, this->ongoingNotification);
-		}
-		catch (const MediaSoupError& error)
-		{
-			MS_ERROR("notification error: %s", error.what());
-		}
+			this->ongoingNotification->SetPayload(reinterpret_cast<const uint8_t*>(msg), msgLen);
 
-		// Delete the Notification.
-		delete this->ongoingNotification;
-		this->ongoingNotification = nullptr;
+			// Notify the listener.
+			try
+			{
+				this->listener->OnPayloadChannelNotification(this, this->ongoingNotification);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("notification failed: %s", error.what());
+			}
+
+			// Delete the Notification.
+			delete this->ongoingNotification;
+			this->ongoingNotification = nullptr;
+		}
 	}
 
 	void UnixStreamSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
@@ -255,54 +246,7 @@ namespace PayloadChannel
 			readLen =
 			  reinterpret_cast<const uint8_t*>(msgStart) - (this->buffer + this->msgStart) + msgLen + 1;
 
-			if (msgLen > 0u)
-			{
-				// We can receive JSON messages or text/binary payloads.
-				switch (msgStart[0])
-				{
-					// 'P' (a payload).
-					case 'P':
-					{
-						// Notify the listener.
-						this->listener->OnConsumerSocketPayload(
-						  this, reinterpret_cast<const uint8_t*>(msgStart + 1), msgLen - 1);
-
-						break;
-					}
-
-					// '{' (a Payload Channel JSON messsage).
-					case '{':
-					{
-						try
-						{
-							json jsonMessage = json::parse(msgStart, msgStart + msgLen);
-
-							// Notify the listener.
-							this->listener->OnConsumerSocketMessage(this, jsonMessage);
-						}
-						catch (const json::parse_error& error)
-						{
-							MS_ERROR("JSON parsing error: %s", error.what());
-						}
-
-						break;
-					}
-
-					default:
-					{
-						MS_ERROR("not a JSON message nor a payload");
-					}
-				}
-
-				return;
-			}
-			// Discard if msgLen is 0.
-			else
-			{
-				MS_ERROR("message length is 0, discarding");
-
-				return;
-			}
+			this->listener->OnConsumerSocketMessage(this, msgStart, msgLen);
 
 			// If there is no more space available in the buffer and that is because
 			// the latest parsed message filled it, then empty the full buffer.

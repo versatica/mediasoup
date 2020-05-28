@@ -14,8 +14,8 @@ namespace Channel
 		class Listener
 		{
 		public:
-			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) = 0;
-			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket)                     = 0;
+			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
+			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) = 0;
 		};
 
 	public:
@@ -71,7 +71,7 @@ namespace Channel
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
-		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) override;
+		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) override;
 		void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) override;
 
 	private:

@@ -102,13 +102,15 @@ namespace Channel
 		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, json& jsonMessage)
+	void UnixStreamSocket::OnConsumerSocketMessage(
+	  ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)
 	{
 		MS_TRACE_STD();
 
 		try
 		{
-			auto* request = new Channel::Request(this, jsonMessage);
+			json jsonMessage = json::parse(msg, msg + msgLen);
+			auto* request    = new Channel::Request(this, jsonMessage);
 
 			// Notify the listener.
 			try
@@ -126,6 +128,10 @@ namespace Channel
 
 			// Delete the Request.
 			delete request;
+		}
+		catch (const json::parse_error& error)
+		{
+			MS_ERROR_STD("JSON parsing error: %s", error.what());
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -244,17 +250,7 @@ namespace Channel
 			readLen =
 			  reinterpret_cast<const uint8_t*>(msgStart) - (this->buffer + this->msgStart) + msgLen + 1;
 
-			try
-			{
-				json jsonMessage = json::parse(msgStart, msgStart + msgLen);
-
-				// Notify the listener.
-				this->listener->OnConsumerSocketMessage(this, jsonMessage);
-			}
-			catch (const json::parse_error& error)
-			{
-				MS_ERROR_STD("JSON parsing error: %s", error.what());
-			}
+			this->listener->OnConsumerSocketMessage(this, msgStart, msgLen);
 
 			// If there is no more space available in the buffer and that is because
 			// the latest parsed message filled it, then empty the full buffer.

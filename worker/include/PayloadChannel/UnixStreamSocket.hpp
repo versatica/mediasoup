@@ -14,10 +14,8 @@ namespace PayloadChannel
 		class Listener
 		{
 		public:
-			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) = 0;
-			virtual void OnConsumerSocketPayload(
-			  ConsumerSocket* consumerSocket, const uint8_t* payload, size_t payloadLen) = 0;
-			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket)          = 0;
+			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
+			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) = 0;
 		};
 
 	public:
@@ -75,9 +73,7 @@ namespace PayloadChannel
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
-		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) override;
-		void OnConsumerSocketPayload(
-		  ConsumerSocket* consumerSocket, const uint8_t* payload, size_t payloadLen) override;
+		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) override;
 		void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) override;
 
 	private:
