@@ -102,7 +102,7 @@ export type PlainTransportStat =
 }
 
 /**
- * DEPRECATED: Use PlainTransportOptions.
+ * DEPRECATED: Use PlainTransportStat.
  */
 export type PlainRtpTransportStat = PlainTransportStat;
 

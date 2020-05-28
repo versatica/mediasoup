@@ -168,13 +168,21 @@ export declare class Transport extends EnhancedEventEmitter {
      */
     consume({ producerId, rtpCapabilities, paused, preferredLayers, appData }: ConsumerOptions): Promise<Consumer>;
     /**
-     * Create a DataProducer.
+     * Create a DataProducer that uses SCTP.
      */
-    produceData({ id, sctpStreamParameters, label, protocol, appData }: DataProducerOptions): Promise<DataProducer>;
+    produceSctpData({ id, sctpStreamParameters, label, protocol, appData }: DataProducerOptions): Promise<DataProducer>;
     /**
-     * Create a DataConsumer.
+     * DEPRECATED: Use produceSctpData().
      */
-    consumeData({ dataProducerId, appData }: DataConsumerOptions): Promise<DataConsumer>;
+    produceData(options: DataProducerOptions): Promise<DataProducer>;
+    /**
+     * Create a DataConsumer that uses SCTP.
+     */
+    consumeSctpData({ dataProducerId, appData }: DataConsumerOptions): Promise<DataConsumer>;
+    /**
+     * DEPRECATED: Use consumeSctpData().
+     */
+    consumeData(options: DataConsumerOptions): Promise<DataConsumer>;
     /**
      * Enable 'trace' event.
      */

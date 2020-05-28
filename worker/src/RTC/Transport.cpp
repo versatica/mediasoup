@@ -57,7 +57,6 @@ namespace RTC
 			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
 			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
 			auto jsonIsDataChannelIt      = data.find("isDataChannel");
-			auto jsonUseRealSctpIt        = data.find("useRealSctp");
 
 			// numSctpStreams is mandatory.
 			// clang-format off
@@ -108,15 +107,9 @@ namespace RTC
 			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
 				isDataChannel = jsonIsDataChannelIt->get<bool>();
 
-			if (jsonUseRealSctpIt != data.end() && jsonUseRealSctpIt->is_boolean())
-				this->useRealSctp = jsonUseRealSctpIt->get<bool>();
-
-			if (this->useRealSctp)
-			{
-				// This may throw.
-				this->sctpAssociation =
-				  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
-			}
+			// This may throw.
+			this->sctpAssociation =
+			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
 		}
 
 		// Create the RTCP timer.
@@ -352,7 +345,7 @@ namespace RTC
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
 
-		if (this->useRealSctp && this->sctpAssociation)
+		if (this->sctpAssociation)
 		{
 			// Add sctpParameters.
 			this->sctpAssociation->FillJson(jsonObject["sctpParameters"]);
@@ -417,7 +410,7 @@ namespace RTC
 		// Add timestamp.
 		jsonObject["timestamp"] = nowMs;
 
-		if (this->useRealSctp && this->sctpAssociation)
+		if (this->sctpAssociation)
 		{
 			// Add sctpState.
 			switch (this->sctpAssociation->GetState())
@@ -954,7 +947,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
 			{
-				if (this->useRealSctp && !this->sctpAssociation)
+				if (!this->sctpAssociation)
 					MS_THROW_ERROR("SCTP not enabled");
 
 				std::string dataProducerId;
@@ -1009,7 +1002,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
 			{
-				if (this->useRealSctp && !this->sctpAssociation)
+				if (!this->sctpAssociation)
 					MS_THROW_ERROR("SCTP not enabled");
 
 				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");

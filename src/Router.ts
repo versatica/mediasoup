@@ -10,7 +10,7 @@ import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
-import { DataTransport, DataTransportOptions } from './DataTransport';
+import { DirectTransport, DirectTransportOptions } from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
@@ -621,18 +621,18 @@ export class Router extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Create a DataTransport.
+	 * Create a DirectTransport.
 	 */
-	async createDataTransport(
+	async createDirectTransport(
 		{
 			enableSctp = true,
 			numSctpStreams = { OS: 65535, MIS: 65535 },
 			maxSctpMessageSize = 262144,
 			appData = {}
-		}: DataTransportOptions
-	): Promise<DataTransport>
+		}: DirectTransportOptions
+	): Promise<DirectTransport>
 	{
-		logger.debug('createDataTransport()');
+		logger.debug('createDirectTransport()');
 
 		const internal = { ...this._internal, transportId: uuidv4() };
 		const reqData = {
@@ -644,9 +644,9 @@ export class Router extends EnhancedEventEmitter
 		};
 
 		const data =
-			await this._channel.request('router.createDataTransport', internal, reqData);
+			await this._channel.request('router.createDirectTransport', internal, reqData);
 
-		const transport = new DataTransport(
+		const transport = new DirectTransport(
 			{
 				internal,
 				data,

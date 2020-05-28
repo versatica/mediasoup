@@ -3,7 +3,7 @@ import { Transport, SctpState } from './Transport';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-export declare type DataTransportOptions = {
+export declare type DirectTransportOptions = {
     /**
      * Create a SCTP association. Default true.
      */
@@ -22,7 +22,7 @@ export declare type DataTransportOptions = {
      */
     appData?: any;
 };
-export declare type DataTransportStat = {
+export declare type DirectTransportStat = {
     type: string;
     transportId: string;
     timestamp: number;
@@ -47,7 +47,7 @@ export declare type DataTransportStat = {
     availableIncomingBitrate?: number;
     maxIncomingBitrate?: number;
 };
-export declare class DataTransport extends Transport {
+export declare class DirectTransport extends Transport {
     protected readonly _data: {
         sctpParameters?: SctpParameters;
         sctpState?: SctpState;
@@ -78,7 +78,7 @@ export declare class DataTransport extends Transport {
      */
     get observer(): EnhancedEventEmitter;
     /**
-     * Close the DataTransport.
+     * Close the DirectTransport.
      *
      * @override
      */
@@ -91,13 +91,13 @@ export declare class DataTransport extends Transport {
      */
     routerClosed(): void;
     /**
-     * Get DataTransport stats.
+     * Get DirectTransport stats.
      *
      * @override
      */
-    getStats(): Promise<DataTransportStat[]>;
+    getStats(): Promise<DirectTransportStat[]>;
     /**
-     * NO-OP method in DataTransport.
+     * NO-OP method in DirectTransport.
      *
      * @override
      */
@@ -116,4 +116,4 @@ export declare class DataTransport extends Transport {
     consumer(options: ConsumerOptions): Promise<Consumer>;
     private _handleWorkerNotifications;
 }
-//# sourceMappingURL=DataTransport.d.ts.map
+//# sourceMappingURL=DirectTransport.d.ts.map

@@ -6,7 +6,7 @@ import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
-export type DataTransportOptions =
+export type DirectTransportOptions =
 {
 	/**
 	 * Create a SCTP association. Default true.
@@ -30,7 +30,7 @@ export type DataTransportOptions =
 	appData?: any;
 }
 
-export type DataTransportStat =
+export type DirectTransportStat =
 {
 	// Common to all Transports.
 	type: string;
@@ -58,11 +58,11 @@ export type DataTransportStat =
 	maxIncomingBitrate?: number;
 }
 
-const logger = new Logger('DataTransport');
+const logger = new Logger('DirectTransport');
 
-export class DataTransport extends Transport
+export class DirectTransport extends Transport
 {
-	// DataTransport data.
+	// DirectTransport data.
 	protected readonly _data:
 	{
 		sctpParameters?: SctpParameters;
@@ -123,7 +123,7 @@ export class DataTransport extends Transport
 	}
 
 	/**
-	 * Close the DataTransport.
+	 * Close the DirectTransport.
 	 *
 	 * @override
 	 */
@@ -156,11 +156,11 @@ export class DataTransport extends Transport
 	}
 
 	/**
-	 * Get DataTransport stats.
+	 * Get DirectTransport stats.
 	 *
 	 * @override
 	 */
-	async getStats(): Promise<DataTransportStat[]>
+	async getStats(): Promise<DirectTransportStat[]>
 	{
 		logger.debug('getStats()');
 
@@ -168,7 +168,7 @@ export class DataTransport extends Transport
 	}
 
 	/**
-	 * NO-OP method in DataTransport.
+	 * NO-OP method in DirectTransport.
 	 *
 	 * @override
 	 */
@@ -184,7 +184,7 @@ export class DataTransport extends Transport
 	async setMaxIncomingBitrate(bitrate: number): Promise<void>
 	{
 		throw new UnsupportedError(
-			'setMaxIncomingBitrate() not implemented in DataTransport');
+			'setMaxIncomingBitrate() not implemented in DirectTransport');
 	}
 
 	/**
@@ -193,7 +193,7 @@ export class DataTransport extends Transport
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async produce(options: ProducerOptions): Promise<Producer>
 	{
-		throw new UnsupportedError('produce() not implemented in DataTransport');
+		throw new UnsupportedError('produce() not implemented in DirectTransport');
 	}
 
 	/**
@@ -202,7 +202,7 @@ export class DataTransport extends Transport
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async consumer(options: ConsumerOptions): Promise<Consumer>
 	{
-		throw new UnsupportedError('consumer() not implemented in DataTransport');
+		throw new UnsupportedError('consumer() not implemented in DirectTransport');
 	}
 
 	private _handleWorkerNotifications(): void

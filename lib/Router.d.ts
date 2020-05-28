@@ -5,7 +5,7 @@ import { TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
-import { DataTransport, DataTransportOptions } from './DataTransport';
+import { DirectTransport, DirectTransportOptions } from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
@@ -160,9 +160,9 @@ export declare class Router extends EnhancedEventEmitter {
      */
     createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
     /**
-     * Create a DataTransport.
+     * Create a DirectTransport.
      */
-    createDataTransport({ enableSctp, numSctpStreams, maxSctpMessageSize, appData }: DataTransportOptions): Promise<DataTransport>;
+    createDirectTransport({ enableSctp, numSctpStreams, maxSctpMessageSize, appData }: DirectTransportOptions): Promise<DirectTransport>;
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.
      */

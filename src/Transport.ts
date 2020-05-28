@@ -585,9 +585,9 @@ export class Transport extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Create a DataProducer.
+	 * Create a DataProducer that uses SCTP.
 	 */
-	async produceData(
+	async produceSctpData(
 		{
 			id = undefined,
 			sctpStreamParameters,
@@ -597,7 +597,7 @@ export class Transport extends EnhancedEventEmitter
 		}: DataProducerOptions
 	): Promise<DataProducer>
 	{
-		logger.debug('produceData()');
+		logger.debug('produceSctpData()');
 
 		if (id && this._dataProducers.has(id))
 			throw new TypeError(`a DataProducer with same id "${id}" already exists`);
@@ -637,16 +637,27 @@ export class Transport extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Create a DataConsumer.
+	 * DEPRECATED: Use produceSctpData().
 	 */
-	async consumeData(
+	async produceData(options: DataProducerOptions): Promise<DataProducer>
+	{
+		logger.warn(
+			'produceData() is DEPRECATED, use produceSctpData()');
+
+		return this.produceSctpData(options);
+	}
+
+	/**
+	 * Create a DataConsumer that uses SCTP.
+	 */
+	async consumeSctpData(
 		{
 			dataProducerId,
 			appData = {}
 		}: DataConsumerOptions
 	): Promise<DataConsumer>
 	{
-		logger.debug('consumeData()');
+		logger.debug('consumeSctpData()');
 
 		if (!dataProducerId || typeof dataProducerId !== 'string')
 			throw new TypeError('missing dataProducerId');
@@ -701,6 +712,17 @@ export class Transport extends EnhancedEventEmitter
 		this._observer.safeEmit('newdataconsumer', dataConsumer);
 
 		return dataConsumer;
+	}
+
+	/**
+	 * DEPRECATED: Use consumeSctpData().
+	 */
+	async consumeData(options: DataConsumerOptions): Promise<DataConsumer>
+	{
+		logger.warn(
+			'consumeData() is DEPRECATED, use consumeSctpData()');
+
+		return this.consumeSctpData(options);
 	}
 
 	/**
