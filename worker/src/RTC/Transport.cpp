@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
+#include "PayloadChannel/Notifier.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -45,6 +46,21 @@ namespace RTC
 		// clang-format on
 		{
 			this->direct = true;
+
+			auto jsonMaxMessageSizeIt = data.find("maxMessageSize");
+
+			// maxSctpMessageSize is mandatory for direct Transports.
+			// clang-format off
+			if (
+				jsonMaxMessageSizeIt == data.end() ||
+				!Utils::Json::IsPositiveInteger(*jsonMaxMessageSizeIt)
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong maxMessageSize (not a number)");
+			}
+
+			this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
 		}
 
 		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
@@ -115,7 +131,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
 			}
 
-			auto maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
+			this->maxMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
 
 			// isDataChannel is optional.
 			bool isDataChannel{ false };
@@ -125,7 +141,7 @@ namespace RTC
 
 			// This may throw.
 			this->sctpAssociation =
-			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
+			  new RTC::SctpAssociation(this, os, mis, this->maxMessageSize, isDataChannel);
 		}
 
 		// Create the RTCP timer.
@@ -363,6 +379,9 @@ namespace RTC
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
+
+		// Add maxMessageSize.
+		jsonObject["maxMessageSize"] = this->maxMessageSize;
 
 		if (this->sctpAssociation)
 		{
@@ -1037,11 +1056,7 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId,
-				  dataProducerId,
-				  this,
-				  request->data,
-				  this->sctpAssociation ? this->sctpAssociation->GetMaxSctpMessageSize() : 0u);
+				  dataConsumerId, dataProducerId, this, request->data, this->maxMessageSize);
 
 				// Notify the listener.
 				// This may throw if no DataProducer is found.
@@ -1320,11 +1335,19 @@ namespace RTC
 				auto* msg = notification->payload;
 				auto len  = notification->payloadLen;
 
-				// NOTE: If we had some maxMessageSize property in Transport, we may
-				// check it here.
+				if (len > this->maxMessageSize)
+				{
+					MS_WARN_TAG(
+					  message,
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
+					  len,
+					  this->maxMessageSize);
+
+					return;
+				}
 
 				// Increase receive transmission.
-				RTC::Transport::DataReceived(len);
+				DataReceived(len);
 
 				// Pass the message to the DataProducer.
 				dataProducer->ReceiveMessage(ppid, msg, len);
@@ -2502,9 +2525,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->sctpAssociation, "no SCTP association");
+		if (this->sctpAssociation)
+		{
+			this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
+		}
+		else if (this->direct)
+		{
+			// Notify the Node DirectTransport.
+			json data = json::object();
 
-		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
+			data["ppid"] = ppid;
+
+			PayloadChannel::Notifier::Emit(dataConsumer->id, "message", data, msg, len);
+
+			// Increase send transmission.
+			DataSent(len);
+		}
+		else
+		{
+			MS_ERROR("no SCTP association nor a direct Transport, cannot send messages");
+		}
 	}
 
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)

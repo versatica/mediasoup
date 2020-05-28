@@ -73,7 +73,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	private readonly _data:
 	{
 		type: DataConsumerType;
-		sctpStreamParameters: SctpStreamParameters;
+		sctpStreamParameters?: SctpStreamParameters;
 		label: string;
 		protocol: string;
 	};

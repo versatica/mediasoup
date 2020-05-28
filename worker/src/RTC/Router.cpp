@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/AudioLevelObserver.hpp"
+#include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
 #include "RTC/WebRtcTransport.hpp"
@@ -240,6 +241,29 @@ namespace RTC
 				json data = json::object();
 
 				pipeTransport->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::Request::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT:
+			{
+				std::string transportId;
+
+				// This may throw
+				SetNewTransportIdFromInternal(request->internal, transportId);
+
+				auto* directTransport = new RTC::DirectTransport(transportId, this, request->data);
+
+				// Insert into the map.
+				this->mapTransports[transportId] = directTransport;
+
+				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
+
+				json data = json::object();
+
+				directTransport->FillJson(data);
 
 				request->Accept(data);
 

@@ -64,7 +64,7 @@ export class DataProducer extends EnhancedEventEmitter
 	private readonly _data:
 	{
 		type: DataProducerType;
-		sctpStreamParameters: SctpStreamParameters;
+		sctpStreamParameters?: SctpStreamParameters;
 		label: string;
 		protocol: string;
 	};
@@ -146,7 +146,7 @@ export class DataProducer extends EnhancedEventEmitter
 	/**
 	 * SCTP stream parameters.
 	 */
-	get sctpStreamParameters(): SctpStreamParameters
+	get sctpStreamParameters(): SctpStreamParameters | undefined
 	{
 		return this._data.sctpStreamParameters;
 	}

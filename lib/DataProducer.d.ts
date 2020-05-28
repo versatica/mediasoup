@@ -73,7 +73,7 @@ export declare class DataProducer extends EnhancedEventEmitter {
     /**
      * SCTP stream parameters.
      */
-    get sctpStreamParameters(): SctpStreamParameters;
+    get sctpStreamParameters(): SctpStreamParameters | undefined;
     /**
      * DataChannel label.
      */

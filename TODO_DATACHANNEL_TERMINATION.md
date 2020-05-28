@@ -8,8 +8,6 @@
 
 - Added `dataProducer/Consumer.type`: 'sctp' | 'direct'.
 
-- `DirectTransport.cpp` must call `Transport::Connected()` in its constructor.
-
 - `transport.consumeData()` (when in SCTP) now accepts optional arguments:
 
 ```ts
@@ -18,8 +16,4 @@ maxPacketLifeTime?: number;
 maxRetransmits?: number;
 ```
 
-- How to increment bytes counter in `Transport` when `DATA_PRODUCER_SEND`? Ok, it must be done in `Transport::HandleNotification()`. It must verify the notification fields and call `DataReceived()`.
-  + DONE
-
-- Same for `DataSent()` when notifying a `message` to a direct `DataConsumer`.
-
+- Added a new `direct` log tag.

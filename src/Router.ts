@@ -624,13 +624,16 @@ export class Router extends EnhancedEventEmitter
 		{
 			maxMessageSize = 262144,
 			appData = {}
-		}: DirectTransportOptions
+		}: DirectTransportOptions =
+		{
+			maxMessageSize : 262144
+		}
 	): Promise<DirectTransport>
 	{
 		logger.debug('createDirectTransport()');
 
 		const internal = { ...this._internal, transportId: uuidv4() };
-		const reqData = { maxMessageSize };
+		const reqData = { direct: true, maxMessageSize };
 
 		const data =
 			await this._channel.request('router.createDirectTransport', internal, reqData);

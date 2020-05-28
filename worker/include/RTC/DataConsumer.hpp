@@ -33,7 +33,7 @@ namespace RTC
 		  const std::string& dataProducerId,
 		  RTC::DataConsumer::Listener* listener,
 		  json& data,
-		  size_t maxSctpMessageSize);
+		  size_t maxMessageSize);
 		virtual ~DataConsumer();
 
 	public:
@@ -73,7 +73,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		RTC::DataConsumer::Listener* listener{ nullptr };
-		size_t maxSctpMessageSize{ 0u };
+		size_t maxMessageSize{ 0u };
 		// Others.
 		Type type;
 		std::string typeString;

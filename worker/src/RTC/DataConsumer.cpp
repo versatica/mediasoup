@@ -16,9 +16,8 @@ namespace RTC
 	  const std::string& dataProducerId,
 	  RTC::DataConsumer::Listener* listener,
 	  json& data,
-	  size_t maxSctpMessageSize)
-	  : id(id), dataProducerId(dataProducerId), listener(listener),
-	    maxSctpMessageSize(maxSctpMessageSize)
+	  size_t maxMessageSize)
+	  : id(id), dataProducerId(dataProducerId), listener(listener), maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
 
@@ -212,13 +211,13 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		if (len > this->maxSctpMessageSize)
+		if (len > this->maxMessageSize)
 		{
 			MS_WARN_TAG(
-			  sctp,
-			  "given message exceeds maxSctpMessageSize value [maxSctpMessageSize:%zu, len:%zu]",
+			  message,
+			  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 			  len,
-			  this->maxSctpMessageSize);
+			  this->maxMessageSize);
 
 			return;
 		}

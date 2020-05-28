@@ -162,7 +162,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a DirectTransport.
      */
-    createDirectTransport({ maxMessageSize, appData }: DirectTransportOptions): Promise<DirectTransport>;
+    createDirectTransport({ maxMessageSize, appData }?: DirectTransportOptions): Promise<DirectTransport>;
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.
      */

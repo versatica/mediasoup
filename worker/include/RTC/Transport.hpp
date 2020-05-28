@@ -253,6 +253,7 @@ namespace RTC
 		std::unordered_map<std::string, RTC::DataConsumer*> mapDataConsumers;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
+		size_t maxMessageSize{ 262144u };
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		Timer* rtcpTimer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
