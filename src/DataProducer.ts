@@ -264,6 +264,11 @@ export class DataProducer extends EnhancedEventEmitter
 	{
 		logger.debug('send()');
 
+		if (typeof message !== 'string' && !Buffer.isBuffer(message))
+		{
+			throw new TypeError('message must be a string or a Buffer');
+		}
+
 		/*
 		 * +-------------------------------+----------+
 		 * | Value                         | SCTP     |

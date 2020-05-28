@@ -22,7 +22,7 @@ namespace PayloadChannel
 		static std::unordered_map<std::string, EventId> string2EventId;
 
 	public:
-		Notification(json& jsonNotification);
+		explicit Notification(json& jsonNotification);
 		virtual ~Notification();
 
 	public:
