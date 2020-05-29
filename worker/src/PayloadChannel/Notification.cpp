@@ -11,10 +11,10 @@ namespace PayloadChannel
 	/* Class variables. */
 
 	// clang-format off
-		std::unordered_map<std::string, Notification::EventId> Notification::string2EventId =
-		{
-			{ "dataProducer.send", Notification::EventId::DATA_PRODUCER_SEND }
-		};
+	std::unordered_map<std::string, Notification::EventId> Notification::string2EventId =
+	{
+		{ "dataProducer.send", Notification::EventId::DATA_PRODUCER_SEND }
+	};
 	// clang-format on
 
 	/* Instance methods. */

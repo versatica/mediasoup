@@ -162,9 +162,9 @@ export class DirectTransport extends Transport
 	 * @override
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async consumer(options: ConsumerOptions): Promise<Consumer>
+	async consume(options: ConsumerOptions): Promise<Consumer>
 	{
-		throw new UnsupportedError('consumer() not implemented in DirectTransport');
+		throw new UnsupportedError('consume() not implemented in DirectTransport');
 	}
 
 	private _handleWorkerNotifications(): void
