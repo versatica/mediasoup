@@ -144,7 +144,15 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			const data = Buffer.from(String(id));
 
 			// Set ppid of type WebRTC DataChannel string.
-			data.ppid = sctp.PPID.WEBRTC_STRING;
+			if (id < numMessages / 2)
+			{
+				data.ppid = sctp.PPID.WEBRTC_STRING;
+			}
+			// Set ppid of type WebRTC DataChannel binary.
+			else
+			{
+				data.ppid = sctp.PPID.WEBRTC_BINARY;
+			}
 
 			sctpSendStream.write(data);
 			sentMessageBytes += data.byteLength;
@@ -174,7 +182,11 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 					resolve();
 				}
 
-				expect(data.ppid).toBe(sctp.PPID.WEBRTC_STRING);
+				if (id < numMessages / 2)
+					expect(data.ppid).toBe(sctp.PPID.WEBRTC_STRING);
+				else
+					expect(data.ppid).toBe(sctp.PPID.WEBRTC_BINARY);
+
 				expect(id).toBe(++lastRecvMessageId);
 			});
 		});
