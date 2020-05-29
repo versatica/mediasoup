@@ -117,7 +117,7 @@ namespace RTC
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);
-		// Subclasses must implement these method and call the parent's one to
+		// Subclasses must implement these methods and call the parent's ones to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
 		virtual void HandleNotification(PayloadChannel::Notification* notification);
