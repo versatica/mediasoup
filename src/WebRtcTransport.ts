@@ -54,7 +54,8 @@ export type WebRtcTransportOptions =
 	numSctpStreams?: NumSctpStreams;
 
 	/**
-	 * Maximum allowed size for SCTP messages. Default 262144.
+	 * Maximum allowed size for SCTP messages sent by DataProducers.
+	 * Default 262144.
 	 */
 	maxSctpMessageSize?: number;
 
