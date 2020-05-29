@@ -11,6 +11,21 @@ import { Router, RouterOptions } from './Router';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
+export type WorkerLogTag =
+  | 'info'
+  | 'ice'
+  | 'dtls'
+  | 'rtp'
+  | 'srtp'
+  | 'rtcp'
+  | 'rtx'
+  | 'bwe'
+  | 'score'
+  | 'simulcast'
+  | 'svc'
+  | 'sctp'
+  | 'message'
+
 export type WorkerSettings =
 {
 	/**
@@ -21,10 +36,10 @@ export type WorkerSettings =
 	logLevel?: WorkerLogLevel;
 
 	/**
-	 * Log tags for debugging. Check the list of available tags in Debugging
-	 * documentation.
+	 * Log tags for debugging. Check the meaning of each available tag in the
+	 * Debugging documentation.
 	 */
-	logTags?: string[];
+	logTags?: WorkerLogTag[];
 
 	/**
 	 * Minimun RTC port for ICE, DTLS, RTP, etc. Default 10000.

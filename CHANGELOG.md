@@ -1,11 +1,12 @@
 # Changelog
 
-### 3.5.16 (WIP)
+### 3.6.0 (WIP)
 
 * DataChannel termination:
   - PR #409
   - Allow the Node application to directly send text/binary messages to mediasoup-worker C++ process so others can consume them using `DataConsumers`.
   - And vice-versa: allow the Node application to directly consume in Node messages send by `DataProducers`.
+* Add `WorkerLogTag` TypeScript enum.
 * Update `Catch2` to v2.12.2.
 
 
