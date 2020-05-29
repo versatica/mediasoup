@@ -138,15 +138,14 @@ test('dataProducer.send() succeeds', async () =>
 			let ppid;
 			let message;
 
-			// Set ppid of type WebRTC DataChannel string or binary.
+			// Send string (WebRTC DataChannel string).
 			if (id < numMessages / 2)
 			{
-				ppid = 51;
 				message = String(id);
 			}
+			// Send string (WebRTC DataChannel binary).
 			else
 			{
-				ppid = 53;
 				message = Buffer.from(String(id));
 			}
 
@@ -171,9 +170,9 @@ test('dataProducer.send() succeeds', async () =>
 			}
 
 			if (id < numMessages / 2)
-				expect(ppid).toBe(51);
+				expect(ppid).toBe(51); // PPID of WebRTC DataChannel string.
 			else
-				expect(ppid).toBe(53);
+				expect(ppid).toBe(53); // PPID of WebRTC DataChannel binary.
 
 			expect(id).toBe(++lastRecvMessageId);
 		});
