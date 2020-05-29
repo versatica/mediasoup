@@ -265,7 +265,7 @@ export class Worker extends EnhancedEventEmitter
 				// fd 3 (channel) : Producer Channel fd.
 				// fd 4 (channel) : Consumer Channel fd.
 				// fd 5 (channel) : Producer PayloadChannel fd.
-				// fd 4 (channel) : Consumer PayloadChannel fd.
+				// fd 6 (channel) : Consumer PayloadChannel fd.
 				stdio : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe' ]
 			});
 
