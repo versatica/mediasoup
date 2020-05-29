@@ -89,7 +89,7 @@ export declare class DirectTransport extends Transport {
     /**
      * @override
      */
-    consumer(options: ConsumerOptions): Promise<Consumer>;
+    consume(options: ConsumerOptions): Promise<Consumer>;
     private _handleWorkerNotifications;
 }
 //# sourceMappingURL=DirectTransport.d.ts.map
