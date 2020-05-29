@@ -4,7 +4,7 @@ import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
 export declare type DirectTransportOptions = {
     /**
-     * Maximum allowed size for messages sent from DataProducers.
+     * Maximum allowed size for direct messages sent from DataProducers.
      * Default 262144.
      */
     maxMessageSize: number;
