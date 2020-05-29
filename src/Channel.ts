@@ -118,7 +118,7 @@ export class Channel extends EnhancedEventEmitter
 					{
 						// 123 = '{' (a Channel JSON messsage).
 						case 123:
-							this._processMessage(JSON.parse(nsPayload));
+							this._processMessage(JSON.parse(nsPayload.toString('utf8')));
 							break;
 
 						// 68 = 'D' (a debug log).

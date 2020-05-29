@@ -5,10 +5,12 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
+import { DirectTransport, DirectTransportOptions } from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
@@ -116,6 +118,9 @@ export class Router extends EnhancedEventEmitter
 	// Channel instance.
 	private readonly _channel: Channel;
 
+	// PayloadChannel instance.
+	private readonly _payloadChannel: PayloadChannel;
+
 	// Closed flag.
 	private _closed = false;
 
@@ -154,12 +159,14 @@ export class Router extends EnhancedEventEmitter
 			internal,
 			data,
 			channel,
+			payloadChannel,
 			appData
 		}:
 		{
 			internal: any;
 			data: any;
 			channel: Channel;
+			payloadChannel: PayloadChannel;
 			appData?: any;
 		}
 	)
@@ -171,6 +178,7 @@ export class Router extends EnhancedEventEmitter
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 	}
 
@@ -392,6 +400,7 @@ export class Router extends EnhancedEventEmitter
 				internal,
 				data,
 				channel                  : this._channel,
+				payloadChannel           : this._payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer => (
@@ -481,6 +490,7 @@ export class Router extends EnhancedEventEmitter
 				internal,
 				data,
 				channel                  : this._channel,
+				payloadChannel           : this._payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer => (
@@ -579,6 +589,61 @@ export class Router extends EnhancedEventEmitter
 				internal,
 				data,
 				channel                  : this._channel,
+				payloadChannel           : this._payloadChannel,
+				appData,
+				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
+				getProducerById          : (producerId: string): Producer => (
+					this._producers.get(producerId)
+				),
+				getDataProducerById : (dataProducerId: string): DataProducer => (
+					this._dataProducers.get(dataProducerId)
+				)
+			});
+
+		this._transports.set(transport.id, transport);
+		transport.on('@close', () => this._transports.delete(transport.id));
+		transport.on('@newproducer', (producer: Producer) => this._producers.set(producer.id, producer));
+		transport.on('@producerclose', (producer: Producer) => this._producers.delete(producer.id));
+		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
+			this._dataProducers.set(dataProducer.id, dataProducer)
+		));
+		transport.on('@dataproducerclose', (dataProducer: DataProducer) => (
+			this._dataProducers.delete(dataProducer.id)
+		));
+
+		// Emit observer event.
+		this._observer.safeEmit('newtransport', transport);
+
+		return transport;
+	}
+
+	/**
+	 * Create a DirectTransport.
+	 */
+	async createDirectTransport(
+		{
+			maxMessageSize = 262144,
+			appData = {}
+		}: DirectTransportOptions =
+		{
+			maxMessageSize : 262144
+		}
+	): Promise<DirectTransport>
+	{
+		logger.debug('createDirectTransport()');
+
+		const internal = { ...this._internal, transportId: uuidv4() };
+		const reqData = { direct: true, maxMessageSize };
+
+		const data =
+			await this._channel.request('router.createDirectTransport', internal, reqData);
+
+		const transport = new DirectTransport(
+			{
+				internal,
+				data,
+				channel                  : this._channel,
+				payloadChannel           : this._payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer => (
@@ -852,6 +917,7 @@ export class Router extends EnhancedEventEmitter
 			{
 				internal,
 				channel         : this._channel,
+				payloadChannel  : this._payloadChannel,
 				appData,
 				getProducerById : (producerId: string): Producer => (
 					this._producers.get(producerId)

@@ -14,6 +14,8 @@
 #include "Worker.hpp"
 #include "Channel/Notifier.hpp"
 #include "Channel/UnixStreamSocket.hpp"
+#include "PayloadChannel/Notifier.hpp"
+#include "PayloadChannel/UnixStreamSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
 #include <uv.h>
@@ -26,6 +28,8 @@
 
 static constexpr int ConsumerChannelFd{ 3 };
 static constexpr int ProducerChannelFd{ 4 };
+static constexpr int PayloadConsumerChannelFd{ 5 };
+static constexpr int PayloadProducerChannelFd{ 6 };
 
 void IgnoreSignals();
 
@@ -47,6 +51,9 @@ int main(int argc, char* argv[])
 	// Channel socket (it will be handled and deleted by the Worker).
 	Channel::UnixStreamSocket* channel{ nullptr };
 
+	// PayloadChannel socket (it will be handled and deleted by the Worker).
+	PayloadChannel::UnixStreamSocket* payloadChannel{ nullptr };
+
 	try
 	{
 		channel = new Channel::UnixStreamSocket(ConsumerChannelFd, ProducerChannelFd);
@@ -54,6 +61,18 @@ int main(int argc, char* argv[])
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("error creating the Channel: %s", error.what());
+
+		std::_Exit(EXIT_FAILURE);
+	}
+
+	try
+	{
+		payloadChannel =
+		  new PayloadChannel::UnixStreamSocket(PayloadConsumerChannelFd, PayloadProducerChannelFd);
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_ERROR_STD("error creating the RTC Channel: %s", error.what());
 
 		std::_Exit(EXIT_FAILURE);
 	}
@@ -111,12 +130,13 @@ int main(int argc, char* argv[])
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
 		Channel::Notifier::ClassInit(channel);
+		PayloadChannel::Notifier::ClassInit(payloadChannel);
 
 		// Ignore some signals.
 		IgnoreSignals();
 
 		// Run the Worker.
-		Worker worker(channel);
+		Worker worker(channel, payloadChannel);
 
 		// Free static stuff.
 		DepLibUV::ClassDestroy();

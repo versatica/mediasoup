@@ -6,6 +6,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
@@ -171,6 +172,9 @@ export class Worker extends EnhancedEventEmitter
 	// Channel instance.
 	private readonly _channel: Channel;
 
+	// PayloadChannel instance.
+	private readonly _payloadChannel: PayloadChannel;
+
 	// Closed flag.
 	private _closed = false;
 
@@ -260,7 +264,9 @@ export class Worker extends EnhancedEventEmitter
 				// fd 2 (stderr)  : Same as stdout.
 				// fd 3 (channel) : Producer Channel fd.
 				// fd 4 (channel) : Consumer Channel fd.
-				stdio : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe' ]
+				// fd 5 (channel) : Producer PayloadChannel fd.
+				// fd 6 (channel) : Consumer PayloadChannel fd.
+				stdio : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe' ]
 			});
 
 		this._pid = this._child.pid;
@@ -270,6 +276,15 @@ export class Worker extends EnhancedEventEmitter
 				producerSocket : this._child.stdio[3],
 				consumerSocket : this._child.stdio[4],
 				pid            : this._pid
+			});
+
+		this._payloadChannel = new PayloadChannel(
+			{
+				// NOTE: TypeScript does not like more than 5 fds.
+				// @ts-ignore
+				producerSocket : this._child.stdio[5],
+				// @ts-ignore
+				consumerSocket : this._child.stdio[6]
 			});
 
 		this._appData = appData;
@@ -442,6 +457,9 @@ export class Worker extends EnhancedEventEmitter
 		// Close the Channel instance.
 		this._channel.close();
 
+		// Close the PayloadChannel instance.
+		this._payloadChannel.close();
+
 		// Close every Router.
 		for (const router of this._routers)
 		{
@@ -516,7 +534,8 @@ export class Worker extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel : this._channel,
+				channel        : this._channel,
+				payloadChannel : this._payloadChannel,
 				appData
 			});
 

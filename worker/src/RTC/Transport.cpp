@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/Notifier.hpp"
+#include "PayloadChannel/Notifier.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -34,6 +35,34 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		auto jsonDirectIt = data.find("direct");
+
+		// clang-format off
+		if (
+			jsonDirectIt != data.end() &&
+			jsonDirectIt->is_boolean() &&
+			jsonDirectIt->get<bool>()
+		)
+		// clang-format on
+		{
+			this->direct = true;
+
+			auto jsonMaxMessageSizeIt = data.find("maxMessageSize");
+
+			// maxMessageSize is mandatory for direct Transports.
+			// clang-format off
+			if (
+				jsonMaxMessageSizeIt == data.end() ||
+				!Utils::Json::IsPositiveInteger(*jsonMaxMessageSizeIt)
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong maxMessageSize (not a number)");
+			}
+
+			this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
+		}
+
 		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
 
 		if (jsonInitialAvailableOutgoingBitrateIt != data.end())
@@ -54,6 +83,11 @@ namespace RTC
 		)
 		// clang-format on
 		{
+			if (this->direct)
+			{
+				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
+			}
+
 			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
 			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
 			auto jsonIsDataChannelIt      = data.find("isDataChannel");
@@ -99,7 +133,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
 			}
 
-			auto maxSctpMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
+			this->maxMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
 
 			// isDataChannel is optional.
 			bool isDataChannel{ false };
@@ -109,7 +143,7 @@ namespace RTC
 
 			// This may throw.
 			this->sctpAssociation =
-			  new RTC::SctpAssociation(this, os, mis, maxSctpMessageSize, isDataChannel);
+			  new RTC::SctpAssociation(this, os, mis, this->maxMessageSize, isDataChannel);
 		}
 
 		// Create the RTCP timer.
@@ -254,6 +288,9 @@ namespace RTC
 		// Add id.
 		jsonObject["id"] = this->id;
 
+		// Add direct.
+		jsonObject["direct"] = this->direct;
+
 		// Add producerIds.
 		jsonObject["producerIds"] = json::array();
 		auto jsonProducerIdsIt    = jsonObject.find("producerIds");
@@ -344,6 +381,9 @@ namespace RTC
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
+
+		// Add maxMessageSize.
+		jsonObject["maxMessageSize"] = this->maxMessageSize;
 
 		if (this->sctpAssociation)
 		{
@@ -547,7 +587,7 @@ namespace RTC
 				std::string producerId;
 
 				// This may throw.
-				SetNewProducerIdFromRequest(request, producerId);
+				SetNewProducerIdFromInternal(request->internal, producerId);
 
 				// This may throw.
 				auto* producer = new RTC::Producer(producerId, this, request->data);
@@ -694,13 +734,13 @@ namespace RTC
 				auto jsonProducerIdIt = request->internal.find("producerId");
 
 				if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
-					MS_THROW_ERROR("request has no internal.producerId");
+					MS_THROW_ERROR("missing internal.producerId");
 
 				std::string producerId = jsonProducerIdIt->get<std::string>();
 				std::string consumerId;
 
 				// This may throw.
-				SetNewConsumerIdFromRequest(request, consumerId);
+				SetNewConsumerIdFromInternal(request->internal, consumerId);
 
 				// Get type.
 				auto jsonTypeIt = request->data.find("type");
@@ -947,28 +987,66 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
 			{
-				if (!this->sctpAssociation)
-					MS_THROW_ERROR("SCTP not enabled");
+				// Early check. The Transport must support SCTP or be direct.
+				if (!this->sctpAssociation && !this->direct)
+				{
+					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+				}
 
 				std::string dataProducerId;
 
 				// This may throw.
-				SetNewDataProducerIdFromRequest(request, dataProducerId);
+				SetNewDataProducerIdFromInternal(request->internal, dataProducerId);
 
 				// This may throw.
 				auto* dataProducer = new RTC::DataProducer(dataProducerId, this, request->data);
 
-				// Insert the DataProducer into the SctpListener.
-				// This may throw. If so, delete the DataProducer and throw.
-				try
+				// Verify the type of the DataProducer.
+				switch (dataProducer->GetType())
 				{
-					this->sctpListener.AddDataProducer(dataProducer);
-				}
-				catch (const MediaSoupError& error)
-				{
-					delete dataProducer;
+					case RTC::DataProducer::Type::SCTP:
+					{
+						if (!this->sctpAssociation)
+						{
+							delete dataProducer;
 
-					throw;
+							MS_THROW_TYPE_ERROR(
+							  "cannot create a DataProducer of type 'sctp', SCTP not enabled in this Transport");
+							;
+						}
+
+						break;
+					}
+
+					case RTC::DataProducer::Type::DIRECT:
+					{
+						if (!this->direct)
+						{
+							delete dataProducer;
+
+							MS_THROW_TYPE_ERROR(
+							  "cannot create a DataProducer of type 'direct', not a direct Transport");
+							;
+						}
+
+						break;
+					}
+				}
+
+				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				{
+					// Insert the DataProducer into the SctpListener.
+					// This may throw. If so, delete the DataProducer and throw.
+					try
+					{
+						this->sctpListener.AddDataProducer(dataProducer);
+					}
+					catch (const MediaSoupError& error)
+					{
+						delete dataProducer;
+
+						throw;
+					}
 				}
 
 				// Notify the listener.
@@ -979,7 +1057,10 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
-					this->sctpListener.RemoveDataProducer(dataProducer);
+					if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+					{
+						this->sctpListener.RemoveDataProducer(dataProducer);
+					}
 
 					delete dataProducer;
 
@@ -1002,27 +1083,60 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
 			{
-				if (!this->sctpAssociation)
-					MS_THROW_ERROR("SCTP not enabled");
+				// Early check. The Transport must support SCTP or be direct.
+				if (!this->sctpAssociation && !this->direct)
+				{
+					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+				}
 
 				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
 
 				if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
-					MS_THROW_ERROR("request has no internal.dataProducerId");
+				{
+					MS_THROW_ERROR("missing internal.dataProducerId");
+				}
 
 				std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();
 				std::string dataConsumerId;
 
 				// This may throw.
-				SetNewDataConsumerIdFromRequest(request, dataConsumerId);
+				SetNewDataConsumerIdFromInternal(request->internal, dataConsumerId);
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId,
-				  dataProducerId,
-				  this,
-				  request->data,
-				  this->sctpAssociation->GetMaxSctpMessageSize());
+				  dataConsumerId, dataProducerId, this, request->data, this->maxMessageSize);
+
+				// Verify the type of the DataConsumer.
+				switch (dataConsumer->GetType())
+				{
+					case RTC::DataConsumer::Type::SCTP:
+					{
+						if (!this->sctpAssociation)
+						{
+							delete dataConsumer;
+
+							MS_THROW_TYPE_ERROR(
+							  "cannot create a DataConsumer of type 'sctp', SCTP not enabled in this Transport");
+							;
+						}
+
+						break;
+					}
+
+					case RTC::DataConsumer::Type::DIRECT:
+					{
+						if (!this->direct)
+						{
+							delete dataConsumer;
+
+							MS_THROW_TYPE_ERROR(
+							  "cannot create a DataConsumer of type 'direct', not a direct Transport");
+							;
+						}
+
+						break;
+					}
+				}
 
 				// Notify the listener.
 				// This may throw if no DataProducer is found.
@@ -1054,11 +1168,16 @@ namespace RTC
 				if (IsConnected())
 					dataConsumer->TransportConnected();
 
-				if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
-					dataConsumer->SctpAssociationConnected();
+				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+				{
+					if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+					{
+						dataConsumer->SctpAssociationConnected();
+					}
 
-				// Tell to the SCTP association.
-				this->sctpAssociation->HandleDataConsumer(dataConsumer);
+					// Tell to the SCTP association.
+					this->sctpAssociation->HandleDataConsumer(dataConsumer);
+				}
 
 				break;
 			}
@@ -1097,7 +1216,7 @@ namespace RTC
 			case Channel::Request::MethodId::PRODUCER_CLOSE:
 			{
 				// This may throw.
-				RTC::Producer* producer = GetProducerFromRequest(request);
+				RTC::Producer* producer = GetProducerFromInternal(request->internal);
 
 				// Remove it from the RtpListener.
 				this->rtpListener.RemoveProducer(producer);
@@ -1121,7 +1240,7 @@ namespace RTC
 			case Channel::Request::MethodId::CONSUMER_CLOSE:
 			{
 				// This may throw.
-				RTC::Consumer* consumer = GetConsumerFromRequest(request);
+				RTC::Consumer* consumer = GetConsumerFromInternal(request->internal);
 
 				// Remove it from the maps.
 				this->mapConsumers.erase(consumer->id);
@@ -1160,7 +1279,7 @@ namespace RTC
 			case Channel::Request::MethodId::PRODUCER_ENABLE_TRACE_EVENT:
 			{
 				// This may throw.
-				RTC::Producer* producer = GetProducerFromRequest(request);
+				RTC::Producer* producer = GetProducerFromInternal(request->internal);
 
 				producer->HandleRequest(request);
 
@@ -1177,7 +1296,7 @@ namespace RTC
 			case Channel::Request::MethodId::CONSUMER_ENABLE_TRACE_EVENT:
 			{
 				// This may throw.
-				RTC::Consumer* consumer = GetConsumerFromRequest(request);
+				RTC::Consumer* consumer = GetConsumerFromInternal(request->internal);
 
 				consumer->HandleRequest(request);
 
@@ -1187,10 +1306,13 @@ namespace RTC
 			case Channel::Request::MethodId::DATA_PRODUCER_CLOSE:
 			{
 				// This may throw.
-				RTC::DataProducer* dataProducer = GetDataProducerFromRequest(request);
+				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(request->internal);
 
-				// Remove it from the SctpListener.
-				this->sctpListener.RemoveDataProducer(dataProducer);
+				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				{
+					// Remove it from the SctpListener.
+					this->sctpListener.RemoveDataProducer(dataProducer);
+				}
 
 				// Remove it from the map.
 				this->mapDataProducers.erase(dataProducer->id);
@@ -1200,8 +1322,11 @@ namespace RTC
 
 				MS_DEBUG_DEV("DataProducer closed [dataProducerId:%s]", dataProducer->id.c_str());
 
-				// Tell the SctpAssociation so it can reset the SCTP stream.
-				this->sctpAssociation->DataProducerClosed(dataProducer);
+				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				{
+					// Tell the SctpAssociation so it can reset the SCTP stream.
+					this->sctpAssociation->DataProducerClosed(dataProducer);
+				}
 
 				// Delete it.
 				delete dataProducer;
@@ -1214,7 +1339,7 @@ namespace RTC
 			case Channel::Request::MethodId::DATA_CONSUMER_CLOSE:
 			{
 				// This may throw.
-				RTC::DataConsumer* dataConsumer = GetDataConsumerFromRequest(request);
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
 
 				// Remove it from the maps.
 				this->mapDataConsumers.erase(dataConsumer->id);
@@ -1224,8 +1349,11 @@ namespace RTC
 
 				MS_DEBUG_DEV("DataConsumer closed [dataConsumerId:%s]", dataConsumer->id.c_str());
 
-				// Tell the SctpAssociation so it can reset the SCTP stream.
-				this->sctpAssociation->DataConsumerClosed(dataConsumer);
+				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+				{
+					// Tell the SctpAssociation so it can reset the SCTP stream.
+					this->sctpAssociation->DataConsumerClosed(dataConsumer);
+				}
 
 				// Delete it.
 				delete dataConsumer;
@@ -1239,7 +1367,7 @@ namespace RTC
 			case Channel::Request::MethodId::DATA_PRODUCER_GET_STATS:
 			{
 				// This may throw.
-				RTC::DataProducer* dataProducer = GetDataProducerFromRequest(request);
+				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(request->internal);
 
 				dataProducer->HandleRequest(request);
 
@@ -1250,7 +1378,7 @@ namespace RTC
 			case Channel::Request::MethodId::DATA_CONSUMER_GET_STATS:
 			{
 				// This may throw.
-				RTC::DataConsumer* dataConsumer = GetDataConsumerFromRequest(request);
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
 
 				dataConsumer->HandleRequest(request);
 
@@ -1260,6 +1388,60 @@ namespace RTC
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+		}
+	}
+
+	void Transport::HandleNotification(PayloadChannel::Notification* notification)
+	{
+		MS_TRACE();
+
+		switch (notification->eventId)
+		{
+			case PayloadChannel::Notification::EventId::DATA_PRODUCER_SEND:
+			{
+				// This may throw.
+				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(notification->internal);
+
+				if (dataProducer->GetType() != RTC::DataProducer::Type::DIRECT)
+				{
+					MS_THROW_ERROR("cannot send direct messages on this DataProducer");
+				}
+
+				auto jsonPpidIt = notification->data.find("ppid");
+
+				if (jsonPpidIt == notification->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
+				{
+					MS_THROW_TYPE_ERROR("invalid ppid");
+				}
+
+				auto ppid = jsonPpidIt->get<uint32_t>();
+				auto* msg = notification->payload;
+				auto len  = notification->payloadLen;
+
+				if (len > this->maxMessageSize)
+				{
+					MS_WARN_TAG(
+					  message,
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
+					  len,
+					  this->maxMessageSize);
+
+					return;
+				}
+
+				// Pass the message to the DataProducer.
+				dataProducer->ReceiveMessage(ppid, msg, len);
+
+				// Increase receive transmission.
+				DataReceived(len);
+
+				break;
+			}
+
+			default:
+			{
+				MS_ERROR("unknown event '%s'", notification->event.c_str());
 			}
 		}
 	}
@@ -1432,14 +1614,14 @@ namespace RTC
 		this->sctpAssociation->ProcessSctpData(data, len);
 	}
 
-	void Transport::SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const
+	void Transport::SetNewProducerIdFromInternal(json& internal, std::string& producerId) const
 	{
 		MS_TRACE();
 
-		auto jsonProducerIdIt = request->internal.find("producerId");
+		auto jsonProducerIdIt = internal.find("producerId");
 
-		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.producerId");
+		if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.producerId");
 
 		producerId.assign(jsonProducerIdIt->get<std::string>());
 
@@ -1447,14 +1629,14 @@ namespace RTC
 			MS_THROW_ERROR("a Producer with same producerId already exists");
 	}
 
-	RTC::Producer* Transport::GetProducerFromRequest(Channel::Request* request) const
+	RTC::Producer* Transport::GetProducerFromInternal(json& internal) const
 	{
 		MS_TRACE();
 
-		auto jsonProducerIdIt = request->internal.find("producerId");
+		auto jsonProducerIdIt = internal.find("producerId");
 
-		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.producerId");
+		if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.producerId");
 
 		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
 
@@ -1466,14 +1648,14 @@ namespace RTC
 		return producer;
 	}
 
-	void Transport::SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const
+	void Transport::SetNewConsumerIdFromInternal(json& internal, std::string& consumerId) const
 	{
 		MS_TRACE();
 
-		auto jsonConsumerIdIt = request->internal.find("consumerId");
+		auto jsonConsumerIdIt = internal.find("consumerId");
 
-		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.consumerId");
+		if (jsonConsumerIdIt == internal.end() || !jsonConsumerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.consumerId");
 
 		consumerId.assign(jsonConsumerIdIt->get<std::string>());
 
@@ -1481,14 +1663,14 @@ namespace RTC
 			MS_THROW_ERROR("a Consumer with same consumerId already exists");
 	}
 
-	RTC::Consumer* Transport::GetConsumerFromRequest(Channel::Request* request) const
+	RTC::Consumer* Transport::GetConsumerFromInternal(json& internal) const
 	{
 		MS_TRACE();
 
-		auto jsonConsumerIdIt = request->internal.find("consumerId");
+		auto jsonConsumerIdIt = internal.find("consumerId");
 
-		if (jsonConsumerIdIt == request->internal.end() || !jsonConsumerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.consumerId");
+		if (jsonConsumerIdIt == internal.end() || !jsonConsumerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.consumerId");
 
 		auto it = this->mapConsumers.find(jsonConsumerIdIt->get<std::string>());
 
@@ -1528,15 +1710,14 @@ namespace RTC
 		return consumer;
 	}
 
-	void Transport::SetNewDataProducerIdFromRequest(
-	  Channel::Request* request, std::string& dataProducerId) const
+	void Transport::SetNewDataProducerIdFromInternal(json& internal, std::string& dataProducerId) const
 	{
 		MS_TRACE();
 
-		auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+		auto jsonDataProducerIdIt = internal.find("dataProducerId");
 
-		if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.dataProducerId");
+		if (jsonDataProducerIdIt == internal.end() || !jsonDataProducerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.dataProducerId");
 
 		dataProducerId.assign(jsonDataProducerIdIt->get<std::string>());
 
@@ -1544,14 +1725,14 @@ namespace RTC
 			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
 	}
 
-	RTC::DataProducer* Transport::GetDataProducerFromRequest(Channel::Request* request) const
+	RTC::DataProducer* Transport::GetDataProducerFromInternal(json& internal) const
 	{
 		MS_TRACE();
 
-		auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+		auto jsonDataProducerIdIt = internal.find("dataProducerId");
 
-		if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.dataProducerId");
+		if (jsonDataProducerIdIt == internal.end() || !jsonDataProducerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.dataProducerId");
 
 		auto it = this->mapDataProducers.find(jsonDataProducerIdIt->get<std::string>());
 
@@ -1563,15 +1744,14 @@ namespace RTC
 		return dataProducer;
 	}
 
-	void Transport::SetNewDataConsumerIdFromRequest(
-	  Channel::Request* request, std::string& dataConsumerId) const
+	void Transport::SetNewDataConsumerIdFromInternal(json& internal, std::string& dataConsumerId) const
 	{
 		MS_TRACE();
 
-		auto jsonDataConsumerIdIt = request->internal.find("dataConsumerId");
+		auto jsonDataConsumerIdIt = internal.find("dataConsumerId");
 
-		if (jsonDataConsumerIdIt == request->internal.end() || !jsonDataConsumerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.dataConsumerId");
+		if (jsonDataConsumerIdIt == internal.end() || !jsonDataConsumerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.dataConsumerId");
 
 		dataConsumerId.assign(jsonDataConsumerIdIt->get<std::string>());
 
@@ -1579,14 +1759,14 @@ namespace RTC
 			MS_THROW_ERROR("a DataConsumer with same dataConsumerId already exists");
 	}
 
-	RTC::DataConsumer* Transport::GetDataConsumerFromRequest(Channel::Request* request) const
+	RTC::DataConsumer* Transport::GetDataConsumerFromInternal(json& internal) const
 	{
 		MS_TRACE();
 
-		auto jsonDataConsumerIdIt = request->internal.find("dataConsumerId");
+		auto jsonDataConsumerIdIt = internal.find("dataConsumerId");
 
-		if (jsonDataConsumerIdIt == request->internal.end() || !jsonDataConsumerIdIt->is_string())
-			MS_THROW_ERROR("request has no internal.dataConsumerId");
+		if (jsonDataConsumerIdIt == internal.end() || !jsonDataConsumerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.dataConsumerId");
 
 		auto it = this->mapDataConsumers.find(jsonDataConsumerIdIt->get<std::string>());
 
@@ -2413,20 +2593,43 @@ namespace RTC
 			ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
 	}
 
-	inline void Transport::OnDataProducerSctpMessageReceived(
+	inline void Transport::OnDataProducerMessageReceived(
 	  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportDataProducerSctpMessageReceived(this, dataProducer, ppid, msg, len);
+		this->listener->OnTransportDataProducerMessageReceived(this, dataProducer, ppid, msg, len);
 	}
 
-	inline void Transport::OnDataConsumerSendSctpMessage(
+	inline void Transport::OnDataConsumerSendMessage(
 	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
-		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
+		switch (dataConsumer->GetType())
+		{
+			case RTC::DataConsumer::Type::SCTP:
+			{
+				this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
+
+				break;
+			}
+
+			case RTC::DataConsumer::Type::DIRECT:
+			{
+				// Notify the Node DirectTransport.
+				json data = json::object();
+
+				data["ppid"] = ppid;
+
+				PayloadChannel::Notifier::Emit(dataConsumer->id, "message", data, msg, len);
+
+				// Increase send transmission.
+				DataSent(len);
+
+				break;
+			}
+		}
 	}
 
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
@@ -2439,8 +2642,11 @@ namespace RTC
 		// Notify the listener.
 		this->listener->OnTransportDataConsumerDataProducerClosed(this, dataConsumer);
 
-		// Tell the SctpAssociation so it can reset the SCTP stream.
-		this->sctpAssociation->DataConsumerClosed(dataConsumer);
+		if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+		{
+			// Tell the SctpAssociation so it can reset the SCTP stream.
+			this->sctpAssociation->DataConsumerClosed(dataConsumer);
+		}
 
 		// Delete it.
 		delete dataConsumer;
@@ -2467,7 +2673,10 @@ namespace RTC
 		{
 			auto* dataConsumer = kv.second;
 
-			dataConsumer->SctpAssociationConnected();
+			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+			{
+				dataConsumer->SctpAssociationConnected();
+			}
 		}
 
 		// Notify the Node Transport.
@@ -2487,7 +2696,10 @@ namespace RTC
 		{
 			auto* dataConsumer = kv.second;
 
-			dataConsumer->SctpAssociationClosed();
+			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+			{
+				dataConsumer->SctpAssociationClosed();
+			}
 		}
 
 		// Notify the Node Transport.
@@ -2507,7 +2719,10 @@ namespace RTC
 		{
 			auto* dataConsumer = kv.second;
 
-			dataConsumer->SctpAssociationClosed();
+			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+			{
+				dataConsumer->SctpAssociationClosed();
+			}
 		}
 
 		// Notify the Node Transport.
@@ -2554,7 +2769,7 @@ namespace RTC
 		}
 
 		// Pass the SCTP message to the corresponding DataProducer.
-		dataProducer->ReceiveSctpMessage(ppid, msg, len);
+		dataProducer->ReceiveMessage(ppid, msg, len);
 	}
 
 	inline void Transport::OnTransportCongestionControlClientBitrates(

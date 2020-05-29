@@ -14,8 +14,8 @@ namespace Channel
 		class Listener
 		{
 		public:
-			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) = 0;
-			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket)                     = 0;
+			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
+			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) = 0;
 		};
 
 	public:
@@ -64,15 +64,14 @@ namespace Channel
 	public:
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage);
-		void SendLog(char* nsPayload, size_t nsPayloadLen);
-		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
+		void SendLog(char* message, size_t messageLen);
 
 	private:
 		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
-		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, json& jsonMessage) override;
+		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) override;
 		void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) override;
 
 	private:

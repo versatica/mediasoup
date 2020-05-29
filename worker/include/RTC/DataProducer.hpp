@@ -15,8 +15,15 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnDataProducerSctpMessageReceived(
+			virtual void OnDataProducerMessageReceived(
 			  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
+		};
+
+	public:
+		enum class Type : uint8_t
+		{
+			SCTP = 0,
+			DIRECT
 		};
 
 	public:
@@ -27,11 +34,15 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
+		Type GetType() const
+		{
+			return this->type;
+		}
 		const RTC::SctpStreamParameters& GetSctpStreamParameters() const
 		{
 			return this->sctpStreamParameters;
 		}
-		void ReceiveSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len);
+		void ReceiveMessage(uint32_t ppid, const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.
@@ -41,6 +52,8 @@ namespace RTC
 		// Passed by argument.
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.
+		Type type;
+		std::string typeString;
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;

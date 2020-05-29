@@ -592,6 +592,14 @@ namespace RTC
 		}
 	}
 
+	void WebRtcTransport::HandleNotification(PayloadChannel::Notification* notification)
+	{
+		MS_TRACE();
+
+		// Pass it to the parent class.
+		RTC::Transport::HandleNotification(notification);
+	}
+
 	inline bool WebRtcTransport::IsConnected() const
 	{
 		MS_TRACE();
@@ -1095,7 +1103,9 @@ namespace RTC
 
 		// If DTLS was already connected, notify the parent class.
 		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
+		{
 			RTC::Transport::Connected();
+		}
 	}
 
 	inline void WebRtcTransport::OnIceServerCompleted(const RTC::IceServer* /*iceServer*/)
@@ -1116,7 +1126,9 @@ namespace RTC
 
 		// If DTLS was already connected, notify the parent class.
 		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
+		{
 			RTC::Transport::Connected();
+		}
 	}
 
 	inline void WebRtcTransport::OnIceServerDisconnected(const RTC::IceServer* /*iceServer*/)
@@ -1134,7 +1146,9 @@ namespace RTC
 
 		// If DTLS was already connected, notify the parent class.
 		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
+		{
 			RTC::Transport::Disconnected();
+		}
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportConnecting(const RTC::DtlsTransport* /*dtlsTransport*/)

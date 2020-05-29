@@ -5,6 +5,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "Channel/Request.hpp"
+#include "PayloadChannel/Notification.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -86,7 +87,7 @@ namespace RTC
 			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
 			virtual void OnTransportDataProducerClosed(
 			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
-			virtual void OnTransportDataProducerSctpMessageReceived(
+			virtual void OnTransportDataProducerMessageReceived(
 			  RTC::Transport* transport,
 			  RTC::DataProducer* dataProducer,
 			  uint32_t ppid,
@@ -116,9 +117,10 @@ namespace RTC
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);
-		// Subclasses must implement this method and call the parent's one to
+		// Subclasses must implement these methods and call the parent's ones to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
+		virtual void HandleNotification(PayloadChannel::Notification* notification);
 
 	protected:
 		// Must be called from the subclass.
@@ -137,16 +139,16 @@ namespace RTC
 		void ReceiveSctpData(const uint8_t* data, size_t len);
 
 	private:
-		void SetNewProducerIdFromRequest(Channel::Request* request, std::string& producerId) const;
-		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
-		void SetNewConsumerIdFromRequest(Channel::Request* request, std::string& consumerId) const;
-		RTC::Consumer* GetConsumerFromRequest(Channel::Request* request) const;
+		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
+		RTC::Producer* GetProducerFromInternal(json& internal) const;
+		void SetNewConsumerIdFromInternal(json& internal, std::string& consumerId) const;
+		RTC::Consumer* GetConsumerFromInternal(json& internal) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
-		void SetNewDataProducerIdFromRequest(Channel::Request* request, std::string& dataProducerId) const;
-		RTC::DataProducer* GetDataProducerFromRequest(Channel::Request* request) const;
-		void SetNewDataConsumerIdFromRequest(Channel::Request* request, std::string& dataConsumerId) const;
-		RTC::DataConsumer* GetDataConsumerFromRequest(Channel::Request* request) const;
+		void SetNewDataProducerIdFromInternal(json& internal, std::string& dataProducerId) const;
+		RTC::DataProducer* GetDataProducerFromInternal(json& internal) const;
+		void SetNewDataConsumerIdFromInternal(json& internal, std::string& dataConsumerId) const;
+		RTC::DataConsumer* GetDataConsumerFromInternal(json& internal) const;
 		virtual bool IsConnected() const                                                 = 0;
 		virtual void SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* cb = nullptr) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
@@ -185,12 +187,12 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
 	public:
-		void OnDataProducerSctpMessageReceived(
+		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) override;
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
-		void OnDataConsumerSendSctpMessage(
+		void OnDataConsumerSendMessage(
 		  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
@@ -251,6 +253,7 @@ namespace RTC
 		std::unordered_map<std::string, RTC::DataConsumer*> mapDataConsumers;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
+		size_t maxMessageSize{ 262144u };
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		Timer* rtcpTimer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
@@ -259,6 +262,7 @@ namespace RTC
 		RTC::SenderBandwidthEstimator* senderBwe{ nullptr };
 #endif
 		// Others.
+		bool direct{ false }; // Whether this Transport allows PayloadChannel comm.
 		bool destroying{ false };
 		struct RTC::RtpHeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;

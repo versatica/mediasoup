@@ -1,6 +1,7 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { SctpStreamParameters } from './SctpParameters';
 
 export type DataConsumerOptions =
@@ -9,6 +10,30 @@ export type DataConsumerOptions =
 	 * The id of the DataProducer to consume.
 	 */
 	dataProducerId: string;
+
+	/**
+	 * Just if consuming over SCTP.
+	 * Whether data messages must be received in order. If true the messages will
+	 * be sent reliably. Defaults to the value in the DataProducer if it has type
+	 * 'sctp' or to true if it has type 'direct'.
+	 */
+	ordered?: boolean;
+
+	/**
+	 * Just if consuming over SCTP.
+	 * When ordered is false indicates the time (in milliseconds) after which a
+	 * SCTP packet will stop being retransmitted. Defaults to the value in the
+	 * DataProducer if it has type 'sctp' or unset if it has type 'direct'.
+	 */
+	maxPacketLifeTime?: number;
+
+	/**
+	 * Just if consuming over SCTP.
+	 * When ordered is false indicates the maximum number of times a packet will
+	 * be retransmitted. Defaults to the value in the DataProducer if it has type
+	 * 'sctp' or unset if it has type 'direct'.
+	 */
+	maxRetransmits?: number;
 
 	/**
 	 * Custom application data.
@@ -26,6 +51,11 @@ export type DataConsumerStat =
 	bytesSent: number;
 }
 
+/**
+ * DataConsumer type.
+ */
+export type DataConsumerType = 'sctp' | 'direct';
+
 const logger = new Logger('DataConsumer');
 
 export class DataConsumer extends EnhancedEventEmitter
@@ -42,13 +72,17 @@ export class DataConsumer extends EnhancedEventEmitter
 	// DataConsumer data.
 	private readonly _data:
 	{
-		sctpStreamParameters: SctpStreamParameters;
+		type: DataConsumerType;
+		sctpStreamParameters?: SctpStreamParameters;
 		label: string;
 		protocol: string;
 	};
 
 	// Channel instance.
 	private readonly _channel: Channel;
+
+	// PayloadChannel instance.
+	private readonly _payloadChannel: PayloadChannel;
 
 	// Closed flag.
 	private _closed = false;
@@ -63,6 +97,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	 * @private
 	 * @emits transportclose
 	 * @emits dataproducerclose
+	 * @emits message - (message: Buffer, ppid: number)
 	 * @emits @close
 	 * @emits @dataproducerclose
 	 */
@@ -71,12 +106,14 @@ export class DataConsumer extends EnhancedEventEmitter
 			internal,
 			data,
 			channel,
+			payloadChannel,
 			appData
 		}:
 		{
 			internal: any;
 			data: any;
 			channel: Channel;
+			payloadChannel: PayloadChannel;
 			appData: any;
 		}
 	)
@@ -88,6 +125,7 @@ export class DataConsumer extends EnhancedEventEmitter
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 
 		this._handleWorkerNotifications();
@@ -118,9 +156,17 @@ export class DataConsumer extends EnhancedEventEmitter
 	}
 
 	/**
+	 * DataConsumer type.
+	 */
+	get type(): DataConsumerType
+	{
+		return this._data.type;
+	}
+
+	/**
 	 * SCTP stream parameters.
 	 */
-	get sctpStreamParameters(): SctpStreamParameters
+	get sctpStreamParameters(): SctpStreamParameters | undefined
 	{
 		return this._data.sctpStreamParameters;
 	}
@@ -265,5 +311,31 @@ export class DataConsumer extends EnhancedEventEmitter
 				}
 			}
 		});
+
+		this._payloadChannel.on(
+			this._internal.dataConsumerId,
+			(event: string, data: any | undefined, payload: Buffer) =>
+			{
+				switch (event)
+				{
+					case 'message':
+					{
+						if (this._closed)
+							break;
+
+						const ppid = data.ppid as number;
+						const message = payload;
+
+						this.safeEmit('message', message, ppid);
+
+						break;
+					}
+
+					default:
+					{
+						logger.error('ignoring unknown event "%s"', event);
+					}
+				}
+			});
 	}
 }

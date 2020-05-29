@@ -1,5 +1,6 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
@@ -64,6 +65,7 @@ export declare class Transport extends EnhancedEventEmitter {
         sctpState?: SctpState;
     };
     protected readonly _channel: Channel;
+    protected readonly _payloadChannel: PayloadChannel;
     protected _closed: boolean;
     private readonly _appData?;
     protected readonly _getRouterRtpCapabilities: () => RtpCapabilities;
@@ -88,10 +90,11 @@ export declare class Transport extends EnhancedEventEmitter {
      * @emits @newdataproducer - (dataProducer: DataProducer)
      * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
-    constructor({ internal, data, channel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
+    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
         internal: any;
         data: any;
         channel: Channel;
+        payloadChannel: PayloadChannel;
         appData: any;
         getRouterRtpCapabilities: () => RtpCapabilities;
         getProducerById: (producerId: string) => Producer;
@@ -171,7 +174,7 @@ export declare class Transport extends EnhancedEventEmitter {
     /**
      * Create a DataConsumer.
      */
-    consumeData({ dataProducerId, appData }: DataConsumerOptions): Promise<DataConsumer>;
+    consumeData({ dataProducerId, ordered, maxPacketLifeTime, maxRetransmits, appData }: DataConsumerOptions): Promise<DataConsumer>;
     /**
      * Enable 'trace' event.
      */

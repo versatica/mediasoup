@@ -25,6 +25,7 @@ public:
 		bool simulcast{ false };
 		bool svc{ false };
 		bool sctp{ false };
+		bool message{ false };
 	};
 
 public:
