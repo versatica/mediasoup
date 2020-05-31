@@ -1394,6 +1394,8 @@ def XcodeVersion():
   global XCODE_VERSION_CACHE
   if XCODE_VERSION_CACHE:
     return XCODE_VERSION_CACHE
+  version = ""
+  build = ""
   try:
     version_list = GetStdout(['xcodebuild', '-version']).splitlines()
     # In some circumstances xcodebuild exits 0 but doesn't return
@@ -1403,21 +1405,16 @@ def XcodeVersion():
     # checking that version.
     if len(version_list) < 2:
       raise GypError("xcodebuild returned unexpected results")
-  except:
-    version = CLTVersion()
-    if version:
-      version = re.match(r'(\d\.\d\.?\d*)', version).groups()[0]
-    else:
+    version = version_list[0].split()[-1]  # Last word on first line
+    build = version_list[-1].split()[-1]  # Last word on last line
+  except GypError:  # Xcode not installed so look for XCode Command Line Tools
+    version = CLTVersion()   # macOS Catalina returns 11.0.0.0.xxx or 11.5
+    if not version:
       raise GypError("No Xcode or CLT version detected!")
-    # The CLT has no build information, so we return an empty string.
-    version_list = [version, '']
-  version = version_list[0]
-  build = version_list[-1]
-  # Be careful to convert "4.2" to "0420":
-  version = version.split()[-1].replace('.', '')
-  version = (version + '0' * (3 - len(version))).zfill(4)
-  if build:
-    build = build.split()[-1]
+  # Be careful to convert "4.2" to "0420" and "11.0.0" to "1100":
+  version = version.split(".")[:3]  # Just major, minor, micro
+  version[0] = version[0].zfill(2)  # Add a leading zero if major is one digit
+  version = ("".join(version) + "00")[:4]  # Limit to exactly four characters
   XCODE_VERSION_CACHE = (version, build)
   return XCODE_VERSION_CACHE
 
@@ -1444,6 +1441,12 @@ def CLTVersion():
     except:
       continue
 
+  regex = re.compile('Command Line Tools for Xcode\s+(?P<version>\S+)')
+  try:
+      output = GetStdout(['/usr/sbin/softwareupdate', '--history'])
+      return re.search(regex, output).groupdict()['version']
+  except (GypError, OSError):
+      return None
 
 def GetStdout(cmdlist):
   """Returns the content of standard output returned by invoking |cmdlist|.
