@@ -1,5 +1,11 @@
 # Changelog
 
+### 3.6.1
+
+* Export new `DirectTransport` in `types`.
+* Make `DataProducerOptions` optional (not needed when in a `DirectTransport`).
+
+
 ### 3.6.0
 
 * DataChannel termination:

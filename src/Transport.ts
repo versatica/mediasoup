@@ -602,7 +602,7 @@ export class Transport extends EnhancedEventEmitter
 			label = '',
 			protocol = '',
 			appData = {}
-		}: DataProducerOptions
+		}: DataProducerOptions = {}
 	): Promise<DataProducer>
 	{
 		logger.debug('produceData()');

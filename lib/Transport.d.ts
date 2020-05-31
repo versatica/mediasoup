@@ -170,7 +170,7 @@ export declare class Transport extends EnhancedEventEmitter {
     /**
      * Create a DataProducer.
      */
-    produceData({ id, sctpStreamParameters, label, protocol, appData }: DataProducerOptions): Promise<DataProducer>;
+    produceData({ id, sctpStreamParameters, label, protocol, appData }?: DataProducerOptions): Promise<DataProducer>;
     /**
      * Create a DataConsumer.
      */
