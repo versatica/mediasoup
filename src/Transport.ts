@@ -767,13 +767,15 @@ export class Transport extends EnhancedEventEmitter
 		{
 			this._dataConsumers.delete(dataConsumer.id);
 
-			this._sctpStreamIds[sctpStreamId] = 0;
+			if (this._sctpStreamIds)
+				this._sctpStreamIds[sctpStreamId] = 0;
 		});
 		dataConsumer.on('@dataproducerclose', () =>
 		{
 			this._dataConsumers.delete(dataConsumer.id);
 
-			this._sctpStreamIds[sctpStreamId] = 0;
+			if (this._sctpStreamIds)
+				this._sctpStreamIds[sctpStreamId] = 0;
 		});
 
 		// Emit observer event.
