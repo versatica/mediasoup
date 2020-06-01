@@ -1,10 +1,9 @@
 # Changelog
 
-### 3.6.3 (WIP)
+### 3.6.3
 
+* Modernize TypeScript.
 * `gyp`: Fix CLT version detection in OSX Catalina.
-  - Add an additional method to detect `CLT` version based on Software Update history: `/usr/sbin/softwareupdate`.
-  - PR #410 (credits to @enimo).
 
 
 ### 3.6.2
