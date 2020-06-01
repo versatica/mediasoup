@@ -1,5 +1,12 @@
 # Changelog
 
+### 3.6.3 (WIP)
+
+* `gyp`: Fix CLT version detection in OSX Catalina.
+  - Add an additional method to detect `CLT` version based on Software Update history: `/usr/sbin/softwareupdate`.
+  - PR #410 (credits to @enimo).
+
+
 ### 3.6.2
 
 * Fix crash in `Transport.ts` when closing a `DataConsumer` created on a `DirectTransport`.
