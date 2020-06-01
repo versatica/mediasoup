@@ -1,4 +1,4 @@
-import debug from 'debug';
+/// <reference types="debug" />
 export declare class Logger {
     private readonly _debug;
     private readonly _warn;

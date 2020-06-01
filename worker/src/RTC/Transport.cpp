@@ -839,10 +839,6 @@ namespace RTC
 					data["preferredLayers"]["spatialLayer"]  = preferredLayers.spatial;
 					data["preferredLayers"]["temporalLayer"] = preferredLayers.temporal;
 				}
-				else
-				{
-					data["preferredLayers"] = nullptr;
-				}
 
 				request->Accept(data);
 

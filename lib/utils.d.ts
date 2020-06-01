@@ -1,8 +1,8 @@
-declare const randomNumberGenerator: (min?: number, max?: number, integer?: boolean) => number;
+declare const randomNumberGenerator: (min?: number | null | undefined, max?: number | null | undefined, integer?: boolean | null | undefined) => number;
 /**
  * Clones the given object/array.
  */
-export declare function clone(obj: any[] | object): any[] | object;
+export declare function clone(data: any): any;
 /**
  * Generates a random positive integer.
  */

@@ -178,10 +178,10 @@ export class Consumer extends EnhancedEventEmitter
 	private _score: ConsumerScore;
 
 	// Preferred layers.
-	private _preferredLayers: ConsumerLayers | null = null;
+	private _preferredLayers?: ConsumerLayers;
 
 	// Curent layers.
-	private _currentLayers: ConsumerLayers | null = null;
+	private _currentLayers?: ConsumerLayers;
 
 	// Observer instance.
 	private readonly _observer = new EnhancedEventEmitter();
@@ -193,7 +193,7 @@ export class Consumer extends EnhancedEventEmitter
 	 * @emits producerpause
 	 * @emits producerresume
 	 * @emits score - (score: ConsumerScore)
-	 * @emits layerschange - (layers: ConsumerLayers | null)
+	 * @emits layerschange - (layers: ConsumerLayers | undefined)
 	 * @emits trace - (trace: ConsumerTraceEventData)
 	 * @emits @close
 	 * @emits @producerclose
@@ -319,7 +319,7 @@ export class Consumer extends EnhancedEventEmitter
 	/**
 	 * Preferred video layers.
 	 */
-	get preferredLayers(): ConsumerLayers | null
+	get preferredLayers(): ConsumerLayers | undefined
 	{
 		return this._preferredLayers;
 	}
@@ -327,7 +327,7 @@ export class Consumer extends EnhancedEventEmitter
 	/**
 	 * Current video layers.
 	 */
-	get currentLayers(): ConsumerLayers | null
+	get currentLayers(): ConsumerLayers | undefined
 	{
 		return this._currentLayers;
 	}
@@ -355,7 +355,7 @@ export class Consumer extends EnhancedEventEmitter
 	 * @emits pause
 	 * @emits resume
 	 * @emits score - (score: ConsumerScore)
-	 * @emits layerschange - (layers: ConsumerLayers | null)
+	 * @emits layerschange - (layers: ConsumerLayers | undefined)
 	 * @emits trace - (trace: ConsumerTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter
@@ -483,7 +483,7 @@ export class Consumer extends EnhancedEventEmitter
 		const data = await this._channel.request(
 			'consumer.setPreferredLayers', this._internal, reqData);
 
-		this._preferredLayers = data || null;
+		this._preferredLayers = data || undefined;
 	}
 
 	/**
@@ -616,7 +616,7 @@ export class Consumer extends EnhancedEventEmitter
 
 				case 'layerschange':
 				{
-					const layers = data as ConsumerLayers | null;
+					const layers = data as ConsumerLayers | undefined;
 
 					this._currentLayers = layers;
 

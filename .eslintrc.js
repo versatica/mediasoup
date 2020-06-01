@@ -211,8 +211,9 @@ switch (process.env.MEDIASOUP_NODE_LANGUAGE)
 					ignoreRestSiblings : false
 				}
 			],
-			'@typescript-eslint/no-use-before-define' : 0,
-			'@typescript-eslint/no-empty-function'    : 0
+			'@typescript-eslint/no-use-before-define'  : 0,
+			'@typescript-eslint/no-empty-function'     : 0,
+			'@typescript-eslint/no-non-null-assertion' : 0
 		};
 
 		break;

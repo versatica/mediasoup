@@ -595,7 +595,7 @@ export function generateRouterRtpCapabilities(
 		validateRtpCodecCapability(mediaCodec);
 
 		const matchedSupportedCodec = clonedSupportedRtpCapabilities
-			.codecs
+			.codecs!
 			.find((supportedCodec) => (
 				matchCodecs(mediaCodec, supportedCodec, { strict: false }))
 			);
@@ -638,14 +638,14 @@ export function generateRouterRtpCapabilities(
 		}
 
 		// Ensure there is not duplicated preferredPayloadType values.
-		if (caps.codecs.some((c) => c.preferredPayloadType === codec.preferredPayloadType))
+		if (caps.codecs!.some((c) => c.preferredPayloadType === codec.preferredPayloadType))
 			throw new TypeError('duplicated codec.preferredPayloadType');
 
 		// Merge the media codec parameters.
 		codec.parameters = { ...codec.parameters, ...mediaCodec.parameters };
 
 		// Append to the codec list.
-		caps.codecs.push(codec);
+		caps.codecs!.push(codec);
 
 		// Add a RTX video codec if video.
 		if (codec.kind === 'video')
@@ -670,7 +670,7 @@ export function generateRouterRtpCapabilities(
 			};
 
 			// Append to the codec list.
-			caps.codecs.push(rtxCodec);
+			caps.codecs!.push(rtxCodec);
 		}
 	}
 
@@ -703,7 +703,7 @@ export function getProducerRtpParametersMapping(
 			continue;
 
 		// Search for the same media codec in capabilities.
-		const matchedCapCodec = caps.codecs
+		const matchedCapCodec = caps.codecs!
 			.find((capCodec) => (
 				matchCodecs(codec, capCodec, { strict: true, modify: true }))
 			);
@@ -736,16 +736,16 @@ export function getProducerRtpParametersMapping(
 		const capMediaCodec = codecToCapCodec.get(associatedMediaCodec);
 
 		// Ensure that the capabilities media codec has a RTX codec.
-		const associatedCapRtxCodec = caps.codecs
+		const associatedCapRtxCodec = caps.codecs!
 			.find((capCodec) => (
 				isRtxCodec(capCodec) &&
-				capCodec.parameters.apt === capMediaCodec.preferredPayloadType
+				capCodec.parameters.apt === capMediaCodec!.preferredPayloadType
 			));
 
 		if (!associatedCapRtxCodec)
 		{
 			throw new UnsupportedError(
-				`no RTX codec for capability codec PT ${capMediaCodec.preferredPayloadType}`);
+				`no RTX codec for capability codec PT ${capMediaCodec!.preferredPayloadType}`);
 		}
 
 		codecToCapCodec.set(codec, associatedCapRtxCodec);
@@ -757,14 +757,14 @@ export function getProducerRtpParametersMapping(
 		rtpMapping.codecs.push(
 			{
 				payloadType       : codec.payloadType,
-				mappedPayloadType : capCodec.preferredPayloadType
+				mappedPayloadType : capCodec.preferredPayloadType!
 			});
 	}
 
 	// Generate encodings mapping.
 	let mappedSsrc = utils.generateRandomNumber();
 
-	for (const encoding of params.encodings)
+	for (const encoding of params.encodings!)
 	{
 		const mappedEncoding: any = {};
 
@@ -808,16 +808,16 @@ export function getConsumableRtpParameters(
 			continue;
 
 		const consumableCodecPt = rtpMapping.codecs
-			.find((entry) => entry.payloadType === codec.payloadType)
+			.find((entry) => entry.payloadType === codec.payloadType)!
 			.mappedPayloadType;
 
-		const matchedCapCodec = caps.codecs
-			.find((capCodec) => capCodec.preferredPayloadType === consumableCodecPt);
+		const matchedCapCodec = caps.codecs!
+			.find((capCodec) => capCodec.preferredPayloadType === consumableCodecPt)!;
 
-		const consumableCodec =
+		const consumableCodec: RtpCodecParameters =
 		{
 			mimeType     : matchedCapCodec.mimeType,
-			payloadType  : matchedCapCodec.preferredPayloadType,
+			payloadType  : matchedCapCodec.preferredPayloadType!,
 			clockRate    : matchedCapCodec.clockRate,
 			channels     : matchedCapCodec.channels,
 			parameters   : codec.parameters, // Keep the Producer codec parameters.
@@ -826,7 +826,7 @@ export function getConsumableRtpParameters(
 
 		consumableParams.codecs.push(consumableCodec);
 
-		const consumableCapRtxCodec = caps.codecs
+		const consumableCapRtxCodec = caps.codecs!
 			.find((capRtxCodec) => (
 				isRtxCodec(capRtxCodec) &&
 				capRtxCodec.parameters.apt === consumableCodec.payloadType
@@ -834,10 +834,10 @@ export function getConsumableRtpParameters(
 
 		if (consumableCapRtxCodec)
 		{
-			const consumableRtxCodec =
+			const consumableRtxCodec: RtpCodecParameters =
 			{
 				mimeType     : consumableCapRtxCodec.mimeType,
-				payloadType  : consumableCapRtxCodec.preferredPayloadType,
+				payloadType  : consumableCapRtxCodec.preferredPayloadType!,
 				clockRate    : consumableCapRtxCodec.clockRate,
 				parameters   : consumableCapRtxCodec.parameters,
 				rtcpFeedback : consumableCapRtxCodec.rtcpFeedback
@@ -847,7 +847,7 @@ export function getConsumableRtpParameters(
 		}
 	}
 
-	for (const capExt of caps.headerExtensions)
+	for (const capExt of caps.headerExtensions!)
 	{
 
 		// Just take RTP header extension that can be used in Consumers.
@@ -867,7 +867,7 @@ export function getConsumableRtpParameters(
 			parameters : {}
 		};
 
-		consumableParams.headerExtensions.push(consumableExt);
+		consumableParams.headerExtensions!.push(consumableExt);
 	}
 
 	// Clone Producer encodings since we'll mangle them.
@@ -886,12 +886,12 @@ export function getConsumableRtpParameters(
 		// Set the mapped ssrc.
 		consumableEncoding.ssrc = mappedSsrc;
 
-		consumableParams.encodings.push(consumableEncoding);
+		consumableParams.encodings!.push(consumableEncoding);
 	}
 
 	consumableParams.rtcp =
 	{
-		cname       : params.rtcp.cname,
+		cname       : params.rtcp!.cname,
 		reducedSize : true,
 		mux         : true
 	};
@@ -914,7 +914,7 @@ export function canConsume(
 
 	for (const codec of consumableParams.codecs)
 	{
-		const matchedCapCodec = caps.codecs
+		const matchedCapCodec = caps.codecs!
 			.find((capCodec) => matchCodecs(capCodec, codec, { strict: true }));
 
 		if (!matchedCapCodec)
@@ -950,7 +950,7 @@ export function getConsumerRtpParameters(
 		rtcp             : consumableParams.rtcp
 	};
 
-	for (const capCodec of caps.codecs)
+	for (const capCodec of caps.codecs!)
 	{
 		validateRtpCodecCapability(capCodec);
 	}
@@ -962,7 +962,7 @@ export function getConsumerRtpParameters(
 
 	for (const codec of consumableCodecs)
 	{
-		const matchedCapCodec = caps.codecs
+		const matchedCapCodec = caps.codecs!
 			.find((capCodec) => matchCodecs(capCodec, codec, { strict: true }));
 
 		if (!matchedCapCodec)
@@ -982,9 +982,9 @@ export function getConsumerRtpParameters(
 		throw new UnsupportedError('no compatible media codecs');
 	}
 
-	consumerParams.headerExtensions = consumableParams.headerExtensions
+	consumerParams.headerExtensions = consumableParams.headerExtensions!
 		.filter((ext) => (
-			caps.headerExtensions
+			caps.headerExtensions!
 				.some((capExt) => (
 					capExt.preferredId === ext.id &&
 					capExt.uri === ext.uri
@@ -1000,7 +1000,7 @@ export function getConsumerRtpParameters(
 	{
 		for (const codec of consumerParams.codecs)
 		{
-			codec.rtcpFeedback = (codec.rtcpFeedback)
+			codec.rtcpFeedback = codec.rtcpFeedback!
 				.filter((fb) => fb.type !== 'goog-remb');
 		}
 	}
@@ -1012,7 +1012,7 @@ export function getConsumerRtpParameters(
 	{
 		for (const codec of consumerParams.codecs)
 		{
-			codec.rtcpFeedback = (codec.rtcpFeedback)
+			codec.rtcpFeedback = codec.rtcpFeedback!
 				.filter((fb) => fb.type !== 'transport-cc');
 		}
 	}
@@ -1020,7 +1020,7 @@ export function getConsumerRtpParameters(
 	{
 		for (const codec of consumerParams.codecs)
 		{
-			codec.rtcpFeedback = (codec.rtcpFeedback)
+			codec.rtcpFeedback = codec.rtcpFeedback!
 				.filter((fb) => (
 					fb.type !== 'transport-cc' &&
 					fb.type !== 'goog-remb'
@@ -1039,18 +1039,18 @@ export function getConsumerRtpParameters(
 	// If any of the consumableParams.encodings has scalabilityMode, process it
 	// (assume all encodings have the same value).
 	const encodingWithScalabilityMode =
-		consumableParams.encodings.find((encoding) => encoding.scalabilityMode);
+		consumableParams.encodings!.find((encoding) => encoding.scalabilityMode);
 
 	let scalabilityMode = encodingWithScalabilityMode
 		? encodingWithScalabilityMode.scalabilityMode
 		: undefined;
 
 	// If there is simulast, mangle spatial layers in scalabilityMode.
-	if (consumableParams.encodings.length > 1)
+	if (consumableParams.encodings!.length > 1)
 	{
 		const { temporalLayers } = parseScalabilityMode(scalabilityMode);
 
-		scalabilityMode = `S${consumableParams.encodings.length}T${temporalLayers}`;
+		scalabilityMode = `S${consumableParams.encodings!.length}T${temporalLayers}`;
 	}
 
 	if (scalabilityMode)
@@ -1059,9 +1059,11 @@ export function getConsumerRtpParameters(
 	// Use the maximum maxBitrate in any encoding and honor it in the Consumer's
 	// encoding.
 	const maxEncodingMaxBitrate =
-		consumableParams.encodings.reduce((maxBitrate, encoding) => (
-			encoding.maxBitrate > maxBitrate ? encoding.maxBitrate : maxBitrate), 0
-		);
+		consumableParams.encodings!.reduce((maxBitrate, encoding) => (
+			encoding.maxBitrate && encoding.maxBitrate > maxBitrate
+				? encoding.maxBitrate
+				: maxBitrate
+		), 0);
 
 	if (maxEncodingMaxBitrate)
 	{
@@ -1069,7 +1071,7 @@ export function getConsumerRtpParameters(
 	}
 
 	// Set a single encoding for the Consumer.
-	consumerParams.encodings.push(consumerEncoding);
+	consumerParams.encodings!.push(consumerEncoding);
 
 	// Copy verbatim.
 	consumerParams.rtcp = consumableParams.rtcp;
@@ -1104,7 +1106,7 @@ export function getPipeConsumerRtpParameters(
 		if (!enableRtx && isRtxCodec(codec))
 			continue;
 
-		codec.rtcpFeedback = codec.rtcpFeedback
+		codec.rtcpFeedback = codec.rtcpFeedback!
 			.filter((fb) => (
 				(fb.type === 'nack' && fb.parameter === 'pli') ||
 				(fb.type === 'ccm' && fb.parameter === 'fir') ||
@@ -1115,7 +1117,7 @@ export function getPipeConsumerRtpParameters(
 	}
 
 	// Reduce RTP extensions by disabling transport MID and BWE related ones.
-	consumerParams.headerExtensions = consumableParams.headerExtensions
+	consumerParams.headerExtensions = consumableParams.headerExtensions!
 		.filter((ext) => (
 			ext.uri !== 'urn:ietf:params:rtp-hdrext:sdes:mid' &&
 			ext.uri !== 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' &&
@@ -1130,7 +1132,7 @@ export function getPipeConsumerRtpParameters(
 		if (!enableRtx)
 			delete encoding.rtx;
 
-		consumerParams.encodings.push(encoding);
+		consumerParams.encodings!.push(encoding);
 	}
 
 	return consumerParams;

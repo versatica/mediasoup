@@ -77,12 +77,12 @@ export class Channel extends EnhancedEventEmitter
 					this._recvBuffer.length + buffer.length);
 			}
 
-			if (this._recvBuffer.length > NS_PAYLOAD_MAX_LEN)
+			if (this._recvBuffer!.length > NS_PAYLOAD_MAX_LEN)
 			{
 				logger.error('receiving buffer is full, discarding all data into it');
 
 				// Reset the buffer and exit.
-				this._recvBuffer = null;
+				this._recvBuffer = undefined;
 
 				return;
 			}
@@ -158,7 +158,7 @@ export class Channel extends EnhancedEventEmitter
 
 				// Remove the read payload from the buffer.
 				this._recvBuffer =
-					this._recvBuffer.slice(netstring.nsLength(this._recvBuffer));
+					this._recvBuffer!.slice(netstring.nsLength(this._recvBuffer));
 
 				if (!this._recvBuffer.length)
 				{
