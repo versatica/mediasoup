@@ -245,10 +245,10 @@ export class Worker extends EnhancedEventEmitter
 				spawnArgs.push(`--logTag=${logTag}`);
 		}
 
-		if (typeof rtcMinPort === 'number' || !Number.isNaN(parseInt(rtcMinPort)))
+		if (typeof rtcMinPort === 'number' && !Number.isNaN(rtcMinPort))
 			spawnArgs.push(`--rtcMinPort=${rtcMinPort}`);
 
-		if (typeof rtcMaxPort === 'number' || !Number.isNaN(parseInt(rtcMaxPort)))
+		if (typeof rtcMaxPort === 'number' && !Number.isNaN(rtcMaxPort))
 			spawnArgs.push(`--rtcMaxPort=${rtcMaxPort}`);
 
 		if (typeof dtlsCertificateFile === 'string' && dtlsCertificateFile)
@@ -382,7 +382,7 @@ export class Worker extends EnhancedEventEmitter
 		});
 
 		// Be ready for 3rd party worker libraries logging to stdout.
-		this._child.stdout.on('data', (buffer) =>
+		this._child.stdout!.on('data', (buffer) =>
 		{
 			for (const line of buffer.toString('utf8').split('\n'))
 			{
@@ -392,7 +392,7 @@ export class Worker extends EnhancedEventEmitter
 		});
 
 		// In case of a worker bug, mediasoup will log to stderr.
-		this._child.stderr.on('data', (buffer) =>
+		this._child.stderr!.on('data', (buffer) =>
 		{
 			for (const line of buffer.toString('utf8').split('\n'))
 			{

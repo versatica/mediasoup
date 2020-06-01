@@ -117,8 +117,8 @@ export declare class Consumer extends EnhancedEventEmitter {
     private _producerPaused;
     private _priority;
     private _score;
-    private _preferredLayers;
-    private _currentLayers;
+    private _preferredLayers?;
+    private _currentLayers?;
     private readonly _observer;
     /**
      * @private
@@ -127,7 +127,7 @@ export declare class Consumer extends EnhancedEventEmitter {
      * @emits producerpause
      * @emits producerresume
      * @emits score - (score: ConsumerScore)
-     * @emits layerschange - (layers: ConsumerLayers | null)
+     * @emits layerschange - (layers: ConsumerLayers | undefined)
      * @emits trace - (trace: ConsumerTraceEventData)
      * @emits @close
      * @emits @producerclose
@@ -185,11 +185,11 @@ export declare class Consumer extends EnhancedEventEmitter {
     /**
      * Preferred video layers.
      */
-    get preferredLayers(): ConsumerLayers | null;
+    get preferredLayers(): ConsumerLayers | undefined;
     /**
      * Current video layers.
      */
-    get currentLayers(): ConsumerLayers | null;
+    get currentLayers(): ConsumerLayers | undefined;
     /**
      * App custom data.
      */
@@ -205,7 +205,7 @@ export declare class Consumer extends EnhancedEventEmitter {
      * @emits pause
      * @emits resume
      * @emits score - (score: ConsumerScore)
-     * @emits layerschange - (layers: ConsumerLayers | null)
+     * @emits layerschange - (layers: ConsumerLayers | undefined)
      * @emits trace - (trace: ConsumerTraceEventData)
      */
     get observer(): EnhancedEventEmitter;

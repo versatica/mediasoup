@@ -531,7 +531,7 @@ export class Transport extends EnhancedEventEmitter
 			throw new TypeError('if given, appData must be an object');
 
 		// This may throw.
-		ortc.validateRtpCapabilities(rtpCapabilities);
+		ortc.validateRtpCapabilities(rtpCapabilities!);
 
 		const producer = this._getProducerById(producerId);
 
@@ -540,7 +540,7 @@ export class Transport extends EnhancedEventEmitter
 
 		// This may throw.
 		const rtpParameters = ortc.getConsumerRtpParameters(
-			producer.consumableRtpParameters, rtpCapabilities);
+			producer.consumableRtpParameters, rtpCapabilities!);
 
 		// Set MID.
 		rtpParameters.mid = `${this._nextMidForConsumers++}`;
@@ -620,7 +620,7 @@ export class Transport extends EnhancedEventEmitter
 			type = 'sctp';
 
 			// This may throw.
-			ortc.validateSctpStreamParameters(sctpStreamParameters);
+			ortc.validateSctpStreamParameters(sctpStreamParameters!);
 		}
 		// If this is a DirectTransport, sctpStreamParameters must not be given.
 		else
@@ -720,7 +720,7 @@ export class Transport extends EnhancedEventEmitter
 			// This may throw.
 			sctpStreamId = this._getNextSctpStreamId();
 
-			this._sctpStreamIds[sctpStreamId] = 1;
+			this._sctpStreamIds![sctpStreamId] = 1;
 			sctpStreamParameters.streamId = sctpStreamId;
 		}
 		// If this is a DirectTransport, sctpStreamParameters must not be used.

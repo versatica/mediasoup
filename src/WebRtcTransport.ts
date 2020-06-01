@@ -151,7 +151,7 @@ export class WebRtcTransport extends Transport
 		iceParameters: IceParameters;
 		iceCandidates: IceCandidate[];
 		iceState: IceState;
-		iceSelectedTuple: TransportTuple;
+		iceSelectedTuple?: TransportTuple;
 		dtlsParameters: DtlsParameters;
 		dtlsState: DtlsState;
 		dtlsRemoteCert?: string;

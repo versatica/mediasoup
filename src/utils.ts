@@ -10,12 +10,12 @@ const randomNumberGenerator = randomNumber.generator(
 /**
  * Clones the given object/array.
  */
-export function clone(obj: any[] | object): any[] | object
+export function clone(data: any): any
 {
-	if (typeof obj !== 'object')
+	if (typeof data !== 'object')
 		return {};
 
-	return JSON.parse(JSON.stringify(obj));
+	return JSON.parse(JSON.stringify(data));
 }
 
 /**
