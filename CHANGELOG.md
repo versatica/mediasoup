@@ -1,9 +1,14 @@
 # Changelog
 
+### 3.6.4
+
+* `gyp`: Fix CLT version detection in OSX Catalina when XCode app is not installed.
+  - PR #413 (credits to @enimo).
+
+
 ### 3.6.3
 
 * Modernize TypeScript.
-* `gyp`: Fix CLT version detection in OSX Catalina.
 
 
 ### 3.6.2
