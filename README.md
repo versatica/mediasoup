@@ -73,9 +73,9 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 * José Luis Millán [[github](https://github.com/jmillan/)]
 
 
-## Donate
+## Sponsor
 
-You can support mediasoup by becoming a [sponsor][donate] or making a [donation][donate]. Thanks!
+You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 
 
 ## License
@@ -96,7 +96,7 @@ You can support mediasoup by becoming a [sponsor][donate] or making a [donation]
 [codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
 [opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
 [opencollective-mediasoup]: https://opencollective.com/mediasoup/
-[donate]: https://mediasoup.org/sponsors/#become-a-sponsor
+[sponsor]: https://mediasoup.org/sponsor/
 [mediasoup-architecture]: /art/mediasoup-v3-architecture-01.svg
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png
 [mediasoup-demo]: https://v3demo.mediasoup.org
