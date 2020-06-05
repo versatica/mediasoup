@@ -1,5 +1,11 @@
 # Changelog
 
+### 3.6.5
+
+* Set `score:0` when `dtx:true` is set in an `encoding` and there is no RTP for some seconds for that RTP stream.
+  - Fixes #415.
+
+
 ### 3.6.4
 
 * `gyp`: Fix CLT version detection in OSX Catalina when XCode app is not installed.
