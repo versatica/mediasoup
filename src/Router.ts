@@ -19,6 +19,7 @@ import { RtpObserver } from './RtpObserver';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
+import { flatten, getAllIPs, getIpv4IPs } from './utils';
 
 export type RouterOptions =
 {
@@ -359,24 +360,46 @@ export class Router extends EnhancedEventEmitter
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		listenIps = (listenIps as any[]).map((listenIp: TransportListenIp | string) =>
-		{
-			if (typeof listenIp === 'string' && listenIp)
-			{
-				return { ip: listenIp };
-			}
-			else if (typeof listenIp === 'object')
-			{
-				return {
-					ip          : listenIp.ip,
-					announcedIp : listenIp.announcedIp || undefined
-				};
-			}
-			else
-			{
-				throw new TypeError('wrong listenIp');
-			}
-		});
+		// This can be simplified with flatMap once support for Node.js v10 is not needed
+		listenIps = flatten(
+			listenIps
+				.map((listenIp) =>
+				{
+					if (typeof listenIp === 'string' && listenIp)
+					{
+						return { ip: listenIp };
+					}
+					else if (typeof listenIp === 'object')
+					{
+						return {
+							ip          : listenIp.ip,
+							announcedIp : listenIp.announcedIp || undefined
+						};
+					}
+					else
+					{
+						throw new TypeError('wrong listenIp');
+					}
+				})
+				.map((listenIp) =>
+				{
+					switch (listenIp.ip)
+					{
+						case '0.0.0.0':
+							return getIpv4IPs().map((ip) =>
+							{
+								return { ...listenIp, ip };
+							});
+						case '::':
+							return getAllIPs().map((ip) =>
+							{
+								return { ...listenIp, ip };
+							});
+						default:
+							return listenIp;
+					}
+				}))
+			.slice(0, 8);
 
 		const internal = { ...this._internal, transportId: uuidv4() };
 		const reqData = {

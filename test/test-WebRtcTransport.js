@@ -75,8 +75,8 @@ test('router.createWebRtcTransport() succeeds', async () =>
 			listenIps :
 			[
 				{ ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-				{ ip: '0.0.0.0', announcedIp: '9.9.9.2' },
-				{ ip: '127.0.0.1', announcedIp: null }
+				{ ip: '127.0.0.1', announcedIp: null },
+				{ ip: '0.0.0.0', announcedIp: '9.9.9.2' }
 			],
 			enableTcp          : true,
 			preferUdp          : true,
@@ -105,7 +105,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 			isDataChannel  : true
 		});
 	expect(transport1.iceCandidates).toBeType('array');
-	expect(transport1.iceCandidates.length).toBe(6);
+	expect(transport1.iceCandidates.length).toBeGreaterThanOrEqual(6);
 
 	const iceCandidates = transport1.iceCandidates;
 
@@ -117,19 +117,19 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(iceCandidates[1].protocol).toBe('tcp');
 	expect(iceCandidates[1].type).toBe('host');
 	expect(iceCandidates[1].tcpType).toBe('passive');
-	expect(iceCandidates[2].ip).toBe('9.9.9.2');
+	expect(iceCandidates[2].ip).toBe('127.0.0.1');
 	expect(iceCandidates[2].protocol).toBe('udp');
 	expect(iceCandidates[2].type).toBe('host');
 	expect(iceCandidates[2].tcpType).toBeUndefined();
-	expect(iceCandidates[3].ip).toBe('9.9.9.2');
+	expect(iceCandidates[3].ip).toBe('127.0.0.1');
 	expect(iceCandidates[3].protocol).toBe('tcp');
 	expect(iceCandidates[3].type).toBe('host');
 	expect(iceCandidates[3].tcpType).toBe('passive');
-	expect(iceCandidates[4].ip).toBe('127.0.0.1');
+	expect(iceCandidates[4].ip).toBe('9.9.9.2');
 	expect(iceCandidates[4].protocol).toBe('udp');
 	expect(iceCandidates[4].type).toBe('host');
 	expect(iceCandidates[4].tcpType).toBeUndefined();
-	expect(iceCandidates[5].ip).toBe('127.0.0.1');
+	expect(iceCandidates[5].ip).toBe('9.9.9.2');
 	expect(iceCandidates[5].protocol).toBe('tcp');
 	expect(iceCandidates[5].type).toBe('host');
 	expect(iceCandidates[5].tcpType).toBe('passive');
