@@ -25,7 +25,8 @@ beforeAll(async () =>
 	router = await worker.createRouter();
 	transport = await router.createPlainTransport(
 		{
-			listenIp       : '127.0.0.1',
+			listenIp       : '0.0.0.0',
+			announcedIp    : '127.0.0.1',
 			comedia        : true, // So we don't need to call transport.connect().
 			enableSctp     : true,
 			numSctpStreams : { OS: 256, MIS: 256 }
