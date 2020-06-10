@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.6.7 (WIP)
+
+* Hide worker executable console in Windows.
+  - PR #419 (credits to @BlueMagnificent).
+
+
 ### 3.6.6
 
 * Update `usrsctp` library.
