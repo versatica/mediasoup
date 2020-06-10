@@ -1,5 +1,12 @@
 # Changelog
 
+
+### 3.6.6
+
+* Update `usrsctp` library.
+* Update ESlint and TypeScript related dependencies.
+
+
 ### 3.6.5
 
 * Set `score:0` when `dtx:true` is set in an `encoding` and there is no RTP for some seconds for that RTP stream.
