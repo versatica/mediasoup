@@ -126,6 +126,7 @@ namespace RTC
 		void ProducerResumed();
 		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
 		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
+		void ProducerRtpStreamScores(const std::vector<uint8_t>* scores);
 		virtual void ProducerRtpStreamScore(
 		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
 		virtual void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) = 0;
@@ -176,6 +177,7 @@ namespace RTC
 		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
+		const std::vector<uint8_t>* producerRtpStreamScores;
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
 		uint64_t lastRtcpSentTime{ 0u };

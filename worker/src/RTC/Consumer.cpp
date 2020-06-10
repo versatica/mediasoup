@@ -427,6 +427,14 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "producerresume");
 	}
 
+	void Consumer::ProducerRtpStreamScores(const std::vector<uint8_t>* scores)
+	{
+		MS_TRACE();
+
+		// This is gonna be a constant pointer.
+		this->producerRtpStreamScores = scores;
+	}
+
 	// The caller (Router) is supposed to proceed with the deletion of this Consumer
 	// right after calling this method. Otherwise ugly things may happen.
 	void Consumer::ProducerClosed()

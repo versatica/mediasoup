@@ -90,6 +90,11 @@ export type ConsumerScore =
 	 * The score of the currently selected RTP stream of the producer.
 	 */
 	producerScore: number;
+
+	/**
+	 * The scores of all RTP streams in the producer.
+	 */
+	producerScores: number[];
 }
 
 export type ConsumerLayers =
@@ -206,7 +211,7 @@ export class Consumer extends EnhancedEventEmitter
 			appData,
 			paused,
 			producerPaused,
-			score = { score: 10, producerScore: 10 },
+			score = { score: 10, producerScore: 10, producerScores: [] },
 			preferredLayers
 		}:
 		{

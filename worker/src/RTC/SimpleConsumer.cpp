@@ -75,6 +75,8 @@ namespace RTC
 			jsonObject["producerScore"] = this->producerRtpStream->GetScore();
 		else
 			jsonObject["producerScore"] = 0;
+
+		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
 	void SimpleConsumer::HandleRequest(Channel::Request* request)
@@ -115,9 +117,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-
-		// Emit the score event.
-		EmitScore();
 	}
 
 	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)

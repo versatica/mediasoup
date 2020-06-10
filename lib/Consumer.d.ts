@@ -70,6 +70,10 @@ export declare type ConsumerScore = {
      * The score of the currently selected RTP stream of the producer.
      */
     producerScore: number;
+    /**
+     * The scores of all RTP streams in the producer.
+     */
+    producerScores: number[];
 };
 export declare type ConsumerLayers = {
     /**

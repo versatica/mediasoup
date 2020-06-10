@@ -166,6 +166,8 @@ namespace RTC
 			jsonObject["producerScore"] = this->producerRtpStream->GetScore();
 		else
 			jsonObject["producerScore"] = 0;
+
+		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
 	void SvcConsumer::HandleRequest(Channel::Request* request)
@@ -268,9 +270,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-
-		// Emit the score event.
-		EmitScore();
 	}
 
 	void SvcConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
@@ -278,9 +277,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-
-		// Request a key frame.
-		RequestKeyFrame();
 
 		// Emit the score event.
 		EmitScore();

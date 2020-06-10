@@ -83,8 +83,9 @@ namespace RTC
 		MS_TRACE();
 
 		// NOTE: Hardcoded values in PipeTransport.
-		jsonObject["score"]         = 10;
-		jsonObject["producerScore"] = 10;
+		jsonObject["score"]          = 10;
+		jsonObject["producerScore"]  = 10;
+		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
 	void PipeConsumer::HandleRequest(Channel::Request* request)

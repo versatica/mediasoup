@@ -283,7 +283,8 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(false);
-	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
+	expect(pipeConsumer.score).toEqual(
+		{ score: 10, producerScore: 10, producerScores: [] });
 	expect(pipeConsumer.appData).toEqual({});
 
 	expect(pipeProducer.id).toBe(audioProducer.id);
@@ -399,7 +400,8 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(true);
-	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
+	expect(pipeConsumer.score).toEqual(
+		{ score: 10, producerScore: 10, producerScores: [] });
 	expect(pipeConsumer.appData).toEqual({});
 
 	expect(pipeProducer.id).toBe(videoProducer.id);
@@ -554,7 +556,8 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(true);
-	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
+	expect(pipeConsumer.score).toEqual(
+		{ score: 10, producerScore: 10, producerScores: [] });
 	expect(pipeConsumer.appData).toEqual({});
 
 	pipeTransport.close();
@@ -737,7 +740,8 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(false);
 	expect(videoConsumer.producerPaused).toBe(true);
-	expect(videoConsumer.score).toEqual({ score: 10, producerScore: 0 });
+	expect(videoConsumer.score).toEqual(
+		{ score: 10, producerScore: 0, producerScores: [ 0, 0, 0 ] });
 	expect(videoConsumer.appData).toEqual({});
 }, 2000);
 
