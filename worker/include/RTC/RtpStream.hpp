@@ -34,21 +34,22 @@ namespace RTC
 		{
 			void FillJson(json& jsonObject) const;
 
-			uint32_t ssrc{ 0 };
-			uint8_t payloadType{ 0 };
+			size_t encodingIdx{ 0u };
+			uint32_t ssrc{ 0u };
+			uint8_t payloadType{ 0u };
 			RTC::RtpCodecMimeType mimeType;
-			uint32_t clockRate{ 0 };
+			uint32_t clockRate{ 0u };
 			std::string rid;
 			std::string cname;
-			uint32_t rtxSsrc{ 0 };
-			uint8_t rtxPayloadType{ 0 };
+			uint32_t rtxSsrc{ 0u };
+			uint8_t rtxPayloadType{ 0u };
 			bool useNack{ false };
 			bool usePli{ false };
 			bool useFir{ false };
 			bool useInBandFec{ false };
 			bool useDtx{ false };
-			uint8_t spatialLayers{ 1 };
-			uint8_t temporalLayers{ 1 };
+			uint8_t spatialLayers{ 1u };
+			uint8_t temporalLayers{ 1u };
 		};
 
 	public:

@@ -111,6 +111,9 @@ namespace RTC
 
 		for (auto& encoding : *jsonEncodingsIt)
 		{
+			// Reserve a slot in rtpStreamsByEncodingIdx vector.
+			this->rtpStreamsByEncodingIdx.emplace_back(nullptr);
+
 			if (!encoding.is_object())
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings");
 
@@ -289,6 +292,7 @@ namespace RTC
 		}
 
 		this->mapSsrcRtpStream.clear();
+		this->rtpStreamsByEncodingIdx.clear();
 		this->mapRtxSsrcRtpStream.clear();
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
@@ -367,18 +371,17 @@ namespace RTC
 		// Add rtpStreams.
 		jsonObject["rtpStreams"] = json::array();
 		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
-		size_t rtpStreamIdx{ 0 };
 
-		for (auto& kv : this->mapSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreamsByEncodingIdx)
 		{
+			if (!rtpStream)
+				continue;
+
 			jsonRtpStreamsIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry = (*jsonRtpStreamsIt)[rtpStreamIdx];
-			auto* rtpStream = kv.second;
+			auto& jsonEntry = (*jsonRtpStreamsIt)[jsonRtpStreamsIt->size() - 1];
 
 			rtpStream->FillJson(jsonEntry);
-
-			++rtpStreamIdx;
 		}
 
 		// Add paused.
@@ -415,12 +418,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : this->mapSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreamsByEncodingIdx)
 		{
+			if (!rtpStream)
+				continue;
+
 			jsonArray.emplace_back(json::value_t::object);
 
 			auto& jsonEntry = jsonArray[jsonArray.size() - 1];
-			auto* rtpStream = kv.second;
 
 			rtpStream->FillJsonStats(jsonEntry);
 		}
@@ -1028,14 +1033,20 @@ namespace RTC
 		uint32_t ssrc = packet->GetSsrc();
 
 		MS_ASSERT(
-		  this->mapSsrcRtpStream.find(ssrc) == this->mapSsrcRtpStream.end(), "RtpStream already exists");
+		  this->mapSsrcRtpStream.find(ssrc) == this->mapSsrcRtpStream.end(),
+		  "RtpStream with given SSRC already exists");
+
+		MS_ASSERT(
+		  !this->rtpStreamsByEncodingIdx[encodingIdx],
+		  "RtpStream for given encoding index already exists");
 
 		auto& encoding        = this->rtpParameters.encodings[encodingIdx];
 		auto& encodingMapping = this->rtpMapping.encodings[encodingIdx];
 
 		MS_DEBUG_TAG(
 		  rtp,
-		  "[ssrc:%" PRIu32 ", rid:%s, payloadType:%" PRIu8 "]",
+		  "[encodingIdx:%zu, ssrc:%" PRIu32 ", rid:%s, payloadType:%" PRIu8 "]",
+		  encodingIdx,
 		  ssrc,
 		  encoding.rid.c_str(),
 		  mediaCodec.payloadType);
@@ -1043,6 +1054,7 @@ namespace RTC
 		// Set stream params.
 		RTC::RtpStream::Params params;
 
+		params.encodingIdx    = encodingIdx;
 		params.ssrc           = ssrc;
 		params.payloadType    = mediaCodec.payloadType;
 		params.mimeType       = mediaCodec.mimeType;
@@ -1101,8 +1113,9 @@ namespace RTC
 		// Create a RtpStreamRecv for receiving a media stream.
 		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
 
-		// Insert into the map.
-		this->mapSsrcRtpStream[ssrc] = rtpStream;
+		// Insert into the maps.
+		this->mapSsrcRtpStream[ssrc]               = rtpStream;
+		this->rtpStreamsByEncodingIdx[encodingIdx] = rtpStream;
 
 		// Set the mapped SSRC.
 		this->mapRtpStreamMappedSsrc[rtpStream]             = encodingMapping.mappedSsrc;
