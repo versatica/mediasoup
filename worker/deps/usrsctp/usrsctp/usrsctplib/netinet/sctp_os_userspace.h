@@ -221,9 +221,19 @@ typedef char* caddr_t;
 
 #define bzero(buf, len) memset(buf, 0, len)
 #define bcopy(srcKey, dstKey, len) memcpy(dstKey, srcKey, len)
+
 #if defined(_MSC_VER) && (_MSC_VER < 1900) && !defined(__MINGW32__)
-#define snprintf(data, size, format, ...) _snprintf_s(data, size, _TRUNCATE, format, __VA_ARGS__)
+#define SCTP_SNPRINTF(data, size, format, ...) 					\
+	if (_snprintf_s(data, size, _TRUNCATE, format, __VA_ARGS__) < 0) {	\
+		data[0] = '\0';							\
+	}
+#else
+#define SCTP_SNPRINTF(data, ...)						\
+	if (snprintf(data, __VA_ARGS__) < 0 ) {					\
+		data[0] = '\0';							\
+	}
 #endif
+
 #define inline __inline
 #define __inline__ __inline
 #define	MSG_EOR		0x8		/* data completes record */
@@ -379,40 +389,6 @@ struct ifkpi {
 		int ifk_value;
 	} ifk_data;
 };
-
-struct ifreq {
-	char    ifr_name[16];
-	union {
-		struct sockaddr ifru_addr;
-		struct sockaddr ifru_dstaddr;
-		struct sockaddr ifru_broadaddr;
-		short  ifru_flags;
-		int ifru_metric;
-		int ifru_mtu;
-		int ifru_phys;
-		int ifru_media;
-		int    ifru_intval;
-		char*  ifru_data;
-		struct ifdevmtu ifru_devmtu;
-		struct ifkpi  ifru_kpi;
-		uint32_t ifru_wake_flags;
-	} ifr_ifru;
-#define ifr_addr        ifr_ifru.ifru_addr
-#define ifr_dstaddr     ifr_ifru.ifru_dstaddr
-#define ifr_broadaddr   ifr_ifru.ifru_broadaddr
-#define ifr_flags       ifr_ifru.ifru_flags[0]
-#define ifr_prevflags   ifr_ifru.ifru_flags[1]
-#define ifr_metric      ifr_ifru.ifru_metric
-#define ifr_mtu         ifr_ifru.ifru_mtu
-#define ifr_phys        ifr_ifru.ifru_phys
-#define ifr_media       ifr_ifru.ifru_media
-#define ifr_data        ifr_ifru.ifru_data
-#define ifr_devmtu      ifr_ifru.ifru_devmtu
-#define ifr_intval      ifr_ifru.ifru_intval
-#define ifr_kpi         ifr_ifru.ifru_kpi
-#define ifr_wake_flags  ifr_ifru.ifru_wake_flags
-};
-
 #endif
 
 #if defined(__Userspace_os_Windows)
@@ -459,11 +435,11 @@ struct sx {int dummy;};
 #include <user_mbuf.h>
 /* #include <sys/uio.h> */
 /* #include <sys/lock.h> */
-#if defined(__FreeBSD__) && __FreeBSD_version > 602000
+#if defined(__FreeBSD__)
 #include <sys/rwlock.h>
 #endif
 /* #include <sys/kthread.h> */
-#if defined(__FreeBSD__) && __FreeBSD_version > 602000
+#if defined(__FreeBSD__)
 #include <sys/priv.h>
 #endif
 /* #include <sys/random.h> */
@@ -555,7 +531,7 @@ struct sx {int dummy;};
 
 #include "netinet/sctp_sha1.h"
 
-#if __FreeBSD_version >= 700000
+#if defined(__FreeBSD__)
 #include <netinet/ip_options.h>
 #endif
 
@@ -830,6 +806,13 @@ sctp_hashfreedestroy(void *vhashtbl, struct malloc_type *type, u_long hashmask);
                                      M_ALIGN(m, len); \
                                   }
 
+#if !defined(__Userspace_os_Windows)
+#define SCTP_SNPRINTF(data, ...)						\
+	if (snprintf(data, __VA_ARGS__) < 0) {					\
+		data[0] = '\0';							\
+	}
+#endif
+
 /* We make it so if you have up to 4 threads
  * writting based on the default size of
  * the packet log 65 k, that would be
@@ -888,7 +871,6 @@ static inline void sctp_userspace_rtfree(sctp_rtentry_t *rt)
 		return;
 	}
 	free(rt);
-	rt = NULL;
 }
 #define rtfree(arg1) sctp_userspace_rtfree(arg1)
 

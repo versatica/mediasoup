@@ -65,8 +65,11 @@
 #endif
 
 void recv_thread_destroy(void);
-#define MAXLEN_MBUF_CHAIN 32 /* What should this value be? */
+
+#define MAXLEN_MBUF_CHAIN 128
+
 #define ROUNDUP(a, size) (((a) & ((size)-1)) ? (1 + ((a) | ((size)-1))) : (a))
+
 #if defined(__Userspace_os_Darwin) || defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD)
 #define NEXT_SA(ap) ap = (struct sockaddr *) \
 	((caddr_t) ap + (ap->sa_len ? ROUNDUP(ap->sa_len, sizeof (uint32_t)) : sizeof(uint32_t)))
@@ -430,7 +433,7 @@ recv_function_raw(void *arg)
 	}
 	/* free the array itself */
 	free(recvmbuf);
-	SCTPDBG(SCTP_DEBUG_USR, "%s: Exiting SCTP/IP4 rcv", __func__);
+	SCTPDBG(SCTP_DEBUG_USR, "%s: Exiting SCTP/IP4 rcv\n", __func__);
 	return (NULL);
 }
 #endif
@@ -591,7 +594,8 @@ recv_function_raw6(void *arg)
 		src.sin6_len = sizeof(struct sockaddr_in6);
 #endif
 		src.sin6_port = sh->src_port;
-		if (memcmp(&src.sin6_addr, &dst.sin6_addr, sizeof(struct in6_addr)) == 0) {
+		if (SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+		    (memcmp(&src.sin6_addr, &dst.sin6_addr, sizeof(struct in6_addr)) == 0)) {
 			compute_crc = 0;
 			SCTP_STAT_INCR(sctps_recvhwcrc);
 		} else {
@@ -615,7 +619,7 @@ recv_function_raw6(void *arg)
 	}
 	/* free the array itself */
 	free(recvmbuf6);
-	SCTPDBG(SCTP_DEBUG_USR, "%s: Exiting SCTP/IP6 rcv", __func__);
+	SCTPDBG(SCTP_DEBUG_USR, "%s: Exiting SCTP/IP6 rcv\n", __func__);
 	return (NULL);
 }
 #endif
@@ -796,7 +800,8 @@ recv_function_udp(void *arg)
 		port = src.sin_port;
 		src.sin_port = sh->src_port;
 		dst.sin_port = sh->dest_port;
-		if (src.sin_addr.s_addr == dst.sin_addr.s_addr) {
+		if (SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+		    (src.sin_addr.s_addr == dst.sin_addr.s_addr)) {
 			compute_crc = 0;
 			SCTP_STAT_INCR(sctps_recvhwcrc);
 		} else {
@@ -820,7 +825,7 @@ recv_function_udp(void *arg)
 	}
 	/* free the array itself */
 	free(udprecvmbuf);
-	SCTPDBG(SCTP_DEBUG_USR, "%s: Exiting SCTP/UDP/IP4 rcv", __func__);
+	SCTPDBG(SCTP_DEBUG_USR, "%s: Exiting SCTP/UDP/IP4 rcv\n", __func__);
 	return (NULL);
 }
 #endif
@@ -983,7 +988,8 @@ recv_function_udp6(void *arg)
 		port = src.sin6_port;
 		src.sin6_port = sh->src_port;
 		dst.sin6_port = sh->dest_port;
-		if ((memcmp(&src.sin6_addr, &dst.sin6_addr, sizeof(struct in6_addr)) == 0)) {
+		if (SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+		    (memcmp(&src.sin6_addr, &dst.sin6_addr, sizeof(struct in6_addr)) == 0)) {
 			compute_crc = 0;
 			SCTP_STAT_INCR(sctps_recvhwcrc);
 		} else {
@@ -1007,7 +1013,7 @@ recv_function_udp6(void *arg)
 	}
 	/* free the array itself */
 	free(udprecvmbuf6);
-	SCTPDBG(SCTP_DEBUG_USR, "%s: Exiting SCTP/UDP/IP6 rcv", __func__);
+	SCTPDBG(SCTP_DEBUG_USR, "%s: Exiting SCTP/UDP/IP6 rcv\n", __func__);
 	return (NULL);
 }
 #endif
@@ -1453,6 +1459,7 @@ recv_thread_destroy(void)
 #if defined(INET) || defined(INET6)
 	if (SCTP_BASE_VAR(userspace_route) != -1) {
 		close(SCTP_BASE_VAR(userspace_route));
+		pthread_join(SCTP_BASE_VAR(recvthreadroute), NULL);
 	}
 #endif
 #endif
@@ -1460,15 +1467,25 @@ recv_thread_destroy(void)
 	if (SCTP_BASE_VAR(userspace_rawsctp) != -1) {
 #if defined(__Userspace_os_Windows)
 		closesocket(SCTP_BASE_VAR(userspace_rawsctp));
+		SCTP_BASE_VAR(userspace_rawsctp) = -1;
+		WaitForSingleObject(SCTP_BASE_VAR(recvthreadraw), INFINITE);
+		CloseHandle(SCTP_BASE_VAR(recvthreadraw));
 #else
 		close(SCTP_BASE_VAR(userspace_rawsctp));
+		SCTP_BASE_VAR(userspace_rawsctp) = -1;
+		pthread_join(SCTP_BASE_VAR(recvthreadraw), NULL);
 #endif
 	}
 	if (SCTP_BASE_VAR(userspace_udpsctp) != -1) {
 #if defined(__Userspace_os_Windows)
 		closesocket(SCTP_BASE_VAR(userspace_udpsctp));
+		SCTP_BASE_VAR(userspace_udpsctp) = -1;
+		WaitForSingleObject(SCTP_BASE_VAR(recvthreadudp), INFINITE);
+		CloseHandle(SCTP_BASE_VAR(recvthreadudp));
 #else
 		close(SCTP_BASE_VAR(userspace_udpsctp));
+		SCTP_BASE_VAR(userspace_udpsctp) = -1;
+		pthread_join(SCTP_BASE_VAR(recvthreadudp), NULL);
 #endif
 	}
 #endif
@@ -1476,15 +1493,25 @@ recv_thread_destroy(void)
 	if (SCTP_BASE_VAR(userspace_rawsctp6) != -1) {
 #if defined(__Userspace_os_Windows)
 		closesocket(SCTP_BASE_VAR(userspace_rawsctp6));
+		SCTP_BASE_VAR(userspace_rawsctp6) = -1;
+		WaitForSingleObject(SCTP_BASE_VAR(recvthreadraw6), INFINITE);
+		CloseHandle(SCTP_BASE_VAR(recvthreadraw6));
 #else
 		close(SCTP_BASE_VAR(userspace_rawsctp6));
+		SCTP_BASE_VAR(userspace_rawsctp6) = -1;
+		pthread_join(SCTP_BASE_VAR(recvthreadraw6), NULL);
 #endif
 	}
 	if (SCTP_BASE_VAR(userspace_udpsctp6) != -1) {
 #if defined(__Userspace_os_Windows)
+		SCTP_BASE_VAR(userspace_udpsctp6) = -1;
 		closesocket(SCTP_BASE_VAR(userspace_udpsctp6));
+		WaitForSingleObject(SCTP_BASE_VAR(recvthreadudp6), INFINITE);
+		CloseHandle(SCTP_BASE_VAR(recvthreadudp6));
 #else
 		close(SCTP_BASE_VAR(userspace_udpsctp6));
+		SCTP_BASE_VAR(userspace_udpsctp6) = -1;
+		pthread_join(SCTP_BASE_VAR(recvthreadudp6), NULL);
 #endif
 	}
 #endif

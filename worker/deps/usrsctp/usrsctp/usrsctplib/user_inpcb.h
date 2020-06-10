@@ -329,7 +329,6 @@ struct inpcbinfo {
 
 #define	INP_CHECK_SOCKAF(so, af)	(INP_SOCKAF(so) == af)
 
-/* #ifdef _KERNEL */
 extern int	ipport_reservedhigh;
 extern int	ipport_reservedlow;
 extern int	ipport_lowfirstauto;
@@ -370,6 +369,5 @@ void	ipport_tick(void *xtp);
  */
 void	db_print_inpcb(struct inpcb *inp, const char *name, int indent);
 
-/* #endif  _KERNEL */
 
 #endif /* !_NETINET_IN_PCB_H_ */

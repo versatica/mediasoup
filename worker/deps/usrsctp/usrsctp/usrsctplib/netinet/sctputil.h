@@ -32,9 +32,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 359405 2020-03-28 20:25:45Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 361895 2020-06-07 14:39:20Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_UTIL_H_
@@ -111,7 +111,7 @@ sctp_mtu_size_reset(struct sctp_inpcb *, struct sctp_association *, uint32_t);
 void
 sctp_wakeup_the_read_socket(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
     int so_locked
-#if !defined(__APPLE__) && !defined(SCTP_SO_LOCK_TESTING)
+#if !defined(__APPLE__)
     SCTP_UNUSED
 #endif
 );
@@ -131,7 +131,7 @@ sctp_add_to_readq(struct sctp_inpcb *inp,
     int end,
     int inpread_locked,
     int so_locked
-#if !defined(__APPLE__) && !defined(SCTP_SO_LOCK_TESTING)
+#if !defined(__APPLE__)
     SCTP_UNUSED
 #endif
     );
@@ -163,7 +163,7 @@ struct mbuf *
 sctp_pad_lastmbuf(struct mbuf *, int, struct mbuf *);
 
 void sctp_ulp_notify(uint32_t, struct sctp_tcb *, uint32_t, void *, int
-#if !defined(__APPLE__) && !defined(SCTP_SO_LOCK_TESTING)
+#if !defined(__APPLE__)
     SCTP_UNUSED
 #endif
     );
@@ -180,7 +180,7 @@ void sctp_stop_timers_for_shutdown(struct sctp_tcb *);
 void sctp_stop_association_timers(struct sctp_tcb *, bool);
 
 void sctp_report_all_outbound(struct sctp_tcb *, uint16_t, int, int
-#if !defined(__APPLE__) && !defined(SCTP_SO_LOCK_TESTING)
+#if !defined(__APPLE__)
     SCTP_UNUSED
 #endif
     );
@@ -189,7 +189,7 @@ int sctp_expand_mapping_array(struct sctp_association *, uint32_t);
 
 void sctp_abort_notification(struct sctp_tcb *, uint8_t, uint16_t,
 			     struct sctp_abort_chunk *, int
-#if !defined(__APPLE__) && !defined(SCTP_SO_LOCK_TESTING)
+#if !defined(__APPLE__)
     SCTP_UNUSED
 #endif
     );
@@ -209,7 +209,7 @@ sctp_abort_association(struct sctp_inpcb *, struct sctp_tcb *, struct mbuf *,
 void
 sctp_abort_an_association(struct sctp_inpcb *, struct sctp_tcb *,
     struct mbuf *, int
-#if !defined(__APPLE__) && !defined(SCTP_SO_LOCK_TESTING)
+#if !defined(__APPLE__)
     SCTP_UNUSED
 #endif
 );
@@ -280,7 +280,7 @@ void sctp_print_address(struct sockaddr *);
 int
 sctp_release_pr_sctp_chunk(struct sctp_tcb *, struct sctp_tmit_chunk *,
     uint8_t, int
-#if !defined(__APPLE__) && !defined(SCTP_SO_LOCK_TESTING)
+#if !defined(__APPLE__)
     SCTP_UNUSED
 #endif
 );

@@ -32,7 +32,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 359379 2020-03-27 21:48:52Z tuexen $");
 #endif
@@ -204,18 +204,10 @@ struct sctp_epinfo {
 	sctp_zone_t ipi_zone_asconf;
 	sctp_zone_t ipi_zone_asconf_ack;
 
-#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
-#if __FreeBSD_version <= 602000
-	struct mtx ipi_ep_mtx;
-#else
+#if defined(__FreeBSD__)
 	struct rwlock ipi_ep_mtx;
-#endif
 	struct mtx ipi_iterator_wq_mtx;
-#if __FreeBSD_version <= 602000
-	struct mtx ipi_addr_mtx;
-#else
 	struct rwlock ipi_addr_mtx;
-#endif
 	struct mtx ipi_pktlog_mtx;
 	struct mtx wq_addr_mtx;
 #elif defined(SCTP_PROCESS_LEVEL_LOCKS)
@@ -514,10 +506,6 @@ struct sctp_inpcb {
 	 * they are candidates with sctp_sendm for
 	 * de-supporting.
 	 */
-#ifdef __Panda__
-	pakhandle_type pak_to_read;
-	pakhandle_type pak_to_read_sendq;
-#endif
 	struct mbuf *pkt, *pkt_last;
 	struct mbuf *control;
 #if !(defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__))
@@ -533,7 +521,7 @@ struct sctp_inpcb {
         uint8_t inp_ip_tos;    /* defined as macro in user_inpcb.h */
 	uint8_t inp_ip_resv;
 #endif
-#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+#if defined(__FreeBSD__)
 	struct mtx inp_mtx;
 	struct mtx inp_create_mtx;
 	struct mtx inp_rdata_mtx;
@@ -614,6 +602,7 @@ int register_recv_cb (struct socket *,
                               struct sctp_rcvinfo, int, void *));
 int register_send_cb (struct socket *, uint32_t, int (*)(struct socket *, uint32_t));
 int register_ulp_info (struct socket *, void *);
+int retrieve_ulp_info (struct socket *, void **);
 
 #endif
 struct sctp_tcb {
@@ -641,7 +630,7 @@ struct sctp_tcb {
 	int freed_from_where;
 	uint16_t rport;		/* remote port in network format */
 	uint16_t resv;
-#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+#if defined(__FreeBSD__)
 	struct mtx tcb_mtx;
 	struct mtx tcb_send_mtx;
 #elif defined(SCTP_PROCESS_LEVEL_LOCKS)
@@ -664,7 +653,7 @@ struct sctp_tcb {
 };
 
 
-#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+#if defined(__FreeBSD__)
 
 #include <netinet/sctp_lock_bsd.h>
 
@@ -701,7 +690,7 @@ struct sctp_tcb {
  * goes with the base info. sctp_pcb.c has
  * the real definition.
  */
-#if defined(__FreeBSD__) && __FreeBSD_version >= 801000
+#if defined(__FreeBSD__)
 VNET_DECLARE(struct sctp_base_info, system_base_info) ;
 #else
 extern struct sctp_base_info system_base_info;
@@ -754,7 +743,7 @@ struct sctp_nets *sctp_findnet(struct sctp_tcb *, struct sockaddr *);
 
 struct sctp_inpcb *sctp_pcb_findep(struct sockaddr *, int, int, uint32_t);
 
-#if defined(__FreeBSD__) && __FreeBSD_version >= 500000
+#if defined(__FreeBSD__)
 int sctp_inpcb_bind(struct socket *, struct sockaddr *,
 		    struct sctp_ifa *,struct thread *);
 #elif defined(__Windows__)
@@ -811,7 +800,7 @@ void sctp_inpcb_free(struct sctp_inpcb *, int, int);
 #define SCTP_DONT_INITIALIZE_AUTH_PARAMS	0
 #define SCTP_INITIALIZE_AUTH_PARAMS		1
 
-#if defined(__FreeBSD__) && __FreeBSD_version >= 500000
+#if defined(__FreeBSD__)
 struct sctp_tcb *
 sctp_aloc_assoc(struct sctp_inpcb *, struct sockaddr *,
                 int *, uint32_t, uint32_t, uint16_t, uint16_t, struct thread *,

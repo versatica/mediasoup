@@ -65,8 +65,9 @@ debug_printf_stack(const char *format, ...)
 	timersub(&time_now, &time_main, &time_delta);
 
 	va_start(ap, format);
-	//vfprintf(stderr, format, ap);
-	vsnprintf(charbuf, 1024, format, ap);
+	if (vsnprintf(charbuf, 1024, format, ap) < 0) {
+		charbuf[0] = '\0';
+	}
 	va_end(ap);
 
 	fprintf(stderr, "[S][%u.%03u] %s", (unsigned int) time_delta.tv_sec, (unsigned int) time_delta.tv_usec / 1000, charbuf);
@@ -121,6 +122,9 @@ handle_association_change_event(struct sctp_assoc_change *sac)
 			case SCTP_ASSOC_SUPPORTS_RE_CONFIG:
 				fprintf(stderr, " RE-CONFIG");
 				break;
+			case SCTP_ASSOC_SUPPORTS_INTERLEAVING:
+				fprintf(stderr, " INTERLEAVING");
+				break;
 			default:
 				fprintf(stderr, " UNKNOWN(0x%02x)", sac->sac_info[i]);
 				break;
@@ -158,18 +162,22 @@ handle_peer_address_change_event(struct sctp_paddr_change *spc)
 	case AF_CONN:
 		sconn = (struct sockaddr_conn *)&spc->spc_aaddr;
 #ifdef _WIN32
-		_snprintf(addr_buf, INET6_ADDRSTRLEN, "%p", sconn->sconn_addr);
+		if (_snprintf(addr_buf, INET6_ADDRSTRLEN, "%p", sconn->sconn_addr) < 0) {
 #else
-		snprintf(addr_buf, INET6_ADDRSTRLEN, "%p", sconn->sconn_addr);
+		if (snprintf(addr_buf, INET6_ADDRSTRLEN, "%p", sconn->sconn_addr) < 0) {
 #endif
+			addr_buf[0] = '\0';
+		}
 		addr = addr_buf;
 		break;
 	default:
 #ifdef _WIN32
-		_snprintf(addr_buf, INET6_ADDRSTRLEN, "Unknown family %d", spc->spc_aaddr.ss_family);
+		if (_snprintf(addr_buf, INET6_ADDRSTRLEN, "Unknown family %d", spc->spc_aaddr.ss_family) < 0) {
 #else
-		snprintf(addr_buf, INET6_ADDRSTRLEN, "Unknown family %d", spc->spc_aaddr.ss_family);
+		if (snprintf(addr_buf, INET6_ADDRSTRLEN, "Unknown family %d", spc->spc_aaddr.ss_family) < 0) {
 #endif
+			addr_buf[0] = '\0';
+		}
 		addr = addr_buf;
 		break;
 	}

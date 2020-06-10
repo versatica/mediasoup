@@ -151,7 +151,9 @@ static const char *bytes2human(uint64_t bytes)
 		}
 	}
 
-	snprintf(output, sizeof(output), "%.02lf %s", human_size, suffix[i]);
+	if (snprintf(output, sizeof(output), "%.02lf %s", human_size, suffix[i]) < 0) {
+		output[0] = '\0';
+	}
 	return output;
 }
 
