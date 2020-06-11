@@ -92,7 +92,8 @@ export type ConsumerScore =
 	producerScore: number;
 
 	/**
-	 * The scores of all RTP streams in the producer.
+	 * The scores of all RTP streams in the producer (just useful when the
+	 * producer uses simulcast).
 	 */
 	producerScores: number[];
 }
