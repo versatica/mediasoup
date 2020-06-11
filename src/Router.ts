@@ -359,7 +359,7 @@ export class Router extends EnhancedEventEmitter
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		listenIps = (listenIps as any[]).map((listenIp: TransportListenIp | string) =>
+		listenIps = listenIps.map((listenIp) =>
 		{
 			if (typeof listenIp === 'string' && listenIp)
 			{
