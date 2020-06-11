@@ -1384,7 +1384,7 @@ namespace RTC
 		}
 	}
 
-	inline void Producer::EmitScore()
+	inline void Producer::EmitScore() const
 	{
 		MS_TRACE();
 

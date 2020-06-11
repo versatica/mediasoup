@@ -132,7 +132,7 @@ namespace RTC
 		void PreProcessRtpPacket(RTC::RtpPacket* packet);
 		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
 		void PostProcessRtpPacket(RTC::RtpPacket* packet);
-		void EmitScore();
+		void EmitScore() const;
 		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
 		void EmitTraceEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
