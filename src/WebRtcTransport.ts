@@ -16,7 +16,7 @@ export type WebRtcTransportOptions =
 	 * Listening IP address or addresses in order of preference (first one is the
 	 * preferred one).
 	 */
-	listenIps: TransportListenIp[] | string[];
+	listenIps: (TransportListenIp | string)[];
 
 	/**
 	 * Listen in UDP. Default true.
