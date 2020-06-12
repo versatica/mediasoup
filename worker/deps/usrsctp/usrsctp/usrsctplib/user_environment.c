@@ -65,16 +65,27 @@ userland_mutex_t atomic_mtx;
  * inside other RNG's, like arc4random(9).
  */
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-static int
-read_random_phony(void *buf, int count)
+void
+init_random(void)
+{
+	return;
+}
+
+int
+read_random(void *buf, int count)
 {
 	memset(buf, 'A', count);
 	return (count);
 }
-#else
-#if defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_Darwin)
-static int
-read_random_phony(void *buf, int count)
+#elif defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_Darwin)
+void
+init_random(void)
+{
+	return;
+}
+
+int
+read_random(void *buf, int count)
 {
 	if (count >= 0) {
 		arc4random_buf(buf, count);
@@ -82,13 +93,29 @@ read_random_phony(void *buf, int count)
 	return (count);
 }
 #else
-static int
-read_random_phony(void *buf, int count)
+void
+init_random(void)
+{
+	unsigned int seed;
+
+#if defined(__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
+	seed = (unsigned int)time(NULL);
+#else
+	seed = getpid();
+#endif
+#if defined(__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
+	srand(seed);
+#else
+	srandom(seed);
+#endif
+	return;
+}
+
+int
+read_random(void *buf, int count)
 {
 	uint32_t randval;
 	int size, i;
-
-	/* srandom() is called in kern/init_main.c:proc0_post() */
 
 	/* Fill buf[] with random(9) output */
 	for (i = 0; i < count; i+= (int)sizeof(uint32_t)) {
@@ -100,14 +127,3 @@ read_random_phony(void *buf, int count)
 	return (count);
 }
 #endif
-#endif
-
-static int (*read_func)(void *, int) = read_random_phony;
-
-/* Userland-visible version of read_random */
-int
-read_random(void *buf, int count)
-{
-	return ((*read_func)(buf, count));
-}
-

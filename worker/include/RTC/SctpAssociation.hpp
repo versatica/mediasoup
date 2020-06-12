@@ -70,10 +70,6 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void TransportConnected();
-		size_t GetMaxSctpMessageSize() const
-		{
-			return this->maxSctpMessageSize;
-		}
 		SctpState GetState() const
 		{
 			return this->state;

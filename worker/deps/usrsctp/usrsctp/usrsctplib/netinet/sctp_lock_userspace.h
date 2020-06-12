@@ -33,7 +33,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 #endif
@@ -210,14 +210,6 @@ __FBSDID("$FreeBSD$");
                 do { \
 		       sctppcbinfo.ipi_count_strmoq--; \
 	        } while (0)
-
-
-/* not sure if __Userspace__ needs these (but copied nonetheless...) */
-#if defined(SCTP_SO_LOCK_TESTING)
-#define SCTP_INP_SO(sctpinp)	(sctpinp)->ip_inp.inp.inp_socket
-#define SCTP_SOCKET_LOCK(so, refcnt)
-#define SCTP_SOCKET_UNLOCK(so, refcnt)
-#endif
 
 
 /* these were in sctp_lock_empty.h but aren't in sctp_lock_bsd.h ... */

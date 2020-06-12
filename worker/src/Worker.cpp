@@ -8,14 +8,21 @@
 #include "Settings.hpp"
 #include "Channel/Notifier.hpp"
 
+// TODO: REMOVE
+#include "PayloadChannel/Notifier.hpp"
+
 /* Instance methods. */
 
-Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
+Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel)
+  : channel(channel), payloadChannel(payloadChannel)
 {
 	MS_TRACE();
 
 	// Set us as Channel's listener.
 	this->channel->SetListener(this);
+
+	// Set us as PayloadChannel's listener.
+	this->payloadChannel->SetListener(this);
 
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
@@ -63,6 +70,9 @@ void Worker::Close()
 
 	// Close the Channel.
 	delete this->channel;
+
+	// Close the PayloadChannel.
+	delete this->payloadChannel;
 }
 
 void Worker::FillJson(json& jsonObject) const
@@ -147,14 +157,14 @@ void Worker::FillJsonResourceUsage(json& jsonObject) const
 	jsonObject["ru_nivcsw"] = uvRusage.ru_nivcsw;
 }
 
-void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& routerId) const
+void Worker::SetNewRouterIdFromInternal(json& internal, std::string& routerId) const
 {
 	MS_TRACE();
 
-	auto jsonRouterIdIt = request->internal.find("routerId");
+	auto jsonRouterIdIt = internal.find("routerId");
 
-	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("request has no internal.routerId");
+	if (jsonRouterIdIt == internal.end() || !jsonRouterIdIt->is_string())
+		MS_THROW_ERROR("missing internal.routerId");
 
 	routerId.assign(jsonRouterIdIt->get<std::string>());
 
@@ -162,14 +172,14 @@ void Worker::SetNewRouterIdFromRequest(Channel::Request* request, std::string& r
 		MS_THROW_ERROR("a Router with same routerId already exists");
 }
 
-RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
+RTC::Router* Worker::GetRouterFromInternal(json& internal) const
 {
 	MS_TRACE();
 
-	auto jsonRouterIdIt = request->internal.find("routerId");
+	auto jsonRouterIdIt = internal.find("routerId");
 
-	if (jsonRouterIdIt == request->internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("request has no internal.routerId");
+	if (jsonRouterIdIt == internal.end() || !jsonRouterIdIt->is_string())
+		MS_THROW_ERROR("missing internal.routerId");
 
 	auto it = this->mapRouters.find(jsonRouterIdIt->get<std::string>());
 
@@ -224,7 +234,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 			std::string routerId;
 
 			// This may throw.
-			SetNewRouterIdFromRequest(request, routerId);
+			SetNewRouterIdFromInternal(request->internal, routerId);
 
 			auto* router = new RTC::Router(routerId);
 
@@ -240,7 +250,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 		case Channel::Request::MethodId::ROUTER_CLOSE:
 		{
 			// This may throw.
-			RTC::Router* router = GetRouterFromRequest(request);
+			RTC::Router* router = GetRouterFromInternal(request->internal);
 
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);
@@ -257,7 +267,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 		default:
 		{
 			// This may throw.
-			RTC::Router* router = GetRouterFromRequest(request);
+			RTC::Router* router = GetRouterFromInternal(request->internal);
 
 			router->HandleRequest(request);
 
@@ -273,6 +283,30 @@ inline void Worker::OnChannelClosed(Channel::UnixStreamSocket* /*socket*/)
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("channel remotely closed, closing myself");
+
+	Close();
+}
+
+inline void Worker::OnPayloadChannelNotification(
+  PayloadChannel::UnixStreamSocket* /*payloadChannel*/, PayloadChannel::Notification* notification)
+{
+	MS_TRACE();
+
+	MS_DEBUG_DEV("PayloadChannel notification received [event:%s]", notification->event.c_str());
+
+	// This may throw.
+	RTC::Router* router = GetRouterFromInternal(notification->internal);
+
+	router->HandleNotification(notification);
+}
+
+inline void Worker::OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* /*payloadChannel*/)
+{
+	MS_TRACE();
+
+	// If the pipe is remotely closed it may mean that mediasoup Node process
+	// abruptly died (SIGKILL?) so we must die.
+	MS_ERROR_STD("payloadChannel remotely closed, closing myself");
 
 	Close();
 }

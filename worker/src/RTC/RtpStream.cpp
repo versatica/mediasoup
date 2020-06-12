@@ -335,6 +335,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		jsonObject["encodingIdx"] = this->encodingIdx;
 		jsonObject["ssrc"]        = this->ssrc;
 		jsonObject["payloadType"] = this->payloadType;
 		jsonObject["mimeType"]    = this->mimeType.ToString();

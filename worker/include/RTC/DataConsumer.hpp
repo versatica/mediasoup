@@ -15,9 +15,16 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnDataConsumerSendSctpMessage(
+			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)    = 0;
+		};
+
+	public:
+		enum class Type : uint8_t
+		{
+			SCTP = 0,
+			DIRECT
 		};
 
 	public:
@@ -26,13 +33,17 @@ namespace RTC
 		  const std::string& dataProducerId,
 		  RTC::DataConsumer::Listener* listener,
 		  json& data,
-		  size_t maxSctpMessageSize);
+		  size_t maxMessageSize);
 		virtual ~DataConsumer();
 
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
+		Type GetType() const
+		{
+			return this->type;
+		}
 		const RTC::SctpStreamParameters& GetSctpStreamParameters() const
 		{
 			return this->sctpStreamParameters;
@@ -42,7 +53,7 @@ namespace RTC
 			// clang-format off
 			return (
 				this->transportConnected &&
-				this->sctpAssociationConnected &&
+				(this->type == DataConsumer::Type::DIRECT || this->sctpAssociationConnected) &&
 				!this->dataProducerClosed
 			);
 			// clang-format on
@@ -52,7 +63,7 @@ namespace RTC
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
 		void DataProducerClosed();
-		void SendSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len);
+		void SendMessage(uint32_t ppid, const uint8_t* msg, size_t len);
 
 	public:
 		// Passed by argument.
@@ -62,8 +73,10 @@ namespace RTC
 	private:
 		// Passed by argument.
 		RTC::DataConsumer::Listener* listener{ nullptr };
-		size_t maxSctpMessageSize{ 0u };
+		size_t maxMessageSize{ 0u };
 		// Others.
+		Type type;
+		std::string typeString;
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;

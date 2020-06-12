@@ -16,7 +16,7 @@ export type WebRtcTransportOptions =
 	 * Listening IP address or addresses in order of preference (first one is the
 	 * preferred one).
 	 */
-	listenIps: TransportListenIp[] | string[];
+	listenIps: (TransportListenIp | string)[];
 
 	/**
 	 * Listen in UDP. Default true.
@@ -54,7 +54,7 @@ export type WebRtcTransportOptions =
 	numSctpStreams?: NumSctpStreams;
 
 	/**
-	 * Maximum size of data that can be passed to DataProducer's send() method.
+	 * Maximum allowed size for SCTP messages sent by DataProducers.
 	 * Default 262144.
 	 */
 	maxSctpMessageSize?: number;
@@ -151,7 +151,7 @@ export class WebRtcTransport extends Transport
 		iceParameters: IceParameters;
 		iceCandidates: IceCandidate[];
 		iceState: IceState;
-		iceSelectedTuple: TransportTuple;
+		iceSelectedTuple?: TransportTuple;
 		dtlsParameters: DtlsParameters;
 		dtlsState: DtlsState;
 		dtlsRemoteCert?: string;

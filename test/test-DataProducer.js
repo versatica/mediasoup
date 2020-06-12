@@ -50,6 +50,7 @@ test('transport1.produceData() succeeds', async () =>
 	expect(onObserverNewDataProducer).toHaveBeenCalledWith(dataProducer1);
 	expect(dataProducer1.id).toBeType('string');
 	expect(dataProducer1.closed).toBe(false);
+	expect(dataProducer1.type).toBe('sctp');
 	expect(dataProducer1.sctpStreamParameters).toBeType('object');
 	expect(dataProducer1.sctpStreamParameters.streamId).toBe(666);
 	expect(dataProducer1.sctpStreamParameters.ordered).toBe(true);
@@ -99,6 +100,7 @@ test('transport2.produceData() succeeds', async () =>
 	expect(onObserverNewDataProducer).toHaveBeenCalledWith(dataProducer2);
 	expect(dataProducer2.id).toBeType('string');
 	expect(dataProducer2.closed).toBe(false);
+	expect(dataProducer2.type).toBe('sctp');
 	expect(dataProducer2.sctpStreamParameters).toBeType('object');
 	expect(dataProducer2.sctpStreamParameters.streamId).toBe(777);
 	expect(dataProducer2.sctpStreamParameters.ordered).toBe(false);
@@ -176,6 +178,7 @@ test('dataProducer.dump() succeeds', async () =>
 	data = await dataProducer1.dump();
 
 	expect(data.id).toBe(dataProducer1.id);
+	expect(data.type).toBe('sctp');
 	expect(data.sctpStreamParameters).toBeType('object');
 	expect(data.sctpStreamParameters.streamId).toBe(666);
 	expect(data.sctpStreamParameters.ordered).toBe(true);
@@ -187,6 +190,7 @@ test('dataProducer.dump() succeeds', async () =>
 	data = await dataProducer2.dump();
 
 	expect(data.id).toBe(dataProducer2.id);
+	expect(data.type).toBe('sctp');
 	expect(data.sctpStreamParameters).toBeType('object');
 	expect(data.sctpStreamParameters.streamId).toBe(777);
 	expect(data.sctpStreamParameters.ordered).toBe(false);

@@ -4,6 +4,7 @@ export * from './Transport';
 export * from './WebRtcTransport';
 export * from './PlainTransport';
 export * from './PipeTransport';
+export * from './DirectTransport';
 export * from './Producer';
 export * from './Consumer';
 export * from './DataProducer';

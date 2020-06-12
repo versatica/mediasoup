@@ -32,9 +32,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 359379 2020-03-27 21:48:52Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 360292 2020-04-25 09:06:11Z melifaro $");
 #endif
 
 #ifndef _NETINET_SCTP_STRUCTS_H_
@@ -55,7 +55,7 @@ struct sctp_timer {
 	void *ep;
 	void *tcb;
 	void *net;
-#if defined(__FreeBSD__) && __FreeBSD_version >= 800000
+#if defined(__FreeBSD__)
 	void *vnet;
 #endif
 
@@ -117,7 +117,7 @@ typedef void (*end_func) (void *ptr, uint32_t val);
 /* whats on the mcore control struct */
 struct sctp_mcore_queue {
 	TAILQ_ENTRY(sctp_mcore_queue) next;
-#if defined(__FreeBSD__) && __FreeBSD_version >= 801000
+#if defined(__FreeBSD__)
 	struct vnet *vn;
 #endif
 	struct mbuf *m;
@@ -142,7 +142,7 @@ struct sctp_mcore_ctrl {
 
 struct sctp_iterator {
 	TAILQ_ENTRY(sctp_iterator) sctp_nxt_itr;
-#if defined(__FreeBSD__) && __FreeBSD_version >= 801000
+#if defined(__FreeBSD__)
 	struct vnet *vn;
 #endif
 	struct sctp_timer tmr;
@@ -228,26 +228,16 @@ struct iterator_control {
 #define SCTP_ITERATOR_STOP_CUR_INP	0x00000008
 
 struct sctp_net_route {
-	sctp_rtentry_t *ro_rt;
 #if defined(__FreeBSD__)
-#if __FreeBSD_version < 1100093
-#if __FreeBSD_version >= 800000
-	void *ro_lle;
-#endif
-#if __FreeBSD_version >= 900000
-	void *ro_ia;
-	int ro_flags;
-#endif
-#else
-#if __FreeBSD_version >= 1100116
+	struct nhop_object *ro_nh;
 	struct llentry *ro_lle;
-#endif
 	char		*ro_prepend;
 	uint16_t	ro_plen;
 	uint16_t	ro_flags;
 	uint16_t	ro_mtu;
 	uint16_t	spare;
-#endif
+#else
+	sctp_rtentry_t *ro_rt;
 #endif
 #if defined(__APPLE__)
 #if !defined(APPLE_LEOPARD) && !defined(APPLE_SNOWLEOPARD) && !defined(APPLE_LION) && !defined(APPLE_MOUNTAINLION) && !defined(APPLE_ELCAPITAN)

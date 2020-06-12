@@ -86,10 +86,12 @@ receive_cb(struct socket *sock, union sctp_sockstore addr, void *data,
 #endif
 			case AF_CONN:
 #ifdef _WIN32
-				_snprintf(namebuf, INET6_ADDRSTRLEN, "%p", addr.sconn.sconn_addr);
+				if (_snprintf(namebuf, INET6_ADDRSTRLEN, "%p", addr.sconn.sconn_addr) < 0) {
 #else
-				snprintf(namebuf, INET6_ADDRSTRLEN, "%p", addr.sconn.sconn_addr);
+				if (snprintf(namebuf, INET6_ADDRSTRLEN, "%p", addr.sconn.sconn_addr) < 0) {
 #endif
+					namebuf[0] = '\0';
+				}
 				name = namebuf;
 				port = ntohs(addr.sconn.sconn_port);
 				break;

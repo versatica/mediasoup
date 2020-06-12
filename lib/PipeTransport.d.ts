@@ -17,8 +17,8 @@ export declare type PipeTransportOptions = {
      */
     numSctpStreams?: NumSctpStreams;
     /**
-     * Maximum size of data that can be passed to DataProducer's send() method.
-     * Default 262144.
+     * Maximum allowed size for SCTP messages sent by DataProducers.
+     * Default 1073741823.
      */
     maxSctpMessageSize?: number;
     /**

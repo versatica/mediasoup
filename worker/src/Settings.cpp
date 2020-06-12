@@ -198,6 +198,8 @@ void Settings::PrintConfiguration()
 		logTags.emplace_back("svc");
 	if (Settings::configuration.logTags.sctp)
 		logTags.emplace_back("sctp");
+	if (Settings::configuration.logTags.message)
+		logTags.emplace_back("message");
 
 	if (!logTags.empty())
 	{
@@ -321,6 +323,8 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 			newLogTags.svc = true;
 		else if (tag == "sctp")
 			newLogTags.sctp = true;
+		else if (tag == "message")
+			newLogTags.message = true;
 	}
 
 	Settings::configuration.logTags = newLogTags;

@@ -10,7 +10,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t InactivityCheckInterval{ 1500u }; // In ms.
+	static constexpr uint64_t InactivityCheckInterval{ 1500u };        // In ms.
+	static constexpr uint64_t InactivityCheckIntervalWithDtx{ 5000u }; // In ms.
 
 	/* TransmissionCounter methods. */
 
@@ -187,14 +188,15 @@ namespace RTC
 		if (this->params.useNack)
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
-		// Run the RTP inactivity periodic timer (unless DTX is enabled).
-		if (!this->params.useDtx)
-		{
-			this->inactivityCheckPeriodicTimer = new Timer(this);
+		// Run the RTP inactivity periodic timer (use a different timeout if DTX is
+		// enabled).
+		this->inactivityCheckPeriodicTimer = new Timer(this);
+		this->inactive                     = false;
 
+		if (!this->params.useDtx)
 			this->inactivityCheckPeriodicTimer->Start(InactivityCheckInterval);
-			this->inactive = false;
-		}
+		else
+			this->inactivityCheckPeriodicTimer->Start(InactivityCheckIntervalWithDtx);
 	}
 
 	RtpStreamRecv::~RtpStreamRecv()

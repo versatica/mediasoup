@@ -169,27 +169,16 @@ socantsendmore(struct socket *so)
 int
 sbwait(struct sockbuf *sb)
 {
-#if defined(__Userspace__) /* __Userspace__ */
-
 	SOCKBUF_LOCK_ASSERT(sb);
 
 	sb->sb_flags |= SB_WAIT;
 #if defined (__Userspace_os_Windows)
 	if (SleepConditionVariableCS(&(sb->sb_cond), &(sb->sb_mtx), INFINITE))
-		return 0;
+		return (0);
 	else
-		return -1;
+		return (-1);
 #else
 	return (pthread_cond_wait(&(sb->sb_cond), &(sb->sb_mtx)));
-#endif
-
-#else
-	SOCKBUF_LOCK_ASSERT(sb);
-
-	sb->sb_flags |= SB_WAIT;
-	return (msleep(&sb->sb_cc, &sb->sb_mtx,
-	    (sb->sb_flags & SB_NOINTR) ? PSOCK : PSOCK | PCATCH, "sbwait",
-	    sb->sb_timeo));
 #endif
 }
 
@@ -1260,7 +1249,6 @@ out:
 
 
 
-#if defined(__Userspace__)
 /* Taken from  /src/sys/kern/uipc_socket.c
  * and modified for __Userspace__
  * socreate returns a socket.  The socket should be
@@ -1331,74 +1319,6 @@ socreate(int dom, struct socket **aso, int type, int proto)
 	*aso = so;
 	return (0);
 }
-#else
-/* The kernel version for reference is below. The #else
-   should be removed once the __Userspace__
-   version is tested.
- * socreate returns a socket with a ref count of 1.  The socket should be
- * closed with soclose().
- */
-int
-socreate(int dom, struct socket **aso, int type, int proto,
-    struct ucred *cred, struct thread *td)
-{
-	struct protosw *prp;
-	struct socket *so;
-	int error;
-
-	if (proto)
-		prp = pffindproto(dom, proto, type);
-	else
-		prp = pffindtype(dom, type);
-
-	if (prp == NULL || prp->pr_usrreqs->pru_attach == NULL ||
-	    prp->pr_usrreqs->pru_attach == pru_attach_notsupp)
-		return (EPROTONOSUPPORT);
-
-	if (jailed(cred) && jail_socket_unixiproute_only &&
-	    prp->pr_domain->dom_family != PF_LOCAL &&
-	    prp->pr_domain->dom_family != PF_INET &&
-	    prp->pr_domain->dom_family != PF_ROUTE) {
-		return (EPROTONOSUPPORT);
-	}
-
-	if (prp->pr_type != type)
-		return (EPROTOTYPE);
-	so = soalloc();
-	if (so == NULL)
-		return (ENOBUFS);
-
-	TAILQ_INIT(&so->so_incomp);
-	TAILQ_INIT(&so->so_comp);
-	so->so_type = type;
-	so->so_cred = crhold(cred);
-	so->so_proto = prp;
-#ifdef MAC
-	mac_create_socket(cred, so);
-#endif
-	knlist_init(&so->so_rcv.sb_sel.si_note, SOCKBUF_MTX(&so->so_rcv),
-	    NULL, NULL, NULL);
-	knlist_init(&so->so_snd.sb_sel.si_note, SOCKBUF_MTX(&so->so_snd),
-	    NULL, NULL, NULL);
-	so->so_count = 1;
-	/*
-	 * Auto-sizing of socket buffers is managed by the protocols and
-	 * the appropriate flags must be set in the pru_attach function.
-	 */
-	error = (*prp->pr_usrreqs->pru_attach)(so, proto, td);
-	if (error) {
-		KASSERT(so->so_count == 1, ("socreate: so_count %d",
-		    so->so_count));
-		so->so_count = 0;
-		sodealloc(so);
-		return (error);
-	}
-	*aso = so;
-	return (0);
-}
-#endif
-
-
 
 
 /* Taken from  /src/sys/kern/uipc_syscalls.c
@@ -1493,7 +1413,6 @@ sbreserve(struct sockbuf *sb, u_long cc, struct socket *so)
 	return (error);
 }
 
-#if defined(__Userspace__)
 int
 soreserve(struct socket *so, u_long sndcc, u_long rcvcc)
 {
@@ -1523,45 +1442,12 @@ soreserve(struct socket *so, u_long sndcc, u_long rcvcc)
 	SOCKBUF_UNLOCK(&so->so_snd);
 	return (ENOBUFS);
 }
-#else /* kernel version for reference */
-int
-soreserve(struct socket *so, u_long sndcc, u_long rcvcc)
-{
-	struct thread *td = curthread;
-
-	SOCKBUF_LOCK(&so->so_snd);
-	SOCKBUF_LOCK(&so->so_rcv);
-	if (sbreserve_locked(&so->so_snd, sndcc, so, td) == 0)
-		goto bad;
-	if (sbreserve_locked(&so->so_rcv, rcvcc, so, td) == 0)
-		goto bad2;
-	if (so->so_rcv.sb_lowat == 0)
-		so->so_rcv.sb_lowat = 1;
-	if (so->so_snd.sb_lowat == 0)
-		so->so_snd.sb_lowat = MCLBYTES;
-	if (so->so_snd.sb_lowat > so->so_snd.sb_hiwat)
-		so->so_snd.sb_lowat = so->so_snd.sb_hiwat;
-	SOCKBUF_UNLOCK(&so->so_rcv);
-	SOCKBUF_UNLOCK(&so->so_snd);
-	return (0);
-bad2:
-	sbrelease_locked(&so->so_snd, so);
-bad:
-	SOCKBUF_UNLOCK(&so->so_rcv);
-	SOCKBUF_UNLOCK(&so->so_snd);
-	return (ENOBUFS);
-}
-#endif
-
-
-
 
 
 /* Taken from  /src/sys/kern/uipc_sockbuf.c
  * and modified for __Userspace__
  */
 
-#if defined(__Userspace__)
 void
 sowakeup(struct socket *so, struct sockbuf *sb)
 {
@@ -1579,43 +1465,6 @@ sowakeup(struct socket *so, struct sockbuf *sb)
 	}
 	SOCKBUF_UNLOCK(sb);
 }
-#else /* kernel version for reference */
-/*
- * Wakeup processes waiting on a socket buffer.  Do asynchronous notification
- * via SIGIO if the socket has the SS_ASYNC flag set.
- *
- * Called with the socket buffer lock held; will release the lock by the end
- * of the function.  This allows the caller to acquire the socket buffer lock
- * while testing for the need for various sorts of wakeup and hold it through
- * to the point where it's no longer required.  We currently hold the lock
- * through calls out to other subsystems (with the exception of kqueue), and
- * then release it to avoid lock order issues.  It's not clear that's
- * correct.
- */
-void
-sowakeup(struct socket *so, struct sockbuf *sb)
-{
-
-	SOCKBUF_LOCK_ASSERT(sb);
-
-	selwakeuppri(&sb->sb_sel, PSOCK);
-	sb->sb_flags &= ~SB_SEL;
-	if (sb->sb_flags & SB_WAIT) {
-		sb->sb_flags &= ~SB_WAIT;
-		wakeup(&sb->sb_cc);
-	}
-	KNOTE_LOCKED(&sb->sb_sel.si_note, 0);
-	SOCKBUF_UNLOCK(sb);
-	if ((so->so_state & SS_ASYNC) && so->so_sigio != NULL)
-		pgsigio(&so->so_sigio, SIGIO, 0);
-	if (sb->sb_flags & SB_UPCALL)
-		(*so->so_upcall)(so, so->so_upcallarg, M_NOWAIT);
-	if (sb->sb_flags & SB_AIO)
-		aio_swake(so, sb);
-	mtx_assert(SOCKBUF_MTX(sb), MA_NOTOWNED);
-}
-#endif
-
 
 
 /* Taken from  /src/sys/kern/uipc_socket.c
@@ -2583,6 +2432,13 @@ usrsctp_set_ulpinfo(struct socket *so, void *ulp_info)
 	return (register_ulp_info(so, ulp_info));
 }
 
+
+int
+usrsctp_get_ulpinfo(struct socket *so, void **pulp_info)
+{
+	return (retrieve_ulp_info(so, pulp_info));
+}
+
 int
 usrsctp_bindx(struct socket *so, struct sockaddr *addrs, int addrcnt, int flags)
 {
@@ -3405,21 +3261,30 @@ usrsctp_dumppacket(const void *buf, size_t len, int outbound)
 	ftime(&tb);
 	localtime_s(&t, &tb.time);
 #if defined(__MINGW32__)
-	snprintf(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_FORMAT,
-	            outbound ? 'O' : 'I',
-	            t.tm_hour, t.tm_min, t.tm_sec, (long)(1000 * tb.millitm));
+	if (snprintf(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_FORMAT,
+	             outbound ? 'O' : 'I',
+	             t.tm_hour, t.tm_min, t.tm_sec, (long)(1000 * tb.millitm)) < 0) {
+		free(dump_buf);
+		return (NULL);
+	}
 #else
-	_snprintf_s(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_LENGTH, PREAMBLE_FORMAT,
-	            outbound ? 'O' : 'I',
-	            t.tm_hour, t.tm_min, t.tm_sec, (long)(1000 * tb.millitm));
+	if (_snprintf_s(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_LENGTH, PREAMBLE_FORMAT,
+	                outbound ? 'O' : 'I',
+	                t.tm_hour, t.tm_min, t.tm_sec, (long)(1000 * tb.millitm)) < 0) {
+		free(dump_buf);
+		return (NULL);
+	}
 #endif
 #else
 	gettimeofday(&tv, NULL);
 	sec = (time_t)tv.tv_sec;
 	localtime_r((const time_t *)&sec, &t);
-	snprintf(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_FORMAT,
-	         outbound ? 'O' : 'I',
-	         t.tm_hour, t.tm_min, t.tm_sec, (long)tv.tv_usec);
+	if (snprintf(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_FORMAT,
+	             outbound ? 'O' : 'I',
+	             t.tm_hour, t.tm_min, t.tm_sec, (long)tv.tv_usec) < 0) {
+		free(dump_buf);
+		return (NULL);
+	}
 #endif
 	pos += PREAMBLE_LENGTH;
 #if defined(_WIN32) && !defined(__MINGW32__)
@@ -3527,9 +3392,9 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 	return;
 }
 
-void usrsctp_handle_timers(uint32_t delta)
+void usrsctp_handle_timers(uint32_t elapsed_milliseconds)
 {
-	sctp_handle_tick(delta);
+	sctp_handle_tick(sctp_msecs_to_ticks(elapsed_milliseconds));
 }
 
 int

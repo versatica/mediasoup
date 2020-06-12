@@ -477,8 +477,9 @@ namespace RTC
 
 		// NOTE: Here we know that SSRCs in Consumer's rtpParameters must be the same
 		// as in the given consumableRtpEncodings.
-		for (auto& encoding : this->rtpParameters.encodings)
+		for (size_t idx{ 0u }; idx < this->rtpParameters.encodings.size(); ++idx)
 		{
+			auto& encoding   = this->rtpParameters.encodings[idx];
 			auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 			MS_DEBUG_TAG(
@@ -487,6 +488,7 @@ namespace RTC
 			// Set stream params.
 			RTC::RtpStream::Params params;
 
+			params.encodingIdx    = idx;
 			params.ssrc           = encoding.ssrc;
 			params.payloadType    = mediaCodec->payloadType;
 			params.mimeType       = mediaCodec->mimeType;

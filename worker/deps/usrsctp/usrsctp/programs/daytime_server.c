@@ -111,10 +111,12 @@ main(int argc, char *argv[])
 		}
 		time(&now);
 #ifdef _WIN32
-		_snprintf(buffer, sizeof(buffer), "%s", ctime(&now));
+		if (_snprintf(buffer, sizeof(buffer), "%s", ctime(&now)) < 0) {
 #else
-		snprintf(buffer, sizeof(buffer), "%s", ctime(&now));
+		if (snprintf(buffer, sizeof(buffer), "%s", ctime(&now)) < 0) {
 #endif
+			buffer[0] = '\0';
+		}
 		sndinfo.snd_sid = 0;
 		sndinfo.snd_flags = 0;
 		sndinfo.snd_ppid = htonl(DAYTIME_PPID);

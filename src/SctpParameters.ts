@@ -74,6 +74,7 @@ export type SctpStreamParameters =
 	 * SCTP stream id.
 	 */
 	streamId: number;
+
 	/**
 	 * Whether data messages must be received in order. If true the messages will
 	 * be sent reliably. Default true.

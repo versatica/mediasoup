@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -15,17 +16,38 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		auto jsonTypeIt                 = data.find("type");
 		auto jsonSctpStreamParametersIt = data.find("sctpStreamParameters");
 		auto jsonLabelIt                = data.find("label");
 		auto jsonProtocolIt             = data.find("protocol");
 
-		if (jsonSctpStreamParametersIt == data.end() || !jsonSctpStreamParametersIt->is_object())
-		{
-			MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
-		}
+		if (jsonTypeIt == data.end() || !jsonTypeIt->is_string())
+			MS_THROW_TYPE_ERROR("missing type");
 
-		// This may throw.
-		this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+		this->typeString = jsonTypeIt->get<std::string>();
+
+		if (this->typeString == "sctp")
+			this->type = DataProducer::Type::SCTP;
+		else if (this->typeString == "direct")
+			this->type = DataProducer::Type::DIRECT;
+		else
+			MS_THROW_TYPE_ERROR("invalid type");
+
+		if (this->type == DataProducer::Type::SCTP)
+		{
+			// clang-format off
+			if (
+				jsonSctpStreamParametersIt == data.end() ||
+				!jsonSctpStreamParametersIt->is_object()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
+			}
+
+			// This may throw.
+			this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+		}
 
 		if (jsonLabelIt != data.end() && jsonLabelIt->is_string())
 			this->label = jsonLabelIt->get<std::string>();
@@ -46,8 +68,14 @@ namespace RTC
 		// Add id.
 		jsonObject["id"] = this->id;
 
+		// Add type.
+		jsonObject["type"] = this->typeString;
+
 		// Add sctpStreamParameters.
-		this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+		if (this->type == DataProducer::Type::SCTP)
+		{
+			this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+		}
 
 		// Add label.
 		jsonObject["label"] = this->label;
@@ -117,13 +145,13 @@ namespace RTC
 		}
 	}
 
-	void DataProducer::ReceiveSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len)
+	void DataProducer::ReceiveMessage(uint32_t ppid, const uint8_t* msg, size_t len)
 	{
 		MS_TRACE();
 
 		this->messagesReceived++;
 		this->bytesReceived += len;
 
-		this->listener->OnDataProducerSctpMessageReceived(this, ppid, msg, len);
+		this->listener->OnDataProducerMessageReceived(this, ppid, msg, len);
 	}
 } // namespace RTC

@@ -41,7 +41,7 @@ export type PlainTransportOptions =
 	numSctpStreams?: NumSctpStreams;
 
 	/**
-	 * Maximum size of data that can be passed to DataProducer's send() method.
+	 * Maximum allowed size for SCTP messages sent by DataProducers.
 	 * Default 262144.
 	 */
 	maxSctpMessageSize?: number;
@@ -103,7 +103,7 @@ export type PlainTransportStat =
 }
 
 /**
- * DEPRECATED: Use PlainTransportOptions.
+ * DEPRECATED: Use PlainTransportStat.
  */
 export type PlainRtpTransportStat = PlainTransportStat;
 

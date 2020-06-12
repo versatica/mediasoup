@@ -28,9 +28,9 @@ namespace Channel
 		MS_TRACE_STD();
 	}
 
-	UnixStreamSocket ::~UnixStreamSocket()
+	UnixStreamSocket::~UnixStreamSocket()
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 	}
 
 	void UnixStreamSocket::SetListener(Listener* listener)
@@ -42,57 +42,46 @@ namespace Channel
 
 	void UnixStreamSocket::Send(json& jsonMessage)
 	{
+		MS_TRACE_STD();
+
 		if (this->producerSocket.IsClosed())
 			return;
 
-		std::string nsPayload = jsonMessage.dump();
-		size_t nsPayloadLen   = nsPayload.length();
+		std::string message = jsonMessage.dump();
 
-		if (nsPayloadLen > NsPayloadMaxLen)
+		if (message.length() > NsPayloadMaxLen)
 		{
 			MS_ERROR_STD("mesage too big");
 
 			return;
 		}
 
-		SendImpl(nsPayload.c_str(), nsPayloadLen);
+		SendImpl(message.c_str(), message.length());
 	}
 
-	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
+	void UnixStreamSocket::SendLog(char* message, size_t messageLen)
 	{
+		MS_TRACE_STD();
+
 		if (this->producerSocket.IsClosed())
 			return;
 
-		// MS_TRACE_STD();
-
-		if (nsPayloadLen > NsPayloadMaxLen)
+		if (messageLen > NsPayloadMaxLen)
 		{
 			MS_ERROR_STD("mesage too big");
 
 			return;
 		}
 
-		SendImpl(nsPayload, nsPayloadLen);
+		SendImpl(message, messageLen);
 	}
 
-	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
+	inline void UnixStreamSocket::SendImpl(const void* nsPayload, size_t nsPayloadLen)
 	{
-		if (this->producerSocket.IsClosed())
-			return;
+		MS_TRACE_STD();
 
-		if (nsPayloadLen > NsPayloadMaxLen)
-		{
-			MS_ERROR_STD("mesage too big");
-
-			return;
-		}
-
-		SendImpl(nsPayload, nsPayloadLen);
-	}
-
-	void UnixStreamSocket::SendImpl(const void* nsPayload, size_t nsPayloadLen)
-	{
 		size_t nsNumLen;
+
 		if (nsPayloadLen == 0)
 		{
 			nsNumLen       = 1;
@@ -109,14 +98,19 @@ namespace Channel
 		}
 
 		size_t nsLen = nsNumLen + nsPayloadLen + 2;
+
 		this->producerSocket.Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, json& jsonMessage)
+	void UnixStreamSocket::OnConsumerSocketMessage(
+	  ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)
 	{
+		MS_TRACE_STD();
+
 		try
 		{
-			auto* request = new Channel::Request(this, jsonMessage);
+			json jsonMessage = json::parse(msg, msg + msgLen);
+			auto* request    = new Channel::Request(this, jsonMessage);
 
 			// Notify the listener.
 			try
@@ -135,6 +129,10 @@ namespace Channel
 			// Delete the Request.
 			delete request;
 		}
+		catch (const json::parse_error& error)
+		{
+			MS_ERROR_STD("JSON parsing error: %s", error.what());
+		}
 		catch (const MediaSoupError& error)
 		{
 			MS_ERROR_STD("discarding wrong Channel request");
@@ -143,6 +141,8 @@ namespace Channel
 
 	void UnixStreamSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
 	{
+		MS_TRACE_STD();
+
 		this->listener->OnChannelClosed(this);
 	}
 
@@ -156,17 +156,17 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		// Be ready to parse more than a single message in a single TCP chunk.
+		// Be ready to parse more than a single message in a single chunk.
 		while (true)
 		{
 			if (IsClosed())
 				return;
 
-			size_t readLen  = this->bufferDataLen - this->msgStart;
-			char* jsonStart = nullptr;
-			size_t jsonLen;
+			size_t readLen = this->bufferDataLen - this->msgStart;
+			char* msgStart = nullptr;
+			size_t msgLen;
 			int nsRet = netstring_read(
-			  reinterpret_cast<char*>(this->buffer + this->msgStart), readLen, &jsonStart, &jsonLen);
+			  reinterpret_cast<char*>(this->buffer + this->msgStart), readLen, &msgStart, &msgLen);
 
 			if (nsRet != 0)
 			{
@@ -245,22 +245,12 @@ namespace Channel
 				return;
 			}
 
-			// If here it means that jsonStart points to the beginning of a JSON string
-			// with jsonLen bytes length, so recalculate readLen.
+			// If here it means that msgStart points to the beginning of a message
+			// with msgLen bytes length, so recalculate readLen.
 			readLen =
-			  reinterpret_cast<const uint8_t*>(jsonStart) - (this->buffer + this->msgStart) + jsonLen + 1;
+			  reinterpret_cast<const uint8_t*>(msgStart) - (this->buffer + this->msgStart) + msgLen + 1;
 
-			try
-			{
-				json jsonMessage = json::parse(jsonStart, jsonStart + jsonLen);
-
-				// Notify the listener.
-				this->listener->OnConsumerSocketMessage(this, jsonMessage);
-			}
-			catch (const json::parse_error& error)
-			{
-				MS_ERROR_STD("JSON parsing error: %s", error.what());
-			}
+			this->listener->OnConsumerSocketMessage(this, msgStart, msgLen);
 
 			// If there is no more space available in the buffer and that is because
 			// the latest parsed message filled it, then empty the full buffer.

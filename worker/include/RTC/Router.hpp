@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Channel/Request.hpp"
+#include "PayloadChannel/Notification.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -29,13 +30,14 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void HandleRequest(Channel::Request* request);
+		void HandleNotification(PayloadChannel::Notification* notification);
 
 	private:
-		void SetNewTransportIdFromRequest(Channel::Request* request, std::string& transportId) const;
-		RTC::Transport* GetTransportFromRequest(Channel::Request* request) const;
-		void SetNewRtpObserverIdFromRequest(Channel::Request* request, std::string& rtpObserverId) const;
-		RTC::RtpObserver* GetRtpObserverFromRequest(Channel::Request* request) const;
-		RTC::Producer* GetProducerFromRequest(Channel::Request* request) const;
+		void SetNewTransportIdFromInternal(json& internal, std::string& transportId) const;
+		RTC::Transport* GetTransportFromInternal(json& internal) const;
+		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
+		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
+		RTC::Producer* GetProducerFromInternal(json& internal) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -71,7 +73,7 @@ namespace RTC
 		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 		void OnTransportNewDataProducer(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
 		void OnTransportDataProducerClosed(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
-		void OnTransportDataProducerSctpMessageReceived(
+		void OnTransportDataProducerMessageReceived(
 		  RTC::Transport* transport,
 		  RTC::DataProducer* dataProducer,
 		  uint32_t ppid,
