@@ -61,7 +61,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 /* Instance methods. */
 
-UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::Role role)
+UnixStreamSocket::UnixStreamSocket(const int fd, size_t bufferSize, UnixStreamSocket::Role role)
   : bufferSize(bufferSize), role(role)
 {
 	MS_TRACE_STD();

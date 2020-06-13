@@ -39,7 +39,6 @@ int main(int argc, char* argv[])
 	if (std::getenv("MEDIASOUP_VERSION") == nullptr)
 	{
 		MS_ERROR_STD("you don't seem to be my real father!");
-
 		std::_Exit(EXIT_FAILURE);
 	}
 

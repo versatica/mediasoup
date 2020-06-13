@@ -19,7 +19,7 @@ namespace Channel
 		};
 
 	public:
-		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
+		ConsumerSocket(const int fd, size_t bufferSize, Listener* listener);
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
@@ -35,7 +35,7 @@ namespace Channel
 	class ProducerSocket : public ::UnixStreamSocket
 	{
 	public:
-		ProducerSocket(int fd, size_t bufferSize);
+		ProducerSocket(const int fd, size_t bufferSize);
 
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
@@ -58,7 +58,7 @@ namespace Channel
 		};
 
 	public:
-		explicit UnixStreamSocket(int consumerFd, int producerFd);
+		explicit UnixStreamSocket(const int consumerFd, const int producerFd);
 		virtual ~UnixStreamSocket();
 
 	public:

@@ -22,7 +22,7 @@ namespace Channel
 	static uint8_t WriteBuffer[NsMessageMaxLen];
 
 	/* Instance methods. */
-	UnixStreamSocket::UnixStreamSocket(int consumerFd, int producerFd)
+	UnixStreamSocket::UnixStreamSocket(const int consumerFd, const int producerFd)
 	  : consumerSocket(consumerFd, NsMessageMaxLen, this), producerSocket(producerFd, NsMessageMaxLen)
 	{
 		MS_TRACE_STD();
@@ -146,7 +146,7 @@ namespace Channel
 		this->listener->OnChannelClosed(this);
 	}
 
-	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
+	ConsumerSocket::ConsumerSocket(const int fd, size_t bufferSize, Listener* listener)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
 	{
 		MS_TRACE_STD();
@@ -285,7 +285,7 @@ namespace Channel
 		this->listener->OnConsumerSocketClosed(this);
 	}
 
-	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
+	ProducerSocket::ProducerSocket(const int fd, size_t bufferSize)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)
 	{
 		MS_TRACE_STD();
