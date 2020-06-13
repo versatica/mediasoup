@@ -5,6 +5,8 @@
 
 * Hide worker executable console in Windows.
   - PR #419 (credits to @BlueMagnificent).
+* `RtpStream.cpp`: Fix wrong `std::round()` usage.
+  - Issue #423.
 
 
 ### 3.6.6
