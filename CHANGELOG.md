@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.8 (WIP)
+
+* Update `nlohmann::json` C++ dep to 3.8.0.
+
+
 ### 3.6.7
 
 * `ConsumerScore`: Add `producerScores`, scores of all RTP streams in the producer ordered by encoding (just useful when the producer uses simulcast).
