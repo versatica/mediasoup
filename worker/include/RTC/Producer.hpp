@@ -110,9 +110,13 @@ namespace RTC
 		{
 			return this->paused;
 		}
-		std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
+		const std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
 		{
 			return this->mapRtpStreamMappedSsrc;
+		}
+		const std::vector<uint8_t>* GetRtpStreamScores() const
+		{
+			return std::addressof(this->rtpStreamScores);
 		}
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
@@ -161,7 +165,8 @@ namespace RTC
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
 		struct RtpMapping rtpMapping;
-		std::vector<RTC::RtpStreamRecv*> rtpStreamsByEncodingIdx;
+		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
+		std::vector<uint8_t> rtpStreamScores;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;

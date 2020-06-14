@@ -46,6 +46,11 @@ namespace RTC
 		// Evaluate type.
 		this->type = RTC::RtpParameters::GetType(this->rtpParameters);
 
+		// Reserve a slot in rtpStreamByEncodingIdx and rtpStreamsScores vectors
+		// for each RTP stream.
+		this->rtpStreamByEncodingIdx.resize(this->rtpParameters.encodings.size(), nullptr);
+		this->rtpStreamScores.resize(this->rtpParameters.encodings.size(), 0u);
+
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
@@ -111,9 +116,6 @@ namespace RTC
 
 		for (auto& encoding : *jsonEncodingsIt)
 		{
-			// Reserve a slot in rtpStreamsByEncodingIdx vector.
-			this->rtpStreamsByEncodingIdx.emplace_back(nullptr);
-
 			if (!encoding.is_object())
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings");
 
@@ -292,7 +294,8 @@ namespace RTC
 		}
 
 		this->mapSsrcRtpStream.clear();
-		this->rtpStreamsByEncodingIdx.clear();
+		this->rtpStreamByEncodingIdx.clear();
+		this->rtpStreamScores.clear();
 		this->mapRtxSsrcRtpStream.clear();
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
@@ -372,7 +375,7 @@ namespace RTC
 		jsonObject["rtpStreams"] = json::array();
 		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
 
-		for (auto* rtpStream : this->rtpStreamsByEncodingIdx)
+		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
 			if (!rtpStream)
 				continue;
@@ -418,7 +421,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto* rtpStream : this->rtpStreamsByEncodingIdx)
+		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
 			if (!rtpStream)
 				continue;
@@ -1035,9 +1038,8 @@ namespace RTC
 		MS_ASSERT(
 		  this->mapSsrcRtpStream.find(ssrc) == this->mapSsrcRtpStream.end(),
 		  "RtpStream with given SSRC already exists");
-
 		MS_ASSERT(
-		  !this->rtpStreamsByEncodingIdx[encodingIdx],
+		  !this->rtpStreamByEncodingIdx[encodingIdx],
 		  "RtpStream for given encoding index already exists");
 
 		auto& encoding        = this->rtpParameters.encodings[encodingIdx];
@@ -1114,8 +1116,9 @@ namespace RTC
 		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
 
 		// Insert into the maps.
-		this->mapSsrcRtpStream[ssrc]               = rtpStream;
-		this->rtpStreamsByEncodingIdx[encodingIdx] = rtpStream;
+		this->mapSsrcRtpStream[ssrc]              = rtpStream;
+		this->rtpStreamByEncodingIdx[encodingIdx] = rtpStream;
+		this->rtpStreamScores[encodingIdx]        = rtpStream->GetScore();
 
 		// Set the mapped SSRC.
 		this->mapRtpStreamMappedSsrc[rtpStream]             = encodingMapping.mappedSsrc;
@@ -1387,16 +1390,17 @@ namespace RTC
 
 		json data = json::array();
 
-		// Iterate all streams and notify their scores.
-		for (auto& kv : this->mapSsrcRtpStream)
+		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
-			auto* rtpStream = kv.second;
+			if (!rtpStream)
+				continue;
 
 			data.emplace_back(json::value_t::object);
 
 			auto& jsonEntry = data[data.size() - 1];
 
-			jsonEntry["ssrc"] = rtpStream->GetSsrc();
+			jsonEntry["encodingIdx"] = rtpStream->GetEncodingIdx();
+			jsonEntry["ssrc"]        = rtpStream->GetSsrc();
 
 			if (!rtpStream->GetRid().empty())
 				jsonEntry["rid"] = rtpStream->GetRid();
@@ -1497,6 +1501,9 @@ namespace RTC
 	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
+
+		// Update the vector of scores.
+		this->rtpStreamScores[rtpStream->GetEncodingIdx()] = score;
 
 		// Notify the listener.
 		this->listener->OnProducerRtpStreamScore(this, rtpStream, score, previousScore);

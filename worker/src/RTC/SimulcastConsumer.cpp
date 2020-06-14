@@ -187,6 +187,8 @@ namespace RTC
 			jsonObject["producerScore"] = producerCurrentRtpStream->GetScore();
 		else
 			jsonObject["producerScore"] = 0;
+
+		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::Request* request)
@@ -309,6 +311,9 @@ namespace RTC
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
+		// Emit the score event.
+		EmitScore();
+
 		if (IsActive())
 			MayChangeLayers();
 	}
@@ -318,9 +323,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Emit score event only if the stream whose score changed is the current one.
-		if (rtpStream == GetProducerCurrentRtpStream())
-			EmitScore();
+		// Emit the score event.
+		EmitScore();
 
 		if (RTC::Consumer::IsActive())
 		{

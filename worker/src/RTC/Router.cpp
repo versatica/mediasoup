@@ -743,6 +743,9 @@ namespace RTC
 
 			consumer->ProducerRtpStream(rtpStream, mappedSsrc);
 		}
+
+		// Provide the Consumer with the scores of all streams in the Producer.
+		consumer->ProducerRtpStreamScores(producer->GetRtpStreamScores());
 	}
 
 	inline void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
