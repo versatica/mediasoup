@@ -1,8 +1,10 @@
 # Changelog
 
 
-### 3.6.7 (WIP)
+### 3.6.7
 
+* `ConsumerScore`: Add `producerScores`, scores of all RTP streams in the producer ordered by encoding (just useful when the producer uses simulcast).
+  - PR #421 (fixes issues #420).
 * Hide worker executable console in Windows.
   - PR #419 (credits to @BlueMagnificent).
 * `RtpStream.cpp`: Fix wrong `std::round()` usage.
