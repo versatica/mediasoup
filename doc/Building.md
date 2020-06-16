@@ -10,12 +10,12 @@ The `package.json` file in the main folder includes the following scripts:
 
 ### `npm run typescript:build`
 
-Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript and places it into the `lib` directory.
+Compiles mediasoup TypeScript code (`lib` folder) JavaScript and places it into the `lib` directory.
 
 
 ### `npm run typescript:watch`
 
-Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
+Compiles mediasoup TypeScript code (`lib` folder) JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
 
 ### `npm run lint`
 
