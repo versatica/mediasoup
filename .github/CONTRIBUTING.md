@@ -5,7 +5,7 @@ Thanks for taking the time to contribute to mediasoup! 🎉👍
 
 ## License
 
-By contributing to mediasoup, you agree that your contributions will be licensed under its MIT License.
+By contributing to mediasoup, you agree that your contributions will be licensed under its ISC License.
 
 
 ## Reporting Bugs
