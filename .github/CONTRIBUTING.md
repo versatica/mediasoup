@@ -29,7 +29,7 @@ When creating a Pull Request for mediasoup, ensure that you run the following co
 * `npm run typescript:build`: Compile TypeScript code (under `src/` folder) into JavaScript code (under `lib/` folder).
 * `npm run test`: Run JavaScript and C++ test units.
 
-The full list of `npm` scripts (and `make` tasks) is available in the [docs/Building.md](/docs/Building.md) file.
+The full list of `npm` scripts (and `make` tasks) is available in the [docs/Building.md](../docs/Building.md) file.
 
 Once all these commands succeed, wait for the Travis CI checks to complete and verify they run successfully (otherwise the PR won't be accepted).
 
