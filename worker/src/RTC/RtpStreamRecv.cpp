@@ -448,7 +448,7 @@ namespace RTC
 		if (expectedInterval == 0 || lostInterval <= 0)
 			this->fractionLost = 0;
 		else
-			this->fractionLost = std::round(((lostInterval << 8) / expectedInterval));
+			this->fractionLost = std::round((static_cast<double>(lostInterval << 8) / expectedInterval));
 
 		// Worst remote fraction lost is not worse than local one.
 		if (worstRemoteFractionLost <= this->fractionLost)
@@ -557,15 +557,11 @@ namespace RTC
 
 		// If no Receiver Extended Report was received by the remote endpoint yet,
 		// ignore lastRr and dlrr values in the Sender Extended Report.
-		if (!lastRr || !dlrr)
-			rtt = 0;
-		else if (compactNtp > dlrr + lastRr)
+		if (lastRr && dlrr && (compactNtp > dlrr + lastRr))
 			rtt = compactNtp - dlrr - lastRr;
-		else
-			rtt = 0;
 
 		// RTT in milliseconds.
-		this->rtt = (rtt >> 16) * 1000;
+		this->rtt = static_cast<float>(rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
 		if (this->rtt > 0.0f)
@@ -740,7 +736,7 @@ namespace RTC
 		MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");
 
 		if (retransmitted > 0)
-			repairedWeight *= repaired / retransmitted;
+			repairedWeight *= static_cast<float>(repaired) / retransmitted;
 
 		lost -= repaired * repairedWeight;
 

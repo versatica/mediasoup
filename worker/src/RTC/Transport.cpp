@@ -295,9 +295,9 @@ namespace RTC
 		jsonObject["producerIds"] = json::array();
 		auto jsonProducerIdsIt    = jsonObject.find("producerIds");
 
-		for (auto& kv : this->mapProducers)
+		for (const auto& kv : this->mapProducers)
 		{
-			auto& producerId = kv.first;
+			const auto& producerId = kv.first;
 
 			jsonProducerIdsIt->emplace_back(producerId);
 		}
@@ -306,9 +306,9 @@ namespace RTC
 		jsonObject["consumerIds"] = json::array();
 		auto jsonConsumerIdsIt    = jsonObject.find("consumerIds");
 
-		for (auto& kv : this->mapConsumers)
+		for (const auto& kv : this->mapConsumers)
 		{
-			auto& consumerId = kv.first;
+			const auto& consumerId = kv.first;
 
 			jsonConsumerIdsIt->emplace_back(consumerId);
 		}
@@ -317,7 +317,7 @@ namespace RTC
 		jsonObject["mapSsrcConsumerId"] = json::object();
 		auto jsonMapSsrcConsumerId      = jsonObject.find("mapSsrcConsumerId");
 
-		for (auto& kv : this->mapSsrcConsumer)
+		for (const auto& kv : this->mapSsrcConsumer)
 		{
 			auto ssrc      = kv.first;
 			auto* consumer = kv.second;
@@ -329,7 +329,7 @@ namespace RTC
 		jsonObject["mapRtxSsrcConsumerId"] = json::object();
 		auto jsonMapRtxSsrcConsumerId      = jsonObject.find("mapRtxSsrcConsumerId");
 
-		for (auto& kv : this->mapRtxSsrcConsumer)
+		for (const auto& kv : this->mapRtxSsrcConsumer)
 		{
 			auto ssrc      = kv.first;
 			auto* consumer = kv.second;
@@ -341,9 +341,9 @@ namespace RTC
 		jsonObject["dataProducerIds"] = json::array();
 		auto jsonDataProducerIdsIt    = jsonObject.find("dataProducerIds");
 
-		for (auto& kv : this->mapDataProducers)
+		for (const auto& kv : this->mapDataProducers)
 		{
-			auto& dataProducerId = kv.first;
+			const auto& dataProducerId = kv.first;
 
 			jsonDataProducerIdsIt->emplace_back(dataProducerId);
 		}
@@ -352,9 +352,9 @@ namespace RTC
 		jsonObject["dataConsumerIds"] = json::array();
 		auto jsonDataConsumerIdsIt    = jsonObject.find("dataConsumerIds");
 
-		for (auto& kv : this->mapDataConsumers)
+		for (const auto& kv : this->mapDataConsumers)
 		{
-			auto& dataConsumerId = kv.first;
+			const auto& dataConsumerId = kv.first;
 
 			jsonDataConsumerIdsIt->emplace_back(dataConsumerId);
 		}
@@ -629,7 +629,7 @@ namespace RTC
 				// add them to the Transport.
 				// NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
 				// header extension ids of the Producer (and not their mapped values).
-				auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+				const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 
 				if (producerRtpHeaderExtensionIds.mid != 0u)
 					this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
@@ -656,8 +656,8 @@ namespace RTC
 
 				// Check if TransportCongestionControlServer or REMB server must be
 				// created.
-				auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
-				auto& codecs                = producer->GetRtpParameters().codecs;
+				const auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+				const auto& codecs                = producer->GetRtpParameters().codecs;
 
 				// Set TransportCongestionControlServer.
 				if (!this->tccServer)
@@ -844,7 +844,7 @@ namespace RTC
 
 				// Check if Transport Congestion Control client must be created.
 				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
-				auto& codecs                      = consumer->GetRtpParameters().codecs;
+				const auto& codecs                      = consumer->GetRtpParameters().codecs;
 
 				// Set TransportCongestionControlClient.
 				if (!this->tccClient)
@@ -1412,8 +1412,8 @@ namespace RTC
 				}
 
 				auto ppid = jsonPpidIt->get<uint32_t>();
-				auto* msg = notification->payload;
 				auto len  = notification->payloadLen;
+				const auto* msg = notification->payload;
 
 				if (len > this->maxMessageSize)
 				{
@@ -2441,7 +2441,7 @@ namespace RTC
 
 			SendRtpPacket(packet, cb);
 #else
-			auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
+			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 			});
@@ -2509,7 +2509,7 @@ namespace RTC
 
 			SendRtpPacket(packet, cb);
 #else
-			auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
+			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 			});
@@ -2840,7 +2840,7 @@ namespace RTC
 
 			SendRtpPacket(packet, cb);
 #else
-			auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
+			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
 				if (sent)
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 			});

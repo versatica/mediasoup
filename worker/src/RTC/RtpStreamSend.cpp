@@ -17,6 +17,20 @@ namespace RTC
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
 
+	static void resetStorageItem(RTC::RtpStreamSend::StorageItem* storageItem)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
+
+		delete storageItem->packet;
+
+		storageItem->packet     = nullptr;
+		storageItem->resentAtMs = 0;
+		storageItem->sentTimes  = 0;
+		storageItem->rtxEncoded = false;
+	}
+
 	/* Instance methods. */
 
 	RtpStreamSend::RtpStreamSend(
@@ -288,7 +302,7 @@ namespace RTC
 				return;
 
 			// Reset the storage item.
-			ResetStorageItem(storageItem);
+			resetStorageItem(storageItem);
 
 			// If this was the item referenced by the buffer start index, move it to
 			// the next one.
@@ -311,7 +325,7 @@ namespace RTC
 			auto* firstStorageItem = this->buffer[this->bufferStartIdx];
 
 			// Reset the first storage item.
-			ResetStorageItem(firstStorageItem);
+			resetStorageItem(firstStorageItem);
 
 			// Unfill the buffer start item.
 			this->buffer[this->bufferStartIdx] = nullptr;
@@ -347,7 +361,7 @@ namespace RTC
 			}
 
 			// Reset (free RTP packet) the storage item.
-			ResetStorageItem(storageItem);
+			resetStorageItem(storageItem);
 
 			// Unfill the buffer item.
 			this->buffer[idx] = nullptr;
@@ -356,20 +370,6 @@ namespace RTC
 		// Reset buffer.
 		this->bufferStartIdx = 0;
 		this->bufferSize     = 0;
-	}
-
-	inline void RtpStreamSend::ResetStorageItem(StorageItem* storageItem)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
-
-		delete storageItem->packet;
-
-		storageItem->packet     = nullptr;
-		storageItem->resentAtMs = 0;
-		storageItem->sentTimes  = 0;
-		storageItem->rtxEncoded = false;
 	}
 
 	/**

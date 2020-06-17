@@ -508,13 +508,8 @@ namespace RTC
 
 						break;
 					}
-					case RTC::DtlsTransport::Role::SERVER:
-					{
-						this->dtlsRole = RTC::DtlsTransport::Role::CLIENT;
-
-						break;
-					}
 					// If the peer has role "auto" we become "client" since we are ICE controlled.
+					case RTC::DtlsTransport::Role::SERVER:
 					case RTC::DtlsTransport::Role::AUTO:
 					{
 						this->dtlsRole = RTC::DtlsTransport::Role::CLIENT;

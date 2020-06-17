@@ -463,7 +463,7 @@ namespace RTC
 		MS_TRACE();
 
 		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		MS_DEBUG_TAG(
 		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);

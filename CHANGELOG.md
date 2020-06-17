@@ -4,6 +4,7 @@
 ### 3.6.8 (WIP)
 
 * Update `nlohmann::json` C++ dep to 3.8.0.
+* Enhance const correctness.
 
 
 ### 3.6.7

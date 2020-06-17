@@ -355,7 +355,7 @@ namespace RTC
 				jsonEncodingsIt->emplace_back(json::value_t::object);
 
 				auto& jsonEntry       = (*jsonEncodingsIt)[i];
-				auto& encodingMapping = this->rtpMapping.encodings[i];
+				const auto& encodingMapping = this->rtpMapping.encodings[i];
 
 				if (!encodingMapping.rid.empty())
 					jsonEntry["rid"] = encodingMapping.rid;
@@ -841,8 +841,8 @@ namespace RTC
 		for (size_t i{ 0 }; i < this->rtpParameters.encodings.size(); ++i)
 		{
 			auto& encoding     = this->rtpParameters.encodings[i];
-			auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-			auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 			bool isMediaPacket = (mediaCodec->payloadType == payloadType);
 			bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
@@ -896,8 +896,8 @@ namespace RTC
 				if (encoding.rid != rid)
 					continue;
 
-				auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-				auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+				const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+				const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 				bool isMediaPacket = (mediaCodec->payloadType == payloadType);
 				bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
@@ -971,8 +971,8 @@ namespace RTC
 		// clang-format on
 		{
 			auto& encoding     = this->rtpParameters.encodings[0];
-			auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-			auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 			bool isMediaPacket = (mediaCodec->payloadType == payloadType);
 			bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
@@ -1090,9 +1090,9 @@ namespace RTC
 			params.useDtx = true;
 		}
 
-		for (auto& fb : mediaCodec.rtcpFeedback)
+		for (const auto& fb : mediaCodec.rtcpFeedback)
 		{
-			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+			if (!params.useNack && fb.type == "nack" && fb.parameter.empty())
 			{
 				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 

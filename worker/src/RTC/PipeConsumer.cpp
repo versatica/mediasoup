@@ -481,7 +481,7 @@ namespace RTC
 		for (size_t idx{ 0u }; idx < this->rtpParameters.encodings.size(); ++idx)
 		{
 			auto& encoding   = this->rtpParameters.encodings[idx];
-			auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 			MS_DEBUG_TAG(
 			  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
@@ -522,9 +522,9 @@ namespace RTC
 				params.useDtx = true;
 			}
 
-			for (auto& fb : mediaCodec->rtcpFeedback)
+			for (const auto& fb : mediaCodec->rtcpFeedback)
 			{
-				if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+				if (!params.useNack && fb.type == "nack" && fb.parameter.empty())
 				{
 					MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 
@@ -552,7 +552,7 @@ namespace RTC
 			if (IsPaused() || IsProducerPaused())
 				rtpStream->Pause();
 
-			auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			const auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 			if (rtxCodec && encoding.hasRtx)
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);

@@ -481,7 +481,7 @@ namespace RTC
 		  this->klass == Class::REQUEST,
 		  "attempt to create an error response for a non Request STUN packet");
 
-		auto response =
+		auto* response =
 		  new StunPacket(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
 
 		response->SetErrorCode(errorCode);

@@ -438,7 +438,7 @@ namespace RTC
 
 		for (auto& kv : PortManager::mapUdpIpPorts)
 		{
-			auto& ip    = kv.first;
+			const auto& ip    = kv.first;
 			auto& ports = kv.second;
 
 			(*jsonUdpIt)[ip] = json::array();
@@ -461,7 +461,7 @@ namespace RTC
 
 		for (auto& kv : PortManager::mapTcpIpPorts)
 		{
-			auto& ip    = kv.first;
+			const auto& ip    = kv.first;
 			auto& ports = kv.second;
 
 			(*jsonTcpIt)[ip] = json::array();
