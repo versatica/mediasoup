@@ -462,7 +462,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& encoding   = this->rtpParameters.encodings[0];
+		auto& encoding         = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		MS_DEBUG_TAG(

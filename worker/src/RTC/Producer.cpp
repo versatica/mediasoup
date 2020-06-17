@@ -354,7 +354,7 @@ namespace RTC
 			{
 				jsonEncodingsIt->emplace_back(json::value_t::object);
 
-				auto& jsonEntry       = (*jsonEncodingsIt)[i];
+				auto& jsonEntry             = (*jsonEncodingsIt)[i];
 				const auto& encodingMapping = this->rtpMapping.encodings[i];
 
 				if (!encodingMapping.rid.empty())
@@ -840,11 +840,11 @@ namespace RTC
 		// First, look for an encoding with matching media or RTX ssrc value.
 		for (size_t i{ 0 }; i < this->rtpParameters.encodings.size(); ++i)
 		{
-			auto& encoding     = this->rtpParameters.encodings[i];
-			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			bool isMediaPacket = (mediaCodec->payloadType == payloadType);
-			bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
+			auto& encoding         = this->rtpParameters.encodings[i];
+			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
+			bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket && encoding.ssrc == ssrc)
 			{
@@ -896,10 +896,10 @@ namespace RTC
 				if (encoding.rid != rid)
 					continue;
 
-				const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-				const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-				bool isMediaPacket = (mediaCodec->payloadType == payloadType);
-				bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
+				const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+				const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+				bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
+				bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 				if (isMediaPacket)
 				{
@@ -970,11 +970,11 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			auto& encoding     = this->rtpParameters.encodings[0];
-			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			bool isMediaPacket = (mediaCodec->payloadType == payloadType);
-			bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
+			auto& encoding         = this->rtpParameters.encodings[0];
+			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
+			bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket)
 			{

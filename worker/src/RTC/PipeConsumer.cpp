@@ -480,7 +480,7 @@ namespace RTC
 		// as in the given consumableRtpEncodings.
 		for (size_t idx{ 0u }; idx < this->rtpParameters.encodings.size(); ++idx)
 		{
-			auto& encoding   = this->rtpParameters.encodings[idx];
+			auto& encoding         = this->rtpParameters.encodings[idx];
 			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 			MS_DEBUG_TAG(

@@ -185,8 +185,8 @@ namespace RTC
 		{
 			jsonConsumableRtpEncodingsIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry = (*jsonConsumableRtpEncodingsIt)[i];
-			const auto& encoding  = this->consumableRtpEncodings[i];
+			auto& jsonEntry      = (*jsonConsumableRtpEncodingsIt)[i];
+			const auto& encoding = this->consumableRtpEncodings[i];
 
 			encoding.FillJson(jsonEntry);
 		}

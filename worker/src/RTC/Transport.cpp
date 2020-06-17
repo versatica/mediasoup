@@ -844,7 +844,7 @@ namespace RTC
 
 				// Check if Transport Congestion Control client must be created.
 				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
-				const auto& codecs                      = consumer->GetRtpParameters().codecs;
+				const auto& codecs                = consumer->GetRtpParameters().codecs;
 
 				// Set TransportCongestionControlClient.
 				if (!this->tccClient)
@@ -1411,8 +1411,8 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid ppid");
 				}
 
-				auto ppid = jsonPpidIt->get<uint32_t>();
-				auto len  = notification->payloadLen;
+				auto ppid       = jsonPpidIt->get<uint32_t>();
+				auto len        = notification->payloadLen;
 				const auto* msg = notification->payload;
 
 				if (len > this->maxMessageSize)
