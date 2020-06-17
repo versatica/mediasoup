@@ -154,15 +154,11 @@ namespace RTC
 
 		// If no Sender Report was received by the remote endpoint yet, ignore lastSr
 		// and dlsr values in the Receiver Report.
-		if (!lastSr || !dlsr)
-			rtt = 0;
-		else if (compactNtp > dlsr + lastSr)
+		if (lastSr && dlsr && (compactNtp > dlsr + lastSr))
 			rtt = compactNtp - dlsr - lastSr;
-		else
-			rtt = 0;
 
 		// RTT in milliseconds.
-		this->rtt = (rtt >> 16) * 1000;
+		this->rtt = static_cast<float>(rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
 		if (this->rtt > 0.0f)
@@ -207,8 +203,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& cname     = GetCname();
-		auto* sdesChunk = new RTC::RTCP::SdesChunk(GetSsrc());
+		const auto& cname = GetCname();
+		auto* sdesChunk   = new RTC::RTCP::SdesChunk(GetSsrc());
 		auto* sdesItem =
 		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
