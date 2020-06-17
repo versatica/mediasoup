@@ -635,7 +635,7 @@ namespace RTC
 		MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");
 
 		if (retransmitted > 0)
-			repairedWeight *= repaired / retransmitted;
+			repairedWeight *= static_cast<float>(repaired) / retransmitted;
 
 		lost -= repaired * repairedWeight;
 
