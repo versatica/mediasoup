@@ -610,17 +610,7 @@ namespace RTC
 			lost = sent;
 
 		if (repaired > lost)
-		{
-			if (HasRtx())
-			{
-				repaired = lost;
-				retransmitted -= repaired - lost;
-			}
-			else
-			{
-				lost = repaired;
-			}
-		}
+			repaired = lost;
 
 #if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
