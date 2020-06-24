@@ -124,7 +124,7 @@ namespace RTC
 		}
 		const std::map<uint32_t, RTC::RtpStreamRecv*>& GetRtxSsrcRtpStreams()
 		{
-			return this->mapRtxSsrcRtpStream;		
+			return this->mapRtxSsrcRtpStream;
 		}
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);

@@ -35,7 +35,7 @@ namespace RTC
 	protected:
 		void RemoveConsumer(RTC::Consumer* consumer) override;
 		void RemoveProducer(RTC::Producer* producer) override;
-		
+
 	private:
 		bool IsConnected() const override;
 		bool HasSrtp() const;

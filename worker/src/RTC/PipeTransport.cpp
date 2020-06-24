@@ -424,7 +424,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (HasSrtp() && this->srtpSendSession)
+		if (HasSrtp() && this->srtpRecvSession)
 		{
 			for (auto& kv : producer->GetSsrcRtpStreams())
 			{

@@ -1226,6 +1226,9 @@ namespace RTC
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromInternal(request->internal);
 
+				// Notify the listener.
+				this->listener->OnTransportConsumerClosed(this, consumer);
+
 				this->RemoveConsumer(consumer);
 
 				request->Accept();
@@ -1578,7 +1581,7 @@ namespace RTC
 		// Pass it to the SctpAssociation.
 		this->sctpAssociation->ProcessSctpData(data, len);
 	}
-	
+
 	void Transport::RemoveConsumer(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
@@ -1595,9 +1598,6 @@ namespace RTC
 		{
 			this->mapRtxSsrcConsumer.erase(ssrc);
 		}
-
-		// Notify the listener.
-		this->listener->OnTransportConsumerClosed(this, consumer);
 
 		MS_DEBUG_DEV("Consumer closed [consumerId:%s]", consumer->id.c_str());
 
@@ -2579,24 +2579,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Remove it from the maps.
-		this->mapConsumers.erase(consumer->id);
-
-		for (auto ssrc : consumer->GetMediaSsrcs())
-		{
-			this->mapSsrcConsumer.erase(ssrc);
-		}
-
-		for (auto ssrc : consumer->GetRtxSsrcs())
-		{
-			this->mapRtxSsrcConsumer.erase(ssrc);
-		}
-
 		// Notify the listener.
 		this->listener->OnTransportConsumerProducerClosed(this, consumer);
 
-		// Delete it.
-		delete consumer;
+		this->RemoveConsumer(consumer);
 
 		// This may be the latest active Consumer with BWE. If so we have to stop probation.
 		if (this->tccClient)
