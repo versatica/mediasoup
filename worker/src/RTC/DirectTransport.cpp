@@ -90,4 +90,18 @@ namespace RTC
 
 		// Do nothing.
 	}
+
+	void DirectTransport::RecvStreamClosed(uint32_t /*ssrc*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	void DirectTransport::SendStreamClosed(uint32_t /*ssrc*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
 } // namespace RTC

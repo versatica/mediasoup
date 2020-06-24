@@ -506,6 +506,26 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
+	void PipeTransport::RecvStreamClosed(uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		if (this->srtpRecvSession)
+		{
+			this->srtpRecvSession->RemoveStream(ssrc);
+		}
+	}
+
+	void PipeTransport::SendStreamClosed(uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		if (this->srtpSendSession)
+		{
+			this->srtpSendSession->RemoveStream(ssrc);
+		}
+	}
+
 	inline void PipeTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
