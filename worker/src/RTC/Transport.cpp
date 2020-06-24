@@ -1567,6 +1567,9 @@ namespace RTC
 			  packet->GetSsrc(),
 			  packet->GetPayloadType());
 
+			// Tell the child class to remove this SSRC.
+			RecvStreamClosed(packet->GetSsrc());
+
 			delete packet;
 
 			return;

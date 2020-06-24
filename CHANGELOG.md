@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.9 (WIP)
+
+* `Transport::ReceiveRtpPacket()`: Call `RecvStreamClosed(packet->GetSsrc())` if received RTP packet does not match any `Producer`.
+
+
 ### 3.6.8
 
 * Fix SRTP leak due to streams not being removed when a `Producer` or `Consumer` is closed.
