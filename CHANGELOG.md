@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.6.8 (WIP)
+### 3.6.8
 
 * Fix SRTP leak due to streams not being removed when a `Producer` or `Consumer` is closed.
   - PR #428 (fixes issues #426). 
