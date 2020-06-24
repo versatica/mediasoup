@@ -1214,19 +1214,7 @@ namespace RTC
 				// This may throw.
 				RTC::Producer* producer = GetProducerFromInternal(request->internal);
 
-				// Remove it from the RtpListener.
-				this->rtpListener.RemoveProducer(producer);
-
-				// Remove it from the map.
-				this->mapProducers.erase(producer->id);
-
-				// Notify the listener.
-				this->listener->OnTransportProducerClosed(this, producer);
-
-				MS_DEBUG_DEV("Producer closed [producerId:%s]", producer->id.c_str());
-
-				// Delete it.
-				delete producer;
+				this->RemoveProducer(producer);
 
 				request->Accept();
 
@@ -1238,26 +1226,7 @@ namespace RTC
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromInternal(request->internal);
 
-				// Remove it from the maps.
-				this->mapConsumers.erase(consumer->id);
-
-				for (auto ssrc : consumer->GetMediaSsrcs())
-				{
-					this->mapSsrcConsumer.erase(ssrc);
-				}
-
-				for (auto ssrc : consumer->GetRtxSsrcs())
-				{
-					this->mapRtxSsrcConsumer.erase(ssrc);
-				}
-
-				// Notify the listener.
-				this->listener->OnTransportConsumerClosed(this, consumer);
-
-				MS_DEBUG_DEV("Consumer closed [consumerId:%s]", consumer->id.c_str());
-
-				// Delete it.
-				delete consumer;
+				this->RemoveConsumer(consumer);
 
 				request->Accept();
 
@@ -1608,6 +1577,51 @@ namespace RTC
 
 		// Pass it to the SctpAssociation.
 		this->sctpAssociation->ProcessSctpData(data, len);
+	}
+	
+	void Transport::RemoveConsumer(RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// Remove it from the maps.
+		this->mapConsumers.erase(consumer->id);
+
+		for (auto ssrc : consumer->GetMediaSsrcs())
+		{
+			this->mapSsrcConsumer.erase(ssrc);
+		}
+
+		for (auto ssrc : consumer->GetRtxSsrcs())
+		{
+			this->mapRtxSsrcConsumer.erase(ssrc);
+		}
+
+		// Notify the listener.
+		this->listener->OnTransportConsumerClosed(this, consumer);
+
+		MS_DEBUG_DEV("Consumer closed [consumerId:%s]", consumer->id.c_str());
+
+		// Delete it.
+		delete consumer;
+	}
+
+	void Transport::RemoveProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		// Remove it from the RtpListener.
+		this->rtpListener.RemoveProducer(producer);
+
+		// Remove it from the map.
+		this->mapProducers.erase(producer->id);
+
+		// Notify the listener.
+		this->listener->OnTransportProducerClosed(this, producer);
+
+		MS_DEBUG_DEV("Producer closed [producerId:%s]", producer->id.c_str());
+
+		// Delete it.
+		delete producer;
 	}
 
 	void Transport::SetNewProducerIdFromInternal(json& internal, std::string& producerId) const

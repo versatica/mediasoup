@@ -579,6 +579,46 @@ namespace RTC
 		}
 	}
 
+	void PlainTransport::RemoveConsumer(RTC::Consumer* consumer)
+	{
+		MS_TRACE()
+
+		if (HasSrtp() && this->srtpSendSession)
+		{
+			for (auto ssrc : consumer->GetMediaSsrcs())
+			{
+				this->srtpSendSession->RemoveStream(ssrc);
+			}
+
+			for (auto ssrc : consumer->GetRtxSsrcs())
+			{
+				this->srtpSendSession->RemoveStream(ssrc);
+			}
+		}
+
+		RTC::Transport::RemoveConsumer(consumer);
+	}
+
+	void PlainTransport::RemoveProducer(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		if (HasSrtp() && this->srtpSendSession)
+		{
+			for (auto& kv : producer->GetSsrcRtpStreams())
+			{
+				this->srtpRecvSession->RemoveStream(kv.first);
+			}
+
+			for (auto& kv : producer->GetRtxSsrcRtpStreams())
+			{
+				this->srtpRecvSession->RemoveStream(kv.first);
+			}
+		}
+
+		RTC::Transport::RemoveProducer(producer);
+	}
+
 	void PlainTransport::HandleNotification(PayloadChannel::Notification* notification)
 	{
 		MS_TRACE();

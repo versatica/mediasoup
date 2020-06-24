@@ -118,6 +118,14 @@ namespace RTC
 		{
 			return std::addressof(this->rtpStreamScores);
 		}
+		const std::map<uint32_t, RTC::RtpStreamRecv*>& GetSsrcRtpStreams()
+		{
+			return this->mapSsrcRtpStream;
+		}
+		const std::map<uint32_t, RTC::RtpStreamRecv*>& GetRtxSsrcRtpStreams()
+		{
+			return this->mapRtxSsrcRtpStream;		
+		}
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);

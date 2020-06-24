@@ -32,6 +32,10 @@ namespace RTC
 		void HandleRequest(Channel::Request* request) override;
 		void HandleNotification(PayloadChannel::Notification* notification) override;
 
+	protected:
+		void RemoveConsumer(RTC::Consumer* consumer) override;
+		void RemoveProducer(RTC::Producer* producer) override;
+		
 	private:
 		bool IsConnected() const override;
 		bool HasSrtp() const;

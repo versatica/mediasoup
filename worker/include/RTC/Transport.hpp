@@ -138,6 +138,10 @@ namespace RTC
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
 
+	protected:
+		virtual void RemoveConsumer(RTC::Consumer* consumer);
+		virtual void RemoveProducer(RTC::Producer* producer);
+
 	private:
 		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
 		RTC::Producer* GetProducerFromInternal(json& internal) const;
