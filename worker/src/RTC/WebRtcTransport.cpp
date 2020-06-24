@@ -814,6 +814,26 @@ namespace RTC
 		this->dtlsTransport->SendApplicationData(data, len);
 	}
 
+	void WebRtcTransport::RecvStreamClosed(uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		if (this->srtpRecvSession)
+		{
+			this->srtpRecvSession->RemoveStream(ssrc);
+		}
+	}
+
+	void WebRtcTransport::SendStreamClosed(uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		if (this->srtpSendSession)
+		{
+			this->srtpSendSession->RemoveStream(ssrc);
+		}
+	}
+
 	inline void WebRtcTransport::OnPacketReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{

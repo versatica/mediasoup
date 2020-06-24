@@ -1220,6 +1220,17 @@ namespace RTC
 				// Remove it from the map.
 				this->mapProducers.erase(producer->id);
 
+				// Tell the child class to clear associated SSRCs.
+				for (auto& kv : producer->GetRtpStreams())
+				{
+					auto* rtpStream = kv.first;
+
+					RecvStreamClosed(rtpStream->GetSsrc());
+
+					if (rtpStream->HasRtx())
+						RecvStreamClosed(rtpStream->GetRtxSsrc());
+				}
+
 				// Notify the listener.
 				this->listener->OnTransportProducerClosed(this, producer);
 
@@ -1244,11 +1255,17 @@ namespace RTC
 				for (auto ssrc : consumer->GetMediaSsrcs())
 				{
 					this->mapSsrcConsumer.erase(ssrc);
+
+					// Tell the child class to clear associated SSRCs.
+					SendStreamClosed(ssrc);
 				}
 
 				for (auto ssrc : consumer->GetRtxSsrcs())
 				{
 					this->mapRtxSsrcConsumer.erase(ssrc);
+
+					// Tell the child class to clear associated SSRCs.
+					SendStreamClosed(ssrc);
 				}
 
 				// Notify the listener.
@@ -2571,11 +2588,17 @@ namespace RTC
 		for (auto ssrc : consumer->GetMediaSsrcs())
 		{
 			this->mapSsrcConsumer.erase(ssrc);
+
+			// Tell the child class to clear associated SSRCs.
+			SendStreamClosed(ssrc);
 		}
 
 		for (auto ssrc : consumer->GetRtxSsrcs())
 		{
 			this->mapRtxSsrcConsumer.erase(ssrc);
+
+			// Tell the child class to clear associated SSRCs.
+			SendStreamClosed(ssrc);
 		}
 
 		// Notify the listener.

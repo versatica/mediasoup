@@ -3,6 +3,9 @@
 
 ### 3.6.8 (WIP)
 
+* Fix SRTP leak due to streams not being removed when a `Producer` or `Consumer` is closed.
+  - PR #428 (fixes issues #426). 
+  - Credits to credits to @penguinol for reporting and initial work at PR #427.
 * Update `nlohmann::json` C++ dep to 3.8.0.
 * Enhance const correctness.
 
