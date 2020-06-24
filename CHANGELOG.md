@@ -7,7 +7,8 @@
   - PR #428 (fixes issues #426). 
   - Credits to credits to @penguinol for reporting and initial work at PR #427.
 * Update `nlohmann::json` C++ dep to 3.8.0.
-* Enhance const correctness.
+* C++: Enhance `const` correctness.
+* Update NPM deps.
 
 
 ### 3.6.7
