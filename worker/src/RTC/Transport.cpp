@@ -632,20 +632,30 @@ namespace RTC
 				const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 
 				if (producerRtpHeaderExtensionIds.mid != 0u)
+				{
 					this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
+				}
 
 				if (producerRtpHeaderExtensionIds.rid != 0u)
+				{
 					this->recvRtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
+				}
 
 				if (producerRtpHeaderExtensionIds.rrid != 0u)
+				{
 					this->recvRtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
+				}
 
 				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+				{
 					this->recvRtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
+				}
 
 				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
+				{
 					this->recvRtpHeaderExtensionIds.transportWideCc01 =
 					  producerRtpHeaderExtensionIds.transportWideCc01;
+				}
 
 				// Create status response.
 				json data = json::object();

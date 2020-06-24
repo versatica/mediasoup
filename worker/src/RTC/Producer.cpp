@@ -27,18 +27,24 @@ namespace RTC
 		auto jsonKindIt = data.find("kind");
 
 		if (jsonKindIt == data.end() || !jsonKindIt->is_string())
+		{
 			MS_THROW_TYPE_ERROR("missing kind");
+		}
 
 		// This may throw.
 		this->kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
 
 		if (this->kind == RTC::Media::Kind::ALL)
+		{
 			MS_THROW_TYPE_ERROR("invalid empty kind");
+		}
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");
 
 		if (jsonRtpParametersIt == data.end() || !jsonRtpParametersIt->is_object())
+		{
 			MS_THROW_TYPE_ERROR("missing rtpParameters");
+		}
 
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
@@ -65,17 +71,23 @@ namespace RTC
 		auto jsonRtpMappingIt = data.find("rtpMapping");
 
 		if (jsonRtpMappingIt == data.end() || !jsonRtpMappingIt->is_object())
+		{
 			MS_THROW_TYPE_ERROR("missing rtpMapping");
+		}
 
 		auto jsonCodecsIt = jsonRtpMappingIt->find("codecs");
 
 		if (jsonCodecsIt == jsonRtpMappingIt->end() || !jsonCodecsIt->is_array())
+		{
 			MS_THROW_TYPE_ERROR("missing rtpMapping.codecs");
+		}
 
 		for (auto& codec : *jsonCodecsIt)
 		{
 			if (!codec.is_object())
+			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (not an object)");
+			}
 
 			auto jsonPayloadTypeIt = codec.find("payloadType");
 
@@ -117,7 +129,9 @@ namespace RTC
 		for (auto& encoding : *jsonEncodingsIt)
 		{
 			if (!encoding.is_object())
+			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings");
+			}
 
 			this->rtpMapping.encodings.emplace_back();
 
@@ -140,7 +154,9 @@ namespace RTC
 			auto jsonRidIt = encoding.find("rid");
 
 			if (jsonRidIt != encoding.end() && jsonRidIt->is_string())
+			{
 				encodingMapping.rid = jsonRidIt->get<std::string>();
+			}
 
 			// However ssrc or rid must be present (if more than 1 encoding).
 			// clang-format off
@@ -187,7 +203,9 @@ namespace RTC
 		auto jsonPausedIt = data.find("paused");
 
 		if (jsonPausedIt != data.end() && jsonPausedIt->is_boolean())
+		{
 			this->paused = jsonPausedIt->get<bool>();
+		}
 
 		// The number of encodings in rtpParameters must match the number of encodings
 		// in rtpMapping.
@@ -201,7 +219,9 @@ namespace RTC
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
 			if (exten.id == 0u)
+			{
 				MS_THROW_TYPE_ERROR("RTP extension id cannot be 0");
+			}
 
 			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
