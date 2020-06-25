@@ -3,7 +3,7 @@ branches:
   - v3
   - devel
 
-dist: xenial
+dist: bionic
 
 language: node_js
 
