@@ -43,7 +43,7 @@ matrix:
     - CC="clang-7"
     - CXX="clang++-7"
   - os: linux
-    node_js: 14
+    node_js: 13
     addons:
       apt:
         sources:
@@ -53,6 +53,17 @@ matrix:
     env:
     - CC="gcc-9"
     - CXX="g++-9"
+  - os: linux
+    node_js: 14
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-10
+    env:
+    - CC="gcc-10"
+    - CXX="g++-10"
 
 install:
 - npm install
