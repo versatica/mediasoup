@@ -82,6 +82,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
+
 		// NOTE: Hardcoded values in PipeTransport.
 		jsonObject["score"]          = 10;
 		jsonObject["producerScore"]  = 10;

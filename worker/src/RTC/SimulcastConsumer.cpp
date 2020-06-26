@@ -179,6 +179,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
+
 		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
 		jsonObject["score"] = this->rtpStream->GetScore();
