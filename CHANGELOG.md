@@ -62,7 +62,7 @@
 
 ### 3.6.0
 
-* DataChannel termination:
+* SCTP/DataChannel termination:
   - PR #409
   - Allow the Node application to directly send text/binary messages to mediasoup-worker C++ process so others can consume them using `DataConsumers`.
   - And vice-versa: allow the Node application to directly consume in Node messages send by `DataProducers`.
@@ -76,7 +76,7 @@
 
 ### 3.5.14
 
-* Update deps, speciall `uuid` and `@types/uuid` that had a TypeScript related bug.
+* Update deps, specially `uuid` and `@types/uuid` that had a TypeScript related bug.
 * `TransportCongestionClient.cpp`: Improve sender side bandwidth estimation by do not reporting `this->initialAvailableBitrate` as available bitrate due to strange behavior in the algorithm.
 
 
