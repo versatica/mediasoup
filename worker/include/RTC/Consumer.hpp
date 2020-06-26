@@ -177,7 +177,7 @@ namespace RTC
 		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
-		const std::vector<uint8_t>* producerRtpStreamScores;
+		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
 		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
 		uint64_t lastRtcpSentTime{ 0u };
