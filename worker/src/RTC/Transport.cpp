@@ -1868,7 +1868,11 @@ namespace RTC
 					{
 						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
-						if (!consumer)
+						if (feedback->GetMediaSsrc() == RTC::RtpProbationSsrc)
+						{
+							break;
+						}
+						else if (!consumer)
 						{
 							MS_DEBUG_TAG(
 							  rtcp,
@@ -1903,7 +1907,11 @@ namespace RTC
 							auto& item     = *it;
 							auto* consumer = GetConsumerByMediaSsrc(item->GetSsrc());
 
-							if (!consumer)
+							if (item->GetSsrc() == RTC::RtpProbationSsrc)
+							{
+								continue;
+							}
+							else if (!consumer)
 							{
 								MS_DEBUG_TAG(
 								  rtcp,
@@ -1980,17 +1988,15 @@ namespace RTC
 				auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
 				// If no Consumer is found and this is not a Transport Feedback for the
-				// probation SSRC or any Consumer RTX SSRC ignore it.
+				// probation SSRC or any Consumer RTX SSRC, ignore it.
 				//
 				// clang-format off
 				if (
 					!consumer &&
+					(feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC) &&
 					(
-						(feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC) &&
-						(
-						 feedback->GetMediaSsrc() != RTC::RtpProbationSsrc ||
-						 !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())
-						)
+						feedback->GetMediaSsrc() != RTC::RtpProbationSsrc ||
+						!GetConsumerByRtxSsrc(feedback->GetMediaSsrc())
 					)
 				)
 				// clang-format on
@@ -2009,6 +2015,18 @@ namespace RTC
 				{
 					case RTC::RTCP::FeedbackRtp::MessageType::NACK:
 					{
+						if (!consumer)
+						{
+							MS_DEBUG_TAG(
+							  rtcp,
+							  "no Consumer found for received NACK Feedback packet "
+							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
+							  feedback->GetMediaSsrc(),
+							  feedback->GetMediaSsrc());
+
+							break;
+						}
+
 						auto* nackPacket = static_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
 
 						consumer->ReceiveNack(nackPacket);
