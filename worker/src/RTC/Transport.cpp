@@ -1993,7 +1993,7 @@ namespace RTC
 				// clang-format off
 				if (
 					!consumer &&
-					(feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC) &&
+					feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC &&
 					(
 						feedback->GetMediaSsrc() != RTC::RtpProbationSsrc ||
 						!GetConsumerByRtxSsrc(feedback->GetMediaSsrc())
