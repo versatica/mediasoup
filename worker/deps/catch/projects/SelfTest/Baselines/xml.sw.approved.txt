@@ -264,6 +264,69 @@ Nor would this
       </Section>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="#1913 - GENERATE inside a for loop should not keep recreating the generator" tags="[generators][regression]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          counter &lt; 7
+        </Original>
+        <Expanded>
+          3 &lt; 7
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          counter &lt; 7
+        </Original>
+        <Expanded>
+          6 &lt; 7
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1913 - GENERATEs can share a line" tags="[generators][regression]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          i != j
+        </Original>
+        <Expanded>
+          1 != 3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          i != j
+        </Original>
+        <Expanded>
+          1 != 4
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          i != j
+        </Original>
+        <Expanded>
+          2 != 3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          i != j
+        </Original>
+        <Expanded>
+          2 != 4
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1954 - 7 arg template test case sig compiles - 1, 1, 1, 1, 1, 0, 0" tags="[!hide][.][compilation][regression]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1954 - 7 arg template test case sig compiles - 5, 1, 1, 1, 1, 0, 0" tags="[!hide][.][compilation][regression]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1954 - 7 arg template test case sig compiles - 5, 3, 1, 1, 1, 0, 0" tags="[!hide][.][compilation][regression]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="#748 - captures with unexpected exceptions" tags="[!hide][!shouldfail][!throws][.][failing]" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
       <Section name="outside assertions" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
         <Info>
@@ -2960,6 +3023,63 @@ Nor would this
           "some completely different text that contains one common word" ( contains: "string" or contains: "random" or contains: "different" )
         </Expanded>
       </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Composed matchers shortcircuit" tags="[composed][matchers]" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+      <Section name="&amp;&amp;" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            1, !(first &amp;&amp; second)
+          </Original>
+          <Expanded>
+            1 not ( CheckedTestingMatcher set to fail and CheckedTestingMatcher set to fail )
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            first.matchCalled
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            !second.matchCalled
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="||" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            1, first || second
+          </Original>
+          <Expanded>
+            1 ( CheckedTestingMatcher set to succeed or CheckedTestingMatcher set to fail )
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            first.matchCalled
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            !second.matchCalled
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
       <OverallResult success="true"/>
     </TestCase>
     <TestCase name="Contains string matcher" tags="[!hide][.][failing][matchers]" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -16255,7 +16375,9 @@ loose text artifact
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <OverallResults successes="1549" failures="149" expectedFailures="21"/>
+    <OverallResults successes="1564" failures="149" expectedFailures="21"/>
+    <OverallResultsCases successes="226" failures="86" expectedFailures="4"/>
   </Group>
-  <OverallResults successes="1549" failures="148" expectedFailures="21"/>
+  <OverallResults successes="1564" failures="148" expectedFailures="21"/>
+  <OverallResultsCases successes="226" failures="86" expectedFailures="4"/>
 </Catch>
