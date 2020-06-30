@@ -1,12 +1,13 @@
 # Changelog
 
 
-### 3.6.9 (WIP)
+### 3.6.9
 
 * `Transport::ReceiveRtpPacket()`: Call `RecvStreamClosed(packet->GetSsrc())` if received RTP packet does not match any `Producer`.
 * `Transport::HandleRtcpPacket()`: Ensure `Consumer` is found for received NACK Feedback packets.
 * Update NPM deps.
 * Update C++ `Catch` dep.
+* Issue #408.
 
 
 ### 3.6.8
