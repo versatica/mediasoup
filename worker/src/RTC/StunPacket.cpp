@@ -65,7 +65,7 @@ namespace RTC
 		uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
 		// Create a new StunPacket (data + 8 points to the received TransactionID field).
-		auto packet = new StunPacket(
+		auto* packet = new StunPacket(
 		  static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
 
 		/*
