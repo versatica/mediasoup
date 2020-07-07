@@ -65,7 +65,7 @@ endif
 bear:
 	$(MAKE) clean
 	$(BEAR) -o compile_commands_template.json $(MAKE)
-	$(SED) -i "s|$(PWD)|PATH|g" compile_commands_template.json
+	$(SED) -i" " "s|$(PWD)|PATH|g" compile_commands_template.json
 
 tidy:
 	$(SED) "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json

@@ -188,8 +188,8 @@ void IgnoreSignals()
 
 	for (auto& kv : ignoredSignals)
 	{
-		auto& sigName = kv.first;
-		int sigId     = kv.second;
+		const auto& sigName = kv.first;
+		int sigId           = kv.second;
 
 		err = sigaction(sigId, &act, nullptr);
 
