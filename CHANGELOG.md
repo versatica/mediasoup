@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.6.10 (WIP)
+
+* Update `libuv` to 1.38.1.
+* Update `Catch` to 2.12.4.
+* Update NPM deps.
+
+
 ### 3.6.9
 
 * `Transport::ReceiveRtpPacket()`: Call `RecvStreamClosed(packet->GetSsrc())` if received RTP packet does not match any `Producer`.
