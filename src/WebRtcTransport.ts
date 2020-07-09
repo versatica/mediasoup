@@ -60,6 +60,12 @@ export type WebRtcTransportOptions =
 	maxSctpMessageSize?: number;
 
 	/**
+	 * Maximum SCTP send buffer used by DataConsumers.
+	 * Default 262144.
+	 */
+	maxSctpSendBufferSize?: number;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: any;

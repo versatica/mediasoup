@@ -348,6 +348,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
+			maxSctpSendBufferSize = 262144,
 			appData = {}
 		}: WebRtcTransportOptions
 	): Promise<WebRtcTransport>
@@ -389,6 +390,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			maxSctpSendBufferSize,
 			isDataChannel : true
 		};
 

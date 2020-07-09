@@ -27,6 +27,9 @@
 
 namespace RTC
 {
+	static size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18.
+	static size_t MaxSctpSendBufferSize{ 268435456 };  // 2^28.
+
 	/* Instance methods. */
 
 	Transport::Transport(const std::string& id, Listener* listener, json& data)
@@ -88,9 +91,10 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
 			}
 
-			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
-			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
-			auto jsonIsDataChannelIt      = data.find("isDataChannel");
+			auto jsonNumSctpStreamsIt        = data.find("numSctpStreams");
+			auto jsonMaxSctpMessageSizeIt    = data.find("maxSctpMessageSize");
+			auto jsonMaxSctpSendBufferSizeIt = data.find("maxSctpSendBufferSize");
+			auto jsonIsDataChannelIt         = data.find("isDataChannel");
 
 			// numSctpStreams is mandatory.
 			// clang-format off
@@ -135,6 +139,28 @@ namespace RTC
 
 			this->maxMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
 
+			size_t maxSctpSendBufferSize;
+
+			// maxSctpSendBufferSize is optional.
+			if (jsonMaxSctpSendBufferSizeIt != data.end())
+			{
+				if (!Utils::Json::IsPositiveInteger(*jsonMaxSctpSendBufferSizeIt))
+				{
+					MS_THROW_TYPE_ERROR("wrong maxSctpSendBufferSize (not a number)");
+				}
+
+				maxSctpSendBufferSize = jsonMaxSctpSendBufferSizeIt->get<size_t>();
+
+				if (maxSctpSendBufferSize > MaxSctpSendBufferSize)
+				{
+					MS_THROW_TYPE_ERROR("wrong maxSctpSendBufferSize (maximum value exceeded)");
+				}
+			}
+			else
+			{
+				maxSctpSendBufferSize = DefaultSctpSendBufferSize;
+			}
+
 			// isDataChannel is optional.
 			bool isDataChannel{ false };
 
@@ -142,8 +168,8 @@ namespace RTC
 				isDataChannel = jsonIsDataChannelIt->get<bool>();
 
 			// This may throw.
-			this->sctpAssociation =
-			  new RTC::SctpAssociation(this, os, mis, this->maxMessageSize, isDataChannel);
+			this->sctpAssociation = new RTC::SctpAssociation(
+			  this, os, mis, this->maxMessageSize, maxSctpSendBufferSize, isDataChannel);
 		}
 
 		// Create the RTCP timer.

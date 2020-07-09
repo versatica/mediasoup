@@ -5,6 +5,7 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Channel/Notifier.hpp"
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memset(), std::memcpy()
 #include <string>
@@ -87,7 +88,12 @@ namespace RTC
 	/* Instance methods. */
 
 	SctpAssociation::SctpAssociation(
-	  Listener* listener, uint16_t os, uint16_t mis, size_t maxSctpMessageSize, bool isDataChannel)
+	  Listener* listener,
+	  uint16_t os,
+	  uint16_t mis,
+	  size_t maxSctpMessageSize,
+	  size_t maxSctpSendBufferSize,
+	  bool isDataChannel)
 	  : listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
 	    isDataChannel(isDataChannel)
 	{
@@ -192,6 +198,13 @@ namespace RTC
 			MS_THROW_ERROR("usrsctp_bind() failed: %s", std::strerror(errno));
 
 		DepUsrSCTP::IncreaseSctpAssociations();
+
+		int bufferSize = static_cast<int>(maxSctpSendBufferSize);
+
+		if (usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(int)) < 0)
+		{
+			MS_THROW_ERROR("usrsctp_setsockopt failed: %s", std::strerror(errno));
+		}
 	}
 
 	SctpAssociation::~SctpAssociation()
@@ -353,6 +366,11 @@ namespace RTC
 			  ppid,
 			  len,
 			  std::strerror(errno));
+		}
+
+		if (ret == EWOULDBLOCK || ret == EAGAIN)
+		{
+			Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 		}
 	}
 

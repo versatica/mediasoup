@@ -146,7 +146,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a WebRtcTransport.
      */
-    createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
+    createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, maxSctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
     /**
      * Create a PlainTransport.
      */
