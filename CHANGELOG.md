@@ -1,12 +1,12 @@
 # Changelog
 
 
-### 3.6.10 (WIP)
+### 3.6.10
 
+* `Transport`: Implement `maxSctpSendBufferSize`.
 * Update `libuv` to 1.38.1.
 * Update `Catch` to 2.12.4.
 * Update NPM deps.
-* `Transport`: Implement `maxSctpSendBufferSize`.
 
 
 ### 3.6.9
