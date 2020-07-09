@@ -32,6 +32,11 @@ export declare type PlainTransportOptions = {
      */
     maxSctpMessageSize?: number;
     /**
+     * Maximum SCTP send buffer used by DataConsumers.
+     * Default 262144.
+     */
+    maxSctpSendBufferSize?: number;
+    /**
      * Enable SRTP. For this to work, connect() must be called
      * with remote SRTP parameters. Default false.
      */

@@ -441,6 +441,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
+			maxSctpSendBufferSize = 262144,
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 			appData = {}
@@ -479,6 +480,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			maxSctpSendBufferSize,
 			isDataChannel : false,
 			enableSrtp,
 			srtpCryptoSuite
@@ -542,6 +544,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 1073741823,
+			maxSctpSendBufferSize = 268435456,
 			enableRtx = false,
 			enableSrtp = false,
 			appData = {}
@@ -578,6 +581,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			maxSctpSendBufferSize,
 			isDataChannel : false,
 			enableRtx,
 			enableSrtp

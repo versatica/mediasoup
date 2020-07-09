@@ -37,6 +37,12 @@ export type PipeTransportOptions =
 	maxSctpMessageSize?: number;
 
 	/**
+	 * Maximum SCTP send buffer used by DataConsumers.
+	 * Default 268435456.
+	 */
+	maxSctpSendBufferSize?: number;
+
+	/**
 	 * Enable RTX and NACK for RTP retransmission. Useful if both Routers are
 	 * located in different hosts and there is packet lost in the link. For this
 	 * to work, both PipeTransports must enable this setting. Default false.
