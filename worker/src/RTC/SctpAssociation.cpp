@@ -5,6 +5,7 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Channel/Notifier.hpp"
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memset(), std::memcpy()
 #include <string>
@@ -87,7 +88,12 @@ namespace RTC
 	/* Instance methods. */
 
 	SctpAssociation::SctpAssociation(
-	  Listener* listener, uint16_t os, uint16_t mis, size_t maxSctpMessageSize, bool isDataChannel)
+	  Listener* listener,
+	  uint16_t os,
+	  uint16_t mis,
+	  size_t maxSctpMessageSize,
+	  size_t maxSctpSendBufferSize,
+	  bool isDataChannel)
 	  : listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
 	    isDataChannel(isDataChannel)
 	{
@@ -110,7 +116,9 @@ namespace RTC
 		ret = usrsctp_set_non_blocking(this->socket, 1);
 
 		if (ret < 0)
+		{
 			MS_THROW_ERROR("usrsctp_set_non_blocking() failed: %s", std::strerror(errno));
+		}
 
 		// Set SO_LINGER.
 		// This ensures that the usrsctp close call deletes the association. This
@@ -124,7 +132,9 @@ namespace RTC
 		ret = usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_LINGER, &lingerOpt, sizeof(lingerOpt));
 
 		if (ret < 0)
+		{
 			MS_THROW_ERROR("usrsctp_setsockopt(SO_LINGER) failed: %s", std::strerror(errno));
+		}
 
 		// Set SCTP_ENABLE_STREAM_RESET.
 		struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -145,7 +155,9 @@ namespace RTC
 		ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_NODELAY, &noDelay, sizeof(noDelay));
 
 		if (ret < 0)
+		{
 			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_NODELAY) failed: %s", std::strerror(errno));
+		}
 
 		// Enable events.
 		struct sctp_event event; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -160,7 +172,9 @@ namespace RTC
 			ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_EVENT, &event, sizeof(event));
 
 			if (ret < 0)
+			{
 				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_EVENT) failed: %s", std::strerror(errno));
+			}
 		}
 
 		// Init message.
@@ -173,7 +187,9 @@ namespace RTC
 		ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
 
 		if (ret < 0)
+		{
 			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_INITMSG) failed: %s", std::strerror(errno));
+		}
 
 		// Server side.
 		struct sockaddr_conn sconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -189,9 +205,18 @@ namespace RTC
 		ret = usrsctp_bind(this->socket, reinterpret_cast<struct sockaddr*>(&sconn), sizeof(sconn));
 
 		if (ret < 0)
+		{
 			MS_THROW_ERROR("usrsctp_bind() failed: %s", std::strerror(errno));
+		}
 
 		DepUsrSCTP::IncreaseSctpAssociations();
+
+		auto bufferSize = static_cast<int>(maxSctpSendBufferSize);
+
+		if (usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(int)) < 0)
+		{
+			MS_THROW_ERROR("usrsctp_setsockopt(SO_SNDBUF) failed: %s", std::strerror(errno));
+		}
 	}
 
 	SctpAssociation::~SctpAssociation()
@@ -353,6 +378,11 @@ namespace RTC
 			  ppid,
 			  len,
 			  std::strerror(errno));
+		}
+
+		if (ret == EWOULDBLOCK || ret == EAGAIN)
+		{
+			Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 		}
 	}
 

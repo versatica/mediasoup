@@ -1,8 +1,9 @@
 # Changelog
 
 
-### 3.6.10 (WIP)
+### 3.6.10
 
+* `Transport`: Implement `maxSctpSendBufferSize`.
 * Update `libuv` to 1.38.1.
 * Update `Catch` to 2.12.4.
 * Update NPM deps.
@@ -14,7 +15,7 @@
 * `Transport::HandleRtcpPacket()`: Ensure `Consumer` is found for received NACK Feedback packets.
 * Update NPM deps.
 * Update C++ `Catch` dep.
-* Issue #408.
+* Fix issue #408.
 
 
 ### 3.6.8

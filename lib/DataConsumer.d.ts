@@ -58,6 +58,7 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * @emits transportclose
      * @emits dataproducerclose
      * @emits message - (message: Buffer, ppid: number)
+     * @emits sctpsendbufferfull
      * @emits @close
      * @emits @dataproducerclose
      */
