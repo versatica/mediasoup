@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.12
+
+* Release script.
+
+
 ### 3.6.11
 
 * `Transport`: rename `maxSctpSendBufferSize` to `sctpSendBufferSize`.
