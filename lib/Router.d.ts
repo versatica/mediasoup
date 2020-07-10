@@ -146,11 +146,11 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a WebRtcTransport.
      */
-    createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, maxSctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
+    createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
     /**
      * Create a PlainTransport.
      */
-    createPlainTransport({ listenIp, rtcpMux, comedia, enableSctp, numSctpStreams, maxSctpMessageSize, maxSctpSendBufferSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
+    createPlainTransport({ listenIp, rtcpMux, comedia, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
     /**
      * DEPRECATED: Use createPlainTransport().
      */
@@ -158,7 +158,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a PipeTransport.
      */
-    createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, maxSctpSendBufferSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
+    createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
     /**
      * Create a DirectTransport.
      */

@@ -91,10 +91,10 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
 			}
 
-			auto jsonNumSctpStreamsIt        = data.find("numSctpStreams");
-			auto jsonMaxSctpMessageSizeIt    = data.find("maxSctpMessageSize");
-			auto jsonMaxSctpSendBufferSizeIt = data.find("maxSctpSendBufferSize");
-			auto jsonIsDataChannelIt         = data.find("isDataChannel");
+			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
+			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
+			auto jsonSctpSendBufferSizeIt = data.find("sctpSendBufferSize");
+			auto jsonIsDataChannelIt      = data.find("isDataChannel");
 
 			// numSctpStreams is mandatory.
 			// clang-format off
@@ -139,26 +139,26 @@ namespace RTC
 
 			this->maxMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
 
-			size_t maxSctpSendBufferSize;
+			size_t sctpSendBufferSize;
 
-			// maxSctpSendBufferSize is optional.
-			if (jsonMaxSctpSendBufferSizeIt != data.end())
+			// sctpSendBufferSize is optional.
+			if (jsonSctpSendBufferSizeIt != data.end())
 			{
-				if (!Utils::Json::IsPositiveInteger(*jsonMaxSctpSendBufferSizeIt))
+				if (!Utils::Json::IsPositiveInteger(*jsonSctpSendBufferSizeIt))
 				{
-					MS_THROW_TYPE_ERROR("wrong maxSctpSendBufferSize (not a number)");
+					MS_THROW_TYPE_ERROR("wrong sctpSendBufferSize (not a number)");
 				}
 
-				maxSctpSendBufferSize = jsonMaxSctpSendBufferSizeIt->get<size_t>();
+				sctpSendBufferSize = jsonSctpSendBufferSizeIt->get<size_t>();
 
-				if (maxSctpSendBufferSize > MaxSctpSendBufferSize)
+				if (sctpSendBufferSize > MaxSctpSendBufferSize)
 				{
-					MS_THROW_TYPE_ERROR("wrong maxSctpSendBufferSize (maximum value exceeded)");
+					MS_THROW_TYPE_ERROR("wrong sctpSendBufferSize (maximum value exceeded)");
 				}
 			}
 			else
 			{
-				maxSctpSendBufferSize = DefaultSctpSendBufferSize;
+				sctpSendBufferSize = DefaultSctpSendBufferSize;
 			}
 
 			// isDataChannel is optional.
@@ -169,7 +169,7 @@ namespace RTC
 
 			// This may throw.
 			this->sctpAssociation = new RTC::SctpAssociation(
-			  this, os, mis, this->maxMessageSize, maxSctpSendBufferSize, isDataChannel);
+			  this, os, mis, this->maxMessageSize, sctpSendBufferSize, isDataChannel);
 		}
 
 		// Create the RTCP timer.

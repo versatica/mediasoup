@@ -92,7 +92,7 @@ namespace RTC
 	  uint16_t os,
 	  uint16_t mis,
 	  size_t maxSctpMessageSize,
-	  size_t maxSctpSendBufferSize,
+	  size_t sctpSendBufferSize,
 	  bool isDataChannel)
 	  : listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
 	    isDataChannel(isDataChannel)
@@ -211,7 +211,7 @@ namespace RTC
 
 		DepUsrSCTP::IncreaseSctpAssociations();
 
-		auto bufferSize = static_cast<int>(maxSctpSendBufferSize);
+		auto bufferSize = static_cast<int>(sctpSendBufferSize);
 
 		if (usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(int)) < 0)
 		{

@@ -68,7 +68,7 @@ namespace RTC
 		  uint16_t os,
 		  uint16_t mis,
 		  size_t maxSctpMessageSize,
-		  size_t maxSctpSendBufferSize,
+		  size_t sctpSendBufferSize,
 		  bool isDataChannel);
 		~SctpAssociation();
 

@@ -32,7 +32,7 @@ export type PipeTransportOptions =
 
 	/**
 	 * Maximum allowed size for SCTP messages sent by DataProducers.
-	 * Default 1073741823.
+	 * Default 268435456.
 	 */
 	maxSctpMessageSize?: number;
 
@@ -40,7 +40,7 @@ export type PipeTransportOptions =
 	 * Maximum SCTP send buffer used by DataConsumers.
 	 * Default 268435456.
 	 */
-	maxSctpSendBufferSize?: number;
+	sctpSendBufferSize?: number;
 
 	/**
 	 * Enable RTX and NACK for RTP retransmission. Useful if both Routers are
