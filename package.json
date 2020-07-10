@@ -38,7 +38,8 @@
     "test:node": "npm run postinstall && node npm-scripts.js test:node",
     "test:worker": "node npm-scripts.js test:worker",
     "coverage": "npm run postinstall && node npm-scripts.js coverage",
-    "postinstall": "node npm-scripts.js postinstall"
+    "postinstall": "node npm-scripts.js postinstall",
+    "release": "node npm-scripts.js release"
   },
   "jest": {
     "verbose": true,
