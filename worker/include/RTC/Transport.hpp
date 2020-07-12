@@ -137,8 +137,6 @@ namespace RTC
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
-
-	private:
 		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
 		RTC::Producer* GetProducerFromInternal(json& internal) const;
 		void SetNewConsumerIdFromInternal(json& internal, std::string& consumerId) const;
@@ -149,15 +147,20 @@ namespace RTC
 		RTC::DataProducer* GetDataProducerFromInternal(json& internal) const;
 		void SetNewDataConsumerIdFromInternal(json& internal, std::string& dataConsumerId) const;
 		RTC::DataConsumer* GetDataConsumerFromInternal(json& internal) const;
-		virtual bool IsConnected() const                                                 = 0;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* cb = nullptr) = 0;
+
+	private:
+		virtual bool IsConnected() const = 0;
+		virtual void SendRtpPacket(
+		  RTC::Consumer* consumer, RTC::RtpPacket* packet, onSendCallback* cb = nullptr) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcp(uint64_t nowMs);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
-		virtual void SendSctpData(const uint8_t* data, size_t len)             = 0;
-		virtual void RecvStreamClosed(uint32_t ssrc)                           = 0;
-		virtual void SendStreamClosed(uint32_t ssrc)                           = 0;
+		virtual void SendMessage(
+		  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
+		virtual void SendSctpData(const uint8_t* data, size_t len)                        = 0;
+		virtual void RecvStreamClosed(uint32_t ssrc)                                      = 0;
+		virtual void SendStreamClosed(uint32_t ssrc)                                      = 0;
 		void DistributeAvailableOutgoingBitrate();
 		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
 		void EmitTraceEventProbationType(RTC::RtpPacket* packet) const;
@@ -245,6 +248,11 @@ namespace RTC
 		// Passed by argument.
 		const std::string id;
 
+	protected:
+		size_t maxMessageSize{ 262144u };
+		// Allocated by this.
+		RTC::SctpAssociation* sctpAssociation{ nullptr };
+
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
@@ -255,8 +263,6 @@ namespace RTC
 		std::unordered_map<std::string, RTC::DataConsumer*> mapDataConsumers;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		std::unordered_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
-		size_t maxMessageSize{ 262144u };
-		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		Timer* rtcpTimer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };

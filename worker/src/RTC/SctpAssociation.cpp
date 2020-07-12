@@ -39,7 +39,7 @@ inline static int onRecvSctpData(
 {
 	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(ulpInfo);
 
-	if (sctpAssociation == nullptr)
+	if (!sctpAssociation)
 	{
 		std::free(data);
 
@@ -107,7 +107,7 @@ namespace RTC
 		this->socket = usrsctp_socket(
 		  AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, static_cast<void*>(this));
 
-		if (this->socket == nullptr)
+		if (!this->socket)
 			MS_THROW_ERROR("usrsctp_socket() failed: %s", std::strerror(errno));
 
 		usrsctp_set_ulpinfo(this->socket, static_cast<void*>(this));

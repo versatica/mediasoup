@@ -411,7 +411,7 @@ namespace RTC
 			case Class::INDICATION:
 			{
 				// Both USERNAME and MESSAGE-INTEGRITY must be present.
-				if (this->messageIntegrity == nullptr || this->username.empty())
+				if (!this->messageIntegrity || this->username.empty())
 					return Authentication::BAD_REQUEST;
 
 				// Check that USERNAME attribute begins with our local username plus ":".

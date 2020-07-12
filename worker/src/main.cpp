@@ -36,7 +36,7 @@ void IgnoreSignals();
 int main(int argc, char* argv[])
 {
 	// Ensure we are called by our Node library.
-	if (std::getenv("MEDIASOUP_VERSION") == nullptr)
+	if (!std::getenv("MEDIASOUP_VERSION"))
 	{
 		MS_ERROR_STD("you don't seem to be my real father!");
 

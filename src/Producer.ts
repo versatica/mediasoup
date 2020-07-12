@@ -1,6 +1,7 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { MediaKind, RtpParameters } from './RtpParameters';
 
 export type ProducerOptions =
@@ -162,6 +163,9 @@ export class Producer extends EnhancedEventEmitter
 	// Channel instance.
 	private readonly _channel: Channel;
 
+	// PayloadChannel instance.
+	private readonly _payloadChannel: PayloadChannel;
+
 	// Closed flag.
 	private _closed = false;
 
@@ -190,6 +194,7 @@ export class Producer extends EnhancedEventEmitter
 			internal,
 			data,
 			channel,
+			payloadChannel,
 			appData,
 			paused
 		}:
@@ -197,6 +202,7 @@ export class Producer extends EnhancedEventEmitter
 			internal: any;
 			data: any;
 			channel: Channel;
+			payloadChannel: PayloadChannel;
 			appData?: any;
 			paused: boolean;
 		}
@@ -209,6 +215,7 @@ export class Producer extends EnhancedEventEmitter
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 		this._paused = paused;
 
@@ -426,6 +433,20 @@ export class Producer extends EnhancedEventEmitter
 
 		await this._channel.request(
 			'producer.enableTraceEvent', this._internal, reqData);
+	}
+
+	/**
+	 * Send RTP packet (just valid for Producers created on a DirectTransport).
+	 */
+	send(rtpPacket: Buffer)
+	{
+		if (!Buffer.isBuffer(rtpPacket))
+		{
+			throw new TypeError('rtpPacket must be a Buffer');
+		}
+
+		this._payloadChannel.notify(
+			'producer.send', this._internal, undefined, rtpPacket);
 	}
 
 	private _handleWorkerNotifications(): void

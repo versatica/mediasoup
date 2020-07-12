@@ -1,5 +1,7 @@
+/// <reference types="node" />
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { MediaKind, RtpParameters } from './RtpParameters';
 export declare type ProducerOptions = {
     /**
@@ -114,6 +116,7 @@ export declare class Producer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
+    private readonly _payloadChannel;
     private _closed;
     private readonly _appData?;
     private _paused;
@@ -127,10 +130,11 @@ export declare class Producer extends EnhancedEventEmitter {
      * @emits trace - (trace: ProducerTraceEventData)
      * @emits @close
      */
-    constructor({ internal, data, channel, appData, paused }: {
+    constructor({ internal, data, channel, payloadChannel, appData, paused }: {
         internal: any;
         data: any;
         channel: Channel;
+        payloadChannel: PayloadChannel;
         appData?: any;
         paused: boolean;
     });
@@ -217,6 +221,10 @@ export declare class Producer extends EnhancedEventEmitter {
      * Enable 'trace' event.
      */
     enableTraceEvent(types?: ProducerTraceEventType[]): Promise<void>;
+    /**
+     * Send RTP packet (just valid for Producers created on a DirectTransport).
+     */
+    send(rtpPacket: Buffer): void;
     private _handleWorkerNotifications;
 }
 //# sourceMappingURL=Producer.d.ts.map

@@ -105,9 +105,9 @@ export declare class PipeTransport extends Transport {
      * @override
      * @emits close
      * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (producer: Producer)
+     * @emits newconsumer - (consumer: Consumer)
      * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
+     * @emits newdataconsumer - (dataConsumer: DataConsumer)
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */

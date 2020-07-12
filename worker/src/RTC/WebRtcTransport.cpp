@@ -693,7 +693,8 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	void WebRtcTransport::SendRtpPacket(
+	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 
@@ -797,6 +798,14 @@ namespace RTC
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
+	}
+
+	void WebRtcTransport::SendMessage(
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
+	{
+		MS_TRACE();
+
+		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
 	}
 
 	void WebRtcTransport::SendSctpData(const uint8_t* data, size_t len)

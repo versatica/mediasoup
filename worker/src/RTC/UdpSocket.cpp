@@ -28,7 +28,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->listener == nullptr)
+		if (!this->listener)
 		{
 			MS_ERROR("no listener set");
 

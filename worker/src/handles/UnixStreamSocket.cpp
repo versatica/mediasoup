@@ -226,7 +226,7 @@ inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 	MS_TRACE_STD();
 
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
-	if (this->buffer == nullptr)
+	if (!this->buffer)
 		this->buffer = new uint8_t[this->bufferSize];
 
 	// Tell UV to write after the last data byte in the buffer.
