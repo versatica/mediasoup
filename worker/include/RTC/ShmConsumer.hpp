@@ -54,6 +54,10 @@ namespace RTC
 
 		bool WritePacketToShm(RTC::RtpPacket* packet);
 		bool VideoOrientationChanged(RTC::RtpPacket* packet);
+/* Uncomment for NACK test simulation
+		bool TestNACK(RTC::RtpPacket* packet);
+		uint64_t lastNACKTestTs {0};
+*/
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:

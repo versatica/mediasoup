@@ -1421,6 +1421,7 @@ namespace RTC
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
+			  // MS_DEBUG_TAG(rtp, "recvRtxTransmission.GetPacketCount()=%d", this->recvRtxTransmission.GetPacketCount());
 				break;
 			default:;
 		}
@@ -2385,6 +2386,8 @@ namespace RTC
 		}
 
 		this->sendRtxTransmission.Update(packet);
+
+		// MS_DEBUG_TAG(rtp, "sendRtxTransmission.GetPacketCount()=%d", this->sendRtxTransmission.GetPacketCount());
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)

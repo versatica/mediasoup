@@ -87,6 +87,7 @@ namespace RTC
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
 			this->nackPacketCount += item->CountRequestedPackets();
+			MS_DEBUG_TAG(rtx, "nackPacketCount=%zu", this->nackPacketCount);
 
 			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
 
@@ -413,7 +414,6 @@ namespace RTC
 		if (!this->params.useNack)
 		{
 			MS_WARN_TAG(rtx, "NACK not supported");
-
 			return;
 		}
 
@@ -457,6 +457,8 @@ namespace RTC
 				if (!storageItem)
 				{
 					// Do nothing.
+					MS_DEBUG_TAG(rtx,
+ 						  "Requested packet not found in storage, do nothing");
 				}
 				// Don't resend the packet if older than MaxRetransmissionDelay ms.
 				else if (diffMs > MaxRetransmissionDelay)
@@ -547,7 +549,7 @@ namespace RTC
 			MS_WARN_DEV(
 			  "could not resend all packets [seq:%" PRIu16
 			  ", first:%s, "
-			  "bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
+			  "bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent bitmask:" MS_UINT16_TO_BINARY_PATTERN "]", //containerIdx:%zu",
 			  seq,
 			  firstPacketSent ? "yes" : "no",
 			  MS_UINT16_TO_BINARY(origBitmask),
@@ -555,7 +557,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_DEBUG_DEV(
+			MS_DEBUG_TAG(rtx,
 			  "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
 			  seq,
 			  MS_UINT16_TO_BINARY(origBitmask));

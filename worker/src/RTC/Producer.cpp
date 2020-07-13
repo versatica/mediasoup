@@ -612,7 +612,10 @@ namespace RTC
 		{
 			result = ReceiveRtpPacketResult::RETRANSMISSION;
 			isRtx  = true;
-
+			
+			MS_DEBUG_TAG(rtp, "Retransmitted packet received [ssrc:%" PRIu32 " seq:%" PRIu16 " ts:%" PRIu32 "]",
+				packet->GetSsrc(),packet->GetSequenceNumber(), packet->GetTimestamp());
+			
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
 				return result;
@@ -1078,6 +1081,8 @@ namespace RTC
 
 		for (auto& fb : mediaCodec.rtcpFeedback)
 		{
+			MS_DEBUG_2TAGS(rtp, rtcp, "mediaCodec.rtcpFeedback: type=%s parameter=%s", fb.type.c_str(), fb.parameter.c_str());
+
 			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
 			{
 				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");

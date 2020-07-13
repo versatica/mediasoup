@@ -133,10 +133,7 @@ int DepLibSfuShm::SfuShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, DepLibSfuS
       err = sfushm_av_write_audio(wrt_ctx, data);
       break;
 
-    case DepLibSfuShm::ShmChunkType::RTCP:
-      //err = sfushm_av_write_rtcp(wrt_ctx, data);
-      break;
-
+    //case DepLibSfuShm::ShmChunkType::RTCP:
     default:
       return -1;
   }
@@ -156,9 +153,8 @@ int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNt
   {
     return 0;
   }
-  int err;
-  uint32_t ssrc;
 
+  uint32_t ssrc;
   switch(kind)
   {
     case DepLibSfuShm::ShmChunkType::AUDIO:
@@ -173,16 +169,6 @@ int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNt
       return 0;
   }
 
-  // TODO: remove all this debugging stuff after confirming that we handle RTSP SR correctly
-  uint64_t walltime = DepLibUV::GetTimeMs();
-  struct timespec clockTime;
-  time_t ct;
-  if (clock_gettime( CLOCK_REALTIME, &clockTime) == -1) {
-    ct = 0;
-  }
-  ct = clockTime.tv_sec;
-  uint64_t clockTimeMs = (clockTime.tv_sec * (uint64_t) 1e9 + clockTime.tv_nsec) / 1000000.0;
-
   /*
 .. c:function:: uint64_t uv_hrtime(void)
 
@@ -193,6 +179,16 @@ int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNt
   auto ntp = Utils::Time::TimeMs2Ntp(lastSenderReportNtpMs);
   auto ntp_sec = ntp.seconds;
   auto ntp_frac = ntp.fractions;
+/*
+  Uncomment for debugging
+  uint64_t walltime = DepLibUV::GetTimeMs();
+  struct timespec clockTime;
+  time_t ct;
+  if (clock_gettime( CLOCK_REALTIME, &clockTime) == -1) {
+    ct = 0;
+  }
+  ct = clockTime.tv_sec;
+  uint64_t clockTimeMs = (clockTime.tv_sec * (uint64_t) 1e9 + clockTime.tv_nsec) / 1000000.0;
 
 	MS_DEBUG_TAG(rtp, "RTCP SR: SSRC=%d ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
     ssrc,
@@ -201,8 +197,8 @@ int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNt
     walltime,
     ct,
     clockTimeMs);
-
-  err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, ntp_sec, ntp_frac, lastSenderReporTs, ssrc);
+*/
+  int err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, ntp_sec, ntp_frac, lastSenderReporTs, ssrc);
 
   if (IsError(err))
   {
