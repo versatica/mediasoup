@@ -135,7 +135,7 @@ export declare class Consumer extends EnhancedEventEmitter {
      * @emits producerresume
      * @emits score - (score: ConsumerScore)
      * @emits layerschange - (layers: ConsumerLayers | undefined)
-     * @emits rtppacket - (packet: Buffer)
+     * @emits rtp - (packet: Buffer)
      * @emits trace - (trace: ConsumerTraceEventData)
      * @emits @close
      * @emits @producerclose

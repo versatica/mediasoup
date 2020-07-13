@@ -40,7 +40,7 @@ export declare class DirectTransport extends Transport {
     protected readonly _data: {};
     /**
      * @private
-     * @emits rtcppacket - (packet: Buffer)
+     * @emits rtcp - (packet: Buffer)
      * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);

@@ -56,7 +56,7 @@ export class DirectTransport extends Transport
 
 	/**
 	 * @private
-	 * @emits rtcppacket - (packet: Buffer)
+	 * @emits rtcp - (packet: Buffer)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
@@ -191,14 +191,14 @@ export class DirectTransport extends Transport
 			{
 				switch (event)
 				{
-					case 'rtcppacket':
+					case 'rtcp':
 					{
 						if (this._closed)
 							break;
 
 						const packet = payload;
 
-						this.safeEmit('rtcppacket', packet);
+						this.safeEmit('rtcp', packet);
 
 						break;
 					}

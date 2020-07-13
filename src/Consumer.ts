@@ -204,7 +204,7 @@ export class Consumer extends EnhancedEventEmitter
 	 * @emits producerresume
 	 * @emits score - (score: ConsumerScore)
 	 * @emits layerschange - (layers: ConsumerLayers | undefined)
-	 * @emits rtppacket - (packet: Buffer)
+	 * @emits rtp - (packet: Buffer)
 	 * @emits trace - (trace: ConsumerTraceEventData)
 	 * @emits @close
 	 * @emits @producerclose
@@ -667,14 +667,14 @@ export class Consumer extends EnhancedEventEmitter
 			{
 				switch (event)
 				{
-					case 'rtppacket':
+					case 'rtp':
 					{
 						if (this._closed)
 							break;
 
 						const packet = payload;
 
-						this.safeEmit('rtppacket', packet);
+						this.safeEmit('rtp', packet);
 
 						break;
 					}

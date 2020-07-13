@@ -182,7 +182,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(consumer->id, "rtppacket", data, len);
+		PayloadChannel::Notifier::Emit(consumer->id, "rtp", data, len);
 
 		if (cb)
 		{
@@ -203,7 +203,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(this->id, "rtcppacket", data, len);
+		PayloadChannel::Notifier::Emit(this->id, "rtcp", data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -217,7 +217,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(this->id, "rtcppacket", data, len);
+		PayloadChannel::Notifier::Emit(this->id, "rtcp", data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
