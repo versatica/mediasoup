@@ -186,8 +186,12 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->params.useNack)
+		{
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
-
+		}
+		else {
+			MS_DEBUG_TAG(rtp,"RtpStreamRecv::params.useNack is false, NACK feature disabled");
+		}
 		// Run the RTP inactivity periodic timer (unless DTX is enabled).
 		if (!this->params.useDtx)
 		{
@@ -301,7 +305,6 @@ namespace RTC
 		if (!this->params.useNack)
 		{
 			MS_WARN_TAG(rtx, "NACK not supported");
-
 			return false;
 		}
 
@@ -326,21 +329,18 @@ namespace RTC
 			if (!this->rtxStream->ReceivePacket(packet))
 			{
 				MS_WARN_TAG(rtx, "RTX packet discarded");
-
 				return false;
 			}
 		}
 
-#if MS_LOG_DEV_LEVEL == 3
 		// Get the RTX packet sequence number for logging purposes.
 		auto rtxSeq = packet->GetSequenceNumber();
-#endif
 
 		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
-			MS_DEBUG_DEV(
-			  "ignoring empty RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", pt:%" PRIu8 "]",
+			MS_DEBUG_TAG(rtx, 
+			  "Ignoring empty RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", pt:%" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetPayloadType());
@@ -348,20 +348,11 @@ namespace RTC
 			return false;
 		}
 
-		MS_DEBUG_DEV(
-		  "received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "] recovering original [ssrc:%" PRIu32
-		  ", seq:%" PRIu16 "]",
-		  this->params.rtxSsrc,
-		  rtxSeq,
-		  packet->GetSsrc(),
-		  packet->GetSequenceNumber());
-
 		// If not a valid packet ignore it.
 		if (!RTC::RtpStream::UpdateSeq(packet))
 		{
-			MS_WARN_TAG(
-			  rtx,
-			  "invalid RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+			MS_DEBUG_TAG(rtp, 
+			  "Ignoring invalid packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber());
 
@@ -837,6 +828,7 @@ namespace RTC
 
 		packet.Serialize(RTC::RTCP::Buffer);
 
+		// MS_DEBUG_TAG(rtp, "Serialize NACKed RTCP packet and call OnRtpStreamSendRtcpPacket");
 		// Notify the listener.
 		static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
 	}

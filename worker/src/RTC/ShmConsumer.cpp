@@ -7,6 +7,8 @@
 #include "MediaSoupErrors.hpp"
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+
 
 namespace RTC
 {
@@ -25,7 +27,7 @@ namespace RTC
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 		if (!RTC::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
 		{
-			MS_THROW_TYPE_ERROR("%s codec not supported for svc", mediaCodec->mimeType.ToString().c_str());
+			MS_THROW_TYPE_ERROR("%s codec not supported for shm", mediaCodec->mimeType.ToString().c_str());
 		}
 
 		//MS_DEBUG_TAG(rtp, "ShmConsumer created from data: %s media codec: %s", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
@@ -33,6 +35,12 @@ namespace RTC
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		this->shmCtx = shmCtx;
+
+/*
+		Uncomment for NACK test simulation
+		uint64_t nowTs = DepLibUV::GetTimeMs();
+		this->lastNACKTestTs = nowTs;
+*/
 
 		CreateRtpStream();
 	}
@@ -231,15 +239,17 @@ namespace RTC
 			  origSeq);
 		}
 
-		// Process the packet.
-		if (this->WritePacketToShm(packet))
+		// Process the packet. In case of shm writer this is still needed for NACKs
+		if (this->rtpStream->ReceivePacket(packet))
 		{
-
-			// Increase transmission counter.
-			this->shmWriterCounter.Update(packet);
-
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
+	
+			// Send the packet.
+			this->listener->OnConsumerSendRtpPacket(this, packet);
+
+			// May emit 'trace' event.
+			EmitTraceEventRtpAndKeyFrameTypes(packet);
 		}
 		else
 		{
@@ -252,11 +262,76 @@ namespace RTC
 			  packet->GetTimestamp(),
 			  origSeq);
 		}
+/*
+	Uncomment for NACK test simulation
+		if (this->TestNACK(packet))
+		{
+			MS_DEBUG_TAG(rtp, "Pretend NACK for packet ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
+			packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
+			return;
+		}
+*/
+		// Process the packet.
+		if (this->WritePacketToShm(packet))
+		{
+			// Increase transmission counter.
+			this->shmWriterCounter.Update(packet);
+		}
+		else
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "failed to write to shm packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "] from original [seq:%" PRIu16 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+			  origSeq);
+		}
 
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
 	}
+
+/*
+Uncomment for NACK test simulation
+	bool ShmConsumer::TestNACK(RTC::RtpPacket* packet)
+	{
+		if (this->GetKind() != RTC::Media::Kind::VIDEO)
+			return false; // not video
+
+		uint64_t nowTs = DepLibUV::GetTimeMs();
+		if (nowTs - this->lastNACKTestTs < 300)
+			return false; // too soon
+
+		this->lastNACKTestTs = nowTs;
+
+		RtpStream::Params params;
+		params.ssrc      = packet->GetSsrc();
+		params.clockRate = 90000;
+		params.useNack   = true;
+
+		// Create a NACK item that request for all the packets.
+		RTCP::FeedbackRtpNackPacket nackPacket(0, params.ssrc);
+		auto* nackItem = new RTCP::FeedbackRtpNackItem(packet->GetSequenceNumber(), 0b0000000000000000);
+		nackPacket.AddItem(nackItem);
+
+		auto it = nackPacket.Begin();
+		if (it != nackPacket.End())
+		{
+			RTC::RTCP::FeedbackRtpNackItem* item = *it;	
+			MS_DEBUG_TAG(rtp,"TestNACK, nackPacket is NOT EMPTY");
+			item->Dump();		
+		}
+		else {
+			MS_DEBUG_TAG(rtp,"TestNACK, nackPacket is EMPTY");
+		}
+
+		this->ReceiveNack(&nackPacket);
+
+		return true;
+	}
+	*/
 
 	bool ShmConsumer::VideoOrientationChanged(RTC::RtpPacket* packet)
 	{
@@ -327,7 +402,7 @@ namespace RTC
 		uint64_t ts            = static_cast<uint64_t>(packet->GetTimestamp());
 		uint64_t seq           = static_cast<uint64_t>(packet->GetSequenceNumber());
 		uint32_t ssrc          = packet->GetSsrc();
-		bool isKeyFrame        = packet->IsKeyFrame();
+		// bool isKeyFrame        = packet->IsKeyFrame(); uncomment for debugging output
 
 		std::memset(&chunk, 0, sizeof(chunk));
 
@@ -399,7 +474,7 @@ namespace RTC
 					this->chunk.ssrc          = ssrc;
 					this->chunk.begin         = begin_picture;
 					this->chunk.end           = (marker != 0);
-
+					/* 
 					if (nal != 1)
 					{
 						MS_DEBUG_TAG(rtp, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
@@ -412,7 +487,7 @@ namespace RTC
 							marker,
 							shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
 					}
-					
+					*/					
 					if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
 					{
 						MS_WARN_TAG(rtp, "FAIL writing video NALU=%d: ts %" PRIu64 " seq %" PRIu64, nal, this->chunk.rtp_time, this->chunk.first_rtp_seq);
@@ -428,7 +503,7 @@ namespace RTC
 						/*
 							0                   1                   2                   3
 							0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-							+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 							|                          RTP Header                           |
 							+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 							|STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
@@ -453,12 +528,12 @@ namespace RTC
 							{
 								uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset); 
 								if ( offset + naluSize > len) {
-									MS_WARN_TAG(rtp, "payload left to read from STAP-A is too short: %" PRIu32" > %" PRIu16, offset + naluSize, len);
+									MS_WARN_TAG(rtp, "payload left to read from STAP-A is too short: %zu > %zu", offset + naluSize, len);
 									break;
 								}
 
 								offset += 2; // skip over NALU size
-								uint8_t subnal = *(data + offset) & 0x1F; //for debugging only, NAL type
+								// uint8_t subnal = *(data + offset) & 0x1F; // uncomment for debugging output, NAL type
 
 								//Add Annex B
 								uint16_t chunksize = naluSize;
@@ -487,7 +562,7 @@ namespace RTC
 								this->chunk.rtp_time      = ts;
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq; // TODO: is it okay to send several NALUs with same seq?
 								this->chunk.ssrc          = ssrc;
-
+								/*
 								if (subnal != 1)
 								{
 									MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
@@ -502,7 +577,7 @@ namespace RTC
 										this->chunk.begin,
 										this->chunk.end);
 								}
-
+								*/
 								if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
 								{
 									MS_WARN_TAG(rtp, "FAIL writing STAP-A pkt to shm: len %zu ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
@@ -579,7 +654,7 @@ namespace RTC
 							this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 							this->chunk.ssrc          = ssrc;
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
-							
+							/*
 							if (subnal != 1) {
 								MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
 									subnal, 
@@ -594,7 +669,7 @@ namespace RTC
 									this->chunk.begin,
 									this->chunk.end);
 							}
-							
+							*/
 							if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
 							{
 								MS_WARN_TAG(rtp, "FAIL writing FU-A pkt to shm: len=%zu ts=%" PRIu64 " seq=%" PRIu64 "%s%s", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, this->chunk.begin ? " begin" : "", this->chunk.end ? " end": "");
@@ -630,16 +705,43 @@ namespace RTC
 
 
 	void ShmConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t now)
+	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
 	{
 		MS_TRACE();
-	}
 
+		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
+
+		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+			return;
+
+		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
+
+		if (!report)
+			return;
+
+		packet->AddSenderReport(report);
+
+		// Build SDES chunk for this sender.
+		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
+
+		packet->AddSdesChunk(sdesChunk);
+
+		this->lastRtcpSentTime = nowMs;
+	}
 
 	void ShmConsumer::NeedWorstRemoteFractionLost(
 	  uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
 	{
 		MS_TRACE();
+
+		if (!IsActive())
+			return;
+
+		auto fractionLost = this->rtpStream->GetFractionLost();
+
+		// If our fraction lost is worse than the given one, update it.
+		if (fractionLost > worstRemoteFractionLost)
+			worstRemoteFractionLost = fractionLost;
 	}
 
 
@@ -649,13 +751,39 @@ namespace RTC
 
 		if (!IsActive())
 			return;
+
+		// May emit 'trace' event.
+		EmitTraceEventNackType();
+
+		this->rtpStream->ReceiveNack(nackPacket);
 	}
 
 
 	void ShmConsumer::ReceiveKeyFrameRequest(
-	  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t /*ssrc*/)
+	  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)
 	{
 		MS_TRACE();
+
+		switch (messageType)
+		{
+			case RTC::RTCP::FeedbackPs::MessageType::PLI:
+			{
+				EmitTraceEventPliType(ssrc);
+
+				break;
+			}
+
+			case RTC::RTCP::FeedbackPs::MessageType::FIR:
+			{
+				EmitTraceEventFirType(ssrc);
+
+				break;
+			}
+
+			default:;
+		}
+
+		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
 			RequestKeyFrame();
@@ -665,14 +793,20 @@ namespace RTC
 	void ShmConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
 	{
 		MS_TRACE();
+
+		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
 
-	uint32_t ShmConsumer::GetTransmissionRate(uint64_t now)
+	uint32_t ShmConsumer::GetTransmissionRate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		return 0u;
+		//return 0u;
+		if (!IsActive())
+			return 0u;
+
+		return this->rtpStream->GetBitrate(nowMs);
 	}
 
 
@@ -713,6 +847,8 @@ namespace RTC
 
 	void ShmConsumer::CreateRtpStream()
 	{
+		MS_TRACE();
+
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
@@ -752,33 +888,16 @@ namespace RTC
 			params.useDtx = true;
 		}
 
-	for (auto& fb : mediaCodec->rtcpFeedback)
-	{
-		if (!params.useNack && fb.type == "nack" && fb.parameter == "")
-		{
-			MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
+		// Always enable these for ShmConsumer
+		params.useNack = true;
+		params.usePli = true;
+		params.useFir = true;
 
-			params.useNack = true;
-		}
-		else if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
-		{
-			MS_DEBUG_2TAGS(rtp, rtcp, "PLI supported");
+		// Create a RtpStreamSend for sending a single media stream.
+		size_t bufferSize = params.useNack ? 600u : 0u;
 
-			params.usePli = true;
-		}
-		else if (!params.useFir && fb.type == "ccm" && fb.parameter == "fir")
-		{
-			MS_DEBUG_2TAGS(rtp, rtcp, "FIR supported");
-
-			params.useFir = true;
-		}
-	}
-
-	// Create a RtpStreamSend for sending a single media stream.
-	size_t bufferSize = params.useNack ? 600u : 0u;
-
-	this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
-	//this->rtpStreams.push_back(this->rtpStream);
+		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.
 		if (IsPaused() || IsProducerPaused())
@@ -788,8 +907,6 @@ namespace RTC
 
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
-
-		this->rtpStreams.push_back(this->rtpStream);
 	}
 
 
@@ -809,10 +926,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		//this->listener->OnConsumerRetransmitRtpPacket(this, packet);
+		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
 
 		// May emit 'trace' event.
-		//EmitTraceEventRtpAndKeyFrameTypes(packet, this->rtpStream->HasRtx());
+		EmitTraceEventRtpAndKeyFrameTypes(packet, this->rtpStream->HasRtx());
 	}
 
 	inline void ShmConsumer::OnRtpStreamScore(
@@ -825,7 +942,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// PipeConsumer does not play the BWE game.
 		return 0u;
 	}
 
