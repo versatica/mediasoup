@@ -126,7 +126,7 @@ export class ShmTransport extends Transport
 	}
 
 	/**
-	 * Get PipeTransport stats.
+	 * Get ShmTransport stats.
 	 *
 	 * @override
 	 */

@@ -36,11 +36,11 @@ namespace RTC
 
 		this->shmCtx = shmCtx;
 
-/*
-		Uncomment for NACK test simulation
+
+//		Uncomment for NACK test simulation
 		uint64_t nowTs = DepLibUV::GetTimeMs();
 		this->lastNACKTestTs = nowTs;
-*/
+
 
 		CreateRtpStream();
 	}
@@ -262,15 +262,15 @@ namespace RTC
 			  packet->GetTimestamp(),
 			  origSeq);
 		}
-/*
-	Uncomment for NACK test simulation
+
+	// Uncomment for NACK test simulation
 		if (this->TestNACK(packet))
 		{
 			MS_DEBUG_TAG(rtp, "Pretend NACK for packet ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
 			packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
 			return;
 		}
-*/
+
 		// Process the packet.
 		if (this->WritePacketToShm(packet))
 		{
@@ -293,8 +293,8 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-/*
-Uncomment for NACK test simulation
+
+  //Uncomment for NACK test simulation
 	bool ShmConsumer::TestNACK(RTC::RtpPacket* packet)
 	{
 		if (this->GetKind() != RTC::Media::Kind::VIDEO)
@@ -331,7 +331,7 @@ Uncomment for NACK test simulation
 
 		return true;
 	}
-	*/
+
 
 	bool ShmConsumer::VideoOrientationChanged(RTC::RtpPacket* packet)
 	{
