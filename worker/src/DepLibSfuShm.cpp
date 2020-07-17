@@ -212,6 +212,11 @@ int DepLibSfuShm::SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNt
 
 int DepLibSfuShm::SfuShmCtx::WriteStreamMeta(std::string metadata, std::string shm)
 {
+  if (Status() != SHM_WRT_READY)
+  {
+    return 0;
+  }
+
   int     err;
   uint8_t data[256]; // Currently this is overkill because just 1 byte will be written successfully into shm
 
@@ -240,6 +245,11 @@ int DepLibSfuShm::SfuShmCtx::WriteStreamMeta(std::string metadata, std::string s
 
 int DepLibSfuShm::SfuShmCtx::WriteVideoOrientation(uint16_t rotation)
 {
+  if (Status() != SHM_WRT_READY)
+  {
+    return 0;
+  }
+
   int err = sfushm_av_write_video_rotation(wrt_ctx, rotation);
 
   if (IsError(err))
