@@ -106,7 +106,7 @@ namespace RTC
 
 			for (auto* storageItem : RetransmissionContainer)
 			{
-				if (storageItem == nullptr)
+				if (!storageItem)
 					break;
 
 				// Note that this is an already RTX encoded packet if RTX is used
@@ -355,7 +355,7 @@ namespace RTC
 
 			if (!storageItem)
 			{
-				MS_ASSERT(this->buffer[idx] == nullptr, "key should be NULL");
+				MS_ASSERT(!this->buffer[idx], "key should be NULL");
 
 				continue;
 			}

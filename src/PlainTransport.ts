@@ -204,9 +204,9 @@ export class PlainTransport extends Transport
 	 * @override
 	 * @emits close
 	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (producer: Producer)
+	 * @emits newconsumer - (consumer: Consumer)
 	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
 	 * @emits tuple - (tuple: TransportTuple)
 	 * @emits rtcptuple - (rtcpTuple: TransportTuple)
 	 * @emits sctpstatechange - (sctpState: SctpState)

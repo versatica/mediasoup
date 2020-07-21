@@ -13,7 +13,9 @@ namespace PayloadChannel
 	// clang-format off
 	std::unordered_map<std::string, Notification::EventId> Notification::string2EventId =
 	{
-		{ "dataProducer.send", Notification::EventId::DATA_PRODUCER_SEND }
+		{ "transport.sendRtcp", Notification::EventId::TRANSPORT_SEND_RTCP },
+		{ "producer.send",      Notification::EventId::PRODUCER_SEND       },
+		{ "dataProducer.send",  Notification::EventId::DATA_PRODUCER_SEND  }
 	};
 	// clang-format on
 

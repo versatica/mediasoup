@@ -1,5 +1,6 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { ProducerStat } from './Producer';
 import { MediaKind, RtpCapabilities, RtpParameters } from './RtpParameters';
 export declare type ConsumerOptions = {
@@ -116,6 +117,7 @@ export declare class Consumer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
+    private readonly _payloadChannel;
     private _closed;
     private readonly _appData?;
     private _paused;
@@ -133,14 +135,16 @@ export declare class Consumer extends EnhancedEventEmitter {
      * @emits producerresume
      * @emits score - (score: ConsumerScore)
      * @emits layerschange - (layers: ConsumerLayers | undefined)
+     * @emits rtp - (packet: Buffer)
      * @emits trace - (trace: ConsumerTraceEventData)
      * @emits @close
      * @emits @producerclose
      */
-    constructor({ internal, data, channel, appData, paused, producerPaused, score, preferredLayers }: {
+    constructor({ internal, data, channel, payloadChannel, appData, paused, producerPaused, score, preferredLayers }: {
         internal: any;
         data: any;
         channel: Channel;
+        payloadChannel: PayloadChannel;
         appData?: any;
         paused: boolean;
         producerPaused: boolean;

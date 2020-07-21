@@ -17,7 +17,7 @@ inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*t
 {
 	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(addr);
 
-	if (sctpAssociation == nullptr)
+	if (!sctpAssociation)
 		return -1;
 
 	sctpAssociation->OnUsrSctpSendSctpData(data, len);

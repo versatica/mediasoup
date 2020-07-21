@@ -2,8 +2,6 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { UnsupportedError } from './errors';
 import { Transport, TransportTraceEventData } from './Transport';
-import { Producer, ProducerOptions } from './Producer';
-import { Consumer, ConsumerOptions } from './Consumer';
 
 export type DirectTransportOptions =
 {
@@ -53,11 +51,12 @@ export class DirectTransport extends Transport
 	// DirectTransport data.
 	protected readonly _data:
 	{
-		// TODO
+		// Nothing for now.
 	};
 
 	/**
 	 * @private
+	 * @emits rtcp - (packet: Buffer)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
@@ -66,13 +65,10 @@ export class DirectTransport extends Transport
 
 		logger.debug('constructor()');
 
-		const { data } = params;
-
-		// TODO
-		this._data = data;
-		// {
-		//
-		// };
+		this._data =
+		{
+			// Nothing for now.
+		};
 
 		this._handleWorkerNotifications();
 	}
@@ -151,21 +147,17 @@ export class DirectTransport extends Transport
 	}
 
 	/**
-	 * @override
+	 * Send RTCP packet.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async produce(options: ProducerOptions): Promise<Producer>
+	sendRtcp(rtcpPacket: Buffer)
 	{
-		throw new UnsupportedError('produce() not implemented in DirectTransport');
-	}
+		if (!Buffer.isBuffer(rtcpPacket))
+		{
+			throw new TypeError('rtcpPacket must be a Buffer');
+		}
 
-	/**
-	 * @override
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async consume(options: ConsumerOptions): Promise<Consumer>
-	{
-		throw new UnsupportedError('consume() not implemented in DirectTransport');
+		this._payloadChannel.notify(
+			'transport.sendRtcp', this._internal, undefined, rtcpPacket);
 	}
 
 	private _handleWorkerNotifications(): void
@@ -192,5 +184,30 @@ export class DirectTransport extends Transport
 				}
 			}
 		});
+
+		this._payloadChannel.on(
+			this._internal.transportId,
+			(event: string, data: any | undefined, payload: Buffer) =>
+			{
+				switch (event)
+				{
+					case 'rtcp':
+					{
+						if (this._closed)
+							break;
+
+						const packet = payload;
+
+						this.safeEmit('rtcp', packet);
+
+						break;
+					}
+
+					default:
+					{
+						logger.error('ignoring unknown event "%s"', event);
+					}
+				}
+			});
 	}
 }

@@ -284,9 +284,9 @@ export class WebRtcTransport extends Transport
 	 * @override
 	 * @emits close
 	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (producer: Producer)
+	 * @emits newconsumer - (consumer: Consumer)
 	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
 	 * @emits icestatechange - (iceState: IceState)
 	 * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
 	 * @emits dtlsstatechange - (dtlsState: DtlsState)

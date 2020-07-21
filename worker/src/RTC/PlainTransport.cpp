@@ -602,7 +602,8 @@ namespace RTC
 		return HasSrtp() && this->srtpSendSession && this->srtpRecvSession;
 	}
 
-	void PlainTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	void PlainTransport::SendRtpPacket(
+	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 
@@ -681,6 +682,14 @@ namespace RTC
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
+	}
+
+	void PlainTransport::SendMessage(
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
+	{
+		MS_TRACE();
+
+		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
 	}
 
 	void PlainTransport::SendSctpData(const uint8_t* data, size_t len)
@@ -819,7 +828,7 @@ namespace RTC
 
 		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
-		if (packet == nullptr)
+		if (!packet)
 		{
 			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
 
@@ -919,7 +928,7 @@ namespace RTC
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 
-		if (packet == nullptr)
+		if (!packet)
 		{
 			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
 
