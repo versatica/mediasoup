@@ -1,6 +1,15 @@
 # Changelog
 
 
+### 3.6.13
+
+* RTP on `DirectTransport` (issue #433, PR #434):
+  - New API `producer.send(rtpPacket: Buffer)`.
+  - New API `consumer.on('rtp', (rtpPacket: Buffer)`.
+  - New API `directTransport.sendRtcp(rtcpPacket: Buffer)`.
+  - New API `directTransport.on('rtcp', (rtpPacket: Buffer)`.
+
+
 ### 3.6.12
 
 * Release script.
