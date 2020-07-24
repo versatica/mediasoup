@@ -53,6 +53,18 @@ matrix:
     env:
     - CC="gcc-9"
     - CXX="g++-9"
+  # NOTE: For this we need Ubuntu Xenial, but then we loose gcc 4.9.
+  # - os: linux
+  #   node_js: 14
+  #   addons:
+  #     apt:
+  #       sources:
+  #       - ubuntu-toolchain-r-test
+  #       packages:
+  #       - g++-10
+  #   env:
+  #   - CC="gcc-10"
+  #   - CXX="g++-10"
 
 install:
 - npm install

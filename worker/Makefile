@@ -65,7 +65,7 @@ endif
 bear:
 	$(MAKE) clean
 	$(BEAR) -o compile_commands_template.json $(MAKE)
-	$(SED) -i "s|$(PWD)|PATH|g" compile_commands_template.json
+	$(SED) -i" " "s|$(PWD)|PATH|g" compile_commands_template.json
 
 tidy:
 	$(SED) "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
@@ -74,7 +74,7 @@ tidy:
 		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
 		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
 		-p=. \
-		-j=2 \
+		-j=$(CORES) \
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
 		-quiet
 

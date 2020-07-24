@@ -58,7 +58,6 @@ namespace RTC
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
 		void ClearBuffer();
-		void ResetStorageItem(StorageItem* storageItem);
 		void UpdateBufferStartIdx();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);

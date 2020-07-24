@@ -58,6 +58,10 @@ namespace RTC
 
 		void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonObject);
+		uint32_t GetEncodingIdx() const
+		{
+			return this->params.encodingIdx;
+		}
 		uint32_t GetSsrc() const
 		{
 			return this->params.ssrc;

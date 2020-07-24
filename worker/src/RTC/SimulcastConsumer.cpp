@@ -179,6 +179,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
+
 		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
 		jsonObject["score"] = this->rtpStream->GetScore();
@@ -187,6 +189,8 @@ namespace RTC
 			jsonObject["producerScore"] = producerCurrentRtpStream->GetScore();
 		else
 			jsonObject["producerScore"] = 0;
+
+		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::Request* request)
@@ -309,18 +313,20 @@ namespace RTC
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
+		// Emit the score event.
+		EmitScore();
+
 		if (IsActive())
 			MayChangeLayers();
 	}
 
 	void SimulcastConsumer::ProducerRtpStreamScore(
-	  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
+	  RTC::RtpStream* /*rtpStream*/, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
-		// Emit score event only if the stream whose score changed is the current one.
-		if (rtpStream == GetProducerCurrentRtpStream())
-			EmitScore();
+		// Emit the score event.
+		EmitScore();
 
 		if (RTC::Consumer::IsActive())
 		{
@@ -779,7 +785,10 @@ namespace RTC
 				// outgoing packet matches the highest seen in the previous stream. Fix it.
 				else if (tsExtraOffset == 0u)
 				{
-					tsExtraOffset = 1u;
+					// Apply an expected offset for a new frame in a 30fps stream.
+					static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
+
+					tsExtraOffset = MsOffset * this->rtpStream->GetClockRate() / 1000;
 				}
 
 				if (tsExtraOffset > 0u)
@@ -1065,8 +1074,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto& encoding         = this->rtpParameters.encodings[0];
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		MS_DEBUG_TAG(
 		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
@@ -1106,9 +1115,9 @@ namespace RTC
 			params.useDtx = true;
 		}
 
-		for (auto& fb : mediaCodec->rtcpFeedback)
+		for (const auto& fb : mediaCodec->rtcpFeedback)
 		{
-			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+			if (!params.useNack && fb.type == "nack" && fb.parameter.empty())
 			{
 				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 
@@ -1138,7 +1147,7 @@ namespace RTC
 		if (IsPaused() || IsProducerPaused())
 			this->rtpStream->Pause();
 
-		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+		const auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);

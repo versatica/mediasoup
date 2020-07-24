@@ -110,7 +110,7 @@ namespace RTC
 		jsonObject["bytesReceived"] = this->bytesReceived;
 	}
 
-	void DataProducer::HandleRequest(Channel::Request* request)
+	void DataProducer::HandleRequest(Channel::Request* request) const
 	{
 		MS_TRACE();
 

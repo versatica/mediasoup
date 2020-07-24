@@ -65,7 +65,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	opterr = 0; // Don't allow getopt to print error messages.
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
-		if (optarg == nullptr)
+		if (!optarg)
 			MS_THROW_TYPE_ERROR("unknown configuration parameter: %s", optarg);
 
 		switch (c)

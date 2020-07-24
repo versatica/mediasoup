@@ -1,6 +1,7 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { ProducerStat } from './Producer';
 import {
 	MediaKind,
@@ -90,6 +91,12 @@ export type ConsumerScore =
 	 * The score of the currently selected RTP stream of the producer.
 	 */
 	producerScore: number;
+
+	/**
+	 * The scores of all RTP streams in the producer ordered by encoding (just
+	 * useful when the producer uses simulcast).
+	 */
+	producerScores: number[];
 }
 
 export type ConsumerLayers =
@@ -159,6 +166,9 @@ export class Consumer extends EnhancedEventEmitter
 	// Channel instance.
 	private readonly _channel: Channel;
 
+	// PayloadChannel instance.
+	private readonly _payloadChannel: PayloadChannel;
+
 	// Closed flag.
 	private _closed = false;
 
@@ -194,6 +204,7 @@ export class Consumer extends EnhancedEventEmitter
 	 * @emits producerresume
 	 * @emits score - (score: ConsumerScore)
 	 * @emits layerschange - (layers: ConsumerLayers | undefined)
+	 * @emits rtp - (packet: Buffer)
 	 * @emits trace - (trace: ConsumerTraceEventData)
 	 * @emits @close
 	 * @emits @producerclose
@@ -203,16 +214,18 @@ export class Consumer extends EnhancedEventEmitter
 			internal,
 			data,
 			channel,
+			payloadChannel,
 			appData,
 			paused,
 			producerPaused,
-			score = { score: 10, producerScore: 10 },
+			score = { score: 10, producerScore: 10, producerScores: [] },
 			preferredLayers
 		}:
 		{
 			internal: any;
 			data: any;
 			channel: Channel;
+			payloadChannel: PayloadChannel;
 			appData?: any;
 			paused: boolean;
 			producerPaused: boolean;
@@ -227,6 +240,7 @@ export class Consumer extends EnhancedEventEmitter
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 		this._paused = paused;
 		this._producerPaused = producerPaused;
@@ -646,5 +660,30 @@ export class Consumer extends EnhancedEventEmitter
 				}
 			}
 		});
+
+		this._payloadChannel.on(
+			this._internal.consumerId,
+			(event: string, data: any | undefined, payload: Buffer) =>
+			{
+				switch (event)
+				{
+					case 'rtp':
+					{
+						if (this._closed)
+							break;
+
+						const packet = payload;
+
+						this.safeEmit('rtp', packet);
+
+						break;
+					}
+
+					default:
+					{
+						logger.error('ignoring unknown event "%s"', event);
+					}
+				}
+			});
 	}
 }

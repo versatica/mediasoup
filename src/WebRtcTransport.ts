@@ -60,6 +60,12 @@ export type WebRtcTransportOptions =
 	maxSctpMessageSize?: number;
 
 	/**
+	 * Maximum SCTP send buffer used by DataConsumers.
+	 * Default 262144.
+	 */
+	sctpSendBufferSize?: number;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: any;
@@ -278,9 +284,9 @@ export class WebRtcTransport extends Transport
 	 * @override
 	 * @emits close
 	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (producer: Producer)
+	 * @emits newconsumer - (consumer: Consumer)
 	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
 	 * @emits icestatechange - (iceState: IceState)
 	 * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
 	 * @emits dtlsstatechange - (dtlsState: DtlsState)

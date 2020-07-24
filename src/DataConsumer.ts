@@ -98,6 +98,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	 * @emits transportclose
 	 * @emits dataproducerclose
 	 * @emits message - (message: Buffer, ppid: number)
+	 * @emits sctpsendbufferfull
 	 * @emits @close
 	 * @emits @dataproducerclose
 	 */
@@ -301,6 +302,16 @@ export class DataConsumer extends EnhancedEventEmitter
 
 					// Emit observer event.
 					this._observer.safeEmit('close');
+
+					break;
+				}
+
+				case 'sctpsendbufferfull':
+				{
+					this.safeEmit('sctpsendbufferfull');
+
+					// Emit observer event.
+					this._observer.safeEmit('sctpsendbufferfull');
 
 					break;
 				}

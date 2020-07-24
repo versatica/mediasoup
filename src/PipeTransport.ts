@@ -32,9 +32,15 @@ export type PipeTransportOptions =
 
 	/**
 	 * Maximum allowed size for SCTP messages sent by DataProducers.
-	 * Default 1073741823.
+	 * Default 268435456.
 	 */
 	maxSctpMessageSize?: number;
+
+	/**
+	 * Maximum SCTP send buffer used by DataConsumers.
+	 * Default 268435456.
+	 */
+	sctpSendBufferSize?: number;
 
 	/**
 	 * Enable RTX and NACK for RTP retransmission. Useful if both Routers are
@@ -163,9 +169,9 @@ export class PipeTransport extends Transport
 	 * @override
 	 * @emits close
 	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (producer: Producer)
+	 * @emits newconsumer - (consumer: Consumer)
 	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
@@ -290,6 +296,7 @@ export class PipeTransport extends Transport
 				internal,
 				data,
 				channel        : this._channel,
+				payloadChannel : this._payloadChannel,
 				appData,
 				paused         : status.paused,
 				producerPaused : status.producerPaused

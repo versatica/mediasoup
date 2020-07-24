@@ -17,6 +17,20 @@ namespace RTC
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
 
+	static void resetStorageItem(RTC::RtpStreamSend::StorageItem* storageItem)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
+
+		delete storageItem->packet;
+
+		storageItem->packet     = nullptr;
+		storageItem->resentAtMs = 0;
+		storageItem->sentTimes  = 0;
+		storageItem->rtxEncoded = false;
+	}
+
 	/* Instance methods. */
 
 	RtpStreamSend::RtpStreamSend(
@@ -92,7 +106,7 @@ namespace RTC
 
 			for (auto* storageItem : RetransmissionContainer)
 			{
-				if (storageItem == nullptr)
+				if (!storageItem)
 					break;
 
 				// Note that this is an already RTX encoded packet if RTX is used
@@ -154,15 +168,11 @@ namespace RTC
 
 		// If no Sender Report was received by the remote endpoint yet, ignore lastSr
 		// and dlsr values in the Receiver Report.
-		if (!lastSr || !dlsr)
-			rtt = 0;
-		else if (compactNtp > dlsr + lastSr)
+		if (lastSr && dlsr && (compactNtp > dlsr + lastSr))
 			rtt = compactNtp - dlsr - lastSr;
-		else
-			rtt = 0;
 
 		// RTT in milliseconds.
-		this->rtt = (rtt >> 16) * 1000;
+		this->rtt = static_cast<float>(rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
 		if (this->rtt > 0.0f)
@@ -207,8 +217,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& cname     = GetCname();
-		auto* sdesChunk = new RTC::RTCP::SdesChunk(GetSsrc());
+		const auto& cname = GetCname();
+		auto* sdesChunk   = new RTC::RTCP::SdesChunk(GetSsrc());
 		auto* sdesItem =
 		  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
@@ -292,7 +302,7 @@ namespace RTC
 				return;
 
 			// Reset the storage item.
-			ResetStorageItem(storageItem);
+			resetStorageItem(storageItem);
 
 			// If this was the item referenced by the buffer start index, move it to
 			// the next one.
@@ -315,7 +325,7 @@ namespace RTC
 			auto* firstStorageItem = this->buffer[this->bufferStartIdx];
 
 			// Reset the first storage item.
-			ResetStorageItem(firstStorageItem);
+			resetStorageItem(firstStorageItem);
 
 			// Unfill the buffer start item.
 			this->buffer[this->bufferStartIdx] = nullptr;
@@ -345,13 +355,13 @@ namespace RTC
 
 			if (!storageItem)
 			{
-				MS_ASSERT(this->buffer[idx] == nullptr, "key should be NULL");
+				MS_ASSERT(!this->buffer[idx], "key should be NULL");
 
 				continue;
 			}
 
 			// Reset (free RTP packet) the storage item.
-			ResetStorageItem(storageItem);
+			resetStorageItem(storageItem);
 
 			// Unfill the buffer item.
 			this->buffer[idx] = nullptr;
@@ -360,20 +370,6 @@ namespace RTC
 		// Reset buffer.
 		this->bufferStartIdx = 0;
 		this->bufferSize     = 0;
-	}
-
-	inline void RtpStreamSend::ResetStorageItem(StorageItem* storageItem)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
-
-		delete storageItem->packet;
-
-		storageItem->packet     = nullptr;
-		storageItem->resentAtMs = 0;
-		storageItem->sentTimes  = 0;
-		storageItem->rtxEncoded = false;
 	}
 
 	/**
@@ -610,17 +606,7 @@ namespace RTC
 			lost = sent;
 
 		if (repaired > lost)
-		{
-			if (HasRtx())
-			{
-				repaired = lost;
-				retransmitted -= repaired - lost;
-			}
-			else
-			{
-				lost = repaired;
-			}
-		}
+			repaired = lost;
 
 #if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(
@@ -645,7 +631,7 @@ namespace RTC
 		MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");
 
 		if (retransmitted > 0)
-			repairedWeight *= repaired / retransmitted;
+			repairedWeight *= static_cast<float>(repaired) / retransmitted;
 
 		lost -= repaired * repairedWeight;
 

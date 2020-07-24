@@ -668,7 +668,7 @@ namespace RTC
 		for (auto* consumer : consumers)
 		{
 			// Update MID RTP extension value.
-			auto& mid = consumer->GetRtpParameters().mid;
+			const auto& mid = consumer->GetRtpParameters().mid;
 
 			if (!mid.empty())
 				packet->UpdateMid(mid);
@@ -736,13 +736,16 @@ namespace RTC
 		this->mapConsumerProducer[consumer] = producer;
 
 		// Get all streams in the Producer and provide the Consumer with them.
-		for (auto& kv : producer->GetRtpStreams())
+		for (const auto& kv : producer->GetRtpStreams())
 		{
 			auto* rtpStream     = kv.first;
 			uint32_t mappedSsrc = kv.second;
 
 			consumer->ProducerRtpStream(rtpStream, mappedSsrc);
 		}
+
+		// Provide the Consumer with the scores of all streams in the Producer.
+		consumer->ProducerRtpStreamScores(producer->GetRtpStreamScores());
 	}
 
 	inline void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)

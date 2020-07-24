@@ -8,6 +8,10 @@ const isWindows = os.platform() === 'win32';
 const task = process.argv.slice(2).join(' ');
 
 const GULP = process.env.GULP || 'gulp';
+
+// mediasoup mayor version.
+const MAYOR_VERSION = 3;
+
 // Just for Windows.
 let PYTHON;
 let MSBUILD;
@@ -60,8 +64,8 @@ switch (task)
 
 	case 'lint:node':
 	{
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --ext=ts src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js gulpfile.js npm-scripts.js test/');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js gulpfile.js npm-scripts.js test/');
 
 		break;
 	}
@@ -129,6 +133,19 @@ switch (task)
 			execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`);
 			execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
 		}
+
+		break;
+	}
+
+	case 'release':
+	{
+		execute('node npm-scripts.js typescript:build');
+		execute('npm run lint');
+		execute('npm run test');
+		execute(`git commit -am '${version}'`);
+		execute(`git tag -a ${version} -m '${version}'`);
+		execute(`git push origin v${MAYOR_VERSION} && git push origin --tags`);
+		execute('npm publish');
 
 		break;
 	}

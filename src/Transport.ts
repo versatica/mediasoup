@@ -488,7 +488,8 @@ export class Transport extends EnhancedEventEmitter
 			{
 				internal,
 				data,
-				channel : this._channel,
+				payloadChannel : this._payloadChannel,
+				channel        : this._channel,
 				appData,
 				paused
 			});
@@ -575,6 +576,7 @@ export class Transport extends EnhancedEventEmitter
 				internal,
 				data,
 				channel         : this._channel,
+				payloadChannel  : this._payloadChannel,
 				appData,
 				paused          : status.paused,
 				producerPaused  : status.producerPaused,

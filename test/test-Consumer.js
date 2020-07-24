@@ -308,7 +308,8 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
 	expect(audioConsumer.priority).toBe(1);
-	expect(audioConsumer.score).toEqual({ score: 10, producerScore: 0 });
+	expect(audioConsumer.score).toEqual(
+		{ score: 10, producerScore: 0, producerScores: [ 0 ] });
 	expect(audioConsumer.preferredLayers).toBeUndefined();
 	expect(audioConsumer.currentLayers).toBeUndefined();
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
@@ -389,7 +390,8 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.paused).toBe(true);
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.priority).toBe(1);
-	expect(videoConsumer.score).toEqual({ score: 10, producerScore: 0 });
+	expect(videoConsumer.score).toEqual(
+		{ score: 10, producerScore: 0, producerScores: [ 0, 0, 0, 0 ] });
 	expect(videoConsumer.preferredLayers).toEqual({ spatialLayer: 3, temporalLayer: 0 });
 	expect(videoConsumer.currentLayers).toBeUndefined();
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
