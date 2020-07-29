@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.6.14 (WIP)
+
+* `TransportCongestionControlClient.cpp`: Enable periodic ALR probing to recover faster from network issues.
+* Update deps.
+
+
 ### 3.6.13
 
 * RTP on `DirectTransport` (issue #433, PR #434):

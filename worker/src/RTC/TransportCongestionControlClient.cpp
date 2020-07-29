@@ -46,8 +46,9 @@ namespace RTC
 
 		this->processTimer = new Timer(this);
 
-		// TODO: Let's see.
-		// this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
+		// NOTE: This is supposed to recover computed available bandwidth after
+		// network issues.
+		this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
 
 		// clang-format off
 		this->processTimer->Start(std::min(
