@@ -244,9 +244,6 @@ namespace RTC
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
-	
-			// Send the packet.
-			this->listener->OnConsumerSendRtpPacket(this, packet);
 
 			// May emit 'trace' event.
 			EmitTraceEventRtpAndKeyFrameTypes(packet);
@@ -263,15 +260,49 @@ namespace RTC
 			  origSeq);
 		}
 
-	// Uncomment for NACK test simulation
-		if (this->TestNACK(packet))
+		// Check for video orientation changes
+		if (VideoOrientationChanged(packet))
+		{
+			MS_DEBUG_TAG(rtp, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				this->rotation,
+				packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp());
+			
+			shmCtx->WriteVideoOrientation(this->rotation);
+		}
+
+		// If we have not written any packets yet, need to configure shm writer
+		if (shmWriterCounter.GetPacketCount() == 0)
+		{
+			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
+			if (DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY != shmCtx->SetSsrcInShmConf(packet->GetSsrc(), kind))
+			{
+				return;
+			}
+		}
+
+		// Cannot write into shm until the first RTCP Sender Report received
+		if (!this->srReceived) {
+/*			MS_DEBUG_TAG(rtp, "RTCP SR not received yet, ignoring packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp()); */
+			return;
+		}
+
+// Uncomment for NACK test simulation
+/*		if (this->TestNACK(packet))
 		{
 			MS_DEBUG_TAG(rtp, "Pretend NACK for packet ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
 			packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
 			return;
 		}
+*/
+// End of NACK test simulation
 
-		// Process the packet.
+		// TODO: WritePacketToShm may actually discard it instead of writing into shm.
+		// Is it still okay to trust its ret value to have similar semantics?
 		if (this->WritePacketToShm(packet))
 		{
 			// Increase transmission counter.
@@ -294,14 +325,14 @@ namespace RTC
 	}
 
 
-  //Uncomment for NACK test simulation
+//Uncomment for NACK test simulation
 	bool ShmConsumer::TestNACK(RTC::RtpPacket* packet)
 	{
 		if (this->GetKind() != RTC::Media::Kind::VIDEO)
 			return false; // not video
 
 		uint64_t nowTs = DepLibUV::GetTimeMs();
-		if (nowTs - this->lastNACKTestTs < 300)
+		if (nowTs - this->lastNACKTestTs < 3000)
 			return false; // too soon
 
 		this->lastNACKTestTs = nowTs;
@@ -331,6 +362,7 @@ namespace RTC
 
 		return true;
 	}
+// End of NACK test simulation
 
 
 	bool ShmConsumer::VideoOrientationChanged(RTC::RtpPacket* packet)
@@ -358,43 +390,14 @@ namespace RTC
 				return true;
 			}
 		}
-
 		return false;
 	}
 
 	bool ShmConsumer::WritePacketToShm(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-		// If we have not written any packets yet, need to configure shm writer
-		if (shmWriterCounter.GetPacketCount() == 0)
-		{
-			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
-			if (DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY != shmCtx->SetSsrcInShmConf(packet->GetSsrc(), kind))
-			{
-				return false;
-			}
-		}
 
-		// Cannot write into shm until the first RTCP Sender Report received
-		if (!this->srReceived) {
-			MS_DEBUG_TAG(rtp, "RTCP SR not received yet, ignoring packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-				packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp());
-			return false;
-		}
-
-		if (VideoOrientationChanged(packet))
-		{
-			MS_DEBUG_TAG(rtp, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-				this->rotation,
-				packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp());
-			
-			shmCtx->WriteVideoOrientation(this->rotation);
-		}
-
+		bool ret               = true;
 		uint8_t const* pktdata = packet->GetData();
 		uint8_t const* cdata   = packet->GetPayload();
 		uint8_t* data          = const_cast<uint8_t*>(cdata);
@@ -402,38 +405,34 @@ namespace RTC
 		uint64_t ts            = static_cast<uint64_t>(packet->GetTimestamp());
 		uint64_t seq           = static_cast<uint64_t>(packet->GetSequenceNumber());
 		uint32_t ssrc          = packet->GetSsrc();
-		// bool isKeyFrame        = packet->IsKeyFrame(); uncomment for debugging output
+		bool isKeyFrame        = packet->IsKeyFrame(); //uncomment for debugging output
 
 		std::memset(&chunk, 0, sizeof(chunk));
 
+		ts = shmCtx->AdjustPktTs(ts, this->GetKind() == Media::Kind::VIDEO ? DepLibSfuShm::ShmChunkType::VIDEO : DepLibSfuShm::ShmChunkType::AUDIO);
+		seq = shmCtx->AdjustPktSeq(seq, this->GetKind() == Media::Kind::VIDEO ? DepLibSfuShm::ShmChunkType::VIDEO : DepLibSfuShm::ShmChunkType::AUDIO);
+
 		switch (this->GetKind())
 		{
-			/* Just write out the payload	*/
+			/* Audio NALUs are always simple */
 			case RTC::Media::Kind::AUDIO:
 			{
-				//ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::AUDIO);
-				seq = shmCtx->AdjustPktSeq(seq, DepLibSfuShm::ShmChunkType::AUDIO);
 				this->chunk.data = data;
 				this->chunk.len = len;
 				this->chunk.rtp_time = ts;
 				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 				this->chunk.ssrc = packet->GetSsrc();
 				this->chunk.begin = this->chunk.end = 1;
-				if(0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc()))
+				if(0 != shmCtx->WriteRtpDataToShm(DepLibSfuShm::ShmChunkType::AUDIO, &chunk))
 				{
 					MS_WARN_TAG(rtp, "FAIL writing audio ts %" PRIu64 " seq %" PRIu64, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-					return false;
+					ret = false;
 				}
-
-				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::AUDIO);
 				break;
 			} // audio
 
 			case RTC::Media::Kind::VIDEO:
 			{
-				ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::VIDEO);
-				seq = shmCtx->AdjustPktSeq(seq, DepLibSfuShm::ShmChunkType::VIDEO);
-
 				uint8_t nal = *(data) & 0x1F;
 				uint8_t marker = *(pktdata + 1) & 0x80; // Marker bit indicates the last or the only NALU in this packet is the end of the picture data
 
@@ -448,7 +447,7 @@ namespace RTC
 						break;
 					}
 
-					//Add Annex B 0x00000001 to the begininng of this packet: overwrite 3 or 4 bytes from the PTP pkt header
+					//Add Annex B 0x00000001 to the beginning of this packet: overwrite 3 or 4 bytes from the PTP pkt header
 					uint16_t chunksize = len;
 					if (begin_picture)
 					{
@@ -478,22 +477,15 @@ namespace RTC
 					if (nal != 1)
 					{
 						MS_DEBUG_TAG(rtp, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
-							nal,
-							this->chunk.len,
-							this->chunk.rtp_time,
-							this->chunk.first_rtp_seq,
-							isKeyFrame,
-							begin_picture,
-							marker,
-							shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
-					}
-					*/					
-					if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
+							nal, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, isKeyFrame, begin_picture, marker, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
+					}	*/					
+					if (0 != shmCtx->WriteRtpDataToShm(DepLibSfuShm::ShmChunkType::VIDEO, &chunk))
 					{
 						MS_WARN_TAG(rtp, "FAIL writing video NALU=%d: ts %" PRIu64 " seq %" PRIu64, nal, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-						return false;
+						ret=false;
+						break;
 					}
-				}
+				} // Single NALU pkt
 				else {
 					switch (nal)
 					{
@@ -562,26 +554,17 @@ namespace RTC
 								this->chunk.rtp_time      = ts;
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq; // TODO: is it okay to send several NALUs with same seq?
 								this->chunk.ssrc          = ssrc;
-								/*
-								if (subnal != 1)
+								/* if (subnal != 1)
 								{
 									MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
-										subnal, 
-										len, 
-										naluSize, 
-										this->chunk.len, 
-										this->chunk.rtp_time,
-										this->chunk.first_rtp_seq,
-										shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
-										isKeyFrame,
-										this->chunk.begin,
-										this->chunk.end);
-								}
-								*/
-								if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
+										subnal, len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq,
+										shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), isKeyFrame, this->chunk.begin, this->chunk.end);
+								}	*/
+								if (0 != shmCtx->WriteRtpDataToShm(DepLibSfuShm::ShmChunkType::VIDEO, &chunk))
 								{
 									MS_WARN_TAG(rtp, "FAIL writing STAP-A pkt to shm: len %zu ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-									return false;
+									ret=false;
+									break;
 								}
 								
 								offset += chunksize;
@@ -608,7 +591,8 @@ namespace RTC
 							if (len < 3)
 							{
 								MS_DEBUG_TAG(rtp, "FU-A payload too short");
-								return false;
+								ret=false;
+								break;
 							}
 							// Parse FU header octet
 							uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates the starting fragment
@@ -642,7 +626,8 @@ namespace RTC
 									this->chunk.begin  = 0;
 								}
 							}
-							else { // if not the beginning fragment, discard FU indicator and FU header
+							else {
+								// if not the beginning fragment, discard FU indicator and FU header
 								chunksize -= 1;
 								data += 2;
 								this->chunk.begin = 0;
@@ -654,26 +639,16 @@ namespace RTC
 							this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 							this->chunk.ssrc          = ssrc;
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
-							/*
-							if (subnal != 1) {
+							/* if (subnal != 1) {
 								MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
-									subnal, 
-									this->chunk.len, 
-									this->chunk.rtp_time,
-									shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
-									this->chunk.first_rtp_seq,
-									isKeyFrame,
-									startBit,
-									endBit,
-									marker,
-									this->chunk.begin,
-									this->chunk.end);
-							}
-							*/
-							if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
+									subnal, this->chunk.len, this->chunk.rtp_time, shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO), this->chunk.first_rtp_seq,
+									isKeyFrame, startBit, endBit, marker, this->chunk.begin, this->chunk.end);
+							}	*/
+							if (0 != shmCtx->WriteRtpDataToShm(DepLibSfuShm::ShmChunkType::VIDEO, &(this->chunk), true))
 							{
 								MS_WARN_TAG(rtp, "FAIL writing FU-A pkt to shm: len=%zu ts=%" PRIu64 " seq=%" PRIu64 "%s%s", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, this->chunk.begin ? " begin" : "", this->chunk.end ? " end": "");
-								return false;
+								ret=false;
+								break;
 							}
 							break;
 						}
@@ -683,16 +658,17 @@ namespace RTC
 						case 29: // FU-B
 						{
 							MS_WARN_TAG(rtp, "Unsupported NAL unit type %u in video packet", nal);
-							return false;
+							ret=false;
+							break;
 						}
 						default: // ignore the rest
 						{
 							MS_DEBUG_TAG(rtp, "Unknown NAL unit type %u in video packet", nal);
-							return false;
+							ret=false;
+							break;
 						}
 					}
-				}
-				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::VIDEO);
+				} // Aggregate or fragmented NALUs
 				break;
 			} // case video
 
@@ -700,7 +676,19 @@ namespace RTC
 				break;
 		} // kind
 
-		return true;
+		// Update last timestamp and seqId, even if we failed to write pkt
+		switch (this->GetKind())
+		{
+			case RTC::Media::Kind::AUDIO:
+				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::AUDIO);
+				break;
+			case RTC::Media::Kind::VIDEO:
+				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::VIDEO);
+				break;
+			default:
+				break;
+		}
+		return ret;
 	}
 
 

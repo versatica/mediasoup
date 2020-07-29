@@ -616,7 +616,7 @@ namespace RTC
 			result = ReceiveRtpPacketResult::RETRANSMISSION;
 			isRtx  = true;
 			
-			MS_DEBUG_TAG(rtp, "L@@KL@@K Retransmitted packet received [ssrc:%" PRIu32 " seq:%" PRIu16 " ts:%" PRIu32 "]",
+			MS_DEBUG_TAG(rtp, "L@@K Retransmitted packet received [ssrc:%" PRIu32 " seq:%" PRIu16 " ts:%" PRIu32 "]",
 				packet->GetSsrc(),packet->GetSequenceNumber(), packet->GetTimestamp());
 			
 			// Process the packet.
@@ -1084,7 +1084,7 @@ namespace RTC
 
 		for (auto& fb : mediaCodec.rtcpFeedback)
 		{
-			MS_DEBUG_2TAGS(rtp, rtcp, "L@@KL@@K mediaCodec.rtcpFeedback: type=%s parameter=%s", fb.type.c_str(), fb.parameter.c_str());
+			MS_DEBUG_2TAGS(rtp, rtcp, "L@@K mediaCodec.rtcpFeedback: type=%s parameter=%s", fb.type.c_str(), fb.parameter.c_str());
 
 			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
 			{

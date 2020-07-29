@@ -190,8 +190,11 @@ namespace RTC
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
 		}
 		else {
-			MS_DEBUG_TAG(rtp,"L@@K RtpStreamRecv::params.useNack is false, NACK feature disabled");
+			MS_DEBUG_TAG(rtp,"L@@KL@@KL@@K RtpStreamRecv::params.useNack is false, NACK feature disabled");
 		}
+
+		MS_DEBUG_TAG(rtp, "L@@KL@@KL@@K RtpStreamRecv::ctor() HasRtx is %s", HasRtx() ? "TRUE" : "FALSE");
+
 		// Run the RTP inactivity periodic timer (unless DTX is enabled).
 		if (!this->params.useDtx)
 		{
@@ -323,6 +326,13 @@ namespace RTC
 
 			return false;
 		}
+
+		MS_DEBUG_TAG(
+			rtx,
+			"L@@KL@@KL@@K Received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]", 
+			packet->GetSsrc(),
+			packet->GetSequenceNumber()
+		);
 
 		if (HasRtx())
 		{

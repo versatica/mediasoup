@@ -72,7 +72,7 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 
-		bool srReceived{ false }; // do not send until SR received
+		bool srReceived{ false }; // do not write into shm until SR received
 
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 
