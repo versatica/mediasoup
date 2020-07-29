@@ -113,7 +113,7 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 
 	MS_ASSERT(
 	  it == DepUsrSCTP::mapIdSctpAssociation.end(),
-	  "given id already has an associated SctpAssociation");
+	  "the id of the SctpAssociation is already in the map");
 
 	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id] = sctpAssociation;
 
