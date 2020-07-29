@@ -1257,7 +1257,7 @@ namespace RTC
 				this->mapProducers.erase(producer->id);
 
 				// Tell the child class to clear associated SSRCs.
-				for (auto& kv : producer->GetRtpStreams())
+				for (const auto& kv : producer->GetRtpStreams())
 				{
 					auto* rtpStream = kv.first;
 
