@@ -60,7 +60,8 @@ namespace RTC
 		// Allocated by this.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		// Others.
-		std::unordered_map<uint32_t, RTC::RtpStreamSend*> mapMappedSsrcRtpStream;
+		std::unordered_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		std::unordered_map<uint32_t, RTC::RtpStreamSend*> mapSsrcRtpStream;
 		bool keyFrameSupported{ false };
 		std::unordered_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
 		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;

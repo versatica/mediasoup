@@ -39,7 +39,8 @@ namespace RTC
 			delete rtpStream;
 		}
 		this->rtpStreams.clear();
-		this->mapMappedSsrcRtpStream.clear();
+		this->mapMappedSsrcSsrc.clear();
+		this->mapSsrcRtpStream.clear();
 	}
 
 	void PipeConsumer::FillJson(json& jsonObject) const
@@ -201,7 +202,8 @@ namespace RTC
 			return;
 		}
 
-		auto* rtpStream     = this->mapMappedSsrcRtpStream.at(packet->GetSsrc());
+		auto ssrc           = this->mapMappedSsrcSsrc.at(packet->GetSsrc());
+		auto* rtpStream     = this->mapSsrcRtpStream.at(ssrc);
 		auto& syncRequired  = this->mapRtpStreamSyncRequired.at(rtpStream);
 		auto& rtpSeqManager = this->mapRtpStreamRtpSeqManager.at(rtpStream);
 
@@ -230,10 +232,11 @@ namespace RTC
 		rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
-		auto origSeq = packet->GetSequenceNumber();
+		auto origSsrc = packet->GetSsrc();
+		auto origSeq  = packet->GetSequenceNumber();
 
 		// Rewrite packet.
-		// NOTE: Do not override the ssrc because we want to honor the consumable ssrcs.
+		packet->SetSsrc(ssrc);
 		packet->SetSequenceNumber(seq);
 
 		if (isSyncPacket)
@@ -241,10 +244,11 @@ namespace RTC
 			MS_DEBUG_TAG(
 			  rtp,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [seq:%" PRIu16 "]",
+			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
+			  origSsrc,
 			  origSeq);
 		}
 
@@ -262,14 +266,16 @@ namespace RTC
 			MS_WARN_TAG(
 			  rtp,
 			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [seq:%" PRIu16 "]",
+			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
+			  origSsrc,
 			  origSeq);
 		}
 
 		// Restore packet fields.
+		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
 	}
 
@@ -337,7 +343,7 @@ namespace RTC
 		EmitTraceEventNackType();
 
 		auto ssrc       = nackPacket->GetMediaSsrc();
-		auto* rtpStream = this->mapMappedSsrcRtpStream.at(ssrc);
+		auto* rtpStream = this->mapSsrcRtpStream.at(ssrc);
 
 		rtpStream->ReceiveNack(nackPacket);
 	}
@@ -365,7 +371,7 @@ namespace RTC
 			default:;
 		}
 
-		auto* rtpStream = this->mapMappedSsrcRtpStream.at(ssrc);
+		auto* rtpStream = this->mapSsrcRtpStream.at(ssrc);
 
 		rtpStream->ReceiveKeyFrameRequest(messageType);
 
@@ -377,7 +383,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* rtpStream = this->mapMappedSsrcRtpStream.at(report->GetSsrc());
+		auto* rtpStream = this->mapSsrcRtpStream.at(report->GetSsrc());
 
 		rtpStream->ReceiveRtcpReceiverReport(report);
 	}
@@ -482,8 +488,9 @@ namespace RTC
 		// as in the given consumableRtpEncodings.
 		for (size_t idx{ 0u }; idx < this->rtpParameters.encodings.size(); ++idx)
 		{
-			auto& encoding         = this->rtpParameters.encodings[idx];
-			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+			auto& encoding           = this->rtpParameters.encodings[idx];
+			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+			auto& consumableEncoding = this->consumableRtpEncodings[idx];
 
 			MS_DEBUG_TAG(
 			  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
@@ -560,8 +567,9 @@ namespace RTC
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
 
 			this->rtpStreams.push_back(rtpStream);
-			this->mapMappedSsrcRtpStream[encoding.ssrc] = rtpStream;
-			this->mapRtpStreamSyncRequired[rtpStream]   = false;
+			this->mapMappedSsrcSsrc[consumableEncoding.ssrc] = encoding.ssrc;
+			this->mapSsrcRtpStream[encoding.ssrc]            = rtpStream;
+			this->mapRtpStreamSyncRequired[rtpStream]        = false;
 			this->mapRtpStreamRtpSeqManager[rtpStream];
 		}
 	}

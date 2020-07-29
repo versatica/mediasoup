@@ -276,10 +276,6 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 				parameters : {}
 			}
 		]);
-	expect(pipeConsumer.rtpParameters.encodings).toEqual(
-		[
-			audioProducer.consumableRtpParameters.encodings[0]
-		]);
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(false);
@@ -315,10 +311,6 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 				encrypt    : false,
 				parameters : {}
 			}
-		]);
-	expect(pipeProducer.rtpParameters.encodings).toEqual(
-		[
-			audioProducer.consumableRtpParameters.encodings[0]
 		]);
 	expect(pipeProducer.paused).toBe(false);
 }, 2000);
@@ -389,12 +381,6 @@ test('router.pipeToRouter() succeeds with video', async () =>
 				encrypt    : false,
 				parameters : {}
 			}
-		]);
-	expect(pipeConsumer.rtpParameters.encodings).toEqual(
-		[
-			videoProducer.consumableRtpParameters.encodings[0],
-			videoProducer.consumableRtpParameters.encodings[1],
-			videoProducer.consumableRtpParameters.encodings[2]
 		]);
 
 	expect(pipeConsumer.type).toBe('pipe');
@@ -545,12 +531,6 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 				encrypt    : false,
 				parameters : {}
 			}
-		]);
-	expect(pipeConsumer.rtpParameters.encodings).toEqual(
-		[
-			videoProducer.consumableRtpParameters.encodings[0],
-			videoProducer.consumableRtpParameters.encodings[1],
-			videoProducer.consumableRtpParameters.encodings[2]
 		]);
 
 	expect(pipeConsumer.type).toBe('pipe');
