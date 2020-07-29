@@ -4,6 +4,7 @@
 ### 3.6.14 (WIP)
 
 * `TransportCongestionControlClient.cpp`: Enable periodic ALR probing to recover faster from network issues.
+* Fix issue #435 (thanks to @penguinol for reporting).
 * Update NPM deps.
 * Update `nlohmann::json` C++ dep to 3.9.0.
 * Update `Catch` to 2.13.0.
