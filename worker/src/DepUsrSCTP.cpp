@@ -4,7 +4,6 @@
 #include "DepUsrSCTP.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "RTC/SctpAssociation.hpp"
 #include <usrsctp.h>
 
 /* Static. */
@@ -15,10 +14,14 @@ static constexpr size_t CheckerInterval{ 10u }; // In ms.
 
 inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
 {
-	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(addr);
+	auto* sctpAssociation = DepUsrSCTP::RetrieveSctpAssociation(reinterpret_cast<uintptr_t>(addr));
 
 	if (!sctpAssociation)
+	{
+		MS_WARN_TAG(sctp, "no SctpAssociation found");
+
 		return -1;
+	}
 
 	sctpAssociation->OnUsrSctpSendSctpData(data, len);
 
@@ -48,6 +51,8 @@ inline static void sctpDebug(const char* format, ...)
 
 DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
 uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
+uintptr_t DepUsrSCTP::nextSctpAssociationId{ 0u };
+std::unordered_map<uintptr_t, RTC::SctpAssociation*> DepUsrSCTP::mapIdSctpAssociation;
 
 /* Static methods. */
 
@@ -78,22 +83,67 @@ void DepUsrSCTP::ClassDestroy()
 	delete DepUsrSCTP::checker;
 }
 
-void DepUsrSCTP::IncreaseSctpAssociations()
+uintptr_t DepUsrSCTP::GetNextSctpAssociationId()
 {
 	MS_TRACE();
+
+	// NOTE: usrsctp_connect() fails with a value of 0.
+	if (DepUsrSCTP::nextSctpAssociationId == 0u)
+		++DepUsrSCTP::nextSctpAssociationId;
+
+	// In case we've wrapped around and need to find an empty spot from a removed
+	// SctpAssociation. Assumes we'll never be full.
+	while (DepUsrSCTP::mapIdSctpAssociation.find(DepUsrSCTP::nextSctpAssociationId) !=
+	       DepUsrSCTP::mapIdSctpAssociation.end())
+	{
+		++DepUsrSCTP::nextSctpAssociationId;
+
+		if (DepUsrSCTP::nextSctpAssociationId == 0u)
+			++DepUsrSCTP::nextSctpAssociationId;
+	}
+
+	return DepUsrSCTP::nextSctpAssociationId++;
+}
+
+void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
+{
+	MS_TRACE();
+
+	auto it = DepUsrSCTP::mapIdSctpAssociation.find(sctpAssociation->id);
+
+	MS_ASSERT(
+	  it == DepUsrSCTP::mapIdSctpAssociation.end(),
+	  "the id of the SctpAssociation is already in the map");
+
+	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id] = sctpAssociation;
 
 	if (++DepUsrSCTP::numSctpAssociations == 1u)
 		DepUsrSCTP::checker->Start();
 }
 
-void DepUsrSCTP::DecreaseSctpAssociations()
+void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 {
 	MS_TRACE();
 
+	auto found = DepUsrSCTP::mapIdSctpAssociation.erase(sctpAssociation->id);
+
+	MS_ASSERT(found > 0, "SctpAssociation not found");
 	MS_ASSERT(DepUsrSCTP::numSctpAssociations > 0u, "numSctpAssociations was not higher than 0");
 
 	if (--DepUsrSCTP::numSctpAssociations == 0u)
 		DepUsrSCTP::checker->Stop();
+}
+
+RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
+{
+	MS_TRACE();
+
+	auto it = DepUsrSCTP::mapIdSctpAssociation.find(id);
+
+	if (it == DepUsrSCTP::mapIdSctpAssociation.end())
+		return nullptr;
+
+	return it->second;
 }
 
 /* DepUsrSCTP::Checker instance methods. */
