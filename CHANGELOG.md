@@ -1,10 +1,11 @@
 # Changelog
 
 
-### 3.6.14 (WIP)
+### 3.6.14
 
-* `TransportCongestionControlClient.cpp`: Enable periodic ALR probing to recover faster from network issues.
+* Fix `usrsctp` vulnerability (PR #439).
 * Fix issue #435 (thanks to @penguinol for reporting).
+* `TransportCongestionControlClient.cpp`: Enable periodic ALR probing to recover faster from network issues.
 * Update NPM deps.
 * Update `nlohmann::json` C++ dep to 3.9.0.
 * Update `Catch` to 2.13.0.
