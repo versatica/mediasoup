@@ -794,6 +794,8 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
 
+			delete packet;
+
 			return;
 		}
 
@@ -806,6 +808,8 @@ namespace RTC
 
 				// Remove this SSRC.
 				RecvStreamClosed(packet->GetSsrc());
+
+				delete packet;
 
 				return;
 			}
@@ -840,6 +844,8 @@ namespace RTC
 
 			// Remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
+
+			delete packet;
 
 			return;
 		}

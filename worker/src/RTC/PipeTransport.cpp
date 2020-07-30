@@ -614,6 +614,8 @@ namespace RTC
 			// Remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
 
+			delete packet;
+
 			return;
 		}
 
