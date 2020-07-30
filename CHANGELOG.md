@@ -1,5 +1,8 @@
 # Changelog
 
+### 3.6.15 (WIP)
+
+* Avoid SRTP leak by deleting invalid SSRCs after STRP decryption (issue #437, thanks to @penguinol for reporting).
 
 ### 3.6.14
 
