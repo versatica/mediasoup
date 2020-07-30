@@ -588,9 +588,6 @@ namespace RTC
 				  packet->GetPayloadType(),
 				  packet->GetSequenceNumber());
 
-				// Remove this SSRC.
-				RecvStreamClosed(packet->GetSsrc());
-
 				delete packet;
 			}
 
