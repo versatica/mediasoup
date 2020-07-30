@@ -1587,6 +1587,10 @@ namespace RTC
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
 				break;
+			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
+				// Tell the child class to remove this SSRC.
+				RecvStreamClosed(packet->GetSsrc());
+				break;
 			default:;
 		}
 
