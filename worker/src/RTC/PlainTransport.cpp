@@ -791,8 +791,6 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
 
-			delete packet;
-
 			return;
 		}
 
