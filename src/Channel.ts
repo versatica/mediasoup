@@ -64,7 +64,7 @@ export class Channel extends EnhancedEventEmitter
 		this._consumerSocket = consumerSocket as Duplex;
 
 		// Read Channel responses/notifications from the worker.
-		this._consumerSocket.on('data', (buffer) =>
+		this._consumerSocket.on('data', (buffer: Buffer) =>
 		{
 			if (!this._recvBuffer)
 			{
