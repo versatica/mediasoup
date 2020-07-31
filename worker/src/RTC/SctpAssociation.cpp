@@ -10,6 +10,10 @@
 #include <cstring> // std::memset(), std::memcpy()
 #include <string>
 
+
+// Free send buffer threshold (in bytes) upon which send_cb will be executed.
+static uint32_t SendBufferThreshold{ 256u };
+
 /* SCTP events to which we are subscribing. */
 
 /* clang-format off */
@@ -80,6 +84,22 @@ inline static int onRecvSctpData(
 	return 1;
 }
 
+inline static int onBufferedAmount(struct socket* /*sock*/, uint32_t len, void* ulpInfo)
+{
+	auto* sctpAssociation = DepUsrSCTP::RetrieveSctpAssociation(reinterpret_cast<uintptr_t>(ulpInfo));
+
+	if (!sctpAssociation)
+	{
+		MS_ERROR("no SctpAssociation found: %s", ulpInfo);
+
+		return 0;
+	}
+
+	sctpAssociation->OnUsrSctpBufferedAmount(len);
+
+	return 1;
+}
+
 namespace RTC
 {
 	/* Static. */
@@ -97,7 +117,7 @@ namespace RTC
 	  size_t sctpSendBufferSize,
 	  bool isDataChannel)
 	  : listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
-	    isDataChannel(isDataChannel)
+	    sctpSendBufferSize(sctpSendBufferSize), isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
 
@@ -111,7 +131,13 @@ namespace RTC
 		int ret;
 
 		this->socket = usrsctp_socket(
-		  AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, reinterpret_cast<void*>(this->id));
+		  AF_CONN,
+		  SOCK_STREAM,
+		  IPPROTO_SCTP,
+		  onRecvSctpData,
+		  onBufferedAmount,
+		  SendBufferThreshold,
+		  reinterpret_cast<void*>(this->id));
 
 		if (!this->socket)
 		{
@@ -262,6 +288,12 @@ namespace RTC
 		delete[] this->messageBuffer;
 	}
 
+	void SctpAssociation::SetSctpBufferedAmount(size_t buffered)
+	{
+		this->sctpBufferedAmount = buffered;
+		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
+	}
+
 	void SctpAssociation::TransportConnected()
 	{
 		MS_TRACE();
@@ -332,6 +364,12 @@ namespace RTC
 		// Add maxMessageSize.
 		jsonObject["maxMessageSize"] = this->maxSctpMessageSize;
 
+		// Add sendBufferSize.
+		jsonObject["sendBufferSize"] = this->sctpSendBufferSize;
+
+		// Add sctpBufferedAmountLowThreshold.
+		jsonObject["sctpBufferedAmount"] = this->sctpBufferedAmount;
+
 		// Add isDataChannel.
 		jsonObject["isDataChannel"] = this->isDataChannel;
 	}
@@ -394,6 +432,9 @@ namespace RTC
 			}
 		}
 
+		// Increase buffered amount.
+		SetSctpBufferedAmount(this->sctpBufferedAmount + len);
+
 		int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
@@ -406,6 +447,9 @@ namespace RTC
 			  ppid,
 			  len,
 			  std::strerror(errno));
+
+			// Decrease buffered amount.
+			SetSctpBufferedAmount(this->sctpBufferedAmount - len);
 		}
 
 		if (ret == EWOULDBLOCK || ret == EAGAIN)
@@ -979,5 +1023,10 @@ namespace RTC
 				  sctp, "unhandled SCTP event received [type:%" PRIu16 "]", notification->sn_header.sn_type);
 			}
 		}
+	}
+
+	void SctpAssociation::OnUsrSctpBufferedAmount(uint32_t len)
+	{
+		SetSctpBufferedAmount(this->sctpSendBufferSize - len);
 	}
 } // namespace RTC

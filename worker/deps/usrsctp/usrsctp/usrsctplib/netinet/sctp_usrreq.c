@@ -9015,7 +9015,7 @@ register_recv_cb(struct socket *so,
 }
 
 int
-register_send_cb(struct socket *so, uint32_t sb_threshold, int (*send_cb)(struct socket *sock, uint32_t sb_free))
+register_send_cb(struct socket *so, uint32_t sb_threshold, int (*send_cb)(struct socket *sock, uint32_t sb_free, void *ulp_info))
 {
 	struct sctp_inpcb *inp;
 

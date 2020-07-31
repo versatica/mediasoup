@@ -215,6 +215,7 @@ namespace RTC
 		  uint32_t ppid,
 		  const uint8_t* msg,
 		  size_t len) override;
+		void OnSctpAssociationBufferedAmount(RTC::SctpAssociation* sctpAssociation, uint32_t len) override;
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
