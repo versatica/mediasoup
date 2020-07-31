@@ -63,9 +63,9 @@ namespace RTC
 		jsonObject["transportIds"] = json::array();
 		auto jsonTransportIdsIt    = jsonObject.find("transportIds");
 
-		for (auto& kv : this->mapTransports)
+		for (const auto& kv : this->mapTransports)
 		{
-			auto& transportId = kv.first;
+			const auto& transportId = kv.first;
 
 			jsonTransportIdsIt->emplace_back(transportId);
 		}
@@ -74,9 +74,9 @@ namespace RTC
 		jsonObject["rtpObserverIds"] = json::array();
 		auto jsonRtpObserverIdsIt    = jsonObject.find("rtpObserverIds");
 
-		for (auto& kv : this->mapRtpObservers)
+		for (const auto& kv : this->mapRtpObservers)
 		{
-			auto& rtpObserverId = kv.first;
+			const auto& rtpObserverId = kv.first;
 
 			jsonRtpObserverIdsIt->emplace_back(rtpObserverId);
 		}
@@ -85,10 +85,10 @@ namespace RTC
 		jsonObject["mapProducerIdConsumerIds"] = json::object();
 		auto jsonMapProducerConsumersIt        = jsonObject.find("mapProducerIdConsumerIds");
 
-		for (auto& kv : this->mapProducerConsumers)
+		for (const auto& kv : this->mapProducerConsumers)
 		{
 			auto* producer  = kv.first;
-			auto& consumers = kv.second;
+			const auto& consumers = kv.second;
 
 			(*jsonMapProducerConsumersIt)[producer->id] = json::array();
 			auto jsonProducerIdIt                       = jsonMapProducerConsumersIt->find(producer->id);
@@ -103,7 +103,7 @@ namespace RTC
 		jsonObject["mapConsumerIdProducerId"] = json::object();
 		auto jsonMapConsumerProducerIt        = jsonObject.find("mapConsumerIdProducerId");
 
-		for (auto& kv : this->mapConsumerProducer)
+		for (const auto& kv : this->mapConsumerProducer)
 		{
 			auto* consumer = kv.first;
 			auto* producer = kv.second;
@@ -115,10 +115,10 @@ namespace RTC
 		jsonObject["mapProducerIdObserverIds"] = json::object();
 		auto jsonMapProducerRtpObserversIt     = jsonObject.find("mapProducerIdObserverIds");
 
-		for (auto& kv : this->mapProducerRtpObservers)
+		for (const auto& kv : this->mapProducerRtpObservers)
 		{
 			auto* producer     = kv.first;
-			auto& rtpObservers = kv.second;
+			const auto& rtpObservers = kv.second;
 
 			(*jsonMapProducerRtpObserversIt)[producer->id] = json::array();
 			auto jsonProducerIdIt = jsonMapProducerRtpObserversIt->find(producer->id);
@@ -133,10 +133,10 @@ namespace RTC
 		jsonObject["mapDataProducerIdDataConsumerIds"] = json::object();
 		auto jsonMapDataProducerDataConsumersIt = jsonObject.find("mapDataProducerIdDataConsumerIds");
 
-		for (auto& kv : this->mapDataProducerDataConsumers)
+		for (const auto& kv : this->mapDataProducerDataConsumers)
 		{
 			auto* dataProducer  = kv.first;
-			auto& dataConsumers = kv.second;
+			const auto& dataConsumers = kv.second;
 
 			(*jsonMapDataProducerDataConsumersIt)[dataProducer->id] = json::array();
 			auto jsonDataProducerIdIt = jsonMapDataProducerDataConsumersIt->find(dataProducer->id);
@@ -151,7 +151,7 @@ namespace RTC
 		jsonObject["mapDataConsumerIdDataProducerId"] = json::object();
 		auto jsonMapDataConsumerDataProducerIt = jsonObject.find("mapDataConsumerIdDataProducerId");
 
-		for (auto& kv : this->mapDataConsumerDataProducer)
+		for (const auto& kv : this->mapDataConsumerDataProducer)
 		{
 			auto* dataConsumer = kv.first;
 			auto* dataProducer = kv.second;
