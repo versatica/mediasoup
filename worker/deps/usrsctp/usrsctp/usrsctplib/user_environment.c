@@ -31,7 +31,7 @@
 /* __Userspace__ */
 
 #include <stdlib.h>
-#if !defined (__Userspace_os_Windows)
+#if !defined(_WIN32)
 #include <stdint.h>
 #include <netinet/sctp_os_userspace.h>
 #endif
@@ -77,7 +77,7 @@ read_random(void *buf, int count)
 	memset(buf, 'A', count);
 	return (count);
 }
-#elif defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_Darwin)
+#elif defined(__FreeBSD__) || defined(__DragonFly__) || defined(__OpenBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 void
 init_random(void)
 {
@@ -96,14 +96,17 @@ read_random(void *buf, int count)
 void
 init_random(void)
 {
+	struct timeval now;
 	unsigned int seed;
 
-#if defined(__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
-	seed = (unsigned int)time(NULL);
-#else
-	seed = getpid();
+	(void)SCTP_GETTIME_TIMEVAL(&now);
+	seed = 0;
+	seed |= (unsigned int)now.tv_sec;
+	seed |= (unsigned int)now.tv_usec;
+#if !defined(_WIN32) &&! defined(__native_client__)
+	seed |= getpid();
 #endif
-#if defined(__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
+#if defined(_WIN32) || defined(__native_client__)
 	srand(seed);
 #else
 	srandom(seed);

@@ -58,41 +58,20 @@ add_project_arguments([
 system = host_machine.system()
 if system in ['linux', 'android']
     add_project_arguments([
-        '-D__Userspace_os_Linux',
         '-D_GNU_SOURCE',
     ], language: 'c')
 elif system == 'freebsd'
-    add_project_arguments([
-        '-D__Userspace_os_FreeBSD',
-        '-U__FreeBSD__',
-    ] + compiler.get_supported_arguments([
-        '-Wno-address-of-packed-member',
-    ]), language: 'c')
+    add_project_arguments(compiler.get_supported_arguments([
+            '-Wno-address-of-packed-member',
+        ]), language: 'c')
 elif system in ['darwin', 'ios']
     add_project_arguments([
-            '-D__Userspace_os_Darwin',
             '-D__APPLE_USE_RFC_2292',
         ] + compiler.get_supported_arguments([
             '-Wno-address-of-packed-member',
             '-Wno-deprecated-declarations',
         ]), language: 'c')
-elif system == 'dragonfly'
-    add_project_arguments([
-        '-D__Userspace_os_DragonFly',
-        '-U__DragonFly__',
-    ], language: 'c')
-elif system == 'netbsd'
-    add_project_arguments([
-        '-D__Userspace_os_NetBSD',
-        '-U__NetBSD__',
-    ], language: 'c')
-elif system == 'openbsd'
-    add_project_arguments([
-        '-D__Userspace_os_OpenBSD',
-        '-U__OpenBSD__',
-    ], language: 'c')
 elif system == 'windows'
-    add_project_arguments('-D__Userspace_os_Windows', language: 'c')
     dependencies += compiler.find_library('ws2_32', required: true)
     dependencies += compiler.find_library('iphlpapi', required: true)
     if compiler.get_id() == 'gcc'
@@ -207,8 +186,7 @@ else
         dependencies: dependencies,
         include_directories: include_dirs,
         install: true,
-        version: meson.project_version(),
-        c_args: '-U__APPLE__')
+        version: meson.project_version())
 endif
 
 # Declare dependency

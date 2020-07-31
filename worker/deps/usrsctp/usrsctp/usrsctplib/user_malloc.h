@@ -37,7 +37,7 @@
 /*__Userspace__*/
 #include <stdlib.h>
 #include <sys/types.h>
-#if !defined (__Userspace_os_Windows)
+#if !defined(_WIN32)
 #include <strings.h>
 #include <stdint.h>
 #else

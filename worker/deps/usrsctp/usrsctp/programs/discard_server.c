@@ -96,7 +96,7 @@ receive_cb(struct socket *sock, union sctp_sockstore addr, void *data,
 				port = ntohs(addr.sconn.sconn_port);
 				break;
 			default:
-				name = NULL;
+				name = "???";
 				port = 0;
 				break;
 			}

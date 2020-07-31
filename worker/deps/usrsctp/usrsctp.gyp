@@ -41,7 +41,6 @@
     'conditions': [
       ['OS in "linux android"', {
         'defines': [
-          '__Userspace_os_Linux',
           '_GNU_SOURCE',
         ],
       }],
@@ -50,7 +49,6 @@
           'HAVE_SA_LEN',
           'HAVE_SCONN_LEN',
           '__APPLE_USE_RFC_2292',
-          '__Userspace_os_Darwin',
         ],
         'xcode_settings': {
           'WARNING_CFLAGS': [
@@ -60,17 +58,11 @@
             '-Wstrict-prototypes',
           ],
           'OTHER_CFLAGS': [
-            '-U__APPLE__',
             '-Wno-deprecated-declarations',
             # atomic_init in user_atomic.h is a static function in a header.
             '-Wno-unused-function',
           ],
         }
-      }],
-      ['OS=="win"', {
-        'defines': [
-          '__Userspace_os_Windows'
-        ],
       }],
       ['OS!="win"', {
         'defines': [

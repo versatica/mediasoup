@@ -32,9 +32,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.h 359152 2020-03-19 21:01:16Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.h 362377 2020-06-19 12:35:29Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_ASCONF_H_
@@ -58,8 +58,8 @@ sctp_handle_asconf_ack(struct mbuf *, int, struct sctp_asconf_ack_chunk *,
      struct sctp_tcb *, struct sctp_nets *, int *);
 
 extern uint32_t
-sctp_addr_mgmt_ep_sa(struct sctp_inpcb *, struct sockaddr *,
-		     uint32_t, uint32_t, struct sctp_ifa *);
+sctp_addr_mgmt_ep_sa(struct sctp_inpcb *, struct sockaddr *, uint32_t,
+                     uint32_t);
 
 
 extern int sctp_asconf_iterator_ep(struct sctp_inpcb *inp, void *ptr,

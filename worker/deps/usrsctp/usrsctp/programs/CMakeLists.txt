@@ -93,7 +93,6 @@ list(APPEND check_programs
 	echo_server_upcall.c
 	ekr_client.c
 	ekr_loop.c
-	ekr_loop_offload.c
 	ekr_loop_upcall.c
 	ekr_peer.c
 	ekr_server.c

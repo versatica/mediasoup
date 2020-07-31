@@ -32,7 +32,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/sys/netinet/sctp_bsd_addr.h 353480 2019-10-13 18:17:08Z tuexen $");
 #endif
@@ -62,7 +62,7 @@ int sctp_copy_out_packet_log(uint8_t *target, int length);
 #endif
 
 void sctp_addr_change(struct ifaddr *ifa, int cmd);
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 
 void sctp_addr_change_event_handler(void *, struct ifaddr *, int);
 #endif

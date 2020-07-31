@@ -32,7 +32,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.c 361934 2020-06-08 20:23:20Z tuexen $");
 #endif
@@ -44,15 +44,15 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.c 361934 2020-06-08 20:23:20Z t
 #include <netinet/sctp_pcb.h>
 #include <netinet/sctputil.h>
 #include <netinet/sctp_output.h>
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/smp.h>
 #include <sys/sysctl.h>
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 #include <netinet/sctp_bsd_addr.h>
 #endif
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 FEATURE(sctp, "Stream Control Transmission Protocol");
 #endif
 
@@ -74,7 +74,7 @@ sctp_init_sysctls()
 	SCTP_BASE_SYSCTL(sctp_reconfig_enable) = SCTPCTL_RECONFIG_ENABLE_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_nrsack_enable) = SCTPCTL_NRSACK_ENABLE_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_pktdrop_enable) = SCTPCTL_PKTDROP_ENABLE_DEFAULT;
-#if !defined(__FreeBSD__)
+#if !(defined(__FreeBSD__) && !defined(__Userspace__))
 	SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) = SCTPCTL_LOOPBACK_NOCSUM_DEFAULT;
 #endif
 	SCTP_BASE_SYSCTL(sctp_peer_chunk_oh) = SCTPCTL_PEER_CHKOH_DEFAULT;
@@ -152,7 +152,7 @@ sctp_init_sysctls()
 	SCTP_BASE_SYSCTL(sctp_sendall_limit) = SCTPCTL_SENDALL_LIMIT_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_diag_info_code) = SCTPCTL_DIAG_INFO_CODE_DEFAULT;
 #if defined(SCTP_LOCAL_TRACE_BUF)
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 	/* On Windows, the resource for global variables is limited. */
 	MALLOC(SCTP_BASE_SYSCTL(sctp_log), struct sctp_log *, sizeof(struct sctp_log), M_SYSCTL, M_ZERO);
 #else
@@ -165,18 +165,18 @@ sctp_init_sysctls()
 #if defined(SCTP_DEBUG)
 	SCTP_BASE_SYSCTL(sctp_debug_on) = SCTPCTL_DEBUG_DEFAULT;
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	SCTP_BASE_SYSCTL(sctp_ignore_vmware_interfaces) = SCTPCTL_IGNORE_VMWARE_INTERFACES_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_main_timer) = SCTPCTL_MAIN_TIMER_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_addr_watchdog_limit) = SCTPCTL_ADDR_WATCHDOG_LIMIT_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_vtag_watchdog_limit) = SCTPCTL_VTAG_WATCHDOG_LIMIT_DEFAULT;
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	SCTP_BASE_SYSCTL(sctp_output_unlocked) = SCTPCTL_OUTPUT_UNLOCKED_DEFAULT;
 #endif
 }
 
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 void
 sctp_finish_sysctls()
 {
@@ -189,7 +189,7 @@ sctp_finish_sysctls()
 }
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__Windows__)
+#if !defined(__Userspace__)
 /* It returns an upper limit. No filtering is done here */
 static unsigned int
 sctp_sysctl_number_of_addresses(struct sctp_inpcb *inp)
@@ -329,7 +329,7 @@ sctp_sysctl_copy_out_local_addresses(struct sctp_inpcb *inp, struct sctp_tcb *st
 						sin = &sctp_ifa->address.sin;
 						if (sin->sin_addr.s_addr == 0)
 							continue;
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 						if (prison_check_ip4(inp->ip_inp.inp.inp_cred,
 						                     &sin->sin_addr) != 0) {
 							continue;
@@ -350,7 +350,7 @@ sctp_sysctl_copy_out_local_addresses(struct sctp_inpcb *inp, struct sctp_tcb *st
 						sin6 = &sctp_ifa->address.sin6;
 						if (IN6_IS_ADDR_UNSPECIFIED(&sin6->sin6_addr))
 							continue;
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 						if (prison_check_ip6(inp->ip_inp.inp.inp_cred,
 						                     &sin6->sin6_addr) != 0) {
 							continue;
@@ -428,7 +428,7 @@ sctp_sysctl_copy_out_local_addresses(struct sctp_inpcb *inp, struct sctp_tcb *st
 /*
  * sysctl functions
  */
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 static int
 sctp_sysctl_handle_assoclist SYSCTL_HANDLER_ARGS
 {
@@ -458,7 +458,7 @@ sctp_sysctl_handle_assoclist(SYSCTL_HANDLER_ARGS)
 	number_of_remote_addresses = 0;
 
 	SCTP_INP_INFO_RLOCK();
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	if (req->oldptr == USER_ADDR_NULL) {
 #else
 	if (req->oldptr == NULL) {
@@ -483,14 +483,14 @@ sctp_sysctl_handle_assoclist(SYSCTL_HANDLER_ARGS)
 		    (number_of_remote_addresses + number_of_associations) * sizeof(struct xsctp_raddr);
 
 		/* request some more memory than needed */
-#if !defined(__Windows__)
+#if !(defined(_WIN32) && !defined(__Userspace__))
 		req->oldidx = (n + n / 8);
 #else
 		req->dataidx = (n + n / 8);
 #endif
 		return (0);
 	}
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	if (req->newptr != USER_ADDR_NULL) {
 #else
 	if (req->newptr != NULL) {
@@ -516,7 +516,7 @@ sctp_sysctl_handle_assoclist(SYSCTL_HANDLER_ARGS)
 		xinpcb.total_recvs = inp->total_recvs;
 		xinpcb.total_nospaces = inp->total_nospaces;
 		xinpcb.fragmentation_point = inp->sctp_frag_point;
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 		xinpcb.socket = (uintptr_t)inp->sctp_socket;
 #else
 		xinpcb.socket = inp->sctp_socket;
@@ -528,7 +528,7 @@ sctp_sysctl_handle_assoclist(SYSCTL_HANDLER_ARGS)
 			xinpcb.qlen = 0;
 			xinpcb.maxqlen = 0;
 		} else {
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 			xinpcb.qlen = so->sol_qlen;
 			xinpcb.qlen_old = so->sol_qlen > USHRT_MAX ?
 			    USHRT_MAX : (uint16_t) so->sol_qlen;
@@ -676,7 +676,7 @@ skip:
 	return (error);
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 static int
 sctp_sysctl_handle_udp_tunneling SYSCTL_HANDLER_ARGS
 {
@@ -695,12 +695,12 @@ sctp_sysctl_handle_udp_tunneling(SYSCTL_HANDLER_ARGS)
 	new = old;
 	error = sysctl_handle_int(oidp, &new, 0, req);
 	if ((error == 0) &&
-#if defined (__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	    (req->newptr != USER_ADDR_NULL)) {
 #else
 	    (req->newptr != NULL)) {
 #endif
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 		SCTP_INP_INFO_WLOCK();
 		sctp_over_udp_restart();
 		SCTP_INP_INFO_WUNLOCK();
@@ -728,7 +728,7 @@ sctp_sysctl_handle_udp_tunneling(SYSCTL_HANDLER_ARGS)
 	return (error);
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 int sctp_is_vmware_interface(struct ifnet *);
 
 static int
@@ -761,7 +761,7 @@ sctp_sysctl_handle_vmware_interfaces SYSCTL_HANDLER_ARGS
 }
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 static int
 sctp_sysctl_handle_auth SYSCTL_HANDLER_ARGS
 {
@@ -777,7 +777,7 @@ sctp_sysctl_handle_auth(SYSCTL_HANDLER_ARGS)
 	new = SCTP_BASE_SYSCTL(sctp_auth_enable);
 	error = sysctl_handle_int(oidp, &new, 0, req);
 	if ((error == 0) &&
-#if defined (__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	    (req->newptr != USER_ADDR_NULL)) {
 #else
 	    (req->newptr != NULL)) {
@@ -798,7 +798,7 @@ sctp_sysctl_handle_auth(SYSCTL_HANDLER_ARGS)
 	return (error);
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 static int
 sctp_sysctl_handle_asconf SYSCTL_HANDLER_ARGS
 {
@@ -814,7 +814,7 @@ sctp_sysctl_handle_asconf(SYSCTL_HANDLER_ARGS)
 	new = SCTP_BASE_SYSCTL(sctp_asconf_enable);
 	error = sysctl_handle_int(oidp, &new, 0, req);
 	if ((error == 0) &&
-#if defined (__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	    (req->newptr != USER_ADDR_NULL)) {
 #else
 	    (req->newptr != NULL)) {
@@ -835,7 +835,7 @@ sctp_sysctl_handle_asconf(SYSCTL_HANDLER_ARGS)
 	return (error);
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 static int
 sctp_sysctl_handle_stats SYSCTL_HANDLER_ARGS
 {
@@ -846,7 +846,7 @@ sctp_sysctl_handle_stats(SYSCTL_HANDLER_ARGS)
 {
 #endif
 	int error;
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #if defined(SMP) && defined(SCTP_USE_PERCPU_STAT)
 	struct sctpstat *sarry;
 	struct sctpstat sb;
@@ -855,7 +855,7 @@ sctp_sysctl_handle_stats(SYSCTL_HANDLER_ARGS)
 	struct sctpstat sb_temp;
 #endif
 
-#if defined (__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	if ((req->newptr != USER_ADDR_NULL) &&
 #else
 	if ((req->newptr != NULL) &&
@@ -863,7 +863,7 @@ sctp_sysctl_handle_stats(SYSCTL_HANDLER_ARGS)
 	    (req->newlen != sizeof(struct sctpstat))) {
 		return (EINVAL);
 	}
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 	memset(&sb_temp, 0, sizeof(struct sctpstat));
 
 	if (req->newptr != NULL) {
@@ -1020,7 +1020,7 @@ sctp_sysctl_handle_stats(SYSCTL_HANDLER_ARGS)
 }
 
 #if defined(SCTP_LOCAL_TRACE_BUF)
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 static int
 sctp_sysctl_handle_trace_log SYSCTL_HANDLER_ARGS
 {
@@ -1032,7 +1032,7 @@ sctp_sysctl_handle_trace_log(SYSCTL_HANDLER_ARGS)
 #endif
 	int error;
 
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 	error = SYSCTL_OUT(req, SCTP_BASE_SYSCTL(sctp_log), sizeof(struct sctp_log));
 #else
 	error = SYSCTL_OUT(req, &SCTP_BASE_SYSCTL(sctp_log), sizeof(struct sctp_log));
@@ -1040,7 +1040,7 @@ sctp_sysctl_handle_trace_log(SYSCTL_HANDLER_ARGS)
 	return (error);
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 static int
 sctp_sysctl_handle_trace_log_clear SYSCTL_HANDLER_ARGS
 {
@@ -1051,7 +1051,7 @@ sctp_sysctl_handle_trace_log_clear(SYSCTL_HANDLER_ARGS)
 {
 #endif
 	int error = 0;
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 	int value = 0;
 
 	if (req->new_data == NULL) {
@@ -1069,7 +1069,7 @@ sctp_sysctl_handle_trace_log_clear(SYSCTL_HANDLER_ARGS)
 }
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if (defined(__APPLE__) || defined(__FreeBSD__)) && !defined(__Userspace__)
 #if defined(__FreeBSD__)
 #define SCTP_UINT_SYSCTL(mib_name, var_name, prefix)			\
 	static int							\
@@ -1139,7 +1139,7 @@ SYSCTL_PROC(_net_inet_sctp, OID_AUTO, asconf_enable, CTLFLAG_VNET|CTLTYPE_UINT|C
 SCTP_UINT_SYSCTL(reconfig_enable, sctp_reconfig_enable, SCTPCTL_RECONFIG_ENABLE)
 SCTP_UINT_SYSCTL(nrsack_enable, sctp_nrsack_enable, SCTPCTL_NRSACK_ENABLE)
 SCTP_UINT_SYSCTL(pktdrop_enable, sctp_pktdrop_enable, SCTPCTL_PKTDROP_ENABLE)
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 SCTP_UINT_SYSCTL(loopback_nocsum, sctp_no_csum_on_loopback, SCTPCTL_LOOPBACK_NOCSUM)
 #endif
 SCTP_UINT_SYSCTL(peer_chkoh, sctp_peer_chunk_oh, SCTPCTL_PEER_CHKOH)
@@ -1211,14 +1211,14 @@ SCTP_UINT_SYSCTL(diag_info_code, sctp_diag_info_code, SCTPCTL_DIAG_INFO_CODE)
 #ifdef SCTP_DEBUG
 SCTP_UINT_SYSCTL(debug, sctp_debug_on, SCTPCTL_DEBUG)
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 SCTP_UINT_SYSCTL(main_timer, sctp_main_timer, SCTPCTL_MAIN_TIMER)
 SYSCTL_PROC(_net_inet_sctp, OID_AUTO, ignore_vmware_interfaces, CTLTYPE_UINT|CTLFLAG_RW,
             NULL, 0, sctp_sysctl_handle_vmware_interfaces, "IU", SCTPCTL_IGNORE_VMWARE_INTERFACES_DESC);
 SCTP_UINT_SYSCTL(addr_watchdog_limit, sctp_addr_watchdog_limit, SCTPCTL_ADDR_WATCHDOG_LIMIT)
 SCTP_UINT_SYSCTL(vtag_watchdog_limit, sctp_vtag_watchdog_limit, SCTPCTL_VTAG_WATCHDOG_LIMIT)
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 SCTP_UINT_SYSCTL(output_unlocked, sctp_output_unlocked, SCTPCTL_OUTPUT_UNLOCKED)
 #endif
 SYSCTL_PROC(_net_inet_sctp, OID_AUTO, stats, CTLFLAG_VNET|CTLTYPE_STRUCT|CTLFLAG_RW,
@@ -1226,7 +1226,7 @@ SYSCTL_PROC(_net_inet_sctp, OID_AUTO, stats, CTLFLAG_VNET|CTLTYPE_STRUCT|CTLFLAG
 SYSCTL_PROC(_net_inet_sctp, OID_AUTO, assoclist, CTLFLAG_VNET|CTLTYPE_OPAQUE|CTLFLAG_RD,
             NULL, 0, sctp_sysctl_handle_assoclist, "S,xassoc", "List of active SCTP associations");
 
-#elif defined(__Windows__)
+#elif defined(_WIN32) && !defined(__Userspace__)
 
 #define RANGECHK(var, min, max) \
 	if ((var) < (min)) { (var) = (min); } \

@@ -33,7 +33,7 @@
 #ifndef _USER_SOCKETVAR_H_
 #define _USER_SOCKETVAR_H_
 
-#if defined(__Userspace_os_Darwin)
+#if defined(__APPLE__)
 #include <sys/types.h>
 #include <unistd.h>
 #endif
@@ -42,7 +42,7 @@
 /* #include <sys/_lock.h>  was 0 byte file */
 /* #include <sys/_mutex.h> was 0 byte file */
 /* #include <sys/_sx.h> */ /*__Userspace__ alternative?*/
-#if !defined(__Userspace_os_DragonFly) && !defined(__Userspace_os_FreeBSD) && !defined(__Userspace_os_NetBSD) && !defined(__Userspace_os_Windows) && !defined(__Userspace_os_NaCl)
+#if !defined(__DragonFly__) && !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(_WIN32) && !defined(__native_client__)
 #include <sys/uio.h>
 #endif
 #define SOCK_MAXADDRLEN 255
@@ -54,16 +54,16 @@
 #define SS_CANTRCVMORE 0x020
 #define SS_CANTSENDMORE 0x010
 
-#if defined(__Userspace_os_Darwin) || defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) || defined (__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
+#if defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(_WIN32) || defined(__native_client__)
 #define UIO_MAXIOV 1024
 #define ERESTART (-1)
 #endif
 
-#if !defined(__Userspace_os_Darwin) && !defined(__Userspace_os_NetBSD) && !defined(__Userspace_os_OpenBSD)
+#if !defined(__APPLE__) && !defined(__NetBSD__) && !defined(__OpenBSD__)
 enum	uio_rw { UIO_READ, UIO_WRITE };
 #endif
 
-#if !defined(__Userspace_os_NetBSD) && !defined(__Userspace_os_OpenBSD)
+#if !defined(__NetBSD__) && !defined(__OpenBSD__)
 /* Segment flag values. */
 enum uio_seg {
 	UIO_USERSPACE,		/* from user data space */
@@ -100,7 +100,7 @@ struct uio {
  * handle on protocol and pointer to protocol
  * private data and error information.
  */
-#if defined (__Userspace_os_Windows)
+#if defined(_WIN32)
 #define AF_ROUTE  17
 #if !defined(__MINGW32__)
 typedef __int32 pid_t;
@@ -237,7 +237,7 @@ struct socket {
  * avoid defining a lock order between listen and accept sockets
  * until such time as it proves to be a good idea.
  */
-#if defined(__Userspace_os_Windows)
+#if defined(_WIN32)
 extern userland_mutex_t accept_mtx;
 extern userland_cond_t accept_cond;
 #define ACCEPT_LOCK_ASSERT()
@@ -272,7 +272,7 @@ extern userland_cond_t accept_cond;
  * buffer.
  */
 #define	SOCKBUF_MTX(_sb) (&(_sb)->sb_mtx)
-#if defined (__Userspace_os_Windows)
+#if defined(_WIN32)
 #define SOCKBUF_LOCK_INIT(_sb, _name) \
 	InitializeCriticalSection(SOCKBUF_MTX(_sb))
 #define SOCKBUF_LOCK_DESTROY(_sb) DeleteCriticalSection(SOCKBUF_MTX(_sb))
