@@ -87,7 +87,7 @@ namespace RTC
 
 		for (const auto& kv : this->mapProducerConsumers)
 		{
-			auto* producer  = kv.first;
+			auto* producer        = kv.first;
 			const auto& consumers = kv.second;
 
 			(*jsonMapProducerConsumersIt)[producer->id] = json::array();
@@ -117,7 +117,7 @@ namespace RTC
 
 		for (const auto& kv : this->mapProducerRtpObservers)
 		{
-			auto* producer     = kv.first;
+			auto* producer           = kv.first;
 			const auto& rtpObservers = kv.second;
 
 			(*jsonMapProducerRtpObserversIt)[producer->id] = json::array();
@@ -135,7 +135,7 @@ namespace RTC
 
 		for (const auto& kv : this->mapDataProducerDataConsumers)
 		{
-			auto* dataProducer  = kv.first;
+			auto* dataProducer        = kv.first;
 			const auto& dataConsumers = kv.second;
 
 			(*jsonMapDataProducerDataConsumersIt)[dataProducer->id] = json::array();
