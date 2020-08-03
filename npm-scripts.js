@@ -124,14 +124,17 @@ switch (task)
 
 	case 'postinstall':
 	{
-		if (!isWindows)
+		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			execute('make -C worker');
-		}
-		else if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`);
-			execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
+			if (!isWindows)
+			{
+				execute('make -C worker');
+			}
+			else
+			{
+				execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`);
+				execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
+			}
 		}
 
 		break;
