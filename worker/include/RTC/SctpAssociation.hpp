@@ -94,7 +94,6 @@ namespace RTC
 	private:
 		void ResetSctpStream(uint16_t streamId, StreamDirection);
 		void AddOutgoingStreams(bool force = false);
-		void SetSctpBufferedAmount(size_t buffered);
 
 		/* Callbacks fired by usrsctp events. */
 	public:

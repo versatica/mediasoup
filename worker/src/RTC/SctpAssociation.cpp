@@ -287,12 +287,6 @@ namespace RTC
 		delete[] this->messageBuffer;
 	}
 
-	void SctpAssociation::SetSctpBufferedAmount(size_t buffered)
-	{
-		this->sctpBufferedAmount = buffered;
-		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
-	}
-
 	void SctpAssociation::TransportConnected()
 	{
 		MS_TRACE();
@@ -432,10 +426,15 @@ namespace RTC
 		}
 
 		// Increase buffered amount.
-		SetSctpBufferedAmount(this->sctpBufferedAmount + len);
+		this->sctpBufferedAmount += len;
 
 		int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
+
+		if (ret == 0)
+			this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
+		else
+			this->sctpBufferedAmount -= len;
 
 		if (ret < 0)
 		{
@@ -446,9 +445,6 @@ namespace RTC
 			  ppid,
 			  len,
 			  std::strerror(errno));
-
-			// Decrease buffered amount.
-			SetSctpBufferedAmount(this->sctpBufferedAmount - len);
 		}
 
 		if (ret == EWOULDBLOCK || ret == EAGAIN)
@@ -1026,6 +1022,7 @@ namespace RTC
 
 	void SctpAssociation::OnUsrSctpBufferedAmount(uint32_t len)
 	{
-		SetSctpBufferedAmount(this->sctpSendBufferSize - len);
+		this->sctpBufferedAmount = this->sctpSendBufferSize - len;
+		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
 	}
 } // namespace RTC
