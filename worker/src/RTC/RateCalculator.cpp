@@ -20,14 +20,14 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		// Set data in the index before the oldest index.
-		uint32_t offset = this->windowSize - 1;
-		uint32_t index  = this->oldestIndex + offset;
-
-		if (index >= this->windowSize)
-			index -= this->windowSize;
-
-		this->buffer[index].count += size;
+		if (!buffer.empty() && buffer.back().timestamp == nowMs)
+		{
+			buffer.back().count += size;
+		}
+		else
+		{
+			buffer.push_back(BufferItem(nowMs, size));
+		}
 		this->totalCount += size;
 
 		// Reset lastRate and lastTime so GetRate() will calculate rate again even
@@ -81,18 +81,11 @@ namespace RTC
 
 			return;
 		}
-
-		while (this->oldestTime < newOldestTime)
+		
+		while (!buffer.empty() && buffer.front().timestamp < newOldestTime)
 		{
-			const BufferItem& oldestItem = buffer[this->oldestIndex];
-
-			this->totalCount -= oldestItem.count;
-			this->buffer[this->oldestIndex] = BufferItem();
-
-			if (++this->oldestIndex >= this->windowSize)
-				this->oldestIndex = 0;
-
-			++this->oldestTime;
+			this->totalCount -= buffer.front().count;
+			this->buffer.pop_front();
 		}
 
 		this->oldestTime = newOldestTime;
