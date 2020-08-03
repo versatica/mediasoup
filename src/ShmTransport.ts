@@ -160,28 +160,43 @@ export class ShmTransport extends Transport
 		await this._channel.request('transport.connect', this._internal, reqData);
 	}
 
+	/**
+	 * Provide the ShmTransport remote parameters.
+	 *
+	 * @param {Object} meta - metadata string.
+	 *
+	 * @async
+	 */
+	async writeStreamMetaData(
+		{
+      meta
+    }:
+    {
+      meta: string;
+    })
+	{
+		logger.debug('writeStreamMetaData()');
+
+		const reqData = {
+			meta,
+			shm: this._shm,
+			log: this._log
+		};
+
+		await this._channel.request('transport.consumeStreamMeta', this._internal, reqData);
+	}
 
 	/**
+	 * Does nothing, should not be called like this
+	 * 
 	 * @private
 	 * @override
 	 */
-	async _handleWorkerNotifications(): Promise<void>
+	_handleWorkerNotifications(): void
 	{
 		this._channel.on(this._internal.transportId, async (event, data) => {
 			switch (event)
 			{
-				case 'writestreammetadata':
-				{
-					const reqdata = {
-						meta: data,
-						shm: this._shm,
-						log: this._log
-					}; // TODO: assume there is shm name and some JSON object, no details yet
-
-          await this._channel.request('transport.consumeStreamMeta', this._internal, reqdata);
-					break;
-				}
-
 				default:
 				{
 					logger.error('ignoring unknown event "%s"', event);

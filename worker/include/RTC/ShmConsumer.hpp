@@ -12,6 +12,35 @@ using json = nlohmann::json;
 
 namespace RTC
 {
+	class RtpLostPktRateCounter
+	{
+	public:
+		explicit RtpLostPktRateCounter(size_t windowSize=2500, float scale=90000.0f) 
+			: lostPackets(windowSize, scale), totalPackets(windowSize, scale)
+		{
+		}
+
+	public:
+		void Update(RTC::RtpPacket* packet);
+		uint64_t GetLossRate(uint64_t nowMs)
+		{
+			return this->lostPackets.GetRate(nowMs);
+		}
+		uint64_t GetTotalRate(uint64_t nowMs)
+		{
+			return this->totalPackets.GetRate(nowMs);
+		}
+
+	private:
+		RateCalculator      lostPackets;  // lost packets (calculated by gaps in seqIds)
+		RateCalculator      totalPackets; // total packets (calculated by seqIds)
+		size_t lost{ 0u };
+		size_t total{ 0u };
+
+		uint64_t firstSeqId{ 0u };
+		uint64_t lastSeqId{ 0u };
+	};
+
 	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
 	public:
@@ -51,6 +80,7 @@ namespace RTC
 		void UserOnResumed() override;
 		void CreateRtpStream();
 		void RequestKeyFrame();
+		void FillShmWriterStats(json& jsonObject) const;
 
 		bool WritePacketToShm(RTC::RtpPacket* packet);
 		bool VideoOrientationChanged(RTC::RtpPacket* packet);
@@ -83,6 +113,7 @@ namespace RTC
 		uint16_t                 rotation{ 0 };             // Current rotation value for video read from RTP packet's videoOrientationExtensionId
 		bool                     rotationDetected{ false }; // Whether video rotation data was ever picked in this stream, then we only write it into shm if there was a change
 		RTC::RtpDataCounter      shmWriterCounter;          // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer) TODO: move into ShmCtx
+		RTC::RtpLostPktRateCounter    lostPktRateCounter;
 	};
 
 	/* Inline methods. */

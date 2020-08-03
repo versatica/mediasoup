@@ -74,7 +74,7 @@ export declare class ShmTransport extends Transport {
      */
     routerClosed(): void;
     /**
-     * Get PipeTransport stats.
+     * Get ShmTransport stats.
      *
      * @override
      */
@@ -91,9 +91,21 @@ export declare class ShmTransport extends Transport {
         shm: string;
     }): Promise<void>;
     /**
+     * Provide the ShmTransport remote parameters.
+     *
+     * @param {Object} meta - metadata string.
+     *
+     * @async
+     */
+    writeStreamMetaData({ meta }: {
+        meta: string;
+    }): Promise<void>;
+    /**
+     * Does nothing, should not be called like this
+     *
      * @private
      * @override
      */
-    _handleWorkerNotifications(): Promise<void>;
+    _handleWorkerNotifications(): void;
 }
 //# sourceMappingURL=ShmTransport.d.ts.map
