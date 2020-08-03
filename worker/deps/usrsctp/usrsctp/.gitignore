@@ -66,7 +66,6 @@ programs/echo_server
 programs/echo_server_upcall
 programs/ekr_client
 programs/ekr_loop
-programs/ekr_loop_offload
 programs/ekr_loop_upcall
 programs/ekr_peer
 programs/ekr_server

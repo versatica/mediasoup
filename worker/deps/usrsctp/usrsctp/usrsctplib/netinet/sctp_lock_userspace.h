@@ -33,7 +33,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 #endif
@@ -76,6 +76,8 @@ __FBSDID("$FreeBSD$");
 #define SCTP_IPI_ADDR_WLOCK()
 #define SCTP_IPI_ADDR_RUNLOCK()
 #define SCTP_IPI_ADDR_WUNLOCK()
+#define SCTP_IPI_ADDR_LOCK_ASSERT()
+#define SCTP_IPI_ADDR_WLOCK_ASSERT()
 
 #define SCTP_IPI_ITERATOR_WQ_INIT()
 #define SCTP_IPI_ITERATOR_WQ_DESTROY()

@@ -785,12 +785,26 @@ namespace RTC
 			return;
 		}
 
+		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+
+		if (!packet)
+		{
+			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+
+			return;
+		}
+
 		// If we don't have a RTP tuple yet, check whether comedia mode is set.
 		if (!this->tuple)
 		{
 			if (!this->comedia)
 			{
 				MS_DEBUG_TAG(rtp, "ignoring RTP packet while not connected");
+
+				// Remove this SSRC.
+				RecvStreamClosed(packet->GetSsrc());
+
+				delete packet;
 
 				return;
 			}
@@ -823,14 +837,10 @@ namespace RTC
 		{
 			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
 
-			return;
-		}
+			// Remove this SSRC.
+			RecvStreamClosed(packet->GetSsrc());
 
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
-
-		if (!packet)
-		{
-			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+			delete packet;
 
 			return;
 		}

@@ -37,10 +37,12 @@ inline static int onRecvSctpData(
   int flags,
   void* ulpInfo)
 {
-	auto* sctpAssociation = static_cast<RTC::SctpAssociation*>(ulpInfo);
+	auto* sctpAssociation = DepUsrSCTP::RetrieveSctpAssociation(reinterpret_cast<uintptr_t>(ulpInfo));
 
 	if (!sctpAssociation)
 	{
+		MS_WARN_TAG(sctp, "no SctpAssociation found");
+
 		std::free(data);
 
 		return 0;
@@ -99,24 +101,34 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Get a id for this SctpAssociation.
+		this->id = DepUsrSCTP::GetNextSctpAssociationId();
+
 		// Register ourselves in usrsctp.
-		usrsctp_register_address(static_cast<void*>(this));
+		// NOTE: This must be done before calling usrsctp_bind().
+		usrsctp_register_address(reinterpret_cast<void*>(this->id));
 
 		int ret;
 
 		this->socket = usrsctp_socket(
-		  AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, static_cast<void*>(this));
+		  AF_CONN, SOCK_STREAM, IPPROTO_SCTP, onRecvSctpData, nullptr, 0, reinterpret_cast<void*>(this->id));
 
 		if (!this->socket)
-			MS_THROW_ERROR("usrsctp_socket() failed: %s", std::strerror(errno));
+		{
+			usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
 
-		usrsctp_set_ulpinfo(this->socket, static_cast<void*>(this));
+			MS_THROW_ERROR("usrsctp_socket() failed: %s", std::strerror(errno));
+		}
+
+		usrsctp_set_ulpinfo(this->socket, reinterpret_cast<void*>(this->id));
 
 		// Make the socket non-blocking.
 		ret = usrsctp_set_non_blocking(this->socket, 1);
 
 		if (ret < 0)
 		{
+			usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
+
 			MS_THROW_ERROR("usrsctp_set_non_blocking() failed: %s", std::strerror(errno));
 		}
 
@@ -133,6 +145,8 @@ namespace RTC
 
 		if (ret < 0)
 		{
+			usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
+
 			MS_THROW_ERROR("usrsctp_setsockopt(SO_LINGER) failed: %s", std::strerror(errno));
 		}
 
@@ -146,6 +160,8 @@ namespace RTC
 
 		if (ret < 0)
 		{
+			usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
+
 			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_ENABLE_STREAM_RESET) failed: %s", std::strerror(errno));
 		}
 
@@ -156,6 +172,8 @@ namespace RTC
 
 		if (ret < 0)
 		{
+			usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
+
 			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_NODELAY) failed: %s", std::strerror(errno));
 		}
 
@@ -173,6 +191,8 @@ namespace RTC
 
 			if (ret < 0)
 			{
+				usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
+
 				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_EVENT) failed: %s", std::strerror(errno));
 			}
 		}
@@ -188,6 +208,8 @@ namespace RTC
 
 		if (ret < 0)
 		{
+			usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
+
 			MS_THROW_ERROR("usrsctp_setsockopt(SCTP_INITMSG) failed: %s", std::strerror(errno));
 		}
 
@@ -197,26 +219,31 @@ namespace RTC
 		std::memset(&sconn, 0, sizeof(sconn));
 		sconn.sconn_family = AF_CONN;
 		sconn.sconn_port   = htons(5000);
-		sconn.sconn_addr   = static_cast<void*>(this);
+		sconn.sconn_addr   = reinterpret_cast<void*>(this->id);
 #ifdef HAVE_SCONN_LEN
-		rconn.sconn_len = sizeof(sconn);
+		sconn.sconn_len = sizeof(sconn);
 #endif
 
 		ret = usrsctp_bind(this->socket, reinterpret_cast<struct sockaddr*>(&sconn), sizeof(sconn));
 
 		if (ret < 0)
 		{
+			usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
+
 			MS_THROW_ERROR("usrsctp_bind() failed: %s", std::strerror(errno));
 		}
-
-		DepUsrSCTP::IncreaseSctpAssociations();
 
 		auto bufferSize = static_cast<int>(sctpSendBufferSize);
 
 		if (usrsctp_setsockopt(this->socket, SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(int)) < 0)
 		{
+			usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
+
 			MS_THROW_ERROR("usrsctp_setsockopt(SO_SNDBUF) failed: %s", std::strerror(errno));
 		}
+
+		// Register the SctpAssociation into the global map.
+		DepUsrSCTP::RegisterSctpAssociation(this);
 	}
 
 	SctpAssociation::~SctpAssociation()
@@ -227,9 +254,10 @@ namespace RTC
 		usrsctp_close(this->socket);
 
 		// Deregister ourselves from usrsctp.
-		usrsctp_deregister_address(static_cast<void*>(this));
+		usrsctp_deregister_address(reinterpret_cast<void*>(this->id));
 
-		DepUsrSCTP::DecreaseSctpAssociations();
+		// Register the SctpAssociation from the global map.
+		DepUsrSCTP::DeregisterSctpAssociation(this);
 
 		delete[] this->messageBuffer;
 	}
@@ -250,7 +278,7 @@ namespace RTC
 			std::memset(&rconn, 0, sizeof(rconn));
 			rconn.sconn_family = AF_CONN;
 			rconn.sconn_port   = htons(5000);
-			rconn.sconn_addr   = static_cast<void*>(this);
+			rconn.sconn_addr   = reinterpret_cast<void*>(this->id);
 #ifdef HAVE_SCONN_LEN
 			rconn.sconn_len = sizeof(rconn);
 #endif
@@ -316,7 +344,7 @@ namespace RTC
 		MS_DUMP_DATA(data, len);
 #endif
 
-		usrsctp_conninput(static_cast<void*>(this), data, len, 0);
+		usrsctp_conninput(reinterpret_cast<void*>(this->id), data, len, 0);
 	}
 
 	void SctpAssociation::SendSctpMessage(

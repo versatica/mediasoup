@@ -1126,10 +1126,18 @@ export function getPipeConsumerRtpParameters(
 
 	const consumableEncodings =
 		utils.clone(consumableParams.encodings) as RtpEncodingParameters[];
+	const baseSsrc = utils.generateRandomNumber();
+	const baseRtxSsrc = utils.generateRandomNumber();
 
-	for (const encoding of consumableEncodings)
+	for (let i = 0; i < consumableEncodings.length; ++i)
 	{
-		if (!enableRtx)
+		const encoding = consumableEncodings[i];
+
+		encoding.ssrc = baseSsrc + i;
+
+		if (enableRtx)
+			encoding.rtx = { ssrc: baseRtxSsrc + i };
+		else
 			delete encoding.rtx;
 
 		consumerParams.encodings!.push(encoding);

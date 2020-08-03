@@ -32,29 +32,29 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 336511 2018-07-19 20:16:33Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 362473 2020-06-21 23:12:56Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_UIO_H_
 #define _NETINET_SCTP_UIO_H_
 
-#if (defined(__APPLE__) && defined(KERNEL))
+#if (defined(__APPLE__) && !defined(__Userspace__) && defined(KERNEL))
 #ifndef _KERNEL
 #define _KERNEL
 #endif
 #endif
 
-#if !(defined(__Windows__)) && !defined(__Userspace_os_Windows)
-#if ! defined(_KERNEL)
+#if !defined(_WIN32)
+#if !defined(_KERNEL)
 #include <stdint.h>
 #endif
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 #pragma warning(push)
 #pragma warning(disable: 4200)
 #if defined(_KERNEL)
@@ -650,10 +650,18 @@ struct sctp_setpeerprim {
 	uint8_t sspp_padding[4];
 };
 
+union sctp_sockstore {
+	struct sockaddr_in sin;
+	struct sockaddr_in6 sin6;
+#if defined(__Userspace__)
+	struct sockaddr_conn sconn;
+#endif
+	struct sockaddr sa;
+};
+
 struct sctp_getaddresses {
 	sctp_assoc_t sget_assoc_id;
-	/* addr is filled in for N * sockaddr_storage */
-	struct sockaddr addr[1];
+	union sctp_sockstore addr[];
 };
 
 struct sctp_status {
@@ -1109,9 +1117,14 @@ struct sctpstat {
 
 #define SCTP_STAT_INCR(_x) SCTP_STAT_INCR_BY(_x,1)
 #define SCTP_STAT_DECR(_x) SCTP_STAT_DECR_BY(_x,1)
-#if defined(__FreeBSD__) && defined(SMP) && defined(SCTP_USE_PERCPU_STAT)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+#if defined(SMP) && defined(SCTP_USE_PERCPU_STAT)
 #define SCTP_STAT_INCR_BY(_x,_d) (SCTP_BASE_STATS[PCPU_GET(cpuid)]._x += _d)
 #define SCTP_STAT_DECR_BY(_x,_d) (SCTP_BASE_STATS[PCPU_GET(cpuid)]._x -= _d)
+#else
+#define SCTP_STAT_INCR_BY(_x,_d) atomic_add_int(&SCTP_BASE_STAT(_x), _d)
+#define SCTP_STAT_DECR_BY(_x,_d) atomic_subtract_int(&SCTP_BASE_STAT(_x), _d)
+#endif
 #else
 #define SCTP_STAT_INCR_BY(_x,_d) atomic_add_int(&SCTP_BASE_STAT(_x), _d)
 #define SCTP_STAT_DECR_BY(_x,_d) atomic_subtract_int(&SCTP_BASE_STAT(_x), _d)
@@ -1124,24 +1137,15 @@ struct sctpstat {
 #define SCTP_STAT_DECR_COUNTER64(_x) SCTP_STAT_DECR(_x)
 #define SCTP_STAT_DECR_GAUGE32(_x) SCTP_STAT_DECR(_x)
 
-union sctp_sockstore {
-	struct sockaddr_in sin;
-	struct sockaddr_in6 sin6;
-#if defined(__Userspace__)
-	struct sockaddr_conn sconn;
-#endif
-	struct sockaddr sa;
-};
-
 
 /***********************************/
 /* And something for us old timers */
 /***********************************/
 
-#ifndef __APPLE__
-#ifndef __Userspace__
+#if !(defined(__APPLE__) && !defined(__Userspace__))
+#if !defined(__Userspace__)
 #ifndef ntohll
-#if defined(__Userspace_os_Linux)
+#if defined(__linux__)
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE
 #endif
@@ -1153,7 +1157,7 @@ union sctp_sockstore {
 #endif
 
 #ifndef htonll
-#if defined(__Userspace_os_Linux)
+#if defined(__linux__)
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE
 #endif
@@ -1177,7 +1181,7 @@ struct xsctp_inpcb {
 	uint32_t total_nospaces;
 	uint32_t fragmentation_point;
 	uint16_t local_port;
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 	uint16_t qlen_old;
 	uint16_t maxqlen_old;
 #else
@@ -1185,12 +1189,12 @@ struct xsctp_inpcb {
 	uint16_t maxqlen;
 #endif
 	uint16_t __spare16;
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 	kvaddr_t socket;
 #else
 	void *socket;
 #endif
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 	uint32_t qlen;
 	uint32_t maxqlen;
 #endif
@@ -1289,7 +1293,7 @@ sctp_lower_sosend(struct socket *so,
 #if !defined(__Userspace__)
 #if defined(__FreeBSD__)
     ,struct thread *p
-#elif defined(__Windows__)
+#elif defined(_WIN32)
     , PKTHREAD p
 #else
     ,struct proc *p

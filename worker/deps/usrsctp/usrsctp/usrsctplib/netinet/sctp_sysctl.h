@@ -32,7 +32,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 361895 2020-06-07 14:39:20Z tuexen $");
 #endif
@@ -56,7 +56,7 @@ struct sctp_sysctl {
 	uint32_t sctp_nrsack_enable;
 	uint32_t sctp_pktdrop_enable;
 	uint32_t sctp_fr_max_burst_default;
-#if !defined(__FreeBSD__)
+#if !(defined(__FreeBSD__)  && !defined(__Userspace__))
 	uint32_t sctp_no_csum_on_loopback;
 #endif
 	uint32_t sctp_peer_chunk_oh;
@@ -113,7 +113,7 @@ struct sctp_sysctl {
 	uint32_t sctp_use_dccc_ecn;
 	uint32_t sctp_diag_info_code;
 #if defined(SCTP_LOCAL_TRACE_BUF)
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 	struct sctp_log *sctp_log;
 #else
 	struct sctp_log sctp_log;
@@ -129,13 +129,13 @@ struct sctp_sysctl {
 #if defined(SCTP_DEBUG)
 	uint32_t sctp_debug_on;
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	uint32_t sctp_ignore_vmware_interfaces;
 	uint32_t sctp_main_timer;
 	uint32_t sctp_addr_watchdog_limit;
 	uint32_t sctp_vtag_watchdog_limit;
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 	uint32_t sctp_output_unlocked;
 #endif
 };
@@ -498,7 +498,7 @@ struct sctp_sysctl {
 #define SCTPCTL_UDP_TUNNELING_PORT_DESC		"Set the SCTP/UDP tunneling port"
 #define SCTPCTL_UDP_TUNNELING_PORT_MIN		0
 #define SCTPCTL_UDP_TUNNELING_PORT_MAX		65535
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #define SCTPCTL_UDP_TUNNELING_PORT_DEFAULT	0
 #else
 #define SCTPCTL_UDP_TUNNELING_PORT_DEFAULT	SCTP_OVER_UDP_TUNNELING_PORT
@@ -585,7 +585,7 @@ struct sctp_sysctl {
 #define SCTPCTL_DEBUG_DEFAULT	0
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 #define SCTPCTL_MAIN_TIMER_DESC		"Main timer interval in ms"
 #define SCTPCTL_MAIN_TIMER_MIN		1
 #define SCTPCTL_MAIN_TIMER_MAX		0xFFFFFFFF
@@ -597,14 +597,14 @@ struct sctp_sysctl {
 #define SCTPCTL_IGNORE_VMWARE_INTERFACES_DEFAULT	SCTPCTL_IGNORE_VMWARE_INTERFACES_MAX
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 #define SCTPCTL_OUTPUT_UNLOCKED_DESC	"Unlock socket when sending packets down to IP"
 #define SCTPCTL_OUTPUT_UNLOCKED_MIN	0
 #define SCTPCTL_OUTPUT_UNLOCKED_MAX	1
 #define SCTPCTL_OUTPUT_UNLOCKED_DEFAULT	SCTPCTL_OUTPUT_UNLOCKED_MIN
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 #define	SCTPCTL_ADDR_WATCHDOG_LIMIT_DESC	"Address watchdog limit"
 #define	SCTPCTL_ADDR_WATCHDOG_LIMIT_MIN		0
 #define	SCTPCTL_ADDR_WATCHDOG_LIMIT_MAX		0xFFFFFFFF
@@ -624,7 +624,7 @@ SYSCTL_DECL(_net_inet_sctp);
 #endif
 
 void sctp_init_sysctls(void);
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 void sctp_finish_sysctls(void);
 #endif
 

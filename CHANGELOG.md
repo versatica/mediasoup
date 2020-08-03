@@ -1,5 +1,19 @@
 # Changelog
 
+### 3.6.15 (WIP)
+
+* Avoid SRTP leak by deleting invalid SSRCs after STRP decryption (issue #437, thanks to @penguinol for reporting).
+* Update `usrsctp` dep.
+
+### 3.6.14
+
+* Fix `usrsctp` vulnerability (PR #439).
+* Fix issue #435 (thanks to @penguinol for reporting).
+* `TransportCongestionControlClient.cpp`: Enable periodic ALR probing to recover faster from network issues.
+* Update NPM deps.
+* Update `nlohmann::json` C++ dep to 3.9.0.
+* Update `Catch` to 2.13.0.
+
 
 ### 3.6.13
 

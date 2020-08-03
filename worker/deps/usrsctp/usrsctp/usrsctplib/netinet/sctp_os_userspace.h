@@ -43,7 +43,7 @@
 
 #include <errno.h>
 
-#if defined(__Userspace_os_Windows)
+#if defined(_WIN32)
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
@@ -83,28 +83,24 @@ typedef HANDLE userland_thread_t;
 #if !defined(_MSC_VER) || (_MSC_VER >= 1600)
 #include <stdint.h>
 #else
-#define uint64_t   unsigned __int64
-#define uint32_t   unsigned __int32
-#define int32_t    __int32
-#define uint16_t   unsigned __int16
-#define int16_t    __int16
-#define uint8_t    unsigned __int8
-#define int8_t     __int8
+typedef unsigned __int64 uint64_t;
+typedef unsigned __int32 uint32_t;
+typedef __int32          int32_t;
+typedef unsigned __int16 uint16_t;
+typedef __int16          int16_t;
+typedef unsigned __int8  uint8_t;
+typedef __int8           int8_t;
 #endif
 #ifndef _SIZE_T_DEFINED
-#define size_t     __int32
+#typedef __int32         size_t;
 #endif
-#define u_long     unsigned __int64
-#define u_int      unsigned __int32
-#define u_int32_t  unsigned __int32
-#define u_int16_t  unsigned __int16
-#define u_int8_t   unsigned __int8
-#define u_char     unsigned char
-#define n_short    unsigned __int16
-#define u_short    unsigned __int16
-#define n_time     unsigned __int32
-#define sa_family_t unsigned __int8
-#define ssize_t    __int64
+typedef unsigned __int32 u_int;
+typedef unsigned char    u_char;
+typedef unsigned __int16 u_short;
+typedef unsigned __int8  sa_family_t;
+#ifndef _SSIZE_T_DEFINED
+typedef __int64          ssize_t;
+#endif
 #if !defined(__MINGW32__)
 #define __func__	__FUNCTION__
 #endif
@@ -287,7 +283,7 @@ typedef char* caddr_t;
 
 #else /* !defined(Userspace_os_Windows) */
 #include <sys/socket.h>
-#if defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_Linux) || defined(__Userspace_os_NetBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_NaCl) || defined(__Userspace_os_Fuchsia)
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__native_client__) || defined(__Fuchsia__)
 #include <pthread.h>
 #endif
 typedef pthread_mutex_t userland_mutex_t;
@@ -295,7 +291,7 @@ typedef pthread_cond_t userland_cond_t;
 typedef pthread_t userland_thread_t;
 #endif
 
-#if defined(__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
+#if defined(_WIN32) || defined(__native_client__)
 
 #define IFNAMSIZ 64
 
@@ -391,7 +387,7 @@ struct ifkpi {
 };
 #endif
 
-#if defined(__Userspace_os_Windows)
+#if defined(_WIN32)
 int Win_getifaddrs(struct ifaddrs**);
 #define getifaddrs(interfaces)  (int)Win_getifaddrs(interfaces)
 int win_if_nametoindex(const char *);
@@ -402,9 +398,9 @@ int win_if_nametoindex(const char *);
 #define mtx_unlock(arg1)
 #define mtx_assert(arg1,arg2)
 #define MA_OWNED 7 /* sys/mutex.h typically on FreeBSD */
-#if !defined(__Userspace_os_FreeBSD)
+#if !defined(__FreeBSD__)
 struct mtx {int dummy;};
-#if !defined(__Userspace_os_NetBSD)
+#if !defined(__NetBSD__)
 struct selinfo {int dummy;};
 #endif
 struct sx {int dummy;};
@@ -435,22 +431,22 @@ struct sx {int dummy;};
 #include <user_mbuf.h>
 /* #include <sys/uio.h> */
 /* #include <sys/lock.h> */
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/rwlock.h>
 #endif
 /* #include <sys/kthread.h> */
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/priv.h>
 #endif
 /* #include <sys/random.h> */
 #include <limits.h>
 /* #include <machine/cpu.h> */
 
-#if defined(__Userspace_os_Darwin)
+#if defined(__APPLE__)
 /* was a 0 byte file.  needed for structs if_data(64) and net_event_data */
 #include <net/if_var.h>
 #endif
-#if defined(__Userspace_os_FreeBSD)
+#if defined(__FreeBSD__)
 #include <net/if_types.h>
 /* #include <net/if_var.h> was a 0 byte file.  causes struct mtx redefinition */
 #endif
@@ -458,7 +454,7 @@ struct sx {int dummy;};
  *  userspace as well? */
 /* on FreeBSD, this results in a redefintion of struct route */
 /* #include <net/route.h> */
-#if !defined(__Userspace_os_Windows) && !defined(__Userspace_os_NaCl)
+#if !defined(_WIN32) && !defined(__native_client__)
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
@@ -474,7 +470,7 @@ struct sx {int dummy;};
 
 /* for getifaddrs */
 #include <sys/types.h>
-#if !defined(__Userspace_os_Windows)
+#if !defined(_WIN32)
 #if defined(INET) || defined(INET6)
 #include <ifaddrs.h>
 #endif
@@ -484,6 +480,8 @@ struct sx {int dummy;};
 
 /* for close, etc. */
 #include <unistd.h>
+/* for gettimeofday */
+#include <sys/time.h>
 #endif
 
 /* lots of errno's used and needed in userspace */
@@ -491,7 +489,7 @@ struct sx {int dummy;};
 /* for offsetof */
 #include <stddef.h>
 
-#if defined(SCTP_PROCESS_LEVEL_LOCKS) && !defined(__Userspace_os_Windows)
+#if defined(SCTP_PROCESS_LEVEL_LOCKS) && !defined(_WIN32)
 /* for pthread_mutex_lock, pthread_mutex_unlock, etc. */
 #include <pthread.h>
 #endif
@@ -502,21 +500,21 @@ struct sx {int dummy;};
 #endif				/* IPSEC */
 
 #ifdef INET6
-#if defined(__Userspace_os_FreeBSD)
+#if defined(__FreeBSD__)
 #include <sys/domain.h>
 #endif
 #ifdef IPSEC
 #include <netipsec/ipsec6.h>
 #endif
-#if !defined(__Userspace_os_Windows)
+#if !defined(_WIN32)
 #include <netinet/ip6.h>
 #endif
-#if defined(__Userspace_os_Darwin) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_Linux) || defined(__Userspace_os_NetBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_Windows)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(_WIN32)
 #include "user_ip6_var.h"
 #else
 #include <netinet6/ip6_var.h>
 #endif
-#if defined(__Userspace_os_FreeBSD)
+#if defined(__FreeBSD__)
 #include <netinet6/in6_pcb.h>
 #include <netinet6/ip6protosw.h>
 /* #include <netinet6/nd6.h> was a 0 byte file */
@@ -531,7 +529,7 @@ struct sx {int dummy;};
 
 #include "netinet/sctp_sha1.h"
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <netinet/ip_options.h>
 #endif
 
@@ -584,12 +582,12 @@ MALLOC_DECLARE(SCTP_M_SOCKOPT);
 /*
  *
  */
-#if !defined(__Userspace_os_Darwin)
+#if !defined(__APPLE__)
 #define USER_ADDR_NULL	(NULL)		/* FIX ME: temp */
 #endif
 
-#if defined(SCTP_DEBUG)
 #include <netinet/sctp_constants.h>
+#if defined(SCTP_DEBUG)
 #define SCTPDBG(level, ...)					\
 {								\
 	do {							\
@@ -643,7 +641,7 @@ MALLOC_DECLARE(SCTP_M_SOCKOPT);
 #define SCTP_VRF_IFN_HASH_SIZE	3
 #define	SCTP_INIT_VRF_TABLEID(vrf)
 
-#if !defined(__Userspace_os_Windows)
+#if !defined(_WIN32)
 #define SCTP_IFN_IS_IFT_LOOP(ifn) (strncmp((ifn)->ifn_name, "lo", 2) == 0)
 /* BSD definition */
 /* #define SCTP_ROUTE_IS_REAL_LOOP(ro) ((ro)->ro_rt && (ro)->ro_rt->rt_ifa && (ro)->ro_rt->rt_ifa->ifa_ifp && (ro)->ro_rt->rt_ifa->ifa_ifp->if_type == IFT_LOOP) */
@@ -777,7 +775,7 @@ sctp_hashfreedestroy(void *vhashtbl, struct malloc_type *type, u_long hashmask);
 #define KTR_SUBSYS 1
 
 /* The packed define for 64 bit platforms */
-#if !defined(__Userspace_os_Windows)
+#if !defined(_WIN32)
 #define SCTP_PACKED __attribute__((packed))
 #define SCTP_UNUSED __attribute__((unused))
 #else
@@ -806,7 +804,7 @@ sctp_hashfreedestroy(void *vhashtbl, struct malloc_type *type, u_long hashmask);
                                      M_ALIGN(m, len); \
                                   }
 
-#if !defined(__Userspace_os_Windows)
+#if !defined(_WIN32)
 #define SCTP_SNPRINTF(data, ...)						\
 	if (snprintf(data, __VA_ARGS__) < 0) {					\
 		data[0] = '\0';							\
@@ -891,10 +889,6 @@ int sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af);
                                                  rt->rt_rmx.rmx_mtu = mtu; \
                                            } while(0)
 
-/* (de-)register interface event notifications */
-#define SCTP_REGISTER_INTERFACE(ifhandle, af)
-#define SCTP_DEREGISTER_INTERFACE(ifhandle, af)
-
 
 /*************************/
 /* These are for logging */
@@ -944,7 +938,7 @@ int sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af);
  */
 
 /* get the v6 hop limit */
-#define SCTP_GET_HLIM(inp, ro) 128 /* As done for __Windows__ */
+#define SCTP_GET_HLIM(inp, ro) 128
 #define IPv6_HOP_LIMIT 128
 
 /* is the endpoint v6only? */
@@ -983,7 +977,7 @@ int sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af);
 
 /* sctp_pcb.h */
 
-#if defined(__Userspace_os_Windows)
+#if defined(_WIN32)
 #define SHUT_RD 1
 #define SHUT_WR 2
 #define SHUT_RDWR 3
@@ -1070,12 +1064,12 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
 /* with the current included files, this is defined in Linux but
  *  in FreeBSD, it is behind a _KERNEL in sys/socket.h ...
  */
-#if defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_NaCl)
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__native_client__)
 /* stolen from /usr/include/sys/socket.h */
 #define CMSG_ALIGN(n)   _ALIGN(n)
-#elif defined(__Userspace_os_NetBSD)
+#elif defined(__NetBSD__)
 #define CMSG_ALIGN(n)   (((n) + __ALIGNBYTES) & ~__ALIGNBYTES)
-#elif defined(__Userspace_os_Darwin)
+#elif defined(__APPLE__)
 #if !defined(__DARWIN_ALIGNBYTES)
 #define	__DARWIN_ALIGNBYTES	(sizeof(__darwin_size_t) - 1)
 #endif
@@ -1110,7 +1104,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
 	} while (0)
 #endif
 
-#if defined(__Userspace_os_Linux)
+#if defined(__linux__)
 #if !defined(TAILQ_FOREACH_SAFE)
 #define TAILQ_FOREACH_SAFE(var, head, field, tvar)             \
          for ((var) = ((head)->tqh_first);                     \
@@ -1124,12 +1118,12 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
               (var) = (tvar))
 #endif
 #endif
-#if defined(__Userspace_os_DragonFly)
+#if defined(__DragonFly__)
 #define TAILQ_FOREACH_SAFE TAILQ_FOREACH_MUTABLE
 #define LIST_FOREACH_SAFE LIST_FOREACH_MUTABLE
 #endif
 
-#if defined(__Userspace_os_NaCl)
+#if defined(__native_client__)
 #define	timercmp(tvp, uvp, cmp)						\
 	(((tvp)->tv_sec == (uvp)->tv_sec) ?				\
 	    ((tvp)->tv_usec cmp (uvp)->tv_usec) :			\
@@ -1138,7 +1132,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
 
 #define SCTP_IS_LISTENING(inp) ((inp->sctp_flags & SCTP_PCB_FLAGS_ACCEPTING) != 0)
 
-#if defined(__Userspace_os_Darwin) || defined(__Userspace_os_DragonFly) || defined(__Userspace_os_Linux) || defined(__Userspace_os_NaCl) || defined(__Userspace_os_NetBSD) || defined(__Userspace_os_Windows) || defined(__Userspace_os_Fuchsia)
+#if defined(__APPLE__) || defined(__DragonFly__) || defined(__linux__) || defined(__native_client__) || defined(__NetBSD__) || defined(_WIN32) || defined(__Fuchsia__)
 int
 timingsafe_bcmp(const void *, const void *, size_t);
 #endif

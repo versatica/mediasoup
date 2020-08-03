@@ -32,7 +32,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/sys/netinet/sctp_os.h 361872 2020-06-06 18:20:09Z tuexen $");
 #endif
@@ -64,7 +64,7 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_os.h 361872 2020-06-06 18:20:09Z tuexe
  * SCTP_ZONE_DESTROY(zone)
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <netinet/sctp_os_bsd.h>
 #else
 #define MODULE_GLOBAL(_B) (_B)
@@ -74,11 +74,11 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_os.h 361872 2020-06-06 18:20:09Z tuexe
 #include <netinet/sctp_os_userspace.h>
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 #include <netinet/sctp_os_macosx.h>
 #endif
 
-#if defined(__Windows__)
+#if defined(_WIN32) && !defined(__Userspace__)
 #include <netinet/sctp_os_windows.h>
 #endif
 

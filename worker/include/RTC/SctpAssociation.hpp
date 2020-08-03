@@ -96,6 +96,9 @@ namespace RTC
 		  uint16_t streamId, uint16_t ssn, uint32_t ppid, int flags, const uint8_t* data, size_t len);
 		void OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len);
 
+	public:
+		uintptr_t id{ 0u };
+
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };

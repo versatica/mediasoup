@@ -33,12 +33,12 @@
 /* __Userspace__ */
 #include <sys/types.h>
 
-#ifdef __Userspace_os_FreeBSD
+#ifdef __FreeBSD__
 #ifndef _SYS_MUTEX_H_
 #include <sys/mutex.h>
 #endif
 #endif
-#if defined (__Userspace_os_Windows)
+#if defined(_WIN32)
 #include "netinet/sctp_os_userspace.h"
 #endif
 
@@ -63,8 +63,8 @@ extern int ipport_firstauto, ipport_lastauto;
 extern int nmbclusters;
 
 #if !defined(_MSC_VER) && !defined(__MINGW32__)
-#define min(a,b) ((a)>(b)?(b):(a))
-#define max(a,b) ((a)>(b)?(a):(b))
+#define min(a,b) (((a)>(b))?(b):(a))
+#define max(a,b) (((a)>(b))?(a):(b))
 #endif
 
 void init_random(void);
@@ -83,7 +83,7 @@ int read_random(void *, int);
 /* Source ip_output.c. extern'd in ip_var.h */
 extern u_short ip_id;
 
-#if defined(__Userspace_os_Linux)
+#if defined(__linux__)
 #define IPV6_VERSION            0x60
 #endif
 

@@ -1257,7 +1257,7 @@ namespace RTC
 				this->mapProducers.erase(producer->id);
 
 				// Tell the child class to clear associated SSRCs.
-				for (auto& kv : producer->GetRtpStreams())
+				for (const auto& kv : producer->GetRtpStreams())
 				{
 					auto* rtpStream = kv.first;
 
@@ -1587,6 +1587,10 @@ namespace RTC
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
 				break;
+			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
+				// Tell the child class to remove this SSRC.
+				RecvStreamClosed(packet->GetSsrc());
+				break;
 			default:;
 		}
 
@@ -1863,7 +1867,7 @@ namespace RTC
 							  rtcp,
 							  "no Consumer found for received PLI Feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  feedback->GetMediaSsrc(),
+							  feedback->GetSenderSsrc(),
 							  feedback->GetMediaSsrc());
 
 							break;
@@ -1873,7 +1877,7 @@ namespace RTC
 						  rtcp,
 						  "PLI received, requesting key frame for Consumer "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-						  feedback->GetMediaSsrc(),
+						  feedback->GetSenderSsrc(),
 						  feedback->GetMediaSsrc());
 
 						consumer->ReceiveKeyFrameRequest(
@@ -1902,7 +1906,7 @@ namespace RTC
 								  rtcp,
 								  "no Consumer found for received FIR Feedback packet "
 								  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
-								  feedback->GetMediaSsrc(),
+								  feedback->GetSenderSsrc(),
 								  feedback->GetMediaSsrc(),
 								  item->GetSsrc());
 
@@ -1913,7 +1917,7 @@ namespace RTC
 							  rtcp,
 							  "FIR received, requesting key frame for Consumer "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
-							  feedback->GetMediaSsrc(),
+							  feedback->GetSenderSsrc(),
 							  feedback->GetMediaSsrc(),
 							  item->GetSsrc());
 
@@ -1945,7 +1949,7 @@ namespace RTC
 							  "ignoring unsupported %s Feedback PS AFB packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-							  feedback->GetMediaSsrc(),
+							  feedback->GetSenderSsrc(),
 							  feedback->GetMediaSsrc());
 
 							break;
@@ -1959,7 +1963,7 @@ namespace RTC
 						  "ignoring unsupported %s Feedback packet "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-						  feedback->GetMediaSsrc(),
+						  feedback->GetSenderSsrc(),
 						  feedback->GetMediaSsrc());
 					}
 				}
@@ -1990,7 +1994,7 @@ namespace RTC
 					  rtcp,
 					  "no Consumer found for received Feedback packet "
 					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-					  feedback->GetMediaSsrc(),
+					  feedback->GetSenderSsrc(),
 					  feedback->GetMediaSsrc());
 
 					break;
@@ -2006,7 +2010,7 @@ namespace RTC
 							  rtcp,
 							  "no Consumer found for received NACK Feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
-							  feedback->GetMediaSsrc(),
+							  feedback->GetSenderSsrc(),
 							  feedback->GetMediaSsrc());
 
 							break;
@@ -2042,7 +2046,7 @@ namespace RTC
 						  "ignoring unsupported %s Feedback packet "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  RTC::RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
-						  feedback->GetMediaSsrc(),
+						  feedback->GetSenderSsrc(),
 						  feedback->GetMediaSsrc());
 					}
 				}

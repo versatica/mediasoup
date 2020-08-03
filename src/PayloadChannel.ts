@@ -49,7 +49,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 		this._consumerSocket = consumerSocket as Duplex;
 
 		// Read PayloadChannel notifications from the worker.
-		this._consumerSocket.on('data', (buffer) =>
+		this._consumerSocket.on('data', (buffer: Buffer) =>
 		{
 			if (!this._recvBuffer)
 			{

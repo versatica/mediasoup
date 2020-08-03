@@ -110,7 +110,7 @@ void             m_cat(struct mbuf *m, struct mbuf *n);
 void		 m_adj(struct mbuf *, int);
 void  mb_free_ext(struct mbuf *);
 void  m_freem(struct mbuf *);
-struct m_tag	*m_tag_alloc(u_int32_t, int, int, int);
+struct m_tag	*m_tag_alloc(uint32_t, int, int, int);
 struct mbuf	*m_copym(struct mbuf *, int, int, int);
 void		 m_copyback(struct mbuf *, int, int, caddr_t);
 struct mbuf	*m_pullup(struct mbuf *, int);
@@ -161,9 +161,9 @@ struct m_hdr {
  */
 struct m_tag {
 	SLIST_ENTRY(m_tag)	m_tag_link;	/* List of packet tags */
-	u_int16_t		m_tag_id;	/* Tag ID */
-	u_int16_t		m_tag_len;	/* Length of data */
-	u_int32_t		m_tag_cookie;	/* ABI/Module ID */
+	uint16_t		m_tag_id;	/* Tag ID */
+	uint16_t		m_tag_len;	/* Length of data */
+	uint32_t		m_tag_cookie;	/* ABI/Module ID */
 	void			(*m_tag_free)(struct m_tag *);
 };
 
@@ -178,8 +178,8 @@ struct pkthdr {
 	/* variables for hardware checksum */
 	int		 csum_flags;	/* flags regarding checksum */
 	int		 csum_data;	/* data field used by csum routines */
-	u_int16_t	 tso_segsz;	/* TSO segment size */
-	u_int16_t	 ether_vtag;	/* Ethernet 802.1p+q vlan tag */
+	uint16_t	 tso_segsz;	/* TSO segment size */
+	uint16_t	 ether_vtag;	/* Ethernet 802.1p+q vlan tag */
 	SLIST_HEAD(packet_tags, m_tag) tags; /* list of packet tags */
 };
 
@@ -341,9 +341,9 @@ extern int max_protohdr; /* Size of largest protocol layer header. See user_mbuf
  * of checking writability of the mbuf data area rests solely with the caller.
  */
 #define	M_LEADINGSPACE(m)						\
-	((m)->m_flags & M_EXT ?						\
+	(((m)->m_flags & M_EXT) ?					\
 	    (M_WRITABLE(m) ? (m)->m_data - (m)->m_ext.ext_buf : 0):	\
-	    (m)->m_flags & M_PKTHDR ? (m)->m_data - (m)->m_pktdat :	\
+	    ((m)->m_flags & M_PKTHDR)? (m)->m_data - (m)->m_pktdat :	\
 	    (m)->m_data - (m)->m_dat)
 
 /*
@@ -353,7 +353,7 @@ extern int max_protohdr; /* Size of largest protocol layer header. See user_mbuf
  * of checking writability of the mbuf data area rests solely with the caller.
  */
 #define	M_TRAILINGSPACE(m)						\
-	((m)->m_flags & M_EXT ?						\
+	(((m)->m_flags & M_EXT) ?					\
 	    (M_WRITABLE(m) ? (m)->m_ext.ext_buf + (m)->m_ext.ext_size	\
 		- ((m)->m_data + (m)->m_len) : 0) :			\
 	    &(m)->m_dat[MLEN] - ((m)->m_data + (m)->m_len))
@@ -404,5 +404,10 @@ extern int max_protohdr; /* Size of largest protocol layer header. See user_mbuf
                 ("%s: MH_ALIGN not a virgin mbuf", __func__));          \
 	(m)->m_data += (MHLEN - (len)) & ~(sizeof(long) - 1);		\
 } while (0)
+
+#define M_SIZE(m)						\
+		(((m)->m_flags & M_EXT) ? (m)->m_ext.ext_size :	\
+		((m)->m_flags & M_PKTHDR) ? MHLEN :		\
+		MLEN)
 
 #endif
