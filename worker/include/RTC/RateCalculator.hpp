@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <deque>
 
 namespace RTC
 {
