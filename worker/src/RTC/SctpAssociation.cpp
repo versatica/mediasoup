@@ -425,16 +425,14 @@ namespace RTC
 			}
 		}
 
-		// Increase buffered amount.
-		this->sctpBufferedAmount += len;
-
 		int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
 		if (ret == 0)
+		{
+			this->sctpBufferedAmount += len;
 			this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
-		else
-			this->sctpBufferedAmount -= len;
+		}
 
 		if (ret < 0)
 		{
