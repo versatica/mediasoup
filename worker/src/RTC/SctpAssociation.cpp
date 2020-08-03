@@ -10,7 +10,6 @@
 #include <cstring> // std::memset(), std::memcpy()
 #include <string>
 
-
 // Free send buffer threshold (in bytes) upon which send_cb will be executed.
 static uint32_t SendBufferThreshold{ 256u };
 

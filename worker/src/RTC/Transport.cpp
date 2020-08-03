@@ -2819,7 +2819,8 @@ namespace RTC
 		{
 			const auto* dataConsumer = kv.second;
 
-			Channel::Notifier::Emit(dataConsumer->id, "bufferedamount", data);
+			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+				Channel::Notifier::Emit(dataConsumer->id, "bufferedamount", data);
 		}
 	}
 
