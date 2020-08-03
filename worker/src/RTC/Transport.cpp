@@ -2810,7 +2810,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Notify the Node Transport.
+		// Notify the Node DataConsumers.
 		json data = json::object();
 
 		data["bufferedAmount"] = len;
