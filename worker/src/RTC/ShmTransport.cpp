@@ -170,7 +170,7 @@ namespace RTC
 		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
 
 		//shm
-		jsonObject["shm-fully-connected"] = IsFullyConnected();
+		jsonObject["shm-writer-ready"] = IsFullyConnected();
 	}
 
 	inline void ShmTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)

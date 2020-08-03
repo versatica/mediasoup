@@ -12,7 +12,38 @@
 
 namespace RTC
 {
-	/* Instance methods. */
+	void RtpLostPktRateCounter::Update(RTC::RtpPacket* packet)
+	{
+		// Each packet if in order will increate number of total received packets
+		// If there is gap in seqIds also increase number of lost packets
+		// If packet's seqId is older then do not update any counters
+		size_t lost    = 0;
+		size_t total   = 0;
+		uint64_t nowMs = DepLibUV::GetTimeMs();
+		uint64_t seq   = static_cast<uint64_t>(packet->GetSequenceNumber());
+
+		// The very first packet, no loss yet, increment total
+		if (0u == this->firstSeqId)
+		{
+			total = 1;
+			this->firstSeqId = this->lastSeqId = seq;			
+		}
+		else if (this->lastSeqId >= seq)
+		{
+			return; // probably retransmission of earlier lost pkt, ignore
+		}
+		else
+		{
+			// Packet in order, check for gaps in seq ids and update the counters
+			lost = seq - this->lastSeqId - 1;
+			total = seq - this->lastSeqId;
+			this->lastSeqId = seq;
+		}
+		
+		this->totalPackets.Update(total, nowMs);
+		this->lostPackets.Update(lost, nowMs);
+	}
+
 
 	ShmConsumer::ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx)
 	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SHM)
@@ -68,18 +99,10 @@ namespace RTC
 	void ShmConsumer::FillJsonStats(json& jsonArray) const
 	{
 		MS_TRACE();
-		
-		uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		// Add stats of our send stream.
 	  jsonArray.emplace_back(json::value_t::object);
-		//this->rtpStream->FillJsonStats(jsonArray[0]);
-		jsonArray[0]["type"]        = "shm-writer-stats";
-
-		RTC::RtpDataCounter* ptr = const_cast<RTC::RtpDataCounter*>(&this->shmWriterCounter);
-		jsonArray[0]["packetCount"] = ptr->GetPacketCount();
-		jsonArray[0]["byteCount"]   = ptr->GetBytes();
-		jsonArray[0]["bitrate"]     = ptr->GetBitrate(nowMs);
+		this->rtpStream->FillJsonStats(jsonArray[0]);
 
 		// Add stats of our recv stream.
 		if (this->producerRtpStream)
@@ -89,8 +112,25 @@ namespace RTC
 		}
 
 		// Shm writing stats
-		
+	  jsonArray.emplace_back(json::value_t::object);
+		this->FillShmWriterStats(jsonArray[2]);
+	}
 
+	void ShmConsumer::FillShmWriterStats(json& jsonObject) const
+	{
+		MS_TRACE();
+		
+		uint64_t nowMs = DepLibUV::GetTimeMs();
+		RTC::RtpLostPktRateCounter* loss = const_cast<RTC::RtpLostPktRateCounter*>(&this->lostPktRateCounter);
+		uint64_t totalRate = loss->GetTotalRate(nowMs);
+		uint64_t lossRate = loss->GetLossRate(nowMs);
+
+		RTC::RtpDataCounter* ptr     = const_cast<RTC::RtpDataCounter*>(&this->shmWriterCounter);
+		jsonObject["type"]           = "shm-writer-stats";
+		jsonObject["packetCount"]    = ptr->GetPacketCount();
+		jsonObject["byteCount"]      = ptr->GetBytes();
+		jsonObject["bitrate"]        = ptr->GetBitrate(nowMs);
+		jsonObject["packetLossRate"] = totalRate != 0 ? (float)lossRate / (float)totalRate : 0.0f;
 	}
 
 	void ShmConsumer::FillJsonScore(json& jsonObject) const
@@ -226,6 +266,9 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
+
+		// Update received and missed packet counters
+		lostPktRateCounter.Update(packet);
 
 		if (isSyncPacket)
 		{
