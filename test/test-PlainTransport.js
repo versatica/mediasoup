@@ -97,7 +97,7 @@ test('router.createPlainTransport() succeeds', async () =>
 			maxMessageSize     : 262144,
 			isDataChannel      : false,
 			sctpBufferedAmount : 0,
-			sendBufferSize     : 262144,
+			sendBufferSize     : 262144
 		});
 	expect(transport1.sctpState).toBe('new');
 	expect(transport1.srtpParameters).toBeUndefined();

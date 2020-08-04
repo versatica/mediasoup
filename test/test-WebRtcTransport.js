@@ -104,7 +104,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 			maxMessageSize     : 1000000,
 			isDataChannel      : true,
 			sctpBufferedAmount : 0,
-			sendBufferSize     : 262144,
+			sendBufferSize     : 262144
 		});
 	expect(transport1.iceCandidates).toBeType('array');
 	expect(transport1.iceCandidates.length).toBe(6);
