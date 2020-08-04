@@ -602,7 +602,7 @@ sctp_process_init_ack(struct mbuf *m, int iphlen, int offset,
 			     (inp->send_sb_threshold == 0))) {
 				atomic_add_int(&stcb->asoc.refcnt, 1);
 				SCTP_TCB_UNLOCK(stcb);
-				inp->send_callback(stcb->sctp_socket, sb_free_now);
+				inp->send_callback(stcb->sctp_socket, sb_free_now, inp->ulp_info);
 				SCTP_TCB_LOCK(stcb);
 				atomic_subtract_int(&stcb->asoc.refcnt, 1);
 			}

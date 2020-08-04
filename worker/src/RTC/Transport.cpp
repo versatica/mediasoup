@@ -1434,6 +1434,31 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
+			{
+				// This may throw.
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
+
+				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
+				{
+					MS_THROW_ERROR("invalid DataConsumer type");
+				}
+
+				if (!this->sctpAssociation)
+				{
+					MS_THROW_ERROR("no SCTP association present");
+				}
+
+				// Create status response.
+				json data = json::object();
+
+				data["bufferedAmount"] = this->sctpAssociation->GetSctpBufferedAmount();
+
+				request->Accept(data);
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
@@ -2786,6 +2811,25 @@ namespace RTC
 
 		// Pass the SCTP message to the corresponding DataProducer.
 		dataProducer->ReceiveMessage(ppid, msg, len);
+	}
+
+	inline void Transport::OnSctpAssociationBufferedAmount(
+	  RTC::SctpAssociation* /*sctpAssociation*/, uint32_t len)
+	{
+		MS_TRACE();
+
+		// Notify the Node DataConsumers.
+		json data = json::object();
+
+		data["bufferedAmount"] = len;
+
+		for (const auto& kv : this->mapDataConsumers)
+		{
+			const auto* dataConsumer = kv.second;
+
+			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+				Channel::Notifier::Emit(dataConsumer->id, "bufferedamount", data);
+		}
 	}
 
 	inline void Transport::OnTransportCongestionControlClientBitrates(

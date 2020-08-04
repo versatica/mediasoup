@@ -271,7 +271,7 @@ handle_connection(void *arg)
 }
 
 static int
-send_cb(struct socket *sock, uint32_t sb_free) {
+send_cb(struct socket *sock, uint32_t sb_free, void *ulp_info) {
 	struct sctp_sendv_spa sendv_spa;
 
 	if ((cb_messages == 0) && verbose) {

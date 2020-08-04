@@ -51,6 +51,8 @@ export declare class DataConsumer extends EnhancedEventEmitter {
     private readonly _channel;
     private readonly _payloadChannel;
     private _closed;
+    private _bufferedAmountLowThreshold;
+    private _bufferedAmount;
     private readonly _appData?;
     private readonly _observer;
     /**
@@ -59,6 +61,7 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * @emits dataproducerclose
      * @emits message - (message: Buffer, ppid: number)
      * @emits sctpsendbufferfull
+     * @emits bufferedamountlow - (bufferedAmount: number)
      * @emits @close
      * @emits @dataproducerclose
      */
@@ -77,6 +80,11 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * Associated DataProducer id.
      */
     get dataProducerId(): string;
+    /**
+     * Buffered amount threshold.
+     */
+    get bufferedAmountLowThreshold(): number;
+    set bufferedAmountLowThreshold(value: number);
     /**
      * Whether the DataConsumer is closed.
      */
@@ -129,6 +137,10 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * Get DataConsumer stats.
      */
     getStats(): Promise<DataConsumerStat[]>;
+    /**
+     * Get buffered amount size.
+     */
+    getBufferedAmount(): Promise<number>;
     private _handleWorkerNotifications;
 }
 //# sourceMappingURL=DataConsumer.d.ts.map

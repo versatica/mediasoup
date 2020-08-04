@@ -98,11 +98,13 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(transport1.iceParameters.password).toBeType('string');
 	expect(transport1.sctpParameters).toStrictEqual(
 		{
-			port           : 5000,
-			OS             : 2048,
-			MIS            : 2048,
-			maxMessageSize : 1000000,
-			isDataChannel  : true
+			port               : 5000,
+			OS                 : 2048,
+			MIS                : 2048,
+			maxMessageSize     : 1000000,
+			isDataChannel      : true,
+			sctpBufferedAmount : 0,
+			sendBufferSize     : 262144
 		});
 	expect(transport1.iceCandidates).toBeType('array');
 	expect(transport1.iceCandidates.length).toBe(6);

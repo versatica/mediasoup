@@ -128,7 +128,8 @@ usrsctp_socket(int domain,
                                  int flags,
                                  void *ulp_info),
                int (*send_cb)(struct socket *sock,
-                              uint32_t sb_free),
+                              uint32_t sb_free,
+                              void *ulp_info),
                uint32_t sb_threshold,
                void *ulp_info)
 ```

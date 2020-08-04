@@ -91,11 +91,13 @@ test('router.createPlainTransport() succeeds', async () =>
 	expect(transport1.rtcpTuple).toBeUndefined();
 	expect(transport1.sctpParameters).toStrictEqual(
 		{
-			port           : 5000,
-			OS             : 1024,
-			MIS            : 1024,
-			maxMessageSize : 262144,
-			isDataChannel  : false
+			port               : 5000,
+			OS                 : 1024,
+			MIS                : 1024,
+			maxMessageSize     : 262144,
+			isDataChannel      : false,
+			sctpBufferedAmount : 0,
+			sendBufferSize     : 262144
 		});
 	expect(transport1.sctpState).toBe('new');
 	expect(transport1.srtpParameters).toBeUndefined();

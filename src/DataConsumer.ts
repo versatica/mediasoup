@@ -87,6 +87,12 @@ export class DataConsumer extends EnhancedEventEmitter
 	// Closed flag.
 	private _closed = false;
 
+	// Buffered amount threshold.
+	private _bufferedAmountLowThreshold = 0
+
+	// Buffered amount.
+	private _bufferedAmount = 0
+
 	// Custom app data.
 	private readonly _appData?: any;
 
@@ -99,6 +105,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	 * @emits dataproducerclose
 	 * @emits message - (message: Buffer, ppid: number)
 	 * @emits sctpsendbufferfull
+	 * @emits bufferedamountlow - (bufferedAmount: number)
 	 * @emits @close
 	 * @emits @dataproducerclose
 	 */
@@ -146,6 +153,19 @@ export class DataConsumer extends EnhancedEventEmitter
 	get dataProducerId(): string
 	{
 		return this._internal.dataProducerId;
+	}
+
+	/**
+	 * Buffered amount threshold.
+	 */
+	get bufferedAmountLowThreshold(): number
+	{
+		return this._bufferedAmountLowThreshold;
+	}
+
+	set bufferedAmountLowThreshold(value: number)
+	{
+		this._bufferedAmountLowThreshold = value;
 	}
 
 	/**
@@ -281,9 +301,22 @@ export class DataConsumer extends EnhancedEventEmitter
 		return this._channel.request('dataConsumer.getStats', this._internal);
 	}
 
+	/**
+	 * Get buffered amount size.
+	 */
+	async getBufferedAmount(): Promise<number>
+	{
+		logger.debug('getBufferedAmount()');
+
+		const { bufferedAmount } =
+			await this._channel.request('dataConsumer.getBufferedAmount', this._internal);
+
+		return bufferedAmount;
+	}
+
 	private _handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.dataConsumerId, (event: string) =>
+		this._channel.on(this._internal.dataConsumerId, (event: string, data: any) =>
 		{
 			switch (event)
 			{
@@ -310,15 +343,30 @@ export class DataConsumer extends EnhancedEventEmitter
 				{
 					this.safeEmit('sctpsendbufferfull');
 
-					// Emit observer event.
-					this._observer.safeEmit('sctpsendbufferfull');
+					break;
+				}
+
+				case 'bufferedamount':
+				{
+					const { bufferedAmount } = data as { bufferedAmount: number };
+					const previousBufferedAmount = this._bufferedAmount;
+
+					this._bufferedAmount = bufferedAmount;
+
+					if (
+						previousBufferedAmount > this._bufferedAmountLowThreshold &&
+						this._bufferedAmount <= this._bufferedAmountLowThreshold
+					)
+					{
+						this.safeEmit('bufferedamountlow', bufferedAmount);
+					}
 
 					break;
 				}
 
 				default:
 				{
-					logger.error('ignoring unknown event "%s"', event);
+					logger.error('ignoring unknown event "%s" in channel listener', event);
 				}
 			}
 		});
@@ -344,7 +392,7 @@ export class DataConsumer extends EnhancedEventEmitter
 
 					default:
 					{
-						logger.error('ignoring unknown event "%s"', event);
+						logger.error('ignoring unknown event "%s" in payload channel listener', event);
 					}
 				}
 			});

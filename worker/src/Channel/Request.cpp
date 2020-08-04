@@ -56,6 +56,7 @@ namespace Channel
 		{ "dataConsumer.close",              Request::MethodId::DATA_CONSUMER_CLOSE                },
 		{ "dataConsumer.dump",               Request::MethodId::DATA_CONSUMER_DUMP                 },
 		{ "dataConsumer.getStats",           Request::MethodId::DATA_CONSUMER_GET_STATS            },
+		{ "dataConsumer.getBufferedAmount",  Request::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT  },
 		{ "rtpObserver.close",               Request::MethodId::RTP_OBSERVER_CLOSE                 },
 		{ "rtpObserver.pause",               Request::MethodId::RTP_OBSERVER_PAUSE                 },
 		{ "rtpObserver.resume",              Request::MethodId::RTP_OBSERVER_RESUME                },
