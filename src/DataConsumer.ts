@@ -356,14 +356,15 @@ export class DataConsumer extends EnhancedEventEmitter
 					if (
 						bufferedAmount <= this._bufferedAmountLowThreshold &&
 						bufferedAmount <= this._bufferedAmount
-					) {
+					)
+					{
 						this.safeEmit('bufferedamountlow', bufferedAmount);
 
 						// Emit observer event.
 						this._observer.safeEmit('bufferedamountlow', bufferedAmount);
 					}
 
-					this._bufferedAmount = bufferedAmount
+					this._bufferedAmount = bufferedAmount;
 
 					break;
 				}
