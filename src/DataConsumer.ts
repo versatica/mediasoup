@@ -352,16 +352,17 @@ export class DataConsumer extends EnhancedEventEmitter
 				case 'bufferedamount':
 				{
 					const { bufferedAmount } = data as { bufferedAmount: number };
+					const previousBufferedAmount = this._bufferedAmount;
+
+					this._bufferedAmount = bufferedAmount;
 
 					if (
-						bufferedAmount <= this._bufferedAmountLowThreshold &&
-						bufferedAmount <= this._bufferedAmount
+						previousBufferedAmount > this._bufferedAmountLowThreshold &&
+						this._bufferedAmount <= this._bufferedAmountLowThreshold
 					)
 					{
 						this.safeEmit('bufferedamountlow', bufferedAmount);
 					}
-
-					this._bufferedAmount = bufferedAmount;
 
 					break;
 				}
