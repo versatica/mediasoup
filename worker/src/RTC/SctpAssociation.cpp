@@ -89,7 +89,7 @@ inline static int onBufferedAmount(struct socket* /*sock*/, uint32_t len, void* 
 
 	if (!sctpAssociation)
 	{
-		MS_ERROR("no SctpAssociation found: %s", ulpInfo);
+		MS_WARN_TAG(sctp, "no SctpAssociation found");
 
 		return 0;
 	}
