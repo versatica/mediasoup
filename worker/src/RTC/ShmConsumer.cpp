@@ -335,13 +335,13 @@ namespace RTC
 		}
 
 // Uncomment for NACK test simulation
-/*		if (this->TestNACK(packet))
+		if (this->TestNACK(packet))
 		{
 			MS_DEBUG_TAG(rtp, "Pretend NACK for packet ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
 			packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
 			return;
 		}
-*/
+
 // End of NACK test simulation
 
 		// TODO: WritePacketToShm may actually discard it instead of writing into shm.
