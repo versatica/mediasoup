@@ -343,9 +343,6 @@ export class DataConsumer extends EnhancedEventEmitter
 				{
 					this.safeEmit('sctpsendbufferfull');
 
-					// Emit observer event.
-					this._observer.safeEmit('sctpsendbufferfull');
-
 					break;
 				}
 
