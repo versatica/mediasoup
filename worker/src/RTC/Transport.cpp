@@ -1436,6 +1436,14 @@ namespace RTC
 
 			case Channel::Request::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
 			{
+				// This may throw.
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
+
+				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
+				{
+					MS_THROW_ERROR("invalid DataConsumer type");
+				}
+
 				if (!this->sctpAssociation)
 				{
 					MS_THROW_ERROR("no SCTP association present");
