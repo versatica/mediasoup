@@ -83,7 +83,7 @@ inline static int onRecvSctpData(
 	return 1;
 }
 
-inline static int onBufferedAmount(struct socket* /*sock*/, uint32_t len, void* ulpInfo)
+inline static int onSendSctpData(struct socket* /*sock*/, uint32_t freeBuffer, void* ulpInfo)
 {
 	auto* sctpAssociation = DepUsrSCTP::RetrieveSctpAssociation(reinterpret_cast<uintptr_t>(ulpInfo));
 
@@ -94,7 +94,7 @@ inline static int onBufferedAmount(struct socket* /*sock*/, uint32_t len, void* 
 		return 0;
 	}
 
-	sctpAssociation->OnUsrSctpBufferedAmount(len);
+	sctpAssociation->OnUsrSctpSentData(freeBuffer);
 
 	return 1;
 }
@@ -134,7 +134,7 @@ namespace RTC
 		  SOCK_STREAM,
 		  IPPROTO_SCTP,
 		  onRecvSctpData,
-		  onBufferedAmount,
+		  onSendSctpData,
 		  SendBufferThreshold,
 		  reinterpret_cast<void*>(this->id));
 
@@ -1018,9 +1018,9 @@ namespace RTC
 		}
 	}
 
-	void SctpAssociation::OnUsrSctpBufferedAmount(uint32_t len)
+	void SctpAssociation::OnUsrSctpSentData(uint32_t freeBuffer)
 	{
-		this->sctpBufferedAmount = this->sctpSendBufferSize - len;
+		this->sctpBufferedAmount = this->sctpSendBufferSize - freeBuffer;
 		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
 	}
 } // namespace RTC
