@@ -62,6 +62,7 @@ namespace RTC
 		void TransportDisconnected();
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
+		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void DataProducerClosed();
 		void SendMessage(uint32_t ppid, const uint8_t* msg, size_t len);
 
@@ -85,6 +86,8 @@ namespace RTC
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0u };
 		size_t bytesSent{ 0u };
+		uint32_t bufferedAmount{ 0u };
+		uint32_t bufferedAmountLowThreshold{ 0u };
 	};
 } // namespace RTC
 

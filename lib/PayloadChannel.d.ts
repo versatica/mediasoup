@@ -4,6 +4,8 @@ export declare class PayloadChannel extends EnhancedEventEmitter {
     private _closed;
     private readonly _producerSocket;
     private readonly _consumerSocket;
+    private _nextId;
+    private readonly _sents;
     private _recvBuffer?;
     private _ongoingNotification?;
     /**
@@ -21,6 +23,10 @@ export declare class PayloadChannel extends EnhancedEventEmitter {
      * @private
      */
     notify(event: string, internal: object, data: any | undefined, payload: string | Buffer): void;
+    /**
+     * @private
+     */
+    request(method: string, internal: object, data: any, payload: string | Buffer): Promise<any>;
     private _processData;
 }
 //# sourceMappingURL=PayloadChannel.d.ts.map

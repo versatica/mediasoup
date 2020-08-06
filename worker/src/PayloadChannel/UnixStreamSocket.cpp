@@ -4,6 +4,7 @@
 #include "PayloadChannel/UnixStreamSocket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "PayloadChannel/Request.hpp"
 #include <cmath>   // std::ceil()
 #include <cstdio>  // sprintf()
 #include <cstring> // std::memcpy(), std::memmove()
@@ -68,6 +69,25 @@ namespace PayloadChannel
 		SendImpl(payload, payloadLen);
 	}
 
+	void UnixStreamSocket::Send(json& jsonMessage)
+	{
+		MS_TRACE_STD();
+
+		if (this->consumerSocket.IsClosed())
+			return;
+
+		std::string message = jsonMessage.dump();
+
+		if (message.length() > NsPayloadMaxLen)
+		{
+			MS_ERROR_STD("mesage too big");
+
+			return;
+		}
+
+		SendImpl(message.c_str(), message.length());
+	}
+
 	inline void UnixStreamSocket::SendImpl(const void* nsPayload, size_t nsPayloadLen)
 	{
 		MS_TRACE();
@@ -99,23 +119,49 @@ namespace PayloadChannel
 	{
 		MS_TRACE();
 
-		if (!this->ongoingNotification)
+		if (!this->ongoingNotification && !this->ongoingRequest)
 		{
-			try
+			json jsonData = json::parse(msg, msg + msgLen);
+			if (Request::IsRequest(jsonData))
 			{
-				json jsonMessage          = json::parse(msg, msg + msgLen);
-				this->ongoingNotification = new PayloadChannel::Notification(jsonMessage);
+				try
+				{
+					json jsonMessage     = json::parse(msg, msg + msgLen);
+					this->ongoingRequest = new PayloadChannel::Request(this, jsonMessage);
+				}
+				catch (const json::parse_error& error)
+				{
+					MS_ERROR_STD("JSON parsing error: %s", error.what());
+				}
+				catch (const MediaSoupError& error)
+				{
+					MS_ERROR("discarding wrong Payload Channel notification");
+				}
 			}
-			catch (const json::parse_error& error)
+
+			else if (Notification::IsNotification(jsonData))
 			{
-				MS_ERROR_STD("JSON parsing error: %s", error.what());
+				try
+				{
+					json jsonMessage          = json::parse(msg, msg + msgLen);
+					this->ongoingNotification = new PayloadChannel::Notification(jsonMessage);
+				}
+				catch (const json::parse_error& error)
+				{
+					MS_ERROR_STD("JSON parsing error: %s", error.what());
+				}
+				catch (const MediaSoupError& error)
+				{
+					MS_ERROR("discarding wrong Payload Channel notification");
+				}
 			}
-			catch (const MediaSoupError& error)
+
+			else
 			{
-				MS_ERROR("discarding wrong Payload Channel notification");
+				MS_ERROR("discarding wrong Payload Channel data");
 			}
 		}
-		else
+		else if (this->ongoingNotification)
 		{
 			this->ongoingNotification->SetPayload(reinterpret_cast<const uint8_t*>(msg), msgLen);
 
@@ -132,6 +178,28 @@ namespace PayloadChannel
 			// Delete the Notification.
 			delete this->ongoingNotification;
 			this->ongoingNotification = nullptr;
+		}
+		else if (this->ongoingRequest)
+		{
+			this->ongoingRequest->SetPayload(reinterpret_cast<const uint8_t*>(msg), msgLen);
+
+			// Notify the listener.
+			try
+			{
+				this->listener->OnPayloadChannelRequest(this, this->ongoingRequest);
+			}
+			catch (const MediaSoupTypeError& error)
+			{
+				this->ongoingRequest->TypeError(error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				this->ongoingRequest->Error(error.what());
+			}
+
+			// Delete the Request.
+			delete this->ongoingRequest;
+			this->ongoingRequest = nullptr;
 		}
 	}
 

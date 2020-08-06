@@ -428,10 +428,13 @@ namespace RTC
 		int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
-		if (ret == 0)
+		if (ret > 0)
 		{
+			// NOTE: 'usrsctp_sendv' returns the number of bytes sent.
+			// Don't decrese such value to sctpBufferedAmount since nothing is sent
+			// at this point.
 			this->sctpBufferedAmount += len;
-			this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
+			this->listener->OnSctpAssociationBufferedAmount(this, this->sctpBufferedAmount);
 		}
 
 		if (ret < 0)
@@ -443,11 +446,13 @@ namespace RTC
 			  ppid,
 			  len,
 			  std::strerror(errno));
+
+			MS_THROW_ERROR("usrsctp_sendv() failed: %s", std::strerror(errno));
 		}
 
-		if (ret == EWOULDBLOCK || ret == EAGAIN)
+		if (errno == EWOULDBLOCK || errno == EAGAIN)
 		{
-			Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
+			MS_THROW_ERROR("usrsctp_sendv() failed: 'full buffer'");
 		}
 	}
 

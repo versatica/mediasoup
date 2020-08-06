@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
@@ -51,8 +52,6 @@ export declare class DataConsumer extends EnhancedEventEmitter {
     private readonly _channel;
     private readonly _payloadChannel;
     private _closed;
-    private _bufferedAmountLowThreshold;
-    private _bufferedAmount;
     private readonly _appData?;
     private readonly _observer;
     /**
@@ -80,11 +79,6 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * Associated DataProducer id.
      */
     get dataProducerId(): string;
-    /**
-     * Buffered amount threshold.
-     */
-    get bufferedAmountLowThreshold(): number;
-    set bufferedAmountLowThreshold(value: number);
     /**
      * Whether the DataConsumer is closed.
      */
@@ -137,6 +131,14 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * Get DataConsumer stats.
      */
     getStats(): Promise<DataConsumerStat[]>;
+    /**
+     * Set buffered amount low threshold.
+     */
+    setBufferedAmountLowThreshold(threshold: number): Promise<void>;
+    /**
+     * Send data.
+     */
+    send(message: string | Buffer, ppid?: number): Promise<void>;
     /**
      * Get buffered amount size.
      */

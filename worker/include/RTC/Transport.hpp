@@ -6,6 +6,7 @@
 #include "DepLibUV.hpp"
 #include "Channel/Request.hpp"
 #include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/Request.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -120,6 +121,7 @@ namespace RTC
 		// Subclasses must implement these methods and call the parent's ones to
 		// handle common requests.
 		virtual void HandleRequest(Channel::Request* request);
+		virtual void HandleRequest(PayloadChannel::Request* request);
 		virtual void HandleNotification(PayloadChannel::Notification* notification);
 
 	protected:
@@ -215,7 +217,8 @@ namespace RTC
 		  uint32_t ppid,
 		  const uint8_t* msg,
 		  size_t len) override;
-		void OnSctpAssociationBufferedAmount(RTC::SctpAssociation* sctpAssociation, uint32_t len) override;
+		void OnSctpAssociationBufferedAmount(
+		  RTC::SctpAssociation* sctpAssociation, uint32_t bufferedAmount) override;
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:

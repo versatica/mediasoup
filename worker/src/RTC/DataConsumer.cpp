@@ -90,6 +90,12 @@ namespace RTC
 
 		// Add protocol.
 		jsonObject["protocol"] = this->protocol;
+
+		// Add bufferedAmount.
+		jsonObject["bufferedAmount"] = this->bufferedAmount;
+
+		// Add bufferedAmountLowThreshold.
+		jsonObject["bufferedAmountLowThreshold"] = this->bufferedAmountLowThreshold;
 	}
 
 	void DataConsumer::FillJsonStats(json& jsonArray) const
@@ -146,6 +152,20 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			{
+				auto jsonThresholdIt = request->data.find("threshold");
+
+				if (jsonThresholdIt == request->data.end() || !jsonThresholdIt->is_number_unsigned())
+					MS_THROW_TYPE_ERROR("wrong bufferedAmountThreshold (not an unsigned number)");
+
+				this->bufferedAmountLowThreshold = jsonThresholdIt->get<uint32_t>();
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
@@ -187,6 +207,30 @@ namespace RTC
 		this->sctpAssociationConnected = false;
 
 		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
+	}
+
+	void DataConsumer::SctpAssociationBufferedAmount(uint32_t bufferedAmount)
+	{
+		MS_TRACE();
+
+		auto previousBufferedAmount = this->bufferedAmount;
+
+		this->bufferedAmount = bufferedAmount;
+
+		// clang-format off
+		if (
+				previousBufferedAmount > this->bufferedAmountLowThreshold &&
+				this->bufferedAmount <= this->bufferedAmountLowThreshold
+		)
+		// clang-format on
+		{
+			// Notify the Node DataConsumer.
+			json data = json::object();
+
+			data["bufferedAmount"] = this->bufferedAmount;
+
+			Channel::Notifier::Emit(this->id, "bufferedamountlow", data);
+		}
 	}
 
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer

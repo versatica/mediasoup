@@ -144,7 +144,7 @@ namespace RTC
 					return;
 				}
 
-				// Pass the message to the DataProducer.
+				// Pass the message to the DataProducer. This may throw.
 				dataProducer->ReceiveMessage(ppid, msg, len);
 
 				// Increase receive transmission.

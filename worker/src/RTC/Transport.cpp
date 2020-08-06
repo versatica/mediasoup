@@ -1459,6 +1459,90 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			{
+				// This may throw.
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
+
+				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
+				{
+					MS_THROW_ERROR("invalid DataConsumer type");
+				}
+
+				dataConsumer->HandleRequest(request);
+
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+		}
+	}
+
+	void Transport::HandleRequest(PayloadChannel::Request* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+			case PayloadChannel::Request::MethodId::DATA_CONSUMER_SEND:
+			{
+				// This may throw.
+				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
+
+				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
+				{
+					MS_THROW_ERROR("invalid DataConsumer type");
+				}
+
+				if (!this->sctpAssociation)
+				{
+					MS_THROW_ERROR("no SCTP association present");
+				}
+
+				auto jsonPpidIt = request->data.find("ppid");
+
+				if (jsonPpidIt == request->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
+				{
+					MS_THROW_TYPE_ERROR("invalid ppid");
+				}
+
+				auto ppid       = jsonPpidIt->get<uint32_t>();
+				const auto* msg = request->payload;
+				auto len        = request->payloadLen;
+
+				if (len > this->maxMessageSize)
+				{
+					MS_WARN_TAG(
+					  message,
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
+					  len,
+					  this->maxMessageSize);
+
+					return;
+				}
+
+				try
+				{
+					// Pass the message to the DataConsumer. This may throw.
+					dataConsumer->SendMessage(ppid, msg, len);
+
+					request->Accept();
+
+					return;
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Error(error.what());
+
+					return;
+				}
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
@@ -2810,25 +2894,27 @@ namespace RTC
 		}
 
 		// Pass the SCTP message to the corresponding DataProducer.
-		dataProducer->ReceiveMessage(ppid, msg, len);
+		try
+		{
+			dataProducer->ReceiveMessage(ppid, msg, len);
+		}
+		catch (std::exception& error)
+		{
+			// Nothing to do.
+		}
 	}
 
 	inline void Transport::OnSctpAssociationBufferedAmount(
-	  RTC::SctpAssociation* /*sctpAssociation*/, uint32_t len)
+	  RTC::SctpAssociation* /*sctpAssociation*/, uint32_t bufferedAmount)
 	{
 		MS_TRACE();
 
-		// Notify the Node DataConsumers.
-		json data = json::object();
-
-		data["bufferedAmount"] = len;
-
 		for (const auto& kv : this->mapDataConsumers)
 		{
-			const auto* dataConsumer = kv.second;
+			auto* dataConsumer = kv.second;
 
 			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-				Channel::Notifier::Emit(dataConsumer->id, "bufferedamount", data);
+				dataConsumer->SctpAssociationBufferedAmount(bufferedAmount);
 		}
 	}
 

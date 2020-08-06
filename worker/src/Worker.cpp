@@ -8,9 +8,6 @@
 #include "Settings.hpp"
 #include "Channel/Notifier.hpp"
 
-// TODO: REMOVE
-#include "PayloadChannel/Notifier.hpp"
-
 /* Instance methods. */
 
 Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel)
@@ -298,6 +295,22 @@ inline void Worker::OnPayloadChannelNotification(
 	RTC::Router* router = GetRouterFromInternal(notification->internal);
 
 	router->HandleNotification(notification);
+}
+
+inline void Worker::OnPayloadChannelRequest(
+  PayloadChannel::UnixStreamSocket* /*payloadChannel*/, PayloadChannel::Request* request)
+{
+	MS_TRACE();
+
+	MS_DEBUG_DEV(
+	  "PayloadChannel request received [method:%s, id:%" PRIu32 "]",
+	  request->method.c_str(),
+	  request->id);
+
+	// This may throw.
+	RTC::Router* router = GetRouterFromInternal(request->internal);
+
+	router->HandleRequest(request);
 }
 
 inline void Worker::OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* /*payloadChannel*/)
