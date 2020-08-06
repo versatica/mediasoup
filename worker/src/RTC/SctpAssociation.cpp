@@ -1020,7 +1020,13 @@ namespace RTC
 
 	void SctpAssociation::OnUsrSctpSentData(uint32_t freeBuffer)
 	{
+		auto previousSctpBufferedAmount = this->sctpBufferedAmount;
+
 		this->sctpBufferedAmount = this->sctpSendBufferSize - freeBuffer;
-		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
+
+		if (this->sctpBufferedAmount != previousSctpBufferedAmount)
+		{
+			this->listener->OnSctpAssociationBufferedAmount(this, this->sctpBufferedAmount);
+		}
 	}
 } // namespace RTC
