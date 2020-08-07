@@ -47,7 +47,8 @@ namespace RTC
 	                  public Timer::Listener
 	{
 	protected:
-		using onSendCallback = const std::function<void(bool sent)>;
+		using onSendCallback   = const std::function<void(bool sent)>;
+		using onQueuedCallback = const std::function<void(bool queued)>;
 
 	public:
 		class Listener
@@ -159,10 +160,14 @@ namespace RTC
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendMessage(
-		  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
-		virtual void SendSctpData(const uint8_t* data, size_t len)                        = 0;
-		virtual void RecvStreamClosed(uint32_t ssrc)                                      = 0;
-		virtual void SendStreamClosed(uint32_t ssrc)                                      = 0;
+		  RTC::DataConsumer* dataConsumer,
+		  uint32_t ppid,
+		  const uint8_t* msg,
+		  size_t len,
+		  onQueuedCallback* = nullptr)                             = 0;
+		virtual void SendSctpData(const uint8_t* data, size_t len) = 0;
+		virtual void RecvStreamClosed(uint32_t ssrc)               = 0;
+		virtual void SendStreamClosed(uint32_t ssrc)               = 0;
 		void DistributeAvailableOutgoingBitrate();
 		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
 		void EmitTraceEventProbationType(RTC::RtpPacket* packet) const;
@@ -200,7 +205,11 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
 		void OnDataConsumerSendMessage(
-		  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) override;
+		  RTC::DataConsumer* dataConsumer,
+		  uint32_t ppid,
+		  const uint8_t* msg,
+		  size_t len,
+		  onQueuedCallback* = nullptr) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */

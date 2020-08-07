@@ -379,7 +379,7 @@ namespace RTC
 	}
 
 	void SctpAssociation::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -447,12 +447,23 @@ namespace RTC
 			  len,
 			  std::strerror(errno));
 
-			MS_THROW_ERROR("usrsctp_sendv() failed: %s", std::strerror(errno));
+			if (cb)
+			{
+				(*cb)(false);
+
+				delete cb;
+			}
+		}
+		else if (cb)
+		{
+			(*cb)(true);
+
+			delete cb;
 		}
 
 		if (errno == EWOULDBLOCK || errno == EAGAIN)
 		{
-			MS_THROW_ERROR("usrsctp_sendv() failed: 'full buffer'");
+			Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 		}
 	}
 

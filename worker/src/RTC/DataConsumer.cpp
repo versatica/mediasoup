@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 
 namespace RTC
@@ -173,6 +174,55 @@ namespace RTC
 		}
 	}
 
+	void DataConsumer::HandleRequest(PayloadChannel::Request* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+			case PayloadChannel::Request::MethodId::DATA_CONSUMER_SEND:
+			{
+				auto jsonPpidIt = request->data.find("ppid");
+
+				if (jsonPpidIt == request->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
+				{
+					MS_THROW_TYPE_ERROR("invalid ppid");
+				}
+
+				auto ppid       = jsonPpidIt->get<uint32_t>();
+				const auto* msg = request->payload;
+				auto len        = request->payloadLen;
+
+				if (len > this->maxMessageSize)
+				{
+					MS_WARN_TAG(
+					  message,
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
+					  len,
+					  this->maxMessageSize);
+
+					return;
+				}
+
+				const auto* cb = new onQueuedCallback([&request](bool queued) {
+					if (queued)
+						request->Accept();
+					else
+						request->Error("usrsctp_sendv() failed");
+				});
+
+				this->SendMessage(ppid, msg, len, cb);
+
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+		}
+	}
+
 	void DataConsumer::TransportConnected()
 	{
 		MS_TRACE();
@@ -248,7 +298,7 @@ namespace RTC
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 
-	void DataConsumer::SendMessage(uint32_t ppid, const uint8_t* msg, size_t len)
+	void DataConsumer::SendMessage(uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -269,6 +319,6 @@ namespace RTC
 		this->messagesSent++;
 		this->bytesSent += len;
 
-		this->listener->OnDataConsumerSendMessage(this, ppid, msg, len);
+		this->listener->OnDataConsumerSendMessage(this, ppid, msg, len, cb);
 	}
 } // namespace RTC

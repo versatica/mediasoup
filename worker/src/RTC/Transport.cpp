@@ -1502,43 +1502,7 @@ namespace RTC
 					MS_THROW_ERROR("no SCTP association present");
 				}
 
-				auto jsonPpidIt = request->data.find("ppid");
-
-				if (jsonPpidIt == request->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
-				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
-				}
-
-				auto ppid       = jsonPpidIt->get<uint32_t>();
-				const auto* msg = request->payload;
-				auto len        = request->payloadLen;
-
-				if (len > this->maxMessageSize)
-				{
-					MS_WARN_TAG(
-					  message,
-					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-					  len,
-					  this->maxMessageSize);
-
-					return;
-				}
-
-				try
-				{
-					// Pass the message to the DataConsumer. This may throw.
-					dataConsumer->SendMessage(ppid, msg, len);
-
-					request->Accept();
-
-					return;
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Error(error.what());
-
-					return;
-				}
+				dataConsumer->HandleRequest(request);
 
 				break;
 			}
@@ -2750,11 +2714,11 @@ namespace RTC
 	}
 
 	inline void Transport::OnDataConsumerSendMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
-		SendMessage(dataConsumer, ppid, msg, len);
+		SendMessage(dataConsumer, ppid, msg, len, cb);
 	}
 
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
