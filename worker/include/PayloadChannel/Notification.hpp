@@ -20,6 +20,9 @@ namespace PayloadChannel
 			DATA_PRODUCER_SEND
 		};
 
+	public:
+		static bool IsNotification(json& jsonNotification);
+
 	private:
 		static std::unordered_map<std::string, EventId> string2EventId;
 

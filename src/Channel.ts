@@ -291,7 +291,7 @@ export class Channel extends EnhancedEventEmitter
 
 	private _processMessage(msg: any): void
 	{
-		// If a response retrieve its associated request.
+		// If a response, retrieve its associated request.
 		if (msg.id)
 		{
 			const sent = this._sents.get(msg.id);

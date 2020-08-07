@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Channel/Request.hpp"
+#include "PayloadChannel/Request.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include <json.hpp>
 #include <string>
@@ -11,13 +12,20 @@ namespace RTC
 {
 	class DataConsumer
 	{
+	protected:
+		using onQueuedCallback = const std::function<void(bool queued)>;
+
 	public:
 		class Listener
 		{
 		public:
 			virtual void OnDataConsumerSendMessage(
-			  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
-			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)    = 0;
+			  RTC::DataConsumer* dataConsumer,
+			  uint32_t ppid,
+			  const uint8_t* msg,
+			  size_t len,
+			  onQueuedCallback* cb)                                                        = 0;
+			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
 		};
 
 	public:
@@ -40,6 +48,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
+		void HandleRequest(PayloadChannel::Request* request);
 		Type GetType() const
 		{
 			return this->type;
@@ -62,8 +71,9 @@ namespace RTC
 		void TransportDisconnected();
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
+		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void DataProducerClosed();
-		void SendMessage(uint32_t ppid, const uint8_t* msg, size_t len);
+		void SendMessage(uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* = nullptr);
 
 	public:
 		// Passed by argument.
@@ -85,6 +95,8 @@ namespace RTC
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0u };
 		size_t bytesSent{ 0u };
+		uint32_t bufferedAmount{ 0u };
+		uint32_t bufferedAmountLowThreshold{ 0u };
 	};
 } // namespace RTC
 

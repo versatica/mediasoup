@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Channel/Request.hpp"
 #include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/Request.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -30,6 +31,7 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void HandleRequest(Channel::Request* request);
+		void HandleRequest(PayloadChannel::Request* request);
 		void HandleNotification(PayloadChannel::Notification* notification);
 
 	private:

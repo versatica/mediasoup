@@ -406,6 +406,16 @@ namespace RTC
 		}
 	}
 
+	void Router::HandleRequest(PayloadChannel::Request* request)
+	{
+		MS_TRACE();
+
+		// This may throw.
+		RTC::Transport* transport = GetTransportFromInternal(request->internal);
+
+		transport->HandleRequest(request);
+	}
+
 	void Router::HandleNotification(PayloadChannel::Notification* notification)
 	{
 		MS_TRACE();

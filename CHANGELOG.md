@@ -5,6 +5,7 @@
 
 * `SctpAssociation.cpp`: Fix `OnSctpAssociationBufferedAmount()` call.
 * Update deps.
+* New API to send data from Node throught SCTP DataConsumer.
 
 
 ### 3.6.15

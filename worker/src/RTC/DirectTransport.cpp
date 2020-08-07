@@ -144,7 +144,6 @@ namespace RTC
 					return;
 				}
 
-				// Pass the message to the DataProducer.
 				dataProducer->ReceiveMessage(ppid, msg, len);
 
 				// Increase receive transmission.
@@ -224,7 +223,7 @@ namespace RTC
 	}
 
 	void DirectTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 

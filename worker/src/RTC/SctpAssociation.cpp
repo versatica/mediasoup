@@ -379,7 +379,7 @@ namespace RTC
 	}
 
 	void SctpAssociation::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -428,10 +428,13 @@ namespace RTC
 		int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
-		if (ret == 0)
+		if (ret > 0)
 		{
+			// NOTE: 'usrsctp_sendv' returns the number of bytes sent.
+			// Don't decrese such value to sctpBufferedAmount since nothing is sent
+			// at this point.
 			this->sctpBufferedAmount += len;
-			this->listener->OnSctpAssociationBufferedAmount(this, this->sctpSendBufferSize);
+			this->listener->OnSctpAssociationBufferedAmount(this, this->sctpBufferedAmount);
 		}
 
 		if (ret < 0)
@@ -443,9 +446,22 @@ namespace RTC
 			  ppid,
 			  len,
 			  std::strerror(errno));
+
+			if (cb)
+			{
+				(*cb)(false);
+
+				delete cb;
+			}
+		}
+		else if (cb)
+		{
+			(*cb)(true);
+
+			delete cb;
 		}
 
-		if (ret == EWOULDBLOCK || ret == EAGAIN)
+		if (errno == EWOULDBLOCK || errno == EAGAIN)
 		{
 			Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 		}

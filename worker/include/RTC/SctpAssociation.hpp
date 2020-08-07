@@ -31,6 +31,9 @@ namespace RTC
 			OUTGOING
 		};
 
+	protected:
+		using onQueuedCallback = const std::function<void(bool queued)>;
+
 	public:
 		class Listener
 		{
@@ -86,7 +89,12 @@ namespace RTC
 			return this->sctpBufferedAmount;
 		}
 		void ProcessSctpData(const uint8_t* data, size_t len);
-		void SendSctpMessage(RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len);
+		void SendSctpMessage(
+		  RTC::DataConsumer* dataConsumer,
+		  uint32_t ppid,
+		  const uint8_t* msg,
+		  size_t len,
+		  onQueuedCallback* cb = nullptr);
 		void HandleDataConsumer(RTC::DataConsumer* dataConsumer);
 		void DataProducerClosed(RTC::DataProducer* dataProducer);
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
