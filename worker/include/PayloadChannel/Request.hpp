@@ -22,11 +22,11 @@ namespace PayloadChannel
 			DATA_CONSUMER_SEND
 		};
 
-	private:
-		static std::unordered_map<std::string, MethodId> string2MethodId;
-
 	public:
 		static bool IsRequest(json& jsonRequest);
+
+	private:
+		static std::unordered_map<std::string, MethodId> string2MethodId;
 
 	public:
 		Request(PayloadChannel::UnixStreamSocket* channel, json& jsonRequest);
