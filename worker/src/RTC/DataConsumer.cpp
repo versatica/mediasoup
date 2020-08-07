@@ -211,7 +211,7 @@ namespace RTC
 						request->Error("usrsctp_sendv() failed");
 				});
 
-				this->SendMessage(ppid, msg, len, cb);
+				SendMessage(ppid, msg, len, cb);
 
 				break;
 			}
