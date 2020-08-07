@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.6.16 (WIP)
+### 3.6.16
 
 * `SctpAssociation.cpp`: Fix `OnSctpAssociationBufferedAmount()` call.
 * Update deps.
