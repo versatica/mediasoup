@@ -208,7 +208,7 @@ namespace RTC
 					if (queued)
 						request->Accept();
 					else
-						request->Error("usrsctp_sendv() failed");
+						request->Error("SCTP data not queued");
 				});
 
 				SendMessage(ppid, msg, len, cb);
