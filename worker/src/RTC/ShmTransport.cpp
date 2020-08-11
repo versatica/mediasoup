@@ -37,7 +37,7 @@ namespace RTC
 
 		auto jsonShmNameIt = jsonShmIt->find("name");
 		if (jsonShmNameIt == jsonShmIt->end())
-			MS_THROW_TYPE_ERROR("missing shm.name");
+			MS_THROW_TYPE_ERROR("missing shm.name in %s", data.dump().c_str());
 		else if (!jsonShmNameIt->is_string())
 			MS_THROW_TYPE_ERROR("wrong shm.name (not a string)");
 

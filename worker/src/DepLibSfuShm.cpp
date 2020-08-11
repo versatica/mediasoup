@@ -15,8 +15,7 @@ namespace DepLibSfuShm {
     {
       { 0, "success (SFUSHM_AV_OK)"   },
       { -1, "error (SFUSHM_AV_ERR)"   },
-      { -2, "again (SFUSHM_AV_AGAIN)" },
-      { 100, "too old pkt ts (SHM_Q_PKT_TOO_OLD)"}
+      { -2, "again (SFUSHM_AV_AGAIN)" }
     };
 
 
@@ -77,10 +76,9 @@ namespace DepLibSfuShm {
         MS_DEBUG_TAG(rtp, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
         wrt_status = SHM_WRT_UNDEFINED;
       }
-      return this->Status();
     }
 
-    return this->Status(); // if shm was not initialized as a result, return false
+    return this->Status();
   }
 
 
@@ -127,6 +125,9 @@ namespace DepLibSfuShm {
   }
 
 
+  // seqId: strictly +1 unless NALUs came from STAP-A packet, then they are the same
+  // timestamps: should increment for each new picture (shm chunk), otherwise they match
+  // Can see two fragments coming in with the same seqId and timestamps: SPS and PPS from the same STAP-A packet are typical
   ShmQueueStatus SfuShmCtx::Enqueue(sfushm_av_frame_frag_t* data, bool isChunkFragment)
   {
     uint64_t ts       = data->rtp_time;
@@ -140,8 +141,7 @@ namespace DepLibSfuShm {
       && (LastSeq(ShmChunkType::VIDEO) == UINT64_UNSET 
         || data->first_rtp_seq - 1 == LastSeq(ShmChunkType::VIDEO)))
     {
-      MS_DEBUG_TAG(rtp, "SHM_Q_PKT_CANWRITETHRU seqid=%" PRIu64 "(%" PRIu64 ") ts=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu",
-          data->first_rtp_seq, LastSeq(ShmChunkType::VIDEO), data->rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
+    //MS_DEBUG_TAG(rtp, "WRITETHRU [seq=%" PRIu64 " ts=%" PRIu64 "] len=%zu chunkstart=%s chunkend=%s qsize=%zu", data->first_rtp_seq, data->rtp_time, data->len, isChunkStart? "1":"0", isChunkEnd? "1":"0", videoPktBuffer.size());
       return ShmQueueStatus::SHM_Q_PKT_CANWRITETHRU;
     }
 
@@ -150,8 +150,7 @@ namespace DepLibSfuShm {
         && LastTs(ShmChunkType::VIDEO) > ts
         && LastTs(ShmChunkType::VIDEO) - ts > MaxVideoPktDelay)
     {
-      MS_DEBUG_TAG(rtp, "SHM_Q_PKT_TOO_OLD seqid=%" PRIu64 " ts=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu",
-          data->first_rtp_seq, data->rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
+      MS_DEBUG_TAG(rtp, "REJECT OLD seqid=%" PRIu64 " delta=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", data->first_rtp_seq, LastTs(ShmChunkType::VIDEO) - data->rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
       return ShmQueueStatus::SHM_Q_PKT_TOO_OLD;
     }
     
@@ -163,10 +162,6 @@ namespace DepLibSfuShm {
         ++it;
     }
     it = videoPktBuffer.emplace(it, data, isChunkFragment, isChunkStart, isChunkEnd);
-    
-    MS_DEBUG_TAG(rtp, "Successully enqueued data seqId=%" PRIu64 "%s%s%s len=%zu ts=%" PRIu64 " lastSeq=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu",
-        seq, isChunkFragment ? " isFragment" : "", isChunkStart ? " chunkStart" : "", isChunkEnd ? " chunkEnd" : "", it->chunk.len,
-        ts, LastSeq(ShmChunkType::VIDEO), LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
 
     return SHM_Q_PKT_QUEUED_OK;
   }
@@ -174,13 +169,15 @@ namespace DepLibSfuShm {
   
   ShmQueueStatus SfuShmCtx::Dequeue()
   {
-    ShmQueueStatus ret = SHM_Q_PKT_DEQUEUED_NOTHING;
+    ShmQueueStatus ret;
     int err;
     
     if (this->videoPktBuffer.empty())
       return SHM_Q_PKT_DEQUEUED_NOTHING;
 
-    // TODO: this algorithm tracks previous seq id in a queue, confirm that it is always monotonous
+    // seqId: strictly +1 unless NALUs came from STAP-A packet, then they are the same
+    // timestamps: should increment for each new picture (shm chunk), otherwise they match
+    // Can see two fragments coming in with the same seqId and timestamps: SPS and PPS from the same STAP-A packet are typical
     std::_List_iterator<DepLibSfuShm::ShmQueueItem> chunkStartIt;
 
     auto it = this->videoPktBuffer.begin();
@@ -190,12 +187,11 @@ namespace DepLibSfuShm {
     while (it != this->videoPktBuffer.end())
     {
       // First, drop chunks with expired timestamps: last timestamp of a written or skipped packet
-      if (LastSeq(ShmChunkType::VIDEO) != UINT64_UNSET
+      if (LastTs(ShmChunkType::VIDEO) != UINT64_UNSET
         && LastTs(ShmChunkType::VIDEO) > it->chunk.rtp_time
-        && LastTs(ShmChunkType::VIDEO) - it->chunk.rtp_time > MaxVideoPktDelay) // TODO: review ts check and verify that LastTs() is updated properly in each scenario
+        && LastTs(ShmChunkType::VIDEO) - it->chunk.rtp_time > MaxVideoPktDelay)
       {
-        MS_DEBUG_TAG(rtp, "dropping pkt seqId=%" PRIu64 " ts=%" PRIu64 " LastTs=%" PRIu64 " qsize=%zu",
-            it->chunk.first_rtp_seq, it->chunk.rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
+        MS_DEBUG_TAG(rtp, "DROP OLD [seq=%" PRIu64 " delta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastTs(ShmChunkType::VIDEO) - it->chunk.rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
         prev_seq = it->chunk.first_rtp_seq;
         it = this->videoPktBuffer.erase(it);
         continue;
@@ -204,7 +200,7 @@ namespace DepLibSfuShm {
       // Hole in seqIds, exit and wait for missing pkt to be retransmitted
       if (it->chunk.first_rtp_seq > prev_seq + 1)
       {
-        MS_DEBUG_TAG(rtp, "HOLE in seqId: cur=%" PRIu64 " prev=%" PRIu64, it->chunk.first_rtp_seq, prev_seq);
+        //MS_DEBUG_TAG(rtp, "HOLE [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64, it->chunk.first_rtp_seq, it->chunk.rtp_time, prev_seq);
         return SHM_Q_PKT_WAIT_FOR_NACK;
       }
 
@@ -223,8 +219,7 @@ namespace DepLibSfuShm {
           if (!chunkStartFound)
           {
             // chunk incomplete, wait for retransmission
-            MS_DEBUG_TAG(rtp, "found fragmented chunk but no start yet: [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu",
-              it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size());
+          //  MS_DEBUG_TAG(rtp, "NO START fragment, wait: [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size());
             return SHM_Q_PKT_CHUNKSTART_MISSING;
           }
 
@@ -241,22 +236,20 @@ namespace DepLibSfuShm {
             nextit++; // position past last fragment in a chunk
             while (chunkStartIt != nextit)
             {
-              MS_DEBUG_TAG(rtp, "writing fragment seq=%" PRIu64 " [%X%X%X%X]",
+              /*MS_DEBUG_TAG(rtp, "writing fragment seq=%" PRIu64 " [%X%X%X%X]",
                 chunkStartIt->chunk.first_rtp_seq,
-                chunkStartIt->chunk.data[0],chunkStartIt->chunk.data[1],chunkStartIt->chunk.data[2],chunkStartIt->chunk.data[3]);
+                chunkStartIt->chunk.data[0],chunkStartIt->chunk.data[1],chunkStartIt->chunk.data[2],chunkStartIt->chunk.data[3]); */
               err = this->WriteChunk(&chunkStartIt->chunk, ShmChunkType::VIDEO);
               ret = IsError(err) ? SHM_Q_PKT_SHMWRITE_ERR : SHM_Q_PKT_DEQUEUED_OK;
               chunkStartIt = this->videoPktBuffer.erase(chunkStartIt);
             }
-            MS_DEBUG_TAG(rtp, "wrote fragmented chunk! start: [seq=%" PRIu64 " ts=%" PRIu64 "] end: [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu",
-              startSeqId, startTs, endSeqId, endTs, videoPktBuffer.size());
+            //MS_DEBUG_TAG(rtp, "WROTE FRAGMENTS start [seq=%" PRIu64 " ts=%" PRIu64 "] end [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", startSeqId, startTs, endSeqId, endTs, videoPktBuffer.size());
             chunkStartFound = false;
+            prev_seq = endSeqId;
             it = nextit; // restore iterator
           }
           else
           {
-            MS_DEBUG_TAG(rtp, "skip over mid fragment [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu",
-              it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size());
             prev_seq = it->chunk.first_rtp_seq;
             ++it;
           }
@@ -265,9 +258,7 @@ namespace DepLibSfuShm {
       else // non-fragmented chunk
       {
         err = this->WriteChunk(&it->chunk, ShmChunkType::VIDEO);
-        MS_DEBUG_TAG(rtp, "wrote non-fragmented chunk! seqId=%" PRIu64 " ts=%" PRIu64 " qsize=%zu [%X%X%X%X]",
-          it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size(),
-          it->chunk.data[0],it->chunk.data[1],it->chunk.data[2],it->chunk.data[3]);
+//        MS_DEBUG_TAG(rtp, "WROTE WHOLE [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu [%X%X%X%X]", it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size(), it->chunk.data[0],it->chunk.data[1],it->chunk.data[2],it->chunk.data[3]);
         ret = IsError(err) ? SHM_Q_PKT_SHMWRITE_ERR : SHM_Q_PKT_DEQUEUED_OK;
         prev_seq = it->chunk.first_rtp_seq;
         it = this->videoPktBuffer.erase(it);
@@ -280,7 +271,7 @@ namespace DepLibSfuShm {
 
   int SfuShmCtx::WriteRtpDataToShm(ShmChunkType type, sfushm_av_frame_frag_t* frag, bool isChunkFragment)
   {
-    int err;
+    int err = 0;
     ShmQueueStatus st;
 
     if (type == ShmChunkType::VIDEO)
@@ -288,9 +279,6 @@ namespace DepLibSfuShm {
       st = this->Enqueue(frag, isChunkFragment);      
       if (SHM_Q_PKT_CANWRITETHRU == st) // Write it into shm, no need to queue anything
       {
-        MS_DEBUG_TAG(rtp, "wrote whole chunk seqid=%" PRIu64 " ts=%" PRIu64 " [%X%X%X%X]",
-          frag->first_rtp_seq, frag->rtp_time, frag->data[0],frag->data[1],frag->data[2],frag->data[3]);
-
         return this->WriteChunk(frag, ShmChunkType::VIDEO);
       }
       
@@ -300,9 +288,8 @@ namespace DepLibSfuShm {
       }
 
       st = this->Dequeue();
-      if (SHM_Q_PKT_DEQUEUED_OK != st)
+      if (SHM_Q_PKT_DEQUEUED_OK != st && SHM_Q_PKT_DEQUEUED_NOTHING != st)
       {
-        MS_DEBUG_TAG(rtp,"Dequeue() returned state %d", st);
         return (SHM_Q_PKT_SHMWRITE_ERR == st) ? -1 : 0;
       }
     }
@@ -317,13 +304,12 @@ namespace DepLibSfuShm {
 
   int SfuShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, ShmChunkType kind)
   {
-    int err;
-
     if (Status() != SHM_WRT_READY)
     {
       return 0;
     }
 
+    int err;
     switch (kind)
     {
       case ShmChunkType::VIDEO:

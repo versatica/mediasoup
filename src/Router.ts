@@ -629,7 +629,7 @@ export class Router extends EnhancedEventEmitter
 		} : ShmTransportOptions
 	): Promise<ShmTransport>
 	{
-		logger.debug('createShmTransport()');
+		logger.debug('createShmTransport() [shm:%o]', shm);
 
 		if (!listenIp)
 			throw new TypeError('missing listenIp');

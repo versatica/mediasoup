@@ -552,7 +552,14 @@ namespace RTC
 			auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 			if (rtxCodec && encoding.hasRtx)
+			{
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
+				MS_DEBUG_2TAGS("RTX set up");
+			}
+			else
+			{
+				MS_DEBUG_2TAGS("RTX is NOT set up");
+			}
 
 			this->rtpStreams.push_back(rtpStream);
 			this->mapMappedSsrcRtpStream[encoding.ssrc] = rtpStream;

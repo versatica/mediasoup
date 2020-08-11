@@ -47,21 +47,18 @@ namespace DepLibSfuShm
 		SHM_Q_PKT_SHMWRITE_ERR = 106        // shm writer returned some err, check the logs for details
 	};
 
+  // Video NALUs queue item
 	struct ShmQueueItem
 	{
-		// Cloned data
-    sfushm_av_frame_frag_t chunk;
-		// Memory to hold the cloned pkt data, won't be larger than MTU (should match RTC::MtuSize)
-		uint8_t store[MTU_SIZE];
-    // Whether this is chunk's fragment
-    bool isChunkFragment{ false };
-		// Whether this is chunk's starting fragment (or whole chunk)
-		bool isChunkStart{ false };
-		// Whether this is chunk's ending fragment (or whole chunk)
-		bool isChunkEnd{ false };
-    //TODO: see that it has dtor
+    sfushm_av_frame_frag_t chunk;  // Cloned data representing either a whole NALU or a fragment
+		uint8_t store[MTU_SIZE];       // Memory to hold the cloned pkt data, won't be larger than MTU (should match RTC::MtuSize)
+    bool isChunkFragment{ false }; // If this is a picture's fragment (can be whole NALU or NALU's fragment)
+		bool isChunkStart{ false };    // The first (or only) picture's fragment
+		bool isChunkEnd{ false };      // Picture's last (or only) fragment
+
     ShmQueueItem(sfushm_av_frame_frag_t* data, bool isfragment, bool isfragmentstart, bool isfragmentend);
 	};
+
 
   // Contains shm configuration, writer context (if initialized), writer status 
   class SfuShmCtx
@@ -105,20 +102,19 @@ namespace DepLibSfuShm
     std::string        log_name;
 
     sfushm_av_wr_ctx_t *wrt_ctx;
-    uint64_t           last_seq_a;   // last RTP sequence processed by this input
-	  uint64_t           last_ts_a;    // the timestamp of the last processed RTP message  
-    uint64_t           last_seq_v;   // last RTP sequence processed by this input
-	  uint64_t           last_ts_v;    // the timestamp of the last processed RTP message
+    uint64_t           last_seq_a;   // last RTP pkt sequence processed by this input
+	  uint64_t           last_ts_a;    // the timestamp of the last processed RTP pkt  
+    uint64_t           last_seq_v;   // last RTP pkt sequence processed by this input
+	  uint64_t           last_ts_v;    // the timestamp of the last processed RTP messpktage
     uint32_t           ssrc_v;       // ssrc of audio chn
     uint32_t           ssrc_a;       // ssrc of video chn
-  
-    int                last_err {0}; // 
   
   private:
     sfushm_av_writer_init_t  wrt_init;
     ShmWriterStatus          wrt_status;
   	static std::unordered_map<int, const char*> errToString;
 		std::list<ShmQueueItem> videoPktBuffer; // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
+    // TODO: variable age of queued items... say, keep 3 pictures max before dropping and moving along
   };
 
   // Inline methods
