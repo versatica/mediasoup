@@ -72,6 +72,10 @@ namespace RTC
 		{
 			return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 		}
+		uint32_t GetJitter()
+		{
+			return this->jitter;
+		}
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);

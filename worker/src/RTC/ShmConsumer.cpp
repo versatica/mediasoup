@@ -8,6 +8,7 @@
 #include "Channel/Notifier.hpp"
 #include "RTC/Codecs/Tools.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RtpStreamRecv.hpp"
 
 
 namespace RTC
@@ -125,12 +126,14 @@ namespace RTC
 		uint64_t totalRate = loss->GetTotalRate(nowMs);
 		uint64_t lossRate = loss->GetLossRate(nowMs);
 
-		RTC::RtpDataCounter* ptr     = const_cast<RTC::RtpDataCounter*>(&this->shmWriterCounter);
-		jsonObject["type"]           = "shm-writer-stats";
-		jsonObject["packetCount"]    = ptr->GetPacketCount();
-		jsonObject["byteCount"]      = ptr->GetBytes();
-		jsonObject["bitrate"]        = ptr->GetBitrate(nowMs);
-		jsonObject["packetLossRate"] = totalRate != 0 ? (float)lossRate / (float)totalRate : 0.0f;
+		RTC::RtpDataCounter* ptr       = const_cast<RTC::RtpDataCounter*>(&this->shmWriterCounter);
+		RTC::RtpStreamRecv* recvStream = dynamic_cast<RTC::RtpStreamRecv*>(this->producerRtpStream);
+		jsonObject["type"]             = "shm-writer-stats";
+		jsonObject["packetCount"]      = ptr->GetPacketCount();
+		jsonObject["byteCount"]        = ptr->GetBytes();
+		jsonObject["bitrate"]          = ptr->GetBitrate(nowMs);
+		jsonObject["packetLossRate"]   = totalRate != 0 ? (float)lossRate / (float)totalRate : 0.0f;
+		jsonObject["recvJitter"]       = recvStream != nullptr ? recvStream->GetJitter() : 0;
 	}
 
 	void ShmConsumer::FillJsonScore(json& jsonObject) const
