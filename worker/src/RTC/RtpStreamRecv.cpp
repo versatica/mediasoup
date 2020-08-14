@@ -787,13 +787,6 @@ namespace RTC
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_DEBUG_TAG(
-		  rtx,
-		  "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
-		  this->params.ssrc,
-		  seqNumbers[0],
-		  seqNumbers.size());
-
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, GetSsrc());
 
 		auto it        = seqNumbers.begin();
@@ -839,7 +832,6 @@ namespace RTC
 
 		packet.Serialize(RTC::RTCP::Buffer);
 
-		MS_DEBUG_TAG(rtp, "L@@KL@@K Serialize NACKed RTCP packet and call OnRtpStreamSendRtcpPacket");
 		// Notify the listener.
 		static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
 	}

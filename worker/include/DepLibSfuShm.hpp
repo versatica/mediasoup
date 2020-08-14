@@ -10,6 +10,7 @@ extern "C"
 #include <string>
 #include <list>
 #include <unordered_map>
+#include "RTC/ShmConsumer.hpp"
 
 #define UINT64_UNSET ((uint64_t)-1)
 #define MAX_SEQ_DELTA 100
@@ -18,7 +19,8 @@ extern "C"
 
 namespace DepLibSfuShm
 {
-  enum ShmWriterStatus {
+  enum ShmWriterStatus
+  {
     SHM_WRT_UNDEFINED = 1,            // default
     SHM_WRT_CLOSED,                  // writer closed. TODO: implement whatever sets this state... producer paused or closed? transport closed?
     SHM_WRT_VIDEO_CHNL_CONF_MISSING, // when info on audio content has arrived but no video yet
@@ -27,7 +29,8 @@ namespace DepLibSfuShm
     // TODO: do I need an explicit value for a writer in error state?
   };
 
-  enum ShmChunkType {
+  enum ShmChunkType
+  {
     VIDEO,
     AUDIO,
     RTCP,
@@ -59,10 +62,16 @@ namespace DepLibSfuShm
     ShmQueueItem(sfushm_av_frame_frag_t* data, bool isfragment, bool isfragmentstart, bool isfragmentend);
 	};
 
-
   // Contains shm configuration, writer context (if initialized), writer status 
   class SfuShmCtx
   {
+  public:
+  	class Listener
+		{
+		public:
+			virtual void OnShmWriterReady() = 0;
+		};
+
   public:
     SfuShmCtx(): wrt_ctx(nullptr), last_seq_a(UINT64_UNSET), last_ts_a(UINT64_UNSET), last_seq_v(UINT64_UNSET), last_ts_v(UINT64_UNSET), wrt_status(SHM_WRT_UNDEFINED) {}
     ~SfuShmCtx();
@@ -71,10 +80,12 @@ namespace DepLibSfuShm
     void CloseShmWriterCtx();
 
     ShmWriterStatus Status() const { return this->wrt_status; }
+    bool CanWrite() const { return (ShmWriterStatus::SHM_WRT_READY == this->wrt_status) && this->srReceived; }
+    void SetListener(DepLibSfuShm::SfuShmCtx::Listener* l) { this->listener = l; }
     uint32_t AudioSsrc() const { return (this->wrt_init.conf.channels[0].audio == 1) ? this->wrt_init.conf.channels[0].ssrc : 0; }
     uint32_t VideoSsrc() const { return (this->wrt_init.conf.channels[1].video == 1) ? this->wrt_init.conf.channels[1].ssrc : 0; }
         
-    ShmWriterStatus SetSsrcInShmConf(uint32_t ssrc, ShmChunkType kind);
+    void SetSsrcInShmConf(uint32_t ssrc, ShmChunkType kind);
 
     uint64_t AdjustPktTs(uint64_t ts, ShmChunkType kind);
     uint64_t AdjustPktSeq(uint64_t seq, ShmChunkType kind);
@@ -91,7 +102,7 @@ namespace DepLibSfuShm
 
 	  bool IsError(int err_code);
 	  const char* GetErrorString(int err_code);
-  
+
   private:
     ShmQueueStatus Enqueue( sfushm_av_frame_frag_t* data, bool isChunkFragment);
     ShmQueueStatus Dequeue();
@@ -110,11 +121,15 @@ namespace DepLibSfuShm
     uint32_t           ssrc_a;       // ssrc of video chn
   
   private:
-    sfushm_av_writer_init_t  wrt_init;
-    ShmWriterStatus          wrt_status;
-  	static std::unordered_map<int, const char*> errToString;
+    sfushm_av_writer_init_t wrt_init;
+    ShmWriterStatus         wrt_status;
+    bool                    srReceived{ false }; // do not write into shm until SR received
+
 		std::list<ShmQueueItem> videoPktBuffer; // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
-    // TODO: variable age of queued items... say, keep 3 pictures max before dropping and moving along
+
+  	static std::unordered_map<int, const char*> errToString;
+
+    Listener *listener{ nullptr }; // needs to be initialized with smth from ShmConsumer so that we can notify it when shm writer is ready
   };
 
   // Inline methods

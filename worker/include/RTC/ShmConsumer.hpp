@@ -41,7 +41,7 @@ namespace RTC
 		uint64_t lastSeqId{ 0u };
 	};
 
-	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
+	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener, public DepLibSfuShm::SfuShmCtx::Listener
 	{
 	public:
 		ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx);
@@ -93,6 +93,10 @@ namespace RTC
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
+	/* Pure virtual methods inherited from DepLibSfuShm::SfuShmCtx::Listener. */
+	public:
+		void OnShmWriterReady() override;
+
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
@@ -101,9 +105,6 @@ namespace RTC
 		RTC::RtpStream* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
-
-		bool srReceived{ false }; // do not write into shm until SR received
-
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 
 		// Shm writing: a consumer will "send" RTP packets (either audio or video) into shm

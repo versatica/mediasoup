@@ -62,14 +62,15 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("%s codec not supported for shm", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		//MS_DEBUG_TAG(rtp, "ShmConsumer created from data: %s media codec: %s", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
+		// MS_DEBUG_TAG(rtp, "ShmConsumer created from data: %s media codec: %s", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		this->shmCtx = shmCtx;
+		this->shmCtx->SetListener(this);
 
 
-//		Uncomment for NACK test simulation
+		// Uncomment for NACK test simulation
 		uint64_t nowTs = DepLibUV::GetTimeMs();
 		this->lastNACKTestTs = nowTs;
 
@@ -126,12 +127,14 @@ namespace RTC
 		uint64_t totalRate = loss->GetTotalRate(nowMs);
 		uint64_t lossRate = loss->GetLossRate(nowMs);
 
-		RTC::RtpDataCounter* ptr     = const_cast<RTC::RtpDataCounter*>(&this->shmWriterCounter);
-		jsonObject["type"]           = "shm-writer-stats";
-		jsonObject["packetCount"]    = ptr->GetPacketCount();
-		jsonObject["byteCount"]      = ptr->GetBytes();
-		jsonObject["bitrate"]        = ptr->GetBitrate(nowMs);
-		jsonObject["packetLossRate"] = totalRate != 0 ? (float)lossRate / (float)totalRate : 0.0f;
+		RTC::RtpDataCounter* ptr       = const_cast<RTC::RtpDataCounter*>(&this->shmWriterCounter);
+		RTC::RtpStreamRecv* recvStream = dynamic_cast<RTC::RtpStreamRecv*>(this->producerRtpStream);
+		jsonObject["type"]             = "shm-writer-stats";
+		jsonObject["packetCount"]      = ptr->GetPacketCount();
+		jsonObject["byteCount"]        = ptr->GetBytes();
+		jsonObject["bitrate"]          = ptr->GetBitrate(nowMs);
+		jsonObject["packetLossRate"]   = totalRate != 0 ? (float)lossRate / (float)totalRate : 0.0f;
+		jsonObject["recvJitter"]       = recvStream != nullptr ? recvStream->GetJitter() : 0;
 	}
 
 	void ShmConsumer::FillJsonScore(json& jsonObject) const
@@ -198,20 +201,16 @@ namespace RTC
 			MS_DEBUG_TAG(rtp, "Producer stream failed to read SR RTCP msg");
 			return;
 		}
-		else {
+		else
+		{
 			uint64_t lastSenderReportNtpMs = this->producerRtpStream->GetSenderReportNtpMs(); // NTP timestamp in last Sender Report (in ms)
 			uint32_t lastSenderReporTs     = this->producerRtpStream->GetSenderReportTs();    // RTP timestamp in last Sender Report.
 
-			if (DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY != shmCtx->Status())
+			if (0 == shmCtx->WriteRtcpSenderReportTs(lastSenderReportNtpMs, lastSenderReporTs,
+          (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO))
 			{
-				return;
+				MS_DEBUG_TAG(rtp, "First SR received and written into shm");
 			}
-
-			this->srReceived = true;
-
-			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
-			shmCtx->WriteRtcpSenderReportTs(lastSenderReportNtpMs, lastSenderReporTs, kind);
-
 		}
 	}
 
@@ -234,11 +233,15 @@ namespace RTC
 			return;
 		}
 
-		// If we need to sync, support key frames and this is not a key frame, ignore
-		// the packet.
-		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame()) {
+		// If we need to sync, support key frames and this is not a key frame,
+		// do not write this packet into shm
+		// but use it to check video orientation and config shm ssrc
+		bool ignorePkt = false;
+
+		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
+		{
 			MS_DEBUG_TAG(rtp, "need to sync but this is not keyframe, ignore packet");
-			return;
+			ignorePkt = true;
 		}
 
 		// Whether this is the first packet after re-sync.
@@ -283,34 +286,30 @@ namespace RTC
 			  origSeq);
 		}
 
-		if (packet->IsKeyFrame())
+		// Check for video orientation changes
+		if (VideoOrientationChanged(packet))
 		{
-			RTC::RtpStreamRecv* recvStream = dynamic_cast<RTC::RtpStreamRecv*>(this->producerRtpStream);
-			if (nullptr != recvStream)
-			{
-				MS_DEBUG_TAG(rtp, "Jitter=%" PRIu32, recvStream->GetJitter());
-			}
-			else
-			{
-				MS_DEBUG_TAG(rtp, "no Jitter for me :(");
-			}
+			MS_DEBUG_TAG(rtp, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				this->rotation,
+				packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp());
+			
+			shmCtx->WriteVideoOrientation(this->rotation);
 		}
 
-/*
-		if (packet->IsKeyFrame())
+		// Need both audio and video SSRCs to set up shm writer
+		if (shmWriterCounter.GetPacketCount() == 0)
 		{
-			MS_DEBUG_TAG(
-				rtp,
-				"L@@K KEYFRAME packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  " payload:%zu] from original [seq:%" PRIu16 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp(),
-				packet->GetPayloadLength(),
-			  origSeq
-			);
+			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
+			shmCtx->SetSsrcInShmConf(packet->GetSsrc(), kind));
 		}
-*/
+
+		if (!shmCtx->CanWrite() || ignorePkt) // shm is not ready for writing, or we still need a key frame
+		{
+			return;
+		}
+
 		// Process the packet. In case of shm writer this is still needed for NACKs
 		if (this->rtpStream->ReceivePacket(packet))
 		{
@@ -332,36 +331,6 @@ namespace RTC
 			  origSeq);
 		}
 
-		// Check for video orientation changes
-		if (VideoOrientationChanged(packet))
-		{
-			MS_DEBUG_TAG(rtp, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-				this->rotation,
-				packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp());
-			
-			shmCtx->WriteVideoOrientation(this->rotation);
-		}
-
-		// If we have not written any packets yet, need to configure shm writer
-		if (shmWriterCounter.GetPacketCount() == 0)
-		{
-			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
-			if (DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY != shmCtx->SetSsrcInShmConf(packet->GetSsrc(), kind))
-			{
-				return;
-			}
-		}
-
-		// Before writing to shm must receive RTCP Sender Report or cannot sync
-		if (!this->srReceived) {
-/*			MS_DEBUG_TAG(rtp, "RTCP SR not received yet, ignoring packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-				packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp()); */
-			return;
-		}
 
 // Uncomment for NACK test simulation
 /*		if (this->TestNACK(packet))
@@ -373,8 +342,6 @@ namespace RTC
 
 // End of NACK test simulation
 
-		// TODO: WritePacketToShm may actually discard it instead of writing into shm.
-		// Is it still okay to trust its ret value to have similar semantics?
 		if (this->WritePacketToShm(packet))
 		{
 			// Increase transmission counter.
@@ -397,7 +364,7 @@ namespace RTC
 	}
 
 
-//Uncomment for NACK test simulation
+	//Uncomment for NACK test simulation
 	bool ShmConsumer::TestNACK(RTC::RtpPacket* packet)
 	{
 		if (this->GetKind() != RTC::Media::Kind::VIDEO)
@@ -464,6 +431,7 @@ namespace RTC
 		}
 		return false;
 	}
+
 
 	bool ShmConsumer::WritePacketToShm(RTC::RtpPacket* packet)
 	{
@@ -982,6 +950,16 @@ namespace RTC
 		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
+	}
+
+	void ShmConsumer::OnShmWriterReady()
+	{
+		MS_TRACE();
+	
+		this->syncRequired = true;
+
+		if (IsActive())
+			RequestKeyFrame();
 	}
 
 	void ShmConsumer::OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet)

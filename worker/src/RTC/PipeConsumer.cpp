@@ -554,11 +554,11 @@ namespace RTC
 			if (rtxCodec && encoding.hasRtx)
 			{
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
-				MS_DEBUG_2TAGS("RTX set up");
+				MS_DEBUG_2TAGS(rtp, rtcp, "RTX set up");
 			}
 			else
 			{
-				MS_DEBUG_2TAGS("RTX is NOT set up");
+				MS_DEBUG_2TAGS(rtp, rtcp, "RTX is NOT set up");
 			}
 
 			this->rtpStreams.push_back(rtpStream);

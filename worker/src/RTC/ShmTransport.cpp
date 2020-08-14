@@ -122,35 +122,6 @@ namespace RTC
 
 		// Call the parent method.
 		RTC::Transport::FillJson(jsonObject);
-
-		// TODO: Add some shm info
-		jsonObject["shm"] = json::object();
-		auto jsonShmIt    = jsonObject.find("shm");
-		//(*jsonShmIt)["name"] = this->shm;
-
-		switch (this->shmCtx.Status())
-		{
-			case DepLibSfuShm::SHM_WRT_READY:
-				(*jsonShmIt)["shm_writer"] = "ready";
-				break;
-
-			case DepLibSfuShm::SHM_WRT_CLOSED:
-				(*jsonShmIt)["shm_writer"] = "closed";
-				break;
-
-			case DepLibSfuShm::SHM_WRT_VIDEO_CHNL_CONF_MISSING:
-				(*jsonShmIt)["shm_writer"] = "video conf missing";
-				break;
-
-			case DepLibSfuShm::SHM_WRT_AUDIO_CHNL_CONF_MISSING:
-				(*jsonShmIt)["shm_writer"] = "audio conf missing";
-				break;
-
-			case DepLibSfuShm::SHM_WRT_UNDEFINED:
-			default:
-				(*jsonShmIt)["shm_writer"] = "undefined";
-				break;
-		}
 	}
 
 	void ShmTransport::FillJsonStats(json& jsonArray)
@@ -168,9 +139,6 @@ namespace RTC
 
 		// Add timestamp.
 		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
-
-		//shm
-		jsonObject["shm-writer-ready"] = IsFullyConnected();
 	}
 
 	inline void ShmTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
@@ -205,7 +173,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected()) //IsFullyConnected())
 		{
 			return;
 		}
@@ -228,7 +196,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected()) //IsFullyConnected())
 			return;
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
@@ -249,7 +217,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected()) //IsFullyConnected())
 			return;
 
 		// Pass it to the parent transport.
@@ -300,7 +268,7 @@ namespace RTC
 
 	inline bool ShmTransport::IsFullyConnected() const
 	{
-		return this->shmCtx.Status() == DepLibSfuShm::SHM_WRT_READY;
+		return false; //this->shmCtx.Status() == DepLibSfuShm::SHM_WRT_READY;
 	}
 
 
@@ -308,7 +276,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected())//IsFullyConnected())
 			return;
 	
 		// Increase send transmission. Consumer writes RTP packets to shm, nothing else to do here.
@@ -320,7 +288,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected())//IsFullyConnected())
 			return;
 
 		// Increase send transmission.
@@ -332,7 +300,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected()) //IsFullyConnected())
 			return;
 
 		// Increase send transmission.

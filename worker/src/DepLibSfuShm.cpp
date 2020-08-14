@@ -19,7 +19,7 @@ namespace DepLibSfuShm {
     };
 
 
-  static constexpr uint64_t MaxVideoPktDelay{ 9000 }; // 100ms in samples (90000 sample rate) TODO: any way to better estimate this one?
+  static constexpr uint64_t MaxVideoPktDelay{ 9000 }; // 100ms in samples (90000 sample rate) TODO: redo to hold constant number of picture frames instead?
 
 
   SfuShmCtx::~SfuShmCtx()
@@ -45,11 +45,11 @@ namespace DepLibSfuShm {
   }
 
 
-  ShmWriterStatus SfuShmCtx::SetSsrcInShmConf(uint32_t ssrc, DepLibSfuShm::ShmChunkType kind)
+  void SfuShmCtx::SetSsrcInShmConf(uint32_t ssrc, DepLibSfuShm::ShmChunkType kind)
   {
     //Assuming that ssrc does not change, shm writer is initialized, nothing else to do
     if (SHM_WRT_READY == this->Status())
-      return SHM_WRT_READY;
+      return;
     
     switch(kind) {
       case DepLibSfuShm::ShmChunkType::AUDIO:
@@ -67,7 +67,7 @@ namespace DepLibSfuShm {
         break;
 
       default:
-        return this->Status();
+        return;
     }
 
     if (this->wrt_status == SHM_WRT_READY) {
@@ -76,9 +76,14 @@ namespace DepLibSfuShm {
         MS_DEBUG_TAG(rtp, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
         wrt_status = SHM_WRT_UNDEFINED;
       }
+      else
+      {
+        if (this->srReceived)
+        {
+          this->listener->OnShmWriterReady();
+        }
+      }
     }
-
-    return this->Status();
   }
 
 
@@ -145,13 +150,13 @@ namespace DepLibSfuShm {
       return ShmQueueStatus::SHM_Q_PKT_CANWRITETHRU;
     }
 
-    // Reject old pkt
+    // Try adding too old pkt in queue anyway
     if (LastSeq(ShmChunkType::VIDEO) != UINT64_UNSET
         && LastTs(ShmChunkType::VIDEO) > ts
         && LastTs(ShmChunkType::VIDEO) - ts > MaxVideoPktDelay)
     {
-      MS_DEBUG_TAG(rtp, "REJECT OLD seqid=%" PRIu64 " delta=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", data->first_rtp_seq, LastTs(ShmChunkType::VIDEO) - data->rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
-      return ShmQueueStatus::SHM_Q_PKT_TOO_OLD;
+      MS_DEBUG_TAG(rtp, "ENQUEUE OLD seqid=%" PRIu64 " delta=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", data->first_rtp_seq, LastTs(ShmChunkType::VIDEO) - data->rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
+//      return ShmQueueStatus::SHM_Q_PKT_TOO_OLD;
     }
     
     // Enqueue pkt, newest at the end
@@ -169,8 +174,7 @@ namespace DepLibSfuShm {
   
   ShmQueueStatus SfuShmCtx::Dequeue()
   {
-    ShmQueueStatus ret;
-    int err;
+    ShmQueueStatus ret = SHM_Q_PKT_DEQUEUED_OK;
     
     if (this->videoPktBuffer.empty())
       return SHM_Q_PKT_DEQUEUED_NOTHING;
@@ -186,21 +190,23 @@ namespace DepLibSfuShm {
 
     while (it != this->videoPktBuffer.end())
     {
-      // First, drop chunks with expired timestamps: last timestamp of a written or skipped packet
+      // First, write out all chunks with expired timestamps. TODO: mark incomplete fragmented pictures as corrupted (feature TBD in shm writer)
+      // Note that this code path will write into shm all old frames (or their parts) regardless of whether there was a hole between seqIds.
       if (LastTs(ShmChunkType::VIDEO) != UINT64_UNSET
         && LastTs(ShmChunkType::VIDEO) > it->chunk.rtp_time
         && LastTs(ShmChunkType::VIDEO) - it->chunk.rtp_time > MaxVideoPktDelay)
       {
-        MS_DEBUG_TAG(rtp, "DROP OLD [seq=%" PRIu64 " delta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastTs(ShmChunkType::VIDEO) - it->chunk.rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
+        MS_DEBUG_TAG(rtp, "WRITE OLD [seq=%" PRIu64 " delta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastTs(ShmChunkType::VIDEO) - it->chunk.rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
         prev_seq = it->chunk.first_rtp_seq;
+        this->WriteChunk(&it->chunk, ShmChunkType::VIDEO);
         it = this->videoPktBuffer.erase(it);
         continue;
       }
 
-      // Hole in seqIds, exit and wait for missing pkt to be retransmitted
+      // Hole in seqIds: wait some time for missing pkt to be retransmitted
       if (it->chunk.first_rtp_seq > prev_seq + 1)
       {
-        //MS_DEBUG_TAG(rtp, "HOLE [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64, it->chunk.first_rtp_seq, it->chunk.rtp_time, prev_seq);
+        MS_DEBUG_TAG(rtp, "HOLE [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64, it->chunk.first_rtp_seq, it->chunk.rtp_time, prev_seq);
         return SHM_Q_PKT_WAIT_FOR_NACK;
       }
 
@@ -232,18 +238,17 @@ namespace DepLibSfuShm {
             uint64_t endSeqId = it->chunk.first_rtp_seq;
             uint64_t endTs = it->chunk.rtp_time;
             prev_seq = it->chunk.first_rtp_seq;
-            
+
             nextit++; // position past last fragment in a chunk
             while (chunkStartIt != nextit)
             {
               /*MS_DEBUG_TAG(rtp, "writing fragment seq=%" PRIu64 " [%X%X%X%X]",
                 chunkStartIt->chunk.first_rtp_seq,
                 chunkStartIt->chunk.data[0],chunkStartIt->chunk.data[1],chunkStartIt->chunk.data[2],chunkStartIt->chunk.data[3]); */
-              err = this->WriteChunk(&chunkStartIt->chunk, ShmChunkType::VIDEO);
-              ret = IsError(err) ? SHM_Q_PKT_SHMWRITE_ERR : SHM_Q_PKT_DEQUEUED_OK;
+              this->WriteChunk(&chunkStartIt->chunk, ShmChunkType::VIDEO);
               chunkStartIt = this->videoPktBuffer.erase(chunkStartIt);
             }
-            //MS_DEBUG_TAG(rtp, "WROTE FRAGMENTS start [seq=%" PRIu64 " ts=%" PRIu64 "] end [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", startSeqId, startTs, endSeqId, endTs, videoPktBuffer.size());
+            MS_DEBUG_TAG(rtp, "WROTE FRAGMENTS start [seq=%" PRIu64 " ts=%" PRIu64 "] end [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", startSeqId, startTs, endSeqId, endTs, videoPktBuffer.size());
             chunkStartFound = false;
             prev_seq = endSeqId;
             it = nextit; // restore iterator
@@ -257,9 +262,7 @@ namespace DepLibSfuShm {
       }
       else // non-fragmented chunk
       {
-        err = this->WriteChunk(&it->chunk, ShmChunkType::VIDEO);
-//        MS_DEBUG_TAG(rtp, "WROTE WHOLE [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu [%X%X%X%X]", it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size(), it->chunk.data[0],it->chunk.data[1],it->chunk.data[2],it->chunk.data[3]);
-        ret = IsError(err) ? SHM_Q_PKT_SHMWRITE_ERR : SHM_Q_PKT_DEQUEUED_OK;
+        this->WriteChunk(&it->chunk, ShmChunkType::VIDEO);
         prev_seq = it->chunk.first_rtp_seq;
         it = this->videoPktBuffer.erase(it);
         continue;
@@ -279,23 +282,14 @@ namespace DepLibSfuShm {
       st = this->Enqueue(frag, isChunkFragment);      
       if (SHM_Q_PKT_CANWRITETHRU == st) // Write it into shm, no need to queue anything
       {
-        return this->WriteChunk(frag, ShmChunkType::VIDEO);
-      }
-      
-      if (SHM_Q_PKT_TOO_OLD == st) // Packet is too old, cannot write it
-      {
-        return SHM_Q_PKT_TOO_OLD;
+        this->WriteChunk(frag, ShmChunkType::VIDEO);
       }
 
       st = this->Dequeue();
-      if (SHM_Q_PKT_DEQUEUED_OK != st && SHM_Q_PKT_DEQUEUED_NOTHING != st)
-      {
-        return (SHM_Q_PKT_SHMWRITE_ERR == st) ? -1 : 0;
-      }
     }
     else
     {
-      err = this->WriteChunk(frag, ShmChunkType::AUDIO); // do not queue audio
+      this->WriteChunk(frag, ShmChunkType::AUDIO); // do not queue audio
     }
 
     return err;
@@ -304,7 +298,7 @@ namespace DepLibSfuShm {
 
   int SfuShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, ShmChunkType kind)
   {
-    if (Status() != SHM_WRT_READY)
+    if (!this->CanWrite()) //Status() != SHM_WRT_READY)
     {
       return 0;
     }
@@ -336,10 +330,10 @@ namespace DepLibSfuShm {
 
   int SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, DepLibSfuShm::ShmChunkType kind)
   {
-    if (Status() != SHM_WRT_READY)
+  /*  if (Status() != SHM_WRT_READY)
     {
       return 0;
-    }
+    }*/
 
     uint32_t ssrc;
     switch(kind)
@@ -392,6 +386,13 @@ namespace DepLibSfuShm {
       MS_WARN_TAG(rtp, "ERROR writing RTCP SR: %d - %s", err, GetErrorString(err));
       return -1;
     }
+
+    if (!this->srReceived && ShmWriterStatus::SHM_WRT_READY == this->wrt_status)
+    {
+      this->listener->OnShmWriterReady();
+    }
+
+    this->srReceived = true;
 
     return 0;
   }
