@@ -11,7 +11,7 @@
 
 namespace DepLibSfuShm {
 
-  std::unordered_map<int, const char*> DepLibSfuShm::SfuShmCtx::errToString =
+  std::unordered_map<int, const char*> ShmCtx::errToString =
     {
       { 0, "success (SFUSHM_AV_OK)"   },
       { -1, "error (SFUSHM_AV_ERR)"   },
@@ -22,7 +22,7 @@ namespace DepLibSfuShm {
   static constexpr uint64_t MaxVideoPktDelay{ 9000 }; // 100ms in samples (90000 sample rate) TODO: redo to hold constant number of picture frames instead?
 
 
-  SfuShmCtx::~SfuShmCtx()
+  ShmCtx::~ShmCtx()
   {
     // Call if writer is not closed
     if (SHM_WRT_CLOSED != wrt_status && SHM_WRT_UNDEFINED != wrt_status)
@@ -32,7 +32,7 @@ namespace DepLibSfuShm {
   }
 
 
-  void SfuShmCtx::CloseShmWriterCtx()
+  void ShmCtx::CloseShmWriterCtx()
   {
     // Call if writer is not closed
     if (SHM_WRT_CLOSED != wrt_status)
@@ -45,41 +45,52 @@ namespace DepLibSfuShm {
   }
 
 
-  void SfuShmCtx::SetSsrcInShmConf(uint32_t ssrc, DepLibSfuShm::ShmChunkType kind)
+  void ShmCtx::ConfigureMediaSsrc(uint32_t ssrc, Media kind)
   {
     //Assuming that ssrc does not change, shm writer is initialized, nothing else to do
-    if (SHM_WRT_READY == this->Status())
+    if (SHM_WRT_READY == this->wrt_status)
       return;
     
-    switch(kind) {
-      case DepLibSfuShm::ShmChunkType::AUDIO:
-        ssrc_a = ssrc; 
-        this->wrt_init.conf.channels[0].audio = 1;
-        this->wrt_init.conf.channels[0].ssrc = ssrc;
-        this->wrt_status = (this->wrt_status == SHM_WRT_AUDIO_CHNL_CONF_MISSING) ? SHM_WRT_READY : SHM_WRT_VIDEO_CHNL_CONF_MISSING;
-        break;
-
-      case DepLibSfuShm::ShmChunkType::VIDEO:
-        ssrc_v = ssrc;
-        this->wrt_init.conf.channels[1].video = 1;
-        this->wrt_init.conf.channels[1].ssrc = ssrc;
-        this->wrt_status = (this->wrt_status == SHM_WRT_VIDEO_CHNL_CONF_MISSING) ? SHM_WRT_READY : SHM_WRT_AUDIO_CHNL_CONF_MISSING;
-        break;
-
-      default:
-        return;
+    if(kind == Media::AUDIO)
+    {
+      this->data[0].ssrc = ssrc; 
+      this->wrt_init.conf.channels[0].audio = 1;
+      this->wrt_init.conf.channels[0].ssrc = ssrc;
+      this->wrt_status = (this->wrt_status == SHM_WRT_AUDIO_CHNL_CONF_MISSING) ? SHM_WRT_READY : SHM_WRT_VIDEO_CHNL_CONF_MISSING;
+    }
+    else // video
+    {
+      this->data[1].ssrc = ssrc;
+      this->wrt_init.conf.channels[1].video = 1;
+      this->wrt_init.conf.channels[1].ssrc = ssrc;
+      this->wrt_status = (this->wrt_status == SHM_WRT_VIDEO_CHNL_CONF_MISSING) ? SHM_WRT_READY : SHM_WRT_AUDIO_CHNL_CONF_MISSING;
     }
 
     if (this->wrt_status == SHM_WRT_READY) {
+      // Just switched into ready status, can open a writer
       int err = SFUSHM_AV_OK;
       if ((err = sfushm_av_open_writer( &wrt_init, &wrt_ctx)) != SFUSHM_AV_OK) {
         MS_DEBUG_TAG(rtp, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
-        wrt_status = SHM_WRT_UNDEFINED;
+        this->wrt_status = SHM_WRT_UNDEFINED;
       }
       else
-      {
-        if (this->srReceived)
+      { 
+        // Write any stored sender reports into shm and possibly notify ShmConsumer
+        if (this->data[0].sr_received)
         {
+          WriteSR(Media::AUDIO);
+          this->data[0].sr_written = true;
+        }
+        
+        if (this->data[1].sr_received)
+        {
+          WriteSR(Media::VIDEO);
+          this->data[1].sr_written = true;
+        }
+
+        if (this->CanWrite())
+        {
+          MS_DEBUG_TAG(rtp, "shm is ready and first SRs received and written");
           this->listener->OnShmWriterReady();
         }
       }
@@ -87,7 +98,7 @@ namespace DepLibSfuShm {
   }
 
 
-  void SfuShmCtx::InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio)
+  void ShmCtx::InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio)
   {
     MS_TRACE();
 
@@ -133,7 +144,7 @@ namespace DepLibSfuShm {
   // seqId: strictly +1 unless NALUs came from STAP-A packet, then they are the same
   // timestamps: should increment for each new picture (shm chunk), otherwise they match
   // Can see two fragments coming in with the same seqId and timestamps: SPS and PPS from the same STAP-A packet are typical
-  ShmQueueStatus SfuShmCtx::Enqueue(sfushm_av_frame_frag_t* data, bool isChunkFragment)
+  EnqueueResult ShmCtx::Enqueue(sfushm_av_frame_frag_t* data, bool isChunkFragment)
   {
     uint64_t ts       = data->rtp_time;
     uint64_t seq      = data->first_rtp_seq;
@@ -143,20 +154,19 @@ namespace DepLibSfuShm {
     // If queue is empty, seqid is in order, and pkt is not a fragment, there is no need to enqueue
     if (this->videoPktBuffer.empty()
       && !isChunkFragment
-      && (LastSeq(ShmChunkType::VIDEO) == UINT64_UNSET 
-        || data->first_rtp_seq - 1 == LastSeq(ShmChunkType::VIDEO)))
+      && (IsVideoSeqUnset() 
+        || data->first_rtp_seq - 1 == LastVideoSeq()))
     {
     //MS_DEBUG_TAG(rtp, "WRITETHRU [seq=%" PRIu64 " ts=%" PRIu64 "] len=%zu chunkstart=%s chunkend=%s qsize=%zu", data->first_rtp_seq, data->rtp_time, data->len, isChunkStart? "1":"0", isChunkEnd? "1":"0", videoPktBuffer.size());
-      return ShmQueueStatus::SHM_Q_PKT_CANWRITETHRU;
+      return EnqueueResult::SHM_Q_PKT_CANWRITETHRU;
     }
 
-    // Try adding too old pkt in queue anyway
-    if (LastSeq(ShmChunkType::VIDEO) != UINT64_UNSET
-        && LastTs(ShmChunkType::VIDEO) > ts
-        && LastTs(ShmChunkType::VIDEO) - ts > MaxVideoPktDelay)
+    // Add a too old pkt in queue anyway
+    if (!IsVideoSeqUnset()
+        && LastVideoTs() > ts
+        && LastVideoTs() - ts > MaxVideoPktDelay)
     {
-      MS_DEBUG_TAG(rtp, "ENQUEUE OLD seqid=%" PRIu64 " delta=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", data->first_rtp_seq, LastTs(ShmChunkType::VIDEO) - data->rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
-//      return ShmQueueStatus::SHM_Q_PKT_TOO_OLD;
+      MS_DEBUG_TAG(rtp, "ENQUEUE OLD seqid=%" PRIu64 " delta=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", data->first_rtp_seq, LastVideoTs() - data->rtp_time, LastVideoTs(), videoPktBuffer.size());
     }
     
     // Enqueue pkt, newest at the end
@@ -172,17 +182,15 @@ namespace DepLibSfuShm {
   }
 
   
-  ShmQueueStatus SfuShmCtx::Dequeue()
+  void ShmCtx::Dequeue()
   {
-    ShmQueueStatus ret = SHM_Q_PKT_DEQUEUED_OK;
-    
     if (this->videoPktBuffer.empty())
-      return SHM_Q_PKT_DEQUEUED_NOTHING;
+      return;
 
     // seqId: strictly +1 unless NALUs came from STAP-A packet, then they are the same
     // timestamps: should increment for each new picture (shm chunk), otherwise they match
     // Can see two fragments coming in with the same seqId and timestamps: SPS and PPS from the same STAP-A packet are typical
-    std::_List_iterator<DepLibSfuShm::ShmQueueItem> chunkStartIt;
+    std::_List_iterator<ShmQueueItem> chunkStartIt;
 
     auto it = this->videoPktBuffer.begin();
     uint64_t prev_seq = it->chunk.first_rtp_seq - 1;
@@ -191,14 +199,13 @@ namespace DepLibSfuShm {
     while (it != this->videoPktBuffer.end())
     {
       // First, write out all chunks with expired timestamps. TODO: mark incomplete fragmented pictures as corrupted (feature TBD in shm writer)
-      // Note that this code path will write into shm all old frames (or their parts) regardless of whether there was a hole between seqIds.
-      if (LastTs(ShmChunkType::VIDEO) != UINT64_UNSET
-        && LastTs(ShmChunkType::VIDEO) > it->chunk.rtp_time
-        && LastTs(ShmChunkType::VIDEO) - it->chunk.rtp_time > MaxVideoPktDelay)
+      if (!IsVideoSeqUnset()
+        && LastVideoTs() > it->chunk.rtp_time
+        && LastVideoTs() - it->chunk.rtp_time > MaxVideoPktDelay)
       {
-        MS_DEBUG_TAG(rtp, "WRITE OLD [seq=%" PRIu64 " delta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastTs(ShmChunkType::VIDEO) - it->chunk.rtp_time, LastTs(ShmChunkType::VIDEO), videoPktBuffer.size());
+        MS_DEBUG_TAG(rtp, "OLD [seq=%" PRIu64 " delta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastVideoTs() - it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
         prev_seq = it->chunk.first_rtp_seq;
-        this->WriteChunk(&it->chunk, ShmChunkType::VIDEO);
+        this->WriteChunk(&it->chunk, Media::VIDEO);
         it = this->videoPktBuffer.erase(it);
         continue;
       }
@@ -207,7 +214,7 @@ namespace DepLibSfuShm {
       if (it->chunk.first_rtp_seq > prev_seq + 1)
       {
         MS_DEBUG_TAG(rtp, "HOLE [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64, it->chunk.first_rtp_seq, it->chunk.rtp_time, prev_seq);
-        return SHM_Q_PKT_WAIT_FOR_NACK;
+        return;
       }
 
       // Fragment of a chunk: start, end or middle
@@ -226,7 +233,7 @@ namespace DepLibSfuShm {
           {
             // chunk incomplete, wait for retransmission
           //  MS_DEBUG_TAG(rtp, "NO START fragment, wait: [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size());
-            return SHM_Q_PKT_CHUNKSTART_MISSING;
+            return;
           }
 
           // write the whole chunk if we have it
@@ -245,10 +252,10 @@ namespace DepLibSfuShm {
               /*MS_DEBUG_TAG(rtp, "writing fragment seq=%" PRIu64 " [%X%X%X%X]",
                 chunkStartIt->chunk.first_rtp_seq,
                 chunkStartIt->chunk.data[0],chunkStartIt->chunk.data[1],chunkStartIt->chunk.data[2],chunkStartIt->chunk.data[3]); */
-              this->WriteChunk(&chunkStartIt->chunk, ShmChunkType::VIDEO);
+              this->WriteChunk(&chunkStartIt->chunk, Media::VIDEO);
               chunkStartIt = this->videoPktBuffer.erase(chunkStartIt);
             }
-            MS_DEBUG_TAG(rtp, "WROTE FRAGMENTS start [seq=%" PRIu64 " ts=%" PRIu64 "] end [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", startSeqId, startTs, endSeqId, endTs, videoPktBuffer.size());
+            MS_DEBUG_TAG(rtp, "FRAG start [seq=%" PRIu64 " ts=%" PRIu64 "] end [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", startSeqId, startTs, endSeqId, endTs, videoPktBuffer.size());
             chunkStartFound = false;
             prev_seq = endSeqId;
             it = nextit; // restore iterator
@@ -262,94 +269,58 @@ namespace DepLibSfuShm {
       }
       else // non-fragmented chunk
       {
-        this->WriteChunk(&it->chunk, ShmChunkType::VIDEO);
+        this->WriteChunk(&it->chunk, Media::VIDEO);
         prev_seq = it->chunk.first_rtp_seq;
         it = this->videoPktBuffer.erase(it);
         continue;
       }
     }
-    return ret;
   }
 
 
-  int SfuShmCtx::WriteRtpDataToShm(ShmChunkType type, sfushm_av_frame_frag_t* frag, bool isChunkFragment)
+  void ShmCtx::WriteRtpDataToShm(Media type, sfushm_av_frame_frag_t* frag, bool isChunkFragment)
   {
-    int err = 0;
-    ShmQueueStatus st;
-
-    if (type == ShmChunkType::VIDEO)
+    if (type == Media::VIDEO)
     {
-      st = this->Enqueue(frag, isChunkFragment);      
-      if (SHM_Q_PKT_CANWRITETHRU == st) // Write it into shm, no need to queue anything
+      if (SHM_Q_PKT_CANWRITETHRU == this->Enqueue(frag, isChunkFragment)) // Write it into shm, no need to queue anything
       {
-        this->WriteChunk(frag, ShmChunkType::VIDEO);
+        this->WriteChunk(frag, Media::VIDEO);
       }
 
-      st = this->Dequeue();
+      this->Dequeue();
     }
     else
     {
-      this->WriteChunk(frag, ShmChunkType::AUDIO); // do not queue audio
+      this->WriteChunk(frag, Media::AUDIO); // do not queue audio
     }
-
-    return err;
   }
 
 
-  int SfuShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, ShmChunkType kind)
+  void ShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, Media kind)
   {
-    if (!this->CanWrite()) //Status() != SHM_WRT_READY)
+    if (!this->CanWrite())
     {
-      return 0;
+      MS_WARN_TAG(rtp, "Cannot write chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because shm writer is not initialized");
+      return;
     }
 
     int err;
-    switch (kind)
+    if(kind == Media::AUDIO)
     {
-      case ShmChunkType::VIDEO:
-        err = sfushm_av_write_video(wrt_ctx, data);
-        break;
-
-      case ShmChunkType::AUDIO:
-        err = sfushm_av_write_audio(wrt_ctx, data);
-        break;
-
-      default:
-        return -1;
+      err = sfushm_av_write_audio(wrt_ctx, data);
+    }
+    else
+    {
+      err = sfushm_av_write_video(wrt_ctx, data);
     }
 
     if (IsError(err))
-    {
-      // TODO: also log first_rtp_seq, ssrc and timestamp
-      MS_WARN_TAG(rtp, "ERROR writing chunk to shm: %d - %s", err, GetErrorString(err));
-      return -1;
-    }
-    return 0;
+      MS_WARN_TAG(rtp, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " to shm: %d - %s", data->ssrc, data->first_rtp_seq, data->rtp_time, err, GetErrorString(err));
   }
 
 
-  int SfuShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, DepLibSfuShm::ShmChunkType kind)
+  void ShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, Media kind)
   {
-  /*  if (Status() != SHM_WRT_READY)
-    {
-      return 0;
-    }*/
-
-    uint32_t ssrc;
-    switch(kind)
-    {
-      case DepLibSfuShm::ShmChunkType::AUDIO:
-      ssrc = ssrc_a;
-      break;
-
-      case DepLibSfuShm::ShmChunkType::VIDEO:
-      ssrc = ssrc_v;
-      break;
-
-      default:
-        return 0;
-    }
-
     /*
   .. c:function:: uint64_t uv_hrtime(void)
 
@@ -357,9 +328,6 @@ namespace DepLibSfuShm {
       nanoseconds. It is relative to an arbitrary time in the past. It is not
       related to the time of day and therefore not subject to clock drift. The
       primary use is for measuring performance between intervals.  */
-    auto ntp = Utils::Time::TimeMs2Ntp(lastSenderReportNtpMs);
-    auto ntp_sec = ntp.seconds;
-    auto ntp_frac = ntp.fractions;
   /*
     Uncomment for debugging
     uint64_t walltime = DepLibUV::GetTimeMs();
@@ -379,27 +347,63 @@ namespace DepLibSfuShm {
       ct,
       clockTimeMs);
   */
-    int err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, ntp_sec, ntp_frac, lastSenderReporTs, ssrc);
+    auto ntp = Utils::Time::TimeMs2Ntp(lastSenderReportNtpMs);
+    size_t idx = (kind == Media::AUDIO) ? 0 : 1;
 
-    if (IsError(err))
+    this->data[idx].sr_received = true;
+    this->data[idx].sr_ntp_msb = ntp.seconds;
+    this->data[idx].sr_ntp_lsb = ntp.fractions;
+    this->data[idx].sr_rtp_tm = lastSenderReporTs;
+
+    if (SHM_WRT_READY != this->wrt_status)
+      return; // shm writer is not set up yet
+
+    WriteSR(kind);
+
+    if (this->CanWrite())
+      return; // already submitted the first SRs into shm, and it is in ready state
+
+    bool shouldNotify = false;
+    if(kind == Media::AUDIO)
     {
-      MS_WARN_TAG(rtp, "ERROR writing RTCP SR: %d - %s", err, GetErrorString(err));
-      return -1;
+      if (this->data[1].sr_written && !this->data[0].sr_written)
+        shouldNotify = true;
+      this->data[0].sr_written = true;
+    }
+    else
+    {
+      if (this->data[0].sr_written && !this->data[1].sr_written)
+        shouldNotify = true;
+      this->data[1].sr_written = true;    
     }
 
-    if (!this->srReceived && ShmWriterStatus::SHM_WRT_READY == this->wrt_status)
+    if (shouldNotify)
     {
+      MS_DEBUG_TAG(rtp, "First SRs received, and shm is ready");
       this->listener->OnShmWriterReady();
     }
-
-    this->srReceived = true;
-
-    return 0;
   }
 
 
-  int SfuShmCtx::WriteStreamMeta(std::string metadata, std::string shm)
+  void ShmCtx::WriteSR(Media kind)
   {
+    size_t idx = (kind == Media::AUDIO) ? 0 : 1;
+    int err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, this->data[idx].sr_ntp_msb, this->data[idx].sr_ntp_lsb, this->data[idx].sr_rtp_tm, this->data[idx].ssrc);
+    if (IsError(err))
+    {
+      MS_WARN_TAG(rtp, "ERROR writing RTCP SR for ssrc %" PRIu32 " %d - %s", this->data[idx].ssrc, err, GetErrorString(err));
+    }
+  }
+
+
+  int ShmCtx::WriteStreamMeta(std::string metadata, std::string shm)
+  {
+    if (SHM_WRT_READY != this->wrt_status)
+    {
+      MS_WARN_TAG(rtp, "Cannot write stream metadata because shm writer is not initialized");
+      return -1; // shm writer is not set up yet
+    }
+
     int     err;
     uint8_t data[256]; // Currently this is overkill because just 1 byte will be written successfully into shm
 
@@ -416,7 +420,6 @@ namespace DepLibSfuShm {
     std::copy(metadata.begin(), metadata.end(), data);
 
     err = sfushm_av_write_stream_metadata(wrt_ctx, data, metadata.length());
-
     if (IsError(err))
     {
       MS_WARN_TAG(rtp, "ERROR writing stream metadata: %d - %s", err, GetErrorString(err));
@@ -427,16 +430,17 @@ namespace DepLibSfuShm {
   }
 
 
-  int SfuShmCtx::WriteVideoOrientation(uint16_t rotation)
+  void ShmCtx::WriteVideoOrientation(uint16_t rotation)
   {
+    if (SHM_WRT_READY != this->wrt_status)
+    {
+      MS_WARN_TAG(rtp, "Cannot write video rotation because shm writer is not initialized");
+      return; // shm writer is not set up yet
+    }
+
     int err = sfushm_av_write_video_rotation(wrt_ctx, rotation);
 
     if (IsError(err))
-    {
       MS_WARN_TAG(rtp, "ERROR writing video rotation: %d - %s", err, GetErrorString(err));
-      return -1;
-    }
-
-    return 0;
   }
 } // namespace DepLibSfuShm

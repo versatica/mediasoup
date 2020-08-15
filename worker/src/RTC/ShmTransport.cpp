@@ -173,7 +173,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsConnected()) //IsFullyConnected())
+		if (!IsConnected())
 		{
 			return;
 		}
@@ -196,7 +196,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsConnected()) //IsFullyConnected())
+		if (!IsConnected())
 			return;
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
@@ -217,7 +217,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsConnected()) //IsFullyConnected())
+		if (!IsConnected())
 			return;
 
 		// Pass it to the parent transport.
@@ -254,21 +254,9 @@ namespace RTC
 	}
 
 
-	/*
-	Transport's consumer expects 'true' from IsConnected() in order to activate.
-	ShmTransport::IsConnected() rather means that transport is initialized but it may not be "fully connected" and ready to write into shm yet.
-	To write into shm we wait until both audio and video consumers receive their first RTP packets with ssrc values.
-	Call ShmTransport::IsFullyConnected() to detect if ShmTransport is ready to write into shm.
-	*/
 	inline bool ShmTransport::IsConnected() const
 	{
 		return true;
-	}
-
-
-	inline bool ShmTransport::IsFullyConnected() const
-	{
-		return false; //this->shmCtx.Status() == DepLibSfuShm::SHM_WRT_READY;
 	}
 
 
@@ -276,7 +264,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsConnected())//IsFullyConnected())
+		if (!IsConnected())
 			return;
 	
 		// Increase send transmission. Consumer writes RTP packets to shm, nothing else to do here.
@@ -288,7 +276,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsConnected())//IsFullyConnected())
+		if (!IsConnected())
 			return;
 
 		// Increase send transmission.
@@ -300,7 +288,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsConnected()) //IsFullyConnected())
+		if (!IsConnected())
 			return;
 
 		// Increase send transmission.

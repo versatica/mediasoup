@@ -31,11 +31,10 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) override;
 		void HandleRequest(Channel::Request* request) override;
 		bool RecvStreamMeta(json& data) override;
-		DepLibSfuShm::SfuShmCtx* ShmCtx() { return &this->shmCtx; }
+		DepLibSfuShm::ShmCtx* ShmCtx() { return &this->shmCtx; }
 
 	private:
 		bool IsConnected() const override;
-		bool IsFullyConnected() const;
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendSctpData(const uint8_t* data, size_t len) override;
@@ -63,7 +62,7 @@ namespace RTC
 		bool comedia{ false };
 		bool multiSource{ false };
 
-		DepLibSfuShm::SfuShmCtx shmCtx; // shm writer context, needed here to begin shm initialization and correctly report transport stats
+		DepLibSfuShm::ShmCtx shmCtx; // shm writer context, needed here to begin shm initialization and correctly report transport stats
 	};
 } // namespace RTC
 

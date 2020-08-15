@@ -1421,7 +1421,7 @@ namespace RTC
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
-			  MS_DEBUG_TAG(rtp, "L@@K recvRtxTransmission.GetPacketCount()=%d", this->recvRtxTransmission.GetPacketCount());
+			  MS_DEBUG_TAG(rtp, "L@@K recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
 				break;
 			default:;
 		}
