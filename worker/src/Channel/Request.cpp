@@ -33,7 +33,7 @@ namespace Channel
 		{ "transport.restartIce",                        Request::MethodId::TRANSPORT_RESTART_ICE                            },
 		{ "transport.produce",                           Request::MethodId::TRANSPORT_PRODUCE                                },
 		{ "transport.consume",                           Request::MethodId::TRANSPORT_CONSUME                                },
-		{ "transport.consumeStreamMeta" },               Request::MethodId::TRANSPORT_CONSUME_STREAM_META                    },
+		{ "transport.consumeStreamMeta",                 Request::MethodId::TRANSPORT_CONSUME_STREAM_META                    },
 		{ "transport.produceData",                       Request::MethodId::TRANSPORT_PRODUCE_DATA                           },
 		{ "transport.consumeData",                       Request::MethodId::TRANSPORT_CONSUME_DATA                           },
 		{ "transport.enableTraceEvent",                  Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT                     },

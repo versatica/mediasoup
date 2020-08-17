@@ -254,7 +254,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromRequest(request, transportId);
+				SetNewTransportIdFromInternal(request->internal, transportId);
 
 				auto* shmTransport = new RTC::ShmTransport(transportId, this, request->data);
 

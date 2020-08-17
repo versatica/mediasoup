@@ -173,6 +173,28 @@ namespace RTC
 		jsonObject["shm-writer-ready"] = IsFullyConnected();
 	}
 
+	void ShmTransport::SendStreamClosed(uint32_t /*ssrc*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	void ShmTransport::RecvStreamClosed(uint32_t /*ssrc*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	void ShmTransport::SendMessage(
+	  RTC::DataConsumer* /*dataConsumer*/, uint32_t /*ppid*/, const uint8_t* /*msg*/, size_t /*len*/, onQueuedCallback* /*cb*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
 	inline void ShmTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -304,7 +326,7 @@ namespace RTC
 	}
 
 
-	void ShmTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* /* cb */)
+	void ShmTransport::SendRtpPacket(RTC::Consumer* /* consumer */, RTC::RtpPacket* packet, onSendCallback* /* cb */)
 	{
 		MS_TRACE();
 

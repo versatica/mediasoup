@@ -26,7 +26,7 @@ namespace RTC
 		{ RtpParameters::Type::SIMPLE,    "simple"    },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },
 		{ RtpParameters::Type::SVC,       "svc"       },
-		{ RtpParameters::Type::PIPE,      "pipe"      }.
+		{ RtpParameters::Type::PIPE,      "pipe"      },
 	  { RtpParameters::Type::SHM,       "shm"       }
 	};
 	// clang-format on
