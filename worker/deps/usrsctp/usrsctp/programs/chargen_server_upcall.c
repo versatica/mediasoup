@@ -41,10 +41,10 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #ifndef _WIN32
+#include <sys/socket.h>
 #include <unistd.h>
 #include <time.h>
-#include <sys/socket.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif

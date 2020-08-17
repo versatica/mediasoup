@@ -52,7 +52,7 @@ namespace RTC
 				uint16_t sequenceNumber;   // Wide sequence number.
 				int16_t delta{ 0 };        // Delta.
 				bool received{ false };    // Packet received or not.
-				int32_t receivedAtMs{ 0 }; // Received time (ms) in remote timestamp reference.
+				int64_t receivedAtMs{ 0 }; // Received time (ms) in remote timestamp reference.
 			};
 
 		public:

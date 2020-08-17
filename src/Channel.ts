@@ -64,7 +64,7 @@ export class Channel extends EnhancedEventEmitter
 		this._consumerSocket = consumerSocket as Duplex;
 
 		// Read Channel responses/notifications from the worker.
-		this._consumerSocket.on('data', (buffer) =>
+		this._consumerSocket.on('data', (buffer: Buffer) =>
 		{
 			if (!this._recvBuffer)
 			{
@@ -77,12 +77,12 @@ export class Channel extends EnhancedEventEmitter
 					this._recvBuffer.length + buffer.length);
 			}
 
-			if (this._recvBuffer.length > NS_PAYLOAD_MAX_LEN)
+			if (this._recvBuffer!.length > NS_PAYLOAD_MAX_LEN)
 			{
 				logger.error('receiving buffer is full, discarding all data into it');
 
 				// Reset the buffer and exit.
-				this._recvBuffer = null;
+				this._recvBuffer = undefined;
 
 				return;
 			}
@@ -118,7 +118,7 @@ export class Channel extends EnhancedEventEmitter
 					{
 						// 123 = '{' (a Channel JSON messsage).
 						case 123:
-							this._processMessage(JSON.parse(nsPayload));
+							this._processMessage(JSON.parse(nsPayload.toString('utf8')));
 							break;
 
 						// 68 = 'D' (a debug log).
@@ -158,7 +158,7 @@ export class Channel extends EnhancedEventEmitter
 
 				// Remove the read payload from the buffer.
 				this._recvBuffer =
-					this._recvBuffer.slice(netstring.nsLength(this._recvBuffer));
+					this._recvBuffer!.slice(netstring.nsLength(this._recvBuffer));
 
 				if (!this._recvBuffer.length)
 				{
@@ -291,7 +291,7 @@ export class Channel extends EnhancedEventEmitter
 
 	private _processMessage(msg: any): void
 	{
-		// If a response retrieve its associated request.
+		// If a response, retrieve its associated request.
 		if (msg.id)
 		{
 			const sent = this._sents.get(msg.id);

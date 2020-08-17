@@ -1,5 +1,7 @@
+/// <reference types="node" />
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { SctpStreamParameters } from './SctpParameters';
 export declare type DataProducerOptions = {
     /**
@@ -8,8 +10,9 @@ export declare type DataProducerOptions = {
     id?: string;
     /**
      * SCTP parameters defining how the endpoint is sending the data.
+     * Just if messages are sent over SCTP.
      */
-    sctpStreamParameters: SctpStreamParameters;
+    sctpStreamParameters?: SctpStreamParameters;
     /**
      * A label which can be used to distinguish this DataChannel from others.
      */
@@ -31,10 +34,15 @@ export declare type DataProducerStat = {
     messagesReceived: number;
     bytesReceived: number;
 };
+/**
+ * DataProducer type.
+ */
+export declare type DataProducerType = 'sctp' | 'direct';
 export declare class DataProducer extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
+    private readonly _payloadChannel;
     private _closed;
     private readonly _appData?;
     private readonly _observer;
@@ -43,10 +51,11 @@ export declare class DataProducer extends EnhancedEventEmitter {
      * @emits transportclose
      * @emits @close
      */
-    constructor({ internal, data, channel, appData }: {
+    constructor({ internal, data, channel, payloadChannel, appData }: {
         internal: any;
         data: any;
         channel: Channel;
+        payloadChannel: PayloadChannel;
         appData: any;
     });
     /**
@@ -58,9 +67,13 @@ export declare class DataProducer extends EnhancedEventEmitter {
      */
     get closed(): boolean;
     /**
+     * DataProducer type.
+     */
+    get type(): DataProducerType;
+    /**
      * SCTP stream parameters.
      */
-    get sctpStreamParameters(): SctpStreamParameters;
+    get sctpStreamParameters(): SctpStreamParameters | undefined;
     /**
      * DataChannel label.
      */
@@ -101,6 +114,10 @@ export declare class DataProducer extends EnhancedEventEmitter {
      * Get DataProducer stats.
      */
     getStats(): Promise<DataProducerStat[]>;
+    /**
+     * Send data (just valid for DataProducers created on a DirectTransport).
+     */
+    send(message: string | Buffer, ppid?: number): void;
     private _handleWorkerNotifications;
 }
 //# sourceMappingURL=DataProducer.d.ts.map

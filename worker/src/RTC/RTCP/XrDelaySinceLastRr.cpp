@@ -26,7 +26,7 @@ namespace RTC
 			// Get the header.
 			auto* body = const_cast<SsrcInfo::Body*>(reinterpret_cast<const SsrcInfo::Body*>(data));
 
-			auto ssrcInfo = new DelaySinceLastRr::SsrcInfo(body);
+			auto* ssrcInfo = new DelaySinceLastRr::SsrcInfo(body);
 
 			return ssrcInfo;
 		}

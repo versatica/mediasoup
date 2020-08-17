@@ -37,10 +37,15 @@
       'src/Channel/Notifier.cpp',
       'src/Channel/Request.cpp',
       'src/Channel/UnixStreamSocket.cpp',
+      'src/PayloadChannel/Notification.cpp',
+      'src/PayloadChannel/Notifier.cpp',
+      'src/PayloadChannel/Request.cpp',
+      'src/PayloadChannel/UnixStreamSocket.cpp',
       'src/RTC/AudioLevelObserver.cpp',
       'src/RTC/Consumer.cpp',
       'src/RTC/DataConsumer.cpp',
       'src/RTC/DataProducer.cpp',
+      'src/RTC/DirectTransport.cpp',
       'src/RTC/DtlsTransport.cpp',
       'src/RTC/IceCandidate.cpp',
       'src/RTC/IceServer.cpp',
@@ -143,10 +148,15 @@
       'include/Channel/Notifier.hpp',
       'include/Channel/Request.hpp',
       'include/Channel/UnixStreamSocket.hpp',
+      'include/PayloadChannel/Notification.hpp',
+      'include/PayloadChannel/Notifier.hpp',
+      'include/PayloadChannel/Request.hpp',
+      'include/PayloadChannel/UnixStreamSocket.hpp',
       'include/RTC/BweType.hpp',
       'include/RTC/AudioLevelObserver.hpp',
       'include/RTC/Consumer.hpp',
       'include/RTC/DataConsumer.hpp',
+      'include/RTC/DirectTransport.hpp',
       'include/RTC/DataProducer.hpp',
       'include/RTC/DtlsTransport.hpp',
       'include/RTC/IceCandidate.hpp',
@@ -317,10 +327,7 @@
   [
     {
       'target_name': 'mediasoup-worker',
-      'defines': [ 'SFU_SHM', 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
-      #'dependencies': [
-        #'deps/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
-      #],
+      'defines': [ 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
       'sources': [
         # C++ source files.
         'src/main.cpp',
@@ -332,15 +339,6 @@
         'include/RTC/ShmConsumer.hpp',
         'include/RTC/ShmTransport.hpp'
       ],
-#      'include_dirs':
-#      [
-#        '/root/build/ff_shm_api/include'
-#      ],
-#      'library_dirs': [
-#        '.',
-#        '/usr/local/lib/'
-#      ],
-#      'libraries': [ '/usr/local/lib/libffngxshm.a' ]
       'library_dirs': [
         '/usr/local/lib/'
       ],
@@ -375,6 +373,7 @@
         'test/src/RTC/TestRtpStreamRecv.cpp',
         'test/src/RTC/TestSeqManager.cpp',
         'test/src/RTC/TestTrendCalculator.cpp',
+        'test/src/RTC/TestRtpEncodingParameters.cpp',
         'test/src/RTC/Codecs/TestVP8.cpp',
         'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
         'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',

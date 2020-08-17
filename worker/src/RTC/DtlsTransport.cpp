@@ -165,7 +165,7 @@ namespace RTC
 		// Create key with curve.
 		ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
 
-		if (ecKey == nullptr)
+		if (!ecKey)
 		{
 			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
 

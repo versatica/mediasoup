@@ -222,6 +222,16 @@ available warnings
 
 When set to ```yes``` Catch will report the duration of each test case, in milliseconds. Note that it does this regardless of whether a test case passes or fails. Note, also, the certain reporters (e.g. Junit) always report test case durations regardless of this option being set or not.
 
+<pre>-D, --min-duration &lt;value></pre>
+
+> `--min-duration` was [introduced](https://github.com/catchorg/Catch2/pull/1910) in Catch 2.13.0
+
+When set, Catch will report the duration of each test case that took more
+than &lt;value> seconds, in milliseconds. This option is overriden by both
+`-d yes` and `-d no`, so that either all durations are reported, or none
+are.
+
+
 <a id="input-file"></a>
 ## Load test names to run from a file
 <pre>-f, --input-file &lt;filename></pre>
@@ -243,15 +253,25 @@ This option lists all available tests in a non-indented form, one on each line. 
 
 Test cases are ordered one of three ways:
 
-
 ### decl
-Declaration order (this is the default order if no --order argument is provided). The order the tests were originally declared in. Note that ordering between files is not guaranteed and is implementation dependent.
+Declaration order (this is the default order if no --order argument is provided).
+Tests in the same TU are sorted using their declaration orders, different
+TUs are in an implementation (linking) dependent order.
+
 
 ### lex
-Lexicographically sorted. Tests are sorted, alpha-numerically, by name.
+Lexicographic order. Tests are sorted by their name, their tags are ignored.
+
 
 ### rand
-Randomly sorted. Test names are sorted using ```std::random_shuffle()```. By default the random number generator is seeded with 0 - and so the order is repeatable. To control the random seed see <a href="#rng-seed">rng-seed</a>.
+
+Randomly sorted. The order is dependent on Catch2's random seed (see
+[`--rng-seed`](#rng-seed)), and is subset invariant. What this means
+is that as long as the random seed is fixed, running only some tests
+(e.g. via tag) does not change their relative order.
+
+> The subset stability was introduced in Catch2 v2.12.0
+
 
 <a id="rng-seed"></a>
 ## Specify a seed for the Random Number Generator

@@ -46,8 +46,9 @@ namespace RTC
 
 		this->processTimer = new Timer(this);
 
-		// TODO: Let's see.
-		// this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
+		// NOTE: This is supposed to recover computed available bandwidth after
+		// network issues.
+		this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
 
 		// clang-format off
 		this->processTimer->Start(std::min(
@@ -282,6 +283,19 @@ namespace RTC
 	void TransportCongestionControlClient::OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate)
 	{
 		MS_TRACE();
+
+		// NOTE: The same value as 'this->initialAvailableBitrate' is received periodically
+		// regardless of the real available bitrate. Skip such value except for the first time
+		// this event is called.
+		// clang-format off
+		if (
+			this->availableBitrateEventCalled &&
+			targetTransferRate.target_rate.bps() == this->initialAvailableBitrate
+		)
+		// clang-format on
+		{
+			return;
+		}
 
 		auto previousAvailableBitrate = this->bitrates.availableBitrate;
 

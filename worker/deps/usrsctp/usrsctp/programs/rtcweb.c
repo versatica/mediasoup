@@ -619,7 +619,7 @@ handle_open_request_message(struct peer_connection *pc,
 	uint8_t unordered;
 
 	if ((channel = find_channel_by_i_stream(pc, i_stream))) {
-		printf("handle_open_request_message: channel %d is in state %d instead of CLOSED.\n",
+		printf("handle_open_request_message: channel %u is in state %u instead of CLOSED.\n",
 		       channel->id, channel->state);
 		/* XXX: some error handling */
 		return;
@@ -707,12 +707,12 @@ handle_open_response_message(struct peer_connection *pc,
 	}
 	if (channel->state != DATA_CHANNEL_CONNECTING) {
 		/* XXX: improve error handling */
-		printf("handle_open_response_message: Channel with id %d for outgoing steam %d is in state %d.\n", channel->id, o_stream, channel->state);
+		printf("handle_open_response_message: Channel with id %u for outgoing steam %u is in state %u.\n", channel->id, o_stream, channel->state);
 		return;
 	}
 	if (find_channel_by_i_stream(pc, i_stream)) {
 		/* XXX: improve error handling */
-		printf("handle_open_response_message: Channel collision for channel with id %d and streams (in/out) = (%d/%d).\n", channel->id, i_stream, o_stream);
+		printf("handle_open_response_message: Channel collision for channel with id %u and streams (in/out) = (%u/%u).\n", channel->id, i_stream, o_stream);
 		return;
 	}
 	channel->i_stream = i_stream;
@@ -778,7 +778,7 @@ handle_data_message(struct peer_connection *pc,
 	} else {
 		/* Assuming DATA_CHANNEL_PPID_DOMSTRING */
 		/* XXX: Protect for non 0 terminated buffer */
-		printf("Message received of length %zu on channel with id %d: %.*s\n",
+		printf("Message received of length %zu on channel with id %u: %.*s\n",
 		       length, channel->id, (int)length, buffer);
 	}
 	return;
@@ -887,6 +887,9 @@ handle_association_change_event(struct sctp_assoc_change *sac)
 			case SCTP_ASSOC_SUPPORTS_RE_CONFIG:
 				printf(" RE-CONFIG");
 				break;
+			case SCTP_ASSOC_SUPPORTS_INTERLEAVING:
+				printf(" INTERLEAVING");
+				break;
 			default:
 				printf(" UNKNOWN(0x%02x)", sac->sac_info[i]);
 				break;
@@ -927,10 +930,12 @@ handle_peer_address_change_event(struct sctp_paddr_change *spc)
 		break;
 	default:
 #ifdef _WIN32
-		_snprintf(addr_buf, INET6_ADDRSTRLEN, "Unknown family %d", spc->spc_aaddr.ss_family);
+		if (_snprintf(addr_buf, INET6_ADDRSTRLEN, "Unknown family %d", spc->spc_aaddr.ss_family) < 0) {
 #else
-		snprintf(addr_buf, INET6_ADDRSTRLEN, "Unknown family %d", spc->spc_aaddr.ss_family);
+		if (snprintf(addr_buf, INET6_ADDRSTRLEN, "Unknown family %d", spc->spc_aaddr.ss_family) < 0) {
 #endif
+			addr_buf[0] = '\0';
+		}
 		addr = addr_buf;
 		break;
 	}

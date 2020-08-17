@@ -2,6 +2,12 @@
 
 # Release notes
 **Contents**<br>
+[2.13.0](#2130)<br>
+[2.12.4](#2124)<br>
+[2.12.3](#2123)<br>
+[2.12.2](#2122)<br>
+[2.12.1](#2121)<br>
+[2.12.0](#2120)<br>
 [2.11.3](#2113)<br>
 [2.11.2](#2112)<br>
 [2.11.1](#2111)<br>
@@ -33,6 +39,89 @@
 [2.0.1](#201)<br>
 [Older versions](#older-versions)<br>
 [Even Older versions](#even-older-versions)<br>
+
+## 2.13.0
+
+### Improvements
+* `GENERATE` can now follow a `SECTION` at the same level of nesting (#1938)
+  * The `SECTION`(s) before the `GENERATE` will not be run multiple times, the following ones will.
+* Added `-D`/`--min-duration` command line flag (#1910)
+  * If a test takes longer to finish than the provided value, its name and duration will be printed.
+  * This flag is overriden by setting `-d`/`--duration`.
+
+### Fixes
+* `TAPReporter` no longer skips successful assertions (#1983)
+
+
+## 2.12.4
+
+### Improvements
+* Added support for MacOS on ARM (#1971)
+
+
+## 2.12.3
+
+### Fixes
+* `GENERATE` nested in a for loop no longer creates multiple generators (#1913)
+* Fixed copy paste error breaking `TEMPLATE_TEST_CASE_SIG` for 6 or more arguments (#1954)
+* Fixed potential UB when handling non-ASCII characters in CLI args (#1943)
+
+### Improvements
+* There can be multiple calls to `GENERATE` on a single line
+* Improved `fno-except` support for platforms that do not provide shims for exception-related std functions (#1950)
+  * E.g. the Green Hills C++ compiler
+* XmlReporter now also reports test-case-level statistics (#1958)
+  * This is done via a new element, `OverallResultsCases`
+
+### Miscellaneous
+* Added `.clang-format` file to the repo (#1182, #1920)
+* Rewrote contributing docs
+  * They should explain the different levels of testing and so on much better
+
+
+## 2.12.2
+
+### Fixes
+* Fixed compilation failure if `is_range` ADL found deleted function (#1929)
+* Fixed potential UB in `CAPTURE` if the expression contained non-ASCII characters (#1925)
+
+### Improvements
+* `std::result_of` is not used if `std::invoke_result` is available (#1934)
+* JUnit reporter writes out `status` attribute for tests (#1899)
+* Suppresed clang-tidy's `hicpp-vararg` warning (#1921)
+  * Catch2 was already suppressing the `cppcoreguidelines-pro-type-vararg` alias of the warning
+
+
+## 2.12.1
+
+### Fixes
+* Vector matchers now support initializer list literals better
+
+### Improvements
+* Added support for `^` (bitwise xor) to `CHECK` and `REQUIRE`
+
+
+## 2.12.0
+
+### Improvements
+* Running tests in random order (`--order rand`) has been reworked significantly (#1908)
+  * Given same seed, all platforms now produce the same order
+  * Given same seed, the relative order of tests does not change if you select only a subset of them
+* Vector matchers support custom allocators (#1909)
+* `|` and `&` (bitwise or and bitwise and) are now supported in `CHECK` and `REQUIRE`
+  * The resulting type must be convertible to `bool`
+
+### Fixes
+* Fixed computation of benchmarking column widths in ConsoleReporter (#1885, #1886)
+* Suppressed clang-tidy's `cppcoreguidelines-pro-type-vararg` in assertions (#1901)
+  * It was a false positive trigered by the new warning support workaround
+* Fixed bug in test specification parser handling of OR'd patterns using escaping (#1905)
+
+### Miscellaneous
+* Worked around IBM XL's codegen bug (#1907)
+  * It would emit code for _destructors_ of temporaries in an unevaluated context
+* Improved detection of stdlib's support for `std::uncaught_exceptions` (#1911)
+
 
 ## 2.11.3
 

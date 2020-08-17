@@ -5,10 +5,12 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
+import { DirectTransport, DirectTransportOptions } from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
@@ -117,6 +119,9 @@ export class Router extends EnhancedEventEmitter
 	// Channel instance.
 	private readonly _channel: Channel;
 
+	// PayloadChannel instance.
+	private readonly _payloadChannel: PayloadChannel;
+
 	// Closed flag.
 	private _closed = false;
 
@@ -155,12 +160,14 @@ export class Router extends EnhancedEventEmitter
 			internal,
 			data,
 			channel,
+			payloadChannel,
 			appData
 		}:
 		{
 			internal: any;
 			data: any;
 			channel: Channel;
+			payloadChannel: PayloadChannel;
 			appData?: any;
 		}
 	)
@@ -172,6 +179,7 @@ export class Router extends EnhancedEventEmitter
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
+		this._payloadChannel = payloadChannel;
 		this._appData = appData;
 	}
 
@@ -341,6 +349,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
+			sctpSendBufferSize = 262144,
 			appData = {}
 		}: WebRtcTransportOptions
 	): Promise<WebRtcTransport>
@@ -352,7 +361,7 @@ export class Router extends EnhancedEventEmitter
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		listenIps = (listenIps as any[]).map((listenIp: TransportListenIp | string) =>
+		listenIps = listenIps.map((listenIp) =>
 		{
 			if (typeof listenIp === 'string' && listenIp)
 			{
@@ -382,6 +391,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			sctpSendBufferSize,
 			isDataChannel : true
 		};
 
@@ -393,12 +403,13 @@ export class Router extends EnhancedEventEmitter
 				internal,
 				data,
 				channel                  : this._channel,
+				payloadChannel           : this._payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
-				getProducerById          : (producerId: string): Producer => (
+				getProducerById          : (producerId: string): Producer | undefined => (
 					this._producers.get(producerId)
 				),
-				getDataProducerById : (dataProducerId: string): DataProducer => (
+				getDataProducerById : (dataProducerId: string): DataProducer | undefined => (
 					this._dataProducers.get(dataProducerId)
 				)
 			});
@@ -432,6 +443,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
+			sctpSendBufferSize = 262144,
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 			appData = {}
@@ -471,6 +483,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			sctpSendBufferSize,
 			isDataChannel : false,
 			enableSrtp,
 			srtpCryptoSuite
@@ -484,12 +497,13 @@ export class Router extends EnhancedEventEmitter
 				internal,
 				data,
 				channel                  : this._channel,
+				payloadChannel           : this._payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
-				getProducerById          : (producerId: string): Producer => (
+				getProducerById          : (producerId: string): Producer | undefined => (
 					this._producers.get(producerId)
 				),
-				getDataProducerById : (dataProducerId: string): DataProducer => (
+				getDataProducerById : (dataProducerId: string): DataProducer | undefined => (
 					this._dataProducers.get(dataProducerId)
 				)
 			});
@@ -532,7 +546,8 @@ export class Router extends EnhancedEventEmitter
 			listenIp,
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
-			maxSctpMessageSize = 1073741823,
+			maxSctpMessageSize = 268435456,
+			sctpSendBufferSize = 268435456,
 			enableRtx = false,
 			enableSrtp = false,
 			appData = {}
@@ -569,6 +584,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			sctpSendBufferSize,
 			isDataChannel : false,
 			enableRtx,
 			enableSrtp
@@ -582,12 +598,67 @@ export class Router extends EnhancedEventEmitter
 				internal,
 				data,
 				channel                  : this._channel,
+				payloadChannel           : this._payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
-				getProducerById          : (producerId: string): Producer => (
+				getProducerById          : (producerId: string): Producer | undefined => (
 					this._producers.get(producerId)
 				),
-				getDataProducerById : (dataProducerId: string): DataProducer => (
+				getDataProducerById : (dataProducerId: string): DataProducer | undefined => (
+					this._dataProducers.get(dataProducerId)
+				)
+			});
+
+		this._transports.set(transport.id, transport);
+		transport.on('@close', () => this._transports.delete(transport.id));
+		transport.on('@newproducer', (producer: Producer) => this._producers.set(producer.id, producer));
+		transport.on('@producerclose', (producer: Producer) => this._producers.delete(producer.id));
+		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
+			this._dataProducers.set(dataProducer.id, dataProducer)
+		));
+		transport.on('@dataproducerclose', (dataProducer: DataProducer) => (
+			this._dataProducers.delete(dataProducer.id)
+		));
+
+		// Emit observer event.
+		this._observer.safeEmit('newtransport', transport);
+
+		return transport;
+	}
+
+	/**
+	 * Create a DirectTransport.
+	 */
+	async createDirectTransport(
+		{
+			maxMessageSize = 262144,
+			appData = {}
+		}: DirectTransportOptions =
+		{
+			maxMessageSize : 262144
+		}
+	): Promise<DirectTransport>
+	{
+		logger.debug('createDirectTransport()');
+
+		const internal = { ...this._internal, transportId: uuidv4() };
+		const reqData = { direct: true, maxMessageSize };
+
+		const data =
+			await this._channel.request('router.createDirectTransport', internal, reqData);
+
+		const transport = new DirectTransport(
+			{
+				internal,
+				data,
+				channel                  : this._channel,
+				payloadChannel           : this._payloadChannel,
+				appData,
+				getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities,
+				getProducerById          : (producerId: string): Producer | undefined => (
+					this._producers.get(producerId)
+				),
+				getDataProducerById : (dataProducerId: string): DataProducer | undefined => (
 					this._dataProducers.get(dataProducerId)
 				)
 			});
@@ -719,8 +790,8 @@ export class Router extends EnhancedEventEmitter
 		else if (router === this)
 			throw new TypeError('cannot use this Router as destination');
 
-		let producer: Producer;
-		let dataProducer: DataProducer;
+		let producer: Producer | undefined;
+		let dataProducer: DataProducer | undefined;
 
 		if (producerId)
 		{
@@ -744,8 +815,8 @@ export class Router extends EnhancedEventEmitter
 		// would end up generating two pairs of PipeTranports. To prevent that, let's
 		// use an async queue.
 
-		let localPipeTransport: PipeTransport;
-		let remotePipeTransport: PipeTransport;
+		let localPipeTransport: PipeTransport | undefined;
+		let remotePipeTransport: PipeTransport | undefined;
 
 		await this._pipeToRouterQueue.push(async () =>
 		{
@@ -791,13 +862,13 @@ export class Router extends EnhancedEventEmitter
 
 					localPipeTransport.observer.on('close', () =>
 					{
-						remotePipeTransport.close();
+						remotePipeTransport!.close();
 						this._mapRouterPipeTransports.delete(router);
 					});
 
 					remotePipeTransport.observer.on('close', () =>
 					{
-						localPipeTransport.close();
+						localPipeTransport!.close();
 						this._mapRouterPipeTransports.delete(router);
 					});
 
@@ -823,29 +894,32 @@ export class Router extends EnhancedEventEmitter
 
 		if (producer)
 		{
-			let pipeConsumer: Consumer;
-			let pipeProducer: Producer;
+			let pipeConsumer: Consumer | undefined;
+			let pipeProducer: Producer | undefined;
 
 			try
 			{
-				pipeConsumer = await localPipeTransport.consume({ producerId });
+				pipeConsumer = await localPipeTransport!.consume(
+					{
+						producerId : producerId!
+					});
 
-				pipeProducer = await remotePipeTransport.produce(
+				pipeProducer = await remotePipeTransport!.produce(
 					{
 						id            : producer.id,
-						kind          : pipeConsumer.kind,
-						rtpParameters : pipeConsumer.rtpParameters,
-						paused        : pipeConsumer.producerPaused,
+						kind          : pipeConsumer!.kind,
+						rtpParameters : pipeConsumer!.rtpParameters,
+						paused        : pipeConsumer!.producerPaused,
 						appData       : producer.appData
 					});
 
 				// Pipe events from the pipe Consumer to the pipe Producer.
-				pipeConsumer.observer.on('close', () => pipeProducer.close());
-				pipeConsumer.observer.on('pause', () => pipeProducer.pause());
-				pipeConsumer.observer.on('resume', () => pipeProducer.resume());
+				pipeConsumer!.observer.on('close', () => pipeProducer!.close());
+				pipeConsumer!.observer.on('pause', () => pipeProducer!.pause());
+				pipeConsumer!.observer.on('resume', () => pipeProducer!.resume());
 
 				// Pipe events from the pipe Producer to the pipe Consumer.
-				pipeProducer.observer.on('close', () => pipeConsumer.close());
+				pipeProducer.observer.on('close', () => pipeConsumer!.close());
 
 				return { pipeConsumer, pipeProducer };
 			}
@@ -866,30 +940,30 @@ export class Router extends EnhancedEventEmitter
 		}
 		else if (dataProducer)
 		{
-			let pipeDataConsumer: DataConsumer;
-			let pipeDataProducer: DataProducer;
+			let pipeDataConsumer: DataConsumer | undefined;
+			let pipeDataProducer: DataProducer | undefined;
 
 			try
 			{
-				pipeDataConsumer = await localPipeTransport.consumeData(
+				pipeDataConsumer = await localPipeTransport!.consumeData(
 					{
-						dataProducerId
+						dataProducerId : dataProducerId!
 					});
 
-				pipeDataProducer = await remotePipeTransport.produceData(
+				pipeDataProducer = await remotePipeTransport!.produceData(
 					{
 						id                   : dataProducer.id,
-						sctpStreamParameters : pipeDataConsumer.sctpStreamParameters,
-						label                : pipeDataConsumer.label,
-						protocol             : pipeDataConsumer.protocol,
+						sctpStreamParameters : pipeDataConsumer!.sctpStreamParameters,
+						label                : pipeDataConsumer!.label,
+						protocol             : pipeDataConsumer!.protocol,
 						appData              : dataProducer.appData
 					});
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.
-				pipeDataConsumer.observer.on('close', () => pipeDataProducer.close());
+				pipeDataConsumer!.observer.on('close', () => pipeDataProducer!.close());
 
 				// Pipe events from the pipe DataProducer to the pipe DataConsumer.
-				pipeDataProducer.observer.on('close', () => pipeDataConsumer.close());
+				pipeDataProducer.observer.on('close', () => pipeDataConsumer!.close());
 
 				return { pipeDataConsumer, pipeDataProducer };
 			}
@@ -940,8 +1014,9 @@ export class Router extends EnhancedEventEmitter
 			{
 				internal,
 				channel         : this._channel,
+				payloadChannel  : this._payloadChannel,
 				appData,
-				getProducerById : (producerId: string): Producer => (
+				getProducerById : (producerId: string): Producer | undefined => (
 					this._producers.get(producerId)
 				)
 			});

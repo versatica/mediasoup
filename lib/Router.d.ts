@@ -1,9 +1,11 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import { TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
+import { DirectTransport, DirectTransportOptions } from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
@@ -78,6 +80,7 @@ export declare class Router extends EnhancedEventEmitter {
     private readonly _internal;
     private readonly _data;
     private readonly _channel;
+    private readonly _payloadChannel;
     private _closed;
     private readonly _appData?;
     private readonly _transports;
@@ -92,10 +95,11 @@ export declare class Router extends EnhancedEventEmitter {
      * @emits workerclose
      * @emits @close
      */
-    constructor({ internal, data, channel, appData }: {
+    constructor({ internal, data, channel, payloadChannel, appData }: {
         internal: any;
         data: any;
         channel: Channel;
+        payloadChannel: PayloadChannel;
         appData?: any;
     });
     /**
@@ -143,11 +147,11 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a WebRtcTransport.
      */
-    createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
+    createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
     /**
      * Create a PlainTransport.
      */
-    createPlainTransport({ listenIp, rtcpMux, comedia, disableOriginCheck, enableSctp, numSctpStreams, maxSctpMessageSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
+    createPlainTransport({ listenIp, rtcpMux, comedia, disableOriginCheck, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
     /**
      * DEPRECATED: Use createPlainTransport().
      */
@@ -155,7 +159,11 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a PipeTransport.
      */
-    createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
+    createPipeTransport({ listenIp, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
+    /**
+     * Create a DirectTransport.
+     */
+    createDirectTransport({ maxMessageSize, appData }?: DirectTransportOptions): Promise<DirectTransport>;
     /**
      * Create a ShmTransport.
      *

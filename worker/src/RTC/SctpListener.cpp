@@ -19,7 +19,7 @@ namespace RTC
 		auto jsonStreamIdTableIt = jsonObject.find("streamIdTable");
 
 		// Add streamIdTable.
-		for (auto& kv : this->streamIdTable)
+		for (const auto& kv : this->streamIdTable)
 		{
 			auto streamId      = kv.first;
 			auto* dataProducer = kv.second;
@@ -32,7 +32,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& sctpParameters = dataProducer->GetSctpStreamParameters();
+		const auto& sctpParameters = dataProducer->GetSctpStreamParameters();
 
 		// Add entries into the streamIdTable.
 		auto streamId = sctpParameters.streamId;

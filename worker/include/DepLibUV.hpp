@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include <uv.h>
-#include <limits>
 
 class DepLibUV
 {
@@ -28,35 +27,17 @@ public:
 	{
 		return uv_hrtime();
 	}
-	// Used within libwebrtc dependency which uses int64_t possitive values for
-	// time representation.
+	// Used within libwebrtc dependency which uses int64_t values for time
+	// representation.
 	static int64_t GetTimeMsInt64()
 	{
-		static constexpr uint64_t MaxInt64{ std::numeric_limits<int64_t>::max() };
-
-		uint64_t time = DepLibUV::GetTimeMs();
-
-		if (time > MaxInt64)
-		{
-			time -= MaxInt64 - 1;
-		}
-
-		return static_cast<int64_t>(time);
+		return static_cast<int64_t>(DepLibUV::GetTimeMs());
 	}
-	// Used within libwebrtc dependency which uses int64_t possitive values for
-	// time representation.
+	// Used within libwebrtc dependency which uses int64_t values for time
+	// representation.
 	static int64_t GetTimeUsInt64()
 	{
-		static constexpr uint64_t MaxInt64{ std::numeric_limits<int64_t>::max() };
-
-		uint64_t time = DepLibUV::GetTimeUs();
-
-		if (time > MaxInt64)
-		{
-			time -= MaxInt64 - 1;
-		}
-
-		return static_cast<int64_t>(time);
+		return static_cast<int64_t>(DepLibUV::GetTimeUs());
 	}
 
 private:

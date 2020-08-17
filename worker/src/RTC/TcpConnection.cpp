@@ -130,14 +130,13 @@ namespace RTC
 					this->frameStart    = 0;
 				}
 				// Second case: the incomplete frame begins at position 0 of the buffer.
-				// The frame is too big, so close the connection.
+				// The frame is too big.
 				else
 				{
 					MS_WARN_DEV(
 					  "no more space in the buffer for the unfinished frame being parsed, closing the "
 					  "connection");
 
-					// Close the socket.
 					ErrorReceiving();
 
 					// And exit fast since we are supposed to be deallocated.

@@ -56,7 +56,7 @@ mediasoup and its client side libraries provide a super low level API. They are 
 * Simulcast and SVC support.
 * Congestion control.
 * Sender and receiver bandwidth estimation with spatial/temporal layers distribution algorithm.
-* SCTP support (WebRTC DataChannels and SCTP over plain UDP).
+* Data message exchange (via WebRTC DataChannels, SCTP over plain UDP, and direct termination in Node.js).
 * Extremely powerful (media worker subprocess coded in C++ on top of [libuv](https://libuv.org)).
 
 
@@ -73,9 +73,9 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 * José Luis Millán [[github](https://github.com/jmillan/)]
 
 
-## Donate
+## Sponsor
 
-You can support mediasoup by becoming a [sponsor][donate] or making a [donation][donate]. Thanks!
+You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 
 
 ## License
@@ -96,7 +96,7 @@ You can support mediasoup by becoming a [sponsor][donate] or making a [donation]
 [codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
 [opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
 [opencollective-mediasoup]: https://opencollective.com/mediasoup/
-[donate]: https://mediasoup.org/sponsors/#become-a-sponsor
+[sponsor]: https://mediasoup.org/sponsor/
 [mediasoup-architecture]: /art/mediasoup-v3-architecture-01.svg
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png
 [mediasoup-demo]: https://v3demo.mediasoup.org

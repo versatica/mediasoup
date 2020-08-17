@@ -355,7 +355,7 @@ namespace RTC
 		if (jsonMetaIt == data.end())
 			MS_THROW_TYPE_ERROR("missing metadata");
 		else if (!jsonMetaIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong metadata (not a string)");
+			MS_THROW_TYPE_ERROR("wrong metadata (not a string) in [%s]", data.dump().c_str());
 
 		metadata.assign(jsonMetaIt->get<std::string>());
 
@@ -364,7 +364,7 @@ namespace RTC
 		if (jsonShmIt == data.end())
 			MS_THROW_TYPE_ERROR("missing shm name");
 		else if (!jsonShmIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong shm name (not a string)");
+			MS_THROW_TYPE_ERROR("wrong shm name (not a string) in [%s]", data.dump().c_str());
 
 		shm.assign(jsonShmIt->get<std::string>());
 

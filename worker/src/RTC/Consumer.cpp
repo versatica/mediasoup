@@ -185,8 +185,8 @@ namespace RTC
 		{
 			jsonConsumableRtpEncodingsIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry = (*jsonConsumableRtpEncodingsIt)[i];
-			auto& encoding  = this->consumableRtpEncodings[i];
+			auto& jsonEntry      = (*jsonConsumableRtpEncodingsIt)[i];
+			const auto& encoding = this->consumableRtpEncodings[i];
 
 			encoding.FillJson(jsonEntry);
 		}
@@ -425,6 +425,14 @@ namespace RTC
 			UserOnResumed();
 
 		Channel::Notifier::Emit(this->id, "producerresume");
+	}
+
+	void Consumer::ProducerRtpStreamScores(const std::vector<uint8_t>* scores)
+	{
+		MS_TRACE();
+
+		// This is gonna be a constant pointer.
+		this->producerRtpStreamScores = scores;
 	}
 
 	// The caller (Router) is supposed to proceed with the deletion of this Consumer

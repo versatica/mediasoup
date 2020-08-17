@@ -46,7 +46,6 @@ set(CMAKE_MACOSX_RPATH 		1)
 include(CheckCCompilerFlag)
 
 add_definitions(-D__Userspace__)
-add_definitions(-D__Userspace_os_${CMAKE_SYSTEM_NAME})
 add_definitions(-DSCTP_SIMPLE_ALLOCATOR)
 add_definitions(-DSCTP_PROCESS_LEVEL_LOCKS)
 
@@ -69,25 +68,8 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_definitions(-D_GNU_SOURCE)
 endif ()
 
-if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-	add_definitions(-U__FreeBSD__)
-endif ()
-
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-	add_definitions(-U__APPLE__)
 	add_definitions(-D__APPLE_USE_RFC_2292)
-endif ()
-
-if (CMAKE_SYSTEM_NAME MATCHES "DragonFly")
-	add_definitions(-U__DragonFly__)
-endif ()
-
-if (CMAKE_SYSTEM_NAME MATCHES "NetBSD")
-	add_definitions(-U__NetBSD__)
-endif ()
-
-if (CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
-	add_definitions(-U__OpenBSD__)
 endif ()
 
 #################################################

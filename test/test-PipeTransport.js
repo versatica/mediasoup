@@ -276,14 +276,11 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 				parameters : {}
 			}
 		]);
-	expect(pipeConsumer.rtpParameters.encodings).toEqual(
-		[
-			audioProducer.consumableRtpParameters.encodings[0]
-		]);
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(false);
-	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
+	expect(pipeConsumer.score).toEqual(
+		{ score: 10, producerScore: 10, producerScores: [] });
 	expect(pipeConsumer.appData).toEqual({});
 
 	expect(pipeProducer.id).toBe(audioProducer.id);
@@ -314,10 +311,6 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 				encrypt    : false,
 				parameters : {}
 			}
-		]);
-	expect(pipeProducer.rtpParameters.encodings).toEqual(
-		[
-			audioProducer.consumableRtpParameters.encodings[0]
 		]);
 	expect(pipeProducer.paused).toBe(false);
 }, 2000);
@@ -389,17 +382,12 @@ test('router.pipeToRouter() succeeds with video', async () =>
 				parameters : {}
 			}
 		]);
-	expect(pipeConsumer.rtpParameters.encodings).toEqual(
-		[
-			videoProducer.consumableRtpParameters.encodings[0],
-			videoProducer.consumableRtpParameters.encodings[1],
-			videoProducer.consumableRtpParameters.encodings[2]
-		]);
 
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(true);
-	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
+	expect(pipeConsumer.score).toEqual(
+		{ score: 10, producerScore: 10, producerScores: [] });
 	expect(pipeConsumer.appData).toEqual({});
 
 	expect(pipeProducer.id).toBe(videoProducer.id);
@@ -544,17 +532,12 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 				parameters : {}
 			}
 		]);
-	expect(pipeConsumer.rtpParameters.encodings).toEqual(
-		[
-			videoProducer.consumableRtpParameters.encodings[0],
-			videoProducer.consumableRtpParameters.encodings[1],
-			videoProducer.consumableRtpParameters.encodings[2]
-		]);
 
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
 	expect(pipeConsumer.producerPaused).toBe(true);
-	expect(pipeConsumer.score).toEqual({ score: 10, producerScore: 10 });
+	expect(pipeConsumer.score).toEqual(
+		{ score: 10, producerScore: 10, producerScores: [] });
 	expect(pipeConsumer.appData).toEqual({});
 
 	pipeTransport.close();
@@ -737,7 +720,8 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(false);
 	expect(videoConsumer.producerPaused).toBe(true);
-	expect(videoConsumer.score).toEqual({ score: 10, producerScore: 0 });
+	expect(videoConsumer.score).toEqual(
+		{ score: 10, producerScore: 0, producerScores: [ 0, 0, 0 ] });
 	expect(videoConsumer.appData).toEqual({});
 }, 2000);
 
@@ -806,6 +790,7 @@ test('router.pipeToRouter() succeeds with data', async () =>
 
 	expect(pipeDataConsumer.id).toBeType('string');
 	expect(pipeDataConsumer.closed).toBe(false);
+	expect(pipeDataConsumer.type).toBe('sctp');
 	expect(pipeDataConsumer.sctpStreamParameters).toBeType('object');
 	expect(pipeDataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(pipeDataConsumer.sctpStreamParameters.ordered).toBe(false);
@@ -816,6 +801,7 @@ test('router.pipeToRouter() succeeds with data', async () =>
 
 	expect(pipeDataProducer.id).toBe(dataProducer.id);
 	expect(pipeDataProducer.closed).toBe(false);
+	expect(pipeDataProducer.type).toBe('sctp');
 	expect(pipeDataProducer.sctpStreamParameters).toBeType('object');
 	expect(pipeDataProducer.sctpStreamParameters.streamId).toBeType('number');
 	expect(pipeDataProducer.sctpStreamParameters.ordered).toBe(false);
@@ -834,6 +820,7 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () =>
 
 	expect(dataConsumer.id).toBeType('string');
 	expect(dataConsumer.closed).toBe(false);
+	expect(dataConsumer.type).toBe('sctp');
 	expect(dataConsumer.sctpStreamParameters).toBeType('object');
 	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
 	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
