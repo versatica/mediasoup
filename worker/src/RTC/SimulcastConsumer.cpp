@@ -883,7 +883,7 @@ namespace RTC
 				header.timestamp      = this->rtpStream->GetMaxPacketTs();
 				header.ssrc           = packet->GetSsrc();
 
-				RTC::RtpPacket *emptyPacket =
+				RTC::RtpPacket* emptyPacket =
 				  RTC::RtpPacket::Parse(reinterpret_cast<uint8_t*>(&header), sizeof(RTC::RtpPacket::Header));
 
 				if (this->rtpStream->ReceivePacket(emptyPacket))
