@@ -873,41 +873,42 @@ namespace RTC
 			if (!lastSentRtpPacketHasMarker && shouldSwitchCurrentSpatialLayer)
 			{
 				RTC::RtpPacket::Header header;
-				header.csrcCount = 0u;
-				header.extension = 0u;
-				header.padding = 0u;
-				header.version = 2u;
-				header.payloadType = packet->GetPayloadType();
-				header.marker = 1u;
+				header.csrcCount      = 0u;
+				header.extension      = 0u;
+				header.padding        = 0u;
+				header.version        = 2u;
+				header.payloadType    = packet->GetPayloadType();
+				header.marker         = 1u;
 				header.sequenceNumber = seq;
-				header.timestamp = this->rtpStream->GetMaxPacketTs();
-				header.ssrc = packet->GetSsrc();
+				header.timestamp      = this->rtpStream->GetMaxPacketTs();
+				header.ssrc           = packet->GetSsrc();
 
-				RTC::RtpPacket *emptyPacket = RTC::RtpPacket::Parse(reinterpret_cast<uint8_t*>(&header), sizeof(RTC::RtpPacket::Header));
+				RTC::RtpPacket *emptyPacket =
+				  RTC::RtpPacket::Parse(reinterpret_cast<uint8_t*>(&header), sizeof(RTC::RtpPacket::Header));
 
 				if (this->rtpStream->ReceivePacket(emptyPacket))
 				{
 					this->listener->OnConsumerSendRtpPacket(this, emptyPacket);
 
 					this->rtpSeqManager.Offset(1);
-					packet->SetSequenceNumber(seq+1);
+					packet->SetSequenceNumber(seq + 1);
 				}
 				else
 				{
 					MS_WARN_TAG(
-					rtp,
-					"failed to send empty packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-					"] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-					emptyPacket->GetSsrc(),
-					emptyPacket->GetSequenceNumber(),
-					emptyPacket->GetTimestamp(),
-					origSsrc,
-					origSeq,
-					origTimestamp);
+					  rtp,
+					  "failed to send empty packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+					  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+					  emptyPacket->GetSsrc(),
+					  emptyPacket->GetSequenceNumber(),
+					  emptyPacket->GetTimestamp(),
+					  origSsrc,
+					  origSeq,
+					  origTimestamp);
 				}
 				delete emptyPacket;
 			}
-			
+
 			MS_DEBUG_TAG(
 			  rtp,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
@@ -924,7 +925,7 @@ namespace RTC
 		if (this->rtpStream->ReceivePacket(packet))
 		{
 			this->lastSentRtpPacketHasMarker = packet->HasMarker();
-			
+
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 
