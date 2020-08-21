@@ -9,9 +9,7 @@
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
 #include "RTC/WebRtcTransport.hpp"
-#ifdef SFU_SHM
-  #include "RTC/ShmTransport.hpp"
-#endif
+#include "RTC/ShmTransport.hpp"
 
 namespace RTC
 {
@@ -251,7 +249,6 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROUTER_CREATE_SHM_TRANSPORT:
 			{
-#ifdef SFU_SHM
 				std::string transportId;
 
 				// This may throw
@@ -269,9 +266,7 @@ namespace RTC
 				shmTransport->FillJson(data);
 
 				request->Accept(data);
-#else
-				request->Accept();
-#endif
+
 				break;
 			}
 

@@ -317,10 +317,7 @@
   [
     {
       'target_name': 'mediasoup-worker',
-      'defines': [ 'SFU_SHM', 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
-      #'dependencies': [
-        #'deps/ff_shm_api/ff_shm_api.gyp:ff_shm_api'
-      #],
+      'defines': [ 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
       'sources': [
         # C++ source files.
         'src/main.cpp',
@@ -332,15 +329,6 @@
         'include/RTC/ShmConsumer.hpp',
         'include/RTC/ShmTransport.hpp'
       ],
-#      'include_dirs':
-#      [
-#        '/root/build/ff_shm_api/include'
-#      ],
-#      'library_dirs': [
-#        '.',
-#        '/usr/local/lib/'
-#      ],
-#      'libraries': [ '/usr/local/lib/libffngxshm.a' ]
       'library_dirs': [
         '/usr/local/lib/'
       ],

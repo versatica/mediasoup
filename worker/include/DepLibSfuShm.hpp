@@ -94,7 +94,7 @@ namespace DepLibSfuShm
     uint64_t AdjustAudioPktSeq(uint64_t seq);
     void UpdatePktStat(uint64_t seq, uint64_t ts, Media kind);
 
-    bool IsVideoSeqUnset() const;  
+    bool IsLastVideoSeqNotSet() const;  
     uint64_t LastVideoTs() const;
     uint64_t LastVideoSeq() const;
 
@@ -189,7 +189,7 @@ namespace DepLibSfuShm
     }
   }
 
-  inline bool ShmCtx::IsVideoSeqUnset() const
+  inline bool ShmCtx::IsLastVideoSeqNotSet() const
   {
       return (this->data[1].last_seq == UINT64_UNSET);
   }

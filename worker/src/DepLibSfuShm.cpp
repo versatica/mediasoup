@@ -18,8 +18,11 @@ namespace DepLibSfuShm {
       { -2, "again (SFUSHM_AV_AGAIN)" }
     };
 
-
-  static constexpr uint64_t MaxVideoPktDelay{ 9000 }; // 100ms in samples (90000 sample rate) TODO: redo to hold constant number of picture frames instead?
+  // 100ms in samples (90000 sample rate) 
+  // TODO: redo to hold constant number of picture frames instead? 
+  // This will not much better because it is just a different time unit,
+  // and with exception of old queue items we try to wait to assemble the whole picture frame anyway
+  static constexpr uint64_t MaxVideoPktDelay{ 9000 };
 
 
   ShmCtx::~ShmCtx()
@@ -154,7 +157,7 @@ namespace DepLibSfuShm {
     // If queue is empty, seqid is in order, and pkt is not a fragment, there is no need to enqueue
     if (this->videoPktBuffer.empty()
       && !isChunkFragment
-      && (IsVideoSeqUnset() 
+      && (IsLastVideoSeqNotSet() 
         || data->first_rtp_seq - 1 == LastVideoSeq()))
     {
     //MS_DEBUG_TAG(rtp, "WRITETHRU [seq=%" PRIu64 " ts=%" PRIu64 "] len=%zu chunkstart=%s chunkend=%s qsize=%zu", data->first_rtp_seq, data->rtp_time, data->len, isChunkStart? "1":"0", isChunkEnd? "1":"0", videoPktBuffer.size());
@@ -162,7 +165,7 @@ namespace DepLibSfuShm {
     }
 
     // Add a too old pkt in queue anyway
-    if (!IsVideoSeqUnset()
+    if (!IsLastVideoSeqNotSet()
         && LastVideoTs() > ts
         && LastVideoTs() - ts > MaxVideoPktDelay)
     {
@@ -199,7 +202,7 @@ namespace DepLibSfuShm {
     while (it != this->videoPktBuffer.end())
     {
       // First, write out all chunks with expired timestamps. TODO: mark incomplete fragmented pictures as corrupted (feature TBD in shm writer)
-      if (!IsVideoSeqUnset()
+      if (!IsLastVideoSeqNotSet()
         && LastVideoTs() > it->chunk.rtp_time
         && LastVideoTs() - it->chunk.rtp_time > MaxVideoPktDelay)
       {

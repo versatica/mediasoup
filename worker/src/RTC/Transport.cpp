@@ -20,10 +20,8 @@
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
 
-#ifdef SFU_SHM
-	#include "RTC/ShmTransport.hpp"
-  #include "RTC/ShmConsumer.hpp"
-#endif
+#include "RTC/ShmTransport.hpp"
+#include "RTC/ShmConsumer.hpp"
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <iterator>                                              // std::ostream_iterator
 #include <map>                                                   // std::multimap
@@ -763,10 +761,8 @@ namespace RTC
 
 					case RTC::RtpParameters::Type::SHM:
 					{
-#ifdef SFU_SHM
 						// This may throw.
-							consumer = new RTC::ShmConsumer(consumerId, producerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
-#endif
+						consumer = new RTC::ShmConsumer(consumerId, producerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
 						break;
 					}
 				}

@@ -463,7 +463,7 @@ namespace RTC
 			{
 				uint8_t nal = *(data) & 0x1F;
 				uint8_t marker = *(pktdata + 1) & 0x80; // Marker bit indicates the last or the only NALU in this packet is the end of the picture data
-				bool begin_picture = (shmCtx->IsVideoSeqUnset() || (ts > shmCtx->LastVideoTs())); // assume that first video pkt starts the picture frame
+				bool begin_picture = (shmCtx->IsLastVideoSeqNotSet() || (ts > shmCtx->LastVideoTs())); // assume that first video pkt starts the picture frame
 				// Single NAL unit packet
 				if (nal >= 1 && nal <= 23)
 			  {

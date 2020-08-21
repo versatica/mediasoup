@@ -17,10 +17,8 @@ namespace RTC
 		{ "simple",    RtpParameters::Type::SIMPLE    },
 		{ "simulcast", RtpParameters::Type::SIMULCAST },
 		{ "svc",       RtpParameters::Type::SVC       },
-		{ "pipe",      RtpParameters::Type::PIPE      }
-#ifdef SFU_SHM
-	 ,{ "shm",       RtpParameters::Type::SHM   }
-#endif	
+		{ "pipe",      RtpParameters::Type::PIPE      },
+	  { "shm",       RtpParameters::Type::SHM       }
 	};
 	std::map<RtpParameters::Type, std::string> RtpParameters::type2String =
 	{
@@ -28,10 +26,8 @@ namespace RTC
 		{ RtpParameters::Type::SIMPLE,    "simple"    },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },
 		{ RtpParameters::Type::SVC,       "svc"       },
-		{ RtpParameters::Type::PIPE,      "pipe"      }
-#ifdef SFU_SHM
-	 ,{ RtpParameters::Type::SHM,   "shm"       }
-#endif
+		{ RtpParameters::Type::PIPE,      "pipe"      },
+	  { RtpParameters::Type::SHM,       "shm"       }
 	};
 	// clang-format on
 
