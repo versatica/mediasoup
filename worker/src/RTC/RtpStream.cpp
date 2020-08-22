@@ -205,12 +205,6 @@ namespace RTC
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
 
-				MS_DEBUG_TAG(
-				  rtp,
-				  "L@@K too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber());
-
 				InitSeq(seq);
 
 				this->maxPacketTs = packet->GetTimestamp();
@@ -221,12 +215,6 @@ namespace RTC
 				MS_WARN_TAG(
 				  rtp,
 				  "bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber());
-					
-				MS_DEBUG_TAG(
-				  rtp,
-				  "L@@K bad sequence number, ignoring packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
 

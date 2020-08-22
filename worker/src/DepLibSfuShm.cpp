@@ -160,7 +160,7 @@ namespace DepLibSfuShm {
       && (IsLastVideoSeqNotSet() 
         || data->first_rtp_seq - 1 == LastVideoSeq()))
     {
-    //MS_DEBUG_TAG(rtp, "WRITETHRU [seq=%" PRIu64 " ts=%" PRIu64 "] len=%zu chunkstart=%s chunkend=%s qsize=%zu", data->first_rtp_seq, data->rtp_time, data->len, isChunkStart? "1":"0", isChunkEnd? "1":"0", videoPktBuffer.size());
+      MS_DEBUG_TAG(rtp, "WRITETHRU [seq=%" PRIu64 " ts=%" PRIu64 "]", data->first_rtp_seq, data->rtp_time);
       return EnqueueResult::SHM_Q_PKT_CANWRITETHRU;
     }
 
@@ -206,7 +206,7 @@ namespace DepLibSfuShm {
         && LastVideoTs() > it->chunk.rtp_time
         && LastVideoTs() - it->chunk.rtp_time > MaxVideoPktDelay)
       {
-        MS_DEBUG_TAG(rtp, "OLD [seq=%" PRIu64 " delta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastVideoTs() - it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
+        MS_DEBUG_TAG(rtp, "OLD [seq=%" PRIu64 " Tsdelta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastVideoTs() - it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
         prev_seq = it->chunk.first_rtp_seq;
         this->WriteChunk(&it->chunk, Media::VIDEO);
         it = this->videoPktBuffer.erase(it);
@@ -216,7 +216,7 @@ namespace DepLibSfuShm {
       // Hole in seqIds: wait some time for missing pkt to be retransmitted
       if (it->chunk.first_rtp_seq > prev_seq + 1)
       {
-        MS_DEBUG_TAG(rtp, "HOLE [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64, it->chunk.first_rtp_seq, it->chunk.rtp_time, prev_seq);
+        MS_DEBUG_TAG(rtp, "HOLE [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, prev_seq, LastVideoTs(), videoPktBuffer.size());
         return;
       }
 
@@ -273,6 +273,7 @@ namespace DepLibSfuShm {
       else // non-fragmented chunk
       {
         this->WriteChunk(&it->chunk, Media::VIDEO);
+        MS_DEBUG_TAG(rtp, "FULL [seq=%" PRIu64 " ts=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
         prev_seq = it->chunk.first_rtp_seq;
         it = this->videoPktBuffer.erase(it);
         continue;

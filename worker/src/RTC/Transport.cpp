@@ -1417,7 +1417,7 @@ namespace RTC
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
-			  MS_DEBUG_TAG(rtp, "L@@K recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
+			  MS_DEBUG_TAG(rtp, "recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
 				break;
 			default:;
 		}
@@ -2383,7 +2383,7 @@ namespace RTC
 
 		this->sendRtxTransmission.Update(packet);
 
-		MS_DEBUG_TAG(rtp, "L@@K sendRtxTransmission.GetPacketCount()=%d", this->sendRtxTransmission.GetPacketCount());
+		MS_DEBUG_TAG(rtp, "sendRtxTransmission.GetPacketCount()=%d", this->sendRtxTransmission.GetPacketCount());
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
