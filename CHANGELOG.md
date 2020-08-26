@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.6.17 (WIP)
+
+* Update `libuv` to 1.39.0.
+* Update Node deps.
+
+
 ### 3.6.16
 
 * `SctpAssociation.cpp`: Fix `OnSctpAssociationBufferedAmount()` call.
