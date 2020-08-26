@@ -1,11 +1,12 @@
 # Changelog
 
 
-### 3.6.17 (WIP)
+### 3.6.17
 
 * Update `libuv` to 1.39.0.
 * Update Node deps.
-* SimulcastConsumer: prefer the highest spatial layer initially (PR #450).
+* SimulcastConsumer: Prefer the highest spatial layer initially (PR #450).
+* RtpStreamRecv: Set RtpDataCounter window size to 6 secs if DTX (#451)
 
 
 ### 3.6.16
