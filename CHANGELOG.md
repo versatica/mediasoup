@@ -5,6 +5,7 @@
 
 * Update `libuv` to 1.39.0.
 * Update Node deps.
+* SimulcastConsumer: prefer the highest spatial layer initially (PR #450).
 
 
 ### 3.6.16
