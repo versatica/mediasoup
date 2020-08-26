@@ -28,7 +28,7 @@ namespace RTC
 		class TransmissionCounter
 		{
 		public:
-			TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers);
+			TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize);
 			void Update(RTC::RtpPacket* packet);
 			uint32_t GetBitrate(uint64_t nowMs);
 			uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);

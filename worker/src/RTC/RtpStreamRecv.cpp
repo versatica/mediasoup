@@ -15,7 +15,8 @@ namespace RTC
 
 	/* TransmissionCounter methods. */
 
-	RtpStreamRecv::TransmissionCounter::TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers)
+	RtpStreamRecv::TransmissionCounter::TransmissionCounter(
+	  uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize)
 	{
 		MS_TRACE();
 
@@ -25,7 +26,10 @@ namespace RTC
 
 		for (auto& spatialLayerCounter : this->spatialLayerCounters)
 		{
-			spatialLayerCounter = std::vector<RTC::RtpDataCounter>(temporalLayers);
+			for (uint8_t tIdx{ 0u }; tIdx < temporalLayers; ++tIdx)
+			{
+				spatialLayerCounter.emplace_back(RTC::RtpDataCounter(windowSize));
+			}
 		}
 	}
 
@@ -181,7 +185,8 @@ namespace RTC
 
 	RtpStreamRecv::RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params)
 	  : RTC::RtpStream::RtpStream(listener, params, 10),
-	    transmissionCounter(params.spatialLayers, params.temporalLayers)
+	    transmissionCounter(
+	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500)
 	{
 		MS_TRACE();
 
