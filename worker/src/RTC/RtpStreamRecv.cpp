@@ -170,9 +170,9 @@ namespace RTC
 
 		size_t bytes{ 0u };
 
-		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		for (const auto& spatialLayerCounter : this->spatialLayerCounters)
 		{
-			for (auto& temporalLayerCounter : spatialLayerCounter)
+			for (const auto& temporalLayerCounter : spatialLayerCounter)
 			{
 				bytes += temporalLayerCounter.GetBytes();
 			}
