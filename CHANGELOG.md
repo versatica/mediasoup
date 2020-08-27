@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.6.18
+
+* Fix `ortc.getConsumerRtpParameters()` RTX codec comparison issue (PR #453).
+* RtpObserver: expose `RtpObserverAddRemoveProducerOptions` for `addProducer()` and `removeProducer()` methods.
+
+
 ### 3.6.17
 
 * Update `libuv` to 1.39.0.
