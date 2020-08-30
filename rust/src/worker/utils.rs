@@ -1,11 +1,11 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
+use async_process::unix::CommandExt;
+use async_process::Command;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::os::raw::c_int;
 use std::os::unix::io::FromRawFd;
-use std::os::unix::process::CommandExt;
-use std::process::Command;
 
 pub struct WorkerChannel {
     reader_pipe: BufReader<File>,

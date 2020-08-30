@@ -8,6 +8,7 @@ license = "ISC"
 keywords = ["webrtc", "ortc", "sfu"]
 
 [dependencies]
+async-process = "0.1.3"
 libc = "0.2.76"
 log = "0.4.11"
 

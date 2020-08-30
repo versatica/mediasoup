@@ -2,10 +2,10 @@
 mod utils;
 
 use crate::worker::utils::WorkerChannels;
+use async_process::{Child, Command, Stdio};
 use log::debug;
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
 use std::{env, io};
 
 #[derive(Debug, Copy, Clone)]
@@ -142,6 +142,7 @@ struct WorkerResourceUsage {
 
 pub struct Worker {
     child: Child,
+    pid: u32,
 }
 
 impl Worker {
@@ -223,8 +224,9 @@ impl Worker {
         } = utils::setup_worker_channels(&mut command);
 
         let child = command.spawn()?;
+        let pid = child.id();
 
-        Ok(Self { child })
+        Ok(Self { child, pid })
     }
 }
 
@@ -238,9 +240,9 @@ mod tests {
 
         let worker_settings = WorkerSettings::default();
         let worker = Worker::new(
-            env::var("MEDIASOUP_WORKER_BIN").map(|path| path.into()).unwrap_or_else(|_| {
-                "../worker/out/Release/mediasoup-worker".into()
-            }),
+            env::var("MEDIASOUP_WORKER_BIN")
+                .map(|path| path.into())
+                .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
             worker_settings,
         )
         .unwrap();
