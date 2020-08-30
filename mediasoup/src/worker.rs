@@ -1,4 +1,12 @@
+// TODO: This is Unix-specific and doesn't support Windows in any way
+mod utils;
+
+use crate::worker::utils::WorkerChannels;
+use log::debug;
+use std::ffi::OsString;
 use std::path::PathBuf;
+use std::process::{Child, Command, Stdio};
+use std::{env, io};
 
 #[derive(Debug, Copy, Clone)]
 pub enum WorkerLogLevel {
@@ -133,5 +141,106 @@ struct WorkerResourceUsage {
 }
 
 pub struct Worker {
-    // TODO
+    child: Child,
+}
+
+impl Worker {
+    pub fn new(
+        worker_binary: PathBuf,
+        WorkerSettings {
+            log_level,
+            log_tags,
+            rtc_min_port,
+            rtc_max_port,
+            dtls_certificate_file,
+            dtls_private_key_file,
+        }: WorkerSettings,
+    ) -> io::Result<Self> {
+        debug!("new()");
+
+        let mut spawn_args: Vec<OsString> = Vec::new();
+        let spawn_bin: PathBuf = match env::var("MEDIASOUP_USE_VALGRIND") {
+            Ok(value) if value.as_str() == "true" => {
+                let binary = match env::var("MEDIASOUP_VALGRIND_BIN") {
+                    Ok(binary) => binary.into(),
+                    _ => "valgrind".into(),
+                };
+
+                spawn_args.push(worker_binary.into_os_string());
+
+                binary
+            }
+            _ => worker_binary,
+        };
+
+        spawn_args.push(format!("--logLevel={}", log_level.as_str()).into());
+        if !log_tags.is_empty() {
+            let log_tags = log_tags
+                .iter()
+                .map(|log_tag| log_tag.as_str())
+                .collect::<Vec<_>>()
+                .join(",");
+            spawn_args.push(format!("--logTags={}", log_tags).into());
+        }
+        spawn_args.push(format!("--rtcMinPort={}", rtc_min_port).into());
+        spawn_args.push(format!("--rtcMaxPort={}", rtc_max_port).into());
+
+        if let Some(dtls_certificate_file) = dtls_certificate_file {
+            let mut arg = OsString::new();
+            arg.push("--dtlsCertificateFile=");
+            arg.push(dtls_certificate_file);
+            spawn_args.push(arg);
+        }
+        if let Some(dtls_private_key_file) = dtls_private_key_file {
+            let mut arg = OsString::new();
+            arg.push("--dtlsPrivateKeyFile=");
+            arg.push(dtls_private_key_file);
+            spawn_args.push(arg);
+        }
+
+        debug!(
+            "spawning worker process: {} {}",
+            spawn_bin.to_string_lossy(),
+            spawn_args
+                .iter()
+                .map(|arg| arg.to_string_lossy())
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+
+        // TODO: Spawn a child process
+
+        let mut command = Command::new(spawn_bin);
+        command
+            .args(spawn_args)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+
+        let WorkerChannels {
+            channel,
+            payload_channel,
+        } = utils::setup_worker_channels(&mut command);
+
+        let child = command.spawn()?;
+
+        Ok(Self { child })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn worker_test() {
+        env_logger::init();
+
+        let worker_settings = WorkerSettings::default();
+        let worker = Worker::new(
+            env::var("MEDIASOUP_WORKER_BIN").unwrap().into(),
+            worker_settings,
+        )
+        .unwrap();
+    }
 }
