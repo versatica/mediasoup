@@ -238,7 +238,9 @@ mod tests {
 
         let worker_settings = WorkerSettings::default();
         let worker = Worker::new(
-            env::var("MEDIASOUP_WORKER_BIN").unwrap().into(),
+            env::var("MEDIASOUP_WORKER_BIN").map(|path| path.into()).unwrap_or_else(|_| {
+                "../worker/out/Release/mediasoup-worker".into()
+            }),
             worker_settings,
         )
         .unwrap();
