@@ -37,3 +37,6 @@
 
 # Vistual Studio Code stuff.
 /.vscode/
+
+# JetBrains IDE stuff
+/.idea/
