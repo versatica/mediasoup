@@ -2,10 +2,12 @@
 mod utils;
 
 use crate::worker::utils::WorkerChannels;
+use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
 use log::debug;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::{env, io};
 
 #[derive(Debug, Copy, Clone)]
@@ -142,11 +144,13 @@ struct WorkerResourceUsage {
 
 pub struct Worker {
     child: Child,
+    executor: Arc<Executor>,
     pid: u32,
 }
 
 impl Worker {
-    pub fn new(
+    pub(super) fn new(
+        executor: Arc<Executor>,
         worker_binary: PathBuf,
         WorkerSettings {
             log_level,
@@ -226,7 +230,11 @@ impl Worker {
         let child = command.spawn()?;
         let pid = child.id();
 
-        Ok(Self { child, pid })
+        Ok(Self {
+            child,
+            executor,
+            pid,
+        })
     }
 }
 
@@ -234,12 +242,18 @@ impl Worker {
 mod tests {
     use super::*;
 
+    fn init() {
+        let _ = env_logger::builder().is_test(true).try_init();
+    }
+
     #[test]
     fn worker_test() {
-        env_logger::init();
+        init();
 
+        let executor = Arc::new(Executor::new());
         let worker_settings = WorkerSettings::default();
         let worker = Worker::new(
+            executor,
             env::var("MEDIASOUP_WORKER_BIN")
                 .map(|path| path.into())
                 .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
