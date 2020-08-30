@@ -1,36 +1,39 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
+use async_fs::File as AsyncFile;
 use async_process::unix::CommandExt;
 use async_process::Command;
+use futures_lite::io::BufReader;
+use futures_lite::{AsyncBufReadExt, AsyncWriteExt};
 use std::error::Error;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Write};
+use std::fs::File as StdFile;
 use std::os::raw::c_int;
 use std::os::unix::io::FromRawFd;
 
 pub struct WorkerChannel {
-    reader_pipe: BufReader<File>,
-    writer_pipe: File,
+    reader_pipe: BufReader<AsyncFile>,
+    writer_pipe: AsyncFile,
 }
 
 impl WorkerChannel {
-    fn new(reader: File, writer: File) -> Self {
+    fn new(reader: AsyncFile, writer: AsyncFile) -> Self {
         Self {
             reader_pipe: BufReader::new(reader),
             writer_pipe: writer,
         }
     }
 
-    pub fn read(&mut self) -> Result<String, Box<dyn Error>> {
+    pub async fn read(&mut self) -> Result<String, Box<dyn Error>> {
         let mut bytes_to_read = vec![];
-        self.reader_pipe.read_until(0, &mut bytes_to_read)?;
+        self.reader_pipe.read_until(0, &mut bytes_to_read).await?;
         bytes_to_read.pop();
         Ok(String::from_utf8(bytes_to_read)?)
     }
 
-    pub fn write(&mut self, message: String) -> Result<usize, Box<dyn Error>> {
+    pub async fn write(&mut self, message: String) -> Result<usize, Box<dyn Error>> {
         Ok(self
             .writer_pipe
-            .write(std::ffi::CString::new(message)?.as_bytes_with_nul())?)
+            .write(std::ffi::CString::new(message)?.as_bytes_with_nul())
+            .await?)
     }
 }
 
@@ -74,12 +77,12 @@ pub fn setup_worker_channels(command: &mut Command) -> WorkerChannels {
         libc::close(producer_payload_channel[READ_END]);
         libc::close(consumer_payload_channel[WRITE_END]);
         channel = WorkerChannel::new(
-            File::from_raw_fd(producer_channel[WRITE_END]),
-            File::from_raw_fd(consumer_channel[READ_END]),
+            AsyncFile::from(StdFile::from_raw_fd(producer_channel[WRITE_END])),
+            AsyncFile::from(StdFile::from_raw_fd(consumer_channel[READ_END])),
         );
         payload_channel = WorkerChannel::new(
-            File::from_raw_fd(producer_payload_channel[WRITE_END]),
-            File::from_raw_fd(consumer_payload_channel[READ_END]),
+            AsyncFile::from(StdFile::from_raw_fd(producer_payload_channel[WRITE_END])),
+            AsyncFile::from(StdFile::from_raw_fd(consumer_payload_channel[READ_END])),
         );
     }
 
