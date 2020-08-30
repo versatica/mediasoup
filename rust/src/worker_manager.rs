@@ -23,6 +23,7 @@ impl WorkerManager {
             let executor = Arc::clone(&executor);
 
             move || {
+                // Will return Err(Closed) when `WorkerManager` struct is dropped
                 let _ = future::block_on(executor.run(stop_receiver));
             }
         });
