@@ -225,7 +225,7 @@ impl Worker {
         let WorkerChannels {
             channel,
             payload_channel,
-        } = utils::setup_worker_channels(&mut command);
+        } = utils::setup_worker_channels(&executor, &mut command);
 
         let child = command.spawn()?;
         let pid = child.id();
