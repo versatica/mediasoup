@@ -63,18 +63,18 @@ mod tests {
     fn worker_manager_test() {
         init();
 
-        {
-            let worker_manager = WorkerManager::new();
+        let worker_manager = WorkerManager::new();
 
-            let worker_settings = WorkerSettings::default();
-            let worker = worker_manager
-                .create_worker(
-                    env::var("MEDIASOUP_WORKER_BIN")
-                        .map(|path| path.into())
-                        .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-                    worker_settings,
-                )
-                .unwrap();
-        }
+        let worker_settings = WorkerSettings::default();
+        let worker = worker_manager
+            .create_worker(
+                env::var("MEDIASOUP_WORKER_BIN")
+                    .map(|path| path.into())
+                    .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
+                worker_settings,
+            )
+            .unwrap();
+
+        std::thread::sleep(std::time::Duration::from_secs(3));
     }
 }
