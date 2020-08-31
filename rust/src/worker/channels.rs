@@ -3,15 +3,13 @@ use async_channel::{Receiver, Sender};
 use async_executor::Executor;
 use async_fs::File as AsyncFile;
 use async_process::unix::CommandExt;
-use async_process::Command;
+use async_process::{Child, Command};
 use futures_lite::io::BufReader;
 use futures_lite::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use nix::unistd;
-use std::error::Error;
 use std::fs::File as StdFile;
 use std::io;
-use std::os::raw::c_int;
-use std::os::unix::io::FromRawFd;
+use std::os::unix::io::{FromRawFd, RawFd};
 
 // netstring length for a 4194304 bytes payload.
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
@@ -111,39 +109,54 @@ fn create_channel_pair(
     (sender, receiver)
 }
 
-pub struct WorkerChannels {
+pub struct SpawnResult {
+    pub child: Child,
     pub channel: (Sender<Vec<u8>>, Receiver<ChannelMessage>),
     pub payload_channel: (Sender<Vec<u8>>, Receiver<ChannelMessage>),
 }
 
-pub fn setup_worker_channels(executor: &Executor, command: &mut Command) -> WorkerChannels {
-    let (producer_fd_read, producer_fd_write) = unistd::pipe().expect("Failed to create pipe");
-    let (consumer_fd_read, consumer_fd_write) = unistd::pipe().expect("Failed to create pipe");
-    let (producer_payload_fd_read, producer_payload_fd_write) =
-        unistd::pipe().expect("Failed to create pipe");
-    let (consumer_payload_fd_read, consumer_payload_fd_write) =
-        unistd::pipe().expect("Failed to create pipe");
+pub fn spawn_with_worker_channels(
+    executor: &Executor,
+    command: &mut Command,
+) -> io::Result<SpawnResult> {
+    let (producer_fd_read, producer_fd_write) = unistd::pipe().unwrap();
+    let (consumer_fd_read, consumer_fd_write) = unistd::pipe().unwrap();
+    let (producer_payload_fd_read, producer_payload_fd_write) = unistd::pipe().unwrap();
+    let (consumer_payload_fd_read, consumer_payload_fd_write) = unistd::pipe().unwrap();
 
     unsafe {
         command.pre_exec(move || {
-            unistd::dup2(producer_fd_read, 3).expect("Failed to duplicate fd");
-            unistd::dup2(consumer_fd_write, 4).expect("Failed to duplicate fd");
-            unistd::dup2(producer_payload_fd_read, 5).expect("Failed to duplicate fd");
-            unistd::dup2(consumer_payload_fd_write, 6).expect("Failed to duplicate fd");
-            // Duplicated above
-            unistd::close(producer_fd_read).expect("Failed to close fd");
-            unistd::close(consumer_fd_write).expect("Failed to close fd");
-            unistd::close(producer_payload_fd_read).expect("Failed to close fd");
-            unistd::close(consumer_payload_fd_write).expect("Failed to close fd");
+            // Duplicate such that it creates new file descriptors in child channel
+            let producer_fd_read_tmp = unistd::dup(producer_fd_read).unwrap();
+            let consumer_fd_write_tmp = unistd::dup(consumer_fd_write).unwrap();
+            let producer_payload_fd_read_tmp = unistd::dup(producer_payload_fd_read).unwrap();
+            let consumer_payload_fd_write_tmp = unistd::dup(consumer_payload_fd_write).unwrap();
             // Unused in child
-            unistd::close(producer_fd_write).expect("Failed to close fd");
-            unistd::close(consumer_fd_read).expect("Failed to close fd");
-            unistd::close(producer_payload_fd_write).expect("Failed to close fd");
-            unistd::close(consumer_payload_fd_read).expect("Failed to close fd");
+            unistd::close(producer_fd_write).unwrap();
+            unistd::close(consumer_fd_read).unwrap();
+            unistd::close(producer_payload_fd_write).unwrap();
+            unistd::close(consumer_payload_fd_read).unwrap();
+            // Duplicated above
+            unistd::close(producer_fd_read).unwrap();
+            unistd::close(consumer_fd_write).unwrap();
+            unistd::close(producer_payload_fd_read).unwrap();
+            unistd::close(consumer_payload_fd_write).unwrap();
+            // Now duplicate into file descriptor indexes we actually want
+            unistd::dup2(producer_fd_read_tmp, 3).unwrap();
+            unistd::dup2(consumer_fd_write_tmp, 4).unwrap();
+            unistd::dup2(producer_payload_fd_read_tmp, 5).unwrap();
+            unistd::dup2(consumer_payload_fd_write_tmp, 6).unwrap();
+            // Duplicated above
+            unistd::close(producer_fd_read_tmp).unwrap();
+            unistd::close(consumer_fd_write_tmp).unwrap();
+            unistd::close(producer_payload_fd_read_tmp).unwrap();
+            unistd::close(consumer_payload_fd_write_tmp).unwrap();
 
             Ok(())
         });
     };
+
+    let child = command.spawn()?;
 
     let producer_file: AsyncFile;
     let consumer_file: AsyncFile;
@@ -160,12 +173,13 @@ pub fn setup_worker_channels(executor: &Executor, command: &mut Command) -> Work
     producer_payload_file = unsafe { StdFile::from_raw_fd(producer_payload_fd_write) }.into();
     consumer_payload_file = unsafe { StdFile::from_raw_fd(consumer_payload_fd_read) }.into();
 
-    WorkerChannels {
+    Ok(SpawnResult {
+        child,
         channel: create_channel_pair(&executor, consumer_file, producer_file),
         payload_channel: create_channel_pair(
             &executor,
             consumer_payload_file,
             producer_payload_file,
         ),
-    }
+    })
 }

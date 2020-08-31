@@ -1,7 +1,7 @@
 // TODO: This is Unix-specific and doesn't support Windows in any way
 mod channels;
 
-use crate::worker::channels::WorkerChannels;
+use crate::worker::channels::SpawnResult;
 use async_channel::Sender;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
@@ -231,12 +231,12 @@ impl Worker {
             .kill_on_drop(true)
             .env("MEDIASOUP_VERSION", env!("CARGO_PKG_VERSION"));
 
-        let WorkerChannels {
+        let SpawnResult {
+            mut child,
             channel,
             payload_channel,
-        } = channels::setup_worker_channels(&executor, &mut command);
+        } = channels::spawn_with_worker_channels(&executor, &mut command)?;
 
-        let mut child = command.spawn()?;
         let pid = child.id();
 
         let status = child.status();
