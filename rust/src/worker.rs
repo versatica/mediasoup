@@ -2,6 +2,7 @@
 mod channels;
 
 use crate::worker::channels::WorkerChannels;
+use async_channel::Sender;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
 use futures_lite::io::BufReader;
@@ -146,6 +147,8 @@ struct WorkerResourceUsage {
 }
 
 pub struct Worker {
+    channel_sender: Sender<Vec<u8>>,
+    payload_channel_sender: Sender<Vec<u8>>,
     child: Child,
     executor: Arc<Executor>,
     event_handlers: Vec<fn()>,
@@ -225,6 +228,7 @@ impl Worker {
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
+            .kill_on_drop(true)
             .env("MEDIASOUP_VERSION", env!("CARGO_PKG_VERSION"));
 
         let WorkerChannels {
@@ -271,9 +275,19 @@ impl Worker {
             })
             .detach();
 
+        let (channel_sender, channel_receiver) = channel;
         executor
             .spawn(async move {
-                while let Ok(message) = channel.receiver.recv().await {
+                while let Ok(message) = channel_receiver.recv().await {
+                    println!("Message {:?}", message);
+                }
+            })
+            .detach();
+
+        let (payload_channel_sender, payload_channel_receiver) = payload_channel;
+        executor
+            .spawn(async move {
+                while let Ok(message) = payload_channel_receiver.recv().await {
                     println!("Message {:?}", message);
                 }
             })
@@ -282,6 +296,8 @@ impl Worker {
         let event_handlers = Vec::new();
 
         Ok(Self {
+            channel_sender,
+            payload_channel_sender,
             child,
             event_handlers,
             executor,
