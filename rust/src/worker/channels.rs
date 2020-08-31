@@ -149,18 +149,16 @@ pub fn setup_worker_channels(executor: &Executor, command: &mut Command) -> Work
     let consumer_file: AsyncFile;
     let producer_payload_file: AsyncFile;
     let consumer_payload_file: AsyncFile;
-    unsafe {
-        // Unused in parent
-        unistd::close(producer_fd_read).expect("Failed to close fd");
-        unistd::close(consumer_fd_write).expect("Failed to close fd");
-        unistd::close(producer_payload_fd_read).expect("Failed to close fd");
-        unistd::close(consumer_payload_fd_write).expect("Failed to close fd");
+    // Unused in parent
+    unistd::close(producer_fd_read).expect("Failed to close fd");
+    unistd::close(consumer_fd_write).expect("Failed to close fd");
+    unistd::close(producer_payload_fd_read).expect("Failed to close fd");
+    unistd::close(consumer_payload_fd_write).expect("Failed to close fd");
 
-        producer_file = StdFile::from_raw_fd(producer_fd_write).into();
-        consumer_file = StdFile::from_raw_fd(consumer_fd_read).into();
-        producer_payload_file = StdFile::from_raw_fd(producer_payload_fd_write).into();
-        consumer_payload_file = StdFile::from_raw_fd(consumer_payload_fd_read).into();
-    }
+    producer_file = unsafe { StdFile::from_raw_fd(producer_fd_write) }.into();
+    consumer_file = unsafe { StdFile::from_raw_fd(consumer_fd_read) }.into();
+    producer_payload_file = unsafe { StdFile::from_raw_fd(producer_payload_fd_write) }.into();
+    consumer_payload_file = unsafe { StdFile::from_raw_fd(consumer_payload_fd_read) }.into();
 
     WorkerChannels {
         channel: create_channel_pair(&executor, consumer_file, producer_file),
