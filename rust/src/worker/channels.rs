@@ -115,63 +115,74 @@ pub struct SpawnResult {
     pub payload_channel: (Sender<Vec<u8>>, Receiver<ChannelMessage>),
 }
 
+fn create_pipe() -> (RawFd, RawFd) {
+    let (read, write) = unistd::pipe().unwrap();
+    // nix::fcntl::fcntl(
+    //     read,
+    //     nix::fcntl::FcntlArg::F_SETFD(nix::fcntl::FdFlag::FD_CLOEXEC),
+    // )
+    // .unwrap();
+    // nix::fcntl::fcntl(
+    //     write,
+    //     nix::fcntl::FcntlArg::F_SETFD(nix::fcntl::FdFlag::FD_CLOEXEC),
+    // )
+    // .unwrap();
+
+    (read, write)
+}
+
 pub fn spawn_with_worker_channels(
     executor: &Executor,
     command: &mut Command,
 ) -> io::Result<SpawnResult> {
-    let (producer_fd_read, producer_fd_write) = unistd::pipe().unwrap();
-    let (consumer_fd_read, consumer_fd_write) = unistd::pipe().unwrap();
-    let (producer_payload_fd_read, producer_payload_fd_write) = unistd::pipe().unwrap();
-    let (consumer_payload_fd_read, consumer_payload_fd_write) = unistd::pipe().unwrap();
+    let (producer_fd_read, producer_fd_write) = create_pipe();
+    let (consumer_fd_read, consumer_fd_write) = create_pipe();
+    let (producer_payload_fd_read, producer_payload_fd_write) = create_pipe();
+    let (consumer_payload_fd_read, consumer_payload_fd_write) = create_pipe();
 
     unsafe {
         command.pre_exec(move || {
-            // Duplicate such that it creates new file descriptors in child channel
-            let producer_fd_read_tmp = unistd::dup(producer_fd_read).unwrap();
-            let consumer_fd_write_tmp = unistd::dup(consumer_fd_write).unwrap();
-            let producer_payload_fd_read_tmp = unistd::dup(producer_payload_fd_read).unwrap();
-            let consumer_payload_fd_write_tmp = unistd::dup(consumer_payload_fd_write).unwrap();
             // Unused in child
             unistd::close(producer_fd_write).unwrap();
             unistd::close(consumer_fd_read).unwrap();
             unistd::close(producer_payload_fd_write).unwrap();
             unistd::close(consumer_payload_fd_read).unwrap();
-            // Duplicated above
-            unistd::close(producer_fd_read).unwrap();
-            unistd::close(consumer_fd_write).unwrap();
-            unistd::close(producer_payload_fd_read).unwrap();
-            unistd::close(consumer_payload_fd_write).unwrap();
-            // Now duplicate into file descriptor indexes we actually want
-            unistd::dup2(producer_fd_read_tmp, 3).unwrap();
-            unistd::dup2(consumer_fd_write_tmp, 4).unwrap();
-            unistd::dup2(producer_payload_fd_read_tmp, 5).unwrap();
-            unistd::dup2(consumer_payload_fd_write_tmp, 6).unwrap();
-            // Duplicated above
-            unistd::close(producer_fd_read_tmp).unwrap();
-            unistd::close(consumer_fd_write_tmp).unwrap();
-            unistd::close(producer_payload_fd_read_tmp).unwrap();
-            unistd::close(consumer_payload_fd_write_tmp).unwrap();
+            // Now duplicate into file descriptor indexes we need
+            if producer_fd_read != 3 {
+                unistd::dup2(producer_fd_read, 3).unwrap();
+                unistd::close(producer_fd_read).unwrap();
+            }
+            if consumer_fd_write != 4 {
+                unistd::dup2(consumer_fd_write, 4).unwrap();
+                unistd::close(consumer_fd_write).unwrap();
+            }
+            if producer_payload_fd_read != 5 {
+                unistd::dup2(producer_payload_fd_read, 5).unwrap();
+                unistd::close(producer_payload_fd_read).unwrap();
+            }
+            if consumer_payload_fd_write != 6 {
+                unistd::dup2(consumer_payload_fd_write, 6).unwrap();
+                unistd::close(consumer_payload_fd_write).unwrap();
+            }
 
             Ok(())
         });
     };
 
+    let producer_file: AsyncFile = unsafe { StdFile::from_raw_fd(producer_fd_write) }.into();
+    let consumer_file: AsyncFile = unsafe { StdFile::from_raw_fd(consumer_fd_read) }.into();
+    let producer_payload_file: AsyncFile =
+        unsafe { StdFile::from_raw_fd(producer_payload_fd_write) }.into();
+    let consumer_payload_file: AsyncFile =
+        unsafe { StdFile::from_raw_fd(consumer_payload_fd_read) }.into();
+
     let child = command.spawn()?;
 
-    let producer_file: AsyncFile;
-    let consumer_file: AsyncFile;
-    let producer_payload_file: AsyncFile;
-    let consumer_payload_file: AsyncFile;
     // Unused in parent
     unistd::close(producer_fd_read).expect("Failed to close fd");
     unistd::close(consumer_fd_write).expect("Failed to close fd");
     unistd::close(producer_payload_fd_read).expect("Failed to close fd");
     unistd::close(consumer_payload_fd_write).expect("Failed to close fd");
-
-    producer_file = unsafe { StdFile::from_raw_fd(producer_fd_write) }.into();
-    consumer_file = unsafe { StdFile::from_raw_fd(consumer_fd_read) }.into();
-    producer_payload_file = unsafe { StdFile::from_raw_fd(producer_payload_fd_write) }.into();
-    consumer_payload_file = unsafe { StdFile::from_raw_fd(consumer_payload_fd_read) }.into();
 
     Ok(SpawnResult {
         child,
