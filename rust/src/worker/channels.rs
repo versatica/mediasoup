@@ -15,15 +15,48 @@ use std::os::unix::io::FromRawFd;
 // netstring length for a 4194304 bytes payload.
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
 
+#[derive(Debug)]
+pub enum ChannelMessage {
+    /// JSON message
+    Json(String),
+    /// Debug log
+    Debug(String),
+    /// Warn log
+    Warn(String),
+    /// Error log
+    Error(String),
+    /// Dump log
+    Dump(String),
+    /// Unknown
+    Unknown { command: u8, data: Vec<u8> },
+}
+
+fn deserialize_message(command: u8, data: Vec<u8>) -> ChannelMessage {
+    match command {
+        // JSON message
+        b'{' => ChannelMessage::Json(unsafe { String::from_utf8_unchecked(data) }),
+        // Debug log
+        b'D' => ChannelMessage::Debug(unsafe { String::from_utf8_unchecked(data) }),
+        // Warn log
+        b'W' => ChannelMessage::Warn(unsafe { String::from_utf8_unchecked(data) }),
+        // Error log
+        b'E' => ChannelMessage::Error(unsafe { String::from_utf8_unchecked(data) }),
+        // Dump log
+        b'X' => ChannelMessage::Dump(unsafe { String::from_utf8_unchecked(data) }),
+        // Unknown
+        _ => ChannelMessage::Unknown { command, data },
+    }
+}
+
 pub struct WorkerChannel {
-    pub receiver: Receiver<Vec<u8>>,
+    pub receiver: Receiver<ChannelMessage>,
     pub sender: Sender<Vec<u8>>,
 }
 
 impl WorkerChannel {
     fn new(executor: &Executor, reader: AsyncFile, mut writer: AsyncFile) -> Self {
         let receiver = {
-            let (sender, receiver) = async_channel::bounded::<Vec<u8>>(1);
+            let (sender, receiver) = async_channel::bounded(1);
 
             executor
                 .spawn(async move {
@@ -39,8 +72,9 @@ impl WorkerChannel {
                         // +1 because of netstring's `,` at the very end
                         reader.read_exact(&mut bytes[..(length + 1)]).await?;
                         // TODO: Parse messages here and send parsed messages over the channel
+                        let message = deserialize_message(bytes[0], Vec::from(&bytes[1..length]));
                         println!("Received");
-                        let _ = sender.send(Vec::from(&bytes[..length]));
+                        let _ = sender.send(message);
                     }
 
                     io::Result::Ok(())
@@ -57,7 +91,7 @@ impl WorkerChannel {
                 .spawn(async move {
                     let mut bytes = Vec::with_capacity(NS_PAYLOAD_MAX_LEN);
                     // TODO: Stringify messages here and received non-stringified messages over the
-                    // channel
+                    //  channel
                     while let Ok(message) = receiver.recv().await {
                         bytes.clear();
                         bytes.extend_from_slice(message.len().to_string().as_bytes());

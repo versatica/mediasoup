@@ -1,10 +1,13 @@
 // TODO: This is Unix-specific and doesn't support Windows in any way
-mod utils;
+mod channels;
 
-use crate::worker::utils::WorkerChannels;
+use crate::worker::channels::WorkerChannels;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
+use futures_lite::io::BufReader;
+use futures_lite::{AsyncBufReadExt, StreamExt};
 use log::debug;
+use log::error;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -145,6 +148,7 @@ struct WorkerResourceUsage {
 pub struct Worker {
     child: Child,
     executor: Arc<Executor>,
+    event_handlers: Vec<fn()>,
     pid: u32,
 }
 
@@ -220,18 +224,66 @@ impl Worker {
             .args(spawn_args)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+            .stderr(Stdio::piped())
+            .env("MEDIASOUP_VERSION", env!("CARGO_PKG_VERSION"));
 
         let WorkerChannels {
             channel,
             payload_channel,
-        } = utils::setup_worker_channels(&executor, &mut command);
+        } = channels::setup_worker_channels(&executor, &mut command);
 
-        let child = command.spawn()?;
+        let mut child = command.spawn()?;
         let pid = child.id();
+
+        let status = child.status();
+        {
+            let stdout = child.stdout.take().unwrap();
+            executor
+                .spawn(async move {
+                    let mut lines = BufReader::new(stdout).lines();
+                    while let Some(Ok(line)) = lines.next().await {
+                        eprintln!("(stdout) {}", line);
+                    }
+                })
+                .detach();
+        }
+        {
+            let stderr = child.stderr.take().unwrap();
+            executor
+                .spawn(async move {
+                    let mut lines = BufReader::new(stderr).lines();
+                    while let Some(Ok(line)) = lines.next().await {
+                        eprintln!("(stderr) {}", line);
+                    }
+                })
+                .detach();
+        }
+        executor
+            .spawn(async move {
+                match status.await {
+                    Ok(exit_status) => {
+                        println!("Exit status {}", exit_status);
+                    }
+                    Err(error) => {
+                        error!("Failed to spawn worker: {}", error);
+                    }
+                }
+            })
+            .detach();
+
+        executor
+            .spawn(async move {
+                while let Ok(message) = channel.receiver.recv().await {
+                    println!("Message {:?}", message);
+                }
+            })
+            .detach();
+
+        let event_handlers = Vec::new();
 
         Ok(Self {
             child,
+            event_handlers,
             executor,
             pid,
         })
