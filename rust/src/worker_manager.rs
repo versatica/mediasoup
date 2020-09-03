@@ -19,14 +19,13 @@ impl WorkerManager {
     pub fn new() -> Self {
         let executor = Arc::new(Executor::new());
         let (stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
-        std::thread::spawn({
+        {
             let executor = Arc::clone(&executor);
-
-            move || {
+            std::thread::spawn(move || {
                 // Will return Err(Closed) when `WorkerManager` struct is dropped
                 let _ = future::block_on(executor.run(stop_receiver));
-            }
-        });
+            });
+        }
         Self {
             executor,
             _stop_sender: Some(stop_sender),
@@ -41,12 +40,12 @@ impl WorkerManager {
         }
     }
 
-    pub fn create_worker(
+    pub async fn create_worker(
         &self,
         worker_binary: PathBuf,
         worker_settings: WorkerSettings,
     ) -> io::Result<Worker> {
-        Worker::new(Arc::clone(&self.executor), worker_binary, worker_settings)
+        Worker::new(Arc::clone(&self.executor), worker_binary, worker_settings).await
     }
 }
 
@@ -66,15 +65,18 @@ mod tests {
         let worker_manager = WorkerManager::new();
 
         let worker_settings = WorkerSettings::default();
-        let worker = worker_manager
-            .create_worker(
-                env::var("MEDIASOUP_WORKER_BIN")
-                    .map(|path| path.into())
-                    .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-                worker_settings,
-            )
-            .unwrap();
+        future::block_on(async move {
+            let worker = worker_manager
+                .create_worker(
+                    env::var("MEDIASOUP_WORKER_BIN")
+                        .map(|path| path.into())
+                        .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
+                    worker_settings,
+                )
+                .await
+                .unwrap();
 
-        std::thread::sleep(std::time::Duration::from_secs(3));
+            println!("Worker created");
+        })
     }
 }

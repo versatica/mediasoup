@@ -1,7 +1,9 @@
 // TODO: This is Unix-specific and doesn't support Windows in any way
-mod channels;
+mod utils;
 
-use crate::worker::channels::SpawnResult;
+use crate::worker::utils::{
+    ChannelReceiveMessage, JsonReceiveMessage, NotificationEvent, SpawnResult,
+};
 use async_channel::Sender;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
@@ -156,7 +158,7 @@ pub struct Worker {
 }
 
 impl Worker {
-    pub(super) fn new(
+    pub(super) async fn new(
         executor: Arc<Executor>,
         worker_binary: PathBuf,
         WorkerSettings {
@@ -233,7 +235,7 @@ impl Worker {
             mut child,
             channel,
             payload_channel,
-        } = channels::spawn_with_worker_channels(&executor, &mut command)?;
+        } = utils::spawn_with_worker_channels(&executor, &mut command)?;
 
         let pid = child.id();
 
@@ -273,23 +275,71 @@ impl Worker {
             })
             .detach();
 
+        let (ready_sender, ready_receiver) = async_oneshot::oneshot::<()>();
+
         let (channel_sender, channel_receiver) = channel;
-        executor
-            .spawn(async move {
-                while let Ok(message) = channel_receiver.recv().await {
-                    println!("Message {:?}", message);
-                }
-            })
-            .detach();
+        {
+            let channel_receiver = channel_receiver.clone();
+            let mut ready_sender = Some(ready_sender);
+
+            executor
+                .spawn(async move {
+                    while let Ok(message) = channel_receiver.recv().await {
+                        println!("Message {:?}", message);
+                        match message {
+                            ChannelReceiveMessage::Json(contents) => match contents {
+                                JsonReceiveMessage::Notification {
+                                    target_id,
+                                    event,
+                                    data,
+                                } => {
+                                    if target_id == pid.to_string() {
+                                        match event {
+                                            NotificationEvent::Running => {
+                                                ready_sender.take().unwrap().send(());
+                                            }
+                                        }
+                                    } else {
+                                        error!(
+                                            "Unexpected target ID {} event {:?}",
+                                            target_id, event
+                                        );
+                                    }
+                                }
+                                JsonReceiveMessage::MgsAccepted { id: _, accepted: _ } => {}
+                                JsonReceiveMessage::MgsError {
+                                    id: _,
+                                    error: _,
+                                    reason: _,
+                                } => {}
+                            },
+                            ChannelReceiveMessage::Debug(_) => {}
+                            ChannelReceiveMessage::Warn(_) => {}
+                            ChannelReceiveMessage::Error(_) => {}
+                            ChannelReceiveMessage::Dump(_) => {}
+                            ChannelReceiveMessage::Invalid { data } => {
+                                error!("Invalid message {}", String::from_utf8_lossy(&data))
+                            }
+                        }
+                    }
+                })
+                .detach();
+        }
 
         let (payload_channel_sender, payload_channel_receiver) = payload_channel;
-        executor
-            .spawn(async move {
-                while let Ok(message) = payload_channel_receiver.recv().await {
-                    println!("Message {:?}", message);
-                }
-            })
-            .detach();
+        {
+            let payload_channel_receiver = payload_channel_receiver.clone();
+            executor
+                .spawn(async move {
+                    while let Ok(message) = payload_channel_receiver.recv().await {
+                        println!("Message {:?}", message);
+                    }
+                })
+                .detach();
+        }
+
+        // TODO: Handle error cases
+        ready_receiver.await;
 
         let event_handlers = Vec::new();
 
@@ -327,15 +377,18 @@ mod tests {
             });
         }
         let worker_settings = WorkerSettings::default();
-        let worker = Worker::new(
-            executor,
-            env::var("MEDIASOUP_WORKER_BIN")
-                .map(|path| path.into())
-                .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-            worker_settings,
-        )
-        .unwrap();
+        future::block_on(async move {
+            let worker = Worker::new(
+                executor,
+                env::var("MEDIASOUP_WORKER_BIN")
+                    .map(|path| path.into())
+                    .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
+                worker_settings,
+            )
+            .await
+            .unwrap();
 
-        thread::sleep(std::time::Duration::from_secs(1));
+            println!("Worker created");
+        });
     }
 }

@@ -53,7 +53,7 @@ pub enum ChannelReceiveMessage {
     /// Dump log
     Dump(String),
     /// Unknown
-    Unknown { data: Vec<u8> },
+    Invalid { data: Vec<u8> },
 }
 
 fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
@@ -80,7 +80,7 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
         }),
         // Unknown
-        _ => ChannelReceiveMessage::Unknown {
+        _ => ChannelReceiveMessage::Invalid {
             data: Vec::from(bytes),
         },
     }
