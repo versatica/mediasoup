@@ -321,24 +321,20 @@ impl Worker {
     }
 
     async fn wait_for_worker_ready(&mut self) -> io::Result<()> {
-        let string_pid = self.pid.to_string();
         match self.channel_receiver.next().await {
             Some(ChannelReceiveMessage::Json(JsonReceiveMessage::Notification {
-                target_id: string_pid,
+                target_id,
                 event: NotificationEvent::Running,
                 data: _,
-            })) => {
+            })) if target_id == self.pid.to_string() => {
                 debug!("worker process running [pid:{}]", self.pid);
+                Ok(())
             }
-            message => {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("unexpected first message from worker: {:?}", message),
-                ));
-            }
+            message => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("unexpected first message from worker: {:?}", message),
+            )),
         }
-
-        Ok(())
     }
 
     fn setup_message_handling(&mut self) {
