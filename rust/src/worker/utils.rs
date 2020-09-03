@@ -164,30 +164,14 @@ pub struct SpawnResult {
     pub payload_channel: (Sender<Vec<u8>>, Receiver<ChannelReceiveMessage>),
 }
 
-fn create_pipe() -> (RawFd, RawFd) {
-    let (read, write) = unistd::pipe().unwrap();
-    // nix::fcntl::fcntl(
-    //     read,
-    //     nix::fcntl::FcntlArg::F_SETFD(nix::fcntl::FdFlag::FD_CLOEXEC),
-    // )
-    // .unwrap();
-    // nix::fcntl::fcntl(
-    //     write,
-    //     nix::fcntl::FcntlArg::F_SETFD(nix::fcntl::FdFlag::FD_CLOEXEC),
-    // )
-    // .unwrap();
-
-    (read, write)
-}
-
 pub fn spawn_with_worker_channels(
     executor: &Executor,
     command: &mut Command,
 ) -> io::Result<SpawnResult> {
-    let (producer_fd_read, producer_fd_write) = create_pipe();
-    let (consumer_fd_read, consumer_fd_write) = create_pipe();
-    let (producer_payload_fd_read, producer_payload_fd_write) = create_pipe();
-    let (consumer_payload_fd_read, consumer_payload_fd_write) = create_pipe();
+    let (producer_fd_read, producer_fd_write) = unistd::pipe().unwrap();
+    let (consumer_fd_read, consumer_fd_write) = unistd::pipe().unwrap();
+    let (producer_payload_fd_read, producer_payload_fd_write) = unistd::pipe().unwrap();
+    let (consumer_payload_fd_read, consumer_payload_fd_write) = unistd::pipe().unwrap();
 
     unsafe {
         command.pre_exec(move || {
