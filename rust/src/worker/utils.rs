@@ -8,7 +8,7 @@ use futures_lite::{future, AsyncWriteExt};
 use nix::unistd;
 use serde::Deserialize;
 use std::fs::File as StdFile;
-use std::os::unix::io::{FromRawFd, RawFd};
+use std::os::unix::io::FromRawFd;
 use std::{io, thread};
 
 // netstring length for a 4194304 bytes payload.
