@@ -159,6 +159,7 @@ pub struct Worker {
 }
 
 impl Worker {
+    // TODO: Handle error cases
     pub(super) async fn new(
         executor: Arc<Executor>,
         worker_binary: PathBuf,
@@ -267,21 +268,39 @@ impl Worker {
             .spawn(async move {
                 match status.await {
                     Ok(exit_status) => {
-                        println!("Exit status {}", exit_status);
+                        println!("exit status {}", exit_status);
                     }
                     Err(error) => {
-                        error!("Failed to spawn worker: {}", error);
+                        error!("failed to spawn worker: {}", error);
                     }
                 }
             })
             .detach();
 
-        let (ready_sender, ready_receiver) = async_oneshot::oneshot::<()>();
+        let (channel_sender, mut channel_receiver) = channel;
+        let (payload_channel_sender, payload_channel_receiver) = payload_channel;
 
-        let (channel_sender, channel_receiver) = channel;
+        {
+            let string_pid = pid.to_string();
+            match channel_receiver.next().await {
+                Some(ChannelReceiveMessage::Json(JsonReceiveMessage::Notification {
+                    target_id: string_pid,
+                    event: NotificationEvent::Running,
+                    data: _,
+                })) => {
+                    debug!("worker process running [pid:{}]", pid);
+                }
+                message => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("unexpected first message from worker: {:?}", message),
+                    ));
+                }
+            }
+        }
+
         {
             let channel_receiver = channel_receiver.clone();
-            let mut ready_sender = Some(ready_sender);
 
             executor
                 .spawn(async move {
@@ -297,12 +316,12 @@ impl Worker {
                                     if target_id == pid.to_string() {
                                         match event {
                                             NotificationEvent::Running => {
-                                                ready_sender.take().unwrap().send(());
+                                                error!("unexpected Running message for")
                                             }
                                         }
                                     } else {
                                         error!(
-                                            "Unexpected target ID {} event {:?}",
+                                            "unexpected target ID {} event {:?}",
                                             target_id, event
                                         );
                                     }
@@ -329,7 +348,6 @@ impl Worker {
                 .detach();
         }
 
-        let (payload_channel_sender, payload_channel_receiver) = payload_channel;
         {
             let payload_channel_receiver = payload_channel_receiver.clone();
             executor
@@ -340,9 +358,6 @@ impl Worker {
                 })
                 .detach();
         }
-
-        // TODO: Handle error cases
-        ready_receiver.await;
 
         let event_handlers = Vec::new();
 
@@ -390,8 +405,6 @@ mod tests {
             )
             .await
             .unwrap();
-
-            println!("Worker created");
         });
     }
 }

@@ -75,8 +75,6 @@ mod tests {
                 )
                 .await
                 .unwrap();
-
-            println!("Worker created");
         })
     }
 }
