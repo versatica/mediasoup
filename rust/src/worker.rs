@@ -4,7 +4,7 @@ mod utils;
 use crate::worker::utils::{
     ChannelReceiveMessage, JsonReceiveMessage, NotificationEvent, SpawnResult,
 };
-use async_channel::Sender;
+use async_channel::{Receiver, Sender};
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
 use futures_lite::io::BufReader;
@@ -151,7 +151,9 @@ struct WorkerResourceUsage {
 
 pub struct Worker {
     channel_sender: Sender<Vec<u8>>,
+    channel_receiver: Receiver<ChannelReceiveMessage>,
     payload_channel_sender: Sender<Vec<u8>>,
+    payload_channel_receiver: Receiver<ChannelReceiveMessage>,
     child: Child,
     executor: Arc<Executor>,
     event_handlers: Vec<fn()>,
@@ -299,76 +301,78 @@ impl Worker {
             }
         }
 
-        {
-            let channel_receiver = channel_receiver.clone();
-
-            executor
-                .spawn(async move {
-                    while let Ok(message) = channel_receiver.recv().await {
-                        println!("Message {:?}", message);
-                        match message {
-                            ChannelReceiveMessage::Json(contents) => match contents {
-                                JsonReceiveMessage::Notification {
-                                    target_id,
-                                    event,
-                                    data,
-                                } => {
-                                    if target_id == pid.to_string() {
-                                        match event {
-                                            NotificationEvent::Running => {
-                                                error!("unexpected Running message for")
-                                            }
-                                        }
-                                    } else {
-                                        error!(
-                                            "unexpected target ID {} event {:?}",
-                                            target_id, event
-                                        );
-                                    }
-                                }
-                                JsonReceiveMessage::MgsAccepted { id: _, accepted: _ } => {}
-                                JsonReceiveMessage::MgsError {
-                                    id: _,
-                                    error: _,
-                                    reason: _,
-                                } => {}
-                            },
-                            ChannelReceiveMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
-                            ChannelReceiveMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
-                            ChannelReceiveMessage::Error(text) => error!("[pid:{}] {}", pid, text),
-                            ChannelReceiveMessage::Dump(text) => println!("{}", text),
-                            ChannelReceiveMessage::Unexpected { data } => error!(
-                                "worker[pid:{}] unexpected data: {}",
-                                pid,
-                                String::from_utf8_lossy(&data)
-                            ),
-                        }
-                    }
-                })
-                .detach();
-        }
-
-        {
-            let payload_channel_receiver = payload_channel_receiver.clone();
-            executor
-                .spawn(async move {
-                    while let Ok(message) = payload_channel_receiver.recv().await {
-                        println!("Message {:?}", message);
-                    }
-                })
-                .detach();
-        }
-
         let event_handlers = Vec::new();
-
-        Ok(Self {
+        let mut worker = Self {
             channel_sender,
+            channel_receiver,
             payload_channel_sender,
+            payload_channel_receiver,
             child,
             event_handlers,
             executor,
             pid,
-        })
+        };
+
+        worker.setup_message_handling();
+
+        Ok(worker)
+    }
+
+    fn setup_message_handling(&mut self) {
+        let channel_receiver = self.channel_receiver.clone();
+        let payload_channel_receiver = self.payload_channel_receiver.clone();
+        let pid = self.pid;
+        // TODO: Make sure these are dropped with worker
+        self.executor
+            .spawn(async move {
+                while let Ok(message) = channel_receiver.recv().await {
+                    println!("Message {:?}", message);
+                    match message {
+                        ChannelReceiveMessage::Json(contents) => match contents {
+                            JsonReceiveMessage::Notification {
+                                target_id,
+                                event,
+                                data,
+                            } => {
+                                if target_id == pid.to_string() {
+                                    match event {
+                                        NotificationEvent::Running => {
+                                            error!("unexpected Running message for")
+                                        }
+                                    }
+                                } else {
+                                    error!("unexpected target ID {} event {:?}", target_id, event);
+                                }
+                            }
+                            JsonReceiveMessage::MgsAccepted { id: _, accepted: _ } => {}
+                            JsonReceiveMessage::MgsError {
+                                id: _,
+                                error: _,
+                                reason: _,
+                            } => {}
+                        },
+                        ChannelReceiveMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
+                        ChannelReceiveMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
+                        ChannelReceiveMessage::Error(text) => error!("[pid:{}] {}", pid, text),
+                        ChannelReceiveMessage::Dump(text) => println!("{}", text),
+                        ChannelReceiveMessage::Unexpected { data } => error!(
+                            "worker[pid:{}] unexpected data: {}",
+                            pid,
+                            String::from_utf8_lossy(&data)
+                        ),
+                    }
+                }
+            })
+            .detach();
+
+        let payload_channel_receiver = payload_channel_receiver.clone();
+        self.executor
+            .spawn(async move {
+                while let Ok(message) = payload_channel_receiver.recv().await {
+                    println!("Message {:?}", message);
+                }
+            })
+            .detach();
     }
 }
 
