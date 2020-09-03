@@ -11,6 +11,7 @@ use futures_lite::io::BufReader;
 use futures_lite::{AsyncBufReadExt, StreamExt};
 use log::debug;
 use log::error;
+use log::warn;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -313,13 +314,15 @@ impl Worker {
                                     reason: _,
                                 } => {}
                             },
-                            ChannelReceiveMessage::Debug(_) => {}
-                            ChannelReceiveMessage::Warn(_) => {}
-                            ChannelReceiveMessage::Error(_) => {}
-                            ChannelReceiveMessage::Dump(_) => {}
-                            ChannelReceiveMessage::Invalid { data } => {
-                                error!("Invalid message {}", String::from_utf8_lossy(&data))
-                            }
+                            ChannelReceiveMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
+                            ChannelReceiveMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
+                            ChannelReceiveMessage::Error(text) => error!("[pid:{}] {}", pid, text),
+                            ChannelReceiveMessage::Dump(text) => println!("{}", text),
+                            ChannelReceiveMessage::Unexpected { data } => error!(
+                                "worker[pid:{}] unexpected data: {}",
+                                pid,
+                                String::from_utf8_lossy(&data)
+                            ),
                         }
                     }
                 })
