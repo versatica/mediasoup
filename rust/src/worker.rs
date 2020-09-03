@@ -243,7 +243,7 @@ impl Worker {
 
         let pid = child.id();
 
-        let (channel_sender, mut channel_receiver) = channel;
+        let (channel_sender, channel_receiver) = channel;
         let (payload_channel_sender, payload_channel_receiver) = payload_channel;
 
         let event_handlers = Vec::new();
