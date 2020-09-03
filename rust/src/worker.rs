@@ -8,7 +8,7 @@ use async_channel::{Receiver, Sender};
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
 use futures_lite::io::BufReader;
-use futures_lite::{AsyncBufReadExt, StreamExt};
+use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::debug;
 use log::error;
 use log::warn;
@@ -149,6 +149,7 @@ struct WorkerResourceUsage {
     pub ru_nivcsw: u64,
 }
 
+// TODO: Drop impl
 pub struct Worker {
     channel_sender: Sender<Vec<u8>>,
     channel_receiver: Receiver<ChannelReceiveMessage>,
@@ -161,7 +162,6 @@ pub struct Worker {
 }
 
 impl Worker {
-    // TODO: Handle error cases
     pub(super) async fn new(
         executor: Arc<Executor>,
         worker_binary: PathBuf,
@@ -236,13 +236,12 @@ impl Worker {
             .env("MEDIASOUP_VERSION", env!("CARGO_PKG_VERSION"));
 
         let SpawnResult {
-            mut child,
+            child,
             channel,
             payload_channel,
         } = utils::spawn_with_worker_channels(&executor, &mut command)?;
 
         let pid = child.id();
-        let status = child.status();
 
         let (channel_sender, mut channel_receiver) = channel;
         let (payload_channel_sender, payload_channel_receiver) = payload_channel;
@@ -261,6 +260,8 @@ impl Worker {
 
         worker.setup_output_forwarding();
 
+        // TODO: Event for this
+        let status = worker.child.status();
         worker
             .executor
             .spawn(async move {
@@ -305,6 +306,21 @@ impl Worker {
     }
 
     async fn wait_for_worker_process(&mut self) -> io::Result<()> {
+        let status = self.child.status();
+        future::race::<io::Result<()>, _, _>(
+            async move {
+                status.await?;
+                Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "worker process exited before being ready",
+                ))
+            },
+            self.wait_for_worker_ready(),
+        )
+        .await
+    }
+
+    async fn wait_for_worker_ready(&mut self) -> io::Result<()> {
         let string_pid = self.pid.to_string();
         match self.channel_receiver.next().await {
             Some(ChannelReceiveMessage::Json(JsonReceiveMessage::Notification {
