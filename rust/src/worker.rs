@@ -220,8 +220,6 @@ impl Worker {
                 .join(" ")
         );
 
-        // TODO: Spawn a child process
-
         let mut command = Command::new(spawn_bin);
         command
             .args(spawn_args)
@@ -309,6 +307,8 @@ impl Worker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use futures_lite::future;
+    use std::thread;
 
     fn init() {
         let _ = env_logger::builder().is_test(true).try_init();
@@ -319,6 +319,13 @@ mod tests {
         init();
 
         let executor = Arc::new(Executor::new());
+        let (stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
+        {
+            let executor = Arc::clone(&executor);
+            thread::spawn(move || {
+                let _ = future::block_on(executor.run(stop_receiver));
+            });
+        }
         let worker_settings = WorkerSettings::default();
         let worker = Worker::new(
             executor,
@@ -328,5 +335,7 @@ mod tests {
             worker_settings,
         )
         .unwrap();
+
+        thread::sleep(std::time::Duration::from_secs(1));
     }
 }

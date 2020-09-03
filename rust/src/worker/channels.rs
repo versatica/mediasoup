@@ -4,12 +4,11 @@ use async_executor::Executor;
 use async_fs::File as AsyncFile;
 use async_process::unix::CommandExt;
 use async_process::{Child, Command};
-use futures_lite::io::BufReader;
-use futures_lite::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
+use futures_lite::{future, AsyncWriteExt};
 use nix::unistd;
 use std::fs::File as StdFile;
-use std::io;
 use std::os::unix::io::{FromRawFd, RawFd};
+use std::{io, thread};
 
 // netstring length for a 4194304 bytes payload.
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
@@ -27,56 +26,77 @@ pub enum ChannelMessage {
     /// Dump log
     Dump(String),
     /// Unknown
-    Unknown { command: u8, data: Vec<u8> },
+    Unknown { data: Vec<u8> },
 }
 
-fn deserialize_message(command: u8, data: Vec<u8>) -> ChannelMessage {
-    match command {
+fn deserialize_message(bytes: &[u8]) -> ChannelMessage {
+    // TODO: More specific message parsing
+    match bytes[0] {
         // JSON message
-        b'{' => ChannelMessage::Json(unsafe { String::from_utf8_unchecked(data) }),
+        b'{' => ChannelMessage::Json(unsafe { String::from_utf8_unchecked(Vec::from(bytes)) }),
         // Debug log
-        b'D' => ChannelMessage::Debug(unsafe { String::from_utf8_unchecked(data) }),
+        b'D' => {
+            ChannelMessage::Debug(unsafe { String::from_utf8_unchecked(Vec::from(&bytes[1..])) })
+        }
         // Warn log
-        b'W' => ChannelMessage::Warn(unsafe { String::from_utf8_unchecked(data) }),
+        b'W' => {
+            ChannelMessage::Warn(unsafe { String::from_utf8_unchecked(Vec::from(&bytes[1..])) })
+        }
         // Error log
-        b'E' => ChannelMessage::Error(unsafe { String::from_utf8_unchecked(data) }),
+        b'E' => {
+            ChannelMessage::Error(unsafe { String::from_utf8_unchecked(Vec::from(&bytes[1..])) })
+        }
         // Dump log
-        b'X' => ChannelMessage::Dump(unsafe { String::from_utf8_unchecked(data) }),
+        b'X' => {
+            ChannelMessage::Dump(unsafe { String::from_utf8_unchecked(Vec::from(&bytes[1..])) })
+        }
         // Unknown
-        _ => ChannelMessage::Unknown { command, data },
+        _ => ChannelMessage::Unknown {
+            data: Vec::from(bytes),
+        },
     }
 }
 
 fn create_channel_pair(
+    read_channel_name: String,
     executor: &Executor,
-    reader: AsyncFile,
+    reader: StdFile,
     mut writer: AsyncFile,
 ) -> (Sender<Vec<u8>>, Receiver<ChannelMessage>) {
     let receiver = {
+        use std::io::{BufRead, BufReader, Read};
+
         let (sender, receiver) = async_channel::bounded(1);
 
-        executor
-            .spawn(async move {
+        // TODO: We'd want to have it async here, but https://github.com/stjepang/async-fs/issues/4
+        thread::Builder::new()
+            .name(read_channel_name)
+            .spawn(move || {
+                let mut len_bytes = Vec::new();
                 let mut bytes = vec![0u8; NS_PAYLOAD_MAX_LEN];
                 let mut reader = BufReader::new(reader);
 
                 loop {
-                    let read_bytes = reader.read_until(b':', &mut bytes).await?;
-                    bytes.pop();
-                    let length = String::from_utf8_lossy(&bytes[..read_bytes])
+                    let read_bytes = reader.read_until(b':', &mut len_bytes)?;
+                    if read_bytes == 0 {
+                        // EOF
+                        break;
+                    }
+                    let length = String::from_utf8_lossy(&len_bytes[..(read_bytes - 1)])
                         .parse::<usize>()
                         .unwrap();
+                    len_bytes.clear();
                     // +1 because of netstring's `,` at the very end
-                    reader.read_exact(&mut bytes[..(length + 1)]).await?;
-                    // TODO: Parse messages here and send parsed messages over the channel
-                    let message = deserialize_message(bytes[0], Vec::from(&bytes[1..length]));
-                    println!("Received");
-                    let _ = sender.send(message);
+                    reader.read_exact(&mut bytes[..(length + 1)])?;
+                    let message = deserialize_message(&bytes[..length]);
+                    if future::block_on(sender.send(message)).is_err() {
+                        break;
+                    }
                 }
 
                 io::Result::Ok(())
             })
-            .detach();
+            .unwrap();
 
         receiver
     };
@@ -169,12 +189,10 @@ pub fn spawn_with_worker_channels(
         });
     };
 
-    let producer_file: AsyncFile = unsafe { StdFile::from_raw_fd(producer_fd_write) }.into();
-    let consumer_file: AsyncFile = unsafe { StdFile::from_raw_fd(consumer_fd_read) }.into();
-    let producer_payload_file: AsyncFile =
-        unsafe { StdFile::from_raw_fd(producer_payload_fd_write) }.into();
-    let consumer_payload_file: AsyncFile =
-        unsafe { StdFile::from_raw_fd(consumer_payload_fd_read) }.into();
+    let producer_file = unsafe { StdFile::from_raw_fd(producer_fd_write) }.into();
+    let consumer_file = unsafe { StdFile::from_raw_fd(consumer_fd_read) }.into();
+    let producer_payload_file = unsafe { StdFile::from_raw_fd(producer_payload_fd_write) }.into();
+    let consumer_payload_file = unsafe { StdFile::from_raw_fd(consumer_payload_fd_read) }.into();
 
     let child = command.spawn()?;
 
@@ -184,10 +202,18 @@ pub fn spawn_with_worker_channels(
     unistd::close(producer_payload_fd_read).expect("Failed to close fd");
     unistd::close(consumer_payload_fd_write).expect("Failed to close fd");
 
+    let pid = child.id();
+
     Ok(SpawnResult {
         child,
-        channel: create_channel_pair(&executor, consumer_file, producer_file),
+        channel: create_channel_pair(
+            format!("consumer_file {}", pid),
+            &executor,
+            consumer_file,
+            producer_file,
+        ),
         payload_channel: create_channel_pair(
+            format!("consumer_payload_file {}", pid),
             &executor,
             consumer_payload_file,
             producer_payload_file,
