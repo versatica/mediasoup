@@ -242,64 +242,10 @@ impl Worker {
         } = utils::spawn_with_worker_channels(&executor, &mut command)?;
 
         let pid = child.id();
-
         let status = child.status();
-        {
-            let stdout = child.stdout.take().unwrap();
-            executor
-                .spawn(async move {
-                    let mut lines = BufReader::new(stdout).lines();
-                    while let Some(Ok(line)) = lines.next().await {
-                        eprintln!("(stdout) {}", line);
-                    }
-                })
-                .detach();
-        }
-        {
-            let stderr = child.stderr.take().unwrap();
-            executor
-                .spawn(async move {
-                    let mut lines = BufReader::new(stderr).lines();
-                    while let Some(Ok(line)) = lines.next().await {
-                        eprintln!("(stderr) {}", line);
-                    }
-                })
-                .detach();
-        }
-        executor
-            .spawn(async move {
-                match status.await {
-                    Ok(exit_status) => {
-                        println!("exit status {}", exit_status);
-                    }
-                    Err(error) => {
-                        error!("failed to spawn worker: {}", error);
-                    }
-                }
-            })
-            .detach();
 
         let (channel_sender, mut channel_receiver) = channel;
         let (payload_channel_sender, payload_channel_receiver) = payload_channel;
-
-        {
-            let string_pid = pid.to_string();
-            match channel_receiver.next().await {
-                Some(ChannelReceiveMessage::Json(JsonReceiveMessage::Notification {
-                    target_id: string_pid,
-                    event: NotificationEvent::Running,
-                    data: _,
-                })) => {
-                    debug!("worker process running [pid:{}]", pid);
-                }
-                message => {
-                    return Err(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("unexpected first message from worker: {:?}", message),
-                    ));
-                }
-            }
-        }
 
         let event_handlers = Vec::new();
         let mut worker = Self {
@@ -313,9 +259,70 @@ impl Worker {
             pid,
         };
 
+        worker.setup_output_forwarding();
+
+        worker
+            .executor
+            .spawn(async move {
+                match status.await {
+                    Ok(exit_status) => {
+                        println!("exit status {}", exit_status);
+                    }
+                    Err(error) => {
+                        error!("failed to spawn worker: {}", error);
+                    }
+                }
+            })
+            .detach();
+
+        worker.wait_for_worker_process().await?;
+
         worker.setup_message_handling();
 
         Ok(worker)
+    }
+
+    fn setup_output_forwarding(&mut self) {
+        let stdout = self.child.stdout.take().unwrap();
+        self.executor
+            .spawn(async move {
+                let mut lines = BufReader::new(stdout).lines();
+                while let Some(Ok(line)) = lines.next().await {
+                    debug!("(stdout) {}", line);
+                }
+            })
+            .detach();
+
+        let stderr = self.child.stderr.take().unwrap();
+        self.executor
+            .spawn(async move {
+                let mut lines = BufReader::new(stderr).lines();
+                while let Some(Ok(line)) = lines.next().await {
+                    error!("(stderr) {}", line);
+                }
+            })
+            .detach();
+    }
+
+    async fn wait_for_worker_process(&mut self) -> io::Result<()> {
+        let string_pid = self.pid.to_string();
+        match self.channel_receiver.next().await {
+            Some(ChannelReceiveMessage::Json(JsonReceiveMessage::Notification {
+                target_id: string_pid,
+                event: NotificationEvent::Running,
+                data: _,
+            })) => {
+                debug!("worker process running [pid:{}]", self.pid);
+            }
+            message => {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    format!("unexpected first message from worker: {:?}", message),
+                ));
+            }
+        }
+
+        Ok(())
     }
 
     fn setup_message_handling(&mut self) {
