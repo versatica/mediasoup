@@ -6,6 +6,7 @@ use async_process::unix::CommandExt;
 use async_process::{Child, Command};
 use futures_lite::{future, AsyncWriteExt};
 use nix::unistd;
+use serde::Deserialize;
 use std::fs::File as StdFile;
 use std::os::unix::io::{FromRawFd, RawFd};
 use std::{io, thread};
@@ -13,10 +14,36 @@ use std::{io, thread};
 // netstring length for a 4194304 bytes payload.
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum NotificationEvent {
+    Running,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum JsonReceiveMessage {
+    #[serde(rename_all = "camelCase")]
+    Notification {
+        target_id: String,
+        event: NotificationEvent,
+        data: Option<()>,
+    },
+    MgsAccepted {
+        id: u32,
+        accepted: bool,
+    },
+    MgsError {
+        id: u32,
+        error: bool,
+        reason: String,
+    },
+}
+
 #[derive(Debug)]
-pub enum ChannelMessage {
+pub enum ChannelReceiveMessage {
     /// JSON message
-    Json(String),
+    Json(JsonReceiveMessage),
     /// Debug log
     Debug(String),
     /// Warn log
@@ -29,29 +56,31 @@ pub enum ChannelMessage {
     Unknown { data: Vec<u8> },
 }
 
-fn deserialize_message(bytes: &[u8]) -> ChannelMessage {
-    // TODO: More specific message parsing
+fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
     match bytes[0] {
         // JSON message
-        b'{' => ChannelMessage::Json(unsafe { String::from_utf8_unchecked(Vec::from(bytes)) }),
+        b'{' => {
+            let contents = serde_json::from_slice(bytes).unwrap();
+            ChannelReceiveMessage::Json(contents)
+        }
         // Debug log
-        b'D' => {
-            ChannelMessage::Debug(unsafe { String::from_utf8_unchecked(Vec::from(&bytes[1..])) })
-        }
+        b'D' => ChannelReceiveMessage::Debug(unsafe {
+            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
+        }),
         // Warn log
-        b'W' => {
-            ChannelMessage::Warn(unsafe { String::from_utf8_unchecked(Vec::from(&bytes[1..])) })
-        }
+        b'W' => ChannelReceiveMessage::Warn(unsafe {
+            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
+        }),
         // Error log
-        b'E' => {
-            ChannelMessage::Error(unsafe { String::from_utf8_unchecked(Vec::from(&bytes[1..])) })
-        }
+        b'E' => ChannelReceiveMessage::Error(unsafe {
+            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
+        }),
         // Dump log
-        b'X' => {
-            ChannelMessage::Dump(unsafe { String::from_utf8_unchecked(Vec::from(&bytes[1..])) })
-        }
+        b'X' => ChannelReceiveMessage::Dump(unsafe {
+            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
+        }),
         // Unknown
-        _ => ChannelMessage::Unknown {
+        _ => ChannelReceiveMessage::Unknown {
             data: Vec::from(bytes),
         },
     }
@@ -62,7 +91,7 @@ fn create_channel_pair(
     executor: &Executor,
     reader: StdFile,
     mut writer: AsyncFile,
-) -> (Sender<Vec<u8>>, Receiver<ChannelMessage>) {
+) -> (Sender<Vec<u8>>, Receiver<ChannelReceiveMessage>) {
     let receiver = {
         use std::io::{BufRead, BufReader, Read};
 
@@ -131,8 +160,8 @@ fn create_channel_pair(
 
 pub struct SpawnResult {
     pub child: Child,
-    pub channel: (Sender<Vec<u8>>, Receiver<ChannelMessage>),
-    pub payload_channel: (Sender<Vec<u8>>, Receiver<ChannelMessage>),
+    pub channel: (Sender<Vec<u8>>, Receiver<ChannelReceiveMessage>),
+    pub payload_channel: (Sender<Vec<u8>>, Receiver<ChannelReceiveMessage>),
 }
 
 fn create_pipe() -> (RawFd, RawFd) {
