@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Serialize, Serializer};
 use uuid::Uuid;
 
 #[derive(Debug, Copy, Clone)]
@@ -79,50 +79,6 @@ impl WorkerLogTag {
             Self::Message => "message",
         }
     }
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum NotificationEvent {
-    Running,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum JsonReceiveMessage {
-    #[serde(rename_all = "camelCase")]
-    Notification {
-        target_id: String,
-        event: NotificationEvent,
-        data: Option<()>,
-    },
-    Success {
-        id: u32,
-        accepted: bool,
-        data: Option<()>,
-    },
-    Error {
-        id: u32,
-        error: bool,
-        // TODO: Enum?
-        reason: String,
-    },
-}
-
-#[derive(Debug)]
-pub enum ChannelReceiveMessage {
-    /// JSON message
-    Json(JsonReceiveMessage),
-    /// Debug log
-    Debug(String),
-    /// Warn log
-    Warn(String),
-    /// Error log
-    Error(String),
-    /// Dump log
-    Dump(String),
-    /// Unknown
-    Unexpected { data: Vec<u8> },
 }
 
 #[derive(Debug, Serialize)]

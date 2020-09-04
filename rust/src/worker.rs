@@ -2,10 +2,8 @@
 mod channel;
 mod utils;
 
-use crate::data_structures::{
-    ChannelReceiveMessage, JsonReceiveMessage, NotificationEvent, WorkerLogLevel, WorkerLogTag,
-};
-use crate::worker::channel::Channel;
+use crate::data_structures::{WorkerLogLevel, WorkerLogTag};
+use crate::worker::channel::{Channel, EventMessage, NotificationEvent};
 use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
@@ -95,7 +93,6 @@ pub struct Worker {
     payload_channel: Channel,
     child: Child,
     executor: Arc<Executor>,
-    event_handlers: Vec<fn()>,
     pid: u32,
 }
 
@@ -181,12 +178,10 @@ impl Worker {
 
         let pid = child.id();
 
-        let event_handlers = Vec::new();
         let mut worker = Self {
             channel,
             payload_channel,
             child,
-            event_handlers,
             executor,
             pid,
         };
@@ -255,11 +250,11 @@ impl Worker {
 
     async fn wait_for_worker_ready(&mut self) -> io::Result<()> {
         match self.channel.get_receiver().next().await {
-            Some(ChannelReceiveMessage::Json(JsonReceiveMessage::Notification {
+            Some(EventMessage::Notification {
                 target_id,
                 event: NotificationEvent::Running,
                 data: _,
-            })) if target_id == self.pid.to_string() => {
+            }) if target_id == self.pid.to_string() => {
                 debug!("worker process running [pid:{}]", self.pid);
                 Ok(())
             }
@@ -280,29 +275,26 @@ impl Worker {
                 while let Ok(message) = channel_receiver.recv().await {
                     println!("Message {:?}", message);
                     match message {
-                        ChannelReceiveMessage::Json(contents) => match contents {
-                            JsonReceiveMessage::Notification {
-                                target_id,
-                                event,
-                                data,
-                            } => {
-                                if target_id == pid.to_string() {
-                                    match event {
-                                        NotificationEvent::Running => {
-                                            error!("unexpected Running message for")
-                                        }
+                        EventMessage::Notification {
+                            target_id,
+                            event,
+                            data: _,
+                        } => {
+                            if target_id == pid.to_string() {
+                                match event {
+                                    NotificationEvent::Running => {
+                                        error!("unexpected Running message for")
                                     }
-                                } else {
-                                    error!("unexpected target ID {} event {:?}", target_id, event);
                                 }
+                            } else {
+                                error!("unexpected target ID {} event {:?}", target_id, event);
                             }
-                            _ => {}
-                        },
-                        ChannelReceiveMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
-                        ChannelReceiveMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
-                        ChannelReceiveMessage::Error(text) => error!("[pid:{}] {}", pid, text),
-                        ChannelReceiveMessage::Dump(text) => println!("{}", text),
-                        ChannelReceiveMessage::Unexpected { data } => error!(
+                        }
+                        EventMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
+                        EventMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
+                        EventMessage::Error(text) => error!("[pid:{}] {}", pid, text),
+                        EventMessage::Dump(text) => println!("{}", text),
+                        EventMessage::Unexpected(data) => error!(
                             "worker[pid:{}] unexpected data: {}",
                             pid,
                             String::from_utf8_lossy(&data)

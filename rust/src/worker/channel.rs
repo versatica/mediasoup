@@ -1,5 +1,4 @@
-use crate::data_structures::{ChannelReceiveMessage, JsonReceiveMessage, RequestMessage};
-use async_channel::SendError;
+use crate::data_structures::RequestMessage;
 use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
@@ -7,12 +6,60 @@ use futures_lite::io::BufReader;
 use futures_lite::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::debug;
 use log::warn;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io;
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum NotificationEvent {
+    Running,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum EventMessage {
+    #[serde(rename_all = "camelCase")]
+    Notification {
+        target_id: String,
+        event: NotificationEvent,
+        data: Option<()>,
+    },
+    /// Debug log
+    #[serde(skip)]
+    Debug(String),
+    /// Warn log
+    #[serde(skip)]
+    Warn(String),
+    /// Error log
+    #[serde(skip)]
+    Error(String),
+    /// Dump log
+    #[serde(skip)]
+    Dump(String),
+    /// Unknown
+    #[serde(skip)]
+    Unexpected(Vec<u8>),
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum ChannelReceiveMessage {
+    ResponseSuccess {
+        id: u32,
+        accepted: bool,
+        data: Option<()>,
+    },
+    ResponseError {
+        id: u32,
+        error: bool,
+        // TODO: Enum?
+        reason: String,
+    },
+    Event(EventMessage),
+}
 
 // netstring length for a 4194304 bytes payload.
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
@@ -20,30 +67,25 @@ const NS_PAYLOAD_MAX_LEN: usize = 4194304;
 fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
     match bytes[0] {
         // JSON message
-        b'{' => {
-            let contents = serde_json::from_slice(bytes).unwrap();
-            ChannelReceiveMessage::Json(contents)
-        }
+        b'{' => serde_json::from_slice(bytes).unwrap(),
         // Debug log
-        b'D' => ChannelReceiveMessage::Debug(unsafe {
+        b'D' => ChannelReceiveMessage::Event(EventMessage::Debug(unsafe {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        }),
+        })),
         // Warn log
-        b'W' => ChannelReceiveMessage::Warn(unsafe {
+        b'W' => ChannelReceiveMessage::Event(EventMessage::Warn(unsafe {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        }),
+        })),
         // Error log
-        b'E' => ChannelReceiveMessage::Error(unsafe {
+        b'E' => ChannelReceiveMessage::Event(EventMessage::Error(unsafe {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        }),
+        })),
         // Dump log
-        b'X' => ChannelReceiveMessage::Dump(unsafe {
+        b'X' => ChannelReceiveMessage::Event(EventMessage::Dump(unsafe {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        }),
+        })),
         // Unknown
-        _ => ChannelReceiveMessage::Unexpected {
-            data: Vec::from(bytes),
-        },
+        _ => ChannelReceiveMessage::Event(EventMessage::Unexpected(Vec::from(bytes))),
     }
 }
 
@@ -67,7 +109,7 @@ struct RequestsContainer {
 // TODO: Close sender/receiver when Channel is dropped
 pub struct Channel {
     sender: async_channel::Sender<Vec<u8>>,
-    receiver: async_channel::Receiver<ChannelReceiveMessage>,
+    receiver: async_channel::Receiver<EventMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
 }
 
@@ -97,51 +139,38 @@ impl Channel {
                         len_bytes.clear();
                         // +1 because of netstring's `,` at the very end
                         reader.read_exact(&mut bytes[..(length + 1)]).await?;
-                        let message = deserialize_message(&bytes[..length]);
-                        match message {
-                            ChannelReceiveMessage::Json(message) => match message {
-                                JsonReceiveMessage::Success {
-                                    id,
-                                    accepted: _,
-                                    data,
-                                } => {
-                                    let sender = requests_container.lock().await.handlers.remove(&id);
-                                    if let Some(sender) = sender {
-                                        drop(sender.send(Ok(data)));
-                                    } else {
-                                        warn!("received success response does not match any sent request [id:{}]", id);
-                                    }
-                                }
-                                JsonReceiveMessage::Error {
-                                    id,
-                                    error: _,
-                                    reason,
-                                } => {
-                                    let sender = requests_container.lock().await.handlers.remove(&id);
-                                    if let Some(sender) = sender {
-                                        drop(sender.send(Err(ResponseError {
-                                            reason
-                                        })));
-                                    } else {
-                                        warn!("received error response does not match any sent request [id:{}]", id);
-                                    }
-                                }
-                                message => {
-                                    // TODO: This type should be more limited
-                                    if sender.send(ChannelReceiveMessage::Json(message)).await.is_err() {
-                                        break;
-                                    }
 
+                        match deserialize_message(&bytes[..length]) {
+                            ChannelReceiveMessage::ResponseSuccess {
+                                id,
+                                accepted: _,
+                                data,
+                            } => {
+                                let sender = requests_container.lock().await.handlers.remove(&id);
+                                if let Some(sender) = sender {
+                                    drop(sender.send(Ok(data)));
+                                } else {
+                                    warn!("received success response does not match any sent request [id:{}]", id);
                                 }
-                            },
-                            message => {
-                                // TODO: This type should be more limited
-                                if sender.send(message).await.is_err() {
+                            }
+                            ChannelReceiveMessage::ResponseError {
+                                id,
+                                error: _,
+                                reason,
+                            } => {
+                                let sender = requests_container.lock().await.handlers.remove(&id);
+                                if let Some(sender) = sender {
+                                    drop(sender.send(Err(ResponseError { reason })));
+                                } else {
+                                    warn!("received error response does not match any sent request [id:{}]", id);
+                                }
+                            }
+                            ChannelReceiveMessage::Event(event_message) => {
+                                if sender.send(event_message).await.is_err() {
                                     break;
                                 }
                             }
                         }
-
                     }
 
                     io::Result::Ok(())
@@ -183,7 +212,7 @@ impl Channel {
         }
     }
 
-    pub fn get_receiver(&self) -> async_channel::Receiver<ChannelReceiveMessage> {
+    pub fn get_receiver(&self) -> async_channel::Receiver<EventMessage> {
         self.receiver.clone()
     }
 
@@ -223,6 +252,19 @@ impl Channel {
             .await
             .map_err(|_| ChannelClosedError {})?;
 
-        result_receiver.await.map_err(|_| ChannelClosedError {})
+        let result = result_receiver.await.map_err(|_| ChannelClosedError {});
+
+        if let Ok(result) = &result {
+            if let Err(error) = result {
+                debug!(
+                    "request failed [method:{}, id:{}]: {}",
+                    method, id, error.reason
+                );
+            } else {
+                debug!("request succeeded [method:{}, id:{}]", method, id);
+            }
+        }
+
+        result
     }
 }
