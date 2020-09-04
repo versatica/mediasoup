@@ -4,12 +4,13 @@ use async_executor::Executor;
 use async_fs::File as AsyncFile;
 use async_process::unix::CommandExt;
 use async_process::{Child, Command};
-use futures_lite::{future, AsyncWriteExt};
+use futures_lite::io::BufReader;
+use futures_lite::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use nix::unistd;
 use serde::Deserialize;
 use std::fs::File as StdFile;
+use std::io;
 use std::os::unix::io::FromRawFd;
-use std::{io, thread};
 
 // netstring length for a 4194304 bytes payload.
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
@@ -87,26 +88,21 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
 }
 
 fn create_channel_pair(
-    read_channel_name: String,
     executor: &Executor,
-    reader: StdFile,
+    reader: AsyncFile,
     mut writer: AsyncFile,
 ) -> (Sender<Vec<u8>>, Receiver<ChannelReceiveMessage>) {
     let receiver = {
-        use std::io::{BufRead, BufReader, Read};
-
         let (sender, receiver) = async_channel::bounded(1);
 
-        // TODO: We'd want to have it async here, but https://github.com/stjepang/async-fs/issues/4
-        thread::Builder::new()
-            .name(read_channel_name)
-            .spawn(move || {
+        executor
+            .spawn(async move {
                 let mut len_bytes = Vec::new();
                 let mut bytes = vec![0u8; NS_PAYLOAD_MAX_LEN];
                 let mut reader = BufReader::new(reader);
 
                 loop {
-                    let read_bytes = reader.read_until(b':', &mut len_bytes)?;
+                    let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
                     if read_bytes == 0 {
                         // EOF
                         break;
@@ -116,16 +112,16 @@ fn create_channel_pair(
                         .unwrap();
                     len_bytes.clear();
                     // +1 because of netstring's `,` at the very end
-                    reader.read_exact(&mut bytes[..(length + 1)])?;
+                    reader.read_exact(&mut bytes[..(length + 1)]).await?;
                     let message = deserialize_message(&bytes[..length]);
-                    if future::block_on(sender.send(message)).is_err() {
+                    if sender.send(message).await.is_err() {
                         break;
                     }
                 }
 
                 io::Result::Ok(())
             })
-            .unwrap();
+            .detach();
 
         receiver
     };
@@ -160,6 +156,8 @@ fn create_channel_pair(
 
 pub struct SpawnResult {
     pub child: Child,
+    // TODO: Wrapper types (probably with Deref and DerefMut impl) for channels to close threads and
+    //  tasks when channel is dropped
     pub channel: (Sender<Vec<u8>>, Receiver<ChannelReceiveMessage>),
     pub payload_channel: (Sender<Vec<u8>>, Receiver<ChannelReceiveMessage>),
 }
@@ -215,18 +213,10 @@ pub fn spawn_with_worker_channels(
     unistd::close(producer_payload_fd_read).expect("Failed to close fd");
     unistd::close(consumer_payload_fd_write).expect("Failed to close fd");
 
-    let pid = child.id();
-
     Ok(SpawnResult {
         child,
-        channel: create_channel_pair(
-            format!("consumer_file {}", pid),
-            &executor,
-            consumer_file,
-            producer_file,
-        ),
+        channel: create_channel_pair(&executor, consumer_file, producer_file),
         payload_channel: create_channel_pair(
-            format!("consumer_payload_file {}", pid),
             &executor,
             consumer_payload_file,
             producer_payload_file,
