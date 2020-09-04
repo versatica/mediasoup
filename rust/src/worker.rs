@@ -1,10 +1,11 @@
 // TODO: This is Unix-specific and doesn't support Windows in any way
+mod channel;
 mod utils;
 
-use crate::worker::utils::{
-    ChannelReceiveMessage, JsonReceiveMessage, NotificationEvent, SpawnResult,
+use crate::worker::channel::{
+    Channel, ChannelReceiveMessage, JsonReceiveMessage, NotificationEvent,
 };
-use async_channel::{Receiver, Sender};
+use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
 use futures_lite::io::BufReader;
@@ -151,10 +152,8 @@ struct WorkerResourceUsage {
 
 // TODO: Drop impl
 pub struct Worker {
-    channel_sender: Sender<Vec<u8>>,
-    channel_receiver: Receiver<ChannelReceiveMessage>,
-    payload_channel_sender: Sender<Vec<u8>>,
-    payload_channel_receiver: Receiver<ChannelReceiveMessage>,
+    channel: Channel,
+    payload_channel: Channel,
     child: Child,
     executor: Arc<Executor>,
     event_handlers: Vec<fn()>,
@@ -243,15 +242,10 @@ impl Worker {
 
         let pid = child.id();
 
-        let (channel_sender, channel_receiver) = channel;
-        let (payload_channel_sender, payload_channel_receiver) = payload_channel;
-
         let event_handlers = Vec::new();
         let mut worker = Self {
-            channel_sender,
-            channel_receiver,
-            payload_channel_sender,
-            payload_channel_receiver,
+            channel,
+            payload_channel,
             child,
             event_handlers,
             executor,
@@ -321,7 +315,7 @@ impl Worker {
     }
 
     async fn wait_for_worker_ready(&mut self) -> io::Result<()> {
-        match self.channel_receiver.next().await {
+        match self.channel.get_receiver().next().await {
             Some(ChannelReceiveMessage::Json(JsonReceiveMessage::Notification {
                 target_id,
                 event: NotificationEvent::Running,
@@ -338,8 +332,8 @@ impl Worker {
     }
 
     fn setup_message_handling(&mut self) {
-        let channel_receiver = self.channel_receiver.clone();
-        let payload_channel_receiver = self.payload_channel_receiver.clone();
+        let channel_receiver = self.channel.get_receiver();
+        let payload_channel_receiver = self.payload_channel.get_receiver();
         let pid = self.pid;
         // TODO: Make sure these are dropped with worker
         self.executor
@@ -384,7 +378,6 @@ impl Worker {
             })
             .detach();
 
-        let payload_channel_receiver = payload_channel_receiver.clone();
         self.executor
             .spawn(async move {
                 while let Ok(message) = payload_channel_receiver.recv().await {
