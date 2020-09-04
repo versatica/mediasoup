@@ -96,13 +96,15 @@ pub enum JsonReceiveMessage {
         event: NotificationEvent,
         data: Option<()>,
     },
-    MgsAccepted {
+    Success {
         id: u32,
         accepted: bool,
+        data: Option<()>,
     },
-    MgsError {
+    Error {
         id: u32,
         error: bool,
+        // TODO: Enum?
         reason: String,
     },
 }
@@ -353,128 +355,153 @@ impl TransportSetMaxIncomingBitrateData {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(tag = "method")]
+#[serde(untagged)]
 pub enum RequestMessage {
-    #[serde(rename = "worker.dump")]
     WorkerDump,
-    #[serde(rename = "worker.getResourceUsage")]
     WorkerGetResourceUsage,
-    #[serde(rename = "worker.updateSettings")]
-    WorkerUpdateSettings { data: WorkerUpdateSettingsData },
-    #[serde(rename = "worker.createRouter")]
-    WorkerCreateRouter { internal: RouterInternal },
-    #[serde(rename = "router.close")]
-    RouterClose { internal: RouterInternal },
-    #[serde(rename = "router.dump")]
-    RouterDump { internal: RouterInternal },
-    #[serde(rename = "router.createWebRtcTransport")]
+    WorkerUpdateSettings {
+        data: WorkerUpdateSettingsData,
+    },
+    WorkerCreateRouter {
+        internal: RouterInternal,
+    },
+    RouterClose {
+        internal: RouterInternal,
+    },
+    RouterDump {
+        internal: RouterInternal,
+    },
     RouterCreateWebrtcTransport {
         internal: TransportInternal,
         data: RouterCreateWebrtcTransportData,
     },
-    #[serde(rename = "router.createPlainTransport")]
     RouterCreatePlainTransport {
         internal: TransportInternal,
         data: RouterCreatePlainTransportData,
     },
-    #[serde(rename = "router.createPipeTransport")]
     RouterCreatePipeTransport {
         internal: TransportInternal,
         data: RouterCreatePipeTransportData,
     },
-    #[serde(rename = "router.createDirectTransport")]
     RouterCreateDirectTransport {
         internal: TransportInternal,
         data: RouterCreateDirectTransportData,
     },
-    #[serde(rename = "router.createAudioLevelObserver")]
     RouterCreateAudioLevelObserver {
         internal: RouterCreateAudioLevelObserverInternal,
         data: RouterCreateAudioLevelObserverData,
     },
-    #[serde(rename = "transport.close")]
-    TransportClose { internal: TransportInternal },
-    #[serde(rename = "transport.dump")]
-    TransportDump { internal: TransportInternal },
-    #[serde(rename = "transport.getStats")]
-    TransportGetStats { internal: TransportInternal },
-    #[serde(rename = "transport.connect")]
+    TransportClose {
+        internal: TransportInternal,
+    },
+    TransportDump {
+        internal: TransportInternal,
+    },
+    TransportGetStats {
+        internal: TransportInternal,
+    },
     TransportConnect {
         internal: TransportInternal,
         data: TransportConnectData,
     },
-    #[serde(rename = "transport.setMaxIncomingBitrate")]
     TransportSetMaxIncomingBitrate {
         internal: TransportInternal,
         data: TransportSetMaxIncomingBitrateData,
     },
     // TODO: Detail remaining methods, I got bored for now
-    #[serde(rename = "transport.restartIce")]
-    TransportRestartIce { internal: TransportInternal },
-    #[serde(rename = "transport.produce")]
+    TransportRestartIce {
+        internal: TransportInternal,
+    },
     TransportProduce,
-    #[serde(rename = "transport.consume")]
     TransportConsume,
-    #[serde(rename = "transport.produceData")]
     TransportProduceData,
-    #[serde(rename = "transport.consumeData")]
     TransportConsumeData,
-    #[serde(rename = "transport.enableTraceEvent")]
     TransportEnableTraceEvent,
-    #[serde(rename = "producer.close")]
     ProducerClose,
-    #[serde(rename = "producer.dump")]
     ProducerDump,
-    #[serde(rename = "producer.getStats")]
     ProducerGetStats,
-    #[serde(rename = "producer.pause")]
     ProducerPause,
-    #[serde(rename = "producer.resume")]
     ProducerResume,
-    #[serde(rename = "producer.enableTraceEvent")]
     ProducerEnableTraceEvent,
-    #[serde(rename = "consumer.close")]
     ConsumerClose,
-    #[serde(rename = "consumer.dump")]
     ConsumerDump,
-    #[serde(rename = "consumer.getStats")]
     ConsumerGetStats,
-    #[serde(rename = "consumer.pause")]
     ConsumerPause,
-    #[serde(rename = "consumer.resume")]
     ConsumerResume,
-    #[serde(rename = "consumer.setPreferredLayers")]
     ConsumerSetPreferredLayers,
-    #[serde(rename = "consumer.setPriority")]
     ConsumerSetPriority,
-    #[serde(rename = "consumer.requestKeyFrame")]
     ConsumerRequestKeyFrame,
-    #[serde(rename = "consumer.enableTraceEvent")]
     ConsumerEnableTraceEvent,
-    #[serde(rename = "dataProducer.close")]
     DataProducerClose,
-    #[serde(rename = "dataProducer.dump")]
     DataProducerDump,
-    #[serde(rename = "dataProducer.getStats")]
     DataProducerGetStats,
-    #[serde(rename = "dataConsumer.close")]
     DataConsumerClose,
-    #[serde(rename = "dataConsumer.dump")]
     DataConsumerDump,
-    #[serde(rename = "dataConsumer.getStats")]
     DataConsumerGetStats,
-    #[serde(rename = "dataConsumer.getBufferedAmount")]
     DataConsumerGetBufferedAmount,
-    #[serde(rename = "dataConsumer.setBufferedAmountLowThreshold")]
     DataConsumerSetBufferedAmountLowThreshold,
-    #[serde(rename = "rtpObserver.close")]
     RtpObserverClose,
-    #[serde(rename = "rtpObserver.pause")]
     RtpObserverPause,
-    #[serde(rename = "rtpObserver.resume")]
     RtpObserverResume,
-    #[serde(rename = "rtpObserver.addProducer")]
     RtpObserverAddProducer,
-    #[serde(rename = "rtpObserver.removeProducer")]
     RtpObserverRemoveProducer,
+}
+
+impl RequestMessage {
+    pub(crate) fn as_method(&self) -> &'static str {
+        match self {
+            Self::WorkerDump => "worker.dump",
+            Self::WorkerGetResourceUsage => "worker.getResourceUsage",
+            Self::WorkerUpdateSettings { .. } => "worker.updateSettings",
+            Self::WorkerCreateRouter { .. } => "worker.createRouter",
+            Self::RouterClose { .. } => "router.close",
+            Self::RouterDump { .. } => "router.dump",
+            Self::RouterCreateWebrtcTransport { .. } => "router.createWebRtcTransport",
+            Self::RouterCreatePlainTransport { .. } => "router.createPlainTransport",
+            Self::RouterCreatePipeTransport { .. } => "router.createPipeTransport",
+            Self::RouterCreateDirectTransport { .. } => "router.createDirectTransport",
+            Self::RouterCreateAudioLevelObserver { .. } => "router.createAudioLevelObserver",
+            Self::TransportClose { .. } => "transport.close",
+            Self::TransportDump { .. } => "transport.dump",
+            Self::TransportGetStats { .. } => "transport.getStats",
+            Self::TransportConnect { .. } => "transport.connect",
+            Self::TransportSetMaxIncomingBitrate { .. } => "transport.setMaxIncomingBitrate",
+            Self::TransportRestartIce { .. } => "transport.restartIce",
+            Self::TransportProduce => "transport.produce",
+            Self::TransportConsume => "transport.consume",
+            Self::TransportProduceData => "transport.produceData",
+            Self::TransportConsumeData => "transport.consumeData",
+            Self::TransportEnableTraceEvent => "transport.enableTraceEvent",
+            Self::ProducerClose => "producer.close",
+            Self::ProducerDump => "producer.dump",
+            Self::ProducerGetStats => "producer.getStats",
+            Self::ProducerPause => "producer.pause",
+            Self::ProducerResume => "producer.resume",
+            Self::ProducerEnableTraceEvent => "producer.enableTraceEvent",
+            Self::ConsumerClose => "consumer.close",
+            Self::ConsumerDump => "consumer.dump",
+            Self::ConsumerGetStats => "consumer.getStats",
+            Self::ConsumerPause => "consumer.pause",
+            Self::ConsumerResume => "consumer.resume",
+            Self::ConsumerSetPreferredLayers => "consumer.setPreferredLayers",
+            Self::ConsumerSetPriority => "consumer.setPriority",
+            Self::ConsumerRequestKeyFrame => "consumer.requestKeyFrame",
+            Self::ConsumerEnableTraceEvent => "consumer.enableTraceEvent",
+            Self::DataProducerClose => "dataProducer.close",
+            Self::DataProducerDump => "dataProducer.dump",
+            Self::DataProducerGetStats => "dataProducer.getStats",
+            Self::DataConsumerClose => "dataConsumer.close",
+            Self::DataConsumerDump => "dataConsumer.dump",
+            Self::DataConsumerGetStats => "dataConsumer.getStats",
+            Self::DataConsumerGetBufferedAmount => "dataConsumer.getBufferedAmount",
+            Self::DataConsumerSetBufferedAmountLowThreshold => {
+                "dataConsumer.setBufferedAmountLowThreshold"
+            }
+            Self::RtpObserverClose => "rtpObserver.close",
+            Self::RtpObserverPause => "rtpObserver.pause",
+            Self::RtpObserverResume => "rtpObserver.resume",
+            Self::RtpObserverAddProducer => "rtpObserver.addProducer",
+            Self::RtpObserverRemoveProducer => "rtpObserver.removeProducer",
+        }
+    }
 }

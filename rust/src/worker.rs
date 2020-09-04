@@ -296,12 +296,7 @@ impl Worker {
                                     error!("unexpected target ID {} event {:?}", target_id, event);
                                 }
                             }
-                            JsonReceiveMessage::MgsAccepted { id: _, accepted: _ } => {}
-                            JsonReceiveMessage::MgsError {
-                                id: _,
-                                error: _,
-                                reason: _,
-                            } => {}
+                            _ => {}
                         },
                         ChannelReceiveMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
                         ChannelReceiveMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
