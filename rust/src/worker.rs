@@ -2,10 +2,10 @@
 mod channel;
 mod utils;
 
-use crate::worker::channel::{
-    Channel, ChannelReceiveMessage, JsonReceiveMessage, NotificationEvent,
+use crate::data_structures::{
+    ChannelReceiveMessage, JsonReceiveMessage, NotificationEvent, WorkerLogLevel, WorkerLogTag,
 };
-use crate::worker::data_structures::{WorkerLogLevel, WorkerLogTag};
+use crate::worker::channel::Channel;
 use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};

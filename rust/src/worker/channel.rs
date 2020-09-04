@@ -1,54 +1,20 @@
+use crate::data_structures::{ChannelReceiveMessage, RequestMessage, WorkerLogLevel, WorkerLogTag};
 use async_channel::{Receiver, Sender};
 use async_executor::Executor;
 use async_fs::File;
 use futures_lite::io::BufReader;
 use futures_lite::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::io;
 
 // netstring length for a 4194304 bytes payload.
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum NotificationEvent {
-    Running,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum JsonReceiveMessage {
-    #[serde(rename_all = "camelCase")]
-    Notification {
-        target_id: String,
-        event: NotificationEvent,
-        data: Option<()>,
-    },
-    MgsAccepted {
-        id: u32,
-        accepted: bool,
-    },
-    MgsError {
-        id: u32,
-        error: bool,
-        reason: String,
-    },
-}
-
-#[derive(Debug)]
-pub enum ChannelReceiveMessage {
-    /// JSON message
-    Json(JsonReceiveMessage),
-    /// Debug log
-    Debug(String),
-    /// Warn log
-    Warn(String),
-    /// Error log
-    Error(String),
-    /// Dump log
-    Dump(String),
-    /// Unknown
-    Unexpected { data: Vec<u8> },
+#[derive(Debug, Serialize)]
+struct RequestMessagePrivate {
+    id: u32,
+    #[serde(flatten)]
+    message: RequestMessage,
 }
 
 fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
