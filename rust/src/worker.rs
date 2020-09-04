@@ -5,6 +5,7 @@ mod utils;
 use crate::worker::channel::{
     Channel, ChannelReceiveMessage, JsonReceiveMessage, NotificationEvent,
 };
+use crate::worker::data_structures::{WorkerLogLevel, WorkerLogTag};
 use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
@@ -17,68 +18,6 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, io};
-
-#[derive(Debug, Copy, Clone)]
-pub enum WorkerLogLevel {
-    Debug,
-    Warn,
-    Error,
-    None,
-}
-
-impl Default for WorkerLogLevel {
-    fn default() -> Self {
-        Self::Error
-    }
-}
-
-impl WorkerLogLevel {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Self::Debug => "debug",
-            Self::Warn => "warn",
-            Self::Error => "error",
-            Self::None => "none",
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum WorkerLogTag {
-    Info,
-    Ice,
-    Dtls,
-    Rtp,
-    Srtp,
-    Rtcp,
-    Rtx,
-    Bwe,
-    Score,
-    Simulcast,
-    Svc,
-    Sctp,
-    Message,
-}
-
-impl WorkerLogTag {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Self::Info => "info",
-            Self::Ice => "ice",
-            Self::Dtls => "dtls",
-            Self::Rtp => "rtp",
-            Self::Srtp => "srtp",
-            Self::Rtcp => "rtcp",
-            Self::Rtx => "rtx",
-            Self::Bwe => "bwe",
-            Self::Score => "score",
-            Self::Simulcast => "simulcast",
-            Self::Svc => "svc",
-            Self::Sctp => "sctp",
-            Self::Message => "message",
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct WorkerSettings {

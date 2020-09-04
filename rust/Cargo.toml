@@ -22,5 +22,9 @@ serde_json = "1.0.57"
 features = ["derive"]
 version = "1.0.115"
 
+[dependencies.uuid]
+features = ["serde", "v4"]
+version = "0.8.1"
+
 [dev-dependencies]
 env_logger = "0.7.1"
