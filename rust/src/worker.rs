@@ -2,8 +2,8 @@
 mod channel;
 mod utils;
 
-use crate::data_structures::{WorkerLogLevel, WorkerLogTag};
-use crate::worker::channel::{Channel, EventMessage, NotificationEvent};
+use crate::data_structures::{RequestMessage, WorkerDumpResponse, WorkerLogLevel, WorkerLogTag};
+use crate::worker::channel::{Channel, EventMessage, NotificationEvent, RequestError};
 use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
@@ -210,6 +210,10 @@ impl Worker {
         Ok(worker)
     }
 
+    pub async fn dump(&self) -> Result<WorkerDumpResponse, RequestError> {
+        self.channel.request(RequestMessage::WorkerDump).await
+    }
+
     fn setup_output_forwarding(&mut self) {
         let stdout = self.child.stdout.take().unwrap();
         self.executor
@@ -344,6 +348,8 @@ mod tests {
             )
             .await
             .unwrap();
+
+            println!("Worker dump: {:?}", worker.dump().await);
         });
     }
 }

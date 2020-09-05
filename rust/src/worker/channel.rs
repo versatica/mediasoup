@@ -177,7 +177,7 @@ impl Channel {
                         }
 
                         len_bytes.clear();
-                        // +1 because of netstring's `,` at the very end
+                        // +1 because of netstring `,` at the very end
                         reader.read_exact(&mut bytes[..(length + 1)]).await?;
 
                         match deserialize_message(&bytes[..length]) {
