@@ -87,7 +87,6 @@ struct WorkerResourceUsage {
     pub ru_nivcsw: u64,
 }
 
-// TODO: Drop impl
 pub struct Worker {
     channel: Channel,
     payload_channel: Channel,
@@ -269,11 +268,9 @@ impl Worker {
         let channel_receiver = self.channel.get_receiver();
         let payload_channel_receiver = self.payload_channel.get_receiver();
         let pid = self.pid;
-        // TODO: Make sure these are dropped with worker
         self.executor
             .spawn(async move {
                 while let Ok(message) = channel_receiver.recv().await {
-                    println!("Message {:?}", message);
                     match message {
                         EventMessage::Notification {
                             target_id,
