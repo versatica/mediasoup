@@ -3,7 +3,7 @@ mod channel;
 mod utils;
 
 use crate::data_structures::{WorkerLogLevel, WorkerLogTag, WorkerResourceUsage};
-use crate::messages::{WorkerDumpRequest, WorkerDumpResponse, WorkerGetResourceRequest};
+use crate::messages::{WorkerDump, WorkerDumpRequest, WorkerGetResourceRequest};
 use crate::worker::channel::{Channel, EventMessage, NotificationEvent, RequestError};
 use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
@@ -175,7 +175,7 @@ impl Worker {
         Ok(worker)
     }
 
-    pub async fn dump(&self) -> Result<WorkerDumpResponse, RequestError> {
+    pub async fn dump(&self) -> Result<WorkerDump, RequestError> {
         self.channel.request(WorkerDumpRequest {}).await
     }
 

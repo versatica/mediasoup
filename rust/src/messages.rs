@@ -54,7 +54,7 @@ macro_rules! request_response {
 
 request_response!(
     WorkerDumpRequest,
-    WorkerDumpResponse,
+    WorkerDump,
     "worker.dump",
     ;,
     {
