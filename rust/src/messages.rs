@@ -1,8 +1,8 @@
 use crate::data_structures::*;
+use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use uuid::Uuid;
 
 pub(crate) trait Request: Debug + Serialize {
     type Response: DeserializeOwned;
@@ -19,11 +19,11 @@ macro_rules! request_response {
         $response_impl: tt,
     ) => {
         #[derive(Debug, Serialize)]
-        pub struct $request_name $request_impl
+        pub(crate) struct $request_name $request_impl
 
         #[derive(Debug, Deserialize)]
         #[serde(rename_all = "camelCase")]
-        pub struct $response_name $response_impl
+        pub(crate) struct $response_name $response_impl
 
         impl Request for $request_name {
             type Response = $response_name;
@@ -40,10 +40,27 @@ macro_rules! request_response {
         $response_name: ident,
     ) => {
         #[derive(Debug, Serialize)]
-        pub struct $request_name $request_impl
+        pub(crate) struct $request_name $request_impl
 
         impl Request for $request_name {
             type Response = $response_name;
+
+            fn as_method(&self) -> &'static str {
+                $method
+            }
+        }
+    };
+    (
+        $request_name: ident,
+        $method: literal,
+        $request_impl: tt,
+        $response_impl: ty,
+    ) => {
+        #[derive(Debug, Serialize)]
+        pub(crate) struct $request_name $request_impl
+
+        impl Request for $request_name {
+            type Response = $response_impl;
 
             fn as_method(&self) -> &'static str {
                 $method
@@ -57,10 +74,6 @@ request_response!(
     "worker.dump",
     ;,
     WorkerDump,
-    {
-        pub pid: u32,
-        pub router_ids: Vec<Uuid>,
-    },
 );
 
 request_response!(
@@ -74,12 +87,9 @@ request_response!(
     WorkerUpdateSettingsRequest,
     "worker.updateSettings",
     {
-        pub(crate) data: WorkerUpdateSettingsData,
+        pub(crate) data: WorkerUpdateSettings,
     },
-    WorkerUpdateSettingsResponse,
-    {
-        // TODO
-    },
+    (),
 );
 
 request_response!(

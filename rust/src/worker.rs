@@ -2,8 +2,8 @@
 mod channel;
 mod utils;
 
-use crate::data_structures::{WorkerLogLevel, WorkerLogTag, WorkerResourceUsage};
-use crate::messages::{WorkerDump, WorkerDumpRequest, WorkerGetResourceRequest};
+use crate::data_structures::{WorkerLogLevel, WorkerLogTag};
+use crate::messages::{WorkerDumpRequest, WorkerGetResourceRequest, WorkerUpdateSettingsRequest};
 use crate::worker::channel::{Channel, EventMessage, NotificationEvent, RequestError};
 use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
@@ -13,10 +13,12 @@ use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::debug;
 use log::error;
 use log::warn;
+use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, io};
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct WorkerSettings {
@@ -50,6 +52,56 @@ impl Default for WorkerSettings {
             dtls_private_key_file: None,
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkerUpdateSettings {
+    pub log_level: WorkerLogLevel,
+    pub log_tags: Vec<WorkerLogTag>,
+}
+
+#[derive(Debug, Copy, Clone, Deserialize)]
+pub struct WorkerResourceUsage {
+    /// User CPU time used (in ms).
+    pub ru_utime: u64,
+    /// System CPU time used (in ms).
+    pub ru_stime: u64,
+    /// Maximum resident set size.
+    pub ru_maxrss: u64,
+    /// Integral shared memory size.
+    pub ru_ixrss: u64,
+    /// Integral unshared data size.
+    pub ru_idrss: u64,
+    /// Integral unshared stack size.
+    pub ru_isrss: u64,
+    /// Page reclaims (soft page faults).
+    pub ru_minflt: u64,
+    /// Page faults (hard page faults).
+    pub ru_majflt: u64,
+    /// Swaps.
+    pub ru_nswap: u64,
+    /// Block input operations.
+    pub ru_inblock: u64,
+    /// Block output operations.
+    pub ru_oublock: u64,
+    /// IPC messages sent.
+    pub ru_msgsnd: u64,
+    /// IPC messages received.
+    pub ru_msgrcv: u64,
+    /// Signals received.
+    pub ru_nsignals: u64,
+    /// Voluntary context switches.
+    pub ru_nvcsw: u64,
+    /// Involuntary context switches.
+    pub ru_nivcsw: u64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkerDump {
+    pub pid: u32,
+    pub router_ids: Vec<Uuid>,
 }
 
 pub struct Worker {
@@ -175,12 +227,28 @@ impl Worker {
         Ok(worker)
     }
 
+    pub fn pid(&self) -> u32 {
+        self.pid
+    }
+
     pub async fn dump(&self) -> Result<WorkerDump, RequestError> {
+        debug!("dump()");
+
         self.channel.request(WorkerDumpRequest {}).await
     }
 
     pub async fn get_resource_usage(&self) -> Result<WorkerResourceUsage, RequestError> {
+        debug!("get_resource_usage()");
+
         self.channel.request(WorkerGetResourceRequest {}).await
+    }
+
+    pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
+        debug!("update_settings()");
+
+        self.channel
+            .request(WorkerUpdateSettingsRequest { data })
+            .await
     }
 
     fn setup_output_forwarding(&mut self) {
@@ -320,6 +388,15 @@ mod tests {
 
             println!("Worker dump: {:?}", worker.dump().await);
             println!("Resource usage: {:?}", worker.get_resource_usage().await);
+            println!(
+                "Update settings: {:?}",
+                worker
+                    .update_settings(WorkerUpdateSettings {
+                        log_level: WorkerLogLevel::Debug,
+                        log_tags: Vec::new(),
+                    })
+                    .await
+            );
         });
     }
 }
