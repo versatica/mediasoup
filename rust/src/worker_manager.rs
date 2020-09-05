@@ -10,7 +10,6 @@ pub struct WorkerManager {
     executor: Arc<Executor>,
     /// This field is only used in order to be dropped with the worker manager itself to stop the
     /// thread created with `WorkerManager::new()` call
-    #[doc(hidden)]
     _stop_sender: Option<Sender<()>>,
 }
 
@@ -40,6 +39,7 @@ impl WorkerManager {
         }
     }
 
+    /// Create a Worker.
     pub async fn create_worker(
         &self,
         worker_binary: PathBuf,

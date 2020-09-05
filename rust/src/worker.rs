@@ -2,7 +2,7 @@
 mod channel;
 mod utils;
 
-use crate::data_structures::{AppData, RouterInternal, WorkerLogLevel, WorkerLogTag};
+use crate::data_structures::{AppData, RouterId, RouterInternal, WorkerLogLevel, WorkerLogTag};
 use crate::messages::{
     WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
     WorkerUpdateSettingsRequest,
@@ -24,8 +24,7 @@ use std::collections::HashMap;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
-use std::{env, fmt, io, mem};
-use uuid::Uuid;
+use std::{env, io, mem};
 
 #[derive(Debug)]
 pub struct WorkerSettings {
@@ -113,27 +112,6 @@ pub struct WorkerDump {
     pub router_ids: Vec<RouterId>,
 }
 
-#[derive(Debug, Copy, Clone, Deserialize, Serialize, Hash, Ord, PartialOrd, Eq, PartialEq)]
-pub struct RouterId(Uuid);
-
-impl fmt::Display for RouterId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Uuid::fmt(&self.0, f)
-    }
-}
-
-impl From<RouterId> for Uuid {
-    fn from(id: RouterId) -> Self {
-        id.0
-    }
-}
-
-impl RouterId {
-    fn new() -> Self {
-        RouterId(Uuid::new_v4())
-    }
-}
-
 pub struct RouterOptions {
     rtp_capabilities: RtpCapabilities,
     app_data: AppData,
@@ -158,6 +136,8 @@ pub struct Worker {
 
 impl Drop for Worker {
     fn drop(&mut self) {
+        debug!("drop()");
+
         let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
         for callback in callbacks {
             callback();
@@ -291,26 +271,31 @@ impl Worker {
         Ok(worker)
     }
 
+    /// Worker process identifier (PID).
     pub fn pid(&self) -> u32 {
         self.pid
     }
 
+    /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.app_data
     }
 
+    /// Dump Worker.
     pub async fn dump(&self) -> Result<WorkerDump, RequestError> {
         debug!("dump()");
 
         self.channel.request(WorkerDumpRequest {}).await
     }
 
+    /// Get mediasoup-worker process resource usage.
     pub async fn get_resource_usage(&self) -> Result<WorkerResourceUsage, RequestError> {
         debug!("get_resource_usage()");
 
         self.channel.request(WorkerGetResourceRequest {}).await
     }
 
+    /// Update settings.
     pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
         debug!("update_settings()");
 
@@ -319,6 +304,7 @@ impl Worker {
             .await
     }
 
+    /// Create a Router.
     pub async fn create_router(
         &self,
         router_options: RouterOptions,
@@ -334,6 +320,7 @@ impl Worker {
 
         let router = Arc::new(Router::new(
             router_id,
+            Arc::clone(&self.executor),
             router_options.rtp_capabilities,
             self.channel.clone(),
             self.payload_channel.clone(),
@@ -530,6 +517,12 @@ mod tests {
                     .unwrap()
                     .id()
             );
+
+            // Just to give it time to finish everything with router destruction
+            thread::sleep(std::time::Duration::from_millis(200));
         });
+
+        // Just to give it time to finish everything
+        thread::sleep(std::time::Duration::from_millis(200));
     }
 }

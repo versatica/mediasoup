@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 /// Media kind
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum MediaKind {
     Audio,
     Video,
@@ -11,7 +11,7 @@ pub enum MediaKind {
 /// Provides information on RTCP feedback messages for a specific codec. Those messages can be
 /// transport layer feedback messages or codec-specific feedback messages. The list of RTCP
 /// feedbacks supported by mediasoup is defined in the supportedRtpCapabilities.ts file.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RtcpFeedback {
     // TODO: Enum?
     /// RTCP feedback type.
@@ -35,7 +35,7 @@ pub struct RtcpFeedback {
 /// RtpCodecCapability entries in the mediaCodecs array of RouterOptions do not require
 /// preferredPayloadType field (if unset, mediasoup will choose a random one). If given, make sure
 /// it's in the 96-127 range.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RtpCodecCapability {
     /// Media kind
     pub kind: MediaKind,
@@ -59,7 +59,7 @@ pub struct RtpCodecCapability {
 }
 
 /// Direction of RTP header extension.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum RtpHeaderExtensionDirection {
     // TODO: Serialization of all of these variants should be lowercase if we ever need it
     SendRecv,
@@ -76,7 +76,7 @@ pub enum RtpHeaderExtensionDirection {
 /// just present in mediasoup RTP capabilities (retrieved via router.rtpCapabilities or
 /// mediasoup.getSupportedRtpCapabilities()). It's ignored if present in endpoints' RTP
 /// capabilities.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RtpHeaderExtension {
     // TODO: TypeScript version makes this field both optional and possible to set to "",
     //  check if "" is actually needed
@@ -97,7 +97,7 @@ pub struct RtpHeaderExtension {
 }
 
 /// The RTP capabilities define what mediasoup or an endpoint can receive at media level.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct RtpCapabilities {
     // TODO: Does this need to be optional or can be an empty vec?
     /// Supported media and RTX codecs.

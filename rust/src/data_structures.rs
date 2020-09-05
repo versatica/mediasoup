@@ -1,6 +1,6 @@
-use crate::worker::RouterId;
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use std::any::Any;
+use std::fmt;
 use std::ops::{Deref, DerefMut};
 use uuid::Uuid;
 
@@ -110,6 +110,28 @@ impl WorkerLogTag {
             Self::Sctp => "sctp",
             Self::Message => "message",
         }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, Hash, Ord, PartialOrd, Eq, PartialEq)]
+pub struct RouterId(Uuid);
+
+impl fmt::Display for RouterId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Uuid::fmt(&self.0, f)
+    }
+}
+
+impl From<RouterId> for Uuid {
+    fn from(id: RouterId) -> Self {
+        id.0
+    }
+}
+
+impl RouterId {
+    // TODO: Ideally we'd want `pub(in super::worker)`, but it doesn't work
+    pub(super) fn new() -> Self {
+        RouterId(Uuid::new_v4())
     }
 }
 

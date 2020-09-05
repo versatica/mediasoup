@@ -83,9 +83,6 @@ request_response!(
     RouterCloseRequest {
         pub(crate) internal: RouterInternal,
     },
-    RouterCloseResponse {
-        // TODO
-    },
 );
 
 request_response!(
