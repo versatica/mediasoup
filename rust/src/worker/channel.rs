@@ -12,6 +12,10 @@ use std::io;
 use std::sync::Arc;
 use thiserror::Error;
 
+// netstring length for a 4194304 bytes payload.
+const NS_MESSAGE_MAX_LEN: usize = 4194313;
+const NS_PAYLOAD_MAX_LEN: usize = 4194304;
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum NotificationEvent {
@@ -61,9 +65,6 @@ enum ChannelReceiveMessage {
     Event(EventMessage),
 }
 
-// netstring length for a 4194304 bytes payload.
-const NS_PAYLOAD_MAX_LEN: usize = 4194304;
-
 fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
     match bytes[0] {
         // JSON message
@@ -91,8 +92,14 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
 
 /// Channel is already closed
 #[derive(Error, Debug)]
-#[error("Channel already closed")]
-pub struct ChannelClosedError;
+pub enum RequestError {
+    #[error("Channel already closed")]
+    ChannelClosed,
+    #[error("Message is too long")]
+    MessageTooLong,
+    #[error("Request timed out")]
+    TimedOut,
+}
 
 pub struct ResponseError {
     reason: String,
@@ -119,6 +126,7 @@ impl Drop for Channel {
     }
 }
 
+// TODO: Catch closed channel gracefully
 impl Channel {
     pub fn new(executor: &Executor, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
@@ -142,6 +150,15 @@ impl Channel {
                         let length = String::from_utf8_lossy(&len_bytes[..(read_bytes - 1)])
                             .parse::<usize>()
                             .unwrap();
+
+                        if length > NS_PAYLOAD_MAX_LEN {
+                            warn!(
+                                "received message payload {} is too long, max supported is {}",
+                                length,
+                                NS_PAYLOAD_MAX_LEN,
+                            );
+                        }
+
                         len_bytes.clear();
                         // +1 because of netstring's `,` at the very end
                         reader.read_exact(&mut bytes[..(length + 1)]).await?;
@@ -156,7 +173,10 @@ impl Channel {
                                 if let Some(sender) = sender {
                                     drop(sender.send(Ok(data)));
                                 } else {
-                                    warn!("received success response does not match any sent request [id:{}]", id);
+                                    warn!(
+                                        "received success response does not match any sent request [id:{}]",
+                                        id,
+                                    );
                                 }
                             }
                             ChannelReceiveMessage::ResponseError {
@@ -168,7 +188,10 @@ impl Channel {
                                 if let Some(sender) = sender {
                                     drop(sender.send(Err(ResponseError { reason })));
                                 } else {
-                                    warn!("received error response does not match any sent request [id:{}]", id);
+                                    warn!(
+                                        "received error response does not match any sent request [id:{}]",
+                                        id,
+                                    );
                                 }
                             }
                             ChannelReceiveMessage::Event(event_message) => {
@@ -191,7 +214,7 @@ impl Channel {
 
             executor
                 .spawn(async move {
-                    let mut bytes = Vec::with_capacity(NS_PAYLOAD_MAX_LEN);
+                    let mut bytes = Vec::with_capacity(NS_MESSAGE_MAX_LEN);
                     // TODO: Stringify messages here and received non-stringified messages over the
                     //  channel
                     while let Ok(message) = receiver.recv().await {
@@ -222,7 +245,7 @@ impl Channel {
         self.receiver.clone()
     }
 
-    pub async fn request(&self, message: RequestMessage) -> Result<Response, ChannelClosedError> {
+    pub async fn request(&self, message: RequestMessage) -> Result<Response, RequestError> {
         #[derive(Debug, Serialize)]
         struct RequestMessagePrivate {
             id: u32,
@@ -253,12 +276,19 @@ impl Channel {
         })
         .unwrap();
 
+        if serialized_message.len() > NS_PAYLOAD_MAX_LEN {
+            self.requests_container.lock().await.handlers.remove(&id);
+            return Err(RequestError::MessageTooLong);
+        }
+
         self.sender
             .send(serialized_message)
             .await
-            .map_err(|_| ChannelClosedError {})?;
+            .map_err(|_| RequestError::ChannelClosed {})?;
 
-        let result = result_receiver.await.map_err(|_| ChannelClosedError {});
+        let result = result_receiver
+            .await
+            .map_err(|_| RequestError::ChannelClosed {});
 
         if let Ok(result) = &result {
             if let Err(error) = result {
