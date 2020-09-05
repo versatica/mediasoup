@@ -2,9 +2,15 @@
 mod channel;
 mod utils;
 
-use crate::data_structures::{WorkerLogLevel, WorkerLogTag};
-use crate::messages::{WorkerDumpRequest, WorkerGetResourceRequest, WorkerUpdateSettingsRequest};
-use crate::worker::channel::{Channel, EventMessage, NotificationEvent, RequestError};
+use crate::data_structures::{RouterInternal, WorkerLogLevel, WorkerLogTag};
+use crate::messages::{
+    WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
+    WorkerUpdateSettingsRequest,
+};
+use crate::ortc::RtpCapabilities;
+use crate::router::Router;
+pub(crate) use crate::worker::channel::{Channel, RequestError};
+use crate::worker::channel::{EventMessage, NotificationEvent};
 use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
@@ -14,9 +20,10 @@ use log::debug;
 use log::error;
 use log::warn;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, Weak};
 use std::{env, io};
 use uuid::Uuid;
 
@@ -104,12 +111,17 @@ pub struct WorkerDump {
     pub router_ids: Vec<Uuid>,
 }
 
+pub struct RouterOptions {
+    rtp_capabilities: RtpCapabilities,
+}
+
 pub struct Worker {
     channel: Channel,
     payload_channel: Channel,
     child: Child,
     executor: Arc<Executor>,
     pid: u32,
+    routers: Arc<Mutex<HashMap<Uuid, Weak<Router>>>>,
 }
 
 impl Worker {
@@ -193,6 +205,7 @@ impl Worker {
         } = utils::spawn_with_worker_channels(&executor, &mut command)?;
 
         let pid = child.id();
+        let routers = Arc::default();
 
         let mut worker = Self {
             channel,
@@ -200,6 +213,7 @@ impl Worker {
             child,
             executor,
             pid,
+            routers,
         };
 
         worker.setup_output_forwarding();
@@ -249,6 +263,38 @@ impl Worker {
         self.channel
             .request(WorkerUpdateSettingsRequest { data })
             .await
+    }
+
+    pub async fn create_router(
+        &self,
+        router_options: RouterOptions,
+    ) -> Result<Arc<Router>, RequestError> {
+        debug!("create_router()");
+
+        let router_id = Uuid::new_v4();
+        let internal = RouterInternal { router_id };
+
+        self.channel
+            .request(WorkerCreateRouterRequest { internal })
+            .await?;
+
+        let router = Arc::new(Router::new(
+            router_id,
+            router_options.rtp_capabilities,
+            self.channel.clone(),
+            self.payload_channel.clone(),
+        ));
+
+        let routers = self.routers.clone();
+        routers
+            .lock()
+            .unwrap()
+            .insert(router_id, Arc::downgrade(&router));
+        router.connect_closed(move |_| {
+            routers.lock().unwrap().remove(&router_id);
+        });
+
+        Ok(router)
     }
 
     fn setup_output_forwarding(&mut self) {
@@ -396,6 +442,20 @@ mod tests {
                         log_tags: Vec::new(),
                     })
                     .await
+            );
+            println!(
+                "Router created: {:?}",
+                worker
+                    .create_router(RouterOptions {
+                        rtp_capabilities: RtpCapabilities {
+                            codecs: None,
+                            fec_mechanisms: None,
+                            header_extensions: None
+                        },
+                    })
+                    .await
+                    .unwrap()
+                    .id()
             );
         });
     }

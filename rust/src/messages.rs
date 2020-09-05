@@ -98,10 +98,7 @@ request_response!(
     {
         pub(crate) internal: RouterInternal,
     },
-    WorkerCreateRouterResponse,
-    {
-        // TODO
-    },
+    (),
 );
 
 request_response!(
