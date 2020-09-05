@@ -100,9 +100,7 @@ request_response!(
         pub(crate) internal: TransportInternal,
         pub(crate) data: RouterCreateWebrtcTransportData,
     },
-    RouterCreateWebrtcTransportResponse {
-        // TODO
-    },
+    WebRtcTransportData,
 );
 
 request_response!(

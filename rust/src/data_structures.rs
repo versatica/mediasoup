@@ -1,3 +1,4 @@
+use crate::router::WebRtcTransportOptions;
 use serde::{Deserialize, Serialize, Serializer};
 use std::any::Any;
 use std::fmt;
@@ -156,10 +157,10 @@ pub(crate) struct RouterInternal {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TransportInternal {
     pub router_id: RouterId,
-    pub transport_id: Uuid,
+    pub transport_id: TransportId,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TransportListenIp {
     pub ip: String,
@@ -167,10 +168,13 @@ pub struct TransportListenIp {
     pub announced_ip: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Serialize, Copy, Clone)]
 pub struct NumSctpStreams {
+    /// Initially requested number of outgoing SCTP streams.
+    #[serde(rename = "OS")]
     pub os: u16,
+    /// Maximum number of incoming SCTP streams.
+    #[serde(rename = "MIS")]
     pub mis: u16,
 }
 
@@ -185,36 +189,158 @@ impl Default for NumSctpStreams {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RouterCreateWebrtcTransportData {
-    pub listen_ips: Vec<TransportListenIp>,
-    pub enable_udp: bool,
-    pub enable_tcp: bool,
-    pub prefer_udp: bool,
-    pub prefer_tcp: bool,
-    pub initial_available_outgoing_bitrate: u32,
-    pub enable_sctp: bool,
-    pub num_sctp_streams: NumSctpStreams,
-    pub max_sctp_message_size: u32,
-    pub sctp_send_buffer_size: u32,
+pub(crate) struct RouterCreateWebrtcTransportData {
+    listen_ips: Vec<TransportListenIp>,
+    enable_udp: bool,
+    enable_tcp: bool,
+    prefer_udp: bool,
+    prefer_tcp: bool,
+    initial_available_outgoing_bitrate: u32,
+    enable_sctp: bool,
+    num_sctp_streams: NumSctpStreams,
+    max_sctp_message_size: u32,
+    sctp_send_buffer_size: u32,
     is_data_channel: bool,
 }
 
 impl RouterCreateWebrtcTransportData {
-    pub fn new(listen_ips: Vec<TransportListenIp>) -> Self {
+    pub(crate) fn from_options(webrtc_transport_options: &WebRtcTransportOptions) -> Self {
         Self {
-            listen_ips,
-            enable_udp: true,
-            enable_tcp: false,
-            prefer_udp: false,
-            prefer_tcp: false,
-            initial_available_outgoing_bitrate: 600_000,
-            enable_sctp: false,
-            num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 262144,
-            sctp_send_buffer_size: 262144,
+            listen_ips: webrtc_transport_options.listen_ips.clone(),
+            enable_udp: webrtc_transport_options.enable_udp,
+            enable_tcp: webrtc_transport_options.enable_tcp,
+            prefer_udp: webrtc_transport_options.prefer_udp,
+            prefer_tcp: webrtc_transport_options.prefer_tcp,
+            initial_available_outgoing_bitrate: webrtc_transport_options
+                .initial_available_outgoing_bitrate,
+            enable_sctp: webrtc_transport_options.enable_sctp,
+            num_sctp_streams: webrtc_transport_options.num_sctp_streams,
+            max_sctp_message_size: webrtc_transport_options.max_sctp_message_size,
+            sctp_send_buffer_size: webrtc_transport_options.sctp_send_buffer_size,
             is_data_channel: true,
         }
     }
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum IceRole {
+    Controlled,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct IceParameters {
+    username_fragment: String,
+    password: String,
+    ice_lite: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum IceCandidateType {
+    Host,
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum IceCandidateTcpType {
+    Passive,
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum TransportProtocol {
+    Tcp,
+    Udp,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct IceCandidate {
+    pub foundation: String,
+    pub priority: u32,
+    pub ip: String,
+    pub protocol: TransportProtocol,
+    pub port: u16,
+    pub r#type: IceCandidateType,
+    pub tcp_type: Option<IceCandidateTcpType>,
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum IceState {
+    New,
+    Connected,
+    Completed,
+    Disconnected,
+    Closed,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase", untagged)]
+pub enum TransportTuple {
+    LocalOnly {
+        local_ip: String,
+        local_port: u16,
+        protocol: TransportProtocol,
+    },
+    WithRemote {
+        local_ip: String,
+        local_port: u16,
+        remote_ip: String,
+        remote_port: u16,
+        protocol: TransportProtocol,
+    },
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum DtlsState {
+    New,
+    Connecting,
+    Connected,
+    Failed,
+    Closed,
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SctpParameters {
+    /// Must always equal 5000.
+    pub port: u16,
+    /// Initially requested number of outgoing SCTP streams.
+    #[serde(rename = "OS")]
+    pub os: u16,
+    /// Maximum number of incoming SCTP streams.
+    #[serde(rename = "MIS")]
+    pub mis: u16,
+    /// Maximum allowed size for SCTP messages.
+    pub max_message_size: usize,
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum SctpState {
+    New,
+    Connecting,
+    Connected,
+    Failed,
+    Closed,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct WebRtcTransportData {
+    pub(crate) ice_role: IceRole,
+    pub(crate) ice_parameters: IceParameters,
+    pub(crate) ice_candidates: Vec<IceCandidate>,
+    pub(crate) ice_state: IceState,
+    pub(crate) ice_selected_tuple: Option<TransportTuple>,
+    pub(crate) dtls_parameters: DtlsParameters,
+    pub(crate) dtls_state: DtlsState,
+    pub(crate) dtls_remote_cert: Option<String>,
+    pub(crate) sctp_parameters: Option<SctpParameters>,
+    pub(crate) sctp_state: Option<SctpState>,
 }
 
 #[derive(Debug, Serialize)]
@@ -318,18 +444,12 @@ impl RouterCreateAudioLevelObserverData {
     }
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "lowercase", untagged)]
+#[derive(Debug, Deserialize, Serialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
 pub enum DtlsRole {
     Auto,
     Client,
     Server,
-}
-
-#[derive(Debug, Serialize)]
-pub struct DtlsFingerprint {
-    pub algorithm: String,
-    pub value: String,
 }
 
 impl Default for DtlsRole {
@@ -338,7 +458,13 @@ impl Default for DtlsRole {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct DtlsFingerprint {
+    pub algorithm: String,
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct DtlsParameters {
     pub role: DtlsRole,
     pub fingerprints: Vec<DtlsFingerprint>,

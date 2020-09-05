@@ -337,16 +337,14 @@ impl Worker {
         router.connect_closed(move || {
             routers.lock().unwrap().remove(&router_id);
         });
-        {
-            for callback in self.handlers.new_router.lock().unwrap().iter() {
-                callback(&router);
-            }
+        for callback in self.handlers.new_router.lock().unwrap().iter() {
+            callback(&router);
         }
 
         Ok(router)
     }
 
-    pub fn connect_new_routers<F: Fn(&Arc<Router>) + 'static>(&self, callback: F) {
+    pub fn connect_new_router<F: Fn(&Arc<Router>) + 'static>(&self, callback: F) {
         self.handlers
             .new_router
             .lock()
