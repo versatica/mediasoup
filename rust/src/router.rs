@@ -1,14 +1,30 @@
-use crate::data_structures::{AppData, RouterId, RouterInternal};
-use crate::messages::RouterCloseRequest;
+use crate::data_structures::{
+    AppData, ConsumerId, ObserverId, ProducerId, RouterId, RouterInternal, TransportId,
+};
+use crate::messages::{RouterCloseRequest, RouterDumpRequest};
 use crate::ortc::RtpCapabilities;
-use crate::worker::Channel;
+use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
 use log::debug;
 use log::error;
+use serde::Deserialize;
+use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::sync::{Arc, Mutex};
 
-// TODO: Router ID new type
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct RouterDumpResponse {
+    id: RouterId,
+    map_consumer_id_producer_id: HashMap<ConsumerId, ProducerId>,
+    map_data_consumer_id_data_producer_id: HashMap<ConsumerId, ProducerId>,
+    map_data_producer_id_data_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
+    map_producer_id_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
+    map_producer_id_observer_ids: HashMap<ProducerId, HashSet<ObserverId>>,
+    rtp_observer_ids: HashSet<ObserverId>,
+    transport_ids: HashSet<TransportId>,
+}
 
 #[derive(Default)]
 struct Handlers {
@@ -87,6 +103,18 @@ impl Router {
     /// RTC capabilities of the Router.
     pub fn rtp_capabilities(&self) -> RtpCapabilities {
         self.rtp_capabilities.clone()
+    }
+
+    /// Dump Router.
+    #[doc(hidden)]
+    pub async fn dump(&self) -> Result<RouterDumpResponse, RequestError> {
+        debug!("dump()");
+
+        self.channel
+            .request(RouterDumpRequest {
+                internal: RouterInternal { router_id: self.id },
+            })
+            .await
     }
 
     pub fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {

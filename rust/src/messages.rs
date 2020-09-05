@@ -1,5 +1,6 @@
 use crate::data_structures::*;
-use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
+use crate::router::RouterDumpResponse;
+use crate::worker::{WorkerDumpResponse, WorkerResourceUsage, WorkerUpdateSettings};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -56,7 +57,7 @@ macro_rules! request_response {
     };
 }
 
-request_response!("worker.dump", WorkerDumpRequest {}, WorkerDump);
+request_response!("worker.dump", WorkerDumpRequest {}, WorkerDumpResponse);
 
 request_response!(
     "worker.getResourceUsage",
@@ -90,9 +91,7 @@ request_response!(
     RouterDumpRequest {
         pub(crate) internal: RouterInternal,
     },
-    RouterDumpResponse {
-        // TODO
-    },
+    RouterDumpResponse,
 );
 
 request_response!(

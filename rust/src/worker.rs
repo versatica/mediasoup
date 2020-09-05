@@ -107,7 +107,8 @@ pub struct WorkerResourceUsage {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WorkerDump {
+#[doc(hidden)]
+pub struct WorkerDumpResponse {
     pub pid: u32,
     pub router_ids: Vec<RouterId>,
 }
@@ -282,7 +283,8 @@ impl Worker {
     }
 
     /// Dump Worker.
-    pub async fn dump(&self) -> Result<WorkerDump, RequestError> {
+    #[doc(hidden)]
+    pub async fn dump(&self) -> Result<WorkerDumpResponse, RequestError> {
         debug!("dump()");
 
         self.channel.request(WorkerDumpRequest {}).await
@@ -506,17 +508,16 @@ mod tests {
                     })
                     .await
             );
-            println!(
-                "Router created: {:?}",
-                worker
-                    .create_router(RouterOptions {
-                        rtp_capabilities: RtpCapabilities::default(),
-                        app_data: AppData::default(),
-                    })
-                    .await
-                    .unwrap()
-                    .id()
-            );
+
+            let router = worker
+                .create_router(RouterOptions {
+                    rtp_capabilities: RtpCapabilities::default(),
+                    app_data: AppData::default(),
+                })
+                .await
+                .unwrap();
+            println!("Router created: {:?}", router.id());
+            println!("Router dump: {:?}", router.dump().await.unwrap());
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

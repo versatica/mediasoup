@@ -113,27 +113,38 @@ impl WorkerLogTag {
     }
 }
 
-#[derive(Debug, Copy, Clone, Deserialize, Serialize, Hash, Ord, PartialOrd, Eq, PartialEq)]
-pub struct RouterId(Uuid);
+macro_rules! uuid_based_wrapper_type {
+    ($struct_name: ident) => {
+        #[derive(
+            Debug, Copy, Clone, Deserialize, Serialize, Hash, Ord, PartialOrd, Eq, PartialEq,
+        )]
+        pub struct $struct_name(Uuid);
 
-impl fmt::Display for RouterId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Uuid::fmt(&self.0, f)
-    }
+        impl fmt::Display for $struct_name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                Uuid::fmt(&self.0, f)
+            }
+        }
+
+        impl From<$struct_name> for Uuid {
+            fn from(id: $struct_name) -> Self {
+                id.0
+            }
+        }
+
+        impl $struct_name {
+            pub(super) fn new() -> Self {
+                $struct_name(Uuid::new_v4())
+            }
+        }
+    };
 }
 
-impl From<RouterId> for Uuid {
-    fn from(id: RouterId) -> Self {
-        id.0
-    }
-}
-
-impl RouterId {
-    // TODO: Ideally we'd want `pub(in super::worker)`, but it doesn't work
-    pub(super) fn new() -> Self {
-        RouterId(Uuid::new_v4())
-    }
-}
+uuid_based_wrapper_type!(RouterId);
+uuid_based_wrapper_type!(ConsumerId);
+uuid_based_wrapper_type!(ProducerId);
+uuid_based_wrapper_type!(ObserverId);
+uuid_based_wrapper_type!(TransportId);
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
