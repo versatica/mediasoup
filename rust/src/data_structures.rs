@@ -1,12 +1,6 @@
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize, Serializer};
 use uuid::Uuid;
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkerDumpResponse {
-    pub pid: u32,
-    pub router_ids: Vec<Uuid>,
-}
 
 #[derive(Debug, Copy, Clone)]
 pub enum WorkerLogLevel {

@@ -8,13 +8,13 @@ use std::fs::File;
 use std::io;
 use std::os::unix::io::FromRawFd;
 
-pub struct SpawnResult {
-    pub child: Child,
-    pub channel: Channel,
-    pub payload_channel: Channel,
+pub(super) struct SpawnResult {
+    pub(super) child: Child,
+    pub(super) channel: Channel,
+    pub(super) payload_channel: Channel,
 }
 
-pub fn spawn_with_worker_channels(
+pub(super) fn spawn_with_worker_channels(
     executor: &Executor,
     command: &mut Command,
 ) -> io::Result<SpawnResult> {

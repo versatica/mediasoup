@@ -1,4 +1,5 @@
 use crate::data_structures::RequestMessage;
+use crate::messages::Request;
 use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
@@ -21,13 +22,13 @@ const NS_PAYLOAD_MAX_LEN: usize = 4194304;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum NotificationEvent {
+pub(super) enum NotificationEvent {
     Running,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub enum EventMessage {
+pub(super) enum EventMessage {
     #[serde(rename_all = "camelCase")]
     Notification {
         target_id: String,
@@ -112,7 +113,7 @@ pub enum RequestError {
     NoData,
 }
 
-pub struct ResponseError {
+struct ResponseError {
     // TODO: Enum?
     reason: String,
 }
@@ -139,13 +140,13 @@ impl Drop for Inner {
 }
 
 #[derive(Clone)]
-pub struct Channel {
+pub(crate) struct Channel {
     inner: Arc<Inner>,
 }
 
 // TODO: Catch closed channel gracefully
 impl Channel {
-    pub fn new(executor: &Executor, reader: File, mut writer: File) -> Self {
+    pub(super) fn new(executor: &Executor, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
 
         let receiver = {
@@ -258,35 +259,38 @@ impl Channel {
         Self { inner }
     }
 
-    pub fn get_receiver(&self) -> async_channel::Receiver<EventMessage> {
+    pub(super) fn get_receiver(&self) -> async_channel::Receiver<EventMessage> {
         self.inner.receiver.clone()
     }
 
-    pub async fn request<T>(&self, message: RequestMessage) -> Result<T, RequestError>
+    pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
     where
-        T: DeserializeOwned,
+        R: Request,
     {
         // Default will work for `()` response
-        let data = self.request_internal(message).await?.unwrap_or_default();
+        let data = self
+            .request_internal(request.as_method(), serde_json::to_value(request).unwrap())
+            .await?
+            .unwrap_or_default();
         serde_json::from_value(data).map_err(|error| RequestError::FailedToParse { error })
     }
 
     /// Non-generic method to avoid significant duplication in final binary
     async fn request_internal(
         &self,
-        message: RequestMessage,
+        method: &'static str,
+        message: Value,
     ) -> Result<Option<Value>, RequestError> {
         #[derive(Debug, Serialize)]
         struct RequestMessagePrivate {
             id: u32,
             method: &'static str,
             #[serde(flatten)]
-            message: RequestMessage,
+            message: Value,
         }
 
         let id;
         let queue_len;
-        let method = message.as_method();
         let (result_sender, result_receiver) = async_oneshot::oneshot();
         let requests_container = &self.inner.requests_container;
 
