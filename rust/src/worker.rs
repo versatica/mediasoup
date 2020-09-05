@@ -124,6 +124,16 @@ pub struct Worker {
     routers: Arc<Mutex<HashMap<Uuid, Weak<Router>>>>,
 }
 
+impl Drop for Worker {
+    fn drop(&mut self) {
+        if matches!(self.child.try_status(), Ok(None)) {
+            unsafe {
+                libc::kill(self.pid as libc::pid_t, libc::SIGTERM);
+            }
+        }
+    }
+}
+
 impl Worker {
     pub(super) async fn new(
         executor: Arc<Executor>,
@@ -195,7 +205,6 @@ impl Worker {
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .kill_on_drop(true)
             .env("MEDIASOUP_VERSION", env!("CARGO_PKG_VERSION"));
 
         let SpawnResult {
