@@ -6,7 +6,9 @@ use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::debug;
 use log::warn;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::io;
 use std::sync::Arc;
@@ -30,6 +32,7 @@ pub enum EventMessage {
     Notification {
         target_id: String,
         event: NotificationEvent,
+        // TODO: Can there be data here?
         data: Option<()>,
     },
     /// Debug log
@@ -55,7 +58,7 @@ enum ChannelReceiveMessage {
     ResponseSuccess {
         id: u32,
         accepted: bool,
-        data: Option<()>,
+        data: Option<Value>,
     },
     ResponseError {
         id: u32,
@@ -100,18 +103,26 @@ pub enum RequestError {
     MessageTooLong,
     #[error("Request timed out")]
     TimedOut,
+    // TODO: Enum?
+    #[error("Received response error: {reason}")]
+    Response { reason: String },
+    #[error("Failed to parse response from worker: {error}")]
+    FailedToParse { error: serde_json::Error },
+    #[error("Worker did not return any data in response")]
+    NoData,
 }
 
 pub struct ResponseError {
+    // TODO: Enum?
     reason: String,
 }
 
-type Response = Result<Option<()>, ResponseError>;
+type Response<T> = Result<Option<T>, ResponseError>;
 
 #[derive(Default)]
 struct RequestsContainer {
     next_id: u32,
-    handlers: HashMap<u32, async_oneshot::Sender<Response>>,
+    handlers: HashMap<u32, async_oneshot::Sender<Response<Value>>>,
 }
 
 struct Inner {
@@ -251,7 +262,20 @@ impl Channel {
         self.inner.receiver.clone()
     }
 
-    pub async fn request(&self, message: RequestMessage) -> Result<Response, RequestError> {
+    pub async fn request<T>(&self, message: RequestMessage) -> Result<T, RequestError>
+    where
+        T: DeserializeOwned,
+    {
+        // Default will work for `()` response
+        let data = self.request_internal(message).await?.unwrap_or_default();
+        serde_json::from_value(data).map_err(|error| RequestError::FailedToParse { error })
+    }
+
+    /// Non-generic method to avoid significant duplication in final binary
+    async fn request_internal(
+        &self,
+        message: RequestMessage,
+    ) -> Result<Option<Value>, RequestError> {
         #[derive(Debug, Serialize)]
         struct RequestMessagePrivate {
             id: u32,
@@ -263,7 +287,7 @@ impl Channel {
         let id;
         let queue_len;
         let method = message.as_method();
-        let (result_sender, result_receiver) = async_oneshot::oneshot::<Response>();
+        let (result_sender, result_receiver) = async_oneshot::oneshot();
         let requests_container = &self.inner.requests_container;
 
         {
@@ -315,15 +339,16 @@ impl Channel {
         )
         .await?;
 
-        if let Err(error) = &result {
-            debug!(
-                "request failed [method:{}, id:{}]: {}",
-                method, id, error.reason
-            );
-        } else {
-            debug!("request succeeded [method:{}, id:{}]", method, id);
-        }
+        match result {
+            Ok(data) => {
+                debug!("request succeeded [method:{}, id:{}]", method, id);
+                Ok(data)
+            }
+            Err(ResponseError { reason }) => {
+                debug!("request failed [method:{}, id:{}]: {}", method, id, reason);
 
-        Ok(result)
+                Err(RequestError::Response { reason })
+            }
+        }
     }
 }
