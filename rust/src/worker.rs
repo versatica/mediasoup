@@ -212,7 +212,7 @@ impl Worker {
     }
 
     pub async fn dump(&self) -> Result<WorkerDumpResponse, RequestError> {
-        self.channel.request(WorkerDumpRequest).await
+        self.channel.request(WorkerDumpRequest {}).await
     }
 
     fn setup_output_forwarding(&mut self) {

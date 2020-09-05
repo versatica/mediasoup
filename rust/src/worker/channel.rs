@@ -1,4 +1,3 @@
-use crate::data_structures::RequestMessage;
 use crate::messages::Request;
 use async_executor::Executor;
 use async_fs::File;
@@ -6,8 +5,8 @@ use async_mutex::Mutex;
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::debug;
+use log::trace;
 use log::warn;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -180,6 +179,8 @@ impl Channel {
                         len_bytes.clear();
                         // +1 because of netstring `,` at the very end
                         reader.read_exact(&mut bytes[..(length + 1)]).await?;
+
+                        trace!("received raw message: {:?}", String::from_utf8_lossy(&bytes[..length]));
 
                         match deserialize_message(&bytes[..length]) {
                             ChannelReceiveMessage::ResponseSuccess {
