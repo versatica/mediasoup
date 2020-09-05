@@ -2,8 +2,8 @@
 mod channel;
 mod utils;
 
-use crate::data_structures::{WorkerLogLevel, WorkerLogTag};
-use crate::messages::{WorkerDumpRequest, WorkerDumpResponse};
+use crate::data_structures::{WorkerLogLevel, WorkerLogTag, WorkerResourceUsage};
+use crate::messages::{WorkerDumpRequest, WorkerDumpResponse, WorkerGetResourceRequest};
 use crate::worker::channel::{Channel, EventMessage, NotificationEvent, RequestError};
 use crate::worker::utils::SpawnResult;
 use async_executor::Executor;
@@ -50,42 +50,6 @@ impl Default for WorkerSettings {
             dtls_private_key_file: None,
         }
     }
-}
-
-#[derive(Debug, Copy, Clone)]
-struct WorkerResourceUsage {
-    /// User CPU time used (in ms).
-    pub ru_utime: u64,
-    /// System CPU time used (in ms).
-    pub ru_stime: u64,
-    /// Maximum resident set size.
-    pub ru_maxrss: u64,
-    /// Integral shared memory size.
-    pub ru_ixrss: u64,
-    /// Integral unshared data size.
-    pub ru_idrss: u64,
-    /// Integral unshared stack size.
-    pub ru_isrss: u64,
-    /// Page reclaims (soft page faults).
-    pub ru_minflt: u64,
-    /// Page faults (hard page faults).
-    pub ru_majflt: u64,
-    /// Swaps.
-    pub ru_nswap: u64,
-    /// Block input operations.
-    pub ru_inblock: u64,
-    /// Block output operations.
-    pub ru_oublock: u64,
-    /// IPC messages sent.
-    pub ru_msgsnd: u64,
-    /// IPC messages received.
-    pub ru_msgrcv: u64,
-    /// Signals received.
-    pub ru_nsignals: u64,
-    /// Voluntary context switches.
-    pub ru_nvcsw: u64,
-    /// Involuntary context switches.
-    pub ru_nivcsw: u64,
 }
 
 pub struct Worker {
@@ -213,6 +177,10 @@ impl Worker {
 
     pub async fn dump(&self) -> Result<WorkerDumpResponse, RequestError> {
         self.channel.request(WorkerDumpRequest {}).await
+    }
+
+    pub async fn get_resource_usage(&self) -> Result<WorkerResourceUsage, RequestError> {
+        self.channel.request(WorkerGetResourceRequest {}).await
     }
 
     fn setup_output_forwarding(&mut self) {
@@ -351,6 +319,7 @@ mod tests {
             .unwrap();
 
             println!("Worker dump: {:?}", worker.dump().await);
+            println!("Resource usage: {:?}", worker.get_resource_usage().await);
         });
     }
 }

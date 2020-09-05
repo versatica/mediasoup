@@ -33,6 +33,23 @@ macro_rules! request_response {
             }
         }
     };
+    (
+        $request_name: ident,
+        $response_name: ident,
+        $method: literal,
+        $request_impl: tt,
+    ) => {
+        #[derive(Debug, Serialize)]
+        pub struct $request_name $request_impl
+
+        impl Request for $request_name {
+            type Response = $response_name;
+
+            fn as_method(&self) -> &'static str {
+                $method
+            }
+        }
+    };
 }
 
 request_response!(
@@ -48,12 +65,9 @@ request_response!(
 
 request_response!(
     WorkerGetResourceRequest,
-    WorkerGetResourceResponse,
+    WorkerResourceUsage,
     "worker.getResourceUsage",
     ;,
-    {
-        // TODO
-    },
 );
 
 request_response!(
