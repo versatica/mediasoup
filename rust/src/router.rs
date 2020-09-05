@@ -1,3 +1,4 @@
+use crate::data_structures::AppData;
 use crate::ortc::RtpCapabilities;
 use crate::worker::Channel;
 use std::mem;
@@ -17,6 +18,7 @@ pub struct Router {
     channel: Channel,
     payload_channel: Channel,
     handlers: Handlers,
+    app_data: AppData,
 }
 
 impl Drop for Router {
@@ -34,6 +36,7 @@ impl Router {
         rtp_capabilities: RtpCapabilities,
         channel: Channel,
         payload_channel: Channel,
+        app_data: AppData,
     ) -> Self {
         let handlers = Handlers::default();
         Self {
@@ -42,6 +45,7 @@ impl Router {
             channel,
             payload_channel,
             handlers,
+            app_data,
         }
     }
 

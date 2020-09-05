@@ -1,5 +1,36 @@
 use serde::{Serialize, Serializer};
+use std::any::Any;
+use std::ops::{Deref, DerefMut};
 use uuid::Uuid;
+
+#[derive(Debug)]
+pub struct AppData(Box<dyn Any>);
+
+impl Default for AppData {
+    fn default() -> Self {
+        Self::new(())
+    }
+}
+
+impl Deref for AppData {
+    type Target = Box<dyn Any>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for AppData {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl AppData {
+    pub fn new<T: Any>(app_data: T) -> Self {
+        Self(Box::new(app_data))
+    }
+}
 
 #[derive(Debug, Copy, Clone)]
 pub enum WorkerLogLevel {
