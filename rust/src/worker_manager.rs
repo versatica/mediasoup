@@ -66,7 +66,7 @@ mod tests {
 
         let worker_settings = WorkerSettings::default();
         future::block_on(async move {
-            let worker = worker_manager
+            worker_manager
                 .create_worker(
                     env::var("MEDIASOUP_WORKER_BIN")
                         .map(|path| path.into())

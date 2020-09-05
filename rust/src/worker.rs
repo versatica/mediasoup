@@ -468,7 +468,7 @@ mod tests {
         init();
 
         let executor = Arc::new(Executor::new());
-        let (stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
+        let (_stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
         {
             let executor = Arc::clone(&executor);
             thread::spawn(move || {
