@@ -1,9 +1,8 @@
 use crate::data_structures::AppData;
 use crate::ortc::RtpCapabilities;
-use crate::worker::Channel;
+use crate::worker::{Channel, RouterId};
 use std::mem;
 use std::sync::Mutex;
-use uuid::Uuid;
 
 // TODO: Router ID new type
 
@@ -13,7 +12,7 @@ struct Handlers {
 }
 
 pub struct Router {
-    id: Uuid,
+    id: RouterId,
     rtp_capabilities: RtpCapabilities,
     channel: Channel,
     payload_channel: Channel,
@@ -32,7 +31,7 @@ impl Drop for Router {
 
 impl Router {
     pub(crate) fn new(
-        id: Uuid,
+        id: RouterId,
         rtp_capabilities: RtpCapabilities,
         channel: Channel,
         payload_channel: Channel,
@@ -49,7 +48,7 @@ impl Router {
         }
     }
 
-    pub fn id(&self) -> Uuid {
+    pub fn id(&self) -> RouterId {
         self.id
     }
 

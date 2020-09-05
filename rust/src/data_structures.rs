@@ -1,3 +1,4 @@
+use crate::worker::RouterId;
 use serde::{Serialize, Serializer};
 use std::any::Any;
 use std::ops::{Deref, DerefMut};
@@ -115,13 +116,13 @@ impl WorkerLogTag {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterInternal {
-    pub router_id: Uuid,
+    pub router_id: RouterId,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TransportInternal {
-    pub router_id: Uuid,
+    pub router_id: RouterId,
     pub transport_id: Uuid,
 }
 
@@ -262,7 +263,7 @@ impl RouterCreateDirectTransportData {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateAudioLevelObserverInternal {
-    pub router_id: Uuid,
+    pub router_id: RouterId,
     pub rtp_observer_id: Uuid,
 }
 

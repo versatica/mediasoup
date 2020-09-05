@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
-use std::{env, io, mem};
+use std::{env, fmt, io, mem};
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -110,7 +110,28 @@ pub struct WorkerResourceUsage {
 #[serde(rename_all = "camelCase")]
 pub struct WorkerDump {
     pub pid: u32,
-    pub router_ids: Vec<Uuid>,
+    pub router_ids: Vec<RouterId>,
+}
+
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, Hash, Ord, PartialOrd, Eq, PartialEq)]
+pub struct RouterId(Uuid);
+
+impl fmt::Display for RouterId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Uuid::fmt(&self.0, f)
+    }
+}
+
+impl From<RouterId> for Uuid {
+    fn from(id: RouterId) -> Self {
+        id.0
+    }
+}
+
+impl RouterId {
+    fn new() -> Self {
+        RouterId(Uuid::new_v4())
+    }
 }
 
 pub struct RouterOptions {
@@ -130,7 +151,7 @@ pub struct Worker {
     child: Child,
     executor: Arc<Executor>,
     pid: u32,
-    routers: Arc<Mutex<HashMap<Uuid, Weak<Router>>>>,
+    routers: Arc<Mutex<HashMap<RouterId, Weak<Router>>>>,
     handlers: Handlers,
     app_data: AppData,
 }
@@ -304,7 +325,7 @@ impl Worker {
     ) -> Result<Arc<Router>, RequestError> {
         debug!("create_router()");
 
-        let router_id = Uuid::new_v4();
+        let router_id = RouterId::new();
         let internal = RouterInternal { router_id };
 
         self.channel
