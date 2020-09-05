@@ -13,9 +13,9 @@ pub(crate) trait Request: Debug + Serialize {
 macro_rules! request_response {
     (
         $request_name: ident,
-        $response_name: ident,
         $method: literal,
         $request_impl: tt,
+        $response_name: ident,
         $response_impl: tt,
     ) => {
         #[derive(Debug, Serialize)]
@@ -35,9 +35,9 @@ macro_rules! request_response {
     };
     (
         $request_name: ident,
-        $response_name: ident,
         $method: literal,
         $request_impl: tt,
+        $response_name: ident,
     ) => {
         #[derive(Debug, Serialize)]
         pub struct $request_name $request_impl
@@ -54,9 +54,9 @@ macro_rules! request_response {
 
 request_response!(
     WorkerDumpRequest,
-    WorkerDump,
     "worker.dump",
     ;,
+    WorkerDump,
     {
         pub pid: u32,
         pub router_ids: Vec<Uuid>,
@@ -65,18 +65,18 @@ request_response!(
 
 request_response!(
     WorkerGetResourceRequest,
-    WorkerResourceUsage,
     "worker.getResourceUsage",
     ;,
+    WorkerResourceUsage,
 );
 
 request_response!(
     WorkerUpdateSettingsRequest,
-    WorkerUpdateSettingsResponse,
     "worker.updateSettings",
     {
         pub(crate) data: WorkerUpdateSettingsData,
     },
+    WorkerUpdateSettingsResponse,
     {
         // TODO
     },
@@ -84,11 +84,11 @@ request_response!(
 
 request_response!(
     WorkerCreateRouterRequest,
-    WorkerCreateRouterResponse,
     "worker.createRouter",
     {
         pub(crate) internal: RouterInternal,
     },
+    WorkerCreateRouterResponse,
     {
         // TODO
     },
@@ -96,11 +96,11 @@ request_response!(
 
 request_response!(
     RouterCloseRequest,
-    RouterCloseResponse,
     "router.close",
     {
         pub(crate) internal: RouterInternal,
     },
+    RouterCloseResponse,
     {
         // TODO
     },
@@ -108,11 +108,11 @@ request_response!(
 
 request_response!(
     RouterDumpRequest,
-    RouterDumpResponse,
     "router.dump",
     {
         pub(crate) internal: RouterInternal,
     },
+    RouterDumpResponse,
     {
         // TODO
     },
@@ -120,12 +120,12 @@ request_response!(
 
 request_response!(
     RouterCreateWebrtcTransportRequest,
-    RouterCreateWebrtcTransportResponse,
     "router.createWebRtcTransport",
     {
         pub(crate) internal: TransportInternal,
         pub(crate) data: RouterCreateWebrtcTransportData,
     },
+    RouterCreateWebrtcTransportResponse,
     {
         // TODO
     },
@@ -133,12 +133,12 @@ request_response!(
 
 request_response!(
     RouterCreatePlainTransportRequest,
-    RouterCreatePlainTransportResponse,
     "router.createPlainTransport",
     {
         pub(crate) internal: TransportInternal,
         pub(crate) data: RouterCreatePlainTransportData,
     },
+    RouterCreatePlainTransportResponse,
     {
         // TODO
     },
@@ -146,12 +146,12 @@ request_response!(
 
 request_response!(
     RouterCreatePipeTransportRequest,
-    RouterCreatePipeTransportResponse,
     "router.createPipeTransport",
     {
         pub(crate) internal: TransportInternal,
         pub(crate) data: RouterCreatePipeTransportData,
     },
+    RouterCreatePipeTransportResponse,
     {
         // TODO
     },
@@ -159,12 +159,12 @@ request_response!(
 
 request_response!(
     RouterCreateDirectTransportRequest,
-    RouterCreateDirectTransportResponse,
     "router.createDirectTransport",
     {
         pub(crate) internal: TransportInternal,
         pub(crate) data: RouterCreateDirectTransportData,
     },
+    RouterCreateDirectTransportResponse,
     {
         // TODO
     },
@@ -172,12 +172,12 @@ request_response!(
 
 request_response!(
     RouterCreateAudioLevelObserverRequest,
-    RouterCreateAudioLevelObserverResponse,
     "router.createAudioLevelObserver",
     {
         pub(crate) internal: RouterCreateAudioLevelObserverInternal,
         pub(crate) data: RouterCreateAudioLevelObserverData,
     },
+    RouterCreateAudioLevelObserverResponse,
     {
         // TODO
     },
@@ -185,11 +185,11 @@ request_response!(
 
 request_response!(
     TransportCloseRequest,
-    TransportCloseResponse,
     "transport.close",
     {
         pub(crate) internal: TransportInternal,
     },
+    TransportCloseResponse,
     {
         // TODO
     },
@@ -197,11 +197,11 @@ request_response!(
 
 request_response!(
     TransportDumpRequest,
-    TransportDumpResponse,
     "transport.dump",
     {
         pub(crate) internal: TransportInternal,
     },
+    TransportDumpResponse,
     {
         // TODO
     },
@@ -209,11 +209,11 @@ request_response!(
 
 request_response!(
     TransportGetStatsRequest,
-    TransportGetStatsResponse,
     "transport.getStats",
     {
         pub(crate) internal: TransportInternal,
     },
+    TransportGetStatsResponse,
     {
         // TODO
     },
@@ -221,12 +221,12 @@ request_response!(
 
 request_response!(
     TransportConnectRequest,
-    TransportConnectResponse,
     "transport.connect",
     {
         pub(crate) internal: TransportInternal,
         pub(crate) data: TransportConnectData,
     },
+    TransportConnectResponse,
     {
         // TODO
     },
@@ -234,12 +234,12 @@ request_response!(
 
 request_response!(
     TransportSetMaxIncomingBitrateRequest,
-    TransportSetMaxIncomingBitrateResponse,
     "transport.setMaxIncomingBitrate",
     {
         pub(crate) internal: TransportInternal,
         pub(crate) data: TransportSetMaxIncomingBitrateData,
     },
+    TransportSetMaxIncomingBitrateResponse,
     {
         // TODO
     },
@@ -248,11 +248,11 @@ request_response!(
 // TODO: Detail remaining methods, I got bored for now
 request_response!(
     TransportRestartIceRequest,
-    TransportRestartIceResponse,
     "transport.restartIce",
     {
         pub(crate) internal: TransportInternal,
     },
+    TransportRestartIceResponse,
     {
         // TODO
     },
@@ -260,9 +260,9 @@ request_response!(
 
 request_response!(
     TransportProduceRequest,
-    TransportProduceResponse,
     "transport.produce",
     ;,
+    TransportProduceResponse,
     {
         // TODO
     },
@@ -270,9 +270,9 @@ request_response!(
 
 request_response!(
     TransportConsumeRequest,
-    TransportConsumeResponse,
     "transport.consume",
     ;,
+    TransportConsumeResponse,
     {
         // TODO
     },
@@ -280,9 +280,9 @@ request_response!(
 
 request_response!(
     TransportProduceDataRequest,
-    TransportProduceDataResponse,
     "transport.produceData",
     ;,
+    TransportProduceDataResponse,
     {
         // TODO
     },
@@ -290,9 +290,9 @@ request_response!(
 
 request_response!(
     TransportConsumeDataRequest,
-    TransportConsumeDataResponse,
     "transport.consumeData",
     ;,
+    TransportConsumeDataResponse,
     {
         // TODO
     },
@@ -300,9 +300,9 @@ request_response!(
 
 request_response!(
     TransportEnableTraceEventRequest,
-    TransportEnableTraceEventResponse,
     "transport.enableTraceEvent",
     ;,
+    TransportEnableTraceEventResponse,
     {
         // TODO
     },
@@ -310,9 +310,9 @@ request_response!(
 
 request_response!(
     ProducerCloseRequest,
-    ProducerCloseResponse,
     "producer.close",
     ;,
+    ProducerCloseResponse,
     {
         // TODO
     },
@@ -320,9 +320,9 @@ request_response!(
 
 request_response!(
     ProducerDumpRequest,
-    ProducerDumpResponse,
     "producer.dump",
     ;,
+    ProducerDumpResponse,
     {
         // TODO
     },
@@ -330,9 +330,9 @@ request_response!(
 
 request_response!(
     ProducerGetStatsRequest,
-    ProducerGetStatsResponse,
     "producer.getStats",
     ;,
+    ProducerGetStatsResponse,
     {
         // TODO
     },
@@ -340,9 +340,9 @@ request_response!(
 
 request_response!(
     ProducerPauseRequest,
-    ProducerPauseResponse,
     "producer.pause",
     ;,
+    ProducerPauseResponse,
     {
         // TODO
     },
@@ -350,9 +350,9 @@ request_response!(
 
 request_response!(
     ProducerResumeRequest,
-    ProducerResumeResponse,
     "producer.resume",
     ;,
+    ProducerResumeResponse,
     {
         // TODO
     },
@@ -360,9 +360,9 @@ request_response!(
 
 request_response!(
     ProducerEnableTraceEventRequest,
-    ProducerEnableTraceEventResponse,
     "producer.enableTraceEvent",
     ;,
+    ProducerEnableTraceEventResponse,
     {
         // TODO
     },
@@ -370,9 +370,9 @@ request_response!(
 
 request_response!(
     ConsumerCloseRequest,
-    ConsumerCloseResponse,
     "consumer.close",
     ;,
+    ConsumerCloseResponse,
     {
         // TODO
     },
@@ -380,9 +380,9 @@ request_response!(
 
 request_response!(
     ConsumerDumpRequest,
-    ConsumerDumpResponse,
     "consumer.dump",
     ;,
+    ConsumerDumpResponse,
     {
         // TODO
     },
@@ -390,9 +390,9 @@ request_response!(
 
 request_response!(
     ConsumerGetStatsRequest,
-    ConsumerGetStatsResponse,
     "consumer.getStats",
     ;,
+    ConsumerGetStatsResponse,
     {
         // TODO
     },
@@ -400,9 +400,9 @@ request_response!(
 
 request_response!(
     ConsumerPauseRequest,
-    ConsumerPauseResponse,
     "consumer.pause",
     ;,
+    ConsumerPauseResponse,
     {
         // TODO
     },
@@ -410,9 +410,9 @@ request_response!(
 
 request_response!(
     ConsumerResumeRequest,
-    ConsumerResumeResponse,
     "consumer.resume",
     ;,
+    ConsumerResumeResponse,
     {
         // TODO
     },
@@ -420,9 +420,9 @@ request_response!(
 
 request_response!(
     ConsumerSetPreferredLayersRequest,
-    ConsumerSetPreferredLayersResponse,
     "consumer.setPreferredLayers",
     ;,
+    ConsumerSetPreferredLayersResponse,
     {
         // TODO
     },
@@ -430,9 +430,9 @@ request_response!(
 
 request_response!(
     ConsumerSetPriorityRequest,
-    ConsumerSetPriorityResponse,
     "consumer.setPriority",
     ;,
+    ConsumerSetPriorityResponse,
     {
         // TODO
     },
@@ -440,9 +440,9 @@ request_response!(
 
 request_response!(
     ConsumerRequestKeyFrameRequest,
-    ConsumerRequestKeyFrameResponse,
     "consumer.requestKeyFrame",
     ;,
+    ConsumerRequestKeyFrameResponse,
     {
         // TODO
     },
@@ -450,9 +450,9 @@ request_response!(
 
 request_response!(
     ConsumerEnableTraceEventRequest,
-    ConsumerEnableTraceEventResponse,
     "consumer.enableTraceEvent",
     ;,
+    ConsumerEnableTraceEventResponse,
     {
         // TODO
     },
@@ -460,9 +460,9 @@ request_response!(
 
 request_response!(
     DataProducerCloseRequest,
-    DataProducerCloseResponse,
     "dataProducer.close",
     ;,
+    DataProducerCloseResponse,
     {
         // TODO
     },
@@ -470,9 +470,9 @@ request_response!(
 
 request_response!(
     DataProducerDumpRequest,
-    DataProducerDumpResponse,
     "dataProducer.dump",
     ;,
+    DataProducerDumpResponse,
     {
         // TODO
     },
@@ -480,9 +480,9 @@ request_response!(
 
 request_response!(
     DataProducerGetStatsRequest,
-    DataProducerGetStatsResponse,
     "dataProducer.getStats",
     ;,
+    DataProducerGetStatsResponse,
     {
         // TODO
     },
@@ -490,9 +490,9 @@ request_response!(
 
 request_response!(
     DataConsumerCloseRequest,
-    DataConsumerCloseResponse,
     "dataConsumer.close",
     ;,
+    DataConsumerCloseResponse,
     {
         // TODO
     },
@@ -500,9 +500,9 @@ request_response!(
 
 request_response!(
     DataConsumerDumpRequest,
-    DataConsumerDumpResponse,
     "dataConsumer.dump",
     ;,
+    DataConsumerDumpResponse,
     {
         // TODO
     },
@@ -510,9 +510,9 @@ request_response!(
 
 request_response!(
     DataConsumerGetStatsRequest,
-    DataConsumerGetStatsResponse,
     "dataConsumer.getStats",
     ;,
+    DataConsumerGetStatsResponse,
     {
         // TODO
     },
@@ -520,9 +520,9 @@ request_response!(
 
 request_response!(
     DataConsumerGetBufferedAmountRequest,
-    DataConsumerGetBufferedAmountResponse,
     "dataConsumer.getBufferedAmount",
     ;,
+    DataConsumerGetBufferedAmountResponse,
     {
         // TODO
     },
@@ -530,9 +530,9 @@ request_response!(
 
 request_response!(
     DataConsumerSetBufferedAmountLowThresholdRequest,
-    DataConsumerSetBufferedAmountLowThresholdResponse,
     "dataConsumer.setBufferedAmountLowThreshold",
     ;,
+    DataConsumerSetBufferedAmountLowThresholdResponse,
     {
         // TODO
     },
@@ -540,9 +540,9 @@ request_response!(
 
 request_response!(
     RtpObserverCloseRequest,
-    RtpObserverCloseResponse,
     "rtpObserver.close",
     ;,
+    RtpObserverCloseResponse,
     {
         // TODO
     },
@@ -550,9 +550,9 @@ request_response!(
 
 request_response!(
     RtpObserverPauseRequest,
-    RtpObserverPauseResponse,
     "rtpObserver.pause",
     ;,
+    RtpObserverPauseResponse,
     {
         // TODO
     },
@@ -560,9 +560,9 @@ request_response!(
 
 request_response!(
     RtpObserverResumeRequest,
-    RtpObserverResumeResponse,
     "rtpObserver.resume",
     ;,
+    RtpObserverResumeResponse,
     {
         // TODO
     },
@@ -570,9 +570,9 @@ request_response!(
 
 request_response!(
     RtpObserverAddProducerRequest,
-    RtpObserverAddProducerResponse,
     "rtpObserver.addProducer",
     ;,
+    RtpObserverAddProducerResponse,
     {
         // TODO
     },
@@ -580,9 +580,9 @@ request_response!(
 
 request_response!(
     RtpObserverRemoveProducerRequest,
-    RtpObserverRemoveProducerResponse,
     "rtpObserver.removeProducer",
     ;,
+    RtpObserverRemoveProducerResponse,
     {
         // TODO
     },
