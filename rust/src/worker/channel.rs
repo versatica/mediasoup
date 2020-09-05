@@ -113,17 +113,22 @@ struct RequestsContainer {
     handlers: HashMap<u32, async_oneshot::Sender<Response>>,
 }
 
-pub struct Channel {
+struct Inner {
     sender: async_channel::Sender<Vec<u8>>,
     receiver: async_channel::Receiver<EventMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
 }
 
-impl Drop for Channel {
+impl Drop for Inner {
     fn drop(&mut self) {
         self.sender.close();
         self.receiver.close();
     }
+}
+
+#[derive(Clone)]
+pub struct Channel {
+    inner: Arc<Inner>,
 }
 
 // TODO: Catch closed channel gracefully
@@ -215,8 +220,6 @@ impl Channel {
             executor
                 .spawn(async move {
                     let mut bytes = Vec::with_capacity(NS_MESSAGE_MAX_LEN);
-                    // TODO: Stringify messages here and received non-stringified messages over the
-                    //  channel
                     while let Ok(message) = receiver.recv().await {
                         bytes.clear();
                         bytes.extend_from_slice(message.len().to_string().as_bytes());
@@ -234,15 +237,17 @@ impl Channel {
             sender
         };
 
-        Self {
+        let inner = Arc::new(Inner {
             sender,
             receiver,
             requests_container,
-        }
+        });
+
+        Self { inner }
     }
 
     pub fn get_receiver(&self) -> async_channel::Receiver<EventMessage> {
-        self.receiver.clone()
+        self.inner.receiver.clone()
     }
 
     pub async fn request(&self, message: RequestMessage) -> Result<Response, RequestError> {
@@ -259,7 +264,7 @@ impl Channel {
         let (result_sender, result_receiver) = async_oneshot::oneshot::<Response>();
 
         {
-            let mut requests_container = self.requests_container.lock().await;
+            let mut requests_container = self.inner.requests_container.lock().await;
 
             id = requests_container.next_id;
 
@@ -277,11 +282,17 @@ impl Channel {
         .unwrap();
 
         if serialized_message.len() > NS_PAYLOAD_MAX_LEN {
-            self.requests_container.lock().await.handlers.remove(&id);
+            self.inner
+                .requests_container
+                .lock()
+                .await
+                .handlers
+                .remove(&id);
             return Err(RequestError::MessageTooLong);
         }
 
-        self.sender
+        self.inner
+            .sender
             .send(serialized_message)
             .await
             .map_err(|_| RequestError::ChannelClosed {})?;
