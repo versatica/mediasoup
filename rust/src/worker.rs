@@ -20,11 +20,11 @@ use log::debug;
 use log::error;
 use log::warn;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
-use std::{env, io};
+use std::{env, io, mem};
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -115,6 +115,12 @@ pub struct RouterOptions {
     rtp_capabilities: RtpCapabilities,
 }
 
+#[derive(Default)]
+struct Handlers {
+    new_router: Mutex<Vec<Box<dyn Fn(&Arc<Router>)>>>,
+    closed: Mutex<Vec<Box<dyn FnOnce()>>>,
+}
+
 pub struct Worker {
     channel: Channel,
     payload_channel: Channel,
@@ -122,10 +128,16 @@ pub struct Worker {
     executor: Arc<Executor>,
     pid: u32,
     routers: Arc<Mutex<HashMap<Uuid, Weak<Router>>>>,
+    handlers: Handlers,
 }
 
 impl Drop for Worker {
     fn drop(&mut self) {
+        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
+        for callback in callbacks {
+            callback();
+        }
+
         if matches!(self.child.try_status(), Ok(None)) {
             unsafe {
                 libc::kill(self.pid as libc::pid_t, libc::SIGTERM);
@@ -215,6 +227,7 @@ impl Worker {
 
         let pid = child.id();
         let routers = Arc::default();
+        let handlers = Handlers::default();
 
         let mut worker = Self {
             channel,
@@ -223,6 +236,7 @@ impl Worker {
             executor,
             pid,
             routers,
+            handlers,
         };
 
         worker.setup_output_forwarding();
@@ -299,11 +313,32 @@ impl Worker {
             .lock()
             .unwrap()
             .insert(router_id, Arc::downgrade(&router));
-        router.connect_closed(move |_| {
+        router.connect_closed(move || {
             routers.lock().unwrap().remove(&router_id);
         });
+        {
+            for callback in self.handlers.new_router.lock().unwrap().iter() {
+                callback(&router);
+            }
+        }
 
         Ok(router)
+    }
+
+    pub fn connect_new_routers<F: Fn(&Arc<Router>) + 'static>(&self, callback: F) {
+        self.handlers
+            .new_router
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {
+        self.handlers
+            .closed
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
     }
 
     fn setup_output_forwarding(&mut self) {
