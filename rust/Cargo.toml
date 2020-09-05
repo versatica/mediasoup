@@ -8,9 +8,10 @@ license = "ISC"
 keywords = ["webrtc", "ortc", "sfu"]
 
 [dependencies]
+async-channel = "1.4.2"
 async-executor = "0.2.1"
 async-fs = "1.1.2"
-async-channel = "1.4.2"
+async-io = "0.2.7"
 async-mutex = "1.2.0"
 async-oneshot = "0.3.3"
 async-process = "0.1.3"

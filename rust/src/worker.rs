@@ -235,7 +235,7 @@ impl Worker {
 
     async fn wait_for_worker_process(&mut self) -> io::Result<()> {
         let status = self.child.status();
-        future::race::<io::Result<()>, _, _>(
+        future::race(
             async move {
                 status.await?;
                 Err(io::Error::new(

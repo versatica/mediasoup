@@ -3,13 +3,14 @@ use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
 use futures_lite::io::BufReader;
-use futures_lite::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
+use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::debug;
 use log::warn;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io;
 use std::sync::Arc;
+use std::time::Duration;
 use thiserror::Error;
 
 // netstring length for a 4194304 bytes payload.
@@ -260,13 +261,16 @@ impl Channel {
         }
 
         let id;
+        let queue_len;
         let method = message.as_method();
         let (result_sender, result_receiver) = async_oneshot::oneshot::<Response>();
+        let requests_container = &self.inner.requests_container;
 
         {
-            let mut requests_container = self.inner.requests_container.lock().await;
+            let mut requests_container = requests_container.lock().await;
 
             id = requests_container.next_id;
+            queue_len = requests_container.handlers.len();
 
             requests_container.next_id = requests_container.next_id.wrapping_add(1);
             requests_container.handlers.insert(id, result_sender);
@@ -282,12 +286,7 @@ impl Channel {
         .unwrap();
 
         if serialized_message.len() > NS_PAYLOAD_MAX_LEN {
-            self.inner
-                .requests_container
-                .lock()
-                .await
-                .handlers
-                .remove(&id);
+            requests_container.lock().await.handlers.remove(&id);
             return Err(RequestError::MessageTooLong);
         }
 
@@ -297,21 +296,34 @@ impl Channel {
             .await
             .map_err(|_| RequestError::ChannelClosed {})?;
 
-        let result = result_receiver
-            .await
-            .map_err(|_| RequestError::ChannelClosed {});
+        let result = future::race(
+            async move {
+                result_receiver
+                    .await
+                    .map_err(|_| RequestError::ChannelClosed {})
+            },
+            async move {
+                async_io::Timer::after(Duration::from_millis(
+                    (1000.0 * (15.0 + (0.1 * queue_len as f64))).round() as u64,
+                ))
+                .await;
 
-        if let Ok(result) = &result {
-            if let Err(error) = result {
-                debug!(
-                    "request failed [method:{}, id:{}]: {}",
-                    method, id, error.reason
-                );
-            } else {
-                debug!("request succeeded [method:{}, id:{}]", method, id);
-            }
+                requests_container.lock().await.handlers.remove(&id);
+
+                Err(RequestError::TimedOut)
+            },
+        )
+        .await?;
+
+        if let Err(error) = &result {
+            debug!(
+                "request failed [method:{}, id:{}]: {}",
+                method, id, error.reason
+            );
+        } else {
+            debug!("request succeeded [method:{}, id:{}]", method, id);
         }
 
-        result
+        Ok(result)
     }
 }
