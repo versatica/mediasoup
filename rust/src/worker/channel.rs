@@ -106,11 +106,17 @@ struct RequestsContainer {
     handlers: HashMap<u32, async_oneshot::Sender<Response>>,
 }
 
-// TODO: Close sender/receiver when Channel is dropped
 pub struct Channel {
     sender: async_channel::Sender<Vec<u8>>,
     receiver: async_channel::Receiver<EventMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
+}
+
+impl Drop for Channel {
+    fn drop(&mut self) {
+        self.sender.close();
+        self.receiver.close();
+    }
 }
 
 impl Channel {
