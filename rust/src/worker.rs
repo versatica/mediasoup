@@ -20,10 +20,9 @@ use log::debug;
 use log::error;
 use log::warn;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex};
 use std::{env, io, mem};
 
 #[derive(Debug)]
@@ -120,22 +119,21 @@ pub struct RouterOptions {
 
 #[derive(Default)]
 struct Handlers {
-    new_router: Mutex<Vec<Box<dyn Fn(&Arc<Router>)>>>,
+    new_router: Mutex<Vec<Box<dyn Fn(&Router)>>>,
     closed: Mutex<Vec<Box<dyn FnOnce()>>>,
 }
 
-pub struct Worker {
+struct Inner {
     channel: Channel,
     payload_channel: Channel,
     child: Child,
     executor: Arc<Executor>,
     pid: u32,
-    routers: Arc<Mutex<HashMap<RouterId, Weak<Router>>>>,
     handlers: Handlers,
     app_data: AppData,
 }
 
-impl Drop for Worker {
+impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
@@ -152,8 +150,8 @@ impl Drop for Worker {
     }
 }
 
-impl Worker {
-    pub(super) async fn new(
+impl Inner {
+    async fn new(
         executor: Arc<Executor>,
         worker_binary: PathBuf,
         WorkerSettings {
@@ -233,25 +231,23 @@ impl Worker {
         } = utils::spawn_with_worker_channels(&executor, &mut command)?;
 
         let pid = child.id();
-        let routers = Arc::default();
         let handlers = Handlers::default();
 
-        let mut worker = Self {
+        let mut inner = Self {
             channel,
             payload_channel,
             child,
             executor,
             pid,
-            routers,
             handlers,
             app_data,
         };
 
-        worker.setup_output_forwarding();
+        inner.setup_output_forwarding();
 
         // TODO: Event for this
-        let status = worker.child.status();
-        worker
+        let status = inner.child.status();
+        inner
             .executor
             .spawn(async move {
                 match status.await {
@@ -265,99 +261,11 @@ impl Worker {
             })
             .detach();
 
-        worker.wait_for_worker_process().await?;
+        inner.wait_for_worker_process().await?;
 
-        worker.setup_message_handling();
+        inner.setup_message_handling();
 
-        Ok(worker)
-    }
-
-    /// Worker process identifier (PID).
-    pub fn pid(&self) -> u32 {
-        self.pid
-    }
-
-    /// App custom data.
-    pub fn app_data(&self) -> &AppData {
-        &self.app_data
-    }
-
-    /// Dump Worker.
-    #[doc(hidden)]
-    pub async fn dump(&self) -> Result<WorkerDumpResponse, RequestError> {
-        debug!("dump()");
-
-        self.channel.request(WorkerDumpRequest {}).await
-    }
-
-    /// Get mediasoup-worker process resource usage.
-    pub async fn get_resource_usage(&self) -> Result<WorkerResourceUsage, RequestError> {
-        debug!("get_resource_usage()");
-
-        self.channel.request(WorkerGetResourceRequest {}).await
-    }
-
-    /// Update settings.
-    pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
-        debug!("update_settings()");
-
-        self.channel
-            .request(WorkerUpdateSettingsRequest { data })
-            .await
-    }
-
-    /// Create a Router.
-    pub async fn create_router(
-        &self,
-        router_options: RouterOptions,
-    ) -> Result<Arc<Router>, RequestError> {
-        debug!("create_router()");
-
-        let router_id = RouterId::new();
-        let internal = RouterInternal { router_id };
-
-        self.channel
-            .request(WorkerCreateRouterRequest { internal })
-            .await?;
-
-        let router = Arc::new(Router::new(
-            router_id,
-            Arc::clone(&self.executor),
-            router_options.rtp_capabilities,
-            self.channel.clone(),
-            self.payload_channel.clone(),
-            router_options.app_data,
-        ));
-
-        let routers = self.routers.clone();
-        routers
-            .lock()
-            .unwrap()
-            .insert(router_id, Arc::downgrade(&router));
-        router.connect_closed(move || {
-            routers.lock().unwrap().remove(&router_id);
-        });
-        for callback in self.handlers.new_router.lock().unwrap().iter() {
-            callback(&router);
-        }
-
-        Ok(router)
-    }
-
-    pub fn connect_new_router<F: Fn(&Arc<Router>) + 'static>(&self, callback: F) {
-        self.handlers
-            .new_router
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
-    }
-
-    pub fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {
-        self.handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+        Ok(inner)
     }
 
     fn setup_output_forwarding(&mut self) {
@@ -458,6 +366,112 @@ impl Worker {
                 }
             })
             .detach();
+    }
+}
+
+#[derive(Clone)]
+pub struct Worker {
+    inner: Arc<Inner>,
+}
+
+impl Worker {
+    pub(super) async fn new(
+        executor: Arc<Executor>,
+        worker_binary: PathBuf,
+        worker_settings: WorkerSettings,
+    ) -> io::Result<Self> {
+        let inner = Inner::new(executor, worker_binary, worker_settings).await?;
+
+        Ok(Self {
+            inner: Arc::new(inner),
+        })
+    }
+
+    /// Worker process identifier (PID).
+    pub fn pid(&self) -> u32 {
+        self.inner.pid
+    }
+
+    /// App custom data.
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
+    }
+
+    /// Dump Worker.
+    #[doc(hidden)]
+    pub async fn dump(&self) -> Result<WorkerDumpResponse, RequestError> {
+        debug!("dump()");
+
+        self.inner.channel.request(WorkerDumpRequest {}).await
+    }
+
+    /// Get mediasoup-worker process resource usage.
+    pub async fn get_resource_usage(&self) -> Result<WorkerResourceUsage, RequestError> {
+        debug!("get_resource_usage()");
+
+        self.inner
+            .channel
+            .request(WorkerGetResourceRequest {})
+            .await
+    }
+
+    /// Update settings.
+    pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
+        debug!("update_settings()");
+
+        self.inner
+            .channel
+            .request(WorkerUpdateSettingsRequest { data })
+            .await
+    }
+
+    /// Create a Router.
+    pub async fn create_router(
+        &self,
+        router_options: RouterOptions,
+    ) -> Result<Router, RequestError> {
+        debug!("create_router()");
+
+        let router_id = RouterId::new();
+        let internal = RouterInternal { router_id };
+
+        self.inner
+            .channel
+            .request(WorkerCreateRouterRequest { internal })
+            .await?;
+
+        let router = Router::new(
+            router_id,
+            Arc::clone(&self.inner.executor),
+            router_options.rtp_capabilities,
+            self.inner.channel.clone(),
+            self.inner.payload_channel.clone(),
+            router_options.app_data,
+        );
+
+        for callback in self.inner.handlers.new_router.lock().unwrap().iter() {
+            callback(&router);
+        }
+
+        Ok(router)
+    }
+
+    pub fn connect_new_router<F: Fn(&Router) + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .new_router
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .closed
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
     }
 }
 

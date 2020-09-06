@@ -4,7 +4,6 @@ use crate::data_structures::{
 };
 use crate::messages::{RouterCloseRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest};
 use crate::ortc::RtpCapabilities;
-use crate::transport::Transport;
 use crate::webrtc_transport::WebRtcTransport;
 use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
@@ -13,7 +12,7 @@ use log::error;
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::mem;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -66,28 +65,23 @@ pub enum NewTransport<'a> {
     WebRtc(&'a Arc<WebRtcTransport>),
 }
 
-enum WeakTransports {
-    WebRtc(Weak<WebRtcTransport>),
-}
-
 #[derive(Default)]
 struct Handlers {
     new_transport: Mutex<Vec<Box<dyn Fn(NewTransport)>>>,
     closed: Mutex<Vec<Box<dyn FnOnce()>>>,
 }
 
-pub struct Router {
+struct Inner {
     id: RouterId,
     executor: Arc<Executor>,
     rtp_capabilities: RtpCapabilities,
     channel: Channel,
     payload_channel: Channel,
-    transports: Arc<Mutex<HashMap<TransportId, WeakTransports>>>,
     handlers: Handlers,
     app_data: AppData,
 }
 
-impl Drop for Router {
+impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
@@ -112,6 +106,11 @@ impl Drop for Router {
     }
 }
 
+#[derive(Clone)]
+pub struct Router {
+    inner: Arc<Inner>,
+}
+
 impl Router {
     // TODO: Ideally we'd want `pub(in super::worker)`, but it doesn't work
     pub(super) fn new(
@@ -124,33 +123,33 @@ impl Router {
     ) -> Self {
         debug!("new()");
 
-        let transports = Arc::default();
         let handlers = Handlers::default();
-        Self {
+        let inner = Arc::new(Inner {
             id,
             executor,
             rtp_capabilities,
             channel,
             payload_channel,
-            transports,
             handlers,
             app_data,
-        }
+        });
+
+        Self { inner }
     }
 
     /// Router id.
     pub fn id(&self) -> RouterId {
-        self.id
+        self.inner.id
     }
 
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
-        &self.app_data
+        &self.inner.app_data
     }
 
     /// RTC capabilities of the Router.
     pub fn rtp_capabilities(&self) -> RtpCapabilities {
-        self.rtp_capabilities.clone()
+        self.inner.rtp_capabilities.clone()
     }
 
     /// Dump Router.
@@ -158,9 +157,12 @@ impl Router {
     pub async fn dump(&self) -> Result<RouterDumpResponse, RequestError> {
         debug!("dump()");
 
-        self.channel
+        self.inner
+            .channel
             .request(RouterDumpRequest {
-                internal: RouterInternal { router_id: self.id },
+                internal: RouterInternal {
+                    router_id: self.inner.id,
+                },
             })
             .await
     }
@@ -174,10 +176,11 @@ impl Router {
 
         let transport_id = TransportId::new();
         let data = self
+            .inner
             .channel
             .request(RouterCreateWebrtcTransportRequest {
                 internal: TransportInternal {
-                    router_id: self.id,
+                    router_id: self.inner.id,
                     transport_id,
                 },
                 data: RouterCreateWebrtcTransportData::from_options(&webrtc_transport_options),
@@ -186,23 +189,15 @@ impl Router {
 
         let transport = Arc::new(WebRtcTransport::new(
             transport_id,
-            self.id,
-            Arc::clone(&self.executor),
-            self.channel.clone(),
-            self.payload_channel.clone(),
+            self.inner.id,
+            Arc::clone(&self.inner.executor),
+            self.inner.channel.clone(),
+            self.inner.payload_channel.clone(),
             data,
             webrtc_transport_options.app_data,
         ));
 
-        let transports = self.transports.clone();
-        transports.lock().unwrap().insert(
-            transport_id,
-            WeakTransports::WebRtc(Arc::downgrade(&transport)),
-        );
-        transport.connect_closed(move || {
-            transports.lock().unwrap().remove(&transport_id);
-        });
-        for callback in self.handlers.new_transport.lock().unwrap().iter() {
+        for callback in self.inner.handlers.new_transport.lock().unwrap().iter() {
             callback(NewTransport::WebRtc(&transport));
         }
 
@@ -210,7 +205,8 @@ impl Router {
     }
 
     pub fn connect_new_transport<F: Fn(NewTransport) + 'static>(&self, callback: F) {
-        self.handlers
+        self.inner
+            .handlers
             .new_transport
             .lock()
             .unwrap()
@@ -218,7 +214,8 @@ impl Router {
     }
 
     pub fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {
-        self.handlers
+        self.inner
+            .handlers
             .closed
             .lock()
             .unwrap()

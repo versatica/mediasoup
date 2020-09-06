@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Default)]
 struct Handlers {
-    new_worker: Mutex<Vec<Box<dyn Fn(&Arc<Worker>)>>>,
+    new_worker: Mutex<Vec<Box<dyn Fn(&Worker)>>>,
 }
 
 pub struct WorkerManager {
@@ -57,10 +57,9 @@ impl WorkerManager {
         &self,
         worker_binary: PathBuf,
         worker_settings: WorkerSettings,
-    ) -> io::Result<Arc<Worker>> {
-        let worker = Arc::new(
-            Worker::new(Arc::clone(&self.executor), worker_binary, worker_settings).await?,
-        );
+    ) -> io::Result<Worker> {
+        let worker =
+            Worker::new(Arc::clone(&self.executor), worker_binary, worker_settings).await?;
         {
             for callback in self.handlers.new_worker.lock().unwrap().iter() {
                 callback(&worker);
@@ -70,7 +69,7 @@ impl WorkerManager {
         Ok(worker)
     }
 
-    pub fn connect_new_worker<F: Fn(&Arc<Worker>) + 'static>(&self, callback: F) {
+    pub fn connect_new_worker<F: Fn(&Worker) + 'static>(&self, callback: F) {
         self.handlers
             .new_worker
             .lock()
