@@ -1,4 +1,7 @@
-use crate::data_structures::{AppData, TransportId};
+use crate::data_structures::AppData;
+use crate::uuid_based_wrapper_type;
+
+uuid_based_wrapper_type!(TransportId);
 
 pub trait Transport {
     /// Transport id.

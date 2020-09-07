@@ -1,7 +1,9 @@
-use crate::router::WebRtcTransportOptions;
-use serde::{Deserialize, Serialize, Serializer};
+use crate::router::RouterId;
+use crate::transport::TransportId;
+use crate::uuid_based_wrapper_type;
+use crate::webrtc_transport::WebRtcTransportOptions;
+use serde::{Deserialize, Serialize};
 use std::any::Any;
-use std::fmt;
 use std::ops::{Deref, DerefMut};
 use uuid::Uuid;
 
@@ -34,118 +36,9 @@ impl AppData {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum WorkerLogLevel {
-    Debug,
-    Warn,
-    Error,
-    None,
-}
-
-impl Default for WorkerLogLevel {
-    fn default() -> Self {
-        Self::Error
-    }
-}
-
-impl Serialize for WorkerLogLevel {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(self.as_str())
-    }
-}
-
-impl WorkerLogLevel {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Debug => "debug",
-            Self::Warn => "warn",
-            Self::Error => "error",
-            Self::None => "none",
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum WorkerLogTag {
-    Info,
-    Ice,
-    Dtls,
-    Rtp,
-    Srtp,
-    Rtcp,
-    Rtx,
-    Bwe,
-    Score,
-    Simulcast,
-    Svc,
-    Sctp,
-    Message,
-}
-
-impl Serialize for WorkerLogTag {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(self.as_str())
-    }
-}
-
-impl WorkerLogTag {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Info => "info",
-            Self::Ice => "ice",
-            Self::Dtls => "dtls",
-            Self::Rtp => "rtp",
-            Self::Srtp => "srtp",
-            Self::Rtcp => "rtcp",
-            Self::Rtx => "rtx",
-            Self::Bwe => "bwe",
-            Self::Score => "score",
-            Self::Simulcast => "simulcast",
-            Self::Svc => "svc",
-            Self::Sctp => "sctp",
-            Self::Message => "message",
-        }
-    }
-}
-
-macro_rules! uuid_based_wrapper_type {
-    ($struct_name: ident) => {
-        #[derive(
-            Debug, Copy, Clone, Deserialize, Serialize, Hash, Ord, PartialOrd, Eq, PartialEq,
-        )]
-        pub struct $struct_name(Uuid);
-
-        impl fmt::Display for $struct_name {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                Uuid::fmt(&self.0, f)
-            }
-        }
-
-        impl From<$struct_name> for Uuid {
-            fn from(id: $struct_name) -> Self {
-                id.0
-            }
-        }
-
-        impl $struct_name {
-            pub(super) fn new() -> Self {
-                $struct_name(Uuid::new_v4())
-            }
-        }
-    };
-}
-
-uuid_based_wrapper_type!(RouterId);
 uuid_based_wrapper_type!(ConsumerId);
 uuid_based_wrapper_type!(ProducerId);
 uuid_based_wrapper_type!(ObserverId);
-uuid_based_wrapper_type!(TransportId);
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

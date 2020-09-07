@@ -2,13 +2,12 @@
 mod channel;
 mod utils;
 
-use crate::data_structures::{AppData, RouterId, RouterInternal, WorkerLogLevel, WorkerLogTag};
+use crate::data_structures::{AppData, RouterInternal};
 use crate::messages::{
     WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
     WorkerUpdateSettingsRequest,
 };
-use crate::ortc::RtpCapabilities;
-use crate::router::Router;
+use crate::router::{Router, RouterId, RouterOptions};
 pub(crate) use crate::worker::channel::{Channel, RequestError};
 use crate::worker::channel::{EventMessage, NotificationEvent};
 use crate::worker::utils::SpawnResult;
@@ -19,11 +18,92 @@ use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::debug;
 use log::error;
 use log::warn;
+use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::{env, io, mem};
+
+#[derive(Debug, Copy, Clone)]
+pub enum WorkerLogLevel {
+    Debug,
+    Warn,
+    Error,
+    None,
+}
+
+impl Default for WorkerLogLevel {
+    fn default() -> Self {
+        Self::Error
+    }
+}
+
+impl Serialize for WorkerLogLevel {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl WorkerLogLevel {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Debug => "debug",
+            Self::Warn => "warn",
+            Self::Error => "error",
+            Self::None => "none",
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum WorkerLogTag {
+    Info,
+    Ice,
+    Dtls,
+    Rtp,
+    Srtp,
+    Rtcp,
+    Rtx,
+    Bwe,
+    Score,
+    Simulcast,
+    Svc,
+    Sctp,
+    Message,
+}
+
+impl Serialize for WorkerLogTag {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl WorkerLogTag {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Info => "info",
+            Self::Ice => "ice",
+            Self::Dtls => "dtls",
+            Self::Rtp => "rtp",
+            Self::Srtp => "srtp",
+            Self::Rtcp => "rtcp",
+            Self::Rtx => "rtx",
+            Self::Bwe => "bwe",
+            Self::Score => "score",
+            Self::Simulcast => "simulcast",
+            Self::Svc => "svc",
+            Self::Sctp => "sctp",
+            Self::Message => "message",
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct WorkerSettings {
@@ -110,11 +190,6 @@ pub struct WorkerResourceUsage {
 pub struct WorkerDumpResponse {
     pub pid: u32,
     pub router_ids: Vec<RouterId>,
-}
-
-pub struct RouterOptions {
-    rtp_capabilities: RtpCapabilities,
-    app_data: AppData,
 }
 
 #[derive(Default)]
@@ -443,10 +518,9 @@ impl Worker {
         let router = Router::new(
             router_id,
             Arc::clone(&self.inner.executor),
-            router_options.rtp_capabilities,
             self.inner.channel.clone(),
             self.inner.payload_channel.clone(),
-            router_options.app_data,
+            router_options,
         );
 
         for callback in self.inner.handlers.new_router.lock().unwrap().iter() {
@@ -522,10 +596,7 @@ mod tests {
             );
 
             let router = worker
-                .create_router(RouterOptions {
-                    rtp_capabilities: RtpCapabilities::default(),
-                    app_data: AppData::default(),
-                })
+                .create_router(RouterOptions::default())
                 .await
                 .unwrap();
             println!("Router created: {:?}", router.id());

@@ -1,10 +1,15 @@
+pub mod transport;
+pub mod webrtc_transport;
+use crate::uuid_based_wrapper_type;
+
 use crate::data_structures::{
-    AppData, ConsumerId, NumSctpStreams, ObserverId, ProducerId, RouterCreateWebrtcTransportData,
-    RouterId, RouterInternal, TransportId, TransportInternal, TransportListenIp,
+    AppData, ConsumerId, ObserverId, ProducerId, RouterCreateWebrtcTransportData, RouterInternal,
+    TransportInternal,
 };
 use crate::messages::{RouterCloseRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest};
 use crate::ortc::RtpCapabilities;
-use crate::webrtc_transport::WebRtcTransport;
+use crate::transport::TransportId;
+use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
 use log::debug;
@@ -13,6 +18,14 @@ use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::sync::{Arc, Mutex};
+
+uuid_based_wrapper_type!(RouterId);
+
+#[derive(Debug, Default)]
+pub struct RouterOptions {
+    rtp_capabilities: RtpCapabilities,
+    app_data: AppData,
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,39 +39,6 @@ pub struct RouterDumpResponse {
     map_producer_id_observer_ids: HashMap<ProducerId, HashSet<ObserverId>>,
     rtp_observer_ids: HashSet<ObserverId>,
     transport_ids: HashSet<TransportId>,
-}
-
-#[derive(Debug)]
-pub struct WebRtcTransportOptions {
-    pub listen_ips: Vec<TransportListenIp>,
-    pub enable_udp: bool,
-    pub enable_tcp: bool,
-    pub prefer_udp: bool,
-    pub prefer_tcp: bool,
-    pub initial_available_outgoing_bitrate: u32,
-    pub enable_sctp: bool,
-    pub num_sctp_streams: NumSctpStreams,
-    pub max_sctp_message_size: u32,
-    pub sctp_send_buffer_size: u32,
-    pub app_data: AppData,
-}
-
-impl WebRtcTransportOptions {
-    pub fn new(listen_ips: Vec<TransportListenIp>) -> Self {
-        Self {
-            listen_ips,
-            enable_udp: true,
-            enable_tcp: false,
-            prefer_udp: false,
-            prefer_tcp: false,
-            initial_available_outgoing_bitrate: 600_000,
-            enable_sctp: false,
-            num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 262144,
-            sctp_send_buffer_size: 262144,
-            app_data: AppData::default(),
-        }
-    }
 }
 
 pub enum NewTransport<'a> {
@@ -112,14 +92,15 @@ pub struct Router {
 }
 
 impl Router {
-    // TODO: Ideally we'd want `pub(in super::worker)`, but it doesn't work
     pub(super) fn new(
         id: RouterId,
         executor: Arc<Executor>,
-        rtp_capabilities: RtpCapabilities,
         channel: Channel,
         payload_channel: Channel,
-        app_data: AppData,
+        RouterOptions {
+            app_data,
+            rtp_capabilities,
+        }: RouterOptions,
     ) -> Self {
         debug!("new()");
 
