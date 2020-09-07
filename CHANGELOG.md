@@ -1,9 +1,10 @@
 # Changelog
 
 
-### 3.6.19 (WIP)
+### 3.6.19
 
 * Update `usrsctp` dependency.
+* Update `typescript-eslint` deps.
 * Update Node deps.
 
 
