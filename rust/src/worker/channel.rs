@@ -107,7 +107,10 @@ pub enum RequestError {
     #[error("Received response error: {reason}")]
     Response { reason: String },
     #[error("Failed to parse response from worker: {error}")]
-    FailedToParse { error: serde_json::Error },
+    FailedToParse {
+        #[from]
+        error: serde_json::Error,
+    },
     #[error("Worker did not return any data in response")]
     NoData,
 }
@@ -273,7 +276,7 @@ impl Channel {
             .request_internal(request.as_method(), serde_json::to_value(request).unwrap())
             .await?
             .unwrap_or_default();
-        serde_json::from_value(data).map_err(|error| RequestError::FailedToParse { error })
+        serde_json::from_value(data).map_err(Into::into)
     }
 
     /// Non-generic method to avoid significant duplication in final binary
