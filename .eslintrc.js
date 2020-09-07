@@ -14,7 +14,12 @@ const eslintConfig =
 		ecmaFeatures :
 		{
 			impliedStrict : true
-		}
+		},
+		lib : [ 'es2018' ]
+	},
+	globals :
+	{
+		NodeJS : 'readonly'
 	},
 	rules :
 	{
