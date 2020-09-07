@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.6.19 (WIP)
+
+* Update `usrsctp` dependency.
+* Update Node deps.
+
+
 ### 3.6.18
 
 * Fix `ortc.getConsumerRtpParameters()` RTX codec comparison issue (PR #453).

@@ -34,7 +34,7 @@
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 363323 2020-07-19 12:34:19Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 364268 2020-08-16 11:50:37Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_UTIL_H_
@@ -179,7 +179,7 @@ void sctp_stop_timers_for_shutdown(struct sctp_tcb *);
 /* Stop all timers for association and remote addresses. */
 void sctp_stop_association_timers(struct sctp_tcb *, bool);
 
-void sctp_report_all_outbound(struct sctp_tcb *, uint16_t, int, int);
+void sctp_report_all_outbound(struct sctp_tcb *, uint16_t, int);
 
 int sctp_expand_mapping_array(struct sctp_association *, uint32_t);
 

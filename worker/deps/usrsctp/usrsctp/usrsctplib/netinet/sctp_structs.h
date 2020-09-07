@@ -34,7 +34,7 @@
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 362106 2020-06-12 16:31:13Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 364268 2020-08-16 11:50:37Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_STRUCTS_H_
@@ -584,6 +584,7 @@ struct sctp_stream_queue_pending {
 	uint8_t  sender_all_done;
 	uint8_t  put_last_out;
 	uint8_t  discard_rest;
+	uint8_t  processing;
 };
 
 /*

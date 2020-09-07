@@ -34,7 +34,7 @@
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 363275 2020-07-17 15:09:49Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 364353 2020-08-18 19:25:03Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -1585,7 +1585,7 @@ sctp_fill_up_addresses_vrf(struct sctp_inpcb *inp,
 							if (actual + sizeof(struct sockaddr_in6) > limit) {
 								return (actual);
 							}
-							in6_sin_2_v4mapsin6(sin, (struct sockaddr_in6 *)&addr);
+							in6_sin_2_v4mapsin6(sin, (struct sockaddr_in6 *)addr);
 							((struct sockaddr_in6 *)addr)->sin6_port = inp->sctp_lport;
 							addr = (struct sockaddr *)((caddr_t)addr + sizeof(struct sockaddr_in6));
 							actual += sizeof(struct sockaddr_in6);
@@ -2868,7 +2868,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 				    (net->ro._l_addr.sa.sa_family == AF_INET)) {
 					/* Must map the address */
 					in6_sin_2_v4mapsin6(&net->ro._l_addr.sin,
-					                    (struct sockaddr_in6 *)&addr);
+					                    (struct sockaddr_in6 *)addr);
 				} else {
 					memcpy(addr, &net->ro._l_addr, cpsz);
 				}
