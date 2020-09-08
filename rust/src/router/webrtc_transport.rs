@@ -42,14 +42,14 @@ impl Deref for TransportListenIps {
     }
 }
 
-pub struct EmptyVec;
+pub struct EmptyListError;
 
 impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
-    type Error = EmptyVec;
+    type Error = EmptyListError;
 
     fn try_from(listen_ips: Vec<TransportListenIp>) -> Result<Self, Self::Error> {
         if listen_ips.is_empty() {
-            Err(EmptyVec)
+            Err(EmptyListError)
         } else {
             Ok(Self(listen_ips))
         }
