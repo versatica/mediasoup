@@ -44,6 +44,8 @@ public:
     void InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio);
     void CloseShmWriterCtx();
 
+    std::string StreamName() const { return this->stream_name; }
+    std::string LogName() const { return this->log_name; }
     ShmWriterStatus Status() const { return this->wrt_status; } // (this->wrt_ctx != nullptr ? this->wrt_status : SHM_WRT_UNDEFINED); }
     uint32_t AudioSsrc() const { return (this->wrt_init.conf.channels[0].audio == 1) ? this->wrt_init.conf.channels[0].ssrc : 0; }
     uint32_t VideoSsrc() const { return (this->wrt_init.conf.channels[1].video == 1) ? this->wrt_init.conf.channels[1].ssrc : 0; }

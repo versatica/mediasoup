@@ -732,21 +732,39 @@ export class Router extends EnhancedEventEmitter
 			appData
 		};
 
+		/*
+		data: {
+			...,
+			shm: {
+				name: "...",
+				log: "...",
+				status: "..."
+			}
+		}
+		*/
 		const data =
 			await this._channel.request('router.createShmTransport', internal, reqData);
 
+		if (data.shm === undefined || typeof data.shm !== 'object' 
+				|| data.shm.name === undefined || typeof data.shm.name !== 'string')
+		{
+			logger.error('cannot create ShmTransport object with data:%o', data);
+			throw new Error('cannot create ShmTransport object');
+		}
+			
 		const transport = new ShmTransport(
-			{
-				internal,
-				data,
-				channel                  : this._channel,
-				appData,
-				getRouterRtpCapabilities : () => this._data.rtpCapabilities,
-				getProducerById          : (producerId: string) => this._producers.get(producerId),
-				getDataProducerById      : (dataProducerId: string) => (
-					this._dataProducers.get(dataProducerId)
-				)
-			});
+				{
+					internal,
+					data,
+					channel                  : this._channel,
+					appData,
+					getRouterRtpCapabilities : () => this._data.rtpCapabilities,
+					getProducerById          : (producerId: string) => this._producers.get(producerId),
+					getDataProducerById      : (dataProducerId: string) => (
+						this._dataProducers.get(dataProducerId)
+					)
+				});
+
 
 		this._transports.set(transport.id, transport);
 		transport.on('@close', () => this._transports.delete(transport.id));
