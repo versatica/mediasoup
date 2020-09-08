@@ -328,7 +328,7 @@ impl Channel {
             .await
             .map_err(|_| RequestError::ChannelClosed {})?;
 
-        let result = future::race(
+        let result = future::or(
             async move {
                 result_receiver
                     .await

@@ -11,6 +11,7 @@ use crate::router::{Router, RouterId, RouterOptions};
 pub(crate) use crate::worker::channel::{Channel, RequestError};
 use crate::worker::channel::{EventMessage, NotificationEvent};
 use crate::worker::utils::SpawnResult;
+use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, Stdio};
 use futures_lite::io::BufReader;
@@ -206,6 +207,8 @@ struct Inner {
     pid: u32,
     handlers: Handlers,
     app_data: AppData,
+    // Make sure worker is not dropped until this worker manager is not dropped
+    _worker_manager: WorkerManager,
 }
 
 impl Drop for Inner {
@@ -238,6 +241,7 @@ impl Inner {
             dtls_certificate_file,
             dtls_private_key_file,
         }: WorkerSettings,
+        worker_manager: WorkerManager,
     ) -> io::Result<Self> {
         debug!("new()");
 
@@ -316,6 +320,7 @@ impl Inner {
             pid,
             handlers,
             app_data,
+            _worker_manager: worker_manager,
         };
 
         inner.setup_output_forwarding();
@@ -367,7 +372,7 @@ impl Inner {
 
     async fn wait_for_worker_process(&mut self) -> io::Result<()> {
         let status = self.child.status();
-        future::race(
+        future::or(
             async move {
                 status.await?;
                 Err(io::Error::new(
@@ -454,8 +459,9 @@ impl Worker {
         executor: Arc<Executor>,
         worker_binary: PathBuf,
         worker_settings: WorkerSettings,
+        worker_manager: WorkerManager,
     ) -> io::Result<Self> {
-        let inner = Inner::new(executor, worker_binary, worker_settings).await?;
+        let inner = Inner::new(executor, worker_binary, worker_settings, worker_manager).await?;
 
         Ok(Self {
             inner: Arc::new(inner),
@@ -521,6 +527,7 @@ impl Worker {
             self.inner.channel.clone(),
             self.inner.payload_channel.clone(),
             router_options,
+            self.clone(),
         );
 
         for callback in self.inner.handlers.new_router.lock().unwrap().iter() {
@@ -572,13 +579,15 @@ mod tests {
             });
         }
         let worker_settings = WorkerSettings::default();
+        let worker_binary: PathBuf = env::var("MEDIASOUP_WORKER_BIN")
+            .map(Into::into)
+            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into());
         future::block_on(async move {
             let worker = Worker::new(
                 executor,
-                env::var("MEDIASOUP_WORKER_BIN")
-                    .map(|path| path.into())
-                    .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
+                worker_binary.clone(),
                 worker_settings,
+                WorkerManager::new(worker_binary),
             )
             .await
             .unwrap();

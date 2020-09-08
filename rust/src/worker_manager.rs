@@ -11,6 +11,15 @@ struct Handlers {
     new_worker: Mutex<Vec<Box<dyn Fn(&Worker)>>>,
 }
 
+struct Inner {
+    executor: Arc<Executor>,
+    handlers: Handlers,
+    /// This field is only used in order to be dropped with the worker manager itself to stop the
+    /// thread created with `WorkerManager::new()` call
+    _stop_sender: Option<Sender<()>>,
+    worker_binary: PathBuf,
+}
+
 /// Container that creates [Worker] instances
 ///
 /// # Examples
@@ -35,13 +44,9 @@ struct Handlers {
 ///
 /// If you already happen to have [`async_executor::Executor`] instance available, [`WorkerManager::with_executor`] can
 /// be used to create an instance instead.
+#[derive(Clone)]
 pub struct WorkerManager {
-    executor: Arc<Executor>,
-    handlers: Handlers,
-    /// This field is only used in order to be dropped with the worker manager itself to stop the
-    /// thread created with `WorkerManager::new()` call
-    _stop_sender: Option<Sender<()>>,
-    worker_binary: PathBuf,
+    inner: Arc<Inner>,
 }
 
 impl WorkerManager {
@@ -59,36 +64,41 @@ impl WorkerManager {
 
         let handlers = Handlers::default();
 
-        Self {
+        let inner = Arc::new(Inner {
             executor,
             handlers,
             _stop_sender: Some(stop_sender),
             worker_binary,
-        }
+        });
+
+        Self { inner }
     }
 
     /// Create new worker manager, uses externally created executor
     pub fn with_executor(worker_binary: PathBuf, executor: Arc<Executor>) -> Self {
         let handlers = Handlers::default();
 
-        Self {
+        let inner = Arc::new(Inner {
             executor,
             handlers,
             _stop_sender: None,
             worker_binary,
-        }
+        });
+
+        Self { inner }
     }
 
     /// Create a Worker.
     pub async fn create_worker(&self, worker_settings: WorkerSettings) -> io::Result<Worker> {
         let worker = Worker::new(
-            Arc::clone(&self.executor),
-            self.worker_binary.clone(),
+            Arc::clone(&self.inner.executor),
+            self.inner.worker_binary.clone(),
             worker_settings,
+            self.clone(),
         )
         .await?;
         {
-            for callback in self.handlers.new_worker.lock().unwrap().iter() {
+            for callback in self.inner.handlers.new_worker.lock().unwrap().iter() {
                 callback(&worker);
             }
         }
@@ -97,7 +107,8 @@ impl WorkerManager {
     }
 
     pub fn connect_new_worker<F: Fn(&Worker) + 'static>(&self, callback: F) {
-        self.handlers
+        self.inner
+            .handlers
             .new_worker
             .lock()
             .unwrap()

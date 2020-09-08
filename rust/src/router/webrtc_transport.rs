@@ -3,7 +3,7 @@ use crate::data_structures::{
     NumSctpStreams, SctpParameters, SctpState, TransportListenIp, TransportTuple,
     WebRtcTransportData,
 };
-use crate::router::RouterId;
+use crate::router::{Router, RouterId};
 use crate::transport::{Transport, TransportId};
 use crate::worker::Channel;
 use async_executor::Executor;
@@ -49,7 +49,7 @@ struct Handlers {
     closed: Mutex<Vec<Box<dyn FnOnce()>>>,
 }
 
-pub struct WebRtcTransport {
+struct Inner {
     id: TransportId,
     router_id: RouterId,
     executor: Arc<Executor>,
@@ -58,9 +58,11 @@ pub struct WebRtcTransport {
     handlers: Handlers,
     data: WebRtcTransportData,
     app_data: AppData,
+    // Make sure router is not dropped until this transport is not dropped
+    _router: Router,
 }
 
-impl Drop for WebRtcTransport {
+impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
@@ -86,19 +88,25 @@ impl Drop for WebRtcTransport {
     }
 }
 
+#[derive(Clone)]
+pub struct WebRtcTransport {
+    inner: Arc<Inner>,
+}
+
 impl Transport for WebRtcTransport {
     /// Transport id.
     fn id(&self) -> TransportId {
-        self.id
+        self.inner.id
     }
 
     /// App custom data.
     fn app_data(&self) -> &AppData {
-        &self.app_data
+        &self.inner.app_data
     }
 
     fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {
-        self.handlers
+        self.inner
+            .handlers
             .closed
             .lock()
             .unwrap()
@@ -115,11 +123,12 @@ impl WebRtcTransport {
         payload_channel: Channel,
         data: WebRtcTransportData,
         app_data: AppData,
+        router: Router,
     ) -> Self {
         debug!("new()");
 
         let handlers = Handlers::default();
-        Self {
+        let inner = Arc::new(Inner {
             id,
             router_id,
             executor,
@@ -128,76 +137,79 @@ impl WebRtcTransport {
             handlers,
             data,
             app_data,
-        }
+            _router: router,
+        });
+
+        Self { inner }
     }
 
     /**
      * ICE role.
      */
     pub fn ice_role(&self) -> IceRole {
-        return self.data.ice_role;
+        return self.inner.data.ice_role;
     }
 
     /**
      * ICE parameters.
      */
     pub fn ice_parameters(&self) -> IceParameters {
-        return self.data.ice_parameters.clone();
+        return self.inner.data.ice_parameters.clone();
     }
 
     /**
      * ICE candidates.
      */
     pub fn ice_candidates(&self) -> Vec<IceCandidate> {
-        return self.data.ice_candidates.clone();
+        return self.inner.data.ice_candidates.clone();
     }
 
     /**
      * ICE state.
      */
     pub fn ice_state(&self) -> IceState {
-        return self.data.ice_state;
+        return self.inner.data.ice_state;
     }
 
     /**
      * ICE selected tuple.
      */
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
-        return self.data.ice_selected_tuple.clone();
+        return self.inner.data.ice_selected_tuple.clone();
     }
 
     /**
      * DTLS parameters.
      */
     pub fn dtls_parameters(&self) -> DtlsParameters {
-        return self.data.dtls_parameters.clone();
+        return self.inner.data.dtls_parameters.clone();
     }
 
     /**
      * DTLS state.
      */
     pub fn dtls_state(&self) -> DtlsState {
-        return self.data.dtls_state;
+        return self.inner.data.dtls_state;
     }
 
     /**
      * Remote certificate in PEM format.
      */
     pub fn dtls_remote_cert(&self) -> Option<String> {
-        return self.data.dtls_remote_cert.clone();
+        return self.inner.data.dtls_remote_cert.clone();
     }
 
     /**
      * SCTP parameters.
      */
     pub fn sctp_parameters(&self) -> Option<SctpParameters> {
-        return self.data.sctp_parameters;
+        return self.inner.data.sctp_parameters;
     }
 
     /**
      * SCTP state.
      */
     pub fn sctp_state(&self) -> Option<SctpState> {
-        return self.data.sctp_state;
+        return self.inner.data.sctp_state;
     }
 }

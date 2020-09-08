@@ -10,7 +10,7 @@ use crate::messages::{RouterCloseRequest, RouterCreateWebrtcTransportRequest, Ro
 use crate::ortc::RtpCapabilities;
 use crate::transport::TransportId;
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
-use crate::worker::{Channel, RequestError};
+use crate::worker::{Channel, RequestError, Worker};
 use async_executor::Executor;
 use log::debug;
 use log::error;
@@ -59,6 +59,8 @@ struct Inner {
     payload_channel: Channel,
     handlers: Handlers,
     app_data: AppData,
+    // Make sure worker is not dropped until this router is not dropped
+    _worker: Worker,
 }
 
 impl Drop for Inner {
@@ -101,6 +103,7 @@ impl Router {
             app_data,
             rtp_capabilities,
         }: RouterOptions,
+        worker: Worker,
     ) -> Self {
         debug!("new()");
 
@@ -113,6 +116,7 @@ impl Router {
             payload_channel,
             handlers,
             app_data,
+            _worker: worker,
         });
 
         Self { inner }
@@ -176,6 +180,7 @@ impl Router {
             self.inner.payload_channel.clone(),
             data,
             webrtc_transport_options.app_data,
+            self.clone(),
         ));
 
         for callback in self.inner.handlers.new_transport.lock().unwrap().iter() {
