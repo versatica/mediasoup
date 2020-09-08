@@ -577,6 +577,9 @@ impl Worker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data_structures::TransportListenIp;
+    use crate::transport::Transport;
+    use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
     use futures_lite::future;
     use std::thread;
 
@@ -610,8 +613,8 @@ mod tests {
             .await
             .unwrap();
 
-            println!("Worker dump: {:?}", worker.dump().await);
-            println!("Resource usage: {:?}", worker.get_resource_usage().await);
+            println!("Worker dump: {:#?}", worker.dump().await);
+            println!("Resource usage: {:#?}", worker.get_resource_usage().await);
             println!(
                 "Update settings: {:?}",
                 worker
@@ -627,7 +630,25 @@ mod tests {
                 .await
                 .unwrap();
             println!("Router created: {:?}", router.id());
-            println!("Router dump: {:?}", router.dump().await.unwrap());
+            println!("Router dump: {:#?}", router.dump().await.unwrap());
+            let webrtc_transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".to_string(),
+                        announced_ip: None,
+                    },
+                )))
+                .await
+                .unwrap();
+            println!("WebRTC transport created: {:?}", webrtc_transport.id());
+            println!(
+                "WebRTC transport stats: {:#?}",
+                webrtc_transport.get_stats().await.unwrap()
+            );
+            println!(
+                "WebRTC transport dump: {:#?}",
+                webrtc_transport.dump().await.unwrap()
+            );
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

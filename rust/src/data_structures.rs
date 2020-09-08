@@ -1,7 +1,7 @@
 use crate::router::RouterId;
 use crate::transport::TransportId;
 use crate::uuid_based_wrapper_type;
-use crate::webrtc_transport::WebRtcTransportOptions;
+use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::ops::{Deref, DerefMut};
@@ -83,7 +83,7 @@ impl Default for NumSctpStreams {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateWebrtcTransportData {
-    listen_ips: Vec<TransportListenIp>,
+    listen_ips: TransportListenIps,
     enable_udp: bool,
     enable_tcp: bool,
     prefer_udp: bool,
@@ -119,6 +119,7 @@ impl RouterCreateWebrtcTransportData {
 #[serde(rename_all = "camelCase")]
 pub enum IceRole {
     Controlled,
+    Controlling,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -133,6 +134,9 @@ pub struct IceParameters {
 #[serde(rename_all = "camelCase")]
 pub enum IceCandidateType {
     Host,
+    Srflx,
+    Prflx,
+    Relay,
 }
 
 #[derive(Debug, Deserialize, Copy, Clone)]
@@ -223,6 +227,7 @@ pub enum SctpState {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct WebRtcTransportData {
     pub(crate) ice_role: IceRole,
     pub(crate) ice_parameters: IceParameters,

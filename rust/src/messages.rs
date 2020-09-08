@@ -4,6 +4,7 @@ use crate::worker::{WorkerDumpResponse, WorkerResourceUsage, WorkerUpdateSetting
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
+use std::marker::PhantomData;
 
 pub(crate) trait Request: Debug + Serialize {
     type Response: DeserializeOwned;
@@ -157,25 +158,35 @@ request_response!(
     },
 );
 
-request_response!(
-    "transport.dump",
-    TransportDumpRequest {
-        pub(crate) internal: TransportInternal,
-    },
-    TransportDumpResponse {
-        // TODO
-    },
-);
+#[derive(Debug, Serialize)]
+pub(crate) struct TransportDumpRequest<Dump: Debug + DeserializeOwned> {
+    pub(crate) internal: TransportInternal,
+    #[serde(skip)]
+    pub(crate) phantom_data: PhantomData<Dump>,
+}
 
-request_response!(
-    "transport.getStats",
-    TransportGetStatsRequest {
-        pub(crate) internal: TransportInternal,
-    },
-    TransportGetStatsResponse {
-        // TODO
-    },
-);
+impl<Dump: Debug + DeserializeOwned> Request for TransportDumpRequest<Dump> {
+    type Response = Dump;
+
+    fn as_method(&self) -> &'static str {
+        "transport.dump"
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct TransportGetStatsRequest<Stat: Debug + DeserializeOwned> {
+    pub(crate) internal: TransportInternal,
+    #[serde(skip)]
+    pub(crate) phantom_data: PhantomData<Stat>,
+}
+
+impl<Stat: Debug + DeserializeOwned> Request for TransportGetStatsRequest<Stat> {
+    type Response = Vec<Stat>;
+
+    fn as_method(&self) -> &'static str {
+        "transport.getStats"
+    }
+}
 
 request_response!(
     "transport.connect",
