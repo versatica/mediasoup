@@ -47,8 +47,8 @@ pub enum NewTransport<'a> {
 
 #[derive(Default)]
 struct Handlers {
-    new_transport: Mutex<Vec<Box<dyn Fn(NewTransport)>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce()>>>,
+    new_transport: Mutex<Vec<Box<dyn Fn(NewTransport) + Send>>>,
+    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
 struct Inner {
@@ -190,7 +190,7 @@ impl Router {
         Ok(transport)
     }
 
-    pub fn connect_new_transport<F: Fn(NewTransport) + 'static>(&self, callback: F) {
+    pub fn connect_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_transport
@@ -199,7 +199,7 @@ impl Router {
             .push(Box::new(callback));
     }
 
-    pub fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {
+    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed

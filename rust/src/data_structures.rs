@@ -8,7 +8,7 @@ use std::ops::{Deref, DerefMut};
 use uuid::Uuid;
 
 #[derive(Debug)]
-pub struct AppData(Box<dyn Any>);
+pub struct AppData(Box<dyn Any + Send + Sync>);
 
 impl Default for AppData {
     fn default() -> Self {
@@ -17,7 +17,7 @@ impl Default for AppData {
 }
 
 impl Deref for AppData {
-    type Target = Box<dyn Any>;
+    type Target = Box<dyn Any + Send + Sync>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -31,7 +31,7 @@ impl DerefMut for AppData {
 }
 
 impl AppData {
-    pub fn new<T: Any>(app_data: T) -> Self {
+    pub fn new<T: Any + Send + Sync>(app_data: T) -> Self {
         Self(Box::new(app_data))
     }
 }

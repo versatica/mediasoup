@@ -10,7 +10,7 @@ pub trait Transport {
     /// App custom data.
     fn app_data(&self) -> &AppData;
 
-    fn connect_closed<F: FnOnce() + 'static>(&self, callback: F)
+    fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F)
     where
         Self: Transport;
     // TODO

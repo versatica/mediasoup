@@ -13,7 +13,7 @@ use crate::worker::channel::{EventMessage, NotificationEvent};
 use crate::worker::utils::SpawnResult;
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
-use async_process::{Child, Command, Stdio};
+use async_process::{Child, Command, ExitStatus, Stdio};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::debug;
@@ -195,8 +195,9 @@ pub struct WorkerDumpResponse {
 
 #[derive(Default)]
 struct Handlers {
-    new_router: Mutex<Vec<Box<dyn Fn(&Router)>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce()>>>,
+    new_router: Mutex<Vec<Box<dyn Fn(&Router) + Send>>>,
+    died: Mutex<Vec<Box<dyn FnOnce(ExitStatus) + Send>>>,
+    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
 struct Inner {
@@ -242,7 +243,7 @@ impl Inner {
             dtls_private_key_file,
         }: WorkerSettings,
         worker_manager: WorkerManager,
-    ) -> io::Result<Self> {
+    ) -> io::Result<Arc<Self>> {
         debug!("new()");
 
         let mut spawn_args: Vec<OsString> = Vec::new();
@@ -325,25 +326,33 @@ impl Inner {
 
         inner.setup_output_forwarding();
 
-        // TODO: Event for this
-        let status = inner.child.status();
-        inner
-            .executor
-            .spawn(async move {
-                match status.await {
-                    Ok(exit_status) => {
-                        println!("exit status {}", exit_status);
-                    }
-                    Err(error) => {
-                        error!("failed to spawn worker: {}", error);
-                    }
-                }
-            })
-            .detach();
-
         inner.wait_for_worker_process().await?;
 
         inner.setup_message_handling();
+
+        let status_fut = inner.child.status();
+        let inner = Arc::new(inner);
+        {
+            let inner_weak = Arc::downgrade(&inner);
+            inner
+                .executor
+                .spawn(async move {
+                    let status = status_fut.await;
+
+                    if let Some(inner) = inner_weak.upgrade() {
+                        if let Ok(exit_status) = status {
+                            warn!("exit status {}", exit_status);
+
+                            let callbacks: Vec<_> =
+                                mem::take(inner.handlers.died.lock().unwrap().as_mut());
+                            for callback in callbacks {
+                                callback(exit_status);
+                            }
+                        }
+                    }
+                })
+                .detach();
+        }
 
         Ok(inner)
     }
@@ -463,9 +472,7 @@ impl Worker {
     ) -> io::Result<Self> {
         let inner = Inner::new(executor, worker_binary, worker_settings, worker_manager).await?;
 
-        Ok(Self {
-            inner: Arc::new(inner),
-        })
+        Ok(Self { inner })
     }
 
     /// Worker process identifier (PID).
@@ -537,7 +544,7 @@ impl Worker {
         Ok(router)
     }
 
-    pub fn connect_new_router<F: Fn(&Router) + 'static>(&self, callback: F) {
+    pub fn connect_new_router<F: Fn(&Router) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_router
@@ -546,7 +553,16 @@ impl Worker {
             .push(Box::new(callback));
     }
 
-    pub fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {
+    pub fn connect_died<F: FnOnce(ExitStatus) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .died
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed

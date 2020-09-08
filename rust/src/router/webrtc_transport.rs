@@ -46,7 +46,7 @@ impl WebRtcTransportOptions {
 
 #[derive(Default)]
 struct Handlers {
-    closed: Mutex<Vec<Box<dyn FnOnce()>>>,
+    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
 struct Inner {
@@ -104,7 +104,7 @@ impl Transport for WebRtcTransport {
         &self.inner.app_data
     }
 
-    fn connect_closed<F: FnOnce() + 'static>(&self, callback: F) {
+    fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed
