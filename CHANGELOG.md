@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.20 (WIP)
+
+* Remove `-fwrapv` when building mediasoup-worker in `Debug` mode (issue #460).
+
+
 ### 3.6.19
 
 * Update `usrsctp` dependency.
