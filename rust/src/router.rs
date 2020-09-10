@@ -153,6 +153,8 @@ impl Router {
     }
 
     /// Create a WebRtcTransport.
+    ///
+    /// Router will be kept alive as long as at least one transport is alive.
     pub async fn create_webrtc_transport(
         &self,
         webrtc_transport_options: WebRtcTransportOptions,

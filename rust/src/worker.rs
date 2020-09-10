@@ -516,6 +516,8 @@ impl Worker {
     }
 
     /// Create a Router.
+    ///
+    /// Worker will be kept alive as long as at least one router is alive.
     pub async fn create_router(
         &self,
         router_options: RouterOptions,
