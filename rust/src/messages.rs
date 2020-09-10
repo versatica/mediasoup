@@ -15,11 +15,13 @@ pub(crate) trait Request: Debug + Serialize {
 macro_rules! request_response {
     (
         $method: literal,
-        $request_struct_name: ident $request_struct_impl: tt,
+        $request_struct_name: ident { $( $field_name: ident: $field_type: ty, )* },
         $existing_response_type: ty $(,)?
     ) => {
         #[derive(Debug, Serialize)]
-        pub(crate) struct $request_struct_name $request_struct_impl
+        pub(crate) struct $request_struct_name {
+            $( pub(crate) $field_name: $field_type, )*
+        }
 
         impl Request for $request_struct_name {
             type Response = $existing_response_type;
@@ -38,11 +40,13 @@ macro_rules! request_response {
     };
     (
         $method: literal,
-        $request_struct_name: ident $request_struct_impl: tt,
+        $request_struct_name: ident { $( $field_name: ident: $field_type: ty, )* },
         $response_struct_name: ident $response_struct_impl: tt,
     ) => {
         #[derive(Debug, Serialize)]
-        pub(crate) struct $request_struct_name $request_struct_impl
+        pub(crate) struct $request_struct_name {
+            $( pub(crate) $field_name: $field_type, )*
+        }
 
         #[derive(Debug, Deserialize)]
         #[serde(rename_all = "camelCase")]
@@ -50,6 +54,32 @@ macro_rules! request_response {
 
         impl Request for $request_struct_name {
             type Response = $response_struct_name;
+
+            fn as_method(&self) -> &'static str {
+                $method
+            }
+        }
+    };
+}
+
+macro_rules! request_response_generic {
+    (
+        $method: literal,
+        $request_struct_name: ident { $( $field_name: ident: $field_type: ty, )* },
+        $generic_response: ident,
+    ) => {
+        #[derive(Debug, Serialize)]
+        pub(crate) struct $request_struct_name<$generic_response>
+        where
+            $generic_response: Debug + DeserializeOwned,
+        {
+            $( pub(crate) $field_name: $field_type, )*
+            #[serde(skip)]
+            pub(crate) phantom_data: PhantomData<$generic_response>,
+        }
+
+        impl<$generic_response: Debug + DeserializeOwned> Request for $request_struct_name<$generic_response> {
+            type Response = $generic_response;
 
             fn as_method(&self) -> &'static str {
                 $method
@@ -69,28 +99,28 @@ request_response!(
 request_response!(
     "worker.updateSettings",
     WorkerUpdateSettingsRequest {
-        pub(crate) data: WorkerUpdateSettings,
+        data: WorkerUpdateSettings,
     },
 );
 
 request_response!(
     "worker.createRouter",
     WorkerCreateRouterRequest {
-        pub(crate) internal: RouterInternal,
+        internal: RouterInternal,
     },
 );
 
 request_response!(
     "router.close",
     RouterCloseRequest {
-        pub(crate) internal: RouterInternal,
+        internal: RouterInternal,
     },
 );
 
 request_response!(
     "router.dump",
     RouterDumpRequest {
-        pub(crate) internal: RouterInternal,
+        internal: RouterInternal,
     },
     RouterDumpResponse,
 );
@@ -98,8 +128,8 @@ request_response!(
 request_response!(
     "router.createWebRtcTransport",
     RouterCreateWebrtcTransportRequest {
-        pub(crate) internal: TransportInternal,
-        pub(crate) data: RouterCreateWebrtcTransportData,
+        internal: TransportInternal,
+        data: RouterCreateWebrtcTransportData,
     },
     WebRtcTransportData,
 );
@@ -107,8 +137,8 @@ request_response!(
 request_response!(
     "router.createPlainTransport",
     RouterCreatePlainTransportRequest {
-        pub(crate) internal: TransportInternal,
-        pub(crate) data: RouterCreatePlainTransportData,
+        internal: TransportInternal,
+        data: RouterCreatePlainTransportData,
     },
     RouterCreatePlainTransportResponse {
         // TODO
@@ -118,8 +148,8 @@ request_response!(
 request_response!(
     "router.createPipeTransport",
     RouterCreatePipeTransportRequest {
-        pub(crate) internal: TransportInternal,
-        pub(crate) data: RouterCreatePipeTransportData,
+        internal: TransportInternal,
+        data: RouterCreatePipeTransportData,
     },
     RouterCreatePipeTransportResponse {
         // TODO
@@ -129,8 +159,8 @@ request_response!(
 request_response!(
     "router.createDirectTransport",
     RouterCreateDirectTransportRequest {
-        pub(crate) internal: TransportInternal,
-        pub(crate) data: RouterCreateDirectTransportData,
+        internal: TransportInternal,
+        data: RouterCreateDirectTransportData,
     },
     RouterCreateDirectTransportResponse {
         // TODO
@@ -140,8 +170,8 @@ request_response!(
 request_response!(
     "router.createAudioLevelObserver",
     RouterCreateAudioLevelObserverRequest {
-        pub(crate) internal: RouterCreateAudioLevelObserverInternal,
-        pub(crate) data: RouterCreateAudioLevelObserverData,
+        internal: RouterCreateAudioLevelObserverInternal,
+        data: RouterCreateAudioLevelObserverData,
     },
     RouterCreateAudioLevelObserverResponse {
         // TODO
@@ -151,48 +181,34 @@ request_response!(
 request_response!(
     "transport.close",
     TransportCloseRequest {
-        pub(crate) internal: TransportInternal,
+        internal: TransportInternal,
     },
     TransportCloseResponse {
         // TODO
     },
 );
 
-#[derive(Debug, Serialize)]
-pub(crate) struct TransportDumpRequest<Dump: Debug + DeserializeOwned> {
-    pub(crate) internal: TransportInternal,
-    #[serde(skip)]
-    pub(crate) phantom_data: PhantomData<Dump>,
-}
+request_response_generic!(
+    "transport.dump",
+    TransportDumpRequest {
+        internal: TransportInternal,
+    },
+    Dump,
+);
 
-impl<Dump: Debug + DeserializeOwned> Request for TransportDumpRequest<Dump> {
-    type Response = Dump;
-
-    fn as_method(&self) -> &'static str {
-        "transport.dump"
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub(crate) struct TransportGetStatsRequest<Stat: Debug + DeserializeOwned> {
-    pub(crate) internal: TransportInternal,
-    #[serde(skip)]
-    pub(crate) phantom_data: PhantomData<Stat>,
-}
-
-impl<Stat: Debug + DeserializeOwned> Request for TransportGetStatsRequest<Stat> {
-    type Response = Vec<Stat>;
-
-    fn as_method(&self) -> &'static str {
-        "transport.getStats"
-    }
-}
+request_response_generic!(
+    "transport.getStats",
+    TransportGetStatsRequest {
+        internal: TransportInternal,
+    },
+    Stats,
+);
 
 request_response!(
     "transport.connect",
     TransportConnectRequest {
-        pub(crate) internal: TransportInternal,
-        pub(crate) data: TransportConnectData,
+        internal: TransportInternal,
+        data: TransportConnectData,
     },
     TransportConnectResponse {
         // TODO
@@ -202,8 +218,8 @@ request_response!(
 request_response!(
     "transport.setMaxIncomingBitrate",
     TransportSetMaxIncomingBitrateRequest {
-        pub(crate) internal: TransportInternal,
-        pub(crate) data: TransportSetMaxIncomingBitrateData,
+        internal: TransportInternal,
+        data: TransportSetMaxIncomingBitrateData,
     },
     TransportSetMaxIncomingBitrateResponse {
         // TODO
@@ -214,7 +230,7 @@ request_response!(
 request_response!(
     "transport.restartIce",
     TransportRestartIceRequest {
-        pub(crate) internal: TransportInternal,
+        internal: TransportInternal,
     },
     TransportRestartIceResponse {
         // TODO
