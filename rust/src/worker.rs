@@ -8,12 +8,12 @@ use crate::messages::{
     WorkerUpdateSettingsRequest,
 };
 use crate::router::{Router, RouterId, RouterOptions};
-pub(crate) use crate::worker::channel::{Channel, RequestError};
-use crate::worker::channel::{EventMessage, NotificationEvent};
 use crate::worker::utils::SpawnResult;
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
+pub(crate) use channel::{Channel, RequestError};
+use channel::{EventMessage, NotificationEvent};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::debug;

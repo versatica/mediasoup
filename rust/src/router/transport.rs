@@ -3,6 +3,7 @@ use crate::messages::{
     TransportDumpRequest, TransportGetStatsRequest, TransportSetMaxIncomingBitrateData,
     TransportSetMaxIncomingBitrateRequest,
 };
+use crate::producer::{Producer, ProducerOptions};
 use crate::router::RouterId;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError};
@@ -35,6 +36,8 @@ pub trait Transport<Dump, Stat, RemoteParameters> {
     async fn connect(&self, remote_parameters: RemoteParameters) -> Result<(), RequestError>;
 
     async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError>;
+
+    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, RequestError>;
 
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
     // TODO
@@ -97,5 +100,12 @@ where
                 data: TransportSetMaxIncomingBitrateData { bitrate },
             })
             .boxed()
+    }
+
+    fn produce_impl(
+        &self,
+        producer_options: ProducerOptions,
+    ) -> Pin<Box<dyn Future<Output = Result<Producer, RequestError>> + Send>> {
+        todo!()
     }
 }

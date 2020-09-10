@@ -1,10 +1,11 @@
+use crate::consumer::ConsumerId;
 use crate::data_structures::{
-    AppData, ConsumerId, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
-    NumSctpStreams, ProducerId, SctpParameters, SctpState, TransportInternal, TransportListenIp,
+    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
+    NumSctpStreams, SctpParameters, SctpState, TransportInternal, TransportListenIp,
     TransportTuple, WebRtcTransportData,
 };
 use crate::messages::{TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData};
-use crate::ortc::RtpHeaderExtension;
+use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::{Router, RouterId};
 use crate::transport::{Transport, TransportId, TransportImpl};
 use crate::worker::{Channel, RequestError};
@@ -277,6 +278,10 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
         debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
 
         self.set_max_incoming_bitrate_impl(bitrate).await
+    }
+
+    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, RequestError> {
+        self.produce_impl(producer_options).await
     }
 
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {

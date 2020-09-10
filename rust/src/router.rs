@@ -1,13 +1,17 @@
+pub mod consumer;
+pub mod producer;
 pub mod transport;
 pub mod webrtc_transport;
+
 use crate::uuid_based_wrapper_type;
 
+use crate::consumer::ConsumerId;
 use crate::data_structures::{
-    AppData, ConsumerId, ObserverId, ProducerId, RouterCreateWebrtcTransportData, RouterInternal,
-    TransportInternal,
+    AppData, ObserverId, RouterCreateWebrtcTransportData, RouterInternal, TransportInternal,
 };
 use crate::messages::{RouterCloseRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest};
-use crate::ortc::RtpCapabilities;
+use crate::producer::ProducerId;
+use crate::rtp_parameters::RtpCapabilities;
 use crate::transport::TransportId;
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError, Worker};

@@ -37,8 +37,6 @@ impl AppData {
     }
 }
 
-uuid_based_wrapper_type!(ConsumerId);
-uuid_based_wrapper_type!(ProducerId);
 uuid_based_wrapper_type!(ObserverId);
 
 #[derive(Debug, Serialize)]

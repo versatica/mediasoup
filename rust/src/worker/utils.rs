@@ -1,5 +1,5 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
-use crate::worker::channel::Channel;
+use crate::worker::Channel;
 use async_executor::Executor;
 use async_process::unix::CommandExt;
 use async_process::{Child, Command};
