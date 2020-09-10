@@ -3,7 +3,11 @@ use crate::data_structures::{
     NumSctpStreams, ProducerId, SctpParameters, SctpState, TransportInternal, TransportListenIp,
     TransportTuple, WebRtcTransportData,
 };
-use crate::messages::{TransportDumpRequest, TransportGetStatsRequest};
+use crate::messages::{
+    TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData, TransportDumpRequest,
+    TransportGetStatsRequest, TransportSetMaxIncomingBitrateData,
+    TransportSetMaxIncomingBitrateRequest,
+};
 use crate::ortc::RtpHeaderExtension;
 use crate::router::{Router, RouterId};
 use crate::transport::{Transport, TransportId};
@@ -18,6 +22,7 @@ use std::marker::PhantomData;
 use std::mem;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
+use thiserror::Error;
 
 /// Struct that protects an invariant of having non-empty list of listen IPs
 #[derive(Debug, Serialize, Clone)]
@@ -42,6 +47,8 @@ impl Deref for TransportListenIps {
     }
 }
 
+#[derive(Error, Debug)]
+#[error("Empty list of listen IPs provided, should have at least one element")]
 pub struct EmptyListError;
 
 impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
@@ -164,6 +171,10 @@ pub struct WebRtcTransportStat {
     dtls_state: DtlsState,
 }
 
+pub struct WebRtcTransportRemoteParameters {
+    dtls_parameters: DtlsParameters,
+}
+
 #[derive(Default)]
 struct Handlers {
     closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
@@ -214,7 +225,9 @@ pub struct WebRtcTransport {
 }
 
 #[async_trait]
-impl Transport<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport {
+impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemoteParameters>
+    for WebRtcTransport
+{
     /// Transport id.
     fn id(&self) -> TransportId {
         self.inner.id
@@ -253,6 +266,47 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport {
                     transport_id: self.inner.id,
                 },
                 phantom_data: PhantomData {},
+            })
+            .await
+    }
+
+    /// Provide the WebRtcTransport remote parameters.
+    async fn connect(
+        &self,
+        remote_parameters: WebRtcTransportRemoteParameters,
+    ) -> Result<(), RequestError> {
+        debug!("connect()");
+
+        let response = self
+            .inner
+            .channel
+            .request(TransportConnectRequestWebRtc {
+                internal: TransportInternal {
+                    router_id: self.inner.router_id,
+                    transport_id: self.inner.id,
+                },
+                data: TransportConnectRequestWebRtcData {
+                    dtls_parameters: remote_parameters.dtls_parameters,
+                },
+            })
+            .await?;
+
+        self.inner.data.dtls_parameters.lock().unwrap().role = response.dtls_local_role;
+
+        Ok(())
+    }
+
+    async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
+        debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
+
+        self.inner
+            .channel
+            .request(TransportSetMaxIncomingBitrateRequest {
+                internal: TransportInternal {
+                    router_id: self.inner.router_id,
+                    transport_id: self.inner.id,
+                },
+                data: TransportSetMaxIncomingBitrateData { bitrate },
             })
             .await
     }
@@ -296,72 +350,52 @@ impl WebRtcTransport {
         Self { inner }
     }
 
-    /**
-     * ICE role.
-     */
+    /// ICE role.
     pub fn ice_role(&self) -> IceRole {
         return self.inner.data.ice_role;
     }
 
-    /**
-     * ICE parameters.
-     */
+    /// ICE parameters.
     pub fn ice_parameters(&self) -> IceParameters {
         return self.inner.data.ice_parameters.clone();
     }
 
-    /**
-     * ICE candidates.
-     */
+    /// ICE candidates.
     pub fn ice_candidates(&self) -> Vec<IceCandidate> {
         return self.inner.data.ice_candidates.clone();
     }
 
-    /**
-     * ICE state.
-     */
+    /// ICE state.
     pub fn ice_state(&self) -> IceState {
         return self.inner.data.ice_state;
     }
 
-    /**
-     * ICE selected tuple.
-     */
+    /// ICE selected tuple.
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
         return self.inner.data.ice_selected_tuple.clone();
     }
 
-    /**
-     * DTLS parameters.
-     */
+    /// DTLS parameters.
     pub fn dtls_parameters(&self) -> DtlsParameters {
-        return self.inner.data.dtls_parameters.clone();
+        return self.inner.data.dtls_parameters.lock().unwrap().clone();
     }
 
-    /**
-     * DTLS state.
-     */
+    /// DTLS state.
     pub fn dtls_state(&self) -> DtlsState {
         return self.inner.data.dtls_state;
     }
 
-    /**
-     * Remote certificate in PEM format.
-     */
+    /// Remote certificate in PEM format.
     pub fn dtls_remote_cert(&self) -> Option<String> {
         return self.inner.data.dtls_remote_cert.clone();
     }
 
-    /**
-     * SCTP parameters.
-     */
+    /// SCTP parameters.
     pub fn sctp_parameters(&self) -> Option<SctpParameters> {
         return self.inner.data.sctp_parameters;
     }
 
-    /**
-     * SCTP state.
-     */
+    /// SCTP state.
     pub fn sctp_state(&self) -> Option<SctpState> {
         return self.inner.data.sctp_state;
     }

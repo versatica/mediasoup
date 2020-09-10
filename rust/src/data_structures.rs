@@ -5,6 +5,7 @@ use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::ops::{Deref, DerefMut};
+use std::sync::Mutex;
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -234,7 +235,7 @@ pub(crate) struct WebRtcTransportData {
     pub(crate) ice_candidates: Vec<IceCandidate>,
     pub(crate) ice_state: IceState,
     pub(crate) ice_selected_tuple: Option<TransportTuple>,
-    pub(crate) dtls_parameters: DtlsParameters,
+    pub(crate) dtls_parameters: Mutex<DtlsParameters>,
     pub(crate) dtls_state: DtlsState,
     pub(crate) dtls_remote_cert: Option<String>,
     pub(crate) sctp_parameters: Option<SctpParameters>,
@@ -377,17 +378,5 @@ pub struct TransportConnectData {
 impl TransportConnectData {
     pub fn new(dtls_parameters: DtlsParameters) -> Self {
         Self { dtls_parameters }
-    }
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TransportSetMaxIncomingBitrateData {
-    pub bitrate: u64,
-}
-
-impl TransportSetMaxIncomingBitrateData {
-    pub fn new(bitrate: u64) -> Self {
-        Self { bitrate }
     }
 }

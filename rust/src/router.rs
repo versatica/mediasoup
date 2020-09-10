@@ -188,6 +188,11 @@ impl Router {
         for callback in self.inner.handlers.new_transport.lock().unwrap().iter() {
             callback(NewTransport::WebRtc(&transport));
         }
+        // TODO: Subscribe when added on transport:
+        //  connect_new_producer
+        //  connect_producer_closed
+        //  connect_new_data_producer
+        //  connect_data_producer_closed
 
         Ok(transport)
     }

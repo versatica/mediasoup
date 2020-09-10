@@ -15,12 +15,12 @@ pub(crate) trait Request: Debug + Serialize {
 macro_rules! request_response {
     (
         $method: literal,
-        $request_struct_name: ident { $( $field_name: ident: $field_type: ty, )* },
+        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty, )* },
         $existing_response_type: ty $(,)?
     ) => {
         #[derive(Debug, Serialize)]
         pub(crate) struct $request_struct_name {
-            $( pub(crate) $field_name: $field_type, )*
+            $( pub(crate) $request_field_name: $request_field_type, )*
         }
 
         impl Request for $request_struct_name {
@@ -40,17 +40,19 @@ macro_rules! request_response {
     };
     (
         $method: literal,
-        $request_struct_name: ident { $( $field_name: ident: $field_type: ty, )* },
-        $response_struct_name: ident $response_struct_impl: tt,
+        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty, )* },
+        $response_struct_name: ident { $( $response_field_name: ident: $response_field_type: ty, )* },
     ) => {
         #[derive(Debug, Serialize)]
         pub(crate) struct $request_struct_name {
-            $( pub(crate) $field_name: $field_type, )*
+            $( pub(crate) $request_field_name: $request_field_type, )*
         }
 
         #[derive(Debug, Deserialize)]
         #[serde(rename_all = "camelCase")]
-        pub(crate) struct $response_struct_name $response_struct_impl
+        pub(crate) struct $response_struct_name {
+            $( pub(crate) $response_field_name: $response_field_type, )*
+        }
 
         impl Request for $request_struct_name {
             type Response = $response_struct_name;
@@ -65,7 +67,7 @@ macro_rules! request_response {
 macro_rules! request_response_generic {
     (
         $method: literal,
-        $request_struct_name: ident { $( $field_name: ident: $field_type: ty, )* },
+        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty, )* },
         $generic_response: ident,
     ) => {
         #[derive(Debug, Serialize)]
@@ -73,7 +75,7 @@ macro_rules! request_response_generic {
         where
             $generic_response: Debug + DeserializeOwned,
         {
-            $( pub(crate) $field_name: $field_type, )*
+            $( pub(crate) $request_field_name: $request_field_type, )*
             #[serde(skip)]
             pub(crate) phantom_data: PhantomData<$generic_response>,
         }
@@ -204,16 +206,27 @@ request_response_generic!(
     Stats,
 );
 
+#[derive(Debug, Serialize)]
+pub(crate) struct TransportConnectRequestWebRtcData {
+    pub(crate) dtls_parameters: DtlsParameters,
+}
+
 request_response!(
     "transport.connect",
-    TransportConnectRequest {
+    TransportConnectRequestWebRtc {
         internal: TransportInternal,
-        data: TransportConnectData,
+        data: TransportConnectRequestWebRtcData,
     },
-    TransportConnectResponse {
-        // TODO
+    TransportConnectResponseWebRtc {
+        dtls_local_role: DtlsRole,
     },
 );
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct TransportSetMaxIncomingBitrateData {
+    pub(crate) bitrate: u32,
+}
 
 request_response!(
     "transport.setMaxIncomingBitrate",
@@ -221,9 +234,7 @@ request_response!(
         internal: TransportInternal,
         data: TransportSetMaxIncomingBitrateData,
     },
-    TransportSetMaxIncomingBitrateResponse {
-        // TODO
-    },
+    (),
 );
 
 // TODO: Detail remaining methods, I got bored for now
