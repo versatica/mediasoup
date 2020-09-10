@@ -17,7 +17,7 @@ macro_rules! uuid_based_wrapper_type {
 
         impl std::fmt::Display for $struct_name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                uuid::Uuid::fmt(&self.0, f)
+                std::fmt::Display::fmt(&self.0, f)
             }
         }
 

@@ -3,14 +3,10 @@ use crate::data_structures::{
     NumSctpStreams, ProducerId, SctpParameters, SctpState, TransportInternal, TransportListenIp,
     TransportTuple, WebRtcTransportData,
 };
-use crate::messages::{
-    TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData, TransportDumpRequest,
-    TransportGetStatsRequest, TransportSetMaxIncomingBitrateData,
-    TransportSetMaxIncomingBitrateRequest,
-};
+use crate::messages::{TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData};
 use crate::ortc::RtpHeaderExtension;
 use crate::router::{Router, RouterId};
-use crate::transport::{Transport, TransportId};
+use crate::transport::{Transport, TransportId, TransportImpl};
 use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
 use async_trait::async_trait;
@@ -18,7 +14,6 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::marker::PhantomData;
 use std::mem;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
@@ -242,32 +237,14 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
     async fn dump(&self) -> Result<WebRtcTransportDump, RequestError> {
         debug!("dump()");
 
-        self.inner
-            .channel
-            .request(TransportDumpRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.router_id,
-                    transport_id: self.inner.id,
-                },
-                phantom_data: PhantomData {},
-            })
-            .await
+        self.dump_impl().await
     }
 
     /// Get Transport stats.
     async fn get_stats(&self) -> Result<Vec<WebRtcTransportStat>, RequestError> {
         debug!("get_stats()");
 
-        self.inner
-            .channel
-            .request(TransportGetStatsRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.router_id,
-                    transport_id: self.inner.id,
-                },
-                phantom_data: PhantomData {},
-            })
-            .await
+        self.get_stats_impl().await
     }
 
     /// Provide the WebRtcTransport remote parameters.
@@ -299,16 +276,7 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
     async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
         debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
 
-        self.inner
-            .channel
-            .request(TransportSetMaxIncomingBitrateRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.router_id,
-                    transport_id: self.inner.id,
-                },
-                data: TransportSetMaxIncomingBitrateData { bitrate },
-            })
-            .await
+        self.set_max_incoming_bitrate_impl(bitrate).await
     }
 
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
@@ -318,6 +286,18 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
             .lock()
             .unwrap()
             .push(Box::new(callback));
+    }
+}
+
+impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemoteParameters>
+    for WebRtcTransport
+{
+    fn router_id(&self) -> RouterId {
+        self.inner.router_id
+    }
+
+    fn channel(&self) -> &Channel {
+        &self.inner.channel
     }
 }
 
