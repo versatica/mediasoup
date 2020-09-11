@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.6.19",
+  "version": "3.6.20",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -47,7 +47,7 @@
     "testRegex": "test/test.*\\.js"
   },
   "dependencies": {
-    "@types/node": "^14.6.4",
+    "@types/node": "^14.10.0",
     "awaitqueue": "^2.2.3",
     "debug": "^4.1.1",
     "h264-profile-level-id": "^1.0.1",
