@@ -4,6 +4,7 @@
 ### 3.6.20 (WIP)
 
 * Remove `-fwrapv` when building mediasoup-worker in `Debug` mode (issue #460).
+* Add `MEDIASOUP_MAX_CORES` to limit `NUM_CORES` during mediasoup-worker build (PR #462).
 
 
 ### 3.6.19
