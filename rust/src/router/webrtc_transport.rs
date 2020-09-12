@@ -8,7 +8,7 @@ use crate::messages::{
     TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData, TransportRestartIceRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::transport::TransportTraceEventData;
+use crate::router::transport::{ProduceError, TransportTraceEventData};
 use crate::router::{Router, RouterId};
 use crate::transport::{Transport, TransportId, TransportImpl};
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
@@ -218,7 +218,7 @@ struct Inner {
     data: Arc<WebRtcTransportData>,
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
-    _router: Router,
+    router: Router,
     // Drop subscription to transport-specific notifications when transport itself is dropped
     _subscription_handler: SubscriptionHandler,
 }
@@ -254,7 +254,7 @@ pub struct WebRtcTransport {
     inner: Arc<Inner>,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemoteParameters>
     for WebRtcTransport
 {
@@ -314,7 +314,7 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
         self.set_max_incoming_bitrate_impl(bitrate).await
     }
 
-    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, RequestError> {
+    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
         self.produce_impl(producer_options).await
     }
 
@@ -337,6 +337,10 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
 
     fn channel(&self) -> &Channel {
         &self.inner.channel
+    }
+
+    fn has_producer(&self, id: &ProducerId) -> bool {
+        self.inner.router.has_producer(id)
     }
 }
 
@@ -428,7 +432,7 @@ impl WebRtcTransport {
             handlers,
             data,
             app_data,
-            _router: router,
+            router,
             _subscription_handler: subscription_handler,
         });
 

@@ -100,7 +100,7 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
 }
 
 /// Channel is already closed
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
 pub enum RequestError {
     #[error("Channel already closed")]
     ChannelClosed,

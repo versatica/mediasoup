@@ -3,12 +3,11 @@ use crate::messages::{
     TransportDumpRequest, TransportGetStatsRequest, TransportSetMaxIncomingBitrateData,
     TransportSetMaxIncomingBitrateRequest,
 };
-use crate::producer::{Producer, ProducerOptions};
+use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::RouterId;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError};
 use async_trait::async_trait;
-use futures_lite::FutureExt;
 use log::debug;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -17,6 +16,7 @@ use std::fmt::Debug;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
+use thiserror::Error;
 
 uuid_based_wrapper_type!(TransportId);
 
@@ -50,7 +50,7 @@ pub enum TransportTraceEventData {
     },
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 pub trait Transport<Dump, Stat, RemoteParameters> {
     /// Transport id.
     fn id(&self) -> TransportId;
@@ -69,28 +69,35 @@ pub trait Transport<Dump, Stat, RemoteParameters> {
 
     async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError>;
 
-    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, RequestError>;
+    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
 
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
     // TODO
 }
 
+#[derive(Debug, Error)]
+pub enum ProduceError {
+    #[error("Producer with ID {0} already exists")]
+    AlreadyExists(ProducerId),
+    #[error("Request to worker failed: {0}")]
+    RequestError(RequestError),
+}
+
+#[async_trait(?Send)]
 pub(super) trait TransportImpl<Dump, Stat, RemoteParameters>:
     Transport<Dump, Stat, RemoteParameters>
 where
-    Dump: Debug + DeserializeOwned + Send + Sync,
-    Stat: Debug + DeserializeOwned + Send + Sync,
+    Dump: Debug + DeserializeOwned + 'static,
+    Stat: Debug + DeserializeOwned + 'static,
+    RemoteParameters: 'static,
 {
     fn router_id(&self) -> RouterId;
 
     fn channel(&self) -> &Channel;
 
-    fn dump_impl<'a>(
-        &'a self,
-    ) -> Pin<Box<dyn Future<Output = Result<Dump, RequestError>> + Send + 'a>>
-    where
-        Dump: 'a,
-    {
+    fn has_producer(&self, id: &ProducerId) -> bool;
+
+    async fn dump_impl(&self) -> Result<Dump, RequestError> {
         self.channel()
             .request(TransportDumpRequest {
                 internal: TransportInternal {
@@ -99,15 +106,10 @@ where
                 },
                 phantom_data: PhantomData {},
             })
-            .boxed()
+            .await
     }
 
-    fn get_stats_impl<'a>(
-        &'a self,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<Stat>, RequestError>> + Send + 'a>>
-    where
-        Stat: 'a,
-    {
+    async fn get_stats_impl(&self) -> Result<Vec<Stat>, RequestError> {
         self.channel()
             .request(TransportGetStatsRequest {
                 internal: TransportInternal {
@@ -116,13 +118,10 @@ where
                 },
                 phantom_data: PhantomData {},
             })
-            .boxed()
+            .await
     }
 
-    fn set_max_incoming_bitrate_impl(
-        &self,
-        bitrate: u32,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RequestError>> + Send + '_>> {
+    async fn set_max_incoming_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
             .request(TransportSetMaxIncomingBitrateRequest {
                 internal: TransportInternal {
@@ -131,13 +130,19 @@ where
                 },
                 data: TransportSetMaxIncomingBitrateData { bitrate },
             })
-            .boxed()
+            .await
     }
 
-    fn produce_impl(
+    async fn produce_impl(
         &self,
         producer_options: ProducerOptions,
-    ) -> Pin<Box<dyn Future<Output = Result<Producer, RequestError>> + Send>> {
+    ) -> Result<Producer, ProduceError> {
+        if let Some(id) = &producer_options.id {
+            if self.has_producer(id) {
+                return Err(ProduceError::AlreadyExists(*id));
+            }
+        }
+
         todo!()
     }
 }

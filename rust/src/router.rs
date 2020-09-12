@@ -63,6 +63,7 @@ struct Inner {
     payload_channel: Channel,
     handlers: Handlers,
     app_data: AppData,
+    producers: Mutex<HashSet<ProducerId>>,
     // Make sure worker is not dropped until this router is not dropped
     _worker: Worker,
 }
@@ -111,6 +112,7 @@ impl Router {
     ) -> Self {
         debug!("new()");
 
+        let producers = Mutex::default();
         let handlers = Handlers::default();
         let inner = Arc::new(Inner {
             id,
@@ -119,6 +121,7 @@ impl Router {
             channel,
             payload_channel,
             handlers,
+            producers,
             app_data,
             _worker: worker,
         });
@@ -218,5 +221,9 @@ impl Router {
             .lock()
             .unwrap()
             .push(Box::new(callback));
+    }
+
+    fn has_producer(&self, producer_id: &ProducerId) -> bool {
+        self.inner.producers.lock().unwrap().contains(producer_id)
     }
 }
