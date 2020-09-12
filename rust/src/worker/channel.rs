@@ -66,7 +66,7 @@ enum ChannelReceiveMessage {
     },
     ResponseError {
         id: u32,
-        error: bool,
+        error: Value,
         // TODO: Enum?
         reason: String,
     },

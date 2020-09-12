@@ -11,7 +11,7 @@ use crate::data_structures::{
 };
 use crate::messages::{RouterCloseRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest};
 use crate::producer::ProducerId;
-use crate::rtp_parameters::RtpCapabilities;
+use crate::rtp_parameters::{RtpCapabilities, RtpCodecCapability};
 use crate::transport::TransportId;
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError, Worker};
@@ -27,22 +27,22 @@ uuid_based_wrapper_type!(RouterId);
 
 #[derive(Debug, Default)]
 pub struct RouterOptions {
-    rtp_capabilities: RtpCapabilities,
-    app_data: AppData,
+    pub media_codecs: Vec<RtpCodecCapability>,
+    pub app_data: AppData,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RouterDumpResponse {
-    id: RouterId,
-    map_consumer_id_producer_id: HashMap<ConsumerId, ProducerId>,
-    map_data_consumer_id_data_producer_id: HashMap<ConsumerId, ProducerId>,
-    map_data_producer_id_data_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
-    map_producer_id_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
-    map_producer_id_observer_ids: HashMap<ProducerId, HashSet<ObserverId>>,
-    rtp_observer_ids: HashSet<ObserverId>,
-    transport_ids: HashSet<TransportId>,
+    pub id: RouterId,
+    pub map_consumer_id_producer_id: HashMap<ConsumerId, ProducerId>,
+    pub map_data_consumer_id_data_producer_id: HashMap<ConsumerId, ProducerId>,
+    pub map_data_producer_id_data_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
+    pub map_producer_id_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
+    pub map_producer_id_observer_ids: HashMap<ProducerId, HashSet<ObserverId>>,
+    pub rtp_observer_ids: HashSet<ObserverId>,
+    pub transport_ids: HashSet<TransportId>,
 }
 
 pub enum NewTransport<'a> {
@@ -104,10 +104,8 @@ impl Router {
         executor: Arc<Executor>,
         channel: Channel,
         payload_channel: Channel,
-        RouterOptions {
-            app_data,
-            rtp_capabilities,
-        }: RouterOptions,
+        rtp_capabilities: RtpCapabilities,
+        app_data: AppData,
         worker: Worker,
     ) -> Self {
         debug!("new()");

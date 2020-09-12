@@ -138,7 +138,30 @@ impl RtpCodecCapability {
         }
     }
 
+    pub(crate) fn mime_type(&self) -> MimeType {
+        match self {
+            Self::Audio { mime_type, .. } => MimeType::Audio(*mime_type),
+            Self::Video { mime_type, .. } => MimeType::Video(*mime_type),
+        }
+    }
+
+    pub(crate) fn clock_rate(&self) -> u32 {
+        match self {
+            Self::Audio { clock_rate, .. } => *clock_rate,
+            Self::Video { clock_rate, .. } => *clock_rate,
+        }
+    }
+
     pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
+        match self {
+            Self::Audio { parameters, .. } => parameters,
+            Self::Video { parameters, .. } => parameters,
+        }
+    }
+
+    pub(crate) fn parameters_mut(
+        &mut self,
+    ) -> &mut BTreeMap<String, RtpCodecParametersParametersValue> {
         match self {
             Self::Audio { parameters, .. } => parameters,
             Self::Video { parameters, .. } => parameters,
@@ -155,6 +178,19 @@ impl RtpCodecCapability {
                 preferred_payload_type,
                 ..
             } => *preferred_payload_type,
+        }
+    }
+
+    pub(crate) fn preferred_payload_type_mut(&mut self) -> &mut Option<u8> {
+        match self {
+            Self::Audio {
+                preferred_payload_type,
+                ..
+            } => preferred_payload_type,
+            Self::Video {
+                preferred_payload_type,
+                ..
+            } => preferred_payload_type,
         }
     }
 }
@@ -259,6 +295,7 @@ pub enum RtpCodecParametersParametersValue {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged, rename_all = "lowercase")]
 pub enum RtpCodecParameters {
+    #[serde(rename_all = "camelCase")]
     Audio {
         /// The codec MIME media type/subtype (e.g. 'audio/opus').
         mime_type: MimeTypeAudio,
@@ -277,6 +314,7 @@ pub enum RtpCodecParameters {
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
+    #[serde(rename_all = "camelCase")]
     Video {
         /// The codec MIME media type/subtype (e.g. 'video/VP8').
         mime_type: MimeTypeVideo,

@@ -251,6 +251,7 @@ request_response!(
 );
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct TransportProduceRequestData {
     pub(crate) kind: MediaKind,
     pub(crate) rtp_parameters: RtpParameters,

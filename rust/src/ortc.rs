@@ -3,19 +3,29 @@ use crate::rtp_parameters::{
     RtpCodecParameters, RtpCodecParametersParametersValue, RtpHeaderExtensionDirection,
     RtpHeaderExtensionParameters, RtpParameters,
 };
+use crate::supported_rtp_capabilities;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use serde::Serialize;
 use std::collections::BTreeMap;
+use std::mem;
+use std::ops::Deref;
 use thiserror::Error;
 
-#[derive(Debug, Default, Serialize)]
+const DYNAMIC_PAYLOAD_TYPES: &[u8] = &[
+    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118,
+    119, 120, 121, 122, 123, 124, 125, 126, 127, 96, 97, 98, 99,
+];
+
+#[derive(Debug, Default, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RtpMappingCodec {
     payload_type: u8,
     mapped_payload_type: u8,
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RtpMappingEncoding {
     ssrc: Option<u32>,
     rid: Option<String>,
@@ -24,7 +34,7 @@ pub(crate) struct RtpMappingEncoding {
     mapped_ssrc: u32,
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub(crate) struct RtpMapping {
     codecs: Vec<RtpMappingCodec>,
     encodings: Vec<RtpMappingEncoding>,
@@ -34,6 +44,27 @@ pub(crate) struct RtpMapping {
 pub enum RtpParametersError {
     #[error("invalid codec apt parameter {0}")]
     InvalidAptParameter(String),
+}
+
+#[derive(Debug, Error)]
+pub enum RouterRtpCapabilitiesError {
+    #[error("media codec not supported [mime_type:{mime_type:?}")]
+    UnsupportedCodec { mime_type: MimeType },
+    #[error("cannot allocate more dynamic codec payload types")]
+    CannotAllocate,
+}
+
+#[derive(Debug, Error)]
+pub enum RtpParametersMappingError {
+    #[error("unsupported codec [mime_type:{mime_type:?}, payloadType:{payload_type}]")]
+    UnsupportedCodec {
+        mime_type: MimeType,
+        payload_type: u8,
+    },
+    #[error("no RTX codec for capability codec PT {preferred_payload_type:?}")]
+    UnsupportedRTXCodec { preferred_payload_type: Option<u8> },
+    #[error("missing media codec found for RTX PT {payload_type}")]
+    MissingMediaCodecForRTX { payload_type: u8 },
 }
 
 /// Validates RtpParameters.
@@ -73,17 +104,122 @@ fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpPa
     Ok(())
 }
 
-#[derive(Debug, Error)]
-pub enum RtpParametersMappingError {
-    #[error("unsupported codec [mimeType:{mime_type:?}, payloadType:{payload_type}]")]
-    UnsupportedCodec {
-        mime_type: MimeType,
-        payload_type: u8,
-    },
-    #[error("no RTX codec for capability codec PT {preferred_payload_type:?}")]
-    UnsupportedRTXCodec { preferred_payload_type: Option<u8> },
-    #[error("missing media codec found for RTX PT {payload_type}")]
-    MissingMediaCodecForRTX { payload_type: u8 },
+/// Generate RTP capabilities for the Router based on the given media codecs and mediasoup supported
+/// RTP capabilities.
+pub(crate) fn generate_router_rtp_capabilities(
+    mut media_codecs: Vec<RtpCodecCapability>,
+) -> Result<RtpCapabilities, RouterRtpCapabilitiesError> {
+    // Normalize supported RTP capabilities.
+    // validateRtpCapabilities(supportedRtpCapabilities);
+
+    let supported_rtp_capabilities = supported_rtp_capabilities::get_supported_rtp_capabilities();
+    let mut dynamic_payload_types = Vec::from(DYNAMIC_PAYLOAD_TYPES);
+    let mut caps = RtpCapabilities {
+        codecs: vec![],
+        header_extensions: supported_rtp_capabilities.header_extensions,
+        fec_mechanisms: vec![],
+    };
+
+    for media_codec in media_codecs.iter_mut() {
+        // This may throw.
+        // validateRtpCodecCapability(media_codec);
+
+        let mut codec = match supported_rtp_capabilities
+            .codecs
+            .iter()
+            .find(|supported_codec| {
+                match_codecs(
+                    media_codec.deref().into(),
+                    (*supported_codec).into(),
+                    false,
+                    false,
+                )
+            }) {
+            Some(codec) => codec.clone(),
+            None => {
+                return Err(RouterRtpCapabilitiesError::UnsupportedCodec {
+                    mime_type: media_codec.mime_type(),
+                });
+            }
+        };
+
+        // If the given media codec has preferred_payload_type, keep it.
+        if let Some(preferred_payload_type) = media_codec.preferred_payload_type() {
+            codec
+                .preferred_payload_type_mut()
+                .replace(preferred_payload_type);
+
+            // Also remove the pt from the list of available dynamic values.
+            // TODO: drain_filter() would be nicer, but it is not stable yet
+            let mut i = 0;
+            while i != dynamic_payload_types.len() {
+                if dynamic_payload_types[i] == preferred_payload_type {
+                    dynamic_payload_types.remove(i);
+                    break;
+                } else {
+                    i += 1;
+                }
+            }
+        }
+        // Otherwise if the supported codec has preferredPayloadType, use it.
+        else if codec.preferred_payload_type().is_some() {
+            // No need to remove it from the list since it's not a dynamic value.
+        }
+        // Otherwise choose a dynamic one.
+        else {
+            if dynamic_payload_types.is_empty() {
+                return Err(RouterRtpCapabilitiesError::CannotAllocate);
+            }
+            // Take the first available payload type and remove it from the list.
+            let payload_type = dynamic_payload_types.remove(0);
+
+            codec.preferred_payload_type_mut().replace(payload_type);
+        }
+
+        // Ensure there is not duplicated preferredPayloadType values.
+        // if (caps.codecs!.some((c) => c.preferredPayloadType === codec.preferredPayloadType))
+        // 	throw new TypeError('duplicated codec.preferredPayloadType');
+
+        // Merge the media codec parameters.
+        codec
+            .parameters_mut()
+            .extend(mem::take(media_codec.parameters_mut()));
+
+        // Add a RTX video codec if video.
+        if matches!(codec, RtpCodecCapability::Video {..}) {
+            if dynamic_payload_types.is_empty() {
+                return Err(RouterRtpCapabilitiesError::CannotAllocate);
+            }
+            // Take the first available pt and remove it from the list.
+            let payload_type = dynamic_payload_types.remove(0);
+
+            let rtx_codec = RtpCodecCapability::Video {
+                mime_type: MimeTypeVideo::RTX,
+                preferred_payload_type: Some(payload_type),
+                clock_rate: codec.clock_rate(),
+                parameters: {
+                    let mut parameters = BTreeMap::new();
+                    parameters.insert(
+                        "apt".to_string(),
+                        RtpCodecParametersParametersValue::Number(
+                            codec.preferred_payload_type().unwrap() as u32,
+                        ),
+                    );
+                    parameters
+                },
+                rtcp_feedback: vec![],
+            };
+
+            // Append to the codec list.
+            caps.codecs.push(codec);
+            caps.codecs.push(rtx_codec);
+        } else {
+            // Append to the codec list.
+            caps.codecs.push(codec);
+        }
+    }
+
+    Ok(caps)
 }
 
 /**
@@ -192,6 +328,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
     for (codec, cap_codec) in codec_to_cap_codec {
         rtp_mapping.codecs.push(RtpMappingCodec {
             payload_type: codec.payload_type(),
+            // TODO: Create a separate type such that we don't have to do this unwrap here
             mapped_payload_type: cap_codec.preferred_payload_type().unwrap(),
         });
     }

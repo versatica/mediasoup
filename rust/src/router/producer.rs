@@ -99,4 +99,14 @@ impl Producer {
 
         Self { inner }
     }
+
+    /// Producer id.
+    pub fn id(&self) -> ProducerId {
+        self.inner.id
+    }
+
+    /// App custom data.
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
+    }
 }

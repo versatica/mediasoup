@@ -7,6 +7,8 @@ use crate::messages::{
     WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
     WorkerUpdateSettingsRequest,
 };
+use crate::ortc;
+use crate::ortc::RouterRtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker::utils::SpawnResult;
 use crate::worker_manager::WorkerManager;
@@ -26,6 +28,7 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::{env, io, mem};
+use thiserror::Error;
 
 #[derive(Debug, Copy, Clone)]
 pub enum WorkerLogLevel {
@@ -192,6 +195,14 @@ pub struct WorkerResourceUsage {
 pub struct WorkerDumpResponse {
     pub pid: u32,
     pub router_ids: Vec<RouterId>,
+}
+
+#[derive(Debug, Error)]
+pub enum CreateRouterError {
+    #[error("RTP capabilities generation error: {0}")]
+    FailedRtpCapabilitiesGeneration(RouterRtpCapabilitiesError),
+    #[error("Request to worker failed: {0}")]
+    Request(RequestError),
 }
 
 #[derive(Default)]
@@ -530,8 +541,16 @@ impl Worker {
     pub async fn create_router(
         &self,
         router_options: RouterOptions,
-    ) -> Result<Router, RequestError> {
+    ) -> Result<Router, CreateRouterError> {
         debug!("create_router()");
+
+        let RouterOptions {
+            app_data,
+            media_codecs,
+        } = router_options;
+
+        let rtp_capabilities = ortc::generate_router_rtp_capabilities(media_codecs)
+            .map_err(CreateRouterError::FailedRtpCapabilitiesGeneration)?;
 
         let router_id = RouterId::new();
         let internal = RouterInternal { router_id };
@@ -539,14 +558,16 @@ impl Worker {
         self.inner
             .channel
             .request(WorkerCreateRouterRequest { internal })
-            .await?;
+            .await
+            .map_err(CreateRouterError::Request)?;
 
         let router = Router::new(
             router_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
             self.inner.payload_channel.clone(),
-            router_options,
+            rtp_capabilities,
+            app_data,
             self.clone(),
         );
 
@@ -589,6 +610,10 @@ impl Worker {
 mod tests {
     use super::*;
     use crate::data_structures::TransportListenIp;
+    use crate::router::producer::ProducerOptions;
+    use crate::rtp_parameters::{
+        MediaKind, MimeTypeAudio, RtpCodecCapability, RtpCodecParameters, RtpParameters,
+    };
     use crate::transport::{Transport, TransportGeneric};
     use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
     use futures_lite::future;
@@ -637,7 +662,18 @@ mod tests {
             );
 
             let router = worker
-                .create_router(RouterOptions::default())
+                .create_router({
+                    let mut router_options = RouterOptions::default();
+                    router_options.media_codecs = vec![RtpCodecCapability::Audio {
+                        mime_type: MimeTypeAudio::Opus,
+                        preferred_payload_type: None,
+                        clock_rate: 48000,
+                        channels: 2,
+                        parameters: Default::default(),
+                        rtcp_feedback: vec![],
+                    }];
+                    router_options
+                })
                 .await
                 .unwrap();
             println!("Router created: {:?}", router.id());
@@ -656,6 +692,28 @@ mod tests {
                 "WebRTC transport stats: {:#?}",
                 webrtc_transport.get_stats().await.unwrap()
             );
+            println!(
+                "WebRTC transport dump: {:#?}",
+                webrtc_transport.dump().await.unwrap()
+            );
+
+            let producer = webrtc_transport
+                .produce(ProducerOptions::new(MediaKind::Audio, {
+                    let mut rtp_parameters = RtpParameters::default();
+                    rtp_parameters.codecs.push(RtpCodecParameters::Audio {
+                        mime_type: MimeTypeAudio::Opus,
+                        payload_type: 111,
+                        clock_rate: 48000,
+                        channels: 2,
+                        parameters: Default::default(),
+                        rtcp_feedback: vec![],
+                    });
+                    rtp_parameters
+                }))
+                .await
+                .unwrap();
+
+            println!("Producer created: {:?}", producer.id());
             println!(
                 "WebRTC transport dump: {:#?}",
                 webrtc_transport.dump().await.unwrap()
