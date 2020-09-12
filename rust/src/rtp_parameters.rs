@@ -272,14 +272,13 @@ pub enum RtpHeaderExtensionDirection {
     Inactive,
 }
 
-// TODO: supported_rtp_capabilities.rs file and generally update TypeScript references
 /// Provides information relating to supported header extensions. The list of RTP header extensions
 /// supported by mediasoup is defined in the supported_rtp_capabilities.rs file.
 ///
 /// mediasoup does not currently support encrypted RTP header extensions. The direction field is
-/// just present in mediasoup RTP capabilities (retrieved via router.rtpCapabilities or
-/// mediasoup.getSupportedRtpCapabilities()). It's ignored if present in endpoints' RTP
-/// capabilities.
+/// just present in mediasoup RTP capabilities (retrieved via `mediasoup::router::Router::rtp_capabilities()` or
+/// `mediasoup::supported_rtp_capabilities::get_supported_rtp_capabilities()`. It's ignored if
+/// present in endpoints' RTP capabilities.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpHeaderExtension {
@@ -427,7 +426,6 @@ impl RtpCodecParameters {
     }
 }
 
-// TODO: supported_rtp_capabilities.rs file and generally update TypeScript references
 /// Provides information on RTCP feedback messages for a specific codec. Those messages can be
 /// transport layer feedback messages or codec-specific feedback messages. The list of RTCP
 /// feedbacks supported by mediasoup is defined in the supported_rtp_capabilities.rs file.
@@ -477,10 +475,8 @@ pub struct RtpEncodingParameters {
     pub max_bitrate: Option<u32>,
 }
 
-// TODO: supported_rtp_capabilities.rs file and generally update TypeScript references
 /// Defines a RTP header extension within the RTP parameters. The list of RTP
-/// header extensions supported by mediasoup is defined in the
-/// supported_rtp_capabilities.rs file.
+/// header extensions supported by mediasoup is defined in the supported_rtp_capabilities.rs file.
 ///
 /// mediasoup does not currently support encrypted RTP header extensions and no
 /// parameters are currently considered.
@@ -500,11 +496,10 @@ pub struct RtpHeaderExtensionParameters {
 
 /// Provides information on RTCP settings within the RTP parameters.
 ///
-/// If no cname is given in a producer's RTP parameters, the mediasoup transport
-/// will choose a random one that will be used into RTCP SDES messages sent to
-/// all its associated consumers.
+/// If no cname is given in a producer's RTP parameters, the mediasoup transport will choose a
+/// random one that will be used into RTCP SDES messages sent to all its associated consumers.
 ///
-/// mediasoup assumes reducedSize to always be true.
+/// mediasoup assumes reduced_size to always be true.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtcpParameters {
