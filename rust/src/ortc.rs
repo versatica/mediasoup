@@ -1,6 +1,7 @@
 use crate::rtp_parameters::{
-    MimeType, MimeTypeAudio, MimeTypeVideo, RtpCapabilities, RtpCodecCapability,
-    RtpCodecParameters, RtpCodecParametersParametersValue, RtpParameters,
+    MediaKind, MimeType, MimeTypeVideo, RtcpParameters, RtpCapabilities, RtpCodecCapability,
+    RtpCodecParameters, RtpCodecParametersParametersValue, RtpHeaderExtensionDirection,
+    RtpHeaderExtensionParameters, RtpParameters,
 };
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
@@ -209,6 +210,182 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
     }
 
     Ok(rtp_mapping)
+}
+
+// Generate RTP parameters to be internally used by Consumers given the RTP parameters of a Producer
+// and the RTP capabilities of the Router.
+pub(crate) fn get_consumable_rtp_parameters(
+    kind: MediaKind,
+    params: RtpParameters,
+    caps: RtpCapabilities,
+    rtp_mapping: RtpMapping,
+) -> RtpParameters {
+    let mut consumable_params = RtpParameters::default();
+
+    for codec in params.codecs.iter() {
+        if codec.is_rtx() {
+            continue;
+        }
+
+        let consumable_codec_pt = rtp_mapping
+            .codecs
+            .iter()
+            .find(|entry| entry.payload_type == codec.payload_type())
+            .unwrap()
+            .mapped_payload_type;
+
+        let consumable_codec = match caps
+            .codecs
+            .iter()
+            .find(|cap_codec| match cap_codec.preferred_payload_type() {
+                Some(preferred_payload_type) => preferred_payload_type == consumable_codec_pt,
+                None => false,
+            })
+            .unwrap()
+        {
+            RtpCodecCapability::Audio {
+                mime_type,
+                preferred_payload_type,
+                clock_rate,
+                channels,
+                parameters,
+                rtcp_feedback,
+            } => {
+                RtpCodecParameters::Audio {
+                    mime_type: *mime_type,
+                    payload_type: preferred_payload_type.unwrap(),
+                    clock_rate: *clock_rate,
+                    channels: *channels,
+                    // Keep the Producer codec parameters.
+                    parameters: codec.parameters().clone(),
+                    rtcp_feedback: rtcp_feedback.clone(),
+                }
+            }
+            RtpCodecCapability::Video {
+                mime_type,
+                preferred_payload_type,
+                clock_rate,
+                parameters,
+                rtcp_feedback,
+            } => {
+                RtpCodecParameters::Video {
+                    mime_type: *mime_type,
+                    payload_type: preferred_payload_type.unwrap(),
+                    clock_rate: *clock_rate,
+                    // Keep the Producer codec parameters.
+                    parameters: codec.parameters().clone(),
+                    rtcp_feedback: rtcp_feedback.clone(),
+                }
+            }
+        };
+
+        let consumable_cap_rtx_codec = caps.codecs.iter().find(|cap_rtx_codec| {
+            if !cap_rtx_codec.is_rtx() {
+                return false;
+            }
+
+            let cap_rtx_codec_parameters_apt = cap_rtx_codec.parameters().get(&"apt".to_string());
+
+            match cap_rtx_codec_parameters_apt {
+                Some(RtpCodecParametersParametersValue::Number(apt)) => {
+                    *apt as u8 == consumable_codec.payload_type()
+                }
+                _ => false,
+            }
+        });
+
+        consumable_params.codecs.push(consumable_codec);
+
+        if let Some(consumable_cap_rtx_codec) = consumable_cap_rtx_codec {
+            let consumable_rtx_codec = match consumable_cap_rtx_codec {
+                RtpCodecCapability::Audio {
+                    mime_type,
+                    preferred_payload_type,
+                    clock_rate,
+                    channels,
+                    parameters,
+                    rtcp_feedback,
+                } => RtpCodecParameters::Audio {
+                    mime_type: *mime_type,
+                    payload_type: preferred_payload_type.unwrap(),
+                    clock_rate: *clock_rate,
+                    channels: *channels,
+                    parameters: parameters.clone(),
+                    rtcp_feedback: rtcp_feedback.clone(),
+                },
+                RtpCodecCapability::Video {
+                    mime_type,
+                    preferred_payload_type,
+                    clock_rate,
+                    parameters,
+                    rtcp_feedback,
+                } => RtpCodecParameters::Video {
+                    mime_type: *mime_type,
+                    payload_type: preferred_payload_type.unwrap(),
+                    clock_rate: *clock_rate,
+                    parameters: parameters.clone(),
+                    rtcp_feedback: rtcp_feedback.clone(),
+                },
+            };
+
+            consumable_params.codecs.push(consumable_rtx_codec);
+        }
+    }
+
+    for capExt in caps.header_extensions {
+        // Just take RTP header extension that can be used in Consumers.
+        match capExt.kind {
+            Some(cap_ext_kind) => {
+                if cap_ext_kind != kind {
+                    continue;
+                }
+            }
+            None => {
+                continue;
+            }
+        }
+        if !matches!(
+            capExt.direction,
+            RtpHeaderExtensionDirection::SendRecv | RtpHeaderExtensionDirection::SendOnly
+        ) {
+            continue;
+        }
+
+        let consumable_ext = RtpHeaderExtensionParameters {
+            uri: capExt.uri,
+            id: capExt.preferred_id,
+            encrypt: capExt.preferred_encrypt,
+            parameters: BTreeMap::new(),
+        };
+
+        consumable_params.header_extensions.push(consumable_ext);
+    }
+
+    for (consumable_encoding, mapped_ssrc) in params.encodings.iter().zip(
+        rtp_mapping
+            .encodings
+            .iter()
+            .map(|encoding| encoding.mapped_ssrc),
+    ) {
+        let mut consumable_encoding = consumable_encoding.clone();
+        // Remove useless fields.
+        consumable_encoding.rid.take();
+        consumable_encoding.rtx.take();
+        consumable_encoding.codec_payload_type.take();
+
+        // Set the mapped ssrc.
+        consumable_encoding.ssrc = Some(mapped_ssrc);
+
+        consumable_params.encodings.push(consumable_encoding);
+    }
+
+    consumable_params.rtcp = RtcpParameters {
+        cname: params.rtcp.cname,
+        reduced_size: true,
+        mux: Some(true),
+    };
+
+    return consumable_params;
 }
 
 struct CodecToMatch<'a> {

@@ -196,13 +196,12 @@ where
             ortc::get_producer_rtp_parameters_mapping(&rtp_parameters, &router_rtp_capabilities)
                 .map_err(ProduceError::FailedRtpParametersMapping)?;
 
-        // This may throw.
-        // let consumableRtpParameters = ortc.getConsumableRtpParameters(
-        //     kind,
-        //     rtpParameters,
-        //     router_rtp_capabilities,
-        //     rtp_mapping,
-        // );
+        let consumable_rtp_parameters = ortc::get_consumable_rtp_parameters(
+            kind,
+            rtp_parameters,
+            router_rtp_capabilities,
+            rtp_mapping,
+        );
         todo!()
     }
 }
