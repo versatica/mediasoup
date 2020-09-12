@@ -3,7 +3,7 @@ mod macros;
 mod messages;
 pub mod ortc;
 pub mod router;
-mod rtp_parameters;
+pub mod rtp_parameters;
 pub mod worker;
 pub mod worker_manager;
 
