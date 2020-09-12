@@ -8,9 +8,10 @@ use crate::messages::{
     TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData, TransportRestartIceRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::transport::TransportTraceEventData;
 use crate::router::{Router, RouterId};
 use crate::transport::{Transport, TransportId, TransportImpl};
-use crate::worker::{Channel, RequestError};
+use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use log::debug;
@@ -183,6 +184,24 @@ struct Handlers {
     closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum Notifications {
+    #[serde(rename_all = "camelCase")]
+    IceStateChange { ice_state: IceState },
+    #[serde(rename_all = "camelCase")]
+    IceSelectedTupleChange { ice_selected_tuple: TransportTuple },
+    #[serde(rename_all = "camelCase")]
+    DtlsStateChange {
+        dtls_state: DtlsState,
+        dtls_remote_cert: Option<String>,
+    },
+    #[serde(rename_all = "camelCase")]
+    SctpStateChange { sctp_state: SctpState },
+    #[serde(rename_all = "camelCase")]
+    Trace(TransportTraceEventData),
+}
+
 struct Inner {
     id: TransportId,
     router_id: RouterId,
@@ -194,6 +213,8 @@ struct Inner {
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
     _router: Router,
+    // Drop subscription to transport-specific notifications when transport itself is dropped
+    _subscription_handler: SubscriptionHandler,
 }
 
 impl Drop for Inner {
@@ -314,7 +335,7 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
 }
 
 impl WebRtcTransport {
-    pub(super) fn new(
+    pub(super) async fn new(
         id: TransportId,
         router_id: RouterId,
         executor: Arc<Executor>,
@@ -327,6 +348,13 @@ impl WebRtcTransport {
         debug!("new()");
 
         let handlers = Handlers::default();
+
+        let subscription_handler = channel
+            .subscribe_to_notifications(id.to_string(), move |notification| {
+                // TODO: Handle events
+            })
+            .await
+            .unwrap();
         let inner = Arc::new(Inner {
             id,
             router_id,
@@ -337,6 +365,7 @@ impl WebRtcTransport {
             data,
             app_data,
             _router: router,
+            _subscription_handler: subscription_handler,
         });
 
         Self { inner }

@@ -178,7 +178,7 @@ impl Router {
             })
             .await?;
 
-        let transport = Arc::new(WebRtcTransport::new(
+        let transport_fut = WebRtcTransport::new(
             transport_id,
             self.inner.id,
             Arc::clone(&self.inner.executor),
@@ -187,7 +187,8 @@ impl Router {
             data,
             webrtc_transport_options.app_data,
             self.clone(),
-        ));
+        );
+        let transport = Arc::new(transport_fut.await);
 
         for callback in self.inner.handlers.new_transport.lock().unwrap().iter() {
             callback(NewTransport::WebRtc(&transport));

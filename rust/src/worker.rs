@@ -13,7 +13,7 @@ use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
 use channel::InternalMessage;
-pub(crate) use channel::{Channel, RequestError};
+pub(crate) use channel::{Channel, RequestError, SubscriptionHandler};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::debug;
@@ -398,26 +398,22 @@ impl Inner {
     }
 
     async fn wait_for_worker_ready(&mut self) -> io::Result<()> {
+        #[derive(Deserialize)]
+        #[serde(tag = "event", rename_all = "lowercase")]
+        enum Notification {
+            Running,
+        }
+
         let (sender, receiver) = async_oneshot::oneshot();
         let pid = self.pid;
         let sender = Cell::new(Some(sender));
         let _handler = self
             .channel
             .subscribe_to_notifications(self.pid.to_string(), move |notification| {
-                let result = match serde_json::from_value::<String>(notification.event.clone()) {
-                    Ok(event) => {
-                        if event == "running".to_string() {
-                            debug!("worker process running [pid:{}]", pid);
-                            Ok(())
-                        } else {
-                            Err(io::Error::new(
-                                io::ErrorKind::Other,
-                                format!(
-                                    "unexpected first notification from worker [pid:{}]: {:?}",
-                                    pid, notification
-                                ),
-                            ))
-                        }
+                let result = match serde_json::from_value(notification.clone()) {
+                    Ok(Notification::Running) => {
+                        debug!("worker process running [pid:{}]", pid);
+                        Ok(())
                     }
                     Err(error) => Err(io::Error::new(
                         io::ErrorKind::Other,

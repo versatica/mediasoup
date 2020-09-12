@@ -23,12 +23,6 @@ const NS_MESSAGE_MAX_LEN: usize = 4194313;
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(super) enum NotificationEvent {
-    Running,
-}
-
-#[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub(super) enum InternalMessage {
     /// Debug log
@@ -48,18 +42,10 @@ pub(super) enum InternalMessage {
     Unexpected(Vec<u8>),
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct Notification {
-    target_id: String,
-    pub(crate) event: Value,
-    pub(crate) data: Option<Value>,
-}
-
-/// Notification handler, will remove corresponding subscription when dropped
+/// Subscription handler, will remove corresponding subscription when dropped
 pub(crate) struct SubscriptionHandler {
     executor: Arc<Executor>,
-    remove_fut: Option<Pin<Box<dyn std::future::Future<Output = ()> + Send>>>,
+    remove_fut: Option<Pin<Box<dyn std::future::Future<Output = ()> + Send + Sync>>>,
 }
 
 impl Drop for SubscriptionHandler {
@@ -84,7 +70,7 @@ enum ChannelReceiveMessage {
         // TODO: Enum?
         reason: String,
     },
-    Notification(Notification),
+    Notification(Value),
     Event(InternalMessage),
 }
 
@@ -156,7 +142,7 @@ struct Inner {
     sender: async_channel::Sender<Vec<u8>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
-    event_handlers: Arc<Mutex<HashMap<String, Box<dyn Fn(Notification) + Send>>>>,
+    event_handlers: Arc<Mutex<HashMap<String, Box<dyn Fn(Value) + Send>>>>,
 }
 
 impl Drop for Inner {
@@ -175,8 +161,7 @@ pub(crate) struct Channel {
 impl Channel {
     pub(super) fn new(executor: Arc<Executor>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
-        let event_handlers =
-            Arc::<Mutex<HashMap<String, Box<dyn Fn(Notification) + Send>>>>::default();
+        let event_handlers = Arc::<Mutex<HashMap<String, Box<dyn Fn(Value) + Send>>>>::default();
 
         let internal_message_receiver = {
             let requests_container = Arc::clone(&requests_container);
@@ -245,8 +230,22 @@ impl Channel {
                                 }
                             }
                             ChannelReceiveMessage::Notification(notification) => {
-                                if let Some(callback) = event_handlers.lock().await.get(&notification.target_id) {
-                                    callback(notification);
+                                let target_id = notification
+                                    .get("targetId".to_string())
+                                    .map(|value| value.as_str())
+                                    .flatten();
+                                match target_id {
+                                    Some(target_id) => {
+                                        if let Some(callback) = event_handlers.lock().await.get(target_id) {
+                                            callback(notification);
+                                        }
+                                    }
+                                    None => {
+                                        let unexpected_message = InternalMessage::Unexpected(Vec::from(&bytes[..length]));
+                                        if sender.send(unexpected_message).await.is_err() {
+                                            break;
+                                        }
+                                    }
                                 }
                             }
                             ChannelReceiveMessage::Event(event_message) => {
@@ -322,7 +321,7 @@ impl Channel {
         callback: F,
     ) -> Result<SubscriptionHandler, HandlerAlreadyExistsError>
     where
-        F: Fn(Notification) + Send + 'static,
+        F: Fn(Value) + Send + 'static,
     {
         {
             let mut event_handlers = self.inner.event_handlers.lock().await;

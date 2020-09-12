@@ -11,12 +11,44 @@ use async_trait::async_trait;
 use futures_lite::FutureExt;
 use log::debug;
 use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fmt::Debug;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
 uuid_based_wrapper_type!(TransportId);
+
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Direction {
+    In,
+    Out,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum TransportTraceEventData {
+    Probation {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: Direction,
+        // TODO: Clarify value structure
+        /// Per type information.
+        info: Value,
+    },
+    Bwe {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: Direction,
+        // TODO: Clarify value structure
+        /// Per type information.
+        info: Value,
+    },
+}
 
 #[async_trait]
 pub trait Transport<Dump, Stat, RemoteParameters> {
