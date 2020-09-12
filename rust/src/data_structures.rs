@@ -114,7 +114,7 @@ impl RouterCreateWebrtcTransportData {
     }
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum IceRole {
     Controlled,
@@ -124,12 +124,12 @@ pub enum IceRole {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct IceParameters {
-    username_fragment: String,
-    password: String,
-    ice_lite: Option<bool>,
+    pub username_fragment: String,
+    pub password: String,
+    pub ice_lite: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum IceCandidateType {
     Host,
@@ -138,13 +138,13 @@ pub enum IceCandidateType {
     Relay,
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum IceCandidateTcpType {
     Passive,
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TransportProtocol {
     Tcp,
@@ -163,7 +163,7 @@ pub struct IceCandidate {
     pub tcp_type: Option<IceCandidateTcpType>,
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum IceState {
     New,
@@ -173,7 +173,7 @@ pub enum IceState {
     Closed,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum TransportTuple {
     LocalOnly {
@@ -190,7 +190,7 @@ pub enum TransportTuple {
     },
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DtlsState {
     New,
@@ -200,7 +200,7 @@ pub enum DtlsState {
     Closed,
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SctpParameters {
     /// Must always equal 5000.
@@ -215,7 +215,7 @@ pub struct SctpParameters {
     pub max_message_size: usize,
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SctpState {
     New,

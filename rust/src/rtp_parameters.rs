@@ -7,13 +7,16 @@ use std::collections::HashMap;
 pub struct RtpCapabilities {
     // TODO: Does this need to be optional or can be an empty vec?
     /// Supported media and RTX codecs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub codecs: Option<Vec<RtpCodecCapability>>,
     // TODO: Does this need to be optional or can be an empty vec?
     /// Supported RTP header extensions.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub header_extensions: Option<Vec<RtpHeaderExtension>>,
     // TODO: Does this need to be optional or can be an empty vec?
     // TODO: Enum instead of string?
     /// Supported FEC mechanisms.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub fec_mechanisms: Option<Vec<String>>,
 }
 
@@ -49,11 +52,13 @@ pub struct RtpCodecCapability {
     /// The codec MIME media type/subtype (e.g. 'audio/opus', 'video/VP8').
     pub mime_type: String,
     /// The preferred RTP payload type.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub preferred_payload_type: Option<u32>,
     /// Codec clock rate expressed in Hertz.
     pub clock_rate: u32,
     /// The number of channels supported (e.g. two for stereo). Just for audio.
     /// Default 1.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub channels: Option<u8>,
     // TODO: Not sure if this hashmap is a correct type
     /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
@@ -61,6 +66,7 @@ pub struct RtpCodecCapability {
     pub parameters: HashMap<String, String>,
     // TODO: Does this need to be optional or can be an empty vec?
     /// Transport layer and codec-specific feedback messages for this codec.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rtcp_feedback: Option<Vec<RtcpFeedback>>,
 }
 
@@ -90,6 +96,7 @@ pub struct RtpHeaderExtension {
     //  check if "" is actually needed
     /// Media kind. If `None`, it's valid for all kinds.
     /// Default any media kind.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<MediaKind>,
     /// The URI of the RTP header extension, as defined in RFC 5285.
     pub uri: String,
@@ -137,16 +144,20 @@ pub struct RtpHeaderExtension {
 #[serde(rename_all = "camelCase")]
 pub struct RtpParameters {
     /// The MID RTP extension value as defined in the BUNDLE specification
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub mid: Option<String>,
     /// Media and RTX codecs in use.
     pub codecs: Vec<RtpCodecParameters>,
     // TODO: Does this need to be optional or can be an empty vec?
     /// RTP header extensions in use.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub header_extensions: Option<Vec<RtpHeaderExtensionParameters>>,
     // TODO: Does this need to be optional or can be an empty vec?
     /// Transmitted RTP streams and their settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub encodings: Option<Vec<RtpEncodingParameters>>,
     /// Parameters used for RTCP.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rtcp: Option<RtcpParameters>,
 }
 
@@ -166,6 +177,7 @@ pub struct RtpCodecParameters {
     pub clock_rate: u32,
     /// The number of channels supported (e.g. two for stereo). Just for audio.
     /// Default 1.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub channels: Option<u8>,
     // TODO: Not sure if this hashmap is a correct type
     /// Codec-specific parameters available for signaling. Some parameters (such as
@@ -174,6 +186,7 @@ pub struct RtpCodecParameters {
     pub parameters: HashMap<String, String>,
     // TODO: Does this need to be optional or can be an empty vec?
     /// Transport layer and codec-specific feedback messages for this codec.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rtcp_feedback: Option<Vec<RtcpFeedback>>,
 }
 
@@ -187,6 +200,7 @@ pub struct RtcpFeedback {
     /// RTCP feedback type.
     pub r#type: String,
     /// RTCP feedback parameter.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub parameter: Option<String>,
 }
 
@@ -201,24 +215,30 @@ pub struct RtpEncodingParametersRtx {
 #[serde(rename_all = "camelCase")]
 pub struct RtpEncodingParameters {
     /// The media SSRC.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ssrc: Option<u32>,
     /// The RID RTP extension value. Must be unique.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rid: Option<String>,
     /// Codec payload type this encoding affects. If unset, first media codec is chosen.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub codec_payload_type: Option<u8>,
-
     /// RTX stream information. It must contain a numeric ssrc field indicating the RTX SSRC.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rtx: Option<RtpEncodingParametersRtx>,
-
     /// It indicates whether discontinuous RTP transmission will be used. Useful for audio (if the
     /// codec supports it) and for video screen sharing (when static content is being transmitted,
     /// this option disables the RTP inactivity checks in mediasoup).
     /// Default false.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub dtx: Option<bool>,
     // TODO: Maybe enum?
     /// Number of spatial and temporal layers in the RTP stream (e.g. 'L1T3'). See webrtc-svc.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scalability_mode: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scale_resolution_down_by: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub max_bitrate: Option<u32>,
 }
 
@@ -236,6 +256,7 @@ pub struct RtpHeaderExtensionParameters {
     /// The numeric identifier that goes in the RTP packet. Must be unique.
     pub id: u16,
     /// If true, the value in the header is encrypted as per RFC 6904. Default false.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub encrypt: Option<bool>,
     // TODO: Not sure if this hashmap is a correct type
     /// Configuration parameters for the header extension.
@@ -253,10 +274,13 @@ pub struct RtpHeaderExtensionParameters {
 #[serde(rename_all = "camelCase")]
 pub struct RtcpParameters {
     /// The Canonical Name (CNAME) used by RTCP (e.g. in SDES messages).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cname: Option<String>,
     /// Whether reduced size RTCP RFC 5506 is configured (if true) or compound RTCP
     /// as specified in RFC 3550 (if false). Default true.
-    reduced_size: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reduced_size: Option<bool>,
     /// Whether RTCP-mux is used. Default true.
-    mux: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mux: Option<bool>,
 }

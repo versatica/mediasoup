@@ -96,79 +96,83 @@ impl WebRtcTransportOptions {
 #[serde(rename_all = "camelCase")]
 pub struct RtpListener {
     // TODO: What is this field format?
-    mid_table: HashMap<(), ()>,
+    pub mid_table: HashMap<(), ()>,
     // TODO: What is this field format?
-    rid_table: HashMap<(), ()>,
+    pub rid_table: HashMap<(), ()>,
     // TODO: What is this field format?
-    ssrc_table: HashMap<(), ()>,
+    pub ssrc_table: HashMap<(), ()>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportDump {
-    id: TransportId,
-    consumer_ids: Vec<ConsumerId>,
-    producer_ids: Vec<ProducerId>,
-    data_consumer_ids: Vec<ConsumerId>,
-    data_producer_ids: Vec<ProducerId>,
-    dtls_parameters: DtlsParameters,
-    dtls_state: DtlsState,
-    ice_candidates: Vec<IceCandidate>,
-    ice_parameters: IceParameters,
-    ice_role: IceRole,
-    ice_state: IceState,
+    pub id: TransportId,
+    pub consumer_ids: Vec<ConsumerId>,
+    pub producer_ids: Vec<ProducerId>,
+    pub data_consumer_ids: Vec<ConsumerId>,
+    pub data_producer_ids: Vec<ProducerId>,
+    pub dtls_parameters: DtlsParameters,
+    pub dtls_state: DtlsState,
+    pub ice_candidates: Vec<IceCandidate>,
+    pub ice_parameters: IceParameters,
+    pub ice_role: IceRole,
+    pub ice_state: IceState,
     // TODO: What is this field format?
-    map_rtx_ssrc_consumer_id: HashMap<(), ()>,
+    pub map_rtx_ssrc_consumer_id: HashMap<(), ()>,
     // TODO: What is this field format?
-    map_ssrc_consumer_id: HashMap<(), ()>,
-    max_message_size: usize,
+    pub map_ssrc_consumer_id: HashMap<(), ()>,
+    pub max_message_size: usize,
     // TODO: What is this field format (returned `{}`, but it seems it should be a Vec)?
-    recv_rtp_header_extensions: HashMap<(), ()>,
-    rtp_listener: RtpListener,
+    pub recv_rtp_header_extensions: HashMap<(), ()>,
+    pub rtp_listener: RtpListener,
     // TODO: What is this field format?
-    trace_event_types: String,
+    pub trace_event_types: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum WebRtcTransportStatType {
     WebrtcTransport,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportStat {
     // Common to all Transports.
-    r#type: WebRtcTransportStatType,
-    transport_id: TransportId,
-    timestamp: u32,
-    sctp_state: Option<SctpState>,
-    bytes_received: usize,
-    recv_bitrate: u32,
-    bytes_sent: usize,
-    send_bitrate: u32,
-    rtp_bytes_received: usize,
-    rtp_recv_bitrate: u32,
-    rtp_bytes_sent: usize,
-    rtp_send_bitrate: u32,
-    rtx_bytes_received: usize,
-    rtx_recv_bitrate: u32,
-    rtx_bytes_sent: usize,
-    rtx_send_bitrate: u32,
-    probation_bytes_sent: usize,
-    probation_send_bitrate: u32,
-    available_outgoing_bitrate: Option<u32>,
-    available_incoming_bitrate: Option<u32>,
-    max_incoming_bitrate: Option<u32>,
+    pub r#type: WebRtcTransportStatType,
+    pub transport_id: TransportId,
+    pub timestamp: u32,
+    pub sctp_state: Option<SctpState>,
+    pub bytes_received: usize,
+    pub recv_bitrate: u32,
+    pub bytes_sent: usize,
+    pub send_bitrate: u32,
+    pub rtp_bytes_received: usize,
+    pub rtp_recv_bitrate: u32,
+    pub rtp_bytes_sent: usize,
+    pub rtp_send_bitrate: u32,
+    pub rtx_bytes_received: usize,
+    pub rtx_recv_bitrate: u32,
+    pub rtx_bytes_sent: usize,
+    pub rtx_send_bitrate: u32,
+    pub probation_bytes_sent: usize,
+    pub probation_send_bitrate: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available_outgoing_bitrate: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available_incoming_bitrate: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_incoming_bitrate: Option<u32>,
     // WebRtcTransport specific.
-    ice_role: IceRole,
-    ice_state: IceState,
-    ice_selected_tuple: Option<TransportTuple>,
-    dtls_state: DtlsState,
+    pub ice_role: IceRole,
+    pub ice_state: IceState,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ice_selected_tuple: Option<TransportTuple>,
+    pub dtls_state: DtlsState,
 }
 
 pub struct WebRtcTransportRemoteParameters {
-    dtls_parameters: DtlsParameters,
+    pub dtls_parameters: DtlsParameters,
 }
 
 #[derive(Default)]
