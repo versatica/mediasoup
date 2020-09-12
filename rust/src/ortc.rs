@@ -5,16 +5,17 @@ use crate::rtp_parameters::{
 };
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use serde::Serialize;
 use std::collections::BTreeMap;
 use thiserror::Error;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub(crate) struct RtpMappingCodec {
     payload_type: u8,
     mapped_payload_type: u8,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub(crate) struct RtpMappingEncoding {
     ssrc: Option<u32>,
     rid: Option<String>,
@@ -23,7 +24,7 @@ pub(crate) struct RtpMappingEncoding {
     mapped_ssrc: u32,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub(crate) struct RtpMapping {
     codecs: Vec<RtpMappingCodec>,
     encodings: Vec<RtpMappingEncoding>,
@@ -216,9 +217,9 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 // and the RTP capabilities of the Router.
 pub(crate) fn get_consumable_rtp_parameters(
     kind: MediaKind,
-    params: RtpParameters,
+    params: &RtpParameters,
     caps: RtpCapabilities,
-    rtp_mapping: RtpMapping,
+    rtp_mapping: &RtpMapping,
 ) -> RtpParameters {
     let mut consumable_params = RtpParameters::default();
 
@@ -332,29 +333,30 @@ pub(crate) fn get_consumable_rtp_parameters(
         }
     }
 
-    for capExt in caps.header_extensions {
+    for cap_ext in caps.header_extensions {
         // Just take RTP header extension that can be used in Consumers.
-        match capExt.kind {
+        match cap_ext.kind {
             Some(cap_ext_kind) => {
                 if cap_ext_kind != kind {
                     continue;
                 }
             }
             None => {
+                // TODO: Should this really skip "any" extensions?
                 continue;
             }
         }
         if !matches!(
-            capExt.direction,
+            cap_ext.direction,
             RtpHeaderExtensionDirection::SendRecv | RtpHeaderExtensionDirection::SendOnly
         ) {
             continue;
         }
 
         let consumable_ext = RtpHeaderExtensionParameters {
-            uri: capExt.uri,
-            id: capExt.preferred_id,
-            encrypt: capExt.preferred_encrypt,
+            uri: cap_ext.uri,
+            id: cap_ext.preferred_id,
+            encrypt: cap_ext.preferred_encrypt,
             parameters: BTreeMap::new(),
         };
 
@@ -380,7 +382,7 @@ pub(crate) fn get_consumable_rtp_parameters(
     }
 
     consumable_params.rtcp = RtcpParameters {
-        cname: params.rtcp.cname,
+        cname: params.rtcp.cname.clone(),
         reduced_size: true,
         mux: Some(true),
     };

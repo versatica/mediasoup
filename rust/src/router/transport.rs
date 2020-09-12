@@ -1,6 +1,7 @@
-use crate::data_structures::{AppData, TransportInternal};
+use crate::data_structures::{AppData, ProducerInternal, TransportInternal};
 use crate::messages::{
-    TransportDumpRequest, TransportGetStatsRequest, TransportSetMaxIncomingBitrateData,
+    TransportDumpRequest, TransportGetStatsRequest, TransportProduceRequest,
+    TransportProduceRequestData, TransportSetMaxIncomingBitrateData,
     TransportSetMaxIncomingBitrateRequest,
 };
 use crate::ortc::{RtpParametersError, RtpParametersMappingError};
@@ -198,10 +199,40 @@ where
 
         let consumable_rtp_parameters = ortc::get_consumable_rtp_parameters(
             kind,
-            rtp_parameters,
+            &rtp_parameters,
             router_rtp_capabilities,
-            rtp_mapping,
+            &rtp_mapping,
         );
+
+        let producer_id = id.unwrap_or_else(|| ProducerId::new());
+
+        let status = self
+            .channel()
+            .request(TransportProduceRequest {
+                internal: ProducerInternal {
+                    router_id: self.router().id(),
+                    transport_id: self.id(),
+                    producer_id,
+                },
+                data: TransportProduceRequestData {
+                    kind,
+                    rtp_parameters,
+                    rtp_mapping,
+                    key_frame_request_delay,
+                    paused,
+                },
+            })
+            .await
+            .map_err(ProduceError::Request)?;
+
+        // const data =
+        //     {
+        //         kind,
+        //         rtpParameters,
+        //         type : status.type,
+        //         consumableRtpParameters
+        //     };
+
         todo!()
     }
 }

@@ -1,5 +1,7 @@
 use crate::data_structures::*;
+use crate::ortc::RtpMapping;
 use crate::router::RouterDumpResponse;
+use crate::rtp_parameters::{MediaKind, RtpParameters};
 use crate::worker::{WorkerDumpResponse, WorkerResourceUsage, WorkerUpdateSettings};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -237,7 +239,6 @@ request_response!(
     (),
 );
 
-// TODO: Detail remaining methods, I got bored for now
 request_response!(
     "transport.restartIce",
     TransportRestartIceRequest {
@@ -248,16 +249,27 @@ request_response!(
     },
 );
 
-// request_response!(
-//     TransportProduceRequest,
-//     "transport.produce",
-//     ;,
-//     TransportProduceResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+#[derive(Debug, Serialize)]
+pub(crate) struct TransportProduceRequestData {
+    pub(crate) kind: MediaKind,
+    pub(crate) rtp_parameters: RtpParameters,
+    pub(crate) rtp_mapping: RtpMapping,
+    pub(crate) key_frame_request_delay: u32,
+    pub(crate) paused: bool,
+}
+
+request_response!(
+    "transport.produce",
+    TransportProduceRequest {
+        internal: ProducerInternal,
+        data: TransportProduceRequestData,
+    },
+    TransportProduceResponse {
+        // TODO
+    },
+);
+
+// TODO: Detail remaining methods, I got bored for now
 // request_response!(
 //     TransportConsumeRequest,
 //     "transport.consume",

@@ -1,3 +1,4 @@
+use crate::router::producer::ProducerId;
 use crate::router::RouterId;
 use crate::transport::TransportId;
 use crate::uuid_based_wrapper_type;
@@ -380,4 +381,12 @@ impl TransportConnectData {
     pub fn new(dtls_parameters: DtlsParameters) -> Self {
         Self { dtls_parameters }
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ProducerInternal {
+    pub router_id: RouterId,
+    pub transport_id: TransportId,
+    pub producer_id: ProducerId,
 }
