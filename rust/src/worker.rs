@@ -12,8 +12,8 @@ use crate::worker::utils::SpawnResult;
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
+use channel::InternalMessage;
 pub(crate) use channel::{Channel, RequestError};
-use channel::{EventMessage, NotificationEvent};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::debug;
@@ -21,6 +21,7 @@ use log::error;
 use log::warn;
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
+use std::cell::Cell;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -308,7 +309,7 @@ impl Inner {
             child,
             channel,
             payload_channel,
-        } = utils::spawn_with_worker_channels(&executor, &mut command)?;
+        } = utils::spawn_with_worker_channels(Arc::clone(&executor), &mut command)?;
 
         let pid = child.id();
         let handlers = Handlers::default();
@@ -397,50 +398,62 @@ impl Inner {
     }
 
     async fn wait_for_worker_ready(&mut self) -> io::Result<()> {
-        match self.channel.get_receiver().next().await {
-            Some(EventMessage::Notification {
-                target_id,
-                event: NotificationEvent::Running,
-                data: _,
-            }) if target_id == self.pid.to_string() => {
-                debug!("worker process running [pid:{}]", self.pid);
-                Ok(())
-            }
-            message => Err(io::Error::new(
-                io::ErrorKind::Other,
-                format!("unexpected first message from worker: {:?}", message),
-            )),
-        }
+        let (sender, receiver) = async_oneshot::oneshot();
+        let pid = self.pid;
+        let sender = Cell::new(Some(sender));
+        let _handler = self
+            .channel
+            .subscribe_to_notifications(self.pid.to_string(), move |notification| {
+                let result = match serde_json::from_value::<String>(notification.event.clone()) {
+                    Ok(event) => {
+                        if event == "running".to_string() {
+                            debug!("worker process running [pid:{}]", pid);
+                            Ok(())
+                        } else {
+                            Err(io::Error::new(
+                                io::ErrorKind::Other,
+                                format!(
+                                    "unexpected first notification from worker [pid:{}]: {:?}",
+                                    pid, notification
+                                ),
+                            ))
+                        }
+                    }
+                    Err(error) => Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!(
+                            "unexpected first notification from worker [pid:{}]: {:?}; error = {}",
+                            pid, notification, error
+                        ),
+                    )),
+                };
+                drop(
+                    sender
+                        .take()
+                        .take()
+                        .expect("Receiving more than one worker notification")
+                        .send(result),
+                );
+            })
+            .await
+            .unwrap();
+
+        receiver.await.unwrap()
     }
 
     fn setup_message_handling(&mut self) {
-        let channel_receiver = self.channel.get_receiver();
-        let payload_channel_receiver = self.payload_channel.get_receiver();
+        let channel_receiver = self.channel.get_internal_message_receiver();
+        let payload_channel_receiver = self.payload_channel.get_internal_message_receiver();
         let pid = self.pid;
         self.executor
             .spawn(async move {
                 while let Ok(message) = channel_receiver.recv().await {
                     match message {
-                        EventMessage::Notification {
-                            target_id,
-                            event,
-                            data: _,
-                        } => {
-                            if target_id == pid.to_string() {
-                                match event {
-                                    NotificationEvent::Running => {
-                                        error!("unexpected Running message for")
-                                    }
-                                }
-                            } else {
-                                error!("unexpected target ID {} event {:?}", target_id, event);
-                            }
-                        }
-                        EventMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
-                        EventMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
-                        EventMessage::Error(text) => error!("[pid:{}] {}", pid, text),
-                        EventMessage::Dump(text) => println!("{}", text),
-                        EventMessage::Unexpected(data) => error!(
+                        InternalMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
+                        InternalMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
+                        InternalMessage::Error(text) => error!("[pid:{}] {}", pid, text),
+                        InternalMessage::Dump(text) => println!("{}", text),
+                        InternalMessage::Unexpected(data) => error!(
                             "worker[pid:{}] unexpected data: {}",
                             pid,
                             String::from_utf8_lossy(&data)

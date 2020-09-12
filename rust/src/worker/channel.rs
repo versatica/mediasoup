@@ -11,7 +11,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt::Debug;
 use std::io;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 use thiserror::Error;
@@ -28,14 +30,7 @@ pub(super) enum NotificationEvent {
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub(super) enum EventMessage {
-    #[serde(rename_all = "camelCase")]
-    Notification {
-        target_id: String,
-        event: NotificationEvent,
-        // TODO: Can there be data here?
-        data: Option<()>,
-    },
+pub(super) enum InternalMessage {
     /// Debug log
     #[serde(skip)]
     Debug(String),
@@ -54,6 +49,28 @@ pub(super) enum EventMessage {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Notification {
+    target_id: String,
+    pub(crate) event: Value,
+    pub(crate) data: Option<Value>,
+}
+
+/// Notification handler, will remove corresponding subscription when dropped
+pub(crate) struct SubscriptionHandler {
+    executor: Arc<Executor>,
+    remove_fut: Option<Pin<Box<dyn std::future::Future<Output = ()> + Send>>>,
+}
+
+impl Drop for SubscriptionHandler {
+    fn drop(&mut self) {
+        self.executor
+            .spawn(self.remove_fut.take().unwrap())
+            .detach();
+    }
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum ChannelReceiveMessage {
     ResponseSuccess {
@@ -67,7 +84,8 @@ enum ChannelReceiveMessage {
         // TODO: Enum?
         reason: String,
     },
-    Event(EventMessage),
+    Notification(Notification),
+    Event(InternalMessage),
 }
 
 fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
@@ -75,23 +93,23 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
         // JSON message
         b'{' => serde_json::from_slice(bytes).unwrap(),
         // Debug log
-        b'D' => ChannelReceiveMessage::Event(EventMessage::Debug(unsafe {
+        b'D' => ChannelReceiveMessage::Event(InternalMessage::Debug(unsafe {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
         })),
         // Warn log
-        b'W' => ChannelReceiveMessage::Event(EventMessage::Warn(unsafe {
+        b'W' => ChannelReceiveMessage::Event(InternalMessage::Warn(unsafe {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
         })),
         // Error log
-        b'E' => ChannelReceiveMessage::Event(EventMessage::Error(unsafe {
+        b'E' => ChannelReceiveMessage::Event(InternalMessage::Error(unsafe {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
         })),
         // Dump log
-        b'X' => ChannelReceiveMessage::Event(EventMessage::Dump(unsafe {
+        b'X' => ChannelReceiveMessage::Event(InternalMessage::Dump(unsafe {
             String::from_utf8_unchecked(Vec::from(&bytes[1..]))
         })),
         // Unknown
-        _ => ChannelReceiveMessage::Event(EventMessage::Unexpected(Vec::from(bytes))),
+        _ => ChannelReceiveMessage::Event(InternalMessage::Unexpected(Vec::from(bytes))),
     }
 }
 
@@ -129,16 +147,22 @@ struct RequestsContainer {
     handlers: HashMap<u32, async_oneshot::Sender<Response<Value>>>,
 }
 
+#[derive(Error, Debug)]
+#[error("Handler for this event already exists, this must be an error in the library")]
+pub struct HandlerAlreadyExistsError;
+
 struct Inner {
+    executor: Arc<Executor>,
     sender: async_channel::Sender<Vec<u8>>,
-    receiver: async_channel::Receiver<EventMessage>,
+    internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
+    event_handlers: Arc<Mutex<HashMap<String, Box<dyn Fn(Notification) + Send>>>>,
 }
 
 impl Drop for Inner {
     fn drop(&mut self) {
         self.sender.close();
-        self.receiver.close();
+        self.internal_message_receiver.close();
     }
 }
 
@@ -149,11 +173,14 @@ pub(crate) struct Channel {
 
 // TODO: Catch closed channel gracefully
 impl Channel {
-    pub(super) fn new(executor: &Executor, reader: File, mut writer: File) -> Self {
+    pub(super) fn new(executor: Arc<Executor>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
+        let event_handlers =
+            Arc::<Mutex<HashMap<String, Box<dyn Fn(Notification) + Send>>>>::default();
 
-        let receiver = {
+        let internal_message_receiver = {
             let requests_container = Arc::clone(&requests_container);
+            let event_handlers = Arc::clone(&event_handlers);
             let (sender, receiver) = async_channel::bounded(1);
 
             executor
@@ -217,6 +244,11 @@ impl Channel {
                                     );
                                 }
                             }
+                            ChannelReceiveMessage::Notification(notification) => {
+                                if let Some(callback) = event_handlers.lock().await.get(&notification.target_id) {
+                                    callback(notification);
+                                }
+                            }
                             ChannelReceiveMessage::Event(event_message) => {
                                 if sender.send(event_message).await.is_err() {
                                     break;
@@ -256,16 +288,18 @@ impl Channel {
         };
 
         let inner = Arc::new(Inner {
+            executor,
             sender,
-            receiver,
+            internal_message_receiver,
             requests_container,
+            event_handlers,
         });
 
         Self { inner }
     }
 
-    pub(super) fn get_receiver(&self) -> async_channel::Receiver<EventMessage> {
-        self.inner.receiver.clone()
+    pub(super) fn get_internal_message_receiver(&self) -> async_channel::Receiver<InternalMessage> {
+        self.inner.internal_message_receiver.clone()
     }
 
     pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
@@ -279,6 +313,32 @@ impl Channel {
             .unwrap_or_default();
         serde_json::from_value(data).map_err(|error| RequestError::FailedToParse {
             error: Box::new(error),
+        })
+    }
+
+    pub(crate) async fn subscribe_to_notifications<F>(
+        &self,
+        target_id: String,
+        callback: F,
+    ) -> Result<SubscriptionHandler, HandlerAlreadyExistsError>
+    where
+        F: Fn(Notification) + Send + 'static,
+    {
+        {
+            let mut event_handlers = self.inner.event_handlers.lock().await;
+            if event_handlers.contains_key(&target_id) {
+                return Err(HandlerAlreadyExistsError {});
+            }
+
+            event_handlers.insert(target_id.clone(), Box::new(callback));
+        }
+
+        let event_handlers = self.inner.event_handlers.clone();
+        Ok(SubscriptionHandler {
+            executor: Arc::clone(&self.inner.executor),
+            remove_fut: Some(Box::pin(async move {
+                event_handlers.lock().await.remove(&target_id);
+            })),
         })
     }
 

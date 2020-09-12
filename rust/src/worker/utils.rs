@@ -7,6 +7,7 @@ use nix::unistd;
 use std::fs::File;
 use std::io;
 use std::os::unix::io::FromRawFd;
+use std::sync::Arc;
 
 pub(super) struct SpawnResult {
     pub(super) child: Child,
@@ -15,7 +16,7 @@ pub(super) struct SpawnResult {
 }
 
 pub(super) fn spawn_with_worker_channels(
-    executor: &Executor,
+    executor: Arc<Executor>,
     command: &mut Command,
 ) -> io::Result<SpawnResult> {
     let (producer_fd_read, producer_fd_write) = unistd::pipe().unwrap();
@@ -67,9 +68,13 @@ pub(super) fn spawn_with_worker_channels(
 
     Ok(SpawnResult {
         child,
-        channel: Channel::new(&executor, consumer_file.into(), producer_file.into()),
+        channel: Channel::new(
+            Arc::clone(&executor),
+            consumer_file.into(),
+            producer_file.into(),
+        ),
         payload_channel: Channel::new(
-            &executor,
+            executor,
             consumer_payload_file.into(),
             producer_payload_file.into(),
         ),
