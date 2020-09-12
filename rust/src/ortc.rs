@@ -1,7 +1,8 @@
 use crate::rtp_parameters::{
-    MediaKind, MimeType, MimeTypeVideo, RtcpParameters, RtpCapabilities, RtpCodecCapability,
-    RtpCodecParameters, RtpCodecParametersParametersValue, RtpHeaderExtensionDirection,
-    RtpHeaderExtensionParameters, RtpParameters,
+    MediaKind, MimeType, MimeTypeVideo, RtcpParameters, RtpCapabilitiesFinalized,
+    RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
+    RtpCodecParametersParametersValue, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
+    RtpParameters,
 };
 use crate::supported_rtp_capabilities;
 use rand::rngs::SmallRng;
@@ -61,8 +62,8 @@ pub enum RtpParametersMappingError {
         mime_type: MimeType,
         payload_type: u8,
     },
-    #[error("no RTX codec for capability codec PT {preferred_payload_type:?}")]
-    UnsupportedRTXCodec { preferred_payload_type: Option<u8> },
+    #[error("no RTX codec for capability codec PT {preferred_payload_type}")]
+    UnsupportedRTXCodec { preferred_payload_type: u8 },
     #[error("missing media codec found for RTX PT {payload_type}")]
     MissingMediaCodecForRTX { payload_type: u8 },
 }
@@ -108,13 +109,13 @@ fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpPa
 /// RTP capabilities.
 pub(crate) fn generate_router_rtp_capabilities(
     mut media_codecs: Vec<RtpCodecCapability>,
-) -> Result<RtpCapabilities, RouterRtpCapabilitiesError> {
+) -> Result<RtpCapabilitiesFinalized, RouterRtpCapabilitiesError> {
     // Normalize supported RTP capabilities.
     // validateRtpCapabilities(supportedRtpCapabilities);
 
     let supported_rtp_capabilities = supported_rtp_capabilities::get_supported_rtp_capabilities();
     let mut dynamic_payload_types = Vec::from(DYNAMIC_PAYLOAD_TYPES);
-    let mut caps = RtpCapabilities {
+    let mut caps = RtpCapabilitiesFinalized {
         codecs: vec![],
         header_extensions: supported_rtp_capabilities.header_extensions,
         fec_mechanisms: vec![],
@@ -124,7 +125,7 @@ pub(crate) fn generate_router_rtp_capabilities(
         // This may throw.
         // validateRtpCodecCapability(media_codec);
 
-        let mut codec = match supported_rtp_capabilities
+        let codec = match supported_rtp_capabilities
             .codecs
             .iter()
             .find(|supported_codec| {
@@ -135,7 +136,7 @@ pub(crate) fn generate_router_rtp_capabilities(
                     false,
                 )
             }) {
-            Some(codec) => codec.clone(),
+            Some(codec) => codec,
             None => {
                 return Err(RouterRtpCapabilitiesError::UnsupportedCodec {
                     mime_type: media_codec.mime_type(),
@@ -143,66 +144,105 @@ pub(crate) fn generate_router_rtp_capabilities(
             }
         };
 
-        // If the given media codec has preferred_payload_type, keep it.
-        if let Some(preferred_payload_type) = media_codec.preferred_payload_type() {
-            codec
-                .preferred_payload_type_mut()
-                .replace(preferred_payload_type);
+        let preferred_payload_type = match media_codec.preferred_payload_type() {
+            // If the given media codec has preferred_payload_type, keep it.
+            Some(preferred_payload_type) => {
+                // Also remove the pt from the list of available dynamic values.
+                // TODO: drain_filter() would be nicer, but it is not stable yet
+                let mut i = 0;
+                while i != dynamic_payload_types.len() {
+                    if dynamic_payload_types[i] == preferred_payload_type {
+                        dynamic_payload_types.remove(i);
+                        break;
+                    } else {
+                        i += 1;
+                    }
+                }
 
-            // Also remove the pt from the list of available dynamic values.
-            // TODO: drain_filter() would be nicer, but it is not stable yet
-            let mut i = 0;
-            while i != dynamic_payload_types.len() {
-                if dynamic_payload_types[i] == preferred_payload_type {
-                    dynamic_payload_types.remove(i);
-                    break;
-                } else {
-                    i += 1;
+                preferred_payload_type
+            }
+            None => {
+                match codec.preferred_payload_type() {
+                    // Otherwise if the supported codec has preferredPayloadType, use it.
+                    Some(preferred_payload_type) => {
+                        // No need to remove it from the list since it's not a dynamic value.
+                        preferred_payload_type
+                    }
+                    // Otherwise choose a dynamic one.
+                    None => {
+                        if dynamic_payload_types.is_empty() {
+                            return Err(RouterRtpCapabilitiesError::CannotAllocate);
+                        }
+                        // Take the first available payload type and remove it from the list.
+                        dynamic_payload_types.remove(0)
+                    }
                 }
             }
-        }
-        // Otherwise if the supported codec has preferredPayloadType, use it.
-        else if codec.preferred_payload_type().is_some() {
-            // No need to remove it from the list since it's not a dynamic value.
-        }
-        // Otherwise choose a dynamic one.
-        else {
-            if dynamic_payload_types.is_empty() {
-                return Err(RouterRtpCapabilitiesError::CannotAllocate);
-            }
-            // Take the first available payload type and remove it from the list.
-            let payload_type = dynamic_payload_types.remove(0);
-
-            codec.preferred_payload_type_mut().replace(payload_type);
-        }
+        };
 
         // Ensure there is not duplicated preferredPayloadType values.
         // if (caps.codecs!.some((c) => c.preferredPayloadType === codec.preferredPayloadType))
         // 	throw new TypeError('duplicated codec.preferredPayloadType');
 
-        // Merge the media codec parameters.
-        codec
-            .parameters_mut()
-            .extend(mem::take(media_codec.parameters_mut()));
+        let codec_finalized = match codec {
+            RtpCodecCapability::Audio {
+                mime_type,
+                preferred_payload_type: _,
+                clock_rate,
+                channels,
+                parameters,
+                rtcp_feedback,
+            } => RtpCodecCapabilityFinalized::Audio {
+                mime_type: *mime_type,
+                preferred_payload_type,
+                clock_rate: *clock_rate,
+                channels: *channels,
+                parameters: {
+                    // Merge the media codec parameters.
+                    let mut parameters = parameters.clone();
+                    parameters.extend(mem::take(media_codec.parameters_mut()));
+                    parameters
+                },
+                rtcp_feedback: rtcp_feedback.clone(),
+            },
+            RtpCodecCapability::Video {
+                mime_type,
+                preferred_payload_type: _,
+                clock_rate,
+                parameters,
+                rtcp_feedback,
+            } => RtpCodecCapabilityFinalized::Video {
+                mime_type: *mime_type,
+                preferred_payload_type,
+                clock_rate: *clock_rate,
+                parameters: {
+                    // Merge the media codec parameters.
+                    let mut parameters = parameters.clone();
+                    parameters.extend(mem::take(media_codec.parameters_mut()));
+                    parameters
+                },
+                rtcp_feedback: rtcp_feedback.clone(),
+            },
+        };
 
         // Add a RTX video codec if video.
-        if matches!(codec, RtpCodecCapability::Video {..}) {
+        if matches!(codec_finalized, RtpCodecCapabilityFinalized::Video {..}) {
             if dynamic_payload_types.is_empty() {
                 return Err(RouterRtpCapabilitiesError::CannotAllocate);
             }
             // Take the first available pt and remove it from the list.
             let payload_type = dynamic_payload_types.remove(0);
 
-            let rtx_codec = RtpCodecCapability::Video {
+            let rtx_codec = RtpCodecCapabilityFinalized::Video {
                 mime_type: MimeTypeVideo::RTX,
-                preferred_payload_type: Some(payload_type),
-                clock_rate: codec.clock_rate(),
+                preferred_payload_type: payload_type,
+                clock_rate: codec_finalized.clock_rate(),
                 parameters: {
                     let mut parameters = BTreeMap::new();
                     parameters.insert(
                         "apt".to_string(),
                         RtpCodecParametersParametersValue::Number(
-                            codec.preferred_payload_type().unwrap() as u32,
+                            codec_finalized.preferred_payload_type() as u32,
                         ),
                     );
                     parameters
@@ -211,11 +251,11 @@ pub(crate) fn generate_router_rtp_capabilities(
             };
 
             // Append to the codec list.
-            caps.codecs.push(codec);
+            caps.codecs.push(codec_finalized);
             caps.codecs.push(rtx_codec);
         } else {
             // Append to the codec list.
-            caps.codecs.push(codec);
+            caps.codecs.push(codec_finalized);
         }
     }
 
@@ -230,12 +270,13 @@ pub(crate) fn generate_router_rtp_capabilities(
  */
 pub(crate) fn get_producer_rtp_parameters_mapping(
     rtp_parameters: &RtpParameters,
-    rtp_capabilities: &RtpCapabilities,
+    rtp_capabilities: &RtpCapabilitiesFinalized,
 ) -> Result<RtpMapping, RtpParametersMappingError> {
     let mut rtp_mapping = RtpMapping::default();
 
     // Match parameters media codecs to capabilities media codecs.
-    let mut codec_to_cap_codec = BTreeMap::<&RtpCodecParameters, &RtpCodecCapability>::new();
+    let mut codec_to_cap_codec =
+        BTreeMap::<&RtpCodecParameters, &RtpCodecCapabilityFinalized>::new();
 
     for codec in rtp_parameters.codecs.iter() {
         if codec.is_rtx() {
@@ -289,17 +330,10 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
                         return false;
                     }
 
-                    let preferred_payload_type = match cap_media_codec.preferred_payload_type() {
-                        Some(preferred_payload_type) => preferred_payload_type,
-                        None => {
-                            return false;
-                        }
-                    };
-
                     let cap_codec_parameters_apt = cap_codec.parameters().get(&"apt".to_string());
                     match cap_codec_parameters_apt {
                         Some(RtpCodecParametersParametersValue::Number(apt)) => {
-                            preferred_payload_type as u32 == *apt
+                            cap_media_codec.preferred_payload_type() as u32 == *apt
                         }
                         _ => false,
                     }
@@ -328,8 +362,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
     for (codec, cap_codec) in codec_to_cap_codec {
         rtp_mapping.codecs.push(RtpMappingCodec {
             payload_type: codec.payload_type(),
-            // TODO: Create a separate type such that we don't have to do this unwrap here
-            mapped_payload_type: cap_codec.preferred_payload_type().unwrap(),
+            mapped_payload_type: cap_codec.preferred_payload_type(),
         });
     }
 
@@ -355,7 +388,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 pub(crate) fn get_consumable_rtp_parameters(
     kind: MediaKind,
     params: &RtpParameters,
-    caps: RtpCapabilities,
+    caps: RtpCapabilitiesFinalized,
     rtp_mapping: &RtpMapping,
 ) -> RtpParameters {
     let mut consumable_params = RtpParameters::default();
@@ -375,23 +408,20 @@ pub(crate) fn get_consumable_rtp_parameters(
         let consumable_codec = match caps
             .codecs
             .iter()
-            .find(|cap_codec| match cap_codec.preferred_payload_type() {
-                Some(preferred_payload_type) => preferred_payload_type == consumable_codec_pt,
-                None => false,
-            })
+            .find(|cap_codec| cap_codec.preferred_payload_type() == consumable_codec_pt)
             .unwrap()
         {
-            RtpCodecCapability::Audio {
+            RtpCodecCapabilityFinalized::Audio {
                 mime_type,
                 preferred_payload_type,
                 clock_rate,
                 channels,
-                parameters,
+                parameters: _,
                 rtcp_feedback,
             } => {
                 RtpCodecParameters::Audio {
                     mime_type: *mime_type,
-                    payload_type: preferred_payload_type.unwrap(),
+                    payload_type: *preferred_payload_type,
                     clock_rate: *clock_rate,
                     channels: *channels,
                     // Keep the Producer codec parameters.
@@ -399,16 +429,16 @@ pub(crate) fn get_consumable_rtp_parameters(
                     rtcp_feedback: rtcp_feedback.clone(),
                 }
             }
-            RtpCodecCapability::Video {
+            RtpCodecCapabilityFinalized::Video {
                 mime_type,
                 preferred_payload_type,
                 clock_rate,
-                parameters,
+                parameters: _,
                 rtcp_feedback,
             } => {
                 RtpCodecParameters::Video {
                     mime_type: *mime_type,
-                    payload_type: preferred_payload_type.unwrap(),
+                    payload_type: *preferred_payload_type,
                     clock_rate: *clock_rate,
                     // Keep the Producer codec parameters.
                     parameters: codec.parameters().clone(),
@@ -436,7 +466,7 @@ pub(crate) fn get_consumable_rtp_parameters(
 
         if let Some(consumable_cap_rtx_codec) = consumable_cap_rtx_codec {
             let consumable_rtx_codec = match consumable_cap_rtx_codec {
-                RtpCodecCapability::Audio {
+                RtpCodecCapabilityFinalized::Audio {
                     mime_type,
                     preferred_payload_type,
                     clock_rate,
@@ -445,13 +475,13 @@ pub(crate) fn get_consumable_rtp_parameters(
                     rtcp_feedback,
                 } => RtpCodecParameters::Audio {
                     mime_type: *mime_type,
-                    payload_type: preferred_payload_type.unwrap(),
+                    payload_type: *preferred_payload_type,
                     clock_rate: *clock_rate,
                     channels: *channels,
                     parameters: parameters.clone(),
                     rtcp_feedback: rtcp_feedback.clone(),
                 },
-                RtpCodecCapability::Video {
+                RtpCodecCapabilityFinalized::Video {
                     mime_type,
                     preferred_payload_type,
                     clock_rate,
@@ -459,7 +489,7 @@ pub(crate) fn get_consumable_rtp_parameters(
                     rtcp_feedback,
                 } => RtpCodecParameters::Video {
                     mime_type: *mime_type,
-                    payload_type: preferred_payload_type.unwrap(),
+                    payload_type: *preferred_payload_type,
                     clock_rate: *clock_rate,
                     parameters: parameters.clone(),
                     rtcp_feedback: rtcp_feedback.clone(),
@@ -563,6 +593,37 @@ impl<'a> From<&'a RtpCodecCapability> for CodecToMatch<'a> {
         }
     }
 }
+
+impl<'a> From<&'a RtpCodecCapabilityFinalized> for CodecToMatch<'a> {
+    fn from(rtp_codec_capability: &'a RtpCodecCapabilityFinalized) -> Self {
+        match rtp_codec_capability {
+            RtpCodecCapabilityFinalized::Audio {
+                mime_type,
+                channels,
+                clock_rate,
+                parameters,
+                ..
+            } => Self {
+                channels: Some(*channels),
+                clock_rate: *clock_rate,
+                mime_type: MimeType::Audio(*mime_type),
+                parameters,
+            },
+            RtpCodecCapabilityFinalized::Video {
+                mime_type,
+                clock_rate,
+                parameters,
+                ..
+            } => Self {
+                channels: None,
+                clock_rate: *clock_rate,
+                mime_type: MimeType::Video(*mime_type),
+                parameters,
+            },
+        }
+    }
+}
+
 impl<'a> From<&'a RtpCodecParameters> for CodecToMatch<'a> {
     fn from(rtp_codec_parameters: &'a RtpCodecParameters) -> Self {
         match rtp_codec_parameters {

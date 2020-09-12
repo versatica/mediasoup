@@ -1,12 +1,100 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+/// Provides information on the capabilities of a codec within the RTP capabilities. The list of
+/// media codecs supported by mediasoup and their settings is defined in the
+/// supported_rtp_capabilities.rs file.
+///
+/// Exactly one RtpCodecCapabilityFinalized will be present for each supported combination of parameters that
+/// requires a distinct value of preferred_payload_type. For example:
+///
+/// - Multiple H264 codecs, each with their own distinct 'packetization-mode' and 'profile-level-id'
+///   values.
+/// - Multiple VP9 codecs, each with their own distinct 'profile-id' value.
+///
+/// This is similar to RtpCodecCapability, but with preferred_payload_type field being required
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+#[non_exhaustive]
+pub enum RtpCodecCapabilityFinalized {
+    #[serde(rename_all = "camelCase")]
+    Audio {
+        /// The codec MIME media type/subtype (e.g. 'audio/opus').
+        mime_type: MimeTypeAudio,
+        /// The preferred RTP payload type.
+        preferred_payload_type: u8,
+        /// Codec clock rate expressed in Hertz.
+        clock_rate: u32,
+        /// The number of channels supported (e.g. two for stereo). Just for audio.
+        /// Default 1.
+        channels: u8,
+        // TODO: Not sure if this hashmap is a correct type
+        /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
+        /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
+        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+        /// Transport layer and codec-specific feedback messages for this codec.
+        rtcp_feedback: Vec<RtcpFeedback>,
+    },
+    #[serde(rename_all = "camelCase")]
+    Video {
+        /// The codec MIME media type/subtype (e.g. 'video/VP8').
+        mime_type: MimeTypeVideo,
+        /// The preferred RTP payload type.
+        preferred_payload_type: u8,
+        /// Codec clock rate expressed in Hertz.
+        clock_rate: u32,
+        // TODO: Not sure if this hashmap is a correct type
+        /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
+        /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
+        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+        /// Transport layer and codec-specific feedback messages for this codec.
+        rtcp_feedback: Vec<RtcpFeedback>,
+    },
+}
+
+impl RtpCodecCapabilityFinalized {
+    pub(crate) fn is_rtx(&self) -> bool {
+        match self {
+            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::RTX,
+            Self::Video { mime_type, .. } => mime_type == &MimeTypeVideo::RTX,
+        }
+    }
+
+    pub(crate) fn clock_rate(&self) -> u32 {
+        match self {
+            Self::Audio { clock_rate, .. } => *clock_rate,
+            Self::Video { clock_rate, .. } => *clock_rate,
+        }
+    }
+
+    pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
+        match self {
+            Self::Audio { parameters, .. } => parameters,
+            Self::Video { parameters, .. } => parameters,
+        }
+    }
+
+    pub(crate) fn preferred_payload_type(&self) -> u8 {
+        match self {
+            Self::Audio {
+                preferred_payload_type,
+                ..
+            } => *preferred_payload_type,
+            Self::Video {
+                preferred_payload_type,
+                ..
+            } => *preferred_payload_type,
+        }
+    }
+}
+
 /// The RTP capabilities define what mediasoup or an endpoint can receive at media level.
 #[derive(Debug, Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RtpCapabilities {
+#[non_exhaustive]
+pub struct RtpCapabilitiesFinalized {
     /// Supported media and RTX codecs.
-    pub codecs: Vec<RtpCodecCapability>,
+    pub codecs: Vec<RtpCodecCapabilityFinalized>,
     /// Supported RTP header extensions.
     pub header_extensions: Vec<RtpHeaderExtension>,
     // TODO: Enum instead of string?
@@ -75,20 +163,19 @@ pub enum MimeTypeVideo {
     ULPFEC,
 }
 
-// TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
 /// Provides information on the capabilities of a codec within the RTP capabilities. The list of
 /// media codecs supported by mediasoup and their settings is defined in the
-/// supportedRtpCapabilities.ts file.
+/// supported_rtp_capabilities.rs file.
 ///
 /// Exactly one RtpCodecCapability will be present for each supported combination of parameters that
-/// requires a distinct value of preferredPayloadType. For example:
+/// requires a distinct value of preferred_payload_type. For example:
 ///
 /// - Multiple H264 codecs, each with their own distinct 'packetization-mode' and 'profile-level-id'
 ///   values.
 /// - Multiple VP9 codecs, each with their own distinct 'profile-id' value.
 ///
 /// RtpCodecCapability entries in the mediaCodecs array of RouterOptions do not require
-/// preferredPayloadType field (if unset, mediasoup will choose a random one). If given, make sure
+/// preferred_payload_type field (if unset, mediasoup will choose a random one). If given, make sure
 /// it's in the 96-127 range.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
@@ -131,31 +218,10 @@ pub enum RtpCodecCapability {
 }
 
 impl RtpCodecCapability {
-    pub(crate) fn is_rtx(&self) -> bool {
-        match self {
-            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::RTX,
-            Self::Video { mime_type, .. } => mime_type == &MimeTypeVideo::RTX,
-        }
-    }
-
     pub(crate) fn mime_type(&self) -> MimeType {
         match self {
             Self::Audio { mime_type, .. } => MimeType::Audio(*mime_type),
             Self::Video { mime_type, .. } => MimeType::Video(*mime_type),
-        }
-    }
-
-    pub(crate) fn clock_rate(&self) -> u32 {
-        match self {
-            Self::Audio { clock_rate, .. } => *clock_rate,
-            Self::Video { clock_rate, .. } => *clock_rate,
-        }
-    }
-
-    pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
-        match self {
-            Self::Audio { parameters, .. } => parameters,
-            Self::Video { parameters, .. } => parameters,
         }
     }
 
@@ -180,19 +246,19 @@ impl RtpCodecCapability {
             } => *preferred_payload_type,
         }
     }
+}
 
-    pub(crate) fn preferred_payload_type_mut(&mut self) -> &mut Option<u8> {
-        match self {
-            Self::Audio {
-                preferred_payload_type,
-                ..
-            } => preferred_payload_type,
-            Self::Video {
-                preferred_payload_type,
-                ..
-            } => preferred_payload_type,
-        }
-    }
+/// The RTP capabilities define what mediasoup or an endpoint can receive at media level.
+#[derive(Debug, Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RtpCapabilities {
+    /// Supported media and RTX codecs.
+    pub codecs: Vec<RtpCodecCapability>,
+    /// Supported RTP header extensions.
+    pub header_extensions: Vec<RtpHeaderExtension>,
+    // TODO: Enum instead of string?
+    /// Supported FEC mechanisms.
+    pub fec_mechanisms: Vec<String>,
 }
 
 /// Direction of RTP header extension.
@@ -206,9 +272,9 @@ pub enum RtpHeaderExtensionDirection {
     Inactive,
 }
 
-// TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
+// TODO: supported_rtp_capabilities.rs file and generally update TypeScript references
 /// Provides information relating to supported header extensions. The list of RTP header extensions
-/// supported by mediasoup is defined in the supportedRtpCapabilities.ts file.
+/// supported by mediasoup is defined in the supported_rtp_capabilities.rs file.
 ///
 /// mediasoup does not currently support encrypted RTP header extensions. The direction field is
 /// just present in mediasoup RTP capabilities (retrieved via router.rtpCapabilities or
@@ -288,10 +354,9 @@ pub enum RtpCodecParametersParametersValue {
     Number(u32),
 }
 
-// TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
 /// Provides information on codec settings within the RTP parameters. The list
 /// of media codecs supported by mediasoup and their settings is defined in the
-/// supportedRtpCapabilities.ts file.
+/// supported_rtp_capabilities.rs file.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged, rename_all = "lowercase")]
 pub enum RtpCodecParameters {
@@ -362,10 +427,10 @@ impl RtpCodecParameters {
     }
 }
 
-// TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
+// TODO: supported_rtp_capabilities.rs file and generally update TypeScript references
 /// Provides information on RTCP feedback messages for a specific codec. Those messages can be
 /// transport layer feedback messages or codec-specific feedback messages. The list of RTCP
-/// feedbacks supported by mediasoup is defined in the supportedRtpCapabilities.ts file.
+/// feedbacks supported by mediasoup is defined in the supported_rtp_capabilities.rs file.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtcpFeedback {
     // TODO: Enum?
@@ -412,10 +477,10 @@ pub struct RtpEncodingParameters {
     pub max_bitrate: Option<u32>,
 }
 
-// TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
+// TODO: supported_rtp_capabilities.rs file and generally update TypeScript references
 /// Defines a RTP header extension within the RTP parameters. The list of RTP
 /// header extensions supported by mediasoup is defined in the
-/// supportedRtpCapabilities.ts file.
+/// supported_rtp_capabilities.rs file.
 ///
 /// mediasoup does not currently support encrypted RTP header extensions and no
 /// parameters are currently considered.

@@ -11,7 +11,7 @@ use crate::data_structures::{
 };
 use crate::messages::{RouterCloseRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest};
 use crate::producer::ProducerId;
-use crate::rtp_parameters::{RtpCapabilities, RtpCodecCapability};
+use crate::rtp_parameters::{RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::transport::TransportId;
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError, Worker};
@@ -58,7 +58,7 @@ struct Handlers {
 struct Inner {
     id: RouterId,
     executor: Arc<Executor>,
-    rtp_capabilities: RtpCapabilities,
+    rtp_capabilities: RtpCapabilitiesFinalized,
     channel: Channel,
     payload_channel: Channel,
     handlers: Handlers,
@@ -104,7 +104,7 @@ impl Router {
         executor: Arc<Executor>,
         channel: Channel,
         payload_channel: Channel,
-        rtp_capabilities: RtpCapabilities,
+        rtp_capabilities: RtpCapabilitiesFinalized,
         app_data: AppData,
         worker: Worker,
     ) -> Self {
@@ -138,7 +138,7 @@ impl Router {
     }
 
     /// RTC capabilities of the Router.
-    pub fn rtp_capabilities(&self) -> RtpCapabilities {
+    pub fn rtp_capabilities(&self) -> RtpCapabilitiesFinalized {
         self.inner.rtp_capabilities.clone()
     }
 

@@ -4,6 +4,7 @@ use crate::rtp_parameters::{
 };
 use std::collections::BTreeMap;
 
+/// Get a mediasoup supported RTP capabilities.
 pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
     RtpCapabilities {
         codecs: vec![
