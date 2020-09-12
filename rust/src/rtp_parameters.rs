@@ -225,6 +225,13 @@ impl RtpCodecCapability {
         }
     }
 
+    pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
+        match self {
+            Self::Audio { parameters, .. } => parameters,
+            Self::Video { parameters, .. } => parameters,
+        }
+    }
+
     pub(crate) fn parameters_mut(
         &mut self,
     ) -> &mut BTreeMap<String, RtpCodecParametersParametersValue> {

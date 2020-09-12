@@ -1,5 +1,5 @@
 use crate::rtp_parameters::{
-    MediaKind, MimeType, MimeTypeVideo, RtcpParameters, RtpCapabilitiesFinalized,
+    MediaKind, MimeType, MimeTypeVideo, RtcpParameters, RtpCapabilities, RtpCapabilitiesFinalized,
     RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
     RtpCodecParametersParametersValue, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
     RtpParameters,
@@ -53,6 +53,10 @@ pub enum RouterRtpCapabilitiesError {
     UnsupportedCodec { mime_type: MimeType },
     #[error("cannot allocate more dynamic codec payload types")]
     CannotAllocate,
+    #[error("invalid codec apt parameter {0}")]
+    InvalidAptParameter(String),
+    #[error("duplicated {0}")]
+    DuplicatedPreferredPayloadType(u8),
 }
 
 #[derive(Debug, Error)]
@@ -79,16 +83,9 @@ pub(crate) fn validate_rtp_parameters(
     Ok(())
 }
 
-/// Validates RtpCodecParameters. It may modify given data by adding missing
-/// fields with default values.
-/// It throws if invalid.
+/// Validates RtpCodecParameters.
 fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpParametersError> {
-    let parameters = match codec {
-        RtpCodecParameters::Audio { parameters, .. } => parameters,
-        RtpCodecParameters::Video { parameters, .. } => parameters,
-    };
-
-    for (key, value) in parameters {
+    for (key, value) in codec.parameters() {
         // Specific parameters validation.
         if key.as_str() == "apt" {
             match value {
@@ -105,15 +102,47 @@ fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpPa
     Ok(())
 }
 
+// Validates RtpCodecCapability.
+fn validate_rtp_codec_capability(
+    codec: &RtpCodecCapability,
+) -> Result<(), RouterRtpCapabilitiesError> {
+    for (key, value) in codec.parameters() {
+        // Specific parameters validation.
+        if key.as_str() == "apt" {
+            match value {
+                RtpCodecParametersParametersValue::Number(_) => {
+                    // Good
+                }
+                RtpCodecParametersParametersValue::String(string) => {
+                    return Err(RouterRtpCapabilitiesError::InvalidAptParameter(
+                        string.clone(),
+                    ));
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Validates RtpCapabilities.
+fn validate_rtp_capabilities(caps: &RtpCapabilities) -> Result<(), RouterRtpCapabilitiesError> {
+    for codec in caps.codecs.iter() {
+        validate_rtp_codec_capability(codec)?;
+    }
+
+    Ok(())
+}
+
 /// Generate RTP capabilities for the Router based on the given media codecs and mediasoup supported
 /// RTP capabilities.
 pub(crate) fn generate_router_rtp_capabilities(
     mut media_codecs: Vec<RtpCodecCapability>,
 ) -> Result<RtpCapabilitiesFinalized, RouterRtpCapabilitiesError> {
-    // Normalize supported RTP capabilities.
-    // validateRtpCapabilities(supportedRtpCapabilities);
-
     let supported_rtp_capabilities = supported_rtp_capabilities::get_supported_rtp_capabilities();
+
+    validate_rtp_capabilities(&supported_rtp_capabilities)?;
+
     let mut dynamic_payload_types = Vec::from(DYNAMIC_PAYLOAD_TYPES);
     let mut caps = RtpCapabilitiesFinalized {
         codecs: vec![],
@@ -122,8 +151,7 @@ pub(crate) fn generate_router_rtp_capabilities(
     };
 
     for media_codec in media_codecs.iter_mut() {
-        // This may throw.
-        // validateRtpCodecCapability(media_codec);
+        validate_rtp_codec_capability(media_codec)?;
 
         let codec = match supported_rtp_capabilities
             .codecs
@@ -147,7 +175,7 @@ pub(crate) fn generate_router_rtp_capabilities(
         let preferred_payload_type = match media_codec.preferred_payload_type() {
             // If the given media codec has preferred_payload_type, keep it.
             Some(preferred_payload_type) => {
-                // Also remove the pt from the list of available dynamic values.
+                // Also remove the payload_type from the list of available dynamic values.
                 // TODO: drain_filter() would be nicer, but it is not stable yet
                 let mut i = 0;
                 while i != dynamic_payload_types.len() {
@@ -181,8 +209,13 @@ pub(crate) fn generate_router_rtp_capabilities(
         };
 
         // Ensure there is not duplicated preferredPayloadType values.
-        // if (caps.codecs!.some((c) => c.preferredPayloadType === codec.preferredPayloadType))
-        // 	throw new TypeError('duplicated codec.preferredPayloadType');
+        for codec in caps.codecs.iter() {
+            if codec.preferred_payload_type() == preferred_payload_type {
+                return Err(RouterRtpCapabilitiesError::DuplicatedPreferredPayloadType(
+                    preferred_payload_type,
+                ));
+            }
+        }
 
         let codec_finalized = match codec {
             RtpCodecCapability::Audio {
@@ -230,7 +263,7 @@ pub(crate) fn generate_router_rtp_capabilities(
             if dynamic_payload_types.is_empty() {
                 return Err(RouterRtpCapabilitiesError::CannotAllocate);
             }
-            // Take the first available pt and remove it from the list.
+            // Take the first available payload_type and remove it from the list.
             let payload_type = dynamic_payload_types.remove(0);
 
             let rtx_codec = RtpCodecCapabilityFinalized::Video {
