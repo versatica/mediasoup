@@ -188,9 +188,6 @@ request_response!(
     TransportCloseRequest {
         internal: TransportInternal,
     },
-    TransportCloseResponse {
-        // TODO
-    },
 );
 
 request_response_generic!(

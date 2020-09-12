@@ -5,7 +5,8 @@ use crate::data_structures::{
     TransportTuple, WebRtcTransportData,
 };
 use crate::messages::{
-    TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData, TransportRestartIceRequest,
+    TransportCloseRequest, TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData,
+    TransportRestartIceRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{ProduceError, TransportTraceEventData};
@@ -231,20 +232,22 @@ impl Drop for Inner {
             callback();
         }
 
-        // TODO: Fix this copy-paste
-        // {
-        //     let channel = self.channel.clone();
-        //     let request = RouterCloseRequest {
-        //         internal: RouterInternal { router_id: self.id },
-        //     };
-        //     self.executor
-        //         .spawn(async move {
-        //             if let Err(error) = channel.request(request).await {
-        //                 error!("router closing failed on drop: {}", error);
-        //             }
-        //         })
-        //         .detach();
-        // }
+        {
+            let channel = self.channel.clone();
+            let request = TransportCloseRequest {
+                internal: TransportInternal {
+                    router_id: self.router.id(),
+                    transport_id: self.id,
+                },
+            };
+            self.executor
+                .spawn(async move {
+                    if let Err(error) = channel.request(request).await {
+                        error!("transport closing failed on drop: {}", error);
+                    }
+                })
+                .detach();
+        }
     }
 }
 
@@ -273,6 +276,8 @@ impl Transport for WebRtcTransport {
     }
 
     /// Create a Producer.
+    ///
+    /// Transport will be kept alive as long as at least one producer instance is alive.
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
         debug!("produce()");
 

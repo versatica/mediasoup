@@ -90,7 +90,7 @@ impl WorkerManager {
 
     /// Create a Worker.
     ///
-    /// Worker manager will be kept alive as long as at least one worker is alive.
+    /// Worker manager will be kept alive as long as at least one worker instance is alive.
     pub async fn create_worker(&self, worker_settings: WorkerSettings) -> io::Result<Worker> {
         let worker = Worker::new(
             Arc::clone(&self.inner.executor),

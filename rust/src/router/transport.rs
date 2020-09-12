@@ -64,6 +64,8 @@ pub trait Transport {
     async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError>;
 
     /// Create a Producer.
+    ///
+    /// Transport will be kept alive as long as at least one producer instance is alive.
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
     // TODO
 }
