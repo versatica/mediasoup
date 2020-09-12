@@ -3,9 +3,10 @@ use crate::messages::{
     TransportDumpRequest, TransportGetStatsRequest, TransportSetMaxIncomingBitrateData,
     TransportSetMaxIncomingBitrateRequest,
 };
-use crate::ortc::RtpParametersError;
+use crate::ortc::{RtpParametersError, RtpParametersMappingError};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::RouterId;
+use crate::router::Router;
+use crate::rtp_parameters::RtpEncodingParameters;
 use crate::worker::{Channel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_trait::async_trait;
@@ -66,8 +67,10 @@ pub trait Transport<Dump, Stat, RemoteParameters> {
     /// Provide the Transport remote parameters.
     async fn connect(&self, remote_parameters: RemoteParameters) -> Result<(), RequestError>;
 
+    /// Set maximum incoming bitrate for receiving media.
     async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError>;
 
+    /// Create a Producer.
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
 
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
@@ -79,9 +82,11 @@ pub enum ProduceError {
     #[error("Producer with ID {0} already exists")]
     AlreadyExists(ProducerId),
     #[error("Incorrect RTP parameters: {0}")]
-    RtpParametersError(RtpParametersError),
+    IncorrectRtpParameters(RtpParametersError),
+    #[error("RTP mapping error: {0}")]
+    FailedRtpParametersMapping(RtpParametersMappingError),
     #[error("Request to worker failed: {0}")]
-    RequestError(RequestError),
+    Request(RequestError),
 }
 
 #[async_trait(?Send)]
@@ -92,7 +97,7 @@ where
     Stat: Debug + DeserializeOwned + 'static,
     RemoteParameters: 'static,
 {
-    fn router_id(&self) -> RouterId;
+    fn router(&self) -> &Router;
 
     fn channel(&self) -> &Channel;
 
@@ -102,7 +107,7 @@ where
         self.channel()
             .request(TransportDumpRequest {
                 internal: TransportInternal {
-                    router_id: self.router_id(),
+                    router_id: self.router().id(),
                     transport_id: self.id(),
                 },
                 phantom_data: PhantomData {},
@@ -114,7 +119,7 @@ where
         self.channel()
             .request(TransportGetStatsRequest {
                 internal: TransportInternal {
-                    router_id: self.router_id(),
+                    router_id: self.router().id(),
                     transport_id: self.id(),
                 },
                 phantom_data: PhantomData {},
@@ -126,7 +131,7 @@ where
         self.channel()
             .request(TransportSetMaxIncomingBitrateRequest {
                 internal: TransportInternal {
-                    router_id: self.router_id(),
+                    router_id: self.router().id(),
                     transport_id: self.id(),
                 },
                 data: TransportSetMaxIncomingBitrateData { bitrate },
@@ -144,9 +149,60 @@ where
             }
         }
 
-        ortc::validate_rtp_parameters(&producer_options.rtp_parameters)
-            .map_err(ProduceError::RtpParametersError)?;
+        let ProducerOptions {
+            id,
+            kind,
+            mut rtp_parameters,
+            paused,
+            key_frame_request_delay,
+            app_data,
+        } = producer_options;
 
+        ortc::validate_rtp_parameters(&rtp_parameters)
+            .map_err(ProduceError::IncorrectRtpParameters)?;
+
+        if rtp_parameters.encodings.is_empty() {
+            rtp_parameters
+                .encodings
+                .push(RtpEncodingParameters::default());
+        }
+
+        // TODO: Port this piece of code from TypeScript
+        // // Don't do this in PipeTransports since there we must keep CNAME value in
+        // // each Producer.
+        // if (this.constructor.name !== 'PipeTransport')
+        // {
+        // 	// If CNAME is given and we don't have yet a CNAME for Producers in this
+        // 	// Transport, take it.
+        // 	if (!this._cnameForProducers && rtpParameters.rtcp && rtpParameters.rtcp.cname)
+        // 	{
+        // 		this._cnameForProducers = rtpParameters.rtcp.cname;
+        // 	}
+        // 	// Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
+        // 	// do not include CNAME, create a random one.
+        // 	else if (!this._cnameForProducers)
+        // 	{
+        // 		this._cnameForProducers = uuidv4().substr(0, 8);
+        // 	}
+        //
+        // 	// Override Producer's CNAME.
+        // 	rtpParameters.rtcp = rtpParameters.rtcp || {};
+        // 	rtpParameters.rtcp.cname = this._cnameForProducers;
+        // }
+
+        let router_rtp_capabilities = self.router().rtp_capabilities();
+
+        let rtp_mapping =
+            ortc::get_producer_rtp_parameters_mapping(&rtp_parameters, &router_rtp_capabilities)
+                .map_err(ProduceError::FailedRtpParametersMapping)?;
+
+        // This may throw.
+        // let consumableRtpParameters = ortc.getConsumableRtpParameters(
+        //     kind,
+        //     rtpParameters,
+        //     router_rtp_capabilities,
+        //     rtp_mapping,
+        // );
         todo!()
     }
 }

@@ -1,34 +1,36 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// The RTP capabilities define what mediasoup or an endpoint can receive at media level.
-#[derive(Debug, Default, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpCapabilities {
-    // TODO: Does this need to be optional or can be an empty vec?
     /// Supported media and RTX codecs.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub codecs: Option<Vec<RtpCodecCapability>>,
+    pub codecs: Vec<RtpCodecCapability>,
     /// Supported RTP header extensions.
     pub header_extensions: Vec<RtpHeaderExtension>,
-    // TODO: Does this need to be optional or can be an empty vec?
     // TODO: Enum instead of string?
     /// Supported FEC mechanisms.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fec_mechanisms: Option<Vec<String>>,
+    pub fec_mechanisms: Vec<String>,
 }
 
 /// Media kind
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum MediaKind {
     Audio,
     Video,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum MimeType {
+    Audio(MimeTypeAudio),
+    Video(MimeTypeVideo),
+}
+
 /// Known Audio MIME types.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub enum MimeTypeAudio {
     #[serde(rename = "audio/opus")]
     Opus,
@@ -48,10 +50,14 @@ pub enum MimeTypeAudio {
     CN,
     #[serde(rename = "audio/telephone-event")]
     TelephoneEvent,
+    #[serde(rename = "audio/rtx")]
+    RTX,
+    #[serde(rename = "audio/red")]
+    RED,
 }
 
 /// Known Video MIME types.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub enum MimeTypeVideo {
     #[serde(rename = "video/VP8")]
     VP8,
@@ -61,6 +67,12 @@ pub enum MimeTypeVideo {
     H264,
     #[serde(rename = "video/H265")]
     H265,
+    #[serde(rename = "video/rtx")]
+    RTX,
+    #[serde(rename = "video/red")]
+    RED,
+    #[serde(rename = "video/ulpfec")]
+    ULPFEC,
 }
 
 // TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
@@ -78,7 +90,7 @@ pub enum MimeTypeVideo {
 /// RtpCodecCapability entries in the mediaCodecs array of RouterOptions do not require
 /// preferredPayloadType field (if unset, mediasoup will choose a random one). If given, make sure
 /// it's in the 96-127 range.
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum RtpCodecCapability {
     #[serde(rename_all = "camelCase")]
@@ -87,7 +99,7 @@ pub enum RtpCodecCapability {
         mime_type: MimeTypeAudio,
         /// The preferred RTP payload type.
         #[serde(skip_serializing_if = "Option::is_none")]
-        preferred_payload_type: Option<u32>,
+        preferred_payload_type: Option<u8>,
         /// Codec clock rate expressed in Hertz.
         clock_rate: u32,
         /// The number of channels supported (e.g. two for stereo). Just for audio.
@@ -96,7 +108,7 @@ pub enum RtpCodecCapability {
         // TODO: Not sure if this hashmap is a correct type
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
-        parameters: HashMap<String, RtpCodecParametersParametersValue>,
+        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
@@ -106,20 +118,49 @@ pub enum RtpCodecCapability {
         mime_type: MimeTypeVideo,
         /// The preferred RTP payload type.
         #[serde(skip_serializing_if = "Option::is_none")]
-        preferred_payload_type: Option<u32>,
+        preferred_payload_type: Option<u8>,
         /// Codec clock rate expressed in Hertz.
         clock_rate: u32,
         // TODO: Not sure if this hashmap is a correct type
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
-        parameters: HashMap<String, RtpCodecParametersParametersValue>,
+        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
 }
 
+impl RtpCodecCapability {
+    pub(crate) fn is_rtx(&self) -> bool {
+        match self {
+            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::RTX,
+            Self::Video { mime_type, .. } => mime_type == &MimeTypeVideo::RTX,
+        }
+    }
+
+    pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
+        match self {
+            Self::Audio { parameters, .. } => parameters,
+            Self::Video { parameters, .. } => parameters,
+        }
+    }
+
+    pub(crate) fn preferred_payload_type(&self) -> Option<u8> {
+        match self {
+            Self::Audio {
+                preferred_payload_type,
+                ..
+            } => *preferred_payload_type,
+            Self::Video {
+                preferred_payload_type,
+                ..
+            } => *preferred_payload_type,
+        }
+    }
+}
+
 /// Direction of RTP header extension.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RtpHeaderExtensionDirection {
     // TODO: Serialization of all of these variants should be lowercase if we ever need it
@@ -137,7 +178,7 @@ pub enum RtpHeaderExtensionDirection {
 /// just present in mediasoup RTP capabilities (retrieved via router.rtpCapabilities or
 /// mediasoup.getSupportedRtpCapabilities()). It's ignored if present in endpoints' RTP
 /// capabilities.
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpHeaderExtension {
     // TODO: TypeScript version makes this field both optional and possible to set to "",
@@ -188,7 +229,7 @@ pub struct RtpHeaderExtension {
 /// endpoint supports RTX), regardless of the original RTP send parameters in
 /// the associated producer. This applies even if the producer's encodings have
 /// rid set.
-#[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpParameters {
     /// The MID RTP extension value as defined in the BUNDLE specification
@@ -204,7 +245,7 @@ pub struct RtpParameters {
     pub rtcp: RtcpParameters,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum RtpCodecParametersParametersValue {
     String(String),
@@ -215,7 +256,7 @@ pub enum RtpCodecParametersParametersValue {
 /// Provides information on codec settings within the RTP parameters. The list
 /// of media codecs supported by mediasoup and their settings is defined in the
 /// supportedRtpCapabilities.ts file.
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged, rename_all = "lowercase")]
 pub enum RtpCodecParameters {
     Audio {
@@ -232,7 +273,7 @@ pub enum RtpCodecParameters {
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
         /// codec matching.
-        parameters: HashMap<String, RtpCodecParametersParametersValue>,
+        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
@@ -247,17 +288,47 @@ pub enum RtpCodecParameters {
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
         /// codec matching.
-        parameters: HashMap<String, RtpCodecParametersParametersValue>,
+        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
+}
+
+impl RtpCodecParameters {
+    pub(crate) fn is_rtx(&self) -> bool {
+        match self {
+            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::RTX,
+            Self::Video { mime_type, .. } => mime_type == &MimeTypeVideo::RTX,
+        }
+    }
+
+    pub(crate) fn mime_type(&self) -> MimeType {
+        match self {
+            Self::Audio { mime_type, .. } => MimeType::Audio(*mime_type),
+            Self::Video { mime_type, .. } => MimeType::Video(*mime_type),
+        }
+    }
+
+    pub(crate) fn payload_type(&self) -> u8 {
+        match self {
+            Self::Audio { payload_type, .. } => *payload_type,
+            Self::Video { payload_type, .. } => *payload_type,
+        }
+    }
+
+    pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
+        match self {
+            Self::Audio { parameters, .. } => parameters,
+            Self::Video { parameters, .. } => parameters,
+        }
+    }
 }
 
 // TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
 /// Provides information on RTCP feedback messages for a specific codec. Those messages can be
 /// transport layer feedback messages or codec-specific feedback messages. The list of RTCP
 /// feedbacks supported by mediasoup is defined in the supportedRtpCapabilities.ts file.
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtcpFeedback {
     // TODO: Enum?
     /// RTCP feedback type.
@@ -266,14 +337,14 @@ pub struct RtcpFeedback {
     pub parameter: String,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtpEncodingParametersRtx {
     ssrc: u32,
 }
 
 /// Provides information relating to an encoding, which represents a media RTP
 /// stream and its associated RTX stream (if any).
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpEncodingParameters {
     /// The media SSRC.
@@ -310,7 +381,7 @@ pub struct RtpEncodingParameters {
 ///
 /// mediasoup does not currently support encrypted RTP header extensions and no
 /// parameters are currently considered.
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtpHeaderExtensionParameters {
     /// The URI of the RTP header extension, as defined in RFC 5285.
     pub uri: String,
@@ -321,7 +392,7 @@ pub struct RtpHeaderExtensionParameters {
     pub encrypt: bool,
     // TODO: Not sure if this hashmap is a correct type
     /// Configuration parameters for the header extension.
-    pub parameters: HashMap<String, RtpCodecParametersParametersValue>,
+    pub parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
 }
 
 /// Provides information on RTCP settings within the RTP parameters.
@@ -331,7 +402,7 @@ pub struct RtpHeaderExtensionParameters {
 /// all its associated consumers.
 ///
 /// mediasoup assumes reducedSize to always be true.
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtcpParameters {
     /// The Canonical Name (CNAME) used by RTCP (e.g. in SDES messages).

@@ -183,7 +183,6 @@ impl Router {
 
         let transport_fut = WebRtcTransport::new(
             transport_id,
-            self.inner.id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
             self.inner.payload_channel.clone(),

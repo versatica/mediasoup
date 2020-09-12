@@ -9,7 +9,7 @@ use crate::messages::{
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{ProduceError, TransportTraceEventData};
-use crate::router::{Router, RouterId};
+use crate::router::Router;
 use crate::transport::{Transport, TransportId, TransportImpl};
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
@@ -210,7 +210,6 @@ enum Notification {
 
 struct Inner {
     id: TransportId,
-    router_id: RouterId,
     executor: Arc<Executor>,
     channel: Channel,
     payload_channel: Channel,
@@ -294,7 +293,7 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
             .channel
             .request(TransportConnectRequestWebRtc {
                 internal: TransportInternal {
-                    router_id: self.inner.router_id,
+                    router_id: self.inner.router.id(),
                     transport_id: self.inner.id,
                 },
                 data: TransportConnectRequestWebRtcData {
@@ -308,13 +307,17 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
         Ok(())
     }
 
+    /// Set maximum incoming bitrate for receiving media.
     async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
         debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
 
         self.set_max_incoming_bitrate_impl(bitrate).await
     }
 
+    /// Create a Producer.
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
+        debug!("produce()");
+
         self.produce_impl(producer_options).await
     }
 
@@ -331,8 +334,8 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
 impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemoteParameters>
     for WebRtcTransport
 {
-    fn router_id(&self) -> RouterId {
-        self.inner.router_id
+    fn router(&self) -> &Router {
+        &self.inner.router
     }
 
     fn channel(&self) -> &Channel {
@@ -347,7 +350,6 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
 impl WebRtcTransport {
     pub(super) async fn new(
         id: TransportId,
-        router_id: RouterId,
         executor: Arc<Executor>,
         channel: Channel,
         payload_channel: Channel,
@@ -425,7 +427,6 @@ impl WebRtcTransport {
         };
         let inner = Arc::new(Inner {
             id,
-            router_id,
             executor,
             channel,
             payload_channel,
@@ -498,7 +499,7 @@ impl WebRtcTransport {
             .channel
             .request(TransportRestartIceRequest {
                 internal: TransportInternal {
-                    router_id: self.inner.router_id,
+                    router_id: self.inner.router.id(),
                     transport_id: self.inner.id,
                 },
             })
