@@ -9,10 +9,8 @@ pub struct RtpCapabilities {
     /// Supported media and RTX codecs.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub codecs: Option<Vec<RtpCodecCapability>>,
-    // TODO: Does this need to be optional or can be an empty vec?
     /// Supported RTP header extensions.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub header_extensions: Option<Vec<RtpHeaderExtension>>,
+    pub header_extensions: Vec<RtpHeaderExtension>,
     // TODO: Does this need to be optional or can be an empty vec?
     // TODO: Enum instead of string?
     /// Supported FEC mechanisms.
@@ -26,6 +24,43 @@ pub struct RtpCapabilities {
 pub enum MediaKind {
     Audio,
     Video,
+}
+
+/// Known Audio MIME types.
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+pub enum MimeTypeAudio {
+    #[serde(rename = "audio/opus")]
+    Opus,
+    #[serde(rename = "audio/PCMU")]
+    PCMU,
+    #[serde(rename = "audio/PCMA")]
+    PCMA,
+    #[serde(rename = "audio/ISAC")]
+    ISAC,
+    #[serde(rename = "audio/G722")]
+    G722,
+    #[serde(rename = "audio/iLBC")]
+    iLBC,
+    #[serde(rename = "audio/SILK")]
+    SILK,
+    #[serde(rename = "audio/CN")]
+    CN,
+    #[serde(rename = "audio/telephone-event")]
+    TelephoneEvent,
+}
+
+/// Known Video MIME types.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+pub enum MimeTypeVideo {
+    #[serde(rename = "video/VP8")]
+    VP8,
+    #[serde(rename = "video/VP9")]
+    VP9,
+    #[serde(rename = "video/H264")]
+    H264,
+    #[serde(rename = "video/H265")]
+    H265,
 }
 
 // TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
@@ -44,30 +79,43 @@ pub enum MediaKind {
 /// preferredPayloadType field (if unset, mediasoup will choose a random one). If given, make sure
 /// it's in the 96-127 range.
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RtpCodecCapability {
-    /// Media kind
-    pub kind: MediaKind,
-    // TODO: Enum?
-    /// The codec MIME media type/subtype (e.g. 'audio/opus', 'video/VP8').
-    pub mime_type: String,
-    /// The preferred RTP payload type.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub preferred_payload_type: Option<u32>,
-    /// Codec clock rate expressed in Hertz.
-    pub clock_rate: u32,
-    /// The number of channels supported (e.g. two for stereo). Just for audio.
-    /// Default 1.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub channels: Option<u8>,
-    // TODO: Not sure if this hashmap is a correct type
-    /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
-    /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
-    pub parameters: HashMap<String, String>,
-    // TODO: Does this need to be optional or can be an empty vec?
-    /// Transport layer and codec-specific feedback messages for this codec.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtcp_feedback: Option<Vec<RtcpFeedback>>,
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum RtpCodecCapability {
+    #[serde(rename_all = "camelCase")]
+    Audio {
+        /// The codec MIME media type/subtype (e.g. 'audio/opus').
+        mime_type: MimeTypeAudio,
+        /// The preferred RTP payload type.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        preferred_payload_type: Option<u32>,
+        /// Codec clock rate expressed in Hertz.
+        clock_rate: u32,
+        /// The number of channels supported (e.g. two for stereo). Just for audio.
+        /// Default 1.
+        channels: u8,
+        // TODO: Not sure if this hashmap is a correct type
+        /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
+        /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
+        parameters: HashMap<String, RtpCodecParametersParametersValue>,
+        /// Transport layer and codec-specific feedback messages for this codec.
+        rtcp_feedback: Vec<RtcpFeedback>,
+    },
+    #[serde(rename_all = "camelCase")]
+    Video {
+        /// The codec MIME media type/subtype (e.g. 'video/VP8').
+        mime_type: MimeTypeVideo,
+        /// The preferred RTP payload type.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        preferred_payload_type: Option<u32>,
+        /// Codec clock rate expressed in Hertz.
+        clock_rate: u32,
+        // TODO: Not sure if this hashmap is a correct type
+        /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
+        /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
+        parameters: HashMap<String, RtpCodecParametersParametersValue>,
+        /// Transport layer and codec-specific feedback messages for this codec.
+        rtcp_feedback: Vec<RtcpFeedback>,
+    },
 }
 
 /// Direction of RTP header extension.
@@ -148,17 +196,19 @@ pub struct RtpParameters {
     pub mid: Option<String>,
     /// Media and RTX codecs in use.
     pub codecs: Vec<RtpCodecParameters>,
-    // TODO: Does this need to be optional or can be an empty vec?
     /// RTP header extensions in use.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub header_extensions: Option<Vec<RtpHeaderExtensionParameters>>,
-    // TODO: Does this need to be optional or can be an empty vec?
+    pub header_extensions: Vec<RtpHeaderExtensionParameters>,
     /// Transmitted RTP streams and their settings.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub encodings: Option<Vec<RtpEncodingParameters>>,
+    pub encodings: Vec<RtpEncodingParameters>,
     /// Parameters used for RTCP.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtcp: Option<RtcpParameters>,
+    pub rtcp: RtcpParameters,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum RtpCodecParametersParametersValue {
+    String(String),
+    Number(u32),
 }
 
 // TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
@@ -166,28 +216,41 @@ pub struct RtpParameters {
 /// of media codecs supported by mediasoup and their settings is defined in the
 /// supportedRtpCapabilities.ts file.
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RtpCodecParameters {
-    // TODO: Enum?
-    /// The codec MIME media type/subtype (e.g. 'audio/opus', 'video/VP8').
-    pub mime_type: String,
-    /// The value that goes in the RTP Payload Type Field. Must be unique.
-    pub payload_type: u8,
-    /// Codec clock rate expressed in Hertz.
-    pub clock_rate: u32,
-    /// The number of channels supported (e.g. two for stereo). Just for audio.
-    /// Default 1.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub channels: Option<u8>,
-    // TODO: Not sure if this hashmap is a correct type
-    /// Codec-specific parameters available for signaling. Some parameters (such as
-    /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
-    /// codec matching.
-    pub parameters: HashMap<String, String>,
-    // TODO: Does this need to be optional or can be an empty vec?
-    /// Transport layer and codec-specific feedback messages for this codec.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtcp_feedback: Option<Vec<RtcpFeedback>>,
+#[serde(untagged, rename_all = "lowercase")]
+pub enum RtpCodecParameters {
+    Audio {
+        /// The codec MIME media type/subtype (e.g. 'audio/opus').
+        mime_type: MimeTypeAudio,
+        /// The value that goes in the RTP Payload Type Field. Must be unique.
+        payload_type: u8,
+        /// Codec clock rate expressed in Hertz.
+        clock_rate: u32,
+        /// The number of channels supported (e.g. two for stereo).
+        /// Default 1.
+        channels: u8,
+        // TODO: Not sure if this hashmap is a correct type
+        /// Codec-specific parameters available for signaling. Some parameters (such as
+        /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
+        /// codec matching.
+        parameters: HashMap<String, RtpCodecParametersParametersValue>,
+        /// Transport layer and codec-specific feedback messages for this codec.
+        rtcp_feedback: Vec<RtcpFeedback>,
+    },
+    Video {
+        /// The codec MIME media type/subtype (e.g. 'video/VP8').
+        mime_type: MimeTypeVideo,
+        /// The value that goes in the RTP Payload Type Field. Must be unique.
+        payload_type: u8,
+        /// Codec clock rate expressed in Hertz.
+        clock_rate: u32,
+        // TODO: Not sure if this hashmap is a correct type
+        /// Codec-specific parameters available for signaling. Some parameters (such as
+        /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
+        /// codec matching.
+        parameters: HashMap<String, RtpCodecParametersParametersValue>,
+        /// Transport layer and codec-specific feedback messages for this codec.
+        rtcp_feedback: Vec<RtcpFeedback>,
+    },
 }
 
 // TODO: supportedRtpCapabilities.ts file and generally update TypeScript references
@@ -200,8 +263,7 @@ pub struct RtcpFeedback {
     /// RTCP feedback type.
     pub r#type: String,
     /// RTCP feedback parameter.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parameter: Option<String>,
+    pub parameter: String,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
@@ -230,8 +292,7 @@ pub struct RtpEncodingParameters {
     /// codec supports it) and for video screen sharing (when static content is being transmitted,
     /// this option disables the RTP inactivity checks in mediasoup).
     /// Default false.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub dtx: Option<bool>,
+    pub dtx: bool,
     // TODO: Maybe enum?
     /// Number of spatial and temporal layers in the RTP stream (e.g. 'L1T3'). See webrtc-svc.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -255,12 +316,12 @@ pub struct RtpHeaderExtensionParameters {
     pub uri: String,
     /// The numeric identifier that goes in the RTP packet. Must be unique.
     pub id: u16,
-    /// If true, the value in the header is encrypted as per RFC 6904. Default false.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub encrypt: Option<bool>,
+    /// If true, the value in the header is encrypted as per RFC 6904.
+    /// Default false.
+    pub encrypt: bool,
     // TODO: Not sure if this hashmap is a correct type
     /// Configuration parameters for the header extension.
-    pub parameters: HashMap<String, String>,
+    pub parameters: HashMap<String, RtpCodecParametersParametersValue>,
 }
 
 /// Provides information on RTCP settings within the RTP parameters.
@@ -278,9 +339,18 @@ pub struct RtcpParameters {
     pub cname: Option<String>,
     /// Whether reduced size RTCP RFC 5506 is configured (if true) or compound RTCP
     /// as specified in RFC 3550 (if false). Default true.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub reduced_size: Option<bool>,
+    pub reduced_size: bool,
     /// Whether RTCP-mux is used. Default true.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mux: Option<bool>,
+}
+
+impl Default for RtcpParameters {
+    fn default() -> Self {
+        Self {
+            cname: None,
+            reduced_size: true,
+            mux: None,
+        }
+    }
 }

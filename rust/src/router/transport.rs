@@ -3,19 +3,18 @@ use crate::messages::{
     TransportDumpRequest, TransportGetStatsRequest, TransportSetMaxIncomingBitrateData,
     TransportSetMaxIncomingBitrateRequest,
 };
+use crate::ortc::RtpParametersError;
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::RouterId;
-use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError};
+use crate::{ortc, uuid_based_wrapper_type};
 use async_trait::async_trait;
 use log::debug;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::Debug;
-use std::future::Future;
 use std::marker::PhantomData;
-use std::pin::Pin;
 use thiserror::Error;
 
 uuid_based_wrapper_type!(TransportId);
@@ -79,6 +78,8 @@ pub trait Transport<Dump, Stat, RemoteParameters> {
 pub enum ProduceError {
     #[error("Producer with ID {0} already exists")]
     AlreadyExists(ProducerId),
+    #[error("Incorrect RTP parameters: {0}")]
+    RtpParametersError(RtpParametersError),
     #[error("Request to worker failed: {0}")]
     RequestError(RequestError),
 }
@@ -142,6 +143,9 @@ where
                 return Err(ProduceError::AlreadyExists(*id));
             }
         }
+
+        ortc::validate_rtp_parameters(&producer_options.rtp_parameters)
+            .map_err(ProduceError::RtpParametersError)?;
 
         todo!()
     }
