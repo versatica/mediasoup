@@ -177,13 +177,16 @@ pub enum IceState {
 #[serde(rename_all = "camelCase", untagged)]
 pub enum TransportTuple {
     LocalOnly {
+        // TODO: Maybe better type for IP address?
         local_ip: String,
         local_port: u16,
         protocol: TransportProtocol,
     },
     WithRemote {
+        // TODO: Maybe better type for IP address?
         local_ip: String,
         local_port: u16,
+        // TODO: Maybe better type for IP address?
         remote_ip: String,
         remote_port: u16,
         protocol: TransportProtocol,
@@ -231,13 +234,13 @@ pub(crate) struct WebRtcTransportData {
     pub(crate) ice_role: IceRole,
     pub(crate) ice_parameters: IceParameters,
     pub(crate) ice_candidates: Vec<IceCandidate>,
-    pub(crate) ice_state: IceState,
-    pub(crate) ice_selected_tuple: Option<TransportTuple>,
+    pub(crate) ice_state: Mutex<IceState>,
+    pub(crate) ice_selected_tuple: Mutex<Option<TransportTuple>>,
     pub(crate) dtls_parameters: Mutex<DtlsParameters>,
-    pub(crate) dtls_state: DtlsState,
-    pub(crate) dtls_remote_cert: Option<String>,
+    pub(crate) dtls_state: Mutex<DtlsState>,
+    pub(crate) dtls_remote_cert: Mutex<Option<String>>,
     pub(crate) sctp_parameters: Option<SctpParameters>,
-    pub(crate) sctp_state: Option<SctpState>,
+    pub(crate) sctp_state: Mutex<Option<SctpState>>,
 }
 
 #[derive(Debug, Serialize)]

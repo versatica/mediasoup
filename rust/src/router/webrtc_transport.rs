@@ -15,6 +15,7 @@ use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use log::debug;
+use log::error;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -181,12 +182,17 @@ pub struct WebRtcTransportRemoteParameters {
 
 #[derive(Default)]
 struct Handlers {
+    ice_state_change: Mutex<Vec<Box<dyn Fn(IceState) + Send>>>,
+    ice_selected_tuple_change: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
+    dtls_state_change: Mutex<Vec<Box<dyn Fn(DtlsState) + Send>>>,
+    sctp_state_change: Mutex<Vec<Box<dyn Fn(SctpState) + Send>>>,
+    trace: Mutex<Vec<Box<dyn Fn(&TransportTraceEventData) + Send>>>,
     closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
-enum Notifications {
+enum Notification {
     #[serde(rename_all = "camelCase")]
     IceStateChange { ice_state: IceState },
     #[serde(rename_all = "camelCase")]
@@ -208,8 +214,8 @@ struct Inner {
     executor: Arc<Executor>,
     channel: Channel,
     payload_channel: Channel,
-    handlers: Handlers,
-    data: WebRtcTransportData,
+    handlers: Arc<Handlers>,
+    data: Arc<WebRtcTransportData>,
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
     _router: Router,
@@ -347,14 +353,72 @@ impl WebRtcTransport {
     ) -> Self {
         debug!("new()");
 
-        let handlers = Handlers::default();
+        let handlers = Arc::<Handlers>::default();
+        let data = Arc::new(data);
 
-        let subscription_handler = channel
-            .subscribe_to_notifications(id.to_string(), move |notification| {
-                // TODO: Handle events
-            })
-            .await
-            .unwrap();
+        let subscription_handler = {
+            let handlers = Arc::clone(&handlers);
+            let data = Arc::clone(&data);
+
+            channel
+                .subscribe_to_notifications(id.to_string(), move |notification| {
+                    match serde_json::from_value::<Notification>(notification) {
+                        Ok(notification) => match notification {
+                            Notification::IceStateChange { ice_state } => {
+                                *data.ice_state.lock().unwrap() = ice_state;
+                                for callback in handlers.ice_state_change.lock().unwrap().iter() {
+                                    callback(ice_state);
+                                }
+                            }
+                            Notification::IceSelectedTupleChange { ice_selected_tuple } => {
+                                data.ice_selected_tuple
+                                    .lock()
+                                    .unwrap()
+                                    .replace(ice_selected_tuple.clone());
+                                for callback in
+                                    handlers.ice_selected_tuple_change.lock().unwrap().iter()
+                                {
+                                    callback(&ice_selected_tuple);
+                                }
+                            }
+                            Notification::DtlsStateChange {
+                                dtls_state,
+                                dtls_remote_cert,
+                            } => {
+                                *data.dtls_state.lock().unwrap() = dtls_state;
+
+                                if let Some(dtls_remote_cert) = dtls_remote_cert {
+                                    data.dtls_remote_cert
+                                        .lock()
+                                        .unwrap()
+                                        .replace(dtls_remote_cert);
+                                }
+
+                                for callback in handlers.dtls_state_change.lock().unwrap().iter() {
+                                    callback(dtls_state);
+                                }
+                            }
+                            Notification::SctpStateChange { sctp_state } => {
+                                data.sctp_state.lock().unwrap().replace(sctp_state);
+
+                                for callback in handlers.sctp_state_change.lock().unwrap().iter() {
+                                    callback(sctp_state);
+                                }
+                            }
+                            Notification::Trace(trace_event_data) => {
+                                for callback in handlers.trace.lock().unwrap().iter() {
+                                    callback(&trace_event_data);
+                                }
+                            }
+                        },
+                        Err(error) => {
+                            error!("Failed to parse notification: {}", error);
+                        }
+                    }
+                })
+                .await
+                .unwrap()
+        };
         let inner = Arc::new(Inner {
             id,
             router_id,
@@ -373,52 +437,52 @@ impl WebRtcTransport {
 
     /// ICE role.
     pub fn ice_role(&self) -> IceRole {
-        return self.inner.data.ice_role;
+        self.inner.data.ice_role
     }
 
     /// ICE parameters.
     pub fn ice_parameters(&self) -> IceParameters {
-        return self.inner.data.ice_parameters.clone();
+        self.inner.data.ice_parameters.clone()
     }
 
     /// ICE candidates.
     pub fn ice_candidates(&self) -> Vec<IceCandidate> {
-        return self.inner.data.ice_candidates.clone();
+        self.inner.data.ice_candidates.clone()
     }
 
     /// ICE state.
     pub fn ice_state(&self) -> IceState {
-        return self.inner.data.ice_state;
+        *self.inner.data.ice_state.lock().unwrap()
     }
 
     /// ICE selected tuple.
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
-        return self.inner.data.ice_selected_tuple.clone();
+        self.inner.data.ice_selected_tuple.lock().unwrap().clone()
     }
 
     /// DTLS parameters.
     pub fn dtls_parameters(&self) -> DtlsParameters {
-        return self.inner.data.dtls_parameters.lock().unwrap().clone();
+        self.inner.data.dtls_parameters.lock().unwrap().clone()
     }
 
     /// DTLS state.
     pub fn dtls_state(&self) -> DtlsState {
-        return self.inner.data.dtls_state;
+        *self.inner.data.dtls_state.lock().unwrap()
     }
 
     /// Remote certificate in PEM format.
     pub fn dtls_remote_cert(&self) -> Option<String> {
-        return self.inner.data.dtls_remote_cert.clone();
+        self.inner.data.dtls_remote_cert.lock().unwrap().clone()
     }
 
     /// SCTP parameters.
     pub fn sctp_parameters(&self) -> Option<SctpParameters> {
-        return self.inner.data.sctp_parameters;
+        self.inner.data.sctp_parameters
     }
 
     /// SCTP state.
     pub fn sctp_state(&self) -> Option<SctpState> {
-        return self.inner.data.sctp_state;
+        *self.inner.data.sctp_state.lock().unwrap()
     }
 
     /// Restart ICE.
@@ -437,5 +501,53 @@ impl WebRtcTransport {
             .await?;
 
         Ok(response.ice_parameters)
+    }
+
+    pub fn connect_ice_state_change<F: Fn(IceState) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .ice_state_change
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_ice_selected_tuple_change<F: Fn(&TransportTuple) + Send + 'static>(
+        &self,
+        callback: F,
+    ) {
+        self.inner
+            .handlers
+            .ice_selected_tuple_change
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_dtls_state_change<F: Fn(DtlsState) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .dtls_state_change
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_sctp_state_change<F: Fn(SctpState) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .sctp_state_change
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .trace
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
     }
 }
