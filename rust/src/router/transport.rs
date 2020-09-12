@@ -10,13 +10,14 @@ use crate::router::Router;
 use crate::rtp_parameters::RtpEncodingParameters;
 use crate::worker::{Channel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
+use async_executor::Executor;
 use async_trait::async_trait;
-use log::debug;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::sync::Arc;
 use thiserror::Error;
 
 uuid_based_wrapper_type!(TransportId);
@@ -52,13 +53,23 @@ pub enum TransportTraceEventData {
 }
 
 #[async_trait(?Send)]
-pub trait Transport<Dump, Stat, RemoteParameters> {
+pub trait Transport {
     /// Transport id.
     fn id(&self) -> TransportId;
 
     /// App custom data.
     fn app_data(&self) -> &AppData;
 
+    /// Set maximum incoming bitrate for receiving media.
+    async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError>;
+
+    /// Create a Producer.
+    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
+    // TODO
+}
+
+#[async_trait(?Send)]
+pub trait TransportGeneric<Dump, Stat, RemoteParameters>: Transport {
     /// Dump Transport.
     async fn dump(&self) -> Result<Dump, RequestError>;
 
@@ -68,14 +79,7 @@ pub trait Transport<Dump, Stat, RemoteParameters> {
     /// Provide the Transport remote parameters.
     async fn connect(&self, remote_parameters: RemoteParameters) -> Result<(), RequestError>;
 
-    /// Set maximum incoming bitrate for receiving media.
-    async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError>;
-
-    /// Create a Producer.
-    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
-
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
-    // TODO
 }
 
 #[derive(Debug, Error)]
@@ -91,18 +95,34 @@ pub enum ProduceError {
 }
 
 #[async_trait(?Send)]
-pub(super) trait TransportImpl<Dump, Stat, RemoteParameters>:
-    Transport<Dump, Stat, RemoteParameters>
+pub(super) trait TransportImpl<Dump, Stat, RemoteParameters>
 where
     Dump: Debug + DeserializeOwned + 'static,
     Stat: Debug + DeserializeOwned + 'static,
     RemoteParameters: 'static,
+    Self: Transport + Clone + 'static,
 {
     fn router(&self) -> &Router;
 
     fn channel(&self) -> &Channel;
 
+    fn payload_channel(&self) -> &Channel;
+
     fn has_producer(&self, id: &ProducerId) -> bool;
+
+    fn executor(&self) -> &Arc<Executor>;
+
+    // fn to_transport(&self) -> Box<dyn Transport<dyn Any, dyn Any, dyn Any>> {
+    //     // let transport: dyn Transport<Dump, Stat, RemoteParameters> = self.clone();
+    //     let transport = dyn_clone::clone_box(self);
+    //     let transport: Box<dyn Any> = transport;
+    //     let transport = transport.downcast_ref::<dyn Transport<dyn Any, dyn Any, dyn Any>>();
+    //     // .downcast_ref::<dyn Transport<dyn Any, dyn Any, dyn Any>>()
+    //     // .unwrap()
+    //     // .clone();
+    //     // Box::new(transport)
+    //     todo!()
+    // }
 
     async fn dump_impl(&self) -> Result<Dump, RequestError> {
         self.channel()
@@ -216,7 +236,7 @@ where
                 },
                 data: TransportProduceRequestData {
                     kind,
-                    rtp_parameters,
+                    rtp_parameters: rtp_parameters.clone(),
                     rtp_mapping,
                     key_frame_request_delay,
                     paused,
@@ -225,14 +245,21 @@ where
             .await
             .map_err(ProduceError::Request)?;
 
-        // const data =
-        //     {
-        //         kind,
-        //         rtpParameters,
-        //         type : status.type,
-        //         consumableRtpParameters
-        //     };
+        let producer = Producer::new(
+            producer_id,
+            kind,
+            status.r#type,
+            rtp_parameters,
+            consumable_rtp_parameters,
+            paused,
+            self.router().id(),
+            Arc::clone(self.executor()),
+            self.channel().clone(),
+            self.payload_channel().clone(),
+            app_data,
+            Box::new(self.clone()),
+        );
 
-        todo!()
+        Ok(producer)
     }
 }

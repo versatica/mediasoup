@@ -10,7 +10,7 @@ use crate::messages::{
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{ProduceError, TransportTraceEventData};
 use crate::router::Router;
-use crate::transport::{Transport, TransportId, TransportImpl};
+use crate::transport::{Transport, TransportGeneric, TransportId, TransportImpl};
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
@@ -254,9 +254,7 @@ pub struct WebRtcTransport {
 }
 
 #[async_trait(?Send)]
-impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemoteParameters>
-    for WebRtcTransport
-{
+impl Transport for WebRtcTransport {
     /// Transport id.
     fn id(&self) -> TransportId {
         self.inner.id
@@ -267,6 +265,25 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
         &self.inner.app_data
     }
 
+    /// Set maximum incoming bitrate for receiving media.
+    async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
+        debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
+
+        self.set_max_incoming_bitrate_impl(bitrate).await
+    }
+
+    /// Create a Producer.
+    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
+        debug!("produce()");
+
+        self.produce_impl(producer_options).await
+    }
+}
+
+#[async_trait(?Send)]
+impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemoteParameters>
+    for WebRtcTransport
+{
     /// Dump Transport.
     async fn dump(&self) -> Result<WebRtcTransportDump, RequestError> {
         debug!("dump()");
@@ -307,20 +324,6 @@ impl Transport<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemotePa
         Ok(())
     }
 
-    /// Set maximum incoming bitrate for receiving media.
-    async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
-        debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
-
-        self.set_max_incoming_bitrate_impl(bitrate).await
-    }
-
-    /// Create a Producer.
-    async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
-        debug!("produce()");
-
-        self.produce_impl(producer_options).await
-    }
-
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
@@ -342,8 +345,16 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
         &self.inner.channel
     }
 
+    fn payload_channel(&self) -> &Channel {
+        &self.inner.payload_channel
+    }
+
     fn has_producer(&self, id: &ProducerId) -> bool {
         self.inner.router.has_producer(id)
+    }
+
+    fn executor(&self) -> &Arc<Executor> {
+        &self.inner.executor
     }
 }
 

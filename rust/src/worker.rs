@@ -589,7 +589,7 @@ impl Worker {
 mod tests {
     use super::*;
     use crate::data_structures::TransportListenIp;
-    use crate::transport::Transport;
+    use crate::transport::{Transport, TransportGeneric};
     use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
     use futures_lite::future;
     use std::thread;

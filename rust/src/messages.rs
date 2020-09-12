@@ -1,5 +1,6 @@
 use crate::data_structures::*;
 use crate::ortc::RtpMapping;
+use crate::producer::ProducerType;
 use crate::router::RouterDumpResponse;
 use crate::rtp_parameters::{MediaKind, RtpParameters};
 use crate::worker::{WorkerDumpResponse, WorkerResourceUsage, WorkerUpdateSettings};
@@ -265,7 +266,7 @@ request_response!(
         data: TransportProduceRequestData,
     },
     TransportProduceResponse {
-        // TODO
+        r#type: ProducerType,
     },
 );
 
