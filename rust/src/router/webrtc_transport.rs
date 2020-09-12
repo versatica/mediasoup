@@ -4,7 +4,9 @@ use crate::data_structures::{
     NumSctpStreams, SctpParameters, SctpState, TransportInternal, TransportListenIp,
     TransportTuple, WebRtcTransportData,
 };
-use crate::messages::{TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData};
+use crate::messages::{
+    TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData, TransportRestartIceRequest,
+};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::{Router, RouterId};
 use crate::transport::{Transport, TransportId, TransportImpl};
@@ -60,6 +62,7 @@ impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct WebRtcTransportOptions {
     pub listen_ips: TransportListenIps,
     pub enable_udp: bool,
@@ -387,5 +390,23 @@ impl WebRtcTransport {
     /// SCTP state.
     pub fn sctp_state(&self) -> Option<SctpState> {
         return self.inner.data.sctp_state;
+    }
+
+    /// Restart ICE.
+    pub async fn restart_ice(&self) -> Result<IceParameters, RequestError> {
+        debug!("restart_ice()");
+
+        let response = self
+            .inner
+            .channel
+            .request(TransportRestartIceRequest {
+                internal: TransportInternal {
+                    router_id: self.inner.router_id,
+                    transport_id: self.inner.id,
+                },
+            })
+            .await?;
+
+        Ok(response.ice_parameters)
     }
 }

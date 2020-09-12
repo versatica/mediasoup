@@ -121,7 +121,7 @@ pub enum IceRole {
     Controlling,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IceParameters {
     pub username_fragment: String,
@@ -151,7 +151,7 @@ pub enum TransportProtocol {
     Udp,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IceCandidate {
     pub foundation: String,

@@ -31,11 +31,11 @@ macro_rules! request_response {
             }
         }
     };
+    // Call above macro with unit type as expected response
     (
         $method: literal,
         $request_struct_name: ident $request_struct_impl: tt $(,)?
     ) => {
-        // Call above macro with unit type as expected response
         request_response!($method, $request_struct_name $request_struct_impl, ());
     };
     (
@@ -244,7 +244,7 @@ request_response!(
         internal: TransportInternal,
     },
     TransportRestartIceResponse {
-        // TODO
+        ice_parameters: IceParameters,
     },
 );
 
