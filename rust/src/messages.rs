@@ -309,16 +309,13 @@ request_response!(
 //     },
 // );
 //
-// request_response!(
-//     ProducerCloseRequest,
-//     "producer.close",
-//     ;,
-//     ProducerCloseResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "producer.close",
+    ProducerCloseRequest {
+        internal: ProducerInternal,
+    },
+);
+
 // request_response!(
 //     ProducerDumpRequest,
 //     "producer.dump",

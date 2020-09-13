@@ -1,12 +1,15 @@
-use crate::data_structures::AppData;
+use crate::data_structures::{AppData, ProducerInternal};
+use crate::messages::ProducerCloseRequest;
 use crate::router::RouterId;
 use crate::rtp_parameters::{MediaKind, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::Channel;
+use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
+use log::{debug, error};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::mem;
+use std::sync::{Arc, Mutex};
 
 uuid_based_wrapper_type!(ProducerId);
 
@@ -47,6 +50,11 @@ pub enum ProducerType {
     Pipe,
 }
 
+#[derive(Default)]
+struct Handlers {
+    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+}
+
 struct Inner {
     id: ProducerId,
     kind: MediaKind,
@@ -58,8 +66,38 @@ struct Inner {
     executor: Arc<Executor>,
     channel: Channel,
     payload_channel: Channel,
+    handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Box<dyn Transport>,
+}
+
+impl Drop for Inner {
+    fn drop(&mut self) {
+        debug!("drop()");
+
+        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
+        for callback in callbacks {
+            callback();
+        }
+
+        {
+            let channel = self.channel.clone();
+            let request = ProducerCloseRequest {
+                internal: ProducerInternal {
+                    router_id: self.router_id,
+                    transport_id: self.transport.id(),
+                    producer_id: self.id,
+                },
+            };
+            self.executor
+                .spawn(async move {
+                    if let Err(error) = channel.request(request).await {
+                        error!("producer closing failed on drop: {}", error);
+                    }
+                })
+                .detach();
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -82,6 +120,12 @@ impl Producer {
         app_data: AppData,
         transport: Box<dyn Transport>,
     ) -> Self {
+        debug!("new()");
+
+        let handlers = Arc::<Handlers>::default();
+
+        // TODO: Subscribe to notifications
+
         let inner = Arc::new(Inner {
             id,
             kind,
@@ -93,6 +137,7 @@ impl Producer {
             executor,
             channel,
             payload_channel,
+            handlers,
             app_data,
             transport,
         });
@@ -105,8 +150,108 @@ impl Producer {
         self.inner.id
     }
 
+    /// Media kind.
+    pub fn kind(&self) -> MediaKind {
+        self.inner.kind
+    }
+
+    /// Media kind.
+    pub fn rtp_parameters(&self) -> RtpParameters {
+        self.inner.rtp_parameters.clone()
+    }
+
+    /// Producer type.
+    pub fn r#type(&self) -> ProducerType {
+        self.inner.r#type
+    }
+
+    /// Whether the Producer is paused.
+    pub fn paused(&self) -> bool {
+        self.inner.paused
+    }
+
+    // TODO: Implement
+    // /// Producer score list.
+    // pub fn score(&self) -> Vec<ProducerScore> {
+    //     self.inner.score
+    // }
+
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
+    }
+
+    // TODO: Implement
+    // /// Dump Producer.
+    // pub async fn dump(&self) -> Result<ProducerDump, RequestError> {
+    //     debug!("dump()");
+    //
+    //     // TODO: Request
+    // }
+
+    // TODO: Implement
+    // /// Get Producer stats.
+    // pub async fn get_stats(&self) -> Result<Vec<ProducerStat>, RequestError> {
+    //     debug!("get_stats()");
+    //
+    //     // TODO: Request
+    // }
+
+    // TODO: Implement
+    // /// Pause the Producer.
+    // pub async fn pause(&self) -> Result<(), RequestError> {
+    //     debug!("pause()");
+    //
+    //     // TODO: Request and update local property
+    // }
+
+    // TODO: Implement
+    // /// Resume the Producer.
+    // pub async fn resume(&self) -> Result<(), RequestError> {
+    //     debug!("resume()");
+    //
+    //     // TODO: Request and update local property
+    // }
+
+    // TODO: Implement
+    // /// Enable 'trace' event.
+    // pub async fn  enable_trace_event(types: Vec<ProducerTraceEventType>) -> Result<(), RequestError>
+    // {
+    // 	debug!("enable_trace_event()");
+    //
+    // 	// const reqData = { types };
+    //     //
+    // 	// await this._channel.request(
+    // 	// 	'producer.enableTraceEvent', this._internal, reqData);
+    // }
+
+    // TODO: Probably create a generic parameter on producer to make sure this method is only
+    //  available when it should
+    // /**
+    //  * Send RTP packet (just valid for Producers created on a DirectTransport).
+    //  */
+    // send(rtpPacket: Buffer)
+    // {
+    // 	if (!Buffer.isBuffer(rtpPacket))
+    // 	{
+    // 		throw new TypeError('rtpPacket must be a Buffer');
+    // 	}
+    //
+    // 	this._payloadChannel.notify(
+    // 		'producer.send', this._internal, undefined, rtpPacket);
+    // }
+
+    /// Consumable RTP parameters.
+    pub(super) fn consumable_rtp_parameters(&self) -> RtpParameters {
+        self.inner.consumable_rtp_parameters.clone()
+    }
+
+    fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .closed
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
     }
 }
