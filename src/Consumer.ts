@@ -196,6 +196,9 @@ export class Consumer extends EnhancedEventEmitter
 	// Observer instance.
 	private readonly _observer = new EnhancedEventEmitter();
 
+	// Listener on the payload channel
+	private readonly _payloadChannelListener = this._onPayloadChannelEvent.bind(this);
+
 	/**
 	 * @private
 	 * @emits transportclose
@@ -391,6 +394,9 @@ export class Consumer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.consumerId);
+		this._payloadChannel.off(
+			this._internal.consumerId,
+			this._payloadChannelListener);
 
 		this._channel.request('consumer.close', this._internal)
 			.catch(() => {});
@@ -417,6 +423,9 @@ export class Consumer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.consumerId);
+		this._payloadChannel.off(
+			this._internal.consumerId,
+			this._payloadChannelListener);
 
 		this.safeEmit('transportclose');
 
@@ -568,6 +577,9 @@ export class Consumer extends EnhancedEventEmitter
 
 					// Remove notification subscriptions.
 					this._channel.removeAllListeners(this._internal.consumerId);
+					this._payloadChannel.off(
+						this._internal.consumerId,
+						this._payloadChannelListener);
 
 					this.emit('@producerclose');
 					this.safeEmit('producerclose');
@@ -663,27 +675,28 @@ export class Consumer extends EnhancedEventEmitter
 
 		this._payloadChannel.on(
 			this._internal.consumerId,
-			(event: string, data: any | undefined, payload: Buffer) =>
+			this._payloadChannelListener);
+	}
+
+	private _onPayloadChannelEvent(event: string, data: any | undefined, payload: Buffer): void {
+		switch (event)
+		{
+			case 'rtp':
 			{
-				switch (event)
-				{
-					case 'rtp':
-					{
-						if (this._closed)
-							break;
+				if (this._closed)
+					break;
 
-						const packet = payload;
+				const packet = payload;
 
-						this.safeEmit('rtp', packet);
+				this.safeEmit('rtp', packet);
 
-						break;
-					}
+				break;
+			}
 
-					default:
-					{
-						logger.error('ignoring unknown event "%s"', event);
-					}
-				}
-			});
+			default:
+			{
+				logger.error('ignoring unknown event "%s"', event);
+			}
+		}
 	}
 }
