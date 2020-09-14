@@ -146,6 +146,7 @@ export class RtpObserver extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.rtpObserverId);
+		this._payloadChannel.removeAllListeners(this._internal.rtpObserverId);
 
 		this._channel.request('rtpObserver.close', this._internal)
 			.catch(() => {});

@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.21
+
+* Fix memory leak in Node.js layer due to `PayloadChannel` event listener not being removed (related to #463).
+
+
 ### 3.6.20
 
 * Remove `-fwrapv` when building mediasoup-worker in `Debug` mode (issue #460).

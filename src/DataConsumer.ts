@@ -229,6 +229,7 @@ export class DataConsumer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.dataConsumerId);
+		this._payloadChannel.removeAllListeners(this._internal.dataConsumerId);
 
 		this._channel.request('dataConsumer.close', this._internal)
 			.catch(() => {});
