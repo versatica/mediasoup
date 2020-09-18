@@ -308,9 +308,10 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
 	expect(audioConsumer.priority).toBe(1);
-	expect(audioConsumer.score).toEqual({ score: 10, producerScore: 0 });
-	expect(audioConsumer.preferredLayers).toBe(null);
-	expect(audioConsumer.currentLayers).toBe(null);
+	expect(audioConsumer.score).toEqual(
+		{ score: 10, producerScore: 0, producerScores: [ 0 ] });
+	expect(audioConsumer.preferredLayers).toBeUndefined();
+	expect(audioConsumer.currentLayers).toBeUndefined();
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
 
 	await expect(router.dump())
@@ -389,9 +390,10 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.paused).toBe(true);
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.priority).toBe(1);
-	expect(videoConsumer.score).toEqual({ score: 10, producerScore: 0 });
+	expect(videoConsumer.score).toEqual(
+		{ score: 10, producerScore: 0, producerScores: [ 0, 0, 0, 0 ] });
 	expect(videoConsumer.preferredLayers).toEqual({ spatialLayer: 3, temporalLayer: 0 });
-	expect(videoConsumer.currentLayers).toBe(null);
+	expect(videoConsumer.currentLayers).toBeUndefined();
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
 
 	await expect(router.dump())
@@ -674,7 +676,7 @@ test('consumer.pause() and resume() succeed', async () =>
 test('consumer.setPreferredLayers() succeed', async () =>
 {
 	await audioConsumer.setPreferredLayers({ spatialLayer: 1, temporalLayer: 1 });
-	expect(audioConsumer.preferredLayers).toBe(null);
+	expect(audioConsumer.preferredLayers).toBeUndefined();
 
 	await videoConsumer.setPreferredLayers({ spatialLayer: 2, temporalLayer: 3 });
 	expect(videoConsumer.preferredLayers).toEqual({ spatialLayer: 2, temporalLayer: 0 });

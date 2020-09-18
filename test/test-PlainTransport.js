@@ -91,11 +91,13 @@ test('router.createPlainTransport() succeeds', async () =>
 	expect(transport1.rtcpTuple).toBeUndefined();
 	expect(transport1.sctpParameters).toStrictEqual(
 		{
-			port           : 5000,
-			OS             : 1024,
-			MIS            : 1024,
-			maxMessageSize : 262144,
-			isDataChannel  : false
+			port               : 5000,
+			OS                 : 1024,
+			MIS                : 1024,
+			maxMessageSize     : 262144,
+			isDataChannel      : false,
+			sctpBufferedAmount : 0,
+			sendBufferSize     : 262144
 		});
 	expect(transport1.sctpState).toBe('new');
 	expect(transport1.srtpParameters).toBeUndefined();
@@ -103,6 +105,7 @@ test('router.createPlainTransport() succeeds', async () =>
 	const data1 = await transport1.dump();
 
 	expect(data1.id).toBe(transport1.id);
+	expect(data1.direct).toBe(false);
 	expect(data1.producerIds).toEqual([]);
 	expect(data1.consumerIds).toEqual([]);
 	expect(data1.tuple).toEqual(transport1.tuple);
@@ -142,6 +145,7 @@ test('router.createPlainTransport() succeeds', async () =>
 	const data2 = await transport2.dump();
 
 	expect(data2.id).toBe(transport2.id);
+	expect(data2.direct).toBe(false);
 	expect(data2.tuple).toEqual(transport2.tuple);
 	expect(data2.rtcpTuple).toEqual(transport2.rtcpTuple);
 	expect(data2.sctpState).toBeUndefined();
@@ -330,21 +334,6 @@ test('plainTransport.getStats() succeeds', async () =>
 
 test('plainTransport.connect() succeeds', async () =>
 {
-	// No SRTP enabled so passing srtpParameters must fail.
-	await expect(transport.connect(
-		{
-			ip             : '127.0.0.2',
-			port           : 9998,
-			rtcpPort       : 9999,
-			srtpParameters :
-			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
-			}
-		}))
-		.rejects
-		.toThrow(TypeError);
-
 	await expect(transport.connect({ ip: '1.2.3.4', port: 1234, rtcpPort: 1235 }))
 		.resolves
 		.toBeUndefined();
@@ -364,6 +353,21 @@ test('plainTransport.connect() succeeds', async () =>
 
 test('plainTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
+	// No SRTP enabled so passing srtpParameters must fail.
+	await expect(transport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9998,
+			rtcpPort       : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+			}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
 	await expect(transport.connect({}))
 		.rejects
 		.toThrow(TypeError);

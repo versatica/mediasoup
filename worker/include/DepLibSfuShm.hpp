@@ -83,6 +83,10 @@ namespace DepLibSfuShm
     void InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio);
     void CloseShmWriterCtx();
 
+    std::string StreamName() const { return this->stream_name; }
+    std::string LogName() const { return this->log_name; }
+    ShmWriterStatus Status() const { return this->wrt_status; }
+
     bool CanWrite() const;
     void SetListener(DepLibSfuShm::ShmCtx::Listener* l) { this->listener = l; }
 

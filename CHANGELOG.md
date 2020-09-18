@@ -4,6 +4,180 @@
 * Minor version leap to signify LivelyVideo mediasoup fork.
 * Lay out changes in ms worker C++ code needed to write RTP/RTCP into xcode shm. Placesholders for shm writer API calls, and no changes in Javascript lib/ yet.
 
+### 3.6.16
+
+* `SctpAssociation.cpp`: Fix `OnSctpAssociationBufferedAmount()` call.
+* Update deps.
+* New API to send data from Node throught SCTP DataConsumer.
+
+
+### 3.6.15
+
+* Avoid SRTP leak by deleting invalid SSRCs after STRP decryption (issue #437, thanks to @penguinol for reporting).
+* Update `usrsctp` dep.
+* DataConsumer 'bufferedAmount' implementation (PR #442).
+
+### 3.6.14
+
+* Fix `usrsctp` vulnerability (PR #439).
+* Fix issue #435 (thanks to @penguinol for reporting).
+* `TransportCongestionControlClient.cpp`: Enable periodic ALR probing to recover faster from network issues.
+* Update NPM deps.
+* Update `nlohmann::json` C++ dep to 3.9.0.
+* Update `Catch` to 2.13.0.
+
+
+### 3.6.13
+
+* RTP on `DirectTransport` (issue #433, PR #434):
+  - New API `producer.send(rtpPacket: Buffer)`.
+  - New API `consumer.on('rtp', (rtpPacket: Buffer)`.
+  - New API `directTransport.sendRtcp(rtcpPacket: Buffer)`.
+  - New API `directTransport.on('rtcp', (rtpPacket: Buffer)`.
+
+
+### 3.6.12
+
+* Release script.
+
+
+### 3.6.11
+
+* `Transport`: rename `maxSctpSendBufferSize` to `sctpSendBufferSize`.
+
+
+### 3.6.10
+
+* `Transport`: Implement `maxSctpSendBufferSize`.
+* Update `libuv` to 1.38.1.
+* Update `Catch` to 2.12.4.
+* Update NPM deps.
+
+
+### 3.6.9
+
+* `Transport::ReceiveRtpPacket()`: Call `RecvStreamClosed(packet->GetSsrc())` if received RTP packet does not match any `Producer`.
+* `Transport::HandleRtcpPacket()`: Ensure `Consumer` is found for received NACK Feedback packets.
+* Update NPM deps.
+* Update C++ `Catch` dep.
+* Fix issue #408.
+
+
+### 3.6.8
+
+* Fix SRTP leak due to streams not being removed when a `Producer` or `Consumer` is closed.
+  - PR #428 (fixes issues #426). 
+  - Credits to credits to @penguinol for reporting and initial work at PR #427.
+* Update `nlohmann::json` C++ dep to 3.8.0.
+* C++: Enhance `const` correctness.
+* Update NPM deps.
+
+
+### 3.6.7
+
+* `ConsumerScore`: Add `producerScores`, scores of all RTP streams in the producer ordered by encoding (just useful when the producer uses simulcast).
+  - PR #421 (fixes issues #420).
+* Hide worker executable console in Windows.
+  - PR #419 (credits to @BlueMagnificent).
+* `RtpStream.cpp`: Fix wrong `std::round()` usage.
+  - Issue #423.
+
+
+### 3.6.6
+
+* Update `usrsctp` library.
+* Update ESlint and TypeScript related dependencies.
+
+
+### 3.6.5
+
+* Set `score:0` when `dtx:true` is set in an `encoding` and there is no RTP for some seconds for that RTP stream.
+  - Fixes #415.
+
+
+### 3.6.4
+
+* `gyp`: Fix CLT version detection in OSX Catalina when XCode app is not installed.
+  - PR #413 (credits to @enimo).
+
+
+### 3.6.3
+
+* Modernize TypeScript.
+
+
+### 3.6.2
+
+* Fix crash in `Transport.ts` when closing a `DataConsumer` created on a `DirectTransport`.
+
+
+### 3.6.1
+
+* Export new `DirectTransport` in `types`.
+* Make `DataProducerOptions` optional (not needed when in a `DirectTransport`).
+
+
+### 3.6.0
+
+* SCTP/DataChannel termination:
+  - PR #409
+  - Allow the Node application to directly send text/binary messages to mediasoup-worker C++ process so others can consume them using `DataConsumers`.
+  - And vice-versa: allow the Node application to directly consume in Node messages send by `DataProducers`.
+* Add `WorkerLogTag` TypeScript enum and also add a new 'message' tag into it.
+
+
+### 3.5.15
+
+* Simulcast and SVC: Better computation of desired bitrate based on `maxBitrate` field in the `producer.rtpParameters.encodings`.
+
+
+### 3.5.14
+
+* Update deps, specially `uuid` and `@types/uuid` that had a TypeScript related bug.
+* `TransportCongestionClient.cpp`: Improve sender side bandwidth estimation by do not reporting `this->initialAvailableBitrate` as available bitrate due to strange behavior in the algorithm.
+
+
+### 3.5.13
+
+* Simplify `GetDesiredBitrate()` in `SimulcastConsumer` and `SvcConsumer`.
+* Update libuv to 1.38.0.
+
+
+### 3.5.12
+
+* `SeqManager.cpp`: Improve performance.
+  - PR #398 (credits to @penguinol).
+
+
+### 3.5.11
+
+* `SeqManager.cpp`: Fix a bug and improve performance.
+  - Fixes issue #395 via PR #396 (credits to @penguinol).
+* Drop Node.js 8 support. Minimum supported Node.js version is now 10.
+* Upgrade `eslint` and `jest` major versions.
+
+
+### 3.5.10
+
+* `SimulcastConsumer.cpp`: Fix `IncreaseLayer()` method (fixes #394).
+* Udpate Node deps.
+
+
+### 3.5.9
+
+* `libwebrtc`: Apply patch by @sspanak and @Ivaka to avoid crash. Related issue: #357.
+* `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in libuv 1.37.0.
+* Update Node deps.
+
+
+### 3.5.8
+
+* Enable `UV_UDP_RECVMMSG`:
+  - Upgrade libuv to 1.37.0.
+  - Use `uv_udp_init_ex()` with `UV_UDP_RECVMMSG` flag.
+  - Add our own `uv.gyp` now that libuv has removed support for GYP (fixes #384).
+
+
 ### 3.5.7
 
 * Fix crash in mediasoup-worker due to conversion from `uint64_t` to `int64_t` (used within `libwebrtc` code. Fixes #357.

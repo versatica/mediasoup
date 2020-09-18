@@ -32,15 +32,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 359405 2020-03-28 20:25:45Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 363440 2020-07-23 01:35:24Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_CONSTANTS_H_
 #define _NETINET_SCTP_CONSTANTS_H_
 
-#if defined(__Userspace_os_Windows)
+#if defined(_WIN32) && defined(__Userspace__)
 extern void getwintimeofday(struct timeval *tv);
 #endif
 
@@ -563,7 +563,7 @@ extern void getwintimeofday(struct timeval *tv);
 					 ((t) < SCTP_TIMER_TYPE_LAST))
 
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 /* Number of ticks to run the main timer at in msec */
 #define SCTP_MAIN_TIMER_DEFAULT		10
 #endif
@@ -586,12 +586,7 @@ extern void getwintimeofday(struct timeval *tv);
  * number of clusters as a base. This way high bandwidth environments will
  * not get impacted by the lower bandwidth sending a bunch of 1 byte chunks
  */
-#ifdef __Panda__
-#define SCTP_ASOC_MAX_CHUNKS_ON_QUEUE 10240
-#else
 #define SCTP_ASOC_MAX_CHUNKS_ON_QUEUE 512
-#endif
-
 
 /*
  * Basically the minimum amount of time before I do a early FR. Making this
@@ -776,9 +771,8 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_FROM_SCTP_ASCONF       0x80000000
 #define SCTP_FROM_SCTP_OUTPUT       0x90000000
 #define SCTP_FROM_SCTP_PEELOFF      0xa0000000
-#define SCTP_FROM_SCTP_PANDA        0xb0000000
-#define SCTP_FROM_SCTP_SYSCTL       0xc0000000
-#define SCTP_FROM_SCTP_CC_FUNCTIONS 0xd0000000
+#define SCTP_FROM_SCTP_SYSCTL       0xb0000000
+#define SCTP_FROM_SCTP_CC_FUNCTIONS 0xc0000000
 
 /* Location ID's */
 #define SCTP_LOC_1  0x00000001
@@ -817,6 +811,7 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_LOC_34 0x00000022
 #define SCTP_LOC_35 0x00000023
 #define SCTP_LOC_36 0x00000024
+#define SCTP_LOC_37 0x00000025
 
 /* Free assoc codes */
 #define SCTP_NORMAL_PROC      0
@@ -863,7 +858,7 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_CHUNKQUEUE_SCALE 10
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 /* clock variance is 1 ms */
 #define SCTP_CLOCK_GRANULARITY	1
 #else
@@ -970,7 +965,7 @@ extern void getwintimeofday(struct timeval *tv);
 
 /*-
  * defines for socket lock states.
- * Used by __APPLE__ and SCTP_SO_LOCK_TESTING
+ * Used by __APPLE__
  */
 #define SCTP_SO_LOCKED		1
 #define SCTP_SO_NOT_LOCKED	0
@@ -1001,7 +996,7 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_SOCKET_OPTION_LIMIT (64 * 1024)
 
 #if defined(__Userspace__)
-#if defined(__Userspace_os_Windows)
+#if defined(_WIN32)
 #define SCTP_GETTIME_TIMEVAL(x)	getwintimeofday(x)
 #define SCTP_GETPTIME_TIMEVAL(x) getwintimeofday(x) /* this doesn't seem to ever be used.. */
 #else
@@ -1025,11 +1020,11 @@ do { \
 	} \
 } while (0)
 
-#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
+#if defined(__FreeBSD__) || defined(_WIN32) || defined(__Userspace__)
 #define sctp_sowwakeup_locked(inp, so) \
 do { \
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) { \
-                SOCKBUF_UNLOCK(&((so)->so_snd)); \
+		SOCKBUF_UNLOCK(&((so)->so_snd)); \
 		inp->sctp_flags |= SCTP_PCB_FLAGS_WAKEOUTPUT; \
 	} else { \
 		sowwakeup_locked(so); \
@@ -1039,7 +1034,7 @@ do { \
 #define sctp_sowwakeup_locked(inp, so) \
 do { \
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) { \
-                SOCKBUF_UNLOCK(&((so)->so_snd)); \
+		SOCKBUF_UNLOCK(&((so)->so_snd)); \
 		inp->sctp_flags |= SCTP_PCB_FLAGS_WAKEOUTPUT; \
 	} else { \
 		sowwakeup(so); \
@@ -1056,12 +1051,12 @@ do { \
 	} \
 } while (0)
 
-#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
+#if defined(__FreeBSD__) || defined(_WIN32) || defined(__Userspace__)
 #define sctp_sorwakeup_locked(inp, so) \
 do { \
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) { \
 		inp->sctp_flags |= SCTP_PCB_FLAGS_WAKEINPUT; \
-                SOCKBUF_UNLOCK(&((so)->so_rcv)); \
+		SOCKBUF_UNLOCK(&((so)->so_rcv)); \
 	} else { \
 		sorwakeup_locked(so); \
 	} \
@@ -1072,7 +1067,7 @@ do { \
 do { \
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) { \
 		inp->sctp_flags |= SCTP_PCB_FLAGS_WAKEINPUT; \
-                SOCKBUF_UNLOCK(&((so)->so_rcv)); \
+		SOCKBUF_UNLOCK(&((so)->so_rcv)); \
 	} else { \
 		sorwakeup(so); \
 	} \

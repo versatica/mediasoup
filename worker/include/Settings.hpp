@@ -26,6 +26,7 @@ public:
 		bool svc{ false };
 		bool sctp{ false };
 		bool xcode{ false };
+		bool message{ false };
 	};
 
 public:

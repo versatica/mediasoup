@@ -81,6 +81,7 @@ namespace RTC
 				return nullptr;
 			}
 
+			// NOLINTNEXTLINE(llvm-qualified-auto)
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<FeedbackRtpTransportPacket> packet(
@@ -116,7 +117,7 @@ namespace RTC
 
 			this->baseSequenceNumber  = Utils::Byte::Get2Bytes(data, 0);
 			this->packetStatusCount   = Utils::Byte::Get2Bytes(data, 2);
-			this->referenceTime       = parseReferenceTime(data + 4u);
+			this->referenceTime       = parseReferenceTime(data + 4);
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
 			this->size                = len;
 
@@ -243,7 +244,7 @@ namespace RTC
 				if (packetResult.received)
 				{
 					MS_DUMP(
-					  "    seq:%" PRIu16 ", received:yes, receivedAtMs:%" PRIi32,
+					  "    seq:%" PRIu16 ", received:yes, receivedAtMs:%" PRIi64,
 					  packetResult.sequenceNumber,
 					  packetResult.receivedAtMs);
 				}
@@ -431,7 +432,7 @@ namespace RTC
 			}
 
 			size_t deltaIdx{ 0u };
-			int32_t currentReceivedAtMs = this->referenceTime * 64;
+			int64_t currentReceivedAtMs = static_cast<int64_t>(this->referenceTime * 64);
 
 			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)
 			{

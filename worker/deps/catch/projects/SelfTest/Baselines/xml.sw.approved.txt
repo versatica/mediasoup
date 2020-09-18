@@ -196,6 +196,473 @@ Nor would this
       </Expression>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="#1905 -- test spec parser properly clears internal state between compound tests" tags="[command-line][test-spec]" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Original>
+          spec.matches(fakeTestCase("spec . char"))
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Original>
+          spec.matches(fakeTestCase("spec , char"))
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Original>
+          !(spec.matches(fakeTestCase(R"(spec \, char)")))
+        </Original>
+        <Expanded>
+          !false
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1912 -- test spec parser handles escaping" tags="[command-line][test-spec]" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+      <Section name="Various parentheses" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+          <Original>
+            spec.matches(fakeTestCase(R"(spec {a} char)"))
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+          <Original>
+            spec.matches(fakeTestCase(R"(spec [a] char)"))
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+          <Original>
+            !(spec.matches(fakeTestCase("differs but has similar tag", "[a]")))
+          </Original>
+          <Expanded>
+            !false
+          </Expanded>
+        </Expression>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="backslash in test name" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/CmdLine.tests.cpp" >
+          <Original>
+            spec.matches(fakeTestCase(R"(spec \ char)"))
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1913 - GENERATE inside a for loop should not keep recreating the generator" tags="[generators][regression]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          counter &lt; 7
+        </Original>
+        <Expanded>
+          3 &lt; 7
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          counter &lt; 7
+        </Original>
+        <Expanded>
+          6 &lt; 7
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1913 - GENERATEs can share a line" tags="[generators][regression]" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          i != j
+        </Original>
+        <Expanded>
+          1 != 3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          i != j
+        </Original>
+        <Expanded>
+          1 != 4
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          i != j
+        </Original>
+        <Expanded>
+          2 != 3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Generators.tests.cpp" >
+        <Original>
+          i != j
+        </Original>
+        <Expanded>
+          2 != 4
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1938 - GENERATE after a section" tags="[!hide][.][generators][regression]" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+      <Section name="A" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="B" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+          <Original>
+            m
+          </Original>
+          <Expanded>
+            1
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="B" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+          <Original>
+            m
+          </Original>
+          <Expanded>
+            2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="B" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+          <Original>
+            m
+          </Original>
+          <Expanded>
+            3
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1938 - Section followed by flat generate" tags="[!hide][.][generators][regression]" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+      <Section name="A" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+          <Original>
+            1
+          </Original>
+          <Expanded>
+            1
+          </Expanded>
+        </Expression>
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          3
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1938 - flat generate" tags="[!hide][.][generators][regression]" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          3
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1938 - mixed sections and generates" tags="[!hide][.][generators][regression]" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+      <Section name="A" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Info>
+        i := 1
+      </Info>
+      <Info>
+        j := 3
+      </Info>
+      <Info>
+        k := 5
+      </Info>
+      <Section name="B" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Info>
+        i := 1
+      </Info>
+      <Info>
+        j := 3
+      </Info>
+      <Info>
+        k := 6
+      </Info>
+      <Section name="B" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Info>
+        i := 1
+      </Info>
+      <Info>
+        j := 4
+      </Info>
+      <Info>
+        k := 5
+      </Info>
+      <Info>
+        i := 1
+      </Info>
+      <Info>
+        j := 4
+      </Info>
+      <Info>
+        k := 6
+      </Info>
+      <Section name="A" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Info>
+        i := 2
+      </Info>
+      <Info>
+        j := 3
+      </Info>
+      <Info>
+        k := 5
+      </Info>
+      <Section name="B" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Info>
+        i := 2
+      </Info>
+      <Info>
+        j := 3
+      </Info>
+      <Info>
+        k := 6
+      </Info>
+      <Section name="B" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+      </Section>
+      <Info>
+        i := 2
+      </Info>
+      <Info>
+        j := 4
+      </Info>
+      <Info>
+        k := 5
+      </Info>
+      <Info>
+        i := 2
+      </Info>
+      <Info>
+        j := 4
+      </Info>
+      <Info>
+        k := 6
+      </Info>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1938 - nested generate" tags="[!hide][.][generators][regression]" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          m
+        </Original>
+        <Expanded>
+          3
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp" >
+        <Original>
+          n
+        </Original>
+        <Expanded>
+          3
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1954 - 7 arg template test case sig compiles - 1, 1, 1, 1, 1, 0, 0" tags="[!hide][.][compilation][regression]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1954 - 7 arg template test case sig compiles - 5, 1, 1, 1, 1, 0, 0" tags="[!hide][.][compilation][regression]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="#1954 - 7 arg template test case sig compiles - 5, 3, 1, 1, 1, 0, 0" tags="[!hide][.][compilation][regression]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="#748 - captures with unexpected exceptions" tags="[!hide][!shouldfail][!throws][.][failing]" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
       <Section name="outside assertions" filename="projects/<exe-name>/UsageTests/Exception.tests.cpp" >
         <Info>
@@ -2109,6 +2576,49 @@ Nor would this
       </Section>
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="Assertion macros support bit operators and bool conversions" tags="[bitops][compilation]" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          lhs | rhs
+        </Original>
+        <Expanded>
+          Val: 1 | Val: 2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          !(lhs &amp; rhs)
+        </Original>
+        <Expanded>
+          !(Val: 1 &amp; Val: 2)
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          HasBitOperators{ 1 } &amp; HasBitOperators{ 1 }
+        </Original>
+        <Expanded>
+          Val: 1 &amp; Val: 1
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          lhs ^ rhs
+        </Original>
+        <Expanded>
+          Val: 1 ^ Val: 2
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="REQUIRE_FALSE" filename="projects/<exe-name>/UsageTests/Compilation.tests.cpp" >
+        <Original>
+          !(lhs ^ lhs)
+        </Original>
+        <Expanded>
+          !(Val: 1 ^ Val: 1)
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
     <TestCase name="Assertions then sections" tags="[Tricky]" filename="projects/<exe-name>/UsageTests/Tricky.tests.cpp" >
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Tricky.tests.cpp" >
         <Original>
@@ -2849,6 +3359,63 @@ Nor would this
           "some completely different text that contains one common word" ( contains: "string" or contains: "random" or contains: "different" )
         </Expanded>
       </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="Composed matchers shortcircuit" tags="[composed][matchers]" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+      <Section name="&amp;&amp;" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            1, !(first &amp;&amp; second)
+          </Original>
+          <Expanded>
+            1 not ( CheckedTestingMatcher set to fail and CheckedTestingMatcher set to fail )
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            first.matchCalled
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            !second.matchCalled
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
+      <Section name="||" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            1, first || second
+          </Original>
+          <Expanded>
+            1 ( CheckedTestingMatcher set to succeed or CheckedTestingMatcher set to fail )
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            first.matchCalled
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            !second.matchCalled
+          </Original>
+          <Expanded>
+            true
+          </Expanded>
+        </Expression>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+      </Section>
       <OverallResult success="true"/>
     </TestCase>
     <TestCase name="Contains string matcher" tags="[!hide][.][failing][matchers]" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13529,9 +14096,17 @@ There is no extra whitespace here
               { 1.0, 2.0, 3.0 } is approx: { 1.0, 2.0, 3.0 }
             </Expanded>
           </Expression>
-          <OverallResults successes="1" failures="0" expectedFailures="0"/>
+          <Expression success="true" type="REQUIRE_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+            <Original>
+              v1, Approx&lt;double>({ 1., 2., 3. })
+            </Original>
+            <Expanded>
+              { 1.0, 2.0, 3.0 } is approx: { 1.0, 2.0, 3.0 }
+            </Expanded>
+          </Expression>
+          <OverallResults successes="2" failures="0" expectedFailures="0"/>
         </Section>
-        <OverallResults successes="1" failures="0" expectedFailures="0"/>
+        <OverallResults successes="2" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="Vectors with elements" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
         <Section name="Different length" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13630,12 +14205,36 @@ There is no extra whitespace here
             { 1, 2, 3 } Contains: 2
           </Expanded>
         </Expression>
-        <OverallResults successes="2" failures="0" expectedFailures="0"/>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (VectorContains&lt;int, CustomAllocator&lt;int>>(2))
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: 2
+          </Expanded>
+        </Expression>
+        <OverallResults successes="3" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="Contains (vector)" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
           <Original>
             v, Contains(v2)
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: { 1, 2 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v, Contains&lt;int>({ 1, 2 })
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: { 1, 2 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (Contains&lt;int, std::allocator&lt;int>, CustomAllocator&lt;int>>(v2))
           </Original>
           <Expanded>
             { 1, 2, 3 } Contains: { 1, 2 }
@@ -13665,7 +14264,23 @@ There is no extra whitespace here
             {  } Contains: {  }
           </Expanded>
         </Expression>
-        <OverallResults successes="4" failures="0" expectedFailures="0"/>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (Contains&lt;int, std::allocator&lt;int>, CustomAllocator&lt;int>>(v2))
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, Contains(v6)
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Contains: { 1, 2 }
+          </Expanded>
+        </Expression>
+        <OverallResults successes="8" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="Contains (element), composed" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13697,13 +14312,37 @@ There is no extra whitespace here
         </Expression>
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
           <Original>
+            v, Equals&lt;int>({ 1, 2, 3 })
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Equals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
             v, Equals(v2)
           </Original>
           <Expanded>
             { 1, 2, 3 } Equals: { 1, 2, 3 }
           </Expanded>
         </Expression>
-        <OverallResults successes="3" failures="0" expectedFailures="0"/>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (Equals&lt;int, std::allocator&lt;int>, CustomAllocator&lt;int>>(v2))
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Equals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, Equals(v6)
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } Equals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <OverallResults successes="6" failures="0" expectedFailures="0"/>
       </Section>
       <Section name="UnorderedEquals" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13712,6 +14351,14 @@ There is no extra whitespace here
           </Original>
           <Expanded>
             { 1, 2, 3 } UnorderedEquals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v, UnorderedEquals&lt;int>({ 3, 2, 1 })
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } UnorderedEquals: { 3, 2, 1 }
           </Expanded>
         </Expression>
         <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
@@ -13738,7 +14385,23 @@ There is no extra whitespace here
             { 2, 3, 1 } UnorderedEquals: { 1, 2, 3 }
           </Expanded>
         </Expression>
-        <OverallResults successes="4" failures="0" expectedFailures="0"/>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5, (UnorderedEquals&lt;int, std::allocator&lt;int>, CustomAllocator&lt;int>>(permuted))
+          </Original>
+          <Expanded>
+            { 1, 2, 3 } UnorderedEquals: { 2, 3, 1 }
+          </Expanded>
+        </Expression>
+        <Expression success="true" type="CHECK_THAT" filename="projects/<exe-name>/UsageTests/Matchers.tests.cpp" >
+          <Original>
+            v5_permuted, UnorderedEquals(v5)
+          </Original>
+          <Expanded>
+            { 1, 3, 2 } UnorderedEquals: { 1, 2, 3 }
+          </Expanded>
+        </Expression>
+        <OverallResults successes="7" failures="0" expectedFailures="0"/>
       </Section>
       <OverallResult success="true"/>
     </TestCase>
@@ -16048,7 +16711,9 @@ loose text artifact
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <OverallResults successes="1525" failures="149" expectedFailures="21"/>
+    <OverallResults successes="1606" failures="149" expectedFailures="21"/>
+    <OverallResultsCases successes="231" failures="86" expectedFailures="4"/>
   </Group>
-  <OverallResults successes="1525" failures="148" expectedFailures="21"/>
+  <OverallResults successes="1606" failures="148" expectedFailures="21"/>
+  <OverallResultsCases successes="231" failures="86" expectedFailures="4"/>
 </Catch>

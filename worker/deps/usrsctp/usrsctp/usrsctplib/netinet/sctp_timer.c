@@ -32,16 +32,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 359405 2020-03-28 20:25:45Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 362054 2020-06-11 13:34:09Z tuexen $");
 #endif
 
 #define _IP_VHL
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_pcb.h>
 #ifdef INET6
-#if defined(__Userspace_os_FreeBSD)
+#if defined(__FreeBSD__) && defined(__Userspace__)
 #include <netinet6/sctp6_var.h>
 #endif
 #endif
@@ -57,13 +57,9 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 359405 2020-03-28 20:25:45Z tu
 #include <netinet/sctp.h>
 #include <netinet/sctp_uio.h>
 #if defined(INET) || defined(INET6)
-#if !defined(__Userspace_os_Windows)
+#if !(defined(_WIN32) && defined(__Userspace__))
 #include <netinet/udp.h>
 #endif
-#endif
-
-#if defined(__APPLE__)
-#define APPLE_FILE_NO 6
 #endif
 
 void
@@ -348,7 +344,11 @@ sctp_find_alternate_net(struct sctp_tcb *stcb,
 				return (NULL);
 			}
 		}
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+		if (alt->ro.ro_nh == NULL) {
+#else
 		if (alt->ro.ro_rt == NULL) {
+#endif
 			if (alt->ro._s_addr) {
 				sctp_free_ifa(alt->ro._s_addr);
 				alt->ro._s_addr = NULL;
@@ -356,7 +356,11 @@ sctp_find_alternate_net(struct sctp_tcb *stcb,
 			alt->src_addr_selected = 0;
 		}
 		if (((alt->dest_state & SCTP_ADDR_REACHABLE) == SCTP_ADDR_REACHABLE) &&
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+		    (alt->ro.ro_nh != NULL) &&
+#else
 		    (alt->ro.ro_rt != NULL) &&
+#endif
 		    (!(alt->dest_state & SCTP_ADDR_UNCONFIRMED))) {
 			/* Found a reachable address */
 			break;
@@ -517,7 +521,7 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 	}
 	tv.tv_sec = cur_rto / 1000000;
 	tv.tv_usec = cur_rto % 1000000;
-#ifndef __FreeBSD__
+#if !(defined(__FreeBSD__) && !defined(__Userspace__))
 	timersub(&now, &tv, &min_wait);
 #else
 	min_wait = now;
@@ -614,7 +618,7 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 			}
 			if (stcb->asoc.prsctp_supported && PR_SCTP_TTL_ENABLED(chk->flags)) {
 				/* Is it expired? */
-#ifndef __FreeBSD__
+#if !(defined(__FreeBSD__) && !defined(__Userspace__))
 				if (timercmp(&now, &chk->rec.data.timetodrop, >)) {
 #else
 				if (timevalcmp(&now, &chk->rec.data.timetodrop, >)) {
@@ -942,10 +946,14 @@ sctp_t3rxt_timer(struct sctp_inpcb *inp,
 		net->src_addr_selected = 0;
 
 		/* Force a route allocation too */
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+		RO_NHFREE(&net->ro);
+#else
 		if (net->ro.ro_rt) {
 			RTFREE(net->ro.ro_rt);
 			net->ro.ro_rt = NULL;
 		}
+#endif
 
 		/* Was it our primary? */
 		if ((stcb->asoc.primary_destination == net) && (alt != net)) {
@@ -982,7 +990,12 @@ sctp_t3rxt_timer(struct sctp_inpcb *inp,
 		/* C3. See if we need to send a Fwd-TSN */
 		if (SCTP_TSN_GT(stcb->asoc.advanced_peer_ack_point, stcb->asoc.last_acked_seq)) {
 			send_forward_tsn(stcb, &stcb->asoc);
-			if (lchk) {
+			for (; lchk != NULL; lchk = TAILQ_NEXT(lchk, sctp_next)) {
+				if (lchk->whoTo != NULL) {
+					break;
+				}
+			}
+			if (lchk != NULL) {
 				/* Assure a timer is up */
 				sctp_timer_start(SCTP_TIMER_TYPE_SEND, stcb->sctp_ep, stcb, lchk->whoTo);
 			}
@@ -1442,7 +1455,7 @@ sctp_heartbeat_timer(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 
 		if ((net->last_sent_time.tv_sec > 0) ||
 		    (net->last_sent_time.tv_usec > 0)) {
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 			struct timeval diff;
 
 			SCTP_GETTIME_TIMEVAL(&diff);
@@ -1488,7 +1501,7 @@ sctp_pathmtu_timer(struct sctp_inpcb *inp,
 				if (net->ro._l_addr.sa.sa_family == AF_INET6) {
 					struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&net->ro._l_addr;
 					/* KAME hack: embed scopeid */
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 #if defined(APPLE_LEOPARD) || defined(APPLE_SNOWLEOPARD)
 					(void)in6_embedscope(&sin6->sin6_addr, sin6, NULL, NULL);
 #else
@@ -1521,7 +1534,11 @@ sctp_pathmtu_timer(struct sctp_inpcb *inp,
 				net->src_addr_selected = 1;
 		}
 		if (net->ro._s_addr) {
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+			mtu = SCTP_GATHER_MTU_FROM_ROUTE(net->ro._s_addr, &net->ro._s_addr.sa, net->ro.ro_nh);
+#else
 			mtu = SCTP_GATHER_MTU_FROM_ROUTE(net->ro._s_addr, &net->ro._s_addr.sa, net->ro.ro_rt);
+#endif
 #if defined(INET) || defined(INET6)
 			if (net->port) {
 				mtu -= sizeof(struct udphdr);

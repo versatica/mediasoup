@@ -75,9 +75,9 @@ export class ShmTransport extends Transport
 		const { data } = params;
 
 		// ShmTransport data.
-		this._shm = data.shm;
+		this._shm = data.shm.name;
 
-		this._log = data.log;
+		this._log = data.shm.log;
 	}
 
 	/**

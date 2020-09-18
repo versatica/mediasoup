@@ -252,8 +252,7 @@ inline void UdpSocket::OnUvRecv(
 {
 	MS_TRACE();
 
-	// NOTE: libuv calls twice to alloc & recv when a datagram is received, the
-	// second one with nread = 0 and addr = NULL. Ignore it.
+	// NOTE: Ignore if there is nothing to read or if it was an empty datagram.
 	if (nread == 0)
 		return;
 

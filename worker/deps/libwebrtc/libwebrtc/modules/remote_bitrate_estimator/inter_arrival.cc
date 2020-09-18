@@ -48,7 +48,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
     current_timestamp_group_.timestamp = timestamp;
     current_timestamp_group_.first_timestamp = timestamp;
     current_timestamp_group_.first_arrival_ms = arrival_time_ms;
-  } else if (!PacketInOrder(timestamp)) {
+  } else if (!PacketInOrder(timestamp, arrival_time_ms)) {
     return false;
   } else if (NewTimestampGroup(arrival_time_ms, timestamp)) {
     // First packet of a later frame, the previous frame sample is ready.
@@ -65,7 +65,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
       if (*arrival_time_delta_ms - system_time_delta_ms >=
           kArrivalTimeOffsetThresholdMs) {
         MS_WARN_TAG(bwe,
-            "The arrival time clock offset has changed (diff = %" PRIi64 "ms, resetting",
+            "the arrival time clock offset has changed (diff = %" PRIi64 "ms, resetting",
             *arrival_time_delta_ms - system_time_delta_ms);
         Reset();
         return false;
@@ -76,7 +76,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
         ++num_consecutive_reordered_packets_;
         if (num_consecutive_reordered_packets_ >= kReorderedResetThreshold) {
           MS_WARN_TAG(bwe,
-                 "Packets are being reordered on the path from the "
+                 "packets are being reordered on the path from the "
                  "socket to the bandwidth estimator. Ignoring this "
                  "packet for bandwidth estimation, resetting");
           Reset();
@@ -110,16 +110,31 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
   return calculated_deltas;
 }
 
-bool InterArrival::PacketInOrder(uint32_t timestamp) {
+bool InterArrival::PacketInOrder(uint32_t timestamp, int64_t arrival_time_ms) {
   if (current_timestamp_group_.IsFirstPacket()) {
     return true;
+  } else if (arrival_time_ms < 0) {
+    // NOTE: Change related to https://github.com/versatica/mediasoup/issues/357
+    //
+    // Sometimes we do get negative arrival time, which causes BelongsToBurst()
+    // to fail, which may cause anything that uses InterArrival to crash.
+    //
+    // Credits to @sspanak and @Ivaka.
+    return false;
   } else {
     // Assume that a diff which is bigger than half the timestamp interval
     // (32 bits) must be due to reordering. This code is almost identical to
     // that in IsNewerTimestamp() in module_common_types.h.
     uint32_t timestamp_diff =
         timestamp - current_timestamp_group_.first_timestamp;
-    return timestamp_diff < 0x80000000;
+
+    const static uint32_t int_middle = 0x80000000;
+
+    if (timestamp_diff == int_middle) {
+      return timestamp > current_timestamp_group_.first_timestamp;
+    }
+
+    return timestamp_diff < int_middle;
   }
 }
 
@@ -146,7 +161,8 @@ bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
 
   MS_ASSERT(
     current_timestamp_group_.complete_time_ms >= 0,
-    "current_timestamp_group_.complete_time_ms < 0");
+    "current_timestamp_group_.complete_time_ms < 0 [current_timestamp_group_.complete_time_ms:%" PRIi64 "]",
+    current_timestamp_group_.complete_time_ms);
 
   int64_t arrival_time_delta_ms =
       arrival_time_ms - current_timestamp_group_.complete_time_ms;

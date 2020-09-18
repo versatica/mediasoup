@@ -22,8 +22,8 @@ namespace RTC
 		if (this->consumableRtpEncodings.size() != 1u)
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto& encoding         = this->rtpParameters.encodings[0];
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
@@ -69,12 +69,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
+
 		jsonObject["score"] = this->rtpStream->GetScore();
 
 		if (this->producerRtpStream)
 			jsonObject["producerScore"] = this->producerRtpStream->GetScore();
 		else
 			jsonObject["producerScore"] = 0;
+
+		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
 	void SimpleConsumer::HandleRequest(Channel::Request* request)
@@ -115,9 +119,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-
-		// Emit the score event.
-		EmitScore();
 	}
 
 	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
@@ -180,7 +181,7 @@ namespace RTC
 		// Video SimpleConsumer does not really play the BWE game when. However, let's
 		// be honest and try to be nice.
 		auto nowMs          = DepLibUV::GetTimeMs();
-		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs, 0u, 0u);
+		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		if (desiredBitrate < bitrate)
 			return desiredBitrate;
@@ -215,7 +216,14 @@ namespace RTC
 			return 0u;
 
 		auto nowMs          = DepLibUV::GetTimeMs();
-		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs, 0u, 0u);
+		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
+
+		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
+		// greater than computed one, then use it.
+		auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
+
+		if (maxBitrate > desiredBitrate)
+			desiredBitrate = maxBitrate;
 
 		return desiredBitrate;
 	}
@@ -456,8 +464,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto& encoding         = this->rtpParameters.encodings[0];
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		MS_DEBUG_TAG(
 		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
@@ -495,9 +503,9 @@ namespace RTC
 			params.useDtx = true;
 		}
 
-		for (auto& fb : mediaCodec->rtcpFeedback)
+		for (const auto& fb : mediaCodec->rtcpFeedback)
 		{
-			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+			if (!params.useNack && fb.type == "nack" && fb.parameter.empty())
 			{
 				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 
@@ -527,7 +535,7 @@ namespace RTC
 		if (IsPaused() || IsProducerPaused())
 			this->rtpStream->Pause();
 
-		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+		const auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);

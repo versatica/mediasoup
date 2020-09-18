@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Channel/Request.hpp"
+#include "PayloadChannel/Request.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include <json.hpp>
 #include <string>
@@ -11,13 +12,27 @@ namespace RTC
 {
 	class DataConsumer
 	{
+	protected:
+		using onQueuedCallback = const std::function<void(bool queued)>;
+
 	public:
 		class Listener
 		{
 		public:
-			virtual void OnDataConsumerSendSctpMessage(
-			  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
-			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)    = 0;
+			virtual void OnDataConsumerSendMessage(
+			  RTC::DataConsumer* dataConsumer,
+			  uint32_t ppid,
+			  const uint8_t* msg,
+			  size_t len,
+			  onQueuedCallback* cb)                                                        = 0;
+			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
+		};
+
+	public:
+		enum class Type : uint8_t
+		{
+			SCTP = 0,
+			DIRECT
 		};
 
 	public:
@@ -26,13 +41,18 @@ namespace RTC
 		  const std::string& dataProducerId,
 		  RTC::DataConsumer::Listener* listener,
 		  json& data,
-		  size_t maxSctpMessageSize);
+		  size_t maxMessageSize);
 		virtual ~DataConsumer();
 
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
 		void HandleRequest(Channel::Request* request);
+		void HandleRequest(PayloadChannel::Request* request);
+		Type GetType() const
+		{
+			return this->type;
+		}
 		const RTC::SctpStreamParameters& GetSctpStreamParameters() const
 		{
 			return this->sctpStreamParameters;
@@ -42,7 +62,7 @@ namespace RTC
 			// clang-format off
 			return (
 				this->transportConnected &&
-				this->sctpAssociationConnected &&
+				(this->type == DataConsumer::Type::DIRECT || this->sctpAssociationConnected) &&
 				!this->dataProducerClosed
 			);
 			// clang-format on
@@ -51,8 +71,9 @@ namespace RTC
 		void TransportDisconnected();
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
+		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void DataProducerClosed();
-		void SendSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len);
+		void SendMessage(uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* = nullptr);
 
 	public:
 		// Passed by argument.
@@ -62,8 +83,10 @@ namespace RTC
 	private:
 		// Passed by argument.
 		RTC::DataConsumer::Listener* listener{ nullptr };
-		size_t maxSctpMessageSize{ 0u };
+		size_t maxMessageSize{ 0u };
 		// Others.
+		Type type;
+		std::string typeString;
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;
@@ -72,6 +95,8 @@ namespace RTC
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0u };
 		size_t bytesSent{ 0u };
+		uint32_t bufferedAmount{ 0u };
+		uint32_t bufferedAmountLowThreshold{ 0u };
 	};
 } // namespace RTC
 

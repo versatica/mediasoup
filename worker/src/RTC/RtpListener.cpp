@@ -54,7 +54,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& rtpParameters = producer->GetRtpParameters();
+		const auto& rtpParameters = producer->GetRtpParameters();
 
 		// Add entries into the ssrcTable.
 		for (auto& encoding : rtpParameters.encodings)

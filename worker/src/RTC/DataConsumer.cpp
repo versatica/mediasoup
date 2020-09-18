@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "Channel/Notifier.hpp"
 
 namespace RTC
@@ -16,23 +17,43 @@ namespace RTC
 	  const std::string& dataProducerId,
 	  RTC::DataConsumer::Listener* listener,
 	  json& data,
-	  size_t maxSctpMessageSize)
-	  : id(id), dataProducerId(dataProducerId), listener(listener),
-	    maxSctpMessageSize(maxSctpMessageSize)
+	  size_t maxMessageSize)
+	  : id(id), dataProducerId(dataProducerId), listener(listener), maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
 
+		auto jsonTypeIt                 = data.find("type");
 		auto jsonSctpStreamParametersIt = data.find("sctpStreamParameters");
 		auto jsonLabelIt                = data.find("label");
 		auto jsonProtocolIt             = data.find("protocol");
 
-		if (jsonSctpStreamParametersIt == data.end() || !jsonSctpStreamParametersIt->is_object())
-		{
-			MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
-		}
+		if (jsonTypeIt == data.end() || !jsonTypeIt->is_string())
+			MS_THROW_TYPE_ERROR("missing type");
 
-		// This may throw.
-		this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+		this->typeString = jsonTypeIt->get<std::string>();
+
+		if (this->typeString == "sctp")
+			this->type = DataConsumer::Type::SCTP;
+		else if (this->typeString == "direct")
+			this->type = DataConsumer::Type::DIRECT;
+		else
+			MS_THROW_TYPE_ERROR("invalid type");
+
+		if (this->type == DataConsumer::Type::SCTP)
+		{
+			// clang-format off
+			if (
+				jsonSctpStreamParametersIt == data.end() ||
+				!jsonSctpStreamParametersIt->is_object()
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
+			}
+
+			// This may throw.
+			this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+		}
 
 		if (jsonLabelIt != data.end() && jsonLabelIt->is_string())
 			this->label = jsonLabelIt->get<std::string>();
@@ -53,17 +74,29 @@ namespace RTC
 		// Add id.
 		jsonObject["id"] = this->id;
 
+		// Add type.
+		jsonObject["type"] = this->typeString;
+
 		// Add dataProducerId.
 		jsonObject["dataProducerId"] = this->dataProducerId;
 
 		// Add sctpStreamParameters.
-		this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+		if (this->type == DataConsumer::Type::SCTP)
+		{
+			this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+		}
 
 		// Add label.
 		jsonObject["label"] = this->label;
 
 		// Add protocol.
 		jsonObject["protocol"] = this->protocol;
+
+		// Add bufferedAmount.
+		jsonObject["bufferedAmount"] = this->bufferedAmount;
+
+		// Add bufferedAmountLowThreshold.
+		jsonObject["bufferedAmountLowThreshold"] = this->bufferedAmountLowThreshold;
 	}
 
 	void DataConsumer::FillJsonStats(json& jsonArray) const
@@ -120,6 +153,69 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			{
+				auto jsonThresholdIt = request->data.find("threshold");
+
+				if (jsonThresholdIt == request->data.end() || !jsonThresholdIt->is_number_unsigned())
+					MS_THROW_TYPE_ERROR("wrong bufferedAmountThreshold (not an unsigned number)");
+
+				this->bufferedAmountLowThreshold = jsonThresholdIt->get<uint32_t>();
+
+				request->Accept();
+
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+		}
+	}
+
+	void DataConsumer::HandleRequest(PayloadChannel::Request* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+			case PayloadChannel::Request::MethodId::DATA_CONSUMER_SEND:
+			{
+				auto jsonPpidIt = request->data.find("ppid");
+
+				if (jsonPpidIt == request->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
+				{
+					MS_THROW_TYPE_ERROR("invalid ppid");
+				}
+
+				auto ppid       = jsonPpidIt->get<uint32_t>();
+				const auto* msg = request->payload;
+				auto len        = request->payloadLen;
+
+				if (len > this->maxMessageSize)
+				{
+					MS_WARN_TAG(
+					  message,
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
+					  len,
+					  this->maxMessageSize);
+
+					return;
+				}
+
+				const auto* cb = new onQueuedCallback([&request](bool queued) {
+					if (queued)
+						request->Accept();
+					else
+						request->Error("message send failed");
+				});
+
+				SendMessage(ppid, msg, len, cb);
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
@@ -163,6 +259,30 @@ namespace RTC
 		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
 	}
 
+	void DataConsumer::SctpAssociationBufferedAmount(uint32_t bufferedAmount)
+	{
+		MS_TRACE();
+
+		auto previousBufferedAmount = this->bufferedAmount;
+
+		this->bufferedAmount = bufferedAmount;
+
+		// clang-format off
+		if (
+				previousBufferedAmount > this->bufferedAmountLowThreshold &&
+				this->bufferedAmount <= this->bufferedAmountLowThreshold
+		)
+		// clang-format on
+		{
+			// Notify the Node DataConsumer.
+			json data = json::object();
+
+			data["bufferedAmount"] = this->bufferedAmount;
+
+			Channel::Notifier::Emit(this->id, "bufferedamountlow", data);
+		}
+	}
+
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
 	// right after calling this method. Otherwise ugly things may happen.
 	void DataConsumer::DataProducerClosed()
@@ -178,20 +298,20 @@ namespace RTC
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 
-	void DataConsumer::SendSctpMessage(uint32_t ppid, const uint8_t* msg, size_t len)
+	void DataConsumer::SendMessage(uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
 		if (!IsActive())
 			return;
 
-		if (len > this->maxSctpMessageSize)
+		if (len > this->maxMessageSize)
 		{
 			MS_WARN_TAG(
-			  sctp,
-			  "given message exceeds maxSctpMessageSize value [maxSctpMessageSize:%zu, len:%zu]",
+			  message,
+			  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 			  len,
-			  this->maxSctpMessageSize);
+			  this->maxMessageSize);
 
 			return;
 		}
@@ -199,6 +319,6 @@ namespace RTC
 		this->messagesSent++;
 		this->bytesSent += len;
 
-		this->listener->OnDataConsumerSendSctpMessage(this, ppid, msg, len);
+		this->listener->OnDataConsumerSendMessage(this, ppid, msg, len, cb);
 	}
 } // namespace RTC

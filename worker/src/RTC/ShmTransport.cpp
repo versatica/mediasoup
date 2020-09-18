@@ -31,30 +31,30 @@ namespace RTC
 		std::string shm;
 		auto jsonShmIt = data.find("shm");
 		if (jsonShmIt == data.end())
-			MS_THROW_TYPE_ERROR("missing shm");
+			MS_THROW_TYPE_ERROR("missing shm in [%s]", data.dump().c_str());
 		else if (!jsonShmIt->is_object())
-			MS_THROW_TYPE_ERROR("wrong shm (not an object)");
+			MS_THROW_TYPE_ERROR("wrong shm (not an object) in [%s]", data.dump().c_str());
 
 		auto jsonShmNameIt = jsonShmIt->find("name");
 		if (jsonShmNameIt == jsonShmIt->end())
-			MS_THROW_TYPE_ERROR("missing shm.name in %s", data.dump().c_str());
+			MS_THROW_TYPE_ERROR("missing shm.name in [%s]", data.dump().c_str());
 		else if (!jsonShmNameIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong shm.name (not a string)");
+			MS_THROW_TYPE_ERROR("wrong shm.name (not a string) in [%s]", data.dump().c_str());
 
 		shm.assign(jsonShmNameIt->get<std::string>());
 
 		// ngxshm log name and level
 		auto jsonLogIt = data.find("log");
 		if (jsonLogIt == data.end())
-			MS_THROW_TYPE_ERROR("missing log");
+			MS_THROW_TYPE_ERROR("missing log in [%s]", data.dump().c_str());
 		else if(!jsonLogIt->is_object())
-			MS_THROW_TYPE_ERROR("wrong log (not an object)");
+			MS_THROW_TYPE_ERROR("wrong log (not an object) in [%s]", data.dump().c_str());
 
 		auto jsonLogNameIt = jsonLogIt->find("name");
 		if (jsonLogNameIt == jsonLogIt->end())
-		  MS_THROW_TYPE_ERROR("missing log.name");
+		  MS_THROW_TYPE_ERROR("missing log.name in [%s]", data.dump().c_str());
 		else if (!jsonLogNameIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong log.name (not a string)");
+			MS_THROW_TYPE_ERROR("wrong log.name (not a string) in [%s]", data.dump().c_str());
 		
 		std::string logname;
 		logname.assign(jsonLogNameIt->get<std::string>());
@@ -64,7 +64,7 @@ namespace RTC
 		if (jsonLogLevelIt != jsonLogIt->end())
 		{
 			if (!jsonLogLevelIt->is_number())
-				MS_THROW_TYPE_ERROR("wrong log.level (not a number");
+				MS_THROW_TYPE_ERROR("wrong log.level (not a number) in [%s]", data.dump().c_str());
 			else
 				loglevel = jsonLogLevelIt->get<int>();
 		}
@@ -74,7 +74,7 @@ namespace RTC
 		if (jsonLogRedirectIt != jsonLogIt->end())
 		{
 			if (!jsonLogRedirectIt->is_number())
-				MS_THROW_TYPE_ERROR("wrong log.stdio (not a number");
+				MS_THROW_TYPE_ERROR("wrong log.stdio (not a number) in [%s]", data.dump().c_str());
 			else
 				redirect_stdio = (jsonLogRedirectIt->get<int>() != 0) ? 1 : 0;
 		}
@@ -82,16 +82,16 @@ namespace RTC
 		// data contains listenIp: {ip: ..., announcedIp: ...}
 		auto jsonListenIpIt = data.find("listenIp");
 		if (jsonListenIpIt == data.end())
-			MS_THROW_TYPE_ERROR("missing listenIp");
+			MS_THROW_TYPE_ERROR("missing listenIp in [%s]", data.dump().c_str());
 		else if (!jsonListenIpIt->is_object())
-			MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
+			MS_THROW_TYPE_ERROR("wrong listenIp (not an object) in [%s]", data.dump().c_str());
 
 		auto jsonIpIt = jsonListenIpIt->find("ip");
 
 		if (jsonIpIt == jsonListenIpIt->end())
-			MS_THROW_TYPE_ERROR("missing listenIp.ip");
+			MS_THROW_TYPE_ERROR("missing listenIp.ip in [%s]", data.dump().c_str());
 		else if (!jsonIpIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong listenIp.ip (not a string)");
+			MS_THROW_TYPE_ERROR("wrong listenIp.ip (not a string) in [%s]", data.dump().c_str());
 
 		this->listenIp.ip.assign(jsonIpIt->get<std::string>());
 
@@ -103,7 +103,7 @@ namespace RTC
 		if (jsonAnnouncedIpIt != jsonListenIpIt->end())
 		{
 			if (!jsonAnnouncedIpIt->is_string())
-				MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
+				MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string) in [%s]", data.dump().c_str());
 
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
@@ -122,6 +122,36 @@ namespace RTC
 
 		// Call the parent method.
 		RTC::Transport::FillJson(jsonObject);
+
+		jsonObject["shm"] = json::object();
+		auto jsonIt = jsonObject.find("shm");
+
+		(*jsonIt)["name"] = this->shmCtx.StreamName().c_str();
+		(*jsonIt)["log"] = this->shmCtx.LogName().c_str();
+
+		switch (this->shmCtx.Status())
+		{
+			case DepLibSfuShm::SHM_WRT_READY:
+				(*jsonIt)["status"] = "ready";
+				break;
+
+			case DepLibSfuShm::SHM_WRT_CLOSED:
+				(*jsonIt)["status"] = "closed";
+				break;
+
+			case DepLibSfuShm::SHM_WRT_VIDEO_CHNL_CONF_MISSING:
+				(*jsonIt)["status"] = "video conf missing";
+				break;
+
+			case DepLibSfuShm::SHM_WRT_AUDIO_CHNL_CONF_MISSING:
+				(*jsonIt)["status"] = "audio conf missing";
+				break;
+
+			case DepLibSfuShm::SHM_WRT_UNDEFINED:
+			default:
+				(*jsonIt)["status"] = "undefined";
+				break;
+		}
 	}
 
 	void ShmTransport::FillJsonStats(json& jsonArray)
@@ -139,6 +169,28 @@ namespace RTC
 
 		// Add timestamp.
 		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
+	}
+
+	void ShmTransport::SendStreamClosed(uint32_t /*ssrc*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	void ShmTransport::RecvStreamClosed(uint32_t /*ssrc*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
+	}
+
+	void ShmTransport::SendMessage(
+	  RTC::DataConsumer* /*dataConsumer*/, uint32_t /*ppid*/, const uint8_t* /*msg*/, size_t /*len*/, onQueuedCallback* /*cb*/)
+	{
+		MS_TRACE();
+
+		// Do nothing.
 	}
 
 	inline void ShmTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
@@ -260,7 +312,7 @@ namespace RTC
 	}
 
 
-	void ShmTransport::SendRtpPacket(RTC::RtpPacket* packet, onSendCallback* /* cb */)
+	void ShmTransport::SendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet, onSendCallback* /* cb */)
 	{
 		MS_TRACE();
 
@@ -309,18 +361,18 @@ namespace RTC
 		std::string metadata;
 		auto jsonMetaIt = data.find("meta");
 		if (jsonMetaIt == data.end())
-			MS_THROW_TYPE_ERROR("missing metadata");
+			MS_THROW_TYPE_ERROR("missing metadata in [%s]", data.dump().c_str());
 		else if (!jsonMetaIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong metadata (not a string)");
+			MS_THROW_TYPE_ERROR("wrong metadata (not a string) in [%s]", data.dump().c_str());
 
 		metadata.assign(jsonMetaIt->get<std::string>());
 
 		std::string shm;
 		auto jsonShmIt = data.find("shm");
 		if (jsonShmIt == data.end())
-			MS_THROW_TYPE_ERROR("missing shm name");
+			MS_THROW_TYPE_ERROR("missing shm name in [%s]", data.dump().c_str());
 		else if (!jsonShmIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong shm name (not a string)");
+			MS_THROW_TYPE_ERROR("wrong shm name (not a string) in [%s]", data.dump().c_str());
 
 		shm.assign(jsonShmIt->get<std::string>());
 
