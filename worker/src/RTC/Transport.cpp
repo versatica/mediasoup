@@ -1875,8 +1875,6 @@ namespace RTC
 			case RTC::RTCP::Type::RR:
 			{
 				auto* rr = static_cast<RTC::RTCP::ReceiverReportPacket*>(packet);
-				// Retrieve the RTT from one of the consumers in order to provide it to tccClient.
-				float rtt = 0;
 
 				for (auto it = rr->Begin(); it != rr->End(); ++it)
 				{
@@ -1899,12 +1897,28 @@ namespace RTC
 						continue;
 					}
 
-					rtt = consumer->GetRtt();
 					consumer->ReceiveRtcpReceiverReport(report);
 				}
 
-				if (this->tccClient)
+				if (this->tccClient && !this->mapConsumers.empty())
+				{
+					float rtt = 0;
+
+					// Retrieve the RTT from the first active consumer.
+					for (auto& kv : this->mapConsumers)
+					{
+						auto* consumer = kv.second;
+
+						if (consumer->IsActive())
+						{
+							rtt = consumer->GetRtt();
+
+							break;
+						}
+					}
+
 					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, DepLibUV::GetTimeMsInt64());
+				}
 
 				break;
 			}
