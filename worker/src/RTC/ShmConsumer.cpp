@@ -199,7 +199,7 @@ namespace RTC
 
 		if (!this->producerRtpStream || !this->producerRtpStream->GetSenderReportNtpMs() || !this->producerRtpStream->GetSenderReportTs())
 		{
-			MS_DEBUG_TAG(rtp, "Producer stream failed to read SR RTCP msg");
+			MS_DEBUG_2TAGS(rtcp, xcode, "Producer stream failed to read SR RTCP msg");
 			return;
 		}
 
@@ -285,7 +285,7 @@ namespace RTC
 		// Check for video orientation changes
 		if (VideoOrientationChanged(packet))
 		{
-			MS_DEBUG_TAG(rtp, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				MS_DEBUG_2TAGS(rtp, xcode, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 				this->rotation,
 				packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
@@ -468,7 +468,7 @@ namespace RTC
 				if (nal >= 1 && nal <= 23)
 			  {
 					if (len < 1) {
-						MS_WARN_TAG(rtp, "NALU data len < 1: %lu", len);
+						MS_WARN_TAG(xcode, "NALU data len < 1: %lu", len);
 						break;
 					}
 
@@ -499,10 +499,9 @@ namespace RTC
 					this->chunk.begin         = begin_picture;
 					this->chunk.end           = (marker != 0);
 					 
-	        //if (nal != 1)
 					if (isKeyFrame)
 					{
-						MS_DEBUG_TAG(rtp, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
+						MS_DEBUG_TAG(xcode, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
   						nal, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, isKeyFrame, begin_picture, marker, shmCtx->LastVideoTs());
           }
 
@@ -541,7 +540,7 @@ namespace RTC
 							{
 								uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset); 
 								if ( offset + naluSize > len) {
-									MS_WARN_TAG(rtp, "payload left to read from STAP-A is too short: %zu > %zu", offset + naluSize, len);
+									MS_WARN_TAG(xcode, "payload left to read from STAP-A is too short: %zu > %zu", offset + naluSize, len);
 									break;
 								}
 
@@ -576,12 +575,9 @@ namespace RTC
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 								this->chunk.ssrc          = ssrc;
 
-								if (isKeyFrame)
-								{
-									MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
-										subnal, len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq,
-										shmCtx->LastVideoTs(), isKeyFrame, this->chunk.begin, this->chunk.end);
-								}
+								MS_DEBUG_TAG(xcode, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
+									subnal, len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq,
+									shmCtx->LastVideoTs(), isKeyFrame, this->chunk.begin, this->chunk.end);
 
 								shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &chunk, !(this->chunk.begin && this->chunk.end));
 								offset += chunksize;
@@ -607,7 +603,7 @@ namespace RTC
 						{
 							if (len < 3)
 							{
-								MS_DEBUG_TAG(rtp, "FU-A payload too short");
+								MS_DEBUG_TAG(xcode, "FU-A payload too short");
 								break;
 							}
 							// Parse FU header octet
@@ -655,9 +651,9 @@ namespace RTC
 							this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 							this->chunk.ssrc          = ssrc;
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
-							if (isKeyFrame) //(subnal != 1)
+							if (isKeyFrame) // remove if not afraid of too much output
 							{
-								MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
+								MS_DEBUG_TAG(xcode, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
 									subnal, this->chunk.len, this->chunk.rtp_time, shmCtx->LastVideoTs(), this->chunk.first_rtp_seq,
 									isKeyFrame, startBit, endBit, marker, this->chunk.begin, this->chunk.end);
 							}
@@ -670,12 +666,12 @@ namespace RTC
 						case 27: // MTAP-24
 						case 29: // FU-B
 						{
-							MS_WARN_TAG(rtp, "Unsupported NAL unit type %u in video packet", nal);
+							MS_WARN_TAG(xcode, "Unsupported NAL unit type %u in video packet", nal);
 							break;
 						}
 						default: // ignore the rest
 						{
-							MS_DEBUG_TAG(rtp, "Unknown NAL unit type %u in video packet", nal);
+							MS_DEBUG_TAG(xcode, "Unknown NAL unit type %u in video packet", nal);
 							break;
 						}
 					}
@@ -924,7 +920,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(rtp, "writer ready, consumer %s, get key frame", IsActive() ? "ready" : "not ready");
+		MS_DEBUG_TAG(xcode, "writer ready, consumer %s, get key frame", IsActive() ? "ready" : "not ready");
 
 		this->syncRequired = true;
 

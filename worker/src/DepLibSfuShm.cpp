@@ -28,9 +28,12 @@ namespace DepLibSfuShm {
   ShmCtx::~ShmCtx()
   {
     // Call if writer is not closed
-    if (SHM_WRT_CLOSED != wrt_status && SHM_WRT_UNDEFINED != wrt_status)
+    if (SHM_WRT_READY == wrt_status)
     {
-      sfushm_av_close_writer(wrt_ctx, 0);
+      if ( wrt_ctx == nullptr)
+        MS_WARN_TAG(xcode, "Warning: shm writer context is null but shm is still in ready state.");
+      else
+        sfushm_av_close_writer(wrt_ctx, 0);
     }
   }
 
@@ -38,9 +41,12 @@ namespace DepLibSfuShm {
   void ShmCtx::CloseShmWriterCtx()
   {
     // Call if writer is not closed
-    if (SHM_WRT_CLOSED != wrt_status)
+    if (SHM_WRT_READY == wrt_status)
     {
-      sfushm_av_close_writer(wrt_ctx, 0);
+      if ( wrt_ctx == nullptr)
+        MS_WARN_TAG(xcode, "Warning: shm writer context is null but shm is still in ready state.");
+      else
+        sfushm_av_close_writer(wrt_ctx, 0);
     }
 
     wrt_status = SHM_WRT_CLOSED;
@@ -73,7 +79,7 @@ namespace DepLibSfuShm {
       // Just switched into ready status, can open a writer
       int err = SFUSHM_AV_OK;
       if ((err = sfushm_av_open_writer( &wrt_init, &wrt_ctx)) != SFUSHM_AV_OK) {
-        MS_DEBUG_TAG(rtp, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
+        MS_DEBUG_TAG(xcode, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
         this->wrt_status = SHM_WRT_UNDEFINED;
       }
       else
@@ -93,7 +99,7 @@ namespace DepLibSfuShm {
 
         if (this->CanWrite())
         {
-          MS_DEBUG_TAG(rtp, "shm is ready and first SRs received and written");
+          MS_DEBUG_TAG(xcode, "shm is ready and first SRs received and written");
           this->listener->OnShmWriterReady();
         }
       }
@@ -160,7 +166,7 @@ namespace DepLibSfuShm {
       && (IsLastVideoSeqNotSet() 
         || data->first_rtp_seq - 1 == LastVideoSeq()))
     {
-      MS_DEBUG_TAG(rtp, "WRITETHRU [seq=%" PRIu64 " ts=%" PRIu64 "]", data->first_rtp_seq, data->rtp_time);
+      MS_DEBUG_TAG(xcode, "WRITETHRU [seq=%" PRIu64 " ts=%" PRIu64 "]", data->first_rtp_seq, data->rtp_time);
       return EnqueueResult::SHM_Q_PKT_CANWRITETHRU;
     }
 
@@ -169,7 +175,7 @@ namespace DepLibSfuShm {
         && LastVideoTs() > ts
         && LastVideoTs() - ts > MaxVideoPktDelay)
     {
-      MS_DEBUG_TAG(rtp, "ENQUEUE OLD seqid=%" PRIu64 " delta=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", data->first_rtp_seq, LastVideoTs() - data->rtp_time, LastVideoTs(), videoPktBuffer.size());
+      MS_DEBUG_TAG(xcode, "ENQUEUE OLD seqid=%" PRIu64 " delta=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", data->first_rtp_seq, LastVideoTs() - data->rtp_time, LastVideoTs(), videoPktBuffer.size());
     }
     
     // Enqueue pkt, newest at the end
@@ -206,7 +212,7 @@ namespace DepLibSfuShm {
         && LastVideoTs() > it->chunk.rtp_time
         && LastVideoTs() - it->chunk.rtp_time > MaxVideoPktDelay)
       {
-        MS_DEBUG_TAG(rtp, "OLD [seq=%" PRIu64 " Tsdelta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastVideoTs() - it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
+        MS_DEBUG_TAG(xcode, "OLD [seq=%" PRIu64 " Tsdelta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastVideoTs() - it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
         prev_seq = it->chunk.first_rtp_seq;
         this->WriteChunk(&it->chunk, Media::VIDEO);
         it = this->videoPktBuffer.erase(it);
@@ -216,7 +222,7 @@ namespace DepLibSfuShm {
       // Hole in seqIds: wait some time for missing pkt to be retransmitted
       if (it->chunk.first_rtp_seq > prev_seq + 1)
       {
-        MS_DEBUG_TAG(rtp, "HOLE [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, prev_seq, LastVideoTs(), videoPktBuffer.size());
+        MS_DEBUG_TAG(xcode, "HOLE [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, prev_seq, LastVideoTs(), videoPktBuffer.size());
         return;
       }
 
@@ -258,7 +264,7 @@ namespace DepLibSfuShm {
               this->WriteChunk(&chunkStartIt->chunk, Media::VIDEO);
               chunkStartIt = this->videoPktBuffer.erase(chunkStartIt);
             }
-            MS_DEBUG_TAG(rtp, "FRAG start [seq=%" PRIu64 " ts=%" PRIu64 "] end [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", startSeqId, startTs, endSeqId, endTs, videoPktBuffer.size());
+            MS_DEBUG_TAG(xcode, "FRAG start [seq=%" PRIu64 " ts=%" PRIu64 "] end [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", startSeqId, startTs, endSeqId, endTs, videoPktBuffer.size());
             chunkStartFound = false;
             prev_seq = endSeqId;
             it = nextit; // restore iterator
@@ -273,7 +279,7 @@ namespace DepLibSfuShm {
       else // non-fragmented chunk
       {
         this->WriteChunk(&it->chunk, Media::VIDEO);
-        MS_DEBUG_TAG(rtp, "FULL [seq=%" PRIu64 " ts=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
+        MS_DEBUG_TAG(xcode, "FULL [seq=%" PRIu64 " ts=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
         prev_seq = it->chunk.first_rtp_seq;
         it = this->videoPktBuffer.erase(it);
         continue;
@@ -304,7 +310,8 @@ namespace DepLibSfuShm {
   {
     if (!this->CanWrite())
     {
-      MS_WARN_TAG(rtp, "Cannot write chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because shm writer is not initialized");
+      MS_WARN_TAG(xcode, "Cannot write chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because shm writer is not initialized",
+        data->ssrc, data->first_rtp_seq, data->rtp_time);
       return;
     }
 
@@ -319,7 +326,7 @@ namespace DepLibSfuShm {
     }
 
     if (IsError(err))
-      MS_WARN_TAG(rtp, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " to shm: %d - %s", data->ssrc, data->first_rtp_seq, data->rtp_time, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " to shm: %d - %s", data->ssrc, data->first_rtp_seq, data->rtp_time, err, GetErrorString(err));
   }
 
 
@@ -332,8 +339,7 @@ namespace DepLibSfuShm {
       nanoseconds. It is relative to an arbitrary time in the past. It is not
       related to the time of day and therefore not subject to clock drift. The
       primary use is for measuring performance between intervals.  */
-  /*
-    Uncomment for debugging
+  
     uint64_t walltime = DepLibUV::GetTimeMs();
     struct timespec clockTime;
     time_t ct;
@@ -343,14 +349,6 @@ namespace DepLibSfuShm {
     ct = clockTime.tv_sec;
     uint64_t clockTimeMs = (clockTime.tv_sec * (uint64_t) 1e9 + clockTime.tv_nsec) / 1000000.0;
 
-    MS_DEBUG_TAG(rtp, "RTCP SR: SSRC=%d ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
-      ssrc,
-      lastSenderReportNtpMs,
-      lastSenderReporTs,
-      walltime,
-      ct,
-      clockTimeMs);
-  */
     auto ntp = Utils::Time::TimeMs2Ntp(lastSenderReportNtpMs);
     size_t idx = (kind == Media::AUDIO) ? 0 : 1;
 
@@ -358,6 +356,14 @@ namespace DepLibSfuShm {
     this->data[idx].sr_ntp_msb = ntp.seconds;
     this->data[idx].sr_ntp_lsb = ntp.fractions;
     this->data[idx].sr_rtp_tm = lastSenderReporTs;
+
+    MS_DEBUG_TAG(xcode, "Received RTCP SR: SSRC=%" PRIu32 " ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
+      this->data[idx].ssrc,
+      lastSenderReportNtpMs,
+      lastSenderReporTs,
+      walltime,
+      ct,
+      clockTimeMs);
 
     if (SHM_WRT_READY != this->wrt_status)
       return; // shm writer is not set up yet
@@ -383,7 +389,7 @@ namespace DepLibSfuShm {
 
     if (shouldNotify)
     {
-      MS_DEBUG_TAG(rtp, "First SRs received, and shm is ready");
+      MS_DEBUG_TAG(xcode, "First SRs received, and shm is ready");
       this->listener->OnShmWriterReady();
     }
   }
@@ -395,7 +401,7 @@ namespace DepLibSfuShm {
     int err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, this->data[idx].sr_ntp_msb, this->data[idx].sr_ntp_lsb, this->data[idx].sr_rtp_tm, this->data[idx].ssrc);
     if (IsError(err))
     {
-      MS_WARN_TAG(rtp, "ERROR writing RTCP SR for ssrc %" PRIu32 " %d - %s", this->data[idx].ssrc, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "ERROR writing RTCP SR for ssrc %" PRIu32 " %d - %s", this->data[idx].ssrc, err, GetErrorString(err));
     }
   }
 
@@ -404,7 +410,7 @@ namespace DepLibSfuShm {
   {
     if (SHM_WRT_READY != this->wrt_status)
     {
-      MS_WARN_TAG(rtp, "Cannot write stream metadata because shm writer is not initialized");
+      MS_WARN_TAG(xcode, "Cannot write stream metadata because shm writer is not initialized");
       return -1; // shm writer is not set up yet
     }
 
@@ -413,20 +419,20 @@ namespace DepLibSfuShm {
 
     if (0 != this->stream_name.compare(shm))
     {
-      MS_WARN_TAG(rtp, "input metadata shm name '%s' does not match '%s'", shm.c_str(), this->stream_name.c_str());
+      MS_WARN_TAG(xcode, "input metadata shm name '%s' does not match '%s'", shm.c_str(), this->stream_name.c_str());
       return -1;
     }
 
     if (metadata.length() > 255)
     {
-      MS_WARN_TAG(rtp, "input metadata is too long: %s", metadata.c_str());
+      MS_WARN_TAG(xcode, "input metadata is too long: %s", metadata.c_str());
     }
     std::copy(metadata.begin(), metadata.end(), data);
 
     err = sfushm_av_write_stream_metadata(wrt_ctx, data, metadata.length());
     if (IsError(err))
     {
-      MS_WARN_TAG(rtp, "ERROR writing stream metadata: %d - %s", err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "ERROR writing stream metadata: %d - %s", err, GetErrorString(err));
       return -1;
     }
 
@@ -438,13 +444,13 @@ namespace DepLibSfuShm {
   {
     if (SHM_WRT_READY != this->wrt_status)
     {
-      MS_WARN_TAG(rtp, "Cannot write video rotation because shm writer is not initialized");
+      MS_WARN_TAG(xcode, "Cannot write video rotation because shm writer is not initialized");
       return; // shm writer is not set up yet
     }
 
     int err = sfushm_av_write_video_rotation(wrt_ctx, rotation);
 
     if (IsError(err))
-      MS_WARN_TAG(rtp, "ERROR writing video rotation: %d - %s", err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "ERROR writing video rotation: %d - %s", err, GetErrorString(err));
   }
 } // namespace DepLibSfuShm

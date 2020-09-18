@@ -38,10 +38,10 @@ namespace DepLibSfuShm
   struct MediaState
   {
     uint64_t last_seq{ UINT64_UNSET };   // last RTP pkt sequence processed by this input
-	  uint64_t last_ts{ UINT64_UNSET };    // the timestamp of the last processed RTP messpktage
-    uint32_t ssrc{ 0 };       // ssrc of audio chn
-    bool     sr_received{ false };
-    bool     sr_written{ false };
+	  uint64_t last_ts{ UINT64_UNSET };    // the timestamp of the last processed RTP message
+    uint32_t ssrc{ 0 };                  // ssrc of audio or video chn
+    bool     sr_received{ false };       // if sender report was received
+    bool     sr_written{ false };        // if sender report was written into shm
     uint32_t sr_ntp_msb{ 0 };
     uint32_t sr_ntp_lsb{ 0 };
     uint64_t sr_rtp_tm{ 0 };
