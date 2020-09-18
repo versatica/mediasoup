@@ -169,9 +169,6 @@ namespace RTC
 
 		// Add timestamp.
 		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
-
-		//shm
-		jsonObject["shm-writer-ready"] = IsFullyConnected();
 	}
 
 	void ShmTransport::SendStreamClosed(uint32_t /*ssrc*/)
@@ -228,7 +225,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected())
 		{
 			return;
 		}
@@ -251,7 +248,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected())
 			return;
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
@@ -272,7 +269,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected())
 			return;
 
 		// Pass it to the parent transport.
@@ -309,29 +306,17 @@ namespace RTC
 	}
 
 
-	/*
-	Transport's consumer expects 'true' from IsConnected() in order to activate.
-	ShmTransport::IsConnected() rather means that transport is initialized but it may not be "fully connected" and ready to write into shm yet.
-	To write into shm we wait until both audio and video consumers receive their first RTP packets with ssrc values.
-	Call ShmTransport::IsFullyConnected() to detect if ShmTransport is ready to write into shm.
-	*/
 	inline bool ShmTransport::IsConnected() const
 	{
 		return true;
 	}
 
 
-	inline bool ShmTransport::IsFullyConnected() const
-	{
-		return this->shmCtx.Status() == DepLibSfuShm::SHM_WRT_READY;
-	}
-
-
-	void ShmTransport::SendRtpPacket(RTC::Consumer* /* consumer */, RTC::RtpPacket* packet, onSendCallback* /* cb */)
+	void ShmTransport::SendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet, onSendCallback* /* cb */)
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected())
 			return;
 	
 		// Increase send transmission. Consumer writes RTP packets to shm, nothing else to do here.
@@ -343,7 +328,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected())
 			return;
 
 		// Increase send transmission.
@@ -355,7 +340,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsFullyConnected())
+		if (!IsConnected())
 			return;
 
 		// Increase send transmission.

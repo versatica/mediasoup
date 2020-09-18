@@ -416,7 +416,7 @@ export class Transport extends EnhancedEventEmitter
 		}: ProducerOptions
 	): Promise<Producer>
 	{
-		logger.debug('produce()');
+		logger.debug('produce() rtpParameters=%o', rtpParameters);
 
 		if (id && this._producers.has(id))
 			throw new TypeError(`a Producer with same id "${id}" already exists`);
@@ -461,14 +461,19 @@ export class Transport extends EnhancedEventEmitter
 		}
 
 		const routerRtpCapabilities = this._getRouterRtpCapabilities();
+		logger.debug("produce(): routerRtpCapabilities=%o", routerRtpCapabilities);
 
 		// This may throw.
 		const rtpMapping = ortc.getProducerRtpParametersMapping(
 			rtpParameters, routerRtpCapabilities);
 
+		logger.debug("produce(): rtpMapping=%o", rtpMapping);
+
 		// This may throw.
 		const consumableRtpParameters = ortc.getConsumableRtpParameters(
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
+
+		logger.debug("produce(): consumableRtpParameters=%o", consumableRtpParameters);
 
 		const internal = { ...this._internal, producerId: id || uuidv4() };
 		const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused };

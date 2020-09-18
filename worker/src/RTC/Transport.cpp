@@ -837,7 +837,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SHM:
 					{
 						// This may throw.
-							consumer = new RTC::ShmConsumer(consumerId, producerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
+						consumer = new RTC::ShmConsumer(consumerId, producerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
 						break;
 					}
 				}
@@ -1682,7 +1682,7 @@ namespace RTC
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
-			  // MS_DEBUG_TAG(rtp, "recvRtxTransmission.GetPacketCount()=%d", this->recvRtxTransmission.GetPacketCount());
+			  MS_DEBUG_TAG(rtp, "recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
 				// Tell the child class to remove this SSRC.
@@ -2668,7 +2668,7 @@ namespace RTC
 
 		this->sendRtxTransmission.Update(packet);
 
-		// MS_DEBUG_TAG(rtp, "sendRtxTransmission.GetPacketCount()=%d", this->sendRtxTransmission.GetPacketCount());
+		MS_DEBUG_TAG(rtp, "sendRtxTransmission.GetPacketCount()=%d", this->sendRtxTransmission.GetPacketCount());
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)

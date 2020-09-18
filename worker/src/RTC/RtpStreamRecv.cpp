@@ -188,8 +188,14 @@ namespace RTC
 		if (this->params.useNack)
 		{
 			this->nackGenerator.reset(new RTC::NackGenerator(this));
+			MS_DEBUG_TAG(rtp,"RtpStreamRecv::params.useNack is true, NACK feature enabled");
 		}
-		
+		else {
+			MS_DEBUG_TAG(rtp,"RtpStreamRecv::params.useNack is false, NACK feature disabled");
+		}
+
+		MS_DEBUG_TAG(rtp, "RtpStreamRecv::HasRtx=%s", HasRtx() ? "TRUE" : "FALSE");
+	
 		// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 		// enabled).
 		this->inactivityCheckPeriodicTimer = new Timer(this);
@@ -322,6 +328,13 @@ namespace RTC
 
 			return false;
 		}
+
+		MS_DEBUG_TAG(
+			rtx,
+			"Received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]", 
+			packet->GetSsrc(),
+			packet->GetSequenceNumber()
+		);
 
 		if (HasRtx())
 		{
@@ -771,13 +784,6 @@ namespace RTC
 
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
-		MS_DEBUG_TAG(
-		  rtx,
-		  "triggering NACK [ssrc:%" PRIu32 ", first seq:%" PRIu16 ", num packets:%zu]",
-		  this->params.ssrc,
-		  seqNumbers[0],
-		  seqNumbers.size());
-
 		RTC::RTCP::FeedbackRtpNackPacket packet(0, GetSsrc());
 
 		auto it        = seqNumbers.begin();
@@ -823,7 +829,6 @@ namespace RTC
 
 		packet.Serialize(RTC::RTCP::Buffer);
 
-		// MS_DEBUG_TAG(rtp, "Serialize NACKed RTCP packet and call OnRtpStreamSendRtcpPacket");
 		// Notify the listener.
 		static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
 	}

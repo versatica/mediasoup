@@ -41,10 +41,10 @@ namespace RTC
 		uint64_t lastSeqId{ 0u };
 	};
 
-	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
+	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener, public DepLibSfuShm::ShmCtx::Listener
 	{
 	public:
-		ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx);
+		ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::ShmCtx *shmCtx);
 		~ShmConsumer() override;
 
 	public:
@@ -82,17 +82,20 @@ namespace RTC
 		void RequestKeyFrame();
 		void FillShmWriterStats(json& jsonObject) const;
 
-		bool WritePacketToShm(RTC::RtpPacket* packet);
+		void WritePacketToShm(RTC::RtpPacket* packet);
 		bool VideoOrientationChanged(RTC::RtpPacket* packet);
-/* Uncomment for NACK test simulation
+    //Uncomment for NACK test simulation
 		bool TestNACK(RTC::RtpPacket* packet);
 		uint64_t lastNACKTestTs {0};
-*/
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
+
+	/* Pure virtual methods inherited from DepLibSfuShm::ShmCtx::Listener. */
+	public:
+		void OnShmWriterReady() override;
 
 	private:
 		// Allocated by this.
@@ -102,19 +105,14 @@ namespace RTC
 		RTC::RtpStream* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
-
-		bool srReceived{ false }; // do not send until SR received
-
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 
-		// Shm writing: a consumer will "send" RTP packets (either audio or video) into shm
-		// RTCP packets and "app metadata" will be "sent" into shm by ShmTransport object
-		DepLibSfuShm::SfuShmCtx *shmCtx{ nullptr };         // Handle to shm context which will be received from ShmTransport during transport.consume()
-		sfushm_av_frame_frag_t   chunk;                     // Structure holding current chunk being written into shm, convenient to reuse timestamps data sometimes
-		uint16_t                 rotation{ 0 };             // Current rotation value for video read from RTP packet's videoOrientationExtensionId
-		bool                     rotationDetected{ false }; // Whether video rotation data was ever picked in this stream, then we only write it into shm if there was a change
-		RTC::RtpDataCounter      shmWriterCounter;          // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer) TODO: move into ShmCtx
-		RTC::RtpLostPktRateCounter    lostPktRateCounter;
+		DepLibSfuShm::ShmCtx       *shmCtx{ nullptr };         // Handle to shm context which will be received from ShmTransport during transport.consume()
+		sfushm_av_frame_frag_t     chunk;                     // Structure holding current chunk being written into shm
+		uint16_t                   rotation{ 0 };             // Current rotation value for video read from RTP packet's videoOrientationExtensionId
+		bool                       rotationDetected{ false }; // Whether video rotation data was ever picked in this stream, then we only write it into shm if there was a change
+		RTC::RtpDataCounter        shmWriterCounter;          // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer) TODO: move into ShmCtx
+		RTC::RtpLostPktRateCounter lostPktRateCounter;
 	};
 
 	/* Inline methods. */

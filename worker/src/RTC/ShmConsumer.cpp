@@ -46,7 +46,7 @@ namespace RTC
 	}
 
 
-	ShmConsumer::ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::SfuShmCtx *shmCtx)
+	ShmConsumer::ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::ShmCtx *shmCtx)
 	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SHM)
 	{
 		MS_TRACE();
@@ -62,17 +62,18 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("%s codec not supported for shm", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		//MS_DEBUG_TAG(rtp, "ShmConsumer created from data: %s media codec: %s", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
+		// MS_DEBUG_TAG(rtp, "ShmConsumer created from data: %s media codec: %s", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		this->shmCtx = shmCtx;
+		this->shmCtx->SetListener(this);
 
-/*
-		Uncomment for NACK test simulation
+
+		// Uncomment for NACK test simulation
 		uint64_t nowTs = DepLibUV::GetTimeMs();
 		this->lastNACKTestTs = nowTs;
-*/
+
 
 		CreateRtpStream();
 	}
@@ -191,31 +192,23 @@ namespace RTC
 		// Emit the score event.
 	}
 
+
 	void ShmConsumer::ProducerRtcpSenderReport(RTC::RtpStream* /*rtpStream*/, bool /*first*/)
 	{
 		MS_TRACE();
 
 		if (!this->producerRtpStream || !this->producerRtpStream->GetSenderReportNtpMs() || !this->producerRtpStream->GetSenderReportTs())
 		{
-			MS_DEBUG_TAG(rtp, "Producer stream failed to read SR RTCP msg");
+			MS_DEBUG_2TAGS(rtcp, xcode, "Producer stream failed to read SR RTCP msg");
 			return;
 		}
-		else {
-			uint64_t lastSenderReportNtpMs = this->producerRtpStream->GetSenderReportNtpMs(); // NTP timestamp in last Sender Report (in ms)
-			uint32_t lastSenderReporTs     = this->producerRtpStream->GetSenderReportTs();    // RTP timestamp in last Sender Report.
 
-			if (DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY != shmCtx->Status())
-			{
-				return;
-			}
+		uint64_t lastSenderReportNtpMs = this->producerRtpStream->GetSenderReportNtpMs(); // NTP timestamp in last Sender Report (in ms)
+		uint32_t lastSenderReporTs     = this->producerRtpStream->GetSenderReportTs();    // RTP timestamp in last Sender Report.
 
-			this->srReceived = true;
-
-			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
-			shmCtx->WriteRtcpSenderReportTs(lastSenderReportNtpMs, lastSenderReporTs, kind);
-
-		}
+		shmCtx->WriteRtcpSenderReportTs(lastSenderReportNtpMs, lastSenderReporTs, (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO);
 	}
+
 
 	void ShmConsumer::SendRtpPacket(RTC::RtpPacket* packet)
 	{
@@ -236,11 +229,15 @@ namespace RTC
 			return;
 		}
 
-		// If we need to sync, support key frames and this is not a key frame, ignore
-		// the packet.
-		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame()) {
+		// If we need to sync, support key frames and this is not a key frame,
+		// do not write this packet into shm
+		// but use it to check video orientation and config shm ssrc
+		bool ignorePkt = false;
+
+		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
+		{
 			MS_DEBUG_TAG(rtp, "need to sync but this is not keyframe, ignore packet");
-			return;
+			ignorePkt = true;
 		}
 
 		// Whether this is the first packet after re-sync.
@@ -285,12 +282,33 @@ namespace RTC
 			  origSeq);
 		}
 
+		// Check for video orientation changes
+		if (VideoOrientationChanged(packet))
+		{
+				MS_DEBUG_2TAGS(rtp, xcode, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				this->rotation,
+				packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp());
+			
+			shmCtx->WriteVideoOrientation(this->rotation);
+		}
+
+		// Need both audio and video SSRCs to set up shm writer
+		if (shmWriterCounter.GetPacketCount() == 0)
+		{
+			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO;
+			shmCtx->ConfigureMediaSsrc(packet->GetSsrc(), kind);
+		}
+
+		if (!shmCtx->CanWrite() || ignorePkt) // shm is not ready for writing, or we still need a key frame
+		{
+			return;
+		}
+
 		// Process the packet. In case of shm writer this is still needed for NACKs
 		if (this->rtpStream->ReceivePacket(packet))
 		{
-			// Send the packet.
-			this->listener->OnConsumerSendRtpPacket(this, packet);
-	
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 
@@ -308,46 +326,37 @@ namespace RTC
 			  packet->GetTimestamp(),
 			  origSeq);
 		}
-/*
-	Uncomment for NACK test simulation
-		if (this->TestNACK(packet))
+
+
+// Uncomment for NACK test simulation
+/*		if (this->TestNACK(packet))
 		{
 			MS_DEBUG_TAG(rtp, "Pretend NACK for packet ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
 			packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
 			return;
-		}
-*/
-		// Process the packet.
-		if (this->WritePacketToShm(packet))
-		{
-			// Increase transmission counter.
-			this->shmWriterCounter.Update(packet);
-		}
-		else
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "failed to write to shm packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "] from original [seq:%" PRIu16 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp(),
-			  origSeq);
-		}
+		}*/
+
+// End of NACK test simulation
+
+		this->WritePacketToShm(packet);
+
+		// Increase transmission counter.
+		this->shmWriterCounter.Update(packet);
 
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
 	}
 
-/*
-Uncomment for NACK test simulation
+
+	//Uncomment for NACK test simulation
 	bool ShmConsumer::TestNACK(RTC::RtpPacket* packet)
 	{
 		if (this->GetKind() != RTC::Media::Kind::VIDEO)
 			return false; // not video
 
 		uint64_t nowTs = DepLibUV::GetTimeMs();
-		if (nowTs - this->lastNACKTestTs < 300)
+		if (nowTs - this->lastNACKTestTs < 3000)
 			return false; // too soon
 
 		this->lastNACKTestTs = nowTs;
@@ -377,7 +386,8 @@ Uncomment for NACK test simulation
 
 		return true;
 	}
-	*/
+// End of NACK test simulation
+
 
 	bool ShmConsumer::VideoOrientationChanged(RTC::RtpPacket* packet)
 	{
@@ -404,42 +414,13 @@ Uncomment for NACK test simulation
 				return true;
 			}
 		}
-
 		return false;
 	}
 
-	bool ShmConsumer::WritePacketToShm(RTC::RtpPacket* packet)
+
+	void ShmConsumer::WritePacketToShm(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-		// If we have not written any packets yet, need to configure shm writer
-		if (shmWriterCounter.GetPacketCount() == 0)
-		{
-			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::ShmChunkType::AUDIO : DepLibSfuShm::ShmChunkType::VIDEO;
-			if (DepLibSfuShm::ShmWriterStatus::SHM_WRT_READY != shmCtx->SetSsrcInShmConf(packet->GetSsrc(), kind))
-			{
-				return false;
-			}
-		}
-
-		// Cannot write into shm until the first RTCP Sender Report received
-		if (!this->srReceived) {
-			MS_DEBUG_TAG(rtp, "RTCP SR not received yet, ignoring packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-				packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp());
-			return false;
-		}
-
-		if (VideoOrientationChanged(packet))
-		{
-			MS_DEBUG_TAG(rtp, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-				this->rotation,
-				packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp());
-			
-			shmCtx->WriteVideoOrientation(this->rotation);
-		}
 
 		uint8_t const* pktdata = packet->GetData();
 		uint8_t const* cdata   = packet->GetPayload();
@@ -448,53 +429,50 @@ Uncomment for NACK test simulation
 		uint64_t ts            = static_cast<uint64_t>(packet->GetTimestamp());
 		uint64_t seq           = static_cast<uint64_t>(packet->GetSequenceNumber());
 		uint32_t ssrc          = packet->GetSsrc();
-		// bool isKeyFrame        = packet->IsKeyFrame(); uncomment for debugging output
+		bool isKeyFrame        = packet->IsKeyFrame();
 
 		std::memset(&chunk, 0, sizeof(chunk));
 
+		if (this->GetKind() == Media::Kind::VIDEO)
+		{
+			ts = shmCtx->AdjustVideoPktTs(ts);
+			seq = shmCtx->AdjustVideoPktSeq(seq);
+		}
+		else // audio
+		{
+			ts = shmCtx->AdjustAudioPktTs(ts);
+			seq = shmCtx->AdjustAudioPktSeq(seq);
+		}
+
 		switch (this->GetKind())
 		{
-			/* Just write out the payload	*/
+			/* Audio NALUs are always simple */
 			case RTC::Media::Kind::AUDIO:
 			{
-				//ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::AUDIO);
-				seq = shmCtx->AdjustPktSeq(seq, DepLibSfuShm::ShmChunkType::AUDIO);
 				this->chunk.data = data;
 				this->chunk.len = len;
 				this->chunk.rtp_time = ts;
 				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 				this->chunk.ssrc = packet->GetSsrc();
 				this->chunk.begin = this->chunk.end = 1;
-				if(0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::AUDIO, packet->GetSsrc()))
-				{
-					MS_WARN_TAG(rtp, "FAIL writing audio ts %" PRIu64 " seq %" PRIu64, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-					return false;
-				}
-
-				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::AUDIO);
+				shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::AUDIO, &chunk);
 				break;
 			} // audio
 
 			case RTC::Media::Kind::VIDEO:
 			{
-				ts = shmCtx->AdjustPktTs(ts, DepLibSfuShm::ShmChunkType::VIDEO);
-				seq = shmCtx->AdjustPktSeq(seq, DepLibSfuShm::ShmChunkType::VIDEO);
-
 				uint8_t nal = *(data) & 0x1F;
 				uint8_t marker = *(pktdata + 1) & 0x80; // Marker bit indicates the last or the only NALU in this packet is the end of the picture data
-
-				// If the first video pkt, or pkt's timestamp is different from the previous video pkt written out
- 				int begin_picture = (shmCtx->IsSeqUnset(DepLibSfuShm::ShmChunkType::VIDEO)) || (ts > shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
-
+				bool begin_picture = (shmCtx->IsLastVideoSeqNotSet() || (ts > shmCtx->LastVideoTs())); // assume that first video pkt starts the picture frame
 				// Single NAL unit packet
 				if (nal >= 1 && nal <= 23)
 			  {
 					if (len < 1) {
-						MS_WARN_TAG(rtp, "NALU data len < 1: %lu", len);
+						MS_WARN_TAG(xcode, "NALU data len < 1: %lu", len);
 						break;
 					}
 
-					//Add Annex B 0x00000001 to the begininng of this packet: overwrite 3 or 4 bytes from the PTP pkt header
+					//Add Annex B 0x00000001 to the beginning of this packet: overwrite 3 or 4 bytes from the PTP pkt header
 					uint16_t chunksize = len;
 					if (begin_picture)
 					{
@@ -520,30 +498,18 @@ Uncomment for NACK test simulation
 					this->chunk.ssrc          = ssrc;
 					this->chunk.begin         = begin_picture;
 					this->chunk.end           = (marker != 0);
-					/* 
-					if (nal != 1)
+					 
+					if (isKeyFrame)
 					{
-						MS_DEBUG_TAG(rtp, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
-							nal,
-							this->chunk.len,
-							this->chunk.rtp_time,
-							this->chunk.first_rtp_seq,
-							isKeyFrame,
-							begin_picture,
-							marker,
-							shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO));
-					}
-					*/					
-					if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, packet->GetSsrc()))
-					{
-						MS_WARN_TAG(rtp, "FAIL writing video NALU=%d: ts %" PRIu64 " seq %" PRIu64, nal, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-						return false;
-					}
+						MS_DEBUG_TAG(xcode, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
+  						nal, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, isKeyFrame, begin_picture, marker, shmCtx->LastVideoTs());
+          }
+
+					shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &chunk, !(this->chunk.begin && this->chunk.end));
 				}
 				else {
 					switch (nal)
 					{
-
 						// Aggregation packet. Contains several NAL units in a single RTP packet
 						// STAP-A.
 						/*
@@ -568,19 +534,19 @@ Uncomment for NACK test simulation
 						case 24:
 						{
 							size_t offset{ 1 }; // Skip over STAP-A NAL header
-							
+
 							// Iterate NAL units.
 							while (offset < len - 3) // need to be able to read 2 bytes of NALU size
 							{
 								uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset); 
 								if ( offset + naluSize > len) {
-									MS_WARN_TAG(rtp, "payload left to read from STAP-A is too short: %zu > %zu", offset + naluSize, len);
+									MS_WARN_TAG(xcode, "payload left to read from STAP-A is too short: %zu > %zu", offset + naluSize, len);
 									break;
 								}
 
 								offset += 2; // skip over NALU size
-								// uint8_t subnal = *(data + offset) & 0x1F; // uncomment for debugging output, NAL type
-
+								uint8_t subnal = *(data + offset) & 0x1F; // actual NAL type
+								
 								//Add Annex B
 								uint16_t chunksize = naluSize;
 								this->chunk.end = (marker != 0) && (offset + chunksize >= len - 3);
@@ -606,30 +572,14 @@ Uncomment for NACK test simulation
 								this->chunk.data          = data + offset;
 								this->chunk.len           = chunksize;
 								this->chunk.rtp_time      = ts;
-								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq; // TODO: is it okay to send several NALUs with same seq?
+								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 								this->chunk.ssrc          = ssrc;
-								/*
-								if (subnal != 1)
-								{
-									MS_DEBUG_TAG(rtp, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
-										subnal, 
-										len, 
-										naluSize, 
-										this->chunk.len, 
-										this->chunk.rtp_time,
-										this->chunk.first_rtp_seq,
-										shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
-										isKeyFrame,
-										this->chunk.begin,
-										this->chunk.end);
-								}
-								*/
-								if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
-								{
-									MS_WARN_TAG(rtp, "FAIL writing STAP-A pkt to shm: len %zu ts %" PRIu64 " seq %" PRIu64, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq);
-									return false;
-								}
-								
+
+								MS_DEBUG_TAG(xcode, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
+									subnal, len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq,
+									shmCtx->LastVideoTs(), isKeyFrame, this->chunk.begin, this->chunk.end);
+
+								shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &chunk, !(this->chunk.begin && this->chunk.end));
 								offset += chunksize;
 							}
 							break;
@@ -653,16 +603,16 @@ Uncomment for NACK test simulation
 						{
 							if (len < 3)
 							{
-								MS_DEBUG_TAG(rtp, "FU-A payload too short");
-								return false;
+								MS_DEBUG_TAG(xcode, "FU-A payload too short");
+								break;
 							}
 							// Parse FU header octet
 							uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates the starting fragment
 							uint8_t endBit   = *(data + 1) & 0x40; // 2nd bit indicates the ending fragment
 							uint8_t fuInd    = *(data) & 0xE0;     // 3 first bytes of FU indicator, use to compose NAL header for the beginning fragment 
-							uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header subtype of FU unit, use to compose NAL header for the beginning fragment, also if (subnal == 7 (SPS) && startBit == 128) then we have a key frame
+							uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header subtype of FU unit, use to compose NAL header for the beginning fragment, also if (videoNALU == 7 (SPS) && startBit == 128) then we have a key frame
+							size_t chunksize = len - 1;            // skip over FU indicator
 
-							size_t chunksize = len - 1; // skip over FU indicator
 							if (startBit == 128)
 							{
 								// Write AnnexB marker and put NAL header in place of FU header
@@ -688,7 +638,8 @@ Uncomment for NACK test simulation
 									this->chunk.begin  = 0;
 								}
 							}
-							else { // if not the beginning fragment, discard FU indicator and FU header
+							else {
+								// if not the beginning fragment, discard FU indicator and FU header
 								chunksize -= 1;
 								data += 2;
 								this->chunk.begin = 0;
@@ -700,27 +651,14 @@ Uncomment for NACK test simulation
 							this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 							this->chunk.ssrc          = ssrc;
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
-							/*
-							if (subnal != 1) {
-								MS_DEBUG_TAG(rtp, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
-									subnal, 
-									this->chunk.len, 
-									this->chunk.rtp_time,
-									shmCtx->LastTs(DepLibSfuShm::ShmChunkType::VIDEO),
-									this->chunk.first_rtp_seq,
-									isKeyFrame,
-									startBit,
-									endBit,
-									marker,
-									this->chunk.begin,
-									this->chunk.end);
-							}
-							*/
-							if (0 != shmCtx->WriteChunk(&chunk, DepLibSfuShm::ShmChunkType::VIDEO, ssrc))
+							if (isKeyFrame) // remove if not afraid of too much output
 							{
-								MS_WARN_TAG(rtp, "FAIL writing FU-A pkt to shm: len=%zu ts=%" PRIu64 " seq=%" PRIu64 "%s%s", this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, this->chunk.begin ? " begin" : "", this->chunk.end ? " end": "");
-								return false;
+								MS_DEBUG_TAG(xcode, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
+									subnal, this->chunk.len, this->chunk.rtp_time, shmCtx->LastVideoTs(), this->chunk.first_rtp_seq,
+									isKeyFrame, startBit, endBit, marker, this->chunk.begin, this->chunk.end);
 							}
+
+							shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &(this->chunk), true);
 							break;
 						}
 						case 25: // STAB-B
@@ -728,17 +666,16 @@ Uncomment for NACK test simulation
 						case 27: // MTAP-24
 						case 29: // FU-B
 						{
-							MS_WARN_TAG(rtp, "Unsupported NAL unit type %u in video packet", nal);
-							return false;
+							MS_WARN_TAG(xcode, "Unsupported NAL unit type %u in video packet", nal);
+							break;
 						}
 						default: // ignore the rest
 						{
-							MS_DEBUG_TAG(rtp, "Unknown NAL unit type %u in video packet", nal);
-							return false;
+							MS_DEBUG_TAG(xcode, "Unknown NAL unit type %u in video packet", nal);
+							break;
 						}
 					}
-				}
-				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::ShmChunkType::VIDEO);
+				} // Aggregate or fragmented NALUs
 				break;
 			} // case video
 
@@ -746,7 +683,18 @@ Uncomment for NACK test simulation
 				break;
 		} // kind
 
-		return true;
+		// Update last timestamp and seqId, even if we failed to write pkt
+		switch (this->GetKind())
+		{
+			case RTC::Media::Kind::AUDIO:
+				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::Media::AUDIO);
+				break;
+			case RTC::Media::Kind::VIDEO:
+				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::Media::VIDEO);
+				break;
+			default:
+				break;
+		}
 	}
 
 
@@ -966,6 +914,18 @@ Uncomment for NACK test simulation
 		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
+	}
+
+	void ShmConsumer::OnShmWriterReady()
+	{
+		MS_TRACE();
+
+		MS_DEBUG_TAG(xcode, "writer ready, consumer %s, get key frame", IsActive() ? "ready" : "not ready");
+
+		this->syncRequired = true;
+
+		if (IsActive())
+			RequestKeyFrame();
 	}
 
 	void ShmConsumer::OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet)

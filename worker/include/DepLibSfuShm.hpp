@@ -8,17 +8,18 @@ extern "C"
 }
 #include <vector>
 #include <string>
+#include <list>
 #include <unordered_map>
 
 #define UINT64_UNSET ((uint64_t)-1)
 #define MAX_SEQ_DELTA 100
 #define MAX_PTS_DELTA (90000*10)
+#define MTU_SIZE       1500
 
-
-class DepLibSfuShm
+namespace DepLibSfuShm
 {
-public:
-  enum ShmWriterStatus {
+  enum ShmWriterStatus
+  {
     SHM_WRT_UNDEFINED = 1,            // default
     SHM_WRT_CLOSED,                  // writer closed. TODO: implement whatever sets this state... producer paused or closed? transport closed?
     SHM_WRT_VIDEO_CHNL_CONF_MISSING, // when info on audio content has arrived but no video yet
@@ -27,43 +28,91 @@ public:
     // TODO: do I need an explicit value for a writer in error state?
   };
 
-  enum ShmChunkType {
+  enum Media
+  {
     VIDEO,
-    AUDIO,
-    RTCP,
-    UNDEFINED
+    AUDIO
   };
 
+  // If Sender Report arrived but shm writer could not be initialized yet, we can save it and write it in as soon as shm writer is initialized
+  struct MediaState
+  {
+    uint64_t last_seq{ UINT64_UNSET };   // last RTP pkt sequence processed by this input
+	  uint64_t last_ts{ UINT64_UNSET };    // the timestamp of the last processed RTP message
+    uint32_t ssrc{ 0 };                  // ssrc of audio or video chn
+    bool     sr_received{ false };       // if sender report was received
+    bool     sr_written{ false };        // if sender report was written into shm
+    uint32_t sr_ntp_msb{ 0 };
+    uint32_t sr_ntp_lsb{ 0 };
+    uint64_t sr_rtp_tm{ 0 };
+  };
+
+	// Need this to keep a buffer of roughly 2-3 video frames
+	enum EnqueueResult
+	{
+		SHM_Q_PKT_CANWRITETHRU, // queue was empty, the pkt represents whole video frame or it is an aggregate, its seqId is (last_seqId+1), won't add pkt to queue
+		SHM_Q_PKT_QUEUED_OK     // added pkt data into the queue
+	};
+
+  // Video NALUs queue item
+	struct ShmQueueItem
+	{
+    sfushm_av_frame_frag_t chunk;                    // Cloned data representing either a whole NALU or a fragment
+		uint8_t                store[MTU_SIZE];          // Memory to hold the cloned pkt data, won't be larger than MTU (should match RTC::MtuSize)
+    bool                   isChunkFragment{ false }; // If this is a picture's fragment (can be whole NALU or NALU's fragment)
+		bool                   isChunkStart{ false };    // The first (or only) picture's fragment
+		bool                   isChunkEnd{ false };      // Picture's last (or only) fragment
+
+    ShmQueueItem(sfushm_av_frame_frag_t* data, bool isfragment, bool isfragmentstart, bool isfragmentend);
+	};
+
   // Contains shm configuration, writer context (if initialized), writer status 
-  class SfuShmCtx
+  class ShmCtx
   {
   public:
-    SfuShmCtx(): wrt_ctx(nullptr), last_seq_a(UINT64_UNSET), last_ts_a(UINT64_UNSET), last_seq_v(UINT64_UNSET), last_ts_v(UINT64_UNSET), wrt_status(SHM_WRT_UNDEFINED) {}
-    ~SfuShmCtx();
+  	class Listener
+		{
+		public:
+			virtual void OnShmWriterReady() = 0;
+		};
+
+  public:
+    ShmCtx(): wrt_ctx(nullptr), wrt_status(SHM_WRT_UNDEFINED) {}
+    ~ShmCtx();
 
     void InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio);
     void CloseShmWriterCtx();
 
     std::string StreamName() const { return this->stream_name; }
     std::string LogName() const { return this->log_name; }
-    ShmWriterStatus Status() const { return this->wrt_status; } // (this->wrt_ctx != nullptr ? this->wrt_status : SHM_WRT_UNDEFINED); }
-    uint32_t AudioSsrc() const { return (this->wrt_init.conf.channels[0].audio == 1) ? this->wrt_init.conf.channels[0].ssrc : 0; }
-    uint32_t VideoSsrc() const { return (this->wrt_init.conf.channels[1].video == 1) ? this->wrt_init.conf.channels[1].ssrc : 0; }
-        
-    ShmWriterStatus SetSsrcInShmConf(uint32_t ssrc, DepLibSfuShm::ShmChunkType kind);
+    ShmWriterStatus Status() const { return this->wrt_status; }
 
-    uint64_t AdjustPktTs(uint64_t ts, DepLibSfuShm::ShmChunkType kind);
-    uint64_t AdjustPktSeq(uint64_t seq, DepLibSfuShm::ShmChunkType kind);
-    void UpdatePktStat(uint64_t seq, uint64_t ts, DepLibSfuShm::ShmChunkType kind);
-    bool IsSeqUnset(DepLibSfuShm::ShmChunkType kind) const;
-    bool IsTsUnset(DepLibSfuShm::ShmChunkType kind) const;    
-    uint64_t LastTs(DepLibSfuShm::ShmChunkType kind) const;
-    uint64_t LastSeq(DepLibSfuShm::ShmChunkType kind) const;
+    bool CanWrite() const;
+    void SetListener(DepLibSfuShm::ShmCtx::Listener* l) { this->listener = l; }
 
-    int WriteChunk(sfushm_av_frame_frag_t* data, DepLibSfuShm::ShmChunkType kind = DepLibSfuShm::ShmChunkType::UNDEFINED, uint32_t ssrc = 0);
-    int WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, DepLibSfuShm::ShmChunkType kind);
+    void ConfigureMediaSsrc(uint32_t ssrc, Media kind);
+
+    uint64_t AdjustVideoPktTs(uint64_t ts);
+    uint64_t AdjustAudioPktTs(uint64_t ts);
+    uint64_t AdjustVideoPktSeq(uint64_t seq);
+    uint64_t AdjustAudioPktSeq(uint64_t seq);
+    void UpdatePktStat(uint64_t seq, uint64_t ts, Media kind);
+
+    bool IsLastVideoSeqNotSet() const;  
+    uint64_t LastVideoTs() const;
+    uint64_t LastVideoSeq() const;
+
+    void WriteRtpDataToShm(Media type, sfushm_av_frame_frag_t* data, bool isChunkFragment = false);
+    void WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, Media kind);
     int WriteStreamMeta(std::string metadata, std::string shm);
-    int WriteVideoOrientation(uint16_t rotation);
+    void WriteVideoOrientation(uint16_t rotation);
+
+  private:
+    EnqueueResult Enqueue( sfushm_av_frame_frag_t* data, bool isChunkFragment);
+    void Dequeue();
+    
+    void WriteChunk(sfushm_av_frame_frag_t* data, Media kind);
+    void WriteSR(Media kind);
 
 	  bool IsError(int err_code);
 	  const char* GetErrorString(int err_code);
@@ -72,154 +121,109 @@ public:
     std::string        stream_name;
     std::string        log_name;
 
-    sfushm_av_wr_ctx_t *wrt_ctx;
-    uint64_t           last_seq_a;   // last RTP sequence processed by this input
-	  uint64_t           last_ts_a;    // the timestamp of the last processed RTP message  
-    uint64_t           last_seq_v;   // last RTP sequence processed by this input
-	  uint64_t           last_ts_v;    // the timestamp of the last processed RTP message
-    uint32_t           ssrc_v;       // ssrc of audio chn
-    uint32_t           ssrc_a;       // ssrc of video chn
-  
-    int                last_err {0}; // 
   
   private:
-    sfushm_av_writer_init_t  wrt_init;
-    ShmWriterStatus          wrt_status;
+    sfushm_av_writer_init_t wrt_init;
+    sfushm_av_wr_ctx_t     *wrt_ctx;        // 0 - audio, 1 - video
+    ShmWriterStatus         wrt_status;
 
+    MediaState              data[2];        // 0 - audio, 1 - video
+		std::list<ShmQueueItem> videoPktBuffer; // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
+
+    Listener *listener{ nullptr }; // needs to be initialized with smth from ShmConsumer so that we can notify it when shm writer is ready. TODO: see if it's worth the effort
   	static std::unordered_map<int, const char*> errToString;
   };
-};
 
+  // Inline methods
 
-// Inline methods
+  // Begin writing into shm when shm writer is initialized (only happens after ssrcs for both audio and video are known)
+  // and both Sender Reports have been received and written into shm
+  inline bool ShmCtx::CanWrite() const
+  { 
+    return nullptr != this->wrt_ctx 
+      && ShmWriterStatus::SHM_WRT_READY == this->wrt_status
+      && this->data[0].sr_written
+      && this->data[1].sr_written;
+  }
 
-inline uint64_t DepLibSfuShm::SfuShmCtx::AdjustPktTs(uint64_t ts, DepLibSfuShm::ShmChunkType kind)
-{
-  uint64_t last_ts;
-  switch(kind)
+  inline uint64_t ShmCtx::AdjustAudioPktTs(uint64_t ts)
   {
-      case DepLibSfuShm::ShmChunkType::VIDEO:
-      last_ts = this->last_ts_v;
-      break;
-
-      case DepLibSfuShm::ShmChunkType::AUDIO:
-      last_ts = this->last_ts_a;
-      break;
-
-      default:
-      return ts; // do nothing
+    if (this->data[0].last_ts != UINT64_UNSET) {
+      sfushm_av_adjust_for_overflow_32_64(this->data[0].last_ts, &ts, MAX_PTS_DELTA);
+    }
+    return ts;
   }
 
-  if (last_ts != UINT64_UNSET) {
-  	sfushm_av_adjust_for_overflow_32_64(last_ts, &ts, MAX_PTS_DELTA);
-  }
-  return ts;
-}
-
-inline uint64_t DepLibSfuShm::SfuShmCtx::AdjustPktSeq(uint64_t seq, DepLibSfuShm::ShmChunkType kind)
-{
-  uint64_t last_seq;
-  switch(kind)
+  inline uint64_t ShmCtx::AdjustAudioPktSeq(uint64_t seq)
   {
-      case DepLibSfuShm::ShmChunkType::VIDEO:
-      last_seq = this->last_seq_v;
-      break;
-
-      case DepLibSfuShm::ShmChunkType::AUDIO:
-      last_seq = this->last_seq_a;
-      break;
-
-      default:
-      return seq; // do nothing
+    if (this->data[0].last_seq != UINT64_UNSET) {
+      sfushm_av_adjust_for_overflow_16_64(this->data[0].last_seq, &seq, MAX_SEQ_DELTA);
+    }
+    return seq;
   }
 
-  if (last_seq != UINT64_UNSET) {
-		sfushm_av_adjust_for_overflow_16_64(last_seq, &seq, MAX_SEQ_DELTA);
-  }
-  return seq;
-}
-
-inline void DepLibSfuShm::SfuShmCtx::UpdatePktStat(uint64_t seq, uint64_t ts, DepLibSfuShm::ShmChunkType kind)
-{
-  //No checks, just update values since we have just written that pkt's data into shm
-  switch(kind)
+  inline uint64_t ShmCtx::AdjustVideoPktTs(uint64_t ts)
   {
-      case DepLibSfuShm::ShmChunkType::VIDEO:
-      this->last_seq_v = seq;
-      this->last_ts_v = ts;
-      break;
-
-      case DepLibSfuShm::ShmChunkType::AUDIO:
-      this->last_seq_a = seq;
-      this->last_ts_a = ts;
-      break;
-
-      default:
-      break; // TODO: will need stats on other pkt types
+    if (this->data[1].last_ts != UINT64_UNSET) {
+      sfushm_av_adjust_for_overflow_32_64(this->data[1].last_ts, &ts, MAX_PTS_DELTA);
+    }
+    return ts;
   }
-}
 
+  inline uint64_t ShmCtx::AdjustVideoPktSeq(uint64_t seq)
+  {
+    if (this->data[1].last_seq != UINT64_UNSET) {
+      sfushm_av_adjust_for_overflow_16_64(this->data[1].last_seq, &seq, MAX_SEQ_DELTA);
+    }
+    return seq;
+  }
+  
+  inline void ShmCtx::UpdatePktStat(uint64_t seq, uint64_t ts, Media kind)
+  {
+    //No checks, just update values since we have just written that pkt's data into shm
+    if (kind == Media::AUDIO)
+    {
+      this->data[0].last_seq = seq;
+      this->data[0].last_ts = ts;
+    }
+    else // video
+    {
+      this->data[1].last_seq = seq;
+      this->data[1].last_ts = ts;
+    }
+  }
 
-inline bool DepLibSfuShm::SfuShmCtx::IsSeqUnset(DepLibSfuShm::ShmChunkType kind) const
-{
-  if (kind == DepLibSfuShm::ShmChunkType::VIDEO)
-    return (this->last_seq_v == UINT64_UNSET);
-  else if (kind == DepLibSfuShm::ShmChunkType::AUDIO)
-    return (this->last_seq_a == UINT64_UNSET);
-  else
-    return true; // no support for other pkt types yet
-}
+  inline bool ShmCtx::IsLastVideoSeqNotSet() const
+  {
+      return (this->data[1].last_seq == UINT64_UNSET);
+  }
 
+  inline uint64_t ShmCtx::LastVideoTs() const
+  {
+    return this->data[1].last_ts;
+  }
 
-inline bool DepLibSfuShm::SfuShmCtx::IsTsUnset(DepLibSfuShm::ShmChunkType kind) const
-{
-  if (kind == DepLibSfuShm::ShmChunkType::VIDEO)
-    return (this->last_ts_v == UINT64_UNSET);
-  else if (kind == DepLibSfuShm::ShmChunkType::AUDIO)
-    return (this->last_ts_a == UINT64_UNSET);
-  else
-    return true; // no support for other pkt types yet
-}
+  inline uint64_t ShmCtx::LastVideoSeq() const
+  {
+    return this->data[1].last_seq;
+  }
 
+  inline bool ShmCtx::IsError(int err_code)
+  {
+    return (err_code != SFUSHM_AV_OK && err_code != SFUSHM_AV_AGAIN);
+  }
 
-inline uint64_t DepLibSfuShm::SfuShmCtx::LastTs(DepLibSfuShm::ShmChunkType kind) const
-{
-  if (kind == DepLibSfuShm::ShmChunkType::VIDEO)
-    return this->last_ts_v;
-  else if (kind == DepLibSfuShm::ShmChunkType::AUDIO)
-    return this->last_ts_a;
-  else
-    return UINT64_UNSET; // no support for other pkt types yet
-}
+  inline const char* ShmCtx::GetErrorString(int err_code)
+  {
+    static const char* unknownErr = "unknown SFUSHM error";
 
+    auto it = ShmCtx::errToString.find(err_code);
 
-inline uint64_t DepLibSfuShm::SfuShmCtx::LastSeq(DepLibSfuShm::ShmChunkType kind) const
-{
-  if (kind == DepLibSfuShm::ShmChunkType::VIDEO)
-    return this->last_seq_v;
-  else if (kind == DepLibSfuShm::ShmChunkType::AUDIO)
-    return this->last_seq_a;
-  else
-    return UINT64_UNSET; // no support for other pkt types yet
-}
+    if (it == ShmCtx::errToString.end())
+      return unknownErr;
 
-
-inline bool DepLibSfuShm::SfuShmCtx::IsError(int err_code)
-{
-	return (err_code != SFUSHM_AV_OK && err_code != SFUSHM_AV_AGAIN);
-}
-
-
-inline const char* DepLibSfuShm::SfuShmCtx::GetErrorString(int err_code)
-{
-  static const char* unknownErr = "unknown SFUSHM error";
-
-  auto it = DepLibSfuShm::SfuShmCtx::errToString.find(err_code);
-
-  if (it == DepLibSfuShm::SfuShmCtx::errToString.end())
-    return unknownErr;
-
-  return it->second;
-}
+    return it->second;
+  }
+} // namespace DepLibSfuShm
 
 #endif // DEP_LIBSFUSHM_HPP

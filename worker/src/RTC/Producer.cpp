@@ -49,6 +49,9 @@ namespace RTC
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
 
+		std::string s = jsonRtpParametersIt->dump();
+		MS_DEBUG_TAG(rtp,"Producer ctor RtpParameters: [%s]", s.c_str());
+
 		// Evaluate type.
 		this->type = RTC::RtpParameters::GetType(this->rtpParameters);
 

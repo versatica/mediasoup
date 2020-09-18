@@ -12,7 +12,6 @@
 #include "RTC/WebRtcTransport.hpp"
 #include "RTC/ShmTransport.hpp"
 
-
 namespace RTC
 {
 	/* Instance methods. */
