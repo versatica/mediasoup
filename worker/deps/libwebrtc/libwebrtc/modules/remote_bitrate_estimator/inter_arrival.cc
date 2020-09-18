@@ -35,8 +35,8 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
                                  int64_t arrival_time_ms,
                                  int64_t system_time_ms,
                                  size_t packet_size,
-                                 uint32_t* timestamp_delta,
-                                 int64_t* arrival_time_delta_ms,
+                                 uint32_t* timestamp_delta, // send_delta.
+                                 int64_t* arrival_time_delta_ms, // recv_delta.
                                  int* packet_size_delta) {
   MS_ASSERT(timestamp_delta != nullptr, "timestamp_delta is null");
   MS_ASSERT(arrival_time_delta_ms != nullptr, "arrival_time_delta_ms is null");
@@ -57,6 +57,9 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
           current_timestamp_group_.timestamp - prev_timestamp_group_.timestamp;
       *arrival_time_delta_ms = current_timestamp_group_.complete_time_ms -
                                prev_timestamp_group_.complete_time_ms;
+      MS_DEBUG_DEV("timestamp previous/current [%" PRIu32 "/%" PRIu32"] complete time previous/current [%" PRIi64 "/%" PRIi64 "]",
+          prev_timestamp_group_.timestamp, current_timestamp_group_.timestamp,
+          prev_timestamp_group_.complete_time_ms, current_timestamp_group_.complete_time_ms);
       // Check system time differences to see if we have an unproportional jump
       // in arrival time. In that case reset the inter-arrival computations.
       int64_t system_time_delta_ms =
@@ -98,6 +101,8 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
     current_timestamp_group_.timestamp = timestamp;
     current_timestamp_group_.first_arrival_ms = arrival_time_ms;
     current_timestamp_group_.size = 0;
+    MS_DEBUG_DEV("new timestamp group: first_timestamp:%" PRIu32 ", first_arrival_ms:%" PRIi64,
+        current_timestamp_group_.first_timestamp, current_timestamp_group_.first_arrival_ms);
   } else {
     current_timestamp_group_.timestamp =
         LatestTimestamp(current_timestamp_group_.timestamp, timestamp);

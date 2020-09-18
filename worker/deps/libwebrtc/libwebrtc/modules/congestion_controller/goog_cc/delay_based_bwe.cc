@@ -172,14 +172,23 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
 
   // Currently overusing the bandwidth.
   if (delay_detector_->State() == BandwidthUsage::kBwOverusing) {
+    MS_DEBUG_DEV("delay_detector_->State() == BandwidthUsage::kBwOverusing");
+    MS_DEBUG_DEV("in_alr: %s", in_alr ? "true" : "false");
     if (in_alr && alr_limited_backoff_enabled_) {
       if (rate_control_.TimeToReduceFurther(at_time, prev_bitrate_)) {
+        MS_DEBUG_DEV("alr_limited_backoff_enabled_ is true, prev_bitrate:%lld, result.target_bitrate:%lld",
+            prev_bitrate_.bps(),
+            result.target_bitrate.bps());
+
         result.updated =
             UpdateEstimate(at_time, prev_bitrate_, &result.target_bitrate);
         result.backoff_in_alr = true;
       }
     } else if (acked_bitrate &&
                rate_control_.TimeToReduceFurther(at_time, *acked_bitrate)) {
+      MS_DEBUG_DEV("acked_bitrate:%lld, result.target_bitrate:%lld",
+            acked_bitrate.value().bps(),
+            result.target_bitrate.bps());
       result.updated =
           UpdateEstimate(at_time, acked_bitrate, &result.target_bitrate);
     } else if (!acked_bitrate && rate_control_.ValidEstimate() &&
@@ -188,6 +197,7 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
       // rate by 50% every 200 ms.
       // TODO(tschumim): Improve this and/or the acknowledged bitrate estimator
       // so that we (almost) always have a bitrate estimate.
+      MS_DEBUG_DEV("reducing send rate by 50%% every 200 ms");
       rate_control_.SetEstimate(rate_control_.LatestEstimate() / 2, at_time);
       result.updated = true;
       result.probe = false;
@@ -195,6 +205,7 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
     }
   } else {
     if (probe_bitrate) {
+      MS_DEBUG_DEV("probe bitrate: %lld", probe_bitrate.value().bps());
       result.probe = true;
       result.updated = true;
       result.target_bitrate = *probe_bitrate;
@@ -210,11 +221,12 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
       detector_state != prev_state_) {
     DataRate bitrate = result.updated ? result.target_bitrate : prev_bitrate_;
 
-    MS_DEBUG_DEV(
-      "[at_time:%lld, target_bitrate_bps:%lld, detector_state:%s]",
-      at_time.ms(), bitrate.bps(), BandwidthUsage2String(detector_state).c_str());
-
     prev_bitrate_ = bitrate;
+
+    MS_DEBUG_DEV("setting prev_bitrate to: %lld, result.updated:%s",
+        prev_bitrate_.bps(),
+        result.updated ? "true" : "false");
+
     prev_state_ = detector_state;
   }
   return result;

@@ -8,9 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#define MS_CLASS "webrtc::OveruseDetector"
+// #define MS_LOG_DEV_LEVEL 3
+
 #include "modules/remote_bitrate_estimator/overuse_detector.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "rtc_base/numerics/safe_minmax.h"
+
+#include "Logger.hpp"
 
 #include <math.h>
 #include <stdio.h>
@@ -102,6 +107,7 @@ BandwidthUsage OveruseDetector::Detect(double offset,
       if (offset >= prev_offset_) {
         time_over_using_ = 0;
         overuse_counter_ = 0;
+        MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
         hypothesis_ = BandwidthUsage::kBwOverusing;
       }
     }
