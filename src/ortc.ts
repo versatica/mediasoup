@@ -971,9 +971,24 @@ export function getConsumerRtpParameters(
 		codec.rtcpFeedback = matchedCapCodec.rtcpFeedback;
 
 		consumerParams.codecs.push(codec);
+	}
 
-		if (!rtxSupported && isRtxCodec(codec))
-			rtxSupported = true;
+	// Must sanitize the list of matched codecs by removing useless RTX codecs.
+	for (let idx = consumerParams.codecs.length -1; idx >= 0; --idx)
+	{
+		const codec = consumerParams.codecs[idx];
+
+		if (isRtxCodec(codec))
+		{
+			// Search for the associated media codec.
+			const associatedMediaCodec = consumerParams.codecs
+				.find((mediaCodec) => mediaCodec.payloadType === codec.parameters.apt);
+
+			if (associatedMediaCodec)
+				rtxSupported = true;
+			else
+				consumerParams.codecs.splice(idx, 1);
+		}
 	}
 
 	// Ensure there is at least one media codec.

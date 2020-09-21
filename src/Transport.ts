@@ -254,6 +254,7 @@ export class Transport extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.transportId);
+		this._payloadChannel.removeAllListeners(this._internal.transportId);
 
 		this._channel.request('transport.close', this._internal)
 			.catch(() => {});

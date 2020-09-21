@@ -68,6 +68,7 @@ namespace RTC
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
 		ListenIp listenIp;
+		bool disableOriginCheck{ false };
 		struct sockaddr_storage remoteAddrStorage;
 		bool rtx{ false };
 		std::string srtpKey;

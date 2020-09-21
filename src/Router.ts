@@ -544,6 +544,7 @@ export class Router extends EnhancedEventEmitter
 	async createPipeTransport(
 		{
 			listenIp,
+			disableOriginCheck = false,
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 268435456,
@@ -581,6 +582,7 @@ export class Router extends EnhancedEventEmitter
 		const internal = { ...this._internal, transportId: uuidv4() };
 		const reqData = {
 			listenIp,
+			disableOriginCheck,
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,

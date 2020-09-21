@@ -457,7 +457,13 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				continue;
+				const auto* provisionalProducerRtpStream =
+				  this->producerRtpStreams.at(this->provisionalTargetSpatialLayer);
+
+				// The stream for the current provisional spatial layer has been active
+				// for enough time, move to the next spatial layer.
+				if (provisionalProducerRtpStream->GetActiveMs() >= StreamMinActiveMs)
+					continue;
 			}
 
 			// We may not yet switch to this spatial layer.

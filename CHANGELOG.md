@@ -4,6 +4,38 @@
 * Minor version leap to signify LivelyVideo mediasoup fork.
 * Lay out changes in ms worker C++ code needed to write RTP/RTCP into xcode shm. Placesholders for shm writer API calls, and no changes in Javascript lib/ yet.
 
+### 3.6.21
+
+* Fix memory leak in Node.js layer due to `PayloadChannel` event listener not being removed (related to #463).
+
+
+### 3.6.20
+
+* Remove `-fwrapv` when building mediasoup-worker in `Debug` mode (issue #460).
+* Add `MEDIASOUP_MAX_CORES` to limit `NUM_CORES` during mediasoup-worker build (PR #462).
+
+
+### 3.6.19
+
+* Update `usrsctp` dependency.
+* Update `typescript-eslint` deps.
+* Update Node deps.
+
+
+### 3.6.18
+
+* Fix `ortc.getConsumerRtpParameters()` RTX codec comparison issue (PR #453).
+* RtpObserver: expose `RtpObserverAddRemoveProducerOptions` for `addProducer()` and `removeProducer()` methods.
+
+
+### 3.6.17
+
+* Update `libuv` to 1.39.0.
+* Update Node deps.
+* SimulcastConsumer: Prefer the highest spatial layer initially (PR #450).
+* RtpStreamRecv: Set RtpDataCounter window size to 6 secs if DTX (#451)
+
+
 ### 3.6.16
 
 * `SctpAssociation.cpp`: Fix `OnSctpAssociationBufferedAmount()` call.

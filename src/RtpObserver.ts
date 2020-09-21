@@ -6,6 +6,14 @@ import { Producer } from './Producer';
 
 const logger = new Logger('RtpObserver');
 
+export type RtpObserverAddRemoveProducerOptions =
+{
+	/**
+	 * The id of the Producer to be added or removed.
+	 */
+	producerId: string;
+}
+
 export class RtpObserver extends EnhancedEventEmitter
 {
 	// Internal data.
@@ -138,6 +146,7 @@ export class RtpObserver extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.rtpObserverId);
+		this._payloadChannel.removeAllListeners(this._internal.rtpObserverId);
 
 		this._channel.request('rtpObserver.close', this._internal)
 			.catch(() => {});
@@ -210,7 +219,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	/**
 	 * Add a Producer to the RtpObserver.
 	 */
-	async addProducer({ producerId }: { producerId: string }): Promise<void>
+	async addProducer({ producerId }: RtpObserverAddRemoveProducerOptions): Promise<void>
 	{
 		logger.debug('addProducer()');
 
@@ -226,7 +235,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	/**
 	 * Remove a Producer from the RtpObserver.
 	 */
-	async removeProducer({ producerId }: { producerId: string }): Promise<void>
+	async removeProducer({ producerId }: RtpObserverAddRemoveProducerOptions): Promise<void>
 	{
 		logger.debug('removeProducer()');
 

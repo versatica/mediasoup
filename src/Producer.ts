@@ -333,6 +333,7 @@ export class Producer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.producerId);
+		this._payloadChannel.removeAllListeners(this._internal.producerId);
 
 		this._channel.request('producer.close', this._internal)
 			.catch(() => {});
