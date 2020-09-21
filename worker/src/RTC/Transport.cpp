@@ -1886,23 +1886,6 @@ namespace RTC
 						// Special case for the RTP probator.
 						if (report->GetSsrc() == RTC::RtpProbationSsrc)
 						{
-							// TODO: We should pass the RR to the tccClient (and in fact just RR for the
-							// probation stream).
-
-							// TODO: Convert report to ReportBlock and pass to tccClient.
-							// RTCPReportBlock in libwebrtc/libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-							//
-							// NOTE: consumer->GetRtt() is already implemented.
-							//
-							// NOTE: Better pass our RR to the tccClient and convert there to webrtc
-							// class.
-							//
-							// if (this->tccClient)
-							// {
-							// this->tccClient->ReceiveRtcpReceiverReport(report, consumer->GetRtt(),
-							// DepLibUV::GetTimeMsInt64());
-							// }
-
 							continue;
 						}
 
@@ -1915,6 +1898,26 @@ namespace RTC
 					}
 
 					consumer->ReceiveRtcpReceiverReport(report);
+				}
+
+				if (this->tccClient && !this->mapConsumers.empty())
+				{
+					float rtt = 0;
+
+					// Retrieve the RTT from the first active consumer.
+					for (auto& kv : this->mapConsumers)
+					{
+						auto* consumer = kv.second;
+
+						if (consumer->IsActive())
+						{
+							rtt = consumer->GetRtt();
+
+							break;
+						}
+					}
+
+					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, DepLibUV::GetTimeMsInt64());
 				}
 
 				break;
