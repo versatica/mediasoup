@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.22 (WIP)
+
+* Transport.cpp: provide transport congestion client with RTCP Receiver Reports (#464)
+
+
 ### 3.6.21
 
 * Fix memory leak in Node.js layer due to `PayloadChannel` event listener not being removed (related to #463).
