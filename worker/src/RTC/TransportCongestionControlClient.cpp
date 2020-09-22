@@ -213,7 +213,7 @@ namespace RTC
 		constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTimeMs());
 		constraints.min_data_rate = webrtc::DataRate::bps(this->bitrates.minBitrate);
 		constraints.max_data_rate = webrtc::DataRate::bps(this->bitrates.maxBitrate);
-		constraints.starting_rate = webrtc::DataRate::bps(this->bitrates.startBitrate);
+		constraints.starting_rate = webrtc::DataRate::bps(this->bitrates.availableBitrate);
 
 		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 	}
