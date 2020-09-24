@@ -1,4 +1,4 @@
-use crate::data_structures::{AppData, ProducerInternal, TransportInternal};
+use crate::data_structures::{AppData, EventDirection, ProducerInternal, TransportInternal};
 use crate::messages::{
     TransportDumpRequest, TransportGetStatsRequest, TransportProduceRequest,
     TransportProduceRequestData, TransportSetMaxIncomingBitrateData,
@@ -22,13 +22,6 @@ use thiserror::Error;
 
 uuid_based_wrapper_type!(TransportId);
 
-#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Direction {
-    In,
-    Out,
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum TransportTraceEventData {
@@ -36,7 +29,7 @@ pub enum TransportTraceEventData {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: Direction,
+        direction: EventDirection,
         // TODO: Clarify value structure
         /// Per type information.
         info: Value,
@@ -45,7 +38,7 @@ pub enum TransportTraceEventData {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: Direction,
+        direction: EventDirection,
         // TODO: Clarify value structure
         /// Per type information.
         info: Value,
@@ -113,18 +106,6 @@ where
     fn has_producer(&self, id: &ProducerId) -> bool;
 
     fn executor(&self) -> &Arc<Executor>;
-
-    // fn to_transport(&self) -> Box<dyn Transport<dyn Any, dyn Any, dyn Any>> {
-    //     // let transport: dyn Transport<Dump, Stat, RemoteParameters> = self.clone();
-    //     let transport = dyn_clone::clone_box(self);
-    //     let transport: Box<dyn Any> = transport;
-    //     let transport = transport.downcast_ref::<dyn Transport<dyn Any, dyn Any, dyn Any>>();
-    //     // .downcast_ref::<dyn Transport<dyn Any, dyn Any, dyn Any>>()
-    //     // .unwrap()
-    //     // .clone();
-    //     // Box::new(transport)
-    //     todo!()
-    // }
 
     async fn dump_impl(&self) -> Result<Dump, RequestError> {
         self.channel()
@@ -247,7 +228,7 @@ where
             .await
             .map_err(ProduceError::Request)?;
 
-        let producer = Producer::new(
+        let producer_fut = Producer::new(
             producer_id,
             kind,
             status.r#type,
@@ -262,6 +243,6 @@ where
             Box::new(self.clone()),
         );
 
-        Ok(producer)
+        Ok(producer_fut.await)
     }
 }

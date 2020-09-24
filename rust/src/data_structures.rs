@@ -390,3 +390,10 @@ pub(crate) struct ProducerInternal {
     pub transport_id: TransportId,
     pub producer_id: ProducerId,
 }
+
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EventDirection {
+    In,
+    Out,
+}
