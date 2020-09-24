@@ -717,6 +717,7 @@ mod tests {
                 webrtc_transport.dump().await.unwrap()
             );
 
+            println!("Producer stats: {:#?}", producer.get_stats().await.unwrap());
             println!("Producer dump: {:#?}", producer.dump().await.unwrap());
 
             // Just to give it time to finish everything with router destruction

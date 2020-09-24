@@ -1,8 +1,8 @@
 use crate::data_structures::{AppData, EventDirection, ProducerInternal};
-use crate::messages::{ProducerCloseRequest, ProducerDumpRequest};
+use crate::messages::{ProducerCloseRequest, ProducerDumpRequest, ProducerGetStatsRequest};
 use crate::ortc::RtpMapping;
 use crate::router::RouterId;
-use crate::rtp_parameters::{MediaKind, RtpParameters};
+use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
@@ -10,6 +10,7 @@ use async_executor::Executor;
 use log::{debug, error};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::mem;
 use std::sync::{Arc, Mutex};
 
@@ -90,11 +91,49 @@ pub struct ProducerScore {
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 pub struct ProducerVideoOrientation {
     /// Whether the source is a video camera.
-    camera: bool,
+    pub camera: bool,
     /// Whether the video source is flipped.
-    flip: bool,
+    pub flip: bool,
     /// Rotation degrees (0, 90, 180 or 270).
-    rotation: u16,
+    pub rotation: u16,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+pub enum RtpType {
+    #[serde(rename = "inbound-rtp")]
+    Inbound,
+    #[serde(rename = "outbound-rtp")]
+    Outbound,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProducerStat {
+    // Common to all RtpStreams.
+    pub r#type: RtpType,
+    pub timestamp: u32,
+    pub ssrc: u32,
+    pub rtx_ssrc: Option<u32>,
+    pub rid: Option<String>,
+    pub kind: String,
+    pub mime_type: MimeType,
+    pub packets_lost: u32,
+    pub fraction_lost: u8,
+    pub packets_discarded: usize,
+    pub packets_retransmitted: usize,
+    pub packets_repaired: usize,
+    pub nack_count: usize,
+    pub nack_packet_count: usize,
+    pub pli_count: usize,
+    pub fir_count: usize,
+    pub score: u8,
+    pub packet_count: usize,
+    pub byte_count: usize,
+    pub bitrate: u32,
+    pub round_trip_time: Option<u32>,
+    // RtpStreamRecv specific.
+    pub jitter: u32,
+    pub bitrate_by_layer: HashMap<String, u32>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -340,13 +379,21 @@ impl Producer {
             .await
     }
 
-    // TODO: Implement
-    // /// Get Producer stats.
-    // pub async fn get_stats(&self) -> Result<Vec<ProducerStat>, RequestError> {
-    //     debug!("get_stats()");
-    //
-    //     // TODO: Request
-    // }
+    /// Get Producer stats.
+    pub async fn get_stats(&self) -> Result<Vec<ProducerStat>, RequestError> {
+        debug!("get_stats()");
+
+        self.inner
+            .channel
+            .request(ProducerGetStatsRequest {
+                internal: ProducerInternal {
+                    router_id: self.inner.router_id,
+                    transport_id: self.inner.transport.id(),
+                    producer_id: self.inner.id,
+                },
+            })
+            .await
+    }
 
     // TODO: Implement
     // /// Pause the Producer.

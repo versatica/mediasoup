@@ -1,6 +1,6 @@
 use crate::data_structures::*;
 use crate::ortc::RtpMapping;
-use crate::producer::{ProducerDump, ProducerType};
+use crate::producer::{ProducerDump, ProducerStat, ProducerType};
 use crate::router::RouterDump;
 use crate::rtp_parameters::{MediaKind, RtpParameters};
 use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
@@ -324,16 +324,14 @@ request_response!(
     ProducerDump
 );
 
-// request_response!(
-//     ProducerGetStatsRequest,
-//     "producer.getStats",
-//     ;,
-//     ProducerGetStatsResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "producer.getStats",
+    ProducerGetStatsRequest {
+        internal: ProducerInternal,
+    },
+    Vec<ProducerStat>,
+);
+
 // request_response!(
 //     ProducerPauseRequest,
 //     "producer.pause",

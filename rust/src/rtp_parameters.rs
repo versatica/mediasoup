@@ -110,7 +110,8 @@ pub enum MediaKind {
     Video,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum MimeType {
     Audio(MimeTypeAudio),
     Video(MimeTypeVideo),
