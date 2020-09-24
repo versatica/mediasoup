@@ -178,21 +178,20 @@ namespace RTC
 		this->bitrates.desiredBitrate          = desiredBitrate;
 		this->bitrates.effectiveDesiredBitrate = this->desiredBitrateTrend.GetValue();
 		this->bitrates.minBitrate              = MinBitrate;
+		// NOTE: Setting 'startBitrate' to 'availableBitrate' has proven to generate
+		// more stable values.
+		this->bitrates.startBitrate = std::max<uint32_t>(MinBitrate, this->bitrates.availableBitrate);
 
 		if (this->desiredBitrateTrend.GetValue() > 0u)
 		{
 			this->bitrates.maxBitrate = std::max<uint32_t>(
 			  this->initialAvailableBitrate,
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
-			this->bitrates.startBitrate = std::min<uint32_t>(
-			  this->bitrates.maxBitrate,
-			  std::max<uint32_t>(this->bitrates.availableBitrate, this->initialAvailableBitrate));
 			this->bitrates.maxPaddingBitrate = this->bitrates.maxBitrate * MaxPaddingBitrateFactor;
 		}
 		else
 		{
 			this->bitrates.maxBitrate        = this->initialAvailableBitrate;
-			this->bitrates.startBitrate      = this->initialAvailableBitrate;
 			this->bitrates.maxPaddingBitrate = 0u;
 		}
 
