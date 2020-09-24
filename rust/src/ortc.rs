@@ -7,7 +7,7 @@ use crate::rtp_parameters::{
 use crate::supported_rtp_capabilities;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::mem;
 use std::ops::Deref;
@@ -18,27 +18,27 @@ const DYNAMIC_PAYLOAD_TYPES: &[u8] = &[
     119, 120, 121, 122, 123, 124, 125, 126, 127, 96, 97, 98, 99,
 ];
 
-#[derive(Debug, Default, Clone, Serialize)]
+#[derive(Debug, Default, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct RtpMappingCodec {
-    payload_type: u8,
-    mapped_payload_type: u8,
+pub struct RtpMappingCodec {
+    pub payload_type: u8,
+    pub mapped_payload_type: u8,
 }
 
-#[derive(Debug, Default, Clone, Serialize)]
+#[derive(Debug, Default, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct RtpMappingEncoding {
-    ssrc: Option<u32>,
-    rid: Option<String>,
+pub struct RtpMappingEncoding {
+    pub ssrc: Option<u32>,
+    pub rid: Option<String>,
     // TODO: Maybe enum?
-    scalability_mode: Option<String>,
-    mapped_ssrc: u32,
+    pub scalability_mode: Option<String>,
+    pub mapped_ssrc: u32,
 }
 
-#[derive(Debug, Default, Clone, Serialize)]
-pub(crate) struct RtpMapping {
-    codecs: Vec<RtpMappingCodec>,
-    encodings: Vec<RtpMappingEncoding>,
+#[derive(Debug, Default, Clone, Deserialize, Serialize)]
+pub struct RtpMapping {
+    pub codecs: Vec<RtpMappingCodec>,
+    pub encodings: Vec<RtpMappingEncoding>,
 }
 
 #[derive(Debug, Error)]

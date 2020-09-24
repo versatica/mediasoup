@@ -1,5 +1,6 @@
 use crate::data_structures::{AppData, EventDirection, ProducerInternal};
-use crate::messages::ProducerCloseRequest;
+use crate::messages::{ProducerCloseRequest, ProducerDumpRequest};
+use crate::ortc::RtpMapping;
 use crate::router::RouterId;
 use crate::rtp_parameters::{MediaKind, RtpParameters};
 use crate::transport::Transport;
@@ -39,6 +40,22 @@ impl ProducerOptions {
             app_data: AppData::default(),
         }
     }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct ProducerDump {
+    pub id: ProducerId,
+    pub kind: MediaKind,
+    pub paused: bool,
+    pub rtp_mapping: RtpMapping,
+    pub rtp_parameters: RtpParameters,
+    // TODO: Add type here
+    pub rtp_streams: Vec<()>,
+    // TODO: What is this field format?
+    pub trace_event_types: String,
+    pub r#type: ProducerType,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
@@ -306,13 +323,22 @@ impl Producer {
         &self.inner.app_data
     }
 
-    // TODO: Implement
-    // /// Dump Producer.
-    // pub async fn dump(&self) -> Result<ProducerDump, RequestError> {
-    //     debug!("dump()");
-    //
-    //     // TODO: Request
-    // }
+    /// Dump Producer.
+    #[doc(hidden)]
+    pub async fn dump(&self) -> Result<ProducerDump, RequestError> {
+        debug!("dump()");
+
+        self.inner
+            .channel
+            .request(ProducerDumpRequest {
+                internal: ProducerInternal {
+                    router_id: self.inner.router_id,
+                    transport_id: self.inner.transport.id(),
+                    producer_id: self.inner.id,
+                },
+            })
+            .await
+    }
 
     // TODO: Implement
     // /// Get Producer stats.

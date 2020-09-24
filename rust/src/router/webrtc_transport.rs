@@ -97,7 +97,7 @@ impl WebRtcTransportOptions {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpListener {
     // TODO: What is this field format?
@@ -108,7 +108,7 @@ pub struct RtpListener {
     pub ssrc_table: HashMap<(), ()>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportDump {
     pub id: TransportId,

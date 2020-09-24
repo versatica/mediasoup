@@ -187,10 +187,10 @@ pub struct WorkerResourceUsage {
     pub ru_nivcsw: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
-pub struct WorkerDumpResponse {
+pub struct WorkerDump {
     pub pid: u32,
     pub router_ids: Vec<RouterId>,
 }
@@ -507,7 +507,7 @@ impl Worker {
 
     /// Dump Worker.
     #[doc(hidden)]
-    pub async fn dump(&self) -> Result<WorkerDumpResponse, RequestError> {
+    pub async fn dump(&self) -> Result<WorkerDump, RequestError> {
         debug!("dump()");
 
         self.inner.channel.request(WorkerDumpRequest {}).await
@@ -716,6 +716,8 @@ mod tests {
                 "WebRTC transport dump: {:#?}",
                 webrtc_transport.dump().await.unwrap()
             );
+
+            println!("Producer dump: {:#?}", producer.dump().await.unwrap());
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

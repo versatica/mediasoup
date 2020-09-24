@@ -471,7 +471,8 @@ pub struct RtpEncodingParameters {
     /// codec supports it) and for video screen sharing (when static content is being transmitted,
     /// this option disables the RTP inactivity checks in mediasoup).
     /// Default false.
-    pub dtx: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dtx: Option<bool>,
     // TODO: Maybe enum?
     /// Number of spatial and temporal layers in the RTP stream (e.g. 'L1T3'). See webrtc-svc.
     #[serde(skip_serializing_if = "Option::is_none")]

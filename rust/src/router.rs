@@ -17,7 +17,7 @@ use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError, Worker};
 use async_executor::Executor;
 use log::{debug, error};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::sync::{Arc, Mutex};
@@ -30,10 +30,10 @@ pub struct RouterOptions {
     pub app_data: AppData,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
-pub struct RouterDumpResponse {
+pub struct RouterDump {
     pub id: RouterId,
     pub map_consumer_id_producer_id: HashMap<ConsumerId, ProducerId>,
     pub map_data_consumer_id_data_producer_id: HashMap<ConsumerId, ProducerId>,
@@ -143,7 +143,7 @@ impl Router {
 
     /// Dump Router.
     #[doc(hidden)]
-    pub async fn dump(&self) -> Result<RouterDumpResponse, RequestError> {
+    pub async fn dump(&self) -> Result<RouterDump, RequestError> {
         debug!("dump()");
 
         self.inner

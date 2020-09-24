@@ -1,9 +1,9 @@
 use crate::data_structures::*;
 use crate::ortc::RtpMapping;
-use crate::producer::ProducerType;
-use crate::router::RouterDumpResponse;
+use crate::producer::{ProducerDump, ProducerType};
+use crate::router::RouterDump;
 use crate::rtp_parameters::{MediaKind, RtpParameters};
-use crate::worker::{WorkerDumpResponse, WorkerResourceUsage, WorkerUpdateSettings};
+use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -93,7 +93,7 @@ macro_rules! request_response_generic {
     };
 }
 
-request_response!("worker.dump", WorkerDumpRequest {}, WorkerDumpResponse);
+request_response!("worker.dump", WorkerDumpRequest {}, WorkerDump);
 
 request_response!(
     "worker.getResourceUsage",
@@ -127,7 +127,7 @@ request_response!(
     RouterDumpRequest {
         internal: RouterInternal,
     },
-    RouterDumpResponse,
+    RouterDump,
 );
 
 request_response!(
@@ -316,16 +316,14 @@ request_response!(
     },
 );
 
-// request_response!(
-//     ProducerDumpRequest,
-//     "producer.dump",
-//     ;,
-//     ProducerDumpResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "producer.dump",
+    ProducerDumpRequest {
+        internal: ProducerInternal,
+    },
+    ProducerDump
+);
+
 // request_response!(
 //     ProducerGetStatsRequest,
 //     "producer.getStats",
