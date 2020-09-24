@@ -1,5 +1,8 @@
 use crate::data_structures::{AppData, EventDirection, ProducerInternal};
-use crate::messages::{ProducerCloseRequest, ProducerDumpRequest, ProducerGetStatsRequest};
+use crate::messages::{
+    ProducerCloseRequest, ProducerDumpRequest, ProducerGetStatsRequest, ProducerPauseRequest,
+    ProducerResumeRequest,
+};
 use crate::ortc::RtpMapping;
 use crate::router::RouterId;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
@@ -74,6 +77,8 @@ struct Handlers {
     score: Mutex<Vec<Box<dyn Fn(&Vec<ProducerScore>) + Send>>>,
     video_orientation_change: Mutex<Vec<Box<dyn Fn(ProducerVideoOrientation) + Send>>>,
     trace: Mutex<Vec<Box<dyn Fn(&ProducerTraceEventData) + Send>>>,
+    pause: Mutex<Vec<Box<dyn Fn() + Send>>>,
+    resume: Mutex<Vec<Box<dyn Fn() + Send>>>,
     closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
@@ -203,7 +208,7 @@ struct Inner {
     r#type: ProducerType,
     rtp_parameters: RtpParameters,
     consumable_rtp_parameters: RtpParameters,
-    paused: bool,
+    paused: Mutex<bool>,
     router_id: RouterId,
     score: Arc<Mutex<Vec<ProducerScore>>>,
     executor: Arc<Executor>,
@@ -312,7 +317,7 @@ impl Producer {
             r#type,
             rtp_parameters,
             consumable_rtp_parameters,
-            paused,
+            paused: Mutex::new(paused),
             router_id,
             score,
             executor,
@@ -349,7 +354,7 @@ impl Producer {
 
     /// Whether the Producer is paused.
     pub fn paused(&self) -> bool {
-        self.inner.paused
+        *self.inner.paused.lock().unwrap()
     }
 
     /// Producer score list.
@@ -395,21 +400,53 @@ impl Producer {
             .await
     }
 
-    // TODO: Implement
-    // /// Pause the Producer.
-    // pub async fn pause(&self) -> Result<(), RequestError> {
-    //     debug!("pause()");
-    //
-    //     // TODO: Request and update local property
-    // }
+    /// Pause the Producer.
+    pub async fn pause(&self) -> Result<(), RequestError> {
+        debug!("pause()");
 
-    // TODO: Implement
-    // /// Resume the Producer.
-    // pub async fn resume(&self) -> Result<(), RequestError> {
-    //     debug!("resume()");
-    //
-    //     // TODO: Request and update local property
-    // }
+        self.inner
+            .channel
+            .request(ProducerPauseRequest {
+                internal: ProducerInternal {
+                    router_id: self.inner.router_id,
+                    transport_id: self.inner.transport.id(),
+                    producer_id: self.inner.id,
+                },
+            })
+            .await?;
+
+        *self.inner.paused.lock().unwrap() = true;
+
+        for callback in self.inner.handlers.pause.lock().unwrap().iter() {
+            callback();
+        }
+
+        Ok(())
+    }
+
+    /// Resume the Producer.
+    pub async fn resume(&self) -> Result<(), RequestError> {
+        debug!("resume()");
+
+        self.inner
+            .channel
+            .request(ProducerResumeRequest {
+                internal: ProducerInternal {
+                    router_id: self.inner.router_id,
+                    transport_id: self.inner.transport.id(),
+                    producer_id: self.inner.id,
+                },
+            })
+            .await?;
+
+        *self.inner.paused.lock().unwrap() = false;
+
+        for callback in self.inner.handlers.resume.lock().unwrap().iter() {
+            callback();
+        }
+
+        Ok(())
+    }
 
     // TODO: Implement
     // /// Enable 'trace' event.
@@ -464,6 +501,24 @@ impl Producer {
         self.inner
             .handlers
             .trace
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_pause<F: Fn() + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .pause
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_resume<F: Fn() + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .resume
             .lock()
             .unwrap()
             .push(Box::new(callback));

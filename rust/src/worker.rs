@@ -719,6 +719,8 @@ mod tests {
 
             println!("Producer stats: {:#?}", producer.get_stats().await.unwrap());
             println!("Producer dump: {:#?}", producer.dump().await.unwrap());
+            println!("Producer pause: {:#?}", producer.pause().await);
+            println!("Producer resume: {:#?}", producer.resume().await);
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

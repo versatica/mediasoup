@@ -332,26 +332,22 @@ request_response!(
     Vec<ProducerStat>,
 );
 
-// request_response!(
-//     ProducerPauseRequest,
-//     "producer.pause",
-//     ;,
-//     ProducerPauseResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     ProducerResumeRequest,
-//     "producer.resume",
-//     ;,
-//     ProducerResumeResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "producer.pause",
+    ProducerPauseRequest {
+        internal: ProducerInternal,
+    },
+    ()
+);
+
+request_response!(
+    "producer.resume",
+    ProducerResumeRequest {
+        internal: ProducerInternal,
+    },
+    (),
+);
+
 // request_response!(
 //     ProducerEnableTraceEventRequest,
 //     "producer.enableTraceEvent",
