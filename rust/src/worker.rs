@@ -608,7 +608,7 @@ impl Worker {
 mod tests {
     use super::*;
     use crate::data_structures::TransportListenIp;
-    use crate::router::producer::{ProducerOptions, ProducerTraceEventType};
+    use crate::producer::{ProducerOptions, ProducerTraceEventType};
     use crate::rtp_parameters::{
         MediaKind, MimeTypeAudio, RtpCodecCapability, RtpCodecParameters, RtpParameters,
     };

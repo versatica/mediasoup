@@ -1,4 +1,4 @@
-use crate::consumer::ConsumerId;
+use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
     NumSctpStreams, SctpParameters, SctpState, TransportInternal, TransportListenIp,
@@ -9,9 +9,11 @@ use crate::messages::{
     TransportRestartIceRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::transport::{ProduceError, TransportTraceEventData, TransportTraceEventType};
 use crate::router::Router;
-use crate::transport::{Transport, TransportGeneric, TransportId, TransportImpl};
+use crate::transport::{
+    ConsumeError, ProduceError, Transport, TransportGeneric, TransportId, TransportImpl,
+    TransportTraceEventData, TransportTraceEventType,
+};
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
@@ -182,6 +184,7 @@ pub struct WebRtcTransportRemoteParameters {
 
 #[derive(Default)]
 struct Handlers {
+    new_producer: Mutex<Vec<Box<dyn Fn(&Producer) + Send>>>,
     ice_state_change: Mutex<Vec<Box<dyn Fn(IceState) + Send>>>,
     ice_selected_tuple_change: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
     dtls_state_change: Mutex<Vec<Box<dyn Fn(DtlsState) + Send>>>,
@@ -280,7 +283,22 @@ impl Transport for WebRtcTransport {
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
         debug!("produce()");
 
-        self.produce_impl(producer_options).await
+        let producer = self.produce_impl(producer_options).await?;
+
+        for callback in self.inner.handlers.new_producer.lock().unwrap().iter() {
+            callback(&producer);
+        }
+
+        Ok(producer)
+    }
+
+    /// Create a Consumer.
+    ///
+    /// Transport will be kept alive as long as at least one consumer instance is alive.
+    async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError> {
+        debug!("consume()");
+
+        self.consume_impl(consumer_options).await
     }
 }
 
@@ -337,6 +355,24 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportR
         self.enable_trace_event_impl(types).await
     }
 
+    fn connect_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .new_producer
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    fn connect_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .trace
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
@@ -360,10 +396,6 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
 
     fn payload_channel(&self) -> &Channel {
         &self.inner.payload_channel
-    }
-
-    fn has_producer(&self, id: &ProducerId) -> bool {
-        self.inner.router.has_producer(id)
     }
 
     fn executor(&self) -> &Arc<Executor> {
@@ -566,15 +598,6 @@ impl WebRtcTransport {
         self.inner
             .handlers
             .sctp_state_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
-    }
-
-    pub fn connect_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .trace
             .lock()
             .unwrap()
             .push(Box::new(callback));

@@ -126,7 +126,9 @@ fn validate_rtp_codec_capability(
 }
 
 /// Validates RtpCapabilities.
-fn validate_rtp_capabilities(caps: &RtpCapabilities) -> Result<(), RouterRtpCapabilitiesError> {
+pub(crate) fn validate_rtp_capabilities(
+    caps: &RtpCapabilities,
+) -> Result<(), RouterRtpCapabilitiesError> {
     for codec in caps.codecs.iter() {
         validate_rtp_codec_capability(codec)?;
     }

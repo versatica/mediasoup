@@ -10,9 +10,9 @@ use crate::data_structures::{
     AppData, ObserverId, RouterCreateWebrtcTransportData, RouterInternal, TransportInternal,
 };
 use crate::messages::{RouterCloseRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest};
-use crate::producer::ProducerId;
+use crate::producer::{Producer, ProducerId, WeakProducer};
 use crate::rtp_parameters::{RtpCapabilitiesFinalized, RtpCodecCapability};
-use crate::transport::TransportId;
+use crate::transport::{TransportGeneric, TransportId};
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError, Worker};
 use async_executor::Executor;
@@ -45,7 +45,7 @@ pub struct RouterDump {
 }
 
 pub enum NewTransport<'a> {
-    WebRtc(&'a Arc<WebRtcTransport>),
+    WebRtc(&'a WebRtcTransport),
 }
 
 #[derive(Default)]
@@ -62,7 +62,7 @@ struct Inner {
     payload_channel: Channel,
     handlers: Handlers,
     app_data: AppData,
-    producers: Mutex<HashSet<ProducerId>>,
+    producers: Arc<Mutex<HashMap<ProducerId, WeakProducer>>>,
     // Make sure worker is not dropped until this router is not dropped
     _worker: Worker,
 }
@@ -109,7 +109,7 @@ impl Router {
     ) -> Self {
         debug!("new()");
 
-        let producers = Mutex::default();
+        let producers = Arc::<Mutex<HashMap<ProducerId, WeakProducer>>>::default();
         let handlers = Handlers::default();
         let inner = Arc::new(Inner {
             id,
@@ -162,7 +162,7 @@ impl Router {
     pub async fn create_webrtc_transport(
         &self,
         webrtc_transport_options: WebRtcTransportOptions,
-    ) -> Result<Arc<WebRtcTransport>, RequestError> {
+    ) -> Result<WebRtcTransport, RequestError> {
         debug!("create_webrtc_transport()");
 
         let transport_id = TransportId::new();
@@ -187,14 +187,33 @@ impl Router {
             webrtc_transport_options.app_data,
             self.clone(),
         );
-        let transport = Arc::new(transport_fut.await);
+        let transport = transport_fut.await;
 
         for callback in self.inner.handlers.new_transport.lock().unwrap().iter() {
             callback(NewTransport::WebRtc(&transport));
         }
+
+        {
+            let producers_weak = Arc::downgrade(&self.inner.producers);
+            transport.connect_new_producer(move |producer| {
+                let producer_id = producer.id();
+                if let Some(producers) = producers_weak.upgrade() {
+                    producers
+                        .lock()
+                        .unwrap()
+                        .insert(producer_id, producer.downgrade());
+                }
+                {
+                    let producers_weak = producers_weak.clone();
+                    producer.connect_closed(move || {
+                        if let Some(producers) = producers_weak.upgrade() {
+                            producers.lock().unwrap().remove(&producer_id);
+                        }
+                    });
+                }
+            });
+        }
         // TODO: Subscribe when added on transport:
-        //  connect_new_producer
-        //  connect_producer_closed
         //  connect_new_data_producer
         //  connect_data_producer_closed
 
@@ -220,6 +239,19 @@ impl Router {
     }
 
     fn has_producer(&self, producer_id: &ProducerId) -> bool {
-        self.inner.producers.lock().unwrap().contains(producer_id)
+        self.inner
+            .producers
+            .lock()
+            .unwrap()
+            .contains_key(producer_id)
+    }
+
+    fn get_producer(&self, producer_id: &ProducerId) -> Option<Producer> {
+        self.inner
+            .producers
+            .lock()
+            .unwrap()
+            .get(producer_id)?
+            .upgrade()
     }
 }

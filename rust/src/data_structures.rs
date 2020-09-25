@@ -1,4 +1,4 @@
-use crate::router::producer::ProducerId;
+use crate::producer::ProducerId;
 use crate::router::RouterId;
 use crate::transport::TransportId;
 use crate::uuid_based_wrapper_type;

@@ -1,10 +1,11 @@
+use crate::consumer::{Consumer, ConsumerOptions};
 use crate::data_structures::{AppData, EventDirection, ProducerInternal, TransportInternal};
 use crate::messages::{
     TransportDumpRequest, TransportEnableTraceEventRequest, TransportEnableTraceEventRequestData,
     TransportGetStatsRequest, TransportProduceRequest, TransportProduceRequestData,
     TransportSetMaxIncomingBitrateData, TransportSetMaxIncomingBitrateRequest,
 };
-use crate::ortc::{RtpParametersError, RtpParametersMappingError};
+use crate::ortc::{RouterRtpCapabilitiesError, RtpParametersError, RtpParametersMappingError};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::Router;
 use crate::rtp_parameters::RtpEncodingParameters;
@@ -54,7 +55,10 @@ pub enum TransportTraceEventType {
 }
 
 #[async_trait(?Send)]
-pub trait Transport {
+pub trait Transport
+where
+    Self: Send + Sync,
+{
     /// Transport id.
     fn id(&self) -> TransportId;
 
@@ -68,6 +72,12 @@ pub trait Transport {
     ///
     /// Transport will be kept alive as long as at least one producer instance is alive.
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
+
+    /// Create a Consumer.
+    ///
+    /// Transport will be kept alive as long as at least one consumer instance is alive.
+    async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError>;
+
     // TODO
 }
 
@@ -87,6 +97,10 @@ pub trait TransportGeneric<Dump, Stat, RemoteParameters>: Transport {
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError>;
 
+    fn connect_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F);
+
+    fn connect_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F);
+
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
 }
 
@@ -98,6 +112,19 @@ pub enum ProduceError {
     IncorrectRtpParameters(RtpParametersError),
     #[error("RTP mapping error: {0}")]
     FailedRtpParametersMapping(RtpParametersMappingError),
+    #[error("Request to worker failed: {0}")]
+    Request(RequestError),
+}
+
+#[derive(Debug, Error)]
+pub enum ConsumeError {
+    // TODO
+    // #[error("Producer with ID {0} already exists")]
+    // AlreadyExists(ProducerId),
+    // #[error("Incorrect RTP parameters: {0}")]
+    // IncorrectRtpParameters(RtpParametersError),
+    #[error("RTP capabilities error: {0}")]
+    FailedRtpCapabilitiesValidation(RouterRtpCapabilitiesError),
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
@@ -115,8 +142,6 @@ where
     fn channel(&self) -> &Channel;
 
     fn payload_channel(&self) -> &Channel;
-
-    fn has_producer(&self, id: &ProducerId) -> bool;
 
     fn executor(&self) -> &Arc<Executor>;
 
@@ -176,7 +201,7 @@ where
         producer_options: ProducerOptions,
     ) -> Result<Producer, ProduceError> {
         if let Some(id) = &producer_options.id {
-            if self.has_producer(id) {
+            if self.router().has_producer(id) {
                 return Err(ProduceError::AlreadyExists(*id));
             }
         }
@@ -272,5 +297,15 @@ where
         );
 
         Ok(producer_fut.await)
+    }
+
+    async fn consume_impl(
+        &self,
+        consumer_options: ConsumerOptions,
+    ) -> Result<Consumer, ConsumeError> {
+        ortc::validate_rtp_capabilities(&consumer_options.rtp_capabilities)
+            .map_err(ConsumeError::FailedRtpCapabilitiesValidation)?;
+
+        unimplemented!()
     }
 }

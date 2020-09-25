@@ -16,21 +16,27 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::mem;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 uuid_based_wrapper_type!(ProducerId);
 
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct ProducerOptions {
+    /// Producer id (just for Router.pipeToRouter() method).
     /// Producer id, should most likely not be specified explicitly, specified by plain transport
     #[doc(hidden)]
     pub id: Option<ProducerId>,
+    /// Media kind.
     pub kind: MediaKind,
     // TODO: Docs have distinction between RtpSendParameters and RtpReceiveParameters
+    /// RTP parameters defining what the endpoint is sending.
     pub rtp_parameters: RtpParameters,
+    /// Whether the producer must start in paused mode. Default false.
     pub paused: bool,
+    /// Just for video. Time (in ms) before asking the sender for a new key frame
     pub key_frame_request_delay: u32,
+    /// Custom application data.
     pub app_data: AppData,
 }
 
@@ -557,5 +563,24 @@ impl Producer {
     /// Consumable RTP parameters.
     pub(super) fn consumable_rtp_parameters(&self) -> RtpParameters {
         self.inner.consumable_rtp_parameters.clone()
+    }
+
+    pub(super) fn downgrade(&self) -> WeakProducer {
+        WeakProducer {
+            inner: Arc::downgrade(&self.inner),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub(super) struct WeakProducer {
+    inner: Weak<Inner>,
+}
+
+impl WeakProducer {
+    pub(super) fn upgrade(&self) -> Option<Producer> {
+        Some(Producer {
+            inner: self.inner.upgrade()?,
+        })
     }
 }
