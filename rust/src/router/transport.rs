@@ -1,8 +1,8 @@
 use crate::data_structures::{AppData, EventDirection, ProducerInternal, TransportInternal};
 use crate::messages::{
-    TransportDumpRequest, TransportGetStatsRequest, TransportProduceRequest,
-    TransportProduceRequestData, TransportSetMaxIncomingBitrateData,
-    TransportSetMaxIncomingBitrateRequest,
+    TransportDumpRequest, TransportEnableTraceEventRequest, TransportEnableTraceEventRequestData,
+    TransportGetStatsRequest, TransportProduceRequest, TransportProduceRequestData,
+    TransportSetMaxIncomingBitrateData, TransportSetMaxIncomingBitrateRequest,
 };
 use crate::ortc::{RtpParametersError, RtpParametersMappingError};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
@@ -34,7 +34,7 @@ pub enum TransportTraceEventData {
         /// Per type information.
         info: Value,
     },
-    Bwe {
+    BWE {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -43,6 +43,14 @@ pub enum TransportTraceEventData {
         /// Per type information.
         info: Value,
     },
+}
+
+/// Valid types for 'trace' event.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TransportTraceEventType {
+    Probation,
+    BWE,
 }
 
 #[async_trait(?Send)]
@@ -73,6 +81,11 @@ pub trait TransportGeneric<Dump, Stat, RemoteParameters>: Transport {
 
     /// Provide the Transport remote parameters.
     async fn connect(&self, remote_parameters: RemoteParameters) -> Result<(), RequestError>;
+
+    async fn enable_trace_event(
+        &self,
+        types: Vec<TransportTraceEventType>,
+    ) -> Result<(), RequestError>;
 
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
 }
@@ -139,6 +152,21 @@ where
                     transport_id: self.id(),
                 },
                 data: TransportSetMaxIncomingBitrateData { bitrate },
+            })
+            .await
+    }
+
+    async fn enable_trace_event_impl(
+        &self,
+        types: Vec<TransportTraceEventType>,
+    ) -> Result<(), RequestError> {
+        self.channel()
+            .request(TransportEnableTraceEventRequest {
+                internal: TransportInternal {
+                    router_id: self.router().id(),
+                    transport_id: self.id(),
+                },
+                data: TransportEnableTraceEventRequestData { types },
             })
             .await
     }

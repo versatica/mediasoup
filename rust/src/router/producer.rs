@@ -1,6 +1,7 @@
 use crate::data_structures::{AppData, EventDirection, ProducerInternal};
 use crate::messages::{
-    ProducerCloseRequest, ProducerDumpRequest, ProducerGetStatsRequest, ProducerPauseRequest,
+    ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
+    ProducerEnableTraceEventRequestData, ProducerGetStatsRequest, ProducerPauseRequest,
     ProducerResumeRequest,
 };
 use crate::ortc::RtpMapping;
@@ -141,6 +142,7 @@ pub struct ProducerStat {
     pub bitrate_by_layer: HashMap<String, u32>,
 }
 
+/// 'trace' event data.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ProducerTraceEventData {
@@ -200,6 +202,17 @@ enum Notification {
     VideoOrientationChange(ProducerVideoOrientation),
     #[serde(rename_all = "camelCase")]
     Trace(ProducerTraceEventData),
+}
+
+/// Valid types for 'trace' event.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ProducerTraceEventType {
+    RTP,
+    KeyFrame,
+    NACK,
+    PLI,
+    FIR,
 }
 
 struct Inner {
@@ -448,17 +461,25 @@ impl Producer {
         Ok(())
     }
 
-    // TODO: Implement
-    // /// Enable 'trace' event.
-    // pub async fn  enable_trace_event(types: Vec<ProducerTraceEventType>) -> Result<(), RequestError>
-    // {
-    // 	debug!("enable_trace_event()");
-    //
-    // 	// const reqData = { types };
-    //     //
-    // 	// await this._channel.request(
-    // 	// 	'producer.enableTraceEvent', this._internal, reqData);
-    // }
+    /// Enable 'trace' event.
+    pub async fn enable_trace_event(
+        &self,
+        types: Vec<ProducerTraceEventType>,
+    ) -> Result<(), RequestError> {
+        debug!("enable_trace_event()");
+
+        self.inner
+            .channel
+            .request(ProducerEnableTraceEventRequest {
+                internal: ProducerInternal {
+                    router_id: self.inner.router_id,
+                    transport_id: self.inner.transport.id(),
+                    producer_id: self.inner.id,
+                },
+                data: ProducerEnableTraceEventRequestData { types },
+            })
+            .await
+    }
 
     // TODO: Probably create a generic parameter on producer to make sure this method is only
     //  available when it should

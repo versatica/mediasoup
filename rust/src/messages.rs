@@ -1,8 +1,9 @@
 use crate::data_structures::*;
 use crate::ortc::RtpMapping;
-use crate::producer::{ProducerDump, ProducerStat, ProducerType};
+use crate::producer::{ProducerDump, ProducerStat, ProducerTraceEventType, ProducerType};
 use crate::router::RouterDump;
 use crate::rtp_parameters::{MediaKind, RtpParameters};
+use crate::transport::TransportTraceEventType;
 use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -299,16 +300,22 @@ request_response!(
 //     },
 // );
 //
-// request_response!(
-//     TransportEnableTraceEventRequest,
-//     "transport.enableTraceEvent",
-//     ;,
-//     TransportEnableTraceEventResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct TransportEnableTraceEventRequestData {
+    pub(crate) types: Vec<TransportTraceEventType>,
+}
+
+request_response!(
+    "transport.enableTraceEvent",
+    TransportEnableTraceEventRequest {
+        internal: TransportInternal,
+        data: TransportEnableTraceEventRequestData,
+    },
+    (),
+);
+
 request_response!(
     "producer.close",
     ProducerCloseRequest {
@@ -348,16 +355,21 @@ request_response!(
     (),
 );
 
-// request_response!(
-//     ProducerEnableTraceEventRequest,
-//     "producer.enableTraceEvent",
-//     ;,
-//     ProducerEnableTraceEventResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ProducerEnableTraceEventRequestData {
+    pub(crate) types: Vec<ProducerTraceEventType>,
+}
+
+request_response!(
+    "producer.enableTraceEvent",
+    ProducerEnableTraceEventRequest {
+        internal: ProducerInternal,
+        data: ProducerEnableTraceEventRequestData,
+    },
+    (),
+);
+
 // request_response!(
 //     ConsumerCloseRequest,
 //     "consumer.close",

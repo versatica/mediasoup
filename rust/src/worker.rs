@@ -608,11 +608,11 @@ impl Worker {
 mod tests {
     use super::*;
     use crate::data_structures::TransportListenIp;
-    use crate::router::producer::ProducerOptions;
+    use crate::router::producer::{ProducerOptions, ProducerTraceEventType};
     use crate::rtp_parameters::{
         MediaKind, MimeTypeAudio, RtpCodecCapability, RtpCodecParameters, RtpParameters,
     };
-    use crate::transport::{Transport, TransportGeneric};
+    use crate::transport::{Transport, TransportGeneric, TransportTraceEventType};
     use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
     use futures_lite::future;
     use std::thread;
@@ -647,8 +647,11 @@ mod tests {
             .await
             .unwrap();
 
-            println!("Worker dump: {:#?}", worker.dump().await);
-            println!("Resource usage: {:#?}", worker.get_resource_usage().await);
+            println!("Worker dump: {:#?}", worker.dump().await.unwrap());
+            println!(
+                "Resource usage: {:#?}",
+                worker.get_resource_usage().await.unwrap()
+            );
             println!(
                 "Update settings: {:?}",
                 worker
@@ -657,6 +660,7 @@ mod tests {
                         log_tags: Vec::new(),
                     })
                     .await
+                    .unwrap()
             );
 
             let router = worker
@@ -694,6 +698,13 @@ mod tests {
                 "WebRTC transport dump: {:#?}",
                 webrtc_transport.dump().await.unwrap()
             );
+            println!(
+                "WebRTC transport enable trace event: {:#?}",
+                webrtc_transport
+                    .enable_trace_event(vec![TransportTraceEventType::BWE])
+                    .await
+                    .unwrap()
+            );
 
             let producer = webrtc_transport
                 .produce(ProducerOptions::new(MediaKind::Audio, {
@@ -719,8 +730,15 @@ mod tests {
 
             println!("Producer stats: {:#?}", producer.get_stats().await.unwrap());
             println!("Producer dump: {:#?}", producer.dump().await.unwrap());
-            println!("Producer pause: {:#?}", producer.pause().await);
-            println!("Producer resume: {:#?}", producer.resume().await);
+            println!("Producer pause: {:#?}", producer.pause().await.unwrap());
+            println!("Producer resume: {:#?}", producer.resume().await.unwrap());
+            println!(
+                "Producer enable trace event: {:#?}",
+                producer
+                    .enable_trace_event(vec![ProducerTraceEventType::KeyFrame])
+                    .await
+                    .unwrap()
+            );
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

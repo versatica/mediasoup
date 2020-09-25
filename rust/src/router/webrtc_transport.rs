@@ -9,7 +9,7 @@ use crate::messages::{
     TransportRestartIceRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::transport::{ProduceError, TransportTraceEventData};
+use crate::router::transport::{ProduceError, TransportTraceEventData, TransportTraceEventType};
 use crate::router::Router;
 use crate::transport::{Transport, TransportGeneric, TransportId, TransportImpl};
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
@@ -326,6 +326,15 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportR
         self.inner.data.dtls_parameters.lock().unwrap().role = response.dtls_local_role;
 
         Ok(())
+    }
+
+    async fn enable_trace_event(
+        &self,
+        types: Vec<TransportTraceEventType>,
+    ) -> Result<(), RequestError> {
+        debug!("enable_trace_event()");
+
+        self.enable_trace_event_impl(types).await
     }
 
     fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
