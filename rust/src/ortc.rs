@@ -1,10 +1,10 @@
 use crate::rtp_parameters::{
     MediaKind, MimeType, MimeTypeVideo, RtcpParameters, RtpCapabilities, RtpCapabilitiesFinalized,
     RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
-    RtpCodecParametersParametersValue, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
-    RtpParameters,
+    RtpCodecParametersParametersValue, RtpEncodingParameters, RtpEncodingParametersRtx,
+    RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpParameters,
 };
-use crate::supported_rtp_capabilities;
+use crate::{scalability_modes, supported_rtp_capabilities};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
@@ -17,6 +17,10 @@ const DYNAMIC_PAYLOAD_TYPES: &[u8] = &[
     100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118,
     119, 120, 121, 122, 123, 124, 125, 126, 127, 96, 97, 98, 99,
 ];
+
+const TWCC_HEADER: &str =
+    "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
+const ABS_SEND_TIME_HEADER: &str = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time";
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -70,6 +74,18 @@ pub enum RtpParametersMappingError {
     UnsupportedRTXCodec { preferred_payload_type: u8 },
     #[error("missing media codec found for RTX PT {payload_type}")]
     MissingMediaCodecForRTX { payload_type: u8 },
+}
+
+#[derive(Debug, Error)]
+pub enum ConsumerRtpParametersError {
+    #[error("invalid capabilities: {0}")]
+    InvalidCapabilities(RouterRtpCapabilitiesError),
+    #[error("no compatible media codecs")]
+    NoCompatibleMediaCodecs,
+}
+
+fn generate_ssrc() -> u32 {
+    SmallRng::from_entropy().gen_range(100000000, 999999999)
 }
 
 /// Validates RtpParameters.
@@ -402,7 +418,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
     }
 
     // Generate encodings mapping.
-    let mut mapped_ssrc: u32 = SmallRng::from_entropy().gen_range(100000000, 999999999);
+    let mut mapped_ssrc: u32 = generate_ssrc();
 
     for encoding in rtp_parameters.encodings.iter() {
         rtp_mapping.encodings.push(RtpMappingEncoding {
@@ -590,6 +606,149 @@ pub(crate) fn get_consumable_rtp_parameters(
     };
 
     return consumable_params;
+}
+
+/// Generate RTP parameters for a specific Consumer.
+///
+/// It reduces encodings to just one and takes into account given RTP capabilities to reduce codecs,
+/// codecs' RTCP feedback and header extensions, and also enables or disabled RTX.
+pub fn get_consumer_rtp_parameters(
+    consumable_params: RtpParameters,
+    caps: RtpCapabilities,
+) -> Result<RtpParameters, ConsumerRtpParametersError> {
+    let mut consumer_params = RtpParameters::default();
+    consumer_params.rtcp = consumable_params.rtcp.clone();
+
+    for cap_codec in caps.codecs.iter() {
+        validate_rtp_codec_capability(cap_codec)
+            .map_err(ConsumerRtpParametersError::InvalidCapabilities)?;
+    }
+
+    let mut rtx_supported = false;
+
+    for mut codec in consumable_params.codecs {
+        if let Some(matched_cap_codec) = caps
+            .codecs
+            .iter()
+            .find(|cap_codec| match_codecs(cap_codec.deref().into(), (&codec).into(), true, false))
+        {
+            *codec.rtcp_feedback_mut() = matched_cap_codec.rtcp_feedback().clone();
+            consumer_params.codecs.push(codec);
+        }
+    }
+
+    // Must sanitize the list of matched codecs by removing useless RTX codecs.
+    let mut remove_codecs = Vec::new();
+    for (idx, codec) in consumer_params.codecs.iter().enumerate() {
+        if codec.is_rtx() {
+            // Search for the associated media codec.
+            let associated_media_codec = consumer_params.codecs.iter().find(|media_codec| {
+                match codec.parameters().get("apt") {
+                    Some(RtpCodecParametersParametersValue::Number(apt)) => {
+                        media_codec.payload_type() as u32 == *apt
+                    }
+                    _ => false,
+                }
+            });
+
+            if associated_media_codec.is_some() {
+                rtx_supported = true;
+            } else {
+                remove_codecs.push(idx);
+            }
+        }
+    }
+    for idx in remove_codecs.into_iter().rev() {
+        consumer_params.codecs.remove(idx);
+    }
+
+    // Ensure there is at least one media codec.
+    if consumer_params.codecs.is_empty() || consumer_params.codecs[0].is_rtx() {
+        return Err(ConsumerRtpParametersError::NoCompatibleMediaCodecs);
+    }
+
+    consumer_params.header_extensions.retain(|ext| {
+        caps.header_extensions
+            .iter()
+            .find(|cap_ext| cap_ext.preferred_id == ext.id && cap_ext.uri == ext.uri)
+            .is_some()
+    });
+
+    // Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
+    if consumer_params
+        .header_extensions
+        .iter()
+        .find(|ext| ext.uri.as_str() == TWCC_HEADER)
+        .is_some()
+    {
+        for codec in consumer_params.codecs.iter_mut() {
+            codec
+                .rtcp_feedback_mut()
+                .retain(|fb| fb.r#type != "goog-remb");
+        }
+    } else if consumer_params
+        .header_extensions
+        .iter()
+        .find(|ext| ext.uri.as_str() == ABS_SEND_TIME_HEADER)
+        .is_some()
+    {
+        for codec in consumer_params.codecs.iter_mut() {
+            codec
+                .rtcp_feedback_mut()
+                .retain(|fb| fb.r#type != "transport-cc");
+        }
+    } else {
+        for codec in consumer_params.codecs.iter_mut() {
+            codec
+                .rtcp_feedback_mut()
+                .retain(|fb| fb.r#type != "transport-cc" && fb.r#type != "goog-remb");
+        }
+    }
+
+    let mut consumer_encoding = RtpEncodingParameters {
+        ssrc: Some(generate_ssrc()),
+        ..RtpEncodingParameters::default()
+    };
+
+    if rtx_supported {
+        consumer_encoding.rtx = Some(RtpEncodingParametersRtx {
+            ssrc: generate_ssrc(),
+        });
+    }
+
+    // If any of the consumable_params.encodings has scalability_mode, process it
+    // (assume all encodings have the same value).
+    let mut scalability_mode = consumable_params
+        .encodings
+        .iter()
+        .find_map(|encoding| encoding.scalability_mode.clone());
+
+    // If there is simulast, mangle spatial layers in scalabilityMode.
+    if consumable_params.encodings.len() > 1 {
+        scalability_mode = Some(format!(
+            "S{}T{}",
+            consumable_params.encodings.len(),
+            scalability_modes::parse(scalability_mode.as_ref().map(String::as_str)).temporal_layers
+        ));
+    }
+
+    consumer_encoding.scalability_mode = scalability_mode;
+
+    // Use the maximum max_bitrate in any encoding and honor it in the Consumer's encoding.
+    consumer_encoding.max_bitrate = consumable_params
+        .encodings
+        .iter()
+        .map(|encoding| encoding.max_bitrate)
+        .max()
+        .flatten();
+
+    // Set a single encoding for the Consumer.
+    consumer_params.encodings.push(consumer_encoding);
+
+    // Copy verbatim.
+    consumer_params.rtcp = consumable_params.rtcp;
+
+    Ok(consumer_params)
 }
 
 struct CodecToMatch<'a> {

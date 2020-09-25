@@ -1,3 +1,4 @@
+use crate::consumer::ConsumerId;
 use crate::producer::ProducerId;
 use crate::router::RouterId;
 use crate::transport::TransportId;
@@ -388,6 +389,15 @@ impl TransportConnectData {
 pub(crate) struct ProducerInternal {
     pub router_id: RouterId,
     pub transport_id: TransportId,
+    pub producer_id: ProducerId,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ConsumerInternal {
+    pub router_id: RouterId,
+    pub transport_id: TransportId,
+    pub consumer_id: ConsumerId,
     pub producer_id: ProducerId,
 }
 

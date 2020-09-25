@@ -1,8 +1,9 @@
+use crate::consumer::{ConsumerLayers, ConsumerScore};
 use crate::data_structures::*;
 use crate::ortc::RtpMapping;
 use crate::producer::{ProducerDump, ProducerStat, ProducerTraceEventType, ProducerType};
 use crate::router::RouterDump;
-use crate::rtp_parameters::{MediaKind, RtpParameters};
+use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
 use crate::transport::TransportTraceEventType;
 use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
 use serde::de::DeserializeOwned;
@@ -140,49 +141,49 @@ request_response!(
     WebRtcTransportData,
 );
 
-request_response!(
-    "router.createPlainTransport",
-    RouterCreatePlainTransportRequest {
-        internal: TransportInternal,
-        data: RouterCreatePlainTransportData,
-    },
-    RouterCreatePlainTransportResponse {
-        // TODO
-    },
-);
+// request_response!(
+//     "router.createPlainTransport",
+//     RouterCreatePlainTransportRequest {
+//         internal: TransportInternal,
+//         data: RouterCreatePlainTransportData,
+//     },
+//     RouterCreatePlainTransportResponse {
+//         // TODO
+//     },
+// );
 
-request_response!(
-    "router.createPipeTransport",
-    RouterCreatePipeTransportRequest {
-        internal: TransportInternal,
-        data: RouterCreatePipeTransportData,
-    },
-    RouterCreatePipeTransportResponse {
-        // TODO
-    },
-);
+// request_response!(
+//     "router.createPipeTransport",
+//     RouterCreatePipeTransportRequest {
+//         internal: TransportInternal,
+//         data: RouterCreatePipeTransportData,
+//     },
+//     RouterCreatePipeTransportResponse {
+//         // TODO
+//     },
+// );
 
-request_response!(
-    "router.createDirectTransport",
-    RouterCreateDirectTransportRequest {
-        internal: TransportInternal,
-        data: RouterCreateDirectTransportData,
-    },
-    RouterCreateDirectTransportResponse {
-        // TODO
-    },
-);
+// request_response!(
+//     "router.createDirectTransport",
+//     RouterCreateDirectTransportRequest {
+//         internal: TransportInternal,
+//         data: RouterCreateDirectTransportData,
+//     },
+//     RouterCreateDirectTransportResponse {
+//         // TODO
+//     },
+// );
 
-request_response!(
-    "router.createAudioLevelObserver",
-    RouterCreateAudioLevelObserverRequest {
-        internal: RouterCreateAudioLevelObserverInternal,
-        data: RouterCreateAudioLevelObserverData,
-    },
-    RouterCreateAudioLevelObserverResponse {
-        // TODO
-    },
-);
+// request_response!(
+//     "router.createAudioLevelObserver",
+//     RouterCreateAudioLevelObserverRequest {
+//         internal: RouterCreateAudioLevelObserverInternal,
+//         data: RouterCreateAudioLevelObserverData,
+//     },
+//     RouterCreateAudioLevelObserverResponse {
+//         // TODO
+//     },
+// );
 
 request_response!(
     "transport.close",
@@ -269,17 +270,31 @@ request_response!(
     },
 );
 
-// TODO: Detail remaining methods, I got bored for now
-// request_response!(
-//     TransportConsumeRequest,
-//     "transport.consume",
-//     ;,
-//     TransportConsumeResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct TransportConsumeRequestData {
+    pub(crate) kind: MediaKind,
+    pub(crate) rtp_parameters: RtpParameters,
+    pub(crate) r#type: ProducerType,
+    pub(crate) consumable_rtp_encodings: Vec<RtpEncodingParameters>,
+    pub(crate) paused: bool,
+    pub(crate) preferred_layers: Option<ConsumerLayers>,
+}
+
+request_response!(
+    "transport.consume",
+    TransportConsumeRequest {
+        internal: ConsumerInternal,
+        data: TransportConsumeRequestData,
+    },
+    TransportConsumeResponse {
+        paused: bool,
+        producer_paused: bool,
+        score: ConsumerScore,
+        preferred_layers: Option<ConsumerLayers>,
+    },
+);
+
 // request_response!(
 //     TransportProduceDataRequest,
 //     "transport.produceData",

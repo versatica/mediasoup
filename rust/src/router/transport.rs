@@ -1,11 +1,17 @@
-use crate::consumer::{Consumer, ConsumerOptions};
-use crate::data_structures::{AppData, EventDirection, ProducerInternal, TransportInternal};
+use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
+use crate::data_structures::{
+    AppData, ConsumerInternal, EventDirection, ProducerInternal, TransportInternal,
+};
 use crate::messages::{
-    TransportDumpRequest, TransportEnableTraceEventRequest, TransportEnableTraceEventRequestData,
+    TransportConsumeRequest, TransportConsumeRequestData, TransportDumpRequest,
+    TransportEnableTraceEventRequest, TransportEnableTraceEventRequestData,
     TransportGetStatsRequest, TransportProduceRequest, TransportProduceRequestData,
     TransportSetMaxIncomingBitrateData, TransportSetMaxIncomingBitrateRequest,
 };
-use crate::ortc::{RouterRtpCapabilitiesError, RtpParametersError, RtpParametersMappingError};
+use crate::ortc::{
+    ConsumerRtpParametersError, RouterRtpCapabilitiesError, RtpParametersError,
+    RtpParametersMappingError,
+};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::Router;
 use crate::rtp_parameters::RtpEncodingParameters;
@@ -106,7 +112,7 @@ pub trait TransportGeneric<Dump, Stat, RemoteParameters>: Transport {
 
 #[derive(Debug, Error)]
 pub enum ProduceError {
-    #[error("Producer with ID {0} already exists")]
+    #[error("Producer with the same id \"{0}\" already exists")]
     AlreadyExists(ProducerId),
     #[error("Incorrect RTP parameters: {0}")]
     IncorrectRtpParameters(RtpParametersError),
@@ -118,13 +124,12 @@ pub enum ProduceError {
 
 #[derive(Debug, Error)]
 pub enum ConsumeError {
-    // TODO
-    // #[error("Producer with ID {0} already exists")]
-    // AlreadyExists(ProducerId),
-    // #[error("Incorrect RTP parameters: {0}")]
-    // IncorrectRtpParameters(RtpParametersError),
+    #[error("Producer with id \"{0}\" not found")]
+    ProducerNotFound(ProducerId),
     #[error("RTP capabilities error: {0}")]
     FailedRtpCapabilitiesValidation(RouterRtpCapabilitiesError),
+    #[error("Bad consumer RTP parameters: {0}")]
+    BadConsumerRtpParameters(ConsumerRtpParametersError),
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
@@ -144,6 +149,8 @@ where
     fn payload_channel(&self) -> &Channel;
 
     fn executor(&self) -> &Arc<Executor>;
+
+    fn next_mid_for_consumers(&self) -> usize;
 
     async fn dump_impl(&self) -> Result<Dump, RequestError> {
         self.channel()
@@ -305,6 +312,48 @@ where
     ) -> Result<Consumer, ConsumeError> {
         ortc::validate_rtp_capabilities(&consumer_options.rtp_capabilities)
             .map_err(ConsumeError::FailedRtpCapabilitiesValidation)?;
+
+        let producer = match self.router().get_producer(&consumer_options.producer_id) {
+            Some(producer) => producer,
+            None => {
+                return Err(ConsumeError::ProducerNotFound(consumer_options.producer_id));
+            }
+        };
+
+        let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
+            producer.consumable_rtp_parameters(),
+            consumer_options.rtp_capabilities,
+        )
+        .map_err(ConsumeError::BadConsumerRtpParameters)?;
+
+        // We use up to 8 bytes for MID (string).
+        let mid = self.next_mid_for_consumers() % 100_000_000;
+
+        // Set MID.
+        rtp_parameters.mid = Some(format!("{}", mid));
+
+        let consumer_id = ConsumerId::new();
+
+        let status = self
+            .channel()
+            .request(TransportConsumeRequest {
+                internal: ConsumerInternal {
+                    router_id: self.router().id(),
+                    transport_id: self.id(),
+                    consumer_id,
+                    producer_id: producer.id(),
+                },
+                data: TransportConsumeRequestData {
+                    kind: producer.kind(),
+                    rtp_parameters: rtp_parameters.clone(),
+                    r#type: producer.r#type(),
+                    consumable_rtp_encodings: vec![],
+                    paused: consumer_options.paused,
+                    preferred_layers: consumer_options.preferred_layers,
+                },
+            })
+            .await
+            .map_err(ConsumeError::Request)?;
 
         unimplemented!()
     }

@@ -2,15 +2,27 @@ use crate::data_structures::AppData;
 use crate::producer::ProducerId;
 use crate::rtp_parameters::RtpCapabilities;
 use crate::uuid_based_wrapper_type;
+use serde::{Deserialize, Serialize};
 
 uuid_based_wrapper_type!(ConsumerId);
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct ConsumerLayers {
     /// The spatial layer index (from 0 to N).
     pub spatial_layer: u8,
     /// The temporal layer index (from 0 to N).
     pub temporal_layer: Option<u8>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConsumerScore {
+    /// The score of the RTP stream of the consumer.
+    score: u8,
+    /// The score of the currently selected RTP stream of the producer.
+    producer_score: u8,
+    /// The scores of all RTP streams in the producer ordered by encoding (just useful when the
+    /// producer uses simulcast).
+    producer_scores: Vec<u8>,
 }
 
 #[derive(Debug)]

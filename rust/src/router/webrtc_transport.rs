@@ -23,6 +23,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::mem;
 use std::ops::Deref;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
 
@@ -213,6 +214,7 @@ enum Notification {
 
 struct Inner {
     id: TransportId,
+    next_mid_for_consumers: AtomicUsize,
     executor: Arc<Executor>,
     channel: Channel,
     payload_channel: Channel,
@@ -401,6 +403,12 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
     fn executor(&self) -> &Arc<Executor> {
         &self.inner.executor
     }
+
+    fn next_mid_for_consumers(&self) -> usize {
+        self.inner
+            .next_mid_for_consumers
+            .fetch_add(1, Ordering::AcqRel)
+    }
 }
 
 impl WebRtcTransport {
@@ -481,8 +489,11 @@ impl WebRtcTransport {
                 .await
                 .unwrap()
         };
+
+        let next_mid_for_consumers = AtomicUsize::default();
         let inner = Arc::new(Inner {
             id,
+            next_mid_for_consumers,
             executor,
             channel,
             payload_channel,

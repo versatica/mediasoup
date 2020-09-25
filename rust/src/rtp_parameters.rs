@@ -254,6 +254,13 @@ impl RtpCodecCapability {
             } => *preferred_payload_type,
         }
     }
+
+    pub(crate) fn rtcp_feedback(&self) -> &Vec<RtcpFeedback> {
+        match self {
+            Self::Audio { rtcp_feedback, .. } => rtcp_feedback,
+            Self::Video { rtcp_feedback, .. } => rtcp_feedback,
+        }
+    }
 }
 
 /// The RTP capabilities define what mediasoup or an endpoint can receive at media level.
@@ -432,6 +439,13 @@ impl RtpCodecParameters {
             Self::Video { parameters, .. } => parameters,
         }
     }
+
+    pub(crate) fn rtcp_feedback_mut(&mut self) -> &mut Vec<RtcpFeedback> {
+        match self {
+            Self::Audio { rtcp_feedback, .. } => rtcp_feedback,
+            Self::Video { rtcp_feedback, .. } => rtcp_feedback,
+        }
+    }
 }
 
 /// Provides information on RTCP feedback messages for a specific codec. Those messages can be
@@ -448,7 +462,7 @@ pub struct RtcpFeedback {
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtpEncodingParametersRtx {
-    ssrc: u32,
+    pub ssrc: u32,
 }
 
 /// Provides information relating to an encoding, which represents a media RTP
