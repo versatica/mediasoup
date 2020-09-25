@@ -3,7 +3,9 @@
 
 ### 3.6.22 (WIP)
 
-* Transport.cpp: provide transport congestion client with RTCP Receiver Reports (#464)
+* `Transport.cpp`: Provide transport congestion client with RTCP Receiver Reports (#464)
+* Update `libuv` to 1.40.0.
+* Update Node deps.
 
 
 ### 3.6.21
