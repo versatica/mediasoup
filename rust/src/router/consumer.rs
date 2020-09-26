@@ -1,5 +1,8 @@
 use crate::data_structures::{AppData, ConsumerInternal, RtpType};
-use crate::messages::{ConsumerCloseRequest, ConsumerDumpRequest, ConsumerGetStatsRequest};
+use crate::messages::{
+    ConsumerCloseRequest, ConsumerDumpRequest, ConsumerGetStatsRequest, ConsumerPauseRequest,
+    ConsumerResumeRequest,
+};
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
 use crate::transport::Transport;
@@ -438,6 +441,64 @@ impl Consumer {
                 },
             })
             .await
+    }
+
+    /// Pause the Consumer.
+    pub async fn pause(&self) -> Result<(), RequestError> {
+        debug!("pause()");
+
+        self.inner
+            .channel
+            .request(ConsumerPauseRequest {
+                internal: ConsumerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    consumer_id: self.inner.id,
+                    producer_id: self.inner.producer_id,
+                },
+            })
+            .await?;
+
+        let mut paused = self.inner.paused.lock().unwrap();
+        let was_paused = *paused || *self.inner.producer_paused.lock().unwrap();
+        *paused = true;
+
+        if !was_paused {
+            for callback in self.inner.handlers.pause.lock().unwrap().iter() {
+                callback();
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Resume the Consumer.
+    pub async fn resume(&self) -> Result<(), RequestError> {
+        debug!("resume()");
+
+        self.inner
+            .channel
+            .request(ConsumerResumeRequest {
+                internal: ConsumerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    consumer_id: self.inner.id,
+                    producer_id: self.inner.producer_id,
+                },
+            })
+            .await?;
+
+        let mut paused = self.inner.paused.lock().unwrap();
+        let was_paused = *paused || *self.inner.producer_paused.lock().unwrap();
+        *paused = false;
+
+        if was_paused {
+            for callback in self.inner.handlers.resume.lock().unwrap().iter() {
+                callback();
+            }
+        }
+
+        Ok(())
     }
 
     pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {

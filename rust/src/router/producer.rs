@@ -433,10 +433,14 @@ impl Producer {
             })
             .await?;
 
-        *self.inner.paused.lock().unwrap() = true;
+        let mut paused = self.inner.paused.lock().unwrap();
+        let was_paused = *paused;
+        *paused = true;
 
-        for callback in self.inner.handlers.pause.lock().unwrap().iter() {
-            callback();
+        if !was_paused {
+            for callback in self.inner.handlers.pause.lock().unwrap().iter() {
+                callback();
+            }
         }
 
         Ok(())
@@ -457,10 +461,14 @@ impl Producer {
             })
             .await?;
 
-        *self.inner.paused.lock().unwrap() = false;
+        let mut paused = self.inner.paused.lock().unwrap();
+        let was_paused = *paused;
+        *paused = false;
 
-        for callback in self.inner.handlers.resume.lock().unwrap().iter() {
-            callback();
+        if was_paused {
+            for callback in self.inner.handlers.resume.lock().unwrap().iter() {
+                callback();
+            }
         }
 
         Ok(())

@@ -773,6 +773,8 @@ mod tests {
             println!("Consumer stats: {:#?}", consumer.get_stats().await.unwrap());
             println!("Producer dump: {:#?}", producer.dump().await.unwrap());
             println!("Consumer dump: {:#?}", consumer.dump().await.unwrap());
+            println!("Consumer pause: {:#?}", consumer.pause().await.unwrap());
+            println!("Consumer resume: {:#?}", consumer.resume().await.unwrap());
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

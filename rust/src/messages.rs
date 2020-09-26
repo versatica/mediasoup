@@ -403,26 +403,20 @@ request_response!(
     ConsumerStats,
 );
 
-// request_response!(
-//     ConsumerPauseRequest,
-//     "consumer.pause",
-//     ;,
-//     ConsumerPauseResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     ConsumerResumeRequest,
-//     "consumer.resume",
-//     ;,
-//     ConsumerResumeResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "consumer.pause",
+    ConsumerPauseRequest {
+        internal: ConsumerInternal,
+    },
+);
+
+request_response!(
+    "consumer.resume",
+    ConsumerResumeRequest {
+        internal: ConsumerInternal,
+    },
+);
+
 // request_response!(
 //     ConsumerSetPreferredLayersRequest,
 //     "consumer.setPreferredLayers",
