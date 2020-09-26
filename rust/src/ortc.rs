@@ -439,7 +439,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 pub(crate) fn get_consumable_rtp_parameters(
     kind: MediaKind,
     params: &RtpParameters,
-    caps: RtpCapabilitiesFinalized,
+    caps: &RtpCapabilitiesFinalized,
     rtp_mapping: &RtpMapping,
 ) -> RtpParameters {
     let mut consumable_params = RtpParameters::default();
@@ -551,7 +551,7 @@ pub(crate) fn get_consumable_rtp_parameters(
         }
     }
 
-    for cap_ext in caps.header_extensions {
+    for cap_ext in caps.header_extensions.iter() {
         // Just take RTP header extension that can be used in Consumers.
         match cap_ext.kind {
             Some(cap_ext_kind) => {
@@ -572,7 +572,7 @@ pub(crate) fn get_consumable_rtp_parameters(
         }
 
         let consumable_ext = RtpHeaderExtensionParameters {
-            uri: cap_ext.uri,
+            uri: cap_ext.uri.clone(),
             id: cap_ext.preferred_id,
             encrypt: cap_ext.preferred_encrypt,
             parameters: BTreeMap::new(),

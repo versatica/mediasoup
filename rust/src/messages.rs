@@ -1,4 +1,4 @@
-use crate::consumer::{ConsumerLayers, ConsumerScore};
+use crate::consumer::{ConsumerLayers, ConsumerScore, ConsumerType};
 use crate::data_structures::*;
 use crate::ortc::RtpMapping;
 use crate::producer::{ProducerDump, ProducerStat, ProducerTraceEventType, ProducerType};
@@ -236,7 +236,6 @@ request_response!(
         internal: TransportInternal,
         data: TransportSetMaxIncomingBitrateData,
     },
-    (),
 );
 
 request_response!(
@@ -275,7 +274,7 @@ request_response!(
 pub(crate) struct TransportConsumeRequestData {
     pub(crate) kind: MediaKind,
     pub(crate) rtp_parameters: RtpParameters,
-    pub(crate) r#type: ProducerType,
+    pub(crate) r#type: ConsumerType,
     pub(crate) consumable_rtp_encodings: Vec<RtpEncodingParameters>,
     pub(crate) paused: bool,
     pub(crate) preferred_layers: Option<ConsumerLayers>,
@@ -328,7 +327,6 @@ request_response!(
         internal: TransportInternal,
         data: TransportEnableTraceEventRequestData,
     },
-    (),
 );
 
 request_response!(
@@ -359,7 +357,6 @@ request_response!(
     ProducerPauseRequest {
         internal: ProducerInternal,
     },
-    ()
 );
 
 request_response!(
@@ -367,7 +364,6 @@ request_response!(
     ProducerResumeRequest {
         internal: ProducerInternal,
     },
-    (),
 );
 
 #[derive(Debug, Serialize)]
@@ -382,19 +378,15 @@ request_response!(
         internal: ProducerInternal,
         data: ProducerEnableTraceEventRequestData,
     },
-    (),
 );
 
-// request_response!(
-//     ConsumerCloseRequest,
-//     "consumer.close",
-//     ;,
-//     ConsumerCloseResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "consumer.close",
+    ConsumerCloseRequest {
+        internal: ConsumerInternal,
+    },
+);
+
 // request_response!(
 //     ConsumerDumpRequest,
 //     "consumer.dump",

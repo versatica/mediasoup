@@ -260,7 +260,7 @@ where
         let router_rtp_capabilities = self.router().rtp_capabilities();
 
         let rtp_mapping =
-            ortc::get_producer_rtp_parameters_mapping(&rtp_parameters, &router_rtp_capabilities)
+            ortc::get_producer_rtp_parameters_mapping(&rtp_parameters, router_rtp_capabilities)
                 .map_err(ProduceError::FailedRtpParametersMapping)?;
 
         let consumable_rtp_parameters = ortc::get_consumable_rtp_parameters(
@@ -347,6 +347,8 @@ where
 
         let consumer_id = ConsumerId::new();
 
+        let r#type = producer.r#type().into();
+
         let status = self
             .channel()
             .request(TransportConsumeRequest {
@@ -359,7 +361,7 @@ where
                 data: TransportConsumeRequestData {
                     kind: producer.kind(),
                     rtp_parameters: rtp_parameters.clone(),
-                    r#type: producer.r#type(),
+                    r#type,
                     consumable_rtp_encodings: producer.consumable_rtp_parameters().encodings,
                     paused,
                     preferred_layers,
@@ -372,7 +374,7 @@ where
             consumer_id,
             producer.id(),
             producer.kind(),
-            producer.r#type(),
+            r#type,
             rtp_parameters,
             status.paused,
             Arc::clone(self.executor()),

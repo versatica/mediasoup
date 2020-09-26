@@ -1,4 +1,5 @@
-use crate::data_structures::AppData;
+use crate::data_structures::{AppData, ConsumerInternal};
+use crate::messages::ConsumerCloseRequest;
 use crate::producer::{ProducerId, ProducerType};
 use crate::rtp_parameters::{MediaKind, RtpCapabilities, RtpParameters};
 use crate::transport::Transport;
@@ -70,6 +71,25 @@ impl ConsumerOptions {
     }
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ConsumerType {
+    Simple,
+    Simulcast,
+    SVC,
+    Pipe,
+}
+
+impl From<ProducerType> for ConsumerType {
+    fn from(producer_type: ProducerType) -> Self {
+        match producer_type {
+            ProducerType::Simple => ConsumerType::Simple,
+            ProducerType::Simulcast => ConsumerType::Simulcast,
+            ProducerType::SVC => ConsumerType::SVC,
+        }
+    }
+}
+
 #[derive(Default)]
 struct Handlers {
     pause: Mutex<Vec<Box<dyn Fn() + Send>>>,
@@ -81,15 +101,17 @@ struct Inner {
     id: ConsumerId,
     producer_id: ProducerId,
     kind: MediaKind,
-    r#type: ProducerType,
+    r#type: ConsumerType,
     rtp_parameters: RtpParameters,
     paused: Mutex<bool>,
     executor: Arc<Executor>,
     channel: Channel,
     payload_channel: Channel,
     producer_paused: Mutex<bool>,
+    priority: Mutex<u8>,
     score: Arc<Mutex<ConsumerScore>>,
     preferred_layers: Mutex<Option<ConsumerLayers>>,
+    current_layers: Arc<Mutex<Option<ConsumerLayers>>>,
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Box<dyn Transport>,
@@ -104,24 +126,24 @@ impl Drop for Inner {
             callback();
         }
 
-        // TODO: Fix copy-paste
-        // {
-        //     let channel = self.channel.clone();
-        //     let request = ConsumerCloseRequest {
-        //         internal: ConsumerInternal {
-        //             router_id: self.router_id,
-        //             transport_id: self.transport.id(),
-        //             producer_id: self.id,
-        //         },
-        //     };
-        //     self.executor
-        //         .spawn(async move {
-        //             if let Err(error) = channel.request(request).await {
-        //                 error!("producer closing failed on drop: {}", error);
-        //             }
-        //         })
-        //         .detach();
-        // }
+        {
+            let channel = self.channel.clone();
+            let request = ConsumerCloseRequest {
+                internal: ConsumerInternal {
+                    router_id: self.transport.router_id(),
+                    transport_id: self.transport.id(),
+                    consumer_id: self.id,
+                    producer_id: self.producer_id,
+                },
+            };
+            self.executor
+                .spawn(async move {
+                    if let Err(error) = channel.request(request).await {
+                        error!("consumer closing failed on drop: {}", error);
+                    }
+                })
+                .detach();
+        }
     }
 }
 
@@ -135,7 +157,7 @@ impl Consumer {
         id: ConsumerId,
         producer_id: ProducerId,
         kind: MediaKind,
-        r#type: ProducerType,
+        r#type: ConsumerType,
         rtp_parameters: RtpParameters,
         paused: bool,
         executor: Arc<Executor>,
@@ -151,6 +173,7 @@ impl Consumer {
 
         let handlers = Arc::<Handlers>::default();
         let score = Arc::new(Mutex::new(score));
+        let current_layers = Arc::<Mutex<Option<ConsumerLayers>>>::default();
         // TODO: Fix copy-paste
         // let subscription_handler = {
         //     let handlers = Arc::clone(&handlers);
@@ -196,8 +219,10 @@ impl Consumer {
             rtp_parameters,
             paused: Mutex::new(paused),
             producer_paused: Mutex::new(producer_paused),
+            priority: Mutex::new(1u8),
             score,
             preferred_layers: Mutex::new(preferred_layers),
+            current_layers,
             executor,
             channel,
             payload_channel,
@@ -213,6 +238,61 @@ impl Consumer {
     /// Consumer id.
     pub fn id(&self) -> ConsumerId {
         self.inner.id
+    }
+
+    /// Associated Producer id.
+    pub fn producer_id(&self) -> ProducerId {
+        self.inner.producer_id
+    }
+
+    /// Media kind.
+    pub fn kind(&self) -> MediaKind {
+        self.inner.kind
+    }
+
+    /// RTP parameters.
+    pub fn rtp_parameters(&self) -> &RtpParameters {
+        &self.inner.rtp_parameters
+    }
+
+    /// Consumer type.
+    pub fn r#type(&self) -> ConsumerType {
+        self.inner.r#type
+    }
+
+    /// Whether the Consumer is paused.
+    pub fn paused(&self) -> bool {
+        *self.inner.paused.lock().unwrap()
+    }
+
+    /// Whether the associate Producer is paused.
+    pub fn producer_paused(&self) -> bool {
+        *self.inner.producer_paused.lock().unwrap()
+    }
+
+    /// Current priority.
+    pub fn priority(&self) -> u8 {
+        *self.inner.priority.lock().unwrap()
+    }
+
+    /// Consumer score.
+    pub fn score(&self) -> ConsumerScore {
+        self.inner.score.lock().unwrap().clone()
+    }
+
+    /// Preferred video layers.
+    pub fn preferred_layers(&self) -> Option<ConsumerLayers> {
+        self.inner.preferred_layers.lock().unwrap().clone()
+    }
+
+    /// Current video layers.
+    pub fn current_layers(&self) -> Option<ConsumerLayers> {
+        self.inner.current_layers.lock().unwrap().clone()
+    }
+
+    /// App custom data.
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 
     pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {

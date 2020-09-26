@@ -137,8 +137,8 @@ impl Router {
     }
 
     /// RTC capabilities of the Router.
-    pub fn rtp_capabilities(&self) -> RtpCapabilitiesFinalized {
-        self.inner.rtp_capabilities.clone()
+    pub fn rtp_capabilities(&self) -> &RtpCapabilitiesFinalized {
+        &self.inner.rtp_capabilities
     }
 
     /// Dump Router.

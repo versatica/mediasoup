@@ -71,11 +71,9 @@ pub struct ProducerDump {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ProducerType {
-    None,
     Simple,
     Simulcast,
     SVC,
-    Pipe,
 }
 
 #[derive(Default)]
@@ -358,8 +356,8 @@ impl Producer {
     }
 
     /// Media kind.
-    pub fn rtp_parameters(&self) -> RtpParameters {
-        self.inner.rtp_parameters.clone()
+    pub fn rtp_parameters(&self) -> &RtpParameters {
+        &self.inner.rtp_parameters
     }
 
     /// Producer type.
