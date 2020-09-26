@@ -89,16 +89,6 @@ pub enum ProducerType {
     SVC,
 }
 
-#[derive(Default)]
-struct Handlers {
-    score: Mutex<Vec<Box<dyn Fn(&Vec<ProducerScore>) + Send>>>,
-    video_orientation_change: Mutex<Vec<Box<dyn Fn(ProducerVideoOrientation) + Send>>>,
-    trace: Mutex<Vec<Box<dyn Fn(&ProducerTraceEventData) + Send>>>,
-    pause: Mutex<Vec<Box<dyn Fn() + Send>>>,
-    resume: Mutex<Vec<Box<dyn Fn() + Send>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ProducerScore {
     // TODO: C++ code also seems to have `encodingIdx`, shouldn't we add it here?
@@ -201,17 +191,6 @@ pub enum ProducerTraceEventData {
     },
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(tag = "event", rename_all = "lowercase", content = "data")]
-enum Notification {
-    #[serde(rename_all = "camelCase")]
-    Score(Vec<ProducerScore>),
-    #[serde(rename_all = "camelCase")]
-    VideoOrientationChange(ProducerVideoOrientation),
-    #[serde(rename_all = "camelCase")]
-    Trace(ProducerTraceEventData),
-}
-
 /// Valid types for 'trace' event.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -221,6 +200,24 @@ pub enum ProducerTraceEventType {
     NACK,
     PLI,
     FIR,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum Notification {
+    Score(Vec<ProducerScore>),
+    VideoOrientationChange(ProducerVideoOrientation),
+    Trace(ProducerTraceEventData),
+}
+
+#[derive(Default)]
+struct Handlers {
+    score: Mutex<Vec<Box<dyn Fn(&Vec<ProducerScore>) + Send>>>,
+    video_orientation_change: Mutex<Vec<Box<dyn Fn(ProducerVideoOrientation) + Send>>>,
+    pause: Mutex<Vec<Box<dyn Fn() + Send>>>,
+    resume: Mutex<Vec<Box<dyn Fn() + Send>>>,
+    trace: Mutex<Vec<Box<dyn Fn(&ProducerTraceEventData) + Send>>>,
+    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
 struct Inner {
@@ -511,15 +508,6 @@ impl Producer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .trace
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
-    }
-
     pub fn connect_pause<F: Fn() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
@@ -533,6 +521,15 @@ impl Producer {
         self.inner
             .handlers
             .resume
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .trace
             .lock()
             .unwrap()
             .push(Box::new(callback));

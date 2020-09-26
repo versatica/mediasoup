@@ -207,17 +207,22 @@ struct Handlers {
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
     #[serde(rename_all = "camelCase")]
-    IceStateChange { ice_state: IceState },
+    IceStateChange {
+        ice_state: IceState,
+    },
     #[serde(rename_all = "camelCase")]
-    IceSelectedTupleChange { ice_selected_tuple: TransportTuple },
+    IceSelectedTupleChange {
+        ice_selected_tuple: TransportTuple,
+    },
     #[serde(rename_all = "camelCase")]
     DtlsStateChange {
         dtls_state: DtlsState,
         dtls_remote_cert: Option<String>,
     },
     #[serde(rename_all = "camelCase")]
-    SctpStateChange { sctp_state: SctpState },
-    #[serde(rename_all = "camelCase")]
+    SctpStateChange {
+        sctp_state: SctpState,
+    },
     Trace(TransportTraceEventData),
 }
 

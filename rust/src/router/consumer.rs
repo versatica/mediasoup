@@ -1,6 +1,7 @@
-use crate::data_structures::{AppData, ConsumerInternal, RtpType};
+use crate::data_structures::{AppData, ConsumerInternal, EventDirection, RtpType};
 use crate::messages::{
-    ConsumerCloseRequest, ConsumerDumpRequest, ConsumerGetStatsRequest, ConsumerPauseRequest,
+    ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
+    ConsumerEnableTraceEventRequestData, ConsumerGetStatsRequest, ConsumerPauseRequest,
     ConsumerRequestKeyFrameRequest, ConsumerResumeRequest, ConsumerSetPreferredLayersRequest,
     ConsumerSetPriorityRequest, ConsumerSetPriorityRequestData,
 };
@@ -8,10 +9,11 @@ use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, RequestError};
+use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use log::*;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::mem;
 use std::sync::{Arc, Mutex};
 
@@ -204,10 +206,86 @@ pub enum ConsumerStats {
     WithProducer((ConsumerStat, ProducerStat)),
 }
 
+/// 'trace' event data.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum ConsumerTraceEventData {
+    RTP {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: EventDirection,
+        // TODO: Clarify value structure
+        /// Per type information.
+        info: Value,
+    },
+    KeyFrame {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: EventDirection,
+        // TODO: Clarify value structure
+        /// Per type information.
+        info: Value,
+    },
+    NACK {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: EventDirection,
+        // TODO: Clarify value structure
+        /// Per type information.
+        info: Value,
+    },
+    PLI {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: EventDirection,
+        // TODO: Clarify value structure
+        /// Per type information.
+        info: Value,
+    },
+    FIR {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: EventDirection,
+        // TODO: Clarify value structure
+        /// Per type information.
+        info: Value,
+    },
+}
+
+/// Valid types for 'trace' event.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ConsumerTraceEventType {
+    RTP,
+    KeyFrame,
+    NACK,
+    PLI,
+    FIR,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum Notification {
+    ProducerClose,
+    ProducerPause,
+    ProducerResume,
+    Score(ConsumerScore),
+    LayersChange(ConsumerLayers),
+    Trace(ConsumerTraceEventData),
+}
+
 #[derive(Default)]
 struct Handlers {
     pause: Mutex<Vec<Box<dyn Fn() + Send>>>,
     resume: Mutex<Vec<Box<dyn Fn() + Send>>>,
+    score: Mutex<Vec<Box<dyn Fn(&ConsumerScore) + Send>>>,
+    layers_change: Mutex<Vec<Box<dyn Fn(&ConsumerLayers) + Send>>>,
+    trace: Mutex<Vec<Box<dyn Fn(&ConsumerTraceEventData) + Send>>>,
     closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
@@ -217,11 +295,11 @@ struct Inner {
     kind: MediaKind,
     r#type: ConsumerType,
     rtp_parameters: RtpParameters,
-    paused: Mutex<bool>,
+    paused: Arc<Mutex<bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: Channel,
-    producer_paused: Mutex<bool>,
+    producer_paused: Arc<Mutex<bool>>,
     priority: Mutex<u8>,
     score: Arc<Mutex<ConsumerScore>>,
     preferred_layers: Mutex<Option<ConsumerLayers>>,
@@ -229,6 +307,8 @@ struct Inner {
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Box<dyn Transport>,
+    // Drop subscription to consumer-specific notifications when consumer itself is dropped
+    _subscription_handler: SubscriptionHandler,
 }
 
 impl Drop for Inner {
@@ -287,43 +367,74 @@ impl Consumer {
 
         let handlers = Arc::<Handlers>::default();
         let score = Arc::new(Mutex::new(score));
+        let paused = Arc::new(Mutex::new(paused));
+        let producer_paused = Arc::new(Mutex::new(producer_paused));
         let current_layers = Arc::<Mutex<Option<ConsumerLayers>>>::default();
-        // TODO: Fix copy-paste
-        // let subscription_handler = {
-        //     let handlers = Arc::clone(&handlers);
-        //     let score = Arc::clone(&score);
-        //
-        //     channel
-        //         .subscribe_to_notifications(id.to_string(), move |notification| {
-        //             match serde_json::from_value::<Notification>(notification) {
-        //                 Ok(notification) => match notification {
-        //                     Notification::Score(scores) => {
-        //                         *score.lock().unwrap() = scores.clone();
-        //                         for callback in handlers.score.lock().unwrap().iter() {
-        //                             callback(&scores);
-        //                         }
-        //                     }
-        //                     Notification::VideoOrientationChange(video_orientation) => {
-        //                         for callback in
-        //                         handlers.video_orientation_change.lock().unwrap().iter()
-        //                         {
-        //                             callback(video_orientation);
-        //                         }
-        //                     }
-        //                     Notification::Trace(trace_event_data) => {
-        //                         for callback in handlers.trace.lock().unwrap().iter() {
-        //                             callback(&trace_event_data);
-        //                         }
-        //                     }
-        //                 },
-        //                 Err(error) => {
-        //                     error!("Failed to parse notification: {}", error);
-        //                 }
-        //             }
-        //         })
-        //         .await
-        //         .unwrap()
-        // };
+
+        let subscription_handler = {
+            let handlers = Arc::clone(&handlers);
+            let paused = Arc::clone(&paused);
+            let producer_paused = Arc::clone(&producer_paused);
+            let score = Arc::clone(&score);
+            let current_layers = Arc::clone(&current_layers);
+
+            channel
+                .subscribe_to_notifications(id.to_string(), move |notification| {
+                    match serde_json::from_value::<Notification>(notification) {
+                        Ok(notification) => match notification {
+                            Notification::ProducerClose => {
+                                // TODO: Handle this in some meaningful way
+                            }
+                            Notification::ProducerPause => {
+                                let mut producer_paused = producer_paused.lock().unwrap();
+                                let was_paused = *paused.lock().unwrap() || *producer_paused;
+                                *producer_paused = true;
+
+                                if !was_paused {
+                                    for callback in handlers.pause.lock().unwrap().iter() {
+                                        callback();
+                                    }
+                                }
+                            }
+                            Notification::ProducerResume => {
+                                let mut producer_paused = producer_paused.lock().unwrap();
+                                let paused = *paused.lock().unwrap();
+                                let was_paused = paused || *producer_paused;
+                                *producer_paused = false;
+
+                                if was_paused && !paused {
+                                    for callback in handlers.resume.lock().unwrap().iter() {
+                                        callback();
+                                    }
+                                }
+                            }
+                            Notification::Score(consumer_score) => {
+                                *score.lock().unwrap() = consumer_score.clone();
+                                for callback in handlers.score.lock().unwrap().iter() {
+                                    callback(&consumer_score);
+                                }
+                            }
+                            Notification::LayersChange(consumer_layers) => {
+                                *current_layers.lock().unwrap() = Some(consumer_layers.clone());
+                                for callback in handlers.layers_change.lock().unwrap().iter() {
+                                    callback(&consumer_layers);
+                                }
+                            }
+                            Notification::Trace(trace_event_data) => {
+                                for callback in handlers.trace.lock().unwrap().iter() {
+                                    callback(&trace_event_data);
+                                }
+                            }
+                        },
+                        Err(error) => {
+                            error!("Failed to parse notification: {}", error);
+                        }
+                    }
+                })
+                .await
+                .unwrap()
+        };
+        // TODO: payload_channel subscription for direct transport
 
         let inner = Arc::new(Inner {
             id,
@@ -331,8 +442,8 @@ impl Consumer {
             kind,
             r#type,
             rtp_parameters,
-            paused: Mutex::new(paused),
-            producer_paused: Mutex::new(producer_paused),
+            paused,
+            producer_paused,
             priority: Mutex::new(1u8),
             score,
             preferred_layers: Mutex::new(preferred_layers),
@@ -343,7 +454,7 @@ impl Consumer {
             handlers,
             app_data,
             transport,
-            // _subscription_handler: subscription_handler,
+            _subscription_handler: subscription_handler,
         });
 
         Self { inner }
@@ -551,6 +662,67 @@ impl Consumer {
                 internal: self.get_internal(),
             })
             .await
+    }
+
+    /// Enable 'trace' event.
+    pub async fn enable_trace_event(
+        &self,
+        types: Vec<ConsumerTraceEventType>,
+    ) -> Result<(), RequestError> {
+        debug!("enable_trace_event()");
+
+        self.inner
+            .channel
+            .request(ConsumerEnableTraceEventRequest {
+                internal: self.get_internal(),
+                data: ConsumerEnableTraceEventRequestData { types },
+            })
+            .await
+    }
+
+    pub fn connect_pause<F: Fn() + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .pause
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_resume<F: Fn() + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .resume
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_score<F: Fn(&ConsumerScore) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .score
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_layers_change<F: Fn(&ConsumerLayers) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .layers_change
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_trace<F: Fn(&ConsumerTraceEventData) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .trace
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
     }
 
     pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {

@@ -607,7 +607,7 @@ impl Worker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::consumer::{ConsumerLayers, ConsumerOptions};
+    use crate::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventType};
     use crate::data_structures::TransportListenIp;
     use crate::producer::{ProducerOptions, ProducerTraceEventType};
     use crate::rtp_parameters::{
@@ -792,6 +792,13 @@ mod tests {
             println!(
                 "Consumer unset priority: {:#?}",
                 consumer.unset_priority().await.unwrap()
+            );
+            println!(
+                "Consumer enable trace event: {:#?}",
+                consumer
+                    .enable_trace_event(vec![ConsumerTraceEventType::KeyFrame])
+                    .await
+                    .unwrap()
             );
 
             // Just to give it time to finish everything with router destruction

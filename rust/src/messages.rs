@@ -1,4 +1,7 @@
-use crate::consumer::{ConsumerDump, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerType};
+use crate::consumer::{
+    ConsumerDump, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
+    ConsumerType,
+};
 use crate::data_structures::*;
 use crate::ortc::RtpMapping;
 use crate::producer::{ProducerDump, ProducerStat, ProducerTraceEventType, ProducerType};
@@ -448,16 +451,20 @@ request_response!(
     },
 );
 
-// request_response!(
-//     ConsumerEnableTraceEventRequest,
-//     "consumer.enableTraceEvent",
-//     ;,
-//     ConsumerEnableTraceEventResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ConsumerEnableTraceEventRequestData {
+    pub(crate) types: Vec<ConsumerTraceEventType>,
+}
+
+request_response!(
+    "producer.enableTraceEvent",
+    ConsumerEnableTraceEventRequest {
+        internal: ConsumerInternal,
+        data: ConsumerEnableTraceEventRequestData,
+    },
+);
+
 // request_response!(
 //     DataProducerCloseRequest,
 //     "dataProducer.close",
