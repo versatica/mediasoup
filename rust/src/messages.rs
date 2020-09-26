@@ -1,4 +1,4 @@
-use crate::consumer::{ConsumerLayers, ConsumerScore, ConsumerType};
+use crate::consumer::{ConsumerDump, ConsumerLayers, ConsumerScore, ConsumerType};
 use crate::data_structures::*;
 use crate::ortc::RtpMapping;
 use crate::producer::{ProducerDump, ProducerStat, ProducerTraceEventType, ProducerType};
@@ -387,16 +387,14 @@ request_response!(
     },
 );
 
-// request_response!(
-//     ConsumerDumpRequest,
-//     "consumer.dump",
-//     ;,
-//     ConsumerDumpResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "consumer.dump",
+    ConsumerDumpRequest {
+        internal: ConsumerInternal,
+    },
+    ConsumerDump,
+);
+
 // request_response!(
 //     ConsumerGetStatsRequest,
 //     "consumer.getStats",

@@ -102,6 +102,7 @@ impl WebRtcTransportOptions {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[doc(hidden)]
 pub struct RtpListener {
     // TODO: What is this field format?
     pub mid_table: HashMap<(), ()>,
@@ -113,6 +114,18 @@ pub struct RtpListener {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct RecvRtpHeaderExtensions {
+    mid: Option<u8>,
+    rid: Option<u8>,
+    rrid: Option<u8>,
+    abs_send_time: Option<u8>,
+    transport_wide_cc01: Option<u8>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
 pub struct WebRtcTransportDump {
     pub id: TransportId,
     pub consumer_ids: Vec<ConsumerId>,
@@ -125,15 +138,11 @@ pub struct WebRtcTransportDump {
     pub ice_parameters: IceParameters,
     pub ice_role: IceRole,
     pub ice_state: IceState,
-    // TODO: What is this field format?
-    pub map_rtx_ssrc_consumer_id: HashMap<(), ()>,
-    // TODO: What is this field format?
-    pub map_ssrc_consumer_id: HashMap<(), ()>,
+    pub map_rtx_ssrc_consumer_id: HashMap<u32, ConsumerId>,
+    pub map_ssrc_consumer_id: HashMap<u32, ConsumerId>,
     pub max_message_size: usize,
-    // TODO: What is this field format (returned `{}`, but it seems it should be a Vec)?
-    pub recv_rtp_header_extensions: HashMap<(), ()>,
+    pub recv_rtp_header_extensions: RecvRtpHeaderExtensions,
     pub rtp_listener: RtpListener,
-    // TODO: What is this field format?
     pub trace_event_types: String,
 }
 
@@ -313,6 +322,7 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportR
     for WebRtcTransport
 {
     /// Dump Transport.
+    #[doc(hidden)]
     async fn dump(&self) -> Result<WebRtcTransportDump, RequestError> {
         debug!("dump()");
 

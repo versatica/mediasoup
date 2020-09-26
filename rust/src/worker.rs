@@ -766,6 +766,12 @@ mod tests {
                 .await
                 .unwrap();
             println!("Consumer created: {:?}", consumer.id());
+            println!(
+                "WebRTC transport dump: {:#?}",
+                webrtc_transport.dump().await.unwrap()
+            );
+            println!("Producer dump: {:#?}", producer.dump().await.unwrap());
+            println!("Consumer dump: {:#?}", consumer.dump().await.unwrap());
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

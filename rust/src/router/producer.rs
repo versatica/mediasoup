@@ -1,3 +1,4 @@
+use crate::consumer::RtpStreamParams;
 use crate::data_structures::{AppData, EventDirection, ProducerInternal};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
@@ -55,15 +56,27 @@ impl ProducerOptions {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+pub struct RtpStreamRecv {
+    params: RtpStreamParams,
+    score: u8,
+    r#type: RtpType,
+    jitter: u32,
+    packet_count: usize,
+    byte_count: usize,
+    bitrate: u32,
+    bitrate_by_layer: Option<HashMap<String, u32>>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
 pub struct ProducerDump {
     pub id: ProducerId,
     pub kind: MediaKind,
     pub paused: bool,
     pub rtp_mapping: RtpMapping,
     pub rtp_parameters: RtpParameters,
-    // TODO: Add type here
-    pub rtp_streams: Vec<()>,
-    // TODO: What is this field format?
+    pub rtp_streams: Vec<RtpStreamRecv>,
     pub trace_event_types: String,
     pub r#type: ProducerType,
 }

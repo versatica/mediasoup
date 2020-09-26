@@ -1,10 +1,10 @@
 use crate::data_structures::{AppData, ConsumerInternal};
-use crate::messages::ConsumerCloseRequest;
+use crate::messages::{ConsumerCloseRequest, ConsumerDumpRequest};
 use crate::producer::{ProducerId, ProducerType};
-use crate::rtp_parameters::{MediaKind, RtpCapabilities, RtpParameters};
+use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::Channel;
+use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -69,6 +69,83 @@ impl ConsumerOptions {
             app_data: AppData::default(),
         }
     }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct RtpStreamParams {
+    clock_rate: u32,
+    cname: String,
+    encoding_idx: usize,
+    mime_type: MimeType,
+    payload_type: u8,
+    spatial_layers: u8,
+    ssrc: u32,
+    temporal_layers: u8,
+    use_dtx: bool,
+    use_in_band_fec: bool,
+    use_nack: bool,
+    use_pli: bool,
+    rid: Option<String>,
+    rtc_ssrc: Option<u32>,
+    rtc_payload_type: Option<u8>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct RtpStream {
+    params: RtpStreamParams,
+    score: u8,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct RtpRtxParameters {
+    ssrc: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct ConsumableRtpEncoding {
+    ssrc: Option<u32>,
+    rid: Option<String>,
+    codec_payload_type: Option<u8>,
+    rtx: Option<RtpRtxParameters>,
+    max_bitrate: Option<u32>,
+    max_framerate: Option<f64>,
+    dtx: Option<bool>,
+    scalability_mode: Option<String>,
+    spatial_layers: Option<u8>,
+    temporal_layers: Option<u8>,
+    ksvc: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct ConsumerDump {
+    pub id: ConsumerId,
+    pub kind: MediaKind,
+    pub paused: bool,
+    pub priority: u8,
+    pub producer_id: ProducerId,
+    pub producer_paused: bool,
+    pub rtp_parameters: RtpParameters,
+    pub supported_codec_payload_types: Vec<u8>,
+    pub trace_event_types: String,
+    pub r#type: ConsumerType,
+    pub consumable_rtp_encodings: Vec<ConsumableRtpEncoding>,
+    pub rtp_stream: RtpStream,
+    pub preferred_spatial_layer: Option<u8>,
+    pub target_spatial_layer: Option<u8>,
+    pub current_spatial_layer: Option<u8>,
+    pub preferred_temporal_layer: Option<u8>,
+    pub target_temporal_layer: Option<u8>,
+    pub current_temporal_layer: Option<u8>,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
@@ -293,6 +370,24 @@ impl Consumer {
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
+    }
+
+    /// Dump Consumer.
+    #[doc(hidden)]
+    pub async fn dump(&self) -> Result<ConsumerDump, RequestError> {
+        debug!("dump()");
+
+        self.inner
+            .channel
+            .request(ConsumerDumpRequest {
+                internal: ConsumerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    consumer_id: self.inner.id,
+                    producer_id: self.inner.producer_id,
+                },
+            })
+            .await
     }
 
     pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
