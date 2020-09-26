@@ -1,6 +1,10 @@
+#[cfg(not(doc))]
 pub mod consumer;
+#[cfg(not(doc))]
 pub mod producer;
+#[cfg(not(doc))]
 pub mod transport;
+#[cfg(not(doc))]
 pub mod webrtc_transport;
 
 use crate::uuid_based_wrapper_type;

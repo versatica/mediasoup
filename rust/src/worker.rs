@@ -10,7 +10,6 @@ use crate::messages::{
 use crate::ortc;
 use crate::ortc::RouterRtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
-use crate::worker::utils::SpawnResult;
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
@@ -27,6 +26,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::{env, io, mem};
 use thiserror::Error;
+use utils::SpawnResult;
 
 #[derive(Debug, Copy, Clone)]
 pub enum WorkerLogLevel {
