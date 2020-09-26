@@ -1,5 +1,5 @@
 use crate::consumer::RtpStreamParams;
-use crate::data_structures::{AppData, EventDirection, ProducerInternal};
+use crate::data_structures::{AppData, EventDirection, ProducerInternal, RtpType};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerEnableTraceEventRequestData, ProducerGetStatsRequest, ProducerPauseRequest,
@@ -118,14 +118,6 @@ pub struct ProducerVideoOrientation {
     pub flip: bool,
     /// Rotation degrees (0, 90, 180 or 270).
     pub rotation: u16,
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
-pub enum RtpType {
-    #[serde(rename = "inbound-rtp")]
-    Inbound,
-    #[serde(rename = "outbound-rtp")]
-    Outbound,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

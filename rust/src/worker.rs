@@ -770,6 +770,7 @@ mod tests {
                 "WebRTC transport dump: {:#?}",
                 webrtc_transport.dump().await.unwrap()
             );
+            println!("Consumer stats: {:#?}", consumer.get_stats().await.unwrap());
             println!("Producer dump: {:#?}", producer.dump().await.unwrap());
             println!("Consumer dump: {:#?}", consumer.dump().await.unwrap());
 

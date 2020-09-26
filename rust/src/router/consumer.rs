@@ -1,6 +1,6 @@
-use crate::data_structures::{AppData, ConsumerInternal};
-use crate::messages::{ConsumerCloseRequest, ConsumerDumpRequest};
-use crate::producer::{ProducerId, ProducerType};
+use crate::data_structures::{AppData, ConsumerInternal, RtpType};
+use crate::messages::{ConsumerCloseRequest, ConsumerDumpRequest, ConsumerGetStatsRequest};
+use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
@@ -165,6 +165,39 @@ impl From<ProducerType> for ConsumerType {
             ProducerType::SVC => ConsumerType::SVC,
         }
     }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsumerStat {
+    // Common to all RtpStreams.
+    pub r#type: RtpType,
+    pub timestamp: u32,
+    pub ssrc: u32,
+    pub rtx_ssrc: Option<u32>,
+    pub kind: String,
+    pub mime_type: MimeType,
+    pub packets_lost: u32,
+    pub fraction_lost: u8,
+    pub packets_discarded: usize,
+    pub packets_retransmitted: usize,
+    pub packets_repaired: usize,
+    pub nack_count: usize,
+    pub nack_packet_count: usize,
+    pub pli_count: usize,
+    pub fir_count: usize,
+    pub score: u8,
+    pub packet_count: usize,
+    pub byte_count: usize,
+    pub bitrate: u32,
+    pub round_trip_time: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum ConsumerStats {
+    JustConsumer((ConsumerStat,)),
+    WithProducer((ConsumerStat, ProducerStat)),
 }
 
 #[derive(Default)]
@@ -380,6 +413,23 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerDumpRequest {
+                internal: ConsumerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    consumer_id: self.inner.id,
+                    producer_id: self.inner.producer_id,
+                },
+            })
+            .await
+    }
+
+    /// Get Consumer stats.
+    pub async fn get_stats(&self) -> Result<ConsumerStats, RequestError> {
+        debug!("get_stats()");
+
+        self.inner
+            .channel
+            .request(ConsumerGetStatsRequest {
                 internal: ConsumerInternal {
                     router_id: self.inner.transport.router_id(),
                     transport_id: self.inner.transport.id(),
