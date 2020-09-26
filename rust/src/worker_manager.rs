@@ -12,7 +12,7 @@ struct Handlers {
 }
 
 struct Inner {
-    executor: Arc<Executor>,
+    executor: Arc<Executor<'static>>,
     handlers: Handlers,
     /// This field is only used in order to be dropped with the worker manager itself to stop the
     /// thread created with `WorkerManager::new()` call
@@ -75,7 +75,7 @@ impl WorkerManager {
     }
 
     /// Create new worker manager, uses externally created executor
-    pub fn with_executor(worker_binary: PathBuf, executor: Arc<Executor>) -> Self {
+    pub fn with_executor(worker_binary: PathBuf, executor: Arc<Executor<'static>>) -> Self {
         let handlers = Handlers::default();
 
         let inner = Arc::new(Inner {

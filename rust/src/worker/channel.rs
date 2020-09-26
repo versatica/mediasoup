@@ -42,7 +42,7 @@ pub(super) enum InternalMessage {
 
 /// Subscription handler, will remove corresponding subscription when dropped
 pub(crate) struct SubscriptionHandler {
-    executor: Arc<Executor>,
+    executor: Arc<Executor<'static>>,
     remove_fut: Option<Pin<Box<dyn std::future::Future<Output = ()> + Send + Sync>>>,
 }
 
@@ -136,7 +136,7 @@ struct RequestsContainer {
 pub struct HandlerAlreadyExistsError;
 
 struct Inner {
-    executor: Arc<Executor>,
+    executor: Arc<Executor<'static>>,
     sender: async_channel::Sender<Vec<u8>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
@@ -157,7 +157,7 @@ pub(crate) struct Channel {
 
 // TODO: Catch closed channel gracefully
 impl Channel {
-    pub(super) fn new(executor: Arc<Executor>, reader: File, mut writer: File) -> Self {
+    pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let event_handlers = Arc::<Mutex<HashMap<String, Box<dyn Fn(Value) + Send>>>>::default();
 

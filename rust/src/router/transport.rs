@@ -151,7 +151,7 @@ where
 
     fn payload_channel(&self) -> &Channel;
 
-    fn executor(&self) -> &Arc<Executor>;
+    fn executor(&self) -> &Arc<Executor<'static>>;
 
     fn next_mid_for_consumers(&self) -> usize;
 

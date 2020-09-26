@@ -224,7 +224,7 @@ enum Notification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    executor: Arc<Executor>,
+    executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: Channel,
     handlers: Arc<Handlers>,
@@ -411,7 +411,7 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
         &self.inner.payload_channel
     }
 
-    fn executor(&self) -> &Arc<Executor> {
+    fn executor(&self) -> &Arc<Executor<'static>> {
         &self.inner.executor
     }
 
@@ -425,7 +425,7 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
 impl WebRtcTransport {
     pub(super) async fn new(
         id: TransportId,
-        executor: Arc<Executor>,
+        executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: Channel,
         data: WebRtcTransportData,

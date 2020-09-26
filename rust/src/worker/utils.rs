@@ -1,10 +1,10 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
 use crate::worker::Channel;
 use async_executor::Executor;
+use async_fs::File;
 use async_process::unix::CommandExt;
 use async_process::{Child, Command};
 use nix::unistd;
-use std::fs::File;
 use std::io;
 use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
@@ -16,7 +16,7 @@ pub(super) struct SpawnResult {
 }
 
 pub(super) fn spawn_with_worker_channels(
-    executor: Arc<Executor>,
+    executor: Arc<Executor<'static>>,
     command: &mut Command,
 ) -> io::Result<SpawnResult> {
     let (producer_fd_read, producer_fd_write) = unistd::pipe().unwrap();
@@ -68,15 +68,7 @@ pub(super) fn spawn_with_worker_channels(
 
     Ok(SpawnResult {
         child,
-        channel: Channel::new(
-            Arc::clone(&executor),
-            consumer_file.into(),
-            producer_file.into(),
-        ),
-        payload_channel: Channel::new(
-            executor,
-            consumer_payload_file.into(),
-            producer_payload_file.into(),
-        ),
+        channel: Channel::new(Arc::clone(&executor), consumer_file, producer_file),
+        payload_channel: Channel::new(executor, consumer_payload_file, producer_payload_file),
     })
 }

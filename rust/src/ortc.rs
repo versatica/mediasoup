@@ -5,8 +5,6 @@ use crate::rtp_parameters::{
     RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpParameters,
 };
 use crate::{scalability_modes, supported_rtp_capabilities};
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::mem;
@@ -85,7 +83,7 @@ pub enum ConsumerRtpParametersError {
 }
 
 fn generate_ssrc() -> u32 {
-    SmallRng::from_entropy().gen_range(100000000, 999999999)
+    fastrand::u32(100000000..999999999)
 }
 
 /// Validates RtpParameters.

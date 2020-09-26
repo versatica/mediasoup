@@ -56,7 +56,7 @@ struct Handlers {
 
 struct Inner {
     id: RouterId,
-    executor: Arc<Executor>,
+    executor: Arc<Executor<'static>>,
     rtp_capabilities: RtpCapabilitiesFinalized,
     channel: Channel,
     payload_channel: Channel,
@@ -100,7 +100,7 @@ pub struct Router {
 impl Router {
     pub(super) fn new(
         id: RouterId,
-        executor: Arc<Executor>,
+        executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: Channel,
         rtp_capabilities: RtpCapabilitiesFinalized,

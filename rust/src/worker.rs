@@ -214,7 +214,7 @@ struct Inner {
     channel: Channel,
     payload_channel: Channel,
     child: Child,
-    executor: Arc<Executor>,
+    executor: Arc<Executor<'static>>,
     pid: u32,
     handlers: Handlers,
     app_data: AppData,
@@ -241,7 +241,7 @@ impl Drop for Inner {
 
 impl Inner {
     async fn new(
-        executor: Arc<Executor>,
+        executor: Arc<Executor<'static>>,
         worker_binary: PathBuf,
         WorkerSettings {
             app_data,
@@ -485,7 +485,7 @@ pub struct Worker {
 
 impl Worker {
     pub(super) async fn new(
-        executor: Arc<Executor>,
+        executor: Arc<Executor<'static>>,
         worker_binary: PathBuf,
         worker_settings: WorkerSettings,
         worker_manager: WorkerManager,
