@@ -417,16 +417,15 @@ request_response!(
     },
 );
 
-// request_response!(
-//     ConsumerSetPreferredLayersRequest,
-//     "consumer.setPreferredLayers",
-//     ;,
-//     ConsumerSetPreferredLayersResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "consumer.setPreferredLayers",
+    ConsumerSetPreferredLayersRequest {
+        internal: ConsumerInternal,
+        data: ConsumerLayers,
+    },
+    Option<ConsumerLayers>,
+);
+
 // request_response!(
 //     ConsumerSetPriorityRequest,
 //     "consumer.setPriority",

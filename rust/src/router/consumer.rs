@@ -1,7 +1,7 @@
 use crate::data_structures::{AppData, ConsumerInternal, RtpType};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerGetStatsRequest, ConsumerPauseRequest,
-    ConsumerResumeRequest,
+    ConsumerResumeRequest, ConsumerSetPreferredLayersRequest,
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
@@ -497,6 +497,32 @@ impl Consumer {
                 callback();
             }
         }
+
+        Ok(())
+    }
+
+    /// Set preferred video layers.
+    pub async fn set_preferred_layers(
+        &self,
+        consumer_layers: ConsumerLayers,
+    ) -> Result<(), RequestError> {
+        debug!("set_preferred_layers()");
+
+        let consumer_layers = self
+            .inner
+            .channel
+            .request(ConsumerSetPreferredLayersRequest {
+                internal: ConsumerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    consumer_id: self.inner.id,
+                    producer_id: self.inner.producer_id,
+                },
+                data: consumer_layers,
+            })
+            .await?;
+
+        *self.inner.preferred_layers.lock().unwrap() = consumer_layers;
 
         Ok(())
     }

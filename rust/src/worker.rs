@@ -607,7 +607,7 @@ impl Worker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::consumer::ConsumerOptions;
+    use crate::consumer::{ConsumerLayers, ConsumerOptions};
     use crate::data_structures::TransportListenIp;
     use crate::producer::{ProducerOptions, ProducerTraceEventType};
     use crate::rtp_parameters::{
@@ -775,6 +775,16 @@ mod tests {
             println!("Consumer dump: {:#?}", consumer.dump().await.unwrap());
             println!("Consumer pause: {:#?}", consumer.pause().await.unwrap());
             println!("Consumer resume: {:#?}", consumer.resume().await.unwrap());
+            println!(
+                "Consumer set preferred layers: {:#?}",
+                consumer
+                    .set_preferred_layers(ConsumerLayers {
+                        spatial_layer: 1,
+                        temporal_layer: None
+                    })
+                    .await
+                    .unwrap()
+            );
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));
