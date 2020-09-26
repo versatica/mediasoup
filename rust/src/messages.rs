@@ -441,16 +441,13 @@ request_response!(
     ConsumerSetPriorityResponse { priority: u8 },
 );
 
-// request_response!(
-//     ConsumerRequestKeyFrameRequest,
-//     "consumer.requestKeyFrame",
-//     ;,
-//     ConsumerRequestKeyFrameResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "consumer.requestKeyFrame",
+    ConsumerRequestKeyFrameRequest {
+        internal: ConsumerInternal,
+    },
+);
+
 // request_response!(
 //     ConsumerEnableTraceEventRequest,
 //     "consumer.enableTraceEvent",

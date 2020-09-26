@@ -1,8 +1,8 @@
 use crate::data_structures::{AppData, ConsumerInternal, RtpType};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerGetStatsRequest, ConsumerPauseRequest,
-    ConsumerResumeRequest, ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest,
-    ConsumerSetPriorityRequestData,
+    ConsumerRequestKeyFrameRequest, ConsumerResumeRequest, ConsumerSetPreferredLayersRequest,
+    ConsumerSetPriorityRequest, ConsumerSetPriorityRequestData,
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
@@ -539,6 +539,18 @@ impl Consumer {
         *self.inner.priority.lock().unwrap() = result.priority;
 
         Ok(())
+    }
+
+    /// Request a key frame to the Producer..
+    pub async fn request_key_frame(&self) -> Result<(), RequestError> {
+        debug!("request_key_frame()");
+
+        self.inner
+            .channel
+            .request(ConsumerRequestKeyFrameRequest {
+                internal: self.get_internal(),
+            })
+            .await
     }
 
     pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
