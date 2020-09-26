@@ -1,12 +1,11 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use crate::data_structures::{
-    AppData, ConsumerInternal, EventDirection, ProducerInternal, TransportInternal,
-};
+use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
-    TransportConsumeRequest, TransportConsumeRequestData, TransportDumpRequest,
-    TransportEnableTraceEventRequest, TransportEnableTraceEventRequestData,
-    TransportGetStatsRequest, TransportProduceRequest, TransportProduceRequestData,
-    TransportSetMaxIncomingBitrateData, TransportSetMaxIncomingBitrateRequest,
+    ConsumerInternal, ProducerInternal, TransportConsumeRequest, TransportConsumeRequestData,
+    TransportDumpRequest, TransportEnableTraceEventRequest, TransportEnableTraceEventRequestData,
+    TransportGetStatsRequest, TransportInternal, TransportProduceRequest,
+    TransportProduceRequestData, TransportSetMaxIncomingBitrateData,
+    TransportSetMaxIncomingBitrateRequest,
 };
 use crate::ortc::{
     ConsumerRtpParametersError, RouterRtpCapabilitiesError, RtpParametersError,

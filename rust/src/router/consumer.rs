@@ -1,9 +1,9 @@
-use crate::data_structures::{AppData, ConsumerInternal, EventDirection, RtpType};
+use crate::data_structures::{AppData, EventDirection, RtpType};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
-    ConsumerEnableTraceEventRequestData, ConsumerGetStatsRequest, ConsumerPauseRequest,
-    ConsumerRequestKeyFrameRequest, ConsumerResumeRequest, ConsumerSetPreferredLayersRequest,
-    ConsumerSetPriorityRequest, ConsumerSetPriorityRequestData,
+    ConsumerEnableTraceEventRequestData, ConsumerGetStatsRequest, ConsumerInternal,
+    ConsumerPauseRequest, ConsumerRequestKeyFrameRequest, ConsumerResumeRequest,
+    ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest, ConsumerSetPriorityRequestData,
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};

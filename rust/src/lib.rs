@@ -1,3 +1,15 @@
+//! This is a port of TypeScript client library for
+//! [Mediasoup](https://github.com/versatica/mediasoup) to Rust
+//!
+//! The library is incomplete and at early stages of development, so it will be hard to use unless
+//! you already have experience with Mediasoup (in this case you can create a worker using
+//! [worker_manager::WorkerManager] and go from there).
+//!
+//! Also there are basic tests in `worker_manager` and `worker` modules that may help to get started.
+//!
+//! API is close to [TypeScript's](https://mediasoup.org/documentation/v3/mediasoup/api/), please
+//! referer to it in the meantime.
+
 pub mod data_structures;
 mod macros;
 mod messages;
@@ -15,6 +27,12 @@ pub use router::consumer;
 #[cfg(doc)]
 #[path = "router/consumer.rs"]
 pub mod consumer;
+
+#[cfg(not(doc))]
+pub use router::observer;
+#[cfg(doc)]
+#[path = "router/observer.rs"]
+pub mod observer;
 
 #[cfg(not(doc))]
 pub use router::producer;

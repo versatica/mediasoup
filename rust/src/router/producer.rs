@@ -1,9 +1,9 @@
 use crate::consumer::RtpStreamParams;
-use crate::data_structures::{AppData, EventDirection, ProducerInternal, RtpType};
+use crate::data_structures::{AppData, EventDirection, RtpType};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
-    ProducerEnableTraceEventRequestData, ProducerGetStatsRequest, ProducerPauseRequest,
-    ProducerResumeRequest,
+    ProducerEnableTraceEventRequestData, ProducerGetStatsRequest, ProducerInternal,
+    ProducerPauseRequest, ProducerResumeRequest,
 };
 use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};

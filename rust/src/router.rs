@@ -1,6 +1,8 @@
 #[cfg(not(doc))]
 pub mod consumer;
 #[cfg(not(doc))]
+pub mod observer;
+#[cfg(not(doc))]
 pub mod producer;
 #[cfg(not(doc))]
 pub mod transport;
@@ -10,10 +12,12 @@ pub mod webrtc_transport;
 use crate::uuid_based_wrapper_type;
 
 use crate::consumer::ConsumerId;
-use crate::data_structures::{
-    AppData, ObserverId, RouterCreateWebrtcTransportData, RouterInternal, TransportInternal,
+use crate::data_structures::AppData;
+use crate::messages::{
+    RouterCloseRequest, RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest,
+    RouterDumpRequest, RouterInternal, TransportInternal,
 };
-use crate::messages::{RouterCloseRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest};
+use crate::observer::ObserverId;
 use crate::producer::{Producer, ProducerId, WeakProducer};
 use crate::rtp_parameters::{RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::transport::{TransportGeneric, TransportId};

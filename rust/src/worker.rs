@@ -2,9 +2,9 @@
 mod channel;
 mod utils;
 
-use crate::data_structures::{AppData, RouterInternal};
+use crate::data_structures::AppData;
 use crate::messages::{
-    WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
+    RouterInternal, WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
     WorkerUpdateSettingsRequest,
 };
 use crate::ortc;

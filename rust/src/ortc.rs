@@ -610,7 +610,7 @@ pub(crate) fn get_consumable_rtp_parameters(
 ///
 /// It reduces encodings to just one and takes into account given RTP capabilities to reduce codecs,
 /// codecs' RTCP feedback and header extensions, and also enables or disabled RTX.
-pub fn get_consumer_rtp_parameters(
+pub(crate) fn get_consumer_rtp_parameters(
     consumable_params: RtpParameters,
     caps: RtpCapabilities,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
@@ -726,7 +726,12 @@ pub fn get_consumer_rtp_parameters(
         scalability_mode = Some(format!(
             "S{}T{}",
             consumable_params.encodings.len(),
-            scalability_modes::parse(scalability_mode.as_ref().map(String::as_str)).temporal_layers
+            scalability_mode
+                .as_ref()
+                .map(String::as_str)
+                .map(scalability_modes::parse)
+                .unwrap_or_default()
+                .temporal_layers
         ));
     }
 

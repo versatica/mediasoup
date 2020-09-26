@@ -1,18 +1,55 @@
 use crate::consumer::{
-    ConsumerDump, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
+    ConsumerDump, ConsumerId, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
     ConsumerType,
 };
-use crate::data_structures::*;
+use crate::data_structures::{
+    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
+    NumSctpStreams, SctpParameters, SctpState, TransportListenIp, TransportTuple,
+};
 use crate::ortc::RtpMapping;
-use crate::producer::{ProducerDump, ProducerStat, ProducerTraceEventType, ProducerType};
-use crate::router::RouterDump;
+use crate::producer::{
+    ProducerDump, ProducerId, ProducerStat, ProducerTraceEventType, ProducerType,
+};
+use crate::router::{RouterDump, RouterId};
 use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
-use crate::transport::TransportTraceEventType;
+use crate::transport::{TransportId, TransportTraceEventType};
+use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::sync::Mutex;
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RouterInternal {
+    pub(crate) router_id: RouterId,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct TransportInternal {
+    pub(crate) router_id: RouterId,
+    pub(crate) transport_id: TransportId,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ProducerInternal {
+    pub(crate) router_id: RouterId,
+    pub(crate) transport_id: TransportId,
+    pub(crate) producer_id: ProducerId,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ConsumerInternal {
+    pub(crate) router_id: RouterId,
+    pub(crate) transport_id: TransportId,
+    pub(crate) consumer_id: ConsumerId,
+    pub(crate) producer_id: ProducerId,
+}
 
 pub(crate) trait Request: Debug + Serialize {
     type Response: DeserializeOwned;
@@ -135,14 +172,92 @@ request_response!(
     RouterDump,
 );
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreateWebrtcTransportData {
+    listen_ips: TransportListenIps,
+    enable_udp: bool,
+    enable_tcp: bool,
+    prefer_udp: bool,
+    prefer_tcp: bool,
+    initial_available_outgoing_bitrate: u32,
+    enable_sctp: bool,
+    num_sctp_streams: NumSctpStreams,
+    max_sctp_message_size: u32,
+    sctp_send_buffer_size: u32,
+    is_data_channel: bool,
+}
+
+impl RouterCreateWebrtcTransportData {
+    pub(crate) fn from_options(webrtc_transport_options: &WebRtcTransportOptions) -> Self {
+        Self {
+            listen_ips: webrtc_transport_options.listen_ips.clone(),
+            enable_udp: webrtc_transport_options.enable_udp,
+            enable_tcp: webrtc_transport_options.enable_tcp,
+            prefer_udp: webrtc_transport_options.prefer_udp,
+            prefer_tcp: webrtc_transport_options.prefer_tcp,
+            initial_available_outgoing_bitrate: webrtc_transport_options
+                .initial_available_outgoing_bitrate,
+            enable_sctp: webrtc_transport_options.enable_sctp,
+            num_sctp_streams: webrtc_transport_options.num_sctp_streams,
+            max_sctp_message_size: webrtc_transport_options.max_sctp_message_size,
+            sctp_send_buffer_size: webrtc_transport_options.sctp_send_buffer_size,
+            is_data_channel: true,
+        }
+    }
+}
+
 request_response!(
     "router.createWebRtcTransport",
     RouterCreateWebrtcTransportRequest {
         internal: TransportInternal,
         data: RouterCreateWebrtcTransportData,
     },
-    WebRtcTransportData,
+    WebRtcTransportData {
+        ice_role: IceRole,
+        ice_parameters: IceParameters,
+        ice_candidates: Vec<IceCandidate>,
+        ice_state: Mutex<IceState>,
+        ice_selected_tuple: Mutex<Option<TransportTuple>>,
+        dtls_parameters: Mutex<DtlsParameters>,
+        dtls_state: Mutex<DtlsState>,
+        dtls_remote_cert: Mutex<Option<String>>,
+        sctp_parameters: Option<SctpParameters>,
+        sctp_state: Mutex<Option<SctpState>>,
+    },
 );
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreatePlainTransportData {
+    pub(crate) listen_ip: TransportListenIp,
+    pub(crate) rtcp_mux: bool,
+    pub(crate) comedia: bool,
+    pub(crate) enable_sctp: bool,
+    pub(crate) num_sctp_streams: NumSctpStreams,
+    pub(crate) max_sctp_message_size: u32,
+    pub(crate) sctp_send_buffer_size: u32,
+    pub(crate) enable_srtp: bool,
+    pub(crate) srtp_crypto_suite: String,
+    is_data_channel: bool,
+}
+
+impl RouterCreatePlainTransportData {
+    pub(crate) fn new(listen_ip: TransportListenIp) -> Self {
+        Self {
+            listen_ip,
+            rtcp_mux: true,
+            comedia: false,
+            enable_sctp: false,
+            num_sctp_streams: NumSctpStreams::default(),
+            max_sctp_message_size: 262144,
+            sctp_send_buffer_size: 262144,
+            enable_srtp: false,
+            srtp_crypto_suite: "AES_CM_128_HMAC_SHA1_80".to_string(),
+            is_data_channel: false,
+        }
+    }
+}
 
 // request_response!(
 //     "router.createPlainTransport",
@@ -155,6 +270,34 @@ request_response!(
 //     },
 // );
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreatePipeTransportData {
+    pub(crate) listen_ip: TransportListenIp,
+    pub(crate) enable_sctp: bool,
+    pub(crate) num_sctp_streams: NumSctpStreams,
+    pub(crate) max_sctp_message_size: u32,
+    pub(crate) sctp_send_buffer_size: u32,
+    pub(crate) enable_rtx: bool,
+    pub(crate) enable_srtp: bool,
+    is_data_channel: bool,
+}
+
+impl RouterCreatePipeTransportData {
+    pub(crate) fn new(listen_ip: TransportListenIp) -> Self {
+        Self {
+            listen_ip,
+            enable_sctp: false,
+            num_sctp_streams: NumSctpStreams::default(),
+            max_sctp_message_size: 268435456,
+            sctp_send_buffer_size: 268435456,
+            enable_rtx: false,
+            enable_srtp: false,
+            is_data_channel: false,
+        }
+    }
+}
+
 // request_response!(
 //     "router.createPipeTransport",
 //     RouterCreatePipeTransportRequest {
@@ -166,6 +309,22 @@ request_response!(
 //     },
 // );
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreateDirectTransportData {
+    pub(crate) direct: bool,
+    pub(crate) max_message_size: u32,
+}
+
+impl Default for RouterCreateDirectTransportData {
+    fn default() -> Self {
+        Self {
+            direct: true,
+            max_message_size: 262144,
+        }
+    }
+}
+
 // request_response!(
 //     "router.createDirectTransport",
 //     RouterCreateDirectTransportRequest {
@@ -176,6 +335,24 @@ request_response!(
 //         // TODO
 //     },
 // );
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreateAudioLevelObserverData {
+    pub(crate) max_entries: u16,
+    pub(crate) threshold: i8,
+    pub(crate) interval: u16,
+}
+
+impl Default for RouterCreateAudioLevelObserverData {
+    fn default() -> Self {
+        Self {
+            max_entries: 1,
+            threshold: -80,
+            interval: 1000,
+        }
+    }
+}
 
 // request_response!(
 //     "router.createAudioLevelObserver",

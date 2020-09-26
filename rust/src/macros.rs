@@ -1,3 +1,4 @@
+#[doc(hidden)]
 #[macro_export]
 macro_rules! uuid_based_wrapper_type {
     ($struct_name: ident) => {
