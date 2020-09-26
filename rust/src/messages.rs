@@ -20,7 +20,7 @@ pub(crate) trait Request: Debug + Serialize {
 macro_rules! request_response {
     (
         $method: literal,
-        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty, )* },
+        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty$(,)? )* },
         $existing_response_type: ty $(,)?
     ) => {
         #[derive(Debug, Serialize)]
@@ -45,8 +45,8 @@ macro_rules! request_response {
     };
     (
         $method: literal,
-        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty, )* },
-        $response_struct_name: ident { $( $response_field_name: ident: $response_field_type: ty, )* },
+        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty$(,)? )* },
+        $response_struct_name: ident { $( $response_field_name: ident: $response_field_type: ty$(,)? )* },
     ) => {
         #[derive(Debug, Serialize)]
         pub(crate) struct $request_struct_name {
@@ -72,7 +72,7 @@ macro_rules! request_response {
 macro_rules! request_response_generic {
     (
         $method: literal,
-        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty, )* },
+        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty$(,)? )* },
         $generic_response: ident,
     ) => {
         #[derive(Debug, Serialize)]
@@ -426,16 +426,21 @@ request_response!(
     Option<ConsumerLayers>,
 );
 
-// request_response!(
-//     ConsumerSetPriorityRequest,
-//     "consumer.setPriority",
-//     ;,
-//     ConsumerSetPriorityResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ConsumerSetPriorityRequestData {
+    pub(crate) priority: u8,
+}
+
+request_response!(
+    "consumer.setPriority",
+    ConsumerSetPriorityRequest {
+        internal: ConsumerInternal,
+        data: ConsumerSetPriorityRequestData,
+    },
+    ConsumerSetPriorityResponse { priority: u8 },
+);
+
 // request_response!(
 //     ConsumerRequestKeyFrameRequest,
 //     "consumer.requestKeyFrame",

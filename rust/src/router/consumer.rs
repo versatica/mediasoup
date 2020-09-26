@@ -1,7 +1,8 @@
 use crate::data_structures::{AppData, ConsumerInternal, RtpType};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerGetStatsRequest, ConsumerPauseRequest,
-    ConsumerResumeRequest, ConsumerSetPreferredLayersRequest,
+    ConsumerResumeRequest, ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest,
+    ConsumerSetPriorityRequestData,
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
@@ -523,6 +524,54 @@ impl Consumer {
             .await?;
 
         *self.inner.preferred_layers.lock().unwrap() = consumer_layers;
+
+        Ok(())
+    }
+
+    /// Set priority.
+    pub async fn set_priority(&self, priority: u8) -> Result<(), RequestError> {
+        debug!("set_preferred_layers()");
+
+        let result = self
+            .inner
+            .channel
+            .request(ConsumerSetPriorityRequest {
+                internal: ConsumerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    consumer_id: self.inner.id,
+                    producer_id: self.inner.producer_id,
+                },
+                data: ConsumerSetPriorityRequestData { priority },
+            })
+            .await?;
+
+        *self.inner.priority.lock().unwrap() = result.priority;
+
+        Ok(())
+    }
+
+    /// Unset priority.
+    pub async fn unset_priority(&self) -> Result<(), RequestError> {
+        debug!("unset_priority()");
+
+        let priority = 1;
+
+        let result = self
+            .inner
+            .channel
+            .request(ConsumerSetPriorityRequest {
+                internal: ConsumerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    consumer_id: self.inner.id,
+                    producer_id: self.inner.producer_id,
+                },
+                data: ConsumerSetPriorityRequestData { priority },
+            })
+            .await?;
+
+        *self.inner.priority.lock().unwrap() = result.priority;
 
         Ok(())
     }

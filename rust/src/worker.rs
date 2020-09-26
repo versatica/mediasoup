@@ -785,6 +785,14 @@ mod tests {
                     .await
                     .unwrap()
             );
+            println!(
+                "Consumer set priority: {:#?}",
+                consumer.set_priority(10).await.unwrap()
+            );
+            println!(
+                "Consumer unset priority: {:#?}",
+                consumer.unset_priority().await.unwrap()
+            );
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));
