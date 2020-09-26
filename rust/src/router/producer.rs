@@ -5,13 +5,12 @@ use crate::messages::{
     ProducerResumeRequest,
 };
 use crate::ortc::RtpMapping;
-use crate::router::RouterId;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
-use log::{debug, error};
+use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -228,7 +227,6 @@ struct Inner {
     rtp_parameters: RtpParameters,
     consumable_rtp_parameters: RtpParameters,
     paused: Mutex<bool>,
-    router_id: RouterId,
     score: Arc<Mutex<Vec<ProducerScore>>>,
     executor: Arc<Executor>,
     channel: Channel,
@@ -253,7 +251,7 @@ impl Drop for Inner {
             let channel = self.channel.clone();
             let request = ProducerCloseRequest {
                 internal: ProducerInternal {
-                    router_id: self.router_id,
+                    router_id: self.transport.router_id(),
                     transport_id: self.transport.id(),
                     producer_id: self.id,
                 },
@@ -282,7 +280,6 @@ impl Producer {
         rtp_parameters: RtpParameters,
         consumable_rtp_parameters: RtpParameters,
         paused: bool,
-        router_id: RouterId,
         executor: Arc<Executor>,
         channel: Channel,
         payload_channel: Channel,
@@ -337,7 +334,6 @@ impl Producer {
             rtp_parameters,
             consumable_rtp_parameters,
             paused: Mutex::new(paused),
-            router_id,
             score,
             executor,
             channel,
@@ -395,7 +391,7 @@ impl Producer {
             .channel
             .request(ProducerDumpRequest {
                 internal: ProducerInternal {
-                    router_id: self.inner.router_id,
+                    router_id: self.inner.transport.router_id(),
                     transport_id: self.inner.transport.id(),
                     producer_id: self.inner.id,
                 },
@@ -411,7 +407,7 @@ impl Producer {
             .channel
             .request(ProducerGetStatsRequest {
                 internal: ProducerInternal {
-                    router_id: self.inner.router_id,
+                    router_id: self.inner.transport.router_id(),
                     transport_id: self.inner.transport.id(),
                     producer_id: self.inner.id,
                 },
@@ -427,7 +423,7 @@ impl Producer {
             .channel
             .request(ProducerPauseRequest {
                 internal: ProducerInternal {
-                    router_id: self.inner.router_id,
+                    router_id: self.inner.transport.router_id(),
                     transport_id: self.inner.transport.id(),
                     producer_id: self.inner.id,
                 },
@@ -451,7 +447,7 @@ impl Producer {
             .channel
             .request(ProducerResumeRequest {
                 internal: ProducerInternal {
-                    router_id: self.inner.router_id,
+                    router_id: self.inner.transport.router_id(),
                     transport_id: self.inner.transport.id(),
                     producer_id: self.inner.id,
                 },
@@ -478,7 +474,7 @@ impl Producer {
             .channel
             .request(ProducerEnableTraceEventRequest {
                 internal: ProducerInternal {
-                    router_id: self.inner.router_id,
+                    router_id: self.inner.transport.router_id(),
                     transport_id: self.inner.transport.id(),
                     producer_id: self.inner.id,
                 },

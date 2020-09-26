@@ -16,7 +16,7 @@ use crate::transport::{TransportGeneric, TransportId};
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError, Worker};
 use async_executor::Executor;
-use log::{debug, error};
+use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::mem;

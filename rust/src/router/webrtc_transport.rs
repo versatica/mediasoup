@@ -9,7 +9,7 @@ use crate::messages::{
     TransportRestartIceRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::Router;
+use crate::router::{Router, RouterId};
 use crate::transport::{
     ConsumeError, ProduceError, Transport, TransportGeneric, TransportId, TransportImpl,
     TransportTraceEventData, TransportTraceEventType,
@@ -17,7 +17,7 @@ use crate::transport::{
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
-use log::{debug, error};
+use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -265,6 +265,10 @@ impl Transport for WebRtcTransport {
     /// Transport id.
     fn id(&self) -> TransportId {
         self.inner.id
+    }
+
+    fn router_id(&self) -> RouterId {
+        self.inner.router.id()
     }
 
     /// App custom data.

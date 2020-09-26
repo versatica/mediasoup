@@ -13,7 +13,7 @@ use crate::ortc::{
     RtpParametersMappingError,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::Router;
+use crate::router::{Router, RouterId};
 use crate::rtp_parameters::RtpEncodingParameters;
 use crate::worker::{Channel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
@@ -67,6 +67,9 @@ where
 {
     /// Transport id.
     fn id(&self) -> TransportId;
+
+    /// Router id.
+    fn router_id(&self) -> RouterId;
 
     /// App custom data.
     fn app_data(&self) -> &AppData;
@@ -295,7 +298,6 @@ where
             rtp_parameters,
             consumable_rtp_parameters,
             paused,
-            self.router().id(),
             Arc::clone(self.executor()),
             self.channel().clone(),
             self.payload_channel().clone(),
@@ -310,27 +312,38 @@ where
         &self,
         consumer_options: ConsumerOptions,
     ) -> Result<Consumer, ConsumeError> {
-        ortc::validate_rtp_capabilities(&consumer_options.rtp_capabilities)
+        let ConsumerOptions {
+            producer_id,
+            rtp_capabilities,
+            paused,
+            preferred_layers,
+            app_data,
+        } = consumer_options;
+        ortc::validate_rtp_capabilities(&rtp_capabilities)
             .map_err(ConsumeError::FailedRtpCapabilitiesValidation)?;
 
-        let producer = match self.router().get_producer(&consumer_options.producer_id) {
+        let producer = match self.router().get_producer(&producer_id) {
             Some(producer) => producer,
             None => {
-                return Err(ConsumeError::ProducerNotFound(consumer_options.producer_id));
+                return Err(ConsumeError::ProducerNotFound(producer_id));
             }
         };
 
-        let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
-            producer.consumable_rtp_parameters(),
-            consumer_options.rtp_capabilities,
-        )
-        .map_err(ConsumeError::BadConsumerRtpParameters)?;
+        let rtp_parameters = {
+            let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
+                producer.consumable_rtp_parameters(),
+                rtp_capabilities,
+            )
+            .map_err(ConsumeError::BadConsumerRtpParameters)?;
 
-        // We use up to 8 bytes for MID (string).
-        let mid = self.next_mid_for_consumers() % 100_000_000;
+            // We use up to 8 bytes for MID (string).
+            let mid = self.next_mid_for_consumers() % 100_000_000;
 
-        // Set MID.
-        rtp_parameters.mid = Some(format!("{}", mid));
+            // Set MID.
+            rtp_parameters.mid = Some(format!("{}", mid));
+
+            rtp_parameters
+        };
 
         let consumer_id = ConsumerId::new();
 
@@ -347,14 +360,31 @@ where
                     kind: producer.kind(),
                     rtp_parameters: rtp_parameters.clone(),
                     r#type: producer.r#type(),
-                    consumable_rtp_encodings: vec![],
-                    paused: consumer_options.paused,
-                    preferred_layers: consumer_options.preferred_layers,
+                    consumable_rtp_encodings: producer.consumable_rtp_parameters().encodings,
+                    paused,
+                    preferred_layers,
                 },
             })
             .await
             .map_err(ConsumeError::Request)?;
 
-        unimplemented!()
+        let consumer_fut = Consumer::new(
+            consumer_id,
+            producer.id(),
+            producer.kind(),
+            producer.r#type(),
+            rtp_parameters,
+            status.paused,
+            Arc::clone(self.executor()),
+            self.channel().clone(),
+            self.payload_channel().clone(),
+            status.producer_paused,
+            status.score,
+            status.preferred_layers,
+            app_data,
+            Box::new(self.clone()),
+        );
+
+        Ok(consumer_fut.await)
     }
 }

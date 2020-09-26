@@ -18,7 +18,7 @@ use channel::InternalMessage;
 pub(crate) use channel::{Channel, RequestError, SubscriptionHandler};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
-use log::{debug, error, warn};
+use log::*;
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
@@ -607,10 +607,12 @@ impl Worker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::consumer::ConsumerOptions;
     use crate::data_structures::TransportListenIp;
     use crate::producer::{ProducerOptions, ProducerTraceEventType};
     use crate::rtp_parameters::{
-        MediaKind, MimeTypeAudio, RtpCodecCapability, RtpCodecParameters, RtpParameters,
+        MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
+        RtpParameters,
     };
     use crate::transport::{Transport, TransportGeneric, TransportTraceEventType};
     use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
@@ -707,18 +709,20 @@ mod tests {
             );
 
             let producer = webrtc_transport
-                .produce(ProducerOptions::new(MediaKind::Audio, {
-                    let mut rtp_parameters = RtpParameters::default();
-                    rtp_parameters.codecs.push(RtpCodecParameters::Audio {
-                        mime_type: MimeTypeAudio::Opus,
-                        payload_type: 111,
-                        clock_rate: 48000,
-                        channels: 2,
-                        parameters: Default::default(),
-                        rtcp_feedback: vec![],
-                    });
-                    rtp_parameters
-                }))
+                .produce(ProducerOptions::new(
+                    MediaKind::Audio,
+                    RtpParameters {
+                        codecs: vec![RtpCodecParameters::Audio {
+                            mime_type: MimeTypeAudio::Opus,
+                            payload_type: 111,
+                            clock_rate: 48000,
+                            channels: 2,
+                            parameters: Default::default(),
+                            rtcp_feedback: vec![],
+                        }],
+                        ..RtpParameters::default()
+                    },
+                ))
                 .await
                 .unwrap();
 
@@ -739,6 +743,29 @@ mod tests {
                     .await
                     .unwrap()
             );
+
+            let consumer = webrtc_transport
+                .consume(ConsumerOptions {
+                    producer_id: producer.id(),
+                    rtp_capabilities: RtpCapabilities {
+                        codecs: vec![RtpCodecCapability::Audio {
+                            mime_type: MimeTypeAudio::Opus,
+                            preferred_payload_type: None,
+                            clock_rate: 48000,
+                            channels: 2,
+                            parameters: Default::default(),
+                            rtcp_feedback: vec![],
+                        }],
+                        header_extensions: vec![],
+                        fec_mechanisms: vec![],
+                    },
+                    paused: true,
+                    preferred_layers: None,
+                    app_data: Default::default(),
+                })
+                .await
+                .unwrap();
+            println!("Consumer created: {:?}", consumer.id());
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));
