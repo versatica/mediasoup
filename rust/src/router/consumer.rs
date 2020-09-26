@@ -417,12 +417,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerDumpRequest {
-                internal: ConsumerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    consumer_id: self.inner.id,
-                    producer_id: self.inner.producer_id,
-                },
+                internal: self.get_internal(),
             })
             .await
     }
@@ -434,12 +429,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerGetStatsRequest {
-                internal: ConsumerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    consumer_id: self.inner.id,
-                    producer_id: self.inner.producer_id,
-                },
+                internal: self.get_internal(),
             })
             .await
     }
@@ -451,12 +441,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerPauseRequest {
-                internal: ConsumerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    consumer_id: self.inner.id,
-                    producer_id: self.inner.producer_id,
-                },
+                internal: self.get_internal(),
             })
             .await?;
 
@@ -480,12 +465,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerResumeRequest {
-                internal: ConsumerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    consumer_id: self.inner.id,
-                    producer_id: self.inner.producer_id,
-                },
+                internal: self.get_internal(),
             })
             .await?;
 
@@ -513,12 +493,7 @@ impl Consumer {
             .inner
             .channel
             .request(ConsumerSetPreferredLayersRequest {
-                internal: ConsumerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    consumer_id: self.inner.id,
-                    producer_id: self.inner.producer_id,
-                },
+                internal: self.get_internal(),
                 data: consumer_layers,
             })
             .await?;
@@ -536,12 +511,7 @@ impl Consumer {
             .inner
             .channel
             .request(ConsumerSetPriorityRequest {
-                internal: ConsumerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    consumer_id: self.inner.id,
-                    producer_id: self.inner.producer_id,
-                },
+                internal: self.get_internal(),
                 data: ConsumerSetPriorityRequestData { priority },
             })
             .await?;
@@ -561,12 +531,7 @@ impl Consumer {
             .inner
             .channel
             .request(ConsumerSetPriorityRequest {
-                internal: ConsumerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    consumer_id: self.inner.id,
-                    producer_id: self.inner.producer_id,
-                },
+                internal: self.get_internal(),
                 data: ConsumerSetPriorityRequestData { priority },
             })
             .await?;
@@ -583,5 +548,14 @@ impl Consumer {
             .lock()
             .unwrap()
             .push(Box::new(callback));
+    }
+
+    fn get_internal(&self) -> ConsumerInternal {
+        ConsumerInternal {
+            router_id: self.inner.transport.router_id(),
+            transport_id: self.inner.transport.id(),
+            consumer_id: self.inner.id,
+            producer_id: self.inner.producer_id,
+        }
     }
 }

@@ -393,11 +393,7 @@ impl Producer {
         self.inner
             .channel
             .request(ProducerDumpRequest {
-                internal: ProducerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    producer_id: self.inner.id,
-                },
+                internal: self.get_internal(),
             })
             .await
     }
@@ -409,11 +405,7 @@ impl Producer {
         self.inner
             .channel
             .request(ProducerGetStatsRequest {
-                internal: ProducerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    producer_id: self.inner.id,
-                },
+                internal: self.get_internal(),
             })
             .await
     }
@@ -425,11 +417,7 @@ impl Producer {
         self.inner
             .channel
             .request(ProducerPauseRequest {
-                internal: ProducerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    producer_id: self.inner.id,
-                },
+                internal: self.get_internal(),
             })
             .await?;
 
@@ -453,11 +441,7 @@ impl Producer {
         self.inner
             .channel
             .request(ProducerResumeRequest {
-                internal: ProducerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    producer_id: self.inner.id,
-                },
+                internal: self.get_internal(),
             })
             .await?;
 
@@ -484,11 +468,7 @@ impl Producer {
         self.inner
             .channel
             .request(ProducerEnableTraceEventRequest {
-                internal: ProducerInternal {
-                    router_id: self.inner.transport.router_id(),
-                    transport_id: self.inner.transport.id(),
-                    producer_id: self.inner.id,
-                },
+                internal: self.get_internal(),
                 data: ProducerEnableTraceEventRequestData { types },
             })
             .await
@@ -575,6 +555,14 @@ impl Producer {
     pub(super) fn downgrade(&self) -> WeakProducer {
         WeakProducer {
             inner: Arc::downgrade(&self.inner),
+        }
+    }
+
+    fn get_internal(&self) -> ProducerInternal {
+        ProducerInternal {
+            router_id: self.inner.transport.router_id(),
+            transport_id: self.inner.transport.id(),
+            producer_id: self.inner.id,
         }
     }
 }

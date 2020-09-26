@@ -347,10 +347,7 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportR
             .inner
             .channel
             .request(TransportConnectRequestWebRtc {
-                internal: TransportInternal {
-                    router_id: self.inner.router.id(),
-                    transport_id: self.inner.id,
-                },
+                internal: self.get_internal(),
                 data: TransportConnectRequestWebRtcData {
                     dtls_parameters: remote_parameters.dtls_parameters,
                 },
@@ -579,10 +576,7 @@ impl WebRtcTransport {
             .inner
             .channel
             .request(TransportRestartIceRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.router.id(),
-                    transport_id: self.inner.id,
-                },
+                internal: self.get_internal(),
             })
             .await?;
 
@@ -626,5 +620,12 @@ impl WebRtcTransport {
             .lock()
             .unwrap()
             .push(Box::new(callback));
+    }
+
+    fn get_internal(&self) -> TransportInternal {
+        TransportInternal {
+            router_id: self.router().id(),
+            transport_id: self.id(),
+        }
     }
 }
