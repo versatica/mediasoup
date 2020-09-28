@@ -757,6 +757,7 @@ export class Router extends EnhancedEventEmitter
 					internal,
 					data,
 					channel                  : this._channel,
+					payloadChannel           : this._payloadChannel,
 					appData,
 					getRouterRtpCapabilities : () => this._data.rtpCapabilities,
 					getProducerById          : (producerId: string) => this._producers.get(producerId),
