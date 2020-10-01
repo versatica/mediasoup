@@ -132,7 +132,7 @@ export class ShmTransport extends Transport
 	 */
 	async getStats(): Promise<ShmTransportStat[]>
 	{
-		logger.debug('getStats()');
+		logger.debug('ShmTransport.getStats()');
 
 		return this._channel.request('transport.getStats', this._internal);
 	}
@@ -153,7 +153,7 @@ export class ShmTransport extends Transport
       shm: string
     })
 	{
-		logger.debug('connect()');
+		logger.debug('ShmTransport.connect()');
 
 		const reqData = { shm };
 

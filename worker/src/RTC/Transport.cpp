@@ -837,7 +837,9 @@ namespace RTC
 					case RTC::RtpParameters::Type::SHM:
 					{
 						// This may throw.
+						MS_DEBUG_TAG(rtp, "ShmConsumer will be created with data [%s]", request->data.dump().c_str());
 						consumer = new RTC::ShmConsumer(consumerId, producerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
+
 						break;
 					}
 				}

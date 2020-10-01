@@ -27,6 +27,9 @@ namespace RTC
 				}
 			}
 		*/
+
+		MS_DEBUG_TAG(rtp, "ShmTransport ctor() with [%s]", data.dump().c_str());
+
 		// Read shm.name
 		std::string shm;
 		auto jsonShmIt = data.find("shm");

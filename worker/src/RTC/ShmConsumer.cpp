@@ -62,7 +62,7 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("%s codec not supported for shm", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		// MS_DEBUG_TAG(rtp, "ShmConsumer created from data: %s media codec: %s", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
+		MS_DEBUG_TAG(rtp, "ShmConsumer ctor() data [%s] media codec [%s]", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
@@ -94,8 +94,6 @@ namespace RTC
 
 		// Add rtpStream.
 	  this->rtpStream->FillJson(jsonObject["rtpStream"]);
-
-		// TODO: add smth about shm writes
 	}
 
 	void ShmConsumer::FillJsonStats(json& jsonArray) const
@@ -175,6 +173,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
+		MS_DEBUG_TAG(rtp, "ShmConsumer's producerRtpStream is set up");
 	}
 
 	void ShmConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
