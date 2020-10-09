@@ -294,15 +294,11 @@ namespace RTC
 		}
 
 		// Need both audio and video SSRCs to set up shm writer
-		if (shmWriterCounter.GetPacketCount() == 0)
+		if (DepLibSfuShm::SHM_WRT_READY != this->shmCtx->Status())
 		{
-			auto kind = (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO;
-			shmCtx->ConfigureMediaSsrc(packet->GetSsrc(), kind);
-		}
-
-		if (!shmCtx->CanWrite() || ignorePkt) // shm is not ready for writing, or we still need a key frame
-		{
-			return;
+			shmCtx->ConfigureMediaSsrc(
+				packet->GetSsrc(),
+				(this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO);
 		}
 
 		// Process the packet. In case of shm writer this is still needed for NACKs
@@ -337,10 +333,20 @@ namespace RTC
 
 // End of NACK test simulation
 
-		this->WritePacketToShm(packet);
+		if (shmCtx->CanWrite() && !ignorePkt)
+		{
+			this->WritePacketToShm(packet);
 
-		// Increase transmission counter.
-		this->shmWriterCounter.Update(packet);
+			// Increase transmission counter.
+			this->shmWriterCounter.Update(packet);
+		}
+		else {
+			MS_DEBUG_2TAGS(rtp, xcode, "Skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "] shm-writer is %s, ignorePkt is %s",
+				packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp(),
+				shmCtx->CanWrite() ? "ready" : "not ready", ignorePkt ? "true": "false");
+		}
 
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
@@ -919,7 +925,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_TAG(xcode, "writer ready, consumer %s, get key frame", IsActive() ? "ready" : "not ready");
+		MS_DEBUG_2TAGS(rtp, xcode, "shm-writer ready, consumer %s, get key frame", IsActive() ? "ready" : "not ready");
 
 		this->syncRequired = true;
 

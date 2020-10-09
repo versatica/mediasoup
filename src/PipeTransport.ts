@@ -228,7 +228,7 @@ export class PipeTransport extends Transport
 	 */
 	async getStats(): Promise<PipeTransportStat[]>
 	{
-		logger.debug('getStats()');
+		logger.debug('PipeTransport.getStats()');
 
 		return this._channel.request('transport.getStats', this._internal);
 	}

@@ -264,7 +264,7 @@ export class PlainTransport extends Transport
 	 */
 	async getStats(): Promise<PlainTransportStat[]>
 	{
-		logger.debug('getStats()');
+		logger.debug('PlainTransport.getStats()');
 
 		return this._channel.request('transport.getStats', this._internal);
 	}

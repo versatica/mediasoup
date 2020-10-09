@@ -555,7 +555,7 @@ export class Router extends EnhancedEventEmitter
 		}: PipeTransportOptions
 	): Promise<PipeTransport>
 	{
-		logger.debug('createPipeTransport()');
+		logger.debug('createPipeTransport() listenIp:[%o] enableRtx:[%o] appData:[%o]', listenIp, enableRtx, appData);
 
 		if (!listenIp)
 			throw new TypeError('missing listenIp');
@@ -752,6 +752,10 @@ export class Router extends EnhancedEventEmitter
 		{
 			logger.error('cannot create ShmTransport object with data:%o', data);
 			throw new Error('cannot create ShmTransport object');
+		}
+		else
+		{
+			logger.debug('router.createShmTransport returned data: %o', data);
 		}
 			
 		const transport = new ShmTransport(

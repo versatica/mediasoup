@@ -325,6 +325,8 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 			newLogTags.sctp = true;
 		else if (tag == "message")
 			newLogTags.message = true;
+		else if (tag == "xcode")
+			newLogTags.xcode = true;
 	}
 
 	Settings::configuration.logTags = newLogTags;

@@ -27,6 +27,8 @@ namespace DepLibSfuShm {
 
   ShmCtx::~ShmCtx()
   {
+    MS_TRACE();
+
     // Call if writer is not closed
     if (SHM_WRT_READY == wrt_status)
     {
@@ -40,6 +42,8 @@ namespace DepLibSfuShm {
 
   void ShmCtx::CloseShmWriterCtx()
   {
+    MS_TRACE();
+
     // Call if writer is not closed
     if (SHM_WRT_READY == wrt_status)
     {
@@ -56,12 +60,17 @@ namespace DepLibSfuShm {
 
   void ShmCtx::ConfigureMediaSsrc(uint32_t ssrc, Media kind)
   {
+    MS_TRACE();
+
     //Assuming that ssrc does not change, shm writer is initialized, nothing else to do
     if (SHM_WRT_READY == this->wrt_status)
       return;
     
     if(kind == Media::AUDIO)
     {
+      if (SHM_WRT_VIDEO_CHNL_CONF_MISSING == this->wrt_status)
+        return;
+
       this->data[0].ssrc = ssrc; 
       this->wrt_init.conf.channels[0].audio = 1;
       this->wrt_init.conf.channels[0].ssrc = ssrc;
@@ -69,6 +78,9 @@ namespace DepLibSfuShm {
     }
     else // video
     {
+      if (SHM_WRT_AUDIO_CHNL_CONF_MISSING == this->wrt_status)
+        return;
+
       this->data[1].ssrc = ssrc;
       this->wrt_init.conf.channels[1].video = 1;
       this->wrt_init.conf.channels[1].ssrc = ssrc;
@@ -155,6 +167,8 @@ namespace DepLibSfuShm {
   // Can see two fragments coming in with the same seqId and timestamps: SPS and PPS from the same STAP-A packet are typical
   EnqueueResult ShmCtx::Enqueue(sfushm_av_frame_frag_t* data, bool isChunkFragment)
   {
+    MS_TRACE();
+
     uint64_t ts       = data->rtp_time;
     uint64_t seq      = data->first_rtp_seq;
     bool isChunkStart = data->begin;
@@ -193,6 +207,8 @@ namespace DepLibSfuShm {
   
   void ShmCtx::Dequeue()
   {
+    MS_TRACE();
+
     if (this->videoPktBuffer.empty())
       return;
 
@@ -290,6 +306,8 @@ namespace DepLibSfuShm {
 
   void ShmCtx::WriteRtpDataToShm(Media type, sfushm_av_frame_frag_t* frag, bool isChunkFragment)
   {
+    MS_TRACE();
+
     if (type == Media::VIDEO)
     {
       if (SHM_Q_PKT_CANWRITETHRU == this->Enqueue(frag, isChunkFragment)) // Write it into shm, no need to queue anything
@@ -308,6 +326,8 @@ namespace DepLibSfuShm {
 
   void ShmCtx::WriteChunk(sfushm_av_frame_frag_t* data, Media kind)
   {
+    MS_TRACE();
+
     if (!this->CanWrite())
     {
       MS_WARN_TAG(xcode, "Cannot write chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because shm writer is not initialized",
@@ -332,6 +352,8 @@ namespace DepLibSfuShm {
 
   void ShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, Media kind)
   {
+    MS_TRACE();
+
     /*
   .. c:function:: uint64_t uv_hrtime(void)
 
@@ -397,6 +419,8 @@ namespace DepLibSfuShm {
 
   void ShmCtx::WriteSR(Media kind)
   {
+    MS_TRACE();
+
     size_t idx = (kind == Media::AUDIO) ? 0 : 1;
     int err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, this->data[idx].sr_ntp_msb, this->data[idx].sr_ntp_lsb, this->data[idx].sr_rtp_tm, this->data[idx].ssrc);
     if (IsError(err))
@@ -408,6 +432,8 @@ namespace DepLibSfuShm {
 
   int ShmCtx::WriteStreamMeta(std::string metadata, std::string shm)
   {
+    MS_TRACE();
+
     if (SHM_WRT_READY != this->wrt_status)
     {
       MS_WARN_TAG(xcode, "Cannot write stream metadata because shm writer is not initialized");
@@ -442,6 +468,8 @@ namespace DepLibSfuShm {
 
   void ShmCtx::WriteVideoOrientation(uint16_t rotation)
   {
+    MS_TRACE();
+
     if (SHM_WRT_READY != this->wrt_status)
     {
       MS_WARN_TAG(xcode, "Cannot write video rotation because shm writer is not initialized");
