@@ -230,6 +230,7 @@ enum Notification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
+    used_sctp_stream_ids: Mutex<HashMap<u16, bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: Channel,
@@ -499,6 +500,19 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
             .next_mid_for_consumers
             .fetch_add(1, Ordering::AcqRel)
     }
+
+    fn next_sctp_stream_id(&self) -> Option<u16> {
+        let mut used_sctp_stream_ids = self.inner.used_sctp_stream_ids.lock().unwrap();
+        // This is simple, but not the fastest implementation, maybe worth improving
+        for (index, used) in used_sctp_stream_ids.iter_mut() {
+            if !*used {
+                *used = true;
+                return Some(*index);
+            }
+        }
+
+        None
+    }
 }
 
 impl WebRtcTransport {
@@ -581,9 +595,19 @@ impl WebRtcTransport {
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
+        let used_sctp_stream_ids = Mutex::new({
+            let mut used_used_sctp_stream_ids = HashMap::new();
+            if let Some(sctp_parameters) = &data.sctp_parameters {
+                for i in 0..sctp_parameters.mis {
+                    used_used_sctp_stream_ids.insert(i, false);
+                }
+            }
+            used_used_sctp_stream_ids
+        });
         let inner = Arc::new(Inner {
             id,
             next_mid_for_consumers,
+            used_sctp_stream_ids,
             executor,
             channel,
             payload_channel,

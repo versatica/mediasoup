@@ -12,8 +12,93 @@ use std::sync::{Arc, Mutex};
 
 uuid_based_wrapper_type!(DataConsumerId);
 
+// TODO: Split into 2 for Direct and others or make an enum
+#[derive(Debug)]
 pub struct DataConsumerOptions {
-    // TODO
+    // The id of the DataProducer to consume.
+    pub(crate) data_producer_id: DataProducerId,
+    /// Just if consuming over SCTP.
+    /// Whether data messages must be received in order. If true the messages will be sent reliably.
+    /// Defaults to the value in the DataProducer if it has type 'Sctp' or to true if it has type
+    /// 'Direct'.
+    pub(crate) ordered: Option<bool>,
+    /// Just if consuming over SCTP.
+    /// When ordered is false indicates the time (in milliseconds) after which a SCTP packet will
+    /// stop being retransmitted.
+    /// Defaults to the value in the DataProducer if it has type 'Sctp' or unset if it has type
+    /// 'Direct'.
+    pub(crate) max_packet_life_time: Option<u16>,
+    /// Just if consuming over SCTP.
+    /// When ordered is false indicates the maximum number of times a packet will be retransmitted.
+    /// Defaults to the value in the DataProducer if it has type 'Sctp' or unset if it has type
+    /// 'Direct'.
+    pub(crate) max_retransmits: Option<u16>,
+    /// Custom application data.
+    pub app_data: AppData,
+}
+
+impl DataConsumerOptions {
+    /// Inherits parameters of corresponding DataProducer.
+    pub fn new_sctp(data_producer_id: DataProducerId) -> Self {
+        Self {
+            data_producer_id,
+            ordered: None,
+            max_packet_life_time: None,
+            max_retransmits: None,
+            app_data: AppData::default(),
+        }
+    }
+
+    /// For DirectTransport.
+    pub fn new_direct(data_producer_id: DataProducerId) -> Self {
+        Self {
+            data_producer_id,
+            ordered: Some(true),
+            max_packet_life_time: None,
+            max_retransmits: None,
+            app_data: AppData::default(),
+        }
+    }
+
+    /// Messages will be sent reliably in order.
+    pub fn new_sctp_ordered(data_producer_id: DataProducerId) -> Self {
+        Self {
+            data_producer_id,
+            ordered: None,
+            max_packet_life_time: None,
+            max_retransmits: None,
+            app_data: AppData::default(),
+        }
+    }
+
+    /// Messages will be sent unreliably with time (in milliseconds) after which a SCTP packet will
+    /// stop being retransmitted.
+    pub fn new_sctp_unordered_with_life_time(
+        data_producer_id: DataProducerId,
+        max_packet_life_time: u16,
+    ) -> Self {
+        Self {
+            data_producer_id,
+            ordered: None,
+            max_packet_life_time: Some(max_packet_life_time),
+            max_retransmits: None,
+            app_data: AppData::default(),
+        }
+    }
+
+    /// Messages will be sent unreliably with a limited number of retransmission attempts.
+    pub fn new_sctp_unordered_with_retransmits(
+        data_producer_id: DataProducerId,
+        max_retransmits: u16,
+    ) -> Self {
+        Self {
+            data_producer_id,
+            ordered: None,
+            max_packet_life_time: None,
+            max_retransmits: Some(max_retransmits),
+            app_data: AppData::default(),
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]

@@ -2,7 +2,7 @@ use crate::consumer::{
     ConsumerDump, ConsumerId, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
     ConsumerType,
 };
-use crate::data_consumer::DataConsumerId;
+use crate::data_consumer::{DataConsumerId, DataConsumerType};
 use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat};
 use crate::data_structures::{
     DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
@@ -518,17 +518,30 @@ request_response!(
         protocol: String,
     },
 );
-//
-// request_response!(
-//     TransportConsumeDataRequest,
-//     "transport.consumeData",
-//     ;,
-//     TransportConsumeDataResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct TransportConsumeDataRequestData {
+    pub(crate) r#type: DataConsumerType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
+    pub(crate) label: String,
+    pub(crate) protocol: String,
+}
+
+request_response!(
+    "transport.consumeData",
+    TransportConsumeDataRequest {
+        internal: DataConsumerInternal,
+        data: TransportConsumeDataRequestData,
+    },
+    TransportConsumeDataResponse {
+        r#type: DataProducerType,
+        sctp_stream_parameters: Option<SctpStreamParameters>,
+        label: String,
+        protocol: String,
+    },
+);
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

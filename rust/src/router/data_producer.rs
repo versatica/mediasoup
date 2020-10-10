@@ -15,6 +15,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 uuid_based_wrapper_type!(DataProducerId);
 
+// TODO: Split into 2 for Direct and others or make an enum
 #[derive(Debug)]
 pub struct DataProducerOptions {
     /// DataProducer id (just for Router.pipeToRouter() method).
@@ -23,7 +24,7 @@ pub struct DataProducerOptions {
     /// SCTP parameters defining how the endpoint is sending the data.
     /// Required if SCTP/DataChannel is used.
     /// Must not be given if the data producer is created on a DirectTransport.
-    pub sctp_stream_parameters: Option<SctpStreamParameters>,
+    pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
     /// A label which can be used to distinguish this DataChannel from others.
     pub label: String,
     /// Name of the sub-protocol used by this DataChannel.
@@ -43,7 +44,7 @@ impl DataProducerOptions {
         }
     }
 
-    /// For DirectTransport
+    /// For DirectTransport.
     pub fn new_direct() -> Self {
         Self {
             id: None,

@@ -51,7 +51,7 @@ pub struct SctpParameters {
     pub max_message_size: usize,
 }
 
-// TODO: Enum to protect documented invariants
+// TODO: Enum to protect documented invariants, maybe finalized variant
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.
 /// If ordered is true then max_packet_life_time and max_retransmits must be false.
 /// If ordered if false, only one of max_packet_life_time or max_retransmits can be true.
@@ -59,17 +59,17 @@ pub struct SctpParameters {
 #[serde(rename_all = "camelCase")]
 pub struct SctpStreamParameters {
     /// SCTP stream id.
-    stream_id: u16,
+    pub(crate) stream_id: u16,
     /// Whether data messages must be received in order. If true the messages will be sent reliably.
     /// Default true.
-    ordered: bool,
+    pub(crate) ordered: bool,
     /// When ordered is false indicates the time (in milliseconds) after which a SCTP packet will
     /// stop being retransmitted.
     #[serde(skip_serializing_if = "Option::is_none")]
-    max_packet_life_time: Option<u16>,
+    pub(crate) max_packet_life_time: Option<u16>,
     /// When ordered is false indicates the maximum number of times a packet will be retransmitted.
     #[serde(skip_serializing_if = "Option::is_none")]
-    max_retransmits: Option<u16>,
+    pub(crate) max_retransmits: Option<u16>,
 }
 
 impl SctpStreamParameters {

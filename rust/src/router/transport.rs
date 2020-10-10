@@ -1,9 +1,10 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use crate::data_consumer::{DataConsumer, DataConsumerOptions};
+use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
-    ConsumerInternal, DataProducerInternal, ProducerInternal, TransportConsumeRequest,
+    ConsumerInternal, DataConsumerInternal, DataProducerInternal, ProducerInternal,
+    TransportConsumeDataRequest, TransportConsumeDataRequestData, TransportConsumeRequest,
     TransportConsumeRequestData, TransportDumpRequest, TransportEnableTraceEventRequest,
     TransportEnableTraceEventRequestData, TransportGetStatsRequest, TransportInternal,
     TransportProduceDataRequest, TransportProduceDataRequestData, TransportProduceRequest,
@@ -163,7 +164,7 @@ pub enum ConsumeError {
 
 #[derive(Debug, Error)]
 pub enum ProduceDataError {
-    #[error("Producer with the same id \"{0}\" already exists")]
+    #[error("Data producer with the same id \"{0}\" already exists")]
     AlreadyExists(DataProducerId),
     #[error("SCTP stream parameters are required for this transport")]
     SctpStreamParametersRequired,
@@ -173,6 +174,10 @@ pub enum ProduceDataError {
 
 #[derive(Debug, Error)]
 pub enum ConsumeDataError {
+    #[error("Data producer with id \"{0}\" not found")]
+    DataProducerNotFound(DataProducerId),
+    #[error("no free sctp_stream_id available in transport")]
+    NoSctpStreamId,
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
@@ -194,6 +199,8 @@ where
     fn executor(&self) -> &Arc<Executor<'static>>;
 
     fn next_mid_for_consumers(&self) -> usize;
+
+    fn next_sctp_stream_id(&self) -> Option<u16>;
 
     async fn dump_impl(&self) -> Result<Dump, RequestError> {
         self.channel()
@@ -506,6 +513,73 @@ where
         r#type: DataConsumerType,
         data_consumer_options: DataConsumerOptions,
     ) -> Result<DataConsumer, ConsumeDataError> {
+        let DataConsumerOptions {
+            data_producer_id,
+            ordered,
+            max_packet_life_time,
+            max_retransmits,
+            app_data,
+        } = data_consumer_options;
+
+        let data_producer = match self.router().get_data_producer(&data_producer_id) {
+            Some(data_producer) => data_producer,
+            None => {
+                return Err(ConsumeDataError::DataProducerNotFound(data_producer_id));
+            }
+        };
+
+        let sctp_stream_parameters = match r#type {
+            DataConsumerType::Sctp => {
+                let mut sctp_stream_parameters = data_producer.sctp_stream_parameters();
+                if let Some(sctp_stream_parameters) = &mut sctp_stream_parameters {
+                    // TODO: This needs to be freed once data consumer is destroyed
+                    if let Some(stream_id) = self.next_sctp_stream_id() {
+                        sctp_stream_parameters.stream_id = stream_id;
+                    } else {
+                        return Err(ConsumeDataError::NoSctpStreamId);
+                    }
+                    if let Some(ordered) = ordered {
+                        sctp_stream_parameters.ordered = ordered;
+                    }
+                    if let Some(max_packet_life_time) = max_packet_life_time {
+                        sctp_stream_parameters.max_packet_life_time = Some(max_packet_life_time);
+                    }
+                    if let Some(max_retransmits) = max_retransmits {
+                        sctp_stream_parameters.max_retransmits = Some(max_retransmits);
+                    }
+                }
+                sctp_stream_parameters
+            }
+            DataConsumerType::Direct => {
+                if ordered.is_some() || max_packet_life_time.is_some() || max_retransmits.is_some()
+                {
+                    warn!("ordered, max_packet_life_time and max_retransmits are ignored when consuming data on a DirectTransport");
+                }
+                None
+            }
+        };
+
+        let data_consumer_id = DataConsumerId::new();
+
+        let response = self
+            .channel()
+            .request(TransportConsumeDataRequest {
+                internal: DataConsumerInternal {
+                    router_id: self.router().id(),
+                    transport_id: self.id(),
+                    data_producer_id: data_producer.id(),
+                    data_consumer_id,
+                },
+                data: TransportConsumeDataRequestData {
+                    r#type,
+                    sctp_stream_parameters,
+                    label: data_producer.label().clone(),
+                    protocol: data_producer.protocol().clone(),
+                },
+            })
+            .await
+            .map_err(ConsumeDataError::Request)?;
+
         todo!()
     }
 }
