@@ -1,6 +1,11 @@
 use crate::data_producer::DataProducerId;
 use crate::data_structures::AppData;
-use crate::messages::{DataConsumerCloseRequest, DataConsumerInternal};
+use crate::messages::{
+    DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
+    DataConsumerGetStatsRequest, DataConsumerInternal,
+    DataConsumerSetBufferedAmountLowThresholdRequest,
+    DataConsumerSetBufferedAmountLowThresholdRequestData,
+};
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
@@ -102,6 +107,31 @@ impl DataConsumerOptions {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct DataConsumerDump {
+    pub id: DataConsumerId,
+    pub data_producer_id: DataProducerId,
+    pub r#type: DataConsumerType,
+    pub label: String,
+    pub protocol: String,
+    pub sctp_stream_parameters: Option<SctpStreamParameters>,
+    pub buffered_amount: u32,
+    pub buffered_amount_low_threshold: u32,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DataConsumerStat {
+    // `type` field is present in worker, but ignored here
+    pub timestamp: u64,
+    pub label: String,
+    pub protocol: String,
+    pub messages_sent: usize,
+    pub bytes_sent: usize,
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DataConsumerType {
@@ -109,8 +139,18 @@ pub enum DataConsumerType {
     Direct,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum Notification {
+    DataProducerClose,
+    SctpSendBufferFull,
+    BufferedAmountLow,
+}
+
 #[derive(Default)]
 struct Handlers {
+    sctp_send_buffer_full: Mutex<Vec<Box<dyn Fn() + Send>>>,
+    buffered_amount_low: Mutex<Vec<Box<dyn Fn() + Send>>>,
     closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
@@ -189,56 +229,29 @@ impl DataConsumer {
 
             channel
                 .subscribe_to_notifications(id.to_string(), move |notification| {
-                    // match serde_json::from_value::<Notification>(notification) {
-                    //     Ok(notification) => match notification {
-                    //         Notification::DataProducerClose => {
-                    //             // TODO: Handle this in some meaningful way
-                    //         }
-                    //         Notification::DataProducerPause => {
-                    //             let mut producer_paused = producer_paused.lock().unwrap();
-                    //             let was_paused = *paused.lock().unwrap() || *producer_paused;
-                    //             *producer_paused = true;
-                    //
-                    //             if !was_paused {
-                    //                 for callback in handlers.pause.lock().unwrap().iter() {
-                    //                     callback();
-                    //                 }
-                    //             }
-                    //         }
-                    //         Notification::DataProducerResume => {
-                    //             let mut producer_paused = producer_paused.lock().unwrap();
-                    //             let paused = *paused.lock().unwrap();
-                    //             let was_paused = paused || *producer_paused;
-                    //             *producer_paused = false;
-                    //
-                    //             if was_paused && !paused {
-                    //                 for callback in handlers.resume.lock().unwrap().iter() {
-                    //                     callback();
-                    //                 }
-                    //             }
-                    //         }
-                    //         Notification::Score(consumer_score) => {
-                    //             *score.lock().unwrap() = consumer_score.clone();
-                    //             for callback in handlers.score.lock().unwrap().iter() {
-                    //                 callback(&consumer_score);
-                    //             }
-                    //         }
-                    //         Notification::LayersChange(consumer_layers) => {
-                    //             *current_layers.lock().unwrap() = Some(consumer_layers.clone());
-                    //             for callback in handlers.layers_change.lock().unwrap().iter() {
-                    //                 callback(&consumer_layers);
-                    //             }
-                    //         }
-                    //         Notification::Trace(trace_event_data) => {
-                    //             for callback in handlers.trace.lock().unwrap().iter() {
-                    //                 callback(&trace_event_data);
-                    //             }
-                    //         }
-                    //     },
-                    //     Err(error) => {
-                    //         error!("Failed to parse notification: {}", error);
-                    //     }
-                    // }
+                    match serde_json::from_value::<Notification>(notification) {
+                        Ok(notification) => match notification {
+                            Notification::DataProducerClose => {
+                                // TODO: Handle this in some meaningful way
+                            }
+                            Notification::SctpSendBufferFull => {
+                                for callback in
+                                    handlers.sctp_send_buffer_full.lock().unwrap().iter()
+                                {
+                                    callback();
+                                }
+                            }
+                            Notification::BufferedAmountLow => {
+                                for callback in handlers.buffered_amount_low.lock().unwrap().iter()
+                                {
+                                    callback();
+                                }
+                            }
+                        },
+                        Err(error) => {
+                            error!("Failed to parse notification: {}", error);
+                        }
+                    }
                 })
                 .await
                 .unwrap()
@@ -299,30 +312,128 @@ impl DataConsumer {
         &self.inner.app_data
     }
 
-    // /// Dump DataConsumer.
-    // #[doc(hidden)]
-    // pub async fn dump(&self) -> Result<DataConsumerDump, RequestError> {
-    //     debug!("dump()");
+    /// Dump DataConsumer.
+    #[doc(hidden)]
+    pub async fn dump(&self) -> Result<DataConsumerDump, RequestError> {
+        debug!("dump()");
+
+        self.inner
+            .channel
+            .request(DataConsumerDumpRequest {
+                internal: self.get_internal(),
+            })
+            .await
+    }
+
+    /// Get DataConsumer stats.
+    pub async fn get_stats(&self) -> Result<Vec<DataConsumerStat>, RequestError> {
+        debug!("get_stats()");
+
+        self.inner
+            .channel
+            .request(DataConsumerGetStatsRequest {
+                internal: self.get_internal(),
+            })
+            .await
+    }
+
+    /// Get buffered amount size.
+    pub async fn get_buffered_amount(&self) -> Result<u32, RequestError> {
+        debug!("get_buffered_amount()");
+
+        let response = self
+            .inner
+            .channel
+            .request(DataConsumerGetBufferedAmountRequest {
+                internal: self.get_internal(),
+            })
+            .await?;
+
+        Ok(response.buffered_amount)
+    }
+
+    /// Set buffered amount low threshold.
+    pub async fn set_buffered_amount_low_threshold(
+        &self,
+        threshold: u32,
+    ) -> Result<(), RequestError> {
+        debug!(
+            "set_buffered_amount_low_threshold() [threshold:{}]",
+            threshold
+        );
+
+        self.inner
+            .channel
+            .request(DataConsumerSetBufferedAmountLowThresholdRequest {
+                internal: self.get_internal(),
+                data: DataConsumerSetBufferedAmountLowThresholdRequestData { threshold },
+            })
+            .await
+    }
+
+    // TODO: Not sure what is the purpose of this: https://github.com/versatica/mediasoup/pull/444
+    // /**
+    //  * Send data.
+    //  */
+    // async send(message: string | Buffer, ppid?: number): Promise<void>
+    // {
+    // 	if (typeof message !== 'string' && !Buffer.isBuffer(message))
+    // 	{
+    // 		throw new TypeError('message must be a string or a Buffer');
+    // 	}
     //
-    //     self.inner
-    //         .channel
-    //         .request(DataConsumerDumpRequest {
-    //             internal: self.get_internal(),
-    //         })
-    //         .await
+    // 	/*
+    // 	 * +-------------------------------+----------+
+    // 	 * | Value                         | SCTP     |
+    // 	 * |                               | PPID     |
+    // 	 * +-------------------------------+----------+
+    // 	 * | WebRTC String                 | 51       |
+    // 	 * | WebRTC Binary Partial         | 52       |
+    // 	 * | (Deprecated)                  |          |
+    // 	 * | WebRTC Binary                 | 53       |
+    // 	 * | WebRTC String Partial         | 54       |
+    // 	 * | (Deprecated)                  |          |
+    // 	 * | WebRTC String Empty           | 56       |
+    // 	 * | WebRTC Binary Empty           | 57       |
+    // 	 * +-------------------------------+----------+
+    // 	 */
+    //
+    // 	if (typeof ppid !== 'number')
+    // 	{
+    // 		ppid = (typeof message === 'string')
+    // 			? message.length > 0 ? 51 : 56
+    // 			: message.length > 0 ? 53 : 57;
+    // 	}
+    //
+    // 	// Ensure we honor PPIDs.
+    // 	if (ppid === 56)
+    // 		message = ' ';
+    // 	else if (ppid === 57)
+    // 		message = Buffer.alloc(1);
+    //
+    // 	const requestData = { ppid };
+    //
+    // 	await this._payloadChannel.request(
+    // 		'dataConsumer.send', this._internal, requestData, message);
     // }
-    //
-    // /// Get DataConsumer stats.
-    // pub async fn get_stats(&self) -> Result<DataConsumerStats, RequestError> {
-    //     debug!("get_stats()");
-    //
-    //     self.inner
-    //         .channel
-    //         .request(DataConsumerGetStatsRequest {
-    //             internal: self.get_internal(),
-    //         })
-    //         .await
-    // }
+
+    pub fn connect_sctp_send_buffer_full<F: Fn() + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .sctp_send_buffer_full
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_buffered_amount_low<F: Fn() + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .buffered_amount_low
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
 
     pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner

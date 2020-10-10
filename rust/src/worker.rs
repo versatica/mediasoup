@@ -851,14 +851,25 @@ mod tests {
                 "Data producer stats: {:#?}",
                 data_producer.get_stats().await.unwrap()
             );
-            // println!(
-            //     "Data consumer stats: {:#?}",
-            //     data_consumer.get_stats().await.unwrap()
-            // );
-            // println!(
-            //     "Data consumer dump: {:#?}",
-            //     data_consumer.dump().await.unwrap()
-            // );
+            println!(
+                "Data consumer stats: {:#?}",
+                data_consumer.get_stats().await.unwrap()
+            );
+            println!(
+                "Data consumer dump: {:#?}",
+                data_consumer.dump().await.unwrap()
+            );
+            println!(
+                "Data consumer get buffered amount: {:#?}",
+                data_consumer.get_buffered_amount().await.unwrap()
+            );
+            println!(
+                "Data consumer set buffered amount low threshold: {:#?}",
+                data_consumer
+                    .set_buffered_amount_low_threshold(256)
+                    .await
+                    .unwrap()
+            );
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

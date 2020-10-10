@@ -2,8 +2,8 @@ use crate::consumer::{
     ConsumerDump, ConsumerId, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
     ConsumerType,
 };
-use crate::data_consumer::{DataConsumerId, DataConsumerType};
-use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat};
+use crate::data_consumer::{DataConsumerDump, DataConsumerId, DataConsumerStat, DataConsumerType};
+use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat, DataProducerType};
 use crate::data_structures::{
     DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
     TransportListenIp, TransportTuple,
@@ -12,7 +12,6 @@ use crate::ortc::RtpMapping;
 use crate::producer::{
     ProducerDump, ProducerId, ProducerStat, ProducerTraceEventType, ProducerType,
 };
-use crate::router::data_producer::DataProducerType;
 use crate::router::{RouterDump, RouterId};
 use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
@@ -720,46 +719,46 @@ request_response!(
     },
 );
 
-// request_response!(
-//     DataConsumerDumpRequest,
-//     "dataConsumer.dump",
-//     ;,
-//     DataConsumerDumpResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     DataConsumerGetStatsRequest,
-//     "dataConsumer.getStats",
-//     ;,
-//     DataConsumerGetStatsResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     DataConsumerGetBufferedAmountRequest,
-//     "dataConsumer.getBufferedAmount",
-//     ;,
-//     DataConsumerGetBufferedAmountResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     DataConsumerSetBufferedAmountLowThresholdRequest,
-//     "dataConsumer.setBufferedAmountLowThreshold",
-//     ;,
-//     DataConsumerSetBufferedAmountLowThresholdResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "dataConsumer.dump",
+    DataConsumerDumpRequest {
+        internal: DataConsumerInternal,
+    },
+    DataConsumerDump,
+);
+
+request_response!(
+    "dataConsumer.getStats",
+    DataConsumerGetStatsRequest {
+        internal: DataConsumerInternal,
+    },
+    Vec<DataConsumerStat>,
+);
+
+request_response!(
+    "dataConsumer.getBufferedAmount",
+    DataConsumerGetBufferedAmountRequest {
+        internal: DataConsumerInternal,
+    },
+    DataConsumerGetBufferedAmountResponse {
+        buffered_amount: u32,
+    },
+);
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct DataConsumerSetBufferedAmountLowThresholdRequestData {
+    pub(crate) threshold: u32,
+}
+
+request_response!(
+    "dataConsumer.setBufferedAmountLowThreshold",
+    DataConsumerSetBufferedAmountLowThresholdRequest {
+        internal: DataConsumerInternal,
+        data: DataConsumerSetBufferedAmountLowThresholdRequestData,
+    },
+);
+
 // request_response!(
 //     RtpObserverCloseRequest,
 //     "rtpObserver.close",
