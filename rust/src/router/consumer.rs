@@ -652,7 +652,7 @@ impl Consumer {
         Ok(())
     }
 
-    /// Request a key frame to the Producer..
+    /// Request a key frame to the Producer.
     pub async fn request_key_frame(&self) -> Result<(), RequestError> {
         debug!("request_key_frame()");
 

@@ -1,5 +1,5 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use crate::data_consumer::DataConsumerId;
+use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{DataProducer, DataProducerId};
 use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
@@ -10,12 +10,13 @@ use crate::messages::{
     TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::data_consumer::DataConsumerType;
 use crate::router::data_producer::{DataProducerOptions, DataProducerType};
 use crate::router::{Router, RouterId};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::transport::{
-    ConsumeError, ProduceDataError, ProduceError, Transport, TransportGeneric, TransportId,
-    TransportImpl, TransportTraceEventData, TransportTraceEventType,
+    ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, Transport, TransportGeneric,
+    TransportId, TransportImpl, TransportTraceEventData, TransportTraceEventType,
 };
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
@@ -192,9 +193,9 @@ pub struct WebRtcTransportRemoteParameters {
 #[derive(Default)]
 struct Handlers {
     new_producer: Mutex<Vec<Box<dyn Fn(&Producer) + Send>>>,
-    // TODO: new_consumer
+    new_consumer: Mutex<Vec<Box<dyn Fn(&Consumer) + Send>>>,
     new_data_producer: Mutex<Vec<Box<dyn Fn(&DataProducer) + Send>>>,
-    // TODO: new_data_consumer
+    new_data_consumer: Mutex<Vec<Box<dyn Fn(&DataConsumer) + Send>>>,
     ice_state_change: Mutex<Vec<Box<dyn Fn(IceState) + Send>>>,
     ice_selected_tuple_change: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
     dtls_state_change: Mutex<Vec<Box<dyn Fn(DtlsState) + Send>>>,
@@ -318,9 +319,18 @@ impl Transport for WebRtcTransport {
     async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError> {
         debug!("consume()");
 
-        self.consume_impl(consumer_options).await
+        let consumer = self.consume_impl(consumer_options).await?;
+
+        for callback in self.inner.handlers.new_consumer.lock().unwrap().iter() {
+            callback(&consumer);
+        }
+
+        Ok(consumer)
     }
 
+    /// Create a DataProducer.
+    ///
+    /// Transport will be kept alive as long as at least one data producer instance is alive.
     async fn produce_data(
         &self,
         data_producer_options: DataProducerOptions,
@@ -336,6 +346,26 @@ impl Transport for WebRtcTransport {
         }
 
         Ok(data_producer)
+    }
+
+    /// Create a DataConsumer.
+    ///
+    /// Transport will be kept alive as long as at least one data consumer instance is alive.
+    async fn consume_data(
+        &self,
+        data_consumer_options: DataConsumerOptions,
+    ) -> Result<DataConsumer, ConsumeDataError> {
+        debug!("consume_data()");
+
+        let data_consumer = self
+            .consume_data_impl(DataConsumerType::Sctp, data_consumer_options)
+            .await?;
+
+        for callback in self.inner.handlers.new_data_consumer.lock().unwrap().iter() {
+            callback(&data_consumer);
+        }
+
+        Ok(data_consumer)
     }
 }
 
@@ -399,10 +429,28 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportR
             .push(Box::new(callback));
     }
 
+    fn connect_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .new_consumer
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
     fn connect_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_data_producer
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    fn connect_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .new_data_consumer
             .lock()
             .unwrap()
             .push(Box::new(callback));

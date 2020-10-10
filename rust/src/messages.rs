@@ -2,6 +2,7 @@ use crate::consumer::{
     ConsumerDump, ConsumerId, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
     ConsumerType,
 };
+use crate::data_consumer::DataConsumerId;
 use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat};
 use crate::data_structures::{
     DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
@@ -60,6 +61,15 @@ pub(crate) struct DataProducerInternal {
     pub(crate) router_id: RouterId,
     pub(crate) transport_id: TransportId,
     pub(crate) data_producer_id: DataProducerId,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct DataConsumerInternal {
+    pub(crate) router_id: RouterId,
+    pub(crate) transport_id: TransportId,
+    pub(crate) data_producer_id: DataProducerId,
+    pub(crate) data_consumer_id: DataConsumerId,
 }
 
 pub(crate) trait Request: Debug + Serialize {
@@ -690,16 +700,13 @@ request_response!(
     Vec<DataProducerStat>,
 );
 
-// request_response!(
-//     DataConsumerCloseRequest,
-//     "dataConsumer.close",
-//     ;,
-//     DataConsumerCloseResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "dataConsumer.close",
+    DataConsumerCloseRequest {
+        internal: DataConsumerInternal
+    },
+);
+
 // request_response!(
 //     DataConsumerDumpRequest,
 //     "dataConsumer.dump",

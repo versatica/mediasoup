@@ -1,4 +1,5 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
+use crate::data_consumer::{DataConsumer, DataConsumerOptions};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
@@ -14,13 +15,14 @@ use crate::ortc::{
     RtpParametersMappingError,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::data_consumer::DataConsumerType;
 use crate::router::{Router, RouterId};
 use crate::rtp_parameters::RtpEncodingParameters;
 use crate::worker::{Channel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
-use log::warn;
+use log::*;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -96,7 +98,14 @@ where
         &self,
         data_producer_options: DataProducerOptions,
     ) -> Result<DataProducer, ProduceDataError>;
-    // TODO
+
+    /// Create a DataConsumer.
+    ///
+    /// Transport will be kept alive as long as at least one data consumer instance is alive.
+    async fn consume_data(
+        &self,
+        data_consumer_options: DataConsumerOptions,
+    ) -> Result<DataConsumer, ConsumeDataError>;
 }
 
 #[async_trait(?Send)]
@@ -117,7 +126,11 @@ pub trait TransportGeneric<Dump, Stat, RemoteParameters>: Transport {
 
     fn connect_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F);
 
+    fn connect_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F);
+
     fn connect_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F);
+
+    fn connect_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F);
 
     fn connect_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F);
 
@@ -154,6 +167,12 @@ pub enum ProduceDataError {
     AlreadyExists(DataProducerId),
     #[error("SCTP stream parameters are required for this transport")]
     SctpStreamParametersRequired,
+    #[error("Request to worker failed: {0}")]
+    Request(RequestError),
+}
+
+#[derive(Debug, Error)]
+pub enum ConsumeDataError {
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
@@ -480,5 +499,13 @@ where
         );
 
         Ok(data_producer_fut.await)
+    }
+
+    async fn consume_data_impl(
+        &self,
+        r#type: DataConsumerType,
+        data_consumer_options: DataConsumerOptions,
+    ) -> Result<DataConsumer, ConsumeDataError> {
+        todo!()
     }
 }
