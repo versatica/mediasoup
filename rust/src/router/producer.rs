@@ -21,12 +21,10 @@ use std::sync::{Arc, Mutex, Weak};
 uuid_based_wrapper_type!(ProducerId);
 
 #[derive(Debug)]
-#[non_exhaustive]
 pub struct ProducerOptions {
     /// Producer id (just for Router.pipeToRouter() method).
-    /// Producer id, should most likely not be specified explicitly, specified by plain transport
-    #[doc(hidden)]
-    pub id: Option<ProducerId>,
+    /// Producer id, should most likely not be specified explicitly, specified by pipe transport
+    pub(super) id: Option<ProducerId>,
     /// Media kind.
     pub kind: MediaKind,
     // TODO: Docs have distinction between RtpSendParameters and RtpReceiveParameters

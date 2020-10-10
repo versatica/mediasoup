@@ -4,6 +4,7 @@ use crate::messages::{
     ProducerEnableTraceEventRequestData, ProducerGetStatsRequest, ProducerPauseRequest,
     ProducerResumeRequest,
 };
+use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
@@ -13,13 +14,24 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::mem;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 uuid_based_wrapper_type!(DataProducerId);
 
 #[derive(Debug)]
-#[non_exhaustive]
 pub struct DataProducerOptions {
+    /// DataProducer id (just for Router.pipeToRouter() method).
+    /// DataProducer id, should most likely not be specified explicitly, specified by pipe transport
+    pub(super) id: Option<DataProducerId>,
+    /// SCTP parameters defining how the endpoint is sending the data.
+    /// Required if SCTP/DataChannel is used.
+    /// Must not be given if the data producer is created on a DirectTransport.
+    pub sctp_stream_parameters: Option<SctpStreamParameters>,
+    /// A label which can be used to distinguish this DataChannel from others.
+    pub label: String,
+    // TODO: Should probably not be a string here, maybe not even optional
+    /// Name of the sub-protocol used by this DataChannel.
+    pub protocol: String,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -27,9 +39,20 @@ pub struct DataProducerOptions {
 impl DataProducerOptions {
     pub fn new() -> Self {
         Self {
+            id: None,
+            sctp_stream_parameters: None,
+            label: "".to_string(),
+            protocol: "".to_string(),
             app_data: AppData::default(),
         }
     }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DataProducerType {
+    Sctp,
+    Direct,
 }
 
 #[derive(Default)]
@@ -39,6 +62,7 @@ struct Handlers {
 
 struct Inner {
     id: DataProducerId,
+    r#type: DataProducerType,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: Channel,
@@ -86,6 +110,7 @@ pub struct DataProducer {
 impl DataProducer {
     pub(super) async fn new(
         id: DataProducerId,
+        r#type: DataProducerType,
         executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: Channel,
@@ -133,6 +158,7 @@ impl DataProducer {
 
         let inner = Arc::new(Inner {
             id,
+            r#type,
             executor,
             channel,
             payload_channel,
@@ -148,6 +174,11 @@ impl DataProducer {
     /// DataProducer id.
     pub fn id(&self) -> DataProducerId {
         self.inner.id
+    }
+
+    /// DataProducer type.
+    pub fn r#type(&self) -> DataProducerType {
+        self.inner.r#type
     }
 
     /// App custom data.
@@ -177,11 +208,30 @@ impl DataProducer {
             .push(Box::new(callback));
     }
 
+    pub(super) fn downgrade(&self) -> WeakDataProducer {
+        WeakDataProducer {
+            inner: Arc::downgrade(&self.inner),
+        }
+    }
+
     fn get_internal(&self) -> DataProducerInternal {
         DataProducerInternal {
             router_id: self.inner.transport.router_id(),
             transport_id: self.inner.transport.id(),
             data_producer_id: self.inner.id,
         }
+    }
+}
+
+#[derive(Clone)]
+pub(super) struct WeakDataProducer {
+    inner: Weak<Inner>,
+}
+
+impl WeakDataProducer {
+    pub(super) fn upgrade(&self) -> Option<DataProducer> {
+        Some(DataProducer {
+            inner: self.inner.upgrade()?,
+        })
     }
 }

@@ -14,6 +14,7 @@ pub mod webrtc_transport;
 use crate::uuid_based_wrapper_type;
 
 use crate::consumer::ConsumerId;
+use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::AppData;
 use crate::messages::{
     RouterCloseRequest, RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest,
@@ -73,6 +74,7 @@ struct Inner {
     handlers: Handlers,
     app_data: AppData,
     producers: Arc<Mutex<HashMap<ProducerId, WeakProducer>>>,
+    data_producers: Arc<Mutex<HashMap<DataProducerId, WeakDataProducer>>>,
     // Make sure worker is not dropped until this router is not dropped
     _worker: Worker,
 }
@@ -120,6 +122,7 @@ impl Router {
         debug!("new()");
 
         let producers = Arc::<Mutex<HashMap<ProducerId, WeakProducer>>>::default();
+        let data_producers = Arc::<Mutex<HashMap<DataProducerId, WeakDataProducer>>>::default();
         let handlers = Handlers::default();
         let inner = Arc::new(Inner {
             id,
@@ -129,6 +132,7 @@ impl Router {
             payload_channel,
             handlers,
             producers,
+            data_producers,
             app_data,
             _worker: worker,
         });
@@ -223,9 +227,26 @@ impl Router {
                 }
             });
         }
-        // TODO: Subscribe when added on transport:
-        //  connect_new_data_producer
-        //  connect_data_producer_closed
+        {
+            let data_producers_weak = Arc::downgrade(&self.inner.data_producers);
+            transport.connect_new_data_producer(move |data_producer| {
+                let data_producer_id = data_producer.id();
+                if let Some(data_producers) = data_producers_weak.upgrade() {
+                    data_producers
+                        .lock()
+                        .unwrap()
+                        .insert(data_producer_id, data_producer.downgrade());
+                }
+                {
+                    let data_producers_weak = data_producers_weak.clone();
+                    data_producer.connect_closed(move || {
+                        if let Some(data_producers) = data_producers_weak.upgrade() {
+                            data_producers.lock().unwrap().remove(&data_producer_id);
+                        }
+                    });
+                }
+            });
+        }
 
         Ok(transport)
     }
@@ -262,6 +283,23 @@ impl Router {
             .lock()
             .unwrap()
             .get(producer_id)?
+            .upgrade()
+    }
+
+    fn has_data_producer(&self, data_producer_id: &DataProducerId) -> bool {
+        self.inner
+            .data_producers
+            .lock()
+            .unwrap()
+            .contains_key(data_producer_id)
+    }
+
+    fn get_data_producer(&self, data_producer_id: &DataProducerId) -> Option<DataProducer> {
+        self.inner
+            .data_producers
+            .lock()
+            .unwrap()
+            .get(data_producer_id)?
             .upgrade()
     }
 }

@@ -4,15 +4,17 @@ use crate::consumer::{
 };
 use crate::data_producer::DataProducerId;
 use crate::data_structures::{
-    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
-    NumSctpStreams, SctpParameters, SctpState, TransportListenIp, TransportTuple,
+    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
+    TransportListenIp, TransportTuple,
 };
 use crate::ortc::RtpMapping;
 use crate::producer::{
     ProducerDump, ProducerId, ProducerStat, ProducerTraceEventType, ProducerType,
 };
+use crate::router::data_producer::DataProducerType;
 use crate::router::{RouterDump, RouterId};
 use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
+use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
@@ -483,15 +485,24 @@ request_response!(
     },
 );
 
-// request_response!(
-//     TransportProduceDataRequest,
-//     "transport.produceData",
-//     ;,
-//     TransportProduceDataResponse,
-//     {
-//         // TODO
-//     },
-// );
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct TransportProduceDataRequestData {
+    pub(crate) r#type: DataProducerType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
+    pub(crate) label: String,
+    pub(crate) protocol: String,
+}
+
+request_response!(
+    "transport.produceData",
+    TransportProduceDataRequest {
+        internal: DataProducerInternal,
+        data: TransportProduceDataRequestData,
+    },
+    TransportProduceDataResponse {},
+);
 //
 // request_response!(
 //     TransportConsumeDataRequest,

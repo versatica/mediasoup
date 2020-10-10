@@ -17,6 +17,7 @@ pub mod ortc;
 pub mod router;
 pub mod rtp_parameters;
 pub mod scalability_modes;
+pub mod sctp_parameters;
 pub mod supported_rtp_capabilities;
 pub mod worker;
 pub mod worker_manager;

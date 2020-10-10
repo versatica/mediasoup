@@ -41,25 +41,6 @@ pub struct TransportListenIp {
     pub announced_ip: Option<String>,
 }
 
-#[derive(Debug, Serialize, Copy, Clone)]
-pub struct NumSctpStreams {
-    /// Initially requested number of outgoing SCTP streams.
-    #[serde(rename = "OS")]
-    pub os: u16,
-    /// Maximum number of incoming SCTP streams.
-    #[serde(rename = "MIS")]
-    pub mis: u16,
-}
-
-impl Default for NumSctpStreams {
-    fn default() -> Self {
-        Self {
-            os: 1024,
-            mis: 1024,
-        }
-    }
-}
-
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum IceRole {
@@ -147,21 +128,6 @@ pub enum DtlsState {
     Connected,
     Failed,
     Closed,
-}
-
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SctpParameters {
-    /// Must always equal 5000.
-    pub port: u16,
-    /// Initially requested number of outgoing SCTP streams.
-    #[serde(rename = "OS")]
-    pub os: u16,
-    /// Maximum number of incoming SCTP streams.
-    #[serde(rename = "MIS")]
-    pub mis: u16,
-    /// Maximum allowed size for SCTP messages.
-    pub max_message_size: usize,
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]

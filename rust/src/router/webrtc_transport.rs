@@ -1,19 +1,20 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_producer::DataProducer;
 use crate::data_structures::{
-    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
-    NumSctpStreams, SctpParameters, SctpState, TransportListenIp, TransportTuple,
+    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
+    TransportListenIp, TransportTuple,
 };
 use crate::messages::{
     TransportCloseRequest, TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData,
     TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::data_producer::DataProducerOptions;
+use crate::router::data_producer::{DataProducerOptions, DataProducerType};
 use crate::router::{Router, RouterId};
+use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::transport::{
-    ConsumeError, ProduceError, Transport, TransportGeneric, TransportId, TransportImpl,
-    TransportTraceEventData, TransportTraceEventType,
+    ConsumeError, ProduceDataError, ProduceError, Transport, TransportGeneric, TransportId,
+    TransportImpl, TransportTraceEventData, TransportTraceEventType,
 };
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
@@ -196,6 +197,9 @@ pub struct WebRtcTransportRemoteParameters {
 #[derive(Default)]
 struct Handlers {
     new_producer: Mutex<Vec<Box<dyn Fn(&Producer) + Send>>>,
+    // TODO: new_consumer
+    new_data_producer: Mutex<Vec<Box<dyn Fn(&DataProducer) + Send>>>,
+    // TODO: new_data_consumer
     ice_state_change: Mutex<Vec<Box<dyn Fn(IceState) + Send>>>,
     ice_selected_tuple_change: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
     dtls_state_change: Mutex<Vec<Box<dyn Fn(DtlsState) + Send>>>,
@@ -325,10 +329,18 @@ impl Transport for WebRtcTransport {
     async fn produce_data(
         &self,
         data_producer_options: DataProducerOptions,
-    ) -> Result<DataProducer, ProduceError> {
+    ) -> Result<DataProducer, ProduceDataError> {
         debug!("produce_data()");
 
-        self.produce_data_impl(data_producer_options).await
+        let data_producer = self
+            .produce_data_impl(DataProducerType::Sctp, data_producer_options)
+            .await?;
+
+        for callback in self.inner.handlers.new_data_producer.lock().unwrap().iter() {
+            callback(&data_producer);
+        }
+
+        Ok(data_producer)
     }
 }
 
@@ -387,6 +399,15 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportR
         self.inner
             .handlers
             .new_producer
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    fn connect_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .new_data_producer
             .lock()
             .unwrap()
             .push(Box::new(callback));

@@ -1,10 +1,11 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use crate::data_producer::{DataProducer, DataProducerOptions};
+use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
-    ConsumerInternal, ProducerInternal, TransportConsumeRequest, TransportConsumeRequestData,
-    TransportDumpRequest, TransportEnableTraceEventRequest, TransportEnableTraceEventRequestData,
-    TransportGetStatsRequest, TransportInternal, TransportProduceRequest,
+    ConsumerInternal, DataProducerInternal, ProducerInternal, TransportConsumeRequest,
+    TransportConsumeRequestData, TransportDumpRequest, TransportEnableTraceEventRequest,
+    TransportEnableTraceEventRequestData, TransportGetStatsRequest, TransportInternal,
+    TransportProduceDataRequest, TransportProduceDataRequestData, TransportProduceRequest,
     TransportProduceRequestData, TransportSetMaxIncomingBitrateData,
     TransportSetMaxIncomingBitrateRequest,
 };
@@ -19,6 +20,7 @@ use crate::worker::{Channel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
+use log::warn;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -93,7 +95,7 @@ where
     async fn produce_data(
         &self,
         data_producer_options: DataProducerOptions,
-    ) -> Result<DataProducer, ProduceError>;
+    ) -> Result<DataProducer, ProduceDataError>;
     // TODO
 }
 
@@ -114,6 +116,8 @@ pub trait TransportGeneric<Dump, Stat, RemoteParameters>: Transport {
     ) -> Result<(), RequestError>;
 
     fn connect_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F);
+
+    fn connect_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F);
 
     fn connect_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F);
 
@@ -140,6 +144,16 @@ pub enum ConsumeError {
     FailedRtpCapabilitiesValidation(RouterRtpCapabilitiesError),
     #[error("Bad consumer RTP parameters: {0}")]
     BadConsumerRtpParameters(ConsumerRtpParametersError),
+    #[error("Request to worker failed: {0}")]
+    Request(RequestError),
+}
+
+#[derive(Debug, Error)]
+pub enum ProduceDataError {
+    #[error("Producer with the same id \"{0}\" already exists")]
+    AlreadyExists(DataProducerId),
+    #[error("SCTP stream parameters are required for this transport")]
+    SctpStreamParametersRequired,
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
@@ -279,7 +293,7 @@ where
 
         let producer_id = id.unwrap_or_else(|| ProducerId::new());
 
-        let status = self
+        let response = self
             .channel()
             .request(TransportProduceRequest {
                 internal: ProducerInternal {
@@ -301,7 +315,7 @@ where
         let producer_fut = Producer::new(
             producer_id,
             kind,
-            status.r#type,
+            response.r#type,
             rtp_parameters,
             consumable_rtp_parameters,
             paused,
@@ -357,7 +371,7 @@ where
 
         let r#type = producer.r#type().into();
 
-        let status = self
+        let response = self
             .channel()
             .request(TransportConsumeRequest {
                 internal: ConsumerInternal {
@@ -384,13 +398,13 @@ where
             producer.kind(),
             r#type,
             rtp_parameters,
-            status.paused,
+            response.paused,
             Arc::clone(self.executor()),
             self.channel().clone(),
             self.payload_channel().clone(),
-            status.producer_paused,
-            status.score,
-            status.preferred_layers,
+            response.producer_paused,
+            response.score,
+            response.preferred_layers,
             app_data,
             Box::new(self.clone()),
         );
@@ -400,8 +414,58 @@ where
 
     async fn produce_data_impl(
         &self,
+        r#type: DataProducerType,
         data_producer_options: DataProducerOptions,
-    ) -> Result<DataProducer, ProduceError> {
+    ) -> Result<DataProducer, ProduceDataError> {
+        if let Some(id) = &data_producer_options.id {
+            if self.router().has_data_producer(id) {
+                return Err(ProduceDataError::AlreadyExists(*id));
+            }
+        }
+
+        match r#type {
+            DataProducerType::Sctp => {
+                if data_producer_options.sctp_stream_parameters.is_none() {
+                    return Err(ProduceDataError::SctpStreamParametersRequired);
+                }
+            }
+            DataProducerType::Direct => {
+                if data_producer_options.sctp_stream_parameters.is_some() {
+                    warn!(
+                        "sctp_stream_parameters are ignored when producing data on a DirectTransport",
+                    );
+                }
+            }
+        }
+
+        let DataProducerOptions {
+            id,
+            sctp_stream_parameters,
+            label,
+            protocol,
+            app_data,
+        } = data_producer_options;
+
+        let data_producer_id = id.unwrap_or_else(|| DataProducerId::new());
+
+        let response = self
+            .channel()
+            .request(TransportProduceDataRequest {
+                internal: DataProducerInternal {
+                    router_id: self.router().id(),
+                    transport_id: self.id(),
+                    data_producer_id,
+                },
+                data: TransportProduceDataRequestData {
+                    r#type,
+                    sctp_stream_parameters,
+                    label,
+                    protocol,
+                },
+            })
+            .await
+            .map_err(ProduceDataError::Request)?;
+
         todo!()
     }
 }
