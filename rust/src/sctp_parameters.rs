@@ -59,7 +59,7 @@ pub struct SctpParameters {
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.
 /// If ordered is true then max_packet_life_time and max_retransmits must be false.
 /// If ordered if false, only one of max_packet_life_time or max_retransmits can be true.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SctpStreamParameters {
     /// SCTP stream id.

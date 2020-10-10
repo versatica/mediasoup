@@ -37,7 +37,18 @@ pub struct DataProducerOptions {
 }
 
 impl DataProducerOptions {
-    pub fn new() -> Self {
+    pub fn new_sctp(sctp_stream_parameters: SctpStreamParameters) -> Self {
+        Self {
+            id: None,
+            sctp_stream_parameters: Some(sctp_stream_parameters),
+            label: "".to_string(),
+            protocol: "".to_string(),
+            app_data: AppData::default(),
+        }
+    }
+
+    /// For DirectTransport
+    pub fn new_direct() -> Self {
         Self {
             id: None,
             sctp_stream_parameters: None,
@@ -111,6 +122,9 @@ impl DataProducer {
     pub(super) async fn new(
         id: DataProducerId,
         r#type: DataProducerType,
+        sctp_stream_parameters: Option<SctpStreamParameters>,
+        label: String,
+        protocol: String,
         executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: Channel,

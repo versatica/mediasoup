@@ -466,6 +466,19 @@ where
             .await
             .map_err(ProduceDataError::Request)?;
 
-        todo!()
+        let data_producer_fut = DataProducer::new(
+            data_producer_id,
+            response.r#type,
+            response.sctp_stream_parameters,
+            response.label,
+            response.protocol,
+            Arc::clone(self.executor()),
+            self.channel().clone(),
+            self.payload_channel().clone(),
+            app_data,
+            Box::new(self.clone()),
+        );
+
+        Ok(data_producer_fut.await)
     }
 }

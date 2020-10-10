@@ -1,5 +1,6 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use crate::data_producer::DataProducer;
+use crate::data_consumer::DataConsumerId;
+use crate::data_producer::{DataProducer, DataProducerId};
 use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
     TransportListenIp, TransportTuple,
@@ -132,8 +133,8 @@ pub struct WebRtcTransportDump {
     pub id: TransportId,
     pub consumer_ids: Vec<ConsumerId>,
     pub producer_ids: Vec<ProducerId>,
-    pub data_consumer_ids: Vec<ConsumerId>,
-    pub data_producer_ids: Vec<ProducerId>,
+    pub data_consumer_ids: Vec<DataConsumerId>,
+    pub data_producer_ids: Vec<DataProducerId>,
     pub dtls_parameters: DtlsParameters,
     pub dtls_state: DtlsState,
     pub ice_candidates: Vec<IceCandidate>,
@@ -160,7 +161,7 @@ pub struct WebRtcTransportStat {
     // Common to all Transports.
     pub r#type: WebRtcTransportStatType,
     pub transport_id: TransportId,
-    pub timestamp: u32,
+    pub timestamp: u64,
     pub sctp_state: Option<SctpState>,
     pub bytes_received: usize,
     pub recv_bitrate: u32,

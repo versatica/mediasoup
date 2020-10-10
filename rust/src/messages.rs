@@ -501,7 +501,12 @@ request_response!(
         internal: DataProducerInternal,
         data: TransportProduceDataRequestData,
     },
-    TransportProduceDataResponse {},
+    TransportProduceDataResponse {
+        r#type: DataProducerType,
+        sctp_stream_parameters: Option<SctpStreamParameters>,
+        label: String,
+        protocol: String,
+    },
 );
 //
 // request_response!(

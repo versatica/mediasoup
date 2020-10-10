@@ -608,12 +608,14 @@ impl Worker {
 mod tests {
     use super::*;
     use crate::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventType};
+    use crate::data_producer::DataProducerOptions;
     use crate::data_structures::TransportListenIp;
     use crate::producer::{ProducerOptions, ProducerTraceEventType};
     use crate::rtp_parameters::{
         MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
         RtpParameters,
     };
+    use crate::sctp_parameters::SctpStreamParameters;
     use crate::transport::{Transport, TransportGeneric, TransportTraceEventType};
     use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
     use futures_lite::future;
@@ -683,12 +685,17 @@ mod tests {
             println!("Router created: {:?}", router.id());
             println!("Router dump: {:#?}", router.dump().await.unwrap());
             let webrtc_transport = router
-                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                    TransportListenIp {
-                        ip: "127.0.0.1".to_string(),
-                        announced_ip: None,
-                    },
-                )))
+                .create_webrtc_transport({
+                    let mut options =
+                        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
+                            ip: "127.0.0.1".to_string(),
+                            announced_ip: None,
+                        }));
+
+                    options.enable_sctp = true;
+
+                    options
+                })
                 .await
                 .unwrap();
             println!("WebRTC transport created: {:?}", webrtc_transport.id());
@@ -799,6 +806,19 @@ mod tests {
                     .enable_trace_event(vec![ConsumerTraceEventType::KeyFrame])
                     .await
                     .unwrap()
+            );
+
+            let data_producer = webrtc_transport
+                .produce_data(DataProducerOptions::new_sctp(
+                    SctpStreamParameters::new_ordered(1),
+                ))
+                .await
+                .unwrap();
+
+            println!("Data producer created: {:?}", producer.id());
+            println!(
+                "WebRTC transport dump: {:#?}",
+                webrtc_transport.dump().await.unwrap()
             );
 
             // Just to give it time to finish everything with router destruction

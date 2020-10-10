@@ -178,7 +178,7 @@ impl From<ProducerType> for ConsumerType {
 pub struct ConsumerStat {
     // Common to all RtpStreams.
     pub r#type: RtpType,
-    pub timestamp: u32,
+    pub timestamp: u64,
     pub ssrc: u32,
     pub rtx_ssrc: Option<u32>,
     pub kind: String,

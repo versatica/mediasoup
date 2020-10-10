@@ -30,6 +30,12 @@ pub use router::consumer;
 pub mod consumer;
 
 #[cfg(not(doc))]
+pub use router::data_consumer;
+#[cfg(doc)]
+#[path = "router/data_consumer.rs"]
+pub mod data_consumer;
+
+#[cfg(not(doc))]
 pub use router::observer;
 #[cfg(doc)]
 #[path = "router/observer.rs"]
