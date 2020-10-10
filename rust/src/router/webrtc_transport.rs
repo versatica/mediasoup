@@ -1,4 +1,5 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
+use crate::data_producer::DataProducer;
 use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
     NumSctpStreams, SctpParameters, SctpState, TransportListenIp, TransportTuple,
@@ -8,6 +9,7 @@ use crate::messages::{
     TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::data_producer::DataProducerOptions;
 use crate::router::{Router, RouterId};
 use crate::transport::{
     ConsumeError, ProduceError, Transport, TransportGeneric, TransportId, TransportImpl,
@@ -318,6 +320,15 @@ impl Transport for WebRtcTransport {
         debug!("consume()");
 
         self.consume_impl(consumer_options).await
+    }
+
+    async fn produce_data(
+        &self,
+        data_producer_options: DataProducerOptions,
+    ) -> Result<DataProducer, ProduceError> {
+        debug!("produce_data()");
+
+        self.produce_data_impl(data_producer_options).await
     }
 }
 

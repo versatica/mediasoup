@@ -1,6 +1,8 @@
 #[cfg(not(doc))]
 pub mod consumer;
 #[cfg(not(doc))]
+pub mod data_producer;
+#[cfg(not(doc))]
 pub mod observer;
 #[cfg(not(doc))]
 pub mod producer;

@@ -1,4 +1,5 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
+use crate::data_producer::{DataProducer, DataProducerOptions};
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
     ConsumerInternal, ProducerInternal, TransportConsumeRequest, TransportConsumeRequestData,
@@ -86,6 +87,13 @@ where
     /// Transport will be kept alive as long as at least one consumer instance is alive.
     async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError>;
 
+    /// Create a DataProducer.
+    ///
+    /// Transport will be kept alive as long as at least one data producer instance is alive.
+    async fn produce_data(
+        &self,
+        data_producer_options: DataProducerOptions,
+    ) -> Result<DataProducer, ProduceError>;
     // TODO
 }
 
@@ -328,6 +336,7 @@ where
             }
         };
 
+        // TODO: Maybe RtpParametersFinalized would be a better fit here
         let rtp_parameters = {
             let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
                 producer.consumable_rtp_parameters(),
@@ -387,5 +396,12 @@ where
         );
 
         Ok(consumer_fut.await)
+    }
+
+    async fn produce_data_impl(
+        &self,
+        data_producer_options: DataProducerOptions,
+    ) -> Result<DataProducer, ProduceError> {
+        todo!()
     }
 }

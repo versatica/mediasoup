@@ -41,6 +41,12 @@ pub use router::producer;
 pub mod producer;
 
 #[cfg(not(doc))]
+pub use router::data_producer;
+#[cfg(doc)]
+#[path = "router/data_producer.rs"]
+pub mod data_producer;
+
+#[cfg(not(doc))]
 pub use router::transport;
 #[cfg(doc)]
 #[path = "router/transport.rs"]
