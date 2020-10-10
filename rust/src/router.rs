@@ -209,6 +209,33 @@ impl Router {
             callback(NewTransport::WebRtc(&transport));
         }
 
+        self.after_transport_creation(&transport);
+
+        Ok(transport)
+    }
+
+    pub fn connect_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .new_transport
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+        self.inner
+            .handlers
+            .closed
+            .lock()
+            .unwrap()
+            .push(Box::new(callback));
+    }
+
+    fn after_transport_creation<Dump, Stat, RemoteParameters, T>(&self, transport: &T)
+    where
+        T: TransportGeneric<Dump, Stat, RemoteParameters>,
+    {
         {
             let producers_weak = Arc::downgrade(&self.inner.producers);
             transport.connect_new_producer(move |producer| {
@@ -249,26 +276,6 @@ impl Router {
                 }
             });
         }
-
-        Ok(transport)
-    }
-
-    pub fn connect_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .new_transport
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
-    }
-
-    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
     }
 
     fn has_producer(&self, producer_id: &ProducerId) -> bool {
