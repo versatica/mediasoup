@@ -1,6 +1,6 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
-use crate::data_producer::{DataProducer, DataProducerId};
+use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
     TransportListenIp, TransportTuple,
@@ -10,7 +10,6 @@ use crate::messages::{
     TransportInternal, TransportRestartIceRequest, WebRtcTransportResponse,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::data_producer::{DataProducerOptions, DataProducerType};
 use crate::router::{Router, RouterId};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::transport::{
