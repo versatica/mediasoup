@@ -233,7 +233,7 @@ request_response!(
         internal: TransportInternal,
         data: RouterCreateWebrtcTransportData,
     },
-    WebRtcTransportData {
+    WebRtcTransportResponse {
         ice_role: IceRole,
         ice_parameters: IceParameters,
         ice_candidates: Vec<IceCandidate>,

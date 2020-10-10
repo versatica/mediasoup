@@ -1,5 +1,5 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
+use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId};
 use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
@@ -7,10 +7,9 @@ use crate::data_structures::{
 };
 use crate::messages::{
     TransportCloseRequest, TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData,
-    TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
+    TransportInternal, TransportRestartIceRequest, WebRtcTransportResponse,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::data_consumer::DataConsumerType;
 use crate::router::data_producer::{DataProducerOptions, DataProducerType};
 use crate::router::{Router, RouterId};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
@@ -235,7 +234,7 @@ struct Inner {
     channel: Channel,
     payload_channel: Channel,
     handlers: Arc<Handlers>,
-    data: Arc<WebRtcTransportData>,
+    data: Arc<WebRtcTransportResponse>,
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
     router: Router,
@@ -528,7 +527,7 @@ impl WebRtcTransport {
         executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: Channel,
-        data: WebRtcTransportData,
+        data: WebRtcTransportResponse,
         app_data: AppData,
         router: Router,
     ) -> Self {

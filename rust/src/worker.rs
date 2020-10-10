@@ -608,10 +608,10 @@ impl Worker {
 mod tests {
     use super::*;
     use crate::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventType};
+    use crate::data_consumer::DataConsumerOptions;
     use crate::data_producer::DataProducerOptions;
     use crate::data_structures::TransportListenIp;
     use crate::producer::{ProducerOptions, ProducerTraceEventType};
-    use crate::router::data_consumer::DataConsumerOptions;
     use crate::rtp_parameters::{
         MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
         RtpParameters,
