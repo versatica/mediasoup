@@ -179,11 +179,3 @@ pub enum EventDirection {
     In,
     Out,
 }
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
-pub enum RtpType {
-    #[serde(rename = "inbound-rtp")]
-    Inbound,
-    #[serde(rename = "outbound-rtp")]
-    Outbound,
-}

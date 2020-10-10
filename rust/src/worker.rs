@@ -707,6 +707,7 @@ mod tests {
                 "WebRTC transport dump: {:#?}",
                 webrtc_transport.dump().await.unwrap()
             );
+            println!("Router dump: {:#?}", router.dump().await.unwrap());
             println!(
                 "WebRTC transport enable trace event: {:#?}",
                 webrtc_transport
@@ -738,6 +739,7 @@ mod tests {
                 "WebRTC transport dump: {:#?}",
                 webrtc_transport.dump().await.unwrap()
             );
+            println!("Router dump: {:#?}", router.dump().await.unwrap());
 
             println!("Producer stats: {:#?}", producer.get_stats().await.unwrap());
             println!("Producer dump: {:#?}", producer.dump().await.unwrap());
@@ -777,6 +779,7 @@ mod tests {
                 "WebRTC transport dump: {:#?}",
                 webrtc_transport.dump().await.unwrap()
             );
+            println!("Router dump: {:#?}", router.dump().await.unwrap());
             println!("Consumer stats: {:#?}", consumer.get_stats().await.unwrap());
             println!("Producer dump: {:#?}", producer.dump().await.unwrap());
             println!("Consumer dump: {:#?}", consumer.dump().await.unwrap());
@@ -819,6 +822,16 @@ mod tests {
             println!(
                 "WebRTC transport dump: {:#?}",
                 webrtc_transport.dump().await.unwrap()
+            );
+            println!("Router dump: {:#?}", router.dump().await.unwrap());
+
+            println!(
+                "Data producer stats: {:#?}",
+                data_producer.get_stats().await.unwrap()
+            );
+            println!(
+                "Data producer dump: {:#?}",
+                data_producer.dump().await.unwrap()
             );
 
             // Just to give it time to finish everything with router destruction

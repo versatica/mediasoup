@@ -1,9 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-pub struct SctpCapabilities {
-    num_streams: NumSctpStreams,
-}
-
 /// Both OS and MIS are part of the SCTP INIT+ACK handshake. OS refers to the initial number of
 /// outgoing SCTP streams that the server side transport creates (to be used by DataConsumers),
 /// while MIS refers to the maximum number of incoming SCTP streams that the server side transport

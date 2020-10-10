@@ -1,18 +1,15 @@
 use crate::data_structures::AppData;
 use crate::messages::{
-    DataProducerCloseRequest, DataProducerInternal, ProducerEnableTraceEventRequest,
-    ProducerEnableTraceEventRequestData, ProducerGetStatsRequest, ProducerPauseRequest,
-    ProducerResumeRequest,
+    DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
+    DataProducerInternal,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
 use log::*;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::HashMap;
 use std::mem;
 use std::sync::{Arc, Mutex, Weak};
 
@@ -29,7 +26,6 @@ pub struct DataProducerOptions {
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
     /// A label which can be used to distinguish this DataChannel from others.
     pub label: String,
-    // TODO: Should probably not be a string here, maybe not even optional
     /// Name of the sub-protocol used by this DataChannel.
     pub protocol: String,
     /// Custom application data.
@@ -66,6 +62,28 @@ pub enum DataProducerType {
     Direct,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct DataProducerDump {
+    pub id: DataProducerId,
+    pub r#type: DataProducerType,
+    pub label: String,
+    pub protocol: String,
+    pub sctp_stream_parameters: Option<SctpStreamParameters>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DataProducerStat {
+    // `type` field is present in worker, but ignored here
+    pub timestamp: u64,
+    pub label: String,
+    pub protocol: String,
+    pub messages_received: usize,
+    pub bytes_received: usize,
+}
+
 #[derive(Default)]
 struct Handlers {
     closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
@@ -74,14 +92,15 @@ struct Handlers {
 struct Inner {
     id: DataProducerId,
     r#type: DataProducerType,
+    sctp_stream_parameters: Option<SctpStreamParameters>,
+    label: String,
+    protocol: String,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: Channel,
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Box<dyn Transport>,
-    // Drop subscription to producer-specific notifications when producer itself is dropped
-    _subscription_handler: SubscriptionHandler,
 }
 
 impl Drop for Inner {
@@ -134,52 +153,18 @@ impl DataProducer {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
-        let subscription_handler = {
-            //     let handlers = Arc::clone(&handlers);
-            //     let score = Arc::clone(&score);
-            //
-            channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    //             match serde_json::from_value::<Notification>(notification) {
-                    //                 Ok(notification) => match notification {
-                    //                     Notification::Score(scores) => {
-                    //                         *score.lock().unwrap() = scores.clone();
-                    //                         for callback in handlers.score.lock().unwrap().iter() {
-                    //                             callback(&scores);
-                    //                         }
-                    //                     }
-                    //                     Notification::VideoOrientationChange(video_orientation) => {
-                    //                         for callback in
-                    //                             handlers.video_orientation_change.lock().unwrap().iter()
-                    //                         {
-                    //                             callback(video_orientation);
-                    //                         }
-                    //                     }
-                    //                     Notification::Trace(trace_event_data) => {
-                    //                         for callback in handlers.trace.lock().unwrap().iter() {
-                    //                             callback(&trace_event_data);
-                    //                         }
-                    //                     }
-                    //                 },
-                    //                 Err(error) => {
-                    //                     error!("Failed to parse notification: {}", error);
-                    //                 }
-                    //             }
-                })
-                .await
-                .unwrap()
-        };
-
         let inner = Arc::new(Inner {
             id,
             r#type,
+            sctp_stream_parameters,
+            label,
+            protocol,
             executor,
             channel,
             payload_channel,
             handlers,
             app_data,
             transport,
-            _subscription_handler: subscription_handler,
         });
 
         Self { inner }
@@ -195,22 +180,96 @@ impl DataProducer {
         self.inner.r#type
     }
 
+    /// SCTP stream parameters.
+    pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
+        self.inner.sctp_stream_parameters
+    }
+
+    /// DataChannel label.
+    pub fn label(&self) -> &String {
+        &self.inner.label
+    }
+
+    /// DataChannel protocol.
+    pub fn protocol(&self) -> &String {
+        &self.inner.protocol
+    }
+
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
     }
 
-    // /// Dump DataProducer.
-    // #[doc(hidden)]
-    // pub async fn dump(&self) -> Result<DataProducerDump, RequestError> {
-    //     debug!("dump()");
+    /// Dump DataProducer.
+    #[doc(hidden)]
+    pub async fn dump(&self) -> Result<DataProducerDump, RequestError> {
+        debug!("dump()");
+
+        self.inner
+            .channel
+            .request(DataProducerDumpRequest {
+                internal: self.get_internal(),
+            })
+            .await
+    }
+
+    /// Get DataProducer stats.
+    pub async fn get_stats(&self) -> Result<Vec<DataProducerStat>, RequestError> {
+        debug!("get_stats()");
+
+        self.inner
+            .channel
+            .request(DataProducerGetStatsRequest {
+                internal: self.get_internal(),
+            })
+            .await
+    }
+
+    // TODO: Probably create a generic parameter on producer to make sure this method is only
+    //  available when it should
+    // /**
+    //  * Send data (just valid for DataProducers created on a DirectTransport).
+    //  */
+    // send(message: string | Buffer, ppid?: number): void
+    // {
+    // 	if (typeof message !== 'string' && !Buffer.isBuffer(message))
+    // 	{
+    // 		throw new TypeError('message must be a string or a Buffer');
+    // 	}
     //
-    //     self.inner
-    //         .channel
-    //         .request(DataProducerDumpRequest {
-    //             internal: self.get_internal(),
-    //         })
-    //         .await
+    // 	/*
+    // 	 * +-------------------------------+----------+
+    // 	 * | Value                         | SCTP     |
+    // 	 * |                               | PPID     |
+    // 	 * +-------------------------------+----------+
+    // 	 * | WebRTC String                 | 51       |
+    // 	 * | WebRTC Binary Partial         | 52       |
+    // 	 * | (Deprecated)                  |          |
+    // 	 * | WebRTC Binary                 | 53       |
+    // 	 * | WebRTC String Partial         | 54       |
+    // 	 * | (Deprecated)                  |          |
+    // 	 * | WebRTC String Empty           | 56       |
+    // 	 * | WebRTC Binary Empty           | 57       |
+    // 	 * +-------------------------------+----------+
+    // 	 */
+    //
+    // 	if (typeof ppid !== 'number')
+    // 	{
+    // 		ppid = (typeof message === 'string')
+    // 			? message.length > 0 ? 51 : 56
+    // 			: message.length > 0 ? 53 : 57;
+    // 	}
+    //
+    // 	// Ensure we honor PPIDs.
+    // 	if (ppid === 56)
+    // 		message = ' ';
+    // 	else if (ppid === 57)
+    // 		message = Buffer.alloc(1);
+    //
+    // 	const notifData = { ppid };
+    //
+    // 	this._payloadChannel.notify(
+    // 		'dataProducer.send', this._internal, notifData, message);
     // }
 
     pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {

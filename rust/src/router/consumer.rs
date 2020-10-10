@@ -1,4 +1,4 @@
-use crate::data_structures::{AppData, EventDirection, RtpType};
+use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
     ConsumerEnableTraceEventRequestData, ConsumerGetStatsRequest, ConsumerInternal,
@@ -177,7 +177,7 @@ impl From<ProducerType> for ConsumerType {
 #[serde(rename_all = "camelCase")]
 pub struct ConsumerStat {
     // Common to all RtpStreams.
-    pub r#type: RtpType,
+    // `type` field is present in worker, but ignored here
     pub timestamp: u64,
     pub ssrc: u32,
     pub rtx_ssrc: Option<u32>,

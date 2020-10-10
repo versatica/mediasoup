@@ -2,7 +2,7 @@ use crate::consumer::{
     ConsumerDump, ConsumerId, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
     ConsumerType,
 };
-use crate::data_producer::DataProducerId;
+use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat};
 use crate::data_structures::{
     DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
     TransportListenIp, TransportTuple,
@@ -674,26 +674,22 @@ request_response!(
     },
 );
 
-// request_response!(
-//     DataProducerDumpRequest,
-//     "dataProducer.dump",
-//     ;,
-//     DataProducerDumpResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     DataProducerGetStatsRequest,
-//     "dataProducer.getStats",
-//     ;,
-//     DataProducerGetStatsResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "dataProducer.dump",
+    DataProducerDumpRequest {
+        internal: DataProducerInternal,
+    },
+    DataProducerDump,
+);
+
+request_response!(
+    "dataProducer.getStats",
+    DataProducerGetStatsRequest {
+        internal: DataProducerInternal,
+    },
+    Vec<DataProducerStat>,
+);
+
 // request_response!(
 //     DataConsumerCloseRequest,
 //     "dataConsumer.close",

@@ -150,16 +150,10 @@ pub struct WebRtcTransportDump {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum WebRtcTransportStatType {
-    WebrtcTransport,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportStat {
     // Common to all Transports.
-    pub r#type: WebRtcTransportStatType,
+    // `type` field is present in worker, but ignored here
     pub transport_id: TransportId,
     pub timestamp: u64,
     pub sctp_state: Option<SctpState>,

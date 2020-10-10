@@ -1,5 +1,5 @@
 use crate::consumer::RtpStreamParams;
-use crate::data_structures::{AppData, EventDirection, RtpType};
+use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerEnableTraceEventRequestData, ProducerGetStatsRequest, ProducerInternal,
@@ -57,7 +57,7 @@ impl ProducerOptions {
 pub struct RtpStreamRecv {
     params: RtpStreamParams,
     score: u8,
-    r#type: RtpType,
+    // `type` field is present in worker, but ignored here
     jitter: u32,
     packet_count: usize,
     byte_count: usize,
@@ -112,7 +112,7 @@ pub struct ProducerVideoOrientation {
 #[serde(rename_all = "camelCase")]
 pub struct ProducerStat {
     // Common to all RtpStreams.
-    pub r#type: RtpType,
+    // `type` field is present in worker, but ignored here
     pub timestamp: u64,
     pub ssrc: u32,
     pub rtx_ssrc: Option<u32>,
