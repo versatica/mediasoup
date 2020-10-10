@@ -501,7 +501,7 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
             .fetch_add(1, Ordering::AcqRel)
     }
 
-    fn next_sctp_stream_id(&self) -> Option<u16> {
+    fn allocate_sctp_stream_id(&self) -> Option<u16> {
         let mut used_sctp_stream_ids = self.inner.used_sctp_stream_ids.lock().unwrap();
         // This is simple, but not the fastest implementation, maybe worth improving
         for (index, used) in used_sctp_stream_ids.iter_mut() {
@@ -512,6 +512,13 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat, WebRtcTransportRemo
         }
 
         None
+    }
+
+    fn deallocate_sctp_stream_id(&self, sctp_stream_id: u16) {
+        let mut used_sctp_stream_ids = self.inner.used_sctp_stream_ids.lock().unwrap();
+        if let Some(used) = used_sctp_stream_ids.get_mut(&sctp_stream_id) {
+            *used = false;
+        }
     }
 }
 

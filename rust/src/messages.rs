@@ -536,7 +536,7 @@ request_response!(
         data: TransportConsumeDataRequestData,
     },
     TransportConsumeDataResponse {
-        r#type: DataProducerType,
+        r#type: DataConsumerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,

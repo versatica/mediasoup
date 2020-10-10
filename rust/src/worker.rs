@@ -611,6 +611,7 @@ mod tests {
     use crate::data_producer::DataProducerOptions;
     use crate::data_structures::TransportListenIp;
     use crate::producer::{ProducerOptions, ProducerTraceEventType};
+    use crate::router::data_consumer::DataConsumerOptions;
     use crate::rtp_parameters::{
         MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
         RtpParameters,
@@ -833,6 +834,31 @@ mod tests {
                 "Data producer dump: {:#?}",
                 data_producer.dump().await.unwrap()
             );
+
+            let data_consumer = webrtc_transport
+                .consume_data(DataConsumerOptions::new_sctp(data_producer.id()))
+                .await
+                .unwrap();
+
+            println!("Data consumer created: {:?}", consumer.id());
+            println!(
+                "WebRTC transport dump: {:#?}",
+                webrtc_transport.dump().await.unwrap()
+            );
+            println!("Router dump: {:#?}", router.dump().await.unwrap());
+
+            println!(
+                "Data producer stats: {:#?}",
+                data_producer.get_stats().await.unwrap()
+            );
+            // println!(
+            //     "Data consumer stats: {:#?}",
+            //     data_consumer.get_stats().await.unwrap()
+            // );
+            // println!(
+            //     "Data consumer dump: {:#?}",
+            //     data_consumer.dump().await.unwrap()
+            // );
 
             // Just to give it time to finish everything with router destruction
             thread::sleep(std::time::Duration::from_millis(200));

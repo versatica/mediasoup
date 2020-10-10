@@ -1,6 +1,7 @@
 use crate::data_producer::DataProducerId;
 use crate::data_structures::AppData;
 use crate::messages::{DataConsumerCloseRequest, DataConsumerInternal};
+use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
@@ -115,8 +116,11 @@ struct Handlers {
 
 struct Inner {
     id: DataConsumerId,
+    r#type: DataConsumerType,
+    sctp_stream_parameters: Option<SctpStreamParameters>,
+    label: String,
+    protocol: String,
     data_producer_id: DataProducerId,
-    // r#type: DataConsumerType,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: Channel,
@@ -165,6 +169,10 @@ pub struct DataConsumer {
 impl DataConsumer {
     pub(super) async fn new(
         id: DataConsumerId,
+        r#type: DataConsumerType,
+        sctp_stream_parameters: Option<SctpStreamParameters>,
+        label: String,
+        protocol: String,
         data_producer_id: DataProducerId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
@@ -239,6 +247,10 @@ impl DataConsumer {
 
         let inner = Arc::new(Inner {
             id,
+            r#type,
+            sctp_stream_parameters,
+            label,
+            protocol,
             data_producer_id,
             executor,
             channel,
@@ -262,10 +274,25 @@ impl DataConsumer {
         self.inner.data_producer_id
     }
 
-    // /// DataConsumer type.
-    // pub fn r#type(&self) -> DataConsumerType {
-    //     self.inner.r#type
-    // }
+    /// DataConsumer type.
+    pub fn r#type(&self) -> DataConsumerType {
+        self.inner.r#type
+    }
+
+    /// SCTP stream parameters.
+    pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
+        self.inner.sctp_stream_parameters
+    }
+
+    /// DataChannel label.
+    pub fn label(&self) -> &String {
+        &self.inner.label
+    }
+
+    /// DataChannel protocol.
+    pub fn protocol(&self) -> &String {
+        &self.inner.protocol
+    }
 
     /// App custom data.
     pub fn app_data(&self) -> &AppData {

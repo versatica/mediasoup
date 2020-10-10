@@ -200,7 +200,9 @@ where
 
     fn next_mid_for_consumers(&self) -> usize;
 
-    fn next_sctp_stream_id(&self) -> Option<u16>;
+    fn allocate_sctp_stream_id(&self) -> Option<u16>;
+
+    fn deallocate_sctp_stream_id(&self, sctp_stream_id: u16);
 
     async fn dump_impl(&self) -> Result<Dump, RequestError> {
         self.channel()
@@ -532,8 +534,7 @@ where
             DataConsumerType::Sctp => {
                 let mut sctp_stream_parameters = data_producer.sctp_stream_parameters();
                 if let Some(sctp_stream_parameters) = &mut sctp_stream_parameters {
-                    // TODO: This needs to be freed once data consumer is destroyed
-                    if let Some(stream_id) = self.next_sctp_stream_id() {
+                    if let Some(stream_id) = self.allocate_sctp_stream_id() {
                         sctp_stream_parameters.stream_id = stream_id;
                     } else {
                         return Err(ConsumeDataError::NoSctpStreamId);
@@ -580,6 +581,30 @@ where
             .await
             .map_err(ConsumeDataError::Request)?;
 
-        todo!()
+        let data_consumer_fut = DataConsumer::new(
+            data_consumer_id,
+            response.r#type,
+            response.sctp_stream_parameters,
+            response.label,
+            response.protocol,
+            data_producer.id(),
+            Arc::clone(self.executor()),
+            self.channel().clone(),
+            self.payload_channel().clone(),
+            app_data,
+            Box::new(self.clone()),
+        );
+
+        let data_consumer = data_consumer_fut.await;
+
+        if let Some(sctp_stream_parameters) = data_consumer.sctp_stream_parameters() {
+            let stream_id = sctp_stream_parameters.stream_id;
+            let transport = self.clone();
+            data_consumer.connect_closed(move || {
+                transport.deallocate_sctp_stream_id(stream_id);
+            });
+        }
+
+        Ok(data_consumer)
     }
 }
