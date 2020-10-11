@@ -1,9 +1,9 @@
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
-    ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
-    ConsumerEnableTraceEventRequestData, ConsumerGetStatsRequest, ConsumerInternal,
+    ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
+    ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
     ConsumerPauseRequest, ConsumerRequestKeyFrameRequest, ConsumerResumeRequest,
-    ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest, ConsumerSetPriorityRequestData,
+    ConsumerSetPreferredLayersRequest, ConsumerSetPriorityData, ConsumerSetPriorityRequest,
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
@@ -623,7 +623,7 @@ impl Consumer {
             .channel
             .request(ConsumerSetPriorityRequest {
                 internal: self.get_internal(),
-                data: ConsumerSetPriorityRequestData { priority },
+                data: ConsumerSetPriorityData { priority },
             })
             .await?;
 
@@ -643,7 +643,7 @@ impl Consumer {
             .channel
             .request(ConsumerSetPriorityRequest {
                 internal: self.get_internal(),
-                data: ConsumerSetPriorityRequestData { priority },
+                data: ConsumerSetPriorityData { priority },
             })
             .await?;
 
@@ -675,7 +675,7 @@ impl Consumer {
             .channel
             .request(ConsumerEnableTraceEventRequest {
                 internal: self.get_internal(),
-                data: ConsumerEnableTraceEventRequestData { types },
+                data: ConsumerEnableTraceEventData { types },
             })
             .await
     }

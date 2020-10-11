@@ -611,6 +611,7 @@ mod tests {
     use crate::data_consumer::DataConsumerOptions;
     use crate::data_producer::DataProducerOptions;
     use crate::data_structures::TransportListenIp;
+    use crate::plain_transport::PlainTransportOptions;
     use crate::producer::{ProducerOptions, ProducerTraceEventType};
     use crate::rtp_parameters::{
         MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
@@ -685,6 +686,7 @@ mod tests {
                 .unwrap();
             println!("Router created: {:?}", router.id());
             println!("Router dump: {:#?}", router.dump().await.unwrap());
+
             let webrtc_transport = router
                 .create_webrtc_transport({
                     let mut options =
@@ -867,6 +869,37 @@ mod tests {
                 "Data consumer set buffered amount low threshold: {:#?}",
                 data_consumer
                     .set_buffered_amount_low_threshold(256)
+                    .await
+                    .unwrap()
+            );
+
+            let plain_transport = router
+                .create_plain_transport({
+                    let mut options = PlainTransportOptions::new(TransportListenIp {
+                        ip: "127.0.0.1".to_string(),
+                        announced_ip: None,
+                    });
+
+                    options.enable_sctp = true;
+
+                    options
+                })
+                .await
+                .unwrap();
+            println!("Plain transport created: {:?}", plain_transport.id());
+            println!(
+                "Plain transport stats: {:#?}",
+                plain_transport.get_stats().await.unwrap()
+            );
+            println!(
+                "Plain transport dump: {:#?}",
+                plain_transport.dump().await.unwrap()
+            );
+            println!("Router dump: {:#?}", router.dump().await.unwrap());
+            println!(
+                "Plain transport enable trace event: {:#?}",
+                plain_transport
+                    .enable_trace_event(vec![TransportTraceEventType::BWE])
                     .await
                     .unwrap()
             );

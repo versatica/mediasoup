@@ -3,8 +3,8 @@ use crate::data_structures::AppData;
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
     DataConsumerGetStatsRequest, DataConsumerInternal,
+    DataConsumerSetBufferedAmountLowThresholdData,
     DataConsumerSetBufferedAmountLowThresholdRequest,
-    DataConsumerSetBufferedAmountLowThresholdRequestData,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
@@ -366,7 +366,7 @@ impl DataConsumer {
             .channel
             .request(DataConsumerSetBufferedAmountLowThresholdRequest {
                 internal: self.get_internal(),
-                data: DataConsumerSetBufferedAmountLowThresholdRequestData { threshold },
+                data: DataConsumerSetBufferedAmountLowThresholdData { threshold },
             })
             .await
     }

@@ -7,6 +7,8 @@ pub mod data_producer;
 #[cfg(not(doc))]
 pub mod observer;
 #[cfg(not(doc))]
+pub mod plain_transport;
+#[cfg(not(doc))]
 pub mod producer;
 #[cfg(not(doc))]
 pub mod transport;
@@ -19,10 +21,12 @@ use crate::consumer::ConsumerId;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::AppData;
 use crate::messages::{
-    RouterCloseRequest, RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest,
-    RouterDumpRequest, RouterInternal, TransportInternal,
+    RouterCloseRequest, RouterCreatePlainTransportData, RouterCreatePlainTransportRequest,
+    RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
+    RouterInternal, TransportInternal,
 };
 use crate::observer::ObserverId;
+use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{Producer, ProducerId, WeakProducer};
 use crate::rtp_parameters::{RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::transport::{TransportGeneric, TransportId};
@@ -59,6 +63,7 @@ pub struct RouterDump {
 
 pub enum NewTransport<'a> {
     WebRtc(&'a WebRtcTransport),
+    Plain(&'a PlainTransport),
 }
 
 #[derive(Default)]
@@ -214,6 +219,48 @@ impl Router {
         Ok(transport)
     }
 
+    /// Create a PlainTransport.
+    ///
+    /// Router will be kept alive as long as at least one transport instance is alive.
+    pub async fn create_plain_transport(
+        &self,
+        plain_transport_options: PlainTransportOptions,
+    ) -> Result<PlainTransport, RequestError> {
+        debug!("create_plain_transport()");
+
+        let transport_id = TransportId::new();
+        let data = self
+            .inner
+            .channel
+            .request(RouterCreatePlainTransportRequest {
+                internal: TransportInternal {
+                    router_id: self.inner.id,
+                    transport_id,
+                },
+                data: RouterCreatePlainTransportData::from_options(&plain_transport_options),
+            })
+            .await?;
+
+        let transport_fut = PlainTransport::new(
+            transport_id,
+            Arc::clone(&self.inner.executor),
+            self.inner.channel.clone(),
+            self.inner.payload_channel.clone(),
+            data,
+            plain_transport_options.app_data,
+            self.clone(),
+        );
+        let transport = transport_fut.await;
+
+        for callback in self.inner.handlers.new_transport.lock().unwrap().iter() {
+            callback(NewTransport::Plain(&transport));
+        }
+
+        self.after_transport_creation(&transport);
+
+        Ok(transport)
+    }
+
     pub fn connect_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
@@ -232,9 +279,9 @@ impl Router {
             .push(Box::new(callback));
     }
 
-    fn after_transport_creation<Dump, Stat, RemoteParameters, T>(&self, transport: &T)
+    fn after_transport_creation<Dump, Stat, T>(&self, transport: &T)
     where
-        T: TransportGeneric<Dump, Stat, RemoteParameters>,
+        T: TransportGeneric<Dump, Stat>,
     {
         {
             let producers_weak = Arc::downgrade(&self.inner.producers);

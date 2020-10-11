@@ -101,14 +101,16 @@ pub enum IceState {
 }
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase", untagged)]
+#[serde(untagged)]
 pub enum TransportTuple {
+    #[serde(rename_all = "camelCase")]
     LocalOnly {
         // TODO: Maybe better type for IP address?
         local_ip: String,
         local_port: u16,
         protocol: TransportProtocol,
     },
+    #[serde(rename_all = "camelCase")]
     WithRemote {
         // TODO: Maybe better type for IP address?
         local_ip: String,

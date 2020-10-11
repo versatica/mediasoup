@@ -18,6 +18,7 @@ pub mod router;
 pub mod rtp_parameters;
 pub mod scalability_modes;
 pub mod sctp_parameters;
+pub mod srtp_parameters;
 pub mod supported_rtp_capabilities;
 pub mod worker;
 pub mod worker_manager;
@@ -58,6 +59,12 @@ pub use router::transport;
 #[cfg(doc)]
 #[path = "router/transport.rs"]
 pub mod transport;
+
+#[cfg(not(doc))]
+pub use router::plain_transport;
+#[cfg(doc)]
+#[path = "router/plain_transport.rs"]
+pub mod plain_transport;
 
 #[cfg(not(doc))]
 pub use router::webrtc_transport;

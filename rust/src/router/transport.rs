@@ -4,11 +4,11 @@ use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, Da
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
     ConsumerInternal, DataConsumerInternal, DataProducerInternal, ProducerInternal,
-    TransportConsumeDataRequest, TransportConsumeDataRequestData, TransportConsumeRequest,
-    TransportConsumeRequestData, TransportDumpRequest, TransportEnableTraceEventRequest,
-    TransportEnableTraceEventRequestData, TransportGetStatsRequest, TransportInternal,
-    TransportProduceDataRequest, TransportProduceDataRequestData, TransportProduceRequest,
-    TransportProduceRequestData, TransportSetMaxIncomingBitrateData,
+    TransportConsumeData, TransportConsumeDataData, TransportConsumeDataRequest,
+    TransportConsumeRequest, TransportDumpRequest, TransportEnableTraceEventData,
+    TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportInternal,
+    TransportProduceData, TransportProduceDataData, TransportProduceDataRequest,
+    TransportProduceRequest, TransportSetMaxIncomingBitrateData,
     TransportSetMaxIncomingBitrateRequest,
 };
 use crate::ortc::{
@@ -26,6 +26,7 @@ use log::*;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -62,6 +63,37 @@ pub enum TransportTraceEventData {
 pub enum TransportTraceEventType {
     Probation,
     BWE,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct RtpListener {
+    /// Map from Ssrc (as string) to producer ID
+    pub mid_table: HashMap<String, ProducerId>,
+    /// Map from Ssrc (as string) to producer ID
+    pub rid_table: HashMap<String, ProducerId>,
+    /// Map from Ssrc (as string) to producer ID
+    pub ssrc_table: HashMap<String, ProducerId>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct RecvRtpHeaderExtensions {
+    mid: Option<u8>,
+    rid: Option<u8>,
+    rrid: Option<u8>,
+    abs_send_time: Option<u8>,
+    transport_wide_cc01: Option<u8>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct SctpListener {
+    /// Map from stream ID (as string) to data producer ID
+    stream_id_table: HashMap<String, DataProducerId>,
 }
 
 #[async_trait(?Send)]
@@ -109,15 +141,12 @@ where
 }
 
 #[async_trait(?Send)]
-pub trait TransportGeneric<Dump, Stat, RemoteParameters>: Transport {
+pub trait TransportGeneric<Dump, Stat>: Transport {
     /// Dump Transport.
     async fn dump(&self) -> Result<Dump, RequestError>;
 
     /// Get Transport stats.
     async fn get_stats(&self) -> Result<Vec<Stat>, RequestError>;
-
-    /// Provide the Transport remote parameters.
-    async fn connect(&self, remote_parameters: RemoteParameters) -> Result<(), RequestError>;
 
     async fn enable_trace_event(
         &self,
@@ -182,11 +211,10 @@ pub enum ConsumeDataError {
 }
 
 #[async_trait(?Send)]
-pub(super) trait TransportImpl<Dump, Stat, RemoteParameters>
+pub(super) trait TransportImpl<Dump, Stat>
 where
     Dump: Debug + DeserializeOwned + 'static,
     Stat: Debug + DeserializeOwned + 'static,
-    RemoteParameters: 'static,
     Self: Transport + Clone + 'static,
 {
     fn router(&self) -> &Router;
@@ -249,7 +277,7 @@ where
                     router_id: self.router().id(),
                     transport_id: self.id(),
                 },
-                data: TransportEnableTraceEventRequestData { types },
+                data: TransportEnableTraceEventData { types },
             })
             .await
     }
@@ -328,7 +356,7 @@ where
                     transport_id: self.id(),
                     producer_id,
                 },
-                data: TransportProduceRequestData {
+                data: TransportProduceData {
                     kind,
                     rtp_parameters: rtp_parameters.clone(),
                     rtp_mapping,
@@ -407,7 +435,7 @@ where
                     consumer_id,
                     producer_id: producer.id(),
                 },
-                data: TransportConsumeRequestData {
+                data: TransportConsumeData {
                     kind: producer.kind(),
                     rtp_parameters: rtp_parameters.clone(),
                     r#type,
@@ -483,7 +511,7 @@ where
                     transport_id: self.id(),
                     data_producer_id,
                 },
-                data: TransportProduceDataRequestData {
+                data: TransportProduceDataData {
                     r#type,
                     sctp_stream_parameters,
                     label,
@@ -570,7 +598,7 @@ where
                     data_producer_id: data_producer.id(),
                     data_consumer_id,
                 },
-                data: TransportConsumeDataRequestData {
+                data: TransportConsumeDataData {
                     r#type,
                     sctp_stream_parameters,
                     label: data_producer.label().clone(),

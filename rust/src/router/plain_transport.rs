@@ -1,17 +1,15 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{
-    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
-    TransportListenIp, TransportTuple,
-};
+use crate::data_structures::{AppData, SctpState, TransportListenIp, TransportTuple};
 use crate::messages::{
-    TransportCloseRequest, TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData,
-    TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
+    PlainTransportData, TransportCloseRequest, TransportConnectRequestPlain,
+    TransportConnectRequestPlainData, TransportInternal,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::{Router, RouterId};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
+use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
@@ -23,99 +21,56 @@ use async_trait::async_trait;
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::mem;
-use std::ops::Deref;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use thiserror::Error;
-
-/// Struct that protects an invariant of having non-empty list of listen IPs
-#[derive(Debug, Serialize, Clone)]
-pub struct TransportListenIps(Vec<TransportListenIp>);
-
-impl TransportListenIps {
-    pub fn new(listen_ip: TransportListenIp) -> Self {
-        Self(vec![listen_ip])
-    }
-
-    pub fn add(mut self, listen_ip: TransportListenIp) -> Self {
-        self.0.push(listen_ip);
-        self
-    }
-}
-
-impl Deref for TransportListenIps {
-    type Target = Vec<TransportListenIp>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-#[derive(Error, Debug)]
-#[error("Empty list of listen IPs provided, should have at least one element")]
-pub struct EmptyListError;
-
-impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
-    type Error = EmptyListError;
-
-    fn try_from(listen_ips: Vec<TransportListenIp>) -> Result<Self, Self::Error> {
-        if listen_ips.is_empty() {
-            Err(EmptyListError)
-        } else {
-            Ok(Self(listen_ips))
-        }
-    }
-}
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub struct WebRtcTransportOptions {
-    /// Listening IP address or addresses in order of preference (first one is the preferred one).
-    pub listen_ips: TransportListenIps,
-    /// Listen in UDP. Default true.
-    pub enable_udp: bool,
-    /// Listen in TCP.
+pub struct PlainTransportOptions {
+    /// Listening IP address.
+    pub listen_ip: TransportListenIp,
+    /// Use RTCP-mux (RTP and RTCP in the same port).
+    /// Default true.
+    pub rtcp_mux: bool,
+    /// Whether remote IP:port should be auto-detected based on first RTP/RTCP
+    /// packet received. If enabled, connect() method must not be called unless
+    /// SRTP is enabled. If so, it must be called with just remote SRTP parameters.
     /// Default false.
-    pub enable_tcp: bool,
-    /// Prefer UDP.
-    /// Default false.
-    pub prefer_udp: bool,
-    /// Prefer TCP.
-    /// Default false.
-    pub prefer_tcp: bool,
-    /// Initial available outgoing bitrate (in bps).
-    /// Default 600000.
-    pub initial_available_outgoing_bitrate: u32,
+    pub comedia: bool,
     /// Create a SCTP association.
     /// Default false.
     pub enable_sctp: bool,
     /// SCTP streams number.
     pub num_sctp_streams: NumSctpStreams,
     /// Maximum allowed size for SCTP messages sent by DataProducers.
-    // 	Default 262144.
+    /// Default 262144.
     pub max_sctp_message_size: u32,
     /// Maximum SCTP send buffer used by DataConsumers.
     /// Default 262144.
     pub sctp_send_buffer_size: u32,
+    /// Enable SRTP. For this to work, connect() must be called with remote SRTP parameters.
+    /// Default false.
+    pub enable_srtp: bool,
+    /// The SRTP crypto suite to be used if enableSrtp is set.
+    /// Default 'AesCm128HmacSha180'.
+    pub srtp_crypto_suite: SrtpCryptoSuite,
     /// Custom application data.
     pub app_data: AppData,
 }
 
-impl WebRtcTransportOptions {
-    pub fn new(listen_ips: TransportListenIps) -> Self {
+impl PlainTransportOptions {
+    pub fn new(listen_ip: TransportListenIp) -> Self {
         Self {
-            listen_ips,
-            enable_udp: true,
-            enable_tcp: false,
-            prefer_udp: false,
-            prefer_tcp: false,
-            initial_available_outgoing_bitrate: 600_000,
+            listen_ip,
+            rtcp_mux: true,
+            comedia: false,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
             max_sctp_message_size: 262144,
             sctp_send_buffer_size: 262144,
+            enable_srtp: false,
+            srtp_crypto_suite: SrtpCryptoSuite::default(),
             app_data: AppData::default(),
         }
     }
@@ -124,7 +79,7 @@ impl WebRtcTransportOptions {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
-pub struct WebRtcTransportDump {
+pub struct PlainTransportDump {
     // Common to all Transports.
     pub id: TransportId,
     pub direct: bool,
@@ -140,18 +95,17 @@ pub struct WebRtcTransportDump {
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_listener: Option<SctpListener>,
     pub trace_event_types: String,
-    // WebRtcTransport specific.
-    pub dtls_parameters: DtlsParameters,
-    pub dtls_state: DtlsState,
-    pub ice_candidates: Vec<IceCandidate>,
-    pub ice_parameters: IceParameters,
-    pub ice_role: IceRole,
-    pub ice_state: IceState,
+    // PlainTransport specific.
+    pub rtcp_mux: bool,
+    pub comedia: bool,
+    pub tuple: Option<TransportTuple>,
+    pub rtcp_tuple: Option<TransportTuple>,
+    pub srtp_parameters: Option<SrtpParameters>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WebRtcTransportStat {
+pub struct PlainTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here
     pub transport_id: TransportId,
@@ -177,16 +131,29 @@ pub struct WebRtcTransportStat {
     pub available_incoming_bitrate: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_incoming_bitrate: Option<u32>,
-    // WebRtcTransport specific.
-    pub ice_role: IceRole,
-    pub ice_state: IceState,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub ice_selected_tuple: Option<TransportTuple>,
-    pub dtls_state: DtlsState,
+    // PlainTransport specific.
+    pub rtcp_mux: bool,
+    pub comedia: bool,
+    pub tuple: Option<TransportTuple>,
+    pub rtcp_tuple: Option<TransportTuple>,
 }
 
-pub struct WebRtcTransportRemoteParameters {
-    pub dtls_parameters: DtlsParameters,
+// TODO: This has all parameters optional, would be useful to somehow make these invariants cleaner
+pub struct PlainTransportRemoteParameters {
+    /// Remote IPv4 or IPv6.
+    /// Required if `comedia` is not set.
+    pub ip: Option<String>,
+    /// Remote port.
+    /// Required if `comedia` is not set.
+    pub port: Option<u16>,
+    /// Remote RTCP port.
+    /// Required if `comedia` is not set and RTCP-mux is not enabled.
+    pub rtcp_port: Option<u16>,
+    /// SRTP parameters used by the remote endpoint to encrypt its RTP and RTCP.
+    /// The SRTP crypto suite of the local `srtpParameters` gets also updated after connect()
+    /// resolves.
+    /// Required if enableSrtp was set.
+    pub srtp_parameters: Option<SrtpParameters>,
 }
 
 #[derive(Default)]
@@ -195,9 +162,8 @@ struct Handlers {
     new_consumer: Mutex<Vec<Box<dyn Fn(&Consumer) + Send>>>,
     new_data_producer: Mutex<Vec<Box<dyn Fn(&DataProducer) + Send>>>,
     new_data_consumer: Mutex<Vec<Box<dyn Fn(&DataConsumer) + Send>>>,
-    ice_state_change: Mutex<Vec<Box<dyn Fn(IceState) + Send>>>,
-    ice_selected_tuple_change: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
-    dtls_state_change: Mutex<Vec<Box<dyn Fn(DtlsState) + Send>>>,
+    tuple: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
+    rtcp_tuple: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
     sctp_state_change: Mutex<Vec<Box<dyn Fn(SctpState) + Send>>>,
     trace: Mutex<Vec<Box<dyn Fn(&TransportTraceEventData) + Send>>>,
     closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
@@ -206,19 +172,8 @@ struct Handlers {
 #[derive(Debug, Deserialize)]
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
-    #[serde(rename_all = "camelCase")]
-    IceStateChange {
-        ice_state: IceState,
-    },
-    #[serde(rename_all = "camelCase")]
-    IceSelectedTupleChange {
-        ice_selected_tuple: TransportTuple,
-    },
-    #[serde(rename_all = "camelCase")]
-    DtlsStateChange {
-        dtls_state: DtlsState,
-        dtls_remote_cert: Option<String>,
-    },
+    Tuple(TransportTuple),
+    RtcpTuple(TransportTuple),
     #[serde(rename_all = "camelCase")]
     SctpStateChange {
         sctp_state: SctpState,
@@ -234,7 +189,7 @@ struct Inner {
     channel: Channel,
     payload_channel: Channel,
     handlers: Arc<Handlers>,
-    data: Arc<WebRtcTransportData>,
+    data: Arc<PlainTransportData>,
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
     router: Router,
@@ -271,12 +226,12 @@ impl Drop for Inner {
 }
 
 #[derive(Clone)]
-pub struct WebRtcTransport {
+pub struct PlainTransport {
     inner: Arc<Inner>,
 }
 
 #[async_trait(?Send)]
-impl Transport for WebRtcTransport {
+impl Transport for PlainTransport {
     /// Transport id.
     fn id(&self) -> TransportId {
         self.inner.id
@@ -370,17 +325,17 @@ impl Transport for WebRtcTransport {
 }
 
 #[async_trait(?Send)]
-impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport {
+impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport {
     /// Dump Transport.
     #[doc(hidden)]
-    async fn dump(&self) -> Result<WebRtcTransportDump, RequestError> {
+    async fn dump(&self) -> Result<PlainTransportDump, RequestError> {
         debug!("dump()");
 
         self.dump_impl().await
     }
 
     /// Get Transport stats.
-    async fn get_stats(&self) -> Result<Vec<WebRtcTransportStat>, RequestError> {
+    async fn get_stats(&self) -> Result<Vec<PlainTransportStat>, RequestError> {
         debug!("get_stats()");
 
         self.get_stats_impl().await
@@ -450,7 +405,7 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransp
     }
 }
 
-impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport {
+impl TransportImpl<PlainTransportDump, PlainTransportStat> for PlainTransport {
     fn router(&self) -> &Router {
         &self.inner.router
     }
@@ -494,13 +449,13 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport
     }
 }
 
-impl WebRtcTransport {
+impl PlainTransport {
     pub(super) async fn new(
         id: TransportId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: Channel,
-        data: WebRtcTransportData,
+        data: PlainTransportData,
         app_data: AppData,
         router: Router,
     ) -> Self {
@@ -517,38 +472,18 @@ impl WebRtcTransport {
                 .subscribe_to_notifications(id.to_string(), move |notification| {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
-                            Notification::IceStateChange { ice_state } => {
-                                *data.ice_state.lock().unwrap() = ice_state;
-                                for callback in handlers.ice_state_change.lock().unwrap().iter() {
-                                    callback(ice_state);
+                            Notification::Tuple(tuple) => {
+                                *data.tuple.lock().unwrap() = tuple.clone();
+
+                                for callback in handlers.tuple.lock().unwrap().iter() {
+                                    callback(&tuple);
                                 }
                             }
-                            Notification::IceSelectedTupleChange { ice_selected_tuple } => {
-                                data.ice_selected_tuple
-                                    .lock()
-                                    .unwrap()
-                                    .replace(ice_selected_tuple.clone());
-                                for callback in
-                                    handlers.ice_selected_tuple_change.lock().unwrap().iter()
-                                {
-                                    callback(&ice_selected_tuple);
-                                }
-                            }
-                            Notification::DtlsStateChange {
-                                dtls_state,
-                                dtls_remote_cert,
-                            } => {
-                                *data.dtls_state.lock().unwrap() = dtls_state;
+                            Notification::RtcpTuple(rtcp_tuple) => {
+                                data.rtcp_tuple.lock().unwrap().replace(rtcp_tuple.clone());
 
-                                if let Some(dtls_remote_cert) = dtls_remote_cert {
-                                    data.dtls_remote_cert
-                                        .lock()
-                                        .unwrap()
-                                        .replace(dtls_remote_cert);
-                                }
-
-                                for callback in handlers.dtls_state_change.lock().unwrap().iter() {
-                                    callback(dtls_state);
+                                for callback in handlers.rtcp_tuple.lock().unwrap().iter() {
+                                    callback(&rtcp_tuple);
                                 }
                             }
                             Notification::SctpStateChange { sctp_state } => {
@@ -600,67 +535,60 @@ impl WebRtcTransport {
         Self { inner }
     }
 
-    /// Provide the WebRtcTransport remote parameters.
+    /// Provide the PlainTransport remote parameters.
     pub async fn connect(
         &self,
-        remote_parameters: WebRtcTransportRemoteParameters,
+        remote_parameters: PlainTransportRemoteParameters,
     ) -> Result<(), RequestError> {
         debug!("connect()");
 
         let response = self
             .inner
             .channel
-            .request(TransportConnectRequestWebRtc {
+            .request(TransportConnectRequestPlain {
                 internal: self.get_internal(),
-                data: TransportConnectRequestWebRtcData {
-                    dtls_parameters: remote_parameters.dtls_parameters,
+                data: TransportConnectRequestPlainData {
+                    ip: remote_parameters.ip,
+                    port: remote_parameters.port,
+                    rtcp_port: remote_parameters.rtcp_port,
+                    srtp_parameters: remote_parameters.srtp_parameters,
                 },
             })
             .await?;
 
-        self.inner.data.dtls_parameters.lock().unwrap().role = response.dtls_local_role;
+        if let Some(tuple) = response.tuple {
+            *self.inner.data.tuple.lock().unwrap() = tuple;
+        }
+
+        if let Some(rtcp_tuple) = response.rtcp_tuple {
+            self.inner
+                .data
+                .rtcp_tuple
+                .lock()
+                .unwrap()
+                .replace(rtcp_tuple);
+        }
+
+        if let Some(srtp_parameters) = response.srtp_parameters {
+            self.inner
+                .data
+                .srtp_parameters
+                .lock()
+                .unwrap()
+                .replace(srtp_parameters);
+        }
 
         Ok(())
     }
 
-    /// ICE role.
-    pub fn ice_role(&self) -> IceRole {
-        self.inner.data.ice_role
+    /// Transport tuple.
+    pub fn tuple(&self) -> TransportTuple {
+        self.inner.data.tuple.lock().unwrap().clone()
     }
 
-    /// ICE parameters.
-    pub fn ice_parameters(&self) -> IceParameters {
-        self.inner.data.ice_parameters.clone()
-    }
-
-    /// ICE candidates.
-    pub fn ice_candidates(&self) -> Vec<IceCandidate> {
-        self.inner.data.ice_candidates.clone()
-    }
-
-    /// ICE state.
-    pub fn ice_state(&self) -> IceState {
-        *self.inner.data.ice_state.lock().unwrap()
-    }
-
-    /// ICE selected tuple.
-    pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
-        self.inner.data.ice_selected_tuple.lock().unwrap().clone()
-    }
-
-    /// DTLS parameters.
-    pub fn dtls_parameters(&self) -> DtlsParameters {
-        self.inner.data.dtls_parameters.lock().unwrap().clone()
-    }
-
-    /// DTLS state.
-    pub fn dtls_state(&self) -> DtlsState {
-        *self.inner.data.dtls_state.lock().unwrap()
-    }
-
-    /// Remote certificate in PEM format.
-    pub fn dtls_remote_cert(&self) -> Option<String> {
-        self.inner.data.dtls_remote_cert.lock().unwrap().clone()
+    /// Transport RTCP tuple.
+    pub fn rtcp_tuple(&self) -> Option<TransportTuple> {
+        self.inner.data.rtcp_tuple.lock().unwrap().clone()
     }
 
     /// SCTP parameters.
@@ -673,46 +601,24 @@ impl WebRtcTransport {
         *self.inner.data.sctp_state.lock().unwrap()
     }
 
-    /// Restart ICE.
-    pub async fn restart_ice(&self) -> Result<IceParameters, RequestError> {
-        debug!("restart_ice()");
-
-        let response = self
-            .inner
-            .channel
-            .request(TransportRestartIceRequest {
-                internal: self.get_internal(),
-            })
-            .await?;
-
-        Ok(response.ice_parameters)
+    /// SRTP parameters.
+    pub fn srtp_parameters(&self) -> Option<SrtpParameters> {
+        self.inner.data.srtp_parameters.lock().unwrap().clone()
     }
 
-    pub fn connect_ice_state_change<F: Fn(IceState) + Send + 'static>(&self, callback: F) {
+    pub fn connect_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
-            .ice_state_change
+            .tuple
             .lock()
             .unwrap()
             .push(Box::new(callback));
     }
 
-    pub fn connect_ice_selected_tuple_change<F: Fn(&TransportTuple) + Send + 'static>(
-        &self,
-        callback: F,
-    ) {
+    pub fn connect_rtcp_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
-            .ice_selected_tuple_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
-    }
-
-    pub fn connect_dtls_state_change<F: Fn(DtlsState) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .dtls_state_change
+            .rtcp_tuple
             .lock()
             .unwrap()
             .push(Box::new(callback));

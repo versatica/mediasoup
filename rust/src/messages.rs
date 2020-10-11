@@ -9,12 +9,14 @@ use crate::data_structures::{
     TransportListenIp, TransportTuple,
 };
 use crate::ortc::RtpMapping;
+use crate::plain_transport::PlainTransportOptions;
 use crate::producer::{
     ProducerDump, ProducerId, ProducerStat, ProducerTraceEventType, ProducerType,
 };
 use crate::router::{RouterDump, RouterId};
 use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
+use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
@@ -233,7 +235,7 @@ request_response!(
         internal: TransportInternal,
         data: RouterCreateWebrtcTransportData,
     },
-    WebRtcTransportResponse {
+    WebRtcTransportData {
         ice_role: IceRole,
         ice_parameters: IceParameters,
         ice_candidates: Vec<IceCandidate>,
@@ -250,45 +252,51 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePlainTransportData {
-    pub(crate) listen_ip: TransportListenIp,
-    pub(crate) rtcp_mux: bool,
-    pub(crate) comedia: bool,
-    pub(crate) enable_sctp: bool,
-    pub(crate) num_sctp_streams: NumSctpStreams,
-    pub(crate) max_sctp_message_size: u32,
-    pub(crate) sctp_send_buffer_size: u32,
-    pub(crate) enable_srtp: bool,
-    pub(crate) srtp_crypto_suite: String,
+    listen_ip: TransportListenIp,
+    rtcp_mux: bool,
+    comedia: bool,
+    enable_sctp: bool,
+    num_sctp_streams: NumSctpStreams,
+    max_sctp_message_size: u32,
+    sctp_send_buffer_size: u32,
+    enable_srtp: bool,
+    srtp_crypto_suite: SrtpCryptoSuite,
     is_data_channel: bool,
 }
 
 impl RouterCreatePlainTransportData {
-    pub(crate) fn new(listen_ip: TransportListenIp) -> Self {
+    pub(crate) fn from_options(plain_transport_options: &PlainTransportOptions) -> Self {
         Self {
-            listen_ip,
-            rtcp_mux: true,
-            comedia: false,
-            enable_sctp: false,
-            num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 262144,
-            sctp_send_buffer_size: 262144,
-            enable_srtp: false,
-            srtp_crypto_suite: "AES_CM_128_HMAC_SHA1_80".to_string(),
+            listen_ip: plain_transport_options.listen_ip.clone(),
+            rtcp_mux: plain_transport_options.rtcp_mux,
+            comedia: plain_transport_options.comedia,
+            enable_sctp: plain_transport_options.enable_sctp,
+            num_sctp_streams: plain_transport_options.num_sctp_streams,
+            max_sctp_message_size: plain_transport_options.max_sctp_message_size,
+            sctp_send_buffer_size: plain_transport_options.sctp_send_buffer_size,
+            enable_srtp: plain_transport_options.enable_srtp,
+            srtp_crypto_suite: plain_transport_options.srtp_crypto_suite,
             is_data_channel: false,
         }
     }
 }
 
-// request_response!(
-//     "router.createPlainTransport",
-//     RouterCreatePlainTransportRequest {
-//         internal: TransportInternal,
-//         data: RouterCreatePlainTransportData,
-//     },
-//     RouterCreatePlainTransportResponse {
-//         // TODO
-//     },
-// );
+request_response!(
+    "router.createPlainTransport",
+    RouterCreatePlainTransportRequest {
+        internal: TransportInternal,
+        data: RouterCreatePlainTransportData,
+    },
+    PlainTransportData {
+        rtcp_mux: bool,
+        comedia: bool,
+        tuple: Mutex<TransportTuple>,
+        rtcp_tuple: Mutex<Option<TransportTuple>>,
+        sctp_parameters: Option<SctpParameters>,
+        sctp_state: Mutex<Option<SctpState>>,
+        srtp_parameters: Mutex<Option<SrtpParameters>>,
+    },
+);
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -425,6 +433,27 @@ request_response!(
 );
 
 #[derive(Debug, Serialize)]
+pub(crate) struct TransportConnectRequestPlainData {
+    pub(crate) ip: Option<String>,
+    pub(crate) port: Option<u16>,
+    pub(crate) rtcp_port: Option<u16>,
+    pub(crate) srtp_parameters: Option<SrtpParameters>,
+}
+
+request_response!(
+    "transport.connect",
+    TransportConnectRequestPlain {
+        internal: TransportInternal,
+        data: TransportConnectRequestPlainData,
+    },
+    TransportConnectResponsePlain {
+        tuple: Option<TransportTuple>,
+        rtcp_tuple: Option<TransportTuple>,
+        srtp_parameters: Option<SrtpParameters>,
+    },
+);
+
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TransportSetMaxIncomingBitrateData {
     pub(crate) bitrate: u32,
@@ -450,7 +479,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct TransportProduceRequestData {
+pub(crate) struct TransportProduceData {
     pub(crate) kind: MediaKind,
     pub(crate) rtp_parameters: RtpParameters,
     pub(crate) rtp_mapping: RtpMapping,
@@ -462,7 +491,7 @@ request_response!(
     "transport.produce",
     TransportProduceRequest {
         internal: ProducerInternal,
-        data: TransportProduceRequestData,
+        data: TransportProduceData,
     },
     TransportProduceResponse {
         r#type: ProducerType,
@@ -471,7 +500,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct TransportConsumeRequestData {
+pub(crate) struct TransportConsumeData {
     pub(crate) kind: MediaKind,
     pub(crate) rtp_parameters: RtpParameters,
     pub(crate) r#type: ConsumerType,
@@ -484,7 +513,7 @@ request_response!(
     "transport.consume",
     TransportConsumeRequest {
         internal: ConsumerInternal,
-        data: TransportConsumeRequestData,
+        data: TransportConsumeData,
     },
     TransportConsumeResponse {
         paused: bool,
@@ -496,7 +525,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct TransportProduceDataRequestData {
+pub(crate) struct TransportProduceDataData {
     pub(crate) r#type: DataProducerType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -508,7 +537,7 @@ request_response!(
     "transport.produceData",
     TransportProduceDataRequest {
         internal: DataProducerInternal,
-        data: TransportProduceDataRequestData,
+        data: TransportProduceDataData,
     },
     TransportProduceDataResponse {
         r#type: DataProducerType,
@@ -520,7 +549,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct TransportConsumeDataRequestData {
+pub(crate) struct TransportConsumeDataData {
     pub(crate) r#type: DataConsumerType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -532,7 +561,7 @@ request_response!(
     "transport.consumeData",
     TransportConsumeDataRequest {
         internal: DataConsumerInternal,
-        data: TransportConsumeDataRequestData,
+        data: TransportConsumeDataData,
     },
     TransportConsumeDataResponse {
         r#type: DataConsumerType,
@@ -544,7 +573,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct TransportEnableTraceEventRequestData {
+pub(crate) struct TransportEnableTraceEventData {
     pub(crate) types: Vec<TransportTraceEventType>,
 }
 
@@ -552,7 +581,7 @@ request_response!(
     "transport.enableTraceEvent",
     TransportEnableTraceEventRequest {
         internal: TransportInternal,
-        data: TransportEnableTraceEventRequestData,
+        data: TransportEnableTraceEventData,
     },
 );
 
@@ -595,7 +624,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct ProducerEnableTraceEventRequestData {
+pub(crate) struct ProducerEnableTraceEventData {
     pub(crate) types: Vec<ProducerTraceEventType>,
 }
 
@@ -603,7 +632,7 @@ request_response!(
     "producer.enableTraceEvent",
     ProducerEnableTraceEventRequest {
         internal: ProducerInternal,
-        data: ProducerEnableTraceEventRequestData,
+        data: ProducerEnableTraceEventData,
     },
 );
 
@@ -655,7 +684,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct ConsumerSetPriorityRequestData {
+pub(crate) struct ConsumerSetPriorityData {
     pub(crate) priority: u8,
 }
 
@@ -663,7 +692,7 @@ request_response!(
     "consumer.setPriority",
     ConsumerSetPriorityRequest {
         internal: ConsumerInternal,
-        data: ConsumerSetPriorityRequestData,
+        data: ConsumerSetPriorityData,
     },
     ConsumerSetPriorityResponse { priority: u8 },
 );
@@ -677,7 +706,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct ConsumerEnableTraceEventRequestData {
+pub(crate) struct ConsumerEnableTraceEventData {
     pub(crate) types: Vec<ConsumerTraceEventType>,
 }
 
@@ -685,7 +714,7 @@ request_response!(
     "producer.enableTraceEvent",
     ConsumerEnableTraceEventRequest {
         internal: ConsumerInternal,
-        data: ConsumerEnableTraceEventRequestData,
+        data: ConsumerEnableTraceEventData,
     },
 );
 
@@ -747,7 +776,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct DataConsumerSetBufferedAmountLowThresholdRequestData {
+pub(crate) struct DataConsumerSetBufferedAmountLowThresholdData {
     pub(crate) threshold: u32,
 }
 
@@ -755,7 +784,7 @@ request_response!(
     "dataConsumer.setBufferedAmountLowThreshold",
     DataConsumerSetBufferedAmountLowThresholdRequest {
         internal: DataConsumerInternal,
-        data: DataConsumerSetBufferedAmountLowThresholdRequestData,
+        data: DataConsumerSetBufferedAmountLowThresholdData,
     },
 );
 

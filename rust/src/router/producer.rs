@@ -1,8 +1,8 @@
 use crate::consumer::RtpStreamParams;
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
-    ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
-    ProducerEnableTraceEventRequestData, ProducerGetStatsRequest, ProducerInternal,
+    ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
+    ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
     ProducerPauseRequest, ProducerResumeRequest,
 };
 use crate::ortc::RtpMapping;
@@ -464,7 +464,7 @@ impl Producer {
             .channel
             .request(ProducerEnableTraceEventRequest {
                 internal: self.get_internal(),
-                data: ProducerEnableTraceEventRequestData { types },
+                data: ProducerEnableTraceEventData { types },
             })
             .await
     }
