@@ -6,6 +6,8 @@ authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
 edition = "2018"
 license = "ISC"
 keywords = ["webrtc", "ortc", "sfu"]
+documentation = "https://docs.rs/mediasoup"
+repository = "https://github.com/nazar-pc/mediasoup/tree/rust"
 
 [dependencies]
 async-channel = "1.5.1"
