@@ -351,7 +351,7 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
         self.enable_trace_event_impl(types).await
     }
 
-    fn connect_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) {
+    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_producer
@@ -360,7 +360,7 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
             .push(Box::new(callback));
     }
 
-    fn connect_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) {
+    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_consumer
@@ -369,7 +369,7 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
             .push(Box::new(callback));
     }
 
-    fn connect_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F) {
+    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_data_producer
@@ -378,7 +378,7 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
             .push(Box::new(callback));
     }
 
-    fn connect_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F) {
+    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_data_consumer
@@ -387,7 +387,7 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
             .push(Box::new(callback));
     }
 
-    fn connect_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) {
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .trace
@@ -396,7 +396,7 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
             .push(Box::new(callback));
     }
 
-    fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed
@@ -589,7 +589,7 @@ impl PlainTransport {
         self.inner.data.srtp_parameters.lock().unwrap().clone()
     }
 
-    pub fn connect_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) {
+    pub fn on_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .tuple
@@ -598,7 +598,7 @@ impl PlainTransport {
             .push(Box::new(callback));
     }
 
-    pub fn connect_rtcp_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) {
+    pub fn on_rtcp_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .rtcp_tuple
@@ -607,7 +607,7 @@ impl PlainTransport {
             .push(Box::new(callback));
     }
 
-    pub fn connect_sctp_state_change<F: Fn(SctpState) + Send + 'static>(&self, callback: F) {
+    pub fn on_sctp_state_change<F: Fn(SctpState) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .sctp_state_change

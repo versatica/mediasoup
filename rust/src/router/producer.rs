@@ -485,7 +485,7 @@ impl Producer {
     // 		'producer.send', this._internal, undefined, rtpPacket);
     // }
 
-    pub fn connect_score<F: Fn(&Vec<ProducerScore>) + Send + 'static>(&self, callback: F) {
+    pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .score
@@ -494,7 +494,7 @@ impl Producer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_video_orientation_change<F: Fn(ProducerVideoOrientation) + Send + 'static>(
+    pub fn on_video_orientation_change<F: Fn(ProducerVideoOrientation) + Send + 'static>(
         &self,
         callback: F,
     ) {
@@ -506,7 +506,7 @@ impl Producer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_pause<F: Fn() + Send + 'static>(&self, callback: F) {
+    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .pause
@@ -515,7 +515,7 @@ impl Producer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_resume<F: Fn() + Send + 'static>(&self, callback: F) {
+    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .resume
@@ -524,7 +524,7 @@ impl Producer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(&self, callback: F) {
+    pub fn on_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .trace
@@ -533,7 +533,7 @@ impl Producer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed

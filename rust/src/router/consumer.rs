@@ -680,7 +680,7 @@ impl Consumer {
             .await
     }
 
-    pub fn connect_pause<F: Fn() + Send + 'static>(&self, callback: F) {
+    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .pause
@@ -689,7 +689,7 @@ impl Consumer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_resume<F: Fn() + Send + 'static>(&self, callback: F) {
+    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .resume
@@ -698,7 +698,7 @@ impl Consumer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_score<F: Fn(&ConsumerScore) + Send + 'static>(&self, callback: F) {
+    pub fn on_score<F: Fn(&ConsumerScore) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .score
@@ -707,7 +707,7 @@ impl Consumer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_layers_change<F: Fn(&ConsumerLayers) + Send + 'static>(&self, callback: F) {
+    pub fn on_layers_change<F: Fn(&ConsumerLayers) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .layers_change
@@ -716,7 +716,7 @@ impl Consumer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_trace<F: Fn(&ConsumerTraceEventData) + Send + 'static>(&self, callback: F) {
+    pub fn on_trace<F: Fn(&ConsumerTraceEventData) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .trace
@@ -725,7 +725,7 @@ impl Consumer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed

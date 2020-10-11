@@ -261,7 +261,7 @@ impl Router {
         Ok(transport)
     }
 
-    pub fn connect_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) {
+    pub fn on_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_transport
@@ -270,7 +270,7 @@ impl Router {
             .push(Box::new(callback));
     }
 
-    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed
@@ -285,7 +285,7 @@ impl Router {
     {
         {
             let producers_weak = Arc::downgrade(&self.inner.producers);
-            transport.connect_new_producer(move |producer| {
+            transport.on_new_producer(move |producer| {
                 let producer_id = producer.id();
                 if let Some(producers) = producers_weak.upgrade() {
                     producers
@@ -295,7 +295,7 @@ impl Router {
                 }
                 {
                     let producers_weak = producers_weak.clone();
-                    producer.connect_closed(move || {
+                    producer.on_closed(move || {
                         if let Some(producers) = producers_weak.upgrade() {
                             producers.lock().unwrap().remove(&producer_id);
                         }
@@ -305,7 +305,7 @@ impl Router {
         }
         {
             let data_producers_weak = Arc::downgrade(&self.inner.data_producers);
-            transport.connect_new_data_producer(move |data_producer| {
+            transport.on_new_data_producer(move |data_producer| {
                 let data_producer_id = data_producer.id();
                 if let Some(data_producers) = data_producers_weak.upgrade() {
                     data_producers
@@ -315,7 +315,7 @@ impl Router {
                 }
                 {
                     let data_producers_weak = data_producers_weak.clone();
-                    data_producer.connect_closed(move || {
+                    data_producer.on_closed(move || {
                         if let Some(data_producers) = data_producers_weak.upgrade() {
                             data_producers.lock().unwrap().remove(&data_producer_id);
                         }

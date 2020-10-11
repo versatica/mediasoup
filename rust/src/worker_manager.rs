@@ -106,7 +106,7 @@ impl WorkerManager {
         Ok(worker)
     }
 
-    pub fn connect_new_worker<F: Fn(&Worker) + Send + 'static>(&self, callback: F) {
+    pub fn on_new_worker<F: Fn(&Worker) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_worker

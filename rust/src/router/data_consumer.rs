@@ -417,7 +417,7 @@ impl DataConsumer {
     // 		'dataConsumer.send', this._internal, requestData, message);
     // }
 
-    pub fn connect_sctp_send_buffer_full<F: Fn() + Send + 'static>(&self, callback: F) {
+    pub fn on_sctp_send_buffer_full<F: Fn() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .sctp_send_buffer_full
@@ -426,7 +426,7 @@ impl DataConsumer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_buffered_amount_low<F: Fn() + Send + 'static>(&self, callback: F) {
+    pub fn on_buffered_amount_low<F: Fn() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .buffered_amount_low
@@ -435,7 +435,7 @@ impl DataConsumer {
             .push(Box::new(callback));
     }
 
-    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed

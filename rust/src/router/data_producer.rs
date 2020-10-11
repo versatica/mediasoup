@@ -273,7 +273,7 @@ impl DataProducer {
     // 		'dataProducer.send', this._internal, notifData, message);
     // }
 
-    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed

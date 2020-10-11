@@ -576,7 +576,7 @@ impl Worker {
         Ok(router)
     }
 
-    pub fn connect_new_router<F: Fn(&Router) + Send + 'static>(&self, callback: F) {
+    pub fn on_new_router<F: Fn(&Router) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .new_router
@@ -585,7 +585,7 @@ impl Worker {
             .push(Box::new(callback));
     }
 
-    pub fn connect_died<F: FnOnce(ExitStatus) + Send + 'static>(&self, callback: F) {
+    pub fn on_died<F: FnOnce(ExitStatus) + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .died
@@ -594,7 +594,7 @@ impl Worker {
             .push(Box::new(callback));
     }
 
-    pub fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
         self.inner
             .handlers
             .closed

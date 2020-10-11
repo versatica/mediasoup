@@ -157,17 +157,17 @@ pub trait TransportGeneric<Dump, Stat>: Transport {
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError>;
 
-    fn connect_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F);
+    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F);
 
-    fn connect_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F);
+    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F);
 
-    fn connect_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F);
+    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F);
 
-    fn connect_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F);
+    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F);
 
-    fn connect_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F);
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F);
 
-    fn connect_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
+    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
 }
 
 #[derive(Debug, Error)]
@@ -662,7 +662,7 @@ where
             let stream_id = sctp_stream_parameters.stream_id;
             let transport = self.clone();
             let executor = Arc::clone(self.executor());
-            data_consumer.connect_closed(move || {
+            data_consumer.on_closed(move || {
                 executor
                     .spawn(async move {
                         transport.deallocate_sctp_stream_id(stream_id).await;
