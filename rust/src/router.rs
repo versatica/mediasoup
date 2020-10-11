@@ -20,6 +20,7 @@ use crate::uuid_based_wrapper_type;
 use crate::consumer::ConsumerId;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::AppData;
+use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     RouterCloseRequest, RouterCreatePlainTransportData, RouterCreatePlainTransportRequest,
     RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
@@ -36,7 +37,6 @@ use async_executor::Executor;
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::mem;
 use std::sync::{Arc, Mutex};
 
 uuid_based_wrapper_type!(RouterId);
@@ -68,8 +68,8 @@ pub enum NewTransport<'a> {
 
 #[derive(Default)]
 struct Handlers {
-    new_transport: Mutex<Vec<Box<dyn Fn(NewTransport) + Send>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    new_transport: Bag<dyn Fn(NewTransport) + Send>,
+    closed: Bag<dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -90,10 +90,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
-        for callback in callbacks {
-            callback();
-        }
+        self.handlers.closed.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -210,9 +207,9 @@ impl Router {
         );
         let transport = transport_fut.await;
 
-        for callback in self.inner.handlers.new_transport.lock().unwrap().iter() {
+        self.inner.handlers.new_transport.call(|callback| {
             callback(NewTransport::WebRtc(&transport));
-        }
+        });
 
         self.after_transport_creation(&transport);
 
@@ -252,31 +249,21 @@ impl Router {
         );
         let transport = transport_fut.await;
 
-        for callback in self.inner.handlers.new_transport.lock().unwrap().iter() {
+        self.inner.handlers.new_transport.call(|callback| {
             callback(NewTransport::Plain(&transport));
-        }
+        });
 
         self.after_transport_creation(&transport);
 
         Ok(transport)
     }
 
-    pub fn on_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .new_transport
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.new_transport.add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.closed.add(Box::new(callback))
     }
 
     fn after_transport_creation<Dump, Stat, T>(&self, transport: &T)
@@ -285,43 +272,51 @@ impl Router {
     {
         {
             let producers_weak = Arc::downgrade(&self.inner.producers);
-            transport.on_new_producer(move |producer| {
-                let producer_id = producer.id();
-                if let Some(producers) = producers_weak.upgrade() {
-                    producers
-                        .lock()
-                        .unwrap()
-                        .insert(producer_id, producer.downgrade());
-                }
-                {
-                    let producers_weak = producers_weak.clone();
-                    producer.on_closed(move || {
-                        if let Some(producers) = producers_weak.upgrade() {
-                            producers.lock().unwrap().remove(&producer_id);
-                        }
-                    });
-                }
-            });
+            transport
+                .on_new_producer(move |producer| {
+                    let producer_id = producer.id();
+                    if let Some(producers) = producers_weak.upgrade() {
+                        producers
+                            .lock()
+                            .unwrap()
+                            .insert(producer_id, producer.downgrade());
+                    }
+                    {
+                        let producers_weak = producers_weak.clone();
+                        producer
+                            .on_closed(move || {
+                                if let Some(producers) = producers_weak.upgrade() {
+                                    producers.lock().unwrap().remove(&producer_id);
+                                }
+                            })
+                            .detach();
+                    }
+                })
+                .detach();
         }
         {
             let data_producers_weak = Arc::downgrade(&self.inner.data_producers);
-            transport.on_new_data_producer(move |data_producer| {
-                let data_producer_id = data_producer.id();
-                if let Some(data_producers) = data_producers_weak.upgrade() {
-                    data_producers
-                        .lock()
-                        .unwrap()
-                        .insert(data_producer_id, data_producer.downgrade());
-                }
-                {
-                    let data_producers_weak = data_producers_weak.clone();
-                    data_producer.on_closed(move || {
-                        if let Some(data_producers) = data_producers_weak.upgrade() {
-                            data_producers.lock().unwrap().remove(&data_producer_id);
-                        }
-                    });
-                }
-            });
+            transport
+                .on_new_data_producer(move |data_producer| {
+                    let data_producer_id = data_producer.id();
+                    if let Some(data_producers) = data_producers_weak.upgrade() {
+                        data_producers
+                            .lock()
+                            .unwrap()
+                            .insert(data_producer_id, data_producer.downgrade());
+                    }
+                    {
+                        let data_producers_weak = data_producers_weak.clone();
+                        data_producer
+                            .on_closed(move || {
+                                if let Some(data_producers) = data_producers_weak.upgrade() {
+                                    data_producers.lock().unwrap().remove(&data_producer_id);
+                                }
+                            })
+                            .detach();
+                    }
+                })
+                .detach();
         }
     }
 

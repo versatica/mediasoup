@@ -11,6 +11,7 @@
 //! referer to it in the meantime.
 
 pub mod data_structures;
+pub mod event_handlers;
 mod macros;
 mod messages;
 pub mod ortc;

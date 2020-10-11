@@ -1,4 +1,5 @@
 use crate::data_structures::AppData;
+use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
     DataProducerInternal,
@@ -10,8 +11,7 @@ use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
 use log::*;
 use serde::{Deserialize, Serialize};
-use std::mem;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(DataProducerId);
 
@@ -87,7 +87,7 @@ pub struct DataProducerStat {
 
 #[derive(Default)]
 struct Handlers {
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    closed: Bag<dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -108,10 +108,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
-        for callback in callbacks {
-            callback();
-        }
+        self.handlers.closed.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -273,13 +270,8 @@ impl DataProducer {
     // 		'dataProducer.send', this._internal, notifData, message);
     // }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.closed.add(Box::new(callback))
     }
 
     pub(super) fn downgrade(&self) -> WeakDataProducer {

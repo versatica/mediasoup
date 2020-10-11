@@ -5,6 +5,7 @@ use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
     TransportListenIp, TransportTuple,
 };
+use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     TransportCloseRequest, TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData,
     TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
@@ -25,10 +26,9 @@ use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::mem;
 use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use thiserror::Error;
 
 /// Struct that protects an invariant of having non-empty list of listen IPs
@@ -192,16 +192,16 @@ pub struct WebRtcTransportRemoteParameters {
 
 #[derive(Default)]
 struct Handlers {
-    new_producer: Mutex<Vec<Box<dyn Fn(&Producer) + Send>>>,
-    new_consumer: Mutex<Vec<Box<dyn Fn(&Consumer) + Send>>>,
-    new_data_producer: Mutex<Vec<Box<dyn Fn(&DataProducer) + Send>>>,
-    new_data_consumer: Mutex<Vec<Box<dyn Fn(&DataConsumer) + Send>>>,
-    ice_state_change: Mutex<Vec<Box<dyn Fn(IceState) + Send>>>,
-    ice_selected_tuple_change: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
-    dtls_state_change: Mutex<Vec<Box<dyn Fn(DtlsState) + Send>>>,
-    sctp_state_change: Mutex<Vec<Box<dyn Fn(SctpState) + Send>>>,
-    trace: Mutex<Vec<Box<dyn Fn(&TransportTraceEventData) + Send>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    new_producer: Bag<dyn Fn(&Producer) + Send>,
+    new_consumer: Bag<dyn Fn(&Consumer) + Send>,
+    new_data_producer: Bag<dyn Fn(&DataProducer) + Send>,
+    new_data_consumer: Bag<dyn Fn(&DataConsumer) + Send>,
+    ice_state_change: Bag<dyn Fn(IceState) + Send>,
+    ice_selected_tuple_change: Bag<dyn Fn(&TransportTuple) + Send>,
+    dtls_state_change: Bag<dyn Fn(DtlsState) + Send>,
+    sctp_state_change: Bag<dyn Fn(SctpState) + Send>,
+    trace: Bag<dyn Fn(&TransportTraceEventData) + Send>,
+    closed: Bag<dyn FnOnce() + Send>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -247,10 +247,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
-        for callback in callbacks {
-            callback();
-        }
+        self.handlers.closed.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -307,9 +304,9 @@ impl Transport for WebRtcTransport {
 
         let producer = self.produce_impl(producer_options).await?;
 
-        for callback in self.inner.handlers.new_producer.lock().unwrap().iter() {
+        self.inner.handlers.new_producer.call(|callback| {
             callback(&producer);
-        }
+        });
 
         Ok(producer)
     }
@@ -322,9 +319,9 @@ impl Transport for WebRtcTransport {
 
         let consumer = self.consume_impl(consumer_options).await?;
 
-        for callback in self.inner.handlers.new_consumer.lock().unwrap().iter() {
+        self.inner.handlers.new_consumer.call(|callback| {
             callback(&consumer);
-        }
+        });
 
         Ok(consumer)
     }
@@ -342,9 +339,9 @@ impl Transport for WebRtcTransport {
             .produce_data_impl(DataProducerType::Sctp, data_producer_options)
             .await?;
 
-        for callback in self.inner.handlers.new_data_producer.lock().unwrap().iter() {
+        self.inner.handlers.new_data_producer.call(|callback| {
             callback(&data_producer);
-        }
+        });
 
         Ok(data_producer)
     }
@@ -362,9 +359,9 @@ impl Transport for WebRtcTransport {
             .consume_data_impl(DataConsumerType::Sctp, data_consumer_options)
             .await?;
 
-        for callback in self.inner.handlers.new_data_consumer.lock().unwrap().iter() {
+        self.inner.handlers.new_data_consumer.call(|callback| {
             callback(&data_consumer);
-        }
+        });
 
         Ok(data_consumer)
     }
@@ -396,58 +393,40 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransp
         self.enable_trace_event_impl(types).await
     }
 
-    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .new_producer
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.new_producer.add(Box::new(callback))
     }
 
-    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .new_consumer
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.new_consumer.add(Box::new(callback))
     }
 
-    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F) {
+    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner
             .handlers
             .new_data_producer
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F) {
+    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner
             .handlers
             .new_data_consumer
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .trace
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.closed.add(Box::new(callback))
     }
 }
 
@@ -502,20 +481,18 @@ impl WebRtcTransport {
                         Ok(notification) => match notification {
                             Notification::IceStateChange { ice_state } => {
                                 *data.ice_state.lock().unwrap() = ice_state;
-                                for callback in handlers.ice_state_change.lock().unwrap().iter() {
+                                handlers.ice_state_change.call(|callback| {
                                     callback(ice_state);
-                                }
+                                });
                             }
                             Notification::IceSelectedTupleChange { ice_selected_tuple } => {
                                 data.ice_selected_tuple
                                     .lock()
                                     .unwrap()
                                     .replace(ice_selected_tuple.clone());
-                                for callback in
-                                    handlers.ice_selected_tuple_change.lock().unwrap().iter()
-                                {
+                                handlers.ice_selected_tuple_change.call(|callback| {
                                     callback(&ice_selected_tuple);
-                                }
+                                });
                             }
                             Notification::DtlsStateChange {
                                 dtls_state,
@@ -530,21 +507,21 @@ impl WebRtcTransport {
                                         .replace(dtls_remote_cert);
                                 }
 
-                                for callback in handlers.dtls_state_change.lock().unwrap().iter() {
+                                handlers.dtls_state_change.call(|callback| {
                                     callback(dtls_state);
-                                }
+                                });
                             }
                             Notification::SctpStateChange { sctp_state } => {
                                 data.sctp_state.lock().unwrap().replace(sctp_state);
 
-                                for callback in handlers.sctp_state_change.lock().unwrap().iter() {
+                                handlers.sctp_state_change.call(|callback| {
                                     callback(sctp_state);
-                                }
+                                });
                             }
                             Notification::Trace(trace_event_data) => {
-                                for callback in handlers.trace.lock().unwrap().iter() {
+                                handlers.trace.call(|callback| {
                                     callback(&trace_event_data);
-                                }
+                                });
                             }
                         },
                         Err(error) => {
@@ -671,43 +648,38 @@ impl WebRtcTransport {
         Ok(response.ice_parameters)
     }
 
-    pub fn on_ice_state_change<F: Fn(IceState) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .ice_state_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_ice_state_change<F: Fn(IceState) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.ice_state_change.add(Box::new(callback))
     }
 
     pub fn on_ice_selected_tuple_change<F: Fn(&TransportTuple) + Send + 'static>(
         &self,
         callback: F,
-    ) {
+    ) -> HandlerId {
         self.inner
             .handlers
             .ice_selected_tuple_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    pub fn on_dtls_state_change<F: Fn(DtlsState) + Send + 'static>(&self, callback: F) {
+    pub fn on_dtls_state_change<F: Fn(DtlsState) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner
             .handlers
             .dtls_state_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    pub fn on_sctp_state_change<F: Fn(SctpState) + Send + 'static>(&self, callback: F) {
+    pub fn on_sctp_state_change<F: Fn(SctpState) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner
             .handlers
             .sctp_state_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
     fn get_internal(&self) -> TransportInternal {

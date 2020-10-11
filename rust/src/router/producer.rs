@@ -1,5 +1,6 @@
 use crate::consumer::RtpStreamParams;
 use crate::data_structures::{AppData, EventDirection};
+use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
     ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
@@ -15,7 +16,6 @@ use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::mem;
 use std::sync::{Arc, Mutex, Weak};
 
 uuid_based_wrapper_type!(ProducerId);
@@ -210,12 +210,12 @@ enum Notification {
 
 #[derive(Default)]
 struct Handlers {
-    score: Mutex<Vec<Box<dyn Fn(&Vec<ProducerScore>) + Send>>>,
-    video_orientation_change: Mutex<Vec<Box<dyn Fn(ProducerVideoOrientation) + Send>>>,
-    pause: Mutex<Vec<Box<dyn Fn() + Send>>>,
-    resume: Mutex<Vec<Box<dyn Fn() + Send>>>,
-    trace: Mutex<Vec<Box<dyn Fn(&ProducerTraceEventData) + Send>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    score: Bag<dyn Fn(&Vec<ProducerScore>) + Send>,
+    video_orientation_change: Bag<dyn Fn(ProducerVideoOrientation) + Send>,
+    pause: Bag<dyn Fn() + Send>,
+    resume: Bag<dyn Fn() + Send>,
+    trace: Bag<dyn Fn(&ProducerTraceEventData) + Send>,
+    closed: Bag<dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -240,10 +240,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
-        for callback in callbacks {
-            callback();
-        }
+        self.handlers.closed.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -299,21 +296,19 @@ impl Producer {
                         Ok(notification) => match notification {
                             Notification::Score(scores) => {
                                 *score.lock().unwrap() = scores.clone();
-                                for callback in handlers.score.lock().unwrap().iter() {
+                                handlers.score.call(|callback| {
                                     callback(&scores);
-                                }
+                                });
                             }
                             Notification::VideoOrientationChange(video_orientation) => {
-                                for callback in
-                                    handlers.video_orientation_change.lock().unwrap().iter()
-                                {
+                                handlers.video_orientation_change.call(|callback| {
                                     callback(video_orientation);
-                                }
+                                });
                             }
                             Notification::Trace(trace_event_data) => {
-                                for callback in handlers.trace.lock().unwrap().iter() {
+                                handlers.trace.call(|callback| {
                                     callback(&trace_event_data);
-                                }
+                                });
                             }
                         },
                         Err(error) => {
@@ -421,9 +416,7 @@ impl Producer {
         *paused = true;
 
         if !was_paused {
-            for callback in self.inner.handlers.pause.lock().unwrap().iter() {
-                callback();
-            }
+            self.inner.handlers.pause.call_simple();
         }
 
         Ok(())
@@ -445,9 +438,7 @@ impl Producer {
         *paused = false;
 
         if was_paused {
-            for callback in self.inner.handlers.resume.lock().unwrap().iter() {
-                callback();
-            }
+            self.inner.handlers.resume.call_simple();
         }
 
         Ok(())
@@ -485,61 +476,37 @@ impl Producer {
     // 		'producer.send', this._internal, undefined, rtpPacket);
     // }
 
-    pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .score
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.score.add(Box::new(callback))
     }
 
     pub fn on_video_orientation_change<F: Fn(ProducerVideoOrientation) + Send + 'static>(
         &self,
         callback: F,
-    ) {
+    ) -> HandlerId {
         self.inner
             .handlers
             .video_orientation_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .pause
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.pause.add(Box::new(callback))
     }
 
-    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .resume
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.resume.add(Box::new(callback))
     }
 
-    pub fn on_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .trace
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
+        self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.closed.add(Box::new(callback))
     }
 
     /// Consumable RTP parameters.

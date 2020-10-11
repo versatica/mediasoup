@@ -1,14 +1,15 @@
+use crate::event_handlers::{Bag, HandlerId};
 use crate::worker::{Worker, WorkerSettings};
 use async_executor::Executor;
 use async_oneshot::Sender;
 use futures_lite::future;
 use std::io;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 #[derive(Default)]
 struct Handlers {
-    new_worker: Mutex<Vec<Box<dyn Fn(&Worker) + Send>>>,
+    new_worker: Bag<dyn Fn(&Worker) + Send>,
 }
 
 struct Inner {
@@ -42,15 +43,15 @@ struct Inner {
 /// })
 /// ```
 ///
-/// If you already happen to have [`async_executor::Executor`] instance available, [`WorkerManager::with_executor`] can
-/// be used to create an instance instead.
+/// If you already happen to have [`async_executor::Executor`] instance available,
+/// [`WorkerManager::with_executor()`] can be used to create an instance instead.
 #[derive(Clone)]
 pub struct WorkerManager {
     inner: Arc<Inner>,
 }
 
 impl WorkerManager {
-    /// Create new worker manager, internally a new thread with executor will be created
+    /// Create new worker manager, internally a new thread with executor will be created.
     pub fn new(worker_binary: PathBuf) -> Self {
         let executor = Arc::new(Executor::new());
         let (stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
@@ -74,7 +75,7 @@ impl WorkerManager {
         Self { inner }
     }
 
-    /// Create new worker manager, uses externally created executor
+    /// Create new worker manager, uses externally provided executor.
     pub fn with_executor(worker_binary: PathBuf, executor: Arc<Executor<'static>>) -> Self {
         let handlers = Handlers::default();
 
@@ -99,20 +100,15 @@ impl WorkerManager {
             self.clone(),
         )
         .await?;
-        for callback in self.inner.handlers.new_worker.lock().unwrap().iter() {
+        self.inner.handlers.new_worker.call(|callback| {
             callback(&worker);
-        }
+        });
 
         Ok(worker)
     }
 
-    pub fn on_new_worker<F: Fn(&Worker) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .new_worker
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_new_worker<F: Fn(&Worker) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.new_worker.add(Box::new(callback))
     }
 }
 

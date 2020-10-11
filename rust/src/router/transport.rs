@@ -2,6 +2,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, EventDirection};
+use crate::event_handlers::HandlerId;
 use crate::messages::{
     ConsumerInternal, DataConsumerInternal, DataProducerInternal, ProducerInternal,
     TransportConsumeData, TransportConsumeDataData, TransportConsumeDataRequest,
@@ -157,17 +158,19 @@ pub trait TransportGeneric<Dump, Stat>: Transport {
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError>;
 
-    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F);
+    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) -> HandlerId;
 
-    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F);
+    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) -> HandlerId;
 
-    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F);
+    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F)
+        -> HandlerId;
 
-    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F);
+    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F)
+        -> HandlerId;
 
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F);
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) -> HandlerId;
 
-    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F);
+    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 }
 
 #[derive(Debug, Error)]
@@ -662,13 +665,15 @@ where
             let stream_id = sctp_stream_parameters.stream_id;
             let transport = self.clone();
             let executor = Arc::clone(self.executor());
-            data_consumer.on_closed(move || {
-                executor
-                    .spawn(async move {
-                        transport.deallocate_sctp_stream_id(stream_id).await;
-                    })
-                    .detach();
-            });
+            data_consumer
+                .on_closed(move || {
+                    executor
+                        .spawn(async move {
+                            transport.deallocate_sctp_stream_id(stream_id).await;
+                        })
+                        .detach();
+                })
+                .detach();
         }
 
         Ok(data_consumer)

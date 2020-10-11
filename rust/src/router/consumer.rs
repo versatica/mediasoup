@@ -1,4 +1,5 @@
 use crate::data_structures::{AppData, EventDirection};
+use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
     ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
@@ -14,7 +15,6 @@ use async_executor::Executor;
 use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::mem;
 use std::sync::{Arc, Mutex};
 
 uuid_based_wrapper_type!(ConsumerId);
@@ -281,12 +281,12 @@ enum Notification {
 
 #[derive(Default)]
 struct Handlers {
-    pause: Mutex<Vec<Box<dyn Fn() + Send>>>,
-    resume: Mutex<Vec<Box<dyn Fn() + Send>>>,
-    score: Mutex<Vec<Box<dyn Fn(&ConsumerScore) + Send>>>,
-    layers_change: Mutex<Vec<Box<dyn Fn(&ConsumerLayers) + Send>>>,
-    trace: Mutex<Vec<Box<dyn Fn(&ConsumerTraceEventData) + Send>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    pause: Bag<dyn Fn() + Send>,
+    resume: Bag<dyn Fn() + Send>,
+    score: Bag<dyn Fn(&ConsumerScore) + Send>,
+    layers_change: Bag<dyn Fn(&ConsumerLayers) + Send>,
+    trace: Bag<dyn Fn(&ConsumerTraceEventData) + Send>,
+    closed: Bag<dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -315,10 +315,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
-        for callback in callbacks {
-            callback();
-        }
+        self.handlers.closed.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -391,9 +388,7 @@ impl Consumer {
                                 *producer_paused = true;
 
                                 if !was_paused {
-                                    for callback in handlers.pause.lock().unwrap().iter() {
-                                        callback();
-                                    }
+                                    handlers.pause.call_simple();
                                 }
                             }
                             Notification::ProducerResume => {
@@ -403,27 +398,25 @@ impl Consumer {
                                 *producer_paused = false;
 
                                 if was_paused && !paused {
-                                    for callback in handlers.resume.lock().unwrap().iter() {
-                                        callback();
-                                    }
+                                    handlers.resume.call_simple();
                                 }
                             }
                             Notification::Score(consumer_score) => {
                                 *score.lock().unwrap() = consumer_score.clone();
-                                for callback in handlers.score.lock().unwrap().iter() {
+                                handlers.score.call(|callback| {
                                     callback(&consumer_score);
-                                }
+                                });
                             }
                             Notification::LayersChange(consumer_layers) => {
                                 *current_layers.lock().unwrap() = Some(consumer_layers.clone());
-                                for callback in handlers.layers_change.lock().unwrap().iter() {
+                                handlers.layers_change.call(|callback| {
                                     callback(&consumer_layers);
-                                }
+                                });
                             }
                             Notification::Trace(trace_event_data) => {
-                                for callback in handlers.trace.lock().unwrap().iter() {
+                                handlers.trace.call(|callback| {
                                     callback(&trace_event_data);
-                                }
+                                });
                             }
                         },
                         Err(error) => {
@@ -561,9 +554,7 @@ impl Consumer {
         *paused = true;
 
         if !was_paused {
-            for callback in self.inner.handlers.pause.lock().unwrap().iter() {
-                callback();
-            }
+            self.inner.handlers.pause.call_simple();
         }
 
         Ok(())
@@ -585,9 +576,7 @@ impl Consumer {
         *paused = false;
 
         if was_paused {
-            for callback in self.inner.handlers.resume.lock().unwrap().iter() {
-                callback();
-            }
+            self.inner.handlers.resume.call_simple();
         }
 
         Ok(())
@@ -680,58 +669,34 @@ impl Consumer {
             .await
     }
 
-    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .pause
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.pause.add(Box::new(callback))
     }
 
-    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .resume
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.resume.add(Box::new(callback))
     }
 
-    pub fn on_score<F: Fn(&ConsumerScore) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .score
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_score<F: Fn(&ConsumerScore) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.score.add(Box::new(callback))
     }
 
-    pub fn on_layers_change<F: Fn(&ConsumerLayers) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .layers_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_layers_change<F: Fn(&ConsumerLayers) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
+        self.inner.handlers.layers_change.add(Box::new(callback))
     }
 
-    pub fn on_trace<F: Fn(&ConsumerTraceEventData) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .trace
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_trace<F: Fn(&ConsumerTraceEventData) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
+        self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.closed.add(Box::new(callback))
     }
 
     fn get_internal(&self) -> ConsumerInternal {

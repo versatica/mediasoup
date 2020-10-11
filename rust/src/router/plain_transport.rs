@@ -2,6 +2,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, SctpState, TransportListenIp, TransportTuple};
+use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     PlainTransportData, TransportCloseRequest, TransportConnectRequestPlain,
     TransportConnectRequestPlainData, TransportInternal,
@@ -22,9 +23,8 @@ use async_trait::async_trait;
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::mem;
 use std::sync::atomic::AtomicUsize;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -159,15 +159,15 @@ pub struct PlainTransportRemoteParameters {
 
 #[derive(Default)]
 struct Handlers {
-    new_producer: Mutex<Vec<Box<dyn Fn(&Producer) + Send>>>,
-    new_consumer: Mutex<Vec<Box<dyn Fn(&Consumer) + Send>>>,
-    new_data_producer: Mutex<Vec<Box<dyn Fn(&DataProducer) + Send>>>,
-    new_data_consumer: Mutex<Vec<Box<dyn Fn(&DataConsumer) + Send>>>,
-    tuple: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
-    rtcp_tuple: Mutex<Vec<Box<dyn Fn(&TransportTuple) + Send>>>,
-    sctp_state_change: Mutex<Vec<Box<dyn Fn(SctpState) + Send>>>,
-    trace: Mutex<Vec<Box<dyn Fn(&TransportTraceEventData) + Send>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    new_producer: Bag<dyn Fn(&Producer) + Send>,
+    new_consumer: Bag<dyn Fn(&Consumer) + Send>,
+    new_data_producer: Bag<dyn Fn(&DataProducer) + Send>,
+    new_data_consumer: Bag<dyn Fn(&DataConsumer) + Send>,
+    tuple: Bag<dyn Fn(&TransportTuple) + Send>,
+    rtcp_tuple: Bag<dyn Fn(&TransportTuple) + Send>,
+    sctp_state_change: Bag<dyn Fn(SctpState) + Send>,
+    trace: Bag<dyn Fn(&TransportTraceEventData) + Send>,
+    closed: Bag<dyn FnOnce() + Send>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -202,10 +202,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
-        for callback in callbacks {
-            callback();
-        }
+        self.handlers.closed.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -262,9 +259,9 @@ impl Transport for PlainTransport {
 
         let producer = self.produce_impl(producer_options).await?;
 
-        for callback in self.inner.handlers.new_producer.lock().unwrap().iter() {
+        self.inner.handlers.new_producer.call(|callback| {
             callback(&producer);
-        }
+        });
 
         Ok(producer)
     }
@@ -277,9 +274,9 @@ impl Transport for PlainTransport {
 
         let consumer = self.consume_impl(consumer_options).await?;
 
-        for callback in self.inner.handlers.new_consumer.lock().unwrap().iter() {
+        self.inner.handlers.new_consumer.call(|callback| {
             callback(&consumer);
-        }
+        });
 
         Ok(consumer)
     }
@@ -297,9 +294,9 @@ impl Transport for PlainTransport {
             .produce_data_impl(DataProducerType::Sctp, data_producer_options)
             .await?;
 
-        for callback in self.inner.handlers.new_data_producer.lock().unwrap().iter() {
+        self.inner.handlers.new_data_producer.call(|callback| {
             callback(&data_producer);
-        }
+        });
 
         Ok(data_producer)
     }
@@ -317,9 +314,9 @@ impl Transport for PlainTransport {
             .consume_data_impl(DataConsumerType::Sctp, data_consumer_options)
             .await?;
 
-        for callback in self.inner.handlers.new_data_consumer.lock().unwrap().iter() {
+        self.inner.handlers.new_data_consumer.call(|callback| {
             callback(&data_consumer);
-        }
+        });
 
         Ok(data_consumer)
     }
@@ -351,58 +348,40 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
         self.enable_trace_event_impl(types).await
     }
 
-    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .new_producer
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.new_producer.add(Box::new(callback))
     }
 
-    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .new_consumer
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.new_consumer.add(Box::new(callback))
     }
 
-    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(&self, callback: F) {
+    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner
             .handlers
             .new_data_producer
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(&self, callback: F) {
+    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner
             .handlers
             .new_data_consumer
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .trace
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.closed.add(Box::new(callback))
     }
 }
 
@@ -458,28 +437,28 @@ impl PlainTransport {
                             Notification::Tuple(tuple) => {
                                 *data.tuple.lock().unwrap() = tuple.clone();
 
-                                for callback in handlers.tuple.lock().unwrap().iter() {
+                                handlers.tuple.call(|callback| {
                                     callback(&tuple);
-                                }
+                                });
                             }
                             Notification::RtcpTuple(rtcp_tuple) => {
                                 data.rtcp_tuple.lock().unwrap().replace(rtcp_tuple.clone());
 
-                                for callback in handlers.rtcp_tuple.lock().unwrap().iter() {
+                                handlers.rtcp_tuple.call(|callback| {
                                     callback(&rtcp_tuple);
-                                }
+                                });
                             }
                             Notification::SctpStateChange { sctp_state } => {
                                 data.sctp_state.lock().unwrap().replace(sctp_state);
 
-                                for callback in handlers.sctp_state_change.lock().unwrap().iter() {
+                                handlers.sctp_state_change.call(|callback| {
                                     callback(sctp_state);
-                                }
+                                });
                             }
                             Notification::Trace(trace_event_data) => {
-                                for callback in handlers.trace.lock().unwrap().iter() {
+                                handlers.trace.call(|callback| {
                                     callback(&trace_event_data);
-                                }
+                                });
                             }
                         },
                         Err(error) => {
@@ -589,31 +568,22 @@ impl PlainTransport {
         self.inner.data.srtp_parameters.lock().unwrap().clone()
     }
 
-    pub fn on_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .tuple
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.tuple.add(Box::new(callback))
     }
 
-    pub fn on_rtcp_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .rtcp_tuple
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_rtcp_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.rtcp_tuple.add(Box::new(callback))
     }
 
-    pub fn on_sctp_state_change<F: Fn(SctpState) + Send + 'static>(&self, callback: F) {
+    pub fn on_sctp_state_change<F: Fn(SctpState) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner
             .handlers
             .sctp_state_change
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
     fn get_internal(&self) -> TransportInternal {

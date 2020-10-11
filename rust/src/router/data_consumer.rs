@@ -1,5 +1,6 @@
 use crate::data_producer::DataProducerId;
 use crate::data_structures::AppData;
+use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
     DataConsumerGetStatsRequest, DataConsumerInternal,
@@ -13,8 +14,7 @@ use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use log::*;
 use serde::{Deserialize, Serialize};
-use std::mem;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 uuid_based_wrapper_type!(DataConsumerId);
 
@@ -149,9 +149,9 @@ enum Notification {
 
 #[derive(Default)]
 struct Handlers {
-    sctp_send_buffer_full: Mutex<Vec<Box<dyn Fn() + Send>>>,
-    buffered_amount_low: Mutex<Vec<Box<dyn Fn() + Send>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    sctp_send_buffer_full: Bag<dyn Fn() + Send>,
+    buffered_amount_low: Bag<dyn Fn() + Send>,
+    closed: Bag<dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -175,10 +175,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
-        for callback in callbacks {
-            callback();
-        }
+        self.handlers.closed.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -235,17 +232,10 @@ impl DataConsumer {
                                 // TODO: Handle this in some meaningful way
                             }
                             Notification::SctpSendBufferFull => {
-                                for callback in
-                                    handlers.sctp_send_buffer_full.lock().unwrap().iter()
-                                {
-                                    callback();
-                                }
+                                handlers.sctp_send_buffer_full.call_simple();
                             }
                             Notification::BufferedAmountLow => {
-                                for callback in handlers.buffered_amount_low.lock().unwrap().iter()
-                                {
-                                    callback();
-                                }
+                                handlers.buffered_amount_low.call_simple();
                             }
                         },
                         Err(error) => {
@@ -417,31 +407,22 @@ impl DataConsumer {
     // 		'dataConsumer.send', this._internal, requestData, message);
     // }
 
-    pub fn on_sctp_send_buffer_full<F: Fn() + Send + 'static>(&self, callback: F) {
+    pub fn on_sctp_send_buffer_full<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner
             .handlers
             .sctp_send_buffer_full
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    pub fn on_buffered_amount_low<F: Fn() + Send + 'static>(&self, callback: F) {
+    pub fn on_buffered_amount_low<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner
             .handlers
             .buffered_amount_low
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+            .add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.closed.add(Box::new(callback))
     }
 
     fn get_internal(&self) -> DataConsumerInternal {

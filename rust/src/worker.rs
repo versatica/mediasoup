@@ -3,6 +3,7 @@ mod channel;
 mod utils;
 
 use crate::data_structures::AppData;
+use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     RouterInternal, WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
     WorkerUpdateSettingsRequest,
@@ -23,8 +24,8 @@ use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
-use std::{env, io, mem};
+use std::sync::Arc;
+use std::{env, io};
 use thiserror::Error;
 use utils::SpawnResult;
 
@@ -205,9 +206,9 @@ pub enum CreateRouterError {
 
 #[derive(Default)]
 struct Handlers {
-    new_router: Mutex<Vec<Box<dyn Fn(&Router) + Send>>>,
-    died: Mutex<Vec<Box<dyn FnOnce(ExitStatus) + Send>>>,
-    closed: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    new_router: Bag<dyn Fn(&Router) + Send>,
+    died: Bag<dyn FnOnce(ExitStatus) + Send>,
+    closed: Bag<dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -226,10 +227,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let callbacks: Vec<_> = mem::take(self.handlers.closed.lock().unwrap().as_mut());
-        for callback in callbacks {
-            callback();
-        }
+        self.handlers.closed.call_once_simple();
 
         if matches!(self.child.try_status(), Ok(None)) {
             unsafe {
@@ -355,11 +353,9 @@ impl Inner {
 
                             // TODO: Probably propagate this down as router/transport/producer
                             //  /consumer events
-                            let callbacks: Vec<_> =
-                                mem::take(inner.handlers.died.lock().unwrap().as_mut());
-                            for callback in callbacks {
+                            inner.handlers.died.call_once(|callback| {
                                 callback(exit_status);
-                            }
+                            });
                         }
                     }
                 })
@@ -569,38 +565,23 @@ impl Worker {
             self.clone(),
         );
 
-        for callback in self.inner.handlers.new_router.lock().unwrap().iter() {
+        self.inner.handlers.new_router.call(|callback| {
             callback(&router);
-        }
+        });
 
         Ok(router)
     }
 
-    pub fn on_new_router<F: Fn(&Router) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .new_router
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_new_router<F: Fn(&Router) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.new_router.add(Box::new(callback))
     }
 
-    pub fn on_died<F: FnOnce(ExitStatus) + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .died
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_died<F: FnOnce(ExitStatus) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.died.add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) {
-        self.inner
-            .handlers
-            .closed
-            .lock()
-            .unwrap()
-            .push(Box::new(callback));
+    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.closed.add(Box::new(callback))
     }
 }
 
