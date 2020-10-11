@@ -21,6 +21,7 @@ use crate::rtp_parameters::RtpEncodingParameters;
 use crate::worker::{Channel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
+use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use log::*;
 use serde::de::DeserializeOwned;
@@ -28,7 +29,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::future::Future;
 use std::marker::PhantomData;
+use std::pin::Pin;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -225,11 +229,41 @@ where
 
     fn executor(&self) -> &Arc<Executor<'static>>;
 
-    fn next_mid_for_consumers(&self) -> usize;
+    fn next_mid_for_consumers(&self) -> &AtomicUsize;
 
-    fn allocate_sctp_stream_id(&self) -> Option<u16>;
+    fn used_sctp_stream_ids(&self) -> &AsyncMutex<HashMap<u16, bool>>;
 
-    fn deallocate_sctp_stream_id(&self, sctp_stream_id: u16);
+    async fn allocate_sctp_stream_id(&self) -> Option<u16> {
+        let mut used_sctp_stream_ids = self.used_sctp_stream_ids().lock().await;
+        // This is simple, but not the fastest implementation, maybe worth improving
+        for (index, used) in used_sctp_stream_ids.iter_mut() {
+            if !*used {
+                *used = true;
+                return Some(*index);
+            }
+        }
+
+        None
+    }
+
+    fn deallocate_sctp_stream_id(
+        &self,
+        sctp_stream_id: u16,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
+        async fn deallocate_sctp_stream_id(
+            used_sctp_stream_ids: &AsyncMutex<HashMap<u16, bool>>,
+            sctp_stream_id: u16,
+        ) {
+            if let Some(used) = used_sctp_stream_ids.lock().await.get_mut(&sctp_stream_id) {
+                *used = false;
+            }
+        }
+        let used_sctp_stream_ids = self.used_sctp_stream_ids();
+        Box::pin(deallocate_sctp_stream_id(
+            used_sctp_stream_ids,
+            sctp_stream_id,
+        ))
+    }
 
     async fn dump_impl(&self) -> Result<Dump, RequestError> {
         self.channel()
@@ -414,7 +448,7 @@ where
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 
             // We use up to 8 bytes for MID (string).
-            let mid = self.next_mid_for_consumers() % 100_000_000;
+            let mid = self.next_mid_for_consumers().fetch_add(1, Ordering::AcqRel) % 100_000_000;
 
             // Set MID.
             rtp_parameters.mid = Some(format!("{}", mid));
@@ -561,7 +595,7 @@ where
             DataConsumerType::Sctp => {
                 let mut sctp_stream_parameters = data_producer.sctp_stream_parameters();
                 if let Some(sctp_stream_parameters) = &mut sctp_stream_parameters {
-                    if let Some(stream_id) = self.allocate_sctp_stream_id() {
+                    if let Some(stream_id) = self.allocate_sctp_stream_id().await {
                         sctp_stream_parameters.stream_id = stream_id;
                     } else {
                         return Err(ConsumeDataError::NoSctpStreamId);
@@ -627,8 +661,13 @@ where
         if let Some(sctp_stream_parameters) = data_consumer.sctp_stream_parameters() {
             let stream_id = sctp_stream_parameters.stream_id;
             let transport = self.clone();
+            let executor = Arc::clone(self.executor());
             data_consumer.connect_closed(move || {
-                transport.deallocate_sctp_stream_id(stream_id);
+                executor
+                    .spawn(async move {
+                        transport.deallocate_sctp_stream_id(stream_id).await;
+                    })
+                    .detach();
             });
         }
 

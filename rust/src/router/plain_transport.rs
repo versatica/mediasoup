@@ -17,12 +17,13 @@ use crate::transport::{
 };
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
+use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::mem;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::AtomicUsize;
 use std::sync::{Arc, Mutex};
 
 #[derive(Debug)]
@@ -184,7 +185,7 @@ enum Notification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    used_sctp_stream_ids: Mutex<HashMap<u16, bool>>,
+    used_sctp_stream_ids: AsyncMutex<HashMap<u16, bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: Channel,
@@ -422,30 +423,12 @@ impl TransportImpl<PlainTransportDump, PlainTransportStat> for PlainTransport {
         &self.inner.executor
     }
 
-    fn next_mid_for_consumers(&self) -> usize {
-        self.inner
-            .next_mid_for_consumers
-            .fetch_add(1, Ordering::AcqRel)
+    fn next_mid_for_consumers(&self) -> &AtomicUsize {
+        &self.inner.next_mid_for_consumers
     }
 
-    fn allocate_sctp_stream_id(&self) -> Option<u16> {
-        let mut used_sctp_stream_ids = self.inner.used_sctp_stream_ids.lock().unwrap();
-        // This is simple, but not the fastest implementation, maybe worth improving
-        for (index, used) in used_sctp_stream_ids.iter_mut() {
-            if !*used {
-                *used = true;
-                return Some(*index);
-            }
-        }
-
-        None
-    }
-
-    fn deallocate_sctp_stream_id(&self, sctp_stream_id: u16) {
-        let mut used_sctp_stream_ids = self.inner.used_sctp_stream_ids.lock().unwrap();
-        if let Some(used) = used_sctp_stream_ids.get_mut(&sctp_stream_id) {
-            *used = false;
-        }
+    fn used_sctp_stream_ids(&self) -> &AsyncMutex<HashMap<u16, bool>> {
+        &self.inner.used_sctp_stream_ids
     }
 }
 
@@ -509,7 +492,7 @@ impl PlainTransport {
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
-        let used_sctp_stream_ids = Mutex::new({
+        let used_sctp_stream_ids = AsyncMutex::new({
             let mut used_used_sctp_stream_ids = HashMap::new();
             if let Some(sctp_parameters) = &data.sctp_parameters {
                 for i in 0..sctp_parameters.mis {
