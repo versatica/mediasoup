@@ -10,7 +10,9 @@
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
 #include "RTC/WebRtcTransport.hpp"
+#ifdef TRANSCODE
 #include "RTC/ShmTransport.hpp"
+#endif
 
 namespace RTC
 {
@@ -250,6 +252,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROUTER_CREATE_SHM_TRANSPORT:
 			{
+#ifdef TRANSCODE
 				std::string transportId;
 
 				// This may throw
@@ -267,7 +270,7 @@ namespace RTC
 				shmTransport->FillJson(data);
 
 				request->Accept(data);
-
+#endif
 				break;
 			}
 			case Channel::Request::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT:

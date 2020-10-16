@@ -30,6 +30,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
 		void HandleRequest(Channel::Request* request) override;
+		void HandleNotification(PayloadChannel::Notification* notification) override;
 		bool RecvStreamMeta(json& data) override;
 		DepLibSfuShm::ShmCtx* ShmCtx() { return &this->shmCtx; }
 

@@ -20,8 +20,10 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
+#ifdef TRANSCODE
 #include "RTC/ShmTransport.hpp"
 #include "RTC/ShmConsumer.hpp"
+#endif
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <iterator>                                              // std::ostream_iterator
 #include <map>                                                   // std::multimap
@@ -833,13 +835,13 @@ namespace RTC
 
 						break;
 					}
-
 					case RTC::RtpParameters::Type::SHM:
 					{
+#ifdef TRANSCODE
 						// This may throw.
 						MS_DEBUG_TAG(rtp, "ShmConsumer will be created with data [%s]", request->data.dump().c_str());
 						consumer = new RTC::ShmConsumer(consumerId, producerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
-
+#endif
 						break;
 					}
 				}
@@ -1232,10 +1234,12 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_STREAM_META:
 			{
+#ifdef TRANSCODE
 				if (RecvStreamMeta(request->data))
 					request->Accept();
 				else
 					request->Error("ShmTransport::RecvStreamMeta returned false");
+#endif
 				break;
 			}
 				
@@ -2174,8 +2178,6 @@ namespace RTC
 					}
 
 					producer->ReceiveRtcpSenderReport(report);
-
-					// TODO: if this is shmTransport, then can write RTCP SR data into shm in some suitable format, since it was already parsed.
 				}
 
 				break;
