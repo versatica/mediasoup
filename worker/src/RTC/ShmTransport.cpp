@@ -309,6 +309,15 @@ namespace RTC
 	}
 
 
+	void ShmTransport::HandleNotification(PayloadChannel::Notification* notification)
+	{
+		MS_TRACE();
+
+		// Pass it to the parent class.
+		RTC::Transport::HandleNotification(notification);
+	}
+
+
 	inline bool ShmTransport::IsConnected() const
 	{
 		return true;

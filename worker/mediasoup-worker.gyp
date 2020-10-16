@@ -326,8 +326,15 @@
   'targets':
   [
     {
+      # This configuration builds mediasoup-worker with transcode functionality and need ngxshm libs to link to.
+      # How to build plain mediasoup without transcode shm dependencies:
+      #  - remove TRANSCODE from 'defines'[] array,
+      #  - comment out all C++ source and include files but src/main.cpp,
+      #  - comment out '-lffngxshm' and '-lngxshm' from 'link_settings'[] array
+      #  - make as usually
+      #  - publish: update package.json with a distinct version name (x.x.x-noshm), run 'npm run typescript:build' and 'npm publish'
       'target_name': 'mediasoup-worker',
-      'defines': [ 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
+      'defines': [ 'TRANSCODE', 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
       'sources': [
         # C++ source files.
         'src/main.cpp',
