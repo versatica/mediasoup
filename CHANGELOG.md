@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.24
+
+* Update `awaitqueue` dependency.
+
+
 ### 3.6.23
 
 * Fix yet another memory leak in Node.js layer due to `PayloadChannel` event listener not being removed.
