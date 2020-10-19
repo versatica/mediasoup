@@ -1,12 +1,18 @@
 # Changelog
 
 
+### 3.6.23
+
+* Fix yet another memory leak in Node.js layer due to `PayloadChannel` event listener not being removed.
+* Update NPM deps.
+
+
 ### 3.6.22
 
 * `Transport.cpp`: Provide transport congestion client with RTCP Receiver Reports (#464).
 * Update `libuv` to 1.40.0.
 * Update Node deps.
-* SctpAssociation: increase sctpBufferedAmount before sending any data (#472).
+* `SctpAssociation.cpp`: increase `sctpBufferedAmount` before sending any data (#472).
 
 
 ### 3.6.21
