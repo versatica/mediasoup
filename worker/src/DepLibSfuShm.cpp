@@ -257,7 +257,7 @@ namespace DepLibSfuShm {
           if (!chunkStartFound)
           {
             // chunk incomplete, wait for retransmission
-          //  MS_DEBUG_TAG(rtp, "NO START fragment, wait: [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size());
+            MS_DEBUG_TAG(xcode, "NO START fragment, wait: [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu", it->chunk.first_rtp_seq, it->chunk.rtp_time, videoPktBuffer.size());
             return;
           }
 
@@ -379,7 +379,7 @@ namespace DepLibSfuShm {
     this->data[idx].sr_ntp_lsb = ntp.fractions;
     this->data[idx].sr_rtp_tm = lastSenderReporTs;
 
-    MS_DEBUG_TAG(xcode, "Received RTCP SR: SSRC=%" PRIu32 " ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
+    MS_DEBUG_TAG(xcode, "Received SR: SSRC=%" PRIu32 " ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
       this->data[idx].ssrc,
       lastSenderReportNtpMs,
       lastSenderReporTs,

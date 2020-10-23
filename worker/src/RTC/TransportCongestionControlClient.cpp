@@ -29,7 +29,8 @@ namespace RTC
 
 		webrtc::GoogCcFactoryConfig config;
 
-		config.feedback_only = bweType == RTC::BweType::TRANSPORT_CC;
+		// Provide RTCP feedback as well as Receiver Reports.
+		config.feedback_only = false;
 
 		this->controllerFactory = new webrtc::GoogCcNetworkControllerFactory(std::move(config));
 
@@ -129,12 +130,29 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpReceiverReport(
-	  const webrtc::RTCPReportBlock& report, float rtt, int64_t nowMs)
+	  RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t nowMs)
 	{
 		MS_TRACE();
 
+		webrtc::ReportBlockList reportBlockList;
+
+		for (auto it = packet->Begin(); it != packet->End(); ++it)
+		{
+			auto& report = *it;
+
+			reportBlockList.emplace_back(
+			  packet->GetSsrc(),
+			  report->GetSsrc(),
+			  report->GetFractionLost(),
+			  report->GetTotalLost(),
+			  report->GetLastSeq(),
+			  report->GetJitter(),
+			  report->GetLastSenderReport(),
+			  report->GetDelaySinceLastSenderReport());
+		}
+
 		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
-		  { report }, static_cast<int64_t>(rtt), nowMs);
+		  reportBlockList, static_cast<int64_t>(rtt), nowMs);
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpTransportFeedback(

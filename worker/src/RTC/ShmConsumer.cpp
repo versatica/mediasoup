@@ -214,6 +214,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive()) {
+			MS_DEBUG_TAG(rtp, "consumer is inactive, ignore pkt");
 			return;
 		}
 
@@ -223,34 +224,34 @@ namespace RTC
 		// in the corresponding Producer.
 		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
 		{
-			MS_DEBUG_TAG(rtp, "payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			MS_WARN_TAG(rtp, "payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 			return;
 		}
 
-		// If we need to sync, support key frames and this is not a key frame,
-		// do not write this packet into shm
-		// but use it to check video orientation and config shm ssrc
+		// If we need to sync, support key frames but this pkt is not a key frame,
+		// do not write it into shm,
+		// might use it to check video orientation and config shm ssrc
 		bool ignorePkt = false;
-
-		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
-		{
-			MS_DEBUG_TAG(rtp, "need to sync but this is not keyframe, ignore packet");
-			ignorePkt = true;
-		}
-
-		// Whether this is the first packet after re-sync.
 		bool isSyncPacket = this->syncRequired;
 
-		// Sync sequence number and timestamp if required.
-		if (isSyncPacket)
+		if (this->syncRequired)
 		{
-			if (packet->IsKeyFrame())
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+			if(this->keyFrameSupported && !packet->IsKeyFrame())
+			{
+				ignorePkt = true;
+			}
+			else
+			{
+			// Whether this is the first packet after re-sync.
+			// Sync sequence number and timestamp if required.
+				if (packet->IsKeyFrame())
+					MS_DEBUG_TAG(rtp, "sync key frame received");
 
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+				this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
-			this->syncRequired = false;
+				this->syncRequired = false;
+			}
 		}
 
 		// Update RTP seq number and timestamp.
@@ -266,22 +267,7 @@ namespace RTC
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
 
-		// Update received and missed packet counters
-		lostPktRateCounter.Update(packet);
-
-		if (isSyncPacket)
-		{
-			MS_DEBUG_TAG(
-			  rtp,
-			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [seq:%" PRIu16 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp(),
-			  origSeq);
-		}
-
-		// Check for video orientation changes
+		// Check for video orientation changes and discover ssrc.
 		if (VideoOrientationChanged(packet))
 		{
 				MS_DEBUG_2TAGS(rtp, xcode, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
@@ -301,6 +287,33 @@ namespace RTC
 				(this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO);
 		}
 
+		// Update received and missed packet counters
+		lostPktRateCounter.Update(packet);
+
+		// Done with this pkt
+		if (ignorePkt)
+		{
+			MS_DEBUG_TAG(rtp, "need to sync but this is not keyframe, ignore packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+				"] from original [seq:%" PRIu16 "]",
+				packet->GetSsrc(),
+				packet->GetSequenceNumber(),
+				packet->GetTimestamp(),
+				origSeq);
+			return; 
+		}
+
+		if (isSyncPacket)
+		{
+			MS_DEBUG_TAG(
+				rtp,
+				"sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+				"] from original [seq:%" PRIu16 "]",
+				packet->GetSsrc(),
+				packet->GetSequenceNumber(),
+				packet->GetTimestamp(),
+				origSeq);
+		}
+
 		// Process the packet. In case of shm writer this is still needed for NACKs
 		if (this->rtpStream->ReceivePacket(packet))
 		{
@@ -313,13 +326,13 @@ namespace RTC
 		else
 		{
 			MS_WARN_TAG(
-			  rtp,
-			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [seq:%" PRIu16 "]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp(),
-			  origSeq);
+				rtp,
+				"failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+				"] from original [seq:%" PRIu16 "]",
+				packet->GetSsrc(),
+				packet->GetSequenceNumber(),
+				packet->GetTimestamp(),
+				origSeq);
 		}
 
 
@@ -333,7 +346,7 @@ namespace RTC
 
 // End of NACK test simulation
 
-		if (shmCtx->CanWrite() && !ignorePkt)
+		if (shmCtx->CanWrite())
 		{
 			this->WritePacketToShm(packet);
 
@@ -341,11 +354,10 @@ namespace RTC
 			this->shmWriterCounter.Update(packet);
 		}
 		else {
-			MS_DEBUG_2TAGS(rtp, xcode, "Skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "] shm-writer is %s, ignorePkt is %s",
+			MS_DEBUG_2TAGS(rtp, xcode, "shm-writer not ready, skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 				packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp(),
-				shmCtx->CanWrite() ? "ready" : "not ready", ignorePkt ? "true": "false");
+				packet->GetSequenceNumber(),
+				packet->GetTimestamp());
 		}
 
 		// Restore packet fields.
@@ -354,12 +366,12 @@ namespace RTC
 	}
 
 
-	//Uncomment for NACK test simulation
 	bool ShmConsumer::TestNACK(RTC::RtpPacket* packet)
 	{
 		if (this->GetKind() != RTC::Media::Kind::VIDEO)
 			return false; // not video
-
+	//Uncomment for NACK test simulation
+/*
 		uint64_t nowTs = DepLibUV::GetTimeMs();
 		if (nowTs - this->lastNACKTestTs < 3000)
 			return false; // too soon
@@ -388,7 +400,7 @@ namespace RTC
 		}
 
 		this->ReceiveNack(&nackPacket);
-
+*/
 		return true;
 	}
 // End of NACK test simulation
@@ -468,7 +480,8 @@ namespace RTC
 			{
 				uint8_t nal = *(data) & 0x1F;
 				uint8_t marker = *(pktdata + 1) & 0x80; // Marker bit indicates the last or the only NALU in this packet is the end of the picture data
-				bool begin_picture = (shmCtx->IsLastVideoSeqNotSet() || (ts > shmCtx->LastVideoTs())); // assume that first video pkt starts the picture frame
+				bool begin_picture = (shmCtx->IsLastVideoSeqNotSet() || (ts > shmCtx->LastVideoTs()));
+
 				// Single NAL unit packet
 				if (nal >= 1 && nal <= 23)
 			  {
@@ -504,11 +517,9 @@ namespace RTC
 					this->chunk.begin         = begin_picture;
 					this->chunk.end           = (marker != 0);
 					 
-					if (isKeyFrame)
-					{
-						MS_DEBUG_TAG(xcode, "video single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
-  						nal, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, isKeyFrame, begin_picture, marker, shmCtx->LastVideoTs());
-          }
+
+					MS_DEBUG_TAG(xcode, "single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
+						nal, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, isKeyFrame, begin_picture, marker, shmCtx->LastVideoTs());
 
 					shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &chunk, !(this->chunk.begin && this->chunk.end));
 				}
@@ -580,7 +591,7 @@ namespace RTC
 								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 								this->chunk.ssrc          = ssrc;
 
-								MS_DEBUG_TAG(xcode, "video STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
+								MS_DEBUG_TAG(xcode, "STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
 									subnal, len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq,
 									shmCtx->LastVideoTs(), isKeyFrame, this->chunk.begin, this->chunk.end);
 
@@ -608,7 +619,7 @@ namespace RTC
 						{
 							if (len < 3)
 							{
-								MS_DEBUG_TAG(xcode, "FU-A payload too short");
+								MS_WARN_TAG(xcode, "FU-A payload too short");
 								break;
 							}
 							// Parse FU header octet
@@ -656,12 +667,10 @@ namespace RTC
 							this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
 							this->chunk.ssrc          = ssrc;
 							this->chunk.end           = (endBit && marker) ? 1 : 0;
-							if (isKeyFrame) // remove if not afraid of too much output
-							{
-								MS_DEBUG_TAG(xcode, "video FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
-									subnal, this->chunk.len, this->chunk.rtp_time, shmCtx->LastVideoTs(), this->chunk.first_rtp_seq,
-									isKeyFrame, startBit, endBit, marker, this->chunk.begin, this->chunk.end);
-							}
+
+							MS_DEBUG_TAG(xcode, "FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
+								subnal, this->chunk.len, this->chunk.rtp_time, shmCtx->LastVideoTs(), this->chunk.first_rtp_seq,
+								isKeyFrame, startBit, endBit, marker, this->chunk.begin, this->chunk.end);
 
 							shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &(this->chunk), true);
 							break;
