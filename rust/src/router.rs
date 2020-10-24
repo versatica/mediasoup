@@ -24,10 +24,10 @@ use crate::consumer::ConsumerId;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::AppData;
 use crate::messages::{
-    RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverInternal,
-    RouterCreateAudioLevelObserverRequest, RouterCreatePlainTransportData,
-    RouterCreatePlainTransportRequest, RouterCreateWebrtcTransportData,
-    RouterCreateWebrtcTransportRequest, RouterDumpRequest, RouterInternal, TransportInternal,
+    RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverRequest,
+    RouterCreatePlainTransportData, RouterCreatePlainTransportRequest,
+    RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
+    RouterInternal, RtpObserverInternal, TransportInternal,
 };
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{Producer, ProducerId, WeakProducer};
@@ -281,7 +281,7 @@ impl Router {
         self.inner
             .channel
             .request(RouterCreateAudioLevelObserverRequest {
-                internal: RouterCreateAudioLevelObserverInternal {
+                internal: RtpObserverInternal {
                     router_id: self.inner.id,
                     rtp_observer_id,
                 },

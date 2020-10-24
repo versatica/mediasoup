@@ -1,5 +1,9 @@
 use crate::data_structures::AppData;
-use crate::messages::{RouterCreateAudioLevelObserverInternal, RtpObserverCloseRequest};
+use crate::messages::{
+    RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestInternal,
+    RtpObserverCloseRequest, RtpObserverInternal, RtpObserverPauseRequest,
+    RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
+};
 use crate::producer::{Producer, ProducerId};
 use crate::router::Router;
 use crate::rtp_observer::{RtpObserver, RtpObserverAddProducerOptions, RtpObserverId};
@@ -94,7 +98,7 @@ impl Drop for Inner {
         {
             let channel = self.channel.clone();
             let request = RtpObserverCloseRequest {
-                internal: RouterCreateAudioLevelObserverInternal {
+                internal: RtpObserverInternal {
                     router_id: self.router.id(),
                     rtp_observer_id: self.id,
                 },
@@ -134,25 +138,97 @@ impl RtpObserver for AudioLevelObserver {
 
     /// Pause the RtpObserver.
     async fn pause(&self) -> Result<(), RequestError> {
-        unimplemented!()
+        debug!("pause()");
+
+        self.inner
+            .channel
+            .request(RtpObserverPauseRequest {
+                internal: self.get_internal(),
+            })
+            .await?;
+
+        let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
+
+        if !was_paused {
+            self.inner.handlers.pause.call_simple();
+        }
+
+        Ok(())
     }
 
     /// Resume the RtpObserver.
     async fn resume(&self) -> Result<(), RequestError> {
-        unimplemented!()
+        debug!("resume()");
+
+        self.inner
+            .channel
+            .request(RtpObserverResumeRequest {
+                internal: self.get_internal(),
+            })
+            .await?;
+
+        let was_paused = self.inner.paused.swap(false, Ordering::SeqCst);
+
+        if !was_paused {
+            self.inner.handlers.resume.call_simple();
+        }
+
+        Ok(())
     }
 
     /// Add a Producer to the RtpObserver.
     async fn add_producer(
         &self,
-        rtp_observer_add_producer_options: RtpObserverAddProducerOptions,
+        RtpObserverAddProducerOptions { producer_id }: RtpObserverAddProducerOptions,
     ) -> Result<(), RequestError> {
-        unimplemented!()
+        let producer = match self.inner.router.get_producer(&producer_id) {
+            Some(producer) => producer,
+            None => {
+                return Ok(());
+            }
+        };
+        self.inner
+            .channel
+            .request(RtpObserverAddProducerRequest {
+                internal: RtpObserverAddRemoveProducerRequestInternal {
+                    router_id: self.inner.router.id(),
+                    rtp_observer_id: self.inner.id,
+                    producer_id,
+                },
+            })
+            .await?;
+
+        self.inner.handlers.add_producer.call(|callback| {
+            callback(&producer);
+        });
+
+        Ok(())
     }
 
     /// Remove a Producer from the RtpObserver.
     async fn remove_producer(&self, producer_id: ProducerId) -> Result<(), RequestError> {
-        unimplemented!()
+        let producer = match self.inner.router.get_producer(&producer_id) {
+            Some(producer) => producer,
+            None => {
+                return Ok(());
+            }
+        };
+        self.inner
+            .channel
+            .request(RtpObserverRemoveProducerRequest {
+                internal: RtpObserverAddRemoveProducerRequestInternal {
+                    router_id: self.inner.router.id(),
+                    rtp_observer_id: self.inner.id,
+                    producer_id,
+                },
+            })
+            .await?;
+
+        self.inner.handlers.remove_producer.call(|callback| {
+            callback(&producer);
+        });
+
+        Ok(())
     }
 }
 
@@ -251,5 +327,12 @@ impl AudioLevelObserver {
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
+    }
+
+    fn get_internal(&self) -> RtpObserverInternal {
+        RtpObserverInternal {
+            router_id: self.inner.router.id(),
+            rtp_observer_id: self.inner.id,
+        }
     }
 }

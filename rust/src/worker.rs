@@ -588,12 +588,14 @@ impl Worker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::audio_level_observer::AudioLevelObserverOptions;
     use crate::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventType};
     use crate::data_consumer::DataConsumerOptions;
     use crate::data_producer::DataProducerOptions;
     use crate::data_structures::TransportListenIp;
     use crate::plain_transport::PlainTransportOptions;
     use crate::producer::{ProducerOptions, ProducerTraceEventType};
+    use crate::rtp_observer::{RtpObserver, RtpObserverAddProducerOptions};
     use crate::rtp_parameters::{
         MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
         RtpParameters,
@@ -881,6 +883,28 @@ mod tests {
                 "Plain transport enable trace event: {:#?}",
                 plain_transport
                     .enable_trace_event(vec![TransportTraceEventType::BWE])
+                    .await
+                    .unwrap()
+            );
+
+            let audio_level_observer = router
+                .create_audio_level_observer(AudioLevelObserverOptions::default())
+                .await
+                .unwrap();
+
+            println!("Audio level observer: {:#?}", audio_level_observer.id());
+            println!(
+                "Add producer to audio level observer: {:#?}",
+                audio_level_observer
+                    .add_producer(RtpObserverAddProducerOptions::new(producer.id()))
+                    .await
+                    .unwrap()
+            );
+            println!("Router dump: {:#?}", router.dump().await.unwrap());
+            println!(
+                "Remove producer from audio level observer: {:#?}",
+                audio_level_observer
+                    .remove_producer(producer.id())
                     .await
                     .unwrap()
             );

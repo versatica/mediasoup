@@ -43,7 +43,7 @@ pub(crate) struct TransportInternal {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct RouterCreateAudioLevelObserverInternal {
+pub(crate) struct RtpObserverInternal {
     pub(crate) router_id: RouterId,
     pub(crate) rtp_observer_id: RtpObserverId,
 }
@@ -394,7 +394,7 @@ impl RouterCreateAudioLevelObserverData {
 request_response!(
     "router.createAudioLevelObserver",
     RouterCreateAudioLevelObserverRequest {
-        internal: RouterCreateAudioLevelObserverInternal,
+        internal: RtpObserverInternal,
         data: RouterCreateAudioLevelObserverData,
     },
 );
@@ -797,46 +797,44 @@ request_response!(
 request_response!(
     "rtpObserver.close",
     RtpObserverCloseRequest {
-        internal: RouterCreateAudioLevelObserverInternal,
+        internal: RtpObserverInternal,
     },
 );
 
-// request_response!(
-//     RtpObserverPauseRequest,
-//     "rtpObserver.pause",
-//     ;,
-//     RtpObserverPauseResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     RtpObserverResumeRequest,
-//     "rtpObserver.resume",
-//     ;,
-//     RtpObserverResumeResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     RtpObserverAddProducerRequest,
-//     "rtpObserver.addProducer",
-//     ;,
-//     RtpObserverAddProducerResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
-// request_response!(
-//     RtpObserverRemoveProducerRequest,
-//     "rtpObserver.removeProducer",
-//     ;,
-//     RtpObserverRemoveProducerResponse,
-//     {
-//         // TODO
-//     },
-// );
+request_response!(
+    "rtpObserver.pause",
+    RtpObserverPauseRequest {
+        internal: RtpObserverInternal,
+    },
+);
+
+request_response!(
+    "rtpObserver.resume",
+    RtpObserverResumeRequest {
+        internal: RtpObserverInternal,
+    },
+);
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RtpObserverAddRemoveProducerRequestInternal {
+    pub(crate) router_id: RouterId,
+    pub(crate) rtp_observer_id: RtpObserverId,
+    // TODO: Inconsistency with the rest of the API, this field should have been in `data` field
+    //  instead, but it is in `internal` for now...
+    pub(crate) producer_id: ProducerId,
+}
+
+request_response!(
+    "rtpObserver.addProducer",
+    RtpObserverAddProducerRequest {
+        internal: RtpObserverAddRemoveProducerRequestInternal,
+    },
+);
+
+request_response!(
+    "rtpObserver.removeProducer",
+    RtpObserverRemoveProducerRequest {
+        internal: RtpObserverAddRemoveProducerRequestInternal,
+    },
+);
