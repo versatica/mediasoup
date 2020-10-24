@@ -510,8 +510,8 @@ impl Producer {
     }
 
     /// Consumable RTP parameters.
-    pub(super) fn consumable_rtp_parameters(&self) -> RtpParameters {
-        self.inner.consumable_rtp_parameters.clone()
+    pub(super) fn consumable_rtp_parameters(&self) -> &RtpParameters {
+        &self.inner.consumable_rtp_parameters
     }
 
     pub(super) fn downgrade(&self) -> WeakProducer {

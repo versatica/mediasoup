@@ -12,8 +12,7 @@ use crate::messages::{
     TransportSetMaxIncomingBitrateRequest,
 };
 use crate::ortc::{
-    ConsumerRtpParametersError, RouterRtpCapabilitiesError, RtpParametersError,
-    RtpParametersMappingError,
+    ConsumerRtpParametersError, RtpCapabilitiesError, RtpParametersError, RtpParametersMappingError,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::{Router, RouterId};
@@ -190,7 +189,7 @@ pub enum ConsumeError {
     #[error("Producer with id \"{0}\" not found")]
     ProducerNotFound(ProducerId),
     #[error("RTP capabilities error: {0}")]
-    FailedRtpCapabilitiesValidation(RouterRtpCapabilitiesError),
+    FailedRtpCapabilitiesValidation(RtpCapabilitiesError),
     #[error("Bad consumer RTP parameters: {0}")]
     BadConsumerRtpParameters(ConsumerRtpParametersError),
     #[error("Request to worker failed: {0}")]
@@ -476,7 +475,10 @@ where
                     kind: producer.kind(),
                     rtp_parameters: rtp_parameters.clone(),
                     r#type,
-                    consumable_rtp_encodings: producer.consumable_rtp_parameters().encodings,
+                    consumable_rtp_encodings: producer
+                        .consumable_rtp_parameters()
+                        .encodings
+                        .clone(),
                     paused,
                     preferred_layers,
                 },

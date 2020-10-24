@@ -8,7 +8,7 @@ use crate::messages::{
     WorkerUpdateSettingsRequest,
 };
 use crate::ortc;
-use crate::ortc::RouterRtpCapabilitiesError;
+use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
@@ -199,7 +199,7 @@ pub struct WorkerDump {
 #[derive(Debug, Error)]
 pub enum CreateRouterError {
     #[error("RTP capabilities generation error: {0}")]
-    FailedRtpCapabilitiesGeneration(RouterRtpCapabilitiesError),
+    FailedRtpCapabilitiesGeneration(RtpCapabilitiesError),
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }

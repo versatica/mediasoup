@@ -15,7 +15,7 @@ pub mod transport;
 #[cfg(not(doc))]
 pub mod webrtc_transport;
 
-use crate::uuid_based_wrapper_type;
+use crate::{ortc, uuid_based_wrapper_type};
 
 use crate::consumer::ConsumerId;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
@@ -28,7 +28,7 @@ use crate::messages::{
 use crate::observer::ObserverId;
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{Producer, ProducerId, WeakProducer};
-use crate::rtp_parameters::{RtpCapabilitiesFinalized, RtpCodecCapability};
+use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::transport::{TransportGeneric, TransportId};
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError, Worker};
@@ -256,6 +256,32 @@ impl Router {
         self.after_transport_creation(&transport);
 
         Ok(transport)
+    }
+
+    /// Check whether the given RTP capabilities can consume the given Producer.
+    pub fn can_consume(
+        &self,
+        producer_id: &ProducerId,
+        rtp_capabilities: &RtpCapabilities,
+    ) -> bool {
+        match self.get_producer(producer_id) {
+            Some(producer) => {
+                match ortc::can_consume(producer.consumable_rtp_parameters(), rtp_capabilities) {
+                    Ok(result) => result,
+                    Err(error) => {
+                        error!("can_consume() | unexpected error: {}", error);
+                        false
+                    }
+                }
+            }
+            None => {
+                error!(
+                    "can_consume() | Producer with id \"{}\" not found",
+                    producer_id
+                );
+                false
+            }
+        }
     }
 
     pub fn on_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) -> HandlerId {
