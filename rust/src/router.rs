@@ -1,15 +1,17 @@
 #[cfg(not(doc))]
+pub mod audio_level_observer;
+#[cfg(not(doc))]
 pub mod consumer;
 #[cfg(not(doc))]
 pub mod data_consumer;
 #[cfg(not(doc))]
 pub mod data_producer;
 #[cfg(not(doc))]
-pub mod observer;
-#[cfg(not(doc))]
 pub mod plain_transport;
 #[cfg(not(doc))]
 pub mod producer;
+#[cfg(not(doc))]
+pub mod rtp_observer;
 #[cfg(not(doc))]
 pub mod transport;
 #[cfg(not(doc))]
@@ -17,17 +19,19 @@ pub mod webrtc_transport;
 
 use crate::{ortc, uuid_based_wrapper_type};
 
+use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
 use crate::consumer::ConsumerId;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::AppData;
 use crate::messages::{
-    RouterCloseRequest, RouterCreatePlainTransportData, RouterCreatePlainTransportRequest,
-    RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
-    RouterInternal, TransportInternal,
+    RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverInternal,
+    RouterCreateAudioLevelObserverRequest, RouterCreatePlainTransportData,
+    RouterCreatePlainTransportRequest, RouterCreateWebrtcTransportData,
+    RouterCreateWebrtcTransportRequest, RouterDumpRequest, RouterInternal, TransportInternal,
 };
-use crate::observer::ObserverId;
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{Producer, ProducerId, WeakProducer};
+use crate::rtp_observer::RtpObserverId;
 use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::transport::{TransportGeneric, TransportId};
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
@@ -56,8 +60,8 @@ pub struct RouterDump {
     pub map_data_consumer_id_data_producer_id: HashMap<ConsumerId, ProducerId>,
     pub map_data_producer_id_data_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
     pub map_producer_id_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
-    pub map_producer_id_observer_ids: HashMap<ProducerId, HashSet<ObserverId>>,
-    pub rtp_observer_ids: HashSet<ObserverId>,
+    pub map_producer_id_observer_ids: HashMap<ProducerId, HashSet<RtpObserverId>>,
+    pub rtp_observer_ids: HashSet<RtpObserverId>,
     pub transport_ids: HashSet<TransportId>,
 }
 
@@ -66,9 +70,14 @@ pub enum NewTransport<'a> {
     Plain(&'a PlainTransport),
 }
 
+pub enum NewRtpObserver<'a> {
+    AudioLevel(&'a AudioLevelObserver),
+}
+
 #[derive(Default)]
 struct Handlers {
     new_transport: Bag<'static, dyn Fn(NewTransport) + Send>,
+    new_rtp_observer: Bag<'static, dyn Fn(NewRtpObserver) + Send>,
     closed: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -80,6 +89,7 @@ struct Inner {
     payload_channel: Channel,
     handlers: Handlers,
     app_data: AppData,
+    // TODO: RwLock instead
     producers: Arc<Mutex<HashMap<ProducerId, WeakProducer>>>,
     data_producers: Arc<Mutex<HashMap<DataProducerId, WeakDataProducer>>>,
     // Make sure worker is not dropped until this router is not dropped
@@ -258,6 +268,46 @@ impl Router {
         Ok(transport)
     }
 
+    /**
+     * Create an AudioLevelObserver.
+     */
+    pub async fn create_audio_level_observer(
+        &self,
+        audio_level_observer_options: AudioLevelObserverOptions,
+    ) -> Result<AudioLevelObserver, RequestError> {
+        debug!("create_audio_level_observer()");
+
+        let rtp_observer_id = RtpObserverId::new();
+        self.inner
+            .channel
+            .request(RouterCreateAudioLevelObserverRequest {
+                internal: RouterCreateAudioLevelObserverInternal {
+                    router_id: self.inner.id,
+                    rtp_observer_id,
+                },
+                data: RouterCreateAudioLevelObserverData::from_options(
+                    &audio_level_observer_options,
+                ),
+            })
+            .await?;
+
+        let audio_level_observer_fut = AudioLevelObserver::new(
+            rtp_observer_id,
+            Arc::clone(&self.inner.executor),
+            self.inner.channel.clone(),
+            audio_level_observer_options.app_data,
+            self.clone(),
+        );
+
+        let audio_level_observer = audio_level_observer_fut.await;
+
+        self.inner.handlers.new_rtp_observer.call(|callback| {
+            callback(NewRtpObserver::AudioLevel(&audio_level_observer));
+        });
+
+        Ok(audio_level_observer)
+    }
+
     /// Check whether the given RTP capabilities can consume the given Producer.
     pub fn can_consume(
         &self,
@@ -286,6 +336,13 @@ impl Router {
 
     pub fn on_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.new_transport.add(Box::new(callback))
+    }
+
+    pub fn on_new_rtp_observer<F: Fn(NewRtpObserver) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
+        self.inner.handlers.new_rtp_observer.add(Box::new(callback))
     }
 
     pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {

@@ -1,8 +1,6 @@
-use crate::router::RouterId;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::ops::{Deref, DerefMut};
-use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct AppData(Box<dyn Any + Send + Sync>);
@@ -140,13 +138,6 @@ pub enum SctpState {
     Connected,
     Failed,
     Closed,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RouterCreateAudioLevelObserverInternal {
-    pub router_id: RouterId,
-    pub rtp_observer_id: Uuid,
 }
 
 #[derive(Debug, Deserialize, Serialize, Copy, Clone)]

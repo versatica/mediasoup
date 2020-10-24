@@ -224,6 +224,7 @@ struct Inner {
     r#type: ProducerType,
     rtp_parameters: RtpParameters,
     consumable_rtp_parameters: RtpParameters,
+    // TODO: Use AtomicBool instead
     paused: Mutex<bool>,
     score: Arc<Mutex<Vec<ProducerScore>>>,
     executor: Arc<Executor<'static>>,

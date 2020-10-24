@@ -25,6 +25,12 @@ pub mod worker_manager;
 
 // TODO: The mess below is because of https://github.com/rust-lang/rust/issues/59368
 #[cfg(not(doc))]
+pub use router::audio_level_observer;
+#[cfg(doc)]
+#[path = "router/audio_level_observer.rs"]
+pub mod audio_level_observer;
+
+#[cfg(not(doc))]
 pub use router::consumer;
 #[cfg(doc)]
 #[path = "router/consumer.rs"]
@@ -65,6 +71,12 @@ pub use router::plain_transport;
 #[cfg(doc)]
 #[path = "router/plain_transport.rs"]
 pub mod plain_transport;
+
+#[cfg(not(doc))]
+pub use router::rtp_observer;
+#[cfg(doc)]
+#[path = "router/rtp_observer.rs"]
+pub mod rtp_observer;
 
 #[cfg(not(doc))]
 pub use router::webrtc_transport;

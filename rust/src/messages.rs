@@ -1,3 +1,4 @@
+use crate::audio_level_observer::AudioLevelObserverOptions;
 use crate::consumer::{
     ConsumerDump, ConsumerId, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
     ConsumerType,
@@ -14,6 +15,7 @@ use crate::producer::{
     ProducerDump, ProducerId, ProducerStat, ProducerTraceEventType, ProducerType,
 };
 use crate::router::{RouterDump, RouterId};
+use crate::rtp_observer::RtpObserverId;
 use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
 use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
@@ -37,6 +39,13 @@ pub(crate) struct RouterInternal {
 pub(crate) struct TransportInternal {
     pub(crate) router_id: RouterId,
     pub(crate) transport_id: TransportId,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreateAudioLevelObserverInternal {
+    pub(crate) router_id: RouterId,
+    pub(crate) rtp_observer_id: RtpObserverId,
 }
 
 #[derive(Debug, Serialize)]
@@ -372,26 +381,23 @@ pub(crate) struct RouterCreateAudioLevelObserverData {
     pub(crate) interval: u16,
 }
 
-impl Default for RouterCreateAudioLevelObserverData {
-    fn default() -> Self {
+impl RouterCreateAudioLevelObserverData {
+    pub(crate) fn from_options(audio_level_observer_options: &AudioLevelObserverOptions) -> Self {
         Self {
-            max_entries: 1,
-            threshold: -80,
-            interval: 1000,
+            max_entries: audio_level_observer_options.max_entries,
+            threshold: audio_level_observer_options.threshold,
+            interval: audio_level_observer_options.interval,
         }
     }
 }
 
-// request_response!(
-//     "router.createAudioLevelObserver",
-//     RouterCreateAudioLevelObserverRequest {
-//         internal: RouterCreateAudioLevelObserverInternal,
-//         data: RouterCreateAudioLevelObserverData,
-//     },
-//     RouterCreateAudioLevelObserverResponse {
-//         // TODO
-//     },
-// );
+request_response!(
+    "router.createAudioLevelObserver",
+    RouterCreateAudioLevelObserverRequest {
+        internal: RouterCreateAudioLevelObserverInternal,
+        data: RouterCreateAudioLevelObserverData,
+    },
+);
 
 request_response!(
     "transport.close",
@@ -788,16 +794,13 @@ request_response!(
     },
 );
 
-// request_response!(
-//     RtpObserverCloseRequest,
-//     "rtpObserver.close",
-//     ;,
-//     RtpObserverCloseResponse,
-//     {
-//         // TODO
-//     },
-// );
-//
+request_response!(
+    "rtpObserver.close",
+    RtpObserverCloseRequest {
+        internal: RouterCreateAudioLevelObserverInternal,
+    },
+);
+
 // request_response!(
 //     RtpObserverPauseRequest,
 //     "rtpObserver.pause",
