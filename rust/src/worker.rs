@@ -3,7 +3,6 @@ mod channel;
 mod utils;
 
 use crate::data_structures::AppData;
-use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     RouterInternal, WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
     WorkerUpdateSettingsRequest,
@@ -16,6 +15,7 @@ use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
 use channel::InternalMessage;
 pub(crate) use channel::{Channel, RequestError, SubscriptionHandler};
+use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::*;
@@ -206,9 +206,9 @@ pub enum CreateRouterError {
 
 #[derive(Default)]
 struct Handlers {
-    new_router: Bag<dyn Fn(&Router) + Send>,
-    died: Bag<dyn FnOnce(ExitStatus) + Send>,
-    closed: Bag<dyn FnOnce() + Send>,
+    new_router: Bag<'static, dyn Fn(&Router) + Send>,
+    died: Bag<'static, dyn FnOnce(ExitStatus) + Send>,
+    closed: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {

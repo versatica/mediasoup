@@ -20,7 +20,6 @@ use crate::uuid_based_wrapper_type;
 use crate::consumer::ConsumerId;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::AppData;
-use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     RouterCloseRequest, RouterCreatePlainTransportData, RouterCreatePlainTransportRequest,
     RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
@@ -34,6 +33,7 @@ use crate::transport::{TransportGeneric, TransportId};
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, RequestError, Worker};
 use async_executor::Executor;
+use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -68,8 +68,8 @@ pub enum NewTransport<'a> {
 
 #[derive(Default)]
 struct Handlers {
-    new_transport: Bag<dyn Fn(NewTransport) + Send>,
-    closed: Bag<dyn FnOnce() + Send>,
+    new_transport: Bag<'static, dyn Fn(NewTransport) + Send>,
+    closed: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {

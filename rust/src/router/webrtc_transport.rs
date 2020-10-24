@@ -5,7 +5,6 @@ use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
     TransportListenIp, TransportTuple,
 };
-use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     TransportCloseRequest, TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData,
     TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
@@ -22,6 +21,7 @@ use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
+use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -192,16 +192,16 @@ pub struct WebRtcTransportRemoteParameters {
 
 #[derive(Default)]
 struct Handlers {
-    new_producer: Bag<dyn Fn(&Producer) + Send>,
-    new_consumer: Bag<dyn Fn(&Consumer) + Send>,
-    new_data_producer: Bag<dyn Fn(&DataProducer) + Send>,
-    new_data_consumer: Bag<dyn Fn(&DataConsumer) + Send>,
-    ice_state_change: Bag<dyn Fn(IceState) + Send>,
-    ice_selected_tuple_change: Bag<dyn Fn(&TransportTuple) + Send>,
-    dtls_state_change: Bag<dyn Fn(DtlsState) + Send>,
-    sctp_state_change: Bag<dyn Fn(SctpState) + Send>,
-    trace: Bag<dyn Fn(&TransportTraceEventData) + Send>,
-    closed: Bag<dyn FnOnce() + Send>,
+    new_producer: Bag<'static, dyn Fn(&Producer) + Send>,
+    new_consumer: Bag<'static, dyn Fn(&Consumer) + Send>,
+    new_data_producer: Bag<'static, dyn Fn(&DataProducer) + Send>,
+    new_data_consumer: Bag<'static, dyn Fn(&DataConsumer) + Send>,
+    ice_state_change: Bag<'static, dyn Fn(IceState) + Send>,
+    ice_selected_tuple_change: Bag<'static, dyn Fn(&TransportTuple) + Send>,
+    dtls_state_change: Bag<'static, dyn Fn(DtlsState) + Send>,
+    sctp_state_change: Bag<'static, dyn Fn(SctpState) + Send>,
+    trace: Bag<'static, dyn Fn(&TransportTraceEventData) + Send>,
+    closed: Bag<'static, dyn FnOnce() + Send>,
 }
 
 #[derive(Debug, Deserialize)]

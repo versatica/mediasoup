@@ -1,6 +1,5 @@
 use crate::data_producer::DataProducerId;
 use crate::data_structures::AppData;
-use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
     DataConsumerGetStatsRequest, DataConsumerInternal,
@@ -12,6 +11,7 @@ use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
+use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -149,9 +149,9 @@ enum Notification {
 
 #[derive(Default)]
 struct Handlers {
-    sctp_send_buffer_full: Bag<dyn Fn() + Send>,
-    buffered_amount_low: Bag<dyn Fn() + Send>,
-    closed: Bag<dyn FnOnce() + Send>,
+    sctp_send_buffer_full: Bag<'static, dyn Fn() + Send>,
+    buffered_amount_low: Bag<'static, dyn Fn() + Send>,
+    closed: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {

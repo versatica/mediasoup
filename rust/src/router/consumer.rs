@@ -1,5 +1,4 @@
 use crate::data_structures::{AppData, EventDirection};
-use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
     ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
@@ -12,6 +11,7 @@ use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
+use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -281,12 +281,12 @@ enum Notification {
 
 #[derive(Default)]
 struct Handlers {
-    pause: Bag<dyn Fn() + Send>,
-    resume: Bag<dyn Fn() + Send>,
-    score: Bag<dyn Fn(&ConsumerScore) + Send>,
-    layers_change: Bag<dyn Fn(&ConsumerLayers) + Send>,
-    trace: Bag<dyn Fn(&ConsumerTraceEventData) + Send>,
-    closed: Bag<dyn FnOnce() + Send>,
+    pause: Bag<'static, dyn Fn() + Send>,
+    resume: Bag<'static, dyn Fn() + Send>,
+    score: Bag<'static, dyn Fn(&ConsumerScore) + Send>,
+    layers_change: Bag<'static, dyn Fn(&ConsumerLayers) + Send>,
+    trace: Bag<'static, dyn Fn(&ConsumerTraceEventData) + Send>,
+    closed: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {

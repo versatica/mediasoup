@@ -1,5 +1,4 @@
 use crate::data_structures::AppData;
-use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
     DataProducerInternal,
@@ -9,6 +8,7 @@ use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError};
 use async_executor::Executor;
+use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Weak};
@@ -87,7 +87,7 @@ pub struct DataProducerStat {
 
 #[derive(Default)]
 struct Handlers {
-    closed: Bag<dyn FnOnce() + Send>,
+    closed: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {

@@ -2,7 +2,6 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, EventDirection};
-use crate::event_handlers::HandlerId;
 use crate::messages::{
     ConsumerInternal, DataConsumerInternal, DataProducerInternal, ProducerInternal,
     TransportConsumeData, TransportConsumeDataData, TransportConsumeDataRequest,
@@ -24,6 +23,7 @@ use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
+use event_listener_primitives::HandlerId;
 use log::*;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};

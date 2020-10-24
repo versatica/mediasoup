@@ -1,6 +1,5 @@
 use crate::consumer::RtpStreamParams;
 use crate::data_structures::{AppData, EventDirection};
-use crate::event_handlers::{Bag, HandlerId};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
     ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
@@ -12,6 +11,7 @@ use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
+use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -210,12 +210,12 @@ enum Notification {
 
 #[derive(Default)]
 struct Handlers {
-    score: Bag<dyn Fn(&Vec<ProducerScore>) + Send>,
-    video_orientation_change: Bag<dyn Fn(ProducerVideoOrientation) + Send>,
-    pause: Bag<dyn Fn() + Send>,
-    resume: Bag<dyn Fn() + Send>,
-    trace: Bag<dyn Fn(&ProducerTraceEventData) + Send>,
-    closed: Bag<dyn FnOnce() + Send>,
+    score: Bag<'static, dyn Fn(&Vec<ProducerScore>) + Send>,
+    video_orientation_change: Bag<'static, dyn Fn(ProducerVideoOrientation) + Send>,
+    pause: Bag<'static, dyn Fn() + Send>,
+    resume: Bag<'static, dyn Fn() + Send>,
+    trace: Bag<'static, dyn Fn(&ProducerTraceEventData) + Send>,
+    closed: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {

@@ -1,7 +1,7 @@
-use crate::event_handlers::{Bag, HandlerId};
 use crate::worker::{Worker, WorkerSettings};
 use async_executor::Executor;
 use async_oneshot::Sender;
+use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::future;
 use std::io;
 use std::path::PathBuf;
@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 #[derive(Default)]
 struct Handlers {
-    new_worker: Bag<dyn Fn(&Worker) + Send>,
+    new_worker: Bag<'static, dyn Fn(&Worker) + Send>,
 }
 
 struct Inner {
