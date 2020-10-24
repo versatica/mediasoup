@@ -286,7 +286,7 @@ struct Handlers {
     score: Bag<'static, dyn Fn(&ConsumerScore) + Send>,
     layers_change: Bag<'static, dyn Fn(&ConsumerLayers) + Send>,
     trace: Bag<'static, dyn Fn(&ConsumerTraceEventData) + Send>,
-    closed: Bag<'static, dyn FnOnce() + Send>,
+    close: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -315,7 +315,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.closed.call_once_simple();
+        self.handlers.close.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -695,8 +695,8 @@ impl Consumer {
         self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.closed.add(Box::new(callback))
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.close.add(Box::new(callback))
     }
 
     fn get_internal(&self) -> ConsumerInternal {

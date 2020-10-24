@@ -207,8 +207,8 @@ pub enum CreateRouterError {
 #[derive(Default)]
 struct Handlers {
     new_router: Bag<'static, dyn Fn(&Router) + Send>,
-    died: Bag<'static, dyn FnOnce(ExitStatus) + Send>,
-    closed: Bag<'static, dyn FnOnce() + Send>,
+    dead: Bag<'static, dyn FnOnce(ExitStatus) + Send>,
+    close: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -227,7 +227,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.closed.call_once_simple();
+        self.handlers.close.call_once_simple();
 
         if matches!(self.child.try_status(), Ok(None)) {
             unsafe {
@@ -353,7 +353,7 @@ impl Inner {
 
                             // TODO: Probably propagate this down as router/transport/producer
                             //  /consumer events
-                            inner.handlers.died.call_once(|callback| {
+                            inner.handlers.dead.call_once(|callback| {
                                 callback(exit_status);
                             });
                         }
@@ -576,12 +576,12 @@ impl Worker {
         self.inner.handlers.new_router.add(Box::new(callback))
     }
 
-    pub fn on_died<F: FnOnce(ExitStatus) + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.died.add(Box::new(callback))
+    pub fn on_dead<F: FnOnce(ExitStatus) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.dead.add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.closed.add(Box::new(callback))
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.close.add(Box::new(callback))
     }
 }
 

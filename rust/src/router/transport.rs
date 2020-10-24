@@ -169,7 +169,7 @@ pub trait TransportGeneric<Dump, Stat>: Transport {
 
     fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) -> HandlerId;
 
-    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
+    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 }
 
 #[derive(Debug, Error)]
@@ -668,7 +668,7 @@ where
             let transport = self.clone();
             let executor = Arc::clone(self.executor());
             data_consumer
-                .on_closed(move || {
+                .on_close(move || {
                     executor
                         .spawn(async move {
                             transport.deallocate_sctp_stream_id(stream_id).await;

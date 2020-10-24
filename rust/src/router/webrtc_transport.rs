@@ -201,7 +201,7 @@ struct Handlers {
     dtls_state_change: Bag<'static, dyn Fn(DtlsState) + Send>,
     sctp_state_change: Bag<'static, dyn Fn(SctpState) + Send>,
     trace: Bag<'static, dyn Fn(&TransportTraceEventData) + Send>,
-    closed: Bag<'static, dyn FnOnce() + Send>,
+    close: Bag<'static, dyn FnOnce() + Send>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -247,7 +247,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.closed.call_once_simple();
+        self.handlers.close.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -425,8 +425,8 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransp
         self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.closed.add(Box::new(callback))
+    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.close.add(Box::new(callback))
     }
 }
 

@@ -215,7 +215,7 @@ struct Handlers {
     pause: Bag<'static, dyn Fn() + Send>,
     resume: Bag<'static, dyn Fn() + Send>,
     trace: Bag<'static, dyn Fn(&ProducerTraceEventData) + Send>,
-    closed: Bag<'static, dyn FnOnce() + Send>,
+    close: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -241,7 +241,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.closed.call_once_simple();
+        self.handlers.close.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -506,8 +506,8 @@ impl Producer {
         self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.closed.add(Box::new(callback))
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.close.add(Box::new(callback))
     }
 
     /// Consumable RTP parameters.

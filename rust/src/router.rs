@@ -78,7 +78,7 @@ pub enum NewRtpObserver<'a> {
 struct Handlers {
     new_transport: Bag<'static, dyn Fn(NewTransport) + Send>,
     new_rtp_observer: Bag<'static, dyn Fn(NewRtpObserver) + Send>,
-    closed: Bag<'static, dyn FnOnce() + Send>,
+    close: Bag<'static, dyn FnOnce() + Send>,
 }
 
 struct Inner {
@@ -100,7 +100,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.closed.call_once_simple();
+        self.handlers.close.call_once_simple();
 
         {
             let channel = self.channel.clone();
@@ -345,8 +345,8 @@ impl Router {
         self.inner.handlers.new_rtp_observer.add(Box::new(callback))
     }
 
-    pub fn on_closed<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.closed.add(Box::new(callback))
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.close.add(Box::new(callback))
     }
 
     fn after_transport_creation<Dump, Stat, T>(&self, transport: &T)
@@ -367,7 +367,7 @@ impl Router {
                     {
                         let producers_weak = producers_weak.clone();
                         producer
-                            .on_closed(move || {
+                            .on_close(move || {
                                 if let Some(producers) = producers_weak.upgrade() {
                                     producers.lock().unwrap().remove(&producer_id);
                                 }
@@ -391,7 +391,7 @@ impl Router {
                     {
                         let data_producers_weak = data_producers_weak.clone();
                         data_producer
-                            .on_closed(move || {
+                            .on_close(move || {
                                 if let Some(data_producers) = data_producers_weak.upgrade() {
                                     data_producers.lock().unwrap().remove(&data_producer_id);
                                 }
