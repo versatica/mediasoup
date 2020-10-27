@@ -92,6 +92,9 @@ namespace RTC
 				const auto* data = notification->payload;
 				auto len         = notification->payloadLen;
 
+        // Find the producer who sent this
+        RTC::Producer* producer = RTC::Transport::GetProducerFromInternal(notification->internal);
+
 				// Increase receive transmission.
 				RTC::Transport::DataReceived(len);
 
@@ -112,7 +115,7 @@ namespace RTC
 				}
 
 				// Pass the packet to the parent transport.
-				RTC::Transport::ReceiveRtpPacket(packet);
+				RTC::Transport::ReceiveRtpPacketForProducer(producer, packet);
 
 				break;
 			}

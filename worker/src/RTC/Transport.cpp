@@ -1607,6 +1607,30 @@ namespace RTC
 #endif
 	}
 
+  void Transport::ReceiveRtpPacketForProducer(RTC::Producer* producer, RTC::RtpPacket* packet) {
+    MS_TRACE();
+
+		// Pass the RTP packet to the corresponding Producer.
+		auto result = producer->ReceiveRtpPacket(packet);
+
+		switch (result)
+		{
+			case RTC::Producer::ReceiveRtpPacketResult::MEDIA:
+				this->recvRtpTransmission.Update(packet);
+				break;
+			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
+				this->recvRtxTransmission.Update(packet);
+				break;
+			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
+				// Tell the child class to remove this SSRC.
+				RecvStreamClosed(packet->GetSsrc());
+				break;
+			default:;
+		}
+
+		delete packet;
+  }
+
 	void Transport::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -1643,31 +1667,7 @@ namespace RTC
 			return;
 		}
 
-		// MS_DEBUG_DEV(
-		//   "RTP packet received [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", producerId:%s]",
-		//   packet->GetSsrc(),
-		//   packet->GetPayloadType(),
-		//   producer->id.c_str());
-
-		// Pass the RTP packet to the corresponding Producer.
-		auto result = producer->ReceiveRtpPacket(packet);
-
-		switch (result)
-		{
-			case RTC::Producer::ReceiveRtpPacketResult::MEDIA:
-				this->recvRtpTransmission.Update(packet);
-				break;
-			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
-				this->recvRtxTransmission.Update(packet);
-				break;
-			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
-				// Tell the child class to remove this SSRC.
-				RecvStreamClosed(packet->GetSsrc());
-				break;
-			default:;
-		}
-
-		delete packet;
+    ReceiveRtpPacketForProducer(producer, packet);
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)

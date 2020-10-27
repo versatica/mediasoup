@@ -138,6 +138,7 @@ namespace RTC
 			this->sendTransmission.Update(len, DepLibUV::GetTimeMs());
 		}
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
+		void ReceiveRtpPacketForProducer(RTC::Producer* producer, RTC::RtpPacket* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
 		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
