@@ -1607,8 +1607,9 @@ namespace RTC
 #endif
 	}
 
-  void Transport::ReceiveRtpPacketForProducer(RTC::Producer* producer, RTC::RtpPacket* packet) {
-    MS_TRACE();
+	void Transport::ReceiveRtpPacketForProducer(RTC::Producer* producer, RTC::RtpPacket* packet)
+	{
+		MS_TRACE();
 
 		// Pass the RTP packet to the corresponding Producer.
 		auto result = producer->ReceiveRtpPacket(packet);
@@ -1629,7 +1630,7 @@ namespace RTC
 		}
 
 		delete packet;
-  }
+	}
 
 	void Transport::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
@@ -1667,7 +1668,7 @@ namespace RTC
 			return;
 		}
 
-    ReceiveRtpPacketForProducer(producer, packet);
+		ReceiveRtpPacketForProducer(producer, packet);
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
