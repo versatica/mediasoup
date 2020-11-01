@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.6.25 (WIP)
+
+* Update `Catch` to 2.13.2.
+* Update NPM deps.
+
+
 ### 3.6.24
 
 * Update `awaitqueue` dependency.
