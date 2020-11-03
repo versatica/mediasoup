@@ -522,7 +522,8 @@ export class Transport extends EnhancedEventEmitter
 			rtpCapabilities,
 			paused = false,
 			preferredLayers,
-			appData = {}
+			appData = {},
+			pipe = false
 		}: ConsumerOptions
 	): Promise<Consumer>
 	{
@@ -562,7 +563,7 @@ export class Transport extends EnhancedEventEmitter
 		{
 			kind                   : producer.kind,
 			rtpParameters,
-			type                   : producer.type,
+			type                   : (pipe ? 'pipe' : producer.type),
 			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
 			preferredLayers
@@ -571,7 +572,7 @@ export class Transport extends EnhancedEventEmitter
 		const status =
 			await this._channel.request('transport.consume', internal, reqData);
 
-		const data = { kind: producer.kind, rtpParameters, type: producer.type };
+		const data = { kind: producer.kind, rtpParameters, type: (pipe ? 'pipe' : producer.type) };
 
 		const consumer = new Consumer(
 			{

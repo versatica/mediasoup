@@ -47,6 +47,11 @@ export type ConsumerOptions =
 	 * Custom application data.
 	 */
 	appData?: any;
+
+	/**
+	 * Whether to create the consumer as a pipe consumer
+	*/
+	pipe?: boolean;
 }
 
 /**

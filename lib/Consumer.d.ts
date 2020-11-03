@@ -36,6 +36,10 @@ export declare type ConsumerOptions = {
      * Custom application data.
      */
     appData?: any;
+    /**
+     * Pipe: make this as a pipe consumer
+     */
+    pipe?: boolean;
 };
 /**
  * Valid types for 'trace' event.
