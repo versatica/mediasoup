@@ -37,8 +37,8 @@ export declare type ConsumerOptions = {
      */
     appData?: any;
     /**
-     * Pipe: make this as a pipe consumer
-     */
+     * Whether to create the consumer as a pipe consumer
+    */
     pipe?: boolean;
 };
 /**

@@ -543,11 +543,17 @@ export class Transport extends EnhancedEventEmitter
 			throw Error(`Producer with id "${producerId}" not found`);
 
 		// This may throw.
-		const rtpParameters = ortc.getConsumerRtpParameters(
-			producer.consumableRtpParameters, rtpCapabilities!);
+		const rtpParameters = (
+			pipe ?
+				ortc.getPipeConsumerRtpParameters(producer.consumableRtpParameters, false) :
+				ortc.getConsumerRtpParameters(producer.consumableRtpParameters, rtpCapabilities!)
+		);
 
 		// Set MID.
-		rtpParameters.mid = `${this._nextMidForConsumers++}`;
+		if (!pipe) 
+		{
+			rtpParameters.mid = `${this._nextMidForConsumers++}`;
+		}
 
 		// We use up to 8 bytes for MID (string).
 		if (this._nextMidForConsumers === 100000000)
@@ -559,15 +565,24 @@ export class Transport extends EnhancedEventEmitter
 		}
 
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
-		const reqData =
-		{
-			kind                   : producer.kind,
-			rtpParameters,
-			type                   : (pipe ? 'pipe' : producer.type),
-			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
-			paused,
-			preferredLayers
-		};
+
+		const reqData = (
+			pipe ?
+				{
+					kind                   : producer.kind,
+					rtpParameters,
+					type                   : (pipe ? 'pipe' : producer.type),
+					consumableRtpEncodings : producer.consumableRtpParameters.encodings
+				} :
+				{
+					kind                   : producer.kind,
+					rtpParameters,
+					type                   : (pipe ? 'pipe' : producer.type),
+					consumableRtpEncodings : producer.consumableRtpParameters.encodings,
+					paused,
+					preferredLayers
+				}
+		);
 
 		const status =
 			await this._channel.request('transport.consume', internal, reqData);
