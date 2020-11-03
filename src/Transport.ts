@@ -571,13 +571,13 @@ export class Transport extends EnhancedEventEmitter
 				{
 					kind                   : producer.kind,
 					rtpParameters,
-					type                   : (pipe ? 'pipe' : producer.type),
+					type                   : 'pipe',
 					consumableRtpEncodings : producer.consumableRtpParameters.encodings
 				} :
 				{
 					kind                   : producer.kind,
 					rtpParameters,
-					type                   : (pipe ? 'pipe' : producer.type),
+					type                   : producer.type,
 					consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 					paused,
 					preferredLayers
