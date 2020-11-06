@@ -201,19 +201,19 @@ namespace RTC
 				return false;
 			}
 			// Upgrade required. Drop current packet if base flag is not set.
-			// TODO: Cannot enable this until this issue is fixed (in libwebrtc?):
+			// NOTE: This is possible once this bug in libwebrtc has been fixed:
 			//   https://github.com/versatica/mediasoup/issues/306
 			//
 			// clang-format off
-			// else if (
-			// 	this->payloadDescriptor->hasTid &&
-			// 	this->payloadDescriptor->tid > context->GetCurrentTemporalLayer() &&
-			// 	!this->payloadDescriptor->b
-			// )
-			// // clang-format on
-			// {
-			// 	return false;
-			// }
+			else if (
+				this->payloadDescriptor->hasTid &&
+				this->payloadDescriptor->tid > context->GetCurrentTemporalLayer() &&
+				!this->payloadDescriptor->b
+			)
+			// clang-format on
+			{
+				return false;
+			}
 
 			// Update/fix current temporal layer.
 			// clang-format off
