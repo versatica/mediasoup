@@ -194,12 +194,9 @@ namespace DepLibSfuShm {
     
     // Enqueue pkt, newest at the end
     auto it = this->videoPktBuffer.begin();
-    while (it != this->videoPktBuffer.end())
-    {
-      if (seq >= it->chunk.first_rtp_seq) // incoming seqId is newer, move further to the end
-        ++it;
-    }
-    it = videoPktBuffer.emplace(it, data, isChunkFragment, isChunkStart, isChunkEnd);
+    // If incoming seqId is newer, move further to the end
+    for (; it != this->videoPktBuffer.end() && seq >= it->chunk.first_rtp_seq; it++);
+      it = videoPktBuffer.emplace(it, data, isChunkFragment, isChunkStart, isChunkEnd);
 
     return SHM_Q_PKT_QUEUED_OK;
   }

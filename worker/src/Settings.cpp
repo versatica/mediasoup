@@ -33,6 +33,18 @@ std::map<LogLevel, std::string> Settings::logLevel2String =
 	{ LogLevel::LOG_ERROR, "error" },
 	{ LogLevel::LOG_NONE,  "none"  }
 };
+std::map<std::string, LogDevLevel> Settings::string2LogDevLevel =
+{
+	{ "debug", LogDevLevel::LOG_DEV_DEBUG },
+	{ "warn",  LogDevLevel::LOG_DEV_WARN  },
+	{ "none",  LogDevLevel::LOG_DEV_NONE  }
+};
+std::map<LogDevLevel, std::string> Settings::logDevLevel2String =
+{
+	{ LogDevLevel::LOG_DEV_DEBUG, "debug" },
+	{ LogDevLevel::LOG_DEV_WARN,  "warn"  },
+	{ LogDevLevel::LOG_DEV_NONE,  "none"  }
+};
 // clang-format on
 
 /* Class methods. */
@@ -50,6 +62,8 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	{
 		{ "logLevel",            optional_argument, nullptr, 'l' },
 		{ "logTags",             optional_argument, nullptr, 't' },
+		{ "logDevLevel",         optional_argument, nullptr, 'd' },
+		{ "logTraceEnabled",     optional_argument, nullptr, 'T' },
 		{ "rtcMinPort",          optional_argument, nullptr, 'm' },
 		{ "rtcMaxPort",          optional_argument, nullptr, 'M' },
 		{ "dtlsCertificateFile", optional_argument, nullptr, 'c' },
@@ -84,6 +98,22 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				logTags.push_back(stringValue);
 
 				break;
+			}
+
+			case 'd':
+			{
+				stringValue = std::string(optarg);
+				SetLogDevLevel(stringValue);
+
+				break;
+			}
+
+			case 'T':
+			{
+				stringValue = std::string(optarg); // TODO: test, not sure if it is bool or string or number?
+				SetTrace(stringValue == "true" ? true : false);
+
+				break;                                                                  
 			}
 
 			case 'm':
@@ -198,6 +228,8 @@ void Settings::PrintConfiguration()
 		logTags.emplace_back("svc");
 	if (Settings::configuration.logTags.sctp)
 		logTags.emplace_back("sctp");
+	if (Settings::configuration.logTags.xcode)
+		logTags.emplace_back("xcode");
 	if (Settings::configuration.logTags.message)
 		logTags.emplace_back("message");
 
@@ -214,7 +246,12 @@ void Settings::PrintConfiguration()
 	  info,
 	  "  logLevel            : %s",
 	  Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	MS_DEBUG_TAG(
+		info,
+	  "  logDevLevel         : %s",
+	  Settings::logDevLevel2String[Settings::configuration.logDevLevel].c_str());
 	MS_DEBUG_TAG(info, "  logTags             : %s", logTagsStream.str().c_str());
+	MS_DEBUG_TAG(info, "  logTraceEnabled     : %s", Settings::configuration.logTraceEnabled ? "true" : "false");
 	MS_DEBUG_TAG(info, "  rtcMinPort          : %" PRIu16, Settings::configuration.rtcMinPort);
 	MS_DEBUG_TAG(info, "  rtcMaxPort          : %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
@@ -238,6 +275,8 @@ void Settings::HandleRequest(Channel::Request* request)
 		{
 			auto jsonLogLevelIt = request->data.find("logLevel");
 			auto jsonLogTagsIt  = request->data.find("logTags");
+			auto jsonLogTraceEnabledIt = request->data.find("logTraceEnabled");
+			auto jsonLogDevLevelIt = request->data.find("logDevLevel");
 
 			// Update logLevel if requested.
 			if (jsonLogLevelIt != request->data.end() && jsonLogLevelIt->is_string())
@@ -262,6 +301,14 @@ void Settings::HandleRequest(Channel::Request* request)
 				Settings::SetLogTags(logTags);
 			}
 
+			// Update tracing if requested.
+			if (jsonLogTraceEnabledIt != request->data.end() && jsonLogTagsIt->is_boolean())
+			{
+				bool trace = *jsonLogTraceEnabledIt;
+
+				Settings::SetTrace(trace);
+			}
+
 			// Print the new effective configuration.
 			Settings::PrintConfiguration();
 
@@ -275,6 +322,26 @@ void Settings::HandleRequest(Channel::Request* request)
 			MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 		}
 	}
+}
+
+void Settings::SetTrace(bool trace)
+{
+	MS_TRACE();
+
+	Settings::configuration.logTraceEnabled = trace;
+}
+
+void Settings::SetLogDevLevel(std::string& devLevel)
+{
+	MS_TRACE();
+
+	// Lowcase given level.
+	Utils::String::ToLowerCase(devLevel);
+
+	if (Settings::string2LogDevLevel.find(devLevel) == Settings::string2LogDevLevel.end())
+		MS_THROW_TYPE_ERROR("invalid value '%s' for logDevLevel", devLevel.c_str());
+
+	Settings::configuration.logDevLevel = Settings::string2LogDevLevel[devLevel];
 }
 
 void Settings::SetLogLevel(std::string& level)

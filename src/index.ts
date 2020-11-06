@@ -38,6 +38,8 @@ export async function createWorker(
 	{
 		logLevel = 'error',
 		logTags,
+		logDevLevel = 'none',
+		logTraceEnabled = false,
 		rtcMinPort = 10000,
 		rtcMaxPort = 59999,
 		dtlsCertificateFile,
@@ -55,11 +57,13 @@ export async function createWorker(
 		{
 			logLevel,
 			logTags,
+			logDevLevel,
+			logTraceEnabled,
 			rtcMinPort,
 			rtcMaxPort,
 			dtlsCertificateFile,
 			dtlsPrivateKeyFile,
-			appData
+			appData,
 		});
 
 	return new Promise((resolve, reject) =>
