@@ -528,13 +528,15 @@ export class Worker extends EnhancedEventEmitter
 	async updateSettings(
 		{
 			logLevel,
-			logTags
+			logTags,
+			logDevLevel,
+			logTraceEnabled,
 		}: WorkerUpdateableSettings = {}
 	): Promise<void>
 	{
 		logger.debug('updateSettings()');
 
-		const reqData = { logLevel, logTags };
+		const reqData = { logLevel, logTags, logDevLevel, logTraceEnabled };
 
 		await this._channel.request('worker.updateSettings', undefined, reqData);
 	}

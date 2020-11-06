@@ -167,7 +167,7 @@ export declare class Worker extends EnhancedEventEmitter {
     /**
      * Update settings.
      */
-    updateSettings({ logLevel, logTags }?: WorkerUpdateableSettings): Promise<void>;
+    updateSettings({ logLevel, logTags, logDevLevel, logTraceEnabled, }?: WorkerUpdateableSettings): Promise<void>;
     /**
      * Create a Router.
      */
