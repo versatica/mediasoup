@@ -164,6 +164,24 @@ namespace RTC
 
 				request->Accept();
 
+				// There is less or same buffered data than the given threshold.
+				// Trigger 'bufferedamountlow' now.
+				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
+				{
+					// Notify the Node DataConsumer.
+					json data = json::object();
+
+					data["bufferedAmount"] = this->bufferedAmount;
+
+					Channel::Notifier::Emit(this->id, "bufferedamountlow", data);
+				}
+				// Force the trigger of 'bufferedamountlow' once there is less or same
+				// buffered data than the given threshold.
+				else
+				{
+					this->forceTriggerBufferedAmountLow = true;
+				}
+
 				break;
 			}
 
@@ -269,11 +287,13 @@ namespace RTC
 
 		// clang-format off
 		if (
-				previousBufferedAmount > this->bufferedAmountLowThreshold &&
+				(this->forceTriggerBufferedAmountLow || previousBufferedAmount > this->bufferedAmountLowThreshold) &&
 				this->bufferedAmount <= this->bufferedAmountLowThreshold
 		)
 		// clang-format on
 		{
+			this->forceTriggerBufferedAmountLow = false;
+
 			// Notify the Node DataConsumer.
 			json data = json::object();
 

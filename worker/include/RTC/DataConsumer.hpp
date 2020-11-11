@@ -97,6 +97,7 @@ namespace RTC
 		size_t bytesSent{ 0u };
 		uint32_t bufferedAmount{ 0u };
 		uint32_t bufferedAmountLowThreshold{ 0u };
+		bool forceTriggerBufferedAmountLow{ false };
 	};
 } // namespace RTC
 
