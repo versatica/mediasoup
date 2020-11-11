@@ -1,10 +1,11 @@
 # Changelog
 
 
-### 3.6.25 (WIP)
+### 3.6.25
 
 * Update `Catch` to 2.13.2.
 * Update NPM deps.
+* sctp fixes #479.
 
 
 ### 3.6.24
