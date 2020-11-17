@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.26 (WIP)
+
+* BWE tweaks and debug logs.
+
+
 ### 3.6.25
 
 * Update `Catch` to 2.13.2.
