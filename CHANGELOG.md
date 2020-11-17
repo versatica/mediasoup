@@ -4,6 +4,7 @@
 ### 3.6.26 (WIP)
 
 * BWE tweaks and debug logs.
+* Update NPM deps.
 
 
 ### 3.6.25
