@@ -147,8 +147,15 @@ TransportFeedbackAdapter::ProcessTransportFeedback(
   for (const PacketFeedback& rtp_feedback : feedback_vector) {
     if (rtp_feedback.send_time_ms != PacketFeedback::kNoSendTime) {
       auto feedback = NetworkPacketFeedbackFromRtpPacketFeedback(rtp_feedback);
+      MS_DEBUG_DEV("feedback received for RTP packet: [seq_num: %" PRIi64 ", send_time:%" PRIi64 ", size: %lld, feedback.receive_time:%" PRIi64,
+          feedback.sent_packet.sequence_number,
+          feedback.sent_packet.send_time.ms(),
+          feedback.sent_packet.size.bytes(),
+          feedback.receive_time.ms());
+
       msg.packet_feedbacks.push_back(feedback);
     } else if (rtp_feedback.arrival_time_ms == PacketFeedback::kNotReceived) {
+      MS_DEBUG_DEV("--- rtp_feedback.arrival_time_ms == PacketFeedback::kNotReceived ---");
       msg.sendless_arrival_times.push_back(Timestamp::PlusInfinity());
     } else {
       msg.sendless_arrival_times.push_back(
@@ -164,6 +171,8 @@ TransportFeedbackAdapter::ProcessTransportFeedback(
   msg.feedback_time = feedback_receive_time;
   msg.prior_in_flight = prior_in_flight;
   msg.data_in_flight = GetOutstandingData();
+
+  MS_DEBUG_DEV("prior_in_flight:%lld, data_in_flight:%lld", msg.prior_in_flight.bytes(), msg.data_in_flight.bytes());
   return msg;
 }
 

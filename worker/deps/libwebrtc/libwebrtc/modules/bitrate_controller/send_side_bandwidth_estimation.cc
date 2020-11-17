@@ -278,6 +278,8 @@ void SendSideBandwidthEstimation::SetBitrates(
 
 void SendSideBandwidthEstimation::SetSendBitrate(DataRate bitrate,
                                                  Timestamp at_time) {
+  MS_DEBUG_DEV("bitrate: %lld", bitrate.bps());
+
   // RTC_DCHECK_GT(bitrate, DataRate::Zero());
   // Reset to avoid being capped by the estimate.
   delay_based_bitrate_ = DataRate::Zero();
@@ -311,6 +313,13 @@ void SendSideBandwidthEstimation::CurrentEstimate(int* bitrate,
   *bitrate = std::max<int32_t>(current_bitrate_.bps<int>(), GetMinBitrate());
   *loss = last_fraction_loss_;
   *rtt = last_round_trip_time_.ms<int64_t>();
+
+  MS_DEBUG_DEV("bitrate:%d (current_bitrate_:%" PRIi64 ", GetMinBitrate():%d), loss:%d, rtt:%" PRIi64,
+      *bitrate,
+      current_bitrate_.bps(),
+      GetMinBitrate(),
+      *loss,
+      *rtt);
 }
 
 DataRate SendSideBandwidthEstimation::GetEstimatedLinkCapacity() const {
@@ -622,20 +631,25 @@ DataRate SendSideBandwidthEstimation::MaybeRampupOrBackoff(DataRate new_bitrate,
 void SendSideBandwidthEstimation::CapBitrateToThresholds(Timestamp at_time,
                                                          DataRate bitrate) {
   if (bwe_incoming_ > DataRate::Zero() && bitrate > bwe_incoming_) {
+    MS_DEBUG_DEV("bwe_incoming_:%lld", bwe_incoming_.bps());
     bitrate = bwe_incoming_;
   }
   if (delay_based_bitrate_ > DataRate::Zero() &&
       bitrate > delay_based_bitrate_) {
+    MS_DEBUG_DEV("delay_based_bitrate_:%lld", delay_based_bitrate_.bps());
     bitrate = delay_based_bitrate_;
   }
   if (loss_based_bandwidth_estimation_.Enabled() &&
       loss_based_bandwidth_estimation_.GetEstimate() > DataRate::Zero()) {
+    MS_DEBUG_DEV("loss_based_bandwidth_estimation_.GetEstimate():%lld", loss_based_bandwidth_estimation_.GetEstimate().bps());
     bitrate = std::min(bitrate, loss_based_bandwidth_estimation_.GetEstimate());
   }
   if (bitrate > max_bitrate_configured_) {
+    MS_DEBUG_DEV("bitrate > max_bitrate_configured_, setting bitrate to max_bitrate_configured_");
     bitrate = max_bitrate_configured_;
   }
   if (bitrate < min_bitrate_configured_) {
+    MS_DEBUG_DEV("bitrate < min_bitrate_configured_");
     if (last_low_bitrate_log_.IsInfinite() ||
         at_time - last_low_bitrate_log_ > kLowBitrateLogPeriod) {
       MS_WARN_TAG(bwe, "Estimated available bandwidth %s"
@@ -653,6 +667,7 @@ void SendSideBandwidthEstimation::CapBitrateToThresholds(Timestamp at_time,
     last_logged_fraction_loss_ = last_fraction_loss_;
     last_rtc_event_log_ = at_time;
   }
+  MS_DEBUG_DEV("current_bitrate_:%lld", current_bitrate_.bps());
   current_bitrate_ = bitrate;
 
   if (acknowledged_rate_) {
