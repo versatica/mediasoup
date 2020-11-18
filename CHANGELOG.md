@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.6.26 (WIP)
+### 3.6.26
 
 * BWE tweaks and debug logs.
 * Update NPM deps.
