@@ -1,5 +1,9 @@
 # Changelog
 
+### 3.6.27 (WIP)
+
+* Update NPM deps.
+
 
 ### 3.6.26
 
