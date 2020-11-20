@@ -58,67 +58,6 @@ namespace DepLibSfuShm {
   }
 
 
-  void ShmCtx::ConfigureMediaSsrc(uint32_t ssrc, Media kind)
-  {
-    MS_TRACE();
-
-    //Assuming that ssrc does not change, shm writer is initialized, nothing else to do
-    if (SHM_WRT_READY == this->wrt_status)
-      return;
-    
-    if(kind == Media::AUDIO)
-    {
-      if (SHM_WRT_VIDEO_CHNL_CONF_MISSING == this->wrt_status)
-        return;
-
-      this->data[0].ssrc = ssrc; 
-      this->wrt_init.conf.channels[0].audio = 1;
-      this->wrt_init.conf.channels[0].ssrc = ssrc;
-      this->wrt_status = (this->wrt_status == SHM_WRT_AUDIO_CHNL_CONF_MISSING) ? SHM_WRT_READY : SHM_WRT_VIDEO_CHNL_CONF_MISSING;
-    }
-    else // video
-    {
-      if (SHM_WRT_AUDIO_CHNL_CONF_MISSING == this->wrt_status)
-        return;
-
-      this->data[1].ssrc = ssrc;
-      this->wrt_init.conf.channels[1].video = 1;
-      this->wrt_init.conf.channels[1].ssrc = ssrc;
-      this->wrt_status = (this->wrt_status == SHM_WRT_VIDEO_CHNL_CONF_MISSING) ? SHM_WRT_READY : SHM_WRT_AUDIO_CHNL_CONF_MISSING;
-    }
-
-    if (this->wrt_status == SHM_WRT_READY) {
-      // Just switched into ready status, can open a writer
-      int err = SFUSHM_AV_OK;
-      if ((err = sfushm_av_open_writer( &wrt_init, &wrt_ctx)) != SFUSHM_AV_OK) {
-        MS_DEBUG_TAG(xcode, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
-        this->wrt_status = SHM_WRT_UNDEFINED;
-      }
-      else
-      { 
-        // Write any stored sender reports into shm and possibly notify ShmConsumer
-        if (this->data[0].sr_received)
-        {
-          WriteSR(Media::AUDIO);
-          this->data[0].sr_written = true;
-        }
-        
-        if (this->data[1].sr_received)
-        {
-          WriteSR(Media::VIDEO);
-          this->data[1].sr_written = true;
-        }
-
-        if (this->CanWrite())
-        {
-          MS_DEBUG_TAG(xcode, "shm is ready and first SRs received and written");
-          this->listener->OnShmWriterReady();
-        }
-      }
-    }
-  }
-
-
   void ShmCtx::InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio)
   {
     MS_TRACE();
@@ -134,9 +73,11 @@ namespace DepLibSfuShm {
     wrt_init.conf.log_level = level;
     wrt_init.conf.redirect_stdio = stdio;
     
+    // TODO: if needed, target_kbps may be passed as config param instead
+    // and codec_id, sample_rate may be read from ShmConsumer in the same way as in ShmConsumer::CreateRtpStream()
     wrt_init.conf.channels[0].target_buf_ms = 20000;
     wrt_init.conf.channels[0].target_kbps   = 128;
-    wrt_init.conf.channels[0].ssrc          = 0;
+    wrt_init.conf.channels[0].ssrc          = Utils::Crypto::GetRandomUInt(0,  0xFFFFFFFF);
     wrt_init.conf.channels[0].sample_rate   = 48000;
     wrt_init.conf.channels[0].num_chn       = 2;
     wrt_init.conf.channels[0].codec_id      = SFUSHM_AV_AUDIO_CODEC_OPUS;
@@ -145,11 +86,42 @@ namespace DepLibSfuShm {
 
     wrt_init.conf.channels[1].target_buf_ms = 20000; 
     wrt_init.conf.channels[1].target_kbps   = 2500;
-    wrt_init.conf.channels[1].ssrc          = 0;
+    wrt_init.conf.channels[1].ssrc          = Utils::Crypto::GetRandomUInt(0,  0xFFFFFFFF);
     wrt_init.conf.channels[1].sample_rate   = 90000;
     wrt_init.conf.channels[1].codec_id      = SFUSHM_AV_VIDEO_CODEC_H264;
     wrt_init.conf.channels[1].video         = 1;
     wrt_init.conf.channels[1].audio         = 0;
+
+    this->data[0].new_ssrc =  wrt_init.conf.channels[0].ssrc;
+    this->data[1].new_ssrc =  wrt_init.conf.channels[1].ssrc;
+
+    MS_DEBUG_TAG(xcode, "shm writer ssrc mapping: audio[%" PRIu32 "] video[%" PRIu32 "]",
+      this->data[0].new_ssrc, this->data[1].new_ssrc);
+
+    int err = SFUSHM_AV_OK;
+    if ((err = sfushm_av_open_writer( &wrt_init, &wrt_ctx)) != SFUSHM_AV_OK) {
+      MS_DEBUG_TAG(xcode, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
+      this->wrt_status = SHM_WRT_UNDEFINED;
+    }
+    else
+    { 
+      this->wrt_status = SHM_WRT_READY;
+
+      // Write any stored sender reports into shm and possibly notify ShmConsumer(s)
+      if (this->data[0].sr_received)
+      {
+        WriteSR(Media::AUDIO);
+        this->data[0].sr_written = true;
+        MS_DEBUG_TAG(xcode, "shm is ready and first audio SR received and written");
+      }
+      if (this->data[1].sr_received)
+      {
+        WriteSR(Media::VIDEO);
+        this->data[1].sr_written = true;
+        MS_DEBUG_TAG(xcode, "shm is ready and first video SR received and written");
+        this->listener->OnShmWriterReady();
+      }
+    }
   }
 
 
@@ -220,11 +192,12 @@ namespace DepLibSfuShm {
 
     while (it != this->videoPktBuffer.end())
     {
-      // First, write out all chunks with expired timestamps. TODO: mark incomplete fragmented pictures as corrupted (feature TBD in shm writer)
+      // First, write out all chunks with expired timestamps
       if (!IsLastVideoSeqNotSet()
         && LastVideoTs() > it->chunk.rtp_time
         && LastVideoTs() - it->chunk.rtp_time > MaxVideoPktDelay)
       {
+        it->chunk.invalid = !(it->chunk.end && it->chunk.begin); // if this is fragment then mark is invalid
         MS_DEBUG_TAG(xcode, "OLD [seq=%" PRIu64 " Tsdelta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->chunk.first_rtp_seq, LastVideoTs() - it->chunk.rtp_time, LastVideoTs(), videoPktBuffer.size());
         prev_seq = it->chunk.first_rtp_seq;
         this->WriteChunk(&it->chunk, Media::VIDEO);
@@ -307,6 +280,7 @@ namespace DepLibSfuShm {
 
     if (type == Media::VIDEO)
     {
+      frag->ssrc = data[1].new_ssrc;
       if (SHM_Q_PKT_CANWRITETHRU == this->Enqueue(frag, isChunkFragment)) // Write it into shm, no need to queue anything
       {
         this->WriteChunk(frag, Media::VIDEO);
@@ -316,6 +290,7 @@ namespace DepLibSfuShm {
     }
     else
     {
+      frag->ssrc = data[0].new_ssrc;
       this->WriteChunk(frag, Media::AUDIO); // do not queue audio
     }
   }
@@ -325,7 +300,7 @@ namespace DepLibSfuShm {
   {
     MS_TRACE();
 
-    if (!this->CanWrite())
+    if (!this->CanWrite(kind))
     {
       MS_WARN_TAG(xcode, "Cannot write chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because shm writer is not initialized",
         data->ssrc, data->first_rtp_seq, data->rtp_time);
@@ -343,11 +318,11 @@ namespace DepLibSfuShm {
     }
 
     if (IsError(err))
-      MS_WARN_TAG(xcode, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " to shm: %d - %s", data->ssrc, data->first_rtp_seq, data->rtp_time, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 "inv=%d to shm: %d - %s", data->ssrc, data->first_rtp_seq, data->rtp_time, data->invalid, err, GetErrorString(err));
   }
 
 
-  void ShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, Media kind)
+  void ShmCtx::WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReportTs, Media kind)
   {
     MS_TRACE();
 
@@ -374,12 +349,12 @@ namespace DepLibSfuShm {
     this->data[idx].sr_received = true;
     this->data[idx].sr_ntp_msb = ntp.seconds;
     this->data[idx].sr_ntp_lsb = ntp.fractions;
-    this->data[idx].sr_rtp_tm = lastSenderReporTs;
+    this->data[idx].sr_rtp_tm = lastSenderReportTs;
 
-    MS_DEBUG_TAG(xcode, "Received SR: SSRC=%" PRIu32 " ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
-      this->data[idx].ssrc,
+    MS_DEBUG_TAG(xcode, "Received SR: SSRC=%" PRIu32 "(%" PRIu32 ") ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
+      this->data[idx].new_ssrc,
       lastSenderReportNtpMs,
-      lastSenderReporTs,
+      lastSenderReportTs,
       walltime,
       ct,
       clockTimeMs);
@@ -389,28 +364,12 @@ namespace DepLibSfuShm {
 
     WriteSR(kind);
 
-    if (this->CanWrite())
+    if (this->CanWrite(kind))
       return; // already submitted the first SRs into shm, and it is in ready state
 
-    bool shouldNotify = false;
-    if(kind == Media::AUDIO)
-    {
-      if (this->data[1].sr_written && !this->data[0].sr_written)
-        shouldNotify = true;
-      this->data[0].sr_written = true;
-    }
-    else
-    {
-      if (this->data[0].sr_written && !this->data[1].sr_written)
-        shouldNotify = true;
-      this->data[1].sr_written = true;    
-    }
-
-    if (shouldNotify)
-    {
-      MS_DEBUG_TAG(xcode, "First SRs received, and shm is ready");
+    this->data[idx].sr_written = true;
+    if (kind == Media::VIDEO)
       this->listener->OnShmWriterReady();
-    }
   }
 
 
@@ -419,10 +378,10 @@ namespace DepLibSfuShm {
     MS_TRACE();
 
     size_t idx = (kind == Media::AUDIO) ? 0 : 1;
-    int err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, this->data[idx].sr_ntp_msb, this->data[idx].sr_ntp_lsb, this->data[idx].sr_rtp_tm, this->data[idx].ssrc);
+    int err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, this->data[idx].sr_ntp_msb, this->data[idx].sr_ntp_lsb, this->data[idx].sr_rtp_tm, this->data[idx].new_ssrc);
     if (IsError(err))
     {
-      MS_WARN_TAG(xcode, "ERROR writing RTCP SR for ssrc %" PRIu32 " %d - %s", this->data[idx].ssrc, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "ERROR writing RTCP SR (ssrc:%" PRIu32 ") %d - %s", this->data[idx].new_ssrc, err, GetErrorString(err));
     }
   }
 

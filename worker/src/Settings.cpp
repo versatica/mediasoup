@@ -309,6 +309,13 @@ void Settings::HandleRequest(Channel::Request* request)
 				Settings::SetTrace(trace);
 			}
 
+			if (jsonLogDevLevelIt != request->data.end() && jsonLogDevLevelIt->is_string())
+			{
+				std::string logDevLevel = *jsonLogDevLevelIt;
+				
+				Settings::SetLogDevLevel(logDevLevel);
+			}
+
 			// Print the new effective configuration.
 			Settings::PrintConfiguration();
 

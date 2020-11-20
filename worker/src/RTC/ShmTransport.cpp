@@ -142,14 +142,6 @@ namespace RTC
 				(*jsonIt)["status"] = "closed";
 				break;
 
-			case DepLibSfuShm::SHM_WRT_VIDEO_CHNL_CONF_MISSING:
-				(*jsonIt)["status"] = "video conf missing";
-				break;
-
-			case DepLibSfuShm::SHM_WRT_AUDIO_CHNL_CONF_MISSING:
-				(*jsonIt)["status"] = "audio conf missing";
-				break;
-
 			case DepLibSfuShm::SHM_WRT_UNDEFINED:
 			default:
 				(*jsonIt)["status"] = "undefined";

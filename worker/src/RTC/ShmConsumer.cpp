@@ -67,8 +67,8 @@ namespace RTC
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		this->shmCtx = shmCtx;
-		this->shmCtx->SetListener(this);
-
+		if (this->GetKind() == RTC::Media::Kind::VIDEO)
+			this->shmCtx->SetListener(this);
 
 		// Uncomment for NACK test simulation
 		uint64_t nowTs = DepLibUV::GetTimeMs();
@@ -203,9 +203,9 @@ namespace RTC
 		}
 
 		uint64_t lastSenderReportNtpMs = this->producerRtpStream->GetSenderReportNtpMs(); // NTP timestamp in last Sender Report (in ms)
-		uint32_t lastSenderReporTs     = this->producerRtpStream->GetSenderReportTs();    // RTP timestamp in last Sender Report.
+		uint32_t lastSenderReportTs    = this->producerRtpStream->GetSenderReportTs();    // RTP timestamp in last Sender Report
 
-		shmCtx->WriteRtcpSenderReportTs(lastSenderReportNtpMs, lastSenderReporTs, (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO);
+		shmCtx->WriteRtcpSenderReportTs(lastSenderReportNtpMs, lastSenderReportTs, (this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO);
 	}
 
 
@@ -279,14 +279,6 @@ namespace RTC
 			shmCtx->WriteVideoOrientation(this->rotation);
 		}
 
-		// Need both audio and video SSRCs to set up shm writer
-		if (DepLibSfuShm::SHM_WRT_READY != this->shmCtx->Status())
-		{
-			shmCtx->ConfigureMediaSsrc(
-				packet->GetSsrc(),
-				(this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO);
-		}
-
 		// Update received and missed packet counters
 		lostPktRateCounter.Update(packet);
 
@@ -346,7 +338,7 @@ namespace RTC
 
 // End of NACK test simulation
 
-		if (shmCtx->CanWrite())
+		if (shmCtx->CanWrite((this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO))
 		{
 			this->WritePacketToShm(packet);
 
@@ -354,7 +346,7 @@ namespace RTC
 			this->shmWriterCounter.Update(packet);
 		}
 		else {
-			MS_DEBUG_2TAGS(rtp, xcode, "shm-writer not ready, skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			MS_DEBUG_TAG(xcode, "shm-writer not ready, skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 				packet->GetSsrc(),
 				packet->GetSequenceNumber(),
 				packet->GetTimestamp());
@@ -470,7 +462,7 @@ namespace RTC
 				this->chunk.len = len;
 				this->chunk.rtp_time = ts;
 				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
-				this->chunk.ssrc = packet->GetSsrc();
+				this->chunk.ssrc = ssrc;
 				this->chunk.begin = this->chunk.end = 1;
 				shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::AUDIO, &chunk);
 				break;

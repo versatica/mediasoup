@@ -20,12 +20,9 @@ namespace DepLibSfuShm
 {
   enum ShmWriterStatus
   {
-    SHM_WRT_UNDEFINED = 1,            // default
-    SHM_WRT_CLOSED,                  // writer closed. TODO: implement whatever sets this state... producer paused or closed? transport closed?
-    SHM_WRT_VIDEO_CHNL_CONF_MISSING, // when info on audio content has arrived but no video yet
-    SHM_WRT_AUDIO_CHNL_CONF_MISSING, // when no info on audio is available yet, but video consumer has already started
-    SHM_WRT_READY                   // writer initialized and ready to be used
-    // TODO: do I need an explicit value for a writer in error state?
+    SHM_WRT_UNDEFINED = 1, // default
+    SHM_WRT_READY,         // writer initialized and ready to be used
+    SHM_WRT_CLOSED         // writer closed. TODO: implement whatever sets this state... producer paused or closed? transport closed?
   };
 
   enum Media
@@ -34,25 +31,25 @@ namespace DepLibSfuShm
     AUDIO
   };
 
-  // If Sender Report arrived but shm writer could not be initialized yet, we can save it and write it in as soon as shm writer is initialized
-  struct MediaState
-  {
-    uint64_t last_seq{ UINT64_UNSET };   // last RTP pkt sequence processed by this input
-	  uint64_t last_ts{ UINT64_UNSET };    // the timestamp of the last processed RTP message
-    uint32_t ssrc{ 0 };                  // ssrc of audio or video chn
-    bool     sr_received{ false };       // if sender report was received
-    bool     sr_written{ false };        // if sender report was written into shm
-    uint32_t sr_ntp_msb{ 0 };
-    uint32_t sr_ntp_lsb{ 0 };
-    uint64_t sr_rtp_tm{ 0 };
-  };
-
 	// Need this to keep a buffer of roughly 2-3 video frames
 	enum EnqueueResult
 	{
 		SHM_Q_PKT_CANWRITETHRU, // queue was empty, the pkt represents whole video frame or it is an aggregate, its seqId is (last_seqId+1), won't add pkt to queue
 		SHM_Q_PKT_QUEUED_OK     // added pkt data into the queue
 	};
+
+  // If Sender Report arrived but shm writer could not be initialized yet, we can save it and write it in as soon as shm writer is initialized
+  struct MediaState
+  {
+    uint64_t last_seq{ UINT64_UNSET };   // last RTP pkt sequence processed by this input
+	  uint64_t last_ts{ UINT64_UNSET };    // the timestamp of the last processed RTP message
+    uint32_t new_ssrc{ 0 };              // mapped ssrc - always generated
+    bool     sr_received{ false };       // if sender report was received
+    bool     sr_written{ false };        // if sender report was written into shm
+    uint32_t sr_ntp_msb{ 0 };
+    uint32_t sr_ntp_lsb{ 0 };
+    uint64_t sr_rtp_tm{ 0 };
+  };
 
   // Video NALUs queue item
 	struct ShmQueueItem
@@ -81,29 +78,27 @@ namespace DepLibSfuShm
     ~ShmCtx();
 
     void InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio);
-    void CloseShmWriterCtx();
+    void CloseShmWriterCtx(); //TBD: nobody calls it 
 
     std::string StreamName() const { return this->stream_name; }
     std::string LogName() const { return this->log_name; }
     ShmWriterStatus Status() const { return this->wrt_status; }
 
-    bool CanWrite() const;
+    bool CanWrite(Media kind) const;
     void SetListener(DepLibSfuShm::ShmCtx::Listener* l) { this->listener = l; }
-
-    void ConfigureMediaSsrc(uint32_t ssrc, Media kind);
-
     uint64_t AdjustVideoPktTs(uint64_t ts);
     uint64_t AdjustAudioPktTs(uint64_t ts);
     uint64_t AdjustVideoPktSeq(uint64_t seq);
     uint64_t AdjustAudioPktSeq(uint64_t seq);
     void UpdatePktStat(uint64_t seq, uint64_t ts, Media kind);
+    void ResetPktStat(Media kind);
 
     bool IsLastVideoSeqNotSet() const;  
     uint64_t LastVideoTs() const;
     uint64_t LastVideoSeq() const;
 
     void WriteRtpDataToShm(Media type, sfushm_av_frame_frag_t* data, bool isChunkFragment = false);
-    void WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReporTs, Media kind);
+    void WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReportTs, Media kind);
     int WriteStreamMeta(std::string metadata, std::string shm);
     void WriteVideoOrientation(uint16_t rotation);
 
@@ -128,9 +123,9 @@ namespace DepLibSfuShm
     ShmWriterStatus         wrt_status;
 
     MediaState              data[2];        // 0 - audio, 1 - video
-		std::list<ShmQueueItem> videoPktBuffer; // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
+    Listener                *listener{ nullptr }; // can notify video consumer that shm writer is ready, and request a key frame
 
-    Listener *listener{ nullptr }; // needs to be initialized with smth from ShmConsumer so that we can notify it when shm writer is ready. TODO: see if it's worth the effort
+		std::list<ShmQueueItem> videoPktBuffer; // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
   	static std::unordered_map<int, const char*> errToString;
   };
 
@@ -138,12 +133,11 @@ namespace DepLibSfuShm
 
   // Begin writing into shm when shm writer is initialized (only happens after ssrcs for both audio and video are known)
   // and both Sender Reports have been received and written into shm
-  inline bool ShmCtx::CanWrite() const
+  inline bool ShmCtx::CanWrite(Media kind) const
   { 
     return nullptr != this->wrt_ctx 
       && ShmWriterStatus::SHM_WRT_READY == this->wrt_status
-      && this->data[0].sr_written
-      && this->data[1].sr_written;
+      && (kind == Media::AUDIO) ? this->data[0].sr_written : this->data[1].sr_written;
   }
 
   inline uint64_t ShmCtx::AdjustAudioPktTs(uint64_t ts)
@@ -191,6 +185,11 @@ namespace DepLibSfuShm
       this->data[1].last_seq = seq;
       this->data[1].last_ts = ts;
     }
+  }
+
+  inline void ShmCtx::ResetPktStat(Media kind)
+  {
+    ShmCtx::UpdatePktStat(UINT64_UNSET, UINT64_UNSET, kind);
   }
 
   inline bool ShmCtx::IsLastVideoSeqNotSet() const
