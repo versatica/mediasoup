@@ -270,7 +270,7 @@ export class Worker extends EnhancedEventEmitter
 				env :
 				{
 					MEDIASOUP_VERSION : '__MEDIASOUP_VERSION__',
-					LD_LIBRARY_PATH: process.env["LD_LIBRARY_PATH"]
+					LD_LIBRARY_PATH   : process.env['LD_LIBRARY_PATH']
 				},
 
 				detached : false,
