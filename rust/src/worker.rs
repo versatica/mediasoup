@@ -1,5 +1,6 @@
 // TODO: This is Unix-specific and doesn't support Windows in any way
 mod channel;
+mod payload_channel;
 mod utils;
 
 use crate::data_structures::AppData;
@@ -13,12 +14,12 @@ use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
-use channel::InternalMessage;
 pub(crate) use channel::{Channel, RequestError, SubscriptionHandler};
 use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::*;
+pub(crate) use payload_channel::PayloadChannel;
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
@@ -213,7 +214,7 @@ struct Handlers {
 
 struct Inner {
     channel: Channel,
-    payload_channel: Channel,
+    payload_channel: PayloadChannel,
     child: Child,
     executor: Arc<Executor<'static>>,
     pid: u32,
@@ -450,12 +451,12 @@ impl Inner {
             .spawn(async move {
                 while let Ok(message) = channel_receiver.recv().await {
                     match message {
-                        InternalMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
-                        InternalMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
-                        InternalMessage::Error(text) => error!("[pid:{}] {}", pid, text),
-                        InternalMessage::Dump(text) => println!("{}", text),
-                        InternalMessage::Unexpected(data) => error!(
-                            "worker[pid:{}] unexpected data: {}",
+                        channel::InternalMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
+                        channel::InternalMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
+                        channel::InternalMessage::Error(text) => error!("[pid:{}] {}", pid, text),
+                        channel::InternalMessage::Dump(text) => println!("{}", text),
+                        channel::InternalMessage::Unexpected(data) => error!(
+                            "worker[pid:{}] unexpected channel data: {}",
                             pid,
                             String::from_utf8_lossy(&data)
                         ),
@@ -467,7 +468,13 @@ impl Inner {
         self.executor
             .spawn(async move {
                 while let Ok(message) = payload_channel_receiver.recv().await {
-                    println!("Message {:?}", message);
+                    match message {
+                        payload_channel::InternalMessage::UnexpectedData(data) => error!(
+                            "worker[pid:{}] unexpected payload channel data: {}",
+                            pid,
+                            String::from_utf8_lossy(&data)
+                        ),
+                    }
                 }
             })
             .detach();

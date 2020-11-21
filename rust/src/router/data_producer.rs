@@ -6,7 +6,7 @@ use crate::messages::{
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, RequestError};
+use crate::worker::{Channel, PayloadChannel, RequestError};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
@@ -98,7 +98,7 @@ struct Inner {
     protocol: String,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: Channel,
+    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Box<dyn Transport>,
@@ -144,7 +144,7 @@ impl DataProducer {
         protocol: String,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: Channel,
+        payload_channel: PayloadChannel,
         app_data: AppData,
         transport: Box<dyn Transport>,
     ) -> Self {

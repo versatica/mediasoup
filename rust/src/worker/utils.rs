@@ -1,4 +1,5 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
+use crate::worker::payload_channel::PayloadChannel;
 use crate::worker::Channel;
 use async_executor::Executor;
 use async_fs::File;
@@ -12,7 +13,7 @@ use std::sync::Arc;
 pub(super) struct SpawnResult {
     pub(super) child: Child,
     pub(super) channel: Channel,
-    pub(super) payload_channel: Channel,
+    pub(super) payload_channel: PayloadChannel,
 }
 
 pub(super) fn spawn_with_worker_channels(
@@ -69,6 +70,10 @@ pub(super) fn spawn_with_worker_channels(
     Ok(SpawnResult {
         child,
         channel: Channel::new(Arc::clone(&executor), consumer_file, producer_file),
-        payload_channel: Channel::new(executor, consumer_payload_file, producer_payload_file),
+        payload_channel: PayloadChannel::new(
+            executor,
+            consumer_payload_file,
+            producer_payload_file,
+        ),
     })
 }

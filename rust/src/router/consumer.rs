@@ -9,7 +9,7 @@ use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
@@ -298,7 +298,7 @@ struct Inner {
     paused: Arc<Mutex<bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: Channel,
+    payload_channel: PayloadChannel,
     producer_paused: Arc<Mutex<bool>>,
     priority: Mutex<u8>,
     score: Arc<Mutex<ConsumerScore>>,
@@ -353,7 +353,7 @@ impl Consumer {
         paused: bool,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: Channel,
+        payload_channel: PayloadChannel,
         producer_paused: bool,
         score: ConsumerScore,
         preferred_layers: Option<ConsumerLayers>,

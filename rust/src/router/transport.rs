@@ -17,7 +17,7 @@ use crate::ortc::{
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::{Router, RouterId};
 use crate::rtp_parameters::RtpEncodingParameters;
-use crate::worker::{Channel, RequestError};
+use crate::worker::{Channel, PayloadChannel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_mutex::Mutex as AsyncMutex;
@@ -227,7 +227,7 @@ where
 
     fn channel(&self) -> &Channel;
 
-    fn payload_channel(&self) -> &Channel;
+    fn payload_channel(&self) -> &PayloadChannel;
 
     fn executor(&self) -> &Arc<Executor<'static>>;
 

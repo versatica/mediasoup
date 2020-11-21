@@ -35,7 +35,7 @@ use crate::rtp_observer::RtpObserverId;
 use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::transport::{TransportGeneric, TransportId};
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
-use crate::worker::{Channel, RequestError, Worker};
+use crate::worker::{Channel, PayloadChannel, RequestError, Worker};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
@@ -86,7 +86,7 @@ struct Inner {
     executor: Arc<Executor<'static>>,
     rtp_capabilities: RtpCapabilitiesFinalized,
     channel: Channel,
-    payload_channel: Channel,
+    payload_channel: PayloadChannel,
     handlers: Handlers,
     app_data: AppData,
     // TODO: RwLock instead
@@ -128,7 +128,7 @@ impl Router {
         id: RouterId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: Channel,
+        payload_channel: PayloadChannel,
         rtp_capabilities: RtpCapabilitiesFinalized,
         app_data: AppData,
         worker: Worker,

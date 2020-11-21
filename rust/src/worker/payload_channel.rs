@@ -2,6 +2,7 @@ use crate::messages::Request;
 use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
+use bytes::Bytes;
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::*;
@@ -20,24 +21,20 @@ use thiserror::Error;
 const NS_MESSAGE_MAX_LEN: usize = 4194313;
 const NS_PAYLOAD_MAX_LEN: usize = 4194304;
 
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
+#[derive(Debug)]
 pub(super) enum InternalMessage {
-    /// Debug log
-    #[serde(skip)]
-    Debug(String),
-    /// Warn log
-    #[serde(skip)]
-    Warn(String),
-    /// Error log
-    #[serde(skip)]
-    Error(String),
-    /// Dump log
-    #[serde(skip)]
-    Dump(String),
-    /// Unknown
-    #[serde(skip)]
-    Unexpected(Vec<u8>),
+    /// Unknown data
+    UnexpectedData(Vec<u8>),
+}
+
+struct MessageWithPayload {
+    message: Vec<u8>,
+    payload: Bytes,
+}
+
+pub(crate) struct NotificationMessage {
+    message: Value,
+    payload: Bytes,
 }
 
 /// Subscription handler, will remove corresponding subscription when dropped
@@ -56,7 +53,7 @@ impl Drop for SubscriptionHandler {
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-enum ChannelReceiveMessage {
+enum PayloadChannelReceiveMessage {
     ResponseSuccess {
         id: u32,
         accepted: bool,
@@ -69,31 +66,21 @@ enum ChannelReceiveMessage {
         reason: String,
     },
     Notification(Value),
-    Event(InternalMessage),
+    /// Unknown data
+    #[serde(skip)]
+    Internal(InternalMessage),
 }
 
-fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
-    match bytes[0] {
-        // JSON message
-        b'{' => serde_json::from_slice(bytes).unwrap(),
-        // Debug log
-        b'D' => ChannelReceiveMessage::Event(InternalMessage::Debug(unsafe {
-            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        })),
-        // Warn log
-        b'W' => ChannelReceiveMessage::Event(InternalMessage::Warn(unsafe {
-            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        })),
-        // Error log
-        b'E' => ChannelReceiveMessage::Event(InternalMessage::Error(unsafe {
-            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        })),
-        // Dump log
-        b'X' => ChannelReceiveMessage::Event(InternalMessage::Dump(unsafe {
-            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        })),
-        // Unknown
-        _ => ChannelReceiveMessage::Event(InternalMessage::Unexpected(Vec::from(bytes))),
+fn deserialize_message(bytes: &[u8]) -> PayloadChannelReceiveMessage {
+    match serde_json::from_slice(bytes) {
+        Ok(message) => message,
+        Err(error) => {
+            warn!("Failed to deserialize message: {}", error);
+
+            PayloadChannelReceiveMessage::Internal(InternalMessage::UnexpectedData(Vec::from(
+                bytes,
+            )))
+        }
     }
 }
 
@@ -137,10 +124,10 @@ pub struct HandlerAlreadyExistsError;
 
 struct Inner {
     executor: Arc<Executor<'static>>,
-    sender: async_channel::Sender<Vec<u8>>,
+    sender: async_channel::Sender<MessageWithPayload>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
-    event_handlers: Arc<Mutex<HashMap<String, Box<dyn Fn(Value) + Send>>>>,
+    event_handlers: Arc<Mutex<HashMap<String, Box<dyn Fn(NotificationMessage) + Send>>>>,
 }
 
 impl Drop for Inner {
@@ -151,14 +138,15 @@ impl Drop for Inner {
 }
 
 #[derive(Clone)]
-pub(crate) struct Channel {
+pub(crate) struct PayloadChannel {
     inner: Arc<Inner>,
 }
 
-impl Channel {
+impl PayloadChannel {
     pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
-        let event_handlers = Arc::<Mutex<HashMap<String, Box<dyn Fn(Value) + Send>>>>::default();
+        let event_handlers =
+            Arc::<Mutex<HashMap<String, Box<dyn Fn(NotificationMessage) + Send>>>>::default();
 
         let internal_message_receiver = {
             let requests_container = Arc::clone(&requests_container);
@@ -198,7 +186,7 @@ impl Channel {
                         );
 
                         match deserialize_message(&bytes[..length]) {
-                            ChannelReceiveMessage::ResponseSuccess {
+                            PayloadChannelReceiveMessage::ResponseSuccess {
                                 id,
                                 accepted: _,
                                 data,
@@ -209,12 +197,12 @@ impl Channel {
                                 } else {
                                     warn!(
                                         "received success response does not match any sent request \
-                                        [id:{}]",
+                                         [id:{}]",
                                         id,
                                     );
                                 }
                             }
-                            ChannelReceiveMessage::ResponseError {
+                            PayloadChannelReceiveMessage::ResponseError {
                                 id,
                                 error: _,
                                 reason,
@@ -230,21 +218,50 @@ impl Channel {
                                     );
                                 }
                             }
-                            ChannelReceiveMessage::Notification(notification) => {
+                            PayloadChannelReceiveMessage::Notification(notification) => {
                                 let target_id = notification
                                     .get("targetId".to_string())
                                     .map(|value| value.as_str())
                                     .flatten();
+
+                                let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
+                                if read_bytes == 0 {
+                                    // EOF
+                                    break;
+                                }
+                                let length =
+                                    String::from_utf8_lossy(&len_bytes[..(read_bytes - 1)])
+                                        .parse::<usize>()
+                                        .unwrap();
+
+                                if length > NS_PAYLOAD_MAX_LEN {
+                                    warn!(
+                                        "received payload {} is too long, max supported is {}",
+                                        length, NS_PAYLOAD_MAX_LEN,
+                                    );
+                                }
+
+                                len_bytes.clear();
+                                // +1 because of netstring `,` at the very end
+                                reader.read_exact(&mut bytes[..(length + 1)]).await?;
+
+                                trace!("received notification payload of {} bytes", length);
+
+                                let payload = Bytes::copy_from_slice(&bytes[..length]);
+
                                 match target_id {
                                     Some(target_id) => {
                                         if let Some(callback) =
                                             event_handlers.lock().await.get(target_id)
                                         {
-                                            callback(notification);
+                                            callback(NotificationMessage {
+                                                message: notification,
+                                                payload,
+                                            });
                                         }
                                     }
                                     None => {
-                                        let unexpected_message = InternalMessage::Unexpected(
+                                        let unexpected_message = InternalMessage::UnexpectedData(
                                             Vec::from(&bytes[..length]),
                                         );
                                         if sender.send(unexpected_message).await.is_err() {
@@ -253,8 +270,8 @@ impl Channel {
                                     }
                                 }
                             }
-                            ChannelReceiveMessage::Event(event_message) => {
-                                if sender.send(event_message).await.is_err() {
+                            PayloadChannelReceiveMessage::Internal(internal_message) => {
+                                if sender.send(internal_message).await.is_err() {
                                     break;
                                 }
                             }
@@ -269,16 +286,24 @@ impl Channel {
         };
 
         let sender = {
-            let (sender, receiver) = async_channel::bounded::<Vec<u8>>(1);
+            let (sender, receiver) = async_channel::bounded::<MessageWithPayload>(1);
 
             executor
                 .spawn(async move {
                     let mut bytes = Vec::with_capacity(NS_MESSAGE_MAX_LEN);
                     while let Ok(message) = receiver.recv().await {
                         bytes.clear();
-                        bytes.extend_from_slice(message.len().to_string().as_bytes());
+                        bytes.extend_from_slice(message.message.len().to_string().as_bytes());
                         bytes.push(b':');
-                        bytes.extend_from_slice(&message);
+                        bytes.extend_from_slice(&message.message);
+                        bytes.push(b',');
+
+                        writer.write_all(&bytes).await?;
+
+                        bytes.clear();
+                        bytes.extend_from_slice(message.payload.len().to_string().as_bytes());
+                        bytes.push(b':');
+                        bytes.extend_from_slice(&message.payload);
                         bytes.push(b',');
 
                         writer.write_all(&bytes).await?;
@@ -306,13 +331,21 @@ impl Channel {
         self.inner.internal_message_receiver.clone()
     }
 
-    pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
+    pub(crate) async fn request<R>(
+        &self,
+        request: R,
+        payload: Bytes,
+    ) -> Result<R::Response, RequestError>
     where
         R: Request,
     {
         // Default will work for `()` response
         let data = self
-            .request_internal(request.as_method(), serde_json::to_value(request).unwrap())
+            .request_internal(
+                request.as_method(),
+                serde_json::to_value(request).unwrap(),
+                payload,
+            )
             .await?
             .unwrap_or_default();
         serde_json::from_value(data).map_err(|error| RequestError::FailedToParse {
@@ -326,7 +359,7 @@ impl Channel {
         callback: F,
     ) -> Result<SubscriptionHandler, HandlerAlreadyExistsError>
     where
-        F: Fn(Value) + Send + 'static,
+        F: Fn(NotificationMessage) + Send + 'static,
     {
         {
             let mut event_handlers = self.inner.event_handlers.lock().await;
@@ -351,6 +384,7 @@ impl Channel {
         &self,
         method: &'static str,
         message: Value,
+        payload: Bytes,
     ) -> Result<Option<Value>, RequestError> {
         #[derive(Debug, Serialize)]
         struct RequestMessagePrivate {
@@ -389,9 +423,17 @@ impl Channel {
             return Err(RequestError::MessageTooLong);
         }
 
+        if payload.len() > NS_PAYLOAD_MAX_LEN {
+            requests_container.lock().await.handlers.remove(&id);
+            return Err(RequestError::MessageTooLong);
+        }
+
         self.inner
             .sender
-            .send(serialized_message)
+            .send(MessageWithPayload {
+                message: serialized_message,
+                payload,
+            })
             .await
             .map_err(|_| RequestError::ChannelClosed {})?;
 

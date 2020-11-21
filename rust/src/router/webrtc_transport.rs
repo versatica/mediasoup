@@ -17,7 +17,7 @@ use crate::transport::{
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
     TransportTraceEventData, TransportTraceEventType,
 };
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
@@ -233,7 +233,7 @@ struct Inner {
     used_sctp_stream_ids: AsyncMutex<HashMap<u16, bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: Channel,
+    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     data: Arc<WebRtcTransportData>,
     app_data: AppData,
@@ -439,7 +439,7 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport
         &self.inner.channel
     }
 
-    fn payload_channel(&self) -> &Channel {
+    fn payload_channel(&self) -> &PayloadChannel {
         &self.inner.payload_channel
     }
 
@@ -461,7 +461,7 @@ impl WebRtcTransport {
         id: TransportId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: Channel,
+        payload_channel: PayloadChannel,
         data: WebRtcTransportData,
         app_data: AppData,
         router: Router,
