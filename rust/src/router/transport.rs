@@ -100,6 +100,13 @@ pub struct SctpListener {
     stream_id_table: HashMap<String, DataProducerId>,
 }
 
+pub(super) enum TransportType {
+    Direct,
+    Pipe,
+    Plain,
+    WebRtc,
+}
+
 #[async_trait(?Send)]
 pub trait Transport
 where
@@ -321,6 +328,7 @@ where
     async fn produce_impl(
         &self,
         producer_options: ProducerOptions,
+        transport_type: TransportType,
     ) -> Result<Producer, ProduceError> {
         if let Some(id) = &producer_options.id {
             if self.router().has_producer(id) {
@@ -415,6 +423,7 @@ where
             self.payload_channel().clone(),
             app_data,
             Box::new(self.clone()),
+            matches!(transport_type, TransportType::Direct),
         );
 
         Ok(producer_fut.await)
@@ -510,6 +519,7 @@ where
         &self,
         r#type: DataProducerType,
         data_producer_options: DataProducerOptions,
+        transport_type: TransportType,
     ) -> Result<DataProducer, ProduceDataError> {
         if let Some(id) = &data_producer_options.id {
             if self.router().has_data_producer(id) {
@@ -571,6 +581,7 @@ where
             self.payload_channel().clone(),
             app_data,
             Box::new(self.clone()),
+            matches!(transport_type, TransportType::Direct),
         );
 
         Ok(data_producer_fut.await)

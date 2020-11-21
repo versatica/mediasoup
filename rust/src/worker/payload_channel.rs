@@ -1,4 +1,5 @@
-use crate::messages::Request;
+use crate::messages::{Notification, Request};
+use crate::worker::RequestError;
 use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
@@ -9,7 +10,6 @@ use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt::Debug;
 use std::io;
 use std::pin::Pin;
@@ -84,25 +84,14 @@ fn deserialize_message(bytes: &[u8]) -> PayloadChannelReceiveMessage {
     }
 }
 
-/// Channel is already closed
 #[derive(Debug, Error)]
-pub enum RequestError {
+pub enum NotificationError {
     #[error("Channel already closed")]
     ChannelClosed,
     #[error("Message is too long")]
     MessageTooLong,
-    #[error("Request timed out")]
-    TimedOut,
-    // TODO: Enum?
-    #[error("Received response error: {reason}")]
-    Response { reason: String },
-    #[error("Failed to parse response from worker: {error}")]
-    FailedToParse {
-        #[from]
-        error: Box<dyn Error>,
-    },
-    #[error("Worker did not return any data in response")]
-    NoData,
+    #[error("Payload is too long")]
+    PayloadTooLong,
 }
 
 struct ResponseError {
@@ -353,6 +342,22 @@ impl PayloadChannel {
         })
     }
 
+    pub(crate) async fn notify<N>(
+        &self,
+        notification: N,
+        payload: Bytes,
+    ) -> Result<(), NotificationError>
+    where
+        N: Notification,
+    {
+        self.notify_internal(
+            notification.as_event(),
+            serde_json::to_value(notification).unwrap(),
+            payload,
+        )
+        .await
+    }
+
     pub(crate) async fn subscribe_to_notifications<F>(
         &self,
         target_id: String,
@@ -425,7 +430,7 @@ impl PayloadChannel {
 
         if payload.len() > NS_PAYLOAD_MAX_LEN {
             requests_container.lock().await.handlers.remove(&id);
-            return Err(RequestError::MessageTooLong);
+            return Err(RequestError::PayloadTooLong);
         }
 
         self.inner
@@ -467,5 +472,45 @@ impl PayloadChannel {
                 Err(RequestError::Response { reason })
             }
         }
+    }
+
+    /// Non-generic method to avoid significant duplication in final binary
+    async fn notify_internal(
+        &self,
+        event: &'static str,
+        notification: Value,
+        payload: Bytes,
+    ) -> Result<(), NotificationError> {
+        #[derive(Debug, Serialize)]
+        struct NotificationMessagePrivate {
+            event: &'static str,
+            #[serde(flatten)]
+            notification: Value,
+        }
+
+        debug!("notify() [event:{}]", event);
+
+        let serialized_notification = serde_json::to_vec(&NotificationMessagePrivate {
+            event,
+            notification,
+        })
+        .unwrap();
+
+        if serialized_notification.len() > NS_PAYLOAD_MAX_LEN {
+            return Err(NotificationError::MessageTooLong);
+        }
+
+        if payload.len() > NS_PAYLOAD_MAX_LEN {
+            return Err(NotificationError::PayloadTooLong);
+        }
+
+        self.inner
+            .sender
+            .send(MessageWithPayload {
+                message: serialized_notification,
+                payload,
+            })
+            .await
+            .map_err(|_| NotificationError::ChannelClosed {})
     }
 }

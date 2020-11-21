@@ -1,4 +1,5 @@
 use crate::messages::Request;
+use crate::worker::RequestError;
 use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
@@ -8,7 +9,6 @@ use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt::Debug;
 use std::io;
 use std::pin::Pin;
@@ -95,27 +95,6 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
         // Unknown
         _ => ChannelReceiveMessage::Event(InternalMessage::Unexpected(Vec::from(bytes))),
     }
-}
-
-/// Channel is already closed
-#[derive(Debug, Error)]
-pub enum RequestError {
-    #[error("Channel already closed")]
-    ChannelClosed,
-    #[error("Message is too long")]
-    MessageTooLong,
-    #[error("Request timed out")]
-    TimedOut,
-    // TODO: Enum?
-    #[error("Received response error: {reason}")]
-    Response { reason: String },
-    #[error("Failed to parse response from worker: {error}")]
-    FailedToParse {
-        #[from]
-        error: Box<dyn Error>,
-    },
-    #[error("Worker did not return any data in response")]
-    NoData,
 }
 
 struct ResponseError {

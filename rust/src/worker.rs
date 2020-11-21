@@ -1,5 +1,6 @@
 // TODO: This is Unix-specific and doesn't support Windows in any way
 mod channel;
+mod common;
 mod payload_channel;
 mod utils;
 
@@ -14,12 +15,13 @@ use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
-pub(crate) use channel::{Channel, RequestError, SubscriptionHandler};
+pub(crate) use channel::{Channel, SubscriptionHandler};
+pub use common::RequestError;
 use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::*;
-pub(crate) use payload_channel::PayloadChannel;
+pub(crate) use payload_channel::{NotificationError, PayloadChannel};
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;

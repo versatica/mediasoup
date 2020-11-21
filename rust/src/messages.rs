@@ -88,6 +88,10 @@ pub(crate) trait Request: Debug + Serialize {
     fn as_method(&self) -> &'static str;
 }
 
+pub(crate) trait Notification: Debug + Serialize {
+    fn as_event(&self) -> &'static str;
+}
+
 macro_rules! request_response {
     (
         $method: literal,
@@ -642,6 +646,17 @@ request_response!(
     },
 );
 
+#[derive(Debug, Serialize)]
+pub(crate) struct ProducerSendNotification {
+    pub(crate) internal: ProducerInternal,
+}
+
+impl Notification for ProducerSendNotification {
+    fn as_event(&self) -> &'static str {
+        "producer.send"
+    }
+}
+
 request_response!(
     "consumer.close",
     ConsumerCloseRequest {
@@ -746,6 +761,24 @@ request_response!(
     },
     Vec<DataProducerStat>,
 );
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct DataProducerSendData {
+    pub(crate) ppid: u32,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct DataProducerSendNotification {
+    pub(crate) internal: DataProducerInternal,
+    pub(crate) data: DataProducerSendData,
+}
+
+impl Notification for DataProducerSendNotification {
+    fn as_event(&self) -> &'static str {
+        "dataProducer.send"
+    }
+}
 
 request_response!(
     "dataConsumer.close",

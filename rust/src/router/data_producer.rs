@@ -1,13 +1,14 @@
 use crate::data_structures::AppData;
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
-    DataProducerInternal,
+    DataProducerInternal, DataProducerSendData, DataProducerSendNotification,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, PayloadChannel, RequestError};
+use crate::worker::{Channel, NotificationError, PayloadChannel, RequestError};
 use async_executor::Executor;
+use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -131,8 +132,32 @@ impl Drop for Inner {
 }
 
 #[derive(Clone)]
-pub struct DataProducer {
+pub struct RegularDataProducer {
     inner: Arc<Inner>,
+}
+
+impl From<RegularDataProducer> for DataProducer {
+    fn from(producer: RegularDataProducer) -> Self {
+        DataProducer::Regular(producer)
+    }
+}
+
+#[derive(Clone)]
+pub struct DirectDataProducer {
+    inner: Arc<Inner>,
+}
+
+impl From<DirectDataProducer> for DataProducer {
+    fn from(producer: DirectDataProducer) -> Self {
+        DataProducer::Direct(producer)
+    }
+}
+
+#[derive(Clone)]
+#[non_exhaustive]
+pub enum DataProducer {
+    Regular(RegularDataProducer),
+    Direct(DirectDataProducer),
 }
 
 impl DataProducer {
@@ -147,6 +172,7 @@ impl DataProducer {
         payload_channel: PayloadChannel,
         app_data: AppData,
         transport: Box<dyn Transport>,
+        direct: bool,
     ) -> Self {
         debug!("new()");
 
@@ -165,37 +191,41 @@ impl DataProducer {
             transport,
         });
 
-        Self { inner }
+        if direct {
+            Self::Direct(DirectDataProducer { inner })
+        } else {
+            Self::Regular(RegularDataProducer { inner })
+        }
     }
 
     /// DataProducer id.
     pub fn id(&self) -> DataProducerId {
-        self.inner.id
+        self.inner().id
     }
 
     /// DataProducer type.
     pub fn r#type(&self) -> DataProducerType {
-        self.inner.r#type
+        self.inner().r#type
     }
 
     /// SCTP stream parameters.
     pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
-        self.inner.sctp_stream_parameters
+        self.inner().sctp_stream_parameters
     }
 
     /// DataChannel label.
     pub fn label(&self) -> &String {
-        &self.inner.label
+        &self.inner().label
     }
 
     /// DataChannel protocol.
     pub fn protocol(&self) -> &String {
-        &self.inner.protocol
+        &self.inner().protocol
     }
 
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
-        &self.inner.app_data
+        &self.inner().app_data
     }
 
     /// Dump DataProducer.
@@ -203,7 +233,7 @@ impl DataProducer {
     pub async fn dump(&self) -> Result<DataProducerDump, RequestError> {
         debug!("dump()");
 
-        self.inner
+        self.inner()
             .channel
             .request(DataProducerDumpRequest {
                 internal: self.get_internal(),
@@ -215,7 +245,7 @@ impl DataProducer {
     pub async fn get_stats(&self) -> Result<Vec<DataProducerStat>, RequestError> {
         debug!("get_stats()");
 
-        self.inner
+        self.inner()
             .channel
             .request(DataProducerGetStatsRequest {
                 internal: self.get_internal(),
@@ -223,69 +253,74 @@ impl DataProducer {
             .await
     }
 
-    // TODO: Probably create a generic parameter on producer to make sure this method is only
-    //  available when it should
-    // /**
-    //  * Send data (just valid for DataProducers created on a DirectTransport).
-    //  */
-    // send(message: string | Buffer, ppid?: number): void
-    // {
-    // 	if (typeof message !== 'string' && !Buffer.isBuffer(message))
-    // 	{
-    // 		throw new TypeError('message must be a string or a Buffer');
-    // 	}
-    //
-    // 	/*
-    // 	 * +-------------------------------+----------+
-    // 	 * | Value                         | SCTP     |
-    // 	 * |                               | PPID     |
-    // 	 * +-------------------------------+----------+
-    // 	 * | WebRTC String                 | 51       |
-    // 	 * | WebRTC Binary Partial         | 52       |
-    // 	 * | (Deprecated)                  |          |
-    // 	 * | WebRTC Binary                 | 53       |
-    // 	 * | WebRTC String Partial         | 54       |
-    // 	 * | (Deprecated)                  |          |
-    // 	 * | WebRTC String Empty           | 56       |
-    // 	 * | WebRTC Binary Empty           | 57       |
-    // 	 * +-------------------------------+----------+
-    // 	 */
-    //
-    // 	if (typeof ppid !== 'number')
-    // 	{
-    // 		ppid = (typeof message === 'string')
-    // 			? message.length > 0 ? 51 : 56
-    // 			: message.length > 0 ? 53 : 57;
-    // 	}
-    //
-    // 	// Ensure we honor PPIDs.
-    // 	if (ppid === 56)
-    // 		message = ' ';
-    // 	else if (ppid === 57)
-    // 		message = Buffer.alloc(1);
-    //
-    // 	const notifData = { ppid };
-    //
-    // 	this._payloadChannel.notify(
-    // 		'dataProducer.send', this._internal, notifData, message);
-    // }
-
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.close.add(Box::new(callback))
+        self.inner().handlers.close.add(Box::new(callback))
     }
 
     pub(super) fn downgrade(&self) -> WeakDataProducer {
         WeakDataProducer {
-            inner: Arc::downgrade(&self.inner),
+            inner: Arc::downgrade(&self.inner()),
+        }
+    }
+
+    fn inner(&self) -> &Arc<Inner> {
+        match self {
+            DataProducer::Regular(producer) => &producer.inner,
+            DataProducer::Direct(producer) => &producer.inner,
         }
     }
 
     fn get_internal(&self) -> DataProducerInternal {
         DataProducerInternal {
-            router_id: self.inner.transport.router_id(),
-            transport_id: self.inner.transport.id(),
-            data_producer_id: self.inner.id,
+            router_id: self.inner().transport.router_id(),
+            transport_id: self.inner().transport.id(),
+            data_producer_id: self.inner().id,
         }
+    }
+}
+
+pub enum Message {
+    WebRtcString(String),
+    WebRtcBinary(Bytes),
+    WebRtcStringEmpty,
+    WebRtcBinaryEmpty,
+}
+
+impl DirectDataProducer {
+    /// Send data
+    pub async fn send(&self, message: Message) -> Result<(), NotificationError> {
+        // +------------------------------------+-----------+
+        // | Value                              | SCTP PPID |
+        // +------------------------------------+-----------+
+        // | WebRTC String                      | 51        |
+        // | WebRTC Binary Partial (Deprecated) | 52        |
+        // | WebRTC Binary                      | 53        |
+        // | WebRTC String Partial (Deprecated) | 54        |
+        // | WebRTC String Empty                | 56        |
+        // | WebRTC Binary Empty                | 57        |
+        // +------------------------------------+-----------+
+
+        let (ppid, payload) = match message {
+            Message::WebRtcString(string) => (51_u32, Bytes::from(string)),
+            Message::WebRtcBinary(binary) => (53_u32, binary),
+            Message::WebRtcStringEmpty => (56_u32, Bytes::from_static(" ".as_bytes())),
+            Message::WebRtcBinaryEmpty => (57_u32, Bytes::from(vec![0u8])),
+        };
+
+        self.inner
+            .payload_channel
+            .notify(
+                DataProducerSendNotification {
+                    internal: DataProducerInternal {
+                        router_id: self.inner.transport.router_id(),
+                        transport_id: self.inner.transport.id(),
+                        data_producer_id: self.inner.id,
+                    },
+                    data: DataProducerSendData { ppid },
+                },
+                payload,
+            )
+            .await
     }
 }
 
@@ -296,8 +331,8 @@ pub(super) struct WeakDataProducer {
 
 impl WeakDataProducer {
     pub(super) fn upgrade(&self) -> Option<DataProducer> {
-        Some(DataProducer {
+        Some(DataProducer::Regular(RegularDataProducer {
             inner: self.inner.upgrade()?,
-        })
+        }))
     }
 }

@@ -3,14 +3,17 @@ use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
     ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
-    ProducerPauseRequest, ProducerResumeRequest,
+    ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
 };
 use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
+use crate::worker::{
+    Channel, NotificationError, PayloadChannel, RequestError, SubscriptionHandler,
+};
 use async_executor::Executor;
+use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -264,8 +267,32 @@ impl Drop for Inner {
 }
 
 #[derive(Clone)]
-pub struct Producer {
+pub struct RegularProducer {
     inner: Arc<Inner>,
+}
+
+impl From<RegularProducer> for Producer {
+    fn from(producer: RegularProducer) -> Self {
+        Producer::Regular(producer)
+    }
+}
+
+#[derive(Clone)]
+pub struct DirectProducer {
+    inner: Arc<Inner>,
+}
+
+impl From<DirectProducer> for Producer {
+    fn from(producer: DirectProducer) -> Self {
+        Producer::Direct(producer)
+    }
+}
+
+#[derive(Clone)]
+#[non_exhaustive]
+pub enum Producer {
+    Regular(RegularProducer),
+    Direct(DirectProducer),
 }
 
 impl Producer {
@@ -281,6 +308,7 @@ impl Producer {
         payload_channel: PayloadChannel,
         app_data: AppData,
         transport: Box<dyn Transport>,
+        direct: bool,
     ) -> Self {
         debug!("new()");
 
@@ -338,42 +366,46 @@ impl Producer {
             _subscription_handler: subscription_handler,
         });
 
-        Self { inner }
+        if direct {
+            Self::Direct(DirectProducer { inner })
+        } else {
+            Self::Regular(RegularProducer { inner })
+        }
     }
 
     /// Producer id.
     pub fn id(&self) -> ProducerId {
-        self.inner.id
+        self.inner().id
     }
 
     /// Media kind.
     pub fn kind(&self) -> MediaKind {
-        self.inner.kind
+        self.inner().kind
     }
 
     /// Media kind.
     pub fn rtp_parameters(&self) -> &RtpParameters {
-        &self.inner.rtp_parameters
+        &self.inner().rtp_parameters
     }
 
     /// Producer type.
     pub fn r#type(&self) -> ProducerType {
-        self.inner.r#type
+        self.inner().r#type
     }
 
     /// Whether the Producer is paused.
     pub fn paused(&self) -> bool {
-        self.inner.paused.load(Ordering::SeqCst)
+        self.inner().paused.load(Ordering::SeqCst)
     }
 
     /// Producer score list.
     pub fn score(&self) -> Vec<ProducerScore> {
-        self.inner.score.lock().unwrap().clone()
+        self.inner().score.lock().unwrap().clone()
     }
 
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
-        &self.inner.app_data
+        &self.inner().app_data
     }
 
     /// Dump Producer.
@@ -381,7 +413,7 @@ impl Producer {
     pub async fn dump(&self) -> Result<ProducerDump, RequestError> {
         debug!("dump()");
 
-        self.inner
+        self.inner()
             .channel
             .request(ProducerDumpRequest {
                 internal: self.get_internal(),
@@ -393,7 +425,7 @@ impl Producer {
     pub async fn get_stats(&self) -> Result<Vec<ProducerStat>, RequestError> {
         debug!("get_stats()");
 
-        self.inner
+        self.inner()
             .channel
             .request(ProducerGetStatsRequest {
                 internal: self.get_internal(),
@@ -405,17 +437,17 @@ impl Producer {
     pub async fn pause(&self) -> Result<(), RequestError> {
         debug!("pause()");
 
-        self.inner
+        self.inner()
             .channel
             .request(ProducerPauseRequest {
                 internal: self.get_internal(),
             })
             .await?;
 
-        let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
+        let was_paused = self.inner().paused.swap(true, Ordering::SeqCst);
 
         if !was_paused {
-            self.inner.handlers.pause.call_simple();
+            self.inner().handlers.pause.call_simple();
         }
 
         Ok(())
@@ -425,17 +457,17 @@ impl Producer {
     pub async fn resume(&self) -> Result<(), RequestError> {
         debug!("resume()");
 
-        self.inner
+        self.inner()
             .channel
             .request(ProducerResumeRequest {
                 internal: self.get_internal(),
             })
             .await?;
 
-        let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
+        let was_paused = self.inner().paused.swap(true, Ordering::SeqCst);
 
         if was_paused {
-            self.inner.handlers.resume.call_simple();
+            self.inner().handlers.resume.call_simple();
         }
 
         Ok(())
@@ -448,7 +480,7 @@ impl Producer {
     ) -> Result<(), RequestError> {
         debug!("enable_trace_event()");
 
-        self.inner
+        self.inner()
             .channel
             .request(ProducerEnableTraceEventRequest {
                 internal: self.get_internal(),
@@ -457,72 +489,82 @@ impl Producer {
             .await
     }
 
-    // TODO: Probably create a generic parameter on producer to make sure this method is only
-    //  available when it should
-    // /**
-    //  * Send RTP packet (just valid for Producers created on a DirectTransport).
-    //  */
-    // send(rtpPacket: Buffer)
-    // {
-    // 	if (!Buffer.isBuffer(rtpPacket))
-    // 	{
-    // 		throw new TypeError('rtpPacket must be a Buffer');
-    // 	}
-    //
-    // 	this._payloadChannel.notify(
-    // 		'producer.send', this._internal, undefined, rtpPacket);
-    // }
-
     pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.score.add(Box::new(callback))
+        self.inner().handlers.score.add(Box::new(callback))
     }
 
     pub fn on_video_orientation_change<F: Fn(ProducerVideoOrientation) + Send + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner
+        self.inner()
             .handlers
             .video_orientation_change
             .add(Box::new(callback))
     }
 
     pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.pause.add(Box::new(callback))
+        self.inner().handlers.pause.add(Box::new(callback))
     }
 
     pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.resume.add(Box::new(callback))
+        self.inner().handlers.resume.add(Box::new(callback))
     }
 
     pub fn on_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.trace.add(Box::new(callback))
+        self.inner().handlers.trace.add(Box::new(callback))
     }
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.close.add(Box::new(callback))
+        self.inner().handlers.close.add(Box::new(callback))
     }
 
     /// Consumable RTP parameters.
     pub(super) fn consumable_rtp_parameters(&self) -> &RtpParameters {
-        &self.inner.consumable_rtp_parameters
+        &self.inner().consumable_rtp_parameters
     }
 
     pub(super) fn downgrade(&self) -> WeakProducer {
         WeakProducer {
-            inner: Arc::downgrade(&self.inner),
+            inner: Arc::downgrade(&self.inner()),
+        }
+    }
+
+    fn inner(&self) -> &Arc<Inner> {
+        match self {
+            Producer::Regular(producer) => &producer.inner,
+            Producer::Direct(producer) => &producer.inner,
         }
     }
 
     fn get_internal(&self) -> ProducerInternal {
         ProducerInternal {
-            router_id: self.inner.transport.router_id(),
-            transport_id: self.inner.transport.id(),
-            producer_id: self.inner.id,
+            router_id: self.inner().transport.router_id(),
+            transport_id: self.inner().transport.id(),
+            producer_id: self.inner().id,
         }
+    }
+}
+
+impl DirectProducer {
+    /// Send RTP packet
+    pub async fn send(&self, rtp_packet: Bytes) -> Result<(), NotificationError> {
+        self.inner
+            .payload_channel
+            .notify(
+                ProducerSendNotification {
+                    internal: ProducerInternal {
+                        router_id: self.inner.transport.router_id(),
+                        transport_id: self.inner.transport.id(),
+                        producer_id: self.inner.id,
+                    },
+                },
+                rtp_packet,
+            )
+            .await
     }
 }
 
@@ -533,8 +575,8 @@ pub(super) struct WeakProducer {
 
 impl WeakProducer {
     pub(super) fn upgrade(&self) -> Option<Producer> {
-        Some(Producer {
+        Some(Producer::Regular(RegularProducer {
             inner: self.inner.upgrade()?,
-        })
+        }))
     }
 }

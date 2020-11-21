@@ -15,7 +15,7 @@ use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
-    TransportTraceEventData, TransportTraceEventType,
+    TransportTraceEventData, TransportTraceEventType, TransportType,
 };
 use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
@@ -302,7 +302,9 @@ impl Transport for WebRtcTransport {
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
         debug!("produce()");
 
-        let producer = self.produce_impl(producer_options).await?;
+        let producer = self
+            .produce_impl(producer_options, TransportType::WebRtc)
+            .await?;
 
         self.inner.handlers.new_producer.call(|callback| {
             callback(&producer);
@@ -336,7 +338,11 @@ impl Transport for WebRtcTransport {
         debug!("produce_data()");
 
         let data_producer = self
-            .produce_data_impl(DataProducerType::Sctp, data_producer_options)
+            .produce_data_impl(
+                DataProducerType::Sctp,
+                data_producer_options,
+                TransportType::WebRtc,
+            )
             .await?;
 
         self.inner.handlers.new_data_producer.call(|callback| {
