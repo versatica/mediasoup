@@ -16,6 +16,7 @@ use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
 uuid_based_wrapper_type!(ProducerId);
@@ -224,8 +225,7 @@ struct Inner {
     r#type: ProducerType,
     rtp_parameters: RtpParameters,
     consumable_rtp_parameters: RtpParameters,
-    // TODO: Use AtomicBool instead
-    paused: Mutex<bool>,
+    paused: AtomicBool,
     score: Arc<Mutex<Vec<ProducerScore>>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -327,7 +327,7 @@ impl Producer {
             r#type,
             rtp_parameters,
             consumable_rtp_parameters,
-            paused: Mutex::new(paused),
+            paused: AtomicBool::new(paused),
             score,
             executor,
             channel,
@@ -363,7 +363,7 @@ impl Producer {
 
     /// Whether the Producer is paused.
     pub fn paused(&self) -> bool {
-        *self.inner.paused.lock().unwrap()
+        self.inner.paused.load(Ordering::SeqCst)
     }
 
     /// Producer score list.
@@ -412,9 +412,7 @@ impl Producer {
             })
             .await?;
 
-        let mut paused = self.inner.paused.lock().unwrap();
-        let was_paused = *paused;
-        *paused = true;
+        let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
 
         if !was_paused {
             self.inner.handlers.pause.call_simple();
@@ -434,9 +432,7 @@ impl Producer {
             })
             .await?;
 
-        let mut paused = self.inner.paused.lock().unwrap();
-        let was_paused = *paused;
-        *paused = false;
+        let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
 
         if was_paused {
             self.inner.handlers.resume.call_simple();
