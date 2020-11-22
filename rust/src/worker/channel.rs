@@ -62,21 +62,21 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
         // JSON message
         b'{' => serde_json::from_slice(bytes).unwrap(),
         // Debug log
-        b'D' => ChannelReceiveMessage::Event(InternalMessage::Debug(unsafe {
-            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        })),
+        b'D' => ChannelReceiveMessage::Event(InternalMessage::Debug(
+            String::from_utf8(Vec::from(&bytes[1..])).unwrap(),
+        )),
         // Warn log
-        b'W' => ChannelReceiveMessage::Event(InternalMessage::Warn(unsafe {
-            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        })),
+        b'W' => ChannelReceiveMessage::Event(InternalMessage::Warn(
+            String::from_utf8(Vec::from(&bytes[1..])).unwrap(),
+        )),
         // Error log
-        b'E' => ChannelReceiveMessage::Event(InternalMessage::Error(unsafe {
-            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        })),
+        b'E' => ChannelReceiveMessage::Event(InternalMessage::Error(
+            String::from_utf8(Vec::from(&bytes[1..])).unwrap(),
+        )),
         // Dump log
-        b'X' => ChannelReceiveMessage::Event(InternalMessage::Dump(unsafe {
-            String::from_utf8_unchecked(Vec::from(&bytes[1..]))
-        })),
+        b'X' => ChannelReceiveMessage::Event(InternalMessage::Dump(
+            String::from_utf8(Vec::from(&bytes[1..])).unwrap(),
+        )),
         // Unknown
         _ => ChannelReceiveMessage::Event(InternalMessage::Unexpected(Vec::from(bytes))),
     }
