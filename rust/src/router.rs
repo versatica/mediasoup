@@ -613,11 +613,11 @@ impl Router {
         let pipe_producer = pipe_transport_pair
             .remote
             .produce({
-                let mut producer_options = ProducerOptions::new(
+                let mut producer_options = ProducerOptions::new_pipe_transport(
+                    producer_id,
                     pipe_consumer.kind(),
                     pipe_consumer.rtp_parameters().clone(),
                 );
-                producer_options.id.replace(producer_id);
                 producer_options.paused = pipe_consumer.producer_paused();
                 producer_options.app_data = producer.app_data().clone();
 
@@ -745,10 +745,10 @@ impl Router {
         let pipe_data_producer = pipe_transport_pair
             .remote
             .produce_data({
-                let mut producer_options = DataProducerOptions::new_sctp(
+                let mut producer_options = DataProducerOptions::new_pipe_transport(
+                    data_producer_id,
                     pipe_data_consumer.sctp_stream_parameters().unwrap(),
                 );
-                producer_options.id.replace(data_producer_id);
                 producer_options.label = pipe_data_consumer.label().clone();
                 producer_options.protocol = pipe_data_consumer.protocol().clone();
                 producer_options.app_data = producer.app_data().clone();

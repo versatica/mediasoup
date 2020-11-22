@@ -45,6 +45,21 @@ pub struct ProducerOptions {
 }
 
 impl ProducerOptions {
+    pub fn new_pipe_transport(
+        producer_id: ProducerId,
+        kind: MediaKind,
+        rtp_parameters: RtpParameters,
+    ) -> Self {
+        Self {
+            id: Some(producer_id),
+            kind,
+            rtp_parameters,
+            paused: false,
+            key_frame_request_delay: 0,
+            app_data: AppData::default(),
+        }
+    }
+
     pub fn new(kind: MediaKind, rtp_parameters: RtpParameters) -> Self {
         Self {
             id: None,

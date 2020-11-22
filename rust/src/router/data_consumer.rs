@@ -25,23 +25,23 @@ uuid_based_wrapper_type!(DataConsumerId);
 #[non_exhaustive]
 pub struct DataConsumerOptions {
     // The id of the DataProducer to consume.
-    pub(crate) data_producer_id: DataProducerId,
+    pub(super) data_producer_id: DataProducerId,
     /// Just if consuming over SCTP.
     /// Whether data messages must be received in order. If true the messages will be sent reliably.
     /// Defaults to the value in the DataProducer if it has type 'Sctp' or to true if it has type
     /// 'Direct'.
-    pub(crate) ordered: Option<bool>,
+    pub(super) ordered: Option<bool>,
     /// Just if consuming over SCTP.
     /// When ordered is false indicates the time (in milliseconds) after which a SCTP packet will
     /// stop being retransmitted.
     /// Defaults to the value in the DataProducer if it has type 'Sctp' or unset if it has type
     /// 'Direct'.
-    pub(crate) max_packet_life_time: Option<u16>,
+    pub(super) max_packet_life_time: Option<u16>,
     /// Just if consuming over SCTP.
     /// When ordered is false indicates the maximum number of times a packet will be retransmitted.
     /// Defaults to the value in the DataProducer if it has type 'Sctp' or unset if it has type
     /// 'Direct'.
-    pub(crate) max_retransmits: Option<u16>,
+    pub(super) max_retransmits: Option<u16>,
     /// Custom application data.
     pub app_data: AppData,
 }

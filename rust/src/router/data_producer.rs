@@ -19,13 +19,13 @@ uuid_based_wrapper_type!(DataProducerId);
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DataProducerOptions {
-    /// DataProducer id (just for Router.pipeToRouter() method).
-    /// DataProducer id, should most likely not be specified explicitly, specified by pipe transport
+    /// DataProducer id (just for `Router::pipe_*_to_router()` methods).
+    /// DataProducer id, should not be specified explicitly, specified by pipe transport only
     pub(super) id: Option<DataProducerId>,
     /// SCTP parameters defining how the endpoint is sending the data.
     /// Required if SCTP/DataChannel is used.
     /// Must not be given if the data producer is created on a DirectTransport.
-    pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
+    pub(super) sctp_stream_parameters: Option<SctpStreamParameters>,
     /// A label which can be used to distinguish this DataChannel from others.
     pub label: String,
     /// Name of the sub-protocol used by this DataChannel.
@@ -35,6 +35,19 @@ pub struct DataProducerOptions {
 }
 
 impl DataProducerOptions {
+    pub(super) fn new_pipe_transport(
+        data_producer_id: DataProducerId,
+        sctp_stream_parameters: SctpStreamParameters,
+    ) -> Self {
+        Self {
+            id: Some(data_producer_id),
+            sctp_stream_parameters: Some(sctp_stream_parameters),
+            label: "".to_string(),
+            protocol: "".to_string(),
+            app_data: AppData::default(),
+        }
+    }
+
     pub fn new_sctp(sctp_stream_parameters: SctpStreamParameters) -> Self {
         Self {
             id: None,
