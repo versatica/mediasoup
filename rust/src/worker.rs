@@ -476,7 +476,7 @@ impl Inner {
                         channel::InternalMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
                         channel::InternalMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
                         channel::InternalMessage::Error(text) => error!("[pid:{}] {}", pid, text),
-                        channel::InternalMessage::Dump(text) => println!("{}", text),
+                        channel::InternalMessage::Dump(text) => eprintln!("{}", text),
                         channel::InternalMessage::Unexpected(data) => error!(
                             "worker[pid:{}] unexpected channel data: {}",
                             pid,
