@@ -300,6 +300,7 @@ pub enum Producer {
 }
 
 impl Producer {
+    #[allow(clippy::too_many_arguments)]
     pub(super) async fn new(
         id: ProducerId,
         kind: MediaKind,

@@ -238,6 +238,7 @@ struct Inner {
     // TODO: RwLock instead
     producers: Arc<SyncMutex<HashMap<ProducerId, WeakProducer>>>,
     data_producers: Arc<SyncMutex<HashMap<DataProducerId, WeakDataProducer>>>,
+    #[allow(clippy::type_complexity)]
     mapped_pipe_transports:
         Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped

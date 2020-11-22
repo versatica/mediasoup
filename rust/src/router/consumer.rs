@@ -202,6 +202,7 @@ pub struct ConsumerStat {
     pub round_trip_time: Option<u32>,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum ConsumerStats {
@@ -356,6 +357,7 @@ pub struct Consumer {
 }
 
 impl Consumer {
+    #[allow(clippy::too_many_arguments)]
     pub(super) async fn new(
         id: ConsumerId,
         producer_id: ProducerId,
@@ -376,7 +378,9 @@ impl Consumer {
 
         let handlers = Arc::<Handlers>::default();
         let score = Arc::new(Mutex::new(score));
+        #[allow(clippy::mutex_atomic)]
         let paused = Arc::new(Mutex::new(paused));
+        #[allow(clippy::mutex_atomic)]
         let producer_paused = Arc::new(Mutex::new(producer_paused));
         let current_layers = Arc::<Mutex<Option<ConsumerLayers>>>::default();
 
@@ -420,7 +424,7 @@ impl Consumer {
                                 });
                             }
                             Notification::LayersChange(consumer_layers) => {
-                                *current_layers.lock().unwrap() = Some(consumer_layers.clone());
+                                *current_layers.lock().unwrap() = Some(consumer_layers);
                                 handlers.layers_change.call(|callback| {
                                     callback(&consumer_layers);
                                 });
@@ -531,12 +535,12 @@ impl Consumer {
 
     /// Preferred video layers.
     pub fn preferred_layers(&self) -> Option<ConsumerLayers> {
-        self.inner.preferred_layers.lock().unwrap().clone()
+        *self.inner.preferred_layers.lock().unwrap()
     }
 
     /// Current video layers.
     pub fn current_layers(&self) -> Option<ConsumerLayers> {
-        self.inner.current_layers.lock().unwrap().clone()
+        *self.inner.current_layers.lock().unwrap()
     }
 
     /// App custom data.

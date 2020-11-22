@@ -212,7 +212,7 @@ impl WebRtcMessage {
         match self {
             WebRtcMessage::String(string) => (51_u32, Bytes::from(string)),
             WebRtcMessage::Binary(binary) => (53_u32, binary),
-            WebRtcMessage::EmptyString => (56_u32, Bytes::from_static(" ".as_bytes())),
+            WebRtcMessage::EmptyString => (56_u32, Bytes::from_static(b" ")),
             WebRtcMessage::EmptyBinary => (57_u32, Bytes::from(vec![0u8])),
         }
     }

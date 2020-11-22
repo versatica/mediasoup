@@ -590,7 +590,7 @@ pub(crate) fn get_consumable_rtp_parameters(
         mux: Some(true),
     };
 
-    return consumable_params;
+    consumable_params
 }
 
 /// Check whether the given RTP capabilities can consume the given Producer.
@@ -606,8 +606,7 @@ pub(crate) fn can_consume(
         if caps
             .codecs
             .iter()
-            .find(|cap_codec| match_codecs(cap_codec.deref().into(), codec.into(), true, false))
-            .is_some()
+            .any(|cap_codec| match_codecs(cap_codec.deref().into(), codec.into(), true, false))
         {
             matching_codecs.push(codec);
         }
@@ -682,16 +681,14 @@ pub(crate) fn get_consumer_rtp_parameters(
     consumer_params.header_extensions.retain(|ext| {
         caps.header_extensions
             .iter()
-            .find(|cap_ext| cap_ext.preferred_id == ext.id && cap_ext.uri == ext.uri)
-            .is_some()
+            .any(|cap_ext| cap_ext.preferred_id == ext.id && cap_ext.uri == ext.uri)
     });
 
     // Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
     if consumer_params
         .header_extensions
         .iter()
-        .find(|ext| ext.uri.as_str() == TWCC_HEADER)
-        .is_some()
+        .any(|ext| ext.uri.as_str() == TWCC_HEADER)
     {
         for codec in consumer_params.codecs.iter_mut() {
             codec
@@ -701,8 +698,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     } else if consumer_params
         .header_extensions
         .iter()
-        .find(|ext| ext.uri.as_str() == ABS_SEND_TIME_HEADER)
-        .is_some()
+        .any(|ext| ext.uri.as_str() == ABS_SEND_TIME_HEADER)
     {
         for codec in consumer_params.codecs.iter_mut() {
             codec
@@ -741,8 +737,7 @@ pub(crate) fn get_consumer_rtp_parameters(
             "S{}T{}",
             consumable_params.encodings.len(),
             scalability_mode
-                .as_ref()
-                .map(String::as_str)
+                .as_deref()
                 .map(scalability_modes::parse)
                 .unwrap_or_default()
                 .temporal_layers
@@ -806,9 +801,8 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         .iter()
         .filter(|ext| {
             ext.uri != "urn:ietf:params:rtp-hdrext:sdes:mid"
-                && ext.uri != "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
-                && ext.uri
-                    != "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+                && ext.uri != ABS_SEND_TIME_HEADER
+                && ext.uri != TWCC_HEADER
         })
         .cloned()
         .collect();
@@ -830,7 +824,7 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         });
     }
 
-    return consumer_params;
+    consumer_params
 }
 
 struct CodecToMatch<'a> {
@@ -1007,5 +1001,5 @@ fn match_codecs(codec_a: CodecToMatch, codec_b: CodecToMatch, strict: bool, modi
         _ => {}
     }
 
-    return true;
+    true
 }

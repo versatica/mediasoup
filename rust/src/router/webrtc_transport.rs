@@ -40,7 +40,7 @@ impl TransportListenIps {
         Self(vec![listen_ip])
     }
 
-    pub fn add(mut self, listen_ip: TransportListenIp) -> Self {
+    pub fn insert(mut self, listen_ip: TransportListenIp) -> Self {
         self.0.push(listen_ip);
         self
     }

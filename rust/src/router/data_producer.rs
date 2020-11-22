@@ -164,6 +164,7 @@ pub enum DataProducer {
 }
 
 impl DataProducer {
+    #[allow(clippy::too_many_arguments)]
     pub(super) async fn new(
         id: DataProducerId,
         r#type: DataProducerType,

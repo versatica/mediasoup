@@ -241,6 +241,7 @@ pub enum DataConsumer {
 }
 
 impl DataConsumer {
+    #[allow(clippy::too_many_arguments)]
     pub(super) async fn new(
         id: DataConsumerId,
         r#type: DataConsumerType,
