@@ -684,7 +684,7 @@ impl Router {
         data_producer_id: DataProducerId,
         pipe_to_router_options: PipeToRouterOptions,
     ) -> Result<PipeDataProducerToRouterValue, PipeDataProducerToRouterError> {
-        debug!("pipe_producer_to_router()");
+        debug!("pipe_data_producer_to_router()");
 
         let remote_router_id = pipe_to_router_options.router.id();
 
