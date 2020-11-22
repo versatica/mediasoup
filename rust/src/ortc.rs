@@ -188,16 +188,7 @@ pub(crate) fn generate_router_rtp_capabilities(
             // If the given media codec has preferred_payload_type, keep it.
             Some(preferred_payload_type) => {
                 // Also remove the payload_type from the list of available dynamic values.
-                // TODO: drain_filter() would be nicer, but it is not stable yet
-                let mut i = 0;
-                while i != dynamic_payload_types.len() {
-                    if dynamic_payload_types[i] == preferred_payload_type {
-                        dynamic_payload_types.remove(i);
-                        break;
-                    } else {
-                        i += 1;
-                    }
-                }
+                dynamic_payload_types.retain(|&pt| pt != preferred_payload_type);
 
                 preferred_payload_type
             }

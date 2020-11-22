@@ -28,7 +28,6 @@ pub enum RtpCodecCapabilityFinalized {
         /// The number of channels supported (e.g. two for stereo). Just for audio.
         /// Default 1.
         channels: u8,
-        // TODO: Not sure if this hashmap is a correct type
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
         parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
@@ -43,7 +42,6 @@ pub enum RtpCodecCapabilityFinalized {
         preferred_payload_type: u8,
         /// Codec clock rate expressed in Hertz.
         clock_rate: u32,
-        // TODO: Not sure if this hashmap is a correct type
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
         parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
@@ -193,7 +191,6 @@ pub enum RtpCodecCapability {
         /// The number of channels supported (e.g. two for stereo). Just for audio.
         /// Default 1.
         channels: u8,
-        // TODO: Not sure if this hashmap is a correct type
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
         parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
@@ -209,7 +206,6 @@ pub enum RtpCodecCapability {
         preferred_payload_type: Option<u8>,
         /// Codec clock rate expressed in Hertz.
         clock_rate: u32,
-        // TODO: Not sure if this hashmap is a correct type
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
         parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
@@ -280,7 +276,6 @@ pub struct RtpCapabilities {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RtpHeaderExtensionDirection {
-    // TODO: Serialization of all of these variants should be lowercase if we ever need it
     SendRecv,
     SendOnly,
     RecvOnly,
@@ -385,7 +380,6 @@ pub enum RtpCodecParameters {
         /// The number of channels supported (e.g. two for stereo).
         /// Default 1.
         channels: u8,
-        // TODO: Not sure if this hashmap is a correct type
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
         /// codec matching.
@@ -401,7 +395,6 @@ pub enum RtpCodecParameters {
         payload_type: u8,
         /// Codec clock rate expressed in Hertz.
         clock_rate: u32,
-        // TODO: Not sure if this hashmap is a correct type
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
         /// codec matching.
@@ -512,7 +505,6 @@ pub struct RtpHeaderExtensionParameters {
     /// If true, the value in the header is encrypted as per RFC 6904.
     /// Default false.
     pub encrypt: bool,
-    // TODO: Not sure if this hashmap is a correct type
     /// Configuration parameters for the header extension.
     pub parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
 }
