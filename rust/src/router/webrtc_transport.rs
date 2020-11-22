@@ -231,6 +231,7 @@ struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
     used_sctp_stream_ids: AsyncMutex<HashMap<u16, bool>>,
+    cname_for_producers: AsyncMutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: PayloadChannel,
@@ -457,6 +458,10 @@ impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport
     fn used_sctp_stream_ids(&self) -> &AsyncMutex<HashMap<u16, bool>> {
         &self.inner.used_sctp_stream_ids
     }
+
+    fn cname_for_producers(&self) -> &AsyncMutex<Option<String>> {
+        &self.inner.cname_for_producers
+    }
 }
 
 impl WebRtcTransport {
@@ -546,10 +551,12 @@ impl WebRtcTransport {
             }
             used_used_sctp_stream_ids
         });
+        let cname_for_producers = AsyncMutex::new(None);
         let inner = Arc::new(Inner {
             id,
             next_mid_for_consumers,
             used_sctp_stream_ids,
+            cname_for_producers,
             executor,
             channel,
             payload_channel,

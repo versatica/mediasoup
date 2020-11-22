@@ -1,8 +1,6 @@
 use async_executor::Executor;
-use std::error::Error;
 use std::pin::Pin;
 use std::sync::Arc;
-use thiserror::Error;
 
 /// Subscription handler, will remove corresponding subscription when dropped
 pub(crate) struct SubscriptionHandler {

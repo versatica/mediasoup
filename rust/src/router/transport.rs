@@ -35,6 +35,7 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
+use uuid::Uuid;
 
 uuid_based_wrapper_type!(TransportId);
 
@@ -239,6 +240,8 @@ where
 
     fn used_sctp_stream_ids(&self) -> &AsyncMutex<HashMap<u16, bool>>;
 
+    fn cname_for_producers(&self) -> &AsyncMutex<Option<String>>;
+
     async fn allocate_sctp_stream_id(&self) -> Option<u16> {
         let mut used_sctp_stream_ids = self.used_sctp_stream_ids().lock().await;
         // This is simple, but not the fastest implementation, maybe worth improving
@@ -351,28 +354,27 @@ where
                 .push(RtpEncodingParameters::default());
         }
 
-        // TODO: Port this piece of code from TypeScript
-        // // Don't do this in PipeTransports since there we must keep CNAME value in
-        // // each Producer.
-        // if (this.constructor.name !== 'PipeTransport')
-        // {
-        // 	// If CNAME is given and we don't have yet a CNAME for Producers in this
-        // 	// Transport, take it.
-        // 	if (!this._cnameForProducers && rtpParameters.rtcp && rtpParameters.rtcp.cname)
-        // 	{
-        // 		this._cnameForProducers = rtpParameters.rtcp.cname;
-        // 	}
-        // 	// Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
-        // 	// do not include CNAME, create a random one.
-        // 	else if (!this._cnameForProducers)
-        // 	{
-        // 		this._cnameForProducers = uuidv4().substr(0, 8);
-        // 	}
-        //
-        // 	// Override Producer's CNAME.
-        // 	rtpParameters.rtcp = rtpParameters.rtcp || {};
-        // 	rtpParameters.rtcp.cname = this._cnameForProducers;
-        // }
+        // Don't do this in PipeTransports since there we must keep CNAME value in each Producer.
+        if !matches!(transport_type, TransportType::Pipe) {
+            let mut cname_for_producers = self.cname_for_producers().lock().await;
+            if let Some(cname_for_producers) = cname_for_producers.as_ref() {
+                rtp_parameters.rtcp.cname = Some(cname_for_producers.clone());
+            } else {
+                if let Some(cname) = rtp_parameters.rtcp.cname.as_ref() {
+                    // If CNAME is given and we don't have yet a CNAME for Producers in this
+                    // Transport, take it.
+                    cname_for_producers.replace(cname.clone());
+                } else {
+                    // Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
+                    // do not include CNAME, create a random one.
+                    let cname = Uuid::new_v4().to_string();
+                    cname_for_producers.replace(cname.clone());
+
+                    // Override Producer's CNAME.
+                    rtp_parameters.rtcp.cname = Some(cname);
+                }
+            }
+        }
 
         let router_rtp_capabilities = self.router().rtp_capabilities();
 
