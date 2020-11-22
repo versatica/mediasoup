@@ -26,7 +26,7 @@ use std::collections::HashMap;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct PlainTransportOptions {
     /// Listening IP address.
@@ -477,7 +477,6 @@ impl PlainTransport {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let next_mid_for_consumers = AtomicUsize::default();

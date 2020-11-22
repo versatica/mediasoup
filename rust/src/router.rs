@@ -24,9 +24,10 @@ pub mod webrtc_transport;
 use crate::{ortc, uuid_based_wrapper_type};
 
 use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
-use crate::consumer::ConsumerId;
-use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
-use crate::data_structures::AppData;
+use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
+use crate::data_consumer::{DataConsumer, DataConsumerOptions};
+use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, WeakDataProducer};
+use crate::data_structures::{AppData, TransportListenIp, TransportTuple};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverRequest,
@@ -36,20 +37,27 @@ use crate::messages::{
     RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
     RouterInternal, RtpObserverInternal, TransportInternal,
 };
-use crate::pipe_transport::{PipeTransport, PipeTransportOptions};
+use crate::pipe_transport::{PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters};
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
-use crate::producer::{Producer, ProducerId, WeakProducer};
+use crate::producer::{Producer, ProducerId, ProducerOptions, WeakProducer};
 use crate::rtp_observer::RtpObserverId;
 use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
-use crate::transport::{TransportGeneric, TransportId};
+use crate::sctp_parameters::NumSctpStreams;
+use crate::transport::{
+    ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, Transport, TransportGeneric,
+    TransportId,
+};
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, PayloadChannel, RequestError, Worker};
 use async_executor::Executor;
+use async_mutex::Mutex as AsyncMutex;
 use event_listener_primitives::{Bag, HandlerId};
+use futures_lite::future;
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex as SyncMutex};
+use thiserror::Error;
 
 uuid_based_wrapper_type!(RouterId);
 
@@ -57,6 +65,129 @@ uuid_based_wrapper_type!(RouterId);
 pub struct RouterOptions {
     pub media_codecs: Vec<RtpCodecCapability>,
     pub app_data: AppData,
+}
+
+pub struct PipeToRouterOptions {
+    /// Target Router instance.
+    pub router: Router,
+    /// IP used in the PipeTransport pair.
+    /// Default '127.0.0.1'.
+    listen_ip: TransportListenIp,
+    /// Create a SCTP association.
+    /// Default true.
+    pub enable_sctp: bool,
+    /// SCTP streams number.
+    pub num_sctp_streams: NumSctpStreams,
+    /// Enable RTX and NACK for RTP retransmission.
+    /// Default false.
+    pub enable_rtx: bool,
+    /// Enable SRTP.
+    /// Default false.
+    pub enable_srtp: bool,
+}
+
+impl PipeToRouterOptions {
+    pub fn new(router: Router) -> Self {
+        Self {
+            router,
+            listen_ip: TransportListenIp {
+                ip: "127.0.0.1".to_string(),
+                announced_ip: None,
+            },
+            enable_sctp: true,
+            num_sctp_streams: Default::default(),
+            enable_rtx: false,
+            enable_srtp: false,
+        }
+    }
+}
+
+pub struct PipeToRouterSourceProducer {
+    /// The id of the Producer to consume.
+    pub producer_id: ProducerId,
+}
+
+pub struct PipeProducerToRouterValue {
+    /// The Consumer created in the current Router.
+    pub pipe_consumer: Consumer,
+    /// The Producer created in the target Router.
+    pub pipe_producer: Producer,
+}
+
+#[derive(Debug, Error)]
+pub enum PipeProducerToRouterError {
+    #[error("Destination router must be different")]
+    SameRouter,
+    #[error("Producer with id \"{0}\" not found")]
+    ProducerNotFound(ProducerId),
+    #[error("Failed to create or connect Pipe transport: \"{0}\"")]
+    TransportFailed(RequestError),
+    #[error("Failed to consume: \"{0}\"")]
+    ConsumeFailed(ConsumeError),
+    #[error("Failed to produce: \"{0}\"")]
+    ProduceFailed(ProduceError),
+}
+
+impl From<RequestError> for PipeProducerToRouterError {
+    fn from(error: RequestError) -> Self {
+        PipeProducerToRouterError::TransportFailed(error)
+    }
+}
+
+impl From<ConsumeError> for PipeProducerToRouterError {
+    fn from(error: ConsumeError) -> Self {
+        PipeProducerToRouterError::ConsumeFailed(error)
+    }
+}
+
+impl From<ProduceError> for PipeProducerToRouterError {
+    fn from(error: ProduceError) -> Self {
+        PipeProducerToRouterError::ProduceFailed(error)
+    }
+}
+
+pub struct PipeToRouterSourceDataProducer {
+    /// The id of the DataProducer to consume.
+    pub data_producer_id: DataProducerId,
+}
+
+pub struct PipeDataProducerToRouterValue {
+    /// The DataConsumer created in the current Router.
+    pub pipe_data_consumer: DataConsumer,
+    /// The DataProducer created in the target Router.
+    pub pipe_data_producer: DataProducer,
+}
+
+#[derive(Debug, Error)]
+pub enum PipeDataProducerToRouterError {
+    #[error("Destination router must be different")]
+    SameRouter,
+    #[error("Data producer with id \"{0}\" not found")]
+    DataProducerNotFound(DataProducerId),
+    #[error("Failed to create or connect Pipe transport: \"{0}\"")]
+    TransportFailed(RequestError),
+    #[error("Failed to consume: \"{0}\"")]
+    ConsumeFailed(ConsumeDataError),
+    #[error("Failed to produce: \"{0}\"")]
+    ProduceFailed(ProduceDataError),
+}
+
+impl From<RequestError> for PipeDataProducerToRouterError {
+    fn from(error: RequestError) -> Self {
+        PipeDataProducerToRouterError::TransportFailed(error)
+    }
+}
+
+impl From<ConsumeDataError> for PipeDataProducerToRouterError {
+    fn from(error: ConsumeDataError) -> Self {
+        PipeDataProducerToRouterError::ConsumeFailed(error)
+    }
+}
+
+impl From<ProduceDataError> for PipeDataProducerToRouterError {
+    fn from(error: ProduceDataError) -> Self {
+        PipeDataProducerToRouterError::ProduceFailed(error)
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -84,6 +215,11 @@ pub enum NewRtpObserver<'a> {
     AudioLevel(&'a AudioLevelObserver),
 }
 
+struct PipeTransportPair {
+    local: PipeTransport,
+    remote: PipeTransport,
+}
+
 #[derive(Default)]
 struct Handlers {
     new_transport: Bag<'static, dyn Fn(NewTransport) + Send>,
@@ -100,8 +236,10 @@ struct Inner {
     handlers: Handlers,
     app_data: AppData,
     // TODO: RwLock instead
-    producers: Arc<Mutex<HashMap<ProducerId, WeakProducer>>>,
-    data_producers: Arc<Mutex<HashMap<DataProducerId, WeakDataProducer>>>,
+    producers: Arc<SyncMutex<HashMap<ProducerId, WeakProducer>>>,
+    data_producers: Arc<SyncMutex<HashMap<DataProducerId, WeakDataProducer>>>,
+    mapped_pipe_transports:
+        Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped
     _worker: Worker,
 }
@@ -145,8 +283,11 @@ impl Router {
     ) -> Self {
         debug!("new()");
 
-        let producers = Arc::<Mutex<HashMap<ProducerId, WeakProducer>>>::default();
-        let data_producers = Arc::<Mutex<HashMap<DataProducerId, WeakDataProducer>>>::default();
+        let producers = Arc::<SyncMutex<HashMap<ProducerId, WeakProducer>>>::default();
+        let data_producers = Arc::<SyncMutex<HashMap<DataProducerId, WeakDataProducer>>>::default();
+        let mapped_pipe_transports = Arc::<
+            SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>,
+        >::default();
         let handlers = Handlers::default();
         let inner = Arc::new(Inner {
             id,
@@ -157,6 +298,7 @@ impl Router {
             handlers,
             producers,
             data_producers,
+            mapped_pipe_transports,
             app_data,
             _worker: worker,
         });
@@ -400,7 +542,238 @@ impl Router {
         Ok(audio_level_observer)
     }
 
-    // TODO: Port pipeToRouter from TypeScript
+    /// Pipes `Producer` with the given `producer_id` into another `Router` on same host.
+    pub async fn pipe_producer_to_router(
+        &self,
+        producer_id: ProducerId,
+        pipe_to_router_options: PipeToRouterOptions,
+    ) -> Result<PipeProducerToRouterValue, PipeProducerToRouterError> {
+        debug!("pipe_producer_to_router()");
+
+        let remote_router_id = pipe_to_router_options.router.id();
+
+        if remote_router_id == self.id() {
+            return Err(PipeProducerToRouterError::SameRouter);
+        }
+
+        let producer = match self
+            .inner
+            .producers
+            .lock()
+            .unwrap()
+            .get(&producer_id)
+            .map(|weak_producer| weak_producer.upgrade())
+            .flatten()
+        {
+            Some(producer) => producer,
+            None => return Err(PipeProducerToRouterError::ProducerNotFound(producer_id)),
+        };
+
+        // Here we may have to create a new PipeTransport pair to connect source and
+        // destination Routers. We just want to keep a PipeTransport pair for each
+        // pair of Routers. Since this operation is async, it may happen that two
+        // simultaneous calls piping to the same router would end up generating two pairs of
+        // `PipeTransport`. To prevent that, we have `HashMap` with mapping behind `Mutex` and
+        // another `Mutex` on the pair of `PipeTransport`.
+
+        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock().unwrap();
+
+        let pipe_transport_pair_mutex = mapped_pipe_transports
+            .entry(remote_router_id)
+            .or_default()
+            .clone();
+
+        let mut pipe_transport_pair = pipe_transport_pair_mutex.lock().await;
+
+        drop(mapped_pipe_transports);
+
+        let pipe_transport_pair = match pipe_transport_pair.as_ref() {
+            Some(pipe_transport_pair) => pipe_transport_pair,
+            None => {
+                pipe_transport_pair.replace(
+                    self.create_pipe_transport_pair(pipe_to_router_options)
+                        .await?,
+                );
+
+                pipe_transport_pair.as_ref().unwrap()
+            }
+        };
+
+        let pipe_consumer = pipe_transport_pair
+            .local
+            .consume(ConsumerOptions::new(
+                producer_id,
+                RtpCapabilities::default(),
+            ))
+            .await?;
+
+        let pipe_producer = pipe_transport_pair
+            .remote
+            .produce({
+                let mut producer_options = ProducerOptions::new(
+                    pipe_consumer.kind(),
+                    pipe_consumer.rtp_parameters().clone(),
+                );
+                producer_options.id.replace(producer_id);
+                producer_options.paused = pipe_consumer.producer_paused();
+                producer_options.app_data = producer.app_data().clone();
+
+                producer_options
+            })
+            .await?;
+
+        // Pipe events from the pipe Consumer to the pipe Producer.
+        pipe_consumer
+            .on_pause({
+                let executor = Arc::clone(&self.inner.executor);
+                let pipe_producer_weak = pipe_producer.downgrade();
+
+                move || {
+                    if let Some(pipe_producer) = pipe_producer_weak.upgrade() {
+                        executor
+                            .spawn(async move {
+                                let _ = pipe_producer.pause().await;
+                            })
+                            .detach();
+                    }
+                }
+            })
+            .detach();
+        pipe_consumer
+            .on_resume({
+                let executor = Arc::clone(&self.inner.executor);
+                let pipe_producer_weak = pipe_producer.downgrade();
+
+                move || {
+                    if let Some(pipe_producer) = pipe_producer_weak.upgrade() {
+                        executor
+                            .spawn(async move {
+                                let _ = pipe_producer.resume().await;
+                            })
+                            .detach();
+                    }
+                }
+            })
+            .detach();
+
+        // Pipe events from the pipe Producer to the pipe Consumer.
+        pipe_producer
+            .on_close({
+                let pipe_consumer = pipe_consumer.clone();
+
+                move || {
+                    // Just ot make sure consumer on local router outlives producer on the other
+                    // router
+                    drop(pipe_consumer);
+                }
+            })
+            .detach();
+
+        Ok(PipeProducerToRouterValue {
+            pipe_consumer,
+            pipe_producer,
+        })
+    }
+
+    /// Pipes `DataProducer` with the given `data_producer_id` into another `Router` on same host.
+    pub async fn pipe_data_producer_to_router(
+        &self,
+        data_producer_id: DataProducerId,
+        pipe_to_router_options: PipeToRouterOptions,
+    ) -> Result<PipeDataProducerToRouterValue, PipeDataProducerToRouterError> {
+        debug!("pipe_producer_to_router()");
+
+        let remote_router_id = pipe_to_router_options.router.id();
+
+        if remote_router_id == self.id() {
+            return Err(PipeDataProducerToRouterError::SameRouter);
+        }
+
+        let producer = match self
+            .inner
+            .data_producers
+            .lock()
+            .unwrap()
+            .get(&data_producer_id)
+            .map(|weak_producer| weak_producer.upgrade())
+            .flatten()
+        {
+            Some(producer) => producer,
+            None => {
+                return Err(PipeDataProducerToRouterError::DataProducerNotFound(
+                    data_producer_id,
+                ))
+            }
+        };
+
+        // Here we may have to create a new PipeTransport pair to connect source and
+        // destination Routers. We just want to keep a PipeTransport pair for each
+        // pair of Routers. Since this operation is async, it may happen that two
+        // simultaneous calls piping to the same router would end up generating two pairs of
+        // `PipeTransport`. To prevent that, we have `HashMap` with mapping behind `Mutex` and
+        // another `Mutex` on the pair of `PipeTransport`.
+
+        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock().unwrap();
+
+        let pipe_transport_pair_mutex = mapped_pipe_transports
+            .entry(remote_router_id)
+            .or_default()
+            .clone();
+
+        let mut pipe_transport_pair = pipe_transport_pair_mutex.lock().await;
+
+        drop(mapped_pipe_transports);
+
+        let pipe_transport_pair = match pipe_transport_pair.as_ref() {
+            Some(pipe_transport_pair) => pipe_transport_pair,
+            None => {
+                pipe_transport_pair.replace(
+                    self.create_pipe_transport_pair(pipe_to_router_options)
+                        .await?,
+                );
+
+                pipe_transport_pair.as_ref().unwrap()
+            }
+        };
+
+        let pipe_data_consumer = pipe_transport_pair
+            .local
+            .consume_data(DataConsumerOptions::new_sctp(data_producer_id))
+            .await?;
+
+        let pipe_data_producer = pipe_transport_pair
+            .remote
+            .produce_data({
+                let mut producer_options = DataProducerOptions::new_sctp(
+                    pipe_data_consumer.sctp_stream_parameters().unwrap(),
+                );
+                producer_options.id.replace(data_producer_id);
+                producer_options.label = pipe_data_consumer.label().clone();
+                producer_options.protocol = pipe_data_consumer.protocol().clone();
+                producer_options.app_data = producer.app_data().clone();
+
+                producer_options
+            })
+            .await?;
+
+        // Pipe events from the pipe DataProducer to the pipe Consumer.
+        pipe_data_producer
+            .on_close({
+                let pipe_data_consumer = pipe_data_consumer.clone();
+
+                move || {
+                    // Just ot make sure consumer on local router outlives producer on the other
+                    // router
+                    drop(pipe_data_consumer);
+                }
+            })
+            .detach();
+
+        Ok(PipeDataProducerToRouterValue {
+            pipe_data_consumer,
+            pipe_data_producer,
+        })
+    }
 
     /// Check whether the given RTP capabilities can consume the given Producer.
     pub fn can_consume(
@@ -441,6 +814,112 @@ impl Router {
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
+    }
+
+    async fn create_pipe_transport_pair(
+        &self,
+        pipe_to_router_options: PipeToRouterOptions,
+    ) -> Result<PipeTransportPair, RequestError> {
+        let PipeToRouterOptions {
+            router,
+            listen_ip,
+            enable_sctp,
+            num_sctp_streams,
+            enable_rtx,
+            enable_srtp,
+        } = pipe_to_router_options;
+
+        let remote_router_id = router.id();
+
+        let transport_options = PipeTransportOptions {
+            enable_sctp,
+            num_sctp_streams,
+            enable_rtx,
+            enable_srtp,
+            app_data: Default::default(),
+            ..PipeTransportOptions::new(listen_ip.clone())
+        };
+        let local_pipe_transport_fut = self.create_pipe_transport(transport_options.clone());
+
+        let remote_pipe_transport_fut = router.create_pipe_transport(transport_options);
+
+        let (local_pipe_transport, remote_pipe_transport) =
+            future::try_zip(local_pipe_transport_fut, remote_pipe_transport_fut).await?;
+
+        let local_connect_fut = local_pipe_transport.connect({
+            let (ip, port) = match remote_pipe_transport.tuple() {
+                TransportTuple::LocalOnly {
+                    local_ip,
+                    local_port,
+                    ..
+                } => (local_ip, local_port),
+                TransportTuple::WithRemote {
+                    local_ip,
+                    local_port,
+                    ..
+                } => (local_ip, local_port),
+            };
+
+            PipeTransportRemoteParameters {
+                ip,
+                port,
+                srtp_parameters: remote_pipe_transport.srtp_parameters(),
+            }
+        });
+
+        let remote_connect_fut = remote_pipe_transport.connect({
+            let (ip, port) = match local_pipe_transport.tuple() {
+                TransportTuple::LocalOnly {
+                    local_ip,
+                    local_port,
+                    ..
+                } => (local_ip, local_port),
+                TransportTuple::WithRemote {
+                    local_ip,
+                    local_port,
+                    ..
+                } => (local_ip, local_port),
+            };
+
+            PipeTransportRemoteParameters {
+                ip,
+                port,
+                srtp_parameters: local_pipe_transport.srtp_parameters(),
+            }
+        });
+
+        future::try_zip(local_connect_fut, remote_connect_fut).await?;
+
+        local_pipe_transport
+            .on_close({
+                let mapped_pipe_transports = Arc::clone(&self.inner.mapped_pipe_transports);
+
+                move || {
+                    mapped_pipe_transports
+                        .lock()
+                        .unwrap()
+                        .remove(&remote_router_id);
+                }
+            })
+            .detach();
+
+        remote_pipe_transport
+            .on_close({
+                let mapped_pipe_transports = Arc::clone(&self.inner.mapped_pipe_transports);
+
+                move || {
+                    mapped_pipe_transports
+                        .lock()
+                        .unwrap()
+                        .remove(&remote_router_id);
+                }
+            })
+            .detach();
+
+        Ok(PipeTransportPair {
+            local: local_pipe_transport,
+            remote: remote_pipe_transport,
+        })
     }
 
     fn after_transport_creation<Dump, Stat, T>(&self, transport: &T)

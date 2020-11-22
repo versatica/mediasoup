@@ -231,6 +231,7 @@ request_response!(
         internal: TransportInternal,
         data: RouterCreateDirectTransportData,
     },
+    RouterCreateDirectTransportResponse {},
 );
 
 #[derive(Debug, Serialize)]

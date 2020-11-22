@@ -70,7 +70,7 @@ impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct WebRtcTransportOptions {
     /// Listening IP address or addresses in order of preference (first one is the preferred one).
@@ -540,7 +540,6 @@ impl WebRtcTransport {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let next_mid_for_consumers = AtomicUsize::default();

@@ -43,7 +43,7 @@ pub struct ConsumerScore {
     producer_scores: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct ConsumerOptions {
     /// The id of the Producer to consume.
@@ -434,7 +434,6 @@ impl Consumer {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let payload_subscription_handler = {
@@ -457,7 +456,6 @@ impl Consumer {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let inner = Arc::new(Inner {

@@ -1,4 +1,5 @@
 use crate::messages::Request;
+use crate::worker::common::EventHandlers;
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
@@ -13,7 +14,6 @@ use std::fmt::Debug;
 use std::io;
 use std::sync::Arc;
 use std::time::Duration;
-use thiserror::Error;
 
 // netstring length for a 4194304 bytes payload.
 const NS_MESSAGE_MAX_LEN: usize = 4194313;
@@ -95,16 +95,11 @@ struct RequestsContainer {
     handlers: HashMap<u32, async_oneshot::Sender<Response<Value>>>,
 }
 
-#[derive(Error, Debug)]
-#[error("Handler for this event already exists, this must be an error in the library")]
-pub struct HandlerAlreadyExistsError;
-
 struct Inner {
-    executor: Arc<Executor<'static>>,
     sender: async_channel::Sender<Vec<u8>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
-    event_handlers: Arc<Mutex<HashMap<String, Box<dyn Fn(Value) + Send>>>>,
+    event_handlers: EventHandlers<Value>,
 }
 
 impl Drop for Inner {
@@ -122,11 +117,11 @@ pub(crate) struct Channel {
 impl Channel {
     pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
-        let event_handlers = Arc::<Mutex<HashMap<String, Box<dyn Fn(Value) + Send>>>>::default();
+        let event_handlers = EventHandlers::new(Arc::clone(&executor));
 
         let internal_message_receiver = {
             let requests_container = Arc::clone(&requests_container);
-            let event_handlers = Arc::clone(&event_handlers);
+            let event_handlers = event_handlers.clone();
             let (sender, receiver) = async_channel::bounded(1);
 
             executor
@@ -169,7 +164,7 @@ impl Channel {
                             } => {
                                 let sender = requests_container.lock().await.handlers.remove(&id);
                                 if let Some(sender) = sender {
-                                    drop(sender.send(Ok(data)));
+                                    let _ = sender.send(Ok(data));
                                 } else {
                                     warn!(
                                         "received success response does not match any sent request \
@@ -185,7 +180,7 @@ impl Channel {
                             } => {
                                 let sender = requests_container.lock().await.handlers.remove(&id);
                                 if let Some(sender) = sender {
-                                    drop(sender.send(Err(ResponseError { reason })));
+                                    let _ = sender.send(Err(ResponseError { reason }));
                                 } else {
                                     warn!(
                                         "received error response does not match any sent request \
@@ -197,15 +192,14 @@ impl Channel {
                             ChannelReceiveMessage::Notification(notification) => {
                                 let target_id = notification
                                     .get("targetId".to_string())
-                                    .map(|value| value.as_str())
-                                    .flatten();
+                                    .map(|value| value.as_str().to_owned())
+                                    .flatten()
+                                    .map(|s| s.to_owned());
                                 match target_id {
                                     Some(target_id) => {
-                                        if let Some(callback) =
-                                            event_handlers.lock().await.get(target_id)
-                                        {
-                                            callback(notification);
-                                        }
+                                        event_handlers
+                                            .call_callbacks_with_value(&target_id, notification)
+                                            .await;
                                     }
                                     None => {
                                         let unexpected_message = InternalMessage::Unexpected(
@@ -256,7 +250,6 @@ impl Channel {
         };
 
         let inner = Arc::new(Inner {
-            executor,
             sender,
             internal_message_receiver,
             requests_container,
@@ -288,26 +281,11 @@ impl Channel {
         &self,
         target_id: String,
         callback: F,
-    ) -> Result<SubscriptionHandler, HandlerAlreadyExistsError>
+    ) -> SubscriptionHandler
     where
         F: Fn(Value) + Send + 'static,
     {
-        {
-            let mut event_handlers = self.inner.event_handlers.lock().await;
-            if event_handlers.contains_key(&target_id) {
-                return Err(HandlerAlreadyExistsError {});
-            }
-
-            event_handlers.insert(target_id.clone(), Box::new(callback));
-        }
-
-        let event_handlers = self.inner.event_handlers.clone();
-        Ok(SubscriptionHandler::new(
-            Arc::clone(&self.inner.executor),
-            Box::pin(async move {
-                event_handlers.lock().await.remove(&target_id);
-            }),
-        ))
+        self.inner.event_handlers.add(target_id, callback).await
     }
 
     /// Non-generic method to avoid significant duplication in final binary

@@ -2,9 +2,10 @@ use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::ops::{Deref, DerefMut};
+use std::sync::Arc;
 
-#[derive(Debug)]
-pub struct AppData(Box<dyn Any + Send + Sync>);
+#[derive(Debug, Clone)]
+pub struct AppData(Arc<dyn Any + Send + Sync>);
 
 impl Default for AppData {
     fn default() -> Self {
@@ -13,7 +14,7 @@ impl Default for AppData {
 }
 
 impl Deref for AppData {
-    type Target = Box<dyn Any + Send + Sync>;
+    type Target = Arc<dyn Any + Send + Sync>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -28,7 +29,7 @@ impl DerefMut for AppData {
 
 impl AppData {
     pub fn new<T: Any + Send + Sync>(app_data: T) -> Self {
-        Self(Box::new(app_data))
+        Self(Arc::new(app_data))
     }
 }
 

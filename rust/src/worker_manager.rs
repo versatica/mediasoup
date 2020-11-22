@@ -59,7 +59,7 @@ impl WorkerManager {
             let executor = Arc::clone(&executor);
             std::thread::spawn(move || {
                 // Will return Err(Closed) when `WorkerManager` struct is dropped
-                drop(future::block_on(executor.run(stop_receiver)));
+                let _ = future::block_on(executor.run(stop_receiver));
             });
         }
 
@@ -118,7 +118,7 @@ mod tests {
     use std::env;
 
     fn init() {
-        drop(env_logger::builder().is_test(true).try_init());
+        let _ = env_logger::builder().is_test(true).try_init();
     }
 
     #[test]

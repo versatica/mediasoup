@@ -16,7 +16,8 @@ use std::sync::{Arc, Weak};
 uuid_based_wrapper_type!(DataProducerId);
 
 // TODO: Split into 2 for Direct and others or make an enum
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct DataProducerOptions {
     /// DataProducer id (just for Router.pipeToRouter() method).
     /// DataProducer id, should most likely not be specified explicitly, specified by pipe transport

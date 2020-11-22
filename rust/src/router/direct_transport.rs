@@ -26,7 +26,7 @@ use std::collections::HashMap;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DirectTransportOptions {
     /// Maximum allowed size for direct messages sent from DataProducers.
@@ -389,7 +389,6 @@ impl DirectTransport {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let payload_subscription_handler = {
@@ -412,7 +411,6 @@ impl DirectTransport {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let next_mid_for_consumers = AtomicUsize::default();

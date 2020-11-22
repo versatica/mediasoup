@@ -16,7 +16,7 @@ use serde::Deserialize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct AudioLevelObserverOptions {
     /// Maximum number of entries in the 'volumes' event.
@@ -281,7 +281,6 @@ impl AudioLevelObserver {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let inner = Arc::new(Inner {

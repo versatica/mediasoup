@@ -1,4 +1,5 @@
 use crate::messages::{Notification, Request};
+use crate::worker::common::EventHandlers;
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
@@ -31,6 +32,7 @@ struct MessageWithPayload {
     payload: Bytes,
 }
 
+#[derive(Clone)]
 pub(crate) struct NotificationMessage {
     pub(crate) message: Value,
     pub(crate) payload: Bytes,
@@ -92,16 +94,11 @@ struct RequestsContainer {
     handlers: HashMap<u32, async_oneshot::Sender<Response<Value>>>,
 }
 
-#[derive(Error, Debug)]
-#[error("Handler for this event already exists, this must be an error in the library")]
-pub struct HandlerAlreadyExistsError;
-
 struct Inner {
-    executor: Arc<Executor<'static>>,
     sender: async_channel::Sender<MessageWithPayload>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
-    event_handlers: Arc<Mutex<HashMap<String, Box<dyn Fn(NotificationMessage) + Send>>>>,
+    event_handlers: EventHandlers<NotificationMessage>,
 }
 
 impl Drop for Inner {
@@ -119,12 +116,11 @@ pub(crate) struct PayloadChannel {
 impl PayloadChannel {
     pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
-        let event_handlers =
-            Arc::<Mutex<HashMap<String, Box<dyn Fn(NotificationMessage) + Send>>>>::default();
+        let event_handlers = EventHandlers::new(Arc::clone(&executor));
 
         let internal_message_receiver = {
             let requests_container = Arc::clone(&requests_container);
-            let event_handlers = Arc::clone(&event_handlers);
+            let event_handlers = event_handlers.clone();
             let (sender, receiver) = async_channel::bounded(1);
 
             executor
@@ -167,7 +163,7 @@ impl PayloadChannel {
                             } => {
                                 let sender = requests_container.lock().await.handlers.remove(&id);
                                 if let Some(sender) = sender {
-                                    drop(sender.send(Ok(data)));
+                                    let _ = sender.send(Ok(data));
                                 } else {
                                     warn!(
                                         "received success response does not match any sent request \
@@ -183,7 +179,7 @@ impl PayloadChannel {
                             } => {
                                 let sender = requests_container.lock().await.handlers.remove(&id);
                                 if let Some(sender) = sender {
-                                    drop(sender.send(Err(ResponseError { reason })));
+                                    let _ = sender.send(Err(ResponseError { reason }));
                                 } else {
                                     warn!(
                                         "received error response does not match any sent request \
@@ -196,7 +192,8 @@ impl PayloadChannel {
                                 let target_id = notification
                                     .get("targetId".to_string())
                                     .map(|value| value.as_str())
-                                    .flatten();
+                                    .flatten()
+                                    .map(|s| s.to_owned());
 
                                 let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
                                 if read_bytes == 0 {
@@ -225,14 +222,15 @@ impl PayloadChannel {
 
                                 match target_id {
                                     Some(target_id) => {
-                                        if let Some(callback) =
-                                            event_handlers.lock().await.get(target_id)
-                                        {
-                                            callback(NotificationMessage {
-                                                message: notification,
-                                                payload,
-                                            });
-                                        }
+                                        event_handlers
+                                            .call_callbacks_with_value(
+                                                &target_id,
+                                                NotificationMessage {
+                                                    message: notification,
+                                                    payload,
+                                                },
+                                            )
+                                            .await;
                                     }
                                     None => {
                                         let unexpected_message = InternalMessage::UnexpectedData(
@@ -291,7 +289,6 @@ impl PayloadChannel {
         };
 
         let inner = Arc::new(Inner {
-            executor,
             sender,
             internal_message_receiver,
             requests_container,
@@ -347,26 +344,11 @@ impl PayloadChannel {
         &self,
         target_id: String,
         callback: F,
-    ) -> Result<SubscriptionHandler, HandlerAlreadyExistsError>
+    ) -> SubscriptionHandler
     where
         F: Fn(NotificationMessage) + Send + 'static,
     {
-        {
-            let mut event_handlers = self.inner.event_handlers.lock().await;
-            if event_handlers.contains_key(&target_id) {
-                return Err(HandlerAlreadyExistsError {});
-            }
-
-            event_handlers.insert(target_id.clone(), Box::new(callback));
-        }
-
-        let event_handlers = self.inner.event_handlers.clone();
-        Ok(SubscriptionHandler::new(
-            Arc::clone(&self.inner.executor),
-            Box::pin(async move {
-                event_handlers.lock().await.remove(&target_id);
-            }),
-        ))
+        self.inner.event_handlers.add(target_id, callback).await
     }
 
     /// Non-generic method to avoid significant duplication in final binary

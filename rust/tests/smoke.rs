@@ -7,7 +7,7 @@ use mediasoup::data_structures::TransportListenIp;
 use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
 use mediasoup::producer::{ProducerOptions, ProducerTraceEventType};
-use mediasoup::router::RouterOptions;
+use mediasoup::router::{PipeToRouterOptions, RouterOptions};
 use mediasoup::rtp_observer::{RtpObserver, RtpObserverAddProducerOptions};
 use mediasoup::rtp_parameters::{
     MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
@@ -330,6 +330,41 @@ fn smoke() {
                 .await
                 .unwrap()
         );
+
+        let router2 = worker
+            .create_router({
+                let mut router_options = RouterOptions::default();
+                router_options.media_codecs = vec![RtpCodecCapability::Audio {
+                    mime_type: MimeTypeAudio::Opus,
+                    preferred_payload_type: None,
+                    clock_rate: 48000,
+                    channels: 2,
+                    parameters: Default::default(),
+                    rtcp_feedback: vec![],
+                }];
+                router_options
+            })
+            .await
+            .unwrap();
+        println!("Second router created: {:?}", router.id());
+
+        let _pipe_producer_to_router_value = router
+            .pipe_producer_to_router(producer.id(), PipeToRouterOptions::new(router2.clone()))
+            .await
+            .unwrap();
+        println!("Piped producer to other router",);
+
+        let _pipe_data_producer_to_router_value = router
+            .pipe_data_producer_to_router(
+                data_producer.id(),
+                PipeToRouterOptions::new(router2.clone()),
+            )
+            .await
+            .unwrap();
+        println!("Piped data producer to other router",);
+
+        println!("Router dump: {:#?}", router.dump().await.unwrap());
+        println!("Router 2 dump: {:#?}", router2.dump().await.unwrap());
 
         // Just to give it time to finish everything with router destruction
         thread::sleep(std::time::Duration::from_millis(200));

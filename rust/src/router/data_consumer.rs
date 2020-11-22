@@ -21,7 +21,8 @@ use std::sync::Arc;
 uuid_based_wrapper_type!(DataConsumerId);
 
 // TODO: Split into 2 for Direct and others or make an enum
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct DataConsumerOptions {
     // The id of the DataProducer to consume.
     pub(crate) data_producer_id: DataProducerId,
@@ -278,7 +279,6 @@ impl DataConsumer {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let payload_subscription_handler = {
@@ -303,7 +303,6 @@ impl DataConsumer {
                     }
                 })
                 .await
-                .unwrap()
         };
 
         let inner = Arc::new(Inner {

@@ -454,16 +454,13 @@ impl Inner {
                         ),
                     )),
                 };
-                drop(
-                    sender
-                        .take()
-                        .take()
-                        .expect("Receiving more than one worker notification")
-                        .send(result),
-                );
+                let _ = sender
+                    .take()
+                    .take()
+                    .expect("Receiving more than one worker notification")
+                    .send(result);
             })
-            .await
-            .unwrap();
+            .await;
 
         receiver.await.unwrap()
     }
