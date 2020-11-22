@@ -54,9 +54,10 @@ use async_mutex::Mutex as AsyncMutex;
 use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::future;
 use log::*;
+use parking_lot::Mutex as SyncMutex;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, Mutex as SyncMutex};
+use std::sync::Arc;
 use thiserror::Error;
 
 uuid_based_wrapper_type!(RouterId);
@@ -564,7 +565,6 @@ impl Router {
             .inner
             .producers
             .lock()
-            .unwrap()
             .get(&producer_id)
             .map(|weak_producer| weak_producer.upgrade())
             .flatten()
@@ -580,7 +580,7 @@ impl Router {
         // `PipeTransport`. To prevent that, we have `HashMap` with mapping behind `Mutex` and
         // another `Mutex` on the pair of `PipeTransport`.
 
-        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock().unwrap();
+        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock();
 
         let pipe_transport_pair_mutex = mapped_pipe_transports
             .entry(remote_router_id)
@@ -697,7 +697,6 @@ impl Router {
             .inner
             .data_producers
             .lock()
-            .unwrap()
             .get(&data_producer_id)
             .map(|weak_producer| weak_producer.upgrade())
             .flatten()
@@ -717,7 +716,7 @@ impl Router {
         // `PipeTransport`. To prevent that, we have `HashMap` with mapping behind `Mutex` and
         // another `Mutex` on the pair of `PipeTransport`.
 
-        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock().unwrap();
+        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock();
 
         let pipe_transport_pair_mutex = mapped_pipe_transports
             .entry(remote_router_id)
@@ -899,10 +898,7 @@ impl Router {
                 let mapped_pipe_transports = Arc::clone(&self.inner.mapped_pipe_transports);
 
                 move || {
-                    mapped_pipe_transports
-                        .lock()
-                        .unwrap()
-                        .remove(&remote_router_id);
+                    mapped_pipe_transports.lock().remove(&remote_router_id);
                 }
             })
             .detach();
@@ -912,10 +908,7 @@ impl Router {
                 let mapped_pipe_transports = Arc::clone(&self.inner.mapped_pipe_transports);
 
                 move || {
-                    mapped_pipe_transports
-                        .lock()
-                        .unwrap()
-                        .remove(&remote_router_id);
+                    mapped_pipe_transports.lock().remove(&remote_router_id);
                 }
             })
             .detach();
@@ -936,17 +929,14 @@ impl Router {
                 .on_new_producer(move |producer| {
                     let producer_id = producer.id();
                     if let Some(producers) = producers_weak.upgrade() {
-                        producers
-                            .lock()
-                            .unwrap()
-                            .insert(producer_id, producer.downgrade());
+                        producers.lock().insert(producer_id, producer.downgrade());
                     }
                     {
                         let producers_weak = producers_weak.clone();
                         producer
                             .on_close(move || {
                                 if let Some(producers) = producers_weak.upgrade() {
-                                    producers.lock().unwrap().remove(&producer_id);
+                                    producers.lock().remove(&producer_id);
                                 }
                             })
                             .detach();
@@ -962,7 +952,6 @@ impl Router {
                     if let Some(data_producers) = data_producers_weak.upgrade() {
                         data_producers
                             .lock()
-                            .unwrap()
                             .insert(data_producer_id, data_producer.downgrade());
                     }
                     {
@@ -970,7 +959,7 @@ impl Router {
                         data_producer
                             .on_close(move || {
                                 if let Some(data_producers) = data_producers_weak.upgrade() {
-                                    data_producers.lock().unwrap().remove(&data_producer_id);
+                                    data_producers.lock().remove(&data_producer_id);
                                 }
                             })
                             .detach();
@@ -981,27 +970,17 @@ impl Router {
     }
 
     fn has_producer(&self, producer_id: &ProducerId) -> bool {
-        self.inner
-            .producers
-            .lock()
-            .unwrap()
-            .contains_key(producer_id)
+        self.inner.producers.lock().contains_key(producer_id)
     }
 
     fn get_producer(&self, producer_id: &ProducerId) -> Option<Producer> {
-        self.inner
-            .producers
-            .lock()
-            .unwrap()
-            .get(producer_id)?
-            .upgrade()
+        self.inner.producers.lock().get(producer_id)?.upgrade()
     }
 
     fn has_data_producer(&self, data_producer_id: &DataProducerId) -> bool {
         self.inner
             .data_producers
             .lock()
-            .unwrap()
             .contains_key(data_producer_id)
     }
 
@@ -1009,7 +988,6 @@ impl Router {
         self.inner
             .data_producers
             .lock()
-            .unwrap()
             .get(data_producer_id)?
             .upgrade()
     }

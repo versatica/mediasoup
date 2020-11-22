@@ -424,7 +424,7 @@ impl PipeTransport {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
                             Notification::SctpStateChange { sctp_state } => {
-                                data.sctp_state.lock().unwrap().replace(sctp_state);
+                                data.sctp_state.lock().replace(sctp_state);
 
                                 handlers.sctp_state_change.call(|callback| {
                                     callback(sctp_state);
@@ -493,7 +493,7 @@ impl PipeTransport {
             })
             .await?;
 
-        *self.inner.data.tuple.lock().unwrap() = response.tuple;
+        *self.inner.data.tuple.lock() = response.tuple;
 
         Ok(())
     }
@@ -507,7 +507,7 @@ impl PipeTransport {
 
     /// Transport tuple.
     pub fn tuple(&self) -> TransportTuple {
-        self.inner.data.tuple.lock().unwrap().clone()
+        self.inner.data.tuple.lock().clone()
     }
 
     /// SCTP parameters.
@@ -517,12 +517,12 @@ impl PipeTransport {
 
     /// SCTP state.
     pub fn sctp_state(&self) -> Option<SctpState> {
-        *self.inner.data.sctp_state.lock().unwrap()
+        *self.inner.data.sctp_state.lock()
     }
 
     /// SRTP parameters.
     pub fn srtp_parameters(&self) -> Option<SrtpParameters> {
-        self.inner.data.srtp_parameters.lock().unwrap().clone()
+        self.inner.data.srtp_parameters.lock().clone()
     }
 
     pub fn on_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) -> HandlerId {

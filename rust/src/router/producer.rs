@@ -16,11 +16,12 @@ use async_executor::Executor;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(ProducerId);
 
@@ -329,7 +330,7 @@ impl Producer {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
                             Notification::Score(scores) => {
-                                *score.lock().unwrap() = scores.clone();
+                                *score.lock() = scores.clone();
                                 handlers.score.call(|callback| {
                                     callback(&scores);
                                 });
@@ -404,7 +405,7 @@ impl Producer {
 
     /// Producer score list.
     pub fn score(&self) -> Vec<ProducerScore> {
-        self.inner().score.lock().unwrap().clone()
+        self.inner().score.lock().clone()
     }
 
     /// App custom data.

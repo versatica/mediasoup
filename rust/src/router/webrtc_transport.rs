@@ -493,7 +493,7 @@ impl WebRtcTransport {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
                             Notification::IceStateChange { ice_state } => {
-                                *data.ice_state.lock().unwrap() = ice_state;
+                                *data.ice_state.lock() = ice_state;
                                 handlers.ice_state_change.call(|callback| {
                                     callback(ice_state);
                                 });
@@ -501,7 +501,6 @@ impl WebRtcTransport {
                             Notification::IceSelectedTupleChange { ice_selected_tuple } => {
                                 data.ice_selected_tuple
                                     .lock()
-                                    .unwrap()
                                     .replace(ice_selected_tuple.clone());
                                 handlers.ice_selected_tuple_change.call(|callback| {
                                     callback(&ice_selected_tuple);
@@ -511,13 +510,10 @@ impl WebRtcTransport {
                                 dtls_state,
                                 dtls_remote_cert,
                             } => {
-                                *data.dtls_state.lock().unwrap() = dtls_state;
+                                *data.dtls_state.lock() = dtls_state;
 
                                 if let Some(dtls_remote_cert) = dtls_remote_cert {
-                                    data.dtls_remote_cert
-                                        .lock()
-                                        .unwrap()
-                                        .replace(dtls_remote_cert);
+                                    data.dtls_remote_cert.lock().replace(dtls_remote_cert);
                                 }
 
                                 handlers.dtls_state_change.call(|callback| {
@@ -525,7 +521,7 @@ impl WebRtcTransport {
                                 });
                             }
                             Notification::SctpStateChange { sctp_state } => {
-                                data.sctp_state.lock().unwrap().replace(sctp_state);
+                                data.sctp_state.lock().replace(sctp_state);
 
                                 handlers.sctp_state_change.call(|callback| {
                                     callback(sctp_state);
@@ -592,7 +588,7 @@ impl WebRtcTransport {
             })
             .await?;
 
-        self.inner.data.dtls_parameters.lock().unwrap().role = response.dtls_local_role;
+        self.inner.data.dtls_parameters.lock().role = response.dtls_local_role;
 
         Ok(())
     }
@@ -621,27 +617,27 @@ impl WebRtcTransport {
 
     /// ICE state.
     pub fn ice_state(&self) -> IceState {
-        *self.inner.data.ice_state.lock().unwrap()
+        *self.inner.data.ice_state.lock()
     }
 
     /// ICE selected tuple.
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
-        self.inner.data.ice_selected_tuple.lock().unwrap().clone()
+        self.inner.data.ice_selected_tuple.lock().clone()
     }
 
     /// DTLS parameters.
     pub fn dtls_parameters(&self) -> DtlsParameters {
-        self.inner.data.dtls_parameters.lock().unwrap().clone()
+        self.inner.data.dtls_parameters.lock().clone()
     }
 
     /// DTLS state.
     pub fn dtls_state(&self) -> DtlsState {
-        *self.inner.data.dtls_state.lock().unwrap()
+        *self.inner.data.dtls_state.lock()
     }
 
     /// Remote certificate in PEM format.
     pub fn dtls_remote_cert(&self) -> Option<String> {
-        self.inner.data.dtls_remote_cert.lock().unwrap().clone()
+        self.inner.data.dtls_remote_cert.lock().clone()
     }
 
     /// SCTP parameters.
@@ -651,7 +647,7 @@ impl WebRtcTransport {
 
     /// SCTP state.
     pub fn sctp_state(&self) -> Option<SctpState> {
-        *self.inner.data.sctp_state.lock().unwrap()
+        *self.inner.data.sctp_state.lock()
     }
 
     /// Restart ICE.

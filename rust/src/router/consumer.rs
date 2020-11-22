@@ -16,9 +16,10 @@ use async_executor::Executor;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 uuid_based_wrapper_type!(ConsumerId);
 
@@ -399,8 +400,8 @@ impl Consumer {
                                 // TODO: Handle this in some meaningful way
                             }
                             Notification::ProducerPause => {
-                                let mut producer_paused = producer_paused.lock().unwrap();
-                                let was_paused = *paused.lock().unwrap() || *producer_paused;
+                                let mut producer_paused = producer_paused.lock();
+                                let was_paused = *paused.lock() || *producer_paused;
                                 *producer_paused = true;
 
                                 if !was_paused {
@@ -408,8 +409,8 @@ impl Consumer {
                                 }
                             }
                             Notification::ProducerResume => {
-                                let mut producer_paused = producer_paused.lock().unwrap();
-                                let paused = *paused.lock().unwrap();
+                                let mut producer_paused = producer_paused.lock();
+                                let paused = *paused.lock();
                                 let was_paused = paused || *producer_paused;
                                 *producer_paused = false;
 
@@ -418,13 +419,13 @@ impl Consumer {
                                 }
                             }
                             Notification::Score(consumer_score) => {
-                                *score.lock().unwrap() = consumer_score.clone();
+                                *score.lock() = consumer_score.clone();
                                 handlers.score.call(|callback| {
                                     callback(&consumer_score);
                                 });
                             }
                             Notification::LayersChange(consumer_layers) => {
-                                *current_layers.lock().unwrap() = Some(consumer_layers);
+                                *current_layers.lock() = Some(consumer_layers);
                                 handlers.layers_change.call(|callback| {
                                     callback(&consumer_layers);
                                 });
@@ -515,32 +516,32 @@ impl Consumer {
 
     /// Whether the Consumer is paused.
     pub fn paused(&self) -> bool {
-        *self.inner.paused.lock().unwrap()
+        *self.inner.paused.lock()
     }
 
     /// Whether the associate Producer is paused.
     pub fn producer_paused(&self) -> bool {
-        *self.inner.producer_paused.lock().unwrap()
+        *self.inner.producer_paused.lock()
     }
 
     /// Current priority.
     pub fn priority(&self) -> u8 {
-        *self.inner.priority.lock().unwrap()
+        *self.inner.priority.lock()
     }
 
     /// Consumer score.
     pub fn score(&self) -> ConsumerScore {
-        self.inner.score.lock().unwrap().clone()
+        self.inner.score.lock().clone()
     }
 
     /// Preferred video layers.
     pub fn preferred_layers(&self) -> Option<ConsumerLayers> {
-        *self.inner.preferred_layers.lock().unwrap()
+        *self.inner.preferred_layers.lock()
     }
 
     /// Current video layers.
     pub fn current_layers(&self) -> Option<ConsumerLayers> {
-        *self.inner.current_layers.lock().unwrap()
+        *self.inner.current_layers.lock()
     }
 
     /// App custom data.
@@ -584,8 +585,8 @@ impl Consumer {
             })
             .await?;
 
-        let mut paused = self.inner.paused.lock().unwrap();
-        let was_paused = *paused || *self.inner.producer_paused.lock().unwrap();
+        let mut paused = self.inner.paused.lock();
+        let was_paused = *paused || *self.inner.producer_paused.lock();
         *paused = true;
 
         if !was_paused {
@@ -606,8 +607,8 @@ impl Consumer {
             })
             .await?;
 
-        let mut paused = self.inner.paused.lock().unwrap();
-        let was_paused = *paused || *self.inner.producer_paused.lock().unwrap();
+        let mut paused = self.inner.paused.lock();
+        let was_paused = *paused || *self.inner.producer_paused.lock();
         *paused = false;
 
         if was_paused {
@@ -633,7 +634,7 @@ impl Consumer {
             })
             .await?;
 
-        *self.inner.preferred_layers.lock().unwrap() = consumer_layers;
+        *self.inner.preferred_layers.lock() = consumer_layers;
 
         Ok(())
     }
@@ -651,7 +652,7 @@ impl Consumer {
             })
             .await?;
 
-        *self.inner.priority.lock().unwrap() = result.priority;
+        *self.inner.priority.lock() = result.priority;
 
         Ok(())
     }
@@ -671,7 +672,7 @@ impl Consumer {
             })
             .await?;
 
-        *self.inner.priority.lock().unwrap() = result.priority;
+        *self.inner.priority.lock() = result.priority;
 
         Ok(())
     }

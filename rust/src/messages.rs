@@ -24,11 +24,11 @@ use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
+use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use std::sync::Mutex;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

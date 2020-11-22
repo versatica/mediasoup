@@ -448,21 +448,21 @@ impl PlainTransport {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
                             Notification::Tuple(tuple) => {
-                                *data.tuple.lock().unwrap() = tuple.clone();
+                                *data.tuple.lock() = tuple.clone();
 
                                 handlers.tuple.call(|callback| {
                                     callback(&tuple);
                                 });
                             }
                             Notification::RtcpTuple(rtcp_tuple) => {
-                                data.rtcp_tuple.lock().unwrap().replace(rtcp_tuple.clone());
+                                data.rtcp_tuple.lock().replace(rtcp_tuple.clone());
 
                                 handlers.rtcp_tuple.call(|callback| {
                                     callback(&rtcp_tuple);
                                 });
                             }
                             Notification::SctpStateChange { sctp_state } => {
-                                data.sctp_state.lock().unwrap().replace(sctp_state);
+                                data.sctp_state.lock().replace(sctp_state);
 
                                 handlers.sctp_state_change.call(|callback| {
                                     callback(sctp_state);
@@ -533,16 +533,11 @@ impl PlainTransport {
             .await?;
 
         if let Some(tuple) = response.tuple {
-            *self.inner.data.tuple.lock().unwrap() = tuple;
+            *self.inner.data.tuple.lock() = tuple;
         }
 
         if let Some(rtcp_tuple) = response.rtcp_tuple {
-            self.inner
-                .data
-                .rtcp_tuple
-                .lock()
-                .unwrap()
-                .replace(rtcp_tuple);
+            self.inner.data.rtcp_tuple.lock().replace(rtcp_tuple);
         }
 
         if let Some(srtp_parameters) = response.srtp_parameters {
@@ -550,7 +545,6 @@ impl PlainTransport {
                 .data
                 .srtp_parameters
                 .lock()
-                .unwrap()
                 .replace(srtp_parameters);
         }
 
@@ -566,12 +560,12 @@ impl PlainTransport {
 
     /// Transport tuple.
     pub fn tuple(&self) -> TransportTuple {
-        self.inner.data.tuple.lock().unwrap().clone()
+        self.inner.data.tuple.lock().clone()
     }
 
     /// Transport RTCP tuple.
     pub fn rtcp_tuple(&self) -> Option<TransportTuple> {
-        self.inner.data.rtcp_tuple.lock().unwrap().clone()
+        self.inner.data.rtcp_tuple.lock().clone()
     }
 
     /// SCTP parameters.
@@ -581,12 +575,12 @@ impl PlainTransport {
 
     /// SCTP state.
     pub fn sctp_state(&self) -> Option<SctpState> {
-        *self.inner.data.sctp_state.lock().unwrap()
+        *self.inner.data.sctp_state.lock()
     }
 
     /// SRTP parameters.
     pub fn srtp_parameters(&self) -> Option<SrtpParameters> {
-        self.inner.data.srtp_parameters.lock().unwrap().clone()
+        self.inner.data.srtp_parameters.lock().clone()
     }
 
     pub fn on_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) -> HandlerId {
