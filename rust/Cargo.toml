@@ -11,23 +11,23 @@ repository = "https://github.com/nazar-pc/mediasoup/tree/rust"
 
 [dependencies]
 async-channel = "1.5.1"
-async-executor = "1.3.0"
+async-executor = "1.4.0"
 async-fs = "1.5.0"
-async-io = "1.1.10"
+async-io = "1.2.0"
 async-mutex = "1.4.0"
-async-oneshot = "0.4.1"
+async-oneshot = "0.4.2"
 async-process = "1.0.1"
-async-trait = "0.1.41"
+async-trait = "0.1.42"
 bytes = "0.6.0"
-event-listener-primitives = "0.1.0"
+event-listener-primitives = "0.1.1"
 fastrand = "1.4.0"
-futures-lite = "1.11.1"
+futures-lite = "1.11.2"
 log = "0.4.11"
-libc = "0.2.79"
-nix = "0.18.0"
-once_cell = "1.4.1"
-serde_json = "1.0.58"
-thiserror = "1.0.21"
+libc = "0.2.80"
+nix = "0.19.0"
+once_cell = "1.5.2"
+serde_json = "1.0.59"
+thiserror = "1.0.22"
 
 [dependencies.parking_lot]
 version = "0.11.1"
@@ -36,15 +36,15 @@ features = ["serde"]
 [dependencies.regex]
 default-features = false
 features = ["std", "perf"]
-version = "1.3.9"
+version = "1.4.2"
 
 [dependencies.serde]
 features = ["derive"]
-version = "1.0.116"
+version = "1.0.117"
 
 [dependencies.uuid]
 features = ["serde", "v4"]
 version = "0.8.1"
 
 [dev-dependencies]
-env_logger = "0.7.1"
+env_logger = "0.8.2"
