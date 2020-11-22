@@ -106,17 +106,14 @@ pub enum IceState {
 pub enum TransportTuple {
     #[serde(rename_all = "camelCase")]
     LocalOnly {
-        // TODO: Maybe better type for IP address?
         local_ip: IpAddr,
         local_port: u16,
         protocol: TransportProtocol,
     },
     #[serde(rename_all = "camelCase")]
     WithRemote {
-        // TODO: Maybe better type for IP address?
         local_ip: IpAddr,
         local_port: u16,
-        // TODO: Maybe better type for IP address?
         remote_ip: IpAddr,
         remote_port: u16,
         protocol: TransportProtocol,
