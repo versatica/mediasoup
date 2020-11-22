@@ -315,7 +315,7 @@ struct Inner {
     current_layers: Arc<Mutex<Option<ConsumerLayers>>>,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Option<Box<dyn Transport>>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
 }
@@ -330,17 +330,20 @@ impl Drop for Inner {
             let channel = self.channel.clone();
             let request = ConsumerCloseRequest {
                 internal: ConsumerInternal {
-                    router_id: self.transport.router_id(),
-                    transport_id: self.transport.id(),
+                    router_id: self.transport.as_ref().unwrap().router_id(),
+                    transport_id: self.transport.as_ref().unwrap().id(),
                     consumer_id: self.id,
                     producer_id: self.producer_id,
                 },
             };
+            let transport = self.transport.take();
             self.executor
                 .spawn(async move {
                     if let Err(error) = channel.request(request).await {
                         error!("consumer closing failed on drop: {}", error);
                     }
+
+                    drop(transport);
                 })
                 .detach();
         }
@@ -474,7 +477,7 @@ impl Consumer {
             channel,
             handlers,
             app_data,
-            transport,
+            transport: Some(transport),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
         });
 
@@ -733,8 +736,8 @@ impl Consumer {
 
     fn get_internal(&self) -> ConsumerInternal {
         ConsumerInternal {
-            router_id: self.inner.transport.router_id(),
-            transport_id: self.inner.transport.id(),
+            router_id: self.inner.transport.as_ref().unwrap().router_id(),
+            transport_id: self.inner.transport.as_ref().unwrap().id(),
             consumer_id: self.inner.id,
             producer_id: self.inner.producer_id,
         }

@@ -365,9 +365,6 @@ fn smoke() {
 
         println!("Router dump: {:#?}", router.dump().await.unwrap());
         println!("Router 2 dump: {:#?}", router2.dump().await.unwrap());
-
-        // Just to give it time to finish everything with router destruction
-        thread::sleep(std::time::Duration::from_millis(200));
     });
 
     // Just to give it time to finish everything

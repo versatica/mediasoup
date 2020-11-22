@@ -102,7 +102,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Option<Box<dyn Transport>>,
 }
 
 impl Drop for Inner {
@@ -115,16 +115,19 @@ impl Drop for Inner {
             let channel = self.channel.clone();
             let request = DataProducerCloseRequest {
                 internal: DataProducerInternal {
-                    router_id: self.transport.router_id(),
-                    transport_id: self.transport.id(),
+                    router_id: self.transport.as_ref().unwrap().router_id(),
+                    transport_id: self.transport.as_ref().unwrap().id(),
                     data_producer_id: self.id,
                 },
             };
+            let transport = self.transport.take();
             self.executor
                 .spawn(async move {
                     if let Err(error) = channel.request(request).await {
                         error!("data producer closing failed on drop: {}", error);
                     }
+
+                    drop(transport);
                 })
                 .detach();
         }
@@ -188,7 +191,7 @@ impl DataProducer {
             payload_channel,
             handlers,
             app_data,
-            transport,
+            transport: Some(transport),
         });
 
         if direct {
@@ -272,8 +275,8 @@ impl DataProducer {
 
     fn get_internal(&self) -> DataProducerInternal {
         DataProducerInternal {
-            router_id: self.inner().transport.router_id(),
-            transport_id: self.inner().transport.id(),
+            router_id: self.inner().transport.as_ref().unwrap().router_id(),
+            transport_id: self.inner().transport.as_ref().unwrap().id(),
             data_producer_id: self.inner().id,
         }
     }
@@ -289,8 +292,8 @@ impl DirectDataProducer {
             .notify(
                 DataProducerSendNotification {
                     internal: DataProducerInternal {
-                        router_id: self.inner.transport.router_id(),
-                        transport_id: self.inner.transport.id(),
+                        router_id: self.inner.transport.as_ref().unwrap().router_id(),
+                        transport_id: self.inner.transport.as_ref().unwrap().id(),
                         data_producer_id: self.inner.id,
                     },
                     data: DataProducerSendData { ppid },

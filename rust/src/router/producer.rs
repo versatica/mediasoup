@@ -236,7 +236,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Option<Box<dyn Transport>>,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     _subscription_handler: SubscriptionHandler,
 }
@@ -251,16 +251,19 @@ impl Drop for Inner {
             let channel = self.channel.clone();
             let request = ProducerCloseRequest {
                 internal: ProducerInternal {
-                    router_id: self.transport.router_id(),
-                    transport_id: self.transport.id(),
+                    router_id: self.transport.as_ref().unwrap().router_id(),
+                    transport_id: self.transport.as_ref().unwrap().id(),
                     producer_id: self.id,
                 },
             };
+            let transport = self.transport.take();
             self.executor
                 .spawn(async move {
                     if let Err(error) = channel.request(request).await {
                         error!("producer closing failed on drop: {}", error);
                     }
+
+                    drop(transport);
                 })
                 .detach();
         }
@@ -362,7 +365,7 @@ impl Producer {
             payload_channel,
             handlers,
             app_data,
-            transport,
+            transport: Some(transport),
             _subscription_handler: subscription_handler,
         });
 
@@ -542,8 +545,8 @@ impl Producer {
 
     fn get_internal(&self) -> ProducerInternal {
         ProducerInternal {
-            router_id: self.inner().transport.router_id(),
-            transport_id: self.inner().transport.id(),
+            router_id: self.inner().transport.as_ref().unwrap().router_id(),
+            transport_id: self.inner().transport.as_ref().unwrap().id(),
             producer_id: self.inner().id,
         }
     }
@@ -557,8 +560,8 @@ impl DirectProducer {
             .notify(
                 ProducerSendNotification {
                     internal: ProducerInternal {
-                        router_id: self.inner.transport.router_id(),
-                        transport_id: self.inner.transport.id(),
+                        router_id: self.inner.transport.as_ref().unwrap().router_id(),
+                        transport_id: self.inner.transport.as_ref().unwrap().id(),
                         producer_id: self.inner.id,
                     },
                 },

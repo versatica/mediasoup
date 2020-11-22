@@ -241,7 +241,7 @@ struct Inner {
     mapped_pipe_transports:
         Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped
-    _worker: Worker,
+    worker: Option<Worker>,
 }
 
 impl Drop for Inner {
@@ -255,11 +255,14 @@ impl Drop for Inner {
             let request = RouterCloseRequest {
                 internal: RouterInternal { router_id: self.id },
             };
+            let worker = self.worker.take();
             self.executor
                 .spawn(async move {
                     if let Err(error) = channel.request(request).await {
                         error!("router closing failed on drop: {}", error);
                     }
+
+                    drop(worker);
                 })
                 .detach();
         }
@@ -300,7 +303,7 @@ impl Router {
             data_producers,
             mapped_pipe_transports,
             app_data,
-            _worker: worker,
+            worker: Some(worker),
         });
 
         Self { inner }
