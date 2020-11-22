@@ -11,6 +11,7 @@ use crate::data_structures::{
 };
 use crate::direct_transport::DirectTransportOptions;
 use crate::ortc::RtpMapping;
+use crate::pipe_transport::PipeTransportOptions;
 use crate::plain_transport::PlainTransportOptions;
 use crate::producer::{
     ProducerDump, ProducerId, ProducerStat, ProducerTraceEventType, ProducerType,
@@ -230,9 +231,6 @@ request_response!(
         internal: TransportInternal,
         data: RouterCreateDirectTransportData,
     },
-    RouterCreateDirectTransportResponse {
-        // TODO
-    },
 );
 
 #[derive(Debug, Serialize)]
@@ -352,16 +350,35 @@ pub(crate) struct RouterCreatePipeTransportData {
     is_data_channel: bool,
 }
 
-// request_response!(
-//     "router.createPipeTransport",
-//     RouterCreatePipeTransportRequest {
-//         internal: TransportInternal,
-//         data: RouterCreatePipeTransportData,
-//     },
-//     RouterCreatePipeTransportResponse {
-//         // TODO
-//     },
-// );
+impl RouterCreatePipeTransportData {
+    pub(crate) fn from_options(pipe_transport_options: &PipeTransportOptions) -> Self {
+        Self {
+            listen_ip: pipe_transport_options.listen_ip.clone(),
+            enable_sctp: pipe_transport_options.enable_sctp,
+            num_sctp_streams: pipe_transport_options.num_sctp_streams,
+            max_sctp_message_size: pipe_transport_options.max_sctp_message_size,
+            sctp_send_buffer_size: pipe_transport_options.sctp_send_buffer_size,
+            enable_rtx: pipe_transport_options.enable_rtx,
+            enable_srtp: pipe_transport_options.enable_srtp,
+            is_data_channel: false,
+        }
+    }
+}
+
+request_response!(
+    "router.createPipeTransport",
+    RouterCreatePipeTransportRequest {
+        internal: TransportInternal,
+        data: RouterCreatePipeTransportData,
+    },
+    PipeTransportData {
+        tuple: Mutex<TransportTuple>,
+        sctp_parameters: Option<SctpParameters>,
+        sctp_state: Mutex<Option<SctpState>>,
+        rtx: bool,
+        srtp_parameters: Mutex<Option<SrtpParameters>>,
+    },
+);
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -429,6 +446,24 @@ request_response!(
 );
 
 #[derive(Debug, Serialize)]
+pub(crate) struct TransportConnectRequestPipeData {
+    pub(crate) ip: String,
+    pub(crate) port: u16,
+    pub(crate) srtp_parameters: Option<SrtpParameters>,
+}
+
+request_response!(
+    "transport.connect",
+    TransportConnectRequestPipe {
+        internal: TransportInternal,
+        data: TransportConnectRequestPipeData,
+    },
+    TransportConnectResponsePipe {
+        tuple: TransportTuple,
+    },
+);
+
+#[derive(Debug, Serialize)]
 pub(crate) struct TransportConnectRequestPlainData {
     pub(crate) ip: Option<String>,
     pub(crate) port: Option<u16>,
@@ -442,6 +477,7 @@ request_response!(
         internal: TransportInternal,
         data: TransportConnectRequestPlainData,
     },
+    // TODO: Should these tuples be optional?
     TransportConnectResponsePlain {
         tuple: Option<TransportTuple>,
         rtcp_tuple: Option<TransportTuple>,

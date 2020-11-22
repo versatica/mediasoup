@@ -777,6 +777,71 @@ pub(crate) fn get_consumer_rtp_parameters(
     Ok(consumer_params)
 }
 
+/// Generate RTP parameters for a pipe Consumer.
+///
+/// It keeps all original consumable encodings and removes support for BWE. If
+/// enableRtx is false, it also removes RTX and NACK support.
+pub(crate) fn get_pipe_consumer_rtp_parameters(
+    consumable_params: &RtpParameters,
+    enable_rtx: bool,
+) -> RtpParameters {
+    let mut consumer_params = RtpParameters {
+        mid: None,
+        codecs: vec![],
+        header_extensions: vec![],
+        encodings: vec![],
+        rtcp: consumable_params.rtcp.clone(),
+    };
+
+    for codec in consumable_params.codecs.iter() {
+        if !enable_rtx && codec.is_rtx() {
+            continue;
+        }
+
+        let mut codec = codec.clone();
+
+        codec.rtcp_feedback_mut().retain(|fb| {
+            (fb.r#type == "nack" && fb.parameter == "pli")
+                || (fb.r#type == "ccm" && fb.parameter == "fir")
+                || (enable_rtx && fb.r#type == "nack" && fb.parameter.is_empty())
+        });
+
+        consumer_params.codecs.push(codec);
+    }
+
+    // Reduce RTP extensions by disabling transport MID and BWE related ones.
+    consumer_params.header_extensions = consumable_params
+        .header_extensions
+        .iter()
+        .filter(|ext| {
+            ext.uri != "urn:ietf:params:rtp-hdrext:sdes:mid"
+                && ext.uri != "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
+                && ext.uri
+                    != "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+        })
+        .cloned()
+        .collect();
+
+    for ((encoding, ssrc), rtx_ssrc) in consumable_params
+        .encodings
+        .iter()
+        .zip(generate_ssrc()..)
+        .zip(generate_ssrc()..)
+    {
+        consumer_params.encodings.push(RtpEncodingParameters {
+            ssrc: Some(ssrc),
+            rtx: if enable_rtx {
+                Some(RtpEncodingParametersRtx { ssrc: rtx_ssrc })
+            } else {
+                None
+            },
+            ..encoding.clone()
+        });
+    }
+
+    return consumer_params;
+}
+
 struct CodecToMatch<'a> {
     channels: Option<u8>,
     clock_rate: u32,

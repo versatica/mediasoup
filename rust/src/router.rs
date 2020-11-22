@@ -9,6 +9,8 @@ pub mod data_producer;
 #[cfg(not(doc))]
 pub mod direct_transport;
 #[cfg(not(doc))]
+pub mod pipe_transport;
+#[cfg(not(doc))]
 pub mod plain_transport;
 #[cfg(not(doc))]
 pub mod producer;
@@ -29,10 +31,12 @@ use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverRequest,
     RouterCreateDirectTransportData, RouterCreateDirectTransportRequest,
+    RouterCreatePipeTransportData, RouterCreatePipeTransportRequest,
     RouterCreatePlainTransportData, RouterCreatePlainTransportRequest,
     RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
     RouterInternal, RtpObserverInternal, TransportInternal,
 };
+use crate::pipe_transport::{PipeTransport, PipeTransportOptions};
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{Producer, ProducerId, WeakProducer};
 use crate::rtp_observer::RtpObserverId;
@@ -71,6 +75,7 @@ pub struct RouterDump {
 
 pub enum NewTransport<'a> {
     Direct(&'a DirectTransport),
+    Pipe(&'a PipeTransport),
     Plain(&'a PlainTransport),
     WebRtc(&'a WebRtcTransport),
 }
@@ -271,6 +276,48 @@ impl Router {
         Ok(transport)
     }
 
+    /// Create a PipeTransport.
+    ///
+    /// Router will be kept alive as long as at least one transport instance is alive.
+    pub async fn create_pipe_transport(
+        &self,
+        pipe_transport_options: PipeTransportOptions,
+    ) -> Result<PipeTransport, RequestError> {
+        debug!("create_pipe_transport()");
+
+        let transport_id = TransportId::new();
+        let data = self
+            .inner
+            .channel
+            .request(RouterCreatePipeTransportRequest {
+                internal: TransportInternal {
+                    router_id: self.inner.id,
+                    transport_id,
+                },
+                data: RouterCreatePipeTransportData::from_options(&pipe_transport_options),
+            })
+            .await?;
+
+        let transport_fut = PipeTransport::new(
+            transport_id,
+            Arc::clone(&self.inner.executor),
+            self.inner.channel.clone(),
+            self.inner.payload_channel.clone(),
+            data,
+            pipe_transport_options.app_data,
+            self.clone(),
+        );
+        let transport = transport_fut.await;
+
+        self.inner.handlers.new_transport.call(|callback| {
+            callback(NewTransport::Pipe(&transport));
+        });
+
+        self.after_transport_creation(&transport);
+
+        Ok(transport)
+    }
+
     /// Create a PlainTransport.
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
@@ -352,6 +399,8 @@ impl Router {
 
         Ok(audio_level_observer)
     }
+
+    // TODO: Port pipeToRouter from TypeScript
 
     /// Check whether the given RTP capabilities can consume the given Producer.
     pub fn can_consume(

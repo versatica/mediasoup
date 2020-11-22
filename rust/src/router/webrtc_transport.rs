@@ -313,7 +313,9 @@ impl Transport for WebRtcTransport {
     async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError> {
         debug!("consume()");
 
-        let consumer = self.consume_impl(consumer_options).await?;
+        let consumer = self
+            .consume_impl(consumer_options, TransportType::WebRtc, false)
+            .await?;
 
         self.inner.handlers.new_consumer.call(|callback| {
             callback(&consumer);

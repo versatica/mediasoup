@@ -431,6 +431,8 @@ where
     async fn consume_impl(
         &self,
         consumer_options: ConsumerOptions,
+        transport_type: TransportType,
+        rtx: bool,
     ) -> Result<Consumer, ConsumeError> {
         let ConsumerOptions {
             producer_id,
@@ -450,7 +452,9 @@ where
         };
 
         // TODO: Maybe RtpParametersFinalized would be a better fit here
-        let rtp_parameters = {
+        let rtp_parameters = if matches!(transport_type, TransportType::Pipe) {
+            ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
+        } else {
             let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
                 producer.consumable_rtp_parameters(),
                 rtp_capabilities,
