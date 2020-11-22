@@ -61,6 +61,12 @@ pub use router::transport;
 pub mod transport;
 
 #[cfg(not(doc))]
+pub use router::direct_transport;
+#[cfg(doc)]
+#[path = "router/direct_transport.rs"]
+pub mod direct_transport;
+
+#[cfg(not(doc))]
 pub use router::plain_transport;
 #[cfg(doc)]
 #[path = "router/plain_transport.rs"]

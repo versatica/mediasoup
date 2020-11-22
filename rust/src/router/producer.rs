@@ -550,7 +550,7 @@ impl Producer {
 }
 
 impl DirectProducer {
-    /// Send RTP packet
+    /// Send RTP packet.
     pub async fn send(&self, rtp_packet: Bytes) -> Result<(), NotificationError> {
         self.inner
             .payload_channel

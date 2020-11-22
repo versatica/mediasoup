@@ -1,6 +1,5 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
-use crate::worker::payload_channel::PayloadChannel;
-use crate::worker::Channel;
+use crate::worker::{Channel, PayloadChannel};
 use async_executor::Executor;
 use async_fs::File;
 use async_process::unix::CommandExt;

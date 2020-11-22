@@ -9,8 +9,11 @@ use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
+use crate::worker::{
+    Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
+};
 use async_executor::Executor;
+use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -279,8 +282,15 @@ enum Notification {
     Trace(ConsumerTraceEventData),
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum PayloadNotification {
+    Rtp,
+}
+
 #[derive(Default)]
 struct Handlers {
+    rtp: Bag<'static, dyn Fn(&Bytes) + Send>,
     pause: Bag<'static, dyn Fn() + Send>,
     resume: Bag<'static, dyn Fn() + Send>,
     score: Bag<'static, dyn Fn(&ConsumerScore) + Send>,
@@ -298,7 +308,6 @@ struct Inner {
     paused: Arc<Mutex<bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: PayloadChannel,
     producer_paused: Arc<Mutex<bool>>,
     priority: Mutex<u8>,
     score: Arc<Mutex<ConsumerScore>>,
@@ -308,7 +317,7 @@ struct Inner {
     app_data: AppData,
     transport: Box<dyn Transport>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
-    _subscription_handler: SubscriptionHandler,
+    _subscription_handlers: Vec<SubscriptionHandler>,
 }
 
 impl Drop for Inner {
@@ -427,7 +436,29 @@ impl Consumer {
                 .await
                 .unwrap()
         };
-        // TODO: payload_channel subscription for direct transport
+
+        let payload_subscription_handler = {
+            let handlers = Arc::clone(&handlers);
+
+            payload_channel
+                .subscribe_to_notifications(id.to_string(), move |notification| {
+                    let NotificationMessage { message, payload } = notification;
+                    match serde_json::from_value::<PayloadNotification>(message) {
+                        Ok(notification) => match notification {
+                            PayloadNotification::Rtp => {
+                                handlers.rtp.call(|callback| {
+                                    callback(&payload);
+                                });
+                            }
+                        },
+                        Err(error) => {
+                            error!("Failed to parse payload notification: {}", error);
+                        }
+                    }
+                })
+                .await
+                .unwrap()
+        };
 
         let inner = Arc::new(Inner {
             id,
@@ -443,11 +474,10 @@ impl Consumer {
             current_layers,
             executor,
             channel,
-            payload_channel,
             handlers,
             app_data,
             transport,
-            _subscription_handler: subscription_handler,
+            _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
         });
 
         Self { inner }
@@ -667,6 +697,10 @@ impl Consumer {
                 data: ConsumerEnableTraceEventData { types },
             })
             .await
+    }
+
+    pub fn on_rtp<F: Fn(&Bytes) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.rtp.add(Box::new(callback))
     }
 
     pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {

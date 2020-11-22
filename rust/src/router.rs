@@ -7,6 +7,8 @@ pub mod data_consumer;
 #[cfg(not(doc))]
 pub mod data_producer;
 #[cfg(not(doc))]
+pub mod direct_transport;
+#[cfg(not(doc))]
 pub mod plain_transport;
 #[cfg(not(doc))]
 pub mod producer;
@@ -23,8 +25,10 @@ use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions}
 use crate::consumer::ConsumerId;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::AppData;
+use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverRequest,
+    RouterCreateDirectTransportData, RouterCreateDirectTransportRequest,
     RouterCreatePlainTransportData, RouterCreatePlainTransportRequest,
     RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
     RouterInternal, RtpObserverInternal, TransportInternal,
@@ -66,8 +70,9 @@ pub struct RouterDump {
 }
 
 pub enum NewTransport<'a> {
-    WebRtc(&'a WebRtcTransport),
+    Direct(&'a DirectTransport),
     Plain(&'a PlainTransport),
+    WebRtc(&'a WebRtcTransport),
 }
 
 pub enum NewRtpObserver<'a> {
@@ -182,6 +187,46 @@ impl Router {
                 },
             })
             .await
+    }
+
+    /// Create a DirectTransport.
+    ///
+    /// Router will be kept alive as long as at least one transport instance is alive.
+    pub async fn create_direct_transport(
+        &self,
+        direct_transport_options: DirectTransportOptions,
+    ) -> Result<DirectTransport, RequestError> {
+        debug!("create_direct_transport()");
+
+        let transport_id = TransportId::new();
+        self.inner
+            .channel
+            .request(RouterCreateDirectTransportRequest {
+                internal: TransportInternal {
+                    router_id: self.inner.id,
+                    transport_id,
+                },
+                data: RouterCreateDirectTransportData::from_options(&direct_transport_options),
+            })
+            .await?;
+
+        let transport_fut = DirectTransport::new(
+            transport_id,
+            Arc::clone(&self.inner.executor),
+            self.inner.channel.clone(),
+            self.inner.payload_channel.clone(),
+            direct_transport_options.app_data,
+            self.clone(),
+        );
+        let transport = transport_fut.await;
+
+        self.inner.handlers.new_transport.call(|callback| {
+            callback(NewTransport::Direct(&transport));
+        });
+
+        self.after_transport_creation(&transport);
+
+        Ok(transport)
     }
 
     /// Create a WebRtcTransport.

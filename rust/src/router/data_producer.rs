@@ -1,4 +1,4 @@
-use crate::data_structures::AppData;
+use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
     DataProducerInternal, DataProducerSendData, DataProducerSendNotification,
@@ -8,7 +8,6 @@ use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationError, PayloadChannel, RequestError};
 use async_executor::Executor;
-use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -265,8 +264,8 @@ impl DataProducer {
 
     fn inner(&self) -> &Arc<Inner> {
         match self {
-            DataProducer::Regular(producer) => &producer.inner,
-            DataProducer::Direct(producer) => &producer.inner,
+            DataProducer::Regular(data_producer) => &data_producer.inner,
+            DataProducer::Direct(data_producer) => &data_producer.inner,
         }
     }
 
@@ -279,33 +278,10 @@ impl DataProducer {
     }
 }
 
-pub enum Message {
-    WebRtcString(String),
-    WebRtcBinary(Bytes),
-    WebRtcStringEmpty,
-    WebRtcBinaryEmpty,
-}
-
 impl DirectDataProducer {
-    /// Send data
-    pub async fn send(&self, message: Message) -> Result<(), NotificationError> {
-        // +------------------------------------+-----------+
-        // | Value                              | SCTP PPID |
-        // +------------------------------------+-----------+
-        // | WebRTC String                      | 51        |
-        // | WebRTC Binary Partial (Deprecated) | 52        |
-        // | WebRTC Binary                      | 53        |
-        // | WebRTC String Partial (Deprecated) | 54        |
-        // | WebRTC String Empty                | 56        |
-        // | WebRTC Binary Empty                | 57        |
-        // +------------------------------------+-----------+
-
-        let (ppid, payload) = match message {
-            Message::WebRtcString(string) => (51_u32, Bytes::from(string)),
-            Message::WebRtcBinary(binary) => (53_u32, binary),
-            Message::WebRtcStringEmpty => (56_u32, Bytes::from_static(" ".as_bytes())),
-            Message::WebRtcBinaryEmpty => (57_u32, Bytes::from(vec![0u8])),
-        };
+    /// Send data.
+    pub async fn send(&self, message: WebRtcMessage) -> Result<(), NotificationError> {
+        let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner
             .payload_channel

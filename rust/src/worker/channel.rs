@@ -1,5 +1,5 @@
 use crate::messages::Request;
-use crate::worker::RequestError;
+use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
@@ -11,7 +11,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
-use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 use thiserror::Error;
@@ -38,20 +37,6 @@ pub(super) enum InternalMessage {
     /// Unknown
     #[serde(skip)]
     Unexpected(Vec<u8>),
-}
-
-/// Subscription handler, will remove corresponding subscription when dropped
-pub(crate) struct SubscriptionHandler {
-    executor: Arc<Executor<'static>>,
-    remove_fut: Option<Pin<Box<dyn std::future::Future<Output = ()> + Send + Sync>>>,
-}
-
-impl Drop for SubscriptionHandler {
-    fn drop(&mut self) {
-        self.executor
-            .spawn(self.remove_fut.take().unwrap())
-            .detach();
-    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -317,12 +302,12 @@ impl Channel {
         }
 
         let event_handlers = self.inner.event_handlers.clone();
-        Ok(SubscriptionHandler {
-            executor: Arc::clone(&self.inner.executor),
-            remove_fut: Some(Box::pin(async move {
+        Ok(SubscriptionHandler::new(
+            Arc::clone(&self.inner.executor),
+            Box::pin(async move {
                 event_handlers.lock().await.remove(&target_id);
-            })),
-        })
+            }),
+        ))
     }
 
     /// Non-generic method to avoid significant duplication in final binary

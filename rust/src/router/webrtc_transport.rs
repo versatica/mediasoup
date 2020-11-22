@@ -289,13 +289,6 @@ impl Transport for WebRtcTransport {
         &self.inner.app_data
     }
 
-    /// Set maximum incoming bitrate for receiving media.
-    async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
-        debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
-
-        self.set_max_incoming_bitrate_impl(bitrate).await
-    }
-
     /// Create a Producer.
     ///
     /// Transport will be kept alive as long as at least one producer instance is alive.
@@ -362,7 +355,11 @@ impl Transport for WebRtcTransport {
         debug!("consume_data()");
 
         let data_consumer = self
-            .consume_data_impl(DataConsumerType::Sctp, data_consumer_options)
+            .consume_data_impl(
+                DataConsumerType::Sctp,
+                data_consumer_options,
+                TransportType::WebRtc,
+            )
             .await?;
 
         self.inner.handlers.new_data_consumer.call(|callback| {
@@ -587,6 +584,13 @@ impl WebRtcTransport {
         self.inner.data.dtls_parameters.lock().unwrap().role = response.dtls_local_role;
 
         Ok(())
+    }
+
+    /// Set maximum incoming bitrate for receiving media.
+    pub async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
+        debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
+
+        self.set_max_incoming_bitrate_impl(bitrate).await
     }
 
     /// ICE role.

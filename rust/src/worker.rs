@@ -15,22 +15,45 @@ use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
-pub(crate) use channel::{Channel, SubscriptionHandler};
-pub use common::RequestError;
+pub(crate) use channel::Channel;
+pub(crate) use common::SubscriptionHandler;
 use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::*;
-pub(crate) use payload_channel::{NotificationError, PayloadChannel};
+pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
+use std::error::Error;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, io};
 use thiserror::Error;
 use utils::SpawnResult;
+
+#[derive(Debug, Error)]
+pub enum RequestError {
+    #[error("Channel already closed")]
+    ChannelClosed,
+    #[error("Message is too long")]
+    MessageTooLong,
+    #[error("Payload is too long")]
+    PayloadTooLong,
+    #[error("Request timed out")]
+    TimedOut,
+    // TODO: Enum?
+    #[error("Received response error: {reason}")]
+    Response { reason: String },
+    #[error("Failed to parse response from worker: {error}")]
+    FailedToParse {
+        #[from]
+        error: Box<dyn Error>,
+    },
+    #[error("Worker did not return any data in response")]
+    NoData,
+}
 
 #[derive(Debug, Copy, Clone)]
 pub enum WorkerLogLevel {

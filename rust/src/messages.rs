@@ -9,6 +9,7 @@ use crate::data_structures::{
     DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
     TransportListenIp, TransportTuple,
 };
+use crate::direct_transport::DirectTransportOptions;
 use crate::ortc::RtpMapping;
 use crate::plain_transport::PlainTransportOptions;
 use crate::producer::{
@@ -209,6 +210,33 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreateDirectTransportData {
+    pub(crate) direct: bool,
+    pub(crate) max_message_size: usize,
+}
+
+impl RouterCreateDirectTransportData {
+    pub(crate) fn from_options(direct_transport_options: &DirectTransportOptions) -> Self {
+        Self {
+            direct: true,
+            max_message_size: direct_transport_options.max_message_size,
+        }
+    }
+}
+
+request_response!(
+    "router.createDirectTransport",
+    RouterCreateDirectTransportRequest {
+        internal: TransportInternal,
+        data: RouterCreateDirectTransportData,
+    },
+    RouterCreateDirectTransportResponse {
+        // TODO
+    },
+);
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateWebrtcTransportData {
     listen_ips: TransportListenIps,
     enable_udp: bool,
@@ -324,21 +352,6 @@ pub(crate) struct RouterCreatePipeTransportData {
     is_data_channel: bool,
 }
 
-impl RouterCreatePipeTransportData {
-    pub(crate) fn new(listen_ip: TransportListenIp) -> Self {
-        Self {
-            listen_ip,
-            enable_sctp: false,
-            num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 268435456,
-            sctp_send_buffer_size: 268435456,
-            enable_rtx: false,
-            enable_srtp: false,
-            is_data_channel: false,
-        }
-    }
-}
-
 // request_response!(
 //     "router.createPipeTransport",
 //     RouterCreatePipeTransportRequest {
@@ -346,33 +359,6 @@ impl RouterCreatePipeTransportData {
 //         data: RouterCreatePipeTransportData,
 //     },
 //     RouterCreatePipeTransportResponse {
-//         // TODO
-//     },
-// );
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RouterCreateDirectTransportData {
-    pub(crate) direct: bool,
-    pub(crate) max_message_size: u32,
-}
-
-impl Default for RouterCreateDirectTransportData {
-    fn default() -> Self {
-        Self {
-            direct: true,
-            max_message_size: 262144,
-        }
-    }
-}
-
-// request_response!(
-//     "router.createDirectTransport",
-//     RouterCreateDirectTransportRequest {
-//         internal: TransportInternal,
-//         data: RouterCreateDirectTransportData,
-//     },
-//     RouterCreateDirectTransportResponse {
 //         // TODO
 //     },
 // );
@@ -594,6 +580,17 @@ request_response!(
         data: TransportEnableTraceEventData,
     },
 );
+
+#[derive(Debug, Serialize)]
+pub(crate) struct TransportSendRtcpNotification {
+    pub(crate) internal: TransportInternal,
+}
+
+impl Notification for TransportSendRtcpNotification {
+    fn as_event(&self) -> &'static str {
+        "transport.sendRtcp"
+    }
+}
 
 request_response!(
     "producer.close",
@@ -824,6 +821,20 @@ request_response!(
     DataConsumerSetBufferedAmountLowThresholdRequest {
         internal: DataConsumerInternal,
         data: DataConsumerSetBufferedAmountLowThresholdData,
+    },
+);
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct DataConsumerSendRequestData {
+    pub(crate) ppid: u32,
+}
+
+request_response!(
+    "dataConsumer.send",
+    DataConsumerSendRequest {
+        internal: DataConsumerInternal,
+        data: DataConsumerSendRequestData,
     },
 );
 

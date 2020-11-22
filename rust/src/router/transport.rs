@@ -121,9 +121,6 @@ where
     /// App custom data.
     fn app_data(&self) -> &AppData;
 
-    /// Set maximum incoming bitrate for receiving media.
-    async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError>;
-
     /// Create a Producer.
     ///
     /// Transport will be kept alive as long as at least one producer instance is alive.
@@ -591,6 +588,7 @@ where
         &self,
         r#type: DataConsumerType,
         data_consumer_options: DataConsumerOptions,
+        transport_type: TransportType,
     ) -> Result<DataConsumer, ConsumeDataError> {
         let DataConsumerOptions {
             data_producer_id,
@@ -670,6 +668,7 @@ where
             self.payload_channel().clone(),
             app_data,
             Box::new(self.clone()),
+            matches!(transport_type, TransportType::Direct),
         );
 
         let data_consumer = data_consumer_fut.await;

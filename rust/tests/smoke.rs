@@ -4,6 +4,7 @@ use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventTyp
 use mediasoup::data_consumer::DataConsumerOptions;
 use mediasoup::data_producer::DataProducerOptions;
 use mediasoup::data_structures::TransportListenIp;
+use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
 use mediasoup::producer::{ProducerOptions, ProducerTraceEventType};
 use mediasoup::router::RouterOptions;
@@ -281,6 +282,28 @@ fn smoke() {
         println!(
             "Plain transport enable trace event: {:#?}",
             plain_transport
+                .enable_trace_event(vec![TransportTraceEventType::BWE])
+                .await
+                .unwrap()
+        );
+
+        let direct_transport = router
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .unwrap();
+        println!("Direct transport created: {:?}", direct_transport.id());
+        println!(
+            "Direct transport stats: {:#?}",
+            direct_transport.get_stats().await.unwrap()
+        );
+        println!(
+            "Direct transport dump: {:#?}",
+            direct_transport.dump().await.unwrap()
+        );
+        println!("Router dump: {:#?}", router.dump().await.unwrap());
+        println!(
+            "Direct transport enable trace event: {:#?}",
+            direct_transport
                 .enable_trace_event(vec![TransportTraceEventType::BWE])
                 .await
                 .unwrap()

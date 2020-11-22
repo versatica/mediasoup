@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::ops::{Deref, DerefMut};
@@ -171,4 +172,47 @@ pub struct DtlsParameters {
 pub enum EventDirection {
     In,
     Out,
+}
+
+#[derive(Clone)]
+pub enum WebRtcMessage {
+    String(String),
+    Binary(Bytes),
+    EmptyString,
+    EmptyBinary,
+}
+
+impl WebRtcMessage {
+    // +------------------------------------+-----------+
+    // | Value                              | SCTP PPID |
+    // +------------------------------------+-----------+
+    // | WebRTC String                      | 51        |
+    // | WebRTC Binary Partial (Deprecated) | 52        |
+    // | WebRTC Binary                      | 53        |
+    // | WebRTC String Partial (Deprecated) | 54        |
+    // | WebRTC String Empty                | 56        |
+    // | WebRTC Binary Empty                | 57        |
+    // +------------------------------------+-----------+
+
+    pub(crate) fn new(ppid: u32, payload: Bytes) -> Self {
+        // TODO: Make this fallible instead
+        match ppid {
+            51 => WebRtcMessage::String(String::from_utf8(payload.to_vec()).unwrap()),
+            53 => WebRtcMessage::Binary(payload),
+            56 => WebRtcMessage::EmptyString,
+            57 => WebRtcMessage::EmptyBinary,
+            _ => {
+                panic!("Bad ppid {}", ppid);
+            }
+        }
+    }
+
+    pub(crate) fn into_ppid_and_payload(self) -> (u32, Bytes) {
+        match self {
+            WebRtcMessage::String(string) => (51_u32, Bytes::from(string)),
+            WebRtcMessage::Binary(binary) => (53_u32, binary),
+            WebRtcMessage::EmptyString => (56_u32, Bytes::from_static(" ".as_bytes())),
+            WebRtcMessage::EmptyBinary => (57_u32, Bytes::from(vec![0u8])),
+        }
+    }
 }

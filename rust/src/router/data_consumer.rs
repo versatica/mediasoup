@@ -1,15 +1,17 @@
 use crate::data_producer::DataProducerId;
-use crate::data_structures::AppData;
+use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
-    DataConsumerGetStatsRequest, DataConsumerInternal,
-    DataConsumerSetBufferedAmountLowThresholdData,
+    DataConsumerGetStatsRequest, DataConsumerInternal, DataConsumerSendRequest,
+    DataConsumerSendRequestData, DataConsumerSetBufferedAmountLowThresholdData,
     DataConsumerSetBufferedAmountLowThresholdRequest,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
+use crate::worker::{
+    Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
+};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
@@ -147,8 +149,15 @@ enum Notification {
     BufferedAmountLow,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum PayloadNotification {
+    Message { ppid: u32 },
+}
+
 #[derive(Default)]
 struct Handlers {
+    message: Bag<'static, dyn Fn(&WebRtcMessage) + Send>,
     sctp_send_buffer_full: Bag<'static, dyn Fn() + Send>,
     buffered_amount_low: Bag<'static, dyn Fn() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
@@ -168,7 +177,7 @@ struct Inner {
     app_data: AppData,
     transport: Box<dyn Transport>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
-    _subscription_handler: SubscriptionHandler,
+    _subscription_handlers: Vec<SubscriptionHandler>,
 }
 
 impl Drop for Inner {
@@ -199,8 +208,32 @@ impl Drop for Inner {
 }
 
 #[derive(Clone)]
-pub struct DataConsumer {
+pub struct RegularDataConsumer {
     inner: Arc<Inner>,
+}
+
+impl From<RegularDataConsumer> for DataConsumer {
+    fn from(producer: RegularDataConsumer) -> Self {
+        DataConsumer::Regular(producer)
+    }
+}
+
+#[derive(Clone)]
+pub struct DirectDataConsumer {
+    inner: Arc<Inner>,
+}
+
+impl From<DirectDataConsumer> for DataConsumer {
+    fn from(producer: DirectDataConsumer) -> Self {
+        DataConsumer::Direct(producer)
+    }
+}
+
+#[derive(Clone)]
+#[non_exhaustive]
+pub enum DataConsumer {
+    Regular(RegularDataConsumer),
+    Direct(DirectDataConsumer),
 }
 
 impl DataConsumer {
@@ -216,6 +249,7 @@ impl DataConsumer {
         payload_channel: PayloadChannel,
         app_data: AppData,
         transport: Box<dyn Transport>,
+        direct: bool,
     ) -> Self {
         debug!("new()");
 
@@ -246,7 +280,31 @@ impl DataConsumer {
                 .await
                 .unwrap()
         };
-        // TODO: payload_channel subscription for direct transport
+
+        let payload_subscription_handler = {
+            let handlers = Arc::clone(&handlers);
+
+            payload_channel
+                .subscribe_to_notifications(id.to_string(), move |notification| {
+                    let NotificationMessage { message, payload } = notification;
+                    match serde_json::from_value::<PayloadNotification>(message) {
+                        Ok(notification) => match notification {
+                            PayloadNotification::Message { ppid } => {
+                                let message = WebRtcMessage::new(ppid, payload);
+
+                                handlers.message.call(|callback| {
+                                    callback(&message);
+                                });
+                            }
+                        },
+                        Err(error) => {
+                            error!("Failed to parse payload notification: {}", error);
+                        }
+                    }
+                })
+                .await
+                .unwrap()
+        };
 
         let inner = Arc::new(Inner {
             id,
@@ -261,45 +319,49 @@ impl DataConsumer {
             handlers,
             app_data,
             transport,
-            _subscription_handler: subscription_handler,
+            _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
         });
 
-        Self { inner }
+        if direct {
+            Self::Direct(DirectDataConsumer { inner })
+        } else {
+            Self::Regular(RegularDataConsumer { inner })
+        }
     }
 
     /// DataConsumer id.
     pub fn id(&self) -> DataConsumerId {
-        self.inner.id
+        self.inner().id
     }
 
     /// Associated DataProducer id.
     pub fn data_producer_id(&self) -> DataProducerId {
-        self.inner.data_producer_id
+        self.inner().data_producer_id
     }
 
     /// DataConsumer type.
     pub fn r#type(&self) -> DataConsumerType {
-        self.inner.r#type
+        self.inner().r#type
     }
 
     /// SCTP stream parameters.
     pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
-        self.inner.sctp_stream_parameters
+        self.inner().sctp_stream_parameters
     }
 
     /// DataChannel label.
     pub fn label(&self) -> &String {
-        &self.inner.label
+        &self.inner().label
     }
 
     /// DataChannel protocol.
     pub fn protocol(&self) -> &String {
-        &self.inner.protocol
+        &self.inner().protocol
     }
 
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
-        &self.inner.app_data
+        &self.inner().app_data
     }
 
     /// Dump DataConsumer.
@@ -307,7 +369,7 @@ impl DataConsumer {
     pub async fn dump(&self) -> Result<DataConsumerDump, RequestError> {
         debug!("dump()");
 
-        self.inner
+        self.inner()
             .channel
             .request(DataConsumerDumpRequest {
                 internal: self.get_internal(),
@@ -319,7 +381,7 @@ impl DataConsumer {
     pub async fn get_stats(&self) -> Result<Vec<DataConsumerStat>, RequestError> {
         debug!("get_stats()");
 
-        self.inner
+        self.inner()
             .channel
             .request(DataConsumerGetStatsRequest {
                 internal: self.get_internal(),
@@ -332,7 +394,7 @@ impl DataConsumer {
         debug!("get_buffered_amount()");
 
         let response = self
-            .inner
+            .inner()
             .channel
             .request(DataConsumerGetBufferedAmountRequest {
                 internal: self.get_internal(),
@@ -352,7 +414,7 @@ impl DataConsumer {
             threshold
         );
 
-        self.inner
+        self.inner()
             .channel
             .request(DataConsumerSetBufferedAmountLowThresholdRequest {
                 internal: self.get_internal(),
@@ -361,76 +423,64 @@ impl DataConsumer {
             .await
     }
 
-    // TODO: Not sure what is the purpose of this: https://github.com/versatica/mediasoup/pull/444
-    // /**
-    //  * Send data.
-    //  */
-    // async send(message: string | Buffer, ppid?: number): Promise<void>
-    // {
-    // 	if (typeof message !== 'string' && !Buffer.isBuffer(message))
-    // 	{
-    // 		throw new TypeError('message must be a string or a Buffer');
-    // 	}
-    //
-    // 	/*
-    // 	 * +-------------------------------+----------+
-    // 	 * | Value                         | SCTP     |
-    // 	 * |                               | PPID     |
-    // 	 * +-------------------------------+----------+
-    // 	 * | WebRTC String                 | 51       |
-    // 	 * | WebRTC Binary Partial         | 52       |
-    // 	 * | (Deprecated)                  |          |
-    // 	 * | WebRTC Binary                 | 53       |
-    // 	 * | WebRTC String Partial         | 54       |
-    // 	 * | (Deprecated)                  |          |
-    // 	 * | WebRTC String Empty           | 56       |
-    // 	 * | WebRTC Binary Empty           | 57       |
-    // 	 * +-------------------------------+----------+
-    // 	 */
-    //
-    // 	if (typeof ppid !== 'number')
-    // 	{
-    // 		ppid = (typeof message === 'string')
-    // 			? message.length > 0 ? 51 : 56
-    // 			: message.length > 0 ? 53 : 57;
-    // 	}
-    //
-    // 	// Ensure we honor PPIDs.
-    // 	if (ppid === 56)
-    // 		message = ' ';
-    // 	else if (ppid === 57)
-    // 		message = Buffer.alloc(1);
-    //
-    // 	const requestData = { ppid };
-    //
-    // 	await this._payloadChannel.request(
-    // 		'dataConsumer.send', this._internal, requestData, message);
-    // }
+    pub fn on_message<F: Fn(&WebRtcMessage) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner().handlers.message.add(Box::new(callback))
+    }
 
     pub fn on_sctp_send_buffer_full<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner
+        self.inner()
             .handlers
             .sctp_send_buffer_full
             .add(Box::new(callback))
     }
 
     pub fn on_buffered_amount_low<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner
+        self.inner()
             .handlers
             .buffered_amount_low
             .add(Box::new(callback))
     }
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.close.add(Box::new(callback))
+        self.inner().handlers.close.add(Box::new(callback))
+    }
+
+    fn inner(&self) -> &Arc<Inner> {
+        match self {
+            DataConsumer::Regular(data_consumer) => &data_consumer.inner,
+            DataConsumer::Direct(data_consumer) => &data_consumer.inner,
+        }
     }
 
     fn get_internal(&self) -> DataConsumerInternal {
         DataConsumerInternal {
-            router_id: self.inner.transport.router_id(),
-            transport_id: self.inner.transport.id(),
-            data_consumer_id: self.inner.id,
-            data_producer_id: self.inner.data_producer_id,
+            router_id: self.inner().transport.router_id(),
+            transport_id: self.inner().transport.id(),
+            data_consumer_id: self.inner().id,
+            data_producer_id: self.inner().data_producer_id,
         }
+    }
+}
+
+impl DirectDataConsumer {
+    /// Send data.
+    pub async fn send(&self, message: WebRtcMessage) -> Result<(), RequestError> {
+        let (ppid, payload) = message.into_ppid_and_payload();
+
+        self.inner
+            .payload_channel
+            .request(
+                DataConsumerSendRequest {
+                    internal: DataConsumerInternal {
+                        router_id: self.inner.transport.router_id(),
+                        transport_id: self.inner.transport.id(),
+                        data_consumer_id: self.inner.id,
+                        data_producer_id: self.inner.data_producer_id,
+                    },
+                    data: DataConsumerSendRequestData { ppid },
+                },
+                payload,
+            )
+            .await
     }
 }

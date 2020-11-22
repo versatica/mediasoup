@@ -1,24 +1,24 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, SctpState, TransportListenIp, TransportTuple};
-use crate::messages::{
-    PlainTransportData, TransportCloseRequest, TransportConnectRequestPlain,
-    TransportConnectRequestPlainData, TransportInternal,
-};
+use crate::data_structures::{AppData, SctpState};
+use crate::messages::{TransportCloseRequest, TransportInternal, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::{Router, RouterId};
-use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
-use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
+use crate::sctp_parameters::SctpParameters;
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
     TransportTraceEventData, TransportTraceEventType, TransportType,
 };
-use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
+use crate::worker::{
+    Channel, NotificationError, NotificationMessage, PayloadChannel, RequestError,
+    SubscriptionHandler,
+};
 use async_executor::Executor;
 use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
+use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -28,50 +28,18 @@ use std::sync::Arc;
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub struct PlainTransportOptions {
-    /// Listening IP address.
-    pub listen_ip: TransportListenIp,
-    /// Use RTCP-mux (RTP and RTCP in the same port).
-    /// Default true.
-    pub rtcp_mux: bool,
-    /// Whether remote IP:port should be auto-detected based on first RTP/RTCP
-    /// packet received. If enabled, connect() method must not be called unless
-    /// SRTP is enabled. If so, it must be called with just remote SRTP parameters.
-    /// Default false.
-    pub comedia: bool,
-    /// Create a SCTP association.
-    /// Default false.
-    pub enable_sctp: bool,
-    /// SCTP streams number.
-    pub num_sctp_streams: NumSctpStreams,
-    /// Maximum allowed size for SCTP messages sent by DataProducers.
-    /// Default 262144.
-    pub max_sctp_message_size: u32,
-    /// Maximum SCTP send buffer used by DataConsumers.
-    /// Default 262144.
-    pub sctp_send_buffer_size: u32,
-    /// Enable SRTP. For this to work, connect() must be called with remote SRTP parameters.
-    /// Default false.
-    pub enable_srtp: bool,
-    /// The SRTP crypto suite to be used if enableSrtp is set.
-    /// Default 'AesCm128HmacSha180'.
-    pub srtp_crypto_suite: SrtpCryptoSuite,
+pub struct DirectTransportOptions {
+    /// Maximum allowed size for direct messages sent from DataProducers.
+    /// Default 262_144.
+    pub max_message_size: usize,
     /// Custom application data.
     pub app_data: AppData,
 }
 
-impl PlainTransportOptions {
-    pub fn new(listen_ip: TransportListenIp) -> Self {
+impl Default for DirectTransportOptions {
+    fn default() -> Self {
         Self {
-            listen_ip,
-            rtcp_mux: true,
-            comedia: false,
-            enable_sctp: false,
-            num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 262144,
-            sctp_send_buffer_size: 262144,
-            enable_srtp: false,
-            srtp_crypto_suite: SrtpCryptoSuite::default(),
+            max_message_size: 262_144,
             app_data: AppData::default(),
         }
     }
@@ -80,7 +48,7 @@ impl PlainTransportOptions {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
-pub struct PlainTransportDump {
+pub struct DirectTransportDump {
     // Common to all Transports.
     pub id: TransportId,
     pub direct: bool,
@@ -96,17 +64,11 @@ pub struct PlainTransportDump {
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_listener: Option<SctpListener>,
     pub trace_event_types: String,
-    // PlainTransport specific.
-    pub rtcp_mux: bool,
-    pub comedia: bool,
-    pub tuple: Option<TransportTuple>,
-    pub rtcp_tuple: Option<TransportTuple>,
-    pub srtp_parameters: Option<SrtpParameters>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PlainTransportStat {
+pub struct DirectTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here
     pub transport_id: TransportId,
@@ -132,40 +94,15 @@ pub struct PlainTransportStat {
     pub available_incoming_bitrate: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_incoming_bitrate: Option<u32>,
-    // PlainTransport specific.
-    pub rtcp_mux: bool,
-    pub comedia: bool,
-    pub tuple: Option<TransportTuple>,
-    pub rtcp_tuple: Option<TransportTuple>,
-}
-
-// TODO: This has all parameters optional, would be useful to somehow make these invariants cleaner
-pub struct PlainTransportRemoteParameters {
-    /// Remote IPv4 or IPv6.
-    /// Required if `comedia` is not set.
-    pub ip: Option<String>,
-    /// Remote port.
-    /// Required if `comedia` is not set.
-    pub port: Option<u16>,
-    /// Remote RTCP port.
-    /// Required if `comedia` is not set and RTCP-mux is not enabled.
-    pub rtcp_port: Option<u16>,
-    /// SRTP parameters used by the remote endpoint to encrypt its RTP and RTCP.
-    /// The SRTP crypto suite of the local `srtpParameters` gets also updated after connect()
-    /// resolves.
-    /// Required if enableSrtp was set.
-    pub srtp_parameters: Option<SrtpParameters>,
 }
 
 #[derive(Default)]
 struct Handlers {
+    rtcp: Bag<'static, dyn Fn(&Bytes) + Send>,
     new_producer: Bag<'static, dyn Fn(&Producer) + Send>,
     new_consumer: Bag<'static, dyn Fn(&Consumer) + Send>,
     new_data_producer: Bag<'static, dyn Fn(&DataProducer) + Send>,
     new_data_consumer: Bag<'static, dyn Fn(&DataConsumer) + Send>,
-    tuple: Bag<'static, dyn Fn(&TransportTuple) + Send>,
-    rtcp_tuple: Bag<'static, dyn Fn(&TransportTuple) + Send>,
-    sctp_state_change: Bag<'static, dyn Fn(SctpState) + Send>,
     trace: Bag<'static, dyn Fn(&TransportTraceEventData) + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
@@ -173,13 +110,13 @@ struct Handlers {
 #[derive(Debug, Deserialize)]
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
-    Tuple(TransportTuple),
-    RtcpTuple(TransportTuple),
-    #[serde(rename_all = "camelCase")]
-    SctpStateChange {
-        sctp_state: SctpState,
-    },
     Trace(TransportTraceEventData),
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum PayloadNotification {
+    Rtcp,
 }
 
 struct Inner {
@@ -190,12 +127,11 @@ struct Inner {
     channel: Channel,
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
-    data: Arc<PlainTransportData>,
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
     router: Router,
     // Drop subscription to transport-specific notifications when transport itself is dropped
-    _subscription_handler: SubscriptionHandler,
+    _subscription_handlers: Vec<SubscriptionHandler>,
 }
 
 impl Drop for Inner {
@@ -224,12 +160,12 @@ impl Drop for Inner {
 }
 
 #[derive(Clone)]
-pub struct PlainTransport {
+pub struct DirectTransport {
     inner: Arc<Inner>,
 }
 
 #[async_trait(?Send)]
-impl Transport for PlainTransport {
+impl Transport for DirectTransport {
     /// Transport id.
     fn id(&self) -> TransportId {
         self.inner.id
@@ -251,7 +187,7 @@ impl Transport for PlainTransport {
         debug!("produce()");
 
         let producer = self
-            .produce_impl(producer_options, TransportType::Plain)
+            .produce_impl(producer_options, TransportType::Direct)
             .await?;
 
         self.inner.handlers.new_producer.call(|callback| {
@@ -289,7 +225,7 @@ impl Transport for PlainTransport {
             .produce_data_impl(
                 DataProducerType::Sctp,
                 data_producer_options,
-                TransportType::Plain,
+                TransportType::Direct,
             )
             .await?;
 
@@ -313,7 +249,7 @@ impl Transport for PlainTransport {
             .consume_data_impl(
                 DataConsumerType::Sctp,
                 data_consumer_options,
-                TransportType::Plain,
+                TransportType::Direct,
             )
             .await?;
 
@@ -326,17 +262,17 @@ impl Transport for PlainTransport {
 }
 
 #[async_trait(?Send)]
-impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport {
+impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransport {
     /// Dump Transport.
     #[doc(hidden)]
-    async fn dump(&self) -> Result<PlainTransportDump, RequestError> {
+    async fn dump(&self) -> Result<DirectTransportDump, RequestError> {
         debug!("dump()");
 
         self.dump_impl().await
     }
 
     /// Get Transport stats.
-    async fn get_stats(&self) -> Result<Vec<PlainTransportStat>, RequestError> {
+    async fn get_stats(&self) -> Result<Vec<DirectTransportStat>, RequestError> {
         debug!("get_stats()");
 
         self.get_stats_impl().await
@@ -388,7 +324,7 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
     }
 }
 
-impl TransportImpl<PlainTransportDump, PlainTransportStat> for PlainTransport {
+impl TransportImpl<DirectTransportDump, DirectTransportStat> for DirectTransport {
     fn router(&self) -> &Router {
         &self.inner.router
     }
@@ -414,50 +350,26 @@ impl TransportImpl<PlainTransportDump, PlainTransportStat> for PlainTransport {
     }
 }
 
-impl PlainTransport {
+impl DirectTransport {
     pub(super) async fn new(
         id: TransportId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: PayloadChannel,
-        data: PlainTransportData,
         app_data: AppData,
         router: Router,
     ) -> Self {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
-        let data = Arc::new(data);
 
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
-            let data = Arc::clone(&data);
 
             channel
                 .subscribe_to_notifications(id.to_string(), move |notification| {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
-                            Notification::Tuple(tuple) => {
-                                *data.tuple.lock().unwrap() = tuple.clone();
-
-                                handlers.tuple.call(|callback| {
-                                    callback(&tuple);
-                                });
-                            }
-                            Notification::RtcpTuple(rtcp_tuple) => {
-                                data.rtcp_tuple.lock().unwrap().replace(rtcp_tuple.clone());
-
-                                handlers.rtcp_tuple.call(|callback| {
-                                    callback(&rtcp_tuple);
-                                });
-                            }
-                            Notification::SctpStateChange { sctp_state } => {
-                                data.sctp_state.lock().unwrap().replace(sctp_state);
-
-                                handlers.sctp_state_change.call(|callback| {
-                                    callback(sctp_state);
-                                });
-                            }
                             Notification::Trace(trace_event_data) => {
                                 handlers.trace.call(|callback| {
                                     callback(&trace_event_data);
@@ -473,16 +385,31 @@ impl PlainTransport {
                 .unwrap()
         };
 
+        let payload_subscription_handler = {
+            let handlers = Arc::clone(&handlers);
+
+            payload_channel
+                .subscribe_to_notifications(id.to_string(), move |notification| {
+                    let NotificationMessage { message, payload } = notification;
+                    match serde_json::from_value::<PayloadNotification>(message) {
+                        Ok(notification) => match notification {
+                            PayloadNotification::Rtcp => {
+                                handlers.rtcp.call(|callback| {
+                                    callback(&payload);
+                                });
+                            }
+                        },
+                        Err(error) => {
+                            error!("Failed to parse payload notification: {}", error);
+                        }
+                    }
+                })
+                .await
+                .unwrap()
+        };
+
         let next_mid_for_consumers = AtomicUsize::default();
-        let used_sctp_stream_ids = AsyncMutex::new({
-            let mut used_used_sctp_stream_ids = HashMap::new();
-            if let Some(sctp_parameters) = &data.sctp_parameters {
-                for i in 0..sctp_parameters.mis {
-                    used_used_sctp_stream_ids.insert(i, false);
-                }
-            }
-            used_used_sctp_stream_ids
-        });
+        let used_sctp_stream_ids = AsyncMutex::new(HashMap::new());
         let inner = Arc::new(Inner {
             id,
             next_mid_for_consumers,
@@ -491,109 +418,29 @@ impl PlainTransport {
             channel,
             payload_channel,
             handlers,
-            data,
             app_data,
             router,
-            _subscription_handler: subscription_handler,
+            _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
         });
 
         Self { inner }
     }
 
-    /// Provide the PlainTransport remote parameters.
-    pub async fn connect(
-        &self,
-        remote_parameters: PlainTransportRemoteParameters,
-    ) -> Result<(), RequestError> {
-        debug!("connect()");
-
-        let response = self
-            .inner
-            .channel
-            .request(TransportConnectRequestPlain {
-                internal: self.get_internal(),
-                data: TransportConnectRequestPlainData {
-                    ip: remote_parameters.ip,
-                    port: remote_parameters.port,
-                    rtcp_port: remote_parameters.rtcp_port,
-                    srtp_parameters: remote_parameters.srtp_parameters,
-                },
-            })
-            .await?;
-
-        if let Some(tuple) = response.tuple {
-            *self.inner.data.tuple.lock().unwrap() = tuple;
-        }
-
-        if let Some(rtcp_tuple) = response.rtcp_tuple {
-            self.inner
-                .data
-                .rtcp_tuple
-                .lock()
-                .unwrap()
-                .replace(rtcp_tuple);
-        }
-
-        if let Some(srtp_parameters) = response.srtp_parameters {
-            self.inner
-                .data
-                .srtp_parameters
-                .lock()
-                .unwrap()
-                .replace(srtp_parameters);
-        }
-
-        Ok(())
-    }
-
-    /// Set maximum incoming bitrate for receiving media.
-    pub async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
-        debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
-
-        self.set_max_incoming_bitrate_impl(bitrate).await
-    }
-
-    /// Transport tuple.
-    pub fn tuple(&self) -> TransportTuple {
-        self.inner.data.tuple.lock().unwrap().clone()
-    }
-
-    /// Transport RTCP tuple.
-    pub fn rtcp_tuple(&self) -> Option<TransportTuple> {
-        self.inner.data.rtcp_tuple.lock().unwrap().clone()
-    }
-
-    /// SCTP parameters.
-    pub fn sctp_parameters(&self) -> Option<SctpParameters> {
-        self.inner.data.sctp_parameters
-    }
-
-    /// SCTP state.
-    pub fn sctp_state(&self) -> Option<SctpState> {
-        *self.inner.data.sctp_state.lock().unwrap()
-    }
-
-    /// SRTP parameters.
-    pub fn srtp_parameters(&self) -> Option<SrtpParameters> {
-        self.inner.data.srtp_parameters.lock().unwrap().clone()
-    }
-
-    pub fn on_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.tuple.add(Box::new(callback))
-    }
-
-    pub fn on_rtcp_tuple<F: Fn(&TransportTuple) + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.rtcp_tuple.add(Box::new(callback))
-    }
-
-    pub fn on_sctp_state_change<F: Fn(SctpState) + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId {
+    /// Send RTCP packet.
+    pub async fn send_rtcp(&self, rtcp_packet: Bytes) -> Result<(), NotificationError> {
         self.inner
-            .handlers
-            .sctp_state_change
-            .add(Box::new(callback))
+            .payload_channel
+            .notify(
+                TransportSendRtcpNotification {
+                    internal: self.get_internal(),
+                },
+                rtcp_packet,
+            )
+            .await
+    }
+
+    pub fn on_rtcp<F: Fn(&Bytes) + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.rtcp.add(Box::new(callback))
     }
 
     fn get_internal(&self) -> TransportInternal {
