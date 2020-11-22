@@ -23,6 +23,7 @@ use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::IpAddr;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
@@ -129,7 +130,7 @@ pub struct PipeTransportStat {
 
 pub struct PipeTransportRemoteParameters {
     /// Remote IPv4 or IPv6.
-    pub ip: String,
+    pub ip: IpAddr,
     /// Remote port.
     pub port: u16,
     /// SRTP parameters used by the paired `PipeTransport` to encrypt its RTP and RTCP.

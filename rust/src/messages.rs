@@ -29,6 +29,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::net::IpAddr;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -448,7 +449,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 pub(crate) struct TransportConnectRequestPipeData {
-    pub(crate) ip: String,
+    pub(crate) ip: IpAddr,
     pub(crate) port: u16,
     pub(crate) srtp_parameters: Option<SrtpParameters>,
 }
