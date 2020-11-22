@@ -92,7 +92,7 @@ impl PipeToRouterOptions {
         Self {
             router,
             listen_ip: TransportListenIp {
-                ip: "127.0.0.1".to_string(),
+                ip: "127.0.0.1".parse().unwrap(),
                 announced_ip: None,
             },
             enable_sctp: true,

@@ -77,7 +77,7 @@ fn smoke() {
             .create_webrtc_transport({
                 let mut options =
                     WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                        ip: "127.0.0.1".to_string(),
+                        ip: "127.0.0.1".parse().unwrap(),
                         announced_ip: None,
                     }));
 
@@ -259,7 +259,7 @@ fn smoke() {
         let plain_transport = router
             .create_plain_transport({
                 let mut options = PlainTransportOptions::new(TransportListenIp {
-                    ip: "127.0.0.1".to_string(),
+                    ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 });
 

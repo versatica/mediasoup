@@ -1,6 +1,7 @@
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::net::IpAddr;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
@@ -36,9 +37,9 @@ impl AppData {
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TransportListenIp {
-    pub ip: String,
+    pub ip: IpAddr,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub announced_ip: Option<String>,
+    pub announced_ip: Option<IpAddr>,
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
