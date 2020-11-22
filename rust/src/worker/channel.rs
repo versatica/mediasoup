@@ -192,9 +192,9 @@ impl Channel {
                             ChannelReceiveMessage::Notification(notification) => {
                                 let target_id = notification
                                     .get("targetId".to_string())
-                                    .map(|value| value.as_str().to_owned())
-                                    .flatten()
-                                    .map(|s| s.to_owned());
+                                    .and_then(|value| value.as_str())
+                                    .map(str::to_owned);
+
                                 match target_id {
                                     Some(target_id) => {
                                         event_handlers

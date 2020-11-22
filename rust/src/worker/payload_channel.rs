@@ -191,9 +191,8 @@ impl PayloadChannel {
                             PayloadChannelReceiveMessage::Notification(notification) => {
                                 let target_id = notification
                                     .get("targetId".to_string())
-                                    .map(|value| value.as_str())
-                                    .flatten()
-                                    .map(|s| s.to_owned());
+                                    .and_then(|value| value.as_str())
+                                    .map(str::to_owned);
 
                                 let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
                                 if read_bytes == 0 {

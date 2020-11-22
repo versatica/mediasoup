@@ -54,7 +54,7 @@ use async_mutex::Mutex as AsyncMutex;
 use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::future;
 use log::*;
-use parking_lot::Mutex as SyncMutex;
+use parking_lot::{Mutex as SyncMutex, RwLock as SyncRwLock};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -236,9 +236,8 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Handlers,
     app_data: AppData,
-    // TODO: RwLock instead
-    producers: Arc<SyncMutex<HashMap<ProducerId, WeakProducer>>>,
-    data_producers: Arc<SyncMutex<HashMap<DataProducerId, WeakDataProducer>>>,
+    producers: Arc<SyncRwLock<HashMap<ProducerId, WeakProducer>>>,
+    data_producers: Arc<SyncRwLock<HashMap<DataProducerId, WeakDataProducer>>>,
     #[allow(clippy::type_complexity)]
     mapped_pipe_transports:
         Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>>,
@@ -288,8 +287,9 @@ impl Router {
     ) -> Self {
         debug!("new()");
 
-        let producers = Arc::<SyncMutex<HashMap<ProducerId, WeakProducer>>>::default();
-        let data_producers = Arc::<SyncMutex<HashMap<DataProducerId, WeakDataProducer>>>::default();
+        let producers = Arc::<SyncRwLock<HashMap<ProducerId, WeakProducer>>>::default();
+        let data_producers =
+            Arc::<SyncRwLock<HashMap<DataProducerId, WeakDataProducer>>>::default();
         let mapped_pipe_transports = Arc::<
             SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>,
         >::default();
@@ -564,10 +564,9 @@ impl Router {
         let producer = match self
             .inner
             .producers
-            .lock()
+            .read()
             .get(&producer_id)
-            .map(|weak_producer| weak_producer.upgrade())
-            .flatten()
+            .and_then(WeakProducer::upgrade)
         {
             Some(producer) => producer,
             None => return Err(PipeProducerToRouterError::ProducerNotFound(producer_id)),
@@ -696,10 +695,9 @@ impl Router {
         let producer = match self
             .inner
             .data_producers
-            .lock()
+            .read()
             .get(&data_producer_id)
-            .map(|weak_producer| weak_producer.upgrade())
-            .flatten()
+            .and_then(WeakDataProducer::upgrade)
         {
             Some(producer) => producer,
             None => {
@@ -929,14 +927,14 @@ impl Router {
                 .on_new_producer(move |producer| {
                     let producer_id = producer.id();
                     if let Some(producers) = producers_weak.upgrade() {
-                        producers.lock().insert(producer_id, producer.downgrade());
+                        producers.write().insert(producer_id, producer.downgrade());
                     }
                     {
                         let producers_weak = producers_weak.clone();
                         producer
                             .on_close(move || {
                                 if let Some(producers) = producers_weak.upgrade() {
-                                    producers.lock().remove(&producer_id);
+                                    producers.write().remove(&producer_id);
                                 }
                             })
                             .detach();
@@ -951,7 +949,7 @@ impl Router {
                     let data_producer_id = data_producer.id();
                     if let Some(data_producers) = data_producers_weak.upgrade() {
                         data_producers
-                            .lock()
+                            .write()
                             .insert(data_producer_id, data_producer.downgrade());
                     }
                     {
@@ -959,7 +957,7 @@ impl Router {
                         data_producer
                             .on_close(move || {
                                 if let Some(data_producers) = data_producers_weak.upgrade() {
-                                    data_producers.lock().remove(&data_producer_id);
+                                    data_producers.write().remove(&data_producer_id);
                                 }
                             })
                             .detach();
@@ -970,24 +968,24 @@ impl Router {
     }
 
     fn has_producer(&self, producer_id: &ProducerId) -> bool {
-        self.inner.producers.lock().contains_key(producer_id)
+        self.inner.producers.read().contains_key(producer_id)
     }
 
     fn get_producer(&self, producer_id: &ProducerId) -> Option<Producer> {
-        self.inner.producers.lock().get(producer_id)?.upgrade()
+        self.inner.producers.read().get(producer_id)?.upgrade()
     }
 
     fn has_data_producer(&self, data_producer_id: &DataProducerId) -> bool {
         self.inner
             .data_producers
-            .lock()
+            .read()
             .contains_key(data_producer_id)
     }
 
     fn get_data_producer(&self, data_producer_id: &DataProducerId) -> Option<DataProducer> {
         self.inner
             .data_producers
-            .lock()
+            .read()
             .get(data_producer_id)?
             .upgrade()
     }
