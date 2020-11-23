@@ -282,6 +282,66 @@ pub enum RtpHeaderExtensionDirection {
     Inactive,
 }
 
+/// URIs for supported RTP header extensions
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+pub enum RtpHeaderExtensionUri {
+    /// urn:ietf:params:rtp-hdrext:sdes:mid
+    #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:mid")]
+    Sdes,
+    /// urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+    #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id")]
+    RtpStreamId,
+    /// urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+    #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id")]
+    RepairRtpStreamId,
+    /// http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
+    #[serde(rename = "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07")]
+    FrameMarkingDraft07,
+    /// urn:ietf:params:rtp-hdrext:framemarking
+    #[serde(rename = "urn:ietf:params:rtp-hdrext:framemarking")]
+    FrameMarking,
+    /// urn:ietf:params:rtp-hdrext:ssrc-audio-level
+    #[serde(rename = "urn:ietf:params:rtp-hdrext:ssrc-audio-level")]
+    AudioLevel,
+    /// urn:3gpp:video-orientation
+    #[serde(rename = "urn:3gpp:video-orientation")]
+    VideoOrientation,
+    /// urn:ietf:params:rtp-hdrext:toffset
+    #[serde(rename = "urn:ietf:params:rtp-hdrext:toffset")]
+    TimeOffset,
+    /// http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
+    #[serde(rename = "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01")]
+    TransportWideCCDraft01,
+    /// http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+    #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
+    AbsSendTime,
+}
+
+impl From<RtpHeaderExtensionUri> for &'static str {
+    fn from(uri: RtpHeaderExtensionUri) -> Self {
+        match uri {
+            RtpHeaderExtensionUri::Sdes => "urn:ietf:params:rtp-hdrext:sdes:mid",
+            RtpHeaderExtensionUri::RtpStreamId => "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
+            RtpHeaderExtensionUri::RepairRtpStreamId => {
+                "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id"
+            }
+            RtpHeaderExtensionUri::FrameMarkingDraft07 => {
+                "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07"
+            }
+            RtpHeaderExtensionUri::FrameMarking => "urn:ietf:params:rtp-hdrext:framemarking",
+            RtpHeaderExtensionUri::AudioLevel => "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+            RtpHeaderExtensionUri::VideoOrientation => "urn:3gpp:video-orientation",
+            RtpHeaderExtensionUri::TimeOffset => "urn:ietf:params:rtp-hdrext:toffset",
+            RtpHeaderExtensionUri::TransportWideCCDraft01 => {
+                "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+            }
+            RtpHeaderExtensionUri::AbsSendTime => {
+                "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
+            }
+        }
+    }
+}
+
 /// Provides information relating to supported header extensions. The list of RTP header extensions
 /// supported by mediasoup is defined in the supported_rtp_capabilities.rs file.
 ///
@@ -289,7 +349,7 @@ pub enum RtpHeaderExtensionDirection {
 /// just present in mediasoup RTP capabilities (retrieved via `mediasoup::router::Router::rtp_capabilities()` or
 /// `mediasoup::supported_rtp_capabilities::get_supported_rtp_capabilities()`. It's ignored if
 /// present in endpoints' RTP capabilities.
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpHeaderExtension {
     // TODO: TypeScript version makes this field both optional and possible to set to "",
@@ -299,7 +359,7 @@ pub struct RtpHeaderExtension {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<MediaKind>,
     /// The URI of the RTP header extension, as defined in RFC 5285.
-    pub uri: String,
+    pub uri: RtpHeaderExtensionUri,
     /// The preferred numeric identifier that goes in the RTP packet. Must be unique.
     pub preferred_id: u16,
     /// If true, it is preferred that the value in the header be encrypted as per RFC 6904.
@@ -499,7 +559,7 @@ pub struct RtpEncodingParameters {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtpHeaderExtensionParameters {
     /// The URI of the RTP header extension, as defined in RFC 5285.
-    pub uri: String,
+    pub uri: RtpHeaderExtensionUri,
     /// The numeric identifier that goes in the RTP packet. Must be unique.
     pub id: u16,
     /// If true, the value in the header is encrypted as per RFC 6904.

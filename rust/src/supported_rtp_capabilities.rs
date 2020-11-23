@@ -1,6 +1,7 @@
 use crate::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities, RtpCodecCapability,
     RtpCodecParametersParametersValue, RtpHeaderExtension, RtpHeaderExtensionDirection,
+    RtpHeaderExtensionUri,
 };
 use std::collections::BTreeMap;
 
@@ -401,42 +402,42 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
         header_extensions: vec![
             RtpHeaderExtension {
                 kind: Some(MediaKind::Audio),
-                uri: "urn:ietf:params:rtp-hdrext:sdes:mid".to_string(),
+                uri: RtpHeaderExtensionUri::Sdes,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "urn:ietf:params:rtp-hdrext:sdes:mid".to_string(),
+                uri: RtpHeaderExtensionUri::Sdes,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id".to_string(),
+                uri: RtpHeaderExtensionUri::RtpStreamId,
                 preferred_id: 2,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::RecvOnly,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id".to_string(),
+                uri: RtpHeaderExtensionUri::RepairRtpStreamId,
                 preferred_id: 3,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::RecvOnly,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Audio),
-                uri: "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time".to_string(),
+                uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time".to_string(),
+                uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
@@ -444,16 +445,14 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             // NOTE: For audio we just enable transport-wide-cc-01 when receiving media.
             RtpHeaderExtension {
                 kind: Some(MediaKind::Audio),
-                uri: "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
-                    .to_string(),
+                uri: RtpHeaderExtensionUri::TransportWideCCDraft01,
                 preferred_id: 5,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::RecvOnly,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
-                    .to_string(),
+                uri: RtpHeaderExtensionUri::TransportWideCCDraft01,
                 preferred_id: 5,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
@@ -461,35 +460,35 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             // NOTE: Remove this once framemarking draft becomes RFC.
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07".to_string(),
+                uri: RtpHeaderExtensionUri::FrameMarkingDraft07,
                 preferred_id: 6,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "urn:ietf:params:rtp-hdrext:framemarking".to_string(),
+                uri: RtpHeaderExtensionUri::FrameMarking,
                 preferred_id: 7,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Audio),
-                uri: "urn:ietf:params:rtp-hdrext:ssrc-audio-level".to_string(),
+                uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "urn:3gpp:video-orientation".to_string(),
+                uri: RtpHeaderExtensionUri::VideoOrientation,
                 preferred_id: 11,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: "urn:ietf:params:rtp-hdrext:toffset".to_string(),
+                uri: RtpHeaderExtensionUri::TimeOffset,
                 preferred_id: 12,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,

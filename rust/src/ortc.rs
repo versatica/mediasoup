@@ -2,7 +2,8 @@ use crate::rtp_parameters::{
     MediaKind, MimeType, MimeTypeVideo, RtcpParameters, RtpCapabilities, RtpCapabilitiesFinalized,
     RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
     RtpCodecParametersParametersValue, RtpEncodingParameters, RtpEncodingParametersRtx,
-    RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpParameters,
+    RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
+    RtpParameters,
 };
 use crate::{scalability_modes, supported_rtp_capabilities};
 use serde::{Deserialize, Serialize};
@@ -15,10 +16,6 @@ const DYNAMIC_PAYLOAD_TYPES: &[u8] = &[
     100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118,
     119, 120, 121, 122, 123, 124, 125, 126, 127, 96, 97, 98, 99,
 ];
-
-const TWCC_HEADER: &str =
-    "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
-const ABS_SEND_TIME_HEADER: &str = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time";
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -557,7 +554,7 @@ pub(crate) fn get_consumable_rtp_parameters(
         }
 
         let consumable_ext = RtpHeaderExtensionParameters {
-            uri: cap_ext.uri.clone(),
+            uri: cap_ext.uri,
             id: cap_ext.preferred_id,
             encrypt: cap_ext.preferred_encrypt,
             parameters: BTreeMap::new(),
@@ -688,7 +685,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     if consumer_params
         .header_extensions
         .iter()
-        .any(|ext| ext.uri.as_str() == TWCC_HEADER)
+        .any(|ext| ext.uri == RtpHeaderExtensionUri::TransportWideCCDraft01)
     {
         for codec in consumer_params.codecs.iter_mut() {
             codec
@@ -698,7 +695,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     } else if consumer_params
         .header_extensions
         .iter()
-        .any(|ext| ext.uri.as_str() == ABS_SEND_TIME_HEADER)
+        .any(|ext| ext.uri == RtpHeaderExtensionUri::AbsSendTime)
     {
         for codec in consumer_params.codecs.iter_mut() {
             codec
@@ -800,9 +797,12 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         .header_extensions
         .iter()
         .filter(|ext| {
-            ext.uri != "urn:ietf:params:rtp-hdrext:sdes:mid"
-                && ext.uri != ABS_SEND_TIME_HEADER
-                && ext.uri != TWCC_HEADER
+            !matches!(
+                ext.uri,
+                RtpHeaderExtensionUri::Sdes
+                    | RtpHeaderExtensionUri::AbsSendTime
+                    | RtpHeaderExtensionUri::TransportWideCCDraft01
+            )
         })
         .cloned()
         .collect();
