@@ -49,7 +49,6 @@ enum PayloadChannelReceiveMessage {
     ResponseError {
         id: u32,
         error: Value,
-        // TODO: Enum?
         reason: String,
     },
     Notification(Value),
@@ -82,7 +81,6 @@ pub enum NotificationError {
 }
 
 struct ResponseError {
-    // TODO: Enum?
     reason: String,
 }
 

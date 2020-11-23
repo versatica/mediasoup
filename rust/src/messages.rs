@@ -467,7 +467,7 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 pub(crate) struct TransportConnectRequestPlainData {
-    pub(crate) ip: Option<String>,
+    pub(crate) ip: Option<IpAddr>,
     pub(crate) port: Option<u16>,
     pub(crate) rtcp_port: Option<u16>,
     pub(crate) srtp_parameters: Option<SrtpParameters>,

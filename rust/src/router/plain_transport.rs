@@ -23,6 +23,7 @@ use event_listener_primitives::{Bag, HandlerId};
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::IpAddr;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
@@ -139,11 +140,12 @@ pub struct PlainTransportStat {
     pub rtcp_tuple: Option<TransportTuple>,
 }
 
-// TODO: This has all parameters optional, would be useful to somehow make these invariants cleaner
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PlainTransportRemoteParameters {
     /// Remote IPv4 or IPv6.
     /// Required if `comedia` is not set.
-    pub ip: Option<String>,
+    pub ip: Option<IpAddr>,
     /// Remote port.
     /// Required if `comedia` is not set.
     pub port: Option<u16>,

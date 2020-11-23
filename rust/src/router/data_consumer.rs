@@ -20,7 +20,6 @@ use std::sync::Arc;
 
 uuid_based_wrapper_type!(DataConsumerId);
 
-// TODO: Split into 2 for Direct and others or make an enum
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DataConsumerOptions {

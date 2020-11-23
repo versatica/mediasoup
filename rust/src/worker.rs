@@ -43,7 +43,6 @@ pub enum RequestError {
     PayloadTooLong,
     #[error("Request timed out")]
     TimedOut,
-    // TODO: Enum?
     #[error("Received response error: {reason}")]
     Response { reason: String },
     #[error("Failed to parse response from worker: {error}")]

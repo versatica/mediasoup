@@ -50,7 +50,6 @@ enum ChannelReceiveMessage {
     ResponseError {
         id: u32,
         error: Value,
-        // TODO: Enum?
         reason: String,
     },
     Notification(Value),
@@ -83,7 +82,6 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
 }
 
 struct ResponseError {
-    // TODO: Enum?
     reason: String,
 }
 

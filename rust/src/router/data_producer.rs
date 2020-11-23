@@ -15,7 +15,6 @@ use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(DataProducerId);
 
-// TODO: Split into 2 for Direct and others or make an enum
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DataProducerOptions {
