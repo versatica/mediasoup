@@ -315,6 +315,9 @@ pub enum RtpHeaderExtensionUri {
     /// http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
     AbsSendTime,
+    #[doc(hidden)]
+    #[serde(other, rename = "unsupported")]
+    Unsupported,
 }
 
 impl From<RtpHeaderExtensionUri> for &'static str {
@@ -338,6 +341,7 @@ impl From<RtpHeaderExtensionUri> for &'static str {
             RtpHeaderExtensionUri::AbsSendTime => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
             }
+            RtpHeaderExtensionUri::Unsupported => "unsupported",
         }
     }
 }
