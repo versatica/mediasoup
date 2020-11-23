@@ -479,7 +479,6 @@ request_response!(
         internal: TransportInternal,
         data: TransportConnectRequestPlainData,
     },
-    // TODO: Should these tuples be optional?
     TransportConnectResponsePlain {
         tuple: Option<TransportTuple>,
         rtcp_tuple: Option<TransportTuple>,
