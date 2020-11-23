@@ -29,7 +29,6 @@ pub struct RtpMappingCodec {
 pub struct RtpMappingEncoding {
     pub ssrc: Option<u32>,
     pub rid: Option<String>,
-    // TODO: Maybe enum?
     pub scalability_mode: Option<String>,
     pub mapped_ssrc: u32,
 }

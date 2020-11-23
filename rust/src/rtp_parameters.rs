@@ -655,7 +655,6 @@ pub struct RtpEncodingParameters {
     /// Default false.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dtx: Option<bool>,
-    // TODO: Maybe enum?
     /// Number of spatial and temporal layers in the RTP stream (e.g. 'L1T3'). See webrtc-svc.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scalability_mode: Option<String>,

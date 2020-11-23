@@ -51,7 +51,6 @@ pub struct SctpParameters {
     pub max_message_size: usize,
 }
 
-// TODO: Enum to protect documented invariants, maybe finalized variant
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.
 /// If ordered is true then max_packet_life_time and max_retransmits must be false.
 /// If ordered if false, only one of max_packet_life_time or max_retransmits can be true.
