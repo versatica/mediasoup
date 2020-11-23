@@ -1,6 +1,6 @@
 use crate::rtp_parameters::{
-    MediaKind, MimeType, MimeTypeVideo, RtcpParameters, RtpCapabilities, RtpCapabilitiesFinalized,
-    RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
+    MediaKind, MimeType, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
+    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
     RtpCodecParametersParametersValue, RtpEncodingParameters, RtpEncodingParametersRtx,
     RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
     RtpParameters,
@@ -690,7 +690,7 @@ pub(crate) fn get_consumer_rtp_parameters(
         for codec in consumer_params.codecs.iter_mut() {
             codec
                 .rtcp_feedback_mut()
-                .retain(|fb| fb.r#type != "goog-remb");
+                .retain(|fb| fb != &RtcpFeedback::GoogRemb);
         }
     } else if consumer_params
         .header_extensions
@@ -700,13 +700,13 @@ pub(crate) fn get_consumer_rtp_parameters(
         for codec in consumer_params.codecs.iter_mut() {
             codec
                 .rtcp_feedback_mut()
-                .retain(|fb| fb.r#type != "transport-cc");
+                .retain(|fb| fb != &RtcpFeedback::TransportCC);
         }
     } else {
         for codec in consumer_params.codecs.iter_mut() {
             codec
                 .rtcp_feedback_mut()
-                .retain(|fb| fb.r#type != "transport-cc" && fb.r#type != "goog-remb");
+                .retain(|fb| !matches!(fb, RtcpFeedback::GoogRemb | RtcpFeedback::TransportCC));
         }
     }
 
@@ -784,9 +784,8 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         let mut codec = codec.clone();
 
         codec.rtcp_feedback_mut().retain(|fb| {
-            (fb.r#type == "nack" && fb.parameter == "pli")
-                || (fb.r#type == "ccm" && fb.parameter == "fir")
-                || (enable_rtx && fb.r#type == "nack" && fb.parameter.is_empty())
+            matches!(fb, RtcpFeedback::NackPli | RtcpFeedback::CcmFir)
+                || (enable_rtx && fb == &RtcpFeedback::Nack)
         });
 
         consumer_params.codecs.push(codec);
@@ -799,7 +798,7 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         .filter(|ext| {
             !matches!(
                 ext.uri,
-                RtpHeaderExtensionUri::Sdes
+                RtpHeaderExtensionUri::SDES
                     | RtpHeaderExtensionUri::AbsSendTime
                     | RtpHeaderExtensionUri::TransportWideCCDraft01
             )

@@ -15,10 +15,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 48000,
                 channels: 2,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::PCMU,
@@ -26,10 +23,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 8000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::PCMA,
@@ -37,10 +31,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 8000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::ISAC,
@@ -48,10 +39,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 32000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::ISAC,
@@ -59,10 +47,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 16000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::G722,
@@ -70,10 +55,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 8000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::iLBC,
@@ -81,10 +63,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 8000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::SILK,
@@ -92,10 +71,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 24000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::SILK,
@@ -103,10 +79,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 16000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::SILK,
@@ -114,10 +87,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 12000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::SILK,
@@ -125,10 +95,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 8000,
                 channels: 1,
                 parameters: BTreeMap::new(),
-                rtcp_feedback: vec![RtcpFeedback {
-                    r#type: "transport-cc".to_string(),
-                    parameter: "".to_string(),
-                }],
+                rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::CN,
@@ -192,26 +159,11 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 90000,
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "pli".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "ccm".to_string(),
-                        parameter: "fir".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "goog-remb".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "transport-cc".to_string(),
-                        parameter: "".to_string(),
-                    },
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCC,
                 ],
             },
             RtpCodecCapability::Video {
@@ -220,26 +172,11 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 clock_rate: 90000,
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "pli".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "ccm".to_string(),
-                        parameter: "fir".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "goog-remb".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "transport-cc".to_string(),
-                        parameter: "".to_string(),
-                    },
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCC,
                 ],
             },
             RtpCodecCapability::Video {
@@ -259,26 +196,11 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                     parameters
                 },
                 rtcp_feedback: vec![
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "pli".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "ccm".to_string(),
-                        parameter: "fir".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "goog-remb".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "transport-cc".to_string(),
-                        parameter: "".to_string(),
-                    },
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCC,
                 ],
             },
             RtpCodecCapability::Video {
@@ -298,26 +220,11 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                     parameters
                 },
                 rtcp_feedback: vec![
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "pli".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "ccm".to_string(),
-                        parameter: "fir".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "goog-remb".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "transport-cc".to_string(),
-                        parameter: "".to_string(),
-                    },
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCC,
                 ],
             },
             RtpCodecCapability::Video {
@@ -337,26 +244,11 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                     parameters
                 },
                 rtcp_feedback: vec![
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "pli".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "ccm".to_string(),
-                        parameter: "fir".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "goog-remb".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "transport-cc".to_string(),
-                        parameter: "".to_string(),
-                    },
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCC,
                 ],
             },
             RtpCodecCapability::Video {
@@ -376,40 +268,25 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                     parameters
                 },
                 rtcp_feedback: vec![
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "nack".to_string(),
-                        parameter: "pli".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "ccm".to_string(),
-                        parameter: "fir".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "goog-remb".to_string(),
-                        parameter: "".to_string(),
-                    },
-                    RtcpFeedback {
-                        r#type: "transport-cc".to_string(),
-                        parameter: "".to_string(),
-                    },
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCC,
                 ],
             },
         ],
         header_extensions: vec![
             RtpHeaderExtension {
                 kind: Some(MediaKind::Audio),
-                uri: RtpHeaderExtensionUri::Sdes,
+                uri: RtpHeaderExtensionUri::SDES,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: RtpHeaderExtensionUri::Sdes,
+                uri: RtpHeaderExtensionUri::SDES,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,

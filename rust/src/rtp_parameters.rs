@@ -1,5 +1,8 @@
-use serde::{Deserialize, Serialize};
+use serde::de::{MapAccess, Visitor};
+use serde::ser::SerializeStruct;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
+use std::fmt;
 
 /// Provides information on the capabilities of a codec within the RTP capabilities. The list of
 /// media codecs supported by mediasoup and their settings is defined in the
@@ -282,12 +285,12 @@ pub enum RtpHeaderExtensionDirection {
     Inactive,
 }
 
-/// URIs for supported RTP header extensions
+/// URI for supported RTP header extension
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub enum RtpHeaderExtensionUri {
     /// urn:ietf:params:rtp-hdrext:sdes:mid
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:mid")]
-    Sdes,
+    SDES,
     /// urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id")]
     RtpStreamId,
@@ -323,7 +326,7 @@ pub enum RtpHeaderExtensionUri {
 impl From<RtpHeaderExtensionUri> for &'static str {
     fn from(uri: RtpHeaderExtensionUri) -> Self {
         match uri {
-            RtpHeaderExtensionUri::Sdes => "urn:ietf:params:rtp-hdrext:sdes:mid",
+            RtpHeaderExtensionUri::SDES => "urn:ietf:params:rtp-hdrext:sdes:mid",
             RtpHeaderExtensionUri::RtpStreamId => "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
             RtpHeaderExtensionUri::RepairRtpStreamId => {
                 "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id"
@@ -508,13 +511,120 @@ impl RtpCodecParameters {
 /// Provides information on RTCP feedback messages for a specific codec. Those messages can be
 /// transport layer feedback messages or codec-specific feedback messages. The list of RTCP
 /// feedbacks supported by mediasoup is defined in the supported_rtp_capabilities.rs file.
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
-pub struct RtcpFeedback {
-    // TODO: Enum?
-    /// RTCP feedback type.
-    pub r#type: String,
-    /// RTCP feedback parameter.
-    pub parameter: String,
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum RtcpFeedback {
+    /// NACK
+    Nack,
+    /// NACK PLI
+    NackPli,
+    /// CCM FIR
+    CcmFir,
+    /// goog-remb
+    GoogRemb,
+    /// transport-cc
+    TransportCC,
+    #[doc(hidden)]
+    Unsupported,
+}
+
+impl Serialize for RtcpFeedback {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let mut rtcp_feedback = serializer.serialize_struct("RtcpFeedback", 2)?;
+        match self {
+            RtcpFeedback::Nack => {
+                rtcp_feedback.serialize_field("type", "nack")?;
+                rtcp_feedback.serialize_field("parameter", "")?;
+            }
+            RtcpFeedback::NackPli => {
+                rtcp_feedback.serialize_field("type", "nack")?;
+                rtcp_feedback.serialize_field("parameter", "pli")?;
+            }
+            RtcpFeedback::CcmFir => {
+                rtcp_feedback.serialize_field("type", "ccm")?;
+                rtcp_feedback.serialize_field("parameter", "fir")?;
+            }
+            RtcpFeedback::GoogRemb => {
+                rtcp_feedback.serialize_field("type", "goog-remb")?;
+                rtcp_feedback.serialize_field("parameter", "")?;
+            }
+            RtcpFeedback::TransportCC => {
+                rtcp_feedback.serialize_field("type", "transport-cc")?;
+                rtcp_feedback.serialize_field("parameter", "")?;
+            }
+            RtcpFeedback::Unsupported => {
+                rtcp_feedback.serialize_field("type", "unknown")?;
+                rtcp_feedback.serialize_field("parameter", "")?;
+            }
+        }
+        rtcp_feedback.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for RtcpFeedback {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field {
+            Type,
+            Parameter,
+        }
+
+        struct RtcpFeedbackVisitor;
+
+        impl<'de> Visitor<'de> for RtcpFeedbackVisitor {
+            type Value = RtcpFeedback;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str(
+                    r#"RTCP feedback type and parameter like {"type": "nack", "parameter": ""}"#,
+                )
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut r#type = None::<&str>;
+                let mut parameter = None::<&str>;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Type => {
+                            if r#type.is_some() {
+                                return Err(de::Error::duplicate_field("type"));
+                            }
+                            r#type = Some(map.next_value()?);
+                        }
+                        Field::Parameter => {
+                            if parameter.is_some() {
+                                return Err(de::Error::duplicate_field("parameter"));
+                            }
+                            parameter = Some(map.next_value()?);
+                        }
+                    }
+                }
+                let r#type = r#type.ok_or_else(|| de::Error::missing_field("type"))?;
+                let parameter = parameter.ok_or_else(|| de::Error::missing_field("parameter"))?;
+
+                Ok(match (r#type, parameter) {
+                    ("nack", "") => RtcpFeedback::Nack,
+                    ("nack", "pli") => RtcpFeedback::NackPli,
+                    ("ccm", "fir") => RtcpFeedback::CcmFir,
+                    ("goog-remb", "") => RtcpFeedback::GoogRemb,
+                    ("transport-cc", "") => RtcpFeedback::TransportCC,
+                    _ => RtcpFeedback::Unsupported,
+                })
+            }
+        }
+
+        const FIELDS: &'static [&'static str] = &["type", "parameter"];
+        deserializer.deserialize_struct("RtcpFeedback", FIELDS, RtcpFeedbackVisitor)
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
@@ -599,6 +709,45 @@ impl Default for RtcpParameters {
             cname: None,
             reduced_size: true,
             mux: None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rtcp_feedback_serde() {
+        {
+            let nack_pli_str = r#"{"type":"nack","parameter":"pli"}"#;
+
+            assert_eq!(
+                serde_json::from_str::<RtcpFeedback>(nack_pli_str).unwrap(),
+                RtcpFeedback::NackPli
+            );
+
+            let result = serde_json::to_string(&RtcpFeedback::NackPli).unwrap();
+            assert_eq!(result.as_str(), nack_pli_str);
+        }
+        {
+            let transport_cc_str = r#"{"type":"transport-cc","parameter":""}"#;
+
+            assert_eq!(
+                serde_json::from_str::<RtcpFeedback>(transport_cc_str).unwrap(),
+                RtcpFeedback::TransportCC
+            );
+
+            let result = serde_json::to_string(&RtcpFeedback::TransportCC).unwrap();
+            assert_eq!(result.as_str(), transport_cc_str);
+        }
+        {
+            let nack_bar_str = r#"{"type":"nack","parameter":"bar"}"#;
+
+            assert_eq!(
+                serde_json::from_str::<RtcpFeedback>(nack_bar_str).unwrap(),
+                RtcpFeedback::Unsupported
+            );
         }
     }
 }
