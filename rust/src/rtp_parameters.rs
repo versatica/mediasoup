@@ -323,9 +323,9 @@ pub enum RtpHeaderExtensionUri {
     Unsupported,
 }
 
-impl From<RtpHeaderExtensionUri> for &'static str {
-    fn from(uri: RtpHeaderExtensionUri) -> Self {
-        match uri {
+impl RtpHeaderExtensionUri {
+    pub fn as_str(&self) -> &'static str {
+        match self {
             RtpHeaderExtensionUri::SDES => "urn:ietf:params:rtp-hdrext:sdes:mid",
             RtpHeaderExtensionUri::RtpStreamId => "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
             RtpHeaderExtensionUri::RepairRtpStreamId => {
