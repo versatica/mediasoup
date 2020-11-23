@@ -3,7 +3,7 @@
 ### 3.6.27 (WIP)
 
 * Update NPM deps.
-
+* Allow the `mediasoup-worker` process to inherit all environment variables (issue #480).
 
 ### 3.6.26
 
