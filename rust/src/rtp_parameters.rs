@@ -3,6 +3,7 @@ use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::fmt;
+use std::num::{NonZeroU32, NonZeroU8};
 
 /// Provides information on the capabilities of a codec within the RTP capabilities. The list of
 /// media codecs supported by mediasoup and their settings is defined in the
@@ -27,10 +28,10 @@ pub enum RtpCodecCapabilityFinalized {
         /// The preferred RTP payload type.
         preferred_payload_type: u8,
         /// Codec clock rate expressed in Hertz.
-        clock_rate: u32,
+        clock_rate: NonZeroU32,
         /// The number of channels supported (e.g. two for stereo). Just for audio.
         /// Default 1.
-        channels: u8,
+        channels: NonZeroU8,
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
         parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
@@ -44,7 +45,7 @@ pub enum RtpCodecCapabilityFinalized {
         /// The preferred RTP payload type.
         preferred_payload_type: u8,
         /// Codec clock rate expressed in Hertz.
-        clock_rate: u32,
+        clock_rate: NonZeroU32,
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
         parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
@@ -61,7 +62,7 @@ impl RtpCodecCapabilityFinalized {
         }
     }
 
-    pub(crate) fn clock_rate(&self) -> u32 {
+    pub(crate) fn clock_rate(&self) -> NonZeroU32 {
         match self {
             Self::Audio { clock_rate, .. } => *clock_rate,
             Self::Video { clock_rate, .. } => *clock_rate,
@@ -190,10 +191,10 @@ pub enum RtpCodecCapability {
         #[serde(skip_serializing_if = "Option::is_none")]
         preferred_payload_type: Option<u8>,
         /// Codec clock rate expressed in Hertz.
-        clock_rate: u32,
+        clock_rate: NonZeroU32,
         /// The number of channels supported (e.g. two for stereo). Just for audio.
         /// Default 1.
-        channels: u8,
+        channels: NonZeroU8,
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
         parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
@@ -208,7 +209,7 @@ pub enum RtpCodecCapability {
         #[serde(skip_serializing_if = "Option::is_none")]
         preferred_payload_type: Option<u8>,
         /// Codec clock rate expressed in Hertz.
-        clock_rate: u32,
+        clock_rate: NonZeroU32,
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
         parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
@@ -283,6 +284,12 @@ pub enum RtpHeaderExtensionDirection {
     SendOnly,
     RecvOnly,
     Inactive,
+}
+
+impl Default for RtpHeaderExtensionDirection {
+    fn default() -> Self {
+        Self::SendRecv
+    }
 }
 
 /// URI for supported RTP header extension
@@ -443,10 +450,10 @@ pub enum RtpCodecParameters {
         /// The value that goes in the RTP Payload Type Field. Must be unique.
         payload_type: u8,
         /// Codec clock rate expressed in Hertz.
-        clock_rate: u32,
+        clock_rate: NonZeroU32,
         /// The number of channels supported (e.g. two for stereo).
         /// Default 1.
-        channels: u8,
+        channels: NonZeroU8,
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
         /// codec matching.
@@ -461,7 +468,7 @@ pub enum RtpCodecParameters {
         /// The value that goes in the RTP Payload Type Field. Must be unique.
         payload_type: u8,
         /// Codec clock rate expressed in Hertz.
-        clock_rate: u32,
+        clock_rate: NonZeroU32,
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
         /// codec matching.

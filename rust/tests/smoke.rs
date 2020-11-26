@@ -18,6 +18,7 @@ use mediasoup::transport::{Transport, TransportGeneric, TransportTraceEventType}
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use mediasoup::worker::{WorkerLogLevel, WorkerSettings, WorkerUpdateSettings};
 use mediasoup::worker_manager::WorkerManager;
+use std::num::{NonZeroU32, NonZeroU8};
 use std::{env, thread};
 
 fn init() {
@@ -61,8 +62,8 @@ fn smoke() {
                 router_options.media_codecs = vec![RtpCodecCapability::Audio {
                     mime_type: MimeTypeAudio::Opus,
                     preferred_payload_type: None,
-                    clock_rate: 48000,
-                    channels: 2,
+                    clock_rate: NonZeroU32::new(48000).unwrap(),
+                    channels: NonZeroU8::new(2).unwrap(),
                     parameters: Default::default(),
                     rtcp_feedback: vec![],
                 }];
@@ -112,8 +113,8 @@ fn smoke() {
                     codecs: vec![RtpCodecParameters::Audio {
                         mime_type: MimeTypeAudio::Opus,
                         payload_type: 111,
-                        clock_rate: 48000,
-                        channels: 2,
+                        clock_rate: NonZeroU32::new(48000).unwrap(),
+                        channels: NonZeroU8::new(2).unwrap(),
                         parameters: Default::default(),
                         rtcp_feedback: vec![],
                     }],
@@ -149,8 +150,8 @@ fn smoke() {
                     codecs: vec![RtpCodecCapability::Audio {
                         mime_type: MimeTypeAudio::Opus,
                         preferred_payload_type: None,
-                        clock_rate: 48000,
-                        channels: 2,
+                        clock_rate: NonZeroU32::new(48000).unwrap(),
+                        channels: NonZeroU8::new(2).unwrap(),
                         parameters: Default::default(),
                         rtcp_feedback: vec![],
                     }],
@@ -335,8 +336,8 @@ fn smoke() {
             .create_router(RouterOptions::new(vec![RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::Opus,
                 preferred_payload_type: None,
-                clock_rate: 48000,
-                channels: 2,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(2).unwrap(),
                 parameters: Default::default(),
                 rtcp_feedback: vec![],
             }]))

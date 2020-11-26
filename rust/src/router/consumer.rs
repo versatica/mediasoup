@@ -32,16 +32,16 @@ pub struct ConsumerLayers {
     pub temporal_layer: Option<u8>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConsumerScore {
     /// The score of the RTP stream of the consumer.
-    score: u8,
+    pub score: u8,
     /// The score of the currently selected RTP stream of the producer.
-    producer_score: u8,
+    pub producer_score: u8,
     /// The scores of all RTP streams in the producer ordered by encoding (just useful when the
     /// producer uses simulcast).
-    producer_scores: Vec<u8>,
+    pub producer_scores: Vec<u8>,
 }
 
 #[derive(Debug, Clone)]

@@ -4,6 +4,7 @@ use crate::rtp_parameters::{
     RtpHeaderExtensionUri,
 };
 use std::collections::BTreeMap;
+use std::num::{NonZeroU32, NonZeroU8};
 
 /// Get a mediasoup supported RTP capabilities.
 pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
@@ -12,151 +13,151 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::Opus,
                 preferred_payload_type: None,
-                clock_rate: 48000,
-                channels: 2,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(2).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::PCMU,
                 preferred_payload_type: Some(0),
-                clock_rate: 8000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(8000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::PCMA,
                 preferred_payload_type: Some(8),
-                clock_rate: 8000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(8000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::ISAC,
                 preferred_payload_type: None,
-                clock_rate: 32000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(32000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::ISAC,
                 preferred_payload_type: None,
-                clock_rate: 16000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(16000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::G722,
                 preferred_payload_type: Some(9),
-                clock_rate: 8000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(8000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::iLBC,
                 preferred_payload_type: None,
-                clock_rate: 8000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(8000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::SILK,
                 preferred_payload_type: None,
-                clock_rate: 24000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(24000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::SILK,
                 preferred_payload_type: None,
-                clock_rate: 16000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(16000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::SILK,
                 preferred_payload_type: None,
-                clock_rate: 12000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(12000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::SILK,
                 preferred_payload_type: None,
-                clock_rate: 8000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(8000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCC],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::CN,
                 preferred_payload_type: Some(13),
-                clock_rate: 32000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(32000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::CN,
                 preferred_payload_type: Some(13),
-                clock_rate: 16000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(16000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::CN,
                 preferred_payload_type: Some(13),
-                clock_rate: 8000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(8000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::TelephoneEvent,
                 preferred_payload_type: None,
-                clock_rate: 48000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::TelephoneEvent,
                 preferred_payload_type: None,
-                clock_rate: 32000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(32000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::TelephoneEvent,
                 preferred_payload_type: None,
-                clock_rate: 16000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(16000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::TelephoneEvent,
                 preferred_payload_type: None,
-                clock_rate: 8000,
-                channels: 1,
+                clock_rate: NonZeroU32::new(8000).unwrap(),
+                channels: NonZeroU8::new(1).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::VP8,
                 preferred_payload_type: None,
-                clock_rate: 90000,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -169,7 +170,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::VP9,
                 preferred_payload_type: None,
-                clock_rate: 90000,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: BTreeMap::new(),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -182,7 +183,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::H264,
                 preferred_payload_type: None,
-                clock_rate: 90000,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: {
                     let mut parameters = BTreeMap::new();
                     parameters.insert(
@@ -206,7 +207,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::H264,
                 preferred_payload_type: None,
-                clock_rate: 90000,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: {
                     let mut parameters = BTreeMap::new();
                     parameters.insert(
@@ -230,7 +231,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::H265,
                 preferred_payload_type: None,
-                clock_rate: 90000,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: {
                     let mut parameters = BTreeMap::new();
                     parameters.insert(
@@ -254,7 +255,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::H265,
                 preferred_payload_type: None,
-                clock_rate: 90000,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: {
                     let mut parameters = BTreeMap::new();
                     parameters.insert(

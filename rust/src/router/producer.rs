@@ -76,14 +76,14 @@ impl ProducerOptions {
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpStreamRecv {
-    params: RtpStreamParams,
-    score: u8,
+    pub params: RtpStreamParams,
+    pub score: u8,
     // `type` field is present in worker, but ignored here
-    jitter: u32,
-    packet_count: usize,
-    byte_count: usize,
-    bitrate: u32,
-    bitrate_by_layer: Option<HashMap<String, u32>>,
+    pub jitter: u32,
+    pub packet_count: usize,
+    pub byte_count: usize,
+    pub bitrate: u32,
+    pub bitrate_by_layer: Option<HashMap<String, u32>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

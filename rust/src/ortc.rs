@@ -9,6 +9,7 @@ use crate::{scalability_modes, supported_rtp_capabilities};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::mem;
+use std::num::{NonZeroU32, NonZeroU8};
 use std::ops::Deref;
 use thiserror::Error;
 
@@ -643,7 +644,6 @@ pub(crate) fn get_consumer_rtp_parameters(
             consumer_params.codecs.push(codec);
         }
     }
-
     // Must sanitize the list of matched codecs by removing useless RTX codecs.
     let mut remove_codecs = Vec::new();
     for (idx, codec) in consumer_params.codecs.iter().enumerate() {
@@ -674,11 +674,16 @@ pub(crate) fn get_consumer_rtp_parameters(
         return Err(ConsumerRtpParametersError::NoCompatibleMediaCodecs);
     }
 
-    consumer_params.header_extensions.retain(|ext| {
-        caps.header_extensions
-            .iter()
-            .any(|cap_ext| cap_ext.preferred_id == ext.id && cap_ext.uri == ext.uri)
-    });
+    consumer_params.header_extensions = consumable_params
+        .header_extensions
+        .iter()
+        .filter(|ext| {
+            caps.header_extensions
+                .iter()
+                .any(|cap_ext| cap_ext.preferred_id == ext.id && cap_ext.uri == ext.uri)
+        })
+        .cloned()
+        .collect();
 
     // Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
     if consumer_params
@@ -826,8 +831,8 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
 }
 
 struct CodecToMatch<'a> {
-    channels: Option<u8>,
-    clock_rate: u32,
+    channels: Option<NonZeroU8>,
+    clock_rate: NonZeroU32,
     mime_type: MimeType,
     parameters: &'a BTreeMap<String, RtpCodecParametersParametersValue>,
 }
