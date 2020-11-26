@@ -30,6 +30,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::net::IpAddr;
+use std::num::NonZeroU16;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -385,7 +386,7 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateAudioLevelObserverData {
-    pub(crate) max_entries: u16,
+    pub(crate) max_entries: NonZeroU16,
     pub(crate) threshold: i8,
     pub(crate) interval: u16,
 }

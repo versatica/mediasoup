@@ -62,10 +62,20 @@ use thiserror::Error;
 
 uuid_based_wrapper_type!(RouterId);
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
+#[non_exhaustive]
 pub struct RouterOptions {
     pub media_codecs: Vec<RtpCodecCapability>,
     pub app_data: AppData,
+}
+
+impl RouterOptions {
+    pub fn new(media_codecs: Vec<RtpCodecCapability>) -> Self {
+        Self {
+            media_codecs,
+            app_data: AppData::default(),
+        }
+    }
 }
 
 pub struct PipeToRouterOptions {

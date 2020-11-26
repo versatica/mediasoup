@@ -57,7 +57,7 @@ fn smoke() {
 
         let router = worker
             .create_router({
-                let mut router_options = RouterOptions::default();
+                let mut router_options = RouterOptions::new(vec![]);
                 router_options.media_codecs = vec![RtpCodecCapability::Audio {
                     mime_type: MimeTypeAudio::Opus,
                     preferred_payload_type: None,
@@ -332,18 +332,14 @@ fn smoke() {
         );
 
         let router2 = worker
-            .create_router({
-                let mut router_options = RouterOptions::default();
-                router_options.media_codecs = vec![RtpCodecCapability::Audio {
-                    mime_type: MimeTypeAudio::Opus,
-                    preferred_payload_type: None,
-                    clock_rate: 48000,
-                    channels: 2,
-                    parameters: Default::default(),
-                    rtcp_feedback: vec![],
-                }];
-                router_options
-            })
+            .create_router(RouterOptions::new(vec![RtpCodecCapability::Audio {
+                mime_type: MimeTypeAudio::Opus,
+                preferred_payload_type: None,
+                clock_rate: 48000,
+                channels: 2,
+                parameters: Default::default(),
+                rtcp_feedback: vec![],
+            }]))
             .await
             .unwrap();
         println!("Second router created: {:?}", router.id());

@@ -13,6 +13,7 @@ use async_trait::async_trait;
 use event_listener_primitives::{Bag, HandlerId};
 use log::{debug, error};
 use serde::Deserialize;
+use std::num::NonZeroU16;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -21,7 +22,7 @@ use std::sync::Arc;
 pub struct AudioLevelObserverOptions {
     /// Maximum number of entries in the 'volumes' event.
     /// Default 1.
-    pub max_entries: u16,
+    pub max_entries: NonZeroU16,
     /// Minimum average volume (in dBvo from -127 to 0) for entries in the 'volumes' event.
     /// Default -80.
     pub threshold: i8,
@@ -35,7 +36,7 @@ pub struct AudioLevelObserverOptions {
 impl Default for AudioLevelObserverOptions {
     fn default() -> Self {
         Self {
-            max_entries: 1,
+            max_entries: NonZeroU16::new(1).unwrap(),
             threshold: -80,
             interval: 1000,
             app_data: AppData::default(),
