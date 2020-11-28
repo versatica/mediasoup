@@ -151,9 +151,6 @@ namespace RTC
 		if (!this->scalabilityMode.empty())
 		{
 			jsonObject["scalabilityMode"] = this->scalabilityMode;
-			jsonObject["spatialLayers"]   = this->spatialLayers;
-			jsonObject["temporalLayers"]  = this->temporalLayers;
-			jsonObject["ksvc"]            = this->ksvc;
 		}
 	}
 } // namespace RTC

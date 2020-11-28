@@ -331,7 +331,7 @@ impl Router {
         &self.inner.app_data
     }
 
-    /// RTC capabilities of the Router.
+    /// RTP capabilities of the Router.
     pub fn rtp_capabilities(&self) -> &RtpCapabilitiesFinalized {
         &self.inner.rtp_capabilities
     }
@@ -812,18 +812,21 @@ impl Router {
         }
     }
 
-    pub fn on_new_transport<F: Fn(NewTransport) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_new_transport<F: Fn(NewTransport) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.new_transport.add(Box::new(callback))
     }
 
     pub fn on_new_rtp_observer<F: Fn(NewRtpObserver) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner.handlers.new_rtp_observer.add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
     }
 

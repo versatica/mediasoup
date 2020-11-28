@@ -293,18 +293,24 @@ impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransp
         self.enable_trace_event_impl(types).await
     }
 
-    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.new_producer.add(Box::new(callback))
     }
 
-    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.new_consumer.add(Box::new(callback))
     }
 
     fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner
             .handlers
             .new_data_producer
@@ -314,18 +320,21 @@ impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransp
     fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner
             .handlers
             .new_data_consumer
             .add(Box::new(callback))
     }
 
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
     }
 }
@@ -449,7 +458,7 @@ impl DirectTransport {
             .await
     }
 
-    pub fn on_rtcp<F: Fn(&Bytes) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_rtcp<F: Fn(&Bytes) + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.rtcp.add(Box::new(callback))
     }
 

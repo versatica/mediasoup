@@ -425,25 +425,34 @@ impl DataConsumer {
             .await
     }
 
-    pub fn on_message<F: Fn(&WebRtcMessage) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_message<F: Fn(&WebRtcMessage) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner().handlers.message.add(Box::new(callback))
     }
 
-    pub fn on_sctp_send_buffer_full<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_sctp_send_buffer_full<F: Fn() + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner()
             .handlers
             .sctp_send_buffer_full
             .add(Box::new(callback))
     }
 
-    pub fn on_buffered_amount_low<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_buffered_amount_low<F: Fn() + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner()
             .handlers
             .buffered_amount_low
             .add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.close.add(Box::new(callback))
     }
 

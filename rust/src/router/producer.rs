@@ -509,41 +509,46 @@ impl Producer {
             .await
     }
 
-    pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner().handlers.score.add(Box::new(callback))
     }
 
     pub fn on_video_orientation_change<F: Fn(ProducerVideoOrientation) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner()
             .handlers
             .video_orientation_change
             .add(Box::new(callback))
     }
 
-    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.pause.add(Box::new(callback))
     }
 
-    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.resume.add(Box::new(callback))
     }
 
     pub fn on_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner().handlers.trace.add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.close.add(Box::new(callback))
     }
 
     /// Consumable RTP parameters.
-    pub(super) fn consumable_rtp_parameters(&self) -> &RtpParameters {
+    // This is used in tests, otherwise would have been `pub(super)`
+    #[doc(hidden)]
+    pub fn consumable_rtp_parameters(&self) -> &RtpParameters {
         &self.inner().consumable_rtp_parameters
     }
 

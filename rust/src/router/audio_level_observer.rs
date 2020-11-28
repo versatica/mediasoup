@@ -304,31 +304,37 @@ impl AudioLevelObserver {
     pub fn on_volumes<F: Fn(&Vec<AudioLevelObserverVolume>) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner.handlers.volumes.add(Box::new(callback))
     }
 
-    pub fn on_silence<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_silence<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.silence.add(Box::new(callback))
     }
 
-    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.pause.add(Box::new(callback))
     }
 
-    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.resume.add(Box::new(callback))
     }
 
-    pub fn on_add_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_add_producer<F: Fn(&Producer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.add_producer.add(Box::new(callback))
     }
 
-    pub fn on_remove_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_remove_producer<F: Fn(&Producer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.remove_producer.add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
     }
 

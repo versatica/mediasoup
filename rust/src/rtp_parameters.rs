@@ -1,6 +1,7 @@
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::num::{NonZeroU32, NonZeroU8};
@@ -597,8 +598,8 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
             where
                 V: MapAccess<'de>,
             {
-                let mut r#type = None::<&str>;
-                let mut parameter = None::<&str>;
+                let mut r#type = None::<Cow<str>>;
+                let mut parameter = Cow::Borrowed("");
                 while let Some(key) = map.next_key()? {
                     match key {
                         Field::Type => {
@@ -608,17 +609,16 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
                             r#type = Some(map.next_value()?);
                         }
                         Field::Parameter => {
-                            if parameter.is_some() {
+                            if parameter != "" {
                                 return Err(de::Error::duplicate_field("parameter"));
                             }
-                            parameter = Some(map.next_value()?);
+                            parameter = map.next_value()?;
                         }
                     }
                 }
                 let r#type = r#type.ok_or_else(|| de::Error::missing_field("type"))?;
-                let parameter = parameter.ok_or_else(|| de::Error::missing_field("parameter"))?;
 
-                Ok(match (r#type, parameter) {
+                Ok(match (r#type.as_ref(), parameter.as_ref()) {
                     ("nack", "") => RtcpFeedback::Nack,
                     ("nack", "pli") => RtcpFeedback::NackPli,
                     ("ccm", "fir") => RtcpFeedback::CcmFir,

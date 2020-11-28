@@ -150,12 +150,18 @@ pub struct ConsumerDump {
     pub r#type: ConsumerType,
     pub consumable_rtp_encodings: Vec<ConsumableRtpEncoding>,
     pub rtp_stream: RtpStream,
-    pub preferred_spatial_layer: Option<u8>,
-    pub target_spatial_layer: Option<u8>,
-    pub current_spatial_layer: Option<u8>,
-    pub preferred_temporal_layer: Option<u8>,
-    pub target_temporal_layer: Option<u8>,
-    pub current_temporal_layer: Option<u8>,
+    /// Essentially `Option<u8>` or `Option<-1>`
+    pub preferred_spatial_layer: Option<i16>,
+    /// Essentially `Option<u8>` or `Option<-1>`
+    pub target_spatial_layer: Option<i16>,
+    /// Essentially `Option<u8>` or `Option<-1>`
+    pub current_spatial_layer: Option<i16>,
+    /// Essentially `Option<u8>` or `Option<-1>`
+    pub preferred_temporal_layer: Option<i16>,
+    /// Essentially `Option<u8>` or `Option<-1>`
+    pub target_temporal_layer: Option<i16>,
+    /// Essentially `Option<u8>` or `Option<-1>`
+    pub current_temporal_layer: Option<i16>,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
@@ -185,7 +191,7 @@ pub struct ConsumerStat {
     pub timestamp: u64,
     pub ssrc: u32,
     pub rtx_ssrc: Option<u32>,
-    pub kind: String,
+    pub kind: MediaKind,
     pub mime_type: MimeType,
     pub packets_lost: u32,
     pub fraction_lost: u8,
@@ -295,9 +301,12 @@ struct Handlers {
     rtp: Bag<'static, dyn Fn(&Bytes) + Send>,
     pause: Bag<'static, dyn Fn() + Send>,
     resume: Bag<'static, dyn Fn() + Send>,
+    producer_pause: Bag<'static, dyn Fn() + Send>,
+    producer_resume: Bag<'static, dyn Fn() + Send>,
     score: Bag<'static, dyn Fn(&ConsumerScore) + Send>,
     layers_change: Bag<'static, dyn Fn(&ConsumerLayers) + Send>,
     trace: Bag<'static, dyn Fn(&ConsumerTraceEventData) + Send>,
+    producer_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -397,7 +406,7 @@ impl Consumer {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
                             Notification::ProducerClose => {
-                                // TODO: Handle this in some meaningful way
+                                handlers.producer_close.call_once_simple();
                             }
                             Notification::ProducerPause => {
                                 let mut producer_paused = producer_paused.lock();
@@ -405,7 +414,7 @@ impl Consumer {
                                 *producer_paused = true;
 
                                 if !was_paused {
-                                    handlers.pause.call_simple();
+                                    handlers.producer_pause.call_simple();
                                 }
                             }
                             Notification::ProducerResume => {
@@ -415,7 +424,7 @@ impl Consumer {
                                 *producer_paused = false;
 
                                 if was_paused && !paused {
-                                    handlers.resume.call_simple();
+                                    handlers.producer_resume.call_simple();
                                 }
                             }
                             Notification::Score(consumer_score) => {
@@ -705,37 +714,55 @@ impl Consumer {
             .await
     }
 
-    pub fn on_rtp<F: Fn(&Bytes) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_rtp<F: Fn(&Bytes) + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.rtp.add(Box::new(callback))
     }
 
-    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.pause.add(Box::new(callback))
     }
 
-    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.resume.add(Box::new(callback))
     }
 
-    pub fn on_score<F: Fn(&ConsumerScore) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_producer_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+        self.inner.handlers.producer_pause.add(Box::new(callback))
+    }
+
+    pub fn on_producer_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+        self.inner.handlers.producer_resume.add(Box::new(callback))
+    }
+
+    pub fn on_score<F: Fn(&ConsumerScore) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.score.add(Box::new(callback))
     }
 
     pub fn on_layers_change<F: Fn(&ConsumerLayers) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner.handlers.layers_change.add(Box::new(callback))
     }
 
     pub fn on_trace<F: Fn(&ConsumerTraceEventData) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_producer_close<F: FnOnce() + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
+        self.inner.handlers.producer_close.add(Box::new(callback))
+    }
+
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
     }
 

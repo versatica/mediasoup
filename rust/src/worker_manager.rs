@@ -107,7 +107,10 @@ impl WorkerManager {
         Ok(worker)
     }
 
-    pub fn on_new_worker<F: Fn(&Worker) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_new_worker<F: Fn(&Worker) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.new_worker.add(Box::new(callback))
     }
 }

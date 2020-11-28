@@ -607,15 +607,21 @@ impl Worker {
         Ok(router)
     }
 
-    pub fn on_new_router<F: Fn(&Router) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_new_router<F: Fn(&Router) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.new_router.add(Box::new(callback))
     }
 
-    pub fn on_dead<F: FnOnce(ExitStatus) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_dead<F: FnOnce(ExitStatus) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.dead.add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
     }
 }

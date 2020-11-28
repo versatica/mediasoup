@@ -403,18 +403,24 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransp
         self.enable_trace_event_impl(types).await
     }
 
-    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.new_producer.add(Box::new(callback))
     }
 
-    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.new_consumer.add(Box::new(callback))
     }
 
     fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner
             .handlers
             .new_data_producer
@@ -424,18 +430,21 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransp
     fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner
             .handlers
             .new_data_consumer
             .add(Box::new(callback))
     }
 
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
     }
 }
@@ -666,14 +675,17 @@ impl WebRtcTransport {
         Ok(response.ice_parameters)
     }
 
-    pub fn on_ice_state_change<F: Fn(IceState) + Send + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_ice_state_change<F: Fn(IceState) + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
         self.inner.handlers.ice_state_change.add(Box::new(callback))
     }
 
     pub fn on_ice_selected_tuple_change<F: Fn(&TransportTuple) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner
             .handlers
             .ice_selected_tuple_change
@@ -683,7 +695,7 @@ impl WebRtcTransport {
     pub fn on_dtls_state_change<F: Fn(DtlsState) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner
             .handlers
             .dtls_state_change
@@ -693,7 +705,7 @@ impl WebRtcTransport {
     pub fn on_sctp_state_change<F: Fn(SctpState) + Send + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId {
+    ) -> HandlerId<'static> {
         self.inner
             .handlers
             .sctp_state_change
