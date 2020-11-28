@@ -32,7 +32,7 @@ use std::sync::Arc;
 use thiserror::Error;
 
 /// Struct that protects an invariant of having non-empty list of listen IPs
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct TransportListenIps(Vec<TransportListenIp>);
 
 impl TransportListenIps {
@@ -122,7 +122,7 @@ impl WebRtcTransportOptions {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct WebRtcTransportDump {
@@ -150,7 +150,7 @@ pub struct WebRtcTransportDump {
     pub ice_state: IceState,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportStat {
     // Common to all Transports.
@@ -186,6 +186,7 @@ pub struct WebRtcTransportStat {
     pub dtls_state: DtlsState,
 }
 
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 pub struct WebRtcTransportRemoteParameters {
     pub dtls_parameters: DtlsParameters,
 }

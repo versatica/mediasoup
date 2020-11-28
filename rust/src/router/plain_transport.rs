@@ -78,7 +78,7 @@ impl PlainTransportOptions {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct PlainTransportDump {
@@ -105,7 +105,7 @@ pub struct PlainTransportDump {
     pub srtp_parameters: Option<SrtpParameters>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlainTransportStat {
     // Common to all Transports.
@@ -140,7 +140,7 @@ pub struct PlainTransportStat {
     pub rtcp_tuple: Option<TransportTuple>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlainTransportRemoteParameters {
     /// Remote IPv4 or IPv6.

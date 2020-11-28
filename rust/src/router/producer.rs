@@ -72,7 +72,7 @@ impl ProducerOptions {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpStreamRecv {
@@ -86,7 +86,7 @@ pub struct RtpStreamRecv {
     pub bitrate_by_layer: Option<HashMap<String, u32>>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct ProducerDump {
@@ -129,7 +129,7 @@ pub struct ProducerVideoOrientation {
     pub rotation: u16,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProducerStat {
     // Common to all RtpStreams.

@@ -81,60 +81,60 @@ impl ConsumerOptions {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpStreamParams {
-    clock_rate: u32,
-    cname: String,
-    encoding_idx: usize,
-    mime_type: MimeType,
-    payload_type: u8,
-    spatial_layers: u8,
-    ssrc: u32,
-    temporal_layers: u8,
-    use_dtx: bool,
-    use_in_band_fec: bool,
-    use_nack: bool,
-    use_pli: bool,
-    rid: Option<String>,
-    rtc_ssrc: Option<u32>,
-    rtc_payload_type: Option<u8>,
+    pub clock_rate: u32,
+    pub cname: String,
+    pub encoding_idx: usize,
+    pub mime_type: MimeType,
+    pub payload_type: u8,
+    pub spatial_layers: u8,
+    pub ssrc: u32,
+    pub temporal_layers: u8,
+    pub use_dtx: bool,
+    pub use_in_band_fec: bool,
+    pub use_nack: bool,
+    pub use_pli: bool,
+    pub rid: Option<String>,
+    pub rtc_ssrc: Option<u32>,
+    pub rtc_payload_type: Option<u8>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpStream {
-    params: RtpStreamParams,
-    score: u8,
+    pub params: RtpStreamParams,
+    pub score: u8,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpRtxParameters {
-    ssrc: Option<u32>,
+    pub ssrc: Option<u32>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct ConsumableRtpEncoding {
-    ssrc: Option<u32>,
-    rid: Option<String>,
-    codec_payload_type: Option<u8>,
-    rtx: Option<RtpRtxParameters>,
-    max_bitrate: Option<u32>,
-    max_framerate: Option<f64>,
-    dtx: Option<bool>,
-    scalability_mode: Option<String>,
-    spatial_layers: Option<u8>,
-    temporal_layers: Option<u8>,
-    ksvc: Option<bool>,
+    pub ssrc: Option<u32>,
+    pub rid: Option<String>,
+    pub codec_payload_type: Option<u8>,
+    pub rtx: Option<RtpRtxParameters>,
+    pub max_bitrate: Option<u32>,
+    pub max_framerate: Option<f64>,
+    pub dtx: Option<bool>,
+    pub scalability_mode: Option<String>,
+    pub spatial_layers: Option<u8>,
+    pub temporal_layers: Option<u8>,
+    pub ksvc: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct ConsumerDump {
@@ -177,7 +177,7 @@ impl From<ProducerType> for ConsumerType {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConsumerStat {
     // Common to all RtpStreams.

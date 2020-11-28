@@ -76,7 +76,7 @@ pub enum DataProducerType {
     Direct,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct DataProducerDump {
@@ -87,7 +87,7 @@ pub struct DataProducerDump {
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DataProducerStat {
     // `type` field is present in worker, but ignored here

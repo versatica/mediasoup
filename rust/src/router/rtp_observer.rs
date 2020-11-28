@@ -6,7 +6,7 @@ use async_trait::async_trait;
 
 uuid_based_wrapper_type!(RtpObserverId);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct RtpObserverAddProducerOptions {
     /// The id of the Producer to be added.

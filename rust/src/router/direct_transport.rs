@@ -45,7 +45,7 @@ impl Default for DirectTransportOptions {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct DirectTransportDump {
@@ -66,7 +66,7 @@ pub struct DirectTransportDump {
     pub trace_event_types: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DirectTransportStat {
     // Common to all Transports.

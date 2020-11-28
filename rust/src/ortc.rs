@@ -18,14 +18,14 @@ const DYNAMIC_PAYLOAD_TYPES: &[u8] = &[
     119, 120, 121, 122, 123, 124, 125, 126, 127, 96, 97, 98, 99,
 ];
 
-#[derive(Debug, Default, Clone, Deserialize, Serialize)]
+#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpMappingCodec {
     pub payload_type: u8,
     pub mapped_payload_type: u8,
 }
 
-#[derive(Debug, Default, Clone, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpMappingEncoding {
     pub ssrc: Option<u32>,
@@ -34,7 +34,7 @@ pub struct RtpMappingEncoding {
     pub mapped_ssrc: u32,
 }
 
-#[derive(Debug, Default, Clone, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct RtpMapping {
     pub codecs: Vec<RtpMappingCodec>,
     pub encodings: Vec<RtpMappingEncoding>,

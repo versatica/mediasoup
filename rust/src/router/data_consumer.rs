@@ -109,7 +109,7 @@ impl DataConsumerOptions {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct DataConsumerDump {
@@ -123,7 +123,7 @@ pub struct DataConsumerDump {
     pub buffered_amount_low_threshold: u32,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DataConsumerStat {
     // `type` field is present in worker, but ignored here

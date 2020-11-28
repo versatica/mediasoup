@@ -34,7 +34,7 @@ impl AppData {
     }
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransportListenIp {
     pub ip: IpAddr,
@@ -140,7 +140,7 @@ pub enum SctpState {
     Closed,
 }
 
-#[derive(Debug, Deserialize, Serialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DtlsRole {
     Auto,
@@ -154,13 +154,13 @@ impl Default for DtlsRole {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 pub struct DtlsFingerprint {
     pub algorithm: String,
     pub value: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 pub struct DtlsParameters {
     pub role: DtlsRole,
     pub fingerprints: Vec<DtlsFingerprint>,

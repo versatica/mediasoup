@@ -71,7 +71,7 @@ impl PipeTransportOptions {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct PipeTransportDump {
@@ -96,7 +96,7 @@ pub struct PipeTransportDump {
     pub srtp_parameters: Option<SrtpParameters>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PipeTransportStat {
     // Common to all Transports.
@@ -128,6 +128,8 @@ pub struct PipeTransportStat {
     pub tuple: Option<TransportTuple>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PipeTransportRemoteParameters {
     /// Remote IPv4 or IPv6.
     pub ip: IpAddr,
