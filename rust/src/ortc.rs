@@ -28,8 +28,11 @@ pub struct RtpMappingCodec {
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpMappingEncoding {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ssrc: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scalability_mode: Option<String>,
     pub mapped_ssrc: u32,
 }

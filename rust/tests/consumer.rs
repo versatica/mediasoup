@@ -1,10 +1,12 @@
 mod consumer {
     use async_io::Timer;
     use futures_lite::future;
-    use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType};
+    use mediasoup::consumer::{
+        ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerStats,
+        ConsumerType,
+    };
     use mediasoup::data_structures::{AppData, TransportListenIp};
     use mediasoup::producer::ProducerOptions;
-    use mediasoup::router::consumer::{ConsumableRtpEncoding, ConsumerStats};
     use mediasoup::router::{Router, RouterOptions};
     use mediasoup::rtp_parameters::{
         MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
@@ -13,8 +15,7 @@ mod consumer {
         RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
         RtpParameters,
     };
-    use mediasoup::transport::ConsumeError;
-    use mediasoup::transport::{Transport, TransportGeneric};
+    use mediasoup::transport::{ConsumeError, Transport, TransportGeneric};
     use mediasoup::webrtc_transport::{
         TransportListenIps, WebRtcTransport, WebRtcTransportOptions,
     };

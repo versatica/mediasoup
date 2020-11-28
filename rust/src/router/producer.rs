@@ -108,7 +108,7 @@ pub enum ProducerType {
     SVC,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ProducerScore {
     // TODO: C++ code also seems to have `encodingIdx`, shouldn't we add it here?
     /// SSRC of the RTP stream.
