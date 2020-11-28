@@ -484,7 +484,7 @@ impl Producer {
             })
             .await?;
 
-        let was_paused = self.inner().paused.swap(true, Ordering::SeqCst);
+        let was_paused = self.inner().paused.swap(false, Ordering::SeqCst);
 
         if was_paused {
             self.inner().handlers.resume.call_simple();

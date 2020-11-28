@@ -110,6 +110,7 @@ fn smoke() {
             .produce(ProducerOptions::new(
                 MediaKind::Audio,
                 RtpParameters {
+                    mid: Some("AUDIO".to_string()),
                     codecs: vec![RtpCodecParameters::Audio {
                         mime_type: MimeTypeAudio::Opus,
                         payload_type: 111,
