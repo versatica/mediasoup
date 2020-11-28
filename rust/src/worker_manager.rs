@@ -121,7 +121,13 @@ mod tests {
     use std::env;
 
     fn init() {
-        let _ = env_logger::builder().is_test(true).try_init();
+        {
+            let mut builder = env_logger::builder();
+            if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
+                builder.filter_level(log::LevelFilter::Off);
+            }
+            let _ = builder.is_test(true).try_init();
+        }
     }
 
     #[test]
