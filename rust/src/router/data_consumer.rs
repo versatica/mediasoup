@@ -146,7 +146,10 @@ pub enum DataConsumerType {
 enum Notification {
     DataProducerClose,
     SctpSendBufferFull,
-    BufferedAmountLow,
+    #[serde(rename_all = "camelCase")]
+    BufferedAmountLow {
+        buffered_amount: u32,
+    },
 }
 
 #[derive(Debug, Deserialize)]
@@ -159,7 +162,8 @@ enum PayloadNotification {
 struct Handlers {
     message: Bag<'static, dyn Fn(&WebRtcMessage) + Send>,
     sctp_send_buffer_full: Bag<'static, dyn Fn() + Send>,
-    buffered_amount_low: Bag<'static, dyn Fn() + Send>,
+    buffered_amount_low: Bag<'static, dyn Fn(u32) + Send>,
+    data_producer_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -267,13 +271,15 @@ impl DataConsumer {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
                             Notification::DataProducerClose => {
-                                // TODO: Handle this in some meaningful way
+                                handlers.data_producer_close.call_once_simple();
                             }
                             Notification::SctpSendBufferFull => {
                                 handlers.sctp_send_buffer_full.call_simple();
                             }
-                            Notification::BufferedAmountLow => {
-                                handlers.buffered_amount_low.call_simple();
+                            Notification::BufferedAmountLow { buffered_amount } => {
+                                handlers.buffered_amount_low.call(|callback| {
+                                    callback(buffered_amount);
+                                });
                             }
                         },
                         Err(error) => {
@@ -442,13 +448,23 @@ impl DataConsumer {
             .add(Box::new(callback))
     }
 
-    pub fn on_buffered_amount_low<F: Fn() + Send + 'static>(
+    pub fn on_buffered_amount_low<F: Fn(u32) + Send + 'static>(
         &self,
         callback: F,
     ) -> HandlerId<'static> {
         self.inner()
             .handlers
             .buffered_amount_low
+            .add(Box::new(callback))
+    }
+
+    pub fn on_data_producer_close<F: FnOnce() + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
+        self.inner()
+            .handlers
+            .data_producer_close
             .add(Box::new(callback))
     }
 
