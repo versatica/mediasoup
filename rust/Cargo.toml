@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup"
-version = "0.0.6"
+version = "0.0.7"
 description = "Cutting Edge WebRTC Video Conferencing"
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
 edition = "2018"
