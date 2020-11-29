@@ -5,11 +5,10 @@ mod audio_level_observer {
     use mediasoup::router::{Router, RouterOptions};
     use mediasoup::rtp_observer::RtpObserver;
     use mediasoup::rtp_parameters::{
-        MimeTypeAudio, RtpCodecCapability, RtpCodecParametersParametersValue,
+        MimeTypeAudio, RtpCodecCapability, RtpCodecParametersParameters,
     };
     use mediasoup::worker::WorkerSettings;
     use mediasoup::worker_manager::WorkerManager;
-    use std::collections::BTreeMap;
     use std::env;
     use std::num::{NonZeroU32, NonZeroU8};
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -22,18 +21,10 @@ mod audio_level_observer {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
-            parameters: {
-                let mut parameters = BTreeMap::new();
-                parameters.insert(
-                    "userinbandfec".to_string(),
-                    RtpCodecParametersParametersValue::Number(1),
-                );
-                parameters.insert(
-                    "foo".to_string(),
-                    RtpCodecParametersParametersValue::String("bar".to_string()),
-                );
-                parameters
-            },
+            parameters: RtpCodecParametersParameters::from([
+                ("useinbandfec", 1u32.into()),
+                ("foo", "bar".into()),
+            ]),
             rtcp_feedback: vec![],
         }]
     }

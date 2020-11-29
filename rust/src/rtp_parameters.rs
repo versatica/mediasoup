@@ -4,7 +4,197 @@ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt;
+use std::iter::FromIterator;
 use std::num::{NonZeroU32, NonZeroU8};
+
+#[derive(Debug, Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+pub struct RtpCodecParametersParameters(BTreeMap<String, RtpCodecParametersParametersValue>);
+
+impl RtpCodecParametersParameters {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert<K, V>(&mut self, key: K, value: V) -> &mut Self
+    where
+        K: Into<String>,
+        V: Into<RtpCodecParametersParametersValue>,
+    {
+        self.0.insert(key.into(), value.into());
+        self
+    }
+
+    pub fn iter(
+        &self,
+    ) -> std::collections::btree_map::Iter<String, RtpCodecParametersParametersValue> {
+        self.0.iter()
+    }
+
+    pub fn get(&self, key: &str) -> Option<&RtpCodecParametersParametersValue> {
+        self.0.get(key)
+    }
+}
+
+// TODO: Unlock this once const generics are stable and remove subsequent impls:
+//  * https://github.com/rust-lang/rust/issues/74878
+//  * https://github.com/rust-lang/rust/issues/65798
+// impl<K, const N: usize> From<[(K, RtpCodecParametersParametersValue); N]> for RtpCodecParametersParameters
+// where
+//     K: Into<String>,
+// {
+//     fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
+//         Self::from_iter(std::array::IntoIter::new(array))
+//     }
+// }
+
+impl<K> From<[(K, RtpCodecParametersParametersValue); 1]> for RtpCodecParametersParameters
+where
+    K: Into<String>,
+{
+    fn from(array: [(K, RtpCodecParametersParametersValue); 1]) -> Self {
+        let mut this = Self::default();
+        let [one] = array;
+        {
+            let (k, v) = one;
+            this.insert(k, v);
+        }
+        this
+    }
+}
+
+impl<K> From<[(K, RtpCodecParametersParametersValue); 2]> for RtpCodecParametersParameters
+where
+    K: Into<String>,
+{
+    fn from(array: [(K, RtpCodecParametersParametersValue); 2]) -> Self {
+        let mut this = Self::default();
+        let [one, two] = array;
+        {
+            let (k, v) = one;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = two;
+            this.insert(k, v);
+        }
+        this
+    }
+}
+
+impl<K> From<[(K, RtpCodecParametersParametersValue); 3]> for RtpCodecParametersParameters
+where
+    K: Into<String>,
+{
+    fn from(array: [(K, RtpCodecParametersParametersValue); 3]) -> Self {
+        let mut this = Self::default();
+        let [one, two, three] = array;
+        {
+            let (k, v) = one;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = two;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = three;
+            this.insert(k, v);
+        }
+        this
+    }
+}
+
+impl<K> From<[(K, RtpCodecParametersParametersValue); 4]> for RtpCodecParametersParameters
+where
+    K: Into<String>,
+{
+    fn from(array: [(K, RtpCodecParametersParametersValue); 4]) -> Self {
+        let mut this = Self::default();
+        let [one, two, three, four] = array;
+        {
+            let (k, v) = one;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = two;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = three;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = four;
+            this.insert(k, v);
+        }
+        this
+    }
+}
+
+impl<K> From<[(K, RtpCodecParametersParametersValue); 5]> for RtpCodecParametersParameters
+where
+    K: Into<String>,
+{
+    fn from(array: [(K, RtpCodecParametersParametersValue); 5]) -> Self {
+        let mut this = Self::default();
+        let [one, two, three, four, five] = array;
+        {
+            let (k, v) = one;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = two;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = three;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = four;
+            this.insert(k, v);
+        }
+        {
+            let (k, v) = five;
+            this.insert(k, v);
+        }
+        this
+    }
+}
+
+impl IntoIterator for RtpCodecParametersParameters {
+    type Item = (String, RtpCodecParametersParametersValue);
+    type IntoIter =
+        std::collections::btree_map::IntoIter<String, RtpCodecParametersParametersValue>;
+
+    fn into_iter(
+        self,
+    ) -> std::collections::btree_map::IntoIter<String, RtpCodecParametersParametersValue> {
+        self.0.into_iter()
+    }
+}
+
+impl<K> Extend<(K, RtpCodecParametersParametersValue)> for RtpCodecParametersParameters
+where
+    K: Into<String>,
+{
+    fn extend<T: IntoIterator<Item = (K, RtpCodecParametersParametersValue)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(k, v)| {
+            self.insert(k, v);
+        });
+    }
+}
+
+impl<K> FromIterator<(K, RtpCodecParametersParametersValue)> for RtpCodecParametersParameters
+where
+    K: Into<String>,
+{
+    fn from_iter<T: IntoIterator<Item = (K, RtpCodecParametersParametersValue)>>(iter: T) -> Self {
+        Self(BTreeMap::from_iter(
+            iter.into_iter().map(|(k, v)| (k.into(), v)),
+        ))
+    }
+}
 
 /// Provides information on the capabilities of a codec within the RTP capabilities. The list of
 /// media codecs supported by mediasoup and their settings is defined in the
@@ -35,7 +225,7 @@ pub enum RtpCodecCapabilityFinalized {
         channels: NonZeroU8,
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
-        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+        parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
@@ -49,7 +239,7 @@ pub enum RtpCodecCapabilityFinalized {
         clock_rate: NonZeroU32,
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
-        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+        parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
@@ -70,7 +260,7 @@ impl RtpCodecCapabilityFinalized {
         }
     }
 
-    pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
+    pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
         match self {
             Self::Audio { parameters, .. } => parameters,
             Self::Video { parameters, .. } => parameters,
@@ -198,7 +388,7 @@ pub enum RtpCodecCapability {
         channels: NonZeroU8,
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
-        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+        parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
@@ -213,7 +403,7 @@ pub enum RtpCodecCapability {
         clock_rate: NonZeroU32,
         /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
         /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
-        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+        parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
@@ -227,16 +417,14 @@ impl RtpCodecCapability {
         }
     }
 
-    pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
+    pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
         match self {
             Self::Audio { parameters, .. } => parameters,
             Self::Video { parameters, .. } => parameters,
         }
     }
 
-    pub(crate) fn parameters_mut(
-        &mut self,
-    ) -> &mut BTreeMap<String, RtpCodecParametersParametersValue> {
+    pub(crate) fn parameters_mut(&mut self) -> &mut RtpCodecParametersParameters {
         match self {
             Self::Audio { parameters, .. } => parameters,
             Self::Video { parameters, .. } => parameters,
@@ -438,6 +626,36 @@ pub enum RtpCodecParametersParametersValue {
     Number(u32),
 }
 
+impl From<String> for RtpCodecParametersParametersValue {
+    fn from(s: String) -> Self {
+        Self::String(s)
+    }
+}
+
+impl From<&str> for RtpCodecParametersParametersValue {
+    fn from(s: &str) -> Self {
+        Self::String(s.to_string())
+    }
+}
+
+impl From<u8> for RtpCodecParametersParametersValue {
+    fn from(n: u8) -> Self {
+        Self::Number(n as u32)
+    }
+}
+
+impl From<u16> for RtpCodecParametersParametersValue {
+    fn from(n: u16) -> Self {
+        Self::Number(n as u32)
+    }
+}
+
+impl From<u32> for RtpCodecParametersParametersValue {
+    fn from(n: u32) -> Self {
+        Self::Number(n)
+    }
+}
+
 /// Provides information on codec settings within the RTP parameters. The list
 /// of media codecs supported by mediasoup and their settings is defined in the
 /// supported_rtp_capabilities.rs file.
@@ -458,7 +676,7 @@ pub enum RtpCodecParameters {
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
         /// codec matching.
-        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+        parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
@@ -473,7 +691,7 @@ pub enum RtpCodecParameters {
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
         /// codec matching.
-        parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+        parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
@@ -501,7 +719,7 @@ impl RtpCodecParameters {
         }
     }
 
-    pub(crate) fn parameters(&self) -> &BTreeMap<String, RtpCodecParametersParametersValue> {
+    pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
         match self {
             Self::Audio { parameters, .. } => parameters,
             Self::Video { parameters, .. } => parameters,
@@ -687,7 +905,7 @@ pub struct RtpHeaderExtensionParameters {
     /// Default false.
     pub encrypt: bool,
     /// Configuration parameters for the header extension.
-    pub parameters: BTreeMap<String, RtpCodecParametersParametersValue>,
+    pub parameters: RtpCodecParametersParameters,
 }
 
 /// Provides information on RTCP settings within the RTP parameters.

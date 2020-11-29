@@ -10,7 +10,7 @@ mod consumer {
     use mediasoup::router::{Router, RouterOptions};
     use mediasoup::rtp_parameters::{
         MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
-        RtpCapabilities, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParametersValue,
+        RtpCapabilities, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
         RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtension,
         RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
         RtpParameters,
@@ -22,7 +22,7 @@ mod consumer {
     use mediasoup::worker::WorkerSettings;
     use mediasoup::worker_manager::WorkerManager;
     use parking_lot::Mutex;
-    use std::collections::{BTreeMap, HashMap, HashSet};
+    use std::collections::{HashMap, HashSet};
     use std::env;
     use std::num::{NonZeroU32, NonZeroU8};
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -45,47 +45,26 @@ mod consumer {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
-                parameters: {
-                    let mut parameters = BTreeMap::new();
-                    parameters.insert(
-                        "foo".to_string(),
-                        RtpCodecParametersParametersValue::String("bar".to_string()),
-                    );
-                    parameters
-                },
+                parameters: RtpCodecParametersParameters::from([("foo", "bar".into())]),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::VP8,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: BTreeMap::new(),
+                parameters: RtpCodecParametersParameters::new(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::H264,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: {
-                    let mut parameters = BTreeMap::new();
-                    parameters.insert(
-                        "level-asymmetry-allowed".to_string(),
-                        RtpCodecParametersParametersValue::Number(1),
-                    );
-                    parameters.insert(
-                        "packetization-mode".to_string(),
-                        RtpCodecParametersParametersValue::Number(1),
-                    );
-                    parameters.insert(
-                        "profile-level-id".to_string(),
-                        RtpCodecParametersParametersValue::String("4d0032".to_string()),
-                    );
-                    parameters.insert(
-                        "foo".to_string(),
-                        RtpCodecParametersParametersValue::String("bar".to_string()),
-                    );
-                    parameters
-                },
+                parameters: RtpCodecParametersParameters::from([
+                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 1u32.into()),
+                    ("profile-level-id", "4d0032".into()),
+                    ("foo", "bar".into()),
+                ]),
                 rtcp_feedback: vec![],
             },
         ]
@@ -100,26 +79,12 @@ mod consumer {
                 payload_type: 111,
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
-                parameters: {
-                    let mut parameters = BTreeMap::new();
-                    parameters.insert(
-                        "useinbandfec".to_string(),
-                        RtpCodecParametersParametersValue::Number(1),
-                    );
-                    parameters.insert(
-                        "usedtx".to_string(),
-                        RtpCodecParametersParametersValue::Number(1),
-                    );
-                    parameters.insert(
-                        "foo".to_string(),
-                        RtpCodecParametersParametersValue::String("222.222".to_string()),
-                    );
-                    parameters.insert(
-                        "bar".to_string(),
-                        RtpCodecParametersParametersValue::String("333".to_string()),
-                    );
-                    parameters
-                },
+                parameters: RtpCodecParametersParameters::from([
+                    ("useinbandfec", 1u32.into()),
+                    ("usedtx", 1u32.into()),
+                    ("foo", "222.222".into()),
+                    ("bar", "333".into()),
+                ]),
                 rtcp_feedback: vec![],
             }];
             parameters.header_extensions = vec![
@@ -127,13 +92,13 @@ mod consumer {
                     uri: RtpHeaderExtensionUri::SDES,
                     id: 10,
                     encrypt: false,
-                    parameters: Default::default(),
+                    parameters: RtpCodecParametersParameters::new(),
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AudioLevel,
                     id: 12,
                     encrypt: false,
-                    parameters: Default::default(),
+                    parameters: RtpCodecParametersParameters::new(),
                 },
             ];
             parameters.encodings = vec![{
@@ -163,18 +128,10 @@ mod consumer {
                     mime_type: MimeTypeVideo::H264,
                     payload_type: 112,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: {
-                        let mut parameters = BTreeMap::new();
-                        parameters.insert(
-                            "packetization-mode".to_string(),
-                            RtpCodecParametersParametersValue::Number(1),
-                        );
-                        parameters.insert(
-                            "profile-level-id".to_string(),
-                            RtpCodecParametersParametersValue::String("4d0032".to_string()),
-                        );
-                        parameters
-                    },
+                    parameters: RtpCodecParametersParameters::from([
+                        ("packetization-mode", 1u32.into()),
+                        ("profile-level-id", "4d0032".into()),
+                    ]),
                     rtcp_feedback: vec![
                         RtcpFeedback::Nack,
                         RtcpFeedback::NackPli,
@@ -185,14 +142,7 @@ mod consumer {
                     mime_type: MimeTypeVideo::RTX,
                     payload_type: 113,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: {
-                        let mut parameters = BTreeMap::new();
-                        parameters.insert(
-                            "apt".to_string(),
-                            RtpCodecParametersParametersValue::Number(112),
-                        );
-                        parameters
-                    },
+                    parameters: RtpCodecParametersParameters::from([("apt", 112u32.into())]),
                     rtcp_feedback: vec![],
                 },
             ];
@@ -201,13 +151,13 @@ mod consumer {
                     uri: RtpHeaderExtensionUri::SDES,
                     id: 10,
                     encrypt: false,
-                    parameters: Default::default(),
+                    parameters: RtpCodecParametersParameters::new(),
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::VideoOrientation,
                     id: 13,
                     encrypt: false,
-                    parameters: Default::default(),
+                    parameters: RtpCodecParametersParameters::new(),
                 },
             ];
             parameters.encodings = vec![
@@ -257,29 +207,18 @@ mod consumer {
                     preferred_payload_type: Some(100),
                     clock_rate: NonZeroU32::new(48000).unwrap(),
                     channels: NonZeroU8::new(2).unwrap(),
-                    parameters: BTreeMap::new(),
+                    parameters: RtpCodecParametersParameters::new(),
                     rtcp_feedback: vec![],
                 },
                 RtpCodecCapability::Video {
                     mime_type: MimeTypeVideo::H264,
                     preferred_payload_type: Some(101),
                     clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: {
-                        let mut parameters = BTreeMap::new();
-                        parameters.insert(
-                            "level-asymmetry-allowed".to_string(),
-                            RtpCodecParametersParametersValue::Number(1),
-                        );
-                        parameters.insert(
-                            "packetization-mode".to_string(),
-                            RtpCodecParametersParametersValue::Number(1),
-                        );
-                        parameters.insert(
-                            "profile-level-id".to_string(),
-                            RtpCodecParametersParametersValue::String("4d0032".to_string()),
-                        );
-                        parameters
-                    },
+                    parameters: RtpCodecParametersParameters::from([
+                        ("level-asymmetry-allowed", 1u32.into()),
+                        ("packetization-mode", 1u32.into()),
+                        ("profile-level-id", "4d0032".into()),
+                    ]),
                     rtcp_feedback: vec![
                         RtcpFeedback::Nack,
                         RtcpFeedback::NackPli,
@@ -291,14 +230,7 @@ mod consumer {
                     mime_type: MimeTypeVideo::RTX,
                     preferred_payload_type: Some(102),
                     clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: {
-                        let mut parameters = BTreeMap::new();
-                        parameters.insert(
-                            "apt".to_string(),
-                            RtpCodecParametersParametersValue::Number(112),
-                        );
-                        parameters
-                    },
+                    parameters: RtpCodecParametersParameters::from([("apt", 112u32.into())]),
                     rtcp_feedback: vec![],
                 },
             ],
@@ -471,26 +403,12 @@ mod consumer {
                         payload_type: 100,
                         clock_rate: NonZeroU32::new(48000).unwrap(),
                         channels: NonZeroU8::new(2).unwrap(),
-                        parameters: {
-                            let mut parameters = BTreeMap::new();
-                            parameters.insert(
-                                "useinbandfec".to_string(),
-                                RtpCodecParametersParametersValue::Number(1),
-                            );
-                            parameters.insert(
-                                "usedtx".to_string(),
-                                RtpCodecParametersParametersValue::Number(1),
-                            );
-                            parameters.insert(
-                                "foo".to_string(),
-                                RtpCodecParametersParametersValue::String("222.222".to_string()),
-                            );
-                            parameters.insert(
-                                "bar".to_string(),
-                                RtpCodecParametersParametersValue::String("333".to_string()),
-                            );
-                            parameters
-                        },
+                        parameters: RtpCodecParametersParameters::from([
+                            ("useinbandfec", 1u32.into()),
+                            ("usedtx", 1u32.into()),
+                            ("foo", "222.222".into()),
+                            ("bar", "333".into()),
+                        ]),
                         rtcp_feedback: vec![],
                     }]
                 );
@@ -570,18 +488,10 @@ mod consumer {
                             mime_type: MimeTypeVideo::H264,
                             payload_type: 103,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
-                            parameters: {
-                                let mut parameters = BTreeMap::new();
-                                parameters.insert(
-                                    "packetization-mode".to_string(),
-                                    RtpCodecParametersParametersValue::Number(1),
-                                );
-                                parameters.insert(
-                                    "profile-level-id".to_string(),
-                                    RtpCodecParametersParametersValue::String("4d0032".to_string()),
-                                );
-                                parameters
-                            },
+                            parameters: RtpCodecParametersParameters::from([
+                                ("packetization-mode", 1u32.into()),
+                                ("profile-level-id", "4d0032".into()),
+                            ]),
                             rtcp_feedback: vec![
                                 RtcpFeedback::Nack,
                                 RtcpFeedback::NackPli,
@@ -593,14 +503,10 @@ mod consumer {
                             mime_type: MimeTypeVideo::RTX,
                             payload_type: 104,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
-                            parameters: {
-                                let mut parameters = BTreeMap::new();
-                                parameters.insert(
-                                    "apt".to_string(),
-                                    RtpCodecParametersParametersValue::Number(103),
-                                );
-                                parameters
-                            },
+                            parameters: RtpCodecParametersParameters::from([(
+                                "apt",
+                                103u32.into()
+                            )]),
                             rtcp_feedback: vec![],
                         },
                     ]
@@ -682,7 +588,7 @@ mod consumer {
                         preferred_payload_type: Some(100),
                         clock_rate: NonZeroU32::new(32_000).unwrap(),
                         channels: NonZeroU8::new(1).unwrap(),
-                        parameters: Default::default(),
+                        parameters: RtpCodecParametersParameters::new(),
                         rtcp_feedback: vec![],
                     }],
                     header_extensions: vec![],
@@ -776,26 +682,12 @@ mod consumer {
                         payload_type: 100,
                         clock_rate: NonZeroU32::new(48000).unwrap(),
                         channels: NonZeroU8::new(2).unwrap(),
-                        parameters: {
-                            let mut parameters = BTreeMap::new();
-                            parameters.insert(
-                                "useinbandfec".to_string(),
-                                RtpCodecParametersParametersValue::Number(1),
-                            );
-                            parameters.insert(
-                                "usedtx".to_string(),
-                                RtpCodecParametersParametersValue::Number(1),
-                            );
-                            parameters.insert(
-                                "foo".to_string(),
-                                RtpCodecParametersParametersValue::String("222.222".to_string()),
-                            );
-                            parameters.insert(
-                                "bar".to_string(),
-                                RtpCodecParametersParametersValue::String("333".to_string()),
-                            );
-                            parameters
-                        },
+                        parameters: RtpCodecParametersParameters::from([
+                            ("useinbandfec", 1u32.into()),
+                            ("usedtx", 1u32.into()),
+                            ("foo", "222.222".into()),
+                            ("bar", "333".into()),
+                        ]),
                         rtcp_feedback: vec![],
                     }],
                 );
@@ -806,19 +698,19 @@ mod consumer {
                             uri: RtpHeaderExtensionUri::SDES,
                             id: 1,
                             encrypt: false,
-                            parameters: Default::default(),
+                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::AbsSendTime,
                             id: 4,
                             encrypt: false,
-                            parameters: Default::default(),
+                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::AudioLevel,
                             id: 10,
                             encrypt: false,
-                            parameters: Default::default(),
+                            parameters: RtpCodecParametersParameters::new(),
                         },
                     ],
                 );
@@ -890,18 +782,10 @@ mod consumer {
                             mime_type: MimeTypeVideo::H264,
                             payload_type: 103,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
-                            parameters: {
-                                let mut parameters = BTreeMap::new();
-                                parameters.insert(
-                                    "packetization-mode".to_string(),
-                                    RtpCodecParametersParametersValue::Number(1),
-                                );
-                                parameters.insert(
-                                    "profile-level-id".to_string(),
-                                    RtpCodecParametersParametersValue::String("4d0032".to_string()),
-                                );
-                                parameters
-                            },
+                            parameters: RtpCodecParametersParameters::from([
+                                ("packetization-mode", 1u32.into()),
+                                ("profile-level-id", "4d0032".into()),
+                            ]),
                             rtcp_feedback: vec![
                                 RtcpFeedback::Nack,
                                 RtcpFeedback::NackPli,
@@ -913,14 +797,10 @@ mod consumer {
                             mime_type: MimeTypeVideo::RTX,
                             payload_type: 104,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
-                            parameters: {
-                                let mut parameters = BTreeMap::new();
-                                parameters.insert(
-                                    "apt".to_string(),
-                                    RtpCodecParametersParametersValue::Number(103),
-                                );
-                                parameters
-                            },
+                            parameters: RtpCodecParametersParameters::from([(
+                                "apt",
+                                103u32.into()
+                            )]),
                             rtcp_feedback: vec![],
                         }
                     ],
@@ -932,25 +812,25 @@ mod consumer {
                             uri: RtpHeaderExtensionUri::SDES,
                             id: 1,
                             encrypt: false,
-                            parameters: Default::default(),
+                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::AbsSendTime,
                             id: 4,
                             encrypt: false,
-                            parameters: Default::default(),
+                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::VideoOrientation,
                             id: 11,
                             encrypt: false,
-                            parameters: Default::default(),
+                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::TimeOffset,
                             id: 12,
                             encrypt: false,
-                            parameters: Default::default(),
+                            parameters: RtpCodecParametersParameters::new(),
                         },
                     ],
                 );

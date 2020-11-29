@@ -1,9 +1,9 @@
 use crate::rtp_parameters::{
     MediaKind, MimeType, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
     RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
-    RtpCodecParametersParametersValue, RtpEncodingParameters, RtpEncodingParametersRtx,
-    RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
-    RtpParameters,
+    RtpCodecParametersParameters, RtpCodecParametersParametersValue, RtpEncodingParameters,
+    RtpEncodingParametersRtx, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
+    RtpHeaderExtensionUri, RtpParameters,
 };
 use crate::{scalability_modes, supported_rtp_capabilities};
 use serde::{Deserialize, Serialize};
@@ -99,7 +99,7 @@ pub(crate) fn validate_rtp_parameters(
 
 /// Validates RtpCodecParameters.
 fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpParametersError> {
-    for (key, value) in codec.parameters() {
+    for (key, value) in codec.parameters().iter() {
         // Specific parameters validation.
         if key.as_str() == "apt" {
             match value {
@@ -118,7 +118,7 @@ fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpPa
 
 // Validates RtpCodecCapability.
 fn validate_rtp_codec_capability(codec: &RtpCodecCapability) -> Result<(), RtpCapabilitiesError> {
-    for (key, value) in codec.parameters() {
+    for (key, value) in codec.parameters().iter() {
         // Specific parameters validation.
         if key.as_str() == "apt" {
             match value {
@@ -273,16 +273,10 @@ pub(crate) fn generate_router_rtp_capabilities(
                 mime_type: MimeTypeVideo::RTX,
                 preferred_payload_type: payload_type,
                 clock_rate: codec_finalized.clock_rate(),
-                parameters: {
-                    let mut parameters = BTreeMap::new();
-                    parameters.insert(
-                        "apt".to_string(),
-                        RtpCodecParametersParametersValue::Number(
-                            codec_finalized.preferred_payload_type() as u32,
-                        ),
-                    );
-                    parameters
-                },
+                parameters: RtpCodecParametersParameters::from([(
+                    "apt",
+                    codec_finalized.preferred_payload_type().into(),
+                )]),
                 rtcp_feedback: vec![],
             };
 
@@ -560,7 +554,7 @@ pub(crate) fn get_consumable_rtp_parameters(
             uri: cap_ext.uri,
             id: cap_ext.preferred_id,
             encrypt: cap_ext.preferred_encrypt,
-            parameters: BTreeMap::new(),
+            parameters: RtpCodecParametersParameters::new(),
         };
 
         consumable_params.header_extensions.push(consumable_ext);
@@ -837,7 +831,7 @@ struct CodecToMatch<'a> {
     channels: Option<NonZeroU8>,
     clock_rate: NonZeroU32,
     mime_type: MimeType,
-    parameters: &'a BTreeMap<String, RtpCodecParametersParametersValue>,
+    parameters: &'a RtpCodecParametersParameters,
 }
 
 impl<'a> From<&'a RtpCodecCapability> for CodecToMatch<'a> {
