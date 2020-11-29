@@ -271,7 +271,7 @@ impl Channel {
             .await?
             .unwrap_or_default();
         serde_json::from_value(data).map_err(|error| RequestError::FailedToParse {
-            error: Box::new(error),
+            error: error.to_string(),
         })
     }
 

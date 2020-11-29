@@ -186,7 +186,7 @@ pub trait TransportGeneric<Dump, Stat>: Transport {
     fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static>;
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum ProduceError {
     #[error("Producer with the same id \"{0}\" already exists")]
     AlreadyExists(ProducerId),
@@ -198,7 +198,7 @@ pub enum ProduceError {
     Request(RequestError),
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum ConsumeError {
     #[error("Producer with id \"{0}\" not found")]
     ProducerNotFound(ProducerId),
@@ -210,7 +210,7 @@ pub enum ConsumeError {
     Request(RequestError),
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum ProduceDataError {
     #[error("Data producer with the same id \"{0}\" already exists")]
     AlreadyExists(DataProducerId),
@@ -220,7 +220,7 @@ pub enum ProduceDataError {
     Request(RequestError),
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum ConsumeDataError {
     #[error("Data producer with id \"{0}\" not found")]
     DataProducerNotFound(DataProducerId),

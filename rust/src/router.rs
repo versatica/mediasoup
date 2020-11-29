@@ -125,7 +125,7 @@ pub struct PipeProducerToRouterValue {
     pub pipe_producer: Producer,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum PipeProducerToRouterError {
     #[error("Destination router must be different")]
     SameRouter,

@@ -54,7 +54,7 @@ impl Deref for TransportListenIps {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Eq, PartialEq)]
 #[error("Empty list of listen IPs provided, should have at least one element")]
 pub struct EmptyListError;
 

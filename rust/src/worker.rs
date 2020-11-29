@@ -25,7 +25,6 @@ pub(crate) use payload_channel::{NotificationError, NotificationMessage, Payload
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
-use std::error::Error;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -33,7 +32,7 @@ use std::{env, io};
 use thiserror::Error;
 use utils::SpawnResult;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum RequestError {
     #[error("Channel already closed")]
     ChannelClosed,
@@ -46,10 +45,7 @@ pub enum RequestError {
     #[error("Received response error: {reason}")]
     Response { reason: String },
     #[error("Failed to parse response from worker: {error}")]
-    FailedToParse {
-        #[from]
-        error: Box<dyn Error>,
-    },
+    FailedToParse { error: String },
     #[error("Worker did not return any data in response")]
     NoData,
 }
@@ -227,7 +223,7 @@ pub struct WorkerDump {
     pub router_ids: Vec<RouterId>,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum CreateRouterError {
     #[error("RTP capabilities generation error: {0}")]
     FailedRtpCapabilitiesGeneration(RtpCapabilitiesError),

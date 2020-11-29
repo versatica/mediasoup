@@ -70,7 +70,7 @@ fn deserialize_message(bytes: &[u8]) -> PayloadChannelReceiveMessage {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum NotificationError {
     #[error("Channel already closed")]
     ChannelClosed,
@@ -317,7 +317,7 @@ impl PayloadChannel {
             .await?
             .unwrap_or_default();
         serde_json::from_value(data).map_err(|error| RequestError::FailedToParse {
-            error: Box::new(error),
+            error: error.to_string(),
         })
     }
 

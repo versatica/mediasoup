@@ -43,13 +43,13 @@ pub struct RtpMapping {
     pub encodings: Vec<RtpMappingEncoding>,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpParametersError {
     #[error("invalid codec apt parameter {0}")]
     InvalidAptParameter(String),
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpCapabilitiesError {
     #[error("media codec not supported [mime_type:{mime_type:?}")]
     UnsupportedCodec { mime_type: MimeType },
@@ -61,7 +61,7 @@ pub enum RtpCapabilitiesError {
     DuplicatedPreferredPayloadType(u8),
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpParametersMappingError {
     #[error("unsupported codec [mime_type:{mime_type:?}, payloadType:{payload_type}]")]
     UnsupportedCodec {
@@ -74,7 +74,7 @@ pub enum RtpParametersMappingError {
     MissingMediaCodecForRTX { payload_type: u8 },
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum ConsumerRtpParametersError {
     #[error("invalid capabilities: {0}")]
     InvalidCapabilities(RtpCapabilitiesError),
