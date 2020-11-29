@@ -267,6 +267,13 @@ impl RtpCodecCapabilityFinalized {
         }
     }
 
+    pub(crate) fn parameters_mut(&mut self) -> &mut RtpCodecParametersParameters {
+        match self {
+            Self::Audio { parameters, .. } => parameters,
+            Self::Video { parameters, .. } => parameters,
+        }
+    }
+
     pub(crate) fn preferred_payload_type(&self) -> u8 {
         match self {
             Self::Audio {

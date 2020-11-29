@@ -523,11 +523,10 @@ mod producer {
                     }))
                     .await;
 
-                // TODO: unlock once h264-profile-level-id is ported to Rust and this starts to fail
-                // assert!(matches!(
-                //     produce_result,
-                //     Err(ProduceError::FailedRtpParametersMapping(_))
-                // ));
+                assert!(matches!(
+                    produce_result,
+                    Err(ProduceError::FailedRtpParametersMapping(_))
+                ));
             }
         });
     }

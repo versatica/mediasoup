@@ -7,6 +7,7 @@ use crate::rtp_parameters::{
 };
 use crate::{scalability_modes, supported_rtp_capabilities};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::mem;
 use std::num::{NonZeroU32, NonZeroU8};
@@ -169,12 +170,7 @@ pub(crate) fn generate_router_rtp_capabilities(
             .codecs
             .iter()
             .find(|supported_codec| {
-                match_codecs(
-                    media_codec.deref().into(),
-                    (*supported_codec).into(),
-                    false,
-                    false,
-                )
+                match_codecs(media_codec.deref().into(), (*supported_codec).into(), false).is_ok()
             }) {
             Some(codec) => codec,
             None => {
@@ -306,7 +302,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 
     // Match parameters media codecs to capabilities media codecs.
     let mut codec_to_cap_codec =
-        BTreeMap::<&RtpCodecParameters, &RtpCodecCapabilityFinalized>::new();
+        BTreeMap::<&RtpCodecParameters, Cow<RtpCodecCapabilityFinalized>>::new();
 
     for codec in rtp_parameters.codecs.iter() {
         if codec.is_rtx() {
@@ -314,11 +310,23 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
         }
 
         // Search for the same media codec in capabilities.
-        match rtp_capabilities
-            .codecs
-            .iter()
-            .find(|cap_codec| match_codecs(codec.into(), (*cap_codec).into(), true, true))
-        {
+        match rtp_capabilities.codecs.iter().find_map(|cap_codec| {
+            match_codecs(codec.into(), cap_codec.into(), true)
+                .ok()
+                .map(|profile_level_id| {
+                    // This is rather ugly, but we need to fix `profile-level-id` and this was the
+                    // quickest way to do it
+                    if let Some(profile_level_id) = profile_level_id {
+                        let mut cap_codec = cap_codec.clone();
+                        cap_codec
+                            .parameters_mut()
+                            .insert("profile-level-id", profile_level_id);
+                        Cow::Owned(cap_codec)
+                    } else {
+                        Cow::Borrowed(cap_codec)
+                    }
+                })
+        }) {
             Some(matched_codec_capability) => {
                 codec_to_cap_codec.insert(codec, matched_codec_capability);
             }
@@ -371,7 +379,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 
                 match associated_cap_rtx_codec {
                     Some(associated_cap_rtx_codec) => {
-                        codec_to_cap_codec.insert(codec, associated_cap_rtx_codec);
+                        codec_to_cap_codec.insert(codec, Cow::Borrowed(associated_cap_rtx_codec));
                     }
                     None => {
                         return Err(RtpParametersMappingError::UnsupportedRTXCodec {
@@ -600,7 +608,7 @@ pub(crate) fn can_consume(
         if caps
             .codecs
             .iter()
-            .any(|cap_codec| match_codecs(cap_codec.deref().into(), codec.into(), true, false))
+            .any(|cap_codec| match_codecs(cap_codec.deref().into(), codec.into(), true).is_ok())
         {
             matching_codecs.push(codec);
         }
@@ -635,7 +643,7 @@ pub(crate) fn get_consumer_rtp_parameters(
         if let Some(matched_cap_codec) = caps
             .codecs
             .iter()
-            .find(|cap_codec| match_codecs(cap_codec.deref().into(), (&codec).into(), true, false))
+            .find(|cap_codec| match_codecs(cap_codec.deref().into(), (&codec).into(), true).is_ok())
         {
             *codec.rtcp_feedback_mut() = matched_cap_codec.rtcp_feedback().clone();
             consumer_params.codecs.push(codec);
@@ -924,17 +932,22 @@ impl<'a> From<&'a RtpCodecParameters> for CodecToMatch<'a> {
     }
 }
 
-fn match_codecs(codec_a: CodecToMatch, codec_b: CodecToMatch, strict: bool, modify: bool) -> bool {
+/// Returns selected `Ok(Some(profile-level-id))` for H264 codec and `Ok(None)` for others
+fn match_codecs(
+    codec_a: CodecToMatch,
+    codec_b: CodecToMatch,
+    strict: bool,
+) -> Result<Option<String>, ()> {
     if codec_a.mime_type != codec_b.mime_type {
-        return false;
+        return Err(());
     }
 
     if codec_a.channels != codec_b.channels {
-        return false;
+        return Err(());
     }
 
     if codec_a.clock_rate != codec_b.clock_rate {
-        return false;
+        return Err(());
     }
     // Per codec special checks.
     match codec_a.mime_type {
@@ -949,34 +962,63 @@ fn match_codecs(codec_a: CodecToMatch, codec_b: CodecToMatch, strict: bool, modi
                 .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
 
             if packetization_mode_a != packetization_mode_b {
-                return false;
+                return Err(());
             }
 
             // If strict matching check profile-level-id.
             if strict {
-                // TODO: port h264-profile-level-id to Rust and implement these checks
-                // if (!h264.isSameProfile(codec_a.parameters, codec_b.parameters))
-                //   return false;
-                //
-                // let selected_profile_level_id;
-                //
-                // try
-                // {
-                //   selected_profile_level_id =
-                //     h264.generateProfileLevelIdForAnswer(codec_a.parameters, codec_b.parameters);
-                // }
-                // catch (error)
-                // {
-                //   return false;
-                // }
-                //
-                // if modify {
-                //   if selected_profile_level_id {
-                //     codec_a.parameters.get_mut("profile-level-id") = selected_profile_level_id;
-                //     } else {
-                //     delete codec_a.parameters['profile-level-id'];
-                //     }
-                // }
+                let profile_level_id_a =
+                    codec_a
+                        .parameters
+                        .get("profile-level-id")
+                        .and_then(|p| match p {
+                            RtpCodecParametersParametersValue::String(s) => Some(s.as_str()),
+                            RtpCodecParametersParametersValue::Number(_) => None,
+                        });
+                let profile_level_id_b =
+                    codec_b
+                        .parameters
+                        .get("profile-level-id")
+                        .and_then(|p| match p {
+                            RtpCodecParametersParametersValue::String(s) => Some(s.as_str()),
+                            RtpCodecParametersParametersValue::Number(_) => None,
+                        });
+
+                let (profile_level_id_a, profile_level_id_b) =
+                    match h264_profile_level_id::is_same_profile(
+                        profile_level_id_a,
+                        profile_level_id_b,
+                    ) {
+                        Some((profile_level_id_a, profile_level_id_b)) => {
+                            (profile_level_id_a, profile_level_id_b)
+                        }
+                        None => {
+                            return Err(());
+                        }
+                    };
+
+                let selected_profile_level_id =
+                    h264_profile_level_id::generate_profile_level_id_for_answer(
+                        Some(profile_level_id_a),
+                        codec_a
+                            .parameters
+                            .get("level-asymmetry-allowed")
+                            .map(|p| p == &RtpCodecParametersParametersValue::Number(1))
+                            .unwrap_or_default(),
+                        Some(profile_level_id_b),
+                        codec_b
+                            .parameters
+                            .get("level-asymmetry-allowed")
+                            .map(|p| p == &RtpCodecParametersParametersValue::Number(1))
+                            .unwrap_or_default(),
+                    );
+
+                return match selected_profile_level_id {
+                    Ok(selected_profile_level_id) => {
+                        Ok(Some(selected_profile_level_id.to_string()))
+                    }
+                    Err(_) => Err(()),
+                };
             }
         }
 
@@ -993,7 +1035,7 @@ fn match_codecs(codec_a: CodecToMatch, codec_b: CodecToMatch, strict: bool, modi
                     .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
 
                 if profile_id_a != profile_id_b {
-                    return false;
+                    return Err(());
                 }
             }
         }
@@ -1001,5 +1043,5 @@ fn match_codecs(codec_a: CodecToMatch, codec_b: CodecToMatch, strict: bool, modi
         _ => {}
     }
 
-    true
+    Ok(None)
 }
