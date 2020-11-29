@@ -61,44 +61,45 @@ mod producer {
     }
 
     fn audio_producer_options() -> ProducerOptions {
-        let mut options = ProducerOptions::new(MediaKind::Audio, {
-            let mut parameters = RtpParameters::default();
-            parameters.mid = Some("AUDIO".to_string());
-            parameters.codecs = vec![RtpCodecParameters::Audio {
-                mime_type: MimeTypeAudio::Opus,
-                payload_type: 0,
-                clock_rate: NonZeroU32::new(48000).unwrap(),
-                channels: NonZeroU8::new(2).unwrap(),
-                parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
-                    ("usedtx", 1u32.into()),
-                    ("foo", "222.222".into()),
-                    ("bar", "333".into()),
-                ]),
-                rtcp_feedback: vec![],
-            }];
-            parameters.header_extensions = vec![
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::SDES,
-                    id: 10,
-                    encrypt: false,
-                    parameters: Default::default(),
+        let mut options = ProducerOptions::new(
+            MediaKind::Audio,
+            RtpParameters {
+                mid: Some("AUDIO".to_string()),
+                codecs: vec![RtpCodecParameters::Audio {
+                    mime_type: MimeTypeAudio::Opus,
+                    payload_type: 0,
+                    clock_rate: NonZeroU32::new(48000).unwrap(),
+                    channels: NonZeroU8::new(2).unwrap(),
+                    parameters: RtpCodecParametersParameters::from([
+                        ("useinbandfec", 1u32.into()),
+                        ("usedtx", 1u32.into()),
+                        ("foo", "222.222".into()),
+                        ("bar", "333".into()),
+                    ]),
+                    rtcp_feedback: vec![],
+                }],
+                header_extensions: vec![
+                    RtpHeaderExtensionParameters {
+                        uri: RtpHeaderExtensionUri::SDES,
+                        id: 10,
+                        encrypt: false,
+                        parameters: Default::default(),
+                    },
+                    RtpHeaderExtensionParameters {
+                        uri: RtpHeaderExtensionUri::AudioLevel,
+                        id: 12,
+                        encrypt: false,
+                        parameters: Default::default(),
+                    },
+                ],
+                // Missing encodings on purpose.
+                encodings: vec![],
+                rtcp: RtcpParameters {
+                    cname: Some("audio-1".to_string()),
+                    ..RtcpParameters::default()
                 },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AudioLevel,
-                    id: 12,
-                    encrypt: false,
-                    parameters: Default::default(),
-                },
-            ];
-            // Missing encodings on purpose.
-            parameters.rtcp = {
-                let mut rtcp = RtcpParameters::default();
-                rtcp.cname = Some("audio-1".to_string());
-                rtcp
-            };
-            parameters
-        });
+            },
+        );
 
         options.app_data = AppData::new(ProducerAppData { foo: 1, bar: "2" });
 
@@ -106,80 +107,76 @@ mod producer {
     }
 
     fn video_producer_options() -> ProducerOptions {
-        let mut options = ProducerOptions::new(MediaKind::Video, {
-            let mut parameters = RtpParameters::default();
-            parameters.mid = Some("VIDEO".to_string());
-            parameters.codecs = vec![
-                RtpCodecParameters::Video {
-                    mime_type: MimeTypeVideo::H264,
-                    payload_type: 112,
-                    clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: RtpCodecParametersParameters::from([
-                        ("packetization-mode", 1u32.into()),
-                        ("profile-level-id", "4d0032".into()),
-                    ]),
-                    rtcp_feedback: vec![
-                        RtcpFeedback::Nack,
-                        RtcpFeedback::NackPli,
-                        RtcpFeedback::GoogRemb,
-                    ],
+        let mut options = ProducerOptions::new(
+            MediaKind::Video,
+            RtpParameters {
+                mid: Some("VIDEO".to_string()),
+                codecs: vec![
+                    RtpCodecParameters::Video {
+                        mime_type: MimeTypeVideo::H264,
+                        payload_type: 112,
+                        clock_rate: NonZeroU32::new(90000).unwrap(),
+                        parameters: RtpCodecParametersParameters::from([
+                            ("packetization-mode", 1u32.into()),
+                            ("profile-level-id", "4d0032".into()),
+                        ]),
+                        rtcp_feedback: vec![
+                            RtcpFeedback::Nack,
+                            RtcpFeedback::NackPli,
+                            RtcpFeedback::GoogRemb,
+                        ],
+                    },
+                    RtpCodecParameters::Video {
+                        mime_type: MimeTypeVideo::RTX,
+                        payload_type: 113,
+                        clock_rate: NonZeroU32::new(90000).unwrap(),
+                        parameters: RtpCodecParametersParameters::from([("apt", 112u32.into())]),
+                        rtcp_feedback: vec![],
+                    },
+                ],
+                header_extensions: vec![
+                    RtpHeaderExtensionParameters {
+                        uri: RtpHeaderExtensionUri::SDES,
+                        id: 10,
+                        encrypt: false,
+                        parameters: Default::default(),
+                    },
+                    RtpHeaderExtensionParameters {
+                        uri: RtpHeaderExtensionUri::VideoOrientation,
+                        id: 13,
+                        encrypt: false,
+                        parameters: Default::default(),
+                    },
+                ],
+                encodings: vec![
+                    RtpEncodingParameters {
+                        ssrc: Some(22222222),
+                        rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
+                        scalability_mode: Some("L1T3".to_string()),
+                        ..RtpEncodingParameters::default()
+                    },
+                    RtpEncodingParameters {
+                        ssrc: Some(22222224),
+                        rtx: Some(RtpEncodingParametersRtx { ssrc: 22222225 }),
+                        ..RtpEncodingParameters::default()
+                    },
+                    RtpEncodingParameters {
+                        ssrc: Some(22222226),
+                        rtx: Some(RtpEncodingParametersRtx { ssrc: 22222227 }),
+                        ..RtpEncodingParameters::default()
+                    },
+                    RtpEncodingParameters {
+                        ssrc: Some(22222228),
+                        rtx: Some(RtpEncodingParametersRtx { ssrc: 22222229 }),
+                        ..RtpEncodingParameters::default()
+                    },
+                ],
+                rtcp: RtcpParameters {
+                    cname: Some("video-1".to_string()),
+                    ..RtcpParameters::default()
                 },
-                RtpCodecParameters::Video {
-                    mime_type: MimeTypeVideo::RTX,
-                    payload_type: 113,
-                    clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: RtpCodecParametersParameters::from([("apt", 112u32.into())]),
-                    rtcp_feedback: vec![],
-                },
-            ];
-            parameters.header_extensions = vec![
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::SDES,
-                    id: 10,
-                    encrypt: false,
-                    parameters: Default::default(),
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::VideoOrientation,
-                    id: 13,
-                    encrypt: false,
-                    parameters: Default::default(),
-                },
-            ];
-            parameters.encodings = vec![
-                {
-                    let mut encoding = RtpEncodingParameters::default();
-                    encoding.ssrc = Some(22222222);
-                    encoding.rtx = Some(RtpEncodingParametersRtx { ssrc: 22222223 });
-                    encoding.scalability_mode = Some("L1T3".to_string());
-                    encoding
-                },
-                {
-                    let mut encoding = RtpEncodingParameters::default();
-                    encoding.ssrc = Some(22222224);
-                    encoding.rtx = Some(RtpEncodingParametersRtx { ssrc: 22222225 });
-                    encoding
-                },
-                {
-                    let mut encoding = RtpEncodingParameters::default();
-                    encoding.ssrc = Some(22222226);
-                    encoding.rtx = Some(RtpEncodingParametersRtx { ssrc: 22222227 });
-                    encoding
-                },
-                {
-                    let mut encoding = RtpEncodingParameters::default();
-                    encoding.ssrc = Some(22222228);
-                    encoding.rtx = Some(RtpEncodingParametersRtx { ssrc: 22222229 });
-                    encoding
-                },
-            ];
-            parameters.rtcp = {
-                let mut rtcp = RtcpParameters::default();
-                rtcp.cname = Some("video-1".to_string());
-                rtcp
-            };
-            parameters
-        });
+            },
+        );
 
         options.app_data = AppData::new(ProducerAppData { foo: 1, bar: "2" });
 
@@ -398,10 +395,9 @@ mod producer {
                                 rtcp_feedback: vec![],
                             },
                         ];
-                        parameters.rtcp = {
-                            let mut rtcp = RtcpParameters::default();
-                            rtcp.cname = Some("qwerty".to_string());
-                            rtcp
+                        parameters.rtcp = RtcpParameters {
+                            cname: Some("qwerty".to_string()),
+                            ..RtcpParameters::default()
                         };
                         parameters
                     }))
@@ -437,16 +433,14 @@ mod producer {
                                 rtcp_feedback: vec![],
                             },
                         ];
-                        parameters.encodings = vec![{
-                            let mut encoding = RtpEncodingParameters::default();
-                            encoding.ssrc = Some(6666);
-                            encoding.rtx = Some(RtpEncodingParametersRtx { ssrc: 6667 });
-                            encoding
+                        parameters.encodings = vec![RtpEncodingParameters {
+                            ssrc: Some(6666),
+                            rtx: Some(RtpEncodingParametersRtx { ssrc: 6667 }),
+                            ..RtpEncodingParameters::default()
                         }];
-                        parameters.rtcp = {
-                            let mut rtcp = RtcpParameters::default();
-                            rtcp.cname = Some("video-1".to_string());
-                            rtcp
+                        parameters.rtcp = RtcpParameters {
+                            cname: Some("video-1".to_string()),
+                            ..RtcpParameters::default()
                         };
                         parameters
                     }))
@@ -479,15 +473,13 @@ mod producer {
                             rtcp_feedback: vec![],
                         }];
                         parameters.header_extensions = vec![];
-                        parameters.encodings = vec![{
-                            let mut encoding = RtpEncodingParameters::default();
-                            encoding.ssrc = Some(1111);
-                            encoding
+                        parameters.encodings = vec![RtpEncodingParameters {
+                            ssrc: Some(1111),
+                            ..RtpEncodingParameters::default()
                         }];
-                        parameters.rtcp = {
-                            let mut rtcp = RtcpParameters::default();
-                            rtcp.cname = Some("audio".to_string());
-                            rtcp
+                        parameters.rtcp = RtcpParameters {
+                            cname: Some("audio".to_string()),
+                            ..RtcpParameters::default()
                         };
                         parameters
                     }))
@@ -522,11 +514,10 @@ mod producer {
                                 rtcp_feedback: vec![],
                             },
                         ];
-                        parameters.encodings = vec![{
-                            let mut encoding = RtpEncodingParameters::default();
-                            encoding.ssrc = Some(6666);
-                            encoding.rtx = Some(RtpEncodingParametersRtx { ssrc: 6667 });
-                            encoding
+                        parameters.encodings = vec![RtpEncodingParameters {
+                            ssrc: Some(6666),
+                            rtx: Some(RtpEncodingParametersRtx { ssrc: 6667 }),
+                            ..RtpEncodingParameters::default()
                         }];
                         parameters
                     }))
@@ -565,15 +556,13 @@ mod producer {
                             rtcp_feedback: vec![],
                         }];
                         parameters.header_extensions = vec![];
-                        parameters.encodings = vec![{
-                            let mut encoding = RtpEncodingParameters::default();
-                            encoding.ssrc = Some(33333333);
-                            encoding
+                        parameters.encodings = vec![RtpEncodingParameters {
+                            ssrc: Some(33333333),
+                            ..RtpEncodingParameters::default()
                         }];
-                        parameters.rtcp = {
-                            let mut rtcp = RtcpParameters::default();
-                            rtcp.cname = Some("audio-2".to_string());
-                            rtcp
+                        parameters.rtcp = RtcpParameters {
+                            cname: Some("audio-2".to_string()),
+                            ..RtcpParameters::default()
                         };
                         parameters
                     }))
@@ -600,11 +589,10 @@ mod producer {
                             parameters: RtpCodecParametersParameters::new(),
                             rtcp_feedback: vec![],
                         }];
-                        parameters.encodings = vec![{
-                            let mut encoding = RtpEncodingParameters::default();
-                            encoding.ssrc = Some(22222222);
-                            encoding.rtx = Some(RtpEncodingParametersRtx { ssrc: 6667 });
-                            encoding
+                        parameters.encodings = vec![RtpEncodingParameters {
+                            ssrc: Some(22222222),
+                            rtx: Some(RtpEncodingParametersRtx { ssrc: 6667 }),
+                            ..RtpEncodingParameters::default()
                         }];
                         parameters
                     }))
@@ -633,10 +621,9 @@ mod producer {
                     }];
                     parameters.header_extensions = vec![];
                     parameters.encodings = vec![RtpEncodingParameters::default()];
-                    parameters.rtcp = {
-                        let mut rtcp = RtcpParameters::default();
-                        rtcp.cname = Some("audio-2".to_string());
-                        rtcp
+                    parameters.rtcp = RtcpParameters {
+                        cname: Some("audio-2".to_string()),
+                        ..RtcpParameters::default()
                     };
                     parameters
                 }))
