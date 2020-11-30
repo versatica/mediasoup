@@ -1,5 +1,12 @@
 # Changelog
 
+
+### 3.6.28 (WIP)
+
+* Fix replacement of `__MEDIASOUP_VERSION__` in `lib/index.d.ts` (issue #483).
+* Update NPM deps.
+
+
 ### 3.6.27
 
 * Update NPM deps.
