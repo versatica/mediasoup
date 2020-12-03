@@ -1,5 +1,9 @@
 # Changelog
 
+### 3.6.29
+
+* Add `mips64` to support the platform of loongnix
+
 
 ### 3.6.28 (WIP)
 
