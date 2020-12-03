@@ -1,10 +1,11 @@
 # Changelog
 
 
-### 3.6.28 (WIP)
+### 3.6.28
 
 * Fix replacement of `__MEDIASOUP_VERSION__` in `lib/index.d.ts` (issue #483).
 * Update NPM deps.
+* `worker/scripts/configure.py`: Handle 'mips64' (PR #485).
 
 
 ### 3.6.27
