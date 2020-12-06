@@ -4,13 +4,16 @@ use crate::messages::{
     DataProducerInternal, DataProducerSendData, DataProducerSendNotification,
 };
 use crate::sctp_parameters::SctpStreamParameters;
-use crate::transport::Transport;
+use crate::transport::{Transport, TransportGeneric};
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationError, PayloadChannel, RequestError};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
+use parking_lot::Mutex as SyncMutex;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(DataProducerId);
@@ -101,6 +104,7 @@ pub struct DataProducerStat {
 
 #[derive(Default)]
 struct Handlers {
+    transport_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -116,6 +120,7 @@ struct Inner {
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Option<Box<dyn Transport>>,
+    _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
 }
 
 impl Drop for Inner {
@@ -178,7 +183,7 @@ pub enum DataProducer {
 
 impl DataProducer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new(
+    pub(super) async fn new<Dump, Stat, Transport>(
         id: DataProducerId,
         r#type: DataProducerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -188,12 +193,25 @@ impl DataProducer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Transport,
         direct: bool,
-    ) -> Self {
+    ) -> Self
+    where
+        Dump: Debug + DeserializeOwned + 'static,
+        Stat: Debug + DeserializeOwned + 'static,
+        Transport: TransportGeneric<Dump, Stat> + 'static,
+    {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
+        let on_transport_close_handler = transport.on_close({
+            let handlers = Arc::clone(&handlers);
+
+            move || {
+                handlers.transport_close.call_once_simple();
+                handlers.close.call_once_simple();
+            }
+        });
         let inner = Arc::new(Inner {
             id,
             r#type,
@@ -205,7 +223,8 @@ impl DataProducer {
             payload_channel,
             handlers,
             app_data,
-            transport: Some(transport),
+            transport: Some(Box::new(transport)),
+            _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
         });
 
         if direct {
@@ -270,7 +289,15 @@ impl DataProducer {
             .await
     }
 
-    // TODO: on_transport_close
+    pub fn on_transport_close<F: FnOnce() + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
+        self.inner()
+            .handlers
+            .transport_close
+            .add(Box::new(callback))
+    }
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.close.add(Box::new(callback))

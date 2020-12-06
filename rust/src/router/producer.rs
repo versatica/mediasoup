@@ -7,7 +7,7 @@ use crate::messages::{
 };
 use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
-use crate::transport::Transport;
+use crate::transport::{Transport, TransportGeneric};
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
     Channel, NotificationError, PayloadChannel, RequestError, SubscriptionHandler,
@@ -16,10 +16,12 @@ use async_executor::Executor;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
-use parking_lot::Mutex;
+use parking_lot::Mutex as SyncMutex;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
@@ -237,6 +239,7 @@ struct Handlers {
     pause: Bag<'static, dyn Fn() + Send>,
     resume: Bag<'static, dyn Fn() + Send>,
     trace: Bag<'static, dyn Fn(&ProducerTraceEventData) + Send>,
+    transport_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -247,7 +250,7 @@ struct Inner {
     rtp_parameters: RtpParameters,
     consumable_rtp_parameters: RtpParameters,
     paused: AtomicBool,
-    score: Arc<Mutex<Vec<ProducerScore>>>,
+    score: Arc<SyncMutex<Vec<ProducerScore>>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: PayloadChannel,
@@ -256,6 +259,7 @@ struct Inner {
     transport: Option<Box<dyn Transport>>,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     _subscription_handler: SubscriptionHandler,
+    _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
 }
 
 impl Drop for Inner {
@@ -318,7 +322,7 @@ pub enum Producer {
 
 impl Producer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new(
+    pub(super) async fn new<Dump, Stat, Transport>(
         id: ProducerId,
         kind: MediaKind,
         r#type: ProducerType,
@@ -329,13 +333,18 @@ impl Producer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Transport,
         direct: bool,
-    ) -> Self {
+    ) -> Self
+    where
+        Dump: Debug + DeserializeOwned + 'static,
+        Stat: Debug + DeserializeOwned + 'static,
+        Transport: TransportGeneric<Dump, Stat> + 'static,
+    {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
-        let score = Arc::<Mutex<Vec<ProducerScore>>>::default();
+        let score = Arc::<SyncMutex<Vec<ProducerScore>>>::default();
 
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
@@ -370,6 +379,14 @@ impl Producer {
                 .await
         };
 
+        let on_transport_close_handler = transport.on_close({
+            let handlers = Arc::clone(&handlers);
+
+            move || {
+                handlers.transport_close.call_once_simple();
+                handlers.close.call_once_simple();
+            }
+        });
         let inner = Arc::new(Inner {
             id,
             kind,
@@ -383,8 +400,9 @@ impl Producer {
             payload_channel,
             handlers,
             app_data,
-            transport: Some(transport),
+            transport: Some(Box::new(transport)),
             _subscription_handler: subscription_handler,
+            _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
         });
 
         if direct {
@@ -542,7 +560,15 @@ impl Producer {
         self.inner().handlers.trace.add(Box::new(callback))
     }
 
-    // TODO: on_transport_close
+    pub fn on_transport_close<F: FnOnce() + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
+        self.inner()
+            .handlers
+            .transport_close
+            .add(Box::new(callback))
+    }
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.close.add(Box::new(callback))

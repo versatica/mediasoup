@@ -7,7 +7,7 @@ use crate::messages::{
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
-use crate::transport::Transport;
+use crate::transport::{Transport, TransportGeneric};
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
     Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
@@ -16,9 +16,11 @@ use async_executor::Executor;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
-use parking_lot::Mutex;
+use parking_lot::Mutex as SyncMutex;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fmt::Debug;
 use std::sync::Arc;
 
 uuid_based_wrapper_type!(ConsumerId);
@@ -308,6 +310,7 @@ struct Handlers {
     layers_change: Bag<'static, dyn Fn(&ConsumerLayers) + Send>,
     trace: Bag<'static, dyn Fn(&ConsumerTraceEventData) + Send>,
     producer_close: Bag<'static, dyn FnOnce() + Send>,
+    transport_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -317,19 +320,20 @@ struct Inner {
     kind: MediaKind,
     r#type: ConsumerType,
     rtp_parameters: RtpParameters,
-    paused: Arc<Mutex<bool>>,
+    paused: Arc<SyncMutex<bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    producer_paused: Arc<Mutex<bool>>,
-    priority: Mutex<u8>,
-    score: Arc<Mutex<ConsumerScore>>,
-    preferred_layers: Mutex<Option<ConsumerLayers>>,
-    current_layers: Arc<Mutex<Option<ConsumerLayers>>>,
+    producer_paused: Arc<SyncMutex<bool>>,
+    priority: SyncMutex<u8>,
+    score: Arc<SyncMutex<ConsumerScore>>,
+    preferred_layers: SyncMutex<Option<ConsumerLayers>>,
+    current_layers: Arc<SyncMutex<Option<ConsumerLayers>>>,
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Option<Box<dyn Transport>>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
+    _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
 }
 
 impl Drop for Inner {
@@ -369,7 +373,7 @@ pub struct Consumer {
 
 impl Consumer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new(
+    pub(super) async fn new<Dump, Stat, Transport>(
         id: ConsumerId,
         producer_id: ProducerId,
         kind: MediaKind,
@@ -383,17 +387,22 @@ impl Consumer {
         score: ConsumerScore,
         preferred_layers: Option<ConsumerLayers>,
         app_data: AppData,
-        transport: Box<dyn Transport>,
-    ) -> Self {
+        transport: Transport,
+    ) -> Self
+    where
+        Dump: Debug + DeserializeOwned + 'static,
+        Stat: Debug + DeserializeOwned + 'static,
+        Transport: TransportGeneric<Dump, Stat> + 'static,
+    {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
-        let score = Arc::new(Mutex::new(score));
+        let score = Arc::new(SyncMutex::new(score));
         #[allow(clippy::mutex_atomic)]
-        let paused = Arc::new(Mutex::new(paused));
+        let paused = Arc::new(SyncMutex::new(paused));
         #[allow(clippy::mutex_atomic)]
-        let producer_paused = Arc::new(Mutex::new(producer_paused));
-        let current_layers = Arc::<Mutex<Option<ConsumerLayers>>>::default();
+        let producer_paused = Arc::new(SyncMutex::new(producer_paused));
+        let current_layers = Arc::<SyncMutex<Option<ConsumerLayers>>>::default();
 
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
@@ -476,6 +485,14 @@ impl Consumer {
                 .await
         };
 
+        let on_transport_close_handler = transport.on_close({
+            let handlers = Arc::clone(&handlers);
+
+            move || {
+                handlers.transport_close.call_once_simple();
+                handlers.close.call_once_simple();
+            }
+        });
         let inner = Arc::new(Inner {
             id,
             producer_id,
@@ -484,16 +501,17 @@ impl Consumer {
             rtp_parameters,
             paused,
             producer_paused,
-            priority: Mutex::new(1u8),
+            priority: SyncMutex::new(1u8),
             score,
-            preferred_layers: Mutex::new(preferred_layers),
+            preferred_layers: SyncMutex::new(preferred_layers),
             current_layers,
             executor,
             channel,
             handlers,
             app_data,
-            transport: Some(transport),
+            transport: Some(Box::new(transport)),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
+            _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
         });
 
         Self { inner }
@@ -763,7 +781,12 @@ impl Consumer {
         self.inner.handlers.producer_close.add(Box::new(callback))
     }
 
-    // TODO: on_transport_close
+    pub fn on_transport_close<F: FnOnce() + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
+        self.inner.handlers.transport_close.add(Box::new(callback))
+    }
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))

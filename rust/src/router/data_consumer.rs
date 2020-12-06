@@ -7,7 +7,7 @@ use crate::messages::{
     DataConsumerSetBufferedAmountLowThresholdRequest,
 };
 use crate::sctp_parameters::SctpStreamParameters;
-use crate::transport::Transport;
+use crate::transport::{Transport, TransportGeneric};
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
     Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
@@ -15,7 +15,10 @@ use crate::worker::{
 use async_executor::Executor;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
+use parking_lot::Mutex as SyncMutex;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 use std::sync::Arc;
 
 uuid_based_wrapper_type!(DataConsumerId);
@@ -165,6 +168,7 @@ struct Handlers {
     sctp_send_buffer_full: Bag<'static, dyn Fn() + Send>,
     buffered_amount_low: Bag<'static, dyn Fn(u32) + Send>,
     data_producer_close: Bag<'static, dyn FnOnce() + Send>,
+    transport_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -183,6 +187,7 @@ struct Inner {
     transport: Option<Box<dyn Transport>>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
+    _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
 }
 
 impl Drop for Inner {
@@ -246,7 +251,7 @@ pub enum DataConsumer {
 
 impl DataConsumer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new(
+    pub(super) async fn new<Dump, Stat, Transport>(
         id: DataConsumerId,
         r#type: DataConsumerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -257,9 +262,14 @@ impl DataConsumer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Transport,
         direct: bool,
-    ) -> Self {
+    ) -> Self
+    where
+        Dump: Debug + DeserializeOwned + 'static,
+        Stat: Debug + DeserializeOwned + 'static,
+        Transport: TransportGeneric<Dump, Stat> + 'static,
+    {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
@@ -315,6 +325,14 @@ impl DataConsumer {
                 .await
         };
 
+        let on_transport_close_handler = transport.on_close({
+            let handlers = Arc::clone(&handlers);
+
+            move || {
+                handlers.transport_close.call_once_simple();
+                handlers.close.call_once_simple();
+            }
+        });
         let inner = Arc::new(Inner {
             id,
             r#type,
@@ -327,8 +345,9 @@ impl DataConsumer {
             payload_channel,
             handlers,
             app_data,
-            transport: Some(transport),
+            transport: Some(Box::new(transport)),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
+            _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
         });
 
         if direct {
@@ -469,7 +488,15 @@ impl DataConsumer {
             .add(Box::new(callback))
     }
 
-    // TODO: on_transport_close
+    pub fn on_transport_close<F: FnOnce() + Send + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId<'static> {
+        self.inner()
+            .handlers
+            .transport_close
+            .add(Box::new(callback))
+    }
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.close.add(Box::new(callback))

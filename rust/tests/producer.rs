@@ -14,7 +14,7 @@ mod producer {
     use mediasoup::webrtc_transport::{
         TransportListenIps, WebRtcTransport, WebRtcTransportOptions,
     };
-    use mediasoup::worker::WorkerSettings;
+    use mediasoup::worker::{Worker, WorkerSettings};
     use mediasoup::worker_manager::WorkerManager;
     use std::collections::{HashMap, HashSet};
     use std::env;
@@ -179,7 +179,7 @@ mod producer {
         options
     }
 
-    async fn init() -> (Router, WebRtcTransport, WebRtcTransport) {
+    async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
         {
             let mut builder = env_logger::builder();
             if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
@@ -220,13 +220,13 @@ mod producer {
             .await
             .expect("Failed to create transport1");
 
-        (router, transport_1, transport_2)
+        (worker, router, transport_1, transport_2)
     }
 
     #[test]
     fn produce_succeeds() {
         future::block_on(async move {
-            let (router, transport_1, transport_2) = init().await;
+            let (_worker, router, transport_1, transport_2) = init().await;
 
             {
                 let new_producers_count = Arc::new(AtomicUsize::new(0));
@@ -349,7 +349,7 @@ mod producer {
     #[test]
     fn produce_wrong_arguments() {
         future::block_on(async move {
-            let (_router, transport_1, _transport_2) = init().await;
+            let (_worker, _router, transport_1, _transport_2) = init().await;
 
             // Empty rtp_parameters.codecs.
             assert!(matches!(
@@ -451,7 +451,7 @@ mod producer {
     #[test]
     fn produce_unsupported_codecs() {
         future::block_on(async move {
-            let (_router, transport_1, _transport_2) = init().await;
+            let (_worker, _router, transport_1, _transport_2) = init().await;
 
             // Empty rtp_parameters.codecs.
             assert!(matches!(
@@ -528,7 +528,7 @@ mod producer {
     #[test]
     fn produce_already_used_mid_ssrc() {
         future::block_on(async move {
-            let (_router, transport_1, transport_2) = init().await;
+            let (_worker, _router, transport_1, transport_2) = init().await;
 
             {
                 let _first_producer = transport_1
@@ -599,7 +599,7 @@ mod producer {
     #[test]
     fn produce_no_mid_single_encoding_without_dir_or_ssrc() {
         future::block_on(async move {
-            let (_router, transport_1, _transport_2) = init().await;
+            let (_worker, _router, transport_1, _transport_2) = init().await;
 
             let produce_result = transport_1
                 .produce(ProducerOptions::new(MediaKind::Audio, {
@@ -629,7 +629,7 @@ mod producer {
     #[test]
     fn dump_succeeds() {
         future::block_on(async move {
-            let (_router, transport_1, transport_2) = init().await;
+            let (_worker, _router, transport_1, transport_2) = init().await;
 
             {
                 let audio_producer = transport_1
@@ -742,7 +742,7 @@ mod producer {
     #[test]
     fn get_stats_succeeds() {
         future::block_on(async move {
-            let (_router, transport_1, transport_2) = init().await;
+            let (_worker, _router, transport_1, transport_2) = init().await;
 
             {
                 let audio_producer = transport_1
@@ -777,7 +777,7 @@ mod producer {
     #[test]
     fn pause_resume_succeeds() {
         future::block_on(async move {
-            let (_router, transport_1, _transport_2) = init().await;
+            let (_worker, _router, transport_1, _transport_2) = init().await;
 
             let audio_producer = transport_1
                 .produce(audio_producer_options())
@@ -821,7 +821,7 @@ mod producer {
     #[test]
     fn enable_trace_event_succeeds() {
         future::block_on(async move {
-            let (_router, transport_1, _transport_2) = init().await;
+            let (_worker, _router, transport_1, _transport_2) = init().await;
 
             let audio_producer = transport_1
                 .produce(audio_producer_options())
@@ -864,7 +864,7 @@ mod producer {
     #[test]
     fn close_event() {
         future::block_on(async move {
-            let (router, transport_1, _transport_2) = init().await;
+            let (_worker, router, transport_1, _transport_2) = init().await;
 
             let audio_producer = transport_1
                 .produce(audio_producer_options())
@@ -897,6 +897,37 @@ mod producer {
                 assert_eq!(dump.producer_ids, vec![]);
                 assert_eq!(dump.consumer_ids, vec![]);
             }
+        });
+    }
+
+    #[test]
+    fn transport_close_event() {
+        future::block_on(async move {
+            let (worker, _router, transport_1, _transport_2) = init().await;
+
+            let audio_producer = transport_1
+                .produce(audio_producer_options())
+                .await
+                .expect("Failed to produce audio");
+
+            let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+            let _handler = audio_producer.on_close(move || {
+                let _ = close_tx.send(());
+            });
+
+            let (transport_close_tx, transport_close_rx) = async_oneshot::oneshot::<()>();
+            let _handler = audio_producer.on_transport_close(move || {
+                let _ = transport_close_tx.send(());
+            });
+
+            unsafe {
+                libc::kill(worker.pid() as i32, libc::SIGINT);
+            }
+
+            transport_close_rx
+                .await
+                .expect("Failed to receive transport_close event");
+            close_rx.await.expect("Failed to receive close event");
         });
     }
 }

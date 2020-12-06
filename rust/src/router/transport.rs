@@ -150,7 +150,7 @@ where
 }
 
 #[async_trait(?Send)]
-pub trait TransportGeneric<Dump, Stat>: Transport {
+pub trait TransportGeneric<Dump, Stat>: Transport + Clone {
     /// Dump Transport.
     async fn dump(&self) -> Result<Dump, RequestError>;
 
@@ -237,7 +237,7 @@ pub(super) trait TransportImpl<Dump, Stat>
 where
     Dump: Debug + DeserializeOwned + 'static,
     Stat: Debug + DeserializeOwned + 'static,
-    Self: Transport + Clone + 'static,
+    Self: Transport + TransportGeneric<Dump, Stat> + 'static,
 {
     fn router(&self) -> &Router;
 
@@ -430,7 +430,7 @@ where
             self.channel().clone(),
             self.payload_channel().clone(),
             app_data,
-            Box::new(self.clone()),
+            self.clone(),
             matches!(transport_type, TransportType::Direct),
         );
 
@@ -521,7 +521,7 @@ where
             response.score,
             response.preferred_layers,
             app_data,
-            Box::new(self.clone()),
+            self.clone(),
         );
 
         Ok(consumer_fut.await)
@@ -592,7 +592,7 @@ where
             self.channel().clone(),
             self.payload_channel().clone(),
             app_data,
-            Box::new(self.clone()),
+            self.clone(),
             matches!(transport_type, TransportType::Direct),
         );
 
@@ -682,7 +682,7 @@ where
             self.channel().clone(),
             self.payload_channel().clone(),
             app_data,
-            Box::new(self.clone()),
+            self.clone(),
             matches!(transport_type, TransportType::Direct),
         );
 
