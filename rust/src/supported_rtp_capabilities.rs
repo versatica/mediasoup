@@ -247,14 +247,14 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
         header_extensions: vec![
             RtpHeaderExtension {
                 kind: Some(MediaKind::Audio),
-                uri: RtpHeaderExtensionUri::SDES,
+                uri: RtpHeaderExtensionUri::MID,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: RtpHeaderExtensionUri::SDES,
+                uri: RtpHeaderExtensionUri::MID,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,

@@ -90,16 +90,14 @@ mod consumer {
                 }],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::SDES,
+                        uri: RtpHeaderExtensionUri::MID,
                         id: 10,
                         encrypt: false,
-                        parameters: RtpCodecParametersParameters::new(),
                     },
                     RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::AudioLevel,
                         id: 12,
                         encrypt: false,
-                        parameters: RtpCodecParametersParameters::new(),
                     },
                 ],
                 encodings: vec![RtpEncodingParameters {
@@ -148,16 +146,14 @@ mod consumer {
                 ],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::SDES,
+                        uri: RtpHeaderExtensionUri::MID,
                         id: 10,
                         encrypt: false,
-                        parameters: RtpCodecParametersParameters::new(),
                     },
                     RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::VideoOrientation,
                         id: 13,
                         encrypt: false,
-                        parameters: RtpCodecParametersParameters::new(),
                     },
                 ],
                 encodings: vec![
@@ -232,14 +228,14 @@ mod consumer {
             header_extensions: vec![
                 RtpHeaderExtension {
                     kind: Some(MediaKind::Audio),
-                    uri: RtpHeaderExtensionUri::SDES,
+                    uri: RtpHeaderExtensionUri::MID,
                     preferred_id: 1,
                     preferred_encrypt: false,
                     direction: RtpHeaderExtensionDirection::default(),
                 },
                 RtpHeaderExtension {
                     kind: Some(MediaKind::Video),
-                    uri: RtpHeaderExtensionUri::SDES,
+                    uri: RtpHeaderExtensionUri::MID,
                     preferred_id: 1,
                     preferred_encrypt: false,
                     direction: RtpHeaderExtensionDirection::default(),
@@ -690,22 +686,19 @@ mod consumer {
                     dump.rtp_parameters.header_extensions,
                     vec![
                         RtpHeaderExtensionParameters {
-                            uri: RtpHeaderExtensionUri::SDES,
+                            uri: RtpHeaderExtensionUri::MID,
                             id: 1,
                             encrypt: false,
-                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::AbsSendTime,
                             id: 4,
                             encrypt: false,
-                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::AudioLevel,
                             id: 10,
                             encrypt: false,
-                            parameters: RtpCodecParametersParameters::new(),
                         },
                     ],
                 );
@@ -808,28 +801,24 @@ mod consumer {
                     dump.rtp_parameters.header_extensions,
                     vec![
                         RtpHeaderExtensionParameters {
-                            uri: RtpHeaderExtensionUri::SDES,
+                            uri: RtpHeaderExtensionUri::MID,
                             id: 1,
                             encrypt: false,
-                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::AbsSendTime,
                             id: 4,
                             encrypt: false,
-                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::VideoOrientation,
                             id: 11,
                             encrypt: false,
-                            parameters: RtpCodecParametersParameters::new(),
                         },
                         RtpHeaderExtensionParameters {
                             uri: RtpHeaderExtensionUri::TimeOffset,
                             id: 12,
                             encrypt: false,
-                            parameters: RtpCodecParametersParameters::new(),
                         },
                     ],
                 );

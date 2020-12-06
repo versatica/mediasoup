@@ -493,7 +493,7 @@ impl Default for RtpHeaderExtensionDirection {
 pub enum RtpHeaderExtensionUri {
     /// urn:ietf:params:rtp-hdrext:sdes:mid
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:mid")]
-    SDES,
+    MID,
     /// urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id")]
     RtpStreamId,
@@ -529,7 +529,7 @@ pub enum RtpHeaderExtensionUri {
 impl RtpHeaderExtensionUri {
     pub fn as_str(&self) -> &'static str {
         match self {
-            RtpHeaderExtensionUri::SDES => "urn:ietf:params:rtp-hdrext:sdes:mid",
+            RtpHeaderExtensionUri::MID => "urn:ietf:params:rtp-hdrext:sdes:mid",
             RtpHeaderExtensionUri::RtpStreamId => "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
             RtpHeaderExtensionUri::RepairRtpStreamId => {
                 "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id"
@@ -911,8 +911,9 @@ pub struct RtpHeaderExtensionParameters {
     /// If true, the value in the header is encrypted as per RFC 6904.
     /// Default false.
     pub encrypt: bool,
-    /// Configuration parameters for the header extension.
-    pub parameters: RtpCodecParametersParameters,
+    // This field is not used by mediasoup currently
+    // /// Configuration parameters for the header extension.
+    // pub parameters: RtpCodecParametersParameters,
 }
 
 /// Provides information on RTCP settings within the RTP parameters.

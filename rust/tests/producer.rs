@@ -80,16 +80,14 @@ mod producer {
                 }],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::SDES,
+                        uri: RtpHeaderExtensionUri::MID,
                         id: 10,
                         encrypt: false,
-                        parameters: Default::default(),
                     },
                     RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::AudioLevel,
                         id: 12,
                         encrypt: false,
-                        parameters: Default::default(),
                     },
                 ],
                 // Missing encodings on purpose.
@@ -136,16 +134,14 @@ mod producer {
                 ],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::SDES,
+                        uri: RtpHeaderExtensionUri::MID,
                         id: 10,
                         encrypt: false,
-                        parameters: Default::default(),
                     },
                     RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::VideoOrientation,
                         id: 13,
                         encrypt: false,
-                        parameters: Default::default(),
                     },
                 ],
                 encodings: vec![
