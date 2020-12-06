@@ -309,7 +309,7 @@ pub(crate) struct RouterCreatePlainTransportData {
 impl RouterCreatePlainTransportData {
     pub(crate) fn from_options(plain_transport_options: &PlainTransportOptions) -> Self {
         Self {
-            listen_ip: plain_transport_options.listen_ip.clone(),
+            listen_ip: plain_transport_options.listen_ip,
             rtcp_mux: plain_transport_options.rtcp_mux,
             comedia: plain_transport_options.comedia,
             enable_sctp: plain_transport_options.enable_sctp,
@@ -356,7 +356,7 @@ pub(crate) struct RouterCreatePipeTransportData {
 impl RouterCreatePipeTransportData {
     pub(crate) fn from_options(pipe_transport_options: &PipeTransportOptions) -> Self {
         Self {
-            listen_ip: pipe_transport_options.listen_ip.clone(),
+            listen_ip: pipe_transport_options.listen_ip,
             enable_sctp: pipe_transport_options.enable_sctp,
             num_sctp_streams: pipe_transport_options.num_sctp_streams,
             max_sctp_message_size: pipe_transport_options.max_sctp_message_size,

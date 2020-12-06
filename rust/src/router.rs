@@ -867,7 +867,7 @@ impl Router {
             enable_rtx,
             enable_srtp,
             app_data: Default::default(),
-            ..PipeTransportOptions::new(listen_ip.clone())
+            ..PipeTransportOptions::new(listen_ip)
         };
         let local_pipe_transport_fut = self.create_pipe_transport(transport_options.clone());
 

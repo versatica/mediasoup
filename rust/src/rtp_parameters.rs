@@ -854,7 +854,7 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
             }
         }
 
-        const FIELDS: &'static [&'static str] = &["type", "parameter"];
+        const FIELDS: &[&str] = &["type", "parameter"];
         deserializer.deserialize_struct("RtcpFeedback", FIELDS, RtcpFeedbackVisitor)
     }
 }
