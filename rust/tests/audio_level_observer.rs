@@ -2,12 +2,12 @@ mod audio_level_observer {
     use async_io::Timer;
     use futures_lite::future;
     use mediasoup::audio_level_observer::AudioLevelObserverOptions;
-    use mediasoup::router::{Router, RouterOptions};
+    use mediasoup::router::RouterOptions;
     use mediasoup::rtp_observer::RtpObserver;
     use mediasoup::rtp_parameters::{
         MimeTypeAudio, RtpCodecCapability, RtpCodecParametersParameters,
     };
-    use mediasoup::worker::WorkerSettings;
+    use mediasoup::worker::{Worker, WorkerSettings};
     use mediasoup::worker_manager::WorkerManager;
     use std::env;
     use std::num::{NonZeroU32, NonZeroU8};
@@ -29,7 +29,7 @@ mod audio_level_observer {
         }]
     }
 
-    async fn init() -> Router {
+    async fn init() -> Worker {
         {
             let mut builder = env_logger::builder();
             if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
@@ -44,21 +44,21 @@ mod audio_level_observer {
                 .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
         );
 
-        let worker = worker_manager
+        worker_manager
             .create_worker(WorkerSettings::default())
             .await
-            .expect("Failed to create worker");
-
-        worker
-            .create_router(RouterOptions::new(media_codecs()))
-            .await
-            .expect("Failed to create router")
+            .expect("Failed to create worker")
     }
 
     #[test]
     fn create() {
         future::block_on(async move {
-            let router = init().await;
+            let worker = init().await;
+
+            let router = worker
+                .create_router(RouterOptions::new(media_codecs()))
+                .await
+                .expect("Failed to create router");
 
             let new_observer_count = Arc::new(AtomicUsize::new(0));
 
@@ -92,7 +92,12 @@ mod audio_level_observer {
     #[test]
     fn pause_resume() {
         future::block_on(async move {
-            let router = init().await;
+            let worker = init().await;
+
+            let router = worker
+                .create_router(RouterOptions::new(media_codecs()))
+                .await
+                .expect("Failed to create router");
 
             let audio_level_observer = router
                 .create_audio_level_observer(AudioLevelObserverOptions::default())
@@ -111,9 +116,75 @@ mod audio_level_observer {
     }
 
     #[test]
+    fn close_event() {
+        future::block_on(async move {
+            let worker = init().await;
+
+            let router = worker
+                .create_router(RouterOptions::new(media_codecs()))
+                .await
+                .expect("Failed to create router");
+
+            let audio_level_observer = router
+                .create_audio_level_observer(AudioLevelObserverOptions::default())
+                .await
+                .expect("Failed to create AudioLevelObserver");
+
+            let (tx, rx) = async_oneshot::oneshot::<()>();
+            let _handler = audio_level_observer.on_close(move || {
+                let _ = tx.send(());
+            });
+            drop(audio_level_observer);
+
+            rx.await.expect("Failed to receive close event");
+        });
+    }
+
+    #[test]
+    fn router_close_event() {
+        future::block_on(async move {
+            let worker = init().await;
+
+            let router = worker
+                .create_router(RouterOptions::new(media_codecs()))
+                .await
+                .expect("Failed to create router");
+
+            let audio_level_observer = router
+                .create_audio_level_observer(AudioLevelObserverOptions::default())
+                .await
+                .expect("Failed to create AudioLevelObserver");
+
+            let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+            let _handler = audio_level_observer.on_close(move || {
+                let _ = close_tx.send(());
+            });
+
+            let (router_close_tx, router_close_rx) = async_oneshot::oneshot::<()>();
+            let _handler = audio_level_observer.on_router_close(move || {
+                let _ = router_close_tx.send(());
+            });
+
+            unsafe {
+                libc::kill(worker.pid() as i32, libc::SIGINT);
+            }
+
+            router_close_rx
+                .await
+                .expect("Failed to receive router_close event");
+            close_rx.await.expect("Failed to receive close event");
+        });
+    }
+
+    #[test]
     fn drop_test() {
         future::block_on(async move {
-            let router = init().await;
+            let worker = init().await;
+
+            let router = worker
+                .create_router(RouterOptions::new(media_codecs()))
+                .await
+                .expect("Failed to create router");
 
             let _audio_level_observer = router
                 .create_audio_level_observer(AudioLevelObserverOptions::default())

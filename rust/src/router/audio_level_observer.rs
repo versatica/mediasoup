@@ -9,6 +9,7 @@ use crate::router::Router;
 use crate::rtp_observer::{RtpObserver, RtpObserverAddProducerOptions, RtpObserverId};
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
+use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, HandlerId};
 use log::{debug, error};
@@ -59,6 +60,7 @@ struct Handlers {
     resume: Bag<'static, dyn Fn() + Send>,
     add_producer: Bag<'static, dyn Fn(&Producer) + Send>,
     remove_producer: Bag<'static, dyn Fn(&Producer) + Send>,
+    router_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -88,6 +90,7 @@ struct Inner {
     // Drop subscription to audio level observer-specific notifications when observer itself is
     // dropped
     _subscription_handler: SubscriptionHandler,
+    _on_router_close_handler: AsyncMutex<HandlerId<'static>>,
 }
 
 impl Drop for Inner {
@@ -287,6 +290,14 @@ impl AudioLevelObserver {
                 .await
         };
 
+        let on_router_close_handler = router.on_close({
+            let handlers = Arc::clone(&handlers);
+
+            move || {
+                handlers.router_close.call_once_simple();
+                handlers.close.call_once_simple();
+            }
+        });
         let inner = Arc::new(Inner {
             id,
             executor,
@@ -296,6 +307,7 @@ impl AudioLevelObserver {
             app_data,
             router,
             _subscription_handler: subscription_handler,
+            _on_router_close_handler: AsyncMutex::new(on_router_close_handler),
         });
 
         Self { inner }
@@ -334,7 +346,9 @@ impl AudioLevelObserver {
         self.inner.handlers.remove_producer.add(Box::new(callback))
     }
 
-    // TODO: on_transport_close
+    pub fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+        self.inner.handlers.router_close.add(Box::new(callback))
+    }
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
