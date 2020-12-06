@@ -500,7 +500,7 @@ pub enum RtpHeaderExtensionUri {
     /// urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id")]
     RepairRtpStreamId,
-    /// http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
+    /// <http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07>
     #[serde(rename = "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07")]
     FrameMarkingDraft07,
     /// urn:ietf:params:rtp-hdrext:framemarking
@@ -515,10 +515,10 @@ pub enum RtpHeaderExtensionUri {
     /// urn:ietf:params:rtp-hdrext:toffset
     #[serde(rename = "urn:ietf:params:rtp-hdrext:toffset")]
     TimeOffset,
-    /// http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
+    /// <http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01>
     #[serde(rename = "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01")]
     TransportWideCCDraft01,
-    /// http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+    /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
     AbsSendTime,
     #[doc(hidden)]
