@@ -246,7 +246,7 @@ struct Inner {
     rtp_capabilities: RtpCapabilitiesFinalized,
     channel: Channel,
     payload_channel: PayloadChannel,
-    handlers: Handlers,
+    handlers: Arc<Handlers>,
     app_data: AppData,
     producers: Arc<SyncRwLock<HashMap<ProducerId, WeakProducer>>>,
     data_producers: Arc<SyncRwLock<HashMap<DataProducerId, WeakDataProducer>>>,
@@ -255,6 +255,7 @@ struct Inner {
         Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped
     worker: Option<Worker>,
+    _on_worker_close_handler: AsyncMutex<HandlerId<'static>>,
 }
 
 impl Drop for Inner {
@@ -305,7 +306,15 @@ impl Router {
         let mapped_pipe_transports = Arc::<
             SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>,
         >::default();
-        let handlers = Handlers::default();
+        let handlers = Arc::new(Handlers::default());
+        let on_worker_close_handler = worker.on_close({
+            let handlers = Arc::clone(&handlers);
+
+            move || {
+                handlers.worker_close.call_once_simple();
+                handlers.close.call_once_simple();
+            }
+        });
         let inner = Arc::new(Inner {
             id,
             executor,
@@ -317,21 +326,9 @@ impl Router {
             data_producers,
             mapped_pipe_transports,
             app_data,
-            worker: Some(worker.clone()),
+            worker: Some(worker),
+            _on_worker_close_handler: AsyncMutex::new(on_worker_close_handler),
         });
-
-        worker
-            .on_close({
-                let inner_weak = Arc::downgrade(&inner);
-
-                move || {
-                    if let Some(inner) = inner_weak.upgrade() {
-                        inner.handlers.worker_close.call_once_simple();
-                        inner.handlers.close.call_once_simple();
-                    }
-                }
-            })
-            .detach();
 
         Self { inner }
     }
