@@ -26,6 +26,7 @@ use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::ffi::OsString;
+use std::ops::RangeInclusive;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, io};
@@ -151,10 +152,8 @@ pub struct WorkerSettings {
     /// Log tags for debugging. Check the meaning of each available tag in the Debugging
     /// documentation.
     pub log_tags: Vec<WorkerLogTag>,
-    /// Minimum RTC port for ICE, DTLS, RTP, etc. Default 10000.
-    pub rtc_min_port: u16,
-    /// Maximum RTC port for ICE, DTLS, RTP, etc. Default 59999.
-    pub rtc_max_port: u16,
+    /// RTC ports range for ICE, DTLS, RTP, etc. Default 10000..=59999.
+    pub rtc_ports_range: RangeInclusive<u16>,
     /// DTLS certificate and private key
     pub dtls_files: Option<WorkerDtlsFiles>,
 }
@@ -165,21 +164,22 @@ impl Default for WorkerSettings {
             app_data: AppData::default(),
             log_level: WorkerLogLevel::default(),
             log_tags: Vec::new(),
-            rtc_min_port: 10000,
-            rtc_max_port: 59999,
+            rtc_ports_range: 10000..=59999,
             dtls_files: None,
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Default, Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct WorkerUpdateSettings {
-    pub log_level: WorkerLogLevel,
-    pub log_tags: Vec<WorkerLogTag>,
+    pub log_level: Option<WorkerLogLevel>,
+    pub log_tags: Option<Vec<WorkerLogTag>>,
 }
 
 #[derive(Debug, Copy, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct WorkerResourceUsage {
     /// User CPU time used (in ms).
     pub ru_utime: u64,
@@ -218,6 +218,7 @@ pub struct WorkerResourceUsage {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct WorkerDump {
     pub pid: u32,
     pub router_ids: Vec<RouterId>,
@@ -272,8 +273,7 @@ impl Inner {
             app_data,
             log_level,
             log_tags,
-            rtc_min_port,
-            rtc_max_port,
+            rtc_ports_range,
             dtls_files,
         }: WorkerSettings,
         worker_manager: WorkerManager,
@@ -296,16 +296,18 @@ impl Inner {
         };
 
         spawn_args.push(format!("--logLevel={}", log_level.as_str()).into());
-        if !log_tags.is_empty() {
-            let log_tags = log_tags
-                .iter()
-                .map(|log_tag| log_tag.as_str())
-                .collect::<Vec<_>>()
-                .join(",");
-            spawn_args.push(format!("--logTags={}", log_tags).into());
+        for log_tag in log_tags {
+            spawn_args.push(format!("--logTag={}", log_tag.as_str()).into());
         }
-        spawn_args.push(format!("--rtcMinPort={}", rtc_min_port).into());
-        spawn_args.push(format!("--rtcMaxPort={}", rtc_max_port).into());
+
+        if rtc_ports_range.is_empty() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Invalid RTC ports range",
+            ));
+        }
+        spawn_args.push(format!("--rtcMinPort={}", rtc_ports_range.start()).into());
+        spawn_args.push(format!("--rtcMaxPort={}", rtc_ports_range.end()).into());
 
         if let Some(dtls_files) = dtls_files {
             {
@@ -362,9 +364,9 @@ impl Inner {
 
         inner.setup_output_forwarding();
 
-        inner.wait_for_worker_process().await?;
-
         inner.setup_message_handling();
+
+        inner.wait_for_worker_process().await?;
 
         let status_fut = inner.child.status();
         let inner = Arc::new(inner);
@@ -384,6 +386,7 @@ impl Inner {
                             inner.handlers.dead.call_once(|callback| {
                                 callback(exit_status);
                             });
+                            inner.handlers.close.call_once_simple();
                         }
                     }
                 })
@@ -619,72 +622,5 @@ impl Worker {
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use futures_lite::future;
-    use std::thread;
-
-    fn init() {
-        {
-            let mut builder = env_logger::builder();
-            if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
-                builder.filter_level(log::LevelFilter::Off);
-            }
-            let _ = builder.is_test(true).try_init();
-        }
-    }
-
-    #[test]
-    fn worker_test() {
-        init();
-
-        let executor = Arc::new(Executor::new());
-        let (_stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
-        {
-            let executor = Arc::clone(&executor);
-            thread::spawn(move || {
-                let _ = future::block_on(executor.run(stop_receiver));
-            });
-        }
-        let worker_settings = WorkerSettings::default();
-        let worker_binary: PathBuf = env::var("MEDIASOUP_WORKER_BIN")
-            .map(Into::into)
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into());
-        future::block_on(async move {
-            let worker = Worker::new(
-                executor,
-                worker_binary.clone(),
-                worker_settings,
-                WorkerManager::new(worker_binary),
-            )
-            .await
-            .unwrap();
-
-            println!("Worker dump: {:#?}", worker.dump().await.unwrap());
-            println!(
-                "Resource usage: {:#?}",
-                worker.get_resource_usage().await.unwrap()
-            );
-            println!(
-                "Update settings: {:?}",
-                worker
-                    .update_settings(WorkerUpdateSettings {
-                        log_level: WorkerLogLevel::Debug,
-                        log_tags: Vec::new(),
-                    })
-                    .await
-                    .unwrap()
-            );
-
-            // Just to give it time to finish everything with router destruction
-            thread::sleep(std::time::Duration::from_millis(200));
-        });
-
-        // Just to give it time to finish everything
-        thread::sleep(std::time::Duration::from_millis(200));
     }
 }

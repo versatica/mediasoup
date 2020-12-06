@@ -54,9 +54,13 @@ fn smoke() {
         println!(
             "Update settings: {:?}",
             worker
-                .update_settings(WorkerUpdateSettings {
-                    log_level: WorkerLogLevel::Debug,
-                    log_tags: Vec::new(),
+                .update_settings({
+                    let mut settings = WorkerUpdateSettings::default();
+
+                    settings.log_level = Some(WorkerLogLevel::Debug);
+                    settings.log_tags = Some(vec![]);
+
+                    settings
                 })
                 .await
                 .unwrap()
