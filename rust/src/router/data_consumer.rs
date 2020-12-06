@@ -112,6 +112,7 @@ impl DataConsumerOptions {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct DataConsumerDump {
     pub id: DataConsumerId,
     pub data_producer_id: DataProducerId,
@@ -467,6 +468,8 @@ impl DataConsumer {
             .data_producer_close
             .add(Box::new(callback))
     }
+
+    // TODO: on_transport_close
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.close.add(Box::new(callback))

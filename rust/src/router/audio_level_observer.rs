@@ -334,6 +334,8 @@ impl AudioLevelObserver {
         self.inner.handlers.remove_producer.add(Box::new(callback))
     }
 
+    // TODO: on_transport_close
+
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
     }

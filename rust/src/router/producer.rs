@@ -89,6 +89,7 @@ pub struct RtpStreamRecv {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct ProducerDump {
     pub id: ProducerId,
     pub kind: MediaKind,
@@ -540,6 +541,8 @@ impl Producer {
     ) -> HandlerId<'static> {
         self.inner().handlers.trace.add(Box::new(callback))
     }
+
+    // TODO: on_transport_close
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.close.add(Box::new(callback))

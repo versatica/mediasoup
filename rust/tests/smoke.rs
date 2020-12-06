@@ -41,10 +41,11 @@ fn smoke() {
             .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
     );
 
-    let worker_settings = WorkerSettings::default();
-
     future::block_on(async move {
-        let worker = worker_manager.create_worker(worker_settings).await.unwrap();
+        let worker = worker_manager
+            .create_worker(WorkerSettings::default())
+            .await
+            .unwrap();
 
         println!("Worker dump: {:#?}", worker.dump().await.unwrap());
         println!(

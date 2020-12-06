@@ -204,6 +204,7 @@ impl From<ProduceDataError> for PipeDataProducerToRouterError {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct RouterDump {
     pub id: RouterId,
     pub map_consumer_id_producer_id: HashMap<ConsumerId, ProducerId>,
@@ -235,6 +236,7 @@ struct PipeTransportPair {
 struct Handlers {
     new_transport: Bag<'static, dyn Fn(NewTransport) + Send>,
     new_rtp_observer: Bag<'static, dyn Fn(NewRtpObserver) + Send>,
+    worker_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -315,8 +317,21 @@ impl Router {
             data_producers,
             mapped_pipe_transports,
             app_data,
-            worker: Some(worker),
+            worker: Some(worker.clone()),
         });
+
+        worker
+            .on_close({
+                let inner_weak = Arc::downgrade(&inner);
+
+                move || {
+                    if let Some(inner) = inner_weak.upgrade() {
+                        inner.handlers.worker_close.call_once_simple();
+                        inner.handlers.close.call_once_simple();
+                    }
+                }
+            })
+            .detach();
 
         Self { inner }
     }
@@ -824,6 +839,10 @@ impl Router {
         callback: F,
     ) -> HandlerId<'static> {
         self.inner.handlers.new_rtp_observer.add(Box::new(callback))
+    }
+
+    pub fn on_worker_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+        self.inner.handlers.worker_close.add(Box::new(callback))
     }
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {

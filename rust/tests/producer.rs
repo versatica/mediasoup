@@ -194,10 +194,8 @@ mod producer {
                 .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
         );
 
-        let worker_settings = WorkerSettings::default();
-
         let worker = worker_manager
-            .create_worker(worker_settings)
+            .create_worker(WorkerSettings::default())
             .await
             .expect("Failed to create worker");
 

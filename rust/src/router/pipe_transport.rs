@@ -74,6 +74,7 @@ impl PipeTransportOptions {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct PipeTransportDump {
     // Common to all Transports.
     pub id: TransportId,

@@ -137,6 +137,7 @@ pub struct ConsumableRtpEncoding {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct ConsumerDump {
     pub id: ConsumerId,
     pub kind: MediaKind,
@@ -761,6 +762,8 @@ impl Consumer {
     ) -> HandlerId<'static> {
         self.inner.handlers.producer_close.add(Box::new(callback))
     }
+
+    // TODO: on_transport_close
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))

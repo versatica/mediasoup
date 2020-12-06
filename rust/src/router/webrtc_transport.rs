@@ -125,6 +125,7 @@ impl WebRtcTransportOptions {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct WebRtcTransportDump {
     // Common to all Transports.
     pub id: TransportId,

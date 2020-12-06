@@ -79,6 +79,7 @@ pub enum DataProducerType {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct DataProducerDump {
     pub id: DataProducerId,
     pub r#type: DataProducerType,
@@ -268,6 +269,8 @@ impl DataProducer {
             })
             .await
     }
+
+    // TODO: on_transport_close
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner().handlers.close.add(Box::new(callback))

@@ -381,8 +381,6 @@ impl Inner {
                         if let Ok(exit_status) = status {
                             warn!("exit status {}", exit_status);
 
-                            // TODO: Probably propagate this down as router/transport/producer
-                            //  /consumer events
                             inner.handlers.dead.call_once(|callback| {
                                 callback(exit_status);
                             });

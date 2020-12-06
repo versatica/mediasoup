@@ -140,9 +140,11 @@ mod tests {
                 .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
         );
 
-        let worker_settings = WorkerSettings::default();
         future::block_on(async move {
-            worker_manager.create_worker(worker_settings).await.unwrap();
+            worker_manager
+                .create_worker(WorkerSettings::default())
+                .await
+                .unwrap();
         });
     }
 }

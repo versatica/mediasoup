@@ -81,6 +81,7 @@ impl PlainTransportOptions {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
+#[non_exhaustive]
 pub struct PlainTransportDump {
     // Common to all Transports.
     pub id: TransportId,
