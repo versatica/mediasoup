@@ -170,6 +170,7 @@ struct Handlers {
     rtcp_tuple: Bag<'static, dyn Fn(&TransportTuple) + Send>,
     sctp_state_change: Bag<'static, dyn Fn(SctpState) + Send>,
     trace: Bag<'static, dyn Fn(&TransportTraceEventData) + Send>,
+    router_close: Bag<'static, dyn FnOnce() + Send>,
     close: Bag<'static, dyn FnOnce() + Send>,
 }
 
@@ -200,6 +201,7 @@ struct Inner {
     router: Router,
     // Drop subscription to transport-specific notifications when transport itself is dropped
     _subscription_handler: SubscriptionHandler,
+    _on_router_close_handler: AsyncMutex<HandlerId<'static>>,
 }
 
 impl Drop for Inner {
@@ -401,6 +403,10 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
         self.inner.handlers.trace.add(Box::new(callback))
     }
 
+    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+        self.inner.handlers.router_close.add(Box::new(callback))
+    }
+
     fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
         self.inner.handlers.close.add(Box::new(callback))
     }
@@ -505,6 +511,14 @@ impl PlainTransport {
             used_used_sctp_stream_ids
         });
         let cname_for_producers = AsyncMutex::new(None);
+        let on_router_close_handler = router.on_close({
+            let handlers = Arc::clone(&handlers);
+
+            move || {
+                handlers.router_close.call_once_simple();
+                handlers.close.call_once_simple();
+            }
+        });
         let inner = Arc::new(Inner {
             id,
             next_mid_for_consumers,
@@ -518,6 +532,7 @@ impl PlainTransport {
             app_data,
             router,
             _subscription_handler: subscription_handler,
+            _on_router_close_handler: AsyncMutex::new(on_router_close_handler),
         });
 
         Self { inner }

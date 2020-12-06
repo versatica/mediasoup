@@ -183,6 +183,8 @@ pub trait TransportGeneric<Dump, Stat>: Transport {
         callback: F,
     ) -> HandlerId<'static>;
 
+    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static>;
+
     fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static>;
 }
 

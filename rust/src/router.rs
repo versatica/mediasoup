@@ -306,7 +306,7 @@ impl Router {
         let mapped_pipe_transports = Arc::<
             SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>,
         >::default();
-        let handlers = Arc::new(Handlers::default());
+        let handlers = Arc::<Handlers>::default();
         let on_worker_close_handler = worker.on_close({
             let handlers = Arc::clone(&handlers);
 
