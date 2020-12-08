@@ -1,6 +1,8 @@
 use once_cell::sync::OnceCell;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
+use thiserror::Error;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct ScalabilityMode {
@@ -19,18 +21,28 @@ impl Default for ScalabilityMode {
     }
 }
 
-pub fn parse(scalability_mode: &str) -> ScalabilityMode {
-    static SCALABILITY_MODE_REGEX: OnceCell<Regex> = OnceCell::new();
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum ParseScalabilityModeError {
+    #[error("Invalid input string")]
+    InvalidInput,
+}
 
-    SCALABILITY_MODE_REGEX
-        .get_or_init(|| Regex::new(r"^[LS]([1-9][0-9]?)T([1-9][0-9]?)(_KEY)?").unwrap())
-        .captures(scalability_mode)
-        .map(|captures| ScalabilityMode {
-            spatial_layers: captures.get(1).unwrap().as_str().parse().unwrap(),
-            temporal_layers: captures.get(2).unwrap().as_str().parse().unwrap(),
-            ksvc: captures.get(3).is_some(),
-        })
-        .unwrap_or_default()
+impl FromStr for ScalabilityMode {
+    type Err = ParseScalabilityModeError;
+
+    fn from_str(scalability_mode: &str) -> Result<Self, Self::Err> {
+        static SCALABILITY_MODE_REGEX: OnceCell<Regex> = OnceCell::new();
+
+        SCALABILITY_MODE_REGEX
+            .get_or_init(|| Regex::new(r"^[LS]([1-9][0-9]?)T([1-9][0-9]?)(_KEY)?").unwrap())
+            .captures(scalability_mode)
+            .map(|captures| ScalabilityMode {
+                spatial_layers: captures.get(1).unwrap().as_str().parse().unwrap(),
+                temporal_layers: captures.get(2).unwrap().as_str().parse().unwrap(),
+                ksvc: captures.get(3).is_some(),
+            })
+            .ok_or(ParseScalabilityModeError::InvalidInput)
+    }
 }
 
 #[cfg(test)]
@@ -40,93 +52,73 @@ mod tests {
     #[test]
     fn parse_scalability_modes() {
         assert_eq!(
-            parse("L1T3"),
-            ScalabilityMode {
+            "L1T3".parse(),
+            Ok(ScalabilityMode {
                 spatial_layers: 1,
                 temporal_layers: 3,
                 ksvc: false
-            }
+            }),
         );
 
         assert_eq!(
-            parse("L3T2_KEY"),
-            ScalabilityMode {
+            "L3T2_KEY".parse(),
+            Ok(ScalabilityMode {
                 spatial_layers: 3,
                 temporal_layers: 2,
                 ksvc: true
-            }
+            }),
         );
 
         assert_eq!(
-            parse("S2T3"),
-            ScalabilityMode {
+            "S2T3".parse(),
+            Ok(ScalabilityMode {
                 spatial_layers: 2,
                 temporal_layers: 3,
                 ksvc: false
-            }
+            }),
         );
 
         assert_eq!(
-            parse("foo"),
-            ScalabilityMode {
-                spatial_layers: 1,
-                temporal_layers: 1,
-                ksvc: false
-            }
+            "foo".parse::<ScalabilityMode>(),
+            Err(ParseScalabilityModeError::InvalidInput),
         );
 
         assert_eq!(
-            parse("ull"),
-            ScalabilityMode {
-                spatial_layers: 1,
-                temporal_layers: 1,
-                ksvc: false
-            }
+            "ull".parse::<ScalabilityMode>(),
+            Err(ParseScalabilityModeError::InvalidInput),
         );
 
         assert_eq!(
-            parse("S0T3"),
-            ScalabilityMode {
-                spatial_layers: 1,
-                temporal_layers: 1,
-                ksvc: false
-            }
+            "S0T3".parse::<ScalabilityMode>(),
+            Err(ParseScalabilityModeError::InvalidInput),
         );
 
         assert_eq!(
-            parse("S1T0"),
-            ScalabilityMode {
-                spatial_layers: 1,
-                temporal_layers: 1,
-                ksvc: false
-            }
+            "S1T0".parse::<ScalabilityMode>(),
+            Err(ParseScalabilityModeError::InvalidInput),
         );
 
         assert_eq!(
-            parse("L20T3"),
-            ScalabilityMode {
+            "L20T3".parse(),
+            Ok(ScalabilityMode {
                 spatial_layers: 20,
                 temporal_layers: 3,
                 ksvc: false
-            }
+            }),
         );
 
         assert_eq!(
-            parse("S200T3"),
-            ScalabilityMode {
-                spatial_layers: 1,
-                temporal_layers: 1,
-                ksvc: false
-            }
+            "S200T3".parse::<ScalabilityMode>(),
+            Err(ParseScalabilityModeError::InvalidInput),
         );
 
         assert_eq!(
-            parse("L4T7_KEY_SHIFT"),
-            ScalabilityMode {
+            "L4T7_KEY_SHIFT".parse(),
+            Ok(ScalabilityMode {
                 spatial_layers: 4,
                 temporal_layers: 7,
                 ksvc: true
-            }
+            }),
         );
     }
 }

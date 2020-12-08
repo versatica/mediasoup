@@ -5,7 +5,8 @@ use crate::rtp_parameters::{
     RtpEncodingParametersRtx, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
     RtpHeaderExtensionUri, RtpParameters,
 };
-use crate::{scalability_modes, supported_rtp_capabilities};
+use crate::scalability_modes::ScalabilityMode;
+use crate::supported_rtp_capabilities;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -742,8 +743,9 @@ pub(crate) fn get_consumer_rtp_parameters(
             "S{}T{}",
             consumable_params.encodings.len(),
             scalability_mode
-                .as_deref()
-                .map(scalability_modes::parse)
+                .as_ref()
+                .map(|s| s.parse::<ScalabilityMode>().ok())
+                .flatten()
                 .unwrap_or_default()
                 .temporal_layers
         ));
