@@ -437,270 +437,200 @@ namespace RTC
 		size_t len             = packet->GetPayloadLength();
 		uint64_t ts            = static_cast<uint64_t>(packet->GetTimestamp());
 		uint64_t seq           = static_cast<uint64_t>(packet->GetSequenceNumber());
-		uint32_t ssrc          = packet->GetSsrc();
-		bool isKeyFrame        = packet->IsKeyFrame();
+		bool keyframe          = packet->IsKeyFrame();
 
-		std::memset(&chunk, 0, sizeof(chunk));
-
-		if (this->GetKind() == Media::Kind::VIDEO)
-		{
-			ts = shmCtx->AdjustVideoPktTs(ts);
-			seq = shmCtx->AdjustVideoPktSeq(seq);
-		}
-		else // audio
+		if (this->GetKind() == Media::Kind::AUDIO)
 		{
 			ts = shmCtx->AdjustAudioPktTs(ts);
 			seq = shmCtx->AdjustAudioPktSeq(seq);
-		}
+			
+			// Audio NALUs are always simple
+			shmCtx->WriteAudioRtpDataToShm(data, len, seq, ts);
 
-		switch (this->GetKind())
-		{
-			/* Audio NALUs are always simple */
-			case RTC::Media::Kind::AUDIO:
+			// Update last ts and seq even if we failed to write pkt
+			shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::Media::AUDIO);
+		} // end of audio
+		else
+		{ // video
+			ts = shmCtx->AdjustVideoPktTs(ts);
+			seq = shmCtx->AdjustVideoPktSeq(seq);
+
+			uint8_t nal = *(data) & 0x1F;
+			uint8_t marker = *(pktdata + 1) & 0x80; // Marker bit indicates the last or the only NALU in this packet is the end of the picture data
+			
+			// Picture begins when timestamp is incremented. Different from the first fragment of pic data. For example:
+			// RTP STAP-A pkt contains SPS and PPS NALUs, followed by RTP pkts each containing a fragment of the actual frame. ALl pkts have the same Ts.
+			// In this case, SPS NALU begins the picture (0x00000001 is added in front), the rest of NALUs have shorter 0x000001 AnnexB headers,
+			// even the first fragmented piece.
+			bool tsIncremented = (shmCtx->IsLastVideoSeqNotSet() || (ts > shmCtx->LastVideoTs()));
+
+			// Single NALU packet
+			if (nal >= 1 && nal <= 23)
 			{
-				this->chunk.data = data;
-				this->chunk.len = len;
-				this->chunk.rtp_time = ts;
-				this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
-				this->chunk.ssrc = ssrc;
-				this->chunk.begin = this->chunk.end = 1;
-				shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::AUDIO, &chunk);
-				break;
-			} // audio
+				if (len >= 1)
+				{
+					MS_DEBUG_TAG(xcode, "single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " keyframe=%d newpic=%d marker=%d lastTs=%" PRIu64,
+						nal, len, ts, seq, keyframe, tsIncremented, marker, shmCtx->LastVideoTs());
 
-			case RTC::Media::Kind::VIDEO:
-			{
-				uint8_t nal = *(data) & 0x1F;
-				uint8_t marker = *(pktdata + 1) & 0x80; // Marker bit indicates the last or the only NALU in this packet is the end of the picture data
-				bool begin_picture = (shmCtx->IsLastVideoSeqNotSet() || (ts > shmCtx->LastVideoTs()));
+					shmCtx->WriteVideoRtpDataToShm( data, len, seq, ts,
+																					false, // not a fragment
+																					true,   // is first fragment? n/a 
+																					tsIncremented, // picture beginning
+																					(marker != 0), // picture ending
+																					keyframe);
+				}
+				else{
+					MS_WARN_TAG(xcode, "NALU data len < 1: %lu", len);
+				}
+			}
+			else
+			{	// Aggregated or fragmented NALUs
+				switch (nal)
+				{
+					// Aggregation packet. Contains several NAL units in a single RTP packet. Cannot contain fragments of NALUs.
+					// STAP-A.
+					/*
+						0                   1                   2                   3
+						0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+							+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                          RTP Header                           |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                         NALU 1 Data                           |
+						:                                                               :
+						+               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|               | NALU 2 Size                   | NALU 2 HDR    |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                         NALU 2 Data                           |
+						:                                                               :
+						|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                               :...OPTIONAL RTP padding        |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+					*/
+					case 24:
+					{
+						size_t offset{ 1 }; // Skip over STAP-A NAL header
 
-				// Single NAL unit packet
-				if (nal >= 1 && nal <= 23)
-			  {
-					if (len < 1) {
-						MS_WARN_TAG(xcode, "NALU data len < 1: %lu", len);
+						// Iterate NAL units.
+						while (offset < len - 3) // 2 bytes of NALU size and min 1 byte of NALU data
+						{
+							uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset);
+
+							if ( offset + naluSize > len) {
+								MS_WARN_TAG(xcode, "payload left to read from STAP-A is too short: %zu > %zu", offset + naluSize, len);
+								break;
+							}
+
+							offset += 2; // skip over NALU size
+							uint8_t subnal = *(data + offset) & 0x1F; // actual NAL type
+							
+							uint16_t chunksize = naluSize;
+							bool beginpicture, endpicture;
+
+							endpicture = (marker != 0);
+
+							if (tsIncremented) {
+								beginpicture = 1;
+								tsIncremented = 0; // all NALUs in aggregated pkt have same rtp ts
+							}
+							else {
+								beginpicture = 0;
+							}
+
+							MS_DEBUG_TAG(xcode, "STAP-A: NAL=%" PRIu8 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
+								subnal, len, naluSize, chunksize, ts, seq,
+								shmCtx->LastVideoTs(), keyframe, beginpicture, endpicture);
+
+							shmCtx->WriteVideoRtpDataToShm(data + offset, chunksize, seq, ts,
+																							false, // non-fragmented
+																							true, // is first fragment? n/a
+																							beginpicture,
+																							endpicture,
+																							keyframe);
+							offset += chunksize;
+						}
 						break;
 					}
 
-					//Add Annex B 0x00000001 to the beginning of this packet: overwrite 3 or 4 bytes from the PTP pkt header
-					uint16_t chunksize = len;
-					if (begin_picture)
-					{
-						data[-1] = 0x01;
-						data[-2] = 0x00;
-						data[-3] = 0x00;
-						data[-4] = 0x00;
-						data -= 4;
-						chunksize += 4;
-					}
-					else {
-						data[-1] = 0x01;
-						data[-2] = 0x00;
-						data[-3] = 0x00;
-						data -= 3;
-						chunksize += 3;
-					}
-				
-					this->chunk.data          = data;
-					this->chunk.len           = chunksize;
-					this->chunk.rtp_time      = ts;
-					this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
-					this->chunk.ssrc          = ssrc;
-					this->chunk.begin         = begin_picture;
-					this->chunk.end           = (marker != 0);
-					 
-
-					MS_DEBUG_TAG(xcode, "single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " isKeyFrame=%d begin_picture(chunk.begin)=%d marker(chunk.end)=%d lastTs=%" PRIu64,
-						nal, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq, isKeyFrame, begin_picture, marker, shmCtx->LastVideoTs());
-
-					shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &chunk, !(this->chunk.begin && this->chunk.end));
-				}
-				else {
-					switch (nal)
-					{
-						// Aggregation packet. Contains several NAL units in a single RTP packet
-						// STAP-A.
-						/*
-							0                   1                   2                   3
-							0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+					/*
+					Fragmentation unit. Single NAL unit is spreaded accross several RTP packets.
+					FU-A
+								0                   1                   2                   3
+								0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-							|                          RTP Header                           |
-							+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-							|STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
-							+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-							|                         NALU 1 Data                           |
-							:                                                               :
-							+               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-							|               | NALU 2 Size                   | NALU 2 HDR    |
-							+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-							|                         NALU 2 Data                           |
-							:                                                               :
-							|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-							|                               :...OPTIONAL RTP padding        |
-							+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-						*/
-						case 24:
+								| FU indicator  |   FU header   |                               |
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+								|                                                               |
+								|                         FU payload                            |
+								|                                                               |
+								|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+								|                               :...OPTIONAL RTP padding        |
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ */
+					case 28:
+					{
+						if (len < 3)
 						{
-							size_t offset{ 1 }; // Skip over STAP-A NAL header
-
-							// Iterate NAL units.
-							while (offset < len - 3) // need to be able to read 2 bytes of NALU size
-							{
-								uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset); 
-								if ( offset + naluSize > len) {
-									MS_WARN_TAG(xcode, "payload left to read from STAP-A is too short: %zu > %zu", offset + naluSize, len);
-									break;
-								}
-
-								offset += 2; // skip over NALU size
-								uint8_t subnal = *(data + offset) & 0x1F; // actual NAL type
-								
-								//Add Annex B
-								uint16_t chunksize = naluSize;
-								this->chunk.end = (marker != 0) && (offset + chunksize >= len - 3);
-								if (begin_picture) {
-									this->chunk.begin = 1;
-									data[offset - 1] = 0x01;
-									data[offset - 2] = 0x00;
-									data[offset - 3] = 0x00;
-									data[offset - 4] = 0x00;
-									begin_picture = 0;
-									offset -= 4;
-									chunksize += 4;
-								}
-								else {
-									this->chunk.begin = 0;
-									data[offset - 1] = 0x01;
-									data[offset - 2] = 0x00;
-									data[offset - 3] = 0x00;
-									offset -= 3;
-									chunksize += 3;
-								}
-
-								this->chunk.data          = data + offset;
-								this->chunk.len           = chunksize;
-								this->chunk.rtp_time      = ts;
-								this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
-								this->chunk.ssrc          = ssrc;
-
-								MS_DEBUG_TAG(xcode, "STAP-A: NAL=%d payloadlen=%" PRIu32 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " isKeyFrame=%d chunk.begin=%d chunk.end=%d",
-									subnal, len, naluSize, this->chunk.len, this->chunk.rtp_time, this->chunk.first_rtp_seq,
-									shmCtx->LastVideoTs(), isKeyFrame, this->chunk.begin, this->chunk.end);
-
-								shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &chunk, !(this->chunk.begin && this->chunk.end));
-								offset += chunksize;
-							}
+							MS_WARN_TAG(xcode, "FU-A payload too short");
 							break;
 						}
+						// Parse FU header octet
+						uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates the starting fragment
+						uint8_t endBit   = *(data + 1) & 0x40; // 2nd bit indicates the ending fragment
+						uint8_t fuInd    = *(data) & 0xE0;     // 3 first bytes of FU indicator, use to compose NAL header for the beginning fragment 
+						bool beginpicture, endpicture, startfragment;
+						
+						// Last 5 bits in FU header subtype of FU unit, use to compose NAL header for the beginning fragment.
+						// Sometimes packet->IsKeyFrame() may be 0 even if actually we have a key frame, so if (subnal == 5 (i.e. IDR) and startBit == 128) then this is a key frame
+						uint8_t subnal   = *(data + 1) & 0x1F;
+						if (subnal == 5)
+							keyframe = true;
 
-						/*
-						Fragmentation unit. Single NAL unit is spreaded accross several RTP packets.
-						FU-A
-									0                   1                   2                   3
-									0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-									+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-									| FU indicator  |   FU header   |                               |
-									+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-									|                                                               |
-									|                         FU payload                            |
-									|                                                               |
-									|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-									|                               :...OPTIONAL RTP padding        |
-									+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ */
-						case 28:
+						// Skip over FU indicator byte
+						size_t chunksize = len - 1;
+						data += 1;
+						
+						beginpicture = (startBit == 128) && tsIncremented; // if right after SPS and PPS then this is the first fragment but NOT the beginning of the picture i.e. 3 bytes of AnnexB
+						startfragment = (startBit == 128); 
+						endpicture = (endBit && marker) ? 1 : 0; // If endBit is true, then marker is also always true. TBD, if this is ever incorrect, then need to differentiate btw last fragment and ending frame data piece
+
+						if (startBit == 128)
 						{
-							if (len < 3)
-							{
-								MS_WARN_TAG(xcode, "FU-A payload too short");
-								break;
-							}
-							// Parse FU header octet
-							uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates the starting fragment
-							uint8_t endBit   = *(data + 1) & 0x40; // 2nd bit indicates the ending fragment
-							uint8_t fuInd    = *(data) & 0xE0;     // 3 first bytes of FU indicator, use to compose NAL header for the beginning fragment 
-							uint8_t subnal   = *(data + 1) & 0x1F; // Last 5 bits in FU header subtype of FU unit, use to compose NAL header for the beginning fragment, also if (videoNALU == 7 (SPS) && startBit == 128) then we have a key frame
-							size_t chunksize = len - 1;            // skip over FU indicator
-
-							if (startBit == 128)
-							{
-								// Write AnnexB marker and put NAL header in place of FU header
-								data[1] = fuInd + subnal;
-								if (begin_picture)
-								{
-									data[0]  = 0x01;
-									data[-1] = 0x00;
-									data[-2] = 0x00;
-									data[-3] = 0x00;
-									chunksize += 4;
-									data -= 3;
-									this->chunk.begin = 1;
-									begin_picture = 0;
-								}
-								else
-								{
-									data[0]  = 0x01;
-									data[-1] = 0x00;
-									data[-2] = 0x00;
-									chunksize += 3;
-									data -= 2;
-									this->chunk.begin  = 0;
-								}
-							}
-							else {
-								// if not the beginning fragment, discard FU indicator and FU header
-								chunksize -= 1;
-								data += 2;
-								this->chunk.begin = 0;
-							}
-
-							this->chunk.data          = data;
-							this->chunk.len           = chunksize;
-							this->chunk.rtp_time      = ts;
-							this->chunk.first_rtp_seq = this->chunk.last_rtp_seq = seq;
-							this->chunk.ssrc          = ssrc;
-							this->chunk.end           = (endBit && marker) ? 1 : 0;
-
-							MS_DEBUG_TAG(xcode, "FU-A NAL=%" PRIu8 " len=%" PRIu32 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " isKeyFrame=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " chunk.begin=%d chunk.end=%d",
-								subnal, this->chunk.len, this->chunk.rtp_time, shmCtx->LastVideoTs(), this->chunk.first_rtp_seq,
-								isKeyFrame, startBit, endBit, marker, this->chunk.begin, this->chunk.end);
-
-							shmCtx->WriteRtpDataToShm(DepLibSfuShm::Media::VIDEO, &(this->chunk), true);
-							break;
+							// Put NAL header in place of FU header
+							data[0] = fuInd + subnal;
+							//tsIncremented = 0;
 						}
-						case 25: // STAB-B
-						case 26: // MTAP-16
-						case 27: // MTAP-24
-						case 29: // FU-B
-						{
-							MS_WARN_TAG(xcode, "Unsupported NAL unit type %u in video packet", nal);
-							break;
+						else {
+							// If not the beginning fragment, skip over FU header byte
+							chunksize -= 1;
+							data += 1;
 						}
-						default: // ignore the rest
-						{
-							MS_DEBUG_TAG(xcode, "Unknown NAL unit type %u in video packet", nal);
-							break;
-						}
+
+						MS_DEBUG_TAG(xcode, "FU-A NAL=%" PRIu8 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
+							subnal, chunksize, ts, shmCtx->LastVideoTs(), seq,
+							keyframe, startBit, endBit, marker, beginpicture, endpicture);
+
+						shmCtx->WriteVideoRtpDataToShm(data, chunksize, seq, ts, true, startfragment, beginpicture, endpicture, keyframe);
+						break;
 					}
-				} // Aggregate or fragmented NALUs
-				break;
-			} // case video
+					case 25: // STAB-B
+					case 26: // MTAP-16
+					case 27: // MTAP-24
+					case 29: // FU-B
+					{
+						MS_WARN_TAG(xcode, "Unsupported NAL unit type %u in video packet", nal);
+						break;
+					}
+					default: // ignore the rest
+					{
+						MS_DEBUG_TAG(xcode, "Unknown NAL unit type %u in video packet", nal);
+						break;
+					}
+				}
+			} // Aggregated or fragmented NALUs
 
-			default:
-				break;
-		} // kind
-
-		// Update last timestamp and seqId, even if we failed to write pkt
-		switch (this->GetKind())
-		{
-			case RTC::Media::Kind::AUDIO:
-				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::Media::AUDIO);
-				break;
-			case RTC::Media::Kind::VIDEO:
-				shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::Media::VIDEO);
-				break;
-			default:
-				break;
-		}
+			shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::Media::VIDEO); // Update last ts and seq even if we failed to write pkt
+		} // end of video
 	}
 
 
@@ -922,11 +852,17 @@ namespace RTC
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 	}
 
-	void ShmConsumer::OnShmWriterReady()
+	void ShmConsumer::OnNeedToSync()
 	{
 		MS_TRACE();
 
-		MS_DEBUG_2TAGS(rtp, xcode, "shm-writer ready, consumer %s, get key frame", IsActive() ? "ready" : "not ready");
+		if (this->kind != RTC::Media::Kind::VIDEO)
+			return;
+
+		MS_DEBUG_2TAGS(rtp, xcode, "shm-writer needs kf: consumer.IsActive()=%d consumer.syncRequired=%d", IsActive(), this->syncRequired);
+
+		if (this->syncRequired)
+			return; // we have already asked for a key frame and waiting, no need to re-request
 
 		this->syncRequired = true;
 

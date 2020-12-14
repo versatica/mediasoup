@@ -38,14 +38,21 @@ namespace DepLibSfuShm
 		SHM_Q_PKT_QUEUED_OK     // added pkt data into the queue
 	};
 
+  enum AnnexB
+  {
+    NO_HEADER,
+    LONG_HEADER,
+    SHORT_HEADER
+  };
+
   // If Sender Report arrived but shm writer could not be initialized yet, we can save it and write it in as soon as shm writer is initialized
   struct MediaState
   {
-    uint64_t last_seq{ UINT64_UNSET };   // last RTP pkt sequence processed by this input
-	  uint64_t last_ts{ UINT64_UNSET };    // the timestamp of the last processed RTP message
-    uint32_t new_ssrc{ 0 };              // mapped ssrc - always generated
-    bool     sr_received{ false };       // if sender report was received
-    bool     sr_written{ false };        // if sender report was written into shm
+    uint64_t last_rtp_seq{ UINT64_UNSET }; // last RTP pkt sequence processed by this input
+	  uint64_t last_ts{ UINT64_UNSET };      // the timestamp of the last processed RTP message
+    uint32_t new_ssrc{ 0 };                // mapped ssrc - always generated
+    bool     sr_received{ false };         // if sender report was received
+    bool     sr_written{ false };          // if sender report was written into shm
     uint32_t sr_ntp_msb{ 0 };
     uint32_t sr_ntp_lsb{ 0 };
     uint64_t sr_rtp_tm{ 0 };
@@ -54,13 +61,19 @@ namespace DepLibSfuShm
   // Video NALUs queue item
 	struct ShmQueueItem
 	{
-    sfushm_av_frame_frag_t chunk;                    // Cloned data representing either a whole NALU or a fragment
-		uint8_t                store[MTU_SIZE];          // Memory to hold the cloned pkt data, won't be larger than MTU (should match RTC::MtuSize)
-    bool                   isChunkFragment{ false }; // If this is a picture's fragment (can be whole NALU or NALU's fragment)
-		bool                   isChunkStart{ false };    // The first (or only) picture's fragment
-		bool                   isChunkEnd{ false };      // Picture's last (or only) fragment
+		uint8_t                store[MTU_SIZE]{ 0 };   // Memory to hold the cloned pkt data, won't be larger than MTU (should match RTC::MtuSize)
+    uint8_t                *data{ nullptr };       // pointer to data start in store
+    size_t                 len;                    // length of data in store
+    uint64_t               seqid;                  // seq id of the item
+    uint64_t               ts;                     // RTP timestamp
+    bool                   fragment{ false };      // If this is a picture's fragment (can be whole NALU or NALU's fragment)
+    bool                   firstfragment{ false }; // Only makes sense if fragment == true; means the first picture frame's fragment in case when SPS and PPS were just sent (then SPS begins the picture)
+		bool                   beginpicture{ false };  // The first (or only) picture's fragment
+		bool                   endpicture{ false };     // Picture's last (or only) fragment
+    bool                   keyframe{ false };      // This item belongs to key frame
 
-    ShmQueueItem(sfushm_av_frame_frag_t* data, bool isfragment, bool isfragmentstart, bool isfragmentend);
+    ShmQueueItem() = default;
+    ShmQueueItem(uint8_t* data, size_t datalen, uint64_t seq, uint64_t timestamp, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
 	};
 
   // Contains shm configuration, writer context (if initialized), writer status 
@@ -70,12 +83,14 @@ namespace DepLibSfuShm
   	class Listener
 		{
 		public:
-			virtual void OnShmWriterReady() = 0;
+			virtual void OnNeedToSync() = 0;
 		};
 
   public:
     ShmCtx(): wrt_ctx(nullptr), wrt_status(SHM_WRT_UNDEFINED) {}
     ~ShmCtx();
+
+    static uint8_t* hex_dump(uint8_t *dst, uint8_t *src, size_t len);
 
     void InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio);
     void CloseShmWriterCtx(); //TBD: nobody calls it 
@@ -97,18 +112,21 @@ namespace DepLibSfuShm
     uint64_t LastVideoTs() const;
     uint64_t LastVideoSeq() const;
 
-    void WriteRtpDataToShm(Media type, sfushm_av_frame_frag_t* data, bool isChunkFragment = false);
+    void WriteAudioRtpDataToShm(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts);
+    void WriteVideoRtpDataToShm(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, bool isfragment, bool isfirstfragment, bool ispicturebegin, bool ispictureend, bool iskeyframe);
     void WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReportTs, Media kind);
     int WriteStreamMeta(std::string metadata, std::string shm);
     void WriteVideoOrientation(uint16_t rotation);
 
   private:
-    EnqueueResult Enqueue( sfushm_av_frame_frag_t* data, bool isChunkFragment);
-    void Dequeue();
-    
-    void WriteChunk(sfushm_av_frame_frag_t* data, Media kind);
+    void WriteAudioChunk(sfushm_av_frame_frag_t* data);
+    void WriteVideoChunk(ShmQueueItem* item, bool writethru, bool invalid = false);
     void WriteSR(Media kind);
 
+    EnqueueResult Enqueue(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
+    void Dequeue();
+    //void Dequeue2();
+  
 	  bool IsError(int err_code);
 	  const char* GetErrorString(int err_code);
 
@@ -121,11 +139,12 @@ namespace DepLibSfuShm
     sfushm_av_writer_init_t wrt_init;
     sfushm_av_wr_ctx_t     *wrt_ctx;        // 0 - audio, 1 - video
     ShmWriterStatus         wrt_status;
-
-    MediaState              data[2];        // 0 - audio, 1 - video
+    MediaState              media[2];       // 0 - audio, 1 - video
     Listener                *listener{ nullptr }; // can notify video consumer that shm writer is ready, and request a key frame
 
 		std::list<ShmQueueItem> videoPktBuffer; // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
+    uint64_t lastKeyFrameTs { UINT64_UNSET }; // keep track of the keyframes sitting in videoPktBuffer queue: if there is one waiting - do not re-request another
+
   	static std::unordered_map<int, const char*> errToString;
   };
 
@@ -137,37 +156,37 @@ namespace DepLibSfuShm
   { 
     return nullptr != this->wrt_ctx 
       && ShmWriterStatus::SHM_WRT_READY == this->wrt_status
-      && (kind == Media::AUDIO) ? this->data[0].sr_written : this->data[1].sr_written;
+      && (kind == Media::AUDIO) ? this->media[0].sr_written : this->media[1].sr_written;
   }
 
   inline uint64_t ShmCtx::AdjustAudioPktTs(uint64_t ts)
   {
-    if (this->data[0].last_ts != UINT64_UNSET) {
-      sfushm_av_adjust_for_overflow_32_64(this->data[0].last_ts, &ts, MAX_PTS_DELTA);
+    if (this->media[0].last_ts != UINT64_UNSET) {
+      sfushm_av_adjust_for_overflow_32_64(this->media[0].last_ts, &ts, MAX_PTS_DELTA);
     }
     return ts;
   }
 
   inline uint64_t ShmCtx::AdjustAudioPktSeq(uint64_t seq)
   {
-    if (this->data[0].last_seq != UINT64_UNSET) {
-      sfushm_av_adjust_for_overflow_16_64(this->data[0].last_seq, &seq, MAX_SEQ_DELTA);
+    if (this->media[0].last_rtp_seq != UINT64_UNSET) {
+      sfushm_av_adjust_for_overflow_16_64(this->media[0].last_rtp_seq, &seq, MAX_SEQ_DELTA);
     }
     return seq;
   }
 
   inline uint64_t ShmCtx::AdjustVideoPktTs(uint64_t ts)
   {
-    if (this->data[1].last_ts != UINT64_UNSET) {
-      sfushm_av_adjust_for_overflow_32_64(this->data[1].last_ts, &ts, MAX_PTS_DELTA);
+    if (this->media[1].last_ts != UINT64_UNSET) {
+      sfushm_av_adjust_for_overflow_32_64(this->media[1].last_ts, &ts, MAX_PTS_DELTA);
     }
     return ts;
   }
 
   inline uint64_t ShmCtx::AdjustVideoPktSeq(uint64_t seq)
   {
-    if (this->data[1].last_seq != UINT64_UNSET) {
-      sfushm_av_adjust_for_overflow_16_64(this->data[1].last_seq, &seq, MAX_SEQ_DELTA);
+    if (this->media[1].last_rtp_seq != UINT64_UNSET) {
+      sfushm_av_adjust_for_overflow_16_64(this->media[1].last_rtp_seq, &seq, MAX_SEQ_DELTA);
     }
     return seq;
   }
@@ -177,13 +196,13 @@ namespace DepLibSfuShm
     //No checks, just update values since we have just written that pkt's data into shm
     if (kind == Media::AUDIO)
     {
-      this->data[0].last_seq = seq;
-      this->data[0].last_ts = ts;
+      this->media[0].last_rtp_seq = seq;
+      this->media[0].last_ts = ts;
     }
     else // video
     {
-      this->data[1].last_seq = seq;
-      this->data[1].last_ts = ts;
+      this->media[1].last_rtp_seq = seq;
+      this->media[1].last_ts = ts;
     }
   }
 
@@ -194,17 +213,17 @@ namespace DepLibSfuShm
 
   inline bool ShmCtx::IsLastVideoSeqNotSet() const
   {
-      return (this->data[1].last_seq == UINT64_UNSET);
+      return (this->media[1].last_rtp_seq == UINT64_UNSET);
   }
 
   inline uint64_t ShmCtx::LastVideoTs() const
   {
-    return this->data[1].last_ts;
+    return this->media[1].last_ts;
   }
 
   inline uint64_t ShmCtx::LastVideoSeq() const
   {
-    return this->data[1].last_seq;
+    return this->media[1].last_rtp_seq;
   }
 
   inline bool ShmCtx::IsError(int err_code)
