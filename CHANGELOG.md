@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.6.29 (WIP)
+
+* Update deps.
+* Improve `EnhancedEventEmitter.safeAsPromise()` (although not used).
+
+
 ### 3.6.28
 
 * Fix replacement of `__MEDIASOUP_VERSION__` in `lib/index.d.ts` (issue #483).
