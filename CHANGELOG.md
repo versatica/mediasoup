@@ -1,8 +1,9 @@
 # Changelog
 
 
-### 3.6.29 (WIP)
+### 3.6.29
 
+* Fix wrong message about `rtcMinPort` and `rtcMaxPort`.
 * Update deps.
 * Improve `EnhancedEventEmitter.safeAsPromise()` (although not used).
 
