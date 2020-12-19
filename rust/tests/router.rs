@@ -79,7 +79,7 @@ mod router {
                 .on_new_router({
                     let new_router_count = Arc::clone(&new_router_count);
 
-                    move |_consumer| {
+                    move |_router| {
                         new_router_count.fetch_add(1, Ordering::SeqCst);
                     }
                 })

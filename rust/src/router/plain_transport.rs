@@ -96,6 +96,7 @@ pub struct PlainTransportDump {
     pub rtp_listener: RtpListener,
     pub max_message_size: usize,
     pub sctp_parameters: Option<SctpParameters>,
+    pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
     pub trace_event_types: String,
     // PlainTransport specific.

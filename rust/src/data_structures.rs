@@ -101,7 +101,7 @@ pub enum IceState {
     Closed,
 }
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum TransportTuple {
     #[serde(rename_all = "camelCase")]

@@ -140,6 +140,7 @@ pub struct WebRtcTransportDump {
     pub rtp_listener: RtpListener,
     pub max_message_size: usize,
     pub sctp_parameters: Option<SctpParameters>,
+    pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
     pub trace_event_types: String,
     // WebRtcTransport specific.
@@ -149,6 +150,7 @@ pub struct WebRtcTransportDump {
     pub ice_parameters: IceParameters,
     pub ice_role: IceRole,
     pub ice_state: IceState,
+    pub ice_selected_tuple: Option<TransportTuple>,
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
@@ -632,13 +634,13 @@ impl WebRtcTransport {
     }
 
     /// ICE parameters.
-    pub fn ice_parameters(&self) -> IceParameters {
-        self.inner.data.ice_parameters.clone()
+    pub fn ice_parameters(&self) -> &IceParameters {
+        &self.inner.data.ice_parameters
     }
 
     /// ICE candidates.
-    pub fn ice_candidates(&self) -> Vec<IceCandidate> {
-        self.inner.data.ice_candidates.clone()
+    pub fn ice_candidates(&self) -> &Vec<IceCandidate> {
+        &self.inner.data.ice_candidates
     }
 
     /// ICE state.
@@ -648,7 +650,7 @@ impl WebRtcTransport {
 
     /// ICE selected tuple.
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
-        self.inner.data.ice_selected_tuple.lock().clone()
+        *self.inner.data.ice_selected_tuple.lock()
     }
 
     /// DTLS parameters.
