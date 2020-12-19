@@ -433,6 +433,7 @@ request_response_generic!(
 );
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct TransportConnectRequestWebRtcData {
     pub(crate) dtls_parameters: DtlsParameters,
 }

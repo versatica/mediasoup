@@ -191,6 +191,7 @@ pub struct WebRtcTransportStat {
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportRemoteParameters {
     pub dtls_parameters: DtlsParameters,
 }

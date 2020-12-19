@@ -156,6 +156,8 @@ impl Default for DtlsRole {
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 pub struct DtlsFingerprint {
+    // TODO: Algorithm should likely be an enum, or the whole DtlsFingerprint an enum with only
+    //  known algorithms supported and fixed size for fingerprints
     pub algorithm: String,
     pub value: String,
 }

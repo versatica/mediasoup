@@ -1,9 +1,11 @@
 mod webrtc_transport {
     use futures_lite::future;
     use mediasoup::data_structures::{
-        AppData, DtlsRole, DtlsState, IceCandidateTcpType, IceCandidateType, IceRole, IceState,
-        SctpState, TransportListenIp, TransportProtocol,
+        AppData, DtlsFingerprint, DtlsParameters, DtlsRole, DtlsState, IceCandidateTcpType,
+        IceCandidateType, IceRole, IceState, SctpState, TransportListenIp, TransportProtocol,
     };
+    use mediasoup::router::transport::TransportTraceEventType;
+    use mediasoup::router::webrtc_transport::WebRtcTransportRemoteParameters;
     use mediasoup::router::{Router, RouterOptions};
     use mediasoup::rtp_parameters::{
         MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
@@ -178,7 +180,7 @@ mod webrtc_transport {
                         port: 5000,
                         os: 2048,
                         mis: 2048,
-                        max_message_size: 1000000
+                        max_message_size: 1000000,
                     }),
                 );
                 {
@@ -315,6 +317,158 @@ mod webrtc_transport {
             assert_eq!(stats[0].probation_send_bitrate, 0);
             assert_eq!(stats[0].ice_selected_tuple, None);
             assert_eq!(stats[0].max_incoming_bitrate, None);
+        });
+    }
+
+    #[test]
+    fn connect_succeeds() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            let transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    },
+                )))
+                .await
+                .expect("Failed to create WebRTC transport");
+
+            let dtls_parameters = DtlsParameters { role: DtlsRole::Client, fingerprints: vec![DtlsFingerprint { algorithm: "sha-256".to_string(), value: "82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD".to_string() }] };
+
+            transport
+                .connect(WebRtcTransportRemoteParameters {
+                    dtls_parameters: dtls_parameters.clone(),
+                })
+                .await
+                .expect("Failed to establish WebRTC connection");
+
+            // Must fail if connected.
+            assert!(matches!(
+                transport
+                    .connect(WebRtcTransportRemoteParameters { dtls_parameters })
+                    .await,
+                Err(RequestError::Response { .. }),
+            ));
+
+            assert_eq!(transport.dtls_parameters().role, DtlsRole::Server);
+        });
+    }
+
+    #[test]
+    fn set_max_incoming_bitrate_succeeds() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            let transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    },
+                )))
+                .await
+                .expect("Failed to create WebRTC transport");
+
+            transport
+                .set_max_incoming_bitrate(100000)
+                .await
+                .expect("Failed to set max incoming bitrate on WebRTC transport");
+        });
+    }
+
+    #[test]
+    fn restart_ice_succeeds() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            let transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    },
+                )))
+                .await
+                .expect("Failed to create WebRTC transport");
+
+            let previous_ice_username_fragment =
+                transport.ice_parameters().username_fragment.clone();
+            let previous_ice_password = transport.ice_parameters().password.clone();
+
+            let ice_parameters = transport
+                .restart_ice()
+                .await
+                .expect("Failed to initiate ICE Restart on WebRTC transport");
+
+            assert_ne!(
+                ice_parameters.username_fragment,
+                previous_ice_username_fragment
+            );
+            assert_ne!(ice_parameters.password, previous_ice_password);
+        });
+    }
+
+    #[test]
+    fn enable_trace_event_succeeds() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            let transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    },
+                )))
+                .await
+                .expect("Failed to create WebRTC transport");
+
+            {
+                transport
+                    .enable_trace_event(vec![TransportTraceEventType::Probation])
+                    .await
+                    .expect("Failed to enable trace event");
+
+                let dump = transport
+                    .dump()
+                    .await
+                    .expect("Failed to dump WebRTC transport");
+
+                assert_eq!(dump.trace_event_types.as_str(), "probation");
+            }
+
+            {
+                transport
+                    .enable_trace_event(vec![
+                        TransportTraceEventType::Probation,
+                        TransportTraceEventType::BWE,
+                    ])
+                    .await
+                    .expect("Failed to enable trace event");
+
+                let dump = transport
+                    .dump()
+                    .await
+                    .expect("Failed to dump WebRTC transport");
+
+                assert_eq!(dump.trace_event_types.as_str(), "probation,bwe");
+            }
+
+            {
+                transport
+                    .enable_trace_event(vec![])
+                    .await
+                    .expect("Failed to enable trace event");
+
+                let dump = transport
+                    .dump()
+                    .await
+                    .expect("Failed to dump WebRTC transport");
+
+                assert_eq!(dump.trace_event_types.as_str(), "");
+            }
         });
     }
 }
