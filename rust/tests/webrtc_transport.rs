@@ -471,4 +471,66 @@ mod webrtc_transport {
             }
         });
     }
+
+    #[test]
+    fn close_event() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            let transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    },
+                )))
+                .await
+                .expect("Failed to create WebRTC transport");
+
+            let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+            let _handler = transport.on_close(move || {
+                let _ = close_tx.send(());
+            });
+
+            drop(transport);
+
+            close_rx.await.expect("Failed to receive close event");
+        });
+    }
+
+    #[test]
+    fn router_close_event() {
+        future::block_on(async move {
+            let (worker, router) = init().await;
+
+            let transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    },
+                )))
+                .await
+                .expect("Failed to create WebRTC transport");
+
+            let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+            let _handler = transport.on_close(move || {
+                let _ = close_tx.send(());
+            });
+
+            let (router_close_tx, router_close_rx) = async_oneshot::oneshot::<()>();
+            let _handler = transport.on_router_close(move || {
+                let _ = router_close_tx.send(());
+            });
+
+            unsafe {
+                libc::kill(worker.pid() as i32, libc::SIGINT);
+            }
+
+            router_close_rx
+                .await
+                .expect("Failed to receive router_close event");
+            close_rx.await.expect("Failed to receive close event");
+        });
+    }
 }
