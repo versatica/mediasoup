@@ -100,6 +100,7 @@ pub struct PipeTransportDump {
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct PipeTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here

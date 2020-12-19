@@ -93,6 +93,7 @@ pub struct DataProducerDump {
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct DataProducerStat {
     // `type` field is present in worker, but ignored here
     pub timestamp: u64,

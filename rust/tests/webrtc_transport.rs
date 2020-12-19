@@ -11,7 +11,7 @@ mod webrtc_transport {
     use mediasoup::sctp_parameters::{NumSctpStreams, SctpParameters};
     use mediasoup::transport::{Transport, TransportGeneric};
     use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
-    use mediasoup::worker::{Worker, WorkerSettings};
+    use mediasoup::worker::{RequestError, Worker, WorkerSettings};
     use mediasoup::worker_manager::WorkerManager;
     use std::collections::HashSet;
     use std::convert::TryInto;
@@ -89,7 +89,7 @@ mod webrtc_transport {
     }
 
     #[test]
-    fn create_webrtc_transport_succeeds() {
+    fn create_succeeds() {
         future::block_on(async move {
             let (_worker, router) = init().await;
 
@@ -251,6 +251,70 @@ mod webrtc_transport {
                     assert_eq!(transport_dump.sctp_state, transport1.sctp_state());
                 }
             }
+        });
+    }
+
+    #[test]
+    fn create_non_bindable_ip() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            assert!(matches!(
+                router
+                    .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                        TransportListenIp {
+                            ip: "8.8.8.8".parse().unwrap(),
+                            announced_ip: None,
+                        },
+                    )))
+                    .await,
+                Err(RequestError::Response { .. }),
+            ));
+        });
+    }
+
+    #[test]
+    fn get_stats_succeeds() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            let transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    },
+                )))
+                .await
+                .expect("Failed to create WebRTC transport");
+
+            let stats = transport
+                .get_stats()
+                .await
+                .expect("Failed to get stats on WebRTC transport");
+
+            assert_eq!(stats.len(), 1);
+            assert_eq!(stats[0].transport_id, transport.id());
+            assert_eq!(stats[0].ice_role, IceRole::Controlled);
+            assert_eq!(stats[0].ice_state, IceState::New);
+            assert_eq!(stats[0].dtls_state, DtlsState::New);
+            assert_eq!(stats[0].sctp_state, None);
+            assert_eq!(stats[0].bytes_received, 0);
+            assert_eq!(stats[0].recv_bitrate, 0);
+            assert_eq!(stats[0].bytes_sent, 0);
+            assert_eq!(stats[0].send_bitrate, 0);
+            assert_eq!(stats[0].rtp_bytes_received, 0);
+            assert_eq!(stats[0].rtp_recv_bitrate, 0);
+            assert_eq!(stats[0].rtp_bytes_sent, 0);
+            assert_eq!(stats[0].rtp_send_bitrate, 0);
+            assert_eq!(stats[0].rtx_bytes_received, 0);
+            assert_eq!(stats[0].rtx_recv_bitrate, 0);
+            assert_eq!(stats[0].rtx_bytes_sent, 0);
+            assert_eq!(stats[0].rtx_send_bitrate, 0);
+            assert_eq!(stats[0].probation_bytes_sent, 0);
+            assert_eq!(stats[0].probation_send_bitrate, 0);
+            assert_eq!(stats[0].ice_selected_tuple, None);
+            assert_eq!(stats[0].max_incoming_bitrate, None);
         });
     }
 }
