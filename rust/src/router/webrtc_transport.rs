@@ -23,12 +23,13 @@ use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, HandlerId};
 use log::*;
+use parking_lot::Mutex as SyncMutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::ops::Deref;
-use std::sync::atomic::AtomicUsize;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc, Weak};
 use thiserror::Error;
 
 /// Struct that protects an invariant of having non-empty list of listen IPs
@@ -247,6 +248,7 @@ struct Inner {
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
     router: Router,
+    closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
     _subscription_handler: SubscriptionHandler,
     _on_router_close_handler: AsyncMutex<HandlerId<'static>>,
@@ -256,26 +258,36 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.close.call_once_simple();
+        self.close();
+    }
+}
 
-        {
-            let channel = self.channel.clone();
-            let request = TransportCloseRequest {
-                internal: TransportInternal {
-                    router_id: self.router.id(),
-                    transport_id: self.id,
-                },
-            };
-            let router = self.router.clone();
-            self.executor
-                .spawn(async move {
-                    if let Err(error) = channel.request(request).await {
-                        error!("transport closing failed on drop: {}", error);
-                    }
+impl Inner {
+    fn close(&self) {
+        debug!("close()");
 
-                    drop(router);
-                })
-                .detach();
+        if !self.closed.swap(true, Ordering::SeqCst) {
+            self.handlers.close.call_once_simple();
+
+            {
+                let channel = self.channel.clone();
+                let request = TransportCloseRequest {
+                    internal: TransportInternal {
+                        router_id: self.router.id(),
+                        transport_id: self.id,
+                    },
+                };
+                let router = self.router.clone();
+                self.executor
+                    .spawn(async move {
+                        if let Err(error) = channel.request(request).await {
+                            error!("transport closing failed on drop: {}", error);
+                        }
+
+                        drop(router);
+                    })
+                    .detach();
+            }
         }
     }
 }
@@ -299,6 +311,10 @@ impl Transport for WebRtcTransport {
     /// App custom data.
     fn app_data(&self) -> &AppData {
         &self.inner.app_data
+    }
+
+    fn closed(&self) -> bool {
+        self.inner.closed.load(Ordering::SeqCst)
     }
 
     /// Create a Producer.
@@ -573,12 +589,19 @@ impl WebRtcTransport {
             used_used_sctp_stream_ids
         });
         let cname_for_producers = AsyncMutex::new(None);
+        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
         let on_router_close_handler = router.on_close({
-            let handlers = Arc::clone(&handlers);
+            let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                handlers.router_close.call_once_simple();
-                handlers.close.call_once_simple();
+                if let Some(inner) = inner_weak
+                    .lock()
+                    .as_ref()
+                    .and_then(|weak_inner| weak_inner.upgrade())
+                {
+                    inner.handlers.router_close.call_once_simple();
+                    inner.close();
+                }
             }
         });
         let inner = Arc::new(Inner {
@@ -593,9 +616,12 @@ impl WebRtcTransport {
             data,
             app_data,
             router,
+            closed: AtomicBool::new(false),
             _subscription_handler: subscription_handler,
             _on_router_close_handler: AsyncMutex::new(on_router_close_handler),
         });
+
+        inner_weak.lock().replace(Arc::downgrade(&inner));
 
         Self { inner }
     }

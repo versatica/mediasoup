@@ -30,6 +30,8 @@ pub trait RtpObserver {
     /// App custom data.
     fn app_data(&self) -> &AppData;
 
+    fn closed(&self) -> bool;
+
     /// Pause the RtpObserver.
     async fn pause(&self) -> Result<(), RequestError>;
 

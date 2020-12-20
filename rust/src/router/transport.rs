@@ -123,6 +123,8 @@ where
     /// App custom data.
     fn app_data(&self) -> &AppData;
 
+    fn closed(&self) -> bool;
+
     /// Create a Producer.
     ///
     /// Transport will be kept alive as long as at least one producer instance is alive.
