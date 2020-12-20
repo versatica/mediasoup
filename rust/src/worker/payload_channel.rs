@@ -149,7 +149,7 @@ impl PayloadChannel {
                         reader.read_exact(&mut bytes[..(length + 1)]).await?;
 
                         trace!(
-                            "received raw message: {:?}",
+                            "received raw message: {}",
                             String::from_utf8_lossy(&bytes[..length]),
                         );
 
@@ -378,7 +378,7 @@ impl PayloadChannel {
             requests_container.handlers.insert(id, result_sender);
         }
 
-        debug!("request() [method:{}, id:{}]", method, id);
+        debug!("request() [method:{}, id:{}]: {}", method, id, message);
 
         let serialized_message = serde_json::to_vec(&RequestMessagePrivate {
             id,

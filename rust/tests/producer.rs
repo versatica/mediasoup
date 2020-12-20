@@ -218,7 +218,7 @@ mod producer {
         let transport_2 = router
             .create_webrtc_transport(transport_options)
             .await
-            .expect("Failed to create transport1");
+            .expect("Failed to create transport2");
 
         (worker, router, transport_1, transport_2)
     }

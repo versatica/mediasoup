@@ -59,16 +59,43 @@ pub struct SctpParameters {
 pub struct SctpStreamParameters {
     /// SCTP stream id.
     pub(crate) stream_id: u16,
-    /// Whether data messages must be received in order. If true the messages will be sent reliably.
+    /// Whether data messages must be received in order. If `true` the messages will be sent
+    /// reliably.
     /// Default true.
     pub(crate) ordered: bool,
-    /// When ordered is false indicates the time (in milliseconds) after which a SCTP packet will
-    /// stop being retransmitted.
+    /// When `ordered` is `false` indicates the time (in milliseconds) after which a SCTP packet
+    /// will stop being retransmitted.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) max_packet_life_time: Option<u16>,
-    /// When ordered is false indicates the maximum number of times a packet will be retransmitted.
+    /// When `ordered` is `false` indicates the maximum number of times a packet will be
+    /// retransmitted.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) max_retransmits: Option<u16>,
+}
+
+impl SctpStreamParameters {
+    /// SCTP stream id.
+    pub fn stream_id(&self) -> u16 {
+        self.stream_id
+    }
+
+    /// Whether data messages must be received in order. If `true` the messages will be sent
+    /// reliably.
+    pub fn ordered(&self) -> bool {
+        self.ordered
+    }
+
+    /// When `ordered` is `false` indicates the time (in milliseconds) after which a SCTP packet
+    /// will stop being retransmitted.
+    pub fn max_packet_life_time(&self) -> Option<u16> {
+        self.max_packet_life_time
+    }
+
+    /// When `ordered` is `false` indicates the maximum number of times a packet will be
+    /// retransmitted.
+    pub fn max_retransmits(&self) -> Option<u16> {
+        self.max_retransmits
+    }
 }
 
 impl SctpStreamParameters {

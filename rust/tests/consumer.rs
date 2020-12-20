@@ -221,7 +221,7 @@ mod consumer {
                     mime_type: MimeTypeVideo::RTX,
                     preferred_payload_type: Some(102),
                     clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: RtpCodecParametersParameters::from([("apt", 112u32.into())]),
+                    parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
                     rtcp_feedback: vec![],
                 },
             ],
@@ -326,7 +326,7 @@ mod consumer {
         let transport_2 = router
             .create_webrtc_transport(transport_options)
             .await
-            .expect("Failed to create transport1");
+            .expect("Failed to create transport2");
 
         (worker, router, transport_1, transport_2)
     }

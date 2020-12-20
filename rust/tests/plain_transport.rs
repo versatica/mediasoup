@@ -269,7 +269,7 @@ mod plain_transport {
             );
             assert_eq!(transport1.srtp_parameters().unwrap().key_base64.len(), 40);
 
-            // Missing srtpParameters.
+            // Missing srtp_parameters.
             assert!(matches!(
                 transport1
                     .connect(PlainTransportRemoteParameters {
@@ -402,7 +402,7 @@ mod plain_transport {
                     srtp_parameters: None,
                 })
                 .await
-                .expect("Failed to establish Plain connection");
+                .expect("Failed to establish Plain transport connection");
 
             // Must fail if connected.
             assert!(matches!(
@@ -463,7 +463,7 @@ mod plain_transport {
                 .await
                 .expect("Failed to create Plain transport");
 
-            // No SRTP enabled so passing srtpParameters must fail.
+            // No SRTP enabled so passing srtp_parameters must fail.
             assert!(matches!(
                 transport
                     .connect(PlainTransportRemoteParameters {

@@ -1,4 +1,4 @@
-use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
+use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, EventDirection};
@@ -101,6 +101,7 @@ pub struct SctpListener {
     stream_id_table: HashMap<String, DataProducerId>,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub(super) enum TransportType {
     Direct,
     Pipe,
@@ -366,7 +367,7 @@ where
         }
 
         // Don't do this in PipeTransports since there we must keep CNAME value in each Producer.
-        if !matches!(transport_type, TransportType::Pipe) {
+        if transport_type != TransportType::Pipe {
             let mut cname_for_producers = self.cname_for_producers().lock().await;
             if let Some(cname_for_producers) = cname_for_producers.as_ref() {
                 rtp_parameters.rtcp.cname = Some(cname_for_producers.clone());
@@ -431,7 +432,7 @@ where
             self.payload_channel().clone(),
             app_data,
             self.clone(),
-            matches!(transport_type, TransportType::Direct),
+            transport_type == TransportType::Direct,
         );
 
         Ok(producer_fut.await)
@@ -461,7 +462,7 @@ where
         };
 
         // TODO: Maybe RtpParametersFinalized would be a better fit here
-        let rtp_parameters = if matches!(transport_type, TransportType::Pipe) {
+        let rtp_parameters = if transport_type == TransportType::Pipe {
             ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
         } else {
             let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
@@ -481,7 +482,11 @@ where
 
         let consumer_id = ConsumerId::new();
 
-        let r#type = producer.r#type().into();
+        let r#type = if transport_type == TransportType::Pipe {
+            ConsumerType::Pipe
+        } else {
+            producer.r#type().into()
+        };
 
         let response = self
             .channel()
@@ -593,7 +598,7 @@ where
             self.payload_channel().clone(),
             app_data,
             self.clone(),
-            matches!(transport_type, TransportType::Direct),
+            transport_type == TransportType::Direct,
         );
 
         Ok(data_producer_fut.await)
@@ -683,7 +688,7 @@ where
             self.payload_channel().clone(),
             app_data,
             self.clone(),
-            matches!(transport_type, TransportType::Direct),
+            transport_type == TransportType::Direct,
         );
 
         let data_consumer = data_consumer_fut.await;

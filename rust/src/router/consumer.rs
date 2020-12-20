@@ -418,14 +418,17 @@ impl Consumer {
                         Ok(notification) => match notification {
                             Notification::ProducerClose => {
                                 handlers.producer_close.call_once_simple();
+                                handlers.close.call_once_simple();
                             }
                             Notification::ProducerPause => {
                                 let mut producer_paused = producer_paused.lock();
                                 let was_paused = *paused.lock() || *producer_paused;
                                 *producer_paused = true;
 
+                                handlers.producer_pause.call_simple();
+
                                 if !was_paused {
-                                    handlers.producer_pause.call_simple();
+                                    handlers.pause.call_simple();
                                 }
                             }
                             Notification::ProducerResume => {
@@ -434,8 +437,10 @@ impl Consumer {
                                 let was_paused = paused || *producer_paused;
                                 *producer_paused = false;
 
+                                handlers.producer_resume.call_simple();
+
                                 if was_paused && !paused {
-                                    handlers.producer_resume.call_simple();
+                                    handlers.resume.call_simple();
                                 }
                             }
                             Notification::Score(consumer_score) => {

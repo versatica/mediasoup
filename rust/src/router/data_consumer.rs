@@ -284,6 +284,7 @@ impl DataConsumer {
                         Ok(notification) => match notification {
                             Notification::DataProducerClose => {
                                 handlers.data_producer_close.call_once_simple();
+                                handlers.close.call_once_simple();
                             }
                             Notification::SctpSendBufferFull => {
                                 handlers.sctp_send_buffer_full.call_simple();
