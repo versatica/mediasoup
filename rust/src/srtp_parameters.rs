@@ -2,11 +2,12 @@ use serde::{Deserialize, Serialize};
 
 /// SRTP parameters.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SrtpParameters {
     /// Encryption and authentication transforms to be used.
-    crypto_suite: SrtpCryptoSuite,
+    pub crypto_suite: SrtpCryptoSuite,
     /// SRTP keying material (master key and salt) in Base64.
-    key_base64: String,
+    pub key_base64: String,
 }
 
 /// SRTP crypto suite.

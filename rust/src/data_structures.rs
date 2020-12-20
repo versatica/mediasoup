@@ -105,17 +105,17 @@ pub enum IceState {
 #[serde(untagged)]
 pub enum TransportTuple {
     #[serde(rename_all = "camelCase")]
-    LocalOnly {
-        local_ip: IpAddr,
-        local_port: u16,
-        protocol: TransportProtocol,
-    },
-    #[serde(rename_all = "camelCase")]
     WithRemote {
         local_ip: IpAddr,
         local_port: u16,
         remote_ip: IpAddr,
         remote_port: u16,
+        protocol: TransportProtocol,
+    },
+    #[serde(rename_all = "camelCase")]
+    LocalOnly {
+        local_ip: IpAddr,
+        local_port: u16,
         protocol: TransportProtocol,
     },
 }

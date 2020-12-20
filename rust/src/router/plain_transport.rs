@@ -102,7 +102,7 @@ pub struct PlainTransportDump {
     // PlainTransport specific.
     pub rtcp_mux: bool,
     pub comedia: bool,
-    pub tuple: Option<TransportTuple>,
+    pub tuple: TransportTuple,
     pub rtcp_tuple: Option<TransportTuple>,
     pub srtp_parameters: Option<SrtpParameters>,
 }

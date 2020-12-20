@@ -450,9 +450,11 @@ request_response!(
 );
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct TransportConnectRequestPipeData {
     pub(crate) ip: IpAddr,
     pub(crate) port: u16,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) srtp_parameters: Option<SrtpParameters>,
 }
 
@@ -468,10 +470,15 @@ request_response!(
 );
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct TransportConnectRequestPlainData {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) ip: Option<IpAddr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) port: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) rtcp_port: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) srtp_parameters: Option<SrtpParameters>,
 }
 

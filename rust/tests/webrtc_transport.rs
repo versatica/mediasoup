@@ -4,15 +4,15 @@ mod webrtc_transport {
         AppData, DtlsFingerprint, DtlsParameters, DtlsRole, DtlsState, IceCandidateTcpType,
         IceCandidateType, IceRole, IceState, SctpState, TransportListenIp, TransportProtocol,
     };
-    use mediasoup::router::transport::TransportTraceEventType;
-    use mediasoup::router::webrtc_transport::WebRtcTransportRemoteParameters;
     use mediasoup::router::{Router, RouterOptions};
     use mediasoup::rtp_parameters::{
         MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
     };
     use mediasoup::sctp_parameters::{NumSctpStreams, SctpParameters};
-    use mediasoup::transport::{Transport, TransportGeneric};
-    use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
+    use mediasoup::transport::{Transport, TransportGeneric, TransportTraceEventType};
+    use mediasoup::webrtc_transport::{
+        TransportListenIps, WebRtcTransportOptions, WebRtcTransportRemoteParameters,
+    };
     use mediasoup::worker::{RequestError, Worker, WorkerSettings};
     use mediasoup::worker_manager::WorkerManager;
     use std::collections::HashSet;
@@ -342,7 +342,7 @@ mod webrtc_transport {
                     dtls_parameters: dtls_parameters.clone(),
                 })
                 .await
-                .expect("Failed to establish WebRTC connection");
+                .expect("Failed to establish WebRTC transport connection");
 
             // Must fail if connected.
             assert!(matches!(
