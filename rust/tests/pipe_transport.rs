@@ -1,16 +1,11 @@
 mod pipe_transport {
     use futures_lite::future;
     use mediasoup::consumer::{ConsumerOptions, ConsumerScore, ConsumerType};
-    use mediasoup::data_producer::DataProducerOptions;
-    use mediasoup::data_structures::{
-        AppData, SctpState, TransportListenIp, TransportProtocol, TransportTuple,
-    };
-    use mediasoup::pipe_transport::PipeTransportRemoteParameters;
-    use mediasoup::plain_transport::{PlainTransportOptions, PlainTransportRemoteParameters};
+    use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
+    use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
+    use mediasoup::data_structures::{AppData, TransportListenIp};
+    use mediasoup::pipe_transport::{PipeTransportOptions, PipeTransportRemoteParameters};
     use mediasoup::producer::ProducerOptions;
-    use mediasoup::router::data_consumer::{DataConsumerOptions, DataConsumerType};
-    use mediasoup::router::data_producer::DataProducerType;
-    use mediasoup::router::pipe_transport::PipeTransportOptions;
     use mediasoup::router::{
         PipeDataProducerToRouterValue, PipeProducerToRouterValue, PipeToRouterOptions, Router,
         RouterOptions,
@@ -21,24 +16,20 @@ mod pipe_transport {
         RtpEncodingParameters, RtpHeaderExtension, RtpHeaderExtensionDirection,
         RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
     };
-    use mediasoup::sctp_parameters::{SctpParameters, SctpStreamParameters};
+    use mediasoup::sctp_parameters::SctpStreamParameters;
     use mediasoup::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
-    use mediasoup::transport::{Transport, TransportGeneric};
+    use mediasoup::transport::Transport;
     use mediasoup::webrtc_transport::{
         TransportListenIps, WebRtcTransport, WebRtcTransportOptions,
     };
     use mediasoup::worker::{RequestError, Worker, WorkerSettings};
     use mediasoup::worker_manager::WorkerManager;
     use parking_lot::Mutex;
-    use std::collections::HashSet;
     use std::env;
-    use std::net::IpAddr;
     use std::num::{NonZeroU32, NonZeroU8};
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::Arc;
 
     struct CustomAppData {
-        foo: &'static str,
+        _foo: &'static str,
     }
 
     fn media_codecs() -> Vec<RtpCodecCapability> {
@@ -96,7 +87,7 @@ mod pipe_transport {
             },
         );
 
-        options.app_data = AppData::new(CustomAppData { foo: "bar1" });
+        options.app_data = AppData::new(CustomAppData { _foo: "bar1" });
 
         options
     }
@@ -155,7 +146,7 @@ mod pipe_transport {
             },
         );
 
-        options.app_data = AppData::new(CustomAppData { foo: "bar2" });
+        options.app_data = AppData::new(CustomAppData { _foo: "bar2" });
 
         options
     }

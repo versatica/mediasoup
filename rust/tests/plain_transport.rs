@@ -120,10 +120,10 @@ mod plain_transport {
 
                 router
                     .on_new_transport({
-                        let new_producers_count = Arc::clone(&new_transports_count);
+                        let new_transports_count = Arc::clone(&new_transports_count);
 
                         move |_transport| {
-                            new_producers_count.fetch_add(1, Ordering::SeqCst);
+                            new_transports_count.fetch_add(1, Ordering::SeqCst);
                         }
                     })
                     .detach();

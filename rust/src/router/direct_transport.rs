@@ -234,7 +234,7 @@ impl Transport for DirectTransport {
 
         let data_producer = self
             .produce_data_impl(
-                DataProducerType::Sctp,
+                DataProducerType::Direct,
                 data_producer_options,
                 TransportType::Direct,
             )
@@ -258,7 +258,7 @@ impl Transport for DirectTransport {
 
         let data_consumer = self
             .consume_data_impl(
-                DataConsumerType::Sctp,
+                DataConsumerType::Direct,
                 data_consumer_options,
                 TransportType::Direct,
             )
