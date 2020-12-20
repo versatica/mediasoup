@@ -21,7 +21,8 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::Debug;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(ConsumerId);
 
@@ -331,7 +332,8 @@ struct Inner {
     current_layers: Arc<SyncMutex<Option<ConsumerLayers>>>,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Option<Box<dyn Transport>>,
+    transport: Arc<Box<dyn Transport>>,
+    closed: AtomicBool,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
     _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
@@ -341,28 +343,38 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.close.call_once_simple();
+        self.close();
+    }
+}
 
-        {
-            let channel = self.channel.clone();
-            let request = ConsumerCloseRequest {
-                internal: ConsumerInternal {
-                    router_id: self.transport.as_ref().unwrap().router_id(),
-                    transport_id: self.transport.as_ref().unwrap().id(),
-                    consumer_id: self.id,
-                    producer_id: self.producer_id,
-                },
-            };
-            let transport = self.transport.take();
-            self.executor
-                .spawn(async move {
-                    if let Err(error) = channel.request(request).await {
-                        error!("consumer closing failed on drop: {}", error);
-                    }
+impl Inner {
+    fn close(&self) {
+        debug!("close()");
 
-                    drop(transport);
-                })
-                .detach();
+        if !self.closed.swap(true, Ordering::SeqCst) {
+            self.handlers.close.call_once_simple();
+
+            {
+                let channel = self.channel.clone();
+                let request = ConsumerCloseRequest {
+                    internal: ConsumerInternal {
+                        router_id: self.transport.router_id(),
+                        transport_id: self.transport.id(),
+                        consumer_id: self.id,
+                        producer_id: self.producer_id,
+                    },
+                };
+                let transport = Arc::clone(&self.transport);
+                self.executor
+                    .spawn(async move {
+                        if let Err(error) = channel.request(request).await {
+                            error!("consumer closing failed on drop: {}", error);
+                        }
+
+                        drop(transport);
+                    })
+                    .detach();
+            }
         }
     }
 }
@@ -405,12 +417,14 @@ impl Consumer {
         let producer_paused = Arc::new(SyncMutex::new(producer_paused));
         let current_layers = Arc::<SyncMutex<Option<ConsumerLayers>>>::default();
 
+        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
             let paused = Arc::clone(&paused);
             let producer_paused = Arc::clone(&producer_paused);
             let score = Arc::clone(&score);
             let current_layers = Arc::clone(&current_layers);
+            let inner_weak = Arc::clone(&inner_weak);
 
             channel
                 .subscribe_to_notifications(id.to_string(), move |notification| {
@@ -418,7 +432,13 @@ impl Consumer {
                         Ok(notification) => match notification {
                             Notification::ProducerClose => {
                                 handlers.producer_close.call_once_simple();
-                                handlers.close.call_once_simple();
+                                if let Some(inner) = inner_weak
+                                    .lock()
+                                    .as_ref()
+                                    .and_then(|weak_inner| weak_inner.upgrade())
+                                {
+                                    inner.close();
+                                }
                             }
                             Notification::ProducerPause => {
                                 let mut producer_paused = producer_paused.lock();
@@ -492,11 +512,17 @@ impl Consumer {
         };
 
         let on_transport_close_handler = transport.on_close({
-            let handlers = Arc::clone(&handlers);
+            let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                handlers.transport_close.call_once_simple();
-                handlers.close.call_once_simple();
+                if let Some(inner) = inner_weak
+                    .lock()
+                    .as_ref()
+                    .and_then(|weak_inner| weak_inner.upgrade())
+                {
+                    inner.handlers.transport_close.call_once_simple();
+                    inner.close();
+                }
             }
         });
         let inner = Arc::new(Inner {
@@ -515,10 +541,13 @@ impl Consumer {
             channel,
             handlers,
             app_data,
-            transport: Some(Box::new(transport)),
+            transport: Arc::new(Box::new(transport)),
+            closed: AtomicBool::new(false),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
             _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
         });
+
+        inner_weak.lock().replace(Arc::downgrade(&inner));
 
         Self { inner }
     }
@@ -581,6 +610,10 @@ impl Consumer {
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
+    }
+
+    pub fn closed(&self) -> bool {
+        self.inner.closed.load(Ordering::SeqCst)
     }
 
     /// Dump Consumer.
@@ -800,8 +833,8 @@ impl Consumer {
 
     fn get_internal(&self) -> ConsumerInternal {
         ConsumerInternal {
-            router_id: self.inner.transport.as_ref().unwrap().router_id(),
-            transport_id: self.inner.transport.as_ref().unwrap().id(),
+            router_id: self.inner.transport.router_id(),
+            transport_id: self.inner.transport.id(),
             consumer_id: self.inner.id,
             producer_id: self.inner.producer_id,
         }

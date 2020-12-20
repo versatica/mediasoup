@@ -257,7 +257,8 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Option<Box<dyn Transport>>,
+    transport: Arc<Box<dyn Transport>>,
+    closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     _subscription_handler: SubscriptionHandler,
     _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
@@ -267,27 +268,37 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.close.call_once_simple();
+        self.close();
+    }
+}
 
-        {
-            let channel = self.channel.clone();
-            let request = ProducerCloseRequest {
-                internal: ProducerInternal {
-                    router_id: self.transport.as_ref().unwrap().router_id(),
-                    transport_id: self.transport.as_ref().unwrap().id(),
-                    producer_id: self.id,
-                },
-            };
-            let transport = self.transport.take();
-            self.executor
-                .spawn(async move {
-                    if let Err(error) = channel.request(request).await {
-                        error!("producer closing failed on drop: {}", error);
-                    }
+impl Inner {
+    fn close(&self) {
+        debug!("close()");
 
-                    drop(transport);
-                })
-                .detach();
+        if !self.closed.swap(true, Ordering::SeqCst) {
+            self.handlers.close.call_once_simple();
+
+            {
+                let channel = self.channel.clone();
+                let request = ProducerCloseRequest {
+                    internal: ProducerInternal {
+                        router_id: self.transport.router_id(),
+                        transport_id: self.transport.id(),
+                        producer_id: self.id,
+                    },
+                };
+                let transport = Arc::clone(&self.transport);
+                self.executor
+                    .spawn(async move {
+                        if let Err(error) = channel.request(request).await {
+                            error!("producer closing failed on drop: {}", error);
+                        }
+
+                        drop(transport);
+                    })
+                    .detach();
+            }
         }
     }
 }
@@ -380,12 +391,19 @@ impl Producer {
                 .await
         };
 
+        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
         let on_transport_close_handler = transport.on_close({
-            let handlers = Arc::clone(&handlers);
+            let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                handlers.transport_close.call_once_simple();
-                handlers.close.call_once_simple();
+                if let Some(inner) = inner_weak
+                    .lock()
+                    .as_ref()
+                    .and_then(|weak_inner| weak_inner.upgrade())
+                {
+                    inner.handlers.transport_close.call_once_simple();
+                    inner.close();
+                }
             }
         });
         let inner = Arc::new(Inner {
@@ -401,10 +419,13 @@ impl Producer {
             payload_channel,
             handlers,
             app_data,
-            transport: Some(Box::new(transport)),
+            transport: Arc::new(Box::new(transport)),
+            closed: AtomicBool::new(false),
             _subscription_handler: subscription_handler,
             _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
         });
+
+        inner_weak.lock().replace(Arc::downgrade(&inner));
 
         if direct {
             Self::Direct(DirectProducer { inner })
@@ -446,6 +467,10 @@ impl Producer {
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
+    }
+
+    pub fn closed(&self) -> bool {
+        self.inner().closed.load(Ordering::SeqCst)
     }
 
     /// Dump Producer.
@@ -582,6 +607,10 @@ impl Producer {
         &self.inner().consumable_rtp_parameters
     }
 
+    pub(super) fn close(&self) {
+        self.inner().close();
+    }
+
     pub(super) fn downgrade(&self) -> WeakProducer {
         WeakProducer {
             inner: Arc::downgrade(&self.inner()),
@@ -597,8 +626,8 @@ impl Producer {
 
     fn get_internal(&self) -> ProducerInternal {
         ProducerInternal {
-            router_id: self.inner().transport.as_ref().unwrap().router_id(),
-            transport_id: self.inner().transport.as_ref().unwrap().id(),
+            router_id: self.inner().transport.router_id(),
+            transport_id: self.inner().transport.id(),
             producer_id: self.inner().id,
         }
     }
@@ -612,8 +641,8 @@ impl DirectProducer {
             .notify(
                 ProducerSendNotification {
                     internal: ProducerInternal {
-                        router_id: self.inner.transport.as_ref().unwrap().router_id(),
-                        transport_id: self.inner.transport.as_ref().unwrap().id(),
+                        router_id: self.inner.transport.router_id(),
+                        transport_id: self.inner.transport.id(),
                         producer_id: self.inner.id,
                     },
                 },

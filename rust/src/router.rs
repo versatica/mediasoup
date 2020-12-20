@@ -649,6 +649,17 @@ impl Router {
 
         // Pipe events from the pipe Consumer to the pipe Producer.
         pipe_consumer
+            .on_close({
+                let pipe_producer_weak = pipe_producer.downgrade();
+
+                move || {
+                    if let Some(pipe_producer) = pipe_producer_weak.upgrade() {
+                        let _ = pipe_producer.close();
+                    }
+                }
+            })
+            .detach();
+        pipe_consumer
             .on_pause({
                 let executor = Arc::clone(&self.inner.executor);
                 let pipe_producer_weak = pipe_producer.downgrade();
@@ -779,6 +790,18 @@ impl Router {
             })
             .await?;
 
+        // Pipe events from the pipe DataConsumer to the pipe DataProducer.
+        pipe_data_consumer
+            .on_close({
+                let pipe_data_producer_weak = pipe_data_producer.downgrade();
+
+                move || {
+                    if let Some(pipe_data_producer) = pipe_data_producer_weak.upgrade() {
+                        let _ = pipe_data_producer.close();
+                    }
+                }
+            })
+            .detach();
         // Pipe events from the pipe DataProducer to the pipe Consumer.
         pipe_data_producer
             .on_close({

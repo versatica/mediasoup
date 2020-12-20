@@ -14,6 +14,7 @@ use parking_lot::Mutex as SyncMutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(DataProducerId);
@@ -120,7 +121,8 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Option<Box<dyn Transport>>,
+    transport: Arc<Box<dyn Transport>>,
+    closed: AtomicBool,
     _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
 }
 
@@ -128,27 +130,37 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.close.call_once_simple();
+        self.close();
+    }
+}
 
-        {
-            let channel = self.channel.clone();
-            let request = DataProducerCloseRequest {
-                internal: DataProducerInternal {
-                    router_id: self.transport.as_ref().unwrap().router_id(),
-                    transport_id: self.transport.as_ref().unwrap().id(),
-                    data_producer_id: self.id,
-                },
-            };
-            let transport = self.transport.take();
-            self.executor
-                .spawn(async move {
-                    if let Err(error) = channel.request(request).await {
-                        error!("data producer closing failed on drop: {}", error);
-                    }
+impl Inner {
+    fn close(&self) {
+        debug!("close()");
 
-                    drop(transport);
-                })
-                .detach();
+        if !self.closed.swap(true, Ordering::SeqCst) {
+            self.handlers.close.call_once_simple();
+
+            {
+                let channel = self.channel.clone();
+                let request = DataProducerCloseRequest {
+                    internal: DataProducerInternal {
+                        router_id: self.transport.router_id(),
+                        transport_id: self.transport.id(),
+                        data_producer_id: self.id,
+                    },
+                };
+                let transport = Arc::clone(&self.transport);
+                self.executor
+                    .spawn(async move {
+                        if let Err(error) = channel.request(request).await {
+                            error!("data producer closing failed on drop: {}", error);
+                        }
+
+                        drop(transport);
+                    })
+                    .detach();
+            }
         }
     }
 }
@@ -205,12 +217,20 @@ impl DataProducer {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
+
+        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
         let on_transport_close_handler = transport.on_close({
-            let handlers = Arc::clone(&handlers);
+            let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                handlers.transport_close.call_once_simple();
-                handlers.close.call_once_simple();
+                if let Some(inner) = inner_weak
+                    .lock()
+                    .as_ref()
+                    .and_then(|weak_inner| weak_inner.upgrade())
+                {
+                    inner.handlers.transport_close.call_once_simple();
+                    inner.close();
+                }
             }
         });
         let inner = Arc::new(Inner {
@@ -224,9 +244,12 @@ impl DataProducer {
             payload_channel,
             handlers,
             app_data,
-            transport: Some(Box::new(transport)),
+            transport: Arc::new(Box::new(transport)),
+            closed: AtomicBool::new(false),
             _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
         });
+
+        inner_weak.lock().replace(Arc::downgrade(&inner));
 
         if direct {
             Self::Direct(DirectDataProducer { inner })
@@ -263,6 +286,10 @@ impl DataProducer {
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
+    }
+
+    pub fn closed(&self) -> bool {
+        self.inner().closed.load(Ordering::SeqCst)
     }
 
     /// Dump DataProducer.
@@ -304,6 +331,10 @@ impl DataProducer {
         self.inner().handlers.close.add(Box::new(callback))
     }
 
+    pub(super) fn close(&self) {
+        self.inner().close();
+    }
+
     pub(super) fn downgrade(&self) -> WeakDataProducer {
         WeakDataProducer {
             inner: Arc::downgrade(&self.inner()),
@@ -319,8 +350,8 @@ impl DataProducer {
 
     fn get_internal(&self) -> DataProducerInternal {
         DataProducerInternal {
-            router_id: self.inner().transport.as_ref().unwrap().router_id(),
-            transport_id: self.inner().transport.as_ref().unwrap().id(),
+            router_id: self.inner().transport.router_id(),
+            transport_id: self.inner().transport.id(),
             data_producer_id: self.inner().id,
         }
     }
@@ -336,8 +367,8 @@ impl DirectDataProducer {
             .notify(
                 DataProducerSendNotification {
                     internal: DataProducerInternal {
-                        router_id: self.inner.transport.as_ref().unwrap().router_id(),
-                        transport_id: self.inner.transport.as_ref().unwrap().id(),
+                        router_id: self.inner.transport.router_id(),
+                        transport_id: self.inner.transport.id(),
                         data_producer_id: self.inner.id,
                     },
                     data: DataProducerSendData { ppid },
