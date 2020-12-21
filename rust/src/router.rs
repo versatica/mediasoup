@@ -25,7 +25,7 @@ use crate::{ortc, uuid_based_wrapper_type};
 
 use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use crate::data_consumer::{DataConsumer, DataConsumerOptions};
+use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, WeakDataProducer};
 use crate::data_structures::{AppData, TransportListenIp, TransportTuple};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
@@ -209,8 +209,8 @@ impl From<ProduceDataError> for PipeDataProducerToRouterError {
 pub struct RouterDump {
     pub id: RouterId,
     pub map_consumer_id_producer_id: HashMap<ConsumerId, ProducerId>,
-    pub map_data_consumer_id_data_producer_id: HashMap<ConsumerId, ProducerId>,
-    pub map_data_producer_id_data_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
+    pub map_data_consumer_id_data_producer_id: HashMap<DataConsumerId, DataProducerId>,
+    pub map_data_producer_id_data_consumer_ids: HashMap<DataProducerId, HashSet<DataConsumerId>>,
     pub map_producer_id_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
     pub map_producer_id_observer_ids: HashMap<ProducerId, HashSet<RtpObserverId>>,
     pub rtp_observer_ids: HashSet<RtpObserverId>,
