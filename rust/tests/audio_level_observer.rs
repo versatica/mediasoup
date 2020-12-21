@@ -78,6 +78,7 @@ mod audio_level_observer {
                 .expect("Failed to create AudioLevelObserver");
 
             assert_eq!(new_observer_count.load(Ordering::SeqCst), 1);
+            assert_eq!(audio_level_observer.closed(), false);
             assert_eq!(audio_level_observer.paused(), false);
 
             let dump = router.dump().await.expect("Failed to get router dump");
@@ -173,6 +174,8 @@ mod audio_level_observer {
                 .await
                 .expect("Failed to receive router_close event");
             close_rx.await.expect("Failed to receive close event");
+
+            assert_eq!(audio_level_observer.closed(), true);
         });
     }
 

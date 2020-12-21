@@ -102,6 +102,7 @@ mod router {
                 .expect("Failed to create router");
 
             assert_eq!(new_router_count.load(Ordering::SeqCst), 1);
+            assert_eq!(router.closed(), false);
             assert_eq!(
                 router.app_data().downcast_ref::<CustomAppData>(),
                 Some(&CustomAppData { foo: 123 }),
@@ -168,6 +169,8 @@ mod router {
                 .await
                 .expect("Failed to receive worker_close event");
             close_rx.await.expect("Failed to receive close event");
+
+            assert_eq!(router.closed(), true);
         });
     }
 }

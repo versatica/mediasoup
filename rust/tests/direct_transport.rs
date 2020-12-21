@@ -91,6 +91,7 @@ mod direct_transport {
                 .expect("Failed to create Direct transport");
 
             assert_eq!(new_transports_count.load(Ordering::SeqCst), 1);
+            assert_eq!(transport1.closed(), false);
             assert_eq!(
                 transport1
                     .app_data()
@@ -323,6 +324,8 @@ mod direct_transport {
                 .await
                 .expect("Failed to receive router_close event");
             close_rx.await.expect("Failed to receive close event");
+
+            assert_eq!(transport.closed(), true);
         });
     }
 }

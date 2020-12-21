@@ -146,6 +146,7 @@ mod plain_transport {
                     .expect("Failed to create Plain transport");
 
                 assert_eq!(new_transports_count.load(Ordering::SeqCst), 1);
+                assert_eq!(transport1.closed(), false);
                 assert_eq!(
                     transport1
                         .app_data()
@@ -208,6 +209,8 @@ mod plain_transport {
                     .await
                     .expect("Failed to create Plain transport");
 
+                assert_eq!(transport2.closed(), false);
+                assert_eq!(transport2.app_data().downcast_ref::<()>().unwrap(), &(),);
                 assert!(matches!(transport2.tuple(), TransportTuple::LocalOnly{ .. }));
                 if let TransportTuple::LocalOnly {
                     local_ip, protocol, ..
@@ -548,6 +551,8 @@ mod plain_transport {
                 .await
                 .expect("Failed to receive router_close event");
             close_rx.await.expect("Failed to receive close event");
+
+            assert_eq!(transport.closed(), true);
         });
     }
 }

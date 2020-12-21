@@ -247,6 +247,7 @@ mod producer {
                     .expect("Failed to produce audio");
 
                 assert_eq!(new_producers_count.load(Ordering::SeqCst), 1);
+                assert_eq!(audio_producer.closed(), false);
                 assert_eq!(audio_producer.kind(), MediaKind::Audio);
                 assert_eq!(audio_producer.r#type(), ProducerType::Simple);
                 assert_eq!(audio_producer.paused(), false);
@@ -305,6 +306,7 @@ mod producer {
                     .expect("Failed to produce video");
 
                 assert_eq!(new_producers_count.load(Ordering::SeqCst), 1);
+                assert_eq!(video_producer.closed(), false);
                 assert_eq!(video_producer.kind(), MediaKind::Video);
                 assert_eq!(video_producer.r#type(), ProducerType::Simulcast);
                 assert_eq!(video_producer.paused(), false);
@@ -928,6 +930,8 @@ mod producer {
                 .await
                 .expect("Failed to receive transport_close event");
             close_rx.await.expect("Failed to receive close event");
+
+            assert_eq!(audio_producer.closed(), true);
         });
     }
 }

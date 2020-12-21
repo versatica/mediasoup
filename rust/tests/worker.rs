@@ -62,6 +62,7 @@ mod worker {
                 .await
                 .expect("Failed to create worker with custom settings");
 
+            assert_eq!(worker.closed(), false);
             assert_eq!(
                 worker.app_data().downcast_ref::<CustomAppData>(),
                 Some(&CustomAppData { bar: 456 }),
@@ -214,6 +215,8 @@ mod worker {
 
                 dead_rx.await.expect("Failed to receive dead event");
                 close_rx.await.expect("Failed to receive close event");
+
+                assert_eq!(worker.closed(), true);
             }
         });
     }

@@ -383,6 +383,7 @@ mod consumer {
 
                 assert_eq!(new_consumer_count.load(Ordering::SeqCst), 1);
                 assert_eq!(audio_consumer.producer_id(), audio_producer.id());
+                assert_eq!(audio_consumer.closed(), false);
                 assert_eq!(audio_consumer.kind(), MediaKind::Audio);
                 assert_eq!(audio_consumer.rtp_parameters().mid, Some("0".to_string()));
                 assert_eq!(
@@ -468,6 +469,7 @@ mod consumer {
 
                 assert_eq!(new_consumer_count.load(Ordering::SeqCst), 2);
                 assert_eq!(video_consumer.producer_id(), video_producer.id());
+                assert_eq!(video_consumer.closed(), false);
                 assert_eq!(video_consumer.kind(), MediaKind::Video);
                 assert_eq!(video_consumer.rtp_parameters().mid, Some("1".to_string()));
                 assert_eq!(
@@ -1255,13 +1257,24 @@ mod consumer {
                 .await
                 .expect("Failed to consume audio");
 
-            let (tx, rx) = async_oneshot::oneshot::<()>();
+            let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+            let _handler = audio_consumer.on_close(move || {
+                let _ = close_tx.send(());
+            });
+
+            let (producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
             let _handler = audio_consumer.on_producer_close(move || {
-                let _ = tx.send(());
+                let _ = producer_close_tx.send(());
             });
             drop(audio_producer);
 
-            rx.await.expect("Failed to receive producer_close event");
+            producer_close_rx
+                .await
+                .expect("Failed to receive producer_close event");
+
+            close_rx.await.expect("Failed to receive close event");
+
+            assert_eq!(audio_consumer.closed(), true);
         });
     }
 
@@ -1301,6 +1314,8 @@ mod consumer {
                 .await
                 .expect("Failed to receive transport_close event");
             close_rx.await.expect("Failed to receive close event");
+
+            assert_eq!(audio_consumer.closed(), true);
         });
     }
 }
