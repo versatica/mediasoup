@@ -331,11 +331,11 @@ namespace RTC
 // Uncomment for NACK test simulation
 /*		if (this->TestNACK(packet))
 		{
-			MS_DEBUG_TAG(rtp, "Pretend NACK for packet ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
+			MS_DEBUG_TAG(rtp, "Pretend NACK ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
 			packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
 			return;
-		}*/
-
+		}
+*/
 // End of NACK test simulation
 
 		if (shmCtx->CanWrite((this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO))
@@ -360,10 +360,10 @@ namespace RTC
 
 	bool ShmConsumer::TestNACK(RTC::RtpPacket* packet)
 	{
-		if (this->GetKind() != RTC::Media::Kind::VIDEO)
+/*		if (this->GetKind() != RTC::Media::Kind::VIDEO)
 			return false; // not video
 	//Uncomment for NACK test simulation
-/*
+
 		uint64_t nowTs = DepLibUV::GetTimeMs();
 		if (nowTs - this->lastNACKTestTs < 3000)
 			return false; // too soon
@@ -384,16 +384,16 @@ namespace RTC
 		if (it != nackPacket.End())
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;	
-			MS_DEBUG_TAG(rtp,"TestNACK, nackPacket is NOT EMPTY");
+			MS_DEBUG_TAG(rtp,"NACK packet NOT EMPTY");
 			item->Dump();		
 		}
 		else {
-			MS_DEBUG_TAG(rtp,"TestNACK, nackPacket is EMPTY");
+			MS_DEBUG_TAG(rtp,"NACK packet EMPTY");
 		}
 
 		this->ReceiveNack(&nackPacket);
 */
-		return true;
+		return true; 
 	}
 // End of NACK test simulation
 
@@ -472,7 +472,7 @@ namespace RTC
 					MS_DEBUG_TAG(xcode, "single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " keyframe=%d newpic=%d marker=%d lastTs=%" PRIu64,
 						nal, len, ts, seq, keyframe, tsIncremented, marker, shmCtx->LastVideoTs());
 
-					shmCtx->WriteVideoRtpDataToShm( data, len, seq, ts,
+					shmCtx->WriteVideoRtpDataToShm( data, len, seq, ts, nal,
 																					false, // not a fragment
 																					true,   // is first fragment? n/a 
 																					tsIncremented, // picture beginning
@@ -538,11 +538,11 @@ namespace RTC
 								beginpicture = 0;
 							}
 
-							MS_DEBUG_TAG(xcode, "STAP-A: NAL=%" PRIu8 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " seq=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
-								subnal, len, naluSize, chunksize, ts, seq,
+							MS_DEBUG_TAG(xcode, "STAP-A: NAL=%" PRIu8 " seq=%" PRIu64 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
+								subnal, seq, len, naluSize, chunksize, ts,
 								shmCtx->LastVideoTs(), keyframe, beginpicture, endpicture);
 
-							shmCtx->WriteVideoRtpDataToShm(data + offset, chunksize, seq, ts,
+							shmCtx->WriteVideoRtpDataToShm(data + offset, chunksize, seq, ts, subnal,
 																							false, // non-fragmented
 																							true, // is first fragment? n/a
 																							beginpicture,
@@ -606,11 +606,9 @@ namespace RTC
 							data += 1;
 						}
 
-						MS_DEBUG_TAG(xcode, "FU-A NAL=%" PRIu8 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " seq=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
-							subnal, chunksize, ts, shmCtx->LastVideoTs(), seq,
-							keyframe, startBit, endBit, marker, beginpicture, endpicture);
-
-						shmCtx->WriteVideoRtpDataToShm(data, chunksize, seq, ts, true, startfragment, beginpicture, endpicture, keyframe);
+						MS_DEBUG_TAG(xcode, "FU-A NAL=%" PRIu8 " seq=%" PRIu64 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
+							subnal, seq, chunksize, ts, shmCtx->LastVideoTs(), keyframe, startBit, endBit, marker, beginpicture, endpicture);
+						shmCtx->WriteVideoRtpDataToShm(data, chunksize, seq, ts, subnal, true, startfragment, beginpicture, endpicture, keyframe);
 						break;
 					}
 					case 25: // STAB-B

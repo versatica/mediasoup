@@ -30,8 +30,8 @@ namespace DepLibSfuShm {
       { -2, "again (SFUSHM_AV_AGAIN)" }
     };
 
-  // 100ms in samples (90000 sample rate) 
-  static constexpr uint64_t MaxVideoPktDelay{ 9000 };
+  // 150ms in samples (90000 sample rate) 
+  static constexpr uint64_t MaxVideoPktDelay{ 12000 };
 
 
   ShmCtx::~ShmCtx()
@@ -134,8 +134,8 @@ namespace DepLibSfuShm {
   }
 
 
-  ShmQueueItem::ShmQueueItem(uint8_t* dataptr, size_t datalen, uint64_t seq, uint64_t timestamp, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe)
-    : len(datalen), seqid(seq), ts(timestamp), fragment(isfragment), firstfragment(isfirstfrag), beginpicture(isbeginpicture), endpicture(isendpicture), keyframe(iskeyframe)
+  ShmQueueItem::ShmQueueItem(uint8_t* dataptr, size_t datalen, uint64_t seq, uint64_t timestamp, uint8_t nalu, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe)
+    : len(datalen), seqid(seq), ts(timestamp), nal(nalu), fragment(isfragment), firstfragment(isfirstfrag), beginpicture(isbeginpicture), endpicture(isendpicture), keyframe(iskeyframe)
   {
     //space for Annex B header, will grab 3 or 4 bytes
     this->store[0] = 0x00;
@@ -156,6 +156,7 @@ namespace DepLibSfuShm {
     size_t len,
     uint64_t seqid,
     uint64_t ts,
+    uint8_t nal,
     bool isfragment,
     bool isfirstfrag,
     bool isbeginpicture,
@@ -163,32 +164,20 @@ namespace DepLibSfuShm {
     bool iskeyframe)
   {
     MS_TRACE();
+    // Got rid of WRITETHRU feature. Old pkts are not a big deal. Keep track of the newest keyframe data in a queue.
 
-    // If queue is empty, seqid is in order, and pkt is not a fragment, there is no need to enqueue
-    if (this->videoPktBuffer.empty()
-      && !isfragment
-      && (IsLastVideoSeqNotSet() 
-        || seqid - 1 == LastVideoSeq()))
-    {
-      MS_DEBUG_TAG(xcode, "WRITETHRU [seq=%" PRIu64 " ts=%" PRIu64 " len=%zu]", seqid, ts, len);
-      return EnqueueResult::SHM_Q_PKT_CANWRITETHRU;
-    }
-
-    // Add a too old pkt in queue anyway TBD
-    if (!IsLastVideoSeqNotSet()
-        && LastVideoTs() > ts
-        && LastVideoTs() - ts > MaxVideoPktDelay)
-    {
-      MS_DEBUG_TAG(xcode, "ENQUEUE OLD seqid=%" PRIu64 " delta=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu", 
-        seqid, LastVideoTs() - ts, LastVideoTs(), videoPktBuffer.size());
-    }
-    
+    // TODO: try reverse iterator for insertion and see if perf is improved.
     // Enqueue pkt, newest at the end.
-    // TODO: keep stats of how many frames had been fixed with retransmission
     auto it = this->videoPktBuffer.begin();
-    for (; it != this->videoPktBuffer.end() && seqid >= it->seqid; it++);
+    for (; it != this->videoPktBuffer.end() && seqid >= it->seqid; it++) {}
 
-    it = this->videoPktBuffer.emplace(it, data, len, seqid, ts, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+    if (it != this->videoPktBuffer.end())
+    {
+    // TODO: keep stats of how many frames had been fixed with retransmission. TBD: assuming this is when an out of order seqId arrives.
+      MS_DEBUG_TAG(xcode, "out-of-order seqid=%" PRIu64 " qsize=%zu", seqid, videoPktBuffer.size());
+    }
+    it = this->videoPktBuffer.emplace(it, data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+
     if (iskeyframe && ts > this->lastKeyFrameTs)
     {
       this->lastKeyFrameTs = ts;
@@ -198,145 +187,119 @@ namespace DepLibSfuShm {
   }
 
 
-/*
-  void ShmCtx::Dequeue2()
+  void ShmCtx::Dequeue()
   {
     MS_TRACE();
     
     if (this->videoPktBuffer.empty())
       return;
 
-    // First, check seqid gap (unless first item in a queue): if current ts is NOT old then return from Dequeue(), otherwise will continue;
-    // Next, check for ts increment(or first item in queue): this is the start of new chunk.
-    // If needed, write out previously accumulated chunk fragments (those will be invalid because end was not found...)
-    // Else if ts did not change, check for beginFragment and endFragment markers.
-    //
-    // Also need to keep track of seqIf gaps inside a fragmented chunk - if it old and we are writing it out anyway.
-    // Need to know if pic ended up as invalid or just sat in a queue blocked by previous pics waiting for RTX, becase we request a KF if we found an invalid one.
+    bool gaps = false; // has missing seqIds
+    bool complete = false; // both start and end of pic found
 
-    std::list<ShmQueueItem>::iterator firstfragIt, lastfragIt; // first and last frags of chunk, regardless of whether they actually have data markers;
-    bool foundBeginFragMarker, foundEndFragMarker;
-    auto it = this->videoPktBuffer.begin();
-    uint64_t prevseqid = it->seqid - 1; // fake to get the loop started
-    uint64_t currentFragTs = it->ts;
+    std::list<ShmQueueItem>::iterator firstIt, lastIt;
+    firstIt = lastIt = this->videoPktBuffer.begin();
 
-  }*/
+    // See if a frame is ready to be written i.e. either it has expired, or all chunks are present.
+    // We have to iterate over all fragments of a frame in order to tell to shm-writer if it is complete, or some chunks are missing. TBD: perf hit?
+    while(GetNextFrame(firstIt, lastIt, gaps, complete)) 
+    {
+      MS_DEBUG_TAG(xcode, "Got frame [ %" PRIu64 " - %" PRIu64 " ] gaps=%d complete=%d  qsize=%zu", firstIt->seqid, lastIt->seqid, gaps, complete, videoPktBuffer.size());
+      WriteFrame(firstIt, lastIt, gaps || !complete);
+    }
+  }
 
-  
-  void ShmCtx::Dequeue()
+  bool ShmCtx::GetNextFrame(std::list<ShmQueueItem>::iterator& firstIt, 
+                            std::list<ShmQueueItem>::iterator& lastIt,
+                            bool& gaps, bool& complete)
+  {
+    MS_TRACE();
+    
+    if (this->videoPktBuffer.empty())
+      return false;
+
+    auto it = firstIt = lastIt = this->videoPktBuffer.begin();
+
+    uint64_t prevseqid = it->seqid - 1;
+    uint64_t frameTs = it->ts;
+    uint64_t lastItemTs = this->videoPktBuffer.rbegin()->ts;
+    bool beginFound = false;
+    bool endFound = false;
+    bool frameTsExpired = (lastItemTs > frameTs) && (lastItemTs - frameTs > MaxVideoPktDelay);
+
+    while(it != this->videoPktBuffer.end() && frameTs == it->ts)
+    {
+      if (it->seqid > prevseqid + 1)
+      {
+        MS_DEBUG_TAG(xcode, "Gap [seq=%" PRIu64 " prev=%" PRIu64 " ts=%" PRIu64 " expired=%d] qsize=%zu",
+          it->seqid, prevseqid, frameTs, frameTsExpired, videoPktBuffer.size());
+        if (!frameTsExpired)
+        {
+          return false; // let's wait
+        }
+        else
+        {
+          gaps = true; // don't wait
+        }
+      }
+
+      if (it->beginpicture)
+        beginFound = true;
+
+      if(it->endpicture)
+        endFound = true;
+
+      prevseqid = it->seqid;
+      lastIt = it;
+      ++it;
+    }
+    complete = beginFound && endFound;
+    return ((complete && !gaps) || frameTsExpired);
+  }
+
+
+  void ShmCtx::WriteFrame(std::list<ShmQueueItem>::iterator& firstIt, 
+                          std::list<ShmQueueItem>::iterator& lastIt,
+                          bool invalid)
   {
     MS_TRACE();
 
     if (this->videoPktBuffer.empty())
       return;
 
-    // seqId: with no pkts lost, strictly +1 unless NALUs came from STAP-A packet
-    // timestamps: should increment for each new picture (shm chunk), otherwise they match
-    // Can see two fragments coming in with the same seqId and timestamps: SPS and PPS from the same STAP-A packet are typical
-    std::list<ShmQueueItem>::iterator firstfragIt;
+    bool keyframe = false; // while writing, see if any chunk has keyframe marking
+    uint64_t frameTs = firstIt->ts;
 
-    auto it = this->videoPktBuffer.begin();
-    uint64_t prevseqid = it->seqid - 1;
-    bool beginFound = false;
-
-    while (it != this->videoPktBuffer.end())
+    auto chunkIt = firstIt;
+    while(chunkIt != this->videoPktBuffer.end())
     {
-      // First, write out all chunks with expired timestamps
-      if (!IsLastVideoSeqNotSet()
-        && LastVideoTs() > it->ts
-        && LastVideoTs() - it->ts > MaxVideoPktDelay)
+      if (chunkIt->keyframe)
+        keyframe = true;
+      
+      ShmQueueItem &item = *chunkIt;
+      this->WriteVideoChunk(&item, item.fragment && invalid); // don't set invalid flag for the whole NALU. TBD: is this correct? invalid setting is for shm-writer.
+      
+      bool end = (chunkIt == lastIt); // before erasing an item check if it is the last one in the frame
+      chunkIt = this->videoPktBuffer.erase(chunkIt); //move to next item
+      if (end)
+        break;
+    }
+
+    if (keyframe && frameTs == this->lastKeyFrameTs)
+    {
+      // we dequeued the last key frame
+      this->lastKeyFrameTs = UINT64_UNSET;
+
+      // If the last KF written into shm was incomplete, we can request a new one right away
+      // TBD: should we also discard everything in videoPktBuffer and reset lastTs and lastSeqId while waiting for another keyframe?
+      if (invalid)
       {
-        // TODO: keep stats of invalid packets (better yet, invalid frames)
-        // BUGBUG Just because this is old chunk and fragmented it does not mean it's invalid. It may be a complete pic waiting in queue and blocked by incomplete pics.
-        bool invalid = it->fragment;
-        prevseqid = it->seqid;
-        ShmQueueItem& item = *it;
-        MS_DEBUG_TAG(xcode, "Old chunk [seq=%" PRIu64 " Tsdelta=%" PRIu64 "] lastTs=%" PRIu64 " qsize=%zu", it->seqid, LastVideoTs() - it->ts, LastVideoTs(), videoPktBuffer.size());
-        this->WriteVideoChunk(&item, false); //, invalid); Temporarily do not set "invalid" flag
-        it = this->videoPktBuffer.erase(it);
-
-        // Temp solution: if there is no other KF in the queue assume we should request a KF
-        /* This check will not work until we reliably can tell that pic is invalid
-        if (invalid && it->keyframe && this->lastKeyFrameTs == UINT64_UNSET)
-        {
-          this->listener->OnNeedToSync();
-        }*/
-        continue;
-      }
-
-      // Hole in seqIds: will wait for some time for missing pkt to be retransmitted
-      if (it->seqid > prevseqid + 1)
-      {
-        MS_DEBUG_TAG(xcode, "Seqid gap [seq=%" PRIu64 " ts=%" PRIu64 "] prev=%" PRIu64 " lastTs=%" PRIu64 " qsize=%zu",
-          it->seqid, it->ts, prevseqid, LastVideoTs(), videoPktBuffer.size());
-        return;
-      }
-
-      // Fragment of a chunk: start, end or middle
-      if (it->fragment)
-      {
-        if (it->firstfragment)
-        {
-          beginFound = true;
-          firstfragIt = it;
-          prevseqid = it->seqid;
-          ++it;
-        }
-        else // mid or end
-        {
-          if (!beginFound)
-          {
-            // chunk incomplete, wait for retransmission
-            MS_DEBUG_TAG(xcode, "Miss begin [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu",
-              it->seqid, it->ts, videoPktBuffer.size());
-            return;
-          }
-
-          // end, found, write the whole chunk
-          if (it->endpicture)
-          {
-            auto nextIt = it;
-            uint64_t beginseqid = firstfragIt->seqid;
-            uint64_t begints = firstfragIt->ts;
-            uint64_t endseqid = it->seqid;
-            uint64_t endts = it->ts;
-            prevseqid = it->seqid;
-
-            nextIt++; // position past last fragment in a chunk
-            while (firstfragIt != nextIt)
-            {
-              ShmQueueItem& item = *firstfragIt;
-              this->WriteVideoChunk(&item, false);
-              firstfragIt = this->videoPktBuffer.erase(firstfragIt);
-            }
-
-            MS_DEBUG_TAG(xcode, "FU begin [seq=%" PRIu64 " ts=%" PRIu64 "] end [seq=%" PRIu64 " ts=%" PRIu64 "] qsize=%zu",
-              beginseqid, begints, endseqid, endts, videoPktBuffer.size());
-            beginFound = false;
-            prevseqid = endseqid;
-            it = nextIt; // restore iterator
-          }
-          else
-          {
-            prevseqid = it->seqid;
-            ++it;
-          }
-        }
-      }
-      else // non-fragmented chunk
-      {
-        ShmQueueItem& item = *it;
-
-        MS_DEBUG_TAG(xcode, "NALU [seq=%" PRIu64 " ts=%" PRIu64 " len=%zu] lastTs=%" PRIu64 " qsize=%zu",
-          item.seqid, item.ts, item.len, LastVideoTs(), videoPktBuffer.size());
-
-        this->WriteVideoChunk(&item, false);
-        prevseqid = it->seqid;
-        it = this->videoPktBuffer.erase(it);
-        continue;
+        MS_DEBUG_TAG(xcode, "Invalid keyframe, request another");
+        this->listener->OnNeedToSync();
       }
     }
   }
+    
 
   void ShmCtx::WriteAudioRtpDataToShm(uint8_t *data, size_t len, uint64_t seq, uint64_t ts)
   {
@@ -375,6 +338,7 @@ namespace DepLibSfuShm {
     size_t len,
     uint64_t seqid,
     uint64_t ts,
+    uint8_t nal,
     bool isfragment,
     bool isfirstfragment,
     bool ispicturebegin,
@@ -382,45 +346,38 @@ namespace DepLibSfuShm {
     bool iskeyframe)
   {
     MS_TRACE();
+    // Try to dequeue whatever data is already accumulated if:
+    // 1) new pkt (not retransmitted) arrived, and it belongs to a new frame (based on timestamp diff)
+    // 2) If there is expired data in a queue
+    uint64_t tsIncrement = (this->videoPktBuffer.size() > 0  && seqid > this->videoPktBuffer.rbegin()->seqid) ? ts - this->videoPktBuffer.rbegin()->ts : 0;
 
-    if (SHM_Q_PKT_CANWRITETHRU == this->Enqueue(data, 
-                                                len,
-                                                seqid,
-                                                ts,
-                                                isfragment,
-                                                isfirstfragment,
-                                                ispicturebegin,
-                                                ispictureend,
-                                                iskeyframe))
+    if (SHM_Q_PKT_QUEUED_OK != this->Enqueue(data, 
+                                              len,
+                                              seqid,
+                                              ts,
+                                              nal,
+                                              isfragment,
+                                              isfirstfragment,
+                                              ispicturebegin,
+                                              ispictureend,
+                                              iskeyframe))
     {
-      // Write it into shm, no need to queue anything
-      ShmQueueItem item; // Default ctor to avoid data copying and leave item.store buffer uninitialized
-      item.len = len;
-      item.data = data;
-      item.ts = ts;
-      item.seqid = seqid;
-      item.fragment = isfragment; //  btw, we never write thru chunk fragments
-      item.firstfragment = isfirstfragment;
-      item.beginpicture = ispicturebegin;
-      item.endpicture = ispictureend; 
-      item.keyframe = iskeyframe;
-
-      this->WriteVideoChunk(&item, true);
+      MS_WARN_TAG(xcode, "Enqueue() put nothing in"); // TBD: see if there is ever a reason for Enqueue() to reject an item, right now it always enqueues
+      return;
     }
 
-    this->Dequeue();
+    if ( ts - this->videoPktBuffer.begin()->ts > MaxVideoPktDelay || tsIncrement > 0)
+    {
+      MS_DEBUG_TAG(xcode, "DEQUEUE [ %" PRIu64 " - %" PRIu64 " ] age=%" PRIu64 " incr=%" PRIu64, 
+      this->videoPktBuffer.begin()->seqid, this->videoPktBuffer.rbegin()->seqid, ts - this->videoPktBuffer.begin()->ts, tsIncrement);
+      this->Dequeue();
+    }
   }
   
 
-  void ShmCtx::WriteVideoChunk(ShmQueueItem* item, bool writethru, bool invalid)
+  void ShmCtx::WriteVideoChunk(ShmQueueItem* item, bool invalid)
   {
     MS_TRACE();
-
-    if (item->keyframe && item->ts == this->lastKeyFrameTs)
-    {
-      // we are writing the last key frame out from a buffer queue
-      this->lastKeyFrameTs = UINT64_UNSET;
-    }
 
     if (!this->CanWrite(Media::VIDEO))
     {
@@ -437,8 +394,6 @@ namespace DepLibSfuShm {
     frag.begin = item->fragment ? (item->firstfragment && item->beginpicture) : item->beginpicture;
     frag.end = item->endpicture; // if this is ending fragment, it is always also end of picture
 
-    uint8_t backup[4]; // backup for 3 or 4 temporarily overwritten bytes
-
     enum AnnexB header = AnnexB::NO_HEADER;
     // If whole NALU then depends on whether this is beginning of a pic i.e. RTP pkt timestamp has been incremented
     if (!item->fragment) 
@@ -451,63 +406,29 @@ namespace DepLibSfuShm {
       header = item->beginpicture ? AnnexB::LONG_HEADER : AnnexB::SHORT_HEADER;
     }
 
-    // take care of AnnexB header selection, 3 or 4 bytes
-    if (writethru)
+    // AnnexB header placed in the first 4 bytes of item->store by ShmQueueItem::ctor, and item->data points to item->store's 5th byte
+    switch(header)
     {
-      // Use item->data ptr which directly points to RTP packet data, not item->store
-      // Previous 3 or 4 bytes (RTP packet header extension) will be temporarily overwritten and then restored
-      std::memcpy(&(backup[0]), &(item->data[-4]), sizeof(uint8_t) * 4);
+      case LONG_HEADER:
+        frag.data = &(item->store[0]);
+        frag.len = item->len + 4;
+        break;
 
-      switch(header)
-      {
-        case LONG_HEADER:
-          frag.data = &(item->data[-4]);
-          frag.data[0] = 0x00;
-          frag.data[1] = 0x00;
-          frag.data[2] = 0x00;
-          frag.data[3] = 0x01;
-          frag.len = item->len + 4;
-          break;
+      case SHORT_HEADER:
+        frag.data = &(item->store[1]);
+        frag.len = item->len + 3;
+        break;
 
-        case SHORT_HEADER:
-          frag.data = &(item->data[-3]);
-          frag.data[0] = 0x00;
-          frag.data[1] = 0x00;
-          frag.data[2] = 0x01;
-          frag.len = item->len + 3;
-          break;
-
-        default:
-          // writethru items are never fragments, always have AnnexB header
-          break;
-      }
-    }
-    else
-    {
-      // AnnexB header placed in the first 4 bytes of item->store by ShmQueueItem::ctor, and item->data points to item->store's 5th byte
-      switch(header)
-      {
-        case LONG_HEADER:
-          frag.data = &(item->store[0]);
-          frag.len = item->len + 4;
-          break;
-
-        case SHORT_HEADER:
-          frag.data = &(item->store[1]);
-          frag.len = item->len + 3;
-          break;
-
-        default:
-          frag.data = item->data;
-          frag.len = item->len;
-          break;
-      }
+      default:
+        frag.data = item->data;
+        frag.len = item->len;
+        break;
     }
     
     int err = sfushm_av_write_video(wrt_ctx, &frag);
     if (IsError(err))
     {
-      MS_WARN_TAG(xcode, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 "len=%zu inv=%d: %d - %s",
+      MS_WARN_TAG(xcode, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " len=%zu inv=%d: %d - %s",
         frag.ssrc, frag.first_rtp_seq, frag.rtp_time, frag.len, frag.invalid, err, GetErrorString(err));
     }
     /*else
@@ -519,12 +440,6 @@ namespace DepLibSfuShm {
       MS_DEBUG_TAG(xcode, "OK ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " begin=%d end=%d len=%zu [%s]",
         frag.ssrc, frag.first_rtp_seq, frag.rtp_time, frag.begin, frag.end, frag.len, dump);
     }*/
-
-    // restore temp overwritten data if not using ShmQueueItem::store
-    if (writethru)
-    {
-      std::memcpy(&(item->data[-4]), &(backup[0]), sizeof(uint8_t) * 4);
-    }
   }
 
 

@@ -34,7 +34,6 @@ namespace DepLibSfuShm
 	// Need this to keep a buffer of roughly 2-3 video frames
 	enum EnqueueResult
 	{
-		SHM_Q_PKT_CANWRITETHRU, // queue was empty, the pkt represents whole video frame or it is an aggregate, its seqId is (last_seqId+1), won't add pkt to queue
 		SHM_Q_PKT_QUEUED_OK     // added pkt data into the queue
 	};
 
@@ -61,19 +60,20 @@ namespace DepLibSfuShm
   // Video NALUs queue item
 	struct ShmQueueItem
 	{
-		uint8_t                store[MTU_SIZE]{ 0 };   // Memory to hold the cloned pkt data, won't be larger than MTU (should match RTC::MtuSize)
-    uint8_t                *data{ nullptr };       // pointer to data start in store
-    size_t                 len;                    // length of data in store
-    uint64_t               seqid;                  // seq id of the item
-    uint64_t               ts;                     // RTP timestamp
-    bool                   fragment{ false };      // If this is a picture's fragment (can be whole NALU or NALU's fragment)
-    bool                   firstfragment{ false }; // Only makes sense if fragment == true; means the first picture frame's fragment in case when SPS and PPS were just sent (then SPS begins the picture)
-		bool                   beginpicture{ false };  // The first (or only) picture's fragment
-		bool                   endpicture{ false };     // Picture's last (or only) fragment
-    bool                   keyframe{ false };      // This item belongs to key frame
+		uint8_t  store[MTU_SIZE]{ 0 };   // Memory to hold the cloned pkt data, won't be larger than MTU (should match RTC::MtuSize)
+    uint8_t *data{ nullptr };        // pointer to data start in store
+    size_t   len;                    // length of data in store
+    uint64_t seqid;                  // seq id of the item
+    uint64_t ts;                     // RTP timestamp
+    uint8_t  nal{ 0 };               // NALU type
+    bool     fragment{ false };      // If this is a picture's fragment (can be whole NALU or NALU's fragment)
+    bool     firstfragment{ false }; // Only makes sense if fragment == true; means the first picture frame's fragment in case when SPS and PPS were just sent (then SPS begins the picture)
+		bool     beginpicture{ false };  // The first (or only) picture's fragment
+		bool     endpicture{ false };    // Picture's last (or only) fragment
+    bool     keyframe{ false };      // This item belongs to key frame
 
     ShmQueueItem() = default;
-    ShmQueueItem(uint8_t* data, size_t datalen, uint64_t seq, uint64_t timestamp, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
+    ShmQueueItem(uint8_t* data, size_t datalen, uint64_t seq, uint64_t timestamp,uint8_t nalu, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
 	};
 
   // Contains shm configuration, writer context (if initialized), writer status 
@@ -113,19 +113,21 @@ namespace DepLibSfuShm
     uint64_t LastVideoSeq() const;
 
     void WriteAudioRtpDataToShm(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts);
-    void WriteVideoRtpDataToShm(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, bool isfragment, bool isfirstfragment, bool ispicturebegin, bool ispictureend, bool iskeyframe);
+    void WriteVideoRtpDataToShm(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, uint8_t nal, bool isfragment, bool isfirstfragment, bool ispicturebegin, bool ispictureend, bool iskeyframe);
     void WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReportTs, Media kind);
     int WriteStreamMeta(std::string metadata, std::string shm);
     void WriteVideoOrientation(uint16_t rotation);
 
   private:
     void WriteAudioChunk(sfushm_av_frame_frag_t* data);
-    void WriteVideoChunk(ShmQueueItem* item, bool writethru, bool invalid = false);
+    void WriteVideoChunk(ShmQueueItem* item, bool invalid);
+    
     void WriteSR(Media kind);
 
-    EnqueueResult Enqueue(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
+    EnqueueResult Enqueue(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, uint8_t nal, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
     void Dequeue();
-    //void Dequeue2();
+    void WriteFrame(std::list<ShmQueueItem>::iterator& firstIt, std::list<ShmQueueItem>::iterator& lastIt, bool invalid);
+    bool GetNextFrame(std::list<ShmQueueItem>::iterator& firstIt, std::list<ShmQueueItem>::iterator& lastIt, bool& hasGaps, bool& complete);
   
 	  bool IsError(int err_code);
 	  const char* GetErrorString(int err_code);
