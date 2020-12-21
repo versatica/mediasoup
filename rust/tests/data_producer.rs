@@ -1,10 +1,8 @@
 mod data_producer {
     use async_io::Timer;
     use futures_lite::future;
-    use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
-    use mediasoup::data_producer::{DataProducer, DataProducerOptions, DataProducerType};
+    use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
     use mediasoup::data_structures::{AppData, TransportListenIp};
-    use mediasoup::direct_transport::DirectTransportOptions;
     use mediasoup::plain_transport::{PlainTransport, PlainTransportOptions};
     use mediasoup::router::{Router, RouterOptions};
     use mediasoup::sctp_parameters::SctpStreamParameters;
@@ -24,17 +22,6 @@ mod data_producer {
     struct CustomAppData {
         foo: u8,
         baz: &'static str,
-    }
-
-    fn data_producer_options() -> DataProducerOptions {
-        let mut options = DataProducerOptions::new_sctp(
-            SctpStreamParameters::new_unordered_with_life_time(12345, 5000),
-        );
-
-        options.label = "foo".to_string();
-        options.protocol = "bar".to_string();
-
-        options
     }
 
     async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
