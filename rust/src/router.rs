@@ -57,7 +57,8 @@ use log::*;
 use parking_lot::{Mutex as SyncMutex, RwLock as SyncRwLock};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Weak};
 use thiserror::Error;
 
 uuid_based_wrapper_type!(RouterId);
@@ -255,6 +256,7 @@ struct Inner {
         Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped
     worker: Option<Worker>,
+    closed: AtomicBool,
     _on_worker_close_handler: AsyncMutex<HandlerId<'static>>,
 }
 
@@ -262,23 +264,25 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.close.call_once_simple();
+        if !self.closed.swap(true, Ordering::SeqCst) {
+            self.handlers.close.call_once_simple();
 
-        {
-            let channel = self.channel.clone();
-            let request = RouterCloseRequest {
-                internal: RouterInternal { router_id: self.id },
-            };
-            let worker = self.worker.take();
-            self.executor
-                .spawn(async move {
-                    if let Err(error) = channel.request(request).await {
-                        error!("router closing failed on drop: {}", error);
-                    }
+            {
+                let channel = self.channel.clone();
+                let request = RouterCloseRequest {
+                    internal: RouterInternal { router_id: self.id },
+                };
+                let worker = self.worker.take();
+                self.executor
+                    .spawn(async move {
+                        if let Err(error) = channel.request(request).await {
+                            error!("router closing failed on drop: {}", error);
+                        }
 
-                    drop(worker);
-                })
-                .detach();
+                        drop(worker);
+                    })
+                    .detach();
+            }
         }
     }
 }
@@ -307,12 +311,21 @@ impl Router {
             SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>,
         >::default();
         let handlers = Arc::<Handlers>::default();
+        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
         let on_worker_close_handler = worker.on_close({
-            let handlers = Arc::clone(&handlers);
+            let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                handlers.worker_close.call_once_simple();
-                handlers.close.call_once_simple();
+                if let Some(inner) = inner_weak
+                    .lock()
+                    .as_ref()
+                    .and_then(|weak_inner| weak_inner.upgrade())
+                {
+                    inner.handlers.worker_close.call_once_simple();
+                    if !inner.closed.swap(true, Ordering::SeqCst) {
+                        inner.handlers.close.call_once_simple();
+                    }
+                }
             }
         });
         let inner = Arc::new(Inner {
@@ -327,8 +340,11 @@ impl Router {
             mapped_pipe_transports,
             app_data,
             worker: Some(worker),
+            closed: AtomicBool::new(false),
             _on_worker_close_handler: AsyncMutex::new(on_worker_close_handler),
         });
+
+        inner_weak.lock().replace(Arc::downgrade(&inner));
 
         Self { inner }
     }
@@ -341,6 +357,10 @@ impl Router {
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
+    }
+
+    pub fn closed(&self) -> bool {
+        self.inner.closed.load(Ordering::SeqCst)
     }
 
     /// RTP capabilities of the Router.

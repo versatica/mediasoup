@@ -28,6 +28,7 @@ use std::cell::Cell;
 use std::ffi::OsString;
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{env, io};
 use thiserror::Error;
@@ -247,6 +248,7 @@ struct Inner {
     pid: u32,
     handlers: Handlers,
     app_data: AppData,
+    closed: AtomicBool,
     // Make sure worker is not dropped until this worker manager is not dropped
     _worker_manager: WorkerManager,
 }
@@ -255,7 +257,9 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.handlers.close.call_once_simple();
+        if !self.closed.swap(true, Ordering::SeqCst) {
+            self.handlers.close.call_once_simple();
+        }
 
         if matches!(self.child.try_status(), Ok(None)) {
             unsafe {
@@ -359,6 +363,7 @@ impl Inner {
             pid,
             handlers,
             app_data,
+            closed: AtomicBool::new(false),
             _worker_manager: worker_manager,
         };
 
@@ -381,10 +386,12 @@ impl Inner {
                         if let Ok(exit_status) = status {
                             warn!("exit status {}", exit_status);
 
-                            inner.handlers.dead.call_once(|callback| {
-                                callback(exit_status);
-                            });
-                            inner.handlers.close.call_once_simple();
+                            if !inner.closed.swap(true, Ordering::SeqCst) {
+                                inner.handlers.dead.call_once(|callback| {
+                                    callback(exit_status);
+                                });
+                                inner.handlers.close.call_once_simple();
+                            }
                         }
                     }
                 })
@@ -531,6 +538,10 @@ impl Worker {
     /// App custom data.
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
+    }
+
+    pub fn closed(&self) -> bool {
+        self.inner.closed.load(Ordering::SeqCst)
     }
 
     /// Dump Worker.
