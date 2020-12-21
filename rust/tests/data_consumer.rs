@@ -5,6 +5,7 @@ mod data_consumer {
     use mediasoup::data_producer::{DataProducer, DataProducerOptions};
     use mediasoup::data_structures::{AppData, TransportListenIp};
     use mediasoup::direct_transport::DirectTransportOptions;
+    use mediasoup::plain_transport::PlainTransportOptions;
     use mediasoup::router::{Router, RouterOptions};
     use mediasoup::sctp_parameters::SctpStreamParameters;
     use mediasoup::transport::{Transport, TransportGeneric};
@@ -92,12 +93,11 @@ mod data_consumer {
             let (_worker, router, _transport1, data_producer) = init().await;
 
             let transport2 = router
-                .create_webrtc_transport({
-                    let mut transport_options =
-                        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                            ip: "127.0.0.1".parse().unwrap(),
-                            announced_ip: None,
-                        }));
+                .create_plain_transport({
+                    let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: None,
+                    });
 
                     transport_options.enable_sctp = true;
 
@@ -109,10 +109,10 @@ mod data_consumer {
             let new_data_consumer_count = Arc::new(AtomicUsize::new(0));
 
             transport2
-                .on_new_consumer({
+                .on_new_data_consumer({
                     let new_data_consumer_count = Arc::clone(&new_data_consumer_count);
 
-                    move |_consumer| {
+                    move |_data_consumer| {
                         new_data_consumer_count.fetch_add(1, Ordering::SeqCst);
                     }
                 })
@@ -132,6 +132,7 @@ mod data_consumer {
                 .await
                 .expect("Failed to consume data");
 
+            assert_eq!(new_data_consumer_count.load(Ordering::SeqCst), 1);
             assert_eq!(data_consumer.data_producer_id(), data_producer.id());
             assert_eq!(data_consumer.closed(), false);
             assert_eq!(data_consumer.r#type(), DataConsumerType::Sctp);
@@ -276,10 +277,10 @@ mod data_consumer {
             let new_data_consumer_count = Arc::new(AtomicUsize::new(0));
 
             transport3
-                .on_new_consumer({
+                .on_new_data_consumer({
                     let new_data_consumer_count = Arc::clone(&new_data_consumer_count);
 
-                    move |_consumer| {
+                    move |_data_consumer| {
                         new_data_consumer_count.fetch_add(1, Ordering::SeqCst);
                     }
                 })
@@ -296,6 +297,7 @@ mod data_consumer {
                 .await
                 .expect("Failed to consume data");
 
+            assert_eq!(new_data_consumer_count.load(Ordering::SeqCst), 1);
             assert_eq!(data_consumer.data_producer_id(), data_producer.id());
             assert_eq!(data_consumer.closed(), false);
             assert_eq!(data_consumer.r#type(), DataConsumerType::Direct);
@@ -396,12 +398,11 @@ mod data_consumer {
             let (_worker, router, _transport1, data_producer) = init().await;
 
             let transport2 = router
-                .create_webrtc_transport({
-                    let mut transport_options =
-                        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                            ip: "127.0.0.1".parse().unwrap(),
-                            announced_ip: None,
-                        }));
+                .create_plain_transport({
+                    let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: None,
+                    });
 
                     transport_options.enable_sctp = true;
 
@@ -463,12 +464,11 @@ mod data_consumer {
             let (_worker, router, _transport1, data_producer) = init().await;
 
             let transport2 = router
-                .create_webrtc_transport({
-                    let mut transport_options =
-                        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                            ip: "127.0.0.1".parse().unwrap(),
-                            announced_ip: None,
-                        }));
+                .create_plain_transport({
+                    let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: None,
+                    });
 
                     transport_options.enable_sctp = true;
 
@@ -518,12 +518,11 @@ mod data_consumer {
             let (worker, router, _transport1, data_producer) = init().await;
 
             let transport2 = router
-                .create_webrtc_transport({
-                    let mut transport_options =
-                        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                            ip: "127.0.0.1".parse().unwrap(),
-                            announced_ip: None,
-                        }));
+                .create_plain_transport({
+                    let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: None,
+                    });
 
                     transport_options.enable_sctp = true;
 

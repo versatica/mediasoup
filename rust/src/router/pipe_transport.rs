@@ -195,9 +195,9 @@ impl Drop for Inner {
 
 impl Inner {
     fn close(&self) {
-        debug!("close()");
-
         if !self.closed.swap(true, Ordering::SeqCst) {
+            debug!("close()");
+
             self.handlers.close.call_once_simple();
 
             {
