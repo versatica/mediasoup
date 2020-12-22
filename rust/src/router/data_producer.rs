@@ -8,7 +8,7 @@ use crate::transport::{Transport, TransportGeneric};
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationError, PayloadChannel, RequestError};
 use async_executor::Executor;
-use event_listener_primitives::{Bag, HandlerId};
+use event_listener_primitives::{BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex as SyncMutex;
 use serde::de::DeserializeOwned;
@@ -106,8 +106,8 @@ pub struct DataProducerStat {
 
 #[derive(Default)]
 struct Handlers {
-    transport_close: Bag<'static, dyn FnOnce() + Send>,
-    close: Bag<'static, dyn FnOnce() + Send>,
+    transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
 struct Inner {
@@ -123,7 +123,7 @@ struct Inner {
     app_data: AppData,
     transport: Arc<Box<dyn Transport>>,
     closed: AtomicBool,
-    _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
+    _on_transport_close_handler: SyncMutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -139,7 +139,7 @@ impl Inner {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
-            self.handlers.close.call_once_simple();
+            self.handlers.close.call_simple();
 
             {
                 let channel = self.channel.clone();
@@ -228,7 +228,7 @@ impl DataProducer {
                     .as_ref()
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
-                    inner.handlers.transport_close.call_once_simple();
+                    inner.handlers.transport_close.call_simple();
                     inner.close();
                 }
             }
@@ -317,17 +317,14 @@ impl DataProducer {
             .await
     }
 
-    pub fn on_transport_close<F: FnOnce() + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    pub fn on_transport_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner()
             .handlers
             .transport_close
             .add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.close.add(Box::new(callback))
     }
 

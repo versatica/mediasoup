@@ -13,7 +13,7 @@ use crate::worker::{
     Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
 };
 use async_executor::Executor;
-use event_listener_primitives::{Bag, HandlerId};
+use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex as SyncMutex;
 use serde::de::DeserializeOwned;
@@ -166,12 +166,12 @@ enum PayloadNotification {
 
 #[derive(Default)]
 struct Handlers {
-    message: Bag<'static, dyn Fn(&WebRtcMessage) + Send>,
-    sctp_send_buffer_full: Bag<'static, dyn Fn() + Send>,
-    buffered_amount_low: Bag<'static, dyn Fn(u32) + Send>,
-    data_producer_close: Bag<'static, dyn FnOnce() + Send>,
-    transport_close: Bag<'static, dyn FnOnce() + Send>,
-    close: Bag<'static, dyn FnOnce() + Send>,
+    message: Bag<Box<dyn Fn(&WebRtcMessage) + Send + Sync>>,
+    sctp_send_buffer_full: Bag<Box<dyn Fn() + Send + Sync>>,
+    buffered_amount_low: Bag<Box<dyn Fn(u32) + Send + Sync>>,
+    data_producer_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
 struct Inner {
@@ -190,7 +190,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
-    _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
+    _on_transport_close_handler: SyncMutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -206,7 +206,7 @@ impl Inner {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
-            self.handlers.close.call_once_simple();
+            self.handlers.close.call_simple();
 
             {
                 let channel = self.channel.clone();
@@ -297,7 +297,7 @@ impl DataConsumer {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
                             Notification::DataProducerClose => {
-                                handlers.data_producer_close.call_once_simple();
+                                handlers.data_producer_close.call_simple();
                                 if let Some(inner) = inner_weak
                                     .lock()
                                     .as_ref()
@@ -356,7 +356,7 @@ impl DataConsumer {
                     .as_ref()
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
-                    inner.handlers.transport_close.call_once_simple();
+                    inner.handlers.transport_close.call_simple();
                     inner.close();
                 }
             }
@@ -486,54 +486,48 @@ impl DataConsumer {
             .await
     }
 
-    pub fn on_message<F: Fn(&WebRtcMessage) + Send + 'static>(
+    pub fn on_message<F: Fn(&WebRtcMessage) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner().handlers.message.add(Box::new(callback))
     }
 
-    pub fn on_sctp_send_buffer_full<F: Fn() + Send + 'static>(
+    pub fn on_sctp_send_buffer_full<F: Fn() + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner()
             .handlers
             .sctp_send_buffer_full
             .add(Box::new(callback))
     }
 
-    pub fn on_buffered_amount_low<F: Fn(u32) + Send + 'static>(
+    pub fn on_buffered_amount_low<F: Fn(u32) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner()
             .handlers
             .buffered_amount_low
             .add(Box::new(callback))
     }
 
-    pub fn on_data_producer_close<F: FnOnce() + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    pub fn on_data_producer_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner()
             .handlers
             .data_producer_close
             .add(Box::new(callback))
     }
 
-    pub fn on_transport_close<F: FnOnce() + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    pub fn on_transport_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner()
             .handlers
             .transport_close
             .add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.close.add(Box::new(callback))
     }
 

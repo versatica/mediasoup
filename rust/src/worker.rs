@@ -17,7 +17,7 @@ use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
 pub(crate) use channel::Channel;
 pub(crate) use common::SubscriptionHandler;
-use event_listener_primitives::{Bag, HandlerId};
+use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::*;
@@ -235,9 +235,9 @@ pub enum CreateRouterError {
 
 #[derive(Default)]
 struct Handlers {
-    new_router: Bag<'static, dyn Fn(&Router) + Send>,
-    dead: Bag<'static, dyn FnOnce(ExitStatus) + Send>,
-    close: Bag<'static, dyn FnOnce() + Send>,
+    new_router: Bag<Box<dyn Fn(&Router) + Send + Sync>>,
+    dead: BagOnce<Box<dyn FnOnce(ExitStatus) + Send>>,
+    close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
 struct Inner {
@@ -258,7 +258,7 @@ impl Drop for Inner {
         debug!("drop()");
 
         if !self.closed.swap(true, Ordering::SeqCst) {
-            self.handlers.close.call_once_simple();
+            self.handlers.close.call_simple();
         }
 
         if matches!(self.child.try_status(), Ok(None)) {
@@ -387,10 +387,10 @@ impl Inner {
                             warn!("exit status {}", exit_status);
 
                             if !inner.closed.swap(true, Ordering::SeqCst) {
-                                inner.handlers.dead.call_once(|callback| {
+                                inner.handlers.dead.call(|callback| {
                                     callback(exit_status);
                                 });
-                                inner.handlers.close.call_once_simple();
+                                inner.handlers.close.call_simple();
                             }
                         }
                     }
@@ -615,21 +615,15 @@ impl Worker {
         Ok(router)
     }
 
-    pub fn on_new_router<F: Fn(&Router) + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    pub fn on_new_router<F: Fn(&Router) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.new_router.add(Box::new(callback))
     }
 
-    pub fn on_dead<F: FnOnce(ExitStatus) + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    pub fn on_dead<F: FnOnce(ExitStatus) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.dead.add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
     }
 }

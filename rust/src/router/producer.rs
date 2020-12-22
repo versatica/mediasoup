@@ -14,7 +14,7 @@ use crate::worker::{
 };
 use async_executor::Executor;
 use bytes::Bytes;
-use event_listener_primitives::{Bag, HandlerId};
+use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex as SyncMutex;
 use serde::de::DeserializeOwned;
@@ -235,13 +235,13 @@ enum Notification {
 
 #[derive(Default)]
 struct Handlers {
-    score: Bag<'static, dyn Fn(&Vec<ProducerScore>) + Send>,
-    video_orientation_change: Bag<'static, dyn Fn(ProducerVideoOrientation) + Send>,
-    pause: Bag<'static, dyn Fn() + Send>,
-    resume: Bag<'static, dyn Fn() + Send>,
-    trace: Bag<'static, dyn Fn(&ProducerTraceEventData) + Send>,
-    transport_close: Bag<'static, dyn FnOnce() + Send>,
-    close: Bag<'static, dyn FnOnce() + Send>,
+    score: Bag<Box<dyn Fn(&Vec<ProducerScore>) + Send + Sync>>,
+    video_orientation_change: Bag<Box<dyn Fn(ProducerVideoOrientation) + Send + Sync>>,
+    pause: Bag<Box<dyn Fn() + Send + Sync>>,
+    resume: Bag<Box<dyn Fn() + Send + Sync>>,
+    trace: Bag<Box<dyn Fn(&ProducerTraceEventData) + Send + Sync>>,
+    transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
 struct Inner {
@@ -261,7 +261,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     _subscription_handler: SubscriptionHandler,
-    _on_transport_close_handler: SyncMutex<HandlerId<'static>>,
+    _on_transport_close_handler: SyncMutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -277,7 +277,7 @@ impl Inner {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
-            self.handlers.close.call_once_simple();
+            self.handlers.close.call_simple();
 
             {
                 let channel = self.channel.clone();
@@ -401,7 +401,7 @@ impl Producer {
                     .as_ref()
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
-                    inner.handlers.transport_close.call_once_simple();
+                    inner.handlers.transport_close.call_simple();
                     inner.close();
                 }
             }
@@ -554,49 +554,46 @@ impl Producer {
             .await
     }
 
-    pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + 'static>(
+    pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner().handlers.score.add(Box::new(callback))
     }
 
-    pub fn on_video_orientation_change<F: Fn(ProducerVideoOrientation) + Send + 'static>(
+    pub fn on_video_orientation_change<F: Fn(ProducerVideoOrientation) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner()
             .handlers
             .video_orientation_change
             .add(Box::new(callback))
     }
 
-    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.pause.add(Box::new(callback))
     }
 
-    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.resume.add(Box::new(callback))
     }
 
-    pub fn on_trace<F: Fn(&ProducerTraceEventData) + Send + 'static>(
+    pub fn on_trace<F: Fn(&ProducerTraceEventData) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner().handlers.trace.add(Box::new(callback))
     }
 
-    pub fn on_transport_close<F: FnOnce() + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    pub fn on_transport_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner()
             .handlers
             .transport_close
             .add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.close.add(Box::new(callback))
     }
 

@@ -19,7 +19,7 @@ use async_executor::Executor;
 use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use bytes::Bytes;
-use event_listener_primitives::{Bag, HandlerId};
+use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex as SyncMutex;
 use serde::{Deserialize, Serialize};
@@ -102,14 +102,14 @@ pub struct DirectTransportStat {
 
 #[derive(Default)]
 struct Handlers {
-    rtcp: Bag<'static, dyn Fn(&Bytes) + Send>,
-    new_producer: Bag<'static, dyn Fn(&Producer) + Send>,
-    new_consumer: Bag<'static, dyn Fn(&Consumer) + Send>,
-    new_data_producer: Bag<'static, dyn Fn(&DataProducer) + Send>,
-    new_data_consumer: Bag<'static, dyn Fn(&DataConsumer) + Send>,
-    trace: Bag<'static, dyn Fn(&TransportTraceEventData) + Send>,
-    router_close: Bag<'static, dyn FnOnce() + Send>,
-    close: Bag<'static, dyn FnOnce() + Send>,
+    rtcp: Bag<Box<dyn Fn(&Bytes) + Send + Sync>>,
+    new_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
+    new_consumer: Bag<Box<dyn Fn(&Consumer) + Send + Sync>>,
+    new_data_producer: Bag<Box<dyn Fn(&DataProducer) + Send + Sync>>,
+    new_data_consumer: Bag<Box<dyn Fn(&DataConsumer) + Send + Sync>>,
+    trace: Bag<Box<dyn Fn(&TransportTraceEventData) + Send + Sync>>,
+    router_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -139,7 +139,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
-    _on_router_close_handler: AsyncMutex<HandlerId<'static>>,
+    _on_router_close_handler: AsyncMutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -155,7 +155,7 @@ impl Inner {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
-            self.handlers.close.call_once_simple();
+            self.handlers.close.call_simple();
 
             {
                 let channel = self.channel.clone();
@@ -314,52 +314,46 @@ impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransp
         self.enable_trace_event_impl(types).await
     }
 
-    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.new_producer.add(Box::new(callback))
     }
 
-    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    fn on_new_consumer<F: Fn(&Consumer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.new_consumer.add(Box::new(callback))
     }
 
-    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(
+    fn on_new_data_producer<F: Fn(&DataProducer) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner
             .handlers
             .new_data_producer
             .add(Box::new(callback))
     }
 
-    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(
+    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner
             .handlers
             .new_data_consumer
             .add(Box::new(callback))
     }
 
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner.handlers.trace.add(Box::new(callback))
     }
 
-    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.router_close.add(Box::new(callback))
     }
 
-    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
     }
 }
@@ -463,7 +457,7 @@ impl DirectTransport {
                     .as_ref()
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
-                    inner.handlers.router_close.call_once_simple();
+                    inner.handlers.router_close.call_simple();
                     inner.close();
                 }
             }
@@ -502,7 +496,7 @@ impl DirectTransport {
             .await
     }
 
-    pub fn on_rtcp<F: Fn(&Bytes) + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_rtcp<F: Fn(&Bytes) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.rtcp.add(Box::new(callback))
     }
 

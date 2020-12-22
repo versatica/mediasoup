@@ -51,7 +51,7 @@ use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, PayloadChannel, RequestError, Worker};
 use async_executor::Executor;
 use async_mutex::Mutex as AsyncMutex;
-use event_listener_primitives::{Bag, HandlerId};
+use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::future;
 use log::*;
 use parking_lot::{Mutex as SyncMutex, RwLock as SyncRwLock};
@@ -235,10 +235,10 @@ struct PipeTransportPair {
 
 #[derive(Default)]
 struct Handlers {
-    new_transport: Bag<'static, dyn Fn(NewTransport) + Send>,
-    new_rtp_observer: Bag<'static, dyn Fn(NewRtpObserver) + Send>,
-    worker_close: Bag<'static, dyn FnOnce() + Send>,
-    close: Bag<'static, dyn FnOnce() + Send>,
+    new_transport: Bag<Box<dyn Fn(NewTransport) + Send + Sync>>,
+    new_rtp_observer: Bag<Box<dyn Fn(NewRtpObserver) + Send + Sync>>,
+    worker_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
 struct Inner {
@@ -257,7 +257,7 @@ struct Inner {
     // Make sure worker is not dropped until this router is not dropped
     worker: Option<Worker>,
     closed: AtomicBool,
-    _on_worker_close_handler: AsyncMutex<HandlerId<'static>>,
+    _on_worker_close_handler: AsyncMutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -265,7 +265,7 @@ impl Drop for Inner {
         debug!("drop()");
 
         if !self.closed.swap(true, Ordering::SeqCst) {
-            self.handlers.close.call_once_simple();
+            self.handlers.close.call_simple();
 
             {
                 let channel = self.channel.clone();
@@ -321,9 +321,9 @@ impl Router {
                     .as_ref()
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
-                    inner.handlers.worker_close.call_once_simple();
+                    inner.handlers.worker_close.call_simple();
                     if !inner.closed.swap(true, Ordering::SeqCst) {
-                        inner.handlers.close.call_once_simple();
+                        inner.handlers.close.call_simple();
                     }
                 }
             }
@@ -867,25 +867,25 @@ impl Router {
         }
     }
 
-    pub fn on_new_transport<F: Fn(NewTransport) + Send + 'static>(
+    pub fn on_new_transport<F: Fn(NewTransport) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner.handlers.new_transport.add(Box::new(callback))
     }
 
-    pub fn on_new_rtp_observer<F: Fn(NewRtpObserver) + Send + 'static>(
+    pub fn on_new_rtp_observer<F: Fn(NewRtpObserver) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner.handlers.new_rtp_observer.add(Box::new(callback))
     }
 
-    pub fn on_worker_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_worker_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.worker_close.add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
     }
 

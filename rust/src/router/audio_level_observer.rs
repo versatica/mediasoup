@@ -11,7 +11,7 @@ use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
-use event_listener_primitives::{Bag, HandlerId};
+use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex as SyncMutex;
 use serde::Deserialize;
@@ -55,14 +55,14 @@ pub struct AudioLevelObserverVolume {
 
 #[derive(Default)]
 struct Handlers {
-    volumes: Bag<'static, dyn Fn(&Vec<AudioLevelObserverVolume>) + Send>,
-    silence: Bag<'static, dyn Fn() + Send>,
-    pause: Bag<'static, dyn Fn() + Send>,
-    resume: Bag<'static, dyn Fn() + Send>,
-    add_producer: Bag<'static, dyn Fn(&Producer) + Send>,
-    remove_producer: Bag<'static, dyn Fn(&Producer) + Send>,
-    router_close: Bag<'static, dyn FnOnce() + Send>,
-    close: Bag<'static, dyn FnOnce() + Send>,
+    volumes: Bag<Box<dyn Fn(&Vec<AudioLevelObserverVolume>) + Send + Sync>>,
+    silence: Bag<Box<dyn Fn() + Send + Sync>>,
+    pause: Bag<Box<dyn Fn() + Send + Sync>>,
+    resume: Bag<Box<dyn Fn() + Send + Sync>>,
+    add_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
+    remove_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
+    router_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -92,7 +92,7 @@ struct Inner {
     // Drop subscription to audio level observer-specific notifications when observer itself is
     // dropped
     _subscription_handler: SubscriptionHandler,
-    _on_router_close_handler: AsyncMutex<HandlerId<'static>>,
+    _on_router_close_handler: AsyncMutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -108,7 +108,7 @@ impl Inner {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
-            self.handlers.close.call_once_simple();
+            self.handlers.close.call_simple();
 
             {
                 let channel = self.channel.clone();
@@ -316,7 +316,7 @@ impl AudioLevelObserver {
                     .as_ref()
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
-                    inner.handlers.router_close.call_once_simple();
+                    inner.handlers.router_close.call_simple();
                     inner.close();
                 }
             }
@@ -339,44 +339,44 @@ impl AudioLevelObserver {
         Self { inner }
     }
 
-    pub fn on_volumes<F: Fn(&Vec<AudioLevelObserverVolume>) + Send + 'static>(
+    pub fn on_volumes<F: Fn(&Vec<AudioLevelObserverVolume>) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner.handlers.volumes.add(Box::new(callback))
     }
 
-    pub fn on_silence<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_silence<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.silence.add(Box::new(callback))
     }
 
-    pub fn on_pause<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.pause.add(Box::new(callback))
     }
 
-    pub fn on_resume<F: Fn() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.resume.add(Box::new(callback))
     }
 
-    pub fn on_add_producer<F: Fn(&Producer) + Send + 'static>(
+    pub fn on_add_producer<F: Fn(&Producer) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner.handlers.add_producer.add(Box::new(callback))
     }
 
-    pub fn on_remove_producer<F: Fn(&Producer) + Send + 'static>(
+    pub fn on_remove_producer<F: Fn(&Producer) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static> {
+    ) -> HandlerId {
         self.inner.handlers.remove_producer.add(Box::new(callback))
     }
 
-    pub fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.router_close.add(Box::new(callback))
     }
 
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static> {
+    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
     }
 

@@ -165,30 +165,28 @@ pub trait TransportGeneric<Dump, Stat>: Transport + Clone {
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError>;
 
-    fn on_new_producer<F: Fn(&Producer) + Send + 'static>(&self, callback: F)
-        -> HandlerId<'static>;
+    fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
 
-    fn on_new_consumer<F: Fn(&Consumer) + Send + 'static>(&self, callback: F)
-        -> HandlerId<'static>;
+    fn on_new_consumer<F: Fn(&Consumer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
 
-    fn on_new_data_producer<F: Fn(&DataProducer) + Send + 'static>(
+    fn on_new_data_producer<F: Fn(&DataProducer) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static>;
+    ) -> HandlerId;
 
-    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + 'static>(
+    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static>;
+    ) -> HandlerId;
 
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + 'static>(
+    fn on_trace<F: Fn(&TransportTraceEventData) + Send + Sync + 'static>(
         &self,
         callback: F,
-    ) -> HandlerId<'static>;
+    ) -> HandlerId;
 
-    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static>;
+    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 
-    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId<'static>;
+    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 }
 
 #[derive(Debug, Error, Eq, PartialEq)]

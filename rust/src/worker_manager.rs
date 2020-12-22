@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 #[derive(Default)]
 struct Handlers {
-    new_worker: Bag<'static, dyn Fn(&Worker) + Send>,
+    new_worker: Bag<Box<dyn Fn(&Worker) + Send + Sync>>,
 }
 
 struct Inner {
@@ -107,10 +107,7 @@ impl WorkerManager {
         Ok(worker)
     }
 
-    pub fn on_new_worker<F: Fn(&Worker) + Send + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId<'static> {
+    pub fn on_new_worker<F: Fn(&Worker) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.new_worker.add(Box::new(callback))
     }
 }
