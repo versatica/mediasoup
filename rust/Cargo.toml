@@ -1,7 +1,7 @@
 [package]
 name = "mediasoup"
-version = "0.0.12"
-description = "Cutting Edge WebRTC Video Conferencing"
+version = "0.1.0"
+description = "Cutting Edge WebRTC Video Conferencing in Rust"
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
 edition = "2018"
 license = "ISC"

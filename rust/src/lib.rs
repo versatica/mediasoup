@@ -1,11 +1,12 @@
 //! This is a port of TypeScript client library for
 //! [Mediasoup](https://github.com/versatica/mediasoup) to Rust
 //!
-//! The library is incomplete and at early stages of development, so it will be hard to use unless
-//! you already have experience with Mediasoup (in this case you can create a worker using
-//! [worker_manager::WorkerManager] and go from there).
+//! The library is fully-featured and API is unlikely to change in a major way. With lack of
+//! documentation it will be hard to use the library unless you already have experience with
+//! Mediasoup (in this case you can create a worker using [worker_manager::WorkerManager] and go
+//! from there).
 //!
-//! Also there are basic tests in `worker_manager` and `worker` modules that may help to get started.
+//! Please check integration tests for usage examples.
 //!
 //! API is close to [TypeScript's](https://mediasoup.org/documentation/v3/mediasoup/api/), please
 //! referer to it in the meantime.
