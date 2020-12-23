@@ -5,9 +5,13 @@ use async_fs::File;
 use async_process::unix::CommandExt;
 use async_process::{Child, Command};
 use nix::unistd;
+use once_cell::sync::Lazy;
 use std::io;
 use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
+use std::sync::Mutex;
+
+static SPAWNING: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
 pub(super) struct SpawnResult {
     pub(super) child: Child,
@@ -19,6 +23,9 @@ pub(super) fn spawn_with_worker_channels(
     executor: Arc<Executor<'static>>,
     command: &mut Command,
 ) -> io::Result<SpawnResult> {
+    // Take a lock to make sure we don't spawn workers from multiple threads concurrently, this
+    // causes racy issues
+    let _lock = SPAWNING.lock();
     let (producer_fd_read, producer_fd_write) = unistd::pipe().unwrap();
     let (consumer_fd_read, consumer_fd_write) = unistd::pipe().unwrap();
     let (producer_payload_fd_read, producer_payload_fd_write) = unistd::pipe().unwrap();
