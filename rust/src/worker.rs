@@ -427,11 +427,13 @@ impl Inner {
         let status = self.child.status();
         future::or(
             async move {
-                status.await?;
-                Err(io::Error::new(
-                    io::ErrorKind::NotFound,
-                    "worker process exited before being ready",
-                ))
+                let status = status.await?;
+                let error_message = format!(
+                    "worker process exited before being ready, exit status {}, code {:?}",
+                    status,
+                    status.code(),
+                );
+                Err(io::Error::new(io::ErrorKind::NotFound, error_message))
             },
             self.wait_for_worker_ready(),
         )
