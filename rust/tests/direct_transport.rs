@@ -197,10 +197,6 @@ mod direct_transport {
                         }
                     };
 
-                    if id == num_messages {
-                        let _ = received_messages_tx.lock().take().unwrap().send(());
-                    }
-
                     if id < num_messages / 2 {
                         assert!(matches!(message, &WebRtcMessage::String(_)));
                     } else {
@@ -209,6 +205,10 @@ mod direct_transport {
 
                     last_recv_message_id.fetch_add(1, Ordering::SeqCst);
                     assert_eq!(id, last_recv_message_id.load(Ordering::SeqCst));
+
+                    if id == num_messages {
+                        let _ = received_messages_tx.lock().take().unwrap().send(());
+                    }
                 }
             });
 
