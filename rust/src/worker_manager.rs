@@ -3,6 +3,7 @@ use async_executor::Executor;
 use async_oneshot::Sender;
 use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::future;
+use log::debug;
 use std::io;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -93,6 +94,8 @@ impl WorkerManager {
     ///
     /// Worker manager will be kept alive as long as at least one worker instance is alive.
     pub async fn create_worker(&self, worker_settings: WorkerSettings) -> io::Result<Worker> {
+        debug!("create_worker()");
+
         let worker = Worker::new(
             Arc::clone(&self.inner.executor),
             self.inner.worker_binary.clone(),

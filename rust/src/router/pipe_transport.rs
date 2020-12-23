@@ -592,10 +592,26 @@ impl PipeTransport {
             .add(Box::new(callback))
     }
 
+    pub(super) fn downgrade(&self) -> WeakPipeTransport {
+        WeakPipeTransport {
+            inner: Arc::downgrade(&self.inner),
+        }
+    }
+
     fn get_internal(&self) -> TransportInternal {
         TransportInternal {
             router_id: self.router().id(),
             transport_id: self.id(),
         }
+    }
+}
+
+pub(super) struct WeakPipeTransport {
+    inner: Weak<Inner>,
+}
+
+impl WeakPipeTransport {
+    pub(super) fn upgrade(&self) -> Option<PipeTransport> {
+        self.inner.upgrade().map(|inner| PipeTransport { inner })
     }
 }

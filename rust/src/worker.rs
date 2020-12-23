@@ -257,14 +257,14 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        if !self.closed.swap(true, Ordering::SeqCst) {
-            self.handlers.close.call_simple();
-        }
-
         if matches!(self.child.try_status(), Ok(None)) {
             unsafe {
                 libc::kill(self.pid as libc::pid_t, libc::SIGTERM);
             }
+        }
+
+        if !self.closed.swap(true, Ordering::SeqCst) {
+            self.handlers.close.call_simple();
         }
     }
 }

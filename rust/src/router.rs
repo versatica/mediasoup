@@ -37,7 +37,9 @@ use crate::messages::{
     RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
     RouterInternal, RtpObserverInternal, TransportInternal,
 };
-use crate::pipe_transport::{PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters};
+use crate::pipe_transport::{
+    PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
+};
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{Producer, ProducerId, ProducerOptions, WeakProducer};
 use crate::rtp_observer::RtpObserverId;
@@ -233,6 +235,30 @@ struct PipeTransportPair {
     remote: PipeTransport,
 }
 
+impl PipeTransportPair {
+    fn downgrade(&self) -> WeakPipeTransportPair {
+        WeakPipeTransportPair {
+            local: self.local.downgrade(),
+            remote: self.remote.downgrade(),
+        }
+    }
+}
+
+struct WeakPipeTransportPair {
+    local: WeakPipeTransport,
+    remote: WeakPipeTransport,
+}
+
+impl WeakPipeTransportPair {
+    fn upgrade(&self) -> Option<PipeTransportPair> {
+        self.local.upgrade().and_then(|local| {
+            self.remote
+                .upgrade()
+                .map(|remote| PipeTransportPair { local, remote })
+        })
+    }
+}
+
 #[derive(Default)]
 struct Handlers {
     new_transport: Bag<Box<dyn Fn(NewTransport) + Send + Sync>>,
@@ -253,7 +279,7 @@ struct Inner {
     data_producers: Arc<SyncRwLock<HashMap<DataProducerId, WeakDataProducer>>>,
     #[allow(clippy::type_complexity)]
     mapped_pipe_transports:
-        Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>>,
+        Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped
     worker: Option<Worker>,
     closed: AtomicBool,
@@ -308,7 +334,7 @@ impl Router {
         let data_producers =
             Arc::<SyncRwLock<HashMap<DataProducerId, WeakDataProducer>>>::default();
         let mapped_pipe_transports = Arc::<
-            SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<PipeTransportPair>>>>>,
+            SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>,
         >::default();
         let handlers = Arc::<Handlers>::default();
         let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
@@ -597,9 +623,7 @@ impl Router {
     ) -> Result<PipeProducerToRouterValue, PipeProducerToRouterError> {
         debug!("pipe_producer_to_router()");
 
-        let remote_router_id = pipe_to_router_options.router.id();
-
-        if remote_router_id == self.id() {
+        if pipe_to_router_options.router.id() == self.id() {
             return Err(PipeProducerToRouterError::SameRouter);
         }
 
@@ -614,35 +638,7 @@ impl Router {
             None => return Err(PipeProducerToRouterError::ProducerNotFound(producer_id)),
         };
 
-        // Here we may have to create a new PipeTransport pair to connect source and
-        // destination Routers. We just want to keep a PipeTransport pair for each
-        // pair of Routers. Since this operation is async, it may happen that two
-        // simultaneous calls piping to the same router would end up generating two pairs of
-        // `PipeTransport`. To prevent that, we have `HashMap` with mapping behind `Mutex` and
-        // another `Mutex` on the pair of `PipeTransport`.
-
-        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock();
-
-        let pipe_transport_pair_mutex = mapped_pipe_transports
-            .entry(remote_router_id)
-            .or_default()
-            .clone();
-
-        let mut pipe_transport_pair = pipe_transport_pair_mutex.lock().await;
-
-        drop(mapped_pipe_transports);
-
-        let pipe_transport_pair = match pipe_transport_pair.as_ref() {
-            Some(pipe_transport_pair) => pipe_transport_pair,
-            None => {
-                pipe_transport_pair.replace(
-                    self.create_pipe_transport_pair(pipe_to_router_options)
-                        .await?,
-                );
-
-                pipe_transport_pair.as_ref().unwrap()
-            }
-        };
+        let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
 
         let pipe_consumer = pipe_transport_pair
             .local
@@ -739,9 +735,7 @@ impl Router {
     ) -> Result<PipeDataProducerToRouterValue, PipeDataProducerToRouterError> {
         debug!("pipe_data_producer_to_router()");
 
-        let remote_router_id = pipe_to_router_options.router.id();
-
-        if remote_router_id == self.id() {
+        if pipe_to_router_options.router.id() == self.id() {
             return Err(PipeDataProducerToRouterError::SameRouter);
         }
 
@@ -760,35 +754,7 @@ impl Router {
             }
         };
 
-        // Here we may have to create a new PipeTransport pair to connect source and
-        // destination Routers. We just want to keep a PipeTransport pair for each
-        // pair of Routers. Since this operation is async, it may happen that two
-        // simultaneous calls piping to the same router would end up generating two pairs of
-        // `PipeTransport`. To prevent that, we have `HashMap` with mapping behind `Mutex` and
-        // another `Mutex` on the pair of `PipeTransport`.
-
-        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock();
-
-        let pipe_transport_pair_mutex = mapped_pipe_transports
-            .entry(remote_router_id)
-            .or_default()
-            .clone();
-
-        let mut pipe_transport_pair = pipe_transport_pair_mutex.lock().await;
-
-        drop(mapped_pipe_transports);
-
-        let pipe_transport_pair = match pipe_transport_pair.as_ref() {
-            Some(pipe_transport_pair) => pipe_transport_pair,
-            None => {
-                pipe_transport_pair.replace(
-                    self.create_pipe_transport_pair(pipe_to_router_options)
-                        .await?,
-                );
-
-                pipe_transport_pair.as_ref().unwrap()
-            }
-        };
+        let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
 
         let pipe_data_consumer = pipe_transport_pair
             .local
@@ -887,6 +853,46 @@ impl Router {
 
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
+    }
+
+    async fn get_pipe_transport_pair(
+        &self,
+        pipe_to_router_options: PipeToRouterOptions,
+    ) -> Result<PipeTransportPair, RequestError> {
+        // Here we may have to create a new PipeTransport pair to connect source and
+        // destination Routers. We just want to keep a PipeTransport pair for each
+        // pair of Routers. Since this operation is async, it may happen that two
+        // simultaneous calls piping to the same router would end up generating two pairs of
+        // `PipeTransport`. To prevent that, we have `HashMap` with mapping behind `Mutex` and
+        // another `Mutex` on the pair of `PipeTransport`.
+
+        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock();
+
+        let pipe_transport_pair_mutex = mapped_pipe_transports
+            .entry(pipe_to_router_options.router.id())
+            .or_default()
+            .clone();
+
+        let mut pipe_transport_pair_guard = pipe_transport_pair_mutex.lock().await;
+
+        drop(mapped_pipe_transports);
+
+        let pipe_transport_pair = match pipe_transport_pair_guard
+            .as_ref()
+            .and_then(WeakPipeTransportPair::upgrade)
+        {
+            Some(pipe_transport_pair) => pipe_transport_pair,
+            None => {
+                let pipe_transport_pair = self
+                    .create_pipe_transport_pair(pipe_to_router_options)
+                    .await?;
+                pipe_transport_pair_guard.replace(pipe_transport_pair.downgrade());
+
+                pipe_transport_pair
+            }
+        };
+
+        Ok(pipe_transport_pair)
     }
 
     async fn create_pipe_transport_pair(
