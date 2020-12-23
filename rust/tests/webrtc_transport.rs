@@ -335,7 +335,16 @@ mod webrtc_transport {
                 .await
                 .expect("Failed to create WebRTC transport");
 
-            let dtls_parameters = DtlsParameters { role: DtlsRole::Client, fingerprints: vec![DtlsFingerprint { algorithm: "sha-256".to_string(), value: "82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD".to_string() }] };
+            let dtls_parameters = DtlsParameters {
+                role: DtlsRole::Client,
+                fingerprints: vec![DtlsFingerprint::Sha256 {
+                    value: [
+                        0x82, 0x5A, 0x68, 0x3D, 0x36, 0xC3, 0x0A, 0xDE, 0xAF, 0xE7, 0x32, 0x43,
+                        0xD2, 0x88, 0x83, 0x57, 0xAC, 0x2D, 0x65, 0xE5, 0x80, 0xC4, 0xB6, 0xFB,
+                        0xAF, 0x1A, 0xA0, 0x21, 0x9F, 0x6D, 0x0C, 0xAD,
+                    ],
+                }],
+            };
 
             transport
                 .connect(WebRtcTransportRemoteParameters {
