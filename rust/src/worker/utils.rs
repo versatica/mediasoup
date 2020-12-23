@@ -6,10 +6,10 @@ use async_process::unix::CommandExt;
 use async_process::{Child, Command};
 use nix::unistd;
 use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 use std::io;
 use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
-use std::sync::Mutex;
 
 static SPAWNING: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
