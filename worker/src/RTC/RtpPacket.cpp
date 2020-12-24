@@ -385,18 +385,13 @@ namespace RTC
 
 		// If One-Byte is requested and the packet already has One-Byte extensions,
 		// keep the header extension id.
-		if (type == 1u && HasOneByteExtensions())
-		{
-			// Nothing to do.
-		}
+
 		// If Two-Bytes is requested and the packet already has Two-Bytes extensions,
 		// keep the header extension id.
-		else if (type == 2u && HasTwoBytesExtensions())
-		{
-			// Nothing to do.
-		}
+
 		// Otherwise, if there is header extension of non matching type, modify its id.
-		else if (this->headerExtension)
+
+		if(!(type == 1u && HasOneByteExtensions()) && !(type == 2u && HasTwoBytesExtensions()) && this->headerExtension)
 		{
 			if (type == 1u)
 				this->headerExtension->id = uint16_t{ htons(0xBEDE) };
