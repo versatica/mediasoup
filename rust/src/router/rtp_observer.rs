@@ -62,25 +62,25 @@ pub trait RtpObserver {
     /// Removes the given producer from the RTP observer.
     async fn remove_producer(&self, producer_id: ProducerId) -> Result<(), RequestError>;
 
-    /// Called when the RTP observer is paused.
+    /// Callback is called when the RTP observer is paused.
     fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
 
-    /// Called when the RTP observer is resumed.
+    /// Callback is called when the RTP observer is resumed.
     fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
 
-    /// Called when a new producer is added into the RTP observer.
+    /// Callback is called when a new producer is added into the RTP observer.
     fn on_add_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
 
-    /// Called when a producer is removed from the RTP observer.
+    /// Callback is called when a producer is removed from the RTP observer.
     fn on_remove_producer<F: Fn(&Producer) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId;
 
-    /// Called when the router this RTP observer belongs to is closed for whatever reason. The RTP
+    /// Callback is called when the router this RTP observer belongs to is closed for whatever reason. The RTP
     /// observer itself is also closed.
     fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 
-    /// Called when the RTP observer is closed for whatever reason.
+    /// Callback is called when the RTP observer is closed for whatever reason.
     fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 }

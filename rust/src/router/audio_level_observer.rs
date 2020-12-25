@@ -368,7 +368,7 @@ impl AudioLevelObserver {
         Self { inner }
     }
 
-    /// Called at most every interval (see [`AudioLevelObserverOptions`]).
+    /// Callback is called at most every interval (see [`AudioLevelObserverOptions`]).
     ///
     /// Audio volumes entries ordered by volume (louder ones go first).
     pub fn on_volumes<F: Fn(&Vec<AudioLevelObserverVolume>) + Send + Sync + 'static>(
@@ -378,7 +378,7 @@ impl AudioLevelObserver {
         self.inner.handlers.volumes.add(Box::new(callback))
     }
 
-    /// Called when no one of the producers in this RTP observer is generating audio with a volume
+    /// Callback is called when no one of the producers in this RTP observer is generating audio with a volume
     /// beyond the given threshold.
     pub fn on_silence<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.silence.add(Box::new(callback))

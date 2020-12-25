@@ -232,27 +232,36 @@ pub trait TransportGeneric<Dump, Stat>: Transport + Clone {
     /// set of statistics.
     async fn get_stats(&self) -> Result<Vec<Stat>, RequestError>;
 
+    /// Callback is called when a new producer is created.
     fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
 
+    /// Callback is called when a new consumer is created.
     fn on_new_consumer<F: Fn(&Consumer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
 
+    /// Callback is called when a new data producer is created.
     fn on_new_data_producer<F: Fn(&DataProducer) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId;
 
+    /// Callback is called when a new data consumer is created.
     fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId;
 
+    /// See [`Transport::enable_trace_event()`]
     fn on_trace<F: Fn(&TransportTraceEventData) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId;
 
+    /// Callback is called when the router this transport belongs to is closed for whatever reason.
+    /// The transport itself is also closed. `on_transport_close` callbacks are also called on all
+    /// its producers and consumers.
     fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 
+    /// Callback is called when the router is closed for whatever reason.
     fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 }
 

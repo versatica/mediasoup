@@ -1,3 +1,5 @@
+//! Container that creates [`Worker`] instances.
+
 use crate::worker::{Worker, WorkerSettings};
 use async_executor::Executor;
 use async_oneshot::Sender;
@@ -22,7 +24,7 @@ struct Inner {
     worker_binary: PathBuf,
 }
 
-/// Container that creates [Worker] instances
+/// Container that creates [`Worker`] instances.
 ///
 /// # Examples
 /// ```no_run
@@ -44,15 +46,16 @@ struct Inner {
 /// })
 /// ```
 ///
-/// If you already happen to have [`async_executor::Executor`] instance available,
-/// [`WorkerManager::with_executor()`] can be used to create an instance instead.
+/// If you already happen to have [`async_executor::Executor`] instance available or need a
+/// multi-threaded executor, [`WorkerManager::with_executor()`] can be used to create an instance
+/// instead.
 #[derive(Clone)]
 pub struct WorkerManager {
     inner: Arc<Inner>,
 }
 
 impl WorkerManager {
-    /// Create new worker manager, internally a new thread with executor will be created.
+    /// Create new worker manager, internally a new single-threaded executor will be created.
     pub fn new(worker_binary: PathBuf) -> Self {
         let executor = Arc::new(Executor::new());
         let (stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
@@ -90,7 +93,7 @@ impl WorkerManager {
         Self { inner }
     }
 
-    /// Create a Worker.
+    /// Creates a new worker with the given settings.
     ///
     /// Worker manager will be kept alive as long as at least one worker instance is alive.
     pub async fn create_worker(&self, worker_settings: WorkerSettings) -> io::Result<Worker> {
@@ -110,6 +113,7 @@ impl WorkerManager {
         Ok(worker)
     }
 
+    /// Callback is called when a new worker is created.
     pub fn on_new_worker<F: Fn(&Worker) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.new_worker.add(Box::new(callback))
     }
