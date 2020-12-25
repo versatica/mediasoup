@@ -232,7 +232,7 @@ pub enum ConsumerTraceEventData {
         /// Event direction.
         direction: EventDirection,
         // TODO: Clarify value structure
-        /// Per type information.
+        /// Per type specific information.
         info: Value,
     },
     KeyFrame {
@@ -241,7 +241,7 @@ pub enum ConsumerTraceEventData {
         /// Event direction.
         direction: EventDirection,
         // TODO: Clarify value structure
-        /// Per type information.
+        /// Per type specific information.
         info: Value,
     },
     NACK {
@@ -250,7 +250,7 @@ pub enum ConsumerTraceEventData {
         /// Event direction.
         direction: EventDirection,
         // TODO: Clarify value structure
-        /// Per type information.
+        /// Per type specific information.
         info: Value,
     },
     PLI {
@@ -259,7 +259,7 @@ pub enum ConsumerTraceEventData {
         /// Event direction.
         direction: EventDirection,
         // TODO: Clarify value structure
-        /// Per type information.
+        /// Per type specific information.
         info: Value,
     },
     FIR {
@@ -268,7 +268,7 @@ pub enum ConsumerTraceEventData {
         /// Event direction.
         direction: EventDirection,
         // TODO: Clarify value structure
-        /// Per type information.
+        /// Per type specific information.
         info: Value,
     },
 }

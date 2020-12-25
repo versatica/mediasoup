@@ -1,7 +1,11 @@
 #[doc(hidden)]
 #[macro_export]
 macro_rules! uuid_based_wrapper_type {
-    ($struct_name: ident) => {
+    (
+        $(#[$outer:meta])*
+        $struct_name: ident
+    ) => {
+        $(#[$outer])*
         #[derive(
             Debug,
             Copy,

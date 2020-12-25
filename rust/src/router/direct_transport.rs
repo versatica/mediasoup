@@ -286,6 +286,15 @@ impl Transport for DirectTransport {
 
         Ok(data_consumer)
     }
+
+    async fn enable_trace_event(
+        &self,
+        types: Vec<TransportTraceEventType>,
+    ) -> Result<(), RequestError> {
+        debug!("enable_trace_event()");
+
+        self.enable_trace_event_impl(types).await
+    }
 }
 
 #[async_trait(?Send)]
@@ -303,15 +312,6 @@ impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransp
         debug!("get_stats()");
 
         self.get_stats_impl().await
-    }
-
-    async fn enable_trace_event(
-        &self,
-        types: Vec<TransportTraceEventType>,
-    ) -> Result<(), RequestError> {
-        debug!("enable_trace_event()");
-
-        self.enable_trace_event_impl(types).await
     }
 
     fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {

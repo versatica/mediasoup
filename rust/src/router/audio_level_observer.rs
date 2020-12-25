@@ -1,3 +1,5 @@
+//! An audio level observer monitors the volume of the selected audio producers.
+
 use crate::data_structures::AppData;
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestInternal,
@@ -133,6 +135,13 @@ impl Inner {
     }
 }
 
+/// An audio level observer monitors the volume of the selected audio producers.
+///
+/// It just handles audio producers (if [`AudioLevelObserver::add_producer()`] is called with a
+/// video producer it will fail).
+///
+/// Audio levels are read from an RTP header extension. No decoding of audio data is done. See
+/// [RFC6464](https://tools.ietf.org/html/rfc6464) for more information.
 #[derive(Clone)]
 pub struct AudioLevelObserver {
     inner: Arc<Inner>,
@@ -140,17 +149,14 @@ pub struct AudioLevelObserver {
 
 #[async_trait(?Send)]
 impl RtpObserver for AudioLevelObserver {
-    /// RtpObserver id.
     fn id(&self) -> RtpObserverId {
         self.inner.id
     }
 
-    /// Whether the RtpObserver is paused.
     fn paused(&self) -> bool {
         self.inner.paused.load(Ordering::SeqCst)
     }
 
-    /// App custom data.
     fn app_data(&self) -> &AppData {
         &self.inner.app_data
     }
@@ -159,7 +165,6 @@ impl RtpObserver for AudioLevelObserver {
         self.inner.closed.load(Ordering::SeqCst)
     }
 
-    /// Pause the RtpObserver.
     async fn pause(&self) -> Result<(), RequestError> {
         debug!("pause()");
 
@@ -179,7 +184,6 @@ impl RtpObserver for AudioLevelObserver {
         Ok(())
     }
 
-    /// Resume the RtpObserver.
     async fn resume(&self) -> Result<(), RequestError> {
         debug!("resume()");
 
@@ -199,7 +203,6 @@ impl RtpObserver for AudioLevelObserver {
         Ok(())
     }
 
-    /// Add a Producer to the RtpObserver.
     async fn add_producer(
         &self,
         RtpObserverAddProducerOptions { producer_id }: RtpObserverAddProducerOptions,
@@ -228,7 +231,6 @@ impl RtpObserver for AudioLevelObserver {
         Ok(())
     }
 
-    /// Remove a Producer from the RtpObserver.
     async fn remove_producer(&self, producer_id: ProducerId) -> Result<(), RequestError> {
         let producer = match self.inner.router.get_producer(&producer_id) {
             Some(producer) => producer,
@@ -252,6 +254,33 @@ impl RtpObserver for AudioLevelObserver {
         });
 
         Ok(())
+    }
+
+    fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.pause.add(Box::new(callback))
+    }
+
+    fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.resume.add(Box::new(callback))
+    }
+
+    fn on_add_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.add_producer.add(Box::new(callback))
+    }
+
+    fn on_remove_producer<F: Fn(&Producer) + Send + Sync + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
+        self.inner.handlers.remove_producer.add(Box::new(callback))
+    }
+
+    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.router_close.add(Box::new(callback))
+    }
+
+    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.close.add(Box::new(callback))
     }
 }
 
@@ -339,6 +368,9 @@ impl AudioLevelObserver {
         Self { inner }
     }
 
+    /// Called at most every interval (see [`AudioLevelObserverOptions`]).
+    ///
+    /// Audio volumes entries ordered by volume (louder ones go first).
     pub fn on_volumes<F: Fn(&Vec<AudioLevelObserverVolume>) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -346,38 +378,10 @@ impl AudioLevelObserver {
         self.inner.handlers.volumes.add(Box::new(callback))
     }
 
+    /// Called when no one of the producers in this RTP observer is generating audio with a volume
+    /// beyond the given threshold.
     pub fn on_silence<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.silence.add(Box::new(callback))
-    }
-
-    pub fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.pause.add(Box::new(callback))
-    }
-
-    pub fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.resume.add(Box::new(callback))
-    }
-
-    pub fn on_add_producer<F: Fn(&Producer) + Send + Sync + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId {
-        self.inner.handlers.add_producer.add(Box::new(callback))
-    }
-
-    pub fn on_remove_producer<F: Fn(&Producer) + Send + Sync + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId {
-        self.inner.handlers.remove_producer.add(Box::new(callback))
-    }
-
-    pub fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.router_close.add(Box::new(callback))
-    }
-
-    pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.close.add(Box::new(callback))
     }
 
     fn get_internal(&self) -> RtpObserverInternal {

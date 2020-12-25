@@ -230,7 +230,6 @@ pub struct PipeTransport {
 
 #[async_trait(?Send)]
 impl Transport for PipeTransport {
-    /// Transport id.
     fn id(&self) -> TransportId {
         self.inner.id
     }
@@ -239,7 +238,6 @@ impl Transport for PipeTransport {
         self.inner.router.id()
     }
 
-    /// App custom data.
     fn app_data(&self) -> &AppData {
         &self.inner.app_data
     }
@@ -248,9 +246,6 @@ impl Transport for PipeTransport {
         self.inner.closed.load(Ordering::SeqCst)
     }
 
-    /// Create a Producer.
-    ///
-    /// Transport will be kept alive as long as at least one producer instance is alive.
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
         debug!("produce()");
 
@@ -265,9 +260,6 @@ impl Transport for PipeTransport {
         Ok(producer)
     }
 
-    /// Create a Consumer.
-    ///
-    /// Transport will be kept alive as long as at least one consumer instance is alive.
     async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError> {
         debug!("consume()");
 
@@ -282,9 +274,6 @@ impl Transport for PipeTransport {
         Ok(consumer)
     }
 
-    /// Create a DataProducer.
-    ///
-    /// Transport will be kept alive as long as at least one data producer instance is alive.
     async fn produce_data(
         &self,
         data_producer_options: DataProducerOptions,
@@ -306,9 +295,6 @@ impl Transport for PipeTransport {
         Ok(data_producer)
     }
 
-    /// Create a DataConsumer.
-    ///
-    /// Transport will be kept alive as long as at least one data consumer instance is alive.
     async fn consume_data(
         &self,
         data_consumer_options: DataConsumerOptions,
@@ -329,24 +315,6 @@ impl Transport for PipeTransport {
 
         Ok(data_consumer)
     }
-}
-
-#[async_trait(?Send)]
-impl TransportGeneric<PipeTransportDump, PipeTransportStat> for PipeTransport {
-    /// Dump Transport.
-    #[doc(hidden)]
-    async fn dump(&self) -> Result<PipeTransportDump, RequestError> {
-        debug!("dump()");
-
-        self.dump_impl().await
-    }
-
-    /// Get Transport stats.
-    async fn get_stats(&self) -> Result<Vec<PipeTransportStat>, RequestError> {
-        debug!("get_stats()");
-
-        self.get_stats_impl().await
-    }
 
     async fn enable_trace_event(
         &self,
@@ -355,6 +323,22 @@ impl TransportGeneric<PipeTransportDump, PipeTransportStat> for PipeTransport {
         debug!("enable_trace_event()");
 
         self.enable_trace_event_impl(types).await
+    }
+}
+
+#[async_trait(?Send)]
+impl TransportGeneric<PipeTransportDump, PipeTransportStat> for PipeTransport {
+    #[doc(hidden)]
+    async fn dump(&self) -> Result<PipeTransportDump, RequestError> {
+        debug!("dump()");
+
+        self.dump_impl().await
+    }
+
+    async fn get_stats(&self) -> Result<Vec<PipeTransportStat>, RequestError> {
+        debug!("get_stats()");
+
+        self.get_stats_impl().await
     }
 
     fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
@@ -548,7 +532,8 @@ impl PipeTransport {
         Ok(())
     }
 
-    /// Set maximum incoming bitrate for receiving media.
+    /// Set maximum incoming bitrate for media streams sent by the remote endpoint over this
+    /// transport.
     pub async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
         debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
 

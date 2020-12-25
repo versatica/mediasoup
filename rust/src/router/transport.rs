@@ -1,3 +1,13 @@
+//! A transport connects an endpoint with a Mediasoup router and enables transmission of media in
+//! both directions by means of [`Producer`], [`Consumer`], [`DataProducer`] and [`DataConsumer`]
+//! instances created on it.
+//!
+//! Mediasoup implements the following transports:
+//! * [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
+//! * [`PlainTransport`](crate::plain_transport::PlainTransport)
+//! * [`PipeTransport`](crate::pipe_transport::PipeTransport)
+//! * [`DirectTransport`](crate::direct_transport::DirectTransport)
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
@@ -37,36 +47,43 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-uuid_based_wrapper_type!(TransportId);
+uuid_based_wrapper_type!(
+    /// Transport identifier.
+    TransportId
+);
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum TransportTraceEventData {
+    /// RTP probation packet.
     Probation {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
         direction: EventDirection,
         // TODO: Clarify value structure
-        /// Per type information.
+        /// Per type specific information.
         info: Value,
     },
+    /// Transport bandwidth estimation changed.
     BWE {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
         direction: EventDirection,
         // TODO: Clarify value structure
-        /// Per type information.
+        /// Per type specific information.
         info: Value,
     },
 }
 
-/// Valid types for 'trace' event.
+/// Valid types for "trace" event.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TransportTraceEventType {
+    /// RTP probation packet.
     Probation,
+    /// Transport bandwidth estimation changed.
     BWE,
 }
 
@@ -109,6 +126,17 @@ pub(super) enum TransportType {
     WebRtc,
 }
 
+/// A transport connects an endpoint with a Mediasoup router and enables transmission of media in
+/// both directions by means of [`Producer`], [`Consumer`], [`DataProducer`] and [`DataConsumer`]
+/// instances created on it.
+///
+/// Mediasoup implements the following transports:
+/// * [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
+/// * [`PlainTransport`](crate::plain_transport::PlainTransport)
+/// * [`PipeTransport`](crate::pipe_transport::PipeTransport)
+/// * [`DirectTransport`](crate::direct_transport::DirectTransport)
+///
+/// For additional methods see [`TransportGeneric`].
 #[async_trait(?Send)]
 pub trait Transport
 where
@@ -123,19 +151,52 @@ where
     /// App custom data.
     fn app_data(&self) -> &AppData;
 
+    /// Whether the transport is closed.
     fn closed(&self) -> bool;
 
-    /// Create a Producer.
+    /// Instructs the router to receive audio or video RTP (or SRTP depending on the transport).
+    /// This is the way to inject media into Mediasoup.
     ///
     /// Transport will be kept alive as long as at least one producer instance is alive.
+    ///
+    /// ### Notes on usage
+    /// Check the [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
+    /// section for more details (TypeScript-oriented, but concepts apply here as well).
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
 
-    /// Create a Consumer.
+    /// Instructs the router to send audio or video RTP (or SRTP depending on the transport).
+    /// This is the way to extract media from Mediasoup.
     ///
     /// Transport will be kept alive as long as at least one consumer instance is alive.
+    ///
+    /// ### Notes on usage
+    /// Check the [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
+    /// section for more details (TypeScript-oriented, but concepts apply here as well).
+    ///
+    /// When creating a consumer it's recommended to set [`ConsumerOptions::paused`] to `true`, then
+    /// transmit the consumer parameters to the consuming endpoint and, once the consuming endpoint
+    /// has created its local side consumer, unpause the server side consumer using the
+    /// [`Consumer::resume()`] method.
+    ///
+    /// Reasons for create the server side consumer in `paused` mode:
+    /// * If the remote endpoint is a WebRTC browser or application and it receives a RTP packet of
+    ///   the new consumer before the remote [`RTCPeerConnection`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
+    ///   is ready to process it (this is, before the remote consumer is created in the remote
+    ///   endpoint) it may happen that the `RTCPeerConnection` will wrongly associate the SSRC of
+    ///   the received packet to an already existing SDP `m=` section, so the imminent creation of
+    ///   the new consumer and its associated `m=` section will fail.
+    ///   * Related [issue](https://github.com/versatica/libmediasoupclient/issues/57).
+    /// * Also, when creating a video consumer, this is an optimization to make it possible for the
+    ///   consuming endpoint to render the video as far as possible. If the server side consumer was
+    ///   created with `paused: false`, Mediasoup will immediately request a key frame to the
+    ///   producer and that key frame may reach the consuming endpoint even before it's ready to
+    ///   consume it, generating "black" video until the device requests a keyframe by itself.
     async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError>;
 
-    /// Create a DataProducer.
+    /// Instructs the router to receive data messages. Those messages can be delivered by an
+    /// endpoint via SCTP protocol (AKA [`DataChannel`](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel)
+    /// in WebRTC) or can be directly sent from the Node.js application if the transport is a
+    /// [`DirectTransport`](crate::direct_transport::DirectTransport).
     ///
     /// Transport will be kept alive as long as at least one data producer instance is alive.
     async fn produce_data(
@@ -143,27 +204,33 @@ where
         data_producer_options: DataProducerOptions,
     ) -> Result<DataProducer, ProduceDataError>;
 
-    /// Create a DataConsumer.
+    /// Instructs the router to send data messages to the endpoint via SCTP protocol (AKA
+    /// [`DataChannel`](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel) in WebRTC)
+    /// or directly to the Node.js process if the transport is a
+    /// [`DirectTransport`](crate::direct_transport::DirectTransport).
     ///
     /// Transport will be kept alive as long as at least one data consumer instance is alive.
     async fn consume_data(
         &self,
         data_consumer_options: DataConsumerOptions,
     ) -> Result<DataConsumer, ConsumeDataError>;
+
+    /// Instructs the transport to emit "trace" events. For monitoring purposes. Use with caution.
+    async fn enable_trace_event(
+        &self,
+        types: Vec<TransportTraceEventType>,
+    ) -> Result<(), RequestError>;
 }
 
+/// Generic transport trait with methods available on all transports in addition to [`Transport`].
 #[async_trait(?Send)]
 pub trait TransportGeneric<Dump, Stat>: Transport + Clone {
     /// Dump Transport.
     async fn dump(&self) -> Result<Dump, RequestError>;
 
-    /// Get Transport stats.
+    /// Returns current RTC statistics of the transport. Each transport class produces a different
+    /// set of statistics.
     async fn get_stats(&self) -> Result<Vec<Stat>, RequestError>;
-
-    async fn enable_trace_event(
-        &self,
-        types: Vec<TransportTraceEventType>,
-    ) -> Result<(), RequestError>;
 
     fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
 
@@ -189,46 +256,64 @@ pub trait TransportGeneric<Dump, Stat>: Transport + Clone {
     fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 }
 
+/// Error that caused [`Transport::produce`] to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ProduceError {
+    /// Producer with the same id already exists.
     #[error("Producer with the same id \"{0}\" already exists")]
     AlreadyExists(ProducerId),
+    /// Incorrect RTP parameters.
     #[error("Incorrect RTP parameters: {0}")]
     IncorrectRtpParameters(RtpParametersError),
+    /// RTP mapping error.
     #[error("RTP mapping error: {0}")]
     FailedRtpParametersMapping(RtpParametersMappingError),
+    /// Request to worker failed.
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
 
+/// Error that caused [`Transport::consume`] to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ConsumeError {
+    // Producer with specified id not found.
     #[error("Producer with id \"{0}\" not found")]
     ProducerNotFound(ProducerId),
+    /// RTP capabilities error.
     #[error("RTP capabilities error: {0}")]
     FailedRtpCapabilitiesValidation(RtpCapabilitiesError),
+    /// Bad consumer RTP parameters.
     #[error("Bad consumer RTP parameters: {0}")]
     BadConsumerRtpParameters(ConsumerRtpParametersError),
+    /// Request to worker failed.
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
 
+/// Error that caused [`Transport::produce_data`] to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ProduceDataError {
+    /// Data producer with the same id already exists.
     #[error("Data producer with the same id \"{0}\" already exists")]
     AlreadyExists(DataProducerId),
+    /// SCTP stream parameters are required for this transport.
     #[error("SCTP stream parameters are required for this transport")]
     SctpStreamParametersRequired,
+    /// Request to worker failed.
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
 
+/// Error that caused [`Transport::consume_data`] to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ConsumeDataError {
+    /// Data producer with specified id not found
     #[error("Data producer with id \"{0}\" not found")]
     DataProducerNotFound(DataProducerId),
-    #[error("no free sctp_stream_id available in transport")]
+    /// No free `sctp_stream_id` available in transport.
+    #[error("No free sctp_stream_id available in transport")]
     NoSctpStreamId,
+    /// Request to worker failed.
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
 }
