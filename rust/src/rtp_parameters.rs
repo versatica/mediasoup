@@ -1,3 +1,6 @@
+//! Collection of RTP-related data structures that are used to specify codec parameters and
+//! capabilities of various endpoints.
+
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -7,6 +10,8 @@ use std::fmt;
 use std::iter::FromIterator;
 use std::num::{NonZeroU32, NonZeroU8};
 
+/// Codec specific parameters. Some parameters (such as `packetization-mode` and `profile-level-id`
+/// in H264 or `profile-id` in VP9) are critical for codec matching.
 #[derive(Debug, Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtpCodecParametersParameters(BTreeMap<String, RtpCodecParametersParametersValue>);
 
@@ -203,9 +208,9 @@ where
 /// Exactly one RtpCodecCapabilityFinalized will be present for each supported combination of parameters that
 /// requires a distinct value of preferred_payload_type. For example:
 ///
-/// - Multiple H264 codecs, each with their own distinct 'packetization-mode' and 'profile-level-id'
+/// - Multiple H264 codecs, each with their own distinct `packetization-mode` and `profile-level-id`
 ///   values.
-/// - Multiple VP9 codecs, each with their own distinct 'profile-id' value.
+/// - Multiple VP9 codecs, each with their own distinct `profile-id` value.
 ///
 /// This is similar to RtpCodecCapability, but with preferred_payload_type field being required
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
@@ -223,8 +228,8 @@ pub enum RtpCodecCapabilityFinalized {
         /// The number of channels supported (e.g. two for stereo). Just for audio.
         /// Default 1.
         channels: NonZeroU8,
-        /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
-        /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
+        /// Codec specific parameters. Some parameters (such as `packetization-mode` and
+        /// `profile-level-id` in H264 or `profile-id` in VP9) are critical for codec matching.
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
@@ -237,8 +242,8 @@ pub enum RtpCodecCapabilityFinalized {
         preferred_payload_type: u8,
         /// Codec clock rate expressed in Hertz.
         clock_rate: NonZeroU32,
-        /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
-        /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
+        /// Codec specific parameters. Some parameters (such as `packetization-mode` and
+        /// `profile-level-id` in H264 or `profile-id` in VP9) are critical for codec matching.
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
@@ -310,6 +315,7 @@ pub enum MediaKind {
     Video,
 }
 
+/// Known Audio or Video MIME type.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum MimeType {
@@ -371,9 +377,9 @@ pub enum MimeTypeVideo {
 /// Exactly one RtpCodecCapability will be present for each supported combination of parameters that
 /// requires a distinct value of preferred_payload_type. For example:
 ///
-/// - Multiple H264 codecs, each with their own distinct 'packetization-mode' and 'profile-level-id'
+/// - Multiple H264 codecs, each with their own distinct `packetization-mode` and `profile-level-id`
 ///   values.
-/// - Multiple VP9 codecs, each with their own distinct 'profile-id' value.
+/// - Multiple VP9 codecs, each with their own distinct `profile-id` value.
 ///
 /// RtpCodecCapability entries in the mediaCodecs array of RouterOptions do not require
 /// preferred_payload_type field (if unset, mediasoup will choose a random one). If given, make sure
@@ -393,8 +399,8 @@ pub enum RtpCodecCapability {
         /// The number of channels supported (e.g. two for stereo). Just for audio.
         /// Default 1.
         channels: NonZeroU8,
-        /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
-        /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
+        /// Codec specific parameters. Some parameters (such as `packetization-mode` and
+        /// `profile-level-id` in H264 or `profile-id` in VP9) are critical for codec matching.
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
@@ -408,8 +414,8 @@ pub enum RtpCodecCapability {
         preferred_payload_type: Option<u8>,
         /// Codec clock rate expressed in Hertz.
         clock_rate: NonZeroU32,
-        /// Codec specific parameters. Some parameters (such as 'packetization-mode' and
-        /// 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for codec matching.
+        /// Codec specific parameters. Some parameters (such as `packetization-mode` and
+        /// `profile-level-id` in H264 or `profile-id` in VP9) are critical for codec matching.
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
@@ -575,8 +581,8 @@ pub struct RtpHeaderExtension {
     /// If true, it is preferred that the value in the header be encrypted as per RFC 6904.
     /// Default false.
     pub preferred_encrypt: bool,
-    /// If 'sendrecv', mediasoup supports sending and receiving this RTP extension. 'sendonly' means
-    /// that mediasoup can send (but not receive) it. 'recvonly' means that mediasoup can receive
+    /// If `SendRecv`, mediasoup supports sending and receiving this RTP extension. `SendOnly` means
+    /// that mediasoup can send (but not receive) it. `RecvOnly` means that mediasoup can receive
     /// (but not send) it.
     pub direction: RtpHeaderExtensionDirection,
 }
@@ -671,7 +677,7 @@ impl From<u32> for RtpCodecParametersParametersValue {
 pub enum RtpCodecParameters {
     #[serde(rename_all = "camelCase")]
     Audio {
-        /// The codec MIME media type/subtype (e.g. 'audio/opus').
+        /// The codec MIME media type/subtype (e.g. `audio/opus`).
         mime_type: MimeTypeAudio,
         /// The value that goes in the RTP Payload Type Field. Must be unique.
         payload_type: u8,
@@ -681,7 +687,7 @@ pub enum RtpCodecParameters {
         /// Default 1.
         channels: NonZeroU8,
         /// Codec-specific parameters available for signaling. Some parameters (such as
-        /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
+        /// `packetization-mode` and `profile-level-id` in H264 or `profile-id` in VP9) are critical for
         /// codec matching.
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
@@ -689,14 +695,14 @@ pub enum RtpCodecParameters {
     },
     #[serde(rename_all = "camelCase")]
     Video {
-        /// The codec MIME media type/subtype (e.g. 'video/VP8').
+        /// The codec MIME media type/subtype (e.g. `video/VP8`).
         mime_type: MimeTypeVideo,
         /// The value that goes in the RTP Payload Type Field. Must be unique.
         payload_type: u8,
         /// Codec clock rate expressed in Hertz.
         clock_rate: NonZeroU32,
         /// Codec-specific parameters available for signaling. Some parameters (such as
-        /// 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
+        /// `packetization-mode` and `profile-level-id` in H264 or `profile-id` in VP9) are critical for
         /// codec matching.
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
@@ -888,7 +894,9 @@ pub struct RtpEncodingParameters {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dtx: Option<bool>,
     // TODO: Enum for scalability modes, they should all be defined in the spec
-    /// Number of spatial and temporal layers in the RTP stream (e.g. 'L1T3'). See webrtc-svc.
+    /// Number of spatial and temporal layers in the RTP stream (e.g. `L1T3`).
+    ///
+    /// See [webrtc-svc](https://w3c.github.io/webrtc-svc/).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scalability_mode: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

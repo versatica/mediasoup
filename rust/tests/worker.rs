@@ -125,7 +125,7 @@ mod worker {
                     let mut settings = WorkerUpdateSettings::default();
 
                     settings.log_level = Some(WorkerLogLevel::Debug);
-                    settings.log_tags = Some(vec![WorkerLogTag::Ice]);
+                    settings.log_tags = Some(vec![WorkerLogTag::ICE]);
 
                     settings
                 })

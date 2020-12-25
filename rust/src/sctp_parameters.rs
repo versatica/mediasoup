@@ -1,5 +1,9 @@
+//! Collection of SCTP-related data structures that are used to specify SCTP association parameters.
+
 use serde::{Deserialize, Serialize};
 
+/// Number of SCTP streams.
+///
 /// Both OS and MIS are part of the SCTP INIT+ACK handshake. OS refers to the initial number of
 /// outgoing SCTP streams that the server side transport creates (to be used by DataConsumers),
 /// while MIS refers to the maximum number of incoming SCTP streams that the server side transport
@@ -36,6 +40,7 @@ impl Default for NumSctpStreams {
     }
 }
 
+/// Parameters of the SCTP association.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SctpParameters {
@@ -52,6 +57,7 @@ pub struct SctpParameters {
 }
 
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.
+///
 /// If ordered is true then max_packet_life_time and max_retransmits must be false.
 /// If ordered if false, only one of max_packet_life_time or max_retransmits can be true.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]

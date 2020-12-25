@@ -25,7 +25,6 @@ use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::*;
 pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
-use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::ffi::OsString;
@@ -107,19 +106,19 @@ pub enum WorkerLogTag {
     /// Logs about software/library versions, configuration and process information.
     Info,
     /// Logs about ICE.
-    Ice,
+    ICE,
     /// Logs about DTLS.
-    Dtls,
+    DTLS,
     /// Logs about RTP.
-    Rtp,
+    RTP,
     /// Logs about SRTP encryption/decryption.
-    Srtp,
+    SRTP,
     /// Logs about RTCP.
-    Rtcp,
+    RTCP,
     /// Logs about RTP retransmission, including NACK/PLI/FIR.
-    Rtx,
+    RTX,
     /// Logs about transport bandwidth estimation.
-    Bwe,
+    BWE,
     /// Logs related to the scores of Producers and Consumers.
     Score,
     /// Logs about video simulcast.
@@ -127,7 +126,7 @@ pub enum WorkerLogTag {
     /// Logs about video SVC.
     SVC,
     /// Logs about SCTP (DataChannel).
-    Sctp,
+    SCTP,
     /// Logs about messages (can be SCTP messages or direct messages).
     Message,
 }
@@ -136,17 +135,17 @@ impl WorkerLogTag {
     fn as_str(&self) -> &'static str {
         match self {
             Self::Info => "info",
-            Self::Ice => "ice",
-            Self::Dtls => "dtls",
-            Self::Rtp => "rtp",
-            Self::Srtp => "srtp",
-            Self::Rtcp => "rtcp",
-            Self::Rtx => "rtx",
-            Self::Bwe => "bwe",
+            Self::ICE => "ice",
+            Self::DTLS => "dtls",
+            Self::RTP => "rtp",
+            Self::SRTP => "srtp",
+            Self::RTCP => "rtcp",
+            Self::RTX => "rtx",
+            Self::BWE => "bwe",
             Self::Score => "score",
             Self::Simulcast => "simulcast",
-            Self::Svc => "svc",
-            Self::Sctp => "sctp",
+            Self::SVC => "svc",
+            Self::SCTP => "sctp",
             Self::Message => "message",
         }
     }
