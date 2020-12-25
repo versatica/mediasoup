@@ -557,7 +557,10 @@ where
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 
             // We use up to 8 bytes for MID (string).
-            let mid = self.next_mid_for_consumers().fetch_add(1, Ordering::AcqRel) % 100_000_000;
+            let next_mid_for_consumers = self
+                .next_mid_for_consumers()
+                .fetch_add(1, Ordering::Relaxed);
+            let mid = next_mid_for_consumers % 100_000_000;
 
             // Set MID.
             rtp_parameters.mid = Some(format!("{}", mid));
