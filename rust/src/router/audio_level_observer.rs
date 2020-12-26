@@ -21,6 +21,7 @@ use std::num::NonZeroU16;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
+/// AudioLevelObserver options
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct AudioLevelObserverOptions {
@@ -48,6 +49,7 @@ impl Default for AudioLevelObserverOptions {
     }
 }
 
+/// Represents volume of one audio producer.
 #[derive(Clone)]
 pub struct AudioLevelObserverVolume {
     /// The audio producer instance.

@@ -14,7 +14,7 @@
 pub mod data_structures;
 mod macros;
 mod messages;
-pub mod ortc;
+mod ortc;
 pub mod router;
 pub mod rtp_parameters;
 pub mod scalability_modes;

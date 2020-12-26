@@ -5,7 +5,7 @@ use crate::messages::{
     ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
     ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
 };
-use crate::ortc::RtpMapping;
+pub use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use crate::transport::{Transport, TransportGeneric};
 use crate::uuid_based_wrapper_type;

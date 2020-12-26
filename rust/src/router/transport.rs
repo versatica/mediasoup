@@ -21,7 +21,7 @@ use crate::messages::{
     TransportProduceRequest, TransportSetMaxIncomingBitrateData,
     TransportSetMaxIncomingBitrateRequest,
 };
-use crate::ortc::{
+pub use crate::ortc::{
     ConsumerRtpParametersError, RtpCapabilitiesError, RtpParametersError, RtpParametersMappingError,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
@@ -52,6 +52,10 @@ uuid_based_wrapper_type!(
     TransportId
 );
 
+/// Data contained in transport trace events.
+///
+/// See also "trace" event in the [Debugging](https://mediasoup.org/documentation/v3/mediasoup/debugging#trace-Event)
+/// section (TypeScript-oriented, but concepts apply here as well).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum TransportTraceEventData {

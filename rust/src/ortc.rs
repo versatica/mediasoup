@@ -20,6 +20,7 @@ const DYNAMIC_PAYLOAD_TYPES: &[u8] = &[
     119, 120, 121, 122, 123, 124, 125, 126, 127, 96, 97, 98, 99,
 ];
 
+#[doc(hidden)]
 #[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpMappingCodec {
@@ -27,6 +28,7 @@ pub struct RtpMappingCodec {
     pub mapped_payload_type: u8,
 }
 
+#[doc(hidden)]
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpMappingEncoding {
@@ -39,48 +41,63 @@ pub struct RtpMappingEncoding {
     pub mapped_ssrc: u32,
 }
 
+#[doc(hidden)]
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct RtpMapping {
     pub codecs: Vec<RtpMappingCodec>,
     pub encodings: Vec<RtpMappingEncoding>,
 }
 
+/// Error caused by invalid RTP parameters.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpParametersError {
-    #[error("invalid codec apt parameter {0}")]
+    /// Invalid codec apt parameter.
+    #[error("Invalid codec apt parameter {0}")]
     InvalidAptParameter(String),
 }
 
+/// Error caused by invalid RTP capabilities.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpCapabilitiesError {
-    #[error("media codec not supported [mime_type:{mime_type:?}")]
+    /// Media codec not supported.
+    #[error("Media codec not supported [mime_type:{mime_type:?}")]
     UnsupportedCodec { mime_type: MimeType },
-    #[error("cannot allocate more dynamic codec payload types")]
+    /// Cannot allocate more dynamic codec payload types.
+    #[error("Cannot allocate more dynamic codec payload types")]
     CannotAllocate,
-    #[error("invalid codec apt parameter {0}")]
+    /// Invalid codec apt parameter.
+    #[error("Invalid codec apt parameter {0}")]
     InvalidAptParameter(String),
-    #[error("duplicated {0}")]
+    /// Duplicated preferred payload type
+    #[error("Duplicated preferred payload type {0}")]
     DuplicatedPreferredPayloadType(u8),
 }
 
+/// Error caused by invalid or unsupported RTP parameters given.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpParametersMappingError {
-    #[error("unsupported codec [mime_type:{mime_type:?}, payloadType:{payload_type}]")]
+    /// Unsupported codec.
+    #[error("Unsupported codec [mime_type:{mime_type:?}, payloadType:{payload_type}]")]
     UnsupportedCodec {
         mime_type: MimeType,
         payload_type: u8,
     },
-    #[error("no RTX codec for capability codec PT {preferred_payload_type}")]
+    /// No RTX codec for capability codec PT.
+    #[error("No RTX codec for capability codec PT {preferred_payload_type}")]
     UnsupportedRTXCodec { preferred_payload_type: u8 },
-    #[error("missing media codec found for RTX PT {payload_type}")]
+    /// Missing media codec found for RTX PT.
+    #[error("Missing media codec found for RTX PT {payload_type}")]
     MissingMediaCodecForRTX { payload_type: u8 },
 }
 
+/// Error caused by bad consumer RTP parameters.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ConsumerRtpParametersError {
-    #[error("invalid capabilities: {0}")]
+    /// Invalid capabilities
+    #[error("Invalid capabilities: {0}")]
     InvalidCapabilities(RtpCapabilitiesError),
-    #[error("no compatible media codecs")]
+    /// No compatible media codecs
+    #[error("No compatible media codecs")]
     NoCompatibleMediaCodecs,
 }
 
@@ -289,12 +306,8 @@ pub(crate) fn generate_router_rtp_capabilities(
     Ok(caps)
 }
 
-/**
- * Get a mapping of codec payloads and encodings of the given Producer RTP
- * parameters as values expected by the Router.
- *
- * Returns `Err()` if invalid or non supported RTP parameters are given.
- */
+/// Get a mapping of codec payloads and encodings of the given Producer RTP parameters as values
+/// expected by the Router.
 pub(crate) fn get_producer_rtp_parameters_mapping(
     rtp_parameters: &RtpParameters,
     rtp_capabilities: &RtpCapabilitiesFinalized,

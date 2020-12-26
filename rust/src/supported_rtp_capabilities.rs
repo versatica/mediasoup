@@ -1,3 +1,5 @@
+//! RTP capabilities supported by Mediasoup.
+
 use crate::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities, RtpCodecCapability,
     RtpCodecParametersParameters, RtpHeaderExtension, RtpHeaderExtensionDirection,
@@ -5,7 +7,14 @@ use crate::rtp_parameters::{
 };
 use std::num::{NonZeroU32, NonZeroU8};
 
-/// Get a mediasoup supported RTP capabilities.
+/// Get a Mediasoup supported RTP capabilities.
+///
+/// ### Note on usage:
+/// Those are NOT the RTP capabilities needed by mediasoup-client's
+/// [device.load()](https://mediasoup.org/documentation/v3/mediasoup-client/api/#device-load) and
+/// libmediasoupclient's [device.Load()](https://mediasoup.org/documentation/v3/libmediasoupclient/api/#device-Load)
+/// methods. There you must use [`Router::rtp_capabilities`](crate::router::Router::rtp_capabilities)
+/// getter instead.
 pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
     RtpCapabilities {
         codecs: vec![
