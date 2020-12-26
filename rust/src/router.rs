@@ -1,3 +1,11 @@
+//! A router enables injection, selection and forwarding of media streams through [`Transport`]
+//! instances created on it.
+//!
+//! Developers may think of a Mediasoup router as if it were a "multi-party conference room",
+//! although Mediasoup is much more low level than that and doesn't constrain itself to specific
+//! high level use cases (for instance, a "multi-party conference room" could involve various
+//! Mediasoup routers, even in different physicals hosts).
+
 #[cfg(not(doc))]
 pub mod audio_level_observer;
 #[cfg(not(doc))]
@@ -63,12 +71,24 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
 
-uuid_based_wrapper_type!(RouterId);
+uuid_based_wrapper_type!(
+    ///Router identifier.
+    RouterId
+);
 
+/// Router options.
+///
+/// ### Notes on usage:
+///
+/// * Feature codecs such as `RTX` MUST NOT be placed into the mediaCodecs list.
+/// * If `preferred_payload_type` is given in a [`RtpCodecCapability`] (although it's unnecessary)
+///   it's extremely recommended to use a value in the 96-127 range.
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct RouterOptions {
+    /// Router media codecs.
     pub media_codecs: Vec<RtpCodecCapability>,
+    /// Custom application data.
     pub app_data: AppData,
 }
 
@@ -81,22 +101,30 @@ impl RouterOptions {
     }
 }
 
+/// Options used for piping media or data producer to into another router on the same host.
+///
+/// ### Notes on usage:
+/// * SCTP arguments will only apply the first time the underlying transports are created.
 pub struct PipeToRouterOptions {
     /// Target Router instance.
     pub router: Router,
     /// IP used in the PipeTransport pair.
-    /// Default '127.0.0.1'.
+    ///
+    /// Default `127.0.0.1`.
     listen_ip: TransportListenIp,
     /// Create a SCTP association.
-    /// Default true.
+    ///
+    /// Default `true`.
     pub enable_sctp: bool,
     /// SCTP streams number.
     pub num_sctp_streams: NumSctpStreams,
     /// Enable RTX and NACK for RTP retransmission.
-    /// Default false.
+    ///
+    /// Default `false`.
     pub enable_rtx: bool,
     /// Enable SRTP.
-    /// Default false.
+    ///
+    /// Default `false`.
     pub enable_srtp: bool,
 }
 
@@ -116,28 +144,32 @@ impl PipeToRouterOptions {
     }
 }
 
-pub struct PipeToRouterSourceProducer {
-    /// The id of the Producer to consume.
-    pub producer_id: ProducerId,
-}
-
-pub struct PipeProducerToRouterValue {
+/// Container for pipe consumer and producer pair.
+// TODO: Fix this usability issue and remove `#[must_use]`
+#[must_use = "When dropped, pipe between routers will be destroyed"]
+pub struct PipeProducerToRouterPair {
     /// The Consumer created in the current Router.
     pub pipe_consumer: Consumer,
     /// The Producer created in the target Router.
     pub pipe_producer: Producer,
 }
 
+/// Error that caused [`Router::pipe_producer_to_router`] to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum PipeProducerToRouterError {
+    /// Destination router must be different
     #[error("Destination router must be different")]
     SameRouter,
+    /// Producer with specified id not found
     #[error("Producer with id \"{0}\" not found")]
     ProducerNotFound(ProducerId),
+    /// Failed to create or connect Pipe transport
     #[error("Failed to create or connect Pipe transport: \"{0}\"")]
     TransportFailed(RequestError),
+    /// Failed to consume
     #[error("Failed to consume: \"{0}\"")]
     ConsumeFailed(ConsumeError),
+    /// Failed to produce
     #[error("Failed to produce: \"{0}\"")]
     ProduceFailed(ProduceError),
 }
@@ -160,28 +192,32 @@ impl From<ProduceError> for PipeProducerToRouterError {
     }
 }
 
-pub struct PipeToRouterSourceDataProducer {
-    /// The id of the DataProducer to consume.
-    pub data_producer_id: DataProducerId,
-}
-
-pub struct PipeDataProducerToRouterValue {
+/// Container for pipe data consumer and data producer pair.
+// TODO: Fix this usability issue and remove `#[must_use]`
+#[must_use = "When dropped, pipe between routers will be destroyed"]
+pub struct PipeDataProducerToRouterPair {
     /// The DataConsumer created in the current Router.
     pub pipe_data_consumer: DataConsumer,
     /// The DataProducer created in the target Router.
     pub pipe_data_producer: DataProducer,
 }
 
+/// Error that caused [`Router::pipe_data_producer_to_router`] to fail.
 #[derive(Debug, Error)]
 pub enum PipeDataProducerToRouterError {
+    /// Destination router must be different
     #[error("Destination router must be different")]
     SameRouter,
+    /// Data producer with specified id not found
     #[error("Data producer with id \"{0}\" not found")]
     DataProducerNotFound(DataProducerId),
+    /// Failed to create or connect Pipe transport
     #[error("Failed to create or connect Pipe transport: \"{0}\"")]
     TransportFailed(RequestError),
+    /// Failed to consume
     #[error("Failed to consume: \"{0}\"")]
     ConsumeFailed(ConsumeDataError),
+    /// Failed to produce
     #[error("Failed to produce: \"{0}\"")]
     ProduceFailed(ProduceDataError),
 }
@@ -219,6 +255,7 @@ pub struct RouterDump {
     pub transport_ids: HashSet<TransportId>,
 }
 
+/// New transport that was just created.
 pub enum NewTransport<'a> {
     Direct(&'a DirectTransport),
     Pipe(&'a PipeTransport),
@@ -226,6 +263,7 @@ pub enum NewTransport<'a> {
     WebRtc(&'a WebRtcTransport),
 }
 
+/// New RTP observer that was just created.
 pub enum NewRtpObserver<'a> {
     AudioLevel(&'a AudioLevelObserver),
 }
@@ -313,6 +351,13 @@ impl Drop for Inner {
     }
 }
 
+/// A router enables injection, selection and forwarding of media streams through [`Transport`]
+/// instances created on it.
+///
+/// Developers may think of a Mediasoup router as if it were a "multi-party conference room",
+/// although Mediasoup is much more low level than that and doesn't constrain itself to specific
+/// high level use cases (for instance, a "multi-party conference room" could involve various
+/// Mediasoup routers, even in different physicals hosts).
 #[derive(Clone)]
 pub struct Router {
     inner: Arc<Inner>,
@@ -389,7 +434,14 @@ impl Router {
         self.inner.closed.load(Ordering::SeqCst)
     }
 
-    /// RTP capabilities of the Router.
+    /// RTP capabilities of the router. These capabilities are typically needed by Mediasoup clients
+    /// to compute their sending RTP parameters.
+    ///
+    /// ### Notes on usage:
+    /// * Check the [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
+    ///   section for more details.
+    /// * See also how to [filter these RTP capabilities](https://mediasoup.org/documentation/v3/tricks/#rtp-capabilities-filtering)
+    ///   before using them into a client.
     pub fn rtp_capabilities(&self) -> &RtpCapabilitiesFinalized {
         &self.inner.rtp_capabilities
     }
@@ -412,6 +464,16 @@ impl Router {
     /// Create a DirectTransport.
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mediasoup::direct_transport::DirectTransportOptions;
+    ///
+    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// let transport = router.create_direct_transport(DirectTransportOptions::default()).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn create_direct_transport(
         &self,
         direct_transport_options: DirectTransportOptions,
@@ -449,9 +511,27 @@ impl Router {
         Ok(transport)
     }
 
-    /// Create a WebRtcTransport.
+    /// Create a `WebRtcTransport`.
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mediasoup::data_structures::TransportListenIp;
+    /// use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
+    ///
+    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// let transport = router
+    ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+    ///         TransportListenIp {
+    ///             ip: "127.0.0.1".parse().unwrap(),
+    ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///         },
+    ///     )))
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn create_webrtc_transport(
         &self,
         webrtc_transport_options: WebRtcTransportOptions,
@@ -491,9 +571,25 @@ impl Router {
         Ok(transport)
     }
 
-    /// Create a PipeTransport.
+    /// Create a `PipeTransport`.
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mediasoup::data_structures::TransportListenIp;
+    /// use mediasoup::pipe_transport::PipeTransportOptions;
+    ///
+    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// let transport = router
+    ///     .create_pipe_transport(PipeTransportOptions::new(TransportListenIp {
+    ///         ip: "127.0.0.1".parse().unwrap(),
+    ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///     }))
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn create_pipe_transport(
         &self,
         pipe_transport_options: PipeTransportOptions,
@@ -533,9 +629,25 @@ impl Router {
         Ok(transport)
     }
 
-    /// Create a PlainTransport.
+    /// Create a `PlainTransport`.
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mediasoup::data_structures::TransportListenIp;
+    /// use mediasoup::plain_transport::PlainTransportOptions;
+    ///
+    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// let transport = router
+    ///     .create_plain_transport(PlainTransportOptions::new(TransportListenIp {
+    ///         ip: "127.0.0.1".parse().unwrap(),
+    ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///     }))
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn create_plain_transport(
         &self,
         plain_transport_options: PlainTransportOptions,
@@ -575,9 +687,28 @@ impl Router {
         Ok(transport)
     }
 
-    /**
-     * Create an AudioLevelObserver.
-     */
+    /// Create an `AudioLevelObserver`.
+    ///
+    /// Router will be kept alive as long as at least one observer instance is alive.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mediasoup::audio_level_observer::AudioLevelObserverOptions;
+    /// use std::num::NonZeroU16;
+    ///
+    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// let observer = router
+    ///     .create_audio_level_observer({
+    ///         let mut options = AudioLevelObserverOptions::default();
+    ///         options.max_entries = NonZeroU16::new(1).unwrap();
+    ///         options.threshold = -70;
+    ///         options.interval = 2000;
+    ///         options
+    ///     })
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn create_audio_level_observer(
         &self,
         audio_level_observer_options: AudioLevelObserverOptions,
@@ -616,11 +747,122 @@ impl Router {
     }
 
     /// Pipes `Producer` with the given `producer_id` into another `Router` on same host.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mediasoup::consumer::ConsumerOptions;
+    /// use mediasoup::data_structures::TransportListenIp;
+    /// use mediasoup::producer::ProducerOptions;
+    /// use mediasoup::router::{PipeToRouterOptions, RouterOptions};
+    /// use mediasoup::rtp_parameters::{
+    ///    MediaKind, MimeTypeAudio, RtcpParameters, RtpCapabilities, RtpCodecCapability,
+    ///    RtpCodecParameters, RtpCodecParametersParameters, RtpParameters,
+    /// };
+    /// use mediasoup::transport::Transport;
+    /// use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
+    /// use mediasoup::worker::WorkerSettings;
+    /// use std::num::{NonZeroU32, NonZeroU8};
+    ///
+    /// # async fn f(
+    /// #     worker_manager: mediasoup::worker_manager::WorkerManager,
+    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// // Have two workers.
+    /// let worker1 = worker_manager.create_worker(WorkerSettings::default()).await?;
+    /// let worker2 = worker_manager.create_worker(WorkerSettings::default()).await?;
+    ///
+    /// // Create a router in each worker.
+    /// let media_codecs = vec![
+    ///     RtpCodecCapability::Audio {
+    ///         mime_type: MimeTypeAudio::Opus,
+    ///         preferred_payload_type: None,
+    ///         clock_rate: NonZeroU32::new(48000).unwrap(),
+    ///         channels: NonZeroU8::new(2).unwrap(),
+    ///         parameters: RtpCodecParametersParameters::from([
+    ///             ("useinbandfec", 1u32.into()),
+    ///         ]),
+    ///         rtcp_feedback: vec![],
+    ///     },
+    /// ];
+    /// let router1 = worker1.create_router(RouterOptions::new(media_codecs.clone())).await?;
+    /// let router2 = worker2.create_router(RouterOptions::new(media_codecs)).await?;
+    ///
+    /// // Produce in router1.
+    /// let transport1 = router1
+    ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+    ///         TransportListenIp {
+    ///             ip: "127.0.0.1".parse().unwrap(),
+    ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///         },
+    ///     )))
+    ///     .await?;
+    /// let producer1 = transport1
+    ///     .produce(ProducerOptions::new(
+    ///         MediaKind::Audio,
+    ///         RtpParameters {
+    ///             mid: Some("AUDIO".to_string()),
+    ///             codecs: vec![RtpCodecParameters::Audio {
+    ///                 mime_type: MimeTypeAudio::Opus,
+    ///                 payload_type: 0,
+    ///                 clock_rate: NonZeroU32::new(48000).unwrap(),
+    ///                 channels: NonZeroU8::new(2).unwrap(),
+    ///                 parameters: RtpCodecParametersParameters::from([
+    ///                     ("useinbandfec", 1u32.into()),
+    ///                     ("usedtx", 1u32.into()),
+    ///                 ]),
+    ///                 rtcp_feedback: vec![],
+    ///             }],
+    ///             header_extensions: vec![],
+    ///             encodings: vec![],
+    ///             rtcp: RtcpParameters::default(),
+    ///         },
+    ///     ))
+    ///     .await?;
+    ///
+    /// // Pipe producer1 into router2.
+    /// let _pair = router1
+    ///     .pipe_producer_to_router(
+    ///         producer1.id(),
+    ///         PipeToRouterOptions::new(router2.clone())
+    ///     )
+    ///     .await?;
+    ///
+    /// // Consume producer1 from router2.
+    /// let transport2 = router2
+    ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+    ///         TransportListenIp {
+    ///             ip: "127.0.0.1".parse().unwrap(),
+    ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///         },
+    ///     )))
+    ///     .await?;
+    /// let consumer2 = transport2
+    ///     .consume(ConsumerOptions::new(
+    ///         producer1.id(),
+    ///         RtpCapabilities {
+    ///            codecs: vec![
+    ///                RtpCodecCapability::Audio {
+    ///                    mime_type: MimeTypeAudio::Opus,
+    ///                    preferred_payload_type: Some(100),
+    ///                    clock_rate: NonZeroU32::new(48000).unwrap(),
+    ///                    channels: NonZeroU8::new(2).unwrap(),
+    ///                    parameters: RtpCodecParametersParameters::new(),
+    ///                    rtcp_feedback: vec![],
+    ///                },
+    ///            ],
+    ///            header_extensions: vec![],
+    ///            fec_mechanisms: vec![],
+    ///        }
+    ///     ))
+    ///     .await?;
+    ///
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn pipe_producer_to_router(
         &self,
         producer_id: ProducerId,
         pipe_to_router_options: PipeToRouterOptions,
-    ) -> Result<PipeProducerToRouterValue, PipeProducerToRouterError> {
+    ) -> Result<PipeProducerToRouterPair, PipeProducerToRouterError> {
         debug!("pipe_producer_to_router()");
 
         if pipe_to_router_options.router.id() == self.id() {
@@ -721,18 +963,88 @@ impl Router {
             })
             .detach();
 
-        Ok(PipeProducerToRouterValue {
+        Ok(PipeProducerToRouterPair {
             pipe_consumer,
             pipe_producer,
         })
     }
 
     /// Pipes `DataProducer` with the given `data_producer_id` into another `Router` on same host.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mediasoup::data_consumer::DataConsumerOptions;
+    /// use mediasoup::data_structures::TransportListenIp;
+    /// use mediasoup::data_producer::DataProducerOptions;
+    /// use mediasoup::router::{PipeToRouterOptions, RouterOptions};
+    /// use mediasoup::sctp_parameters::SctpStreamParameters;
+    /// use mediasoup::transport::Transport;
+    /// use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
+    /// use mediasoup::worker::WorkerSettings;
+    ///
+    /// # async fn f(
+    /// #     worker_manager: mediasoup::worker_manager::WorkerManager,
+    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// // Have two workers.
+    /// let worker1 = worker_manager.create_worker(WorkerSettings::default()).await?;
+    /// let worker2 = worker_manager.create_worker(WorkerSettings::default()).await?;
+    ///
+    /// // Create a router in each worker.
+    /// let router1 = worker1.create_router(RouterOptions::new(vec![])).await?;
+    /// let router2 = worker2.create_router(RouterOptions::new(vec![])).await?;
+    ///
+    /// // Produce in router1.
+    /// let transport1 = router1
+    ///     .create_webrtc_transport({
+    ///         let mut options = WebRtcTransportOptions::new(TransportListenIps::new(
+    ///             TransportListenIp {
+    ///                 ip: "127.0.0.1".parse().unwrap(),
+    ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///             },
+    ///         ));
+    ///         options.enable_sctp = true;
+    ///         options
+    ///     })
+    ///     .await?;
+    /// let data_producer1 = transport1
+    ///     .produce_data(DataProducerOptions::new_sctp(
+    ///         SctpStreamParameters::new_unordered_with_life_time(666, 5000),
+    ///     ))
+    ///     .await?;
+    ///
+    /// // Pipe data_producer1 into router2.
+    /// let _pair = router1
+    ///     .pipe_data_producer_to_router(
+    ///         data_producer1.id(),
+    ///         PipeToRouterOptions::new(router2.clone())
+    ///     )
+    ///     .await?;
+    ///
+    /// // Consume data_producer1 from router2.
+    /// let transport2 = router2
+    ///     .create_webrtc_transport({
+    ///         let mut options = WebRtcTransportOptions::new(TransportListenIps::new(
+    ///             TransportListenIp {
+    ///                 ip: "127.0.0.1".parse().unwrap(),
+    ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///             },
+    ///         ));
+    ///         options.enable_sctp = true;
+    ///         options
+    ///     })
+    ///     .await?;
+    /// let data_consumer2 = transport2
+    ///     .consume_data(DataConsumerOptions::new_sctp(data_producer1.id()))
+    ///     .await?;
+    ///
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn pipe_data_producer_to_router(
         &self,
         data_producer_id: DataProducerId,
         pipe_to_router_options: PipeToRouterOptions,
-    ) -> Result<PipeDataProducerToRouterValue, PipeDataProducerToRouterError> {
+    ) -> Result<PipeDataProducerToRouterPair, PipeDataProducerToRouterError> {
         debug!("pipe_data_producer_to_router()");
 
         if pipe_to_router_options.router.id() == self.id() {
@@ -801,13 +1113,13 @@ impl Router {
             })
             .detach();
 
-        Ok(PipeDataProducerToRouterValue {
+        Ok(PipeDataProducerToRouterPair {
             pipe_data_consumer,
             pipe_data_producer,
         })
     }
 
-    /// Check whether the given RTP capabilities can consume the given Producer.
+    /// Check whether the given RTP capabilities are valid to consume the given producer.
     pub fn can_consume(
         &self,
         producer_id: &ProducerId,
@@ -833,6 +1145,7 @@ impl Router {
         }
     }
 
+    /// Callback is called when a new transport is created.
     pub fn on_new_transport<F: Fn(NewTransport) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -840,6 +1153,7 @@ impl Router {
         self.inner.handlers.new_transport.add(Box::new(callback))
     }
 
+    /// Callback is called when a new RTP observer is created.
     pub fn on_new_rtp_observer<F: Fn(NewRtpObserver) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -847,10 +1161,14 @@ impl Router {
         self.inner.handlers.new_rtp_observer.add(Box::new(callback))
     }
 
+    /// Callback is called when the worker this router belongs to is closed for whatever reason.
+    /// The router itself is also closed. A `on_router_close` callbacks are triggered in all its
+    /// transports all RTP observers.
     pub fn on_worker_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.worker_close.add(Box::new(callback))
     }
 
+    /// Callback is called when the router is closed for whatever reason.
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
     }

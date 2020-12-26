@@ -48,6 +48,7 @@ impl Default for AudioLevelObserverOptions {
     }
 }
 
+#[derive(Clone)]
 pub struct AudioLevelObserverVolume {
     /// The audio producer instance.
     pub producer: Producer,

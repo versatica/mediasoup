@@ -7,7 +7,7 @@ mod pipe_transport {
     use mediasoup::pipe_transport::{PipeTransportOptions, PipeTransportRemoteParameters};
     use mediasoup::producer::ProducerOptions;
     use mediasoup::router::{
-        PipeDataProducerToRouterValue, PipeProducerToRouterValue, PipeToRouterOptions, Router,
+        PipeDataProducerToRouterPair, PipeProducerToRouterPair, PipeToRouterOptions, Router,
         RouterOptions,
     };
     use mediasoup::rtp_parameters::{
@@ -279,7 +279,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to produce audio");
 
-            let PipeProducerToRouterValue {
+            let PipeProducerToRouterPair {
                 pipe_consumer,
                 pipe_producer,
             } = router1
@@ -384,7 +384,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to produce audio");
 
-            router1
+            let _pair = router1
                 .pipe_producer_to_router(
                     audio_producer.id(),
                     PipeToRouterOptions::new(router2.clone()),
@@ -403,7 +403,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to pause video producer");
 
-            let PipeProducerToRouterValue {
+            let PipeProducerToRouterPair {
                 pipe_consumer,
                 pipe_producer,
             } = router1
@@ -925,7 +925,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to produce data");
 
-            let PipeDataProducerToRouterValue {
+            let PipeDataProducerToRouterPair {
                 pipe_data_consumer,
                 pipe_data_producer,
             } = router1
