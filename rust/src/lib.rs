@@ -11,7 +11,6 @@
 //! `close()` you will see `Drop` implementation for major entities that will close everything
 //! gracefully when it goes out of scope.
 //!
-//!
 //! # How to start
 //! This is very low-level **library**. Which means it doesn't come with a ready to use signaling
 //! mechanism or easy to customize app scaffold (see
@@ -19,6 +18,14 @@
 //!
 //! It is recommended to visit mediasoup website and read
 //! [design overview](https://mediasoup.org/documentation/v3/mediasoup/design/) first.
+//!
+//! Pre-requisite for using this library is to have mediasoup worker. The simples way to get it is
+//! to run `npm i mediasoup` (see
+//! [installation instructions](https://mediasoup.org/documentation/v3/mediasoup/installation/)) and
+//! get worker binary from `node_modules/mediasoup/worker/out/Release/mediasoup-worker`.
+//!
+//! If you are hacking on the library just run `npm i` in the root of the repo and tests will pick
+//! up the worker binary automatically.
 //!
 //! With that in mind, you want start with creating [`WorkerManager`](worker_manager::WorkerManager)
 //! instance and then 1 or more workers. Workers a responsible for low-level job of sending media
