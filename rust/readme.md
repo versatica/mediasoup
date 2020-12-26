@@ -1,4 +1,7 @@
 # Rust port of [mediasoup](https://github.com/versatica/mediasoup) TypeScript library
+[![Crates.io](https://img.shields.io/crates/v/mediasoup?style=flat-square)](https://crates.io/crates/mediasoup)
+[![Docs](https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square)](https://docs.rs/mediasoup)
+[![License](https://img.shields.io/github/license/nazar-pc/mediasoup?style=flat-square)](https://github.com/nazar-pc/mediasoup/tree/rust)
 
 # Support forum
 * [mediasoup.discourse.group](https://mediasoup.discourse.group/)
