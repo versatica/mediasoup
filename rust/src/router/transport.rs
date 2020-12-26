@@ -1,8 +1,8 @@
-//! A transport connects an endpoint with a Mediasoup router and enables transmission of media in
+//! A transport connects an endpoint with a mediasoup router and enables transmission of media in
 //! both directions by means of [`Producer`], [`Consumer`], [`DataProducer`] and [`DataConsumer`]
 //! instances created on it.
 //!
-//! Mediasoup implements the following transports:
+//! mediasoup implements the following transports:
 //! * [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
 //! * [`PlainTransport`](crate::plain_transport::PlainTransport)
 //! * [`PipeTransport`](crate::pipe_transport::PipeTransport)
@@ -130,11 +130,11 @@ pub(super) enum TransportType {
     WebRtc,
 }
 
-/// A transport connects an endpoint with a Mediasoup router and enables transmission of media in
+/// A transport connects an endpoint with a mediasoup router and enables transmission of media in
 /// both directions by means of [`Producer`], [`Consumer`], [`DataProducer`] and [`DataConsumer`]
 /// instances created on it.
 ///
-/// Mediasoup implements the following transports:
+/// mediasoup implements the following transports:
 /// * [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
 /// * [`PlainTransport`](crate::plain_transport::PlainTransport)
 /// * [`PipeTransport`](crate::pipe_transport::PipeTransport)
@@ -159,7 +159,7 @@ where
     fn closed(&self) -> bool;
 
     /// Instructs the router to receive audio or video RTP (or SRTP depending on the transport).
-    /// This is the way to inject media into Mediasoup.
+    /// This is the way to inject media into mediasoup.
     ///
     /// Transport will be kept alive as long as at least one producer instance is alive.
     ///
@@ -169,7 +169,7 @@ where
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
 
     /// Instructs the router to send audio or video RTP (or SRTP depending on the transport).
-    /// This is the way to extract media from Mediasoup.
+    /// This is the way to extract media from mediasoup.
     ///
     /// Transport will be kept alive as long as at least one consumer instance is alive.
     ///
@@ -192,7 +192,7 @@ where
     ///   * Related [issue](https://github.com/versatica/libmediasoupclient/issues/57).
     /// * Also, when creating a video consumer, this is an optimization to make it possible for the
     ///   consuming endpoint to render the video as far as possible. If the server side consumer was
-    ///   created with `paused: false`, Mediasoup will immediately request a key frame to the
+    ///   created with `paused: false`, mediasoup will immediately request a key frame to the
     ///   producer and that key frame may reach the consuming endpoint even before it's ready to
     ///   consume it, generating "black" video until the device requests a keyframe by itself.
     async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError>;

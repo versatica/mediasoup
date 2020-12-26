@@ -1,10 +1,10 @@
 //! A router enables injection, selection and forwarding of media streams through [`Transport`]
 //! instances created on it.
 //!
-//! Developers may think of a Mediasoup router as if it were a "multi-party conference room",
-//! although Mediasoup is much more low level than that and doesn't constrain itself to specific
+//! Developers may think of a mediasoup router as if it were a "multi-party conference room",
+//! although mediasoup is much more low level than that and doesn't constrain itself to specific
 //! high level use cases (for instance, a "multi-party conference room" could involve various
-//! Mediasoup routers, even in different physicals hosts).
+//! mediasoup routers, even in different physicals hosts).
 
 #[cfg(not(doc))]
 pub mod audio_level_observer;
@@ -354,10 +354,10 @@ impl Drop for Inner {
 /// A router enables injection, selection and forwarding of media streams through [`Transport`]
 /// instances created on it.
 ///
-/// Developers may think of a Mediasoup router as if it were a "multi-party conference room",
-/// although Mediasoup is much more low level than that and doesn't constrain itself to specific
+/// Developers may think of a mediasoup router as if it were a "multi-party conference room",
+/// although mediasoup is much more low level than that and doesn't constrain itself to specific
 /// high level use cases (for instance, a "multi-party conference room" could involve various
-/// Mediasoup routers, even in different physicals hosts).
+/// mediasoup routers, even in different physicals hosts).
 #[derive(Clone)]
 pub struct Router {
     inner: Arc<Inner>,
@@ -434,7 +434,7 @@ impl Router {
         self.inner.closed.load(Ordering::SeqCst)
     }
 
-    /// RTP capabilities of the router. These capabilities are typically needed by Mediasoup clients
+    /// RTP capabilities of the router. These capabilities are typically needed by mediasoup clients
     /// to compute their sending RTP parameters.
     ///
     /// # Notes on usage

@@ -1,6 +1,6 @@
 //! An RTP observer inspects the media received by a set of selected producers.
 //!
-//! Mediasoup implements the following RTP observers:
+//! mediasoup implements the following RTP observers:
 //! * [`AudioLevelObserver`](crate::audio_level_observer::AudioLevelObserver)
 
 use crate::data_structures::AppData;
@@ -31,7 +31,7 @@ impl RtpObserverAddProducerOptions {
 
 /// An RTP observer inspects the media received by a set of selected producers.
 ///
-/// Mediasoup implements the following RTP observers:
+/// mediasoup implements the following RTP observers:
 /// * [`AudioLevelObserver`](crate::audio_level_observer::AudioLevelObserver)
 #[async_trait(?Send)]
 pub trait RtpObserver {

@@ -1,4 +1,4 @@
-//! A direct transport represents a direct connection between the Mediasoup Rust process and a
+//! A direct transport represents a direct connection between the mediasoup Rust process and a
 //! [`Router`] instance in a mediasoup-worker subprocess.
 //!
 //! A direct transport can be used to directly send and receive data messages from/to Rust by means
@@ -199,7 +199,7 @@ impl Inner {
     }
 }
 
-/// A direct transport represents a direct connection between the Mediasoup Rust process and a
+/// A direct transport represents a direct connection between the mediasoup Rust process and a
 /// [`Router`] instance in a mediasoup-worker subprocess.
 ///
 /// A direct transport can be used to directly send and receive data messages from/to Rust by means

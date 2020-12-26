@@ -1,4 +1,4 @@
-//! A data consumer represents an endpoint capable of receiving data messages from a Mediasoup
+//! A data consumer represents an endpoint capable of receiving data messages from a mediasoup
 //! [`Router`](crate::router::Router).
 //!
 //! A data consumer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA
@@ -274,7 +274,7 @@ impl From<DirectDataConsumer> for DataConsumer {
     }
 }
 
-/// A data consumer represents an endpoint capable of receiving data messages from a Mediasoup
+/// A data consumer represents an endpoint capable of receiving data messages from a mediasoup
 /// [`Router`](crate::router::Router).
 ///
 /// A data consumer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA

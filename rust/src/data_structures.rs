@@ -11,7 +11,7 @@ use std::net::IpAddr;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
-/// Container for arbitrary data attached to Mediasoup entities.
+/// Container for arbitrary data attached to mediasoup entities.
 #[derive(Debug, Clone)]
 pub struct AppData(Arc<dyn Any + Send + Sync>);
 
@@ -225,7 +225,7 @@ pub enum SctpState {
 pub enum DtlsRole {
     /// The DTLS role is determined based on the resolved ICE role (the `Controlled` role acts as
     /// DTLS client, the `Controlling` role acts as DTLS server).
-    /// Since Mediasoup is a ICE Lite implementation it always behaves as ICE `Controlled`.
+    /// Since mediasoup is a ICE Lite implementation it always behaves as ICE `Controlled`.
     Auto,
     /// DTLS client role.
     Client,

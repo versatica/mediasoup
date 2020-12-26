@@ -1,4 +1,4 @@
-//! RTP capabilities supported by Mediasoup.
+//! RTP capabilities supported by mediasoup.
 
 use crate::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities, RtpCodecCapability,
@@ -7,7 +7,7 @@ use crate::rtp_parameters::{
 };
 use std::num::{NonZeroU32, NonZeroU8};
 
-/// Get a Mediasoup supported RTP capabilities.
+/// Get a mediasoup supported RTP capabilities.
 ///
 /// # Notes on usage
 /// Those are NOT the RTP capabilities needed by mediasoup-client's

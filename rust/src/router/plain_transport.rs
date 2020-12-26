@@ -36,8 +36,8 @@ use std::sync::{Arc, Weak};
 /// # Notes on usage
 /// * Note that `comedia` mode just makes sense when the remote endpoint is gonna produce RTP on
 ///   this plain transport. Otherwise, if the remote endpoint does not send any RTP (or SCTP) packet
-///   to Mediasoup, there is no way to detect its remote RTP IP and port, so the endpoint won't
-///   receive any packet from Mediasoup.
+///   to mediasoup, there is no way to detect its remote RTP IP and port, so the endpoint won't
+///   receive any packet from mediasoup.
 /// * In other words, do not use `comedia` mode if the remote endpoint is not going to produce RTP
 ///   but just consume it. In those cases, do not set `comedia` flag and call
 ///   [`PlainTransport::connect()`] with the IP and port(s) of the remote endpoint.

@@ -1,4 +1,4 @@
-//! A producer represents an audio or video source being injected into a Mediasoup router. It's
+//! A producer represents an audio or video source being injected into a mediasoup router. It's
 //! created on top of a transport that defines how the media packets are carried.
 
 use crate::consumer::RtpStreamParams;
@@ -357,7 +357,7 @@ impl From<DirectProducer> for Producer {
     }
 }
 
-/// A producer represents an audio or video source being injected into a Mediasoup router. It's
+/// A producer represents an audio or video source being injected into a mediasoup router. It's
 /// created on top of a transport that defines how the media packets are carried.
 #[derive(Clone)]
 #[non_exhaustive]
