@@ -1,15 +1,42 @@
-//! This is a port of TypeScript client library for
-//! [Mediasoup](https://github.com/versatica/mediasoup) to Rust
+//! Rust port of [mediasoup](https://github.com/versatica/mediasoup) TypeScript library!
 //!
-//! The library is fully-featured and API is unlikely to change in a major way. With lack of
-//! documentation it will be hard to use the library unless you already have experience with
-//! Mediasoup (in this case you can create a worker using [worker_manager::WorkerManager] and go
-//! from there).
+//! For general information go to readme in repository.
 //!
-//! Please check integration tests for usage examples.
+//! # For TypeScript users
+//! If you were using mediasoup in TypeScript before, most of the API should be familiar to you.
+//! However, this is not one-to-one port, API was adjusted to more idiomatic Rust style leveraging
+//! powerful type system and ownership system to make API more robust and more misuse-resistant.
 //!
-//! API is close to [TypeScript's](https://mediasoup.org/documentation/v3/mediasoup/api/), please
-//! referer to it in the meantime.
+//! So you will find specific types in most places where plain strings were used, instead of
+//! `close()` you will see `Drop` implementation for major entities that will close everything
+//! gracefully when it goes out of scope.
+//!
+//!
+//! # How to start
+//! This is very low-level **library**. Which means it doesn't come with a ready to use signaling
+//! mechanism or easy to customize app scaffold (see
+//! [design goals](https://github.com/nazar-pc/mediasoup/tree/rust/readme.md#design-goals)).
+//!
+//! It is recommended to visit mediasoup website and read
+//! [design overview](https://mediasoup.org/documentation/v3/mediasoup/design/) first.
+//!
+//! With that in mind, you want start with creating [`WorkerManager`](worker_manager::WorkerManager)
+//! instance and then 1 or more workers. Workers a responsible for low-level job of sending media
+//! and data back and forth. Each worker is backed by single-core C++ worker process. On each worker
+//! you create one or more routers that enable injection, selection and forwarding of media and data
+//! through [`transport`] instances. There are a few different transports available, but most likely
+//! you'll want to use [`WebRtcTransport`](webrtc_transport::WebRtcTransport) most often. With
+//! transport created you can start creating [`Producer`](producer::Producer)s to send data to
+//! [`Router`](router::Router) and [`Consumer`](consumer::Consumer) instances to extract data from
+//! [`Router`](router::Router).
+//!
+//! Some of the more advanced cases involve multiple routers and even workers that can user more
+//! than one core on the machine or even scale beyond single host. Check
+//! [scalability page](https://mediasoup.org/documentation/v3/scalability/) of the official
+//! documentation.
+//!
+//! Please check integration and unit tests for usage examples, they cover all major functionality
+//! and are a good place to start until we have demo apps built in Rust).
 
 pub mod data_structures;
 mod macros;
