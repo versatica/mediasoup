@@ -1,13 +1,14 @@
 [package]
 name = "mediasoup"
-version = "0.2.0"
+version = "0.2.1"
 description = "Cutting Edge WebRTC Video Conferencing in Rust"
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
 edition = "2018"
 license = "ISC"
 keywords = ["webrtc", "ortc", "sfu"]
 documentation = "https://docs.rs/mediasoup"
-repository = "https://github.com/nazar-pc/mediasoup/tree/rust"
+repository = "https://github.com/nazar-pc/mediasoup/tree/rust/rust"
+readme = "readme.md"
 
 [dependencies]
 async-channel = "1.5.1"
