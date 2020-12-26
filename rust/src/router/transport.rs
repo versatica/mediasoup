@@ -163,7 +163,7 @@ where
     ///
     /// Transport will be kept alive as long as at least one producer instance is alive.
     ///
-    /// ### Notes on usage
+    /// # Notes on usage
     /// Check the [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
     /// section for more details (TypeScript-oriented, but concepts apply here as well).
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError>;
@@ -173,7 +173,7 @@ where
     ///
     /// Transport will be kept alive as long as at least one consumer instance is alive.
     ///
-    /// ### Notes on usage
+    /// # Notes on usage
     /// Check the [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
     /// section for more details (TypeScript-oriented, but concepts apply here as well).
     ///

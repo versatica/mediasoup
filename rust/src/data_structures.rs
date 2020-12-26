@@ -77,31 +77,48 @@ pub enum IceCandidateTcpType {
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "lowercase")]
 pub enum TransportProtocol {
-    Tcp,
-    Udp,
+    TCP,
+    UDP,
 }
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IceCandidate {
+    /// Unique identifier that allows ICE to correlate candidates that appear on multiple
+    /// `transports`.
     pub foundation: String,
+    /// The assigned priority of the candidate.
     pub priority: u32,
+    /// The IP address of the candidate.
     pub ip: IpAddr,
+    /// The protocol of the candidate.
     pub protocol: TransportProtocol,
+    /// The port for the candidate.
     pub port: u16,
+    /// The type of candidate (always `Host`).
     pub r#type: IceCandidateType,
+    /// The type of TCP candidate (always `Passive`).
     pub tcp_type: Option<IceCandidateTcpType>,
 }
 
+/// ICE state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum IceState {
+    /// No ICE Binding Requests have been received yet.
     New,
+    /// Valid ICE Binding Request have been received, but none with USE-CANDIDATE attribute.
+    /// Outgoing media is allowed.
     Connected,
+    /// ICE Binding Request with USE_CANDIDATE attribute has been received. Media in both directions
+    /// is now allowed.
     Completed,
+    /// ICE was `Connected` or `Completed` but it has suddenly failed (this can just happen if the
+    /// selected tuple has `Tcp` protocol).
     Disconnected,
+    /// ICE state when the `transport` has been closed.
     Closed,
 }
 
@@ -124,31 +141,49 @@ pub enum TransportTuple {
     },
 }
 
+/// DTLS state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DtlsState {
+    /// DTLS procedures not yet initiated.
     New,
+    /// DTLS connecting.
     Connecting,
+    /// DTLS successfully connected (SRTP keys already extracted).
     Connected,
+    /// DTLS connection failed.
     Failed,
+    /// DTLS state when the `transport` has been closed.
     Closed,
 }
 
+/// SCTP state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SctpState {
+    /// SCTP procedures not yet initiated.
     New,
+    /// SCTP connecting.
     Connecting,
+    /// SCTP successfully connected.
     Connected,
+    /// SCTP connection failed.
     Failed,
+    /// SCTP state when the transport has been closed.
     Closed,
 }
 
+/// DTLS role.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DtlsRole {
+    /// The DTLS role is determined based on the resolved ICE role (the `Controlled` role acts as
+    /// DTLS client, the `Controlling` role acts as DTLS server).
+    /// Since Mediasoup is a ICE Lite implementation it always behaves as ICE `Controlled`.
     Auto,
+    /// DTLS client role.
     Client,
+    /// DTLS server role.
     Server,
 }
 
@@ -158,13 +193,31 @@ impl Default for DtlsRole {
     }
 }
 
+/// The hash function algorithm (as defined in the "Hash function Textual Names" registry initially
+/// specified in [RFC 4572](https://tools.ietf.org/html/rfc4572#section-8) Section 8) and its
+/// corresponding certificate fingerprint value.
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum DtlsFingerprint {
-    Sha1 { value: [u8; 20] },
-    Sha224 { value: [u8; 28] },
-    Sha256 { value: [u8; 32] },
-    Sha384 { value: [u8; 48] },
-    Sha512 { value: [u8; 64] },
+    Sha1 {
+        /// Certificate fingerprint value.
+        value: [u8; 20],
+    },
+    Sha224 {
+        /// Certificate fingerprint value.
+        value: [u8; 28],
+    },
+    Sha256 {
+        /// Certificate fingerprint value.
+        value: [u8; 32],
+    },
+    Sha384 {
+        /// Certificate fingerprint value.
+        value: [u8; 48],
+    },
+    Sha512 {
+        /// Certificate fingerprint value.
+        value: [u8; 64],
+    },
 }
 
 impl Serialize for DtlsFingerprint {
@@ -574,9 +627,12 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
     }
 }
 
+/// DTLS parameters.
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 pub struct DtlsParameters {
+    /// DTLS role.
     pub role: DtlsRole,
+    /// DTLS fingerprints.
     pub fingerprints: Vec<DtlsFingerprint>,
 }
 

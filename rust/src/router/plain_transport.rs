@@ -1,3 +1,6 @@
+//! A plain transport represents a network path through which RTP, RTCP (optionally secured with
+//! SRTP) and SCTP (DataChannel) is transmitted.
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
@@ -28,6 +31,16 @@ use std::net::IpAddr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
+/// Plain transport options.
+///
+/// # Notes on usage
+/// * Note that `comedia` mode just makes sense when the remote endpoint is gonna produce RTP on
+///   this plain transport. Otherwise, if the remote endpoint does not send any RTP (or SCTP) packet
+///   to Mediasoup, there is no way to detect its remote RTP IP and port, so the endpoint won't
+///   receive any packet from Mediasoup.
+/// * In other words, do not use `comedia` mode if the remote endpoint is not going to produce RTP
+///   but just consume it. In those cases, do not set `comedia` flag and call
+///   [`PlainTransport::connect()`] with the IP and port(s) of the remote endpoint.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct PlainTransportOptions {
@@ -108,6 +121,7 @@ pub struct PlainTransportDump {
     pub srtp_parameters: Option<SrtpParameters>,
 }
 
+/// RTC statistics of the plain transport.
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -144,6 +158,8 @@ pub struct PlainTransportStat {
     pub rtcp_tuple: Option<TransportTuple>,
 }
 
+// TODO: Impl with methods that only allow working invariants
+/// Remote parameters for plain transport.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlainTransportRemoteParameters {
@@ -246,6 +262,8 @@ impl Inner {
     }
 }
 
+/// A plain transport represents a network path through which RTP, RTCP (optionally secured with
+/// SRTP) and SCTP (DataChannel) is transmitted.
 #[derive(Clone)]
 pub struct PlainTransport {
     inner: Arc<Inner>,
@@ -544,7 +562,102 @@ impl PlainTransport {
         Self { inner }
     }
 
-    /// Provide the PlainTransport remote parameters.
+    /// Provide the PlainTransport with remote parameters.
+    ///
+    /// # Notes on usage
+    /// * If `comedia` is enabled in this plain transport and SRTP is not, `connect()` must not be
+    ///   called.
+    /// * If `comedia` is enabled and SRTP is also enabled (`enable_srtp` was set in the
+    ///   [`Router::create_plain_transport`] options) then `connect()` must be called with just the
+    ///   remote `srtp_parameters`.
+    /// * If `comedia` is disabled, `connect()` must be eventually called with remote `ip`, `port`,
+    ///   optional `rtcp_port` (if RTCP-mux is not enabled) and optional `srtp_parameters` (if SRTP
+    ///   is enabled).
+    ///
+    /// # Examples
+    /// ```rust
+    /// use mediasoup::plain_transport::PlainTransportRemoteParameters;
+    ///
+    /// # async fn f(
+    /// #     plain_transport: mediasoup::plain_transport::PlainTransport,
+    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// // Calling connect() on a PlainTransport created with comedia and rtcp_mux set.
+    /// plain_transport
+    ///     .connect(PlainTransportRemoteParameters {
+    ///         ip: Some("1.2.3.4".parse().unwrap()),
+    ///         port: Some(9998),
+    ///         rtcp_port: None,
+    ///         srtp_parameters: None,
+    ///     })
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```rust
+    /// use mediasoup::plain_transport::PlainTransportRemoteParameters;
+    ///
+    /// # async fn f(
+    /// #     plain_transport: mediasoup::plain_transport::PlainTransport,
+    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// // Calling connect() on a PlainTransport created with comedia unset and rtcp_mux
+    /// // also unset.
+    /// plain_transport
+    ///     .connect(PlainTransportRemoteParameters {
+    ///         ip: Some("1.2.3.4".parse().unwrap()),
+    ///         port: Some(9998),
+    ///         rtcp_port: Some(9999),
+    ///         srtp_parameters: None,
+    ///     })
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```rust
+    /// use mediasoup::plain_transport::PlainTransportRemoteParameters;
+    /// use mediasoup::srtp_parameters::{SrtpParameters, SrtpCryptoSuite};
+    ///
+    /// # async fn f(
+    /// #     plain_transport: mediasoup::plain_transport::PlainTransport,
+    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// // Calling connect() on a PlainTransport created with comedia set and
+    /// // enable_srtp enabled.
+    /// plain_transport
+    ///     .connect(PlainTransportRemoteParameters {
+    ///         ip: None,
+    ///         port: None,
+    ///         rtcp_port: None,
+    ///         srtp_parameters: Some(SrtpParameters {
+    ///             crypto_suite: SrtpCryptoSuite::AesCm128HmacSha180,
+    ///             key_base64: "ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv".to_string(),
+    ///         }),
+    ///     })
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```rust
+    /// use mediasoup::plain_transport::PlainTransportRemoteParameters;
+    /// use mediasoup::srtp_parameters::{SrtpParameters, SrtpCryptoSuite};
+    ///
+    /// # async fn f(
+    /// #     plain_transport: mediasoup::plain_transport::PlainTransport,
+    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// // Calling connect() on a PlainTransport created with comedia unset, rtcpMux
+    /// // set and enableSrtp enabled.
+    /// plain_transport
+    ///     .connect(PlainTransportRemoteParameters {
+    ///         ip: Some("1.2.3.4".parse().unwrap()),
+    ///         port: Some(9998),
+    ///         rtcp_port: None,
+    ///         srtp_parameters: Some(SrtpParameters {
+    ///             crypto_suite: SrtpCryptoSuite::AesCm128HmacSha180,
+    ///             key_base64: "ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv".to_string(),
+    ///         }),
+    ///     })
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn connect(
         &self,
         remote_parameters: PlainTransportRemoteParameters,
@@ -592,31 +705,52 @@ impl PlainTransport {
         self.set_max_incoming_bitrate_impl(bitrate).await
     }
 
-    /// Transport tuple.
+    /// The transport tuple. If RTCP-mux is enabled (`rtcp_mux` is set), this tuple refers to both
+    /// RTP and RTCP.
+    ///
+    /// # Notes on usage
+    /// * Once the plain transport is created, `transport.tuple()` will contain information about
+    ///   its `local_ip`, `local_port` and `protocol`.
+    /// * Information about `remote_ip` and `remote_port` will be set:
+    ///   * after calling `connect()` method, or
+    ///   * via dynamic remote address detection when using `comedia` mode.
     pub fn tuple(&self) -> TransportTuple {
         self.inner.data.tuple.lock().clone()
     }
 
-    /// Transport RTCP tuple.
+    /// The transport tuple for RTCP. If RTCP-mux is enabled (`rtcp_mux` is set), its value is
+    /// `None`.
+    ///
+    /// # Notes on usage
+    /// * Once the plain transport is created (with RTCP-mux disabled), `transport.rtcp_tuple()`
+    ///   will contain information about its `local_ip`, `local_port` and `protocol`.
+    /// * Information about `remote_ip` and `remote_port` will be set:
+    ///   * after calling `connect()` method, or
+    ///   * via dynamic remote address detection when using `comedia` mode.
     pub fn rtcp_tuple(&self) -> Option<TransportTuple> {
         self.inner.data.rtcp_tuple.lock().clone()
     }
 
-    /// SCTP parameters.
+    /// Current SCTP state. Or `None` if SCTP is not enabled.
     pub fn sctp_parameters(&self) -> Option<SctpParameters> {
         self.inner.data.sctp_parameters
     }
 
-    /// SCTP state.
+    /// Current SCTP state. Or `None` if SCTP is not enabled.
     pub fn sctp_state(&self) -> Option<SctpState> {
         *self.inner.data.sctp_state.lock()
     }
 
-    /// SRTP parameters.
+    /// Local SRTP parameters representing the crypto suite and key material used to encrypt sending
+    /// RTP and SRTP. Note that, if `comedia` mode is set, these local SRTP parameters may change
+    /// after calling `connect()` with the remote SRTP parameters (to override the local SRTP crypto
+    /// suite with the one given in `connect()`).
     pub fn srtp_parameters(&self) -> Option<SrtpParameters> {
         self.inner.data.srtp_parameters.lock().clone()
     }
 
+    /// Callback is called after the remote RTP origin has been discovered. Only if `comedia` mode
+    /// was set.
     pub fn on_tuple<F: Fn(&TransportTuple) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -624,6 +758,8 @@ impl PlainTransport {
         self.inner.handlers.tuple.add(Box::new(callback))
     }
 
+    /// Callback is called after the remote RTCP origin has been discovered. Only if `comedia` mode
+    /// was set and `rtcp_mux` was not.
     pub fn on_rtcp_tuple<F: Fn(&TransportTuple) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -631,6 +767,7 @@ impl PlainTransport {
         self.inner.handlers.rtcp_tuple.add(Box::new(callback))
     }
 
+    /// Callback is called when the transport SCTP state changes.
     pub fn on_sctp_state_change<F: Fn(SctpState) + Send + Sync + 'static>(
         &self,
         callback: F,

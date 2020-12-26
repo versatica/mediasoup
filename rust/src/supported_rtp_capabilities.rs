@@ -9,7 +9,7 @@ use std::num::{NonZeroU32, NonZeroU8};
 
 /// Get a Mediasoup supported RTP capabilities.
 ///
-/// ### Note on usage:
+/// # Notes on usage
 /// Those are NOT the RTP capabilities needed by mediasoup-client's
 /// [device.load()](https://mediasoup.org/documentation/v3/mediasoup-client/api/#device-load) and
 /// libmediasoupclient's [device.Load()](https://mediasoup.org/documentation/v3/libmediasoupclient/api/#device-Load)

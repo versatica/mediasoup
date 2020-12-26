@@ -1,3 +1,20 @@
+//! A direct transport represents a direct connection between the Mediasoup Rust process and a
+//! [`Router`] instance in a mediasoup-worker subprocess.
+//!
+//! A direct transport can be used to directly send and receive data messages from/to Rust by means
+//! of [`DataProducer`]s and [`DataConsumer`]s of type `Direct` created on a direct transport.
+//! Direct messages sent by a [`DataProducer`] in a direct transport can be consumed by endpoints
+//! connected through a SCTP capable transport ([`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport),
+//! [`PlainTransport`](crate::plain_transport::PlainTransport), [`PipeTransport`](crate::pipe_transport::PipeTransport)
+//! and also by the Rust application by means of a [`DataConsumer`] created on a [`DirectTransport`]
+//! (and vice-versa: messages sent over SCTP/DataChannel can be consumed by the Rust application by
+//! means of a [`DataConsumer`] created on a [`DirectTransport`]).
+//!
+//! A direct transport can also be used to inject and directly consume RTP and RTCP packets in Rust
+//! by using the [`DirectProducer::send`](crate::producer::DirectProducer::send) and
+//! [`Consumer::on_rtp`] API (plus [`DirectTransport::send_rtcp`] and [`DirectTransport::on_rtcp`]
+//! API).
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
@@ -27,6 +44,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
+/// Direct transport options.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DirectTransportOptions {
@@ -69,6 +87,7 @@ pub struct DirectTransportDump {
     pub trace_event_types: String,
 }
 
+/// RTC statistics of the direct transport.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -180,6 +199,22 @@ impl Inner {
     }
 }
 
+/// A direct transport represents a direct connection between the Mediasoup Rust process and a
+/// [`Router`] instance in a mediasoup-worker subprocess.
+///
+/// A direct transport can be used to directly send and receive data messages from/to Rust by means
+/// of [`DataProducer`]s and [`DataConsumer`]s of type `Direct` created on a direct transport.
+/// Direct messages sent by a [`DataProducer`] in a direct transport can be consumed by endpoints
+/// connected through a SCTP capable transport ([`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport),
+/// [`PlainTransport`](crate::plain_transport::PlainTransport), [`PipeTransport`](crate::pipe_transport::PipeTransport)
+/// and also by the Rust application by means of a [`DataConsumer`] created on a [`DirectTransport`]
+/// (and vice-versa: messages sent over SCTP/DataChannel can be consumed by the Rust application by
+/// means of a [`DataConsumer`] created on a [`DirectTransport`]).
+///
+/// A direct transport can also be used to inject and directly consume RTP and RTCP packets in Rust
+/// by using the [`DirectProducer::send`](crate::producer::DirectProducer::send) and
+/// [`Consumer::on_rtp`] API (plus [`DirectTransport::send_rtcp`] and [`DirectTransport::on_rtcp`]
+/// API).
 #[derive(Clone)]
 pub struct DirectTransport {
     inner: Arc<Inner>,
@@ -307,7 +342,10 @@ impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransp
         self.dump_impl().await
     }
 
-    /// Get Transport stats.
+    /// Returns current RTC statistics of the transport.
+    ///
+    /// Check the [RTC Statistics](https://mediasoup.org/documentation/v3/mediasoup/rtc-statistics/)
+    /// section for more details (TypeScript-oriented, but concepts apply here as well).
     async fn get_stats(&self) -> Result<Vec<DirectTransportStat>, RequestError> {
         debug!("get_stats()");
 
@@ -483,7 +521,9 @@ impl DirectTransport {
         Self { inner }
     }
 
-    /// Send RTCP packet.
+    /// Send a RTCP packet from the Rust process.
+    ///
+    /// * `rtcp_packet` - Bytes containing a valid RTCP packet (can be a compound packet).
     pub async fn send_rtcp(&self, rtcp_packet: Bytes) -> Result<(), NotificationError> {
         self.inner
             .payload_channel
@@ -496,6 +536,7 @@ impl DirectTransport {
             .await
     }
 
+    /// Callback is called when the direct transport receives a RTCP packet from its router.
     pub fn on_rtcp<F: Fn(&Bytes) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.rtcp.add(Box::new(callback))
     }

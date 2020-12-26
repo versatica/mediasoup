@@ -1,3 +1,13 @@
+//! A pipe transport represents a network path through which RTP, RTCP (optionally secured with
+//! SRTP) and SCTP (DataChannel) is transmitted. Pipe transports are intended to intercommunicate
+//! two [`Router`] instances collocated on the same host or on separate hosts.
+//!
+//! # Notes on usage
+//! When calling [`PipeTransport::consume`], all RTP streams of the [`Producer`] are transmitted
+//! verbatim (in contrast to what happens in [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
+//! and [`PlainTransport`](crate::plain_transport::PlainTransport) in which a single and continuous
+//! RTP stream is sent to the consuming endpoint).
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
@@ -28,6 +38,7 @@ use std::net::IpAddr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
+/// Pipe transport options.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct PipeTransportOptions {
@@ -99,6 +110,7 @@ pub struct PipeTransportDump {
     pub srtp_parameters: Option<SrtpParameters>,
 }
 
+/// RTC statistics of the pipe transport.
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -132,6 +144,7 @@ pub struct PipeTransportStat {
     pub tuple: Option<TransportTuple>,
 }
 
+/// Remote parameters for pipe transport.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PipeTransportRemoteParameters {
@@ -223,6 +236,15 @@ impl Inner {
     }
 }
 
+/// A pipe transport represents a network path through which RTP, RTCP (optionally secured with
+/// SRTP) and SCTP (DataChannel) is transmitted. Pipe transports are intended to intercommunicate
+/// two [`Router`] instances collocated on the same host or on separate hosts.
+///
+/// # Notes on usage
+/// When calling [`PipeTransport::consume`], all RTP streams of the [`Producer`] are transmitted
+/// verbatim (in contrast to what happens in [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
+/// and [`PlainTransport`](crate::plain_transport::PlainTransport) in which a single and continuous
+/// RTP stream is sent to the consuming endpoint).
 #[derive(Clone)]
 pub struct PipeTransport {
     inner: Arc<Inner>,
@@ -507,7 +529,7 @@ impl PipeTransport {
         Self { inner }
     }
 
-    /// Provide the PipeTransport remote parameters.
+    /// Provide the PipeTransport with remote parameters.
     pub async fn connect(
         &self,
         remote_parameters: PipeTransportRemoteParameters,
@@ -540,26 +562,37 @@ impl PipeTransport {
         self.set_max_incoming_bitrate_impl(bitrate).await
     }
 
-    /// Transport tuple.
+    /// The transport tuple. It refers to both RTP and RTCP since pipe transports use RTCP-mux by
+    /// design.
+    ///
+    /// # Notes on usage
+    /// * Once the pipe transport is created, `transport.tuple()` will contain information about
+    ///   its `local_ip`, `local_port` and `protocol`.
+    /// * Information about `remote_ip` and `remote_port` will be set after calling `connect()`
+    ///   method.
     pub fn tuple(&self) -> TransportTuple {
         self.inner.data.tuple.lock().clone()
     }
 
-    /// SCTP parameters.
+    /// Local SCTP parameters. Or `None` if SCTP is not enabled.
     pub fn sctp_parameters(&self) -> Option<SctpParameters> {
         self.inner.data.sctp_parameters
     }
 
-    /// SCTP state.
+    /// Current SCTP state. Or `None` if SCTP is not enabled.
     pub fn sctp_state(&self) -> Option<SctpState> {
         *self.inner.data.sctp_state.lock()
     }
 
-    /// SRTP parameters.
+    /// Local SRTP parameters representing the crypto suite and key material used to encrypt sending
+    /// RTP and SRTP. Those parameters must be given to the paired `PipeTransport` in the
+    /// `connect()` method.
     pub fn srtp_parameters(&self) -> Option<SrtpParameters> {
         self.inner.data.srtp_parameters.lock().clone()
     }
 
+    /// Callback is called after the remote RTP origin has been discovered. Only if `comedia` mode
+    /// was set.
     pub fn on_tuple<F: Fn(&TransportTuple) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -567,6 +600,7 @@ impl PipeTransport {
         self.inner.handlers.tuple.add(Box::new(callback))
     }
 
+    /// Callback is called when the transport SCTP state changes.
     pub fn on_sctp_state_change<F: Fn(SctpState) + Send + Sync + 'static>(
         &self,
         callback: F,

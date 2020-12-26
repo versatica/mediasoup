@@ -162,7 +162,7 @@ mod plain_transport {
                 } = transport1.tuple()
                 {
                     assert_eq!(local_ip, "9.9.9.1".parse::<IpAddr>().unwrap());
-                    assert_eq!(protocol, TransportProtocol::Udp);
+                    assert_eq!(protocol, TransportProtocol::UDP);
                 }
                 assert_eq!(transport1.rtcp_tuple(), None);
                 assert_eq!(
@@ -217,7 +217,7 @@ mod plain_transport {
                 } = transport2.tuple()
                 {
                     assert_eq!(local_ip, "127.0.0.1".parse::<IpAddr>().unwrap());
-                    assert_eq!(protocol, TransportProtocol::Udp);
+                    assert_eq!(protocol, TransportProtocol::UDP);
                 }
                 assert!(transport2.rtcp_tuple().is_some());
                 if let TransportTuple::LocalOnly {
@@ -225,7 +225,7 @@ mod plain_transport {
                 } = transport2.rtcp_tuple().unwrap()
                 {
                     assert_eq!(local_ip, "127.0.0.1".parse::<IpAddr>().unwrap());
-                    assert_eq!(protocol, TransportProtocol::Udp);
+                    assert_eq!(protocol, TransportProtocol::UDP);
                 }
                 assert_eq!(transport2.srtp_parameters(), None);
                 assert_eq!(transport2.sctp_state(), None);
@@ -372,7 +372,7 @@ mod plain_transport {
             } = stats[0].tuple.unwrap()
             {
                 assert_eq!(local_ip, "4.4.4.4".parse::<IpAddr>().unwrap());
-                assert_eq!(protocol, TransportProtocol::Udp);
+                assert_eq!(protocol, TransportProtocol::UDP);
             }
             assert_eq!(stats[0].rtcp_tuple, None);
         });
@@ -430,7 +430,7 @@ mod plain_transport {
             {
                 assert_eq!(remote_ip, "1.2.3.4".parse::<IpAddr>().unwrap());
                 assert_eq!(remote_port, 1234);
-                assert_eq!(protocol, TransportProtocol::Udp);
+                assert_eq!(protocol, TransportProtocol::UDP);
             }
             assert!(transport.rtcp_tuple().is_some());
             if let TransportTuple::WithRemote {
@@ -442,7 +442,7 @@ mod plain_transport {
             {
                 assert_eq!(remote_ip, "1.2.3.4".parse::<IpAddr>().unwrap());
                 assert_eq!(remote_port, 1235);
-                assert_eq!(protocol, TransportProtocol::Udp);
+                assert_eq!(protocol, TransportProtocol::UDP);
             }
         });
     }

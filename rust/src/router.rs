@@ -78,7 +78,7 @@ uuid_based_wrapper_type!(
 
 /// Router options.
 ///
-/// ### Notes on usage:
+/// # Notes on usage
 ///
 /// * Feature codecs such as `RTX` MUST NOT be placed into the mediaCodecs list.
 /// * If `preferred_payload_type` is given in a [`RtpCodecCapability`] (although it's unnecessary)
@@ -103,7 +103,7 @@ impl RouterOptions {
 
 /// Options used for piping media or data producer to into another router on the same host.
 ///
-/// ### Notes on usage:
+/// # Notes on usage
 /// * SCTP arguments will only apply the first time the underlying transports are created.
 pub struct PipeToRouterOptions {
     /// Target Router instance.
@@ -437,7 +437,7 @@ impl Router {
     /// RTP capabilities of the router. These capabilities are typically needed by Mediasoup clients
     /// to compute their sending RTP parameters.
     ///
-    /// ### Notes on usage:
+    /// # Notes on usage
     /// * Check the [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
     ///   section for more details.
     /// * See also how to [filter these RTP capabilities](https://mediasoup.org/documentation/v3/tricks/#rtp-capabilities-filtering)

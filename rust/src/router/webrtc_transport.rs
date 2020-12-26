@@ -1,3 +1,14 @@
+//! A WebRTC transport represents a network path negotiated by both, a WebRTC endpoint and
+//! Mediasoup, via ICE and DTLS procedures. A WebRTC transport may be used to receive media, to send
+//! media or to both receive and send. There is no limitation in Mediasoup. However, due to their
+//! design, mediasoup-client and libmediasoupclient require separate WebRTC transports for sending
+//! and receiving.
+//!
+//! # Notes on usage
+//! The WebRTC transport implementation of Mediasoup is
+//! [ICE Lite](https://tools.ietf.org/html/rfc5245#section-2.7), meaning that it does not initiate
+//! ICE connections but expects ICE Binding Requests from endpoints.
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
@@ -55,6 +66,7 @@ impl Deref for TransportListenIps {
     }
 }
 
+/// Empty list of listen IPs provided, should have at least one element
 #[derive(Error, Debug, Eq, PartialEq)]
 #[error("Empty list of listen IPs provided, should have at least one element")]
 pub struct EmptyListError;
@@ -71,6 +83,15 @@ impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
     }
 }
 
+/// Plain transport options.
+///
+/// # Notes on usage
+/// * Do not use "0.0.0.0" into `listen_ips`. Values in `listen_ips` must be specific bindable IPs
+///   on the host.
+/// * If you use "0.0.0.0" or "::" into `listen_ips`, then you need to also provide `announced_ip`
+///   in the corresponding entry in `listen_ips`.
+/// * `initial_available_outgoing_bitrate` is just applied when the consumer endpoint supports REMB
+///   or Transport-CC.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct WebRtcTransportOptions {
@@ -154,6 +175,7 @@ pub struct WebRtcTransportDump {
     pub ice_selected_tuple: Option<TransportTuple>,
 }
 
+/// RTC statistics of the WebRTC transport.
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -191,9 +213,11 @@ pub struct WebRtcTransportStat {
     pub dtls_state: DtlsState,
 }
 
+/// Remote parameters for WebRTC transport.
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportRemoteParameters {
+    /// Remote DTLS parameters.
     pub dtls_parameters: DtlsParameters,
 }
 
@@ -292,6 +316,16 @@ impl Inner {
     }
 }
 
+/// A WebRTC transport represents a network path negotiated by both, a WebRTC endpoint and
+/// Mediasoup, via ICE and DTLS procedures. A WebRTC transport may be used to receive media, to send
+/// media or to both receive and send. There is no limitation in Mediasoup. However, due to their
+/// design, mediasoup-client and libmediasoupclient require separate WebRTC transports for sending
+/// and receiving.
+///
+/// # Notes on usage
+/// The WebRTC transport implementation of Mediasoup is
+/// [ICE Lite](https://tools.ietf.org/html/rfc5245#section-2.7), meaning that it does not initiate
+/// ICE connections but expects ICE Binding Requests from endpoints.
 #[derive(Clone)]
 pub struct WebRtcTransport {
     inner: Arc<Inner>,
@@ -604,7 +638,36 @@ impl WebRtcTransport {
         Self { inner }
     }
 
-    /// Provide the WebRtcTransport remote parameters.
+    /// Provide the WebRtcTransport with remote parameters.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mediasoup::data_structures::{DtlsParameters, DtlsRole, DtlsFingerprint};
+    /// use mediasoup::webrtc_transport::WebRtcTransportRemoteParameters;
+    ///
+    /// # async fn f(
+    /// #     webrtc_transport: mediasoup::webrtc_transport::WebRtcTransport,
+    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// // Calling connect() on a PlainTransport created with comedia and rtcp_mux set.
+    /// webrtc_transport
+    ///     .connect(WebRtcTransportRemoteParameters {
+    ///         dtls_parameters: DtlsParameters {
+    ///             role: DtlsRole::Server,
+    ///             fingerprints: vec![
+    ///                 DtlsFingerprint::Sha256 {
+    ///                     value: [
+    ///                         0xE5, 0xF5, 0xCA, 0xA7, 0x2D, 0x93, 0xE6, 0x16, 0xAC, 0x21, 0x09,
+    ///                         0x9F, 0x23, 0x51, 0x62, 0x8C, 0xD0, 0x66, 0xE9, 0x0C, 0x22, 0x54,
+    ///                         0x2B, 0x82, 0x0C, 0xDF, 0xE0, 0xC5, 0x2C, 0x7E, 0xCD, 0x53,
+    ///                     ],
+    ///                 },
+    ///             ],
+    ///         },
+    ///     })
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn connect(
         &self,
         remote_parameters: WebRtcTransportRemoteParameters,
@@ -635,57 +698,63 @@ impl WebRtcTransport {
         self.set_max_incoming_bitrate_impl(bitrate).await
     }
 
-    /// ICE role.
+    /// Local ICE role. Due to the Mediasoup ICE Lite design, this is always `Controlled`.
     pub fn ice_role(&self) -> IceRole {
         self.inner.data.ice_role
     }
 
-    /// ICE parameters.
+    /// Local ICE parameters.
     pub fn ice_parameters(&self) -> &IceParameters {
         &self.inner.data.ice_parameters
     }
 
-    /// ICE candidates.
+    /// Local ICE candidates.
     pub fn ice_candidates(&self) -> &Vec<IceCandidate> {
         &self.inner.data.ice_candidates
     }
 
-    /// ICE state.
+    /// Current ICE state.
     pub fn ice_state(&self) -> IceState {
         *self.inner.data.ice_state.lock()
     }
 
-    /// ICE selected tuple.
+    /// The selected transport tuple if ICE is in `Connected` or `Completed` state. It is `None` if
+    /// ICE is not established (no working candidate pair was found).
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
         *self.inner.data.ice_selected_tuple.lock()
     }
 
-    /// DTLS parameters.
+    /// Local DTLS parameters.
     pub fn dtls_parameters(&self) -> DtlsParameters {
         self.inner.data.dtls_parameters.lock().clone()
     }
 
-    /// DTLS state.
+    /// Current DTLS state.
     pub fn dtls_state(&self) -> DtlsState {
         *self.inner.data.dtls_state.lock()
     }
 
-    /// Remote certificate in PEM format.
+    /// The remote certificate in PEM format. It is `Some` once the DTLS state becomes `Connected`.
+    ///
+    /// # Notes on usage
+    /// The application may want to inspect the remote certificate for authorization purposes by
+    /// using some certificates utility.
     pub fn dtls_remote_cert(&self) -> Option<String> {
         self.inner.data.dtls_remote_cert.lock().clone()
     }
 
-    /// SCTP parameters.
+    /// Local SCTP parameters. Or `None` if SCTP is not enabled.
     pub fn sctp_parameters(&self) -> Option<SctpParameters> {
         self.inner.data.sctp_parameters
     }
 
-    /// SCTP state.
+    /// Current SCTP state. Or `None` if SCTP is not enabled.
     pub fn sctp_state(&self) -> Option<SctpState> {
         *self.inner.data.sctp_state.lock()
     }
 
-    /// Restart ICE.
+    /// Restarts the ICE layer by generating new local ICE parameters that must be signaled to the
+    /// remote endpoint.
     pub async fn restart_ice(&self) -> Result<IceParameters, RequestError> {
         debug!("restart_ice()");
 
@@ -700,6 +769,7 @@ impl WebRtcTransport {
         Ok(response.ice_parameters)
     }
 
+    /// Callback is called when the transport ICE state changes.
     pub fn on_ice_state_change<F: Fn(IceState) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -707,6 +777,8 @@ impl WebRtcTransport {
         self.inner.handlers.ice_state_change.add(Box::new(callback))
     }
 
+    /// Callback is called after ICE state becomes `Completed` and when the ICE selected tuple
+    /// changes.
     pub fn on_ice_selected_tuple_change<F: Fn(&TransportTuple) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -717,6 +789,7 @@ impl WebRtcTransport {
             .add(Box::new(callback))
     }
 
+    /// Callback is called when the transport DTLS state changes.
     pub fn on_dtls_state_change<F: Fn(DtlsState) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -727,6 +800,7 @@ impl WebRtcTransport {
             .add(Box::new(callback))
     }
 
+    /// Callback is called when the transport SCTP state changes.
     pub fn on_sctp_state_change<F: Fn(SctpState) + Send + Sync + 'static>(
         &self,
         callback: F,

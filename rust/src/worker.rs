@@ -1,4 +1,4 @@
-//! A worker represents a Mediasoup C++ subprocess that runs in a single CPU core and handles
+//! A worker represents a Mediasoup C++ subprocess that runs on a single CPU core and handles
 //! [`Router`] instances.
 
 // TODO: This is Unix-specific and doesn't support Windows in any way
@@ -548,7 +548,7 @@ impl Inner {
     }
 }
 
-/// A worker represents a Mediasoup C++ subprocess that runs in a single CPU core and handles
+/// A worker represents a Mediasoup C++ subprocess that runs on a single CPU core and handles
 /// [`Router`] instances.
 #[derive(Clone)]
 pub struct Worker {
