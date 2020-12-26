@@ -152,7 +152,7 @@ where
     /// Router id.
     fn router_id(&self) -> RouterId;
 
-    /// App custom data.
+    /// Custom application data.
     fn app_data(&self) -> &AppData;
 
     /// Whether the transport is closed.
@@ -199,7 +199,7 @@ where
 
     /// Instructs the router to receive data messages. Those messages can be delivered by an
     /// endpoint via SCTP protocol (AKA [`DataChannel`](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel)
-    /// in WebRTC) or can be directly sent from the Node.js application if the transport is a
+    /// in WebRTC) or can be directly sent from the Rust application if the transport is a
     /// [`DirectTransport`](crate::direct_transport::DirectTransport).
     ///
     /// Transport will be kept alive as long as at least one data producer instance is alive.
@@ -210,7 +210,7 @@ where
 
     /// Instructs the router to send data messages to the endpoint via SCTP protocol (AKA
     /// [`DataChannel`](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel) in WebRTC)
-    /// or directly to the Node.js process if the transport is a
+    /// or directly to the Rust process if the transport is a
     /// [`DirectTransport`](crate::direct_transport::DirectTransport).
     ///
     /// Transport will be kept alive as long as at least one data consumer instance is alive.

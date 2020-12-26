@@ -425,7 +425,7 @@ impl Router {
         self.inner.id
     }
 
-    /// App custom data.
+    /// Custom application data.
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
     }

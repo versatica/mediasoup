@@ -1,3 +1,6 @@
+//! A producer represents an audio or video source being injected into a Mediasoup router. It's
+//! created on top of a transport that defines how the media packets are carried.
+
 use crate::consumer::RtpStreamParams;
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{
@@ -25,13 +28,22 @@ use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
-uuid_based_wrapper_type!(ProducerId);
+uuid_based_wrapper_type!(
+    /// Producer identifier.
+    ProducerId
+);
 
+/// Producer options.
+///
+/// # Notes on usage
+/// Check the
+/// [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
+/// section for more details (TypeScript-oriented, but concepts apply here as well).
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct ProducerOptions {
-    /// Producer id (just for Router.pipeToRouter() method).
-    /// Producer id, should most likely not be specified explicitly, specified by pipe transport
+    /// Producer id (just for
+    /// [`Router::pipe_producer_to_router`](crate::router::Router::pipe_producer_to_router) method).
     pub(super) id: Option<ProducerId>,
     /// Media kind.
     pub kind: MediaKind,
@@ -40,7 +52,8 @@ pub struct ProducerOptions {
     pub rtp_parameters: RtpParameters,
     /// Whether the producer must start in paused mode. Default false.
     pub paused: bool,
-    /// Just for video. Time (in ms) before asking the sender for a new key frame
+    /// Just for video. Time (in ms) before asking the sender for a new key frame after having asked
+    /// a previous one. If 0 there is no delay.
     pub key_frame_request_delay: u32,
     /// Custom application data.
     pub app_data: AppData,
@@ -103,35 +116,46 @@ pub struct ProducerDump {
     pub r#type: ProducerType,
 }
 
+/// Producer type.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ProducerType {
+    /// A single RTP stream is received with no spatial/temporal layers.
     Simple,
+    /// Two or more RTP streams are received, each of them with one or more temporal layers.
     Simulcast,
+    /// A single RTP stream is received with spatial/temporal layers.
     SVC,
 }
 
+/// Score of the RTP stream in the producer representing its transmission quality.
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProducerScore {
-    // TODO: C++ code also seems to have `encodingIdx`, shouldn't we add it here?
-    /// SSRC of the RTP stream.
+    /// Index of the RTP stream in the `rtp_parameters.encodings` array of the producer.
+    pub encoding_ddx: u32,
+    /// RTP stream SSRC.
     pub ssrc: u32,
-    /// RID of the RTP stream.
+    /// RTP stream RID value.
     pub rid: Option<String>,
-    /// The score of the RTP stream.
+    /// RTP stream score (from 0 to 10) representing the transmission quality.
     pub score: u8,
 }
 
+/// As documented in
+/// [WebRTC Video Processing and Codec Requirements](https://tools.ietf.org/html/rfc7742#section-4).
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 pub struct ProducerVideoOrientation {
     /// Whether the source is a video camera.
     pub camera: bool,
     /// Whether the video source is flipped.
     pub flip: bool,
+    // TODO: Enum with `repr(u16)`?
     /// Rotation degrees (0, 90, 180 or 270).
     pub rotation: u16,
 }
 
+/// RTC statistics of the producer.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -214,14 +238,19 @@ pub enum ProducerTraceEventData {
     },
 }
 
-/// Valid types for 'trace' event.
+/// Types of consumer trace events.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ProducerTraceEventType {
+    /// RTP packet.
     RTP,
+    /// RTP video keyframe packet.
     KeyFrame,
+    /// RTCP NACK packet.
     NACK,
+    /// RTCP PLI packet.
     PLI,
+    /// RTCP FIR packet.
     FIR,
 }
 
@@ -303,6 +332,8 @@ impl Inner {
     }
 }
 
+/// Producer created on transport other than
+/// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 pub struct RegularProducer {
     inner: Arc<Inner>,
@@ -314,6 +345,7 @@ impl From<RegularProducer> for Producer {
     }
 }
 
+/// Producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 pub struct DirectProducer {
     inner: Arc<Inner>,
@@ -325,10 +357,15 @@ impl From<DirectProducer> for Producer {
     }
 }
 
+/// A producer represents an audio or video source being injected into a Mediasoup router. It's
+/// created on top of a transport that defines how the media packets are carried.
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum Producer {
+    /// Producer created on transport other than
+    /// [`DirectTransport`](crate::direct_transport::DirectTransport).
     Regular(RegularProducer),
+    /// Producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectProducer),
 }
 
@@ -434,7 +471,7 @@ impl Producer {
         }
     }
 
-    /// Producer id.
+    /// Producer identifier.
     pub fn id(&self) -> ProducerId {
         self.inner().id
     }
@@ -444,7 +481,11 @@ impl Producer {
         self.inner().kind
     }
 
-    /// Media kind.
+    /// Producer RTP parameters.
+    /// # Notes on usage
+    /// Check the
+    /// [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
+    /// section for more details (TypeScript-oriented, but concepts apply here as well).
     pub fn rtp_parameters(&self) -> &RtpParameters {
         &self.inner().rtp_parameters
     }
@@ -459,16 +500,17 @@ impl Producer {
         self.inner().paused.load(Ordering::SeqCst)
     }
 
-    /// Producer score list.
+    /// The score of each RTP stream being received, representing their transmission quality.
     pub fn score(&self) -> Vec<ProducerScore> {
         self.inner().score.lock().clone()
     }
 
-    /// App custom data.
+    /// Custom application data.
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
     }
 
+    /// Whether the producer is closed.
     pub fn closed(&self) -> bool {
         self.inner().closed.load(Ordering::SeqCst)
     }
@@ -486,7 +528,10 @@ impl Producer {
             .await
     }
 
-    /// Get Producer stats.
+    /// Returns current RTC statistics of the producer.
+    ///
+    /// Check the [RTC Statistics](https://mediasoup.org/documentation/v3/mediasoup/rtc-statistics/)
+    /// section for more details (TypeScript-oriented, but concepts apply here as well).
     pub async fn get_stats(&self) -> Result<Vec<ProducerStat>, RequestError> {
         debug!("get_stats()");
 
@@ -498,7 +543,9 @@ impl Producer {
             .await
     }
 
-    /// Pause the Producer.
+    /// Pauses the producer (no RTP is sent to its associated consumers).  Calls
+    /// [`Consumer::on_producer_pause`](crate::consumer::Consumer::on_producer_pause) callback on
+    /// all its associated consumers.
     pub async fn pause(&self) -> Result<(), RequestError> {
         debug!("pause()");
 
@@ -518,7 +565,9 @@ impl Producer {
         Ok(())
     }
 
-    /// Resume the Producer.
+    /// Resumes the producer (no RTP is sent to its associated consumers). Calls
+    /// [`Consumer::on_producer_resume`](crate::consumer::Consumer::on_producer_resume) callback on
+    /// all its associated consumers.
     pub async fn resume(&self) -> Result<(), RequestError> {
         debug!("resume()");
 
@@ -538,7 +587,7 @@ impl Producer {
         Ok(())
     }
 
-    /// Enable 'trace' event.
+    /// Instructs the procuer to emit "trace" events. For monitoring purposes. Use with caution.
     pub async fn enable_trace_event(
         &self,
         types: Vec<ProducerTraceEventType>,
@@ -554,6 +603,7 @@ impl Producer {
             .await
     }
 
+    /// Callback is called when the producer score changes.
     pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -561,6 +611,9 @@ impl Producer {
         self.inner().handlers.score.add(Box::new(callback))
     }
 
+    /// Callback is called when the video orientation changes. This is just possible if the
+    /// `urn:3gpp:video-orientation` RTP extension has been negotiated in the producer RTP
+    /// parameters.
     pub fn on_video_orientation_change<F: Fn(ProducerVideoOrientation) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -571,14 +624,17 @@ impl Producer {
             .add(Box::new(callback))
     }
 
+    /// Callback is called when the producer is paused.
     pub fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.pause.add(Box::new(callback))
     }
 
+    /// Callback is called when the producer is resumed.
     pub fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.resume.add(Box::new(callback))
     }
 
+    /// See [`Producer::enable_trace_event`] method.
     pub fn on_trace<F: Fn(&ProducerTraceEventData) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -586,6 +642,9 @@ impl Producer {
         self.inner().handlers.trace.add(Box::new(callback))
     }
 
+    /// Callback is called when the transport this producer belongs to is closed for whatever
+    /// reason. The producer itself is also closed. A `on_producer_close` callback is called on all
+    /// its associated consumers.
     pub fn on_transport_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner()
             .handlers
@@ -593,6 +652,7 @@ impl Producer {
             .add(Box::new(callback))
     }
 
+    /// Callback is called when the producer is closed for whatever reason.
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.close.add(Box::new(callback))
     }
@@ -631,7 +691,7 @@ impl Producer {
 }
 
 impl DirectProducer {
-    /// Send RTP packet.
+    /// Sends a RTP packet from the Rust process.
     pub async fn send(&self, rtp_packet: Bytes) -> Result<(), NotificationError> {
         self.inner
             .payload_channel

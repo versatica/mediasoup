@@ -1,3 +1,11 @@
+//! A data consumer represents an endpoint capable of receiving data messages from a Mediasoup
+//! [`Router`](crate::router::Router).
+//!
+//! A data consumer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA
+//! DataChannel) to receive those messages, or can directly receive them in the Rust application if
+//! the data consumer was created on top of a
+//! [`DirectTransport`](crate::direct_transport::DirectTransport).
+
 use crate::data_producer::DataProducerId;
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
@@ -22,8 +30,12 @@ use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
-uuid_based_wrapper_type!(DataConsumerId);
+uuid_based_wrapper_type!(
+    /// Data consumer identifier.
+    DataConsumerId
+);
 
+/// Data consumer options.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DataConsumerOptions {
@@ -31,19 +43,19 @@ pub struct DataConsumerOptions {
     pub(super) data_producer_id: DataProducerId,
     /// Just if consuming over SCTP.
     /// Whether data messages must be received in order. If true the messages will be sent reliably.
-    /// Defaults to the value in the DataProducer if it has type 'Sctp' or to true if it has type
-    /// 'Direct'.
+    /// Defaults to the value in the DataProducer if it has type `Sctp` or to true if it has type
+    /// `Direct`.
     pub(super) ordered: Option<bool>,
     /// Just if consuming over SCTP.
     /// When ordered is false indicates the time (in milliseconds) after which a SCTP packet will
     /// stop being retransmitted.
-    /// Defaults to the value in the DataProducer if it has type 'Sctp' or unset if it has type
-    /// 'Direct'.
+    /// Defaults to the value in the DataProducer if it has type `Sctp` or unset if it has type
+    /// `Direct`.
     pub(super) max_packet_life_time: Option<u16>,
     /// Just if consuming over SCTP.
     /// When ordered is false indicates the maximum number of times a packet will be retransmitted.
-    /// Defaults to the value in the DataProducer if it has type 'Sctp' or unset if it has type
-    /// 'Direct'.
+    /// Defaults to the value in the DataProducer if it has type `Sctp` or unset if it has type
+    /// `Direct`.
     pub(super) max_retransmits: Option<u16>,
     /// Custom application data.
     pub app_data: AppData,
@@ -128,6 +140,7 @@ pub struct DataConsumerDump {
     pub buffered_amount_low_threshold: u32,
 }
 
+/// RTC statistics of the data consumer.
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -140,10 +153,13 @@ pub struct DataConsumerStat {
     pub bytes_sent: usize,
 }
 
+/// Data consumer type.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DataConsumerType {
+    /// The endpoint receives messages using the SCTP protocol.
     Sctp,
+    /// Messages are received directly by the Rust process over a direct transport.
     Direct,
 }
 
@@ -233,6 +249,8 @@ impl Inner {
     }
 }
 
+/// Data consumer created on transport other than
+/// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 pub struct RegularDataConsumer {
     inner: Arc<Inner>,
@@ -244,6 +262,7 @@ impl From<RegularDataConsumer> for DataConsumer {
     }
 }
 
+/// Data consumer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 pub struct DirectDataConsumer {
     inner: Arc<Inner>,
@@ -255,10 +274,20 @@ impl From<DirectDataConsumer> for DataConsumer {
     }
 }
 
+/// A data consumer represents an endpoint capable of receiving data messages from a Mediasoup
+/// [`Router`](crate::router::Router).
+///
+/// A data consumer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA
+/// DataChannel) to receive those messages, or can directly receive them in the Rust application if
+/// the data consumer was created on top of a
+/// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum DataConsumer {
+    /// Data consumer created on transport other than
+    /// [`DirectTransport`](crate::direct_transport::DirectTransport).
     Regular(RegularDataConsumer),
+    /// Data consumer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectDataConsumer),
 }
 
@@ -388,41 +417,42 @@ impl DataConsumer {
         }
     }
 
-    /// DataConsumer id.
+    /// Data consumer identifier.
     pub fn id(&self) -> DataConsumerId {
         self.inner().id
     }
 
-    /// Associated DataProducer id.
+    /// The associated data producer identifier.
     pub fn data_producer_id(&self) -> DataProducerId {
         self.inner().data_producer_id
     }
 
-    /// DataConsumer type.
+    /// The type of the data consumer.
     pub fn r#type(&self) -> DataConsumerType {
         self.inner().r#type
     }
 
-    /// SCTP stream parameters.
+    /// The SCTP stream parameters (just if the data consumer type is `Sctp`).
     pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
         self.inner().sctp_stream_parameters
     }
 
-    /// DataChannel label.
+    /// The data consumer label.
     pub fn label(&self) -> &String {
         &self.inner().label
     }
 
-    /// DataChannel protocol.
+    /// The data consumer sub-protocol.
     pub fn protocol(&self) -> &String {
         &self.inner().protocol
     }
 
-    /// App custom data.
+    /// Custom application data.
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
     }
 
+    /// Whether the data consumer is closed.
     pub fn closed(&self) -> bool {
         self.inner().closed.load(Ordering::SeqCst)
     }
@@ -440,7 +470,10 @@ impl DataConsumer {
             .await
     }
 
-    /// Get DataConsumer stats.
+    /// Returns current statistics of the data consumer.
+    ///
+    /// Check the [RTC Statistics](https://mediasoup.org/documentation/v3/mediasoup/rtc-statistics/)
+    /// section for more details (TypeScript-oriented, but concepts apply here as well).
     pub async fn get_stats(&self) -> Result<Vec<DataConsumerStat>, RequestError> {
         debug!("get_stats()");
 
@@ -452,7 +485,13 @@ impl DataConsumer {
             .await
     }
 
-    /// Get buffered amount size.
+    /// Returns the number of bytes of data currently buffered to be sent over the underlying SCTP
+    /// association.
+    ///
+    /// # Notes on usage
+    /// The underlying SCTP association uses a common send buffer for all data consumers, hence the
+    /// value given by this method indicates the data buffered for all data consumers in the
+    /// transport.
     pub async fn get_buffered_amount(&self) -> Result<u32, RequestError> {
         debug!("get_buffered_amount()");
 
@@ -467,7 +506,8 @@ impl DataConsumer {
         Ok(response.buffered_amount)
     }
 
-    /// Set buffered amount low threshold.
+    // Whenever the underlying SCTP association buffered bytes drop to this value,
+    // `on_buffered_amount_low` callback is called.
     pub async fn set_buffered_amount_low_threshold(
         &self,
         threshold: u32,
@@ -486,6 +526,11 @@ impl DataConsumer {
             .await
     }
 
+    /// Callback is called when a message has been received from the corresponding data producer.
+    ///
+    /// # Notes on usage
+    /// Just available in direct transports, this is, those created via
+    /// [`Router::create_direct_transport`](crate::router::Router::create_direct_transport).
     pub fn on_message<F: Fn(&WebRtcMessage) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -493,6 +538,7 @@ impl DataConsumer {
         self.inner().handlers.message.add(Box::new(callback))
     }
 
+    /// Callback is called when a message could not be sent because the SCTP send buffer was full.
     pub fn on_sctp_send_buffer_full<F: Fn() + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -503,6 +549,11 @@ impl DataConsumer {
             .add(Box::new(callback))
     }
 
+    /// Emitted when the underlying SCTP association buffered bytes drop down to the value set with
+    /// [`DataConsumer::set_buffered_amount_low_threshold`].
+    ///
+    /// # Notes on usage
+    /// Only applicable for consumers of type `Sctp`.
     pub fn on_buffered_amount_low<F: Fn(u32) + Send + Sync + 'static>(
         &self,
         callback: F,
@@ -513,6 +564,8 @@ impl DataConsumer {
             .add(Box::new(callback))
     }
 
+    /// Callback is called when the associated data producer is closed for whatever reason. The data
+    /// consumer itself is also closed.
     pub fn on_data_producer_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner()
             .handlers
@@ -520,6 +573,8 @@ impl DataConsumer {
             .add(Box::new(callback))
     }
 
+    /// Callback is called when the transport this data consumer belongs to is closed for whatever
+    /// reason. The data consumer itself is also closed.
     pub fn on_transport_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner()
             .handlers
@@ -527,6 +582,7 @@ impl DataConsumer {
             .add(Box::new(callback))
     }
 
+    /// Callback is called when the data consumer is closed for whatever reason.
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.close.add(Box::new(callback))
     }
@@ -549,7 +605,7 @@ impl DataConsumer {
 }
 
 impl DirectDataConsumer {
-    /// Send data.
+    /// Sends direct messages from the Rust process.
     pub async fn send(&self, message: WebRtcMessage) -> Result<(), RequestError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 

@@ -41,7 +41,7 @@ pub trait RtpObserver {
     /// Whether the RtpObserver is paused.
     fn paused(&self) -> bool;
 
-    /// App custom data.
+    /// Custom application data.
     fn app_data(&self) -> &AppData;
 
     /// Whether the RTP observer is closed.

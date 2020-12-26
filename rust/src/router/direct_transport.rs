@@ -231,7 +231,7 @@ impl Transport for DirectTransport {
         self.inner.router.id()
     }
 
-    /// App custom data.
+    /// Custom application data.
     fn app_data(&self) -> &AppData {
         &self.inner.app_data
     }

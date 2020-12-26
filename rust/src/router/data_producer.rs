@@ -1,3 +1,10 @@
+//! A data producer represents an endpoint capable of injecting data messages into a Mediasoup
+//! [`Router`](crate::router::Router).
+//!
+//! A data producer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA DataChannel) to deliver
+//! those messages, or can directly send them from the Rust application if the data producer was
+//! created on top of a [`DirectTransport`](crate::direct_transport::DirectTransport).
+
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
@@ -17,13 +24,18 @@ use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
-uuid_based_wrapper_type!(DataProducerId);
+uuid_based_wrapper_type!(
+    /// Data producer identifier.
+    DataProducerId
+);
 
+/// Data producer options.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DataProducerOptions {
-    /// DataProducer id (just for `Router::pipe_*_to_router()` methods).
-    /// DataProducer id, should not be specified explicitly, specified by pipe transport only
+    /// DataProducer id (just for
+    /// [`Router::pipe_data_producer_to_router`](crate::router::Router::pipe_producer_to_router)
+    /// method).
     pub(super) id: Option<DataProducerId>,
     /// SCTP parameters defining how the endpoint is sending the data.
     /// Required if SCTP/DataChannel is used.
@@ -73,10 +85,13 @@ impl DataProducerOptions {
     }
 }
 
+/// Data consumer type.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DataProducerType {
+    /// The endpoint sends messages using the SCTP protocol.
     Sctp,
+    /// Messages are sent directly from the Rust process over a direct transport.
     Direct,
 }
 
@@ -92,6 +107,7 @@ pub struct DataProducerDump {
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
 }
 
+/// RTC statistics of the data producer.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -165,6 +181,8 @@ impl Inner {
     }
 }
 
+/// Data producer created on transport other than
+/// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 pub struct RegularDataProducer {
     inner: Arc<Inner>,
@@ -176,6 +194,7 @@ impl From<RegularDataProducer> for DataProducer {
     }
 }
 
+/// Data producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 pub struct DirectDataProducer {
     inner: Arc<Inner>,
@@ -187,10 +206,19 @@ impl From<DirectDataProducer> for DataProducer {
     }
 }
 
+/// A data producer represents an endpoint capable of injecting data messages into a Mediasoup
+/// [`Router`](crate::router::Router).
+///
+/// A data producer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA DataChannel) to deliver
+/// those messages, or can directly send them from the Rust application if the data producer was
+/// created on top of a [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum DataProducer {
+    /// Data producer created on transport other than
+    /// [`DirectTransport`](crate::direct_transport::DirectTransport).
     Regular(RegularDataProducer),
+    /// Data producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectDataProducer),
 }
 
@@ -258,36 +286,37 @@ impl DataProducer {
         }
     }
 
-    /// DataProducer id.
+    /// Data producer identifier.
     pub fn id(&self) -> DataProducerId {
         self.inner().id
     }
 
-    /// DataProducer type.
+    /// The type of the data producer.
     pub fn r#type(&self) -> DataProducerType {
         self.inner().r#type
     }
 
-    /// SCTP stream parameters.
+    /// The SCTP stream parameters (just if the data producer type is `Sctp`).
     pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
         self.inner().sctp_stream_parameters
     }
 
-    /// DataChannel label.
+    /// The data producer label.
     pub fn label(&self) -> &String {
         &self.inner().label
     }
 
-    /// DataChannel protocol.
+    /// The data producer sub-protocol.
     pub fn protocol(&self) -> &String {
         &self.inner().protocol
     }
 
-    /// App custom data.
+    /// Custom application data.
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
     }
 
+    /// Whether the data producer is closed.
     pub fn closed(&self) -> bool {
         self.inner().closed.load(Ordering::SeqCst)
     }
@@ -305,7 +334,10 @@ impl DataProducer {
             .await
     }
 
-    /// Get DataProducer stats.
+    /// Returns current statistics of the data producer.
+    ///
+    /// Check the [RTC Statistics](https://mediasoup.org/documentation/v3/mediasoup/rtc-statistics/)
+    /// section for more details (TypeScript-oriented, but concepts apply here as well).
     pub async fn get_stats(&self) -> Result<Vec<DataProducerStat>, RequestError> {
         debug!("get_stats()");
 
@@ -317,6 +349,9 @@ impl DataProducer {
             .await
     }
 
+    /// Callback is called when the transport this data producer belongs to is closed for whatever
+    /// reason. The producer itself is also closed. A `on_data_producer_close` callback is called on
+    /// all its associated consumers.
     pub fn on_transport_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner()
             .handlers
@@ -324,6 +359,7 @@ impl DataProducer {
             .add(Box::new(callback))
     }
 
+    /// Callback is called when the producer is closed for whatever reason.
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
         self.inner().handlers.close.add(Box::new(callback))
     }
@@ -355,7 +391,7 @@ impl DataProducer {
 }
 
 impl DirectDataProducer {
-    /// Send data.
+    /// Sends direct messages from the Rust process.
     pub async fn send(&self, message: WebRtcMessage) -> Result<(), NotificationError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
