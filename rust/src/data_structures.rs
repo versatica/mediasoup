@@ -1,3 +1,5 @@
+//! Miscellaneous data structures.
+
 use bytes::Bytes;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
@@ -9,6 +11,7 @@ use std::net::IpAddr;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
+/// Container for arbitrary data attached to Mediasoup entities.
 #[derive(Debug, Clone)]
 pub struct AppData(Arc<dyn Any + Send + Sync>);
 
@@ -38,44 +41,70 @@ impl AppData {
     }
 }
 
+/// IP to listen on.
+///
+/// # Notes on usage
+/// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransportListenIp {
+    /// Listening IPv4 or IPv6.
     pub ip: IpAddr,
+    /// Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with private IP).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announced_ip: Option<IpAddr>,
 }
 
+/// ICE role.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum IceRole {
+    /// The transport is the controlled agent.
     Controlled,
+    /// The transport is the controlling agent.
     Controlling,
 }
 
+/// ICE parameters.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IceParameters {
+    /// ICE username fragment.
     pub username_fragment: String,
+    /// ICE password.
     pub password: String,
+    /// ICE Lite.
     pub ice_lite: Option<bool>,
 }
 
+/// ICE candidate type
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "lowercase")]
 pub enum IceCandidateType {
+    /// The candidate is a host candidate, whose IP address as specified in the
+    /// [`IceCandidate::ip`] property is in fact the true address of the remote peer.
     Host,
+    /// The candidate is a server reflexive candidate; the [`IceCandidate::ip`] indicates an
+    /// intermediary address assigned by the STUN server to represent the candidate's peer
+    /// anonymously.
     Srflx,
+    /// The candidate is a peer reflexive candidate; the [`IceCandidate::ip`] is an intermediary
+    /// address assigned by the STUN server to represent the candidate's peer anonymously.
     Prflx,
+    /// The candidate is a relay candidate, obtained from a TURN server. The relay candidate's IP
+    /// address is an address the [TURN](https://developer.mozilla.org/en-US/docs/Glossary/TURN)
+    /// server uses to forward the media between the two peers.
     Relay,
 }
 
+/// ICE candidate TCP type (always `Passive`).
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "lowercase")]
 pub enum IceCandidateTcpType {
     Passive,
 }
 
+/// Transport protocol.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TransportProtocol {
@@ -83,6 +112,7 @@ pub enum TransportProtocol {
     UDP,
 }
 
+/// ICE candidate
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IceCandidate {
@@ -122,21 +152,37 @@ pub enum IceState {
     Closed,
 }
 
+/// Tuple of local IP/port/protocol + optional remote IP/port.
+///
+/// # Notes on usage
+/// Both `remote_ip` and `remote_port` are unset until the media address of the remote endpoint is
+/// known, which happens after calling `transport.connect()` in `PlainTransport` and
+/// `PipeTransport`, or via dynamic detection as it happens in `WebRtcTransport` (in which the
+/// remote media address is detected by ICE means), or in `PlainTransport` (when using `comedia`
+/// mode).
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum TransportTuple {
     #[serde(rename_all = "camelCase")]
     WithRemote {
+        /// Local IP address.
         local_ip: IpAddr,
+        /// Local port.
         local_port: u16,
+        /// Remote IP address.
         remote_ip: IpAddr,
+        /// Remote port.
         remote_port: u16,
+        /// Protocol
         protocol: TransportProtocol,
     },
     #[serde(rename_all = "camelCase")]
     LocalOnly {
+        /// Local IP address.
         local_ip: IpAddr,
+        /// Local port.
         local_port: u16,
+        /// Protocol
         protocol: TransportProtocol,
     },
 }
@@ -643,6 +689,8 @@ pub enum EventDirection {
     Out,
 }
 
+/// Container used for sending/receiving messages using `DirectTransport` data producers and data
+/// consumers.
 #[derive(Clone)]
 pub enum WebRtcMessage {
     String(String),

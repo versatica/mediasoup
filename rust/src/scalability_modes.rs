@@ -1,13 +1,19 @@
+//! Scalability mode.
+
 use once_cell::sync::OnceCell;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use thiserror::Error;
 
+/// Scalability mode.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct ScalabilityMode {
+    /// Number of spatial layers.
     pub spatial_layers: u8,
+    /// Number of temporal layers.
     pub temporal_layers: u8,
+    /// K-SVC mode.
     pub ksvc: bool,
 }
 
@@ -21,8 +27,10 @@ impl Default for ScalabilityMode {
     }
 }
 
+/// Error that caused [`ScalabilityMode`] parsing error.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ParseScalabilityModeError {
+    /// Invalid input string
     #[error("Invalid input string")]
     InvalidInput,
 }
