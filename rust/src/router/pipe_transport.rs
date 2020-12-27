@@ -571,7 +571,7 @@ impl PipeTransport {
     /// * Information about `remote_ip` and `remote_port` will be set after calling `connect()`
     ///   method.
     pub fn tuple(&self) -> TransportTuple {
-        self.inner.data.tuple.lock().clone()
+        *self.inner.data.tuple.lock()
     }
 
     /// Local SCTP parameters. Or `None` if SCTP is not enabled.

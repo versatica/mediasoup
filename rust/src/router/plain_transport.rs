@@ -480,14 +480,14 @@ impl PlainTransport {
                     match serde_json::from_value::<Notification>(notification) {
                         Ok(notification) => match notification {
                             Notification::Tuple(tuple) => {
-                                *data.tuple.lock() = tuple.clone();
+                                *data.tuple.lock() = tuple;
 
                                 handlers.tuple.call(|callback| {
                                     callback(&tuple);
                                 });
                             }
                             Notification::RtcpTuple(rtcp_tuple) => {
-                                data.rtcp_tuple.lock().replace(rtcp_tuple.clone());
+                                data.rtcp_tuple.lock().replace(rtcp_tuple);
 
                                 handlers.rtcp_tuple.call(|callback| {
                                     callback(&rtcp_tuple);
@@ -715,7 +715,7 @@ impl PlainTransport {
     ///   * after calling `connect()` method, or
     ///   * via dynamic remote address detection when using `comedia` mode.
     pub fn tuple(&self) -> TransportTuple {
-        self.inner.data.tuple.lock().clone()
+        *self.inner.data.tuple.lock()
     }
 
     /// The transport tuple for RTCP. If RTCP-mux is enabled (`rtcp_mux` is set), its value is
@@ -728,7 +728,7 @@ impl PlainTransport {
     ///   * after calling `connect()` method, or
     ///   * via dynamic remote address detection when using `comedia` mode.
     pub fn rtcp_tuple(&self) -> Option<TransportTuple> {
-        self.inner.data.rtcp_tuple.lock().clone()
+        *self.inner.data.rtcp_tuple.lock()
     }
 
     /// Current SCTP state. Or `None` if SCTP is not enabled.

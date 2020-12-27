@@ -593,7 +593,7 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
                         } else {
                             let mut value_result = [0u8; 20];
                             parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(|error| de::Error::custom(error))?;
+                                .map_err(de::Error::custom)?;
 
                             Ok(DtlsFingerprint::Sha1 {
                                 value: value_result,
@@ -608,7 +608,7 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
                         } else {
                             let mut value_result = [0u8; 28];
                             parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(|error| de::Error::custom(error))?;
+                                .map_err(de::Error::custom)?;
 
                             Ok(DtlsFingerprint::Sha224 {
                                 value: value_result,
@@ -623,7 +623,7 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
                         } else {
                             let mut value_result = [0u8; 32];
                             parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(|error| de::Error::custom(error))?;
+                                .map_err(de::Error::custom)?;
 
                             Ok(DtlsFingerprint::Sha256 {
                                 value: value_result,
@@ -638,7 +638,7 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
                         } else {
                             let mut value_result = [0u8; 48];
                             parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(|error| de::Error::custom(error))?;
+                                .map_err(de::Error::custom)?;
 
                             Ok(DtlsFingerprint::Sha384 {
                                 value: value_result,
@@ -653,7 +653,7 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
                         } else {
                             let mut value_result = [0u8; 64];
                             parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(|error| de::Error::custom(error))?;
+                                .map_err(de::Error::custom)?;
 
                             Ok(DtlsFingerprint::Sha512 {
                                 value: value_result,

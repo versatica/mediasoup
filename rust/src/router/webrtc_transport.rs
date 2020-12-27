@@ -548,9 +548,7 @@ impl WebRtcTransport {
                                 });
                             }
                             Notification::IceSelectedTupleChange { ice_selected_tuple } => {
-                                data.ice_selected_tuple
-                                    .lock()
-                                    .replace(ice_selected_tuple.clone());
+                                data.ice_selected_tuple.lock().replace(ice_selected_tuple);
                                 handlers.ice_selected_tuple_change.call(|callback| {
                                     callback(&ice_selected_tuple);
                                 });
