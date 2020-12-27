@@ -115,6 +115,21 @@ mod direct_transport {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let (_worker, _router, transport) = init().await;
+
+            let weak_transport = transport.downgrade();
+
+            assert!(weak_transport.upgrade().is_some());
+
+            drop(transport);
+
+            assert!(weak_transport.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn get_stats_succeeds() {
         future::block_on(async move {
             let (_worker, _router, transport) = init().await;

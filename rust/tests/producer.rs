@@ -349,6 +349,26 @@ mod producer {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let (_worker, _router, transport_1, _transport_2) = init().await;
+
+            let producer = transport_1
+                .produce(audio_producer_options())
+                .await
+                .expect("Failed to produce audio");
+
+            let weak_producer = producer.downgrade();
+
+            assert!(weak_producer.upgrade().is_some());
+
+            drop(producer);
+
+            assert!(weak_producer.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn produce_wrong_arguments() {
         future::block_on(async move {
             let (_worker, _router, transport_1, _transport_2) = init().await;

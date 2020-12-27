@@ -247,6 +247,35 @@ mod plain_transport {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            let transport = router
+                .create_plain_transport({
+                    let mut plain_transport_options =
+                        PlainTransportOptions::new(TransportListenIp {
+                            ip: "127.0.0.1".parse().unwrap(),
+                            announced_ip: Some("4.4.4.4".parse().unwrap()),
+                        });
+                    plain_transport_options.rtcp_mux = false;
+
+                    plain_transport_options
+                })
+                .await
+                .expect("Failed to create Plain transport");
+
+            let weak_transport = transport.downgrade();
+
+            assert!(weak_transport.upgrade().is_some());
+
+            drop(transport);
+
+            assert!(weak_transport.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn create_enable_srtp_succeeds() {
         future::block_on(async move {
             let (_worker, router) = init().await;

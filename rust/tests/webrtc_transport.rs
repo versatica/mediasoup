@@ -257,6 +257,31 @@ mod webrtc_transport {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let (_worker, router) = init().await;
+
+            let transport = router
+                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                    TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    },
+                )))
+                .await
+                .expect("Failed to create WebRTC transport");
+
+            let weak_transport = transport.downgrade();
+
+            assert!(weak_transport.upgrade().is_some());
+
+            drop(transport);
+
+            assert!(weak_transport.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn create_non_bindable_ip() {
         future::block_on(async move {
             let (_worker, router) = init().await;

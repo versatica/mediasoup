@@ -229,6 +229,35 @@ mod data_producer {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let (_worker, _router, transport1, _transport2) = init().await;
+
+            let data_producer = transport1
+                .produce_data({
+                    let mut options =
+                        DataProducerOptions::new_sctp(SctpStreamParameters::new_ordered(666));
+
+                    options.label = "foo".to_string();
+                    options.protocol = "bar".to_string();
+                    options.app_data = AppData::new(CustomAppData { foo: 1, baz: "2" });
+
+                    options
+                })
+                .await
+                .expect("Failed to produce data");
+
+            let weak_data_producer = data_producer.downgrade();
+
+            assert!(weak_data_producer.upgrade().is_some());
+
+            drop(data_producer);
+
+            assert!(weak_data_producer.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn produce_data_used_stream_id_rejects() {
         future::block_on(async move {
             let (_worker, _router, transport1, _transport2) = init().await;

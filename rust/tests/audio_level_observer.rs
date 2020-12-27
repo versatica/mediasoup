@@ -91,6 +91,31 @@ mod audio_level_observer {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let worker = init().await;
+
+            let router = worker
+                .create_router(RouterOptions::new(media_codecs()))
+                .await
+                .expect("Failed to create router");
+
+            let audio_level_observer = router
+                .create_audio_level_observer(AudioLevelObserverOptions::default())
+                .await
+                .expect("Failed to create AudioLevelObserver");
+
+            let weak_audio_level_observer = audio_level_observer.downgrade();
+
+            assert!(weak_audio_level_observer.upgrade().is_some());
+
+            drop(audio_level_observer);
+
+            assert!(weak_audio_level_observer.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn pause_resume() {
         future::block_on(async move {
             let worker = init().await;

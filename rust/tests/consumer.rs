@@ -563,6 +563,36 @@ mod consumer {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let (_worker, _router, transport_1, transport_2) = init().await;
+
+            let producer = transport_1
+                .produce(audio_producer_options())
+                .await
+                .expect("Failed to produce audio");
+
+            let consumer = transport_2
+                .consume({
+                    let mut options =
+                        ConsumerOptions::new(producer.id(), consumer_device_capabilities());
+                    options.app_data = AppData::new(ConsumerAppData { baz: "LOL" });
+                    options
+                })
+                .await
+                .expect("Failed to consume audio");
+
+            let weak_consumer = consumer.downgrade();
+
+            assert!(weak_consumer.upgrade().is_some());
+
+            drop(consumer);
+
+            assert!(weak_consumer.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn consume_incompatible_rtp_capabilities() {
         future::block_on(async move {
             let (_worker, router, transport_1, transport_2) = init().await;

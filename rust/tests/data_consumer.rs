@@ -187,6 +187,49 @@ mod data_consumer {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let (_worker, router, _transport1, data_producer) = init().await;
+
+            let transport2 = router
+                .create_plain_transport({
+                    let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: None,
+                    });
+
+                    transport_options.enable_sctp = true;
+
+                    transport_options
+                })
+                .await
+                .expect("Failed to create transport1");
+
+            let data_consumer = transport2
+                .consume_data({
+                    let mut options = DataConsumerOptions::new_sctp_unordered_with_life_time(
+                        data_producer.id(),
+                        4000,
+                    );
+
+                    options.app_data = AppData::new(CustomAppData { baz: "LOL" });
+
+                    options
+                })
+                .await
+                .expect("Failed to consume data");
+
+            let weak_data_consumer = data_consumer.downgrade();
+
+            assert!(weak_data_consumer.upgrade().is_some());
+
+            drop(data_consumer);
+
+            assert!(weak_data_consumer.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn dump_succeeds() {
         future::block_on(async move {
             let (_worker, _router, transport, data_producer) = init().await;

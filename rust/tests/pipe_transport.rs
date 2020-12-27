@@ -523,6 +523,34 @@ mod pipe_transport {
     }
 
     #[test]
+    fn weak() {
+        future::block_on(async move {
+            let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+
+            let pipe_transport = router1
+                .create_pipe_transport({
+                    let mut options = PipeTransportOptions::new(TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: None,
+                    });
+                    options.enable_rtx = true;
+
+                    options
+                })
+                .await
+                .expect("Failed to create Pipe transport");
+
+            let weak_pipe_transport = pipe_transport.downgrade();
+
+            assert!(weak_pipe_transport.upgrade().is_some());
+
+            drop(pipe_transport);
+
+            assert!(weak_pipe_transport.upgrade().is_none());
+        });
+    }
+
+    #[test]
     fn create_with_enable_rtx_succeeds() {
         future::block_on(async move {
             let (_worker, router1, _router2, transport1, _transport2) = init().await;
