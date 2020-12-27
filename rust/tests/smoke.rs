@@ -357,13 +357,13 @@ fn smoke() {
             .unwrap();
         println!("Second router created: {:?}", router.id());
 
-        let _pipe_producer_to_router_value = router
+        router
             .pipe_producer_to_router(producer.id(), PipeToRouterOptions::new(router2.clone()))
             .await
             .unwrap();
         println!("Piped producer to other router",);
 
-        let _pipe_data_producer_to_router_value = router
+        router
             .pipe_data_producer_to_router(
                 data_producer.id(),
                 PipeToRouterOptions::new(router2.clone()),

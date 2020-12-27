@@ -34,7 +34,9 @@ use crate::{ortc, uuid_based_wrapper_type};
 use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
-use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, WeakDataProducer};
+use crate::data_producer::{
+    DataProducer, DataProducerId, DataProducerOptions, NonClosingDataProducer, WeakDataProducer,
+};
 use crate::data_structures::{AppData, TransportListenIp, TransportTuple};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
@@ -49,7 +51,7 @@ use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
 };
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
-use crate::producer::{Producer, ProducerId, ProducerOptions, WeakProducer};
+use crate::producer::{NonClosingProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
 use crate::rtp_observer::RtpObserverId;
 use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::sctp_parameters::NumSctpStreams;
@@ -144,17 +146,23 @@ impl PipeToRouterOptions {
     }
 }
 
-/// Container for pipe consumer and producer pair.
-// TODO: Fix this usability issue and remove `#[must_use]`
-#[must_use = "When dropped, pipe between routers will be destroyed"]
+/// Container for pipe consumer and pipe producer pair.
+///
+/// # Notes on usage
+/// Pipe consumer and Pipe producer will not be closed on drop, to control this manually get pipe
+/// producer out of non-closing variant with [`NonClosingProducer::into_inner()`] call,
+/// otherwise pipe consumer and pipe producer lifetime will be tied to source producer lifetime.
+///
+/// Pipe consumer is always tied to the lifetime of pipe producer.
 pub struct PipeProducerToRouterPair {
     /// The Consumer created in the current Router.
     pub pipe_consumer: Consumer,
-    /// The Producer created in the target Router.
-    pub pipe_producer: Producer,
+    /// The Producer created in the target Router, get regular instance with
+    /// [`NonClosingProducer::into_inner()`] call.
+    pub pipe_producer: NonClosingProducer,
 }
 
-/// Error that caused [`Router::pipe_producer_to_router`] to fail.
+/// Error that caused [`Router::pipe_producer_to_router()`] to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum PipeProducerToRouterError {
     /// Destination router must be different
@@ -192,17 +200,24 @@ impl From<ProduceError> for PipeProducerToRouterError {
     }
 }
 
-/// Container for pipe data consumer and data producer pair.
-// TODO: Fix this usability issue and remove `#[must_use]`
-#[must_use = "When dropped, pipe between routers will be destroyed"]
+/// Container for pipe data consumer and pipe data producer pair.
+///
+/// # Notes on usage
+/// Pipe data consumer and pipe data producer will not be closed on drop, to control this manually
+/// get pipe data producer out of non-closing variant with [`NonClosingDataProducer::into_inner()`]
+/// call, otherwise pipe data consumer and pipe data producer lifetime will be tied to source data
+/// producer lifetime.
+///
+/// Pipe data consumer is always tied to the lifetime of pipe data producer.
 pub struct PipeDataProducerToRouterPair {
     /// The DataConsumer created in the current Router.
     pub pipe_data_consumer: DataConsumer,
-    /// The DataProducer created in the target Router.
-    pub pipe_data_producer: DataProducer,
+    /// The DataProducer created in the target Router, get regular instance with
+    /// [`NonClosingDataProducer::into_inner()`] call.
+    pub pipe_data_producer: NonClosingDataProducer,
 }
 
-/// Error that caused [`Router::pipe_data_producer_to_router`] to fail.
+/// Error that caused [`Router::pipe_data_producer_to_router()`] to fail.
 #[derive(Debug, Error)]
 pub enum PipeDataProducerToRouterError {
     /// Destination router must be different
@@ -817,7 +832,7 @@ impl Router {
     ///     .await?;
     ///
     /// // Pipe producer1 into router2.
-    /// let _pair = router1
+    /// router1
     ///     .pipe_producer_to_router(
     ///         producer1.id(),
     ///         PipeToRouterOptions::new(router2.clone())
@@ -875,7 +890,9 @@ impl Router {
             .and_then(WeakProducer::upgrade)
         {
             Some(producer) => producer,
-            None => return Err(PipeProducerToRouterError::ProducerNotFound(producer_id)),
+            None => {
+                return Err(PipeProducerToRouterError::ProducerNotFound(producer_id));
+            }
         };
 
         let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
@@ -954,12 +971,29 @@ impl Router {
                 let pipe_consumer = pipe_consumer.clone();
 
                 move || {
-                    // Just ot make sure consumer on local router outlives producer on the other
+                    // Just to make sure consumer on local router outlives producer on the other
                     // router
                     drop(pipe_consumer);
                 }
             })
             .detach();
+
+        let pipe_producer = NonClosingProducer::new(pipe_producer, {
+            let weak_producer = producer.downgrade();
+
+            move |pipe_producer| {
+                if let Some(producer) = weak_producer.upgrade() {
+                    // In case `NonClosingProducer` was dropped without transforming into regular
+                    // `Producer` first, we need to tie underlying pipe producer lifetime to the
+                    // lifetime of original source producer in another router
+                    producer
+                        .on_close(move || {
+                            pipe_producer.close();
+                        })
+                        .detach();
+                }
+            }
+        });
 
         Ok(PipeProducerToRouterPair {
             pipe_consumer,
@@ -1011,7 +1045,7 @@ impl Router {
     ///     .await?;
     ///
     /// // Pipe data_producer1 into router2.
-    /// let _pair = router1
+    /// router1
     ///     .pipe_data_producer_to_router(
     ///         data_producer1.id(),
     ///         PipeToRouterOptions::new(router2.clone())
@@ -1049,18 +1083,18 @@ impl Router {
             return Err(PipeDataProducerToRouterError::SameRouter);
         }
 
-        let producer = match self
+        let data_producer = match self
             .inner
             .data_producers
             .read()
             .get(&data_producer_id)
             .and_then(WeakDataProducer::upgrade)
         {
-            Some(producer) => producer,
+            Some(data_producer) => data_producer,
             None => {
                 return Err(PipeDataProducerToRouterError::DataProducerNotFound(
                     data_producer_id,
-                ))
+                ));
             }
         };
 
@@ -1080,7 +1114,7 @@ impl Router {
                 );
                 producer_options.label = pipe_data_consumer.label().clone();
                 producer_options.protocol = pipe_data_consumer.protocol().clone();
-                producer_options.app_data = producer.app_data().clone();
+                producer_options.app_data = data_producer.app_data().clone();
 
                 producer_options
             })
@@ -1104,12 +1138,29 @@ impl Router {
                 let pipe_data_consumer = pipe_data_consumer.clone();
 
                 move || {
-                    // Just ot make sure consumer on local router outlives producer on the other
+                    // Just to make sure consumer on local router outlives producer on the other
                     // router
                     drop(pipe_data_consumer);
                 }
             })
             .detach();
+
+        let pipe_data_producer = NonClosingDataProducer::new(pipe_data_producer, {
+            let weak_data_producer = data_producer.downgrade();
+
+            move |pipe_data_producer| {
+                if let Some(data_producer) = weak_data_producer.upgrade() {
+                    // In case `NonClosingDataProducer` was dropped without transforming into
+                    // regular `DataProducer` first, we need to tie underlying pipe data producer
+                    // lifetime to the lifetime of original source data producer in another router
+                    data_producer
+                        .on_close(move || {
+                            pipe_data_producer.close();
+                        })
+                        .detach();
+                }
+            }
+        });
 
         Ok(PipeDataProducerToRouterPair {
             pipe_data_consumer,

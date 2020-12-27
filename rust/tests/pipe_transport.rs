@@ -290,6 +290,8 @@ mod pipe_transport {
                 .await
                 .expect("Failed to pipe audio producer to router");
 
+            let pipe_producer = pipe_producer.into_inner();
+
             {
                 let dump = router1.dump().await.expect("Failed to dump router");
 
@@ -384,7 +386,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to produce audio");
 
-            let _pair = router1
+            router1
                 .pipe_producer_to_router(
                     audio_producer.id(),
                     PipeToRouterOptions::new(router2.clone()),
@@ -413,6 +415,8 @@ mod pipe_transport {
                 )
                 .await
                 .expect("Failed to pipe video producer to router");
+
+            let pipe_producer = pipe_producer.into_inner();
 
             {
                 let dump = router1.dump().await.expect("Failed to dump router");
@@ -750,7 +754,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to pause video producer");
 
-            let _value = router1
+            router1
                 .pipe_producer_to_router(
                     video_producer.id(),
                     PipeToRouterOptions::new(router2.clone()),
@@ -840,7 +844,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to pause video producer");
 
-            let _value = router1
+            router1
                 .pipe_producer_to_router(
                     video_producer.id(),
                     PipeToRouterOptions::new(router2.clone()),
@@ -914,7 +918,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to produce video");
 
-            let _value = router1
+            router1
                 .pipe_producer_to_router(
                     video_producer.id(),
                     PipeToRouterOptions::new(router2.clone()),
@@ -963,6 +967,8 @@ mod pipe_transport {
                 )
                 .await
                 .expect("Failed to pipe data producer to router");
+
+            let pipe_data_producer = pipe_data_producer.into_inner();
 
             {
                 let dump = router1.dump().await.expect("Failed to dump router");
@@ -1023,7 +1029,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to produce data");
 
-            let _value = router1
+            router1
                 .pipe_data_producer_to_router(
                     data_producer.id(),
                     PipeToRouterOptions::new(router2.clone()),
@@ -1062,7 +1068,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to produce data");
 
-            let _value = router1
+            router1
                 .pipe_data_producer_to_router(
                     data_producer.id(),
                     PipeToRouterOptions::new(router2.clone()),
@@ -1130,7 +1136,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to produce audio");
 
-            let _value_a = router_a
+            router_a
                 .pipe_producer_to_router(
                     audio_producer1.id(),
                     PipeToRouterOptions::new(router_b.clone()),
@@ -1138,7 +1144,7 @@ mod pipe_transport {
                 .await
                 .expect("Failed to pipe audio producer to router");
 
-            let _value_b = router_a
+            router_a
                 .pipe_producer_to_router(
                     audio_producer2.id(),
                     PipeToRouterOptions::new(router_b.clone()),

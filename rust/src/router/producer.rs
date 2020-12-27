@@ -712,6 +712,42 @@ impl DirectProducer {
     }
 }
 
+/// Same as [`Producer`], but will not be closed on [`Router`](crate::router::Router) when dropped.
+///
+/// Use [`NonClosingProducer::into_inner()`] method to get regular [`Producer`] instead and restore
+/// regular behavior of [`Drop`] implementation.
+pub struct NonClosingProducer {
+    producer: Producer,
+    on_drop: Option<Box<dyn FnOnce(Producer) + Send + 'static>>,
+}
+
+impl Drop for NonClosingProducer {
+    fn drop(&mut self) {
+        if let Some(on_drop) = self.on_drop.take() {
+            on_drop(self.producer.clone())
+        }
+    }
+}
+
+impl NonClosingProducer {
+    /// * `on_drop` - Callback that takes last `Producer` instance and must do something with it to
+    ///   prevent dropping and thus closing
+    pub(crate) fn new<F: FnOnce(Producer) + Send + 'static>(
+        producer: Producer,
+        on_drop: F,
+    ) -> Self {
+        Self {
+            producer,
+            on_drop: Some(Box::new(on_drop)),
+        }
+    }
+
+    pub fn into_inner(mut self) -> Producer {
+        self.on_drop.take();
+        self.producer.clone()
+    }
+}
+
 /// [`WeakProducer`] doesn't own producer instance on mediasoup-worker and will not prevent one from
 /// being destroyed once last instance of regular [`Producer`] is dropped.
 ///
