@@ -712,7 +712,7 @@ impl DirectProducer {
     }
 }
 
-/// Same as [`Producer`], but will not be closed on [`Router`](crate::router::Router) when dropped.
+/// Same as [`Producer`], but will not be closed when dropped.
 ///
 /// Use [`NonClosingProducer::into_inner()`] method to get regular [`Producer`] instead and restore
 /// regular behavior of [`Drop`] implementation.

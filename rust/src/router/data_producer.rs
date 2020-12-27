@@ -415,7 +415,7 @@ impl DirectDataProducer {
     }
 }
 
-/// Same as [`DataProducer`], but will not be closed on [`Router`](crate::router::Router) when dropped.
+/// Same as [`DataProducer`], but will not be closed when dropped.
 ///
 /// Use [`NonClosingDataProducer::into_inner()`] method to get regular [`DataProducer`] instead and
 /// restore regular behavior of [`Drop`] implementation.
