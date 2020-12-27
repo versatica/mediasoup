@@ -197,6 +197,7 @@ struct Inner {
     label: String,
     protocol: String,
     data_producer_id: DataProducerId,
+    direct: bool,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: PayloadChannel,
@@ -397,6 +398,7 @@ impl DataConsumer {
             label,
             protocol,
             data_producer_id,
+            direct,
             executor,
             channel,
             payload_channel,
@@ -587,6 +589,13 @@ impl DataConsumer {
         self.inner().handlers.close.add(Box::new(callback))
     }
 
+    /// Downgrade `DataConsumer` to [`WeakDataConsumer`] instance.
+    pub fn downgrade(&self) -> WeakDataConsumer {
+        WeakDataConsumer {
+            inner: Arc::downgrade(&self.inner()),
+        }
+    }
+
     fn inner(&self) -> &Arc<Inner> {
         match self {
             DataConsumer::Regular(data_consumer) => &data_consumer.inner,
@@ -624,5 +633,30 @@ impl DirectDataConsumer {
                 payload,
             )
             .await
+    }
+}
+
+/// [`WeakDataConsumer`] doesn't own data consumer instance on mediasoup-worker and will not prevent
+/// one from being destroyed once last instance of regular [`DataConsumer`] is dropped.
+///
+/// [`WeakDataConsumer`] vs [`DataConsumer`] is similar to [`Weak`] vs [`Arc`].
+#[derive(Clone)]
+pub struct WeakDataConsumer {
+    inner: Weak<Inner>,
+}
+
+impl WeakDataConsumer {
+    /// Attempts to upgrade `WeakDataConsumer` to [`DataConsumer`] if last instance of one wasn't
+    /// dropped yet.
+    pub fn upgrade(&self) -> Option<DataConsumer> {
+        let inner = self.inner.upgrade()?;
+
+        let data_consumer = if inner.direct {
+            DataConsumer::Direct(DirectDataConsumer { inner })
+        } else {
+            DataConsumer::Regular(RegularDataConsumer { inner })
+        };
+
+        Some(data_consumer)
     }
 }

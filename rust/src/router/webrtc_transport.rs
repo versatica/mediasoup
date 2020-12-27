@@ -811,10 +811,36 @@ impl WebRtcTransport {
             .add(Box::new(callback))
     }
 
+    /// Downgrade `WebRtcTransport` to [`WeakWebRtcTransport`] instance.
+    pub fn downgrade(&self) -> WeakWebRtcTransport {
+        WeakWebRtcTransport {
+            inner: Arc::downgrade(&self.inner),
+        }
+    }
+
     fn get_internal(&self) -> TransportInternal {
         TransportInternal {
             router_id: self.router().id(),
             transport_id: self.id(),
         }
+    }
+}
+
+/// [`WeakWebRtcTransport`] doesn't own WebRTC transport instance on mediasoup-worker and will not
+/// prevent one from being destroyed once last instance of regular [`WebRtcTransport`] is dropped.
+///
+/// [`WeakWebRtcTransport`] vs [`WebRtcTransport`] is similar to [`Weak`] vs [`Arc`].
+#[derive(Clone)]
+pub struct WeakWebRtcTransport {
+    inner: Weak<Inner>,
+}
+
+impl WeakWebRtcTransport {
+    /// Attempts to upgrade `WeakWebRtcTransport` to [`WebRtcTransport`] if last instance of one
+    /// wasn't dropped yet.
+    pub fn upgrade(&self) -> Option<WebRtcTransport> {
+        let inner = self.inner.upgrade()?;
+
+        Some(WebRtcTransport { inner })
     }
 }

@@ -387,10 +387,37 @@ impl AudioLevelObserver {
         self.inner.handlers.silence.add(Box::new(callback))
     }
 
+    /// Downgrade `AudioLevelObserver` to [`WeakAudioLevelObserver`] instance.
+    pub fn downgrade(&self) -> WeakAudioLevelObserver {
+        WeakAudioLevelObserver {
+            inner: Arc::downgrade(&self.inner),
+        }
+    }
+
     fn get_internal(&self) -> RtpObserverInternal {
         RtpObserverInternal {
             router_id: self.inner.router.id(),
             rtp_observer_id: self.inner.id,
         }
+    }
+}
+
+/// [`WeakAudioLevelObserver`] doesn't own audio level observer instance on mediasoup-worker and
+/// will not prevent one from being destroyed once last instance of regular [`AudioLevelObserver`]
+/// is dropped.
+///
+/// [`WeakAudioLevelObserver`] vs [`AudioLevelObserver`] is similar to [`Weak`] vs [`Arc`].
+#[derive(Clone)]
+pub struct WeakAudioLevelObserver {
+    inner: Weak<Inner>,
+}
+
+impl WeakAudioLevelObserver {
+    /// Attempts to upgrade `WeakAudioLevelObserver` to [`AudioLevelObserver`] if last instance of one wasn't
+    /// dropped yet.
+    pub fn upgrade(&self) -> Option<AudioLevelObserver> {
+        let inner = self.inner.upgrade()?;
+
+        Some(AudioLevelObserver { inner })
     }
 }

@@ -289,11 +289,9 @@ struct WeakPipeTransportPair {
 
 impl WeakPipeTransportPair {
     fn upgrade(&self) -> Option<PipeTransportPair> {
-        self.local.upgrade().and_then(|local| {
-            self.remote
-                .upgrade()
-                .map(|remote| PipeTransportPair { local, remote })
-        })
+        let local = self.local.upgrade()?;
+        let remote = self.remote.upgrade()?;
+        Some(PipeTransportPair { local, remote })
     }
 }
 

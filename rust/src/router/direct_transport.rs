@@ -541,10 +541,36 @@ impl DirectTransport {
         self.inner.handlers.rtcp.add(Box::new(callback))
     }
 
+    /// Downgrade `DirectTransport` to [`WeakDirectTransport`] instance.
+    pub fn downgrade(&self) -> WeakDirectTransport {
+        WeakDirectTransport {
+            inner: Arc::downgrade(&self.inner),
+        }
+    }
+
     fn get_internal(&self) -> TransportInternal {
         TransportInternal {
             router_id: self.router().id(),
             transport_id: self.id(),
         }
+    }
+}
+
+/// [`WeakDirectTransport`] doesn't own direct transport instance on mediasoup-worker and will not
+/// prevent one from being destroyed once last instance of regular [`DirectTransport`] is dropped.
+///
+/// [`WeakDirectTransport`] vs [`DirectTransport`] is similar to [`Weak`] vs [`Arc`].
+#[derive(Clone)]
+pub struct WeakDirectTransport {
+    inner: Weak<Inner>,
+}
+
+impl WeakDirectTransport {
+    /// Attempts to upgrade `WeakDirectTransport` to [`DirectTransport`] if last instance of one
+    /// wasn't dropped yet.
+    pub fn upgrade(&self) -> Option<DirectTransport> {
+        let inner = self.inner.upgrade()?;
+
+        Some(DirectTransport { inner })
     }
 }

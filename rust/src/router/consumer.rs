@@ -902,6 +902,13 @@ impl Consumer {
         self.inner.handlers.close.add(Box::new(callback))
     }
 
+    /// Downgrade `Consumer` to [`WeakConsumer`] instance.
+    pub fn downgrade(&self) -> WeakConsumer {
+        WeakConsumer {
+            inner: Arc::downgrade(&self.inner),
+        }
+    }
+
     fn get_internal(&self) -> ConsumerInternal {
         ConsumerInternal {
             router_id: self.inner.transport.router_id(),
@@ -909,5 +916,24 @@ impl Consumer {
             consumer_id: self.inner.id,
             producer_id: self.inner.producer_id,
         }
+    }
+}
+
+/// [`WeakConsumer`] doesn't own consumer instance on mediasoup-worker and will not prevent one from
+/// being destroyed once last instance of regular [`Consumer`] is dropped.
+///
+/// [`WeakConsumer`] vs [`Consumer`] is similar to [`Weak`] vs [`Arc`].
+#[derive(Clone)]
+pub struct WeakConsumer {
+    inner: Weak<Inner>,
+}
+
+impl WeakConsumer {
+    /// Attempts to upgrade `WeakConsumer` to [`Consumer`] if last instance of one wasn't dropped
+    /// yet.
+    pub fn upgrade(&self) -> Option<Consumer> {
+        let inner = self.inner.upgrade()?;
+
+        Some(Consumer { inner })
     }
 }

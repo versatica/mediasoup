@@ -279,6 +279,7 @@ struct Inner {
     r#type: ProducerType,
     rtp_parameters: RtpParameters,
     consumable_rtp_parameters: RtpParameters,
+    direct: bool,
     paused: AtomicBool,
     score: Arc<SyncMutex<Vec<ProducerScore>>>,
     executor: Arc<Executor<'static>>,
@@ -449,6 +450,7 @@ impl Producer {
             r#type,
             rtp_parameters,
             consumable_rtp_parameters,
+            direct,
             paused: AtomicBool::new(paused),
             score,
             executor,
@@ -668,7 +670,8 @@ impl Producer {
         self.inner().close();
     }
 
-    pub(super) fn downgrade(&self) -> WeakProducer {
+    /// Downgrade `Producer` to [`WeakProducer`] instance.
+    pub fn downgrade(&self) -> WeakProducer {
         WeakProducer {
             inner: Arc::downgrade(&self.inner()),
         }
@@ -709,15 +712,27 @@ impl DirectProducer {
     }
 }
 
+/// [`WeakProducer`] doesn't own producer instance on mediasoup-worker and will not prevent one from
+/// being destroyed once last instance of regular [`Producer`] is dropped.
+///
+/// [`WeakProducer`] vs [`Producer`] is similar to [`Weak`] vs [`Arc`].
 #[derive(Clone)]
-pub(super) struct WeakProducer {
+pub struct WeakProducer {
     inner: Weak<Inner>,
 }
 
 impl WeakProducer {
-    pub(super) fn upgrade(&self) -> Option<Producer> {
-        Some(Producer::Regular(RegularProducer {
-            inner: self.inner.upgrade()?,
-        }))
+    /// Attempts to upgrade `WeakProducer` to [`Producer`] if last instance of one wasn't dropped
+    /// yet.
+    pub fn upgrade(&self) -> Option<Producer> {
+        let inner = self.inner.upgrade()?;
+
+        let producer = if inner.direct {
+            Producer::Direct(DirectProducer { inner })
+        } else {
+            Producer::Regular(RegularProducer { inner })
+        };
+
+        Some(producer)
     }
 }

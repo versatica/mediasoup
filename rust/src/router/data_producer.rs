@@ -132,6 +132,7 @@ struct Inner {
     sctp_stream_parameters: Option<SctpStreamParameters>,
     label: String,
     protocol: String,
+    direct: bool,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: PayloadChannel,
@@ -267,6 +268,7 @@ impl DataProducer {
             sctp_stream_parameters,
             label,
             protocol,
+            direct,
             executor,
             channel,
             payload_channel,
@@ -368,7 +370,8 @@ impl DataProducer {
         self.inner().close();
     }
 
-    pub(super) fn downgrade(&self) -> WeakDataProducer {
+    /// Downgrade `DataProducer` to [`WeakDataProducer`] instance.
+    pub fn downgrade(&self) -> WeakDataProducer {
         WeakDataProducer {
             inner: Arc::downgrade(&self.inner()),
         }
@@ -412,15 +415,27 @@ impl DirectDataProducer {
     }
 }
 
+/// [`WeakDataProducer`] doesn't own data producer instance on mediasoup-worker and will not prevent
+/// one from being destroyed once last instance of regular [`DataProducer`] is dropped.
+///
+/// [`WeakDataProducer`] vs [`DataProducer`] is similar to [`Weak`] vs [`Arc`].
 #[derive(Clone)]
-pub(super) struct WeakDataProducer {
+pub struct WeakDataProducer {
     inner: Weak<Inner>,
 }
 
 impl WeakDataProducer {
-    pub(super) fn upgrade(&self) -> Option<DataProducer> {
-        Some(DataProducer::Regular(RegularDataProducer {
-            inner: self.inner.upgrade()?,
-        }))
+    /// Attempts to upgrade `WeakDataProducer` to [`DataProducer`] if last instance of one wasn't
+    /// dropped yet.
+    pub fn upgrade(&self) -> Option<DataProducer> {
+        let inner = self.inner.upgrade()?;
+
+        let data_producer = if inner.direct {
+            DataProducer::Direct(DirectDataProducer { inner })
+        } else {
+            DataProducer::Regular(RegularDataProducer { inner })
+        };
+
+        Some(data_producer)
     }
 }

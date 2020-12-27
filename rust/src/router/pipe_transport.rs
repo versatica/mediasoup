@@ -611,7 +611,8 @@ impl PipeTransport {
             .add(Box::new(callback))
     }
 
-    pub(super) fn downgrade(&self) -> WeakPipeTransport {
+    /// Downgrade `PipeTransport` to [`WeakPipeTransport`] instance.
+    pub fn downgrade(&self) -> WeakPipeTransport {
         WeakPipeTransport {
             inner: Arc::downgrade(&self.inner),
         }
@@ -625,12 +626,21 @@ impl PipeTransport {
     }
 }
 
-pub(super) struct WeakPipeTransport {
+/// [`WeakPipeTransport`] doesn't own pipe transport instance on mediasoup-worker and will not
+/// prevent one from being destroyed once last instance of regular [`PipeTransport`] is dropped.
+///
+/// [`WeakPipeTransport`] vs [`PipeTransport`] is similar to [`Weak`] vs [`Arc`].
+#[derive(Clone)]
+pub struct WeakPipeTransport {
     inner: Weak<Inner>,
 }
 
 impl WeakPipeTransport {
-    pub(super) fn upgrade(&self) -> Option<PipeTransport> {
-        self.inner.upgrade().map(|inner| PipeTransport { inner })
+    /// Attempts to upgrade `WeakPipeTransport` to [`PipeTransport`] if last instance of one
+    /// wasn't dropped yet.
+    pub fn upgrade(&self) -> Option<PipeTransport> {
+        let inner = self.inner.upgrade()?;
+
+        Some(PipeTransport { inner })
     }
 }
