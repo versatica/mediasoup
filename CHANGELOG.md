@@ -4,6 +4,7 @@
 ### 3.6.30 (WIP)
 
 * Update NPM deps.
+* Add `LICENSE` and `PATENTS` files in `libwebrtc` dependency (issue #495).
 
 
 ### 3.6.29
