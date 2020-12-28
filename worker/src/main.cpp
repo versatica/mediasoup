@@ -35,6 +35,9 @@ static constexpr int PayloadProducerChannelFd{ 6 };
 void IgnoreSignals();
 void HandleSignals();
 void SignalHandler(int signal, siginfo_t* info, void* ucontext);
+#ifdef _WIN32
+int WinExceptionHandler(unsigned int code, struct _EXCEPTION_POINTERS* ep);
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -122,7 +125,11 @@ int main(int argc, char* argv[])
 	Settings::PrintConfiguration();
 	DepLibUV::PrintVersion();
 
+#ifndef _WIN32
 	try
+#else
+	__try
+#endif
 	{
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
@@ -156,12 +163,19 @@ int main(int argc, char* argv[])
 
 		std::_Exit(EXIT_SUCCESS);
 	}
+#ifndef _WIN32
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("failure exit: %s", error.what());
 
 		std::_Exit(EXIT_FAILURE);
 	}
+#else
+	__except (WinExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+	{
+		std::_Exit(EXIT_FAILURE);
+	}
+#endif
 }
 
 void IgnoreSignals()
@@ -263,3 +277,13 @@ void SignalHandler(int signal, siginfo_t* info, void* /*ucontext*/)
 	}
 #endif
 }
+
+#ifdef _WIN32
+int WinExceptionHandler(unsigned int code, struct _EXCEPTION_POINTERS* /*ep*/)
+{
+	MS_ERROR_STD("failure exit [code:%u]", code);
+
+	// Execute exception handler.
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+#endif
