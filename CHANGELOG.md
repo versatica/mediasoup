@@ -5,6 +5,7 @@
 
 * Update NPM deps.
 * Add `LICENSE` and `PATENTS` files in `libwebrtc` dependency (issue #495).
+* Added `worker/src/Utils/README_BASE64_UTILS` (issue #497).
 
 
 ### 3.6.29
