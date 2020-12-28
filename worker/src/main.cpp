@@ -20,11 +20,12 @@
 #include "RTC/SrtpSession.hpp"
 #include <uv.h>
 #include <cerrno>
-#include <csignal>  // sigaction()
+#include <csignal>  // sigaction(), sigfillset()
 #include <cstdlib>  // std::_Exit(), std::genenv()
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
+#include <vector>
 
 static constexpr int ConsumerChannelFd{ 3 };
 static constexpr int ProducerChannelFd{ 4 };
@@ -32,6 +33,8 @@ static constexpr int PayloadConsumerChannelFd{ 5 };
 static constexpr int PayloadProducerChannelFd{ 6 };
 
 void IgnoreSignals();
+void HandleSignals();
+void SignalHandler(int signal, siginfo_t* info, void* ucontext);
 
 int main(int argc, char* argv[])
 {
@@ -132,8 +135,9 @@ int main(int argc, char* argv[])
 		Channel::Notifier::ClassInit(channel);
 		PayloadChannel::Notifier::ClassInit(payloadChannel);
 
-		// Ignore some signals.
+		// Ignore and handle some signals.
 		IgnoreSignals();
+		HandleSignals();
 
 		// Run the Worker.
 		Worker worker(channel, payloadChannel);
@@ -195,6 +199,67 @@ void IgnoreSignals()
 
 		if (err != 0)
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
+	}
+#endif
+}
+
+void HandleSignals()
+{
+#ifndef _WIN32
+	MS_TRACE();
+
+	int err;
+	struct sigaction act; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+	// clang-format off
+	std::map<std::string, int> handledSignals =
+	{
+		{ "ILL", SIGILL }
+	};
+	// clang-format on
+
+	act.sa_sigaction = SignalHandler;
+	act.sa_flags     = SA_SIGINFO;
+	err              = sigfillset(&act.sa_mask);
+
+	if (err != 0)
+		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
+
+	for (auto& kv : handledSignals)
+	{
+		const auto& sigName = kv.first;
+		int sigId           = kv.second;
+
+		err = sigaction(sigId, &act, nullptr);
+
+		if (err != 0)
+			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
+	}
+#endif
+}
+
+void SignalHandler(int signal, siginfo_t* info, void* /*ucontext*/)
+{
+#ifndef _WIN32
+	MS_TRACE();
+
+	switch (signal)
+	{
+		case SIGILL:
+		{
+			MS_ERROR_STD(
+			  "SIGILL signal received [si_signo:%d, si_errno:%d (\"%s\"), si_code:%d]",
+			  info->si_signo,
+			  info->si_errno,
+			  std::strerror(info->si_errno),
+			  info->si_code);
+
+			std::_Exit(EXIT_FAILURE);
+
+			break;
+		}
+
+		default:;
 	}
 #endif
 }
