@@ -18,7 +18,10 @@ namespace RTC
 			{ 
 				"listenIp": '127.0.0.1',
 				"shm": {
-					"name": "shmtest"
+					"name": "shmtest",
+					"queueAge": 100,
+					"testNack": 3000,
+					"reverseIt": 0,
 				},
 				"log": {
 					"name": /var/log/sg/nginx/test_sfu_shm.log",
@@ -46,6 +49,36 @@ namespace RTC
 
 		shm.assign(jsonShmNameIt->get<std::string>());
 
+		// Read shm.queueAge in ms
+		auto queueAge = 100;
+		auto jsonQueueAgeIt = jsonShmIt->find("queueAge");
+		if (jsonQueueAgeIt != jsonShmIt->end())
+		{
+			if (!jsonQueueAgeIt->is_number())
+				MS_THROW_TYPE_ERROR("wrong shm.queueAge (not a number) in [%s]", data.dump().c_str());
+			else
+				queueAge = jsonQueueAgeIt->get<int>();
+		}
+		
+		// Read shm.testNack in ms, default is 0 which means disabled NACK testing
+		auto testNack = 0;
+		auto jsonTestNackIt = jsonShmIt->find("testNack");
+		if (jsonTestNackIt != jsonShmIt->end())
+		{
+			if (!jsonTestNackIt->is_number())
+				MS_THROW_TYPE_ERROR("wrong shm.testNack (not a number) in [%s]", data.dump().c_str());
+			else
+				testNack = jsonTestNackIt->get<int>();
+		}
+
+		// Perf testing: use forward or reverse iterator to place incoming chunks into video buffer
+		bool useReverse = false;
+		auto jsonReverseIt = jsonShmIt->find("reverseIt");
+		if (jsonReverseIt != jsonShmIt->end() && jsonReverseIt->is_number())
+		{
+			useReverse = (jsonReverseIt->get<int>() != 0) ? true : false;
+		}
+		
 		// ngxshm log name and level
 		auto jsonLogIt = data.find("log");
 		if (jsonLogIt == data.end())
@@ -111,7 +144,7 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
- 	  this->shmCtx.InitializeShmWriterCtx(shm, logname, loglevel, redirect_stdio);
+ 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname, loglevel, redirect_stdio);
 	}
 
 	ShmTransport::~ShmTransport()
@@ -131,6 +164,8 @@ namespace RTC
 
 		(*jsonIt)["name"] = this->shmCtx.StreamName().c_str();
 		(*jsonIt)["log"] = this->shmCtx.LogName().c_str();
+		(*jsonIt)["maxqueueage"] = this->shmCtx.MaxQueuePktDelayMs();
+		(*jsonIt)["testnack"] = this->shmCtx.TestNackMs();
 
 		switch (this->shmCtx.Status())
 		{

@@ -30,8 +30,8 @@ namespace DepLibSfuShm {
       { -2, "again (SFUSHM_AV_AGAIN)" }
     };
 
-  // 150ms in samples (90000 sample rate) 
-  static constexpr uint64_t MaxVideoPktDelay{ 12000 };
+  // 100ms in samples (90000 sample rate) 
+  //static constexpr uint64_t MaxVideoPktDelay{ 9000 };
 
 
   ShmCtx::~ShmCtx()
@@ -67,7 +67,7 @@ namespace DepLibSfuShm {
   }
 
 
-  void ShmCtx::InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio)
+  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, int stdio)
   {
     MS_TRACE();
 
@@ -75,6 +75,10 @@ namespace DepLibSfuShm {
 
     stream_name.assign(shm);
     log_name.assign(log);
+
+    maxVideoPktDelay = uint64_t(queueAge * 90); // queueAge in ms * 90,000 samples per sec / 1,000ms
+    testNackEachMs = uint64_t(testNack);
+    useReverseIterator = useReverse;
 
     wrt_init.stream_name = const_cast<char*>(stream_name.c_str());
     wrt_init.stats_win_size = 300;
@@ -104,8 +108,10 @@ namespace DepLibSfuShm {
     this->media[0].new_ssrc =  wrt_init.conf.channels[0].ssrc;
     this->media[1].new_ssrc =  wrt_init.conf.channels[1].ssrc;
 
-    MS_DEBUG_TAG(xcode, "shm writer ssrc mapping: audio[%" PRIu32 "] video[%" PRIu32 "]",
+    MS_DEBUG_TAG(xcode, "shm ctx ssrc mapping: audio[%" PRIu32 "] video[%" PRIu32 "]",
       this->media[0].new_ssrc, this->media[1].new_ssrc);
+    MS_DEBUG_TAG(xcode, "shm ctx maxVideoPktDelay=%" PRIu64 " testNackEachMs=%" PRIu64 " useReverseIterator=%s",
+      maxVideoPktDelay, testNackEachMs, useReverseIterator ? "true" : "false");
 
     int err = SFUSHM_AV_OK;
     if ((err = sfushm_av_open_writer( &wrt_init, &wrt_ctx)) != SFUSHM_AV_OK) {
@@ -164,20 +170,38 @@ namespace DepLibSfuShm {
     bool iskeyframe)
   {
     MS_TRACE();
-    // Got rid of WRITETHRU feature. Old pkts are not a big deal. Keep track of the newest keyframe data in a queue.
-
-    // TODO: try reverse iterator for insertion and see if perf is improved.
-    // Enqueue pkt, newest at the end.
-    auto it = this->videoPktBuffer.begin();
-    for (; it != this->videoPktBuffer.end() && seqid >= it->seqid; it++) {}
-
-    if (it != this->videoPktBuffer.end())
+    if (useReverseIterator)
     {
-    // TODO: keep stats of how many frames had been fixed with retransmission. TBD: assuming this is when an out of order seqId arrives.
-      MS_DEBUG_TAG(xcode, "out-of-order seqid=%" PRIu64 " qsize=%zu", seqid, videoPktBuffer.size());
-    }
-    it = this->videoPktBuffer.emplace(it, data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+      // If the first item into empty queue, or should be placed at the end
+      if (this->videoPktBuffer.empty() || seqid >= this->videoPktBuffer.rbegin()->seqid)
+      {
+        this->videoPktBuffer.emplace(this->videoPktBuffer.end(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+        return SHM_Q_PKT_QUEUED_OK;
+      }
 
+      MS_DEBUG_TAG(xcode, "out-of-order(r) seqid=%" PRIu64 " qsize=%zu", seqid, videoPktBuffer.size());
+      
+      auto it = this->videoPktBuffer.rbegin();
+      auto prevIt = it;
+      it++;
+      for (; it != this->videoPktBuffer.rend() && seqid < it->seqid; it++, prevIt++) {}
+      this->videoPktBuffer.emplace(prevIt.base(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+      return SHM_Q_PKT_QUEUED_OK;
+    }
+    else
+    {
+      // Enqueue pkt, newest at the end.
+      auto it = this->videoPktBuffer.begin();
+      for (; it != this->videoPktBuffer.end() && seqid >= it->seqid; it++) {}
+
+      if (it != this->videoPktBuffer.end())
+      {
+      // TODO: keep stats of how many frames had been fixed with retransmission. TBD: assuming this is when an out of order seqId arrives.
+        MS_DEBUG_TAG(xcode, "out-of-order seqid=%" PRIu64 " qsize=%zu", seqid, videoPktBuffer.size());
+      }
+      this->videoPktBuffer.emplace(it, data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+    }
+    
     if (iskeyframe && ts > this->lastKeyFrameTs)
     {
       this->lastKeyFrameTs = ts;
@@ -225,7 +249,7 @@ namespace DepLibSfuShm {
     uint64_t lastItemTs = this->videoPktBuffer.rbegin()->ts;
     bool beginFound = false;
     bool endFound = false;
-    bool frameTsExpired = (lastItemTs > frameTs) && (lastItemTs - frameTs > MaxVideoPktDelay);
+    bool frameTsExpired = (lastItemTs > frameTs) && (lastItemTs - frameTs > this->maxVideoPktDelay);
 
     while(it != this->videoPktBuffer.end() && frameTs == it->ts)
     {
@@ -366,7 +390,7 @@ namespace DepLibSfuShm {
       return;
     }
 
-    if ( ts - this->videoPktBuffer.begin()->ts > MaxVideoPktDelay || tsIncrement > 0)
+    if ( ts - this->videoPktBuffer.begin()->ts > this->maxVideoPktDelay || tsIncrement > 0)
     {
       MS_DEBUG_TAG(xcode, "DEQUEUE [ %" PRIu64 " - %" PRIu64 " ] age=%" PRIu64 " incr=%" PRIu64, 
       this->videoPktBuffer.begin()->seqid, this->videoPktBuffer.rbegin()->seqid, ts - this->videoPktBuffer.begin()->ts, tsIncrement);

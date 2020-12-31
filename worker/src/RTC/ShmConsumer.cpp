@@ -70,10 +70,9 @@ namespace RTC
 		if (this->GetKind() == RTC::Media::Kind::VIDEO)
 			this->shmCtx->SetListener(this);
 
-		// Uncomment for NACK test simulation
+		this->testNackEachMs = shmCtx->TestNackMs();
 		uint64_t nowTs = DepLibUV::GetTimeMs();
 		this->lastNACKTestTs = nowTs;
-
 
 		CreateRtpStream();
 	}
@@ -328,14 +327,17 @@ namespace RTC
 		}
 
 
-// Uncomment for NACK test simulation
-/*		if (this->TestNACK(packet))
+
+	if (this->testNackEachMs != 0)
+	{
+		if (this->TestNACK(packet))
 		{
 			MS_DEBUG_TAG(rtp, "Pretend NACK ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
 			packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
 			return;
 		}
-*/
+	}
+
 // End of NACK test simulation
 
 		if (shmCtx->CanWrite((this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO))
@@ -360,9 +362,11 @@ namespace RTC
 
 	bool ShmConsumer::TestNACK(RTC::RtpPacket* packet)
 	{
-/*		if (this->GetKind() != RTC::Media::Kind::VIDEO)
+		if (this->GetKind() != RTC::Media::Kind::VIDEO)
 			return false; // not video
-	//Uncomment for NACK test simulation
+
+		if (this->testNackEachMs == 0)
+			return false; // test disabled
 
 		uint64_t nowTs = DepLibUV::GetTimeMs();
 		if (nowTs - this->lastNACKTestTs < 3000)
@@ -392,7 +396,6 @@ namespace RTC
 		}
 
 		this->ReceiveNack(&nackPacket);
-*/
 		return true; 
 	}
 // End of NACK test simulation

@@ -92,12 +92,14 @@ namespace DepLibSfuShm
 
     static uint8_t* hex_dump(uint8_t *dst, uint8_t *src, size_t len);
 
-    void InitializeShmWriterCtx(std::string shm, std::string log, int level, int stdio);
+    void InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, int stdio);
     void CloseShmWriterCtx(); //TBD: nobody calls it 
 
     std::string StreamName() const { return this->stream_name; }
     std::string LogName() const { return this->log_name; }
     ShmWriterStatus Status() const { return this->wrt_status; }
+    uint64_t MaxQueuePktDelayMs() const { return this->maxVideoPktDelay; }
+    uint64_t TestNackMs() const { return this->testNackEachMs; }
 
     bool CanWrite(Media kind) const;
     void SetListener(DepLibSfuShm::ShmCtx::Listener* l) { this->listener = l; }
@@ -132,20 +134,21 @@ namespace DepLibSfuShm
 	  bool IsError(int err_code);
 	  const char* GetErrorString(int err_code);
 
-  public:
-    std::string        stream_name;
-    std::string        log_name;
-
-  
   private:
+    std::string             stream_name;
+    std::string             log_name;
     sfushm_av_writer_init_t wrt_init;
-    sfushm_av_wr_ctx_t     *wrt_ctx;        // 0 - audio, 1 - video
+    sfushm_av_wr_ctx_t      *wrt_ctx;           // 0 - audio, 1 - video
     ShmWriterStatus         wrt_status;
-    MediaState              media[2];       // 0 - audio, 1 - video
-    Listener                *listener{ nullptr }; // can notify video consumer that shm writer is ready, and request a key frame
+    MediaState              media[2];           // 0 - audio, 1 - video
+    Listener                *listener{nullptr}; // can notify video consumer that shm writer is ready, and request a key frame
 
-		std::list<ShmQueueItem> videoPktBuffer; // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
-    uint64_t lastKeyFrameTs { UINT64_UNSET }; // keep track of the keyframes sitting in videoPktBuffer queue: if there is one waiting - do not re-request another
+    std::list<ShmQueueItem> videoPktBuffer;                // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
+    uint64_t                lastKeyFrameTs {UINT64_UNSET}; // keep track of the keyframes sitting in videoPktBuffer queue: if there is one waiting - do not re-request another
+    uint64_t                maxVideoPktDelay {9000};       // Default is 100ms at 90000 sample rate
+    bool                    useReverseIterator {false};    // Test Enqueue() with plain or reverse iterator 
+
+    uint64_t testNackEachMs {0}; // Pass this value to ShmConsumer, if not 0 it will drop incoming pkt periodically and form NACK request
 
   	static std::unordered_map<int, const char*> errToString;
   };
