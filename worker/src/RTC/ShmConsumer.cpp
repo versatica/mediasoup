@@ -369,7 +369,7 @@ namespace RTC
 			return false; // test disabled
 
 		uint64_t nowTs = DepLibUV::GetTimeMs();
-		if (nowTs - this->lastNACKTestTs < 3000)
+		if (nowTs - this->lastNACKTestTs < testNackEachMs)
 			return false; // too soon
 
 		this->lastNACKTestTs = nowTs;
