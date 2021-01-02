@@ -475,6 +475,7 @@ pub struct RtpCapabilities {
     pub header_extensions: Vec<RtpHeaderExtension>,
     // TODO: Enum instead of string?
     /// Supported FEC mechanisms.
+    #[serde(default)]
     pub fec_mechanisms: Vec<String>,
 }
 

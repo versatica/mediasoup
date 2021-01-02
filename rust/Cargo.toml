@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup"
-version = "0.3.0"
+version = "0.3.1"
 description = "Cutting Edge WebRTC Video Conferencing in Rust"
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
 edition = "2018"
@@ -49,4 +49,7 @@ features = ["serde", "v4"]
 version = "0.8.1"
 
 [dev-dependencies]
+actix = "0.10.0"
+actix-web = "3.3.2"
+actix-web-actors = "3.0.0"
 env_logger = "0.8.2"

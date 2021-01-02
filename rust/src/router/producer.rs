@@ -132,8 +132,8 @@ pub enum ProducerType {
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProducerScore {
-    /// Index of the RTP stream in the `rtp_parameters.encodings` array of the producer.
-    pub encoding_ddx: u32,
+    /// Index of the RTP stream in the [`RtpParameters::encodings`] array of the producer.
+    pub encoding_idx: u32,
     /// RTP stream SSRC.
     pub ssrc: u32,
     /// RTP stream RID value.
