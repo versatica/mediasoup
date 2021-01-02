@@ -11,7 +11,7 @@
 //! `close()` you will see `Drop` implementation for major entities that will close everything
 //! gracefully when it goes out of scope.
 //!
-//! # How to start
+//! # Before you start
 //! This is very low-level **library**. Which means it doesn't come with a ready to use signaling
 //! mechanism or easy to customize app scaffold (see
 //! [design goals](https://github.com/nazar-pc/mediasoup/tree/rust/rust/readme.md#design-goals)).
@@ -27,6 +27,13 @@
 //! If you are hacking on the library just run `npm i` in the root of the repo and tests will pick
 //! up the worker binary automatically.
 //!
+//! # Examples
+//! There are some examples in `examples` and `examples-frontend` directories (for server- and
+//! client-side respectively), you may want to look at those to get a general idea of what API looks
+//! like and what needs to be done in what order (check WebSocket messages in browser DevTools for
+//! better understanding of what is happening under the hood).
+//!
+//! # How to start
 //! With that in mind, you want start with creating [`WorkerManager`](worker_manager::WorkerManager)
 //! instance and then 1 or more workers. Workers a responsible for low-level job of sending media
 //! and data back and forth. Each worker is backed by single-core C++ worker process. On each worker
