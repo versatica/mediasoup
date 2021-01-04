@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2015-2015 Oleg Alexeenkov
-# Copyright (C) 2015-2019 Felix Weinrank
+# Copyright (C) 2015-2020 Felix Weinrank
 #
 # All rights reserved.
 #
@@ -116,7 +116,7 @@ foreach (source_file ${check_programs})
 
 	target_link_libraries(
 		${source_file_we}
-		${programs_link_library}
+		"usrsctp"
 		${CMAKE_THREAD_LIBS_INIT}
 	)
 endforeach ()

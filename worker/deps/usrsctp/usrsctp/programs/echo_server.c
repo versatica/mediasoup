@@ -107,7 +107,7 @@ receive_cb(struct socket *sock, union sctp_sockstore addr, void *data,
 			       rcv.rcv_sid,
 			       rcv.rcv_ssn,
 			       rcv.rcv_tsn,
-			       ntohl(rcv.rcv_ppid),
+			       (uint32_t)ntohl(rcv.rcv_ppid),
 			       rcv.rcv_context);
 			if (flags & MSG_EOR) {
 				struct sctp_sndinfo snd_info;
@@ -236,7 +236,7 @@ main(int argc, char *argv[])
 						        rcv_info.rcv_sid,
 						        rcv_info.rcv_ssn,
 						        rcv_info.rcv_tsn,
-						        ntohl(rcv_info.rcv_ppid),
+						        (uint32_t)ntohl(rcv_info.rcv_ppid),
 						        rcv_info.rcv_context,
 						        (flags & MSG_EOR) ? 1 : 0);
 						if (flags & MSG_EOR) {

@@ -143,7 +143,7 @@ receive_cb(struct socket *s, union sctp_sockstore addr, void *data,
 			       rcv.rcv_sid,
 			       rcv.rcv_ssn,
 			       rcv.rcv_tsn,
-			       ntohl(rcv.rcv_ppid),
+			       (uint32_t)ntohl(rcv.rcv_ppid),
 			       rcv.rcv_context);
 		}
 		free(data);
@@ -246,7 +246,7 @@ main(int argc, char *argv[])
 	usrsctp_register_address((void *)&fd);
 #ifdef _WIN32
 	if ((tid = CreateThread(NULL, 0, &handle_packets, (void *)&fd, 0, NULL)) == NULL) {
-		fprintf(stderr, "CreateThread() failed with error: %d\n", GetLastError());
+		fprintf(stderr, "CreateThread() failed with error: %lu\n", GetLastError());
 		exit(EXIT_FAILURE);
 	}
 #else
@@ -276,28 +276,5 @@ main(int argc, char *argv[])
 			perror("usrsctp_accept");
 		}
 	}
-	usrsctp_close(s);
-	usrsctp_deregister_address((void *)&fd);
-	while (usrsctp_finish() != 0) {
-#ifdef _WIN32
-		Sleep(SLEEP * 1000);
-#else
-		sleep(SLEEP);
-#endif
-	}
-#ifdef _WIN32
-	TerminateThread(tid, 0);
-	WaitForSingleObject(tid, INFINITE);
-	if (closesocket(fd) == SOCKET_ERROR) {
-		fprintf(stderr, "closesocket() failed with error: %d\n", WSAGetLastError());
-	}
-	WSACleanup();
-#else
-	pthread_cancel(tid);
-	pthread_join(tid, NULL);
-	if (close(fd) < 0) {
-		perror("close");
-	}
-#endif
 	return (0);
 }
