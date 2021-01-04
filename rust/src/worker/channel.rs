@@ -4,6 +4,7 @@ use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
+use bytes::{BufMut, Bytes, BytesMut};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::*;
@@ -12,12 +13,11 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
+use std::io::Write;
 use std::sync::Arc;
 use std::time::Duration;
 
-// netstring length for a 4194304 bytes payload.
-const NS_MESSAGE_MAX_LEN: usize = 4194313;
-const NS_PAYLOAD_MAX_LEN: usize = 4194304;
+const NS_PAYLOAD_MAX_LEN: usize = 4_194_304;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -94,7 +94,7 @@ struct RequestsContainer {
 }
 
 struct Inner {
-    sender: async_channel::Sender<Vec<u8>>,
+    sender: async_channel::Sender<Bytes>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
     event_handlers: EventHandlers<Value>,
@@ -125,7 +125,7 @@ impl Channel {
             executor
                 .spawn(async move {
                     let mut len_bytes = Vec::new();
-                    let mut bytes = vec![0u8; NS_PAYLOAD_MAX_LEN];
+                    let mut bytes = Vec::new();
                     let mut reader = BufReader::new(reader);
 
                     loop {
@@ -146,6 +146,10 @@ impl Channel {
                         }
 
                         len_bytes.clear();
+                        if bytes.len() < length + 1 {
+                            // Increase bytes size if/when needed
+                            bytes.resize(length + 1, 0);
+                        }
                         // +1 because of netstring `,` at the very end
                         reader.read_exact(&mut bytes[..(length + 1)]).await?;
 
@@ -225,19 +229,17 @@ impl Channel {
         };
 
         let sender = {
-            let (sender, receiver) = async_channel::bounded::<Vec<u8>>(1);
+            let (sender, receiver) = async_channel::bounded::<Bytes>(1);
 
             executor
                 .spawn(async move {
-                    let mut bytes = Vec::with_capacity(NS_MESSAGE_MAX_LEN);
+                    let mut len = Vec::new();
                     while let Ok(message) = receiver.recv().await {
-                        bytes.clear();
-                        bytes.extend_from_slice(message.len().to_string().as_bytes());
-                        bytes.push(b':');
-                        bytes.extend_from_slice(&message);
-                        bytes.push(b',');
-
-                        writer.write_all(&bytes).await?;
+                        len.clear();
+                        write!(&mut len, "{}:", message.len()).unwrap();
+                        writer.write_all(&len).await?;
+                        writer.write_all(&message).await?;
+                        writer.write_all(&[b',']).await?;
                     }
 
                     io::Result::Ok(())
@@ -317,21 +319,28 @@ impl Channel {
 
         debug!("request() [method:{}, id:{}]: {}", method, id, message);
 
-        let serialized_message = serde_json::to_vec(&RequestMessagePrivate {
-            id,
-            method,
-            message,
-        })
-        .unwrap();
+        let bytes = {
+            let mut bytes = BytesMut::new().writer();
+            serde_json::to_writer(
+                &mut bytes,
+                &RequestMessagePrivate {
+                    id,
+                    method,
+                    message,
+                },
+            )
+            .unwrap();
+            bytes.into_inner()
+        };
 
-        if serialized_message.len() > NS_PAYLOAD_MAX_LEN {
+        if bytes.len() > NS_PAYLOAD_MAX_LEN {
             requests_container.lock().await.handlers.remove(&id);
             return Err(RequestError::MessageTooLong);
         }
 
         self.inner
             .sender
-            .send(serialized_message)
+            .send(bytes.freeze())
             .await
             .map_err(|_| RequestError::ChannelClosed {})?;
 

@@ -4,7 +4,7 @@ use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
 use async_mutex::Mutex;
-use bytes::Bytes;
+use bytes::{BufMut, Bytes, BytesMut};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::*;
@@ -13,13 +13,12 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
+use std::io::Write;
 use std::sync::Arc;
 use std::time::Duration;
 use thiserror::Error;
 
-// netstring length for a 4194304 bytes payload.
-const NS_MESSAGE_MAX_LEN: usize = 4194313;
-const NS_PAYLOAD_MAX_LEN: usize = 4194304;
+const NS_PAYLOAD_MAX_LEN: usize = 4_194_304;
 
 #[derive(Debug)]
 pub(super) enum InternalMessage {
@@ -28,7 +27,7 @@ pub(super) enum InternalMessage {
 }
 
 struct MessageWithPayload {
-    message: Vec<u8>,
+    message: Bytes,
     payload: Bytes,
 }
 
@@ -124,7 +123,7 @@ impl PayloadChannel {
             executor
                 .spawn(async move {
                     let mut len_bytes = Vec::new();
-                    let mut bytes = vec![0u8; NS_PAYLOAD_MAX_LEN];
+                    let mut bytes = Vec::new();
                     let mut reader = BufReader::new(reader);
 
                     loop {
@@ -145,6 +144,10 @@ impl PayloadChannel {
                         }
 
                         len_bytes.clear();
+                        if bytes.len() < length + 1 {
+                            // Increase bytes size if/when needed
+                            bytes.resize(length + 1, 0);
+                        }
                         // +1 because of netstring `,` at the very end
                         reader.read_exact(&mut bytes[..(length + 1)]).await?;
 
@@ -259,23 +262,19 @@ impl PayloadChannel {
 
             executor
                 .spawn(async move {
-                    let mut bytes = Vec::with_capacity(NS_MESSAGE_MAX_LEN);
+                    let mut len = Vec::new();
                     while let Ok(message) = receiver.recv().await {
-                        bytes.clear();
-                        bytes.extend_from_slice(message.message.len().to_string().as_bytes());
-                        bytes.push(b':');
-                        bytes.extend_from_slice(&message.message);
-                        bytes.push(b',');
+                        len.clear();
+                        write!(&mut len, "{}:", message.message.len()).unwrap();
+                        writer.write_all(&len).await?;
+                        writer.write_all(&message.message).await?;
+                        writer.write_all(&[b',']).await?;
 
-                        writer.write_all(&bytes).await?;
-
-                        bytes.clear();
-                        bytes.extend_from_slice(message.payload.len().to_string().as_bytes());
-                        bytes.push(b':');
-                        bytes.extend_from_slice(&message.payload);
-                        bytes.push(b',');
-
-                        writer.write_all(&bytes).await?;
+                        len.clear();
+                        write!(&mut len, "{}:", message.payload.len()).unwrap();
+                        writer.write_all(&len).await?;
+                        writer.write_all(&message.payload).await?;
+                        writer.write_all(&[b',']).await?;
                     }
 
                     io::Result::Ok(())
@@ -380,14 +379,21 @@ impl PayloadChannel {
 
         debug!("request() [method:{}, id:{}]: {}", method, id, message);
 
-        let serialized_message = serde_json::to_vec(&RequestMessagePrivate {
-            id,
-            method,
-            message,
-        })
-        .unwrap();
+        let bytes = {
+            let mut bytes = BytesMut::new().writer();
+            serde_json::to_writer(
+                &mut bytes,
+                &RequestMessagePrivate {
+                    id,
+                    method,
+                    message,
+                },
+            )
+            .unwrap();
+            bytes.into_inner()
+        };
 
-        if serialized_message.len() > NS_PAYLOAD_MAX_LEN {
+        if bytes.len() > NS_PAYLOAD_MAX_LEN {
             requests_container.lock().await.handlers.remove(&id);
             return Err(RequestError::MessageTooLong);
         }
@@ -400,7 +406,7 @@ impl PayloadChannel {
         self.inner
             .sender
             .send(MessageWithPayload {
-                message: serialized_message,
+                message: bytes.freeze(),
                 payload,
             })
             .await
@@ -454,24 +460,31 @@ impl PayloadChannel {
 
         debug!("notify() [event:{}]", event);
 
-        let serialized_notification = serde_json::to_vec(&NotificationMessagePrivate {
-            event,
-            notification,
-        })
-        .unwrap();
-
-        if serialized_notification.len() > NS_PAYLOAD_MAX_LEN {
-            return Err(NotificationError::MessageTooLong);
-        }
-
         if payload.len() > NS_PAYLOAD_MAX_LEN {
             return Err(NotificationError::PayloadTooLong);
+        }
+
+        let bytes = {
+            let mut bytes = BytesMut::new().writer();
+            serde_json::to_writer(
+                &mut bytes,
+                &NotificationMessagePrivate {
+                    event,
+                    notification,
+                },
+            )
+            .unwrap();
+            bytes.into_inner()
+        };
+
+        if bytes.len() > NS_PAYLOAD_MAX_LEN {
+            return Err(NotificationError::MessageTooLong);
         }
 
         self.inner
             .sender
             .send(MessageWithPayload {
-                message: serialized_notification,
+                message: bytes.freeze(),
                 payload,
             })
             .await
