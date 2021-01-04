@@ -7,6 +7,10 @@
   - So the receiver will get all streams from the `Producer`.
   - It works for any kind of transport (but `PipeTransport` which is always like this).
 * Update NPM deps.
+* Add `LICENSE` and `PATENTS` files in `libwebrtc` dependency (issue #495).
+* Added `worker/src/Utils/README_BASE64_UTILS` (issue #497).
+* Update `Catch` to 2.13.4.
+* Update `usrsctp`.
 
 
 ### 3.6.29

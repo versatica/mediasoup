@@ -2,6 +2,8 @@
 
 # Release notes
 **Contents**<br>
+[2.13.4](#2134)<br>
+[2.13.3](#2133)<br>
 [2.13.2](#2132)<br>
 [2.13.1](#2131)<br>
 [2.13.0](#2130)<br>
@@ -41,6 +43,33 @@
 [2.0.1](#201)<br>
 [Older versions](#older-versions)<br>
 [Even Older versions](#even-older-versions)<br>
+
+
+## 2.13.4
+
+### Improvements
+* Improved the hashing algorithm used for shuffling test cases (#2070)
+  * `TEST_CASE`s that differ only in the last character should be properly shuffled
+  * Note that this means that v2.13.4 gives you a different order of test cases than 2.13.3, even given the same seed.
+
+### Miscellaneous
+* Deprecated `ParseAndAddCatchTests` CMake integration (#2092)
+  * It is impossible to implement it properly for all the different test case variants Catch2 provides, and there are better options provided.
+  * Use `catch_discover_tests` instead, which uses runtime information about available tests.
+* Fixed bug in `catch_discover_tests` that would cause it to fail when used in specific project structures (#2119)
+* Added Bazel build file
+* Added an experimental static library target to CMake
+
+
+## 2.13.3
+
+### Fixes
+* Fixed possible infinite loop when combining generators with section filter (`-c` option) (#2025)
+
+### Miscellaneous
+* Fixed `ParseAndAddCatchTests` not finding `TEST_CASE`s without tags (#2055, #2056)
+* `ParseAndAddCatchTests` supports `CMP0110` policy for changing behaviour of `add_test` (#2057)
+  * This was the shortlived change in CMake 3.18.0 that temporarily broke `ParseAndAddCatchTests`
 
 
 ## 2.13.2
@@ -666,7 +695,7 @@ than `single_include/catch.hpp`.**
 * CLR objects (`T^`) can now be stringified (#1216)
   * This affects code compiled as C++/CLI
 * Added `PredicateMatcher`, a matcher that takes an arbitrary predicate function (#1236)
-  * See [documentation for details](https://github.com/catchorg/Catch2/blob/master/docs/matchers.md)
+  * See [documentation for details](https://github.com/catchorg/Catch2/blob/v2.x/docs/matchers.md)
 
 ### Others
 * Modified CMake-installed pkg-config to allow `#include <catch.hpp>`(#1239)
@@ -694,7 +723,7 @@ than `single_include/catch.hpp`.**
 * Added an option to warn (+ exit with error) when no tests were ran (#1158)
   * Use as `-w NoTests`
 * Added provisional support for Emscripten (#1114)
-* [Added a way to override the fallback stringifier](https://github.com/catchorg/Catch2/blob/master/docs/configuration.md#fallback-stringifier) (#1024)
+* [Added a way to override the fallback stringifier](https://github.com/catchorg/Catch2/blob/v2.x/docs/configuration.md#fallback-stringifier) (#1024)
   * This allows project's own stringification machinery to be easily reused for Catch
 * `Catch::Session::run()` now accepts `char const * const *`, allowing it to accept array of string literals (#1031, #1178)
   * The embedded version of Clara was bumped to v1.1.3

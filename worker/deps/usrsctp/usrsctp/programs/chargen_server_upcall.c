@@ -219,13 +219,5 @@ main(int argc, char *argv[])
 		sleep(1);
 #endif
 	}
-	usrsctp_close(listening_socket);
-	while (usrsctp_finish() != 0) {
-#ifdef _WIN32
-		Sleep(1000);
-#else
-		sleep(1);
-#endif
-	}
 	return (0);
 }

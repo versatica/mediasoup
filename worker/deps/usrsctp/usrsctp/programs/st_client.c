@@ -84,7 +84,11 @@ get_milliseconds_count(void)
 }
 
 static void
+#ifdef _WIN32
+handle_events(SOCKET sock, struct socket* s, void* sconn_addr)
+#else
 handle_events(int sock, struct socket* s, void* sconn_addr)
+#endif
 {
 	char *dump_buf;
 	ssize_t length;
@@ -112,7 +116,11 @@ handle_events(int sock, struct socket* s, void* sconn_addr)
 		FD_ZERO(&rfds);
 		FD_SET(sock, &rfds);
 
+#ifdef _WIN32
+		select(0 /* ignored */, &rfds, NULL, NULL, &tv);
+#else
 		select(sock + 1, &rfds, NULL, NULL, &tv);
+#endif
 
 		if (FD_ISSET(sock, &rfds)) {
 			length = recv(sock, buf, MAX_PACKET_SIZE, 0);
@@ -190,7 +198,7 @@ on_socket_readable(struct socket* s) {
 			       rcv_info.rcv_sid,
 			       rcv_info.rcv_ssn,
 			       rcv_info.rcv_tsn,
-			       ntohl(rcv_info.rcv_ppid),
+			       (uint32_t)ntohl(rcv_info.rcv_ppid),
 			       rcv_info.rcv_context);
 		}
 	}

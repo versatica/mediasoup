@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2015-2015 Oleg Alexeenkov
-# Copyright (C) 2015-2019 Felix Weinrank
+# Copyright (C) 2015-2020 Felix Weinrank
 #
 # All rights reserved.
 #
@@ -76,6 +76,9 @@ endif ()
 # MISC
 #################################################
 
+if (sctp_build_shared_lib)
+	set(BUILD_SHARED_LIBS 1)
+endif ()
 
 
 #################################################
@@ -163,19 +166,15 @@ list(APPEND usrsctp_sources
 	user_socket.c
 )
 
-add_library(usrsctp SHARED ${usrsctp_sources} ${usrsctp_headers})
-add_library(usrsctp-static STATIC ${usrsctp_sources} ${usrsctp_headers})
+add_library(usrsctp ${usrsctp_sources} ${usrsctp_headers})
 
 target_include_directories(usrsctp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(usrsctp-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (WIN32)
 	message(STATUS "link library: ws2_32")
-	target_link_libraries(usrsctp ws2_32 iphlpapi.lib)
-	target_link_libraries(usrsctp-static ws2_32 iphlpapi.lib)
+	target_link_libraries(usrsctp ws2_32 iphlpapi)
 endif ()
 
-set_target_properties(usrsctp-static PROPERTIES OUTPUT_NAME "usrsctp")
 set_target_properties(usrsctp PROPERTIES IMPORT_SUFFIX "_import.lib")
 set_target_properties(usrsctp PROPERTIES SOVERSION 1 VERSION 1.0.0)
 
@@ -188,5 +187,5 @@ endif ()
 # INSTALL LIBRARY AND HEADER
 #################################################
 
-install(TARGETS usrsctp usrsctp-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS usrsctp DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES usrsctp.h DESTINATION include)
