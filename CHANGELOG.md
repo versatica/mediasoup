@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.7.30 (WIP)
+### 3.6.30
 
 * Add `pipe` option to `transport.consume()`(PR #494).
   - So the receiver will get all streams from the `Producer`.
