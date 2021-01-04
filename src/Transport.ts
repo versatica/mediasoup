@@ -522,6 +522,7 @@ export class Transport extends EnhancedEventEmitter
 			rtpCapabilities,
 			paused = false,
 			preferredLayers,
+			pipe = false,
 			appData = {}
 		}: ConsumerOptions
 	): Promise<Consumer>
@@ -543,18 +544,21 @@ export class Transport extends EnhancedEventEmitter
 
 		// This may throw.
 		const rtpParameters = ortc.getConsumerRtpParameters(
-			producer.consumableRtpParameters, rtpCapabilities!);
+			producer.consumableRtpParameters, rtpCapabilities!, pipe);
 
 		// Set MID.
-		rtpParameters.mid = `${this._nextMidForConsumers++}`;
-
-		// We use up to 8 bytes for MID (string).
-		if (this._nextMidForConsumers === 100000000)
+		if (!pipe)
 		{
-			logger.error(
-				`consume() | reaching max MID value "${this._nextMidForConsumers}"`);
+			rtpParameters.mid = `${this._nextMidForConsumers++}`;
 
-			this._nextMidForConsumers = 0;
+			// We use up to 8 bytes for MID (string).
+			if (this._nextMidForConsumers === 100000000)
+			{
+				logger.error(
+					`consume() | reaching max MID value "${this._nextMidForConsumers}"`);
+
+				this._nextMidForConsumers = 0;
+			}
 		}
 
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
@@ -562,7 +566,7 @@ export class Transport extends EnhancedEventEmitter
 		{
 			kind                   : producer.kind,
 			rtpParameters,
-			type                   : producer.type,
+			type                   : pipe ? 'pipe' : producer.type,
 			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
 			preferredLayers
@@ -571,7 +575,12 @@ export class Transport extends EnhancedEventEmitter
 		const status =
 			await this._channel.request('transport.consume', internal, reqData);
 
-		const data = { kind: producer.kind, rtpParameters, type: producer.type };
+		const data =
+		{
+			kind : producer.kind,
+			rtpParameters,
+			type : pipe ? 'pipe' : producer.type
+		};
 
 		const consumer = new Consumer(
 			{
