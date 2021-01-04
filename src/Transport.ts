@@ -566,7 +566,7 @@ export class Transport extends EnhancedEventEmitter
 		{
 			kind                   : producer.kind,
 			rtpParameters,
-			type                   : !pipe ? producer.type : 'pipe',
+			type                   : pipe ? 'pipe' : producer.type,
 			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
 			preferredLayers
@@ -579,7 +579,7 @@ export class Transport extends EnhancedEventEmitter
 		{
 			kind : producer.kind,
 			rtpParameters,
-			type : !pipe ? producer.type : 'pipe'
+			type : pipe ? 'pipe' : producer.type
 		};
 
 		const consumer = new Consumer(
