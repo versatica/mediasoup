@@ -368,15 +368,18 @@ impl Transport for PlainTransport {
 }
 
 #[async_trait(?Send)]
-impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport {
+impl TransportGeneric for PlainTransport {
+    type Dump = PlainTransportDump;
+    type Stat = PlainTransportStat;
+
     #[doc(hidden)]
-    async fn dump(&self) -> Result<PlainTransportDump, RequestError> {
+    async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
         self.dump_impl().await
     }
 
-    async fn get_stats(&self) -> Result<Vec<PlainTransportStat>, RequestError> {
+    async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
         self.get_stats_impl().await
@@ -426,7 +429,7 @@ impl TransportGeneric<PlainTransportDump, PlainTransportStat> for PlainTransport
     }
 }
 
-impl TransportImpl<PlainTransportDump, PlainTransportStat> for PlainTransport {
+impl TransportImpl for PlainTransport {
     fn router(&self) -> &Router {
         &self.inner.router
     }

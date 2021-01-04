@@ -1362,10 +1362,7 @@ impl Router {
         })
     }
 
-    fn after_transport_creation<Dump, Stat, T>(&self, transport: &T)
-    where
-        T: TransportGeneric<Dump, Stat>,
-    {
+    fn after_transport_creation(&self, transport: &impl TransportGeneric) {
         {
             let producers_weak = Arc::downgrade(&self.inner.producers);
             transport

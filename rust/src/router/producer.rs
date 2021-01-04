@@ -20,7 +20,6 @@ use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex as SyncMutex;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -372,7 +371,7 @@ pub enum Producer {
 
 impl Producer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new<Dump, Stat, Transport>(
+    pub(super) async fn new(
         id: ProducerId,
         kind: MediaKind,
         r#type: ProducerType,
@@ -383,14 +382,9 @@ impl Producer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Transport,
+        transport: impl TransportGeneric,
         direct: bool,
-    ) -> Self
-    where
-        Dump: Debug + DeserializeOwned + 'static,
-        Stat: Debug + DeserializeOwned + 'static,
-        Transport: TransportGeneric<Dump, Stat> + 'static,
-    {
+    ) -> Self {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();

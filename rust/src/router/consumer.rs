@@ -20,7 +20,6 @@ use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex as SyncMutex;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::Debug;
@@ -412,7 +411,7 @@ pub struct Consumer {
 
 impl Consumer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new<Dump, Stat, Transport>(
+    pub(super) async fn new(
         id: ConsumerId,
         producer_id: ProducerId,
         kind: MediaKind,
@@ -426,13 +425,8 @@ impl Consumer {
         score: ConsumerScore,
         preferred_layers: Option<ConsumerLayers>,
         app_data: AppData,
-        transport: Transport,
-    ) -> Self
-    where
-        Dump: Debug + DeserializeOwned + 'static,
-        Stat: Debug + DeserializeOwned + 'static,
-        Transport: TransportGeneric<Dump, Stat> + 'static,
-    {
+        transport: impl TransportGeneric,
+    ) -> Self {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();

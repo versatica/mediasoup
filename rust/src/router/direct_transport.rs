@@ -333,10 +333,13 @@ impl Transport for DirectTransport {
 }
 
 #[async_trait(?Send)]
-impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransport {
+impl TransportGeneric for DirectTransport {
+    type Dump = DirectTransportDump;
+    type Stat = DirectTransportStat;
+
     /// Dump Transport.
     #[doc(hidden)]
-    async fn dump(&self) -> Result<DirectTransportDump, RequestError> {
+    async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
         self.dump_impl().await
@@ -346,7 +349,7 @@ impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransp
     ///
     /// Check the [RTC Statistics](https://mediasoup.org/documentation/v3/mediasoup/rtc-statistics/)
     /// section for more details (TypeScript-oriented, but concepts apply here as well).
-    async fn get_stats(&self) -> Result<Vec<DirectTransportStat>, RequestError> {
+    async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
         self.get_stats_impl().await
@@ -396,7 +399,7 @@ impl TransportGeneric<DirectTransportDump, DirectTransportStat> for DirectTransp
     }
 }
 
-impl TransportImpl<DirectTransportDump, DirectTransportStat> for DirectTransport {
+impl TransportImpl for DirectTransport {
     fn router(&self) -> &Router {
         &self.inner.router
     }

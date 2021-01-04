@@ -142,10 +142,7 @@ pub(super) enum TransportType {
 ///
 /// For additional methods see [`TransportGeneric`].
 #[async_trait(?Send)]
-pub trait Transport
-where
-    Self: Send + Sync,
-{
+pub trait Transport: Send + Sync {
     /// Transport id.
     fn id(&self) -> TransportId;
 
@@ -228,13 +225,16 @@ where
 
 /// Generic transport trait with methods available on all transports in addition to [`Transport`].
 #[async_trait(?Send)]
-pub trait TransportGeneric<Dump, Stat>: Transport + Clone {
+pub trait TransportGeneric: Transport + Clone + 'static {
+    type Dump: Debug + DeserializeOwned + 'static;
+    type Stat: Debug + DeserializeOwned + 'static;
+
     /// Dump Transport.
-    async fn dump(&self) -> Result<Dump, RequestError>;
+    async fn dump(&self) -> Result<Self::Dump, RequestError>;
 
     /// Returns current RTC statistics of the transport. Each transport class produces a different
     /// set of statistics.
-    async fn get_stats(&self) -> Result<Vec<Stat>, RequestError>;
+    async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError>;
 
     /// Callback is called when a new producer is created.
     fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
@@ -332,12 +332,7 @@ pub enum ConsumeDataError {
 }
 
 #[async_trait(?Send)]
-pub(super) trait TransportImpl<Dump, Stat>
-where
-    Dump: Debug + DeserializeOwned + 'static,
-    Stat: Debug + DeserializeOwned + 'static,
-    Self: Transport + TransportGeneric<Dump, Stat> + 'static,
-{
+pub(super) trait TransportImpl: TransportGeneric {
     fn router(&self) -> &Router;
 
     fn channel(&self) -> &Channel;
@@ -384,7 +379,7 @@ where
         ))
     }
 
-    async fn dump_impl(&self) -> Result<Dump, RequestError> {
+    async fn dump_impl(&self) -> Result<Self::Dump, RequestError> {
         self.channel()
             .request(TransportDumpRequest {
                 internal: TransportInternal {
@@ -396,7 +391,7 @@ where
             .await
     }
 
-    async fn get_stats_impl(&self) -> Result<Vec<Stat>, RequestError> {
+    async fn get_stats_impl(&self) -> Result<Vec<Self::Stat>, RequestError> {
         self.channel()
             .request(TransportGetStatsRequest {
                 internal: TransportInternal {

@@ -349,15 +349,18 @@ impl Transport for PipeTransport {
 }
 
 #[async_trait(?Send)]
-impl TransportGeneric<PipeTransportDump, PipeTransportStat> for PipeTransport {
+impl TransportGeneric for PipeTransport {
+    type Dump = PipeTransportDump;
+    type Stat = PipeTransportStat;
+
     #[doc(hidden)]
-    async fn dump(&self) -> Result<PipeTransportDump, RequestError> {
+    async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
         self.dump_impl().await
     }
 
-    async fn get_stats(&self) -> Result<Vec<PipeTransportStat>, RequestError> {
+    async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
         self.get_stats_impl().await
@@ -407,7 +410,7 @@ impl TransportGeneric<PipeTransportDump, PipeTransportStat> for PipeTransport {
     }
 }
 
-impl TransportImpl<PipeTransportDump, PipeTransportStat> for PipeTransport {
+impl TransportImpl for PipeTransport {
     fn router(&self) -> &Router {
         &self.inner.router
     }

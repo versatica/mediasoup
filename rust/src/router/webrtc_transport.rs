@@ -430,15 +430,18 @@ impl Transport for WebRtcTransport {
 }
 
 #[async_trait(?Send)]
-impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport {
+impl TransportGeneric for WebRtcTransport {
+    type Dump = WebRtcTransportDump;
+    type Stat = WebRtcTransportStat;
+
     #[doc(hidden)]
-    async fn dump(&self) -> Result<WebRtcTransportDump, RequestError> {
+    async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
         self.dump_impl().await
     }
 
-    async fn get_stats(&self) -> Result<Vec<WebRtcTransportStat>, RequestError> {
+    async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
         self.get_stats_impl().await
@@ -488,7 +491,7 @@ impl TransportGeneric<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransp
     }
 }
 
-impl TransportImpl<WebRtcTransportDump, WebRtcTransportStat> for WebRtcTransport {
+impl TransportImpl for WebRtcTransport {
     fn router(&self) -> &Router {
         &self.inner.router
     }

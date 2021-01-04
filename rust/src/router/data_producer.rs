@@ -18,7 +18,6 @@ use async_executor::Executor;
 use event_listener_primitives::{BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex as SyncMutex;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -225,7 +224,7 @@ pub enum DataProducer {
 
 impl DataProducer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new<Dump, Stat, Transport>(
+    pub(super) async fn new(
         id: DataProducerId,
         r#type: DataProducerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -235,14 +234,9 @@ impl DataProducer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Transport,
+        transport: impl TransportGeneric,
         direct: bool,
-    ) -> Self
-    where
-        Dump: Debug + DeserializeOwned + 'static,
-        Stat: Debug + DeserializeOwned + 'static,
-        Transport: TransportGeneric<Dump, Stat> + 'static,
-    {
+    ) -> Self {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
