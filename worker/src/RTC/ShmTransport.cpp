@@ -415,7 +415,7 @@ namespace RTC
 
 		shm.assign(jsonShmIt->get<std::string>());
 
-		return this->shmCtx.WriteStreamMeta(metadata, shm);
+		return (0 == this->shmCtx.WriteStreamMeta(metadata, shm));
 	}
 
 
