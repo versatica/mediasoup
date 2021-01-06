@@ -142,7 +142,7 @@ pub(super) enum TransportType {
 ///
 /// For additional methods see [`TransportGeneric`].
 #[async_trait(?Send)]
-pub trait Transport: Send + Sync {
+pub trait Transport: Send + Sync + CloneTransport {
     /// Transport id.
     fn id(&self) -> TransportId;
 
@@ -221,6 +221,31 @@ pub trait Transport: Send + Sync {
         &self,
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError>;
+}
+
+// We don't want this to be a public API, but have to use it like this to be able to still use as
+// trait object
+/// This is a private method, don't use it outside of the library
+#[doc(hidden)]
+pub trait CloneTransport {
+    /// This is a private method, don't use it outside of the library
+    #[doc(hidden)]
+    fn clone_transport(&self) -> Box<dyn Transport>;
+}
+
+impl<T> CloneTransport for T
+where
+    T: Transport + Clone + 'static,
+{
+    fn clone_transport(&self) -> Box<dyn Transport> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn Transport> {
+    fn clone(&self) -> Self {
+        self.clone_transport()
+    }
 }
 
 /// Generic transport trait with methods available on all transports in addition to [`Transport`].
