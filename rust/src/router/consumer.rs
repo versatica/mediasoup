@@ -10,7 +10,7 @@ use crate::messages::{
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
-use crate::transport::{Transport, TransportGeneric};
+use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
     Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
@@ -355,7 +355,7 @@ struct Inner {
     current_layers: Arc<SyncMutex<Option<ConsumerLayers>>>,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Arc<Box<dyn Transport>>,
+    transport: Box<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
@@ -387,7 +387,7 @@ impl Inner {
                         producer_id: self.producer_id,
                     },
                 };
-                let transport = Arc::clone(&self.transport);
+                let transport = self.transport.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
@@ -425,7 +425,7 @@ impl Consumer {
         score: ConsumerScore,
         preferred_layers: Option<ConsumerLayers>,
         app_data: AppData,
-        transport: impl TransportGeneric,
+        transport: Box<dyn Transport>,
     ) -> Self {
         debug!("new()");
 
@@ -534,7 +534,7 @@ impl Consumer {
         let on_transport_close_handler = transport.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
-            move || {
+            Box::new(move || {
                 if let Some(inner) = inner_weak
                     .lock()
                     .as_ref()
@@ -543,7 +543,7 @@ impl Consumer {
                     inner.handlers.transport_close.call_simple();
                     inner.close();
                 }
-            }
+            })
         });
         let inner = Arc::new(Inner {
             id,
@@ -561,7 +561,7 @@ impl Consumer {
             channel,
             handlers,
             app_data,
-            transport: Arc::new(Box::new(transport)),
+            transport,
             closed: AtomicBool::new(false),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
             _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),

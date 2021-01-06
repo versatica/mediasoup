@@ -92,9 +92,9 @@ mod data_producer {
                 .on_new_data_producer({
                     let new_data_producer_count = Arc::clone(&new_data_producer_count);
 
-                    move |_data_producer| {
+                    Box::new(move |_data_producer| {
                         new_data_producer_count.fetch_add(1, Ordering::SeqCst);
-                    }
+                    })
                 })
                 .detach();
 
@@ -165,9 +165,9 @@ mod data_producer {
                 .on_new_data_producer({
                     let new_data_producer_count = Arc::clone(&new_data_producer_count);
 
-                    move |_data_producer| {
+                    Box::new(move |_data_producer| {
                         new_data_producer_count.fetch_add(1, Ordering::SeqCst);
-                    }
+                    })
                 })
                 .detach();
 

@@ -15,7 +15,7 @@ use crate::messages::{
     DataConsumerSetBufferedAmountLowThresholdRequest,
 };
 use crate::sctp_parameters::SctpStreamParameters;
-use crate::transport::{Transport, TransportGeneric};
+use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
     Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
@@ -202,7 +202,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Arc<Box<dyn Transport>>,
+    transport: Box<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
@@ -234,7 +234,7 @@ impl Inner {
                         data_producer_id: self.data_producer_id,
                     },
                 };
-                let transport = Arc::clone(&self.transport);
+                let transport = self.transport.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
@@ -304,7 +304,7 @@ impl DataConsumer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: impl TransportGeneric,
+        transport: Box<dyn Transport>,
         direct: bool,
     ) -> Self {
         debug!("new()");
@@ -374,7 +374,7 @@ impl DataConsumer {
         let on_transport_close_handler = transport.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
-            move || {
+            Box::new(move || {
                 if let Some(inner) = inner_weak
                     .lock()
                     .as_ref()
@@ -383,7 +383,7 @@ impl DataConsumer {
                     inner.handlers.transport_close.call_simple();
                     inner.close();
                 }
-            }
+            })
         });
         let inner = Arc::new(Inner {
             id,
@@ -398,7 +398,7 @@ impl DataConsumer {
             payload_channel,
             handlers,
             app_data,
-            transport: Arc::new(Box::new(transport)),
+            transport,
             closed: AtomicBool::new(false),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
             _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),

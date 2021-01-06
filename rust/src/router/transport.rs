@@ -221,6 +221,44 @@ pub trait Transport: Send + Sync + CloneTransport {
         &self,
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError>;
+
+    /// Callback is called when a new producer is created.
+    fn on_new_producer(
+        &self,
+        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+    ) -> HandlerId;
+
+    /// Callback is called when a new consumer is created.
+    fn on_new_consumer(
+        &self,
+        callback: Box<dyn Fn(&Consumer) + Send + Sync + 'static>,
+    ) -> HandlerId;
+
+    /// Callback is called when a new data producer is created.
+    fn on_new_data_producer(
+        &self,
+        callback: Box<dyn Fn(&DataProducer) + Send + Sync + 'static>,
+    ) -> HandlerId;
+
+    /// Callback is called when a new data consumer is created.
+    fn on_new_data_consumer(
+        &self,
+        callback: Box<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
+    ) -> HandlerId;
+
+    /// See [`Transport::enable_trace_event()`]
+    fn on_trace(
+        &self,
+        callback: Box<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
+    ) -> HandlerId;
+
+    /// Callback is called when the router this transport belongs to is closed for whatever reason.
+    /// The transport itself is also closed. `on_transport_close` callbacks are also called on all
+    /// its producers and consumers.
+    fn on_router_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
+
+    /// Callback is called when the router is closed for whatever reason.
+    fn on_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
 }
 
 // We don't want this to be a public API, but have to use it like this to be able to still use as
@@ -260,38 +298,6 @@ pub trait TransportGeneric: Transport + Clone + 'static {
     /// Returns current RTC statistics of the transport. Each transport class produces a different
     /// set of statistics.
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError>;
-
-    /// Callback is called when a new producer is created.
-    fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
-
-    /// Callback is called when a new consumer is created.
-    fn on_new_consumer<F: Fn(&Consumer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
-
-    /// Callback is called when a new data producer is created.
-    fn on_new_data_producer<F: Fn(&DataProducer) + Send + Sync + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId;
-
-    /// Callback is called when a new data consumer is created.
-    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + Sync + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId;
-
-    /// See [`Transport::enable_trace_event()`]
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + Sync + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId;
-
-    /// Callback is called when the router this transport belongs to is closed for whatever reason.
-    /// The transport itself is also closed. `on_transport_close` callbacks are also called on all
-    /// its producers and consumers.
-    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
-
-    /// Callback is called when the router is closed for whatever reason.
-    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
 }
 
 /// Error that caused [`Transport::produce`] to fail.
@@ -549,7 +555,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             self.channel().clone(),
             self.payload_channel().clone(),
             app_data,
-            self.clone(),
+            Box::new(self.clone()),
             transport_type == TransportType::Direct,
         );
 
@@ -647,7 +653,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.score,
             response.preferred_layers,
             app_data,
-            self.clone(),
+            Box::new(self.clone()),
         );
 
         Ok(consumer_fut.await)
@@ -718,7 +724,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             self.channel().clone(),
             self.payload_channel().clone(),
             app_data,
-            self.clone(),
+            Box::new(self.clone()),
             transport_type == TransportType::Direct,
         );
 
@@ -808,7 +814,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             self.channel().clone(),
             self.payload_channel().clone(),
             app_data,
-            self.clone(),
+            Box::new(self.clone()),
             transport_type == TransportType::Direct,
         );
 

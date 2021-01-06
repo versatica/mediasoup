@@ -11,7 +11,7 @@ use crate::messages::{
     DataProducerInternal, DataProducerSendData, DataProducerSendNotification,
 };
 use crate::sctp_parameters::SctpStreamParameters;
-use crate::transport::{Transport, TransportGeneric};
+use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationError, PayloadChannel, RequestError};
 use async_executor::Executor;
@@ -137,7 +137,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Arc<Box<dyn Transport>>,
+    transport: Box<dyn Transport>,
     closed: AtomicBool,
     _on_transport_close_handler: SyncMutex<HandlerId>,
 }
@@ -166,7 +166,7 @@ impl Inner {
                         data_producer_id: self.id,
                     },
                 };
-                let transport = Arc::clone(&self.transport);
+                let transport = self.transport.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
@@ -234,7 +234,7 @@ impl DataProducer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: impl TransportGeneric,
+        transport: Box<dyn Transport>,
         direct: bool,
     ) -> Self {
         debug!("new()");
@@ -245,7 +245,7 @@ impl DataProducer {
         let on_transport_close_handler = transport.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
-            move || {
+            Box::new(move || {
                 if let Some(inner) = inner_weak
                     .lock()
                     .as_ref()
@@ -254,7 +254,7 @@ impl DataProducer {
                     inner.handlers.transport_close.call_simple();
                     inner.close();
                 }
-            }
+            })
         });
         let inner = Arc::new(Inner {
             id,
@@ -268,7 +268,7 @@ impl DataProducer {
             payload_channel,
             handlers,
             app_data,
-            transport: Arc::new(Box::new(transport)),
+            transport,
             closed: AtomicBool::new(false),
             _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
         });

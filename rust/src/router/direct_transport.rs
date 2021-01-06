@@ -330,6 +330,49 @@ impl Transport for DirectTransport {
 
         self.enable_trace_event_impl(types).await
     }
+
+    fn on_new_producer(
+        &self,
+        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+    ) -> HandlerId {
+        self.inner.handlers.new_producer.add(callback)
+    }
+
+    fn on_new_consumer(
+        &self,
+        callback: Box<dyn Fn(&Consumer) + Send + Sync + 'static>,
+    ) -> HandlerId {
+        self.inner.handlers.new_consumer.add(callback)
+    }
+
+    fn on_new_data_producer(
+        &self,
+        callback: Box<dyn Fn(&DataProducer) + Send + Sync + 'static>,
+    ) -> HandlerId {
+        self.inner.handlers.new_data_producer.add(callback)
+    }
+
+    fn on_new_data_consumer(
+        &self,
+        callback: Box<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
+    ) -> HandlerId {
+        self.inner.handlers.new_data_consumer.add(callback)
+    }
+
+    fn on_trace(
+        &self,
+        callback: Box<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
+    ) -> HandlerId {
+        self.inner.handlers.trace.add(callback)
+    }
+
+    fn on_router_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId {
+        self.inner.handlers.router_close.add(callback)
+    }
+
+    fn on_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId {
+        self.inner.handlers.close.add(callback)
+    }
 }
 
 #[async_trait(?Send)]
@@ -353,49 +396,6 @@ impl TransportGeneric for DirectTransport {
         debug!("get_stats()");
 
         self.get_stats_impl().await
-    }
-
-    fn on_new_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.new_producer.add(Box::new(callback))
-    }
-
-    fn on_new_consumer<F: Fn(&Consumer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.new_consumer.add(Box::new(callback))
-    }
-
-    fn on_new_data_producer<F: Fn(&DataProducer) + Send + Sync + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId {
-        self.inner
-            .handlers
-            .new_data_producer
-            .add(Box::new(callback))
-    }
-
-    fn on_new_data_consumer<F: Fn(&DataConsumer) + Send + Sync + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId {
-        self.inner
-            .handlers
-            .new_data_consumer
-            .add(Box::new(callback))
-    }
-
-    fn on_trace<F: Fn(&TransportTraceEventData) + Send + Sync + 'static>(
-        &self,
-        callback: F,
-    ) -> HandlerId {
-        self.inner.handlers.trace.add(Box::new(callback))
-    }
-
-    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.router_close.add(Box::new(callback))
-    }
-
-    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.close.add(Box::new(callback))
     }
 }
 

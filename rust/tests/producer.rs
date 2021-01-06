@@ -235,9 +235,9 @@ mod producer {
                     .on_new_producer({
                         let new_producers_count = Arc::clone(&new_producers_count);
 
-                        move |_producer| {
+                        Box::new(move |_producer| {
                             new_producers_count.fetch_add(1, Ordering::SeqCst);
-                        }
+                        })
                     })
                     .detach();
 
@@ -294,9 +294,9 @@ mod producer {
                     .on_new_producer({
                         let new_producers_count = Arc::clone(&new_producers_count);
 
-                        move |_producer| {
+                        Box::new(move |_producer| {
                             new_producers_count.fetch_add(1, Ordering::SeqCst);
-                        }
+                        })
                     })
                     .detach();
 

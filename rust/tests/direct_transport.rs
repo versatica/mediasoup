@@ -306,9 +306,9 @@ mod direct_transport {
             let (_worker, _router, transport) = init().await;
 
             let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-            let _handler = transport.on_close(move || {
+            let _handler = transport.on_close(Box::new(move || {
                 let _ = close_tx.send(());
-            });
+            }));
 
             drop(transport);
 
@@ -322,14 +322,14 @@ mod direct_transport {
             let (worker, _router, transport) = init().await;
 
             let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-            let _handler = transport.on_close(move || {
+            let _handler = transport.on_close(Box::new(move || {
                 let _ = close_tx.send(());
-            });
+            }));
 
             let (router_close_tx, router_close_rx) = async_oneshot::oneshot::<()>();
-            let _handler = transport.on_router_close(move || {
+            let _handler = transport.on_router_close(Box::new(move || {
                 let _ = router_close_tx.send(());
-            });
+            }));
 
             unsafe {
                 libc::kill(worker.pid() as i32, libc::SIGINT);

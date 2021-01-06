@@ -10,7 +10,7 @@ use crate::messages::{
 };
 pub use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
-use crate::transport::{Transport, TransportGeneric};
+use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
     Channel, NotificationError, PayloadChannel, RequestError, SubscriptionHandler,
@@ -286,7 +286,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Arc<Box<dyn Transport>>,
+    transport: Box<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     _subscription_handler: SubscriptionHandler,
@@ -317,7 +317,7 @@ impl Inner {
                         producer_id: self.id,
                     },
                 };
-                let transport = Arc::clone(&self.transport);
+                let transport = self.transport.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
@@ -382,7 +382,7 @@ impl Producer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: impl TransportGeneric,
+        transport: Box<dyn Transport>,
         direct: bool,
     ) -> Self {
         debug!("new()");
@@ -427,7 +427,7 @@ impl Producer {
         let on_transport_close_handler = transport.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
-            move || {
+            Box::new(move || {
                 if let Some(inner) = inner_weak
                     .lock()
                     .as_ref()
@@ -436,7 +436,7 @@ impl Producer {
                     inner.handlers.transport_close.call_simple();
                     inner.close();
                 }
-            }
+            })
         });
         let inner = Arc::new(Inner {
             id,
@@ -452,7 +452,7 @@ impl Producer {
             payload_channel,
             handlers,
             app_data,
-            transport: Arc::new(Box::new(transport)),
+            transport,
             closed: AtomicBool::new(false),
             _subscription_handler: subscription_handler,
             _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),

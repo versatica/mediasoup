@@ -112,9 +112,9 @@ mod data_consumer {
                 .on_new_data_consumer({
                     let new_data_consumer_count = Arc::clone(&new_data_consumer_count);
 
-                    move |_data_consumer| {
+                    Box::new(move |_data_consumer| {
                         new_data_consumer_count.fetch_add(1, Ordering::SeqCst);
-                    }
+                    })
                 })
                 .detach();
 
@@ -323,9 +323,9 @@ mod data_consumer {
                 .on_new_data_consumer({
                     let new_data_consumer_count = Arc::clone(&new_data_consumer_count);
 
-                    move |_data_consumer| {
+                    Box::new(move |_data_consumer| {
                         new_data_consumer_count.fetch_add(1, Ordering::SeqCst);
-                    }
+                    })
                 })
                 .detach();
 

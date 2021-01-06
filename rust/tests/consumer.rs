@@ -357,9 +357,9 @@ mod consumer {
                 .on_new_consumer({
                     let new_consumer_count = Arc::clone(&new_consumer_count);
 
-                    move |_consumer| {
+                    Box::new(move |_consumer| {
                         new_consumer_count.fetch_add(1, Ordering::SeqCst);
-                    }
+                    })
                 })
                 .detach();
 

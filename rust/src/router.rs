@@ -1340,9 +1340,9 @@ impl Router {
             .on_close({
                 let mapped_pipe_transports = Arc::clone(&self.inner.mapped_pipe_transports);
 
-                move || {
+                Box::new(move || {
                     mapped_pipe_transports.lock().remove(&remote_router_id);
-                }
+                })
             })
             .detach();
 
@@ -1350,9 +1350,9 @@ impl Router {
             .on_close({
                 let mapped_pipe_transports = Arc::clone(&self.inner.mapped_pipe_transports);
 
-                move || {
+                Box::new(move || {
                     mapped_pipe_transports.lock().remove(&remote_router_id);
-                }
+                })
             })
             .detach();
 
@@ -1366,7 +1366,7 @@ impl Router {
         {
             let producers_weak = Arc::downgrade(&self.inner.producers);
             transport
-                .on_new_producer(move |producer| {
+                .on_new_producer(Box::new(move |producer| {
                     let producer_id = producer.id();
                     if let Some(producers) = producers_weak.upgrade() {
                         producers.write().insert(producer_id, producer.downgrade());
@@ -1381,13 +1381,13 @@ impl Router {
                             })
                             .detach();
                     }
-                })
+                }))
                 .detach();
         }
         {
             let data_producers_weak = Arc::downgrade(&self.inner.data_producers);
             transport
-                .on_new_data_producer(move |data_producer| {
+                .on_new_data_producer(Box::new(move |data_producer| {
                     let data_producer_id = data_producer.id();
                     if let Some(data_producers) = data_producers_weak.upgrade() {
                         data_producers
@@ -1404,7 +1404,7 @@ impl Router {
                             })
                             .detach();
                     }
-                })
+                }))
                 .detach();
         }
     }
