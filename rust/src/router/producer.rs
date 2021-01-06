@@ -22,6 +22,7 @@ use log::*;
 use parking_lot::Mutex as SyncMutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -141,6 +142,15 @@ pub struct ProducerScore {
     pub score: u8,
 }
 
+#[derive(Debug, Copy, Clone, Deserialize_repr, Serialize_repr)]
+#[repr(u16)]
+enum Rotation {
+    None = 0,
+    Clockwise = 90,
+    Rotate180 = 180,
+    CounterClockwise = 270,
+}
+
 /// As documented in
 /// [WebRTC Video Processing and Codec Requirements](https://tools.ietf.org/html/rfc7742#section-4).
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
@@ -149,9 +159,8 @@ pub struct ProducerVideoOrientation {
     pub camera: bool,
     /// Whether the video source is flipped.
     pub flip: bool,
-    // TODO: Enum with `repr(u16)`?
-    /// Rotation degrees (0, 90, 180 or 270).
-    pub rotation: u16,
+    /// Rotation degrees.
+    pub rotation: Rotation,
 }
 
 /// RTC statistics of the producer.
