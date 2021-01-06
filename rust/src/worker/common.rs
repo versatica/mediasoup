@@ -30,10 +30,11 @@ impl<V: Clone + 'static> EventHandlers<V> {
         Self { executor, handlers }
     }
 
-    pub(super) async fn add<F>(&self, target_id: String, callback: F) -> SubscriptionHandler
-    where
-        F: Fn(V) + Send + 'static,
-    {
+    pub(super) async fn add(
+        &self,
+        target_id: String,
+        callback: Box<dyn Fn(V) + Send + 'static>,
+    ) -> SubscriptionHandler {
         let mut event_handlers = self.handlers.lock().await;
         let list = event_handlers
             .entry(target_id.clone())

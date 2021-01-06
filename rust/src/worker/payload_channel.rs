@@ -344,7 +344,10 @@ impl PayloadChannel {
     where
         F: Fn(NotificationMessage) + Send + 'static,
     {
-        self.inner.event_handlers.add(target_id, callback).await
+        self.inner
+            .event_handlers
+            .add(target_id, Box::new(callback))
+            .await
     }
 
     /// Non-generic method to avoid significant duplication in final binary
