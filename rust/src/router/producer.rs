@@ -142,9 +142,9 @@ pub struct ProducerScore {
     pub score: u8,
 }
 
-#[derive(Debug, Copy, Clone, Deserialize_repr, Serialize_repr)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]
-enum Rotation {
+pub enum Rotation {
     None = 0,
     Clockwise = 90,
     Rotate180 = 180,
