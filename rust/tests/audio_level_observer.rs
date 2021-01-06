@@ -157,9 +157,9 @@ mod audio_level_observer {
                 .expect("Failed to create AudioLevelObserver");
 
             let (tx, rx) = async_oneshot::oneshot::<()>();
-            let _handler = audio_level_observer.on_close(move || {
+            let _handler = audio_level_observer.on_close(Box::new(move || {
                 let _ = tx.send(());
-            });
+            }));
             drop(audio_level_observer);
 
             rx.await.expect("Failed to receive close event");
@@ -182,14 +182,14 @@ mod audio_level_observer {
                 .expect("Failed to create AudioLevelObserver");
 
             let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-            let _handler = audio_level_observer.on_close(move || {
+            let _handler = audio_level_observer.on_close(Box::new(move || {
                 let _ = close_tx.send(());
-            });
+            }));
 
             let (router_close_tx, router_close_rx) = async_oneshot::oneshot::<()>();
-            let _handler = audio_level_observer.on_router_close(move || {
+            let _handler = audio_level_observer.on_router_close(Box::new(move || {
                 let _ = router_close_tx.send(());
-            });
+            }));
 
             unsafe {
                 libc::kill(worker.pid() as i32, libc::SIGINT);

@@ -259,30 +259,33 @@ impl RtpObserver for AudioLevelObserver {
         Ok(())
     }
 
-    fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    fn on_pause(&self, callback: Box<dyn Fn() + Send + Sync + 'static>) -> HandlerId {
         self.inner.handlers.pause.add(Box::new(callback))
     }
 
-    fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    fn on_resume(&self, callback: Box<dyn Fn() + Send + Sync + 'static>) -> HandlerId {
         self.inner.handlers.resume.add(Box::new(callback))
     }
 
-    fn on_add_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    fn on_add_producer(
+        &self,
+        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+    ) -> HandlerId {
         self.inner.handlers.add_producer.add(Box::new(callback))
     }
 
-    fn on_remove_producer<F: Fn(&Producer) + Send + Sync + 'static>(
+    fn on_remove_producer(
         &self,
-        callback: F,
+        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.remove_producer.add(Box::new(callback))
     }
 
-    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_router_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId {
         self.inner.handlers.router_close.add(Box::new(callback))
     }
 
-    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
+    fn on_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId {
         self.inner.handlers.close.add(Box::new(callback))
     }
 }

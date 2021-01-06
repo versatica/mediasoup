@@ -63,24 +63,27 @@ pub trait RtpObserver {
     async fn remove_producer(&self, producer_id: ProducerId) -> Result<(), RequestError>;
 
     /// Callback is called when the RTP observer is paused.
-    fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
+    fn on_pause(&self, callback: Box<dyn Fn() + Send + Sync + 'static>) -> HandlerId;
 
     /// Callback is called when the RTP observer is resumed.
-    fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
+    fn on_resume(&self, callback: Box<dyn Fn() + Send + Sync + 'static>) -> HandlerId;
 
     /// Callback is called when a new producer is added into the RTP observer.
-    fn on_add_producer<F: Fn(&Producer) + Send + Sync + 'static>(&self, callback: F) -> HandlerId;
+    fn on_add_producer(
+        &self,
+        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+    ) -> HandlerId;
 
     /// Callback is called when a producer is removed from the RTP observer.
-    fn on_remove_producer<F: Fn(&Producer) + Send + Sync + 'static>(
+    fn on_remove_producer(
         &self,
-        callback: F,
+        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId;
 
     /// Callback is called when the router this RTP observer belongs to is closed for whatever reason. The RTP
     /// observer itself is also closed.
-    fn on_router_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
+    fn on_router_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
 
     /// Callback is called when the RTP observer is closed for whatever reason.
-    fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId;
+    fn on_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
 }
