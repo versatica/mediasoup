@@ -2,6 +2,7 @@ use async_executor::Executor;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::Arc;
+use uuid::Uuid;
 
 struct EventHandlersList<V: Clone + 'static> {
     index: usize,
@@ -20,24 +21,23 @@ impl<V: Clone + 'static> Default for EventHandlersList<V> {
 #[derive(Clone)]
 pub(super) struct EventHandlers<V: Clone + 'static> {
     executor: Arc<Executor<'static>>,
-    handlers: Arc<Mutex<HashMap<String, EventHandlersList<V>>>>,
+    handlers: Arc<Mutex<HashMap<SubscriptionTarget, EventHandlersList<V>>>>,
 }
 
 impl<V: Clone + 'static> EventHandlers<V> {
     pub(super) fn new(executor: Arc<Executor<'static>>) -> Self {
-        let handlers = Arc::<Mutex<HashMap<String, EventHandlersList<V>>>>::default();
+        let handlers = Arc::<Mutex<HashMap<SubscriptionTarget, EventHandlersList<V>>>>::default();
         Self { executor, handlers }
     }
 
-    // TODO: Avoid `String` if possible (switch to uuid or enum with uuid and u32)
     pub(super) fn add(
         &self,
-        target_id: String,
+        target_id: SubscriptionTarget,
         callback: Box<dyn Fn(V) + Send + 'static>,
     ) -> SubscriptionHandler {
         let mut event_handlers = self.handlers.lock();
         let list = event_handlers
-            .entry(target_id.clone())
+            .entry(target_id)
             .or_insert_with(EventHandlersList::default);
         let index = list.index;
         list.index += 1;
@@ -61,7 +61,7 @@ impl<V: Clone + 'static> EventHandlers<V> {
         })
     }
 
-    pub(super) fn call_callbacks_with_value(&self, target_id: &str, value: V) {
+    pub(super) fn call_callbacks_with_value(&self, target_id: &SubscriptionTarget, value: V) {
         let handlers = self.handlers.lock();
         if let Some(list) = handlers.get(target_id) {
             let mut callbacks = list.callbacks.values();
@@ -74,6 +74,18 @@ impl<V: Clone + 'static> EventHandlers<V> {
                 }
             }
         }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
+pub(crate) enum SubscriptionTarget {
+    Uuid(Uuid),
+    Number(u32),
+}
+
+impl From<u32> for SubscriptionTarget {
+    fn from(number: u32) -> Self {
+        Self::Number(number)
     }
 }
 

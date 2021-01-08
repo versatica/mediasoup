@@ -1,5 +1,5 @@
 use crate::messages::{Notification, Request};
-use crate::worker::common::EventHandlers;
+use crate::worker::common::{EventHandlers, SubscriptionTarget};
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
@@ -190,10 +190,12 @@ impl PayloadChannel {
                                 }
                             }
                             PayloadChannelReceiveMessage::Notification(notification) => {
-                                let target_id = notification
-                                    .get("targetId".to_string())
-                                    .and_then(|value| value.as_str())
-                                    .map(str::to_owned);
+                                let target_id = notification.get("targetId").and_then(|value| {
+                                    let str = value.as_str()?;
+                                    str.parse().ok().map(SubscriptionTarget::Uuid).or_else(|| {
+                                        str.parse().ok().map(SubscriptionTarget::Number)
+                                    })
+                                });
 
                                 let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
                                 if read_bytes == 0 {
@@ -336,7 +338,7 @@ impl PayloadChannel {
 
     pub(crate) fn subscribe_to_notifications<F>(
         &self,
-        target_id: String,
+        target_id: SubscriptionTarget,
         callback: F,
     ) -> SubscriptionHandler
     where

@@ -444,7 +444,7 @@ impl DirectTransport {
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            channel.subscribe_to_notifications(id.to_string(), move |notification| {
+            channel.subscribe_to_notifications(id.into(), move |notification| {
                 match serde_json::from_value::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::Trace(trace_event_data) => {
@@ -463,7 +463,7 @@ impl DirectTransport {
         let payload_subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            payload_channel.subscribe_to_notifications(id.to_string(), move |notification| {
+            payload_channel.subscribe_to_notifications(id.into(), move |notification| {
                 let NotificationMessage { message, payload } = notification;
                 match serde_json::from_value::<PayloadNotification>(message) {
                     Ok(notification) => match notification {

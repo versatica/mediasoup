@@ -19,7 +19,7 @@ use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
 use async_process::{Child, Command, ExitStatus, Stdio};
 pub(crate) use channel::Channel;
-pub(crate) use common::SubscriptionHandler;
+pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
@@ -485,7 +485,7 @@ impl Inner {
         let sender = Cell::new(Some(sender));
         let _handler =
             self.channel
-                .subscribe_to_notifications(self.pid.to_string(), move |notification| {
+                .subscribe_to_notifications(self.pid.into(), move |notification| {
                     let result = match serde_json::from_value(notification.clone()) {
                         Ok(Notification::Running) => {
                             debug!("worker process running [pid:{}]", pid);
