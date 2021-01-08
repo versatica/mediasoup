@@ -33,12 +33,11 @@ use crate::worker::{
     SubscriptionHandler,
 };
 use async_executor::Executor;
-use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
-use parking_lot::Mutex as SyncMutex;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -146,8 +145,8 @@ enum PayloadNotification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    used_sctp_stream_ids: AsyncMutex<HashMap<u16, bool>>,
-    cname_for_producers: AsyncMutex<Option<String>>,
+    used_sctp_stream_ids: Mutex<HashMap<u16, bool>>,
+    cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: PayloadChannel,
@@ -158,7 +157,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
-    _on_router_close_handler: AsyncMutex<HandlerId>,
+    _on_router_close_handler: Mutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -420,17 +419,17 @@ impl TransportImpl for DirectTransport {
         &self.inner.next_mid_for_consumers
     }
 
-    fn used_sctp_stream_ids(&self) -> &AsyncMutex<HashMap<u16, bool>> {
+    fn used_sctp_stream_ids(&self) -> &Mutex<HashMap<u16, bool>> {
         &self.inner.used_sctp_stream_ids
     }
 
-    fn cname_for_producers(&self) -> &AsyncMutex<Option<String>> {
+    fn cname_for_producers(&self) -> &Mutex<Option<String>> {
         &self.inner.cname_for_producers
     }
 }
 
 impl DirectTransport {
-    pub(super) async fn new(
+    pub(super) fn new(
         id: TransportId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
@@ -445,50 +444,46 @@ impl DirectTransport {
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    match serde_json::from_value::<Notification>(notification) {
-                        Ok(notification) => match notification {
-                            Notification::Trace(trace_event_data) => {
-                                handlers.trace.call(|callback| {
-                                    callback(&trace_event_data);
-                                });
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse notification: {}", error);
+            channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                match serde_json::from_value::<Notification>(notification) {
+                    Ok(notification) => match notification {
+                        Notification::Trace(trace_event_data) => {
+                            handlers.trace.call(|callback| {
+                                callback(&trace_event_data);
+                            });
                         }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
         let payload_subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            payload_channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    let NotificationMessage { message, payload } = notification;
-                    match serde_json::from_value::<PayloadNotification>(message) {
-                        Ok(notification) => match notification {
-                            PayloadNotification::Rtcp => {
-                                handlers.rtcp.call(|callback| {
-                                    callback(&payload);
-                                });
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse payload notification: {}", error);
+            payload_channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                let NotificationMessage { message, payload } = notification;
+                match serde_json::from_value::<PayloadNotification>(message) {
+                    Ok(notification) => match notification {
+                        PayloadNotification::Rtcp => {
+                            handlers.rtcp.call(|callback| {
+                                callback(&payload);
+                            });
                         }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse payload notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
-        let used_sctp_stream_ids = AsyncMutex::new(HashMap::new());
-        let cname_for_producers = AsyncMutex::new(None);
-        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
+        let used_sctp_stream_ids = Mutex::new(HashMap::new());
+        let cname_for_producers = Mutex::new(None);
+        let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_router_close_handler = router.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
@@ -516,7 +511,7 @@ impl DirectTransport {
             router,
             closed: AtomicBool::new(false),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
-            _on_router_close_handler: AsyncMutex::new(on_router_close_handler),
+            _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));

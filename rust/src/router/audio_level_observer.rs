@@ -11,11 +11,10 @@ use crate::router::Router;
 use crate::rtp_observer::{RtpObserver, RtpObserverAddProducerOptions, RtpObserverId};
 use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
-use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
-use parking_lot::Mutex as SyncMutex;
+use parking_lot::Mutex;
 use serde::Deserialize;
 use std::num::NonZeroU16;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -97,7 +96,7 @@ struct Inner {
     // Drop subscription to audio level observer-specific notifications when observer itself is
     // dropped
     _subscription_handler: SubscriptionHandler,
-    _on_router_close_handler: AsyncMutex<HandlerId>,
+    _on_router_close_handler: Mutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -291,7 +290,7 @@ impl RtpObserver for AudioLevelObserver {
 }
 
 impl AudioLevelObserver {
-    pub(super) async fn new(
+    pub(super) fn new(
         id: RtpObserverId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
@@ -307,41 +306,39 @@ impl AudioLevelObserver {
             let router = router.clone();
             let handlers = Arc::clone(&handlers);
 
-            channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    match serde_json::from_value::<Notification>(notification) {
-                        Ok(notification) => match notification {
-                            Notification::Volumes(volumes) => {
-                                let volumes = volumes
-                                    .into_iter()
-                                    .filter_map(|notification| {
-                                        let VolumeNotification {
-                                            producer_id,
-                                            volume,
-                                        } = notification;
-                                        router.get_producer(&producer_id).map(|producer| {
-                                            AudioLevelObserverVolume { producer, volume }
-                                        })
+            channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                match serde_json::from_value::<Notification>(notification) {
+                    Ok(notification) => match notification {
+                        Notification::Volumes(volumes) => {
+                            let volumes = volumes
+                                .into_iter()
+                                .filter_map(|notification| {
+                                    let VolumeNotification {
+                                        producer_id,
+                                        volume,
+                                    } = notification;
+                                    router.get_producer(&producer_id).map(|producer| {
+                                        AudioLevelObserverVolume { producer, volume }
                                     })
-                                    .collect();
+                                })
+                                .collect();
 
-                                handlers.volumes.call(|callback| {
-                                    callback(&volumes);
-                                });
-                            }
-                            Notification::Silence => {
-                                handlers.silence.call_simple();
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse notification: {}", error);
+                            handlers.volumes.call(|callback| {
+                                callback(&volumes);
+                            });
                         }
+                        Notification::Silence => {
+                            handlers.silence.call_simple();
+                        }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
-        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
+        let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_router_close_handler = router.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
@@ -366,7 +363,7 @@ impl AudioLevelObserver {
             router,
             closed: AtomicBool::new(false),
             _subscription_handler: subscription_handler,
-            _on_router_close_handler: AsyncMutex::new(on_router_close_handler),
+            _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));

@@ -3,11 +3,11 @@ use crate::worker::common::EventHandlers;
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
-use async_mutex::Mutex;
 use bytes::{BufMut, Bytes, BytesMut};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::*;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -164,7 +164,7 @@ impl Channel {
                                 accepted: _,
                                 data,
                             } => {
-                                let sender = requests_container.lock().await.handlers.remove(&id);
+                                let sender = requests_container.lock().handlers.remove(&id);
                                 if let Some(sender) = sender {
                                     let _ = sender.send(Ok(data));
                                 } else {
@@ -180,7 +180,7 @@ impl Channel {
                                 error: _,
                                 reason,
                             } => {
-                                let sender = requests_container.lock().await.handlers.remove(&id);
+                                let sender = requests_container.lock().handlers.remove(&id);
                                 if let Some(sender) = sender {
                                     let _ = sender.send(Err(ResponseError { reason }));
                                 } else {
@@ -200,8 +200,7 @@ impl Channel {
                                 match target_id {
                                     Some(target_id) => {
                                         event_handlers
-                                            .call_callbacks_with_value(&target_id, notification)
-                                            .await;
+                                            .call_callbacks_with_value(&target_id, notification);
                                     }
                                     None => {
                                         let unexpected_message = InternalMessage::Unexpected(
@@ -277,7 +276,7 @@ impl Channel {
         })
     }
 
-    pub(crate) async fn subscribe_to_notifications<F>(
+    pub(crate) fn subscribe_to_notifications<F>(
         &self,
         target_id: String,
         callback: F,
@@ -285,10 +284,7 @@ impl Channel {
     where
         F: Fn(Value) + Send + 'static,
     {
-        self.inner
-            .event_handlers
-            .add(target_id, Box::new(callback))
-            .await
+        self.inner.event_handlers.add(target_id, Box::new(callback))
     }
 
     /// Non-generic method to avoid significant duplication in final binary
@@ -311,7 +307,7 @@ impl Channel {
         let requests_container = &self.inner.requests_container;
 
         {
-            let mut requests_container = requests_container.lock().await;
+            let mut requests_container = requests_container.lock();
 
             id = requests_container.next_id;
             queue_len = requests_container.handlers.len();
@@ -337,7 +333,7 @@ impl Channel {
         };
 
         if bytes.len() > NS_PAYLOAD_MAX_LEN {
-            requests_container.lock().await.handlers.remove(&id);
+            requests_container.lock().handlers.remove(&id);
             return Err(RequestError::MessageTooLong);
         }
 
@@ -359,7 +355,7 @@ impl Channel {
                 ))
                 .await;
 
-                requests_container.lock().await.handlers.remove(&id);
+                requests_container.lock().handlers.remove(&id);
 
                 Err(RequestError::TimedOut)
             },

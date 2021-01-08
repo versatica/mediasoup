@@ -23,7 +23,7 @@ use crate::worker::{
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
-use parking_lot::Mutex as SyncMutex;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -206,7 +206,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
-    _on_transport_close_handler: SyncMutex<HandlerId>,
+    _on_transport_close_handler: Mutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -293,7 +293,7 @@ pub enum DataConsumer {
 
 impl DataConsumer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new(
+    pub(super) fn new(
         id: DataConsumerId,
         r#type: DataConsumerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -311,64 +311,60 @@ impl DataConsumer {
 
         let handlers = Arc::<Handlers>::default();
 
-        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
+        let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
             let inner_weak = Arc::clone(&inner_weak);
 
-            channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    match serde_json::from_value::<Notification>(notification) {
-                        Ok(notification) => match notification {
-                            Notification::DataProducerClose => {
-                                handlers.data_producer_close.call_simple();
-                                if let Some(inner) = inner_weak
-                                    .lock()
-                                    .as_ref()
-                                    .and_then(|weak_inner| weak_inner.upgrade())
-                                {
-                                    inner.close();
-                                }
+            channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                match serde_json::from_value::<Notification>(notification) {
+                    Ok(notification) => match notification {
+                        Notification::DataProducerClose => {
+                            handlers.data_producer_close.call_simple();
+                            if let Some(inner) = inner_weak
+                                .lock()
+                                .as_ref()
+                                .and_then(|weak_inner| weak_inner.upgrade())
+                            {
+                                inner.close();
                             }
-                            Notification::SctpSendBufferFull => {
-                                handlers.sctp_send_buffer_full.call_simple();
-                            }
-                            Notification::BufferedAmountLow { buffered_amount } => {
-                                handlers.buffered_amount_low.call(|callback| {
-                                    callback(buffered_amount);
-                                });
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse notification: {}", error);
                         }
+                        Notification::SctpSendBufferFull => {
+                            handlers.sctp_send_buffer_full.call_simple();
+                        }
+                        Notification::BufferedAmountLow { buffered_amount } => {
+                            handlers.buffered_amount_low.call(|callback| {
+                                callback(buffered_amount);
+                            });
+                        }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
         let payload_subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            payload_channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    let NotificationMessage { message, payload } = notification;
-                    match serde_json::from_value::<PayloadNotification>(message) {
-                        Ok(notification) => match notification {
-                            PayloadNotification::Message { ppid } => {
-                                let message = WebRtcMessage::new(ppid, payload);
+            payload_channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                let NotificationMessage { message, payload } = notification;
+                match serde_json::from_value::<PayloadNotification>(message) {
+                    Ok(notification) => match notification {
+                        PayloadNotification::Message { ppid } => {
+                            let message = WebRtcMessage::new(ppid, payload);
 
-                                handlers.message.call(|callback| {
-                                    callback(&message);
-                                });
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse payload notification: {}", error);
+                            handlers.message.call(|callback| {
+                                callback(&message);
+                            });
                         }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse payload notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
         let on_transport_close_handler = transport.on_close({
@@ -401,7 +397,7 @@ impl DataConsumer {
             transport,
             closed: AtomicBool::new(false),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
-            _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
+            _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));

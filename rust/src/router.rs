@@ -29,8 +29,6 @@ pub mod transport;
 #[cfg(not(doc))]
 pub mod webrtc_transport;
 
-use crate::{ortc, uuid_based_wrapper_type};
-
 use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
@@ -61,12 +59,13 @@ use crate::transport::{
 };
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
 use crate::worker::{Channel, PayloadChannel, RequestError, Worker};
+use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
-use async_mutex::Mutex as AsyncMutex;
+use async_lock::Mutex as AsyncMutex;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::future;
 use log::*;
-use parking_lot::{Mutex as SyncMutex, RwLock as SyncRwLock};
+use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -326,15 +325,15 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    producers: Arc<SyncRwLock<HashMap<ProducerId, WeakProducer>>>,
-    data_producers: Arc<SyncRwLock<HashMap<DataProducerId, WeakDataProducer>>>,
+    producers: Arc<RwLock<HashMap<ProducerId, WeakProducer>>>,
+    data_producers: Arc<RwLock<HashMap<DataProducerId, WeakDataProducer>>>,
     #[allow(clippy::type_complexity)]
     mapped_pipe_transports:
-        Arc<SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>>,
+        Arc<Mutex<HashMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped
     worker: Option<Worker>,
     closed: AtomicBool,
-    _on_worker_close_handler: AsyncMutex<HandlerId>,
+    _on_worker_close_handler: Mutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -388,14 +387,13 @@ impl Router {
     ) -> Self {
         debug!("new()");
 
-        let producers = Arc::<SyncRwLock<HashMap<ProducerId, WeakProducer>>>::default();
-        let data_producers =
-            Arc::<SyncRwLock<HashMap<DataProducerId, WeakDataProducer>>>::default();
+        let producers = Arc::<RwLock<HashMap<ProducerId, WeakProducer>>>::default();
+        let data_producers = Arc::<RwLock<HashMap<DataProducerId, WeakDataProducer>>>::default();
         let mapped_pipe_transports = Arc::<
-            SyncMutex<HashMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>,
+            Mutex<HashMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>,
         >::default();
         let handlers = Arc::<Handlers>::default();
-        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
+        let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_worker_close_handler = worker.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
@@ -425,7 +423,7 @@ impl Router {
             app_data,
             worker: Some(worker),
             closed: AtomicBool::new(false),
-            _on_worker_close_handler: AsyncMutex::new(on_worker_close_handler),
+            _on_worker_close_handler: Mutex::new(on_worker_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));
@@ -505,7 +503,7 @@ impl Router {
             })
             .await?;
 
-        let transport_fut = DirectTransport::new(
+        let transport = DirectTransport::new(
             transport_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
@@ -513,7 +511,6 @@ impl Router {
             direct_transport_options.app_data,
             self.clone(),
         );
-        let transport = transport_fut.await;
 
         self.inner.handlers.new_transport.call(|callback| {
             callback(NewTransport::Direct(&transport));
@@ -564,7 +561,7 @@ impl Router {
             })
             .await?;
 
-        let transport_fut = WebRtcTransport::new(
+        let transport = WebRtcTransport::new(
             transport_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
@@ -573,7 +570,6 @@ impl Router {
             webrtc_transport_options.app_data,
             self.clone(),
         );
-        let transport = transport_fut.await;
 
         self.inner.handlers.new_transport.call(|callback| {
             callback(NewTransport::WebRtc(&transport));
@@ -622,7 +618,7 @@ impl Router {
             })
             .await?;
 
-        let transport_fut = PipeTransport::new(
+        let transport = PipeTransport::new(
             transport_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
@@ -631,7 +627,6 @@ impl Router {
             pipe_transport_options.app_data,
             self.clone(),
         );
-        let transport = transport_fut.await;
 
         self.inner.handlers.new_transport.call(|callback| {
             callback(NewTransport::Pipe(&transport));
@@ -680,7 +675,7 @@ impl Router {
             })
             .await?;
 
-        let transport_fut = PlainTransport::new(
+        let transport = PlainTransport::new(
             transport_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
@@ -689,7 +684,6 @@ impl Router {
             plain_transport_options.app_data,
             self.clone(),
         );
-        let transport = transport_fut.await;
 
         self.inner.handlers.new_transport.call(|callback| {
             callback(NewTransport::Plain(&transport));
@@ -742,15 +736,13 @@ impl Router {
             })
             .await?;
 
-        let audio_level_observer_fut = AudioLevelObserver::new(
+        let audio_level_observer = AudioLevelObserver::new(
             rtp_observer_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
             audio_level_observer_options.app_data,
             self.clone(),
         );
-
-        let audio_level_observer = audio_level_observer_fut.await;
 
         self.inner.handlers.new_rtp_observer.call(|callback| {
             callback(NewRtpObserver::AudioLevel(&audio_level_observer));

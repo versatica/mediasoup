@@ -30,18 +30,16 @@ use crate::rtp_parameters::RtpEncodingParameters;
 use crate::worker::{Channel, PayloadChannel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
-use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
 use log::*;
+use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::future::Future;
 use std::marker::PhantomData;
-use std::pin::Pin;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
@@ -374,12 +372,12 @@ pub(super) trait TransportImpl: TransportGeneric {
 
     fn next_mid_for_consumers(&self) -> &AtomicUsize;
 
-    fn used_sctp_stream_ids(&self) -> &AsyncMutex<HashMap<u16, bool>>;
+    fn used_sctp_stream_ids(&self) -> &Mutex<HashMap<u16, bool>>;
 
-    fn cname_for_producers(&self) -> &AsyncMutex<Option<String>>;
+    fn cname_for_producers(&self) -> &Mutex<Option<String>>;
 
-    async fn allocate_sctp_stream_id(&self) -> Option<u16> {
-        let mut used_sctp_stream_ids = self.used_sctp_stream_ids().lock().await;
+    fn allocate_sctp_stream_id(&self) -> Option<u16> {
+        let mut used_sctp_stream_ids = self.used_sctp_stream_ids().lock();
         // This is simple, but not the fastest implementation, maybe worth improving
         for (index, used) in used_sctp_stream_ids.iter_mut() {
             if !*used {
@@ -391,23 +389,11 @@ pub(super) trait TransportImpl: TransportGeneric {
         None
     }
 
-    fn deallocate_sctp_stream_id(
-        &self,
-        sctp_stream_id: u16,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
-        async fn deallocate_sctp_stream_id(
-            used_sctp_stream_ids: &AsyncMutex<HashMap<u16, bool>>,
-            sctp_stream_id: u16,
-        ) {
-            if let Some(used) = used_sctp_stream_ids.lock().await.get_mut(&sctp_stream_id) {
-                *used = false;
-            }
-        }
+    fn deallocate_sctp_stream_id(&self, sctp_stream_id: u16) {
         let used_sctp_stream_ids = self.used_sctp_stream_ids();
-        Box::pin(deallocate_sctp_stream_id(
-            used_sctp_stream_ids,
-            sctp_stream_id,
-        ))
+        if let Some(used) = used_sctp_stream_ids.lock().get_mut(&sctp_stream_id) {
+            *used = false;
+        }
     }
 
     async fn dump_impl(&self) -> Result<Self::Dump, RequestError> {
@@ -492,7 +478,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         // Don't do this in PipeTransports since there we must keep CNAME value in each Producer.
         if transport_type != TransportType::Pipe {
-            let mut cname_for_producers = self.cname_for_producers().lock().await;
+            let mut cname_for_producers = self.cname_for_producers().lock();
             if let Some(cname_for_producers) = cname_for_producers.as_ref() {
                 rtp_parameters.rtcp.cname = Some(cname_for_producers.clone());
             } else if let Some(cname) = rtp_parameters.rtcp.cname.as_ref() {
@@ -639,7 +625,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             .await
             .map_err(ConsumeError::Request)?;
 
-        let consumer_fut = Consumer::new(
+        Ok(Consumer::new(
             consumer_id,
             producer.id(),
             producer.kind(),
@@ -654,9 +640,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.preferred_layers,
             app_data,
             Box::new(self.clone()),
-        );
-
-        Ok(consumer_fut.await)
+        ))
     }
 
     async fn produce_data_impl(
@@ -714,7 +698,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             .await
             .map_err(ProduceDataError::Request)?;
 
-        let data_producer_fut = DataProducer::new(
+        Ok(DataProducer::new(
             data_producer_id,
             response.r#type,
             response.sctp_stream_parameters,
@@ -726,9 +710,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             app_data,
             Box::new(self.clone()),
             transport_type == TransportType::Direct,
-        );
-
-        Ok(data_producer_fut.await)
+        ))
     }
 
     async fn consume_data_impl(
@@ -756,7 +738,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             DataConsumerType::Sctp => {
                 let mut sctp_stream_parameters = data_producer.sctp_stream_parameters();
                 if let Some(sctp_stream_parameters) = &mut sctp_stream_parameters {
-                    if let Some(stream_id) = self.allocate_sctp_stream_id().await {
+                    if let Some(stream_id) = self.allocate_sctp_stream_id() {
                         sctp_stream_parameters.stream_id = stream_id;
                     } else {
                         return Err(ConsumeDataError::NoSctpStreamId);
@@ -803,7 +785,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             .await
             .map_err(ConsumeDataError::Request)?;
 
-        let data_consumer_fut = DataConsumer::new(
+        let data_consumer = DataConsumer::new(
             data_consumer_id,
             response.r#type,
             response.sctp_stream_parameters,
@@ -818,19 +800,12 @@ pub(super) trait TransportImpl: TransportGeneric {
             transport_type == TransportType::Direct,
         );
 
-        let data_consumer = data_consumer_fut.await;
-
         if let Some(sctp_stream_parameters) = data_consumer.sctp_stream_parameters() {
             let stream_id = sctp_stream_parameters.stream_id;
             let transport = self.clone();
-            let executor = Arc::clone(self.executor());
             data_consumer
                 .on_close(move || {
-                    executor
-                        .spawn(async move {
-                            transport.deallocate_sctp_stream_id(stream_id).await;
-                        })
-                        .detach();
+                    transport.deallocate_sctp_stream_id(stream_id);
                 })
                 .detach();
         }

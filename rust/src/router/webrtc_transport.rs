@@ -30,11 +30,10 @@ use crate::transport::{
 };
 use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
-use async_mutex::Mutex as AsyncMutex;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
-use parking_lot::Mutex as SyncMutex;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -262,8 +261,8 @@ enum Notification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    used_sctp_stream_ids: AsyncMutex<HashMap<u16, bool>>,
-    cname_for_producers: AsyncMutex<Option<String>>,
+    used_sctp_stream_ids: Mutex<HashMap<u16, bool>>,
+    cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: PayloadChannel,
@@ -275,7 +274,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
     _subscription_handler: SubscriptionHandler,
-    _on_router_close_handler: AsyncMutex<HandlerId>,
+    _on_router_close_handler: Mutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -512,17 +511,17 @@ impl TransportImpl for WebRtcTransport {
         &self.inner.next_mid_for_consumers
     }
 
-    fn used_sctp_stream_ids(&self) -> &AsyncMutex<HashMap<u16, bool>> {
+    fn used_sctp_stream_ids(&self) -> &Mutex<HashMap<u16, bool>> {
         &self.inner.used_sctp_stream_ids
     }
 
-    fn cname_for_producers(&self) -> &AsyncMutex<Option<String>> {
+    fn cname_for_producers(&self) -> &Mutex<Option<String>> {
         &self.inner.cname_for_producers
     }
 }
 
 impl WebRtcTransport {
-    pub(super) async fn new(
+    pub(super) fn new(
         id: TransportId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
@@ -540,59 +539,57 @@ impl WebRtcTransport {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
 
-            channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    match serde_json::from_value::<Notification>(notification) {
-                        Ok(notification) => match notification {
-                            Notification::IceStateChange { ice_state } => {
-                                *data.ice_state.lock() = ice_state;
-                                handlers.ice_state_change.call(|callback| {
-                                    callback(ice_state);
-                                });
-                            }
-                            Notification::IceSelectedTupleChange { ice_selected_tuple } => {
-                                data.ice_selected_tuple.lock().replace(ice_selected_tuple);
-                                handlers.ice_selected_tuple_change.call(|callback| {
-                                    callback(&ice_selected_tuple);
-                                });
-                            }
-                            Notification::DtlsStateChange {
-                                dtls_state,
-                                dtls_remote_cert,
-                            } => {
-                                *data.dtls_state.lock() = dtls_state;
-
-                                if let Some(dtls_remote_cert) = dtls_remote_cert {
-                                    data.dtls_remote_cert.lock().replace(dtls_remote_cert);
-                                }
-
-                                handlers.dtls_state_change.call(|callback| {
-                                    callback(dtls_state);
-                                });
-                            }
-                            Notification::SctpStateChange { sctp_state } => {
-                                data.sctp_state.lock().replace(sctp_state);
-
-                                handlers.sctp_state_change.call(|callback| {
-                                    callback(sctp_state);
-                                });
-                            }
-                            Notification::Trace(trace_event_data) => {
-                                handlers.trace.call(|callback| {
-                                    callback(&trace_event_data);
-                                });
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse notification: {}", error);
+            channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                match serde_json::from_value::<Notification>(notification) {
+                    Ok(notification) => match notification {
+                        Notification::IceStateChange { ice_state } => {
+                            *data.ice_state.lock() = ice_state;
+                            handlers.ice_state_change.call(|callback| {
+                                callback(ice_state);
+                            });
                         }
+                        Notification::IceSelectedTupleChange { ice_selected_tuple } => {
+                            data.ice_selected_tuple.lock().replace(ice_selected_tuple);
+                            handlers.ice_selected_tuple_change.call(|callback| {
+                                callback(&ice_selected_tuple);
+                            });
+                        }
+                        Notification::DtlsStateChange {
+                            dtls_state,
+                            dtls_remote_cert,
+                        } => {
+                            *data.dtls_state.lock() = dtls_state;
+
+                            if let Some(dtls_remote_cert) = dtls_remote_cert {
+                                data.dtls_remote_cert.lock().replace(dtls_remote_cert);
+                            }
+
+                            handlers.dtls_state_change.call(|callback| {
+                                callback(dtls_state);
+                            });
+                        }
+                        Notification::SctpStateChange { sctp_state } => {
+                            data.sctp_state.lock().replace(sctp_state);
+
+                            handlers.sctp_state_change.call(|callback| {
+                                callback(sctp_state);
+                            });
+                        }
+                        Notification::Trace(trace_event_data) => {
+                            handlers.trace.call(|callback| {
+                                callback(&trace_event_data);
+                            });
+                        }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
-        let used_sctp_stream_ids = AsyncMutex::new({
+        let used_sctp_stream_ids = Mutex::new({
             let mut used_used_sctp_stream_ids = HashMap::new();
             if let Some(sctp_parameters) = &data.sctp_parameters {
                 for i in 0..sctp_parameters.mis {
@@ -601,8 +598,8 @@ impl WebRtcTransport {
             }
             used_used_sctp_stream_ids
         });
-        let cname_for_producers = AsyncMutex::new(None);
-        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
+        let cname_for_producers = Mutex::new(None);
+        let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_router_close_handler = router.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
@@ -631,7 +628,7 @@ impl WebRtcTransport {
             router,
             closed: AtomicBool::new(false),
             _subscription_handler: subscription_handler,
-            _on_router_close_handler: AsyncMutex::new(on_router_close_handler),
+            _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));

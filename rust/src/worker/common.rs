@@ -1,7 +1,6 @@
 use async_executor::Executor;
-use async_mutex::Mutex;
+use parking_lot::Mutex;
 use std::collections::HashMap;
-use std::pin::Pin;
 use std::sync::Arc;
 
 struct EventHandlersList<V: Clone + 'static> {
@@ -30,12 +29,13 @@ impl<V: Clone + 'static> EventHandlers<V> {
         Self { executor, handlers }
     }
 
-    pub(super) async fn add(
+    // TODO: Avoid `String` if possible (switch to uuid or enum with uuid and u32)
+    pub(super) fn add(
         &self,
         target_id: String,
         callback: Box<dyn Fn(V) + Send + 'static>,
     ) -> SubscriptionHandler {
-        let mut event_handlers = self.handlers.lock().await;
+        let mut event_handlers = self.handlers.lock();
         let list = event_handlers
             .entry(target_id.clone())
             .or_insert_with(EventHandlersList::default);
@@ -44,28 +44,25 @@ impl<V: Clone + 'static> EventHandlers<V> {
         list.callbacks.insert(index, Box::new(callback));
         drop(event_handlers);
 
-        SubscriptionHandler::new(
-            Arc::clone(&self.executor),
-            Box::pin({
-                let event_handlers = self.handlers.clone();
+        SubscriptionHandler::new({
+            let event_handlers = self.handlers.clone();
 
-                async move {
-                    let mut event_handlers = event_handlers.lock().await;
-                    let is_empty = {
-                        let list = event_handlers.get_mut(&target_id).unwrap();
-                        list.callbacks.remove(&index);
-                        list.callbacks.is_empty()
-                    };
-                    if is_empty {
-                        event_handlers.remove(&target_id);
-                    }
+            Box::new(move || {
+                let mut handlers = event_handlers.lock();
+                let is_empty = {
+                    let list = handlers.get_mut(&target_id).unwrap();
+                    list.callbacks.remove(&index);
+                    list.callbacks.is_empty()
+                };
+                if is_empty {
+                    handlers.remove(&target_id);
                 }
-            }),
-        )
+            })
+        })
     }
 
-    pub(super) async fn call_callbacks_with_value(&self, target_id: &str, value: V) {
-        let handlers = self.handlers.lock().await;
+    pub(super) fn call_callbacks_with_value(&self, target_id: &str, value: V) {
+        let handlers = self.handlers.lock();
         if let Some(list) = handlers.get(target_id) {
             let mut callbacks = list.callbacks.values();
             if callbacks.len() == 1 {
@@ -82,26 +79,20 @@ impl<V: Clone + 'static> EventHandlers<V> {
 
 /// Subscription handler, will remove corresponding subscription when dropped
 pub(crate) struct SubscriptionHandler {
-    executor: Arc<Executor<'static>>,
-    remove_fut: Option<Pin<Box<dyn std::future::Future<Output = ()> + Send + Sync>>>,
+    remove_callback: Option<Box<dyn FnOnce() + Send + Sync>>,
 }
 
 impl SubscriptionHandler {
-    pub(super) fn new(
-        executor: Arc<Executor<'static>>,
-        remove_fut: Pin<Box<dyn std::future::Future<Output = ()> + Send + Sync>>,
-    ) -> Self {
+    fn new(remove_callback: Box<dyn FnOnce() + Send + Sync>) -> Self {
         Self {
-            executor,
-            remove_fut: Some(remove_fut),
+            remove_callback: Some(remove_callback),
         }
     }
 }
 
 impl Drop for SubscriptionHandler {
     fn drop(&mut self) {
-        self.executor
-            .spawn(self.remove_fut.take().unwrap())
-            .detach();
+        let remove_callback = self.remove_callback.take().unwrap();
+        remove_callback();
     }
 }

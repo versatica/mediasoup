@@ -19,7 +19,7 @@ use async_executor::Executor;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
-use parking_lot::Mutex as SyncMutex;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -289,7 +289,7 @@ struct Inner {
     consumable_rtp_parameters: RtpParameters,
     direct: bool,
     paused: AtomicBool,
-    score: Arc<SyncMutex<Vec<ProducerScore>>>,
+    score: Arc<Mutex<Vec<ProducerScore>>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     payload_channel: PayloadChannel,
@@ -299,7 +299,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     _subscription_handler: SubscriptionHandler,
-    _on_transport_close_handler: SyncMutex<HandlerId>,
+    _on_transport_close_handler: Mutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -397,42 +397,40 @@ impl Producer {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
-        let score = Arc::<SyncMutex<Vec<ProducerScore>>>::default();
+        let score = Arc::<Mutex<Vec<ProducerScore>>>::default();
 
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
             let score = Arc::clone(&score);
 
-            channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    match serde_json::from_value::<Notification>(notification) {
-                        Ok(notification) => match notification {
-                            Notification::Score(scores) => {
-                                *score.lock() = scores.clone();
-                                handlers.score.call(|callback| {
-                                    callback(&scores);
-                                });
-                            }
-                            Notification::VideoOrientationChange(video_orientation) => {
-                                handlers.video_orientation_change.call(|callback| {
-                                    callback(video_orientation);
-                                });
-                            }
-                            Notification::Trace(trace_event_data) => {
-                                handlers.trace.call(|callback| {
-                                    callback(&trace_event_data);
-                                });
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse notification: {}", error);
+            channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                match serde_json::from_value::<Notification>(notification) {
+                    Ok(notification) => match notification {
+                        Notification::Score(scores) => {
+                            *score.lock() = scores.clone();
+                            handlers.score.call(|callback| {
+                                callback(&scores);
+                            });
                         }
+                        Notification::VideoOrientationChange(video_orientation) => {
+                            handlers.video_orientation_change.call(|callback| {
+                                callback(video_orientation);
+                            });
+                        }
+                        Notification::Trace(trace_event_data) => {
+                            handlers.trace.call(|callback| {
+                                callback(&trace_event_data);
+                            });
+                        }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
-        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
+        let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_transport_close_handler = transport.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
@@ -464,7 +462,7 @@ impl Producer {
             transport,
             closed: AtomicBool::new(false),
             _subscription_handler: subscription_handler,
-            _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
+            _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));

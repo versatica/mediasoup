@@ -19,7 +19,7 @@ use async_executor::Executor;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
-use parking_lot::Mutex as SyncMutex;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::Debug;
@@ -345,21 +345,21 @@ struct Inner {
     kind: MediaKind,
     r#type: ConsumerType,
     rtp_parameters: RtpParameters,
-    paused: Arc<SyncMutex<bool>>,
+    paused: Arc<Mutex<bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    producer_paused: Arc<SyncMutex<bool>>,
-    priority: SyncMutex<u8>,
-    score: Arc<SyncMutex<ConsumerScore>>,
-    preferred_layers: SyncMutex<Option<ConsumerLayers>>,
-    current_layers: Arc<SyncMutex<Option<ConsumerLayers>>>,
+    producer_paused: Arc<Mutex<bool>>,
+    priority: Mutex<u8>,
+    score: Arc<Mutex<ConsumerScore>>,
+    preferred_layers: Mutex<Option<ConsumerLayers>>,
+    current_layers: Arc<Mutex<Option<ConsumerLayers>>>,
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Box<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<SubscriptionHandler>,
-    _on_transport_close_handler: SyncMutex<HandlerId>,
+    _on_transport_close_handler: Mutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -411,7 +411,7 @@ pub struct Consumer {
 
 impl Consumer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new(
+    pub(super) fn new(
         id: ConsumerId,
         producer_id: ProducerId,
         kind: MediaKind,
@@ -430,14 +430,14 @@ impl Consumer {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
-        let score = Arc::new(SyncMutex::new(score));
+        let score = Arc::new(Mutex::new(score));
         #[allow(clippy::mutex_atomic)]
-        let paused = Arc::new(SyncMutex::new(paused));
+        let paused = Arc::new(Mutex::new(paused));
         #[allow(clippy::mutex_atomic)]
-        let producer_paused = Arc::new(SyncMutex::new(producer_paused));
-        let current_layers = Arc::<SyncMutex<Option<ConsumerLayers>>>::default();
+        let producer_paused = Arc::new(Mutex::new(producer_paused));
+        let current_layers = Arc::<Mutex<Option<ConsumerLayers>>>::default();
 
-        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
+        let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
             let paused = Arc::clone(&paused);
@@ -446,89 +446,85 @@ impl Consumer {
             let current_layers = Arc::clone(&current_layers);
             let inner_weak = Arc::clone(&inner_weak);
 
-            channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    match serde_json::from_value::<Notification>(notification) {
-                        Ok(notification) => match notification {
-                            Notification::ProducerClose => {
-                                handlers.producer_close.call_simple();
-                                if let Some(inner) = inner_weak
-                                    .lock()
-                                    .as_ref()
-                                    .and_then(|weak_inner| weak_inner.upgrade())
-                                {
-                                    inner.close();
-                                }
+            channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                match serde_json::from_value::<Notification>(notification) {
+                    Ok(notification) => match notification {
+                        Notification::ProducerClose => {
+                            handlers.producer_close.call_simple();
+                            if let Some(inner) = inner_weak
+                                .lock()
+                                .as_ref()
+                                .and_then(|weak_inner| weak_inner.upgrade())
+                            {
+                                inner.close();
                             }
-                            Notification::ProducerPause => {
-                                let mut producer_paused = producer_paused.lock();
-                                let was_paused = *paused.lock() || *producer_paused;
-                                *producer_paused = true;
-
-                                handlers.producer_pause.call_simple();
-
-                                if !was_paused {
-                                    handlers.pause.call_simple();
-                                }
-                            }
-                            Notification::ProducerResume => {
-                                let mut producer_paused = producer_paused.lock();
-                                let paused = *paused.lock();
-                                let was_paused = paused || *producer_paused;
-                                *producer_paused = false;
-
-                                handlers.producer_resume.call_simple();
-
-                                if was_paused && !paused {
-                                    handlers.resume.call_simple();
-                                }
-                            }
-                            Notification::Score(consumer_score) => {
-                                *score.lock() = consumer_score.clone();
-                                handlers.score.call(|callback| {
-                                    callback(&consumer_score);
-                                });
-                            }
-                            Notification::LayersChange(consumer_layers) => {
-                                *current_layers.lock() = consumer_layers;
-                                handlers.layers_change.call(|callback| {
-                                    callback(&consumer_layers);
-                                });
-                            }
-                            Notification::Trace(trace_event_data) => {
-                                handlers.trace.call(|callback| {
-                                    callback(&trace_event_data);
-                                });
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse notification: {}", error);
                         }
+                        Notification::ProducerPause => {
+                            let mut producer_paused = producer_paused.lock();
+                            let was_paused = *paused.lock() || *producer_paused;
+                            *producer_paused = true;
+
+                            handlers.producer_pause.call_simple();
+
+                            if !was_paused {
+                                handlers.pause.call_simple();
+                            }
+                        }
+                        Notification::ProducerResume => {
+                            let mut producer_paused = producer_paused.lock();
+                            let paused = *paused.lock();
+                            let was_paused = paused || *producer_paused;
+                            *producer_paused = false;
+
+                            handlers.producer_resume.call_simple();
+
+                            if was_paused && !paused {
+                                handlers.resume.call_simple();
+                            }
+                        }
+                        Notification::Score(consumer_score) => {
+                            *score.lock() = consumer_score.clone();
+                            handlers.score.call(|callback| {
+                                callback(&consumer_score);
+                            });
+                        }
+                        Notification::LayersChange(consumer_layers) => {
+                            *current_layers.lock() = consumer_layers;
+                            handlers.layers_change.call(|callback| {
+                                callback(&consumer_layers);
+                            });
+                        }
+                        Notification::Trace(trace_event_data) => {
+                            handlers.trace.call(|callback| {
+                                callback(&trace_event_data);
+                            });
+                        }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
         let payload_subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            payload_channel
-                .subscribe_to_notifications(id.to_string(), move |notification| {
-                    let NotificationMessage { message, payload } = notification;
-                    match serde_json::from_value::<PayloadNotification>(message) {
-                        Ok(notification) => match notification {
-                            PayloadNotification::Rtp => {
-                                handlers.rtp.call(|callback| {
-                                    callback(&payload);
-                                });
-                            }
-                        },
-                        Err(error) => {
-                            error!("Failed to parse payload notification: {}", error);
+            payload_channel.subscribe_to_notifications(id.to_string(), move |notification| {
+                let NotificationMessage { message, payload } = notification;
+                match serde_json::from_value::<PayloadNotification>(message) {
+                    Ok(notification) => match notification {
+                        PayloadNotification::Rtp => {
+                            handlers.rtp.call(|callback| {
+                                callback(&payload);
+                            });
                         }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse payload notification: {}", error);
                     }
-                })
-                .await
+                }
+            })
         };
 
         let on_transport_close_handler = transport.on_close({
@@ -553,9 +549,9 @@ impl Consumer {
             rtp_parameters,
             paused,
             producer_paused,
-            priority: SyncMutex::new(1u8),
+            priority: Mutex::new(1u8),
             score,
-            preferred_layers: SyncMutex::new(preferred_layers),
+            preferred_layers: Mutex::new(preferred_layers),
             current_layers,
             executor,
             channel,
@@ -564,7 +560,7 @@ impl Consumer {
             transport,
             closed: AtomicBool::new(false),
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
-            _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
+            _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));

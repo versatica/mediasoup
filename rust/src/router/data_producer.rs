@@ -17,7 +17,7 @@ use crate::worker::{Channel, NotificationError, PayloadChannel, RequestError};
 use async_executor::Executor;
 use event_listener_primitives::{BagOnce, HandlerId};
 use log::*;
-use parking_lot::Mutex as SyncMutex;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -139,7 +139,7 @@ struct Inner {
     app_data: AppData,
     transport: Box<dyn Transport>,
     closed: AtomicBool,
-    _on_transport_close_handler: SyncMutex<HandlerId>,
+    _on_transport_close_handler: Mutex<HandlerId>,
 }
 
 impl Drop for Inner {
@@ -224,7 +224,7 @@ pub enum DataProducer {
 
 impl DataProducer {
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn new(
+    pub(super) fn new(
         id: DataProducerId,
         r#type: DataProducerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -241,7 +241,7 @@ impl DataProducer {
 
         let handlers = Arc::<Handlers>::default();
 
-        let inner_weak = Arc::<SyncMutex<Option<Weak<Inner>>>>::default();
+        let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_transport_close_handler = transport.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
@@ -270,7 +270,7 @@ impl DataProducer {
             app_data,
             transport,
             closed: AtomicBool::new(false),
-            _on_transport_close_handler: SyncMutex::new(on_transport_close_handler),
+            _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));

@@ -483,29 +483,28 @@ impl Inner {
         let (sender, receiver) = async_oneshot::oneshot();
         let pid = self.pid;
         let sender = Cell::new(Some(sender));
-        let _handler = self
-            .channel
-            .subscribe_to_notifications(self.pid.to_string(), move |notification| {
-                let result = match serde_json::from_value(notification.clone()) {
-                    Ok(Notification::Running) => {
-                        debug!("worker process running [pid:{}]", pid);
-                        Ok(())
-                    }
-                    Err(error) => Err(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!(
+        let _handler =
+            self.channel
+                .subscribe_to_notifications(self.pid.to_string(), move |notification| {
+                    let result = match serde_json::from_value(notification.clone()) {
+                        Ok(Notification::Running) => {
+                            debug!("worker process running [pid:{}]", pid);
+                            Ok(())
+                        }
+                        Err(error) => Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            format!(
                             "unexpected first notification from worker [pid:{}]: {:?}; error = {}",
                             pid, notification, error
                         ),
-                    )),
-                };
-                let _ = sender
-                    .take()
-                    .take()
-                    .expect("Receiving more than one worker notification")
-                    .send(result);
-            })
-            .await;
+                        )),
+                    };
+                    let _ = sender
+                        .take()
+                        .take()
+                        .expect("Receiving more than one worker notification")
+                        .send(result);
+                });
 
         receiver.await.unwrap()
     }
