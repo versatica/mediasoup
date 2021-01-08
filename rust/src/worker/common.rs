@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 struct EventHandlersList<V: Clone + 'static> {
     index: usize,
-    callbacks: HashMap<usize, Box<dyn Fn(V) + Send>>,
+    callbacks: HashMap<usize, Arc<Box<dyn Fn(V) + Send + Sync>>>,
 }
 
 impl<V: Clone + 'static> Default for EventHandlersList<V> {
@@ -33,30 +33,42 @@ impl<V: Clone + 'static> EventHandlers<V> {
     pub(super) fn add(
         &self,
         target_id: SubscriptionTarget,
-        callback: Box<dyn Fn(V) + Send + 'static>,
+        callback: Box<dyn Fn(V) + Send + Sync + 'static>,
     ) -> SubscriptionHandler {
-        let mut event_handlers = self.handlers.lock();
-        let list = event_handlers
-            .entry(target_id)
-            .or_insert_with(EventHandlersList::default);
-        let index = list.index;
-        list.index += 1;
-        list.callbacks.insert(index, Box::new(callback));
-        drop(event_handlers);
+        let index;
+        {
+            let mut event_handlers = self.handlers.lock();
+            let list = event_handlers
+                .entry(target_id)
+                .or_insert_with(EventHandlersList::default);
+            index = list.index;
+            list.index += 1;
+            list.callbacks.insert(index, Arc::new(Box::new(callback)));
+            drop(event_handlers);
+        }
 
         SubscriptionHandler::new({
             let event_handlers = self.handlers.clone();
 
             Box::new(move || {
-                let mut handlers = event_handlers.lock();
-                let is_empty = {
-                    let list = handlers.get_mut(&target_id).unwrap();
-                    list.callbacks.remove(&index);
-                    list.callbacks.is_empty()
-                };
-                if is_empty {
-                    handlers.remove(&target_id);
+                // We store removed handler here in order to drop after `event_handlers` lock is
+                // released, otherwise handler will be dropped on removal from callbacks immediately
+                // and if it happens to hold another entity that held subscription handler, we may
+                // arrive here again trying to acquire lock that we didn't release yet. By dropping
+                // callback only when lock is released we avoid deadlocking.
+                let removed_handler;
+                {
+                    let mut handlers = event_handlers.lock();
+                    let is_empty = {
+                        let list = handlers.get_mut(&target_id).unwrap();
+                        removed_handler = list.callbacks.remove(&index);
+                        list.callbacks.is_empty()
+                    };
+                    if is_empty {
+                        handlers.remove(&target_id);
+                    }
                 }
+                drop(removed_handler);
             })
         })
     }
@@ -64,11 +76,16 @@ impl<V: Clone + 'static> EventHandlers<V> {
     pub(super) fn call_callbacks_with_value(&self, target_id: &SubscriptionTarget, value: V) {
         let handlers = self.handlers.lock();
         if let Some(list) = handlers.get(target_id) {
-            let mut callbacks = list.callbacks.values();
-            if callbacks.len() == 1 {
-                // Tiny optimization that avoids cloning `value`
-                (callbacks.next().unwrap())(value);
+            // Tiny optimization that avoids cloning `value` unless necessary
+            if list.callbacks.len() == 1 {
+                let callback = list.callbacks.values().next().cloned().unwrap();
+                // Drop mutex guard before running callbacks to avoid deadlocks
+                drop(handlers);
+                callback(value);
             } else {
+                let callbacks = list.callbacks.values().cloned().collect::<Vec<_>>();
+                // Drop mutex guard before running callbacks to avoid deadlocks
+                drop(handlers);
                 for callback in callbacks {
                     callback(value.clone());
                 }

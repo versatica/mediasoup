@@ -284,7 +284,7 @@ impl Channel {
         callback: F,
     ) -> SubscriptionHandler
     where
-        F: Fn(Value) + Send + 'static,
+        F: Fn(Value) + Send + Sync + 'static,
     {
         self.inner.event_handlers.add(target_id, Box::new(callback))
     }

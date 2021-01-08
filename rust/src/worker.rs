@@ -24,9 +24,9 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::*;
+use parking_lot::Mutex;
 pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
 use serde::{Deserialize, Serialize};
-use std::cell::Cell;
 use std::ffi::OsString;
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
@@ -482,7 +482,7 @@ impl Inner {
 
         let (sender, receiver) = async_oneshot::oneshot();
         let pid = self.pid;
-        let sender = Cell::new(Some(sender));
+        let sender = Mutex::new(Some(sender));
         let _handler =
             self.channel
                 .subscribe_to_notifications(self.pid.into(), move |notification| {
@@ -500,7 +500,7 @@ impl Inner {
                         )),
                     };
                     let _ = sender
-                        .take()
+                        .lock()
                         .take()
                         .expect("Receiving more than one worker notification")
                         .send(result);

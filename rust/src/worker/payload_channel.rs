@@ -342,7 +342,7 @@ impl PayloadChannel {
         callback: F,
     ) -> SubscriptionHandler
     where
-        F: Fn(NotificationMessage) + Send + 'static,
+        F: Fn(NotificationMessage) + Send + Sync + 'static,
     {
         self.inner.event_handlers.add(target_id, Box::new(callback))
     }
