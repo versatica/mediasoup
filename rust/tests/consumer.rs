@@ -447,10 +447,11 @@ mod consumer {
                 assert_eq!(transport_2_dump.consumer_ids, vec![audio_consumer.id()]);
             }
 
+            let video_consumer;
             {
                 assert!(router.can_consume(&video_producer.id(), &consumer_device_capabilities));
 
-                let video_consumer = transport_2
+                video_consumer = transport_2
                     .consume({
                         let mut options = ConsumerOptions::new(
                             video_producer.id(),
@@ -557,6 +558,110 @@ mod consumer {
                 assert_eq!(
                     transport_2_dump.consumer_ids.clone().sort(),
                     vec![audio_consumer.id(), video_consumer.id()].sort()
+                );
+            }
+
+            {
+                assert!(router.can_consume(&video_producer.id(), &consumer_device_capabilities));
+
+                let video_pipe_consumer = transport_2
+                    .consume({
+                        let mut options = ConsumerOptions::new(
+                            video_producer.id(),
+                            consumer_device_capabilities.clone(),
+                        );
+                        options.pipe = true;
+                        options
+                    })
+                    .await
+                    .expect("Failed to consume video");
+
+                assert_eq!(new_consumer_count.load(Ordering::SeqCst), 3);
+                assert_eq!(video_pipe_consumer.producer_id(), video_producer.id());
+                assert_eq!(video_pipe_consumer.closed(), false);
+                assert_eq!(video_pipe_consumer.kind(), MediaKind::Video);
+                assert_eq!(video_pipe_consumer.rtp_parameters().mid, None);
+                assert_eq!(
+                    video_pipe_consumer.rtp_parameters().codecs,
+                    vec![
+                        RtpCodecParameters::Video {
+                            mime_type: MimeTypeVideo::H264,
+                            payload_type: 103,
+                            clock_rate: NonZeroU32::new(90000).unwrap(),
+                            parameters: RtpCodecParametersParameters::from([
+                                ("packetization-mode", 1u32.into()),
+                                ("profile-level-id", "4d0032".into()),
+                            ]),
+                            rtcp_feedback: vec![
+                                RtcpFeedback::Nack,
+                                RtcpFeedback::NackPli,
+                                RtcpFeedback::CcmFir,
+                                RtcpFeedback::GoogRemb,
+                            ],
+                        },
+                        RtpCodecParameters::Video {
+                            mime_type: MimeTypeVideo::RTX,
+                            payload_type: 104,
+                            clock_rate: NonZeroU32::new(90000).unwrap(),
+                            parameters: RtpCodecParametersParameters::from([(
+                                "apt",
+                                103u32.into()
+                            )]),
+                            rtcp_feedback: vec![],
+                        },
+                    ]
+                );
+                assert_eq!(video_pipe_consumer.r#type(), ConsumerType::Pipe);
+                assert_eq!(video_pipe_consumer.paused(), false);
+                assert_eq!(video_pipe_consumer.producer_paused(), true);
+                assert_eq!(video_pipe_consumer.priority(), 1);
+                assert_eq!(
+                    video_pipe_consumer.score(),
+                    ConsumerScore {
+                        score: 10,
+                        producer_score: 10,
+                        producer_scores: vec![0, 0, 0, 0]
+                    },
+                );
+                assert_eq!(video_pipe_consumer.preferred_layers(), None);
+                assert_eq!(video_pipe_consumer.current_layers(), None);
+                assert_eq!(
+                    video_pipe_consumer.app_data().downcast_ref::<()>().unwrap(),
+                    &(),
+                );
+
+                let router_dump = router.dump().await.expect("Failed to get router dump");
+
+                assert_eq!(router_dump.map_producer_id_consumer_ids, {
+                    let mut map = HashMap::new();
+                    map.insert(audio_producer.id(), {
+                        let mut set = HashSet::new();
+                        set.insert(audio_consumer.id());
+                        set
+                    });
+                    map.insert(video_producer.id(), {
+                        let mut set = HashSet::new();
+                        set.insert(video_consumer.id());
+                        set.insert(video_pipe_consumer.id());
+                        set
+                    });
+                    map
+                });
+
+                let transport_2_dump = transport_2
+                    .dump()
+                    .await
+                    .expect("Failed to get transport 2 dump");
+
+                assert_eq!(transport_2_dump.producer_ids, vec![]);
+                assert_eq!(
+                    transport_2_dump.consumer_ids.clone().sort(),
+                    vec![
+                        audio_consumer.id(),
+                        video_consumer.id(),
+                        video_pipe_consumer.id()
+                    ]
+                    .sort(),
                 );
             }
         });

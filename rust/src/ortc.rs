@@ -641,6 +641,7 @@ pub(crate) fn can_consume(
 pub(crate) fn get_consumer_rtp_parameters(
     consumable_params: &RtpParameters,
     caps: RtpCapabilities,
+    pipe: bool,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
     let mut consumer_params = RtpParameters::default();
     consumer_params.rtcp = consumable_params.rtcp.clone();
@@ -732,53 +733,69 @@ pub(crate) fn get_consumer_rtp_parameters(
         }
     }
 
-    let mut consumer_encoding = RtpEncodingParameters {
-        ssrc: Some(generate_ssrc()),
-        ..RtpEncodingParameters::default()
-    };
+    if pipe {
+        for ((encoding, ssrc), rtx_ssrc) in consumable_params
+            .encodings
+            .iter()
+            .zip(generate_ssrc()..)
+            .zip(generate_ssrc()..)
+        {
+            consumer_params.encodings.push(RtpEncodingParameters {
+                ssrc: Some(ssrc),
+                rtx: if rtx_supported {
+                    Some(RtpEncodingParametersRtx { ssrc: rtx_ssrc })
+                } else {
+                    None
+                },
+                ..encoding.clone()
+            });
+        }
+    } else {
+        let mut consumer_encoding = RtpEncodingParameters {
+            ssrc: Some(generate_ssrc()),
+            ..RtpEncodingParameters::default()
+        };
 
-    if rtx_supported {
-        consumer_encoding.rtx = Some(RtpEncodingParametersRtx {
-            ssrc: generate_ssrc(),
-        });
+        if rtx_supported {
+            consumer_encoding.rtx = Some(RtpEncodingParametersRtx {
+                ssrc: consumer_encoding.ssrc.unwrap() + 1,
+            });
+        }
+
+        // If any of the consumable_params.encodings has scalability_mode, process it
+        // (assume all encodings have the same value).
+        let mut scalability_mode = consumable_params
+            .encodings
+            .iter()
+            .find_map(|encoding| encoding.scalability_mode.clone());
+
+        // If there is simulast, mangle spatial layers in scalabilityMode.
+        if consumable_params.encodings.len() > 1 {
+            scalability_mode = Some(format!(
+                "S{}T{}",
+                consumable_params.encodings.len(),
+                scalability_mode
+                    .as_ref()
+                    .map(|s| s.parse::<ScalabilityMode>().ok())
+                    .flatten()
+                    .unwrap_or_default()
+                    .temporal_layers
+            ));
+        }
+
+        consumer_encoding.scalability_mode = scalability_mode;
+
+        // Use the maximum max_bitrate in any encoding and honor it in the Consumer's encoding.
+        consumer_encoding.max_bitrate = consumable_params
+            .encodings
+            .iter()
+            .map(|encoding| encoding.max_bitrate)
+            .max()
+            .flatten();
+
+        // Set a single encoding for the Consumer.
+        consumer_params.encodings.push(consumer_encoding);
     }
-
-    // If any of the consumable_params.encodings has scalability_mode, process it
-    // (assume all encodings have the same value).
-    let mut scalability_mode = consumable_params
-        .encodings
-        .iter()
-        .find_map(|encoding| encoding.scalability_mode.clone());
-
-    // If there is simulast, mangle spatial layers in scalabilityMode.
-    if consumable_params.encodings.len() > 1 {
-        scalability_mode = Some(format!(
-            "S{}T{}",
-            consumable_params.encodings.len(),
-            scalability_mode
-                .as_ref()
-                .map(|s| s.parse::<ScalabilityMode>().ok())
-                .flatten()
-                .unwrap_or_default()
-                .temporal_layers
-        ));
-    }
-
-    consumer_encoding.scalability_mode = scalability_mode;
-
-    // Use the maximum max_bitrate in any encoding and honor it in the Consumer's encoding.
-    consumer_encoding.max_bitrate = consumable_params
-        .encodings
-        .iter()
-        .map(|encoding| encoding.max_bitrate)
-        .max()
-        .flatten();
-
-    // Set a single encoding for the Consumer.
-    consumer_params.encodings.push(consumer_encoding);
-
-    // Copy verbatim.
-    consumer_params.rtcp = consumable_params.rtcp.clone();
 
     Ok(consumer_params)
 }
@@ -1528,7 +1545,7 @@ mod tests {
         };
 
         let consumer_rtp_parameters =
-            get_consumer_rtp_parameters(&consumable_rtp_parameters, remote_rtp_capabilities)
+            get_consumer_rtp_parameters(&consumable_rtp_parameters, remote_rtp_capabilities, false)
                 .expect("Failed to get consumer RTP parameters");
 
         assert_eq!(

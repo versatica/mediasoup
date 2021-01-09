@@ -559,6 +559,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             rtp_capabilities,
             paused,
             preferred_layers,
+            pipe,
             app_data,
         } = consumer_options;
         ortc::validate_rtp_capabilities(&rtp_capabilities)
@@ -578,24 +579,27 @@ pub(super) trait TransportImpl: TransportGeneric {
             let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
                 producer.consumable_rtp_parameters(),
                 rtp_capabilities,
+                pipe,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 
-            // We use up to 8 bytes for MID (string).
-            let next_mid_for_consumers = self
-                .next_mid_for_consumers()
-                .fetch_add(1, Ordering::Relaxed);
-            let mid = next_mid_for_consumers % 100_000_000;
+            if !pipe {
+                // We use up to 8 bytes for MID (string).
+                let next_mid_for_consumers = self
+                    .next_mid_for_consumers()
+                    .fetch_add(1, Ordering::Relaxed);
+                let mid = next_mid_for_consumers % 100_000_000;
 
-            // Set MID.
-            rtp_parameters.mid = Some(format!("{}", mid));
+                // Set MID.
+                rtp_parameters.mid = Some(format!("{}", mid));
+            }
 
             rtp_parameters
         };
 
         let consumer_id = ConsumerId::new();
 
-        let r#type = if transport_type == TransportType::Pipe {
+        let r#type = if transport_type == TransportType::Pipe || pipe {
             ConsumerType::Pipe
         } else {
             producer.r#type().into()

@@ -449,7 +449,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	};
 
 	const consumerRtpParameters =
-		ortc.getConsumerRtpParameters(consumableRtpParameters, remoteRtpCapabilities);
+		ortc.getConsumerRtpParameters(consumableRtpParameters, remoteRtpCapabilities, false);
 
 	expect(consumerRtpParameters.codecs.length).toEqual(2);
 	expect(consumerRtpParameters.codecs[0]).toEqual(
