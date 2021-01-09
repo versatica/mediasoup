@@ -878,7 +878,7 @@ namespace RTC
 				EmitLayersChange();
 		}
 
-		if (-1 == this->tsReferenceSpatialLayer)
+		if (-1 == this->tsReferenceSpatialLayer && this->currentSpatialLayer == this->targetSpatialLayer)
 		{
 			auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 			if (producerCurrentRtpStream && producerCurrentRtpStream->GetSenderReportNtpMs())
