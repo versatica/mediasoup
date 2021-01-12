@@ -33,9 +33,6 @@ namespace RTC
 
 			Reset(nowMs);
 		}
-
-	private:
-		void RemoveOldData(uint64_t nowMs);
 		void Reset(uint64_t nowMs)
 		{
 			this->buffer.reset(new BufferItem[this->windowSize]);
@@ -45,6 +42,9 @@ namespace RTC
 			this->lastRate    = 0u;
 			this->lastTime    = 0u;
 		}
+
+	private:
+		void RemoveOldData(uint64_t nowMs);
 
 	private:
 		struct BufferItem

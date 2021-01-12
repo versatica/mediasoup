@@ -1,6 +1,6 @@
 #ifndef MS_RTC_TRANSPORT_HPP
 #define MS_RTC_TRANSPORT_HPP
-// #define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+#define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
@@ -251,6 +251,10 @@ namespace RTC
 		  RTC::SenderBandwidthEstimator* senderBwe,
 		  uint32_t availableBitrate,
 		  uint32_t previousAvailableBitrate) override;
+
+		void OnSenderBandwidthEstimatorDeltaOfDelta(
+		  RTC::SenderBandwidthEstimator* senderBwe,
+		  std::vector<SenderBandwidthEstimator::DeltaOfDelta>& deltaOfDeltas) override;
 #endif
 
 		/* Pure virtual methods inherited from Timer::Listener. */

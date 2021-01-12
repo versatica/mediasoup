@@ -7,11 +7,20 @@
 #include "RTC/SeqManager.hpp"
 #include "RTC/TrendCalculator.hpp"
 #include <map>
+#include <vector>
 
 namespace RTC
 {
 	class SenderBandwidthEstimator
 	{
+	public:
+		struct DeltaOfDelta
+		{
+			uint16_t wideSeq{ 0u };
+			uint64_t sentAtMs{ 0u };
+			int16_t dod{ 0 };
+		};
+
 	public:
 		class Listener
 		{
@@ -20,6 +29,9 @@ namespace RTC
 			  RTC::SenderBandwidthEstimator* senderBwe,
 			  uint32_t availableBitrate,
 			  uint32_t previousAvailableBitrate) = 0;
+
+			virtual void OnSenderBandwidthEstimatorDeltaOfDelta(
+			  RTC::SenderBandwidthEstimator* senderBwe, std::vector<DeltaOfDelta>& deltaOfDeltas) = 0;
 		};
 
 	public:
@@ -30,6 +42,13 @@ namespace RTC
 			bool isProbation{ false };
 			uint64_t sendingAtMs{ 0u };
 			uint64_t sentAtMs{ 0u };
+		};
+
+		struct RecvInfo
+		{
+			uint16_t wideSeq{ 0u };
+			uint64_t receivedAtMs{ 0u };
+			int16_t delta{ 0 };
 		};
 
 	private:
@@ -90,6 +109,8 @@ namespace RTC
 		void EstimateAvailableBitrate(CummulativeResult& cummulativeResult);
 		void UpdateRtt(float rtt);
 		uint32_t GetAvailableBitrate() const;
+		uint32_t GetSendBitrate() const;
+		uint32_t GetRecvBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
 
 	private:
@@ -100,11 +121,17 @@ namespace RTC
 		uint32_t availableBitrate{ 0u };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		std::map<uint16_t, SentInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> sentInfos;
+		std::map<uint16_t, RecvInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> recvInfos;
+		std::map<uint16_t, DeltaOfDelta, RTC::SeqManager<uint16_t>::SeqLowerThan> deltaOfDeltas;
 		float rtt{ 0 }; // Round trip time in ms.
 		CummulativeResult cummulativeResult;
 		CummulativeResult probationCummulativeResult;
 		RTC::RateCalculator sendTransmission;
 		RTC::TrendCalculator sendTransmissionTrend;
+		RTC::RateCalculator sendRateCalculator;
+		RTC::RateCalculator recvRateCalculator;
+		uint32_t sendBitrate{ 0 };
+		uint32_t recvBitrate{ 0 };
 	};
 } // namespace RTC
 

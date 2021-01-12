@@ -11,7 +11,9 @@ namespace RTC
 	/* Static. */
 
 	// static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
-	static constexpr uint16_t MaxSentInfoAge{ 2000u }; // TODO: Let's see.
+	static constexpr uint16_t MaxSentInfoAge{ 2000u };     // TODO: Let's see.
+	static constexpr uint16_t MaxRecvInfoAge{ 2000u };     // TODO: Let's see.
+	static constexpr uint16_t MaxDeltaOfDeltaAge{ 2000u }; // TODO: Let's see.
 	static constexpr float DefaultRtt{ 100 };
 
 	/* Instance methods. */
@@ -90,7 +92,9 @@ namespace RTC
 		if (elapsedMs > 1000u)
 			this->cummulativeResult.Reset();
 
-		for (auto& result : feedback->GetPacketResults())
+		const auto packetResults = feedback->GetPacketResults();
+
+		for (const auto& result : packetResults)
 		{
 			if (!result.received)
 				continue;
@@ -118,6 +122,111 @@ namespace RTC
 				  sentInfo.size, static_cast<int64_t>(sentInfo.sentAtMs), result.receivedAtMs);
 			}
 		}
+
+		// TODO: Remove.
+		// feedback->Dump();
+
+		// For calling OnSenderBandwidthEstimatorDeltaOfDelta.
+		std::vector<DeltaOfDelta> deltaOfDeltas;
+
+		for (const auto& result : packetResults)
+		{
+			if (!result.received)
+				continue;
+
+			uint16_t wideSeq = result.sequenceNumber;
+
+			// Get the corresponding SentInfo.
+			auto sentInfosIt = this->sentInfos.find(wideSeq);
+
+			if (sentInfosIt == this->sentInfos.end())
+			{
+				MS_WARN_DEV("received packet not present in sent infos [wideSeq:%" PRIu16 "]", wideSeq);
+
+				continue;
+			}
+
+			auto& sentInfo = sentInfosIt->second;
+
+			// Create and store the RecvInfo.
+			RecvInfo recvInfo;
+
+			recvInfo.wideSeq      = wideSeq;
+			recvInfo.receivedAtMs = result.receivedAtMs;
+			recvInfo.delta        = result.delta;
+
+			// Remove old RecvInfo's.
+			auto recvInfosIt = this->recvInfos.lower_bound(wideSeq - MaxRecvInfoAge + 1);
+
+			this->recvInfos.erase(this->recvInfos.begin(), recvInfosIt);
+
+			// Store the RecvInfo.
+			this->recvInfos[wideSeq] = recvInfo;
+
+			// Feed the send RateCalculator.
+			this->sendRateCalculator.Update(sentInfo.size, sentInfo.sendingAtMs);
+			this->sendBitrate = this->sendRateCalculator.GetRate(sentInfo.sendingAtMs);
+
+			// First RecvInfo, reset the rate calculator with the correct time.
+			if (this->recvInfos.size() == 1)
+			{
+				this->recvRateCalculator.Reset(result.receivedAtMs);
+			}
+
+			// Feed the receive RateCalculator.
+			this->recvRateCalculator.Update(sentInfo.size, result.receivedAtMs);
+			this->recvBitrate = this->recvRateCalculator.GetRate(result.receivedAtMs);
+
+			// Get the RecvInfo pointed by the current one in order to calculate the delta.
+			recvInfosIt = this->recvInfos.find(wideSeq);
+
+			// First RecvInfo.
+			if (recvInfosIt == this->recvInfos.begin())
+				continue;
+
+			--recvInfosIt;
+
+			const auto& previousRecvInfo = (*recvInfosIt).second;
+
+			sentInfosIt = this->sentInfos.find(previousRecvInfo.wideSeq);
+
+			// Get the SendInfo related to the RecvInfo pointed by the current one.
+			if (sentInfosIt == this->sentInfos.end())
+			{
+				MS_WARN_DEV("received packet not present in sent infos [wideSeq:%" PRIu16 "]", wideSeq);
+
+				continue;
+			}
+
+			auto& previousSentInfo = sentInfosIt->second;
+
+			MS_DEBUG_DEV(
+			  "received delta for packet [wideSeq:%" PRIu16 ", send delta:%" PRIi32
+			  ", recv delta:%" PRIu64 "]",
+			  wideSeq,
+			  sentInfo.sentAtMs - previousSentInfo.sentAtMs,
+			  result.delta / 4);
+
+			// Create and store the DeltaOfDelta.
+			DeltaOfDelta deltaOfDelta;
+
+			deltaOfDelta.wideSeq  = wideSeq;
+			deltaOfDelta.sentAtMs = sentInfo.sentAtMs;
+			deltaOfDelta.dod      = (result.delta / 4) - (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
+
+			// Remove old DeltaOfDelta's.
+			auto deltaOfDeltasIt = this->deltaOfDeltas.lower_bound(wideSeq - MaxDeltaOfDeltaAge + 1);
+
+			this->deltaOfDeltas.erase(this->deltaOfDeltas.begin(), deltaOfDeltasIt);
+
+			// Store the DeltaOfDelta.
+			this->deltaOfDeltas[wideSeq] = deltaOfDelta;
+
+			deltaOfDeltas.push_back(deltaOfDelta);
+		}
+
+		// Notify listener.
+		this->listener->OnSenderBandwidthEstimatorDeltaOfDelta(this, deltaOfDeltas);
 
 		// Handle probation packets separately.
 		if (this->probationCummulativeResult.GetNumPackets() >= 2u)
@@ -214,6 +323,20 @@ namespace RTC
 		MS_TRACE();
 
 		return this->availableBitrate;
+	}
+
+	uint32_t SenderBandwidthEstimator::GetSendBitrate() const
+	{
+		MS_TRACE();
+
+		return this->sendBitrate;
+	}
+
+	uint32_t SenderBandwidthEstimator::GetRecvBitrate() const
+	{
+		MS_TRACE();
+
+		return this->recvBitrate;
 	}
 
 	void SenderBandwidthEstimator::RescheduleNextAvailableBitrateEvent()

@@ -3017,6 +3017,39 @@ namespace RTC
 		// DistributeAvailableOutgoingBitrate();
 		// ComputeOutgoingDesiredBitrate();
 	}
+
+	inline void Transport::OnSenderBandwidthEstimatorDeltaOfDelta(
+	  RTC::SenderBandwidthEstimator* senderBwe,
+	  std::vector<SenderBandwidthEstimator::DeltaOfDelta>& deltaOfDeltas)
+	{
+		MS_TRACE();
+
+		if (!this->traceEventTypes.bwe)
+			return;
+
+		json data = json::object();
+
+		data["type"]                = "new-bwe";
+		data["timestamp"]           = DepLibUV::GetTimeMs();
+		data["direction"]           = "out";
+		data["info"]["type"]        = "transport-cc";
+		data["info"]["dod"]         = json::array();
+		data["info"]["sendbitrate"] = senderBwe->GetSendBitrate();
+		data["info"]["recvbitrate"] = senderBwe->GetRecvBitrate();
+
+		for (const auto& deltaOfDelta : deltaOfDeltas)
+		{
+			json dod = json::object();
+
+			dod["wideSeq"]  = deltaOfDelta.wideSeq;
+			dod["sentAtMs"] = deltaOfDelta.sentAtMs;
+			dod["dod"]      = deltaOfDelta.dod;
+
+			data["info"]["dod"].push_back(dod);
+		}
+
+		Channel::Notifier::Emit(this->id, "trace", data);
+	}
 #endif
 
 	inline void Transport::OnTimer(Timer* timer)
