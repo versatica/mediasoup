@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.31 (WIP)
+
+* Move `bufferedAmount` from `dataConsumer.dump()` to `dataConsumer.getStats()`.
+
+
 ### 3.6.30
 
 * Add `pipe` option to `transport.consume()`(PR #494).

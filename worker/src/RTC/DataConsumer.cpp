@@ -92,9 +92,6 @@ namespace RTC
 		// Add protocol.
 		jsonObject["protocol"] = this->protocol;
 
-		// Add bufferedAmount.
-		jsonObject["bufferedAmount"] = this->bufferedAmount;
-
 		// Add bufferedAmountLowThreshold.
 		jsonObject["bufferedAmountLowThreshold"] = this->bufferedAmountLowThreshold;
 	}
@@ -123,6 +120,10 @@ namespace RTC
 
 		// Add bytesSent.
 		jsonObject["bytesSent"] = this->bytesSent;
+
+		// Add bufferedAmount.
+		jsonObject["bufferedAmount"] = this->bufferedAmount;
+
 	}
 
 	void DataConsumer::HandleRequest(Channel::Request* request)
