@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.6.31 (WIP)
+### 3.6.31
 
 * Move `bufferedAmount` from `dataConsumer.dump()` to `dataConsumer.getStats()`.
 

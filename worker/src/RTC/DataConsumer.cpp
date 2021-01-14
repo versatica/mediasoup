@@ -123,7 +123,6 @@ namespace RTC
 
 		// Add bufferedAmount.
 		jsonObject["bufferedAmount"] = this->bufferedAmount;
-
 	}
 
 	void DataConsumer::HandleRequest(Channel::Request* request)
