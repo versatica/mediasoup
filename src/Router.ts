@@ -346,7 +346,7 @@ export class Router extends EnhancedEventEmitter
 			preferTcp = false,
 			initialAvailableOutgoingBitrate = 600000,
 			enableSctp = false,
-			numSctpStreams = { OS: 1024, MIS: 1024 },
+			numSctpStreams = { OS: 1024, MIS: 1024 }, // eslint-disable-line
 			maxSctpMessageSize = 262144,
 			sctpSendBufferSize = 262144,
 			appData = {}
@@ -439,7 +439,7 @@ export class Router extends EnhancedEventEmitter
 			rtcpMux = true,
 			comedia = false,
 			enableSctp = false,
-			numSctpStreams = { OS: 1024, MIS: 1024 },
+			numSctpStreams = { OS: 1024, MIS: 1024 }, // eslint-disable-line
 			maxSctpMessageSize = 262144,
 			sctpSendBufferSize = 262144,
 			enableSrtp = false,
@@ -542,7 +542,7 @@ export class Router extends EnhancedEventEmitter
 		{
 			listenIp,
 			enableSctp = false,
-			numSctpStreams = { OS: 1024, MIS: 1024 },
+			numSctpStreams = { OS: 1024, MIS: 1024 }, // eslint-disable-line
 			maxSctpMessageSize = 268435456,
 			sctpSendBufferSize = 268435456,
 			enableRtx = false,
@@ -632,7 +632,7 @@ export class Router extends EnhancedEventEmitter
 			appData = {}
 		}: DirectTransportOptions =
 		{
-			maxMessageSize : 262144
+			maxMessageSize : 262144 // eslint-disable-line
 		}
 	): Promise<DirectTransport>
 	{
@@ -687,7 +687,7 @@ export class Router extends EnhancedEventEmitter
 			router,
 			listenIp = '127.0.0.1',
 			enableSctp = true,
-			numSctpStreams = { OS: 1024, MIS: 1024 },
+			numSctpStreams = { OS: 1024, MIS: 1024 }, // eslint-disable-line
 			enableRtx = false,
 			enableSrtp = false
 		}: PipeToRouterOptions

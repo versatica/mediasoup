@@ -224,7 +224,7 @@ export class Consumer extends EnhancedEventEmitter
 			appData,
 			paused,
 			producerPaused,
-			score = { score: 10, producerScore: 10, producerScores: [] },
+			score = { score: 10, producerScore: 10, producerScores: [] }, // eslint-disable-line
 			preferredLayers
 		}:
 		{
