@@ -159,6 +159,9 @@ bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
     return false;
   }
 
+  if (current_timestamp_group_.complete_time_ms < 0)
+    return false; // brutal workaround for MS_ASSERT below, TBR
+
   MS_ASSERT(
     current_timestamp_group_.complete_time_ms >= 0,
     "current_timestamp_group_.complete_time_ms < 0 [current_timestamp_group_.complete_time_ms:%" PRIi64 "]",
