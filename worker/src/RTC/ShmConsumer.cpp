@@ -290,6 +290,12 @@ namespace RTC
 				packet->GetSequenceNumber(),
 				packet->GetTimestamp(),
 				origSeq);
+
+			if (this->GetKind() == Media::Kind::AUDIO)
+				shmCtx->bin_log_ctx.record.a_num_discarded_rtp_pkts += 1;
+			else
+				shmCtx->bin_log_ctx.record.v_num_discarded_rtp_pkts += 1;
+
 			return; 
 		}
 
@@ -352,6 +358,11 @@ namespace RTC
 				packet->GetSsrc(),
 				packet->GetSequenceNumber(),
 				packet->GetTimestamp());
+		
+			if (this->GetKind() == Media::Kind::AUDIO)
+				shmCtx->bin_log_ctx.record.a_num_discarded_rtp_pkts += 1;
+			else
+				shmCtx->bin_log_ctx.record.v_num_discarded_rtp_pkts += 1;
 		}
 
 		// Restore packet fields.

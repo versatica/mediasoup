@@ -327,6 +327,26 @@ namespace RTC
 				break;
 			}
 
+			}
+
+			case Channel::Request::MethodId::TRANSPORT_CONSUME_STREAM_META:
+			{
+				if (RecvStreamMeta(request->data))
+					request->Accept();
+				else
+					request->Error("ShmTransport::RecvStreamMeta returned false");
+				break;
+			}
+
+			case Request::MethodId::TRANSPORT_ROTATE_SHM_BINARY_LOG:
+			{
+				if (RecvStreamMeta(request->data))
+					request->Accept();
+				else
+					request->Error("ShmTransport::RecvStreamMeta returned false");
+				break;
+			}
+
 			default:
 			{
 				// Pass it to the parent class.
@@ -387,6 +407,21 @@ namespace RTC
 	}
 
 
+	bool ShmTransport::RotateShmBinaryLog(json& data)
+	{
+		MS_TRACE();
+		/*
+			const reqdata = {
+				binlogrotate: true|false, 1|0
+				shm: ...
+			};
+		*/
+		MS_DEBUG_TAG(xcode, "received rotate shm binary log signal [%s]", data.dump().c_str());
+
+		// TODO: implement actual code
+	}
+
+
   bool ShmTransport::RecvStreamMeta(json& data)
 	{
 		MS_TRACE();
@@ -396,6 +431,7 @@ namespace RTC
 						shm: ...
 					};
 */
+		MS_DEBUG_TAG(xcode, "received stream metadata [%s]", data.dump().c_str());
 
 		std::string metadata;
 		auto jsonMetaIt = data.find("meta");

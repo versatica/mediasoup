@@ -1230,18 +1230,6 @@ namespace RTC
 				}
 
 				break;
-			}
-
-			case Channel::Request::MethodId::TRANSPORT_CONSUME_STREAM_META:
-			{
-#ifdef TRANSCODE
-				if (RecvStreamMeta(request->data))
-					request->Accept();
-				else
-					request->Error("ShmTransport::RecvStreamMeta returned false");
-#endif
-				break;
-			}
 				
 			case Channel::Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT:
 			{
@@ -2313,14 +2301,6 @@ namespace RTC
 			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
 		}
-	}
-
-	bool Transport::RecvStreamMeta(json& data)
-	{
-		MS_TRACE();
-
-		// Do nothing, will overwrite in shm transport class
-		return false;
 	}
 	
 	void Transport::DistributeAvailableOutgoingBitrate()

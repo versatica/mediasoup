@@ -8,6 +8,7 @@
 #include "Utils.hpp"
 #include "DepLibUV.hpp"
 #include <time.h>
+#include <chrono>
 
 namespace DepLibSfuShm {
 
@@ -32,6 +33,12 @@ namespace DepLibSfuShm {
 
   // 100ms in samples (90000 sample rate) 
   //static constexpr uint64_t MaxVideoPktDelay{ 9000 };
+
+
+  ShmCtx::ShmCtx(): wrt_ctx(nullptr), wrt_status(SHM_WRT_UNDEFINED)
+  {
+    memset(&bin_log_ctx, 0, sizeof(bin_log_ctx));
+  }
 
 
   ShmCtx::~ShmCtx()
@@ -170,23 +177,44 @@ namespace DepLibSfuShm {
     bool iskeyframe)
   {
     MS_TRACE();
+    
+    if (iskeyframe && ts > this->lastKeyFrameTs)
+    {
+      this->lastKeyFrameTs = ts;
+      bin_log_record.v_last_kf_rtp_time = this->lastKeyFrameTs;
+    }
+
+    auto startTime = std::chrono::system_clock::now();
+
+    uint16_t duration;
+
     if (useReverseIterator)
     {
       // If the first item into empty queue, or should be placed at the end
       if (this->videoPktBuffer.empty() || seqid >= this->videoPktBuffer.rbegin()->seqid)
       {
         this->videoPktBuffer.emplace(this->videoPktBuffer.end(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+        
+        auto endTime = std::chrono::system_clock::now();
+        //MS_DEBUG_TAG(xcode, "rev: l=%zu t=%" PRIu64, this->videoPktBuffer.size(), std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count());
+        log_bin_record.v_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
+        log_bin_record.v_last_queue_len = this->videoPktBuffer.size();        
         return SHM_Q_PKT_QUEUED_OK;
       }
 
-      MS_DEBUG_TAG(xcode, "out-of-order(r) seqid=%" PRIu64 " qsize=%zu", seqid, videoPktBuffer.size());
+      //MS_DEBUG_TAG(xcode, "out-of-order(r) seqid=%" PRIu64 " qsize=%zu", seqid, videoPktBuffer.size());
       
       auto it = this->videoPktBuffer.rbegin();
       auto prevIt = it;
       it++;
       for (; it != this->videoPktBuffer.rend() && seqid < it->seqid; it++, prevIt++) {}
       this->videoPktBuffer.emplace(prevIt.base(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
-      return SHM_Q_PKT_QUEUED_OK;
+
+      auto endTime2 = std::chrono::system_clock::now();
+//      MS_DEBUG_TAG(xcode, "rev: l=%zu t=%" PRIu64, this->videoPktBuffer.size(), std::chrono::duration_cast<std::chrono::nanoseconds>(endTime2 - startTime).count());
+      log_bin_record.v_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime2 - startTime).count();
+      log_bin_record.v_last_queue_len = this->videoPktBuffer.size();
+      log_bin_record.v_enqueue_out_of_order += 1;
     }
     else
     {
@@ -196,15 +224,16 @@ namespace DepLibSfuShm {
 
       if (it != this->videoPktBuffer.end())
       {
-      // TODO: keep stats of how many frames had been fixed with retransmission. TBD: assuming this is when an out of order seqId arrives.
-        MS_DEBUG_TAG(xcode, "out-of-order seqid=%" PRIu64 " qsize=%zu", seqid, videoPktBuffer.size());
+        log_bin_record.v_enqueue_out_of_order += 1;
       }
+
       this->videoPktBuffer.emplace(it, data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
-    }
-    
-    if (iskeyframe && ts > this->lastKeyFrameTs)
-    {
-      this->lastKeyFrameTs = ts;
+
+      auto endTime = std::chrono::system_clock::now();
+
+      log_bin_record.v_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
+      log_bin_record.v_last_queue_len = this->videoPktBuffer.size();        
+      //MS_DEBUG_TAG(xcode, "fwd: l=%zu t=%" PRIu64, this->videoPktBuffer.size(), std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count());
     }
 
     return SHM_Q_PKT_QUEUED_OK;
@@ -324,10 +353,39 @@ namespace DepLibSfuShm {
     }
   }
     
+  // Will write into the log, rotate... Need signal_set and current data
+  void ShmCtx::DumpBinLogDataIfNeeded(bool signal_set)
+  {
+    MS_TRACE();
+    /* 
+    put into sfushm_bin_log.c
+    
+    uint64_t cur_tm;
+
+    // assuming time update was called prior to this call
+    cur_tm = ffngxshm_get_cur_timestamp();
+
+    // check if it is time to write the current record
+    if(bin_log_record.start_tm + bin_log_rec_intervals < cur_tm)
+    {
+        bin_log_record.epoch_len = (uint16_t)(cur_tm - bin_log_record.start_tm);
+
+    }
+    */
+    int ret = sfushm_bin_log_rotate(&bin_log_ctx, bin_log_rec_intervals, signal_set);
+    if (0 != ret)
+    {
+      MS_ERROR("failed to dump bin record. err='%s'", strerror(ret));
+      // sfushm API should close file and zero out fd
+    }
+  }
 
   void ShmCtx::WriteAudioRtpDataToShm(uint8_t *data, size_t len, uint64_t seq, uint64_t ts)
   {
     MS_TRACE();
+
+    // see if need to dump data into binary log
+    DumpBinLogDataIfNeeded();
 
     sfushm_av_frame_frag_t frag;
     frag.ssrc = media[0].new_ssrc;
@@ -352,9 +410,16 @@ namespace DepLibSfuShm {
       return;
     }
 
+    bin_log_record.a_egress_bytes += data->len;
+    bin_log_record.a_last_rtp_time = data->a_last_rtp_time;
+    bin_log_record.a_num_wr += 1;
+
     int err = sfushm_av_write_audio(wrt_ctx, data);
     if (IsError(err))
+    {
       MS_WARN_TAG(xcode, "ERROR writing audio ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " inv=%d to shm: %d - %s", data->ssrc, data->first_rtp_seq, data->rtp_time, data->invalid, err, GetErrorString(err));
+      bin_log_record.a_num_wr_err += 1;
+    }
   }
 
   void ShmCtx::WriteVideoRtpDataToShm(
@@ -370,6 +435,9 @@ namespace DepLibSfuShm {
     bool iskeyframe)
   {
     MS_TRACE();
+
+    DumpBinLogDataIfNeeded();
+
     // Try to dequeue whatever data is already accumulated if:
     // 1) new pkt (not retransmitted) arrived, and it belongs to a new frame (based on timestamp diff)
     // 2) If there is expired data in a queue
@@ -448,12 +516,19 @@ namespace DepLibSfuShm {
         frag.len = item->len;
         break;
     }
+
+    bin_log_record.v_egress_bytes += frag.len;
+    bin_log_record.v_last_rtp_time = frag.rtp_time;
+    bin_log_record.v_num_wr += 1;
+    if (frag.invalid)
+      bin_log_record.v_num_wr_incomplete_chunk += 1;
     
     int err = sfushm_av_write_video(wrt_ctx, &frag);
     if (IsError(err))
     {
       MS_WARN_TAG(xcode, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " len=%zu inv=%d: %d - %s",
         frag.ssrc, frag.first_rtp_seq, frag.rtp_time, frag.len, frag.invalid, err, GetErrorString(err));
+      bin_log_record.v_num_wr_err += 1;
     }
     /*else
     {

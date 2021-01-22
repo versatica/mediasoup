@@ -34,6 +34,7 @@ namespace Channel
 		{ "transport.produce",                           Request::MethodId::TRANSPORT_PRODUCE                                },
 		{ "transport.consume",                           Request::MethodId::TRANSPORT_CONSUME                                },
 		{ "transport.consumeStreamMeta",                 Request::MethodId::TRANSPORT_CONSUME_STREAM_META                    },
+		{ "transport.rotateShmBinaryLog",                Request::MethodId::TRANSPORT_ROTATE_SHM_BINARY_LOG                  },
 		{ "transport.produceData",                       Request::MethodId::TRANSPORT_PRODUCE_DATA                           },
 		{ "transport.consumeData",                       Request::MethodId::TRANSPORT_CONSUME_DATA                           },
 		{ "transport.enableTraceEvent",                  Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT                     },
