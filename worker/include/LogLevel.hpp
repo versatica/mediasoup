@@ -11,4 +11,11 @@ enum class LogLevel : uint8_t
 	LOG_NONE  = 0
 };
 
+enum class LogDevLevel : uint8_t
+{
+	LOG_DEV_DEBUG = 3,
+	LOG_DEV_WARN  = 2,
+	LOG_DEV_NONE  = 0
+};
+
 #endif

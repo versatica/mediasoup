@@ -153,11 +153,11 @@ public:
 	#define _MS_LOG_ARG MS_CLASS, __FUNCTION__
 #endif
 
-#ifdef MS_LOG_TRACE
+//#ifdef MS_LOG_TRACE
 	#define MS_TRACE() \
 		do \
 		{ \
-			if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG) \
+			if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG && Settings::configuration.logTraceEnabled) \
 			{ \
 				int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D(trace) " _MS_LOG_STR, _MS_LOG_ARG); \
 				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
@@ -168,17 +168,17 @@ public:
 	#define MS_TRACE_STD() \
 		do \
 		{ \
-			if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG) \
+			if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG && Settings::configuration.logTraceEnabled) \
 			{ \
 				std::fprintf(stdout, "(trace) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG); \
 				std::fflush(stdout); \
 			} \
 		} \
 		while (false)
-#else
-	#define MS_TRACE() {}
-	#define MS_TRACE_STD() {}
-#endif
+//#else
+//	#define MS_TRACE() {}
+//	#define MS_TRACE_STD() {}
+//#endif
 
 #define MS_HAS_DEBUG_TAG(tag) \
 	(Settings::configuration.logLevel == LogLevel::LOG_DEBUG && _MS_TAG_ENABLED(tag))
@@ -274,48 +274,60 @@ public:
 	} \
 	while (false)
 
-#if MS_LOG_DEV_LEVEL == 3
+//#if MS_LOG_DEV_LEVEL == 3
 	#define MS_DEBUG_DEV(desc, ...) \
 		do \
 		{ \
-			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
-			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
+			if (Settings::configuration.logDevLevel == LogDevLevel::LOG_DEV_DEBUG) \
+			{ \
+				int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
+			} \
 		} \
 		while (false)
 
 	#define MS_DEBUG_DEV_STD(desc, ...) \
 		do \
 		{ \
-			std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
-			std::fflush(stdout); \
+			if (Settings::configuration.logDevLevel == LogDevLevel::LOG_DEV_DEBUG) \
+			{ \
+				std::fprintf(stdout, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+				std::fflush(stdout); \
+			} \
 		} \
 		while (false)
-#else
-	#define MS_DEBUG_DEV(desc, ...) {}
-	#define MS_DEBUG_DEV_STD(desc, ...) {}
-#endif
+//#else
+//	#define MS_DEBUG_DEV(desc, ...) {}
+//	#define MS_DEBUG_DEV_STD(desc, ...) {}
+//#endif
 
 
-#if MS_LOG_DEV_LEVEL >= 2
+//#if MS_LOG_DEV_LEVEL >= 2
 	#define MS_WARN_DEV(desc, ...) \
 		do \
 		{ \
-			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
-			Logger::channel->SendLog(Logger::buffer, loggerWritten); \
+			if (Settings::configuration.logDevLevel >= LogDevLevel::LOG_DEV_WARN) \
+			{ \
+				int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "W" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+				Logger::channel->SendLog(Logger::buffer, loggerWritten); \
+			} \
 		} \
 		while (false)
 
 	#define MS_WARN_DEV_STD(desc, ...) \
 		do \
 		{ \
-			std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
-			std::fflush(stderr); \
+			if (Settings::configuration.logDevLevel >= LogDevLevel::LOG_DEV_WARN) \
+			{ \
+				std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+				std::fflush(stderr); \
+			} \
 		} \
 		while (false)
-#else
-	#define MS_WARN_DEV(desc, ...) {}
-	#define MS_WARN_DEV_STD(desc, ...) {}
-#endif
+//#else
+//	#define MS_WARN_DEV(desc, ...) {}
+//	#define MS_WARN_DEV_STD(desc, ...) {}
+//#endif
 
 #define MS_DUMP(desc, ...) \
 	do \

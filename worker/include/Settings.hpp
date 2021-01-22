@@ -34,6 +34,8 @@ public:
 	struct Configuration
 	{
 		LogLevel logLevel{ LogLevel::LOG_ERROR };
+		LogDevLevel logDevLevel{LogDevLevel::LOG_DEV_NONE};
+		bool logTraceEnabled{false};
 		struct LogTags logTags;
 		uint16_t rtcMinPort{ 10000u };
 		uint16_t rtcMaxPort{ 59999u };
@@ -49,6 +51,8 @@ public:
 private:
 	static void SetLogLevel(std::string& level);
 	static void SetLogTags(const std::vector<std::string>& tags);
+	static void SetLogDevLevel(std::string& devLevel);
+	static void SetTrace(bool trace);
 	static void SetDtlsCertificateAndPrivateKeyFiles();
 
 public:
@@ -57,6 +61,8 @@ public:
 private:
 	static std::map<std::string, LogLevel> string2LogLevel;
 	static std::map<LogLevel, std::string> logLevel2String;
+	static std::map<std::string, LogDevLevel> string2LogDevLevel;
+	static std::map<LogDevLevel, std::string> logDevLevel2String;
 };
 
 #endif

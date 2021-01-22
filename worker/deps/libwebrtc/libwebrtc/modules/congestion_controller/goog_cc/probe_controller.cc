@@ -81,11 +81,10 @@ void MaybeLogProbeClusterCreated(const ProbeClusterConfig& probe) {
 #if MS_LOG_DEV_LEVEL == 3
   size_t min_bytes = static_cast<int32_t>(probe.target_data_rate.bps() *
                                           probe.target_duration.ms() / 8000);
-#endif
-
   MS_DEBUG_DEV(
     "probe cluster created [id:%d, target data rate(bps):%lld, target probe count:%d, min_bytes:%zu]",
     probe.id, probe.target_data_rate.bps(), probe.target_probe_count, min_bytes);
+#endif
 }
 
 }  // namespace

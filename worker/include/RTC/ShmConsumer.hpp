@@ -84,9 +84,11 @@ namespace RTC
 
 		void WritePacketToShm(RTC::RtpPacket* packet);
 		bool VideoOrientationChanged(RTC::RtpPacket* packet);
-    //Uncomment for NACK test simulation
+
+		// NACK testing: if testNackEachMs > 0 then drop a pkt each ms and form a NACK request
 		bool TestNACK(RTC::RtpPacket* packet);
 		uint64_t lastNACKTestTs {0};
+		uint64_t testNackEachMs {0};
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -95,7 +97,7 @@ namespace RTC
 
 	/* Pure virtual methods inherited from DepLibSfuShm::ShmCtx::Listener. */
 	public:
-		void OnShmWriterReady() override;
+		void OnNeedToSync() override;
 
 	private:
 		// Allocated by this.
@@ -108,7 +110,6 @@ namespace RTC
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 
 		DepLibSfuShm::ShmCtx       *shmCtx{ nullptr };         // Handle to shm context which will be received from ShmTransport during transport.consume()
-		sfushm_av_frame_frag_t     chunk;                     // Structure holding current chunk being written into shm
 		uint16_t                   rotation{ 0 };             // Current rotation value for video read from RTP packet's videoOrientationExtensionId
 		bool                       rotationDetected{ false }; // Whether video rotation data was ever picked in this stream, then we only write it into shm if there was a change
 		RTC::RtpDataCounter        shmWriterCounter;          // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer) TODO: move into ShmCtx

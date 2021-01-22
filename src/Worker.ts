@@ -11,6 +11,8 @@ import { Router, RouterOptions } from './Router';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
+export type WorkerDevLogLevel = 'debug' | 'warn' | 'none';
+
 export type WorkerLogTag =
   | 'info'
   | 'ice'
@@ -24,6 +26,7 @@ export type WorkerLogTag =
   | 'simulcast'
   | 'svc'
   | 'sctp'
+	| 'xcode'
   | 'message'
 
 export type WorkerSettings =
@@ -34,6 +37,10 @@ export type WorkerSettings =
 	 * 'none'. Default 'error'.
 	 */
 	logLevel?: WorkerLogLevel;
+
+	logDevLevel?: WorkerDevLogLevel;
+
+	logTraceEnabled?: boolean;
 
 	/**
 	 * Log tags for debugging. Check the meaning of each available tag in the
@@ -69,7 +76,7 @@ export type WorkerSettings =
 	appData?: any;
 }
 
-export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
+export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags' | 'logDevLevel' | 'logTraceEnabled'>;
 
 /**
  * An object with the fields of the uv_rusage_t struct.
@@ -212,6 +219,8 @@ export class Worker extends EnhancedEventEmitter
 		{
 			logLevel,
 			logTags,
+			logDevLevel,
+			logTraceEnabled,
 			rtcMinPort,
 			rtcMaxPort,
 			dtlsCertificateFile,
@@ -244,6 +253,12 @@ export class Worker extends EnhancedEventEmitter
 			if (typeof logTag === 'string' && logTag)
 				spawnArgs.push(`--logTag=${logTag}`);
 		}
+
+		if (typeof logDevLevel === 'string' && logDevLevel)
+			spawnArgs.push(`--logDevLevel=${logDevLevel}`);
+
+		if (typeof logTraceEnabled === 'boolean' && logTraceEnabled && logTraceEnabled === true)
+			spawnArgs.push(`--logTraceEnabled=true`);
 
 		if (typeof rtcMinPort === 'number' && !Number.isNaN(rtcMinPort))
 			spawnArgs.push(`--rtcMinPort=${rtcMinPort}`);
@@ -513,13 +528,15 @@ export class Worker extends EnhancedEventEmitter
 	async updateSettings(
 		{
 			logLevel,
-			logTags
+			logTags,
+			logDevLevel,
+			logTraceEnabled,
 		}: WorkerUpdateableSettings = {}
 	): Promise<void>
 	{
 		logger.debug('updateSettings()');
 
-		const reqData = { logLevel, logTags };
+		const reqData = { logLevel, logTags, logDevLevel, logTraceEnabled };
 
 		await this._channel.request('worker.updateSettings', undefined, reqData);
 	}
