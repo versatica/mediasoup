@@ -4,6 +4,7 @@
 ### 3.6.31
 
 * Move `bufferedAmount` from `dataConsumer.dump()` to `dataConsumer.getStats()`.
+* Update NPM deps.
 
 
 ### 3.6.30
