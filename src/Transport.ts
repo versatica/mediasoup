@@ -562,19 +562,11 @@ export class Transport extends EnhancedEventEmitter
 		}
 
 		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
-		const consumerType = (appData && appData.xcode === true) ? "shm" : producer.type; // to create ShmConsumer, cannot copy a producer's type in case of shm transport
-		const shmData = (appData && appData.xcode === true) ? 
-			{
-				shm: (appData.shm !== undefined) ? appData.shm : {}, 
-				log: (appData.log !== undefined) ? appData.log : {}
-			} 
-			: {};
 		const reqData =
 		{
 			kind                   : producer.kind,
 			rtpParameters,
-			type                   : consumerType,
-			shm                    : shmData,
+			type                   : producer.type,
 			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
 			preferredLayers
@@ -583,7 +575,7 @@ export class Transport extends EnhancedEventEmitter
 		const status =
 			await this._channel.request('transport.consume', internal, reqData);
 
-		const data = { kind: producer.kind, rtpParameters, type: consumerType };
+		const data = { kind: producer.kind, rtpParameters, type: producer.type };
 
 		const consumer = new Consumer(
 			{

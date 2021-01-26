@@ -1,4 +1,5 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Consumer, ConsumerOptions } from './Consumer';
 import { Transport, TransportListenIp } from './Transport';
 export interface ShmTransportOptions {
     /**
@@ -90,6 +91,12 @@ export declare class ShmTransport extends Transport {
     connect({ shm }: {
         shm: string;
     }): Promise<void>;
+    /**
+     * Create a shm Consumer.
+     *
+     * @virtual
+     */
+    consume({ producerId, rtpCapabilities, paused, preferredLayers, appData }: ConsumerOptions): Promise<Consumer>;
     /**
      * Provide the ShmTransport remote parameters.
      *
