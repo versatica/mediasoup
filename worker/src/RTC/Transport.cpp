@@ -1236,6 +1236,10 @@ namespace RTC
 						newTraceEventTypes.probation = true;
 					if (typeStr == "bwe")
 						newTraceEventTypes.bwe = true;
+					if (typeStr == "bwe-dod")
+						newTraceEventTypes.bweDod = true;
+					if (typeStr == "new-bwe")
+						newTraceEventTypes.newBwe = true;
 				}
 
 				this->traceEventTypes = newTraceEventTypes;
@@ -3024,7 +3028,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->traceEventTypes.bwe)
+		if (!this->traceEventTypes.bweDod)
 			return;
 
 		json data = json::object();

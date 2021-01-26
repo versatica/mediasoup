@@ -108,6 +108,8 @@ namespace RTC
 		{
 			bool probation{ false };
 			bool bwe{ false };
+			bool bweDod{ false };
+			bool newBwe{ false };
 		};
 
 	public:
