@@ -3029,7 +3029,7 @@ namespace RTC
 
 		json data = json::object();
 
-		data["type"]                = "new-bwe";
+		data["type"]                = "bwe-dod";
 		data["timestamp"]           = DepLibUV::GetTimeMs();
 		data["direction"]           = "out";
 		data["info"]["type"]        = "transport-cc";
