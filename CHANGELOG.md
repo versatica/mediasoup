@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.32
+
+* Fix notifications from `mediasoup-worker` being processed before responses received before them (issue #501).
+
+
 ### 3.6.31
 
 * Move `bufferedAmount` from `dataConsumer.dump()` to `dataConsumer.getStats()`.
