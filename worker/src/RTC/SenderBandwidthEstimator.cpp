@@ -12,7 +12,6 @@ namespace RTC
 
 	// static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
 	static constexpr uint16_t MaxSentInfoAge{ 2000u };     // TODO: Let's see.
-	static constexpr uint16_t MaxRecvInfoAge{ 2000u };     // TODO: Let's see.
 	static constexpr float DefaultRtt{ 100 };
 
 	/* Instance methods. */
@@ -53,15 +52,7 @@ namespace RTC
 
 		auto nowMs = sentInfo.sentAtMs;
 
-		// Remove old sent infos.
-		auto sentInfosIt = this->sentInfos.lower_bound(sentInfo.wideSeq - MaxSentInfoAge + 1);
-
-		this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
-
-		// Remove old received infos.
-		auto recvInfosIt = this->recvInfos.lower_bound(sentInfo.wideSeq - MaxRecvInfoAge + 1);
-
-		this->recvInfos.erase(this->recvInfos.begin(), recvInfosIt);
+		this->RemoveOldInfos();
 
 		// Insert the sent info into the map.
 		this->sentInfos[sentInfo.wideSeq] = sentInfo;
@@ -222,6 +213,27 @@ namespace RTC
 		MS_TRACE();
 
 		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
+	}
+
+	void SenderBandwidthEstimator::RemoveOldInfos()
+	{
+		if (this->sentInfos.empty())
+		{
+			return;
+		}
+
+		// Retrieve last sent wide seq.
+		auto lastSentWideSeq = this->sentInfos.rbegin()->first;
+
+		// Remove old sent infos.
+		auto sentInfosIt = this->sentInfos.lower_bound(lastSentWideSeq - MaxSentInfoAge + 1);
+
+		this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
+
+		// Remove old received infos.
+		auto recvInfosIt = this->recvInfos.lower_bound(lastSentWideSeq - MaxSentInfoAge + 1);
+
+		this->recvInfos.erase(this->recvInfos.begin(), recvInfosIt);
 	}
 
 	void SenderBandwidthEstimator::CummulativeResult::AddPacket(

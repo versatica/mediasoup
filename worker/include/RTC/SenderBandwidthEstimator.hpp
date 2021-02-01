@@ -114,6 +114,9 @@ namespace RTC
 		void RescheduleNextAvailableBitrateEvent();
 
 	private:
+		void RemoveOldInfos();
+
+	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Others.
