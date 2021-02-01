@@ -3032,7 +3032,7 @@ namespace RTC
 	}
 
 	inline void Transport::OnSenderBandwidthEstimatorDeltaOfDelta(
-	  RTC::SenderBandwidthEstimator* senderBwe,
+	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
 	  std::vector<SenderBandwidthEstimator::DeltaOfDelta>& deltaOfDeltas)
 	{
 		MS_TRACE();
