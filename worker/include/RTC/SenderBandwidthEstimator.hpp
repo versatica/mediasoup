@@ -122,16 +122,11 @@ namespace RTC
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		std::map<uint16_t, SentInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> sentInfos;
 		std::map<uint16_t, RecvInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> recvInfos;
-		std::map<uint16_t, DeltaOfDelta, RTC::SeqManager<uint16_t>::SeqLowerThan> deltaOfDeltas;
 		float rtt{ 0 }; // Round trip time in ms.
 		CummulativeResult cummulativeResult;
 		CummulativeResult probationCummulativeResult;
 		RTC::RateCalculator sendTransmission;
 		RTC::TrendCalculator sendTransmissionTrend;
-		RTC::RateCalculator sendRateCalculator;
-		RTC::RateCalculator recvRateCalculator;
-		uint32_t sendBitrate{ 0 };
-		uint32_t recvBitrate{ 0 };
 	};
 } // namespace RTC
 

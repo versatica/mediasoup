@@ -3008,7 +3008,7 @@ namespace RTC
 	inline void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
 	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
 	  uint32_t availableBitrate,
-	  uint32_t previousAvailableBitrate)
+	  uint32_t /*previousAvailableBitrate*/)
 	{
 		MS_TRACE();
 
@@ -3017,9 +3017,18 @@ namespace RTC
 		  availableBitrate,
 		  previousAvailableBitrate);
 
-		// TODO: Uncomment once just SenderBandwidthEstimator is used.
-		// DistributeAvailableOutgoingBitrate();
-		// ComputeOutgoingDesiredBitrate();
+		if (!this->traceEventTypes.newBwe)
+			return;
+
+		json data = json::object();
+
+		data["type"]                     = "new-bwe";
+		data["timestamp"]                = DepLibUV::GetTimeMs();
+		data["direction"]                = "out";
+		data["info"]["type"]             = "transport-cc";
+		data["info"]["availableBitrate"] = availableBitrate;
+
+		Channel::Notifier::Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnSenderBandwidthEstimatorDeltaOfDelta(
@@ -3038,8 +3047,6 @@ namespace RTC
 		data["direction"]           = "out";
 		data["info"]["type"]        = "transport-cc";
 		data["info"]["dod"]         = json::array();
-		data["info"]["sendbitrate"] = senderBwe->GetSendBitrate();
-		data["info"]["recvbitrate"] = senderBwe->GetRecvBitrate();
 
 		for (const auto& deltaOfDelta : deltaOfDeltas)
 		{

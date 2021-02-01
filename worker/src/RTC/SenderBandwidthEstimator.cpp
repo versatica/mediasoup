@@ -13,7 +13,6 @@ namespace RTC
 	// static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
 	static constexpr uint16_t MaxSentInfoAge{ 2000u };     // TODO: Let's see.
 	static constexpr uint16_t MaxRecvInfoAge{ 2000u };     // TODO: Let's see.
-	static constexpr uint16_t MaxDeltaOfDeltaAge{ 2000u }; // TODO: Let's see.
 	static constexpr float DefaultRtt{ 100 };
 
 	/* Instance methods. */
@@ -163,20 +162,6 @@ namespace RTC
 			// Store the RecvInfo.
 			this->recvInfos[wideSeq] = recvInfo;
 
-			// Feed the send RateCalculator.
-			this->sendRateCalculator.Update(sentInfo.size, sentInfo.sendingAtMs);
-			this->sendBitrate = this->sendRateCalculator.GetRate(sentInfo.sendingAtMs);
-
-			// First RecvInfo, reset the rate calculator with the correct time.
-			if (this->recvInfos.size() == 1)
-			{
-				this->recvRateCalculator.Reset(result.receivedAtMs);
-			}
-
-			// Feed the receive RateCalculator.
-			this->recvRateCalculator.Update(sentInfo.size, result.receivedAtMs);
-			this->recvBitrate = this->recvRateCalculator.GetRate(result.receivedAtMs);
-
 			// Get the RecvInfo pointed by the current one in order to calculate the delta.
 			recvInfosIt = this->recvInfos.find(wideSeq);
 
@@ -214,15 +199,6 @@ namespace RTC
 			deltaOfDelta.sentAtMs = sentInfo.sentAtMs;
 			deltaOfDelta.dod      = (result.delta / 4) - (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
 
-			// Remove old DeltaOfDelta's.
-			auto deltaOfDeltasIt = this->deltaOfDeltas.lower_bound(wideSeq - MaxDeltaOfDeltaAge + 1);
-
-			this->deltaOfDeltas.erase(this->deltaOfDeltas.begin(), deltaOfDeltasIt);
-
-			// Store the DeltaOfDelta.
-			this->deltaOfDeltas[wideSeq] = deltaOfDelta;
-
-			deltaOfDeltas.push_back(deltaOfDelta);
 		}
 
 		// Notify listener.
@@ -323,20 +299,6 @@ namespace RTC
 		MS_TRACE();
 
 		return this->availableBitrate;
-	}
-
-	uint32_t SenderBandwidthEstimator::GetSendBitrate() const
-	{
-		MS_TRACE();
-
-		return this->sendBitrate;
-	}
-
-	uint32_t SenderBandwidthEstimator::GetRecvBitrate() const
-	{
-		MS_TRACE();
-
-		return this->recvBitrate;
 	}
 
 	void SenderBandwidthEstimator::RescheduleNextAvailableBitrateEvent()
