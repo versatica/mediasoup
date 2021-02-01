@@ -124,7 +124,7 @@ namespace RTC
 			this->recvInfos[wideSeq] = recvInfo;
 
 			// Get the RecvInfo pointed by the current one in order to calculate the delta.
-			recvInfosIt = this->recvInfos.find(wideSeq);
+			auto recvInfosIt = this->recvInfos.find(wideSeq);
 
 			// First RecvInfo.
 			if (recvInfosIt == this->recvInfos.begin())
