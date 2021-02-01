@@ -6,12 +6,13 @@
 #include "RTC/RateCalculator.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/TrendCalculator.hpp"
+#include "handles/Timer.hpp"
 #include <map>
 #include <vector>
 
 namespace RTC
 {
-	class SenderBandwidthEstimator
+	class SenderBandwidthEstimator: public Timer::Listener
 	{
 	public:
 		struct DeltaOfDelta
@@ -113,6 +114,10 @@ namespace RTC
 		uint32_t GetRecvBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
 
+		/* Pure virtual methods inherited from Timer::Listener. */
+	public:
+		void OnTimer(Timer* timer) override;
+
 	private:
 		void RemoveOldInfos();
 
@@ -128,6 +133,7 @@ namespace RTC
 		float rtt{ 0 }; // Round trip time in ms.
 		RTC::RateCalculator sendTransmission;
 		RTC::TrendCalculator sendTransmissionTrend;
+		Timer* timer{ nullptr };
 	};
 } // namespace RTC
 

@@ -13,6 +13,7 @@ namespace RTC
 	// static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
 	static constexpr uint16_t MaxSentInfoAge{ 2000u };     // TODO: Let's see.
 	static constexpr float DefaultRtt{ 100 };
+	static constexpr uint16_t TimerInterval{ 1000u };
 
 	/* Instance methods. */
 
@@ -22,11 +23,18 @@ namespace RTC
 	    sendTransmission(1000u), sendTransmissionTrend(0.15f)
 	{
 		MS_TRACE();
+
+		// Create the timer.
+		this->timer = new Timer(this);
 	}
 
 	SenderBandwidthEstimator::~SenderBandwidthEstimator()
 	{
 		MS_TRACE();
+
+		// Delete the timer.
+		delete this->timer;
+		this->timer = nullptr;
 	}
 
 	void SenderBandwidthEstimator::TransportConnected()
@@ -35,6 +43,10 @@ namespace RTC
 
 		this->availableBitrate              = this->initialAvailableBitrate;
 		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
+
+		// Start the timer.
+		this->timer->Start(static_cast<uint64_t>(TimerInterval));
+
 	}
 
 	void SenderBandwidthEstimator::TransportDisconnected()
@@ -44,6 +56,9 @@ namespace RTC
 		this->availableBitrate = 0u;
 
 		this->sentInfos.clear();
+
+		// Stop the timer.
+		this->timer->Stop();
 	}
 
 	void SenderBandwidthEstimator::RtpPacketSent(SentInfo& sentInfo)
@@ -137,12 +152,13 @@ namespace RTC
 
 			auto& previousSentInfo = sentInfosIt->second;
 
-			MS_DEBUG_DEV(
-			  "received delta for packet [wideSeq:%" PRIu16 ", send delta:%" PRIi32
-			  ", recv delta:%" PRIu64 "]",
-			  wideSeq,
-			  sentInfo.sentAtMs - previousSentInfo.sentAtMs,
-			  result.delta / 4);
+			// TODO: Remove.
+			// MS_DEBUG_DEV(
+			//   "received delta for packet [wideSeq:%" PRIu16 ", send delta:%" PRIi32
+			//   ", recv delta:%" PRIu64 "]",
+			//   wideSeq,
+			//   sentInfo.sentAtMs - previousSentInfo.sentAtMs,
+			//   result.delta / 4);
 
 			// Create and store the DeltaOfDelta.
 			DeltaOfDelta deltaOfDelta;
@@ -213,6 +229,20 @@ namespace RTC
 		MS_TRACE();
 
 		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
+	}
+
+	void SenderBandwidthEstimator::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		// RTCP timer.
+		if (timer == this->timer)
+		{
+			// TODO.
+			// EstimateAvailableBitrate();
+
+		this->timer->Start(static_cast<uint64_t>(TimerInterval));
+		}
 	}
 
 	void SenderBandwidthEstimator::RemoveOldInfos()
