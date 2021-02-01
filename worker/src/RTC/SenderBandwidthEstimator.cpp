@@ -54,9 +54,14 @@ namespace RTC
 		auto nowMs = sentInfo.sentAtMs;
 
 		// Remove old sent infos.
-		auto it = this->sentInfos.lower_bound(sentInfo.wideSeq - MaxSentInfoAge + 1);
+		auto sentInfosIt = this->sentInfos.lower_bound(sentInfo.wideSeq - MaxSentInfoAge + 1);
 
-		this->sentInfos.erase(this->sentInfos.begin(), it);
+		this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
+
+		// Remove old received infos.
+		auto recvInfosIt = this->recvInfos.lower_bound(sentInfo.wideSeq - MaxRecvInfoAge + 1);
+
+		this->recvInfos.erase(this->recvInfos.begin(), recvInfosIt);
 
 		// Insert the sent info into the map.
 		this->sentInfos[sentInfo.wideSeq] = sentInfo;
@@ -114,11 +119,6 @@ namespace RTC
 			recvInfo.wideSeq      = wideSeq;
 			recvInfo.receivedAtMs = result.receivedAtMs;
 			recvInfo.delta        = result.delta;
-
-			// Remove old RecvInfo's.
-			auto recvInfosIt = this->recvInfos.lower_bound(wideSeq - MaxRecvInfoAge + 1);
-
-			this->recvInfos.erase(this->recvInfos.begin(), recvInfosIt);
 
 			// Store the RecvInfo.
 			this->recvInfos[wideSeq] = recvInfo;
