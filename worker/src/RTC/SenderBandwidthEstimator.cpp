@@ -147,6 +147,8 @@ namespace RTC
 			deltaOfDelta.sentAtMs = sentInfo.sentAtMs;
 			deltaOfDelta.dod      = (result.delta / 4) - (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
 
+			deltaOfDeltas.push_back(deltaOfDelta);
+
 			// TODO: Remove.
 			// MS_DEBUG_DEV(
 			//   "received delta for packet [wideSeq:%" PRIu16 ", send delta:%" PRIi32
