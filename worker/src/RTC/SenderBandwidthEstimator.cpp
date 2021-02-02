@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SenderBandwidthEstimator"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SenderBandwidthEstimator.hpp"
 #include "DepLibUV.hpp"
@@ -165,6 +165,11 @@ namespace RTC
 
 		auto previousAvailableBitrate = this->availableBitrate;
 		auto bitrates                 = GetBitrates();
+
+		if (bitrates.sentBitrate == 0)
+		{
+			return;
+		}
 
 		double ratio =
 		  static_cast<double>(bitrates.sentBitrate) / static_cast<double>(bitrates.recvBitrate);
@@ -359,9 +364,9 @@ namespace RTC
 		  recvTimeWindowMs);
 
 		bitrates.sentBitrate =
-		  static_cast<double>(totalBytes * 8) / static_cast<double>(sentTimeWindowMs / 1000);
+		  static_cast<double>(totalBytes * 8) / (static_cast<double>(sentTimeWindowMs) / 1000.0f);
 		bitrates.recvBitrate =
-		  static_cast<double>(totalBytes * 8) / static_cast<double>(recvTimeWindowMs / 1000);
+		  static_cast<double>(totalBytes * 8) / (static_cast<double>(recvTimeWindowMs) / 1000.0f);
 
 		return bitrates;
 	}
