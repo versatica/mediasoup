@@ -239,6 +239,7 @@ namespace RTC
 			  "sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32, bitrates.sentBitrate, bitrates.recvBitrate);
 
 			EstimateAvailableBitrate();
+			RemoveProcessedInfos();
 
 			this->timer->Start(static_cast<uint64_t>(TimerInterval));
 		}
@@ -277,6 +278,22 @@ namespace RTC
 			auto sentInfosIt = this->sentInfos.lower_bound(oldestWideSeq);
 
 			this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
+		}
+	}
+
+	void SenderBandwidthEstimator::RemoveProcessedInfos()
+	{
+		// Remove all SentInfo's that have been processed.
+		for (auto it = this->sentInfos.begin(); it != this->sentInfos.end();)
+		{
+			if (it->second.received)
+			{
+				it = this->sentInfos.erase(it);
+			}
+			else
+			{
+				++it;
+			}
 		}
 	}
 

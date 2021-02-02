@@ -83,6 +83,7 @@ namespace RTC
 
 	private:
 		void RemoveOldInfos();
+		void RemoveProcessedInfos();
 		Bitrates GetBitrates();
 
 	private:
