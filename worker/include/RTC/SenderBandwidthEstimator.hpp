@@ -29,7 +29,9 @@ namespace RTC
 			virtual void OnSenderBandwidthEstimatorAvailableBitrate(
 			  RTC::SenderBandwidthEstimator* senderBwe,
 			  uint32_t availableBitrate,
-			  uint32_t previousAvailableBitrate) = 0;
+			  uint32_t previousAvailableBitrate,
+			  uint32_t sendBirate,
+			  uint32_t recvBirate) = 0;
 
 			virtual void OnSenderBandwidthEstimatorDeltaOfDelta(
 			  RTC::SenderBandwidthEstimator* senderBwe, std::vector<DeltaOfDelta>& deltaOfDeltas) = 0;
@@ -56,7 +58,7 @@ namespace RTC
 
 		struct Bitrates
 		{
-			uint32_t sentBitrate{ 0u };
+			uint32_t sendBitrate{ 0u };
 			uint32_t recvBitrate{ 0u };
 		};
 

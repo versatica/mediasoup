@@ -252,7 +252,9 @@ namespace RTC
 		void OnSenderBandwidthEstimatorAvailableBitrate(
 		  RTC::SenderBandwidthEstimator* senderBwe,
 		  uint32_t availableBitrate,
-		  uint32_t previousAvailableBitrate) override;
+		  uint32_t previousAvailableBitrate,
+		  uint32_t sendBitrate,
+		  uint32_t recvBitrate) override;
 
 		void OnSenderBandwidthEstimatorDeltaOfDelta(
 		  RTC::SenderBandwidthEstimator* senderBwe,

@@ -3008,7 +3008,9 @@ namespace RTC
 	inline void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
 	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
 	  uint32_t availableBitrate,
-	  uint32_t /*previousAvailableBitrate*/)
+	  uint32_t /*previousAvailableBitrate*/,
+	  uint32_t sendBitrate,
+	  uint32_t recvBitrate)
 	{
 		MS_TRACE();
 
@@ -3027,6 +3029,8 @@ namespace RTC
 		data["direction"]                = "out";
 		data["info"]["type"]             = "transport-cc";
 		data["info"]["availableBitrate"] = availableBitrate;
+		data["info"]["sendBitrate"]      = sendBitrate;
+		data["info"]["recvBitrate"]      = recvBitrate;
 
 		Channel::Notifier::Emit(this->id, "trace", data);
 	}

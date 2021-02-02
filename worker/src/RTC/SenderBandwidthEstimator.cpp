@@ -166,13 +166,13 @@ namespace RTC
 		auto previousAvailableBitrate = this->availableBitrate;
 		auto bitrates                 = GetBitrates();
 
-		if (bitrates.sentBitrate == 0)
+		if (bitrates.sendBitrate == 0)
 		{
 			return;
 		}
 
 		double ratio =
-		  static_cast<double>(bitrates.sentBitrate) / static_cast<double>(bitrates.recvBitrate);
+		  static_cast<double>(bitrates.sendBitrate) / static_cast<double>(bitrates.recvBitrate);
 
 		// RTP is being received properly.
 		if (0.75f <= ratio && ratio <= 1.25f)
@@ -199,7 +199,7 @@ namespace RTC
 
 		// TODO: No, should wait for AvailableBitrateEventInterval and so on.
 		this->listener->OnSenderBandwidthEstimatorAvailableBitrate(
-		  this, this->availableBitrate, previousAvailableBitrate);
+		  this, this->availableBitrate, previousAvailableBitrate, bitrates.sendBitrate, bitrates.recvBitrate);
 	}
 
 	void SenderBandwidthEstimator::UpdateRtt(float rtt)
@@ -236,7 +236,7 @@ namespace RTC
 			auto bitrates = GetBitrates();
 
 			MS_ERROR(
-			  "sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32, bitrates.sentBitrate, bitrates.recvBitrate);
+			  "sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32, bitrates.sendBitrate, bitrates.recvBitrate);
 
 			EstimateAvailableBitrate();
 			RemoveProcessedInfos();
@@ -352,8 +352,8 @@ namespace RTC
 		// Zero bytes processed.
 		if (totalBytes == 0)
 		{
-			bitrates.sentBitrate = 0;
-			bitrates.sentBitrate = 0;
+			bitrates.sendBitrate = 0;
+			bitrates.sendBitrate = 0;
 
 			return bitrates;
 		}
@@ -380,7 +380,7 @@ namespace RTC
 		  sentTimeWindowMs,
 		  recvTimeWindowMs);
 
-		bitrates.sentBitrate =
+		bitrates.sendBitrate =
 		  static_cast<double>(totalBytes * 8) / (static_cast<double>(sentTimeWindowMs) / 1000.0f);
 		bitrates.recvBitrate =
 		  static_cast<double>(totalBytes * 8) / (static_cast<double>(recvTimeWindowMs) / 1000.0f);
