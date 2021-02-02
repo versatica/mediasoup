@@ -60,51 +60,6 @@ namespace RTC
 			uint32_t recvBitrate{ 0u };
 		};
 
-	private:
-		class CummulativeResult
-		{
-		public:
-			CummulativeResult() = default;
-
-		public:
-			uint64_t GetStartedAtMs() const
-			{
-				return this->firstPacketSentAtMs;
-			}
-			size_t GetNumPackets() const
-			{
-				return this->numPackets;
-			}
-			size_t GetTotalSize() const
-			{
-				return this->totalSize;
-			}
-			uint32_t GetSendBitrate() const
-			{
-				auto sendIntervalMs =
-				  std::max<uint64_t>(this->lastPacketSentAtMs - this->firstPacketSentAtMs, 1u);
-
-				return static_cast<uint32_t>(this->totalSize / sendIntervalMs) * 8 * 1000;
-			}
-			uint32_t GetReceiveBitrate() const
-			{
-				auto recvIntervalMs =
-				  std::max<uint64_t>(this->lastPacketReceivedAtMs - this->firstPacketReceivedAtMs, 1u);
-
-				return static_cast<uint32_t>(this->totalSize / recvIntervalMs) * 8 * 1000;
-			}
-			void AddPacket(size_t size, int64_t sentAtMs, int64_t receivedAtMs);
-			void Reset();
-
-		private:
-			size_t numPackets{ 0u };
-			size_t totalSize{ 0u };
-			int64_t firstPacketSentAtMs{ 0u };
-			int64_t lastPacketSentAtMs{ 0u };
-			int64_t firstPacketReceivedAtMs{ 0u };
-			int64_t lastPacketReceivedAtMs{ 0u };
-		};
-
 	public:
 		SenderBandwidthEstimator(
 		  RTC::SenderBandwidthEstimator::Listener* listener, uint32_t initialAvailableBitrate);
@@ -115,7 +70,6 @@ namespace RTC
 		void TransportDisconnected();
 		void RtpPacketSent(SentInfo& sentInfo);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
-		void EstimateAvailableBitrate(CummulativeResult& cummulativeResult);
 		void EstimateAvailableBitrate();
 		void UpdateRtt(float rtt);
 		uint32_t GetAvailableBitrate() const;

@@ -159,31 +159,33 @@ namespace RTC
 		this->listener->OnSenderBandwidthEstimatorDeltaOfDelta(this, deltaOfDeltas);
 	}
 
-	void SenderBandwidthEstimator::EstimateAvailableBitrate(CummulativeResult& cummulativeResult)
+	void SenderBandwidthEstimator::EstimateAvailableBitrate()
 	{
 		MS_TRACE();
 
 		auto previousAvailableBitrate = this->availableBitrate;
+		auto bitrates                 = GetBitrates();
 
-		double ratio = static_cast<double>(cummulativeResult.GetReceiveBitrate()) /
-		               static_cast<double>(cummulativeResult.GetSendBitrate());
-		auto bitrate =
-		  std::min<uint32_t>(cummulativeResult.GetReceiveBitrate(), cummulativeResult.GetSendBitrate());
+		double ratio =
+		  static_cast<double>(bitrates.sentBitrate) / static_cast<double>(bitrates.recvBitrate);
 
+		// RTP is being received properly.
 		if (0.75f <= ratio && ratio <= 1.25f)
 		{
-			if (bitrate > this->availableBitrate)
+			if (bitrates.recvBitrate > this->availableBitrate)
 			{
-				this->availableBitrate = bitrate;
+				this->availableBitrate = bitrates.recvBitrate;
 
 				MS_DEBUG_DEV("BWE UP [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
 			}
 		}
+		// RTP is being received worst than expected.
 		else
 		{
-			if (bitrate < this->availableBitrate)
+			if (bitrates.recvBitrate < this->availableBitrate)
 			{
-				this->availableBitrate = bitrate;
+				// TODO: This 0.8 must be set acording to other values: dod, jitter, etc.
+				this->availableBitrate *= 0.8;
 
 				MS_DEBUG_DEV(
 				  "BWE DOWN [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
@@ -225,14 +227,13 @@ namespace RTC
 		{
 			RemoveOldInfos();
 
-			// TODO.
-			// EstimateAvailableBitrate();
-
 			// TODO. Remove.
 			auto bitrates = GetBitrates();
 
 			MS_ERROR(
 			  "sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32, bitrates.sentBitrate, bitrates.recvBitrate);
+
+			EstimateAvailableBitrate();
 
 			this->timer->Start(static_cast<uint64_t>(TimerInterval));
 		}
@@ -363,48 +364,5 @@ namespace RTC
 		  static_cast<double>(totalBytes * 8) / static_cast<double>(recvTimeWindowMs / 1000);
 
 		return bitrates;
-	}
-
-	void SenderBandwidthEstimator::CummulativeResult::AddPacket(
-	  size_t size, int64_t sentAtMs, int64_t receivedAtMs)
-	{
-		MS_TRACE();
-
-		if (this->numPackets == 0u)
-		{
-			this->firstPacketSentAtMs     = sentAtMs;
-			this->firstPacketReceivedAtMs = receivedAtMs;
-			this->lastPacketSentAtMs      = sentAtMs;
-			this->lastPacketReceivedAtMs  = receivedAtMs;
-		}
-		else
-		{
-			if (sentAtMs < this->firstPacketSentAtMs)
-				this->firstPacketSentAtMs = sentAtMs;
-
-			if (receivedAtMs < this->firstPacketReceivedAtMs)
-				this->firstPacketReceivedAtMs = receivedAtMs;
-
-			if (sentAtMs > this->lastPacketSentAtMs)
-				this->lastPacketSentAtMs = sentAtMs;
-
-			if (receivedAtMs > this->lastPacketReceivedAtMs)
-				this->lastPacketReceivedAtMs = receivedAtMs;
-		}
-
-		this->numPackets++;
-		this->totalSize += size;
-	}
-
-	void SenderBandwidthEstimator::CummulativeResult::Reset()
-	{
-		MS_TRACE();
-
-		this->numPackets              = 0u;
-		this->totalSize               = 0u;
-		this->firstPacketSentAtMs     = 0u;
-		this->lastPacketSentAtMs      = 0u;
-		this->firstPacketReceivedAtMs = 0u;
-		this->lastPacketReceivedAtMs  = 0u;
 	}
 } // namespace RTC
