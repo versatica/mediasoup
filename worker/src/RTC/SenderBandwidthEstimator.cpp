@@ -281,7 +281,6 @@ namespace RTC
 		uint64_t lastSentAtMs  = 0;
 		uint64_t firstRecvAtMs = 0;
 		uint64_t lastRecvAtMs  = 0;
-		size_t numReceived     = 0;
 		SenderBandwidthEstimator::Bitrates bitrates;
 
 		for (auto& kv : this->sentInfos)
@@ -293,8 +292,6 @@ namespace RTC
 			{
 				continue;
 			}
-
-			numReceived++;
 
 			if (!firstSentAtMs)
 			{
@@ -325,10 +322,12 @@ namespace RTC
 				lastRecvAtMs = sentInfo.recvInfo.receivedAtMs;
 			}
 
+			// Increase total bytes.
 			totalBytes += sentInfo.size;
 		}
 
-		if (numReceived == 0)
+		// Zero bytes processed.
+		if (totalBytes == 0)
 		{
 			bitrates.sentBitrate = 0;
 			bitrates.sentBitrate = 0;
