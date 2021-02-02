@@ -36,6 +36,13 @@ namespace RTC
 		};
 
 	public:
+		struct RecvInfo
+		{
+			uint64_t receivedAtMs{ 0u };
+			int16_t delta{ 0 };
+			int16_t dod{ 0 };
+		};
+
 		struct SentInfo
 		{
 			uint16_t wideSeq{ 0u };
@@ -43,13 +50,8 @@ namespace RTC
 			bool isProbation{ false };
 			uint64_t sendingAtMs{ 0u };
 			uint64_t sentAtMs{ 0u };
-		};
-
-		struct RecvInfo
-		{
-			uint16_t wideSeq{ 0u };
-			uint64_t receivedAtMs{ 0u };
-			int16_t delta{ 0 };
+			bool received{ false };
+			RecvInfo recvInfo;
 		};
 
 	private:
@@ -129,11 +131,11 @@ namespace RTC
 		uint32_t availableBitrate{ 0u };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		std::map<uint16_t, SentInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> sentInfos;
-		std::map<uint16_t, RecvInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> recvInfos;
 		float rtt{ 0 }; // Round trip time in ms.
 		RTC::RateCalculator sendTransmission;
 		RTC::TrendCalculator sendTransmissionTrend;
 		Timer* timer{ nullptr };
+		uint16_t lastReceivedWideSeq{ 0u };
 	};
 } // namespace RTC
 

@@ -119,38 +119,33 @@ namespace RTC
 
 			auto& sentInfo = sentInfosIt->second;
 
-			// Create and store the RecvInfo.
-			RecvInfo recvInfo;
+			// Fill the RecvInfo.
+			sentInfo.received              = true;
+			sentInfo.recvInfo.receivedAtMs = result.receivedAtMs;
+			sentInfo.recvInfo.delta        = result.delta;
 
-			recvInfo.wideSeq      = wideSeq;
-			recvInfo.receivedAtMs = result.receivedAtMs;
-			recvInfo.delta        = result.delta;
-
-			// Store the RecvInfo.
-			this->recvInfos[wideSeq] = recvInfo;
-
-			// Get the RecvInfo pointed by the current one in order to calculate the delta.
-			auto recvInfosIt = this->recvInfos.find(wideSeq);
-
-			// First RecvInfo.
-			if (recvInfosIt == this->recvInfos.begin())
-				continue;
-
-			--recvInfosIt;
-
-			const auto& previousRecvInfo = (*recvInfosIt).second;
-
-			sentInfosIt = this->sentInfos.find(previousRecvInfo.wideSeq);
-
-			// Get the SendInfo related to the RecvInfo pointed by the current one.
+			// Retrieve the RecvInfo of the previously received RTP packet in order to calculate
+			// the delta.
+			sentInfosIt = this->sentInfos.find(this->lastReceivedWideSeq);
 			if (sentInfosIt == this->sentInfos.end())
 			{
-				MS_WARN_DEV("received packet not present in sent infos [wideSeq:%" PRIu16 "]", wideSeq);
+				this->lastReceivedWideSeq = wideSeq;
 
 				continue;
 			}
 
+			this->lastReceivedWideSeq = wideSeq;
+
 			auto& previousSentInfo = sentInfosIt->second;
+
+			sentInfo.recvInfo.dod = (result.delta / 4) - (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
+
+			// Create and store the DeltaOfDelta.
+			DeltaOfDelta deltaOfDelta;
+
+			deltaOfDelta.wideSeq  = wideSeq;
+			deltaOfDelta.sentAtMs = sentInfo.sentAtMs;
+			deltaOfDelta.dod      = (result.delta / 4) - (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
 
 			// TODO: Remove.
 			// MS_DEBUG_DEV(
@@ -159,13 +154,6 @@ namespace RTC
 			//   wideSeq,
 			//   sentInfo.sentAtMs - previousSentInfo.sentAtMs,
 			//   result.delta / 4);
-
-			// Create and store the DeltaOfDelta.
-			DeltaOfDelta deltaOfDelta;
-
-			deltaOfDelta.wideSeq  = wideSeq;
-			deltaOfDelta.sentAtMs = sentInfo.sentAtMs;
-			deltaOfDelta.dod      = (result.delta / 4) - (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
 
 		}
 
@@ -239,6 +227,7 @@ namespace RTC
 		if (timer == this->timer)
 		{
 			// TODO.
+			// RemoveOldInfos();
 			// EstimateAvailableBitrate();
 
 		this->timer->Start(static_cast<uint64_t>(TimerInterval));
@@ -252,6 +241,8 @@ namespace RTC
 			return;
 		}
 
+		// TODO: Do it based on time. Remove items older than X MS.
+
 		// Retrieve last sent wide seq.
 		auto lastSentWideSeq = this->sentInfos.rbegin()->first;
 
@@ -259,11 +250,6 @@ namespace RTC
 		auto sentInfosIt = this->sentInfos.lower_bound(lastSentWideSeq - MaxSentInfoAge + 1);
 
 		this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
-
-		// Remove old received infos.
-		auto recvInfosIt = this->recvInfos.lower_bound(lastSentWideSeq - MaxSentInfoAge + 1);
-
-		this->recvInfos.erase(this->recvInfos.begin(), recvInfosIt);
 	}
 
 	void SenderBandwidthEstimator::CummulativeResult::AddPacket(
