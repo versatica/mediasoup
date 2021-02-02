@@ -66,8 +66,6 @@ namespace RTC
 
 		auto nowMs = sentInfo.sentAtMs;
 
-		this->RemoveOldInfos();
-
 		// Insert the sent info into the map.
 		this->sentInfos[sentInfo.wideSeq] = sentInfo;
 
@@ -225,9 +223,16 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->timer)
 		{
+			RemoveOldInfos();
+
 			// TODO.
-			// RemoveOldInfos();
 			// EstimateAvailableBitrate();
+
+			// TODO. Remove.
+			auto bitrates = GetBitrates();
+
+			MS_ERROR(
+			  "sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32, bitrates.sentBitrate, bitrates.recvBitrate);
 
 			this->timer->Start(static_cast<uint64_t>(TimerInterval));
 		}
@@ -267,6 +272,98 @@ namespace RTC
 
 			this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
 		}
+	}
+
+	SenderBandwidthEstimator::Bitrates SenderBandwidthEstimator::GetBitrates()
+	{
+		uint32_t totalBytes    = 0;
+		uint64_t firstSentAtMs = 0;
+		uint64_t lastSentAtMs  = 0;
+		uint64_t firstRecvAtMs = 0;
+		uint64_t lastRecvAtMs  = 0;
+		size_t numReceived     = 0;
+		SenderBandwidthEstimator::Bitrates bitrates;
+
+		for (auto& kv : this->sentInfos)
+		{
+			auto& sentInfo = kv.second;
+
+			// RTP packet feedback not received.
+			if (!sentInfo.received)
+			{
+				continue;
+			}
+
+			numReceived++;
+
+			if (!firstSentAtMs)
+			{
+				firstSentAtMs = sentInfo.sentAtMs;
+				firstRecvAtMs = sentInfo.recvInfo.receivedAtMs;
+				lastSentAtMs  = sentInfo.sentAtMs;
+				lastRecvAtMs  = sentInfo.recvInfo.receivedAtMs;
+			}
+
+			// Handle disorder on sending.
+			if (RTC::SeqManager<uint64_t>::IsSeqLowerThan(sentInfo.sentAtMs, firstSentAtMs))
+			{
+				firstSentAtMs = sentInfo.sentAtMs;
+			}
+			else if (RTC::SeqManager<uint64_t>::IsSeqHigherThan(sentInfo.sentAtMs, lastSentAtMs))
+			{
+				lastSentAtMs = sentInfo.sentAtMs;
+			}
+
+			// Handle disorder on receiving.
+			if (RTC::SeqManager<uint64_t>::IsSeqLowerThan(sentInfo.recvInfo.receivedAtMs, firstRecvAtMs))
+			{
+				firstRecvAtMs = sentInfo.recvInfo.receivedAtMs;
+			}
+			else if (RTC::SeqManager<uint64_t>::IsSeqHigherThan(
+			           sentInfo.recvInfo.receivedAtMs, lastRecvAtMs))
+			{
+				lastRecvAtMs = sentInfo.recvInfo.receivedAtMs;
+			}
+
+			totalBytes += sentInfo.size;
+		}
+
+		if (numReceived == 0)
+		{
+			bitrates.sentBitrate = 0;
+			bitrates.sentBitrate = 0;
+
+			return bitrates;
+		}
+
+		uint64_t sentTimeWindowMs = lastSentAtMs - firstSentAtMs;
+		uint64_t recvTimeWindowMs = lastRecvAtMs - firstRecvAtMs;
+
+		// All packets sent in the same millisecond.
+		if (sentTimeWindowMs == 0)
+		{
+			sentTimeWindowMs = 1000;
+		}
+
+		// All packets received in the same millisecond.
+		if (recvTimeWindowMs == 0)
+		{
+			recvTimeWindowMs = 1000;
+		}
+
+		// TODO: Remove.
+		MS_DEBUG_DEV(
+		  "totalBytes:%" PRIu32 ", sentTimeWindowMs:%" PRIu64 ",recvTimeWindowMs:%" PRIu64,
+		  totalBytes,
+		  sentTimeWindowMs,
+		  recvTimeWindowMs);
+
+		bitrates.sentBitrate =
+		  static_cast<double>(totalBytes * 8) / static_cast<double>(sentTimeWindowMs / 1000);
+		bitrates.recvBitrate =
+		  static_cast<double>(totalBytes * 8) / static_cast<double>(recvTimeWindowMs / 1000);
+
+		return bitrates;
 	}
 
 	void SenderBandwidthEstimator::CummulativeResult::AddPacket(

@@ -54,6 +54,12 @@ namespace RTC
 			RecvInfo recvInfo;
 		};
 
+		struct Bitrates
+		{
+			uint32_t sentBitrate{ 0u };
+			uint32_t recvBitrate{ 0u };
+		};
+
 	private:
 		class CummulativeResult
 		{
@@ -110,6 +116,7 @@ namespace RTC
 		void RtpPacketSent(SentInfo& sentInfo);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void EstimateAvailableBitrate(CummulativeResult& cummulativeResult);
+		void EstimateAvailableBitrate();
 		void UpdateRtt(float rtt);
 		uint32_t GetAvailableBitrate() const;
 		uint32_t GetSendBitrate() const;
@@ -122,6 +129,7 @@ namespace RTC
 
 	private:
 		void RemoveOldInfos();
+		Bitrates GetBitrates();
 
 	private:
 		// Passed by argument.

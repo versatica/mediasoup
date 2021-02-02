@@ -137,5 +137,6 @@ namespace RTC
 	template class SeqManager<uint8_t>;
 	template class SeqManager<uint16_t>;
 	template class SeqManager<uint32_t>;
+	template class SeqManager<uint64_t>;
 
 } // namespace RTC
