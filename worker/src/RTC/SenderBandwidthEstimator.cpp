@@ -240,15 +240,33 @@ namespace RTC
 			return;
 		}
 
-		// TODO: Do it based on time. Remove items older than X MS.
+		const auto nowMs = DepLibUV::GetTimeMs();
 
-		// Retrieve last sent wide seq.
-		auto lastSentWideSeq = this->sentInfos.rbegin()->first;
+		// A value of -1 indicates there is no old sendInfo.
+		int32_t oldestWideSeq = -1;
+		for (auto& kv : this->sentInfos)
+		{
+			auto& sentInfo = kv.second;
 
-		// Remove old sent infos.
-		auto sentInfosIt = this->sentInfos.lower_bound(lastSentWideSeq - MaxSentInfoAge + 1);
+			if (sentInfo.sentAtMs < nowMs - MaxSentInfoAge)
+			{
+				oldestWideSeq = kv.first;
 
-		this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
+				continue;
+			}
+			// Following sentInfo's are newer.
+			else
+			{
+				break;
+			}
+		}
+
+		if (oldestWideSeq != -1)
+		{
+			auto sentInfosIt = this->sentInfos.lower_bound(oldestWideSeq);
+
+			this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
+		}
 	}
 
 	void SenderBandwidthEstimator::CummulativeResult::AddPacket(
