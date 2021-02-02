@@ -3042,11 +3042,11 @@ namespace RTC
 
 		json data = json::object();
 
-		data["type"]                = "bwe-dod";
-		data["timestamp"]           = DepLibUV::GetTimeMs();
-		data["direction"]           = "out";
-		data["info"]["type"]        = "transport-cc";
-		data["info"]["dod"]         = json::array();
+		data["type"]         = "bwe-dod";
+		data["timestamp"]    = DepLibUV::GetTimeMs();
+		data["direction"]    = "out";
+		data["info"]["type"] = "transport-cc";
+		data["info"]["dod"]  = json::array();
 
 		for (const auto& deltaOfDelta : deltaOfDeltas)
 		{

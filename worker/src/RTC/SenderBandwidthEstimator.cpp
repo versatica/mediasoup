@@ -11,7 +11,7 @@ namespace RTC
 	/* Static. */
 
 	// static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
-	static constexpr uint16_t MaxSentInfoAge{ 2000u };     // TODO: Let's see.
+	static constexpr uint16_t MaxSentInfoAge{ 2000u }; // TODO: Let's see.
 	static constexpr float DefaultRtt{ 100 };
 	static constexpr uint16_t TimerInterval{ 1000u };
 
@@ -46,7 +46,6 @@ namespace RTC
 
 		// Start the timer.
 		this->timer->Start(static_cast<uint64_t>(TimerInterval));
-
 	}
 
 	void SenderBandwidthEstimator::TransportDisconnected()
@@ -156,12 +155,10 @@ namespace RTC
 			//   wideSeq,
 			//   sentInfo.sentAtMs - previousSentInfo.sentAtMs,
 			//   result.delta / 4);
-
 		}
 
 		// Notify listener.
 		this->listener->OnSenderBandwidthEstimatorDeltaOfDelta(this, deltaOfDeltas);
-
 	}
 
 	void SenderBandwidthEstimator::EstimateAvailableBitrate(CummulativeResult& cummulativeResult)
@@ -232,7 +229,7 @@ namespace RTC
 			// RemoveOldInfos();
 			// EstimateAvailableBitrate();
 
-		this->timer->Start(static_cast<uint64_t>(TimerInterval));
+			this->timer->Start(static_cast<uint64_t>(TimerInterval));
 		}
 	}
 

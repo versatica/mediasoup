@@ -12,7 +12,7 @@
 
 namespace RTC
 {
-	class SenderBandwidthEstimator: public Timer::Listener
+	class SenderBandwidthEstimator : public Timer::Listener
 	{
 	public:
 		struct DeltaOfDelta
