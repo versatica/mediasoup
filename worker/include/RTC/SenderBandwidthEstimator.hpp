@@ -22,16 +22,20 @@ namespace RTC
 			int16_t dod{ 0 };
 		};
 
+		struct Bitrates
+		{
+			uint32_t availableBitrate{ 0u };
+			uint32_t previousAvailableBitrate{ 0u };
+			uint32_t sendBitrate{ 0u };
+			uint32_t recvBitrate{ 0u };
+		};
+
 	public:
 		class Listener
 		{
 		public:
 			virtual void OnSenderBandwidthEstimatorAvailableBitrate(
-			  RTC::SenderBandwidthEstimator* senderBwe,
-			  uint32_t availableBitrate,
-			  uint32_t previousAvailableBitrate,
-			  uint32_t sendBirate,
-			  uint32_t recvBirate) = 0;
+			  RTC::SenderBandwidthEstimator* senderBwe, Bitrates& bitrates) = 0;
 
 			virtual void OnSenderBandwidthEstimatorDeltaOfDelta(
 			  RTC::SenderBandwidthEstimator* senderBwe, std::vector<DeltaOfDelta>& deltaOfDeltas) = 0;
@@ -56,7 +60,7 @@ namespace RTC
 			RecvInfo recvInfo;
 		};
 
-		struct Bitrates
+		struct SendRecvBitrates
 		{
 			uint32_t sendBitrate{ 0u };
 			uint32_t recvBitrate{ 0u };
@@ -106,7 +110,7 @@ namespace RTC
 	private:
 		void RemoveOldInfos();
 		void RemoveProcessedInfos();
-		Bitrates GetBitrates();
+		SendRecvBitrates GetSendRecvBitrates();
 
 	private:
 		// Passed by argument.

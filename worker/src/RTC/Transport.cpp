@@ -2525,8 +2525,7 @@ namespace RTC
 		Channel::Notifier::Emit(this->id, "trace", data);
 	}
 
-	inline void Transport::EmitTraceEventNewBweType(
-	  uint32_t availableBitrate, uint32_t sendBitrate, uint32_t recvBitrate) const
+	inline void Transport::EmitTraceEventNewBweType(RTC::SenderBandwidthEstimator::Bitrates& bitrates) const
 	{
 		MS_TRACE();
 
@@ -2539,9 +2538,9 @@ namespace RTC
 		data["timestamp"]                = DepLibUV::GetTimeMs();
 		data["direction"]                = "out";
 		data["info"]["type"]             = "transport-cc";
-		data["info"]["availableBitrate"] = availableBitrate;
-		data["info"]["sendBitrate"]      = sendBitrate;
-		data["info"]["recvBitrate"]      = recvBitrate;
+		data["info"]["availableBitrate"] = bitrates.availableBitrate;
+		data["info"]["sendBitrate"]      = bitrates.sendBitrate;
+		data["info"]["recvBitrate"]      = bitrates.recvBitrate;
 
 		Channel::Notifier::Emit(this->id, "trace", data);
 	}
@@ -3100,21 +3099,17 @@ namespace RTC
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	inline void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
-	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
-	  uint32_t availableBitrate,
-	  uint32_t previousAvailableBitrate,
-	  uint32_t sendBitrate,
-	  uint32_t recvBitrate)
+	  RTC::SenderBandwidthEstimator* /*senderBwe*/, RTC::SenderBandwidthEstimator::Bitrates& bitrates)
 	{
 		MS_TRACE();
 
 		MS_DEBUG_DEV(
 		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
-		  availableBitrate,
-		  previousAvailableBitrate);
+		  bitrates.availableBitrate,
+		  bitrates.previousAvailableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
-		EmitTraceEventNewBweType(availableBitrate, sendBitrate, recvBitrate);
+		EmitTraceEventNewBweType(bitrates);
 	}
 
 	inline void Transport::OnSenderBandwidthEstimatorDeltaOfDelta(
