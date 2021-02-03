@@ -136,14 +136,15 @@ namespace RTC
 
 			auto& previousSentInfo = sentInfosIt->second;
 
-			sentInfo.recvInfo.dod = (result.delta / 4) - (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
+			sentInfo.recvInfo.dod = (result.receivedAtMs - previousSentInfo.recvInfo.receivedAtMs) -
+			                        (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
 
 			// Create and store the DeltaOfDelta.
 			DeltaOfDelta deltaOfDelta;
 
 			deltaOfDelta.wideSeq  = wideSeq;
 			deltaOfDelta.sentAtMs = sentInfo.sentAtMs;
-			deltaOfDelta.dod      = (result.delta / 4) - (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
+			deltaOfDelta.dod      = sentInfo.recvInfo.dod;
 
 			deltaOfDeltas.push_back(deltaOfDelta);
 
@@ -199,7 +200,6 @@ namespace RTC
 			// 	MS_DEBUG_DEV("wideSeq:%" PRIu16 ", dod:%" PRIi16,
 			// 			deltaOfDelta.wideSeq,
 			// 			deltaOfDelta.dod);
-
 			// }
 		}
 
