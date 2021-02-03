@@ -100,9 +100,6 @@ namespace RTC
 		void UpdateRtt(float rtt);
 		void SetDesiredBitrate(uint32_t desiredBitrate);
 		uint32_t GetAvailableBitrate() const;
-		uint32_t GetSendBitrate() const;
-		uint32_t GetRecvBitrate() const;
-		uint32_t GetDesiredBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
 
 		/* Pure virtual methods inherited from Timer::Listener. */
