@@ -13,6 +13,7 @@ namespace RTC
 
 	// static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
 	static constexpr uint16_t MaxSentInfoAge{ 2000u }; // TODO: Let's see.
+	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
 	static constexpr float DefaultRtt{ 100 };
 	static constexpr uint16_t TimerInterval{ 1000u };
 
@@ -20,8 +21,9 @@ namespace RTC
 
 	SenderBandwidthEstimator::SenderBandwidthEstimator(
 	  RTC::SenderBandwidthEstimator::Listener* listener, uint32_t initialAvailableBitrate)
-	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate), rtt(DefaultRtt),
-	    sendTransmission(1000u), sendTransmissionTrend(0.15f)
+	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate),
+	    availableBitrate(initialAvailableBitrate), rtt(DefaultRtt), sendTransmission(1000u),
+	    sendTransmissionTrend(0.15f)
 	{
 		MS_TRACE();
 
@@ -171,15 +173,17 @@ namespace RTC
 			auto previousDeltaOfDelta  = this->currentDeltaOfDelta;
 
 			this->currentDeltaOfDelta =
-			  Utils::ComputeEWMA(this->currentDeltaOfDelta, averageDeltaOfDelta, 0.6f);
+			  Utils::ComputeEWMA(this->currentDeltaOfDelta, averageDeltaOfDelta, 0.7f);
 
 			const auto ratio = this->currentDeltaOfDelta / previousDeltaOfDelta;
 
-			if (ratio >= 1.25f)
+			// TODO: 0.7f is the EWMA alpha. Define a constant.
+			if (ratio > (1 - 0.7f))
 			{
 				this->deltaOfdeltaTrend = INCREASE;
 			}
-			else if (ratio <= 0.75f)
+			// TODO: 0.7f is the EWMA alpha. Define a constant.
+			else if (ratio < (1 - 0.7f))
 			{
 				this->deltaOfdeltaTrend = DECREASE;
 			}
@@ -189,9 +193,11 @@ namespace RTC
 			}
 
 			MS_DEBUG_DEV(
-			  "Delta of Delta. Total:%" PRIi32 ", avg: %f, trend: %s",
+			  "Delta of Delta. Total:%" PRIi32 ", avg: %f, current:%f, ratio:%f trend: %s",
 			  totalDeltaOfDelta,
 			  averageDeltaOfDelta,
+			  this->currentDeltaOfDelta,
+			  ratio,
 			  TrendToString(this->deltaOfdeltaTrend).c_str());
 
 			// TODO: Remove.
@@ -249,11 +255,14 @@ namespace RTC
 		if (this->deltaOfdeltaTrend == INCREASE)
 		{
 			this->availableBitrate *= 0.8;
+
+			MS_DEBUG_DEV("BWE DOWN [deltaOfDeltasTrend:%s", TrendToString(this->deltaOfdeltaTrend).c_str());
 		}
 		// Augment the available bitrate if delta of delta is decreasing.
 		else if (this->deltaOfdeltaTrend == DECREASE)
 		{
 			this->availableBitrate *= 1.2;
+			MS_DEBUG_DEV("BWE UP [deltaOfDeltasTrend:%s", TrendToString(this->deltaOfdeltaTrend).c_str());
 		}
 
 		Bitrates bitrates;
@@ -263,11 +272,13 @@ namespace RTC
 		bitrates.sendBitrate              = sendRecvBitrates.sendBitrate;
 		bitrates.recvBitrate              = sendRecvBitrates.recvBitrate;
 
+		auto maxBitrate = std::max<uint32_t>(
+		  this->initialAvailableBitrate, this->desiredBitrate * MaxBitrateIncrementFactor);
+
 		// Limit maximum available bitrate to desired one.
-		// TODO: Add a MaxBitrateIncrementFactor as in TransportCongestionControlClient.
-		if (bitrates.availableBitrate > this->desiredBitrate)
+		if (bitrates.availableBitrate > maxBitrate)
 		{
-			bitrates.availableBitrate = this->desiredBitrate;
+			bitrates.availableBitrate = maxBitrate;
 		}
 
 		this->listener->OnSenderBandwidthEstimatorAvailableBitrate(this, bitrates);
