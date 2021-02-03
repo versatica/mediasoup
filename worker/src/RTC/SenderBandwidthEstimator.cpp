@@ -4,6 +4,7 @@
 #include "RTC/SenderBandwidthEstimator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 #include <limits>
 
 namespace RTC
@@ -155,6 +156,53 @@ namespace RTC
 			//   result.delta / 4);
 		}
 
+		if (!deltaOfDeltas.empty())
+		{
+			// Calculate the average delta.
+			// TODO: Apply EWMA so last dod have more weight.
+			int32_t totalDeltaOfDelta = std::accumulate(
+			  deltaOfDeltas.begin(),
+			  deltaOfDeltas.end(),
+			  0,
+			  [](size_t acc, const DeltaOfDelta& deltaOfDelta) { return acc + deltaOfDelta.dod; });
+
+			double averageDeltaOfDelta = static_cast<double>(totalDeltaOfDelta) / deltaOfDeltas.size();
+			auto previousDeltaOfDelta  = this->currentDeltaOfDelta;
+
+			this->currentDeltaOfDelta =
+			  Utils::ComputeEWMA(this->currentDeltaOfDelta, averageDeltaOfDelta, 0.6f);
+
+			const auto ratio = this->currentDeltaOfDelta / previousDeltaOfDelta;
+
+			if (ratio >= 1.25f)
+			{
+				this->deltaOfdeltaTrend = INCREASE;
+			}
+			else if (ratio <= 0.75f)
+			{
+				this->deltaOfdeltaTrend = DECREASE;
+			}
+			else
+			{
+				this->deltaOfdeltaTrend = HOLD;
+			}
+
+			MS_DEBUG_DEV(
+			  "Delta of Delta. Total:%" PRIi32 ", avg: %f, trend: %s",
+			  totalDeltaOfDelta,
+			  averageDeltaOfDelta,
+			  TrendToString(this->deltaOfdeltaTrend).c_str());
+
+			// TODO: Remove.
+			// for (const auto& deltaOfDelta : deltaOfDeltas)
+			// {
+			// 	MS_DEBUG_DEV("wideSeq:%" PRIu16 ", dod:%" PRIi16,
+			// 			deltaOfDelta.wideSeq,
+			// 			deltaOfDelta.dod);
+
+			// }
+		}
+
 		// Notify listener.
 		this->listener->OnSenderBandwidthEstimatorDeltaOfDelta(this, deltaOfDeltas);
 	}
@@ -195,6 +243,17 @@ namespace RTC
 				MS_DEBUG_DEV(
 				  "BWE DOWN [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
 			}
+		}
+
+		// Reduce the available bitrate if delta of delta is increasing.
+		if (this->deltaOfdeltaTrend == INCREASE)
+		{
+			this->availableBitrate *= 0.8;
+		}
+		// Augment the available bitrate if delta of delta is decreasing.
+		else if (this->deltaOfdeltaTrend == DECREASE)
+		{
+			this->availableBitrate *= 1.2;
 		}
 
 		// TODO: No, should wait for AvailableBitrateEventInterval and so on.

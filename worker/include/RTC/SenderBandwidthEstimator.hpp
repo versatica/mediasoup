@@ -62,6 +62,26 @@ namespace RTC
 			uint32_t recvBitrate{ 0u };
 		};
 
+		enum Trend
+		{
+			INCREASE = 0,
+			DECREASE,
+			HOLD,
+		};
+
+		std::string static TrendToString(Trend trend)
+		{
+			switch (trend)
+			{
+				case INCREASE:
+					return "increase";
+				case DECREASE:
+					return "decrease";
+				case HOLD:
+					return "hold";
+			}
+		}
+
 	public:
 		SenderBandwidthEstimator(
 		  RTC::SenderBandwidthEstimator::Listener* listener, uint32_t initialAvailableBitrate);
@@ -101,6 +121,8 @@ namespace RTC
 		RTC::TrendCalculator sendTransmissionTrend;
 		Timer* timer{ nullptr };
 		uint16_t lastReceivedWideSeq{ 0u };
+		double currentDeltaOfDelta{ 0 };
+		Trend deltaOfdeltaTrend{ HOLD };
 	};
 } // namespace RTC
 

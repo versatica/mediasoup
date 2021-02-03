@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Transport"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Transport.hpp"
 #include "Logger.hpp"
@@ -2296,6 +2296,78 @@ namespace RTC
 		}
 	}
 
+#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+	void Transport::DistributeAvailableOutgoingBitrate()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->senderBwe, "no SenderBandwidthEstimator");
+
+		std::multimap<uint8_t, RTC::Consumer*> multimapPriorityConsumer;
+
+		// Fill the map with Consumers and their priority (if > 0).
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer = kv.second;
+			auto priority  = consumer->GetBitratePriority();
+
+			if (priority > 0u)
+				multimapPriorityConsumer.emplace(priority, consumer);
+		}
+
+		// Nobody wants bitrate. Exit.
+		if (multimapPriorityConsumer.empty())
+			return;
+
+		uint32_t availableBitrate = this->senderBwe->GetAvailableBitrate();
+
+		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+
+		// Redistribute the available bitrate by allowing Consumers to increase
+		// layer by layer. Take into account the priority of each Consumer to
+		// provide it with more bitrate.
+		while (availableBitrate > 0u)
+		{
+			auto previousAvailableBitrate = availableBitrate;
+
+			for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+			{
+				auto priority  = it->first;
+				auto* consumer = it->second;
+
+				// If a Consumer has priority > 1, call IncreaseLayer() more times to
+				// provide it with more available bitrate to choose its preferred layers.
+				for (uint8_t i{ 1u }; i <= priority; ++i)
+				{
+					auto usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
+
+					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
+
+					availableBitrate -= usedBitrate;
+
+					// Exit the loop fast if used bitrate is 0.
+					if (usedBitrate == 0u)
+						break;
+				}
+			}
+
+			// If no Consumer used bitrate, exit the loop.
+			if (availableBitrate == previousAvailableBitrate)
+				break;
+		}
+
+		MS_DEBUG_DEV("after layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+
+		// Finally instruct Consumers to apply their computed layers.
+		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
+		{
+			auto* consumer = it->second;
+
+			consumer->ApplyLayers();
+		}
+	}
+
+#else
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
 		MS_TRACE();
@@ -2378,6 +2450,7 @@ namespace RTC
 			consumer->ApplyLayers();
 		}
 	}
+#endif
 
 	void Transport::ComputeOutgoingDesiredBitrate(bool forceBitrate)
 	{
@@ -2448,6 +2521,27 @@ namespace RTC
 				data["info"]["type"] = "remb";
 				break;
 		}
+
+		Channel::Notifier::Emit(this->id, "trace", data);
+	}
+
+	inline void Transport::EmitTraceEventNewBweType(
+	  uint32_t availableBitrate, uint32_t sendBitrate, uint32_t recvBitrate) const
+	{
+		MS_TRACE();
+
+		if (!this->traceEventTypes.newBwe)
+			return;
+
+		json data = json::object();
+
+		data["type"]                     = "new-bwe";
+		data["timestamp"]                = DepLibUV::GetTimeMs();
+		data["direction"]                = "out";
+		data["info"]["type"]             = "transport-cc";
+		data["info"]["availableBitrate"] = availableBitrate;
+		data["info"]["sendBitrate"]      = sendBitrate;
+		data["info"]["recvBitrate"]      = recvBitrate;
 
 		Channel::Notifier::Emit(this->id, "trace", data);
 	}
@@ -3008,7 +3102,7 @@ namespace RTC
 	inline void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
 	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
 	  uint32_t availableBitrate,
-	  uint32_t /*previousAvailableBitrate*/,
+	  uint32_t previousAvailableBitrate,
 	  uint32_t sendBitrate,
 	  uint32_t recvBitrate)
 	{
@@ -3019,20 +3113,8 @@ namespace RTC
 		  availableBitrate,
 		  previousAvailableBitrate);
 
-		if (!this->traceEventTypes.newBwe)
-			return;
-
-		json data = json::object();
-
-		data["type"]                     = "new-bwe";
-		data["timestamp"]                = DepLibUV::GetTimeMs();
-		data["direction"]                = "out";
-		data["info"]["type"]             = "transport-cc";
-		data["info"]["availableBitrate"] = availableBitrate;
-		data["info"]["sendBitrate"]      = sendBitrate;
-		data["info"]["recvBitrate"]      = recvBitrate;
-
-		Channel::Notifier::Emit(this->id, "trace", data);
+		DistributeAvailableOutgoingBitrate();
+		EmitTraceEventNewBweType(availableBitrate, sendBitrate, recvBitrate);
 	}
 
 	inline void Transport::OnSenderBandwidthEstimatorDeltaOfDelta(

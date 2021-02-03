@@ -174,6 +174,8 @@ namespace RTC
 		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
 		void EmitTraceEventProbationType(RTC::RtpPacket* packet) const;
 		void EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
+		void EmitTraceEventNewBweType(
+		  uint32_t availableBitrate, uint32_t sendBitrate, uint32_t recvBitrate) const;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:

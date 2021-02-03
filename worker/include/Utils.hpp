@@ -349,6 +349,15 @@ namespace Utils
 				return false;
 		}
 	};
+
+	// Exponentially weighted moving average (EWMA).
+	// The higher the alpha [0-1], the more weight has the new value.
+	//
+	template<typename T>
+	T ComputeEWMA(T previous, T current, float alpha)
+	{
+		return previous ? (1 - alpha) * previous + alpha * current : current;
+	}
 } // namespace Utils
 
 #endif
