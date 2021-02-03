@@ -98,9 +98,11 @@ namespace RTC
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void EstimateAvailableBitrate();
 		void UpdateRtt(float rtt);
+		void SetDesiredBitrate(uint32_t desiredBitrate);
 		uint32_t GetAvailableBitrate() const;
 		uint32_t GetSendBitrate() const;
 		uint32_t GetRecvBitrate() const;
+		uint32_t GetDesiredBitrate() const;
 		void RescheduleNextAvailableBitrateEvent();
 
 		/* Pure virtual methods inherited from Timer::Listener. */
@@ -118,6 +120,7 @@ namespace RTC
 		// Others.
 		uint32_t initialAvailableBitrate{ 0u };
 		uint32_t availableBitrate{ 0u };
+		uint32_t desiredBitrate{ 0u };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		std::map<uint16_t, SentInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> sentInfos;
 		float rtt{ 0 }; // Round trip time in ms.

@@ -2367,6 +2367,27 @@ namespace RTC
 		}
 	}
 
+	void Transport::ComputeOutgoingDesiredBitrate(bool /*forceBitrate*/)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->senderBwe, "no SenderBandwidthEstimator");
+
+		uint32_t totalDesiredBitrate{ 0u };
+
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* consumer      = kv.second;
+			auto desiredBitrate = consumer->GetDesiredBitrate();
+
+			totalDesiredBitrate += desiredBitrate;
+		}
+
+		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
+
+		this->senderBwe->SetDesiredBitrate(totalDesiredBitrate);
+	}
+
 #else
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
@@ -2450,7 +2471,6 @@ namespace RTC
 			consumer->ApplyLayers();
 		}
 	}
-#endif
 
 	void Transport::ComputeOutgoingDesiredBitrate(bool forceBitrate)
 	{
@@ -2472,6 +2492,8 @@ namespace RTC
 
 		this->tccClient->SetDesiredBitrate(totalDesiredBitrate, forceBitrate);
 	}
+
+#endif
 
 	inline void Transport::EmitTraceEventProbationType(RTC::RtpPacket* packet) const
 	{

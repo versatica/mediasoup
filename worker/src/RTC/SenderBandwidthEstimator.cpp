@@ -263,7 +263,13 @@ namespace RTC
 		bitrates.sendBitrate              = sendRecvBitrates.sendBitrate;
 		bitrates.recvBitrate              = sendRecvBitrates.recvBitrate;
 
-		// TODO: No, should wait for AvailableBitrateEventInterval and so on.
+		// Limit maximum available bitrate to desired one.
+		// TODO: Add a MaxBitrateIncrementFactor as in TransportCongestionControlClient.
+		if (bitrates.availableBitrate > this->desiredBitrate)
+		{
+			bitrates.availableBitrate = this->desiredBitrate;
+		}
+
 		this->listener->OnSenderBandwidthEstimatorAvailableBitrate(this, bitrates);
 	}
 
@@ -272,6 +278,13 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtt = rtt;
+	}
+
+	void SenderBandwidthEstimator::SetDesiredBitrate(uint32_t desiredBitrate)
+	{
+		MS_TRACE();
+
+		this->desiredBitrate = desiredBitrate;
 	}
 
 	uint32_t SenderBandwidthEstimator::GetAvailableBitrate() const
