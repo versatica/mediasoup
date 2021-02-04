@@ -193,15 +193,15 @@ namespace RTC
 			this->deltaOfdeltaTrend = HOLD;
 		}
 
-		MS_DEBUG_DEV(
-		  "Delta of Delta. Total:%" PRIi32 ", avg: %f, current:%f, ratio:%f trend: %s",
-		  totalDeltaOfDelta,
-		  avgDeltaOfDelta,
-		  this->currentDeltaOfDelta,
-		  ratio,
-		  TrendToString(this->deltaOfdeltaTrend).c_str());
-
 		// TODO: Remove.
+		//MS_DEBUG_DEV(
+		//  "Delta of Delta. Total:%" PRIi32 ", avg: %f, current:%f, ratio:%f trend: %s",
+		//  totalDeltaOfDelta,
+		//  avgDeltaOfDelta,
+		//  this->currentDeltaOfDelta,
+		//  ratio,
+		//  TrendToString(this->deltaOfdeltaTrend).c_str());
+
 		// for (const auto& deltaOfDelta : deltaOfDeltas)
 		// {
 		// 	MS_DEBUG_DEV("wideSeq:%" PRIu16 ", dod:%" PRIi16,
