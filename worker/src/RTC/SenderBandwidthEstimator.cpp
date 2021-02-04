@@ -163,28 +163,18 @@ namespace RTC
 			return;
 		}
 
-		// Calculate the average delta.
-		// TODO: Apply EWMA so last dod have more weight.
-		int32_t totalDeltaOfDelta = std::accumulate(
-				deltaOfDeltas.begin(),
-				deltaOfDeltas.end(),
-				0,
-				[](size_t acc, const DeltaOfDelta& deltaOfDelta) { return acc + deltaOfDelta.dod; });
-
-		double avgDeltaOfDelta     = static_cast<double>(totalDeltaOfDelta) / deltaOfDeltas.size();
 		auto previousDeltaOfDelta  = this->currentDeltaOfDelta;
 
-		this->currentDeltaOfDelta = Utils::ComputeEWMA(this->currentDeltaOfDelta, avgDeltaOfDelta, 0.6f);
+		for (const auto deltaOfDelta : deltaOfDeltas)
+		{
+			this->currentDeltaOfDelta = Utils::ComputeEWMA(this->currentDeltaOfDelta, static_cast<double>(deltaOfDelta.dod), 0.6f);
+		}
 
-		const auto ratio = this->currentDeltaOfDelta / previousDeltaOfDelta;
-
-		// TODO: 0.7f is the EWMA alpha. Define a constant.
-		if (ratio > (1 - 0.6f))
+		if (this->currentDeltaOfDelta > previousDeltaOfDelta)
 		{
 			this->deltaOfdeltaTrend = INCREASE;
 		}
-		// TODO: 0.7f is the EWMA alpha. Define a constant.
-		else if (ratio < (1 - 0.6f))
+		else if (this->currentDeltaOfDelta < previousDeltaOfDelta)
 		{
 			this->deltaOfdeltaTrend = DECREASE;
 		}
@@ -194,13 +184,11 @@ namespace RTC
 		}
 
 		// TODO: Remove.
-		//MS_DEBUG_DEV(
-		//  "Delta of Delta. Total:%" PRIi32 ", avg: %f, current:%f, ratio:%f trend: %s",
-		//  totalDeltaOfDelta,
-		//  avgDeltaOfDelta,
-		//  this->currentDeltaOfDelta,
-		//  ratio,
-		//  TrendToString(this->deltaOfdeltaTrend).c_str());
+		MS_DEBUG_DEV(
+		  "Delta of Delta. Previous:%f, Current:%f, Trend: %s",
+		  previousDeltaOfDelta,
+		  this->currentDeltaOfDelta,
+		  TrendToString(this->deltaOfdeltaTrend).c_str());
 
 		// for (const auto& deltaOfDelta : deltaOfDeltas)
 		// {
