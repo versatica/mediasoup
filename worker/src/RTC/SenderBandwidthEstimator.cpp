@@ -184,11 +184,11 @@ namespace RTC
 		}
 
 		// TODO: Remove.
-		MS_DEBUG_DEV(
-		  "Delta of Delta. Previous:%f, Current:%f, Trend: %s",
-		  previousDeltaOfDelta,
-		  this->currentDeltaOfDelta,
-		  TrendToString(this->deltaOfdeltaTrend).c_str());
+		// MS_DEBUG_DEV(
+		//   "Delta of Delta. Previous:%f, Current:%f, Trend: %s",
+		//   previousDeltaOfDelta,
+		//   this->currentDeltaOfDelta,
+		//   TrendToString(this->deltaOfdeltaTrend).c_str());
 
 		// for (const auto& deltaOfDelta : deltaOfDeltas)
 		// {
