@@ -220,7 +220,7 @@ namespace RTC
 		               static_cast<double>(sendRecvBitrates.recvBitrate);
 
 		// RTP is being received properly.
-		if (0.80f <= ratio && ratio <= 1.15f)
+		if (0.75f <= ratio && ratio <= 1.25f)
 		{
 			if (sendRecvBitrates.recvBitrate > this->availableBitrate)
 			{
@@ -249,6 +249,8 @@ namespace RTC
 		if (this->availableBitrate > maxBitrate)
 		{
 			this->availableBitrate = maxBitrate;
+
+			MS_DEBUG_DEV("BWE CAP [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
 		}
 
 		Bitrates bitrates;
@@ -403,8 +405,9 @@ namespace RTC
 
 		// TODO: Remove.
 		MS_DEBUG_DEV(
-		  "totalBytes:%" PRIu32 ", sentTimeWindowMs:%" PRIu64 ",recvTimeWindowMs:%" PRIu64
-		  ",sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32,
+		  "lastReceivedWideSeq:%" PRIu16 ", totalBytes:%" PRIu32 ", sentTimeWindowMs:%" PRIu64
+		  ",recvTimeWindowMs:%" PRIu64 ",sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32,
+		  this->lastReceivedWideSeq,
 		  totalBytes,
 		  sentTimeWindowMs,
 		  recvTimeWindowMs,
@@ -421,10 +424,10 @@ namespace RTC
 		MS_DUMP("<SentInfo>");
 		MS_DUMP("  wideSeq     : %" PRIu16, this->wideSeq);
 		MS_DUMP("  size        : %zu", this->size);
-		MS_DUMP("  isProbation : %s", this->isProbation? "true" : "false");
+		MS_DUMP("  isProbation : %s", this->isProbation ? "true" : "false");
 		MS_DUMP("  sendingAt   : %" PRIu64, this->sendingAtMs);
 		MS_DUMP("  sentAt      : %" PRIu64, this->sentAtMs);
-		MS_DUMP("  received    : %s", this->received? "true" : "false");
+		MS_DUMP("  received    : %s", this->received ? "true" : "false");
 
 		if (this->received)
 		{
