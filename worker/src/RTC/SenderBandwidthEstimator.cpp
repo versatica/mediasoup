@@ -15,7 +15,7 @@ namespace RTC
 	static constexpr uint16_t MaxSentInfoAge{ 2000u }; // TODO: Let's see.
 	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
 	static constexpr float DefaultRtt{ 100 };
-	static constexpr uint16_t TimerInterval{ 1000u };
+	static constexpr uint16_t TimerInterval{ 500u };
 
 	/* Instance methods. */
 
@@ -99,7 +99,6 @@ namespace RTC
 		// TODO: Remove.
 		// feedback->Dump();
 
-		// For calling OnSenderBandwidthEstimatorDeltaOfDelta.
 		std::vector<DeltaOfDelta> deltaOfDeltas;
 
 		for (const auto& result : packetResults)
@@ -159,55 +158,56 @@ namespace RTC
 			//   result.delta / 4);
 		}
 
-		if (!deltaOfDeltas.empty())
+		if (deltaOfDeltas.empty())
 		{
-			// Calculate the average delta.
-			// TODO: Apply EWMA so last dod have more weight.
-			int32_t totalDeltaOfDelta = std::accumulate(
-			  deltaOfDeltas.begin(),
-			  deltaOfDeltas.end(),
-			  0,
-			  [](size_t acc, const DeltaOfDelta& deltaOfDelta) { return acc + deltaOfDelta.dod; });
-
-			double averageDeltaOfDelta = static_cast<double>(totalDeltaOfDelta) / deltaOfDeltas.size();
-			auto previousDeltaOfDelta  = this->currentDeltaOfDelta;
-
-			this->currentDeltaOfDelta =
-			  Utils::ComputeEWMA(this->currentDeltaOfDelta, averageDeltaOfDelta, 0.7f);
-
-			const auto ratio = this->currentDeltaOfDelta / previousDeltaOfDelta;
-
-			// TODO: 0.7f is the EWMA alpha. Define a constant.
-			if (ratio > (1 - 0.7f))
-			{
-				this->deltaOfdeltaTrend = INCREASE;
-			}
-			// TODO: 0.7f is the EWMA alpha. Define a constant.
-			else if (ratio < (1 - 0.7f))
-			{
-				this->deltaOfdeltaTrend = DECREASE;
-			}
-			else
-			{
-				this->deltaOfdeltaTrend = HOLD;
-			}
-
-			MS_DEBUG_DEV(
-			  "Delta of Delta. Total:%" PRIi32 ", avg: %f, current:%f, ratio:%f trend: %s",
-			  totalDeltaOfDelta,
-			  averageDeltaOfDelta,
-			  this->currentDeltaOfDelta,
-			  ratio,
-			  TrendToString(this->deltaOfdeltaTrend).c_str());
-
-			// TODO: Remove.
-			// for (const auto& deltaOfDelta : deltaOfDeltas)
-			// {
-			// 	MS_DEBUG_DEV("wideSeq:%" PRIu16 ", dod:%" PRIi16,
-			// 			deltaOfDelta.wideSeq,
-			// 			deltaOfDelta.dod);
-			// }
+			return;
 		}
+
+		// Calculate the average delta.
+		// TODO: Apply EWMA so last dod have more weight.
+		int32_t totalDeltaOfDelta = std::accumulate(
+				deltaOfDeltas.begin(),
+				deltaOfDeltas.end(),
+				0,
+				[](size_t acc, const DeltaOfDelta& deltaOfDelta) { return acc + deltaOfDelta.dod; });
+
+		double avgDeltaOfDelta     = static_cast<double>(totalDeltaOfDelta) / deltaOfDeltas.size();
+		auto previousDeltaOfDelta  = this->currentDeltaOfDelta;
+
+		this->currentDeltaOfDelta = Utils::ComputeEWMA(this->currentDeltaOfDelta, avgDeltaOfDelta, 0.6f);
+
+		const auto ratio = this->currentDeltaOfDelta / previousDeltaOfDelta;
+
+		// TODO: 0.7f is the EWMA alpha. Define a constant.
+		if (ratio > (1 - 0.6f))
+		{
+			this->deltaOfdeltaTrend = INCREASE;
+		}
+		// TODO: 0.7f is the EWMA alpha. Define a constant.
+		else if (ratio < (1 - 0.6f))
+		{
+			this->deltaOfdeltaTrend = DECREASE;
+		}
+		else
+		{
+			this->deltaOfdeltaTrend = HOLD;
+		}
+
+		MS_DEBUG_DEV(
+		  "Delta of Delta. Total:%" PRIi32 ", avg: %f, current:%f, ratio:%f trend: %s",
+		  totalDeltaOfDelta,
+		  avgDeltaOfDelta,
+		  this->currentDeltaOfDelta,
+		  ratio,
+		  TrendToString(this->deltaOfdeltaTrend).c_str());
+
+		// TODO: Remove.
+		// for (const auto& deltaOfDelta : deltaOfDeltas)
+		// {
+		// 	MS_DEBUG_DEV("wideSeq:%" PRIu16 ", dod:%" PRIi16,
+		// 			deltaOfDelta.wideSeq,
+		// 			deltaOfDelta.dod);
+		// }
 
 		// Notify listener.
 		this->listener->OnSenderBandwidthEstimatorDeltaOfDelta(this, deltaOfDeltas);
@@ -251,18 +251,13 @@ namespace RTC
 			}
 		}
 
-		// Reduce the available bitrate if delta of delta is increasing.
-		if (this->deltaOfdeltaTrend == INCREASE)
-		{
-			this->availableBitrate *= 0.8;
+		auto maxBitrate = std::max<uint32_t>(
+		  this->initialAvailableBitrate, this->desiredBitrate * MaxBitrateIncrementFactor);
 
-			MS_DEBUG_DEV("BWE DOWN [deltaOfDeltasTrend:%s", TrendToString(this->deltaOfdeltaTrend).c_str());
-		}
-		// Augment the available bitrate if delta of delta is decreasing.
-		else if (this->deltaOfdeltaTrend == DECREASE)
+		// Limit maximum available bitrate to desired one.
+		if (this->availableBitrate > maxBitrate)
 		{
-			this->availableBitrate *= 1.2;
-			MS_DEBUG_DEV("BWE UP [deltaOfDeltasTrend:%s", TrendToString(this->deltaOfdeltaTrend).c_str());
+			this->availableBitrate = maxBitrate;
 		}
 
 		Bitrates bitrates;
@@ -271,15 +266,6 @@ namespace RTC
 		bitrates.previousAvailableBitrate = previousAvailableBitrate;
 		bitrates.sendBitrate              = sendRecvBitrates.sendBitrate;
 		bitrates.recvBitrate              = sendRecvBitrates.recvBitrate;
-
-		auto maxBitrate = std::max<uint32_t>(
-		  this->initialAvailableBitrate, this->desiredBitrate * MaxBitrateIncrementFactor);
-
-		// Limit maximum available bitrate to desired one.
-		if (bitrates.availableBitrate > maxBitrate)
-		{
-			bitrates.availableBitrate = maxBitrate;
-		}
 
 		this->listener->OnSenderBandwidthEstimatorAvailableBitrate(this, bitrates);
 	}
@@ -320,13 +306,6 @@ namespace RTC
 		if (timer == this->timer)
 		{
 			RemoveOldInfos();
-
-			// TODO. Remove.
-			auto bitrates = GetSendRecvBitrates();
-
-			MS_ERROR(
-			  "sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32, bitrates.sendBitrate, bitrates.recvBitrate);
-
 			EstimateAvailableBitrate();
 			RemoveProcessedInfos();
 
@@ -462,17 +441,19 @@ namespace RTC
 			recvTimeWindowMs = 1000;
 		}
 
-		// TODO: Remove.
-		MS_DEBUG_DEV(
-		  "totalBytes:%" PRIu32 ", sentTimeWindowMs:%" PRIu64 ",recvTimeWindowMs:%" PRIu64,
-		  totalBytes,
-		  sentTimeWindowMs,
-		  recvTimeWindowMs);
-
 		sendRecvBitrates.sendBitrate =
 		  static_cast<double>(totalBytes * 8) / (static_cast<double>(sentTimeWindowMs) / 1000.0f);
 		sendRecvBitrates.recvBitrate =
 		  static_cast<double>(totalBytes * 8) / (static_cast<double>(recvTimeWindowMs) / 1000.0f);
+
+		// TODO: Remove.
+		MS_DEBUG_DEV(
+		  "totalBytes:%" PRIu32 ", sentTimeWindowMs:%" PRIu64 ",recvTimeWindowMs:%" PRIu64 ",sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32,
+		  totalBytes,
+		  sentTimeWindowMs,
+		  recvTimeWindowMs,
+			sendRecvBitrates.sendBitrate,
+			sendRecvBitrates.recvBitrate);
 
 		return sendRecvBitrates;
 	}
