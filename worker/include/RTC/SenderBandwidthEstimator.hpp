@@ -108,7 +108,6 @@ namespace RTC
 
 	private:
 		void RemoveOldInfos();
-		void RemoveProcessedInfos();
 		SendRecvBitrates GetSendRecvBitrates();
 
 	private:

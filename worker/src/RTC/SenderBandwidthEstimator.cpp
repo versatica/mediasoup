@@ -294,7 +294,6 @@ namespace RTC
 		{
 			RemoveOldInfos();
 			EstimateAvailableBitrate();
-			RemoveProcessedInfos();
 
 			this->timer->Start(static_cast<uint64_t>(TimerInterval));
 		}
@@ -308,22 +307,6 @@ namespace RTC
 		for (auto it = this->sentInfos.begin(); it != this->sentInfos.end();)
 		{
 			if (it->second.sentAtMs < nowMs - this->rtt)
-			{
-				it = this->sentInfos.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
-	}
-
-	void SenderBandwidthEstimator::RemoveProcessedInfos()
-	{
-		// Remove all SentInfo's that have been processed.
-		for (auto it = this->sentInfos.begin(); it != this->sentInfos.end();)
-		{
-			if (it->second.received)
 			{
 				it = this->sentInfos.erase(it);
 			}
