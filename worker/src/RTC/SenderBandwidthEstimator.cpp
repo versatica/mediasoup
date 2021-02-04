@@ -139,6 +139,9 @@ namespace RTC
 			sentInfo.recvInfo.dod = (result.receivedAtMs - previousSentInfo.recvInfo.receivedAtMs) -
 			                        (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
 
+			// TODO: Remove.
+			sentInfo.Dump();
+
 			// Create and store the DeltaOfDelta.
 			DeltaOfDelta deltaOfDelta;
 
@@ -217,7 +220,7 @@ namespace RTC
 		               static_cast<double>(sendRecvBitrates.recvBitrate);
 
 		// RTP is being received properly.
-		if (0.75f <= ratio && ratio <= 1.25f)
+		if (0.80f <= ratio && ratio <= 1.15f)
 		{
 			if (sendRecvBitrates.recvBitrate > this->availableBitrate)
 			{
@@ -409,5 +412,36 @@ namespace RTC
 		  sendRecvBitrates.recvBitrate);
 
 		return sendRecvBitrates;
+	}
+
+	void SenderBandwidthEstimator::SentInfo::Dump() const
+	{
+		MS_TRACE();
+
+		MS_DUMP("<SentInfo>");
+		MS_DUMP("  wideSeq     : %" PRIu16, this->wideSeq);
+		MS_DUMP("  size        : %zu", this->size);
+		MS_DUMP("  isProbation : %s", this->isProbation? "true" : "false");
+		MS_DUMP("  sendingAt   : %" PRIu64, this->sendingAtMs);
+		MS_DUMP("  sentAt      : %" PRIu64, this->sentAtMs);
+		MS_DUMP("  received    : %s", this->received? "true" : "false");
+
+		if (this->received)
+		{
+			this->recvInfo.Dump();
+		}
+
+		MS_DUMP("</SentInfo>");
+	}
+
+	void SenderBandwidthEstimator::RecvInfo::Dump() const
+	{
+		MS_TRACE();
+
+		MS_DUMP("<RecvInfo>");
+		MS_DUMP("    receivedAt : %" PRIu64, this->receivedAtMs);
+		MS_DUMP("    delta      : %" PRIi16, this->delta);
+		MS_DUMP("    dod        : %" PRIi16, this->dod);
+		MS_DUMP("</RecvInfo>");
 	}
 } // namespace RTC

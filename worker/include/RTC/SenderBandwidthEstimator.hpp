@@ -44,6 +44,7 @@ namespace RTC
 	public:
 		struct RecvInfo
 		{
+			void Dump() const;
 			uint64_t receivedAtMs{ 0u };
 			int16_t delta{ 0 };
 			int16_t dod{ 0 };
@@ -51,6 +52,7 @@ namespace RTC
 
 		struct SentInfo
 		{
+			void Dump() const;
 			uint16_t wideSeq{ 0u };
 			size_t size{ 0u };
 			bool isProbation{ false };
