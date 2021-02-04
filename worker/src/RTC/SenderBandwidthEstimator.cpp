@@ -163,11 +163,12 @@ namespace RTC
 			return;
 		}
 
-		auto previousDeltaOfDelta  = this->currentDeltaOfDelta;
+		auto previousDeltaOfDelta = this->currentDeltaOfDelta;
 
 		for (const auto deltaOfDelta : deltaOfDeltas)
 		{
-			this->currentDeltaOfDelta = Utils::ComputeEWMA(this->currentDeltaOfDelta, static_cast<double>(deltaOfDelta.dod), 0.6f);
+			this->currentDeltaOfDelta =
+			  Utils::ComputeEWMA(this->currentDeltaOfDelta, static_cast<double>(deltaOfDelta.dod), 0.6f);
 		}
 
 		if (this->currentDeltaOfDelta > previousDeltaOfDelta)
@@ -303,37 +304,19 @@ namespace RTC
 
 	void SenderBandwidthEstimator::RemoveOldInfos()
 	{
-		if (this->sentInfos.empty())
-		{
-			return;
-		}
-
 		const auto nowMs = DepLibUV::GetTimeMs();
 
-		// A value of -1 indicates there is no old sendInfo.
-		int32_t oldestWideSeq = -1;
-		for (auto& kv : this->sentInfos)
+		// Remove all SentInfo's that are older than RTT.
+		for (auto it = this->sentInfos.begin(); it != this->sentInfos.end();)
 		{
-			auto& sentInfo = kv.second;
-
-			if (sentInfo.sentAtMs < nowMs - MaxSentInfoAge)
+			if (it->second.sentAtMs < nowMs - this->rtt)
 			{
-				oldestWideSeq = kv.first;
-
-				continue;
+				it = this->sentInfos.erase(it);
 			}
-			// Following sentInfo's are newer.
 			else
 			{
-				break;
+				++it;
 			}
-		}
-
-		if (oldestWideSeq != -1)
-		{
-			auto sentInfosIt = this->sentInfos.lower_bound(oldestWideSeq);
-
-			this->sentInfos.erase(this->sentInfos.begin(), sentInfosIt);
 		}
 	}
 
@@ -436,12 +419,13 @@ namespace RTC
 
 		// TODO: Remove.
 		MS_DEBUG_DEV(
-		  "totalBytes:%" PRIu32 ", sentTimeWindowMs:%" PRIu64 ",recvTimeWindowMs:%" PRIu64 ",sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32,
+		  "totalBytes:%" PRIu32 ", sentTimeWindowMs:%" PRIu64 ",recvTimeWindowMs:%" PRIu64
+		  ",sendBitrate:%" PRIu32 ", recvBitrate:%" PRIu32,
 		  totalBytes,
 		  sentTimeWindowMs,
 		  recvTimeWindowMs,
-			sendRecvBitrates.sendBitrate,
-			sendRecvBitrates.recvBitrate);
+		  sendRecvBitrates.sendBitrate,
+		  sendRecvBitrates.recvBitrate);
 
 		return sendRecvBitrates;
 	}

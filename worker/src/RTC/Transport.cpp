@@ -1922,6 +1922,10 @@ namespace RTC
 					}
 
 					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, DepLibUV::GetTimeMsInt64());
+
+#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+					this->senderBwe->UpdateRtt(rtt);
+#endif
 				}
 
 				break;
