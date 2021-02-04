@@ -291,7 +291,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// RTCP timer.
 		if (timer == this->timer)
 		{
 			RemoveOldInfos();
