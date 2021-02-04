@@ -12,7 +12,6 @@ namespace RTC
 	/* Static. */
 
 	// static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
-	static constexpr uint16_t MaxSentInfoAge{ 2000u }; // TODO: Let's see.
 	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
 	static constexpr float DefaultRtt{ 100 };
 	static constexpr uint16_t TimerInterval{ 500u };
