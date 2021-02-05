@@ -230,12 +230,12 @@ namespace RTC
 			}
 		}
 		// RTP is being received worst than expected.
-		else if (ratio <= 0.75f)
+		else if (ratio >= 1.35f)
 		{
 			if (sendRecvBitrates.recvBitrate < this->availableBitrate)
 			{
 				// TODO: This 0.8 must be set acording to other values: dod, jitter, etc.
-				this->availableBitrate = Utils::ComputeEWMA(this->availableBitrate, sendRecvBitrates.recvBitrate, 0.7f);
+				this->availableBitrate = Utils::ComputeEWMA(this->availableBitrate, sendRecvBitrates.recvBitrate, static_cast<float>(ratio - 1));
 
 				MS_DEBUG_DEV(
 				  "BWE DOWN [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
