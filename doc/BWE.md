@@ -200,10 +200,10 @@ When inspecting TCC feedbacks there may be holes. It can happen because:
 
 Since we know the current average RTT of the transport, we should consider those holes differently when it comes to process the sending info map (every few seconds):
 
-- Those infos for which there is no `recvTime` and `currentTime - sentTime > 2 * RTT` should account as a problem and should contribute to reduce the estimated bandwidth. If for example the network is temporary down, this is the way to detect that no packets are being received by the endpoint so we should NOT contribute to produce more congestion (so we should stop sending RTP by decreasing BWE).
+- Those infos for which there is no `recvAtMs` and `currentTime - sentAtMs > 2 * RTT` should account as a problem and should contribute to reduce the estimated bandwidth. If for example the network is temporary down, this is the way to detect that no packets are being received by the endpoint so we should NOT contribute to produce more congestion (so we should stop sending RTP by decreasing BWE).
 
-- Those infos for which `currentTime - sentTime < RTT` should be just ignored since it's 100% expected to not have received yet their TCC feedbacks. To clarify, those infos should be ignored even if they have `recvTime`. Why? because it's expected to not have yet all the feedbacks and hence it's better to wait a bit before processing them.
+- Those infos for which `currentTime - sentAtMs < RTT` should be just ignored since it's 100% expected to not have received yet their TCC feedbacks. To clarify, those infos should be ignored even if they have `recvAtMs`. Why? because it's expected to not have yet all the feedbacks and hence it's better to wait a bit before processing them.
 
-- Those infos in the middle with `(currentTime - sentTime < 2 * RTT) && (currentTime - sentTime >= RTT)` should be processed and account for BWE changes. Here we may have infos with and without `recvTime`, however it's not clear whether holes here (missing `recvTime`) should account for BWE decrease or whether it's just better to wait until future iterations when `currentTime - sentTime > 2 * RTT` happens (as told in the first bullet).
+- Those infos in the middle with `(currentTime - sentAtMs < 2 * RTT) && (currentTime - sentAtMs >= RTT)` should be processed and account for BWE changes. Here we may have infos with and without `recvAtMs`, however it's not clear whether holes here (missing `recvAtMs`) should account for BWE decrease or whether it's just better to wait until future iterations when `currentTime - sentAtMs > 2 * RTT` happens (as told in the first bullet).
 
 _NOTE:_ This is conceptually WIP. Values may change, etc.
