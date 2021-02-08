@@ -186,3 +186,24 @@ The trendline estimator helps avoiding taking premature decisions onthe BWE upon
 
 Delay is calculated as a difference bettween the send time deltas for RTP packets and the received time deltas of such RTP packets.
 
+## Considerations 
+
+(To be properly documented when appropriate).
+
+### Packet loss
+
+When inspecting TCC feedbacks there may be holes. It can happen because:
+
+1. Some sent RTP packets were lost and never received by the endpoint.
+2. Some sent RTP packets were received out of order by the received.
+3. Some feedback packets were lost from receiver to mediasoup (there is nothing we can do about this).
+
+Since we know the current average RTT of the transport, we should consider those holes differently when it comes to process the sending info map (every few seconds):
+
+- Those infos for which there is no `recvTime` and `currentTime - sentTime > 2 * RTT` should account as a problem and should contribute to reduce the estimated bandwidth. If for example the network is temporary down, this is the way to detect that no packets are being received by the endpoint so we should NOT contribute to produce more congestion (so we should stop sending RTP by decreasing BWE).
+
+- Those infos for which `currentTime - sentTime < RTT` should be just ignored since it's 100% expected to not have received yet their TCC feedbacks. To clarify, those infos should be ignored even if they have `recvTime`. Why? because it's expected to not have yet all the feedbacks and hence it's better to wait a bit before processing them.
+
+- Those infos in the middle with `(currentTime - sentTime < 2 * RTT) && (currentTime - sentTime >= RTT)` should be processed and account for BWE changes. Here we may have infos with and without `recvTime`, however it's not clear whether holes here (missing `recvTime`) should account for BWE decrease or whether it's just better to wait until future iterations when `currentTime - sentTime > 2 * RTT` happens (as told in the first bullet).
+
+_NOTE:_ This is conceptually WIP. Values may change, etc.
