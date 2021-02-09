@@ -3138,9 +3138,9 @@ namespace RTC
 		EmitTraceEventNewBweType(bitrates);
 	}
 
-	inline void Transport::OnSenderBandwidthEstimatorDeltaOfDelta(
+	inline void Transport::OnSenderBandwidthEstimatorRtpFeedback(
 	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
-	  std::vector<SenderBandwidthEstimator::DeltaOfDelta>& deltaOfDeltas)
+	  std::vector<SenderBandwidthEstimator::SentInfo>& sentInfos)
 	{
 		MS_TRACE();
 
@@ -3155,13 +3155,15 @@ namespace RTC
 		data["info"]["type"] = "transport-cc";
 		data["info"]["dod"]  = json::array();
 
-		for (const auto& deltaOfDelta : deltaOfDeltas)
+		for (const auto& sentInfo : sentInfos)
 		{
 			json dod = json::object();
 
-			dod["wideSeq"]  = deltaOfDelta.wideSeq;
-			dod["sentAtMs"] = deltaOfDelta.sentAtMs;
-			dod["dod"]      = deltaOfDelta.dod;
+			dod["wideSeq"]      = sentInfo.wideSeq;
+			dod["size"]         = sentInfo.size;
+			dod["sentAtMs"]     = sentInfo.sentAtMs;
+			dod["receivedAtMs"] = sentInfo.receivedAtMs;
+			dod["dod"]          = sentInfo.dod;
 
 			data["info"]["dod"].push_back(dod);
 		}

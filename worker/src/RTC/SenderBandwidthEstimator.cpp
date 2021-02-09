@@ -98,7 +98,7 @@ namespace RTC
 		// TODO: Remove.
 		// feedback->Dump();
 
-		std::vector<DeltaOfDelta> deltaOfDeltas;
+		std::vector<SentInfo> sentInfos;
 
 		for (const auto& result : packetResults)
 		{
@@ -141,14 +141,7 @@ namespace RTC
 			// TODO: Remove.
 			// sentInfo.Dump();
 
-			// Create and store the DeltaOfDelta.
-			DeltaOfDelta deltaOfDelta;
-
-			deltaOfDelta.wideSeq  = wideSeq;
-			deltaOfDelta.sentAtMs = sentInfo.sentAtMs;
-			deltaOfDelta.dod      = sentInfo.dod;
-
-			deltaOfDeltas.push_back(deltaOfDelta);
+			sentInfos.push_back(sentInfo);
 
 			// TODO: Remove.
 			// MS_DEBUG_DEV(
@@ -159,17 +152,17 @@ namespace RTC
 			//   result.delta / 4);
 		}
 
-		if (deltaOfDeltas.empty())
+		if (sentInfos.empty())
 		{
 			return;
 		}
 
 		auto previousDeltaOfDelta = this->currentDeltaOfDelta;
 
-		for (const auto deltaOfDelta : deltaOfDeltas)
+		for (const auto sentInfo : sentInfos)
 		{
 			this->currentDeltaOfDelta =
-			  Utils::ComputeEWMA(this->currentDeltaOfDelta, static_cast<double>(deltaOfDelta.dod), 0.6f);
+			  Utils::ComputeEWMA(this->currentDeltaOfDelta, static_cast<double>(sentInfo.dod), 0.6f);
 		}
 
 		if (this->currentDeltaOfDelta > previousDeltaOfDelta)
@@ -200,7 +193,7 @@ namespace RTC
 		// }
 
 		// Notify listener.
-		this->listener->OnSenderBandwidthEstimatorDeltaOfDelta(this, deltaOfDeltas);
+		this->listener->OnSenderBandwidthEstimatorRtpFeedback(this, sentInfos);
 	}
 
 	void SenderBandwidthEstimator::EstimateAvailableBitrate()

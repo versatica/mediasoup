@@ -254,9 +254,9 @@ namespace RTC
 		  RTC::SenderBandwidthEstimator* senderBwe,
 		  RTC::SenderBandwidthEstimator::Bitrates& bitrates) override;
 
-		void OnSenderBandwidthEstimatorDeltaOfDelta(
+		void OnSenderBandwidthEstimatorRtpFeedback(
 		  RTC::SenderBandwidthEstimator* senderBwe,
-		  std::vector<SenderBandwidthEstimator::DeltaOfDelta>& deltaOfDeltas) override;
+		  std::vector<SenderBandwidthEstimator::SentInfo>& sentInfos) override;
 #endif
 
 		/* Pure virtual methods inherited from Timer::Listener. */

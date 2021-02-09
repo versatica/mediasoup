@@ -15,10 +15,16 @@ namespace RTC
 	class SenderBandwidthEstimator : public Timer::Listener
 	{
 	public:
-		struct DeltaOfDelta
+		struct SentInfo
 		{
+			void Dump() const;
 			uint16_t wideSeq{ 0u };
+			size_t size{ 0u };
+			bool isProbation{ false };
+			uint64_t sendingAtMs{ 0u };
 			uint64_t sentAtMs{ 0u };
+			bool received{ false };
+			uint64_t receivedAtMs{ 0u };
 			int16_t dod{ 0 };
 		};
 
@@ -37,24 +43,11 @@ namespace RTC
 			virtual void OnSenderBandwidthEstimatorAvailableBitrate(
 			  RTC::SenderBandwidthEstimator* senderBwe, Bitrates& bitrates) = 0;
 
-			virtual void OnSenderBandwidthEstimatorDeltaOfDelta(
-			  RTC::SenderBandwidthEstimator* senderBwe, std::vector<DeltaOfDelta>& deltaOfDeltas) = 0;
+			virtual void OnSenderBandwidthEstimatorRtpFeedback(
+			  RTC::SenderBandwidthEstimator* senderBwe, std::vector<SentInfo>& sentInfos) = 0;
 		};
 
 	public:
-		struct SentInfo
-		{
-			void Dump() const;
-			uint16_t wideSeq{ 0u };
-			size_t size{ 0u };
-			bool isProbation{ false };
-			uint64_t sendingAtMs{ 0u };
-			uint64_t sentAtMs{ 0u };
-			bool received{ false };
-			uint64_t receivedAtMs{ 0u };
-			int16_t dod{ 0 };
-		};
-
 		struct SendRecvBitrates
 		{
 			uint32_t sendBitrate{ 0u };
