@@ -121,6 +121,9 @@ namespace RTC
 			sentInfo.received     = true;
 			sentInfo.receivedAtMs = result.receivedAtMs;
 
+			// TODO: Properly retrieve RTT.
+			sentInfo.rtt = this->rtt;
+
 			// Retrieve the received info of the previously received RTP packet in order to calculate
 			// the delta.
 			sentInfosIt = this->sentInfos.find(this->lastReceivedWideSeq);

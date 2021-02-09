@@ -3163,6 +3163,7 @@ namespace RTC
 			dod["size"]         = sentInfo.size;
 			dod["sentAtMs"]     = sentInfo.sentAtMs;
 			dod["receivedAtMs"] = sentInfo.receivedAtMs;
+			dod["rtt"]          = sentInfo.rtt;
 			dod["dod"]          = sentInfo.dod;
 
 			data["info"]["dod"].push_back(dod);
