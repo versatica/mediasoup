@@ -117,12 +117,11 @@ namespace RTC
 
 			auto& sentInfo = sentInfosIt->second;
 
-			// Fill the RecvInfo.
-			sentInfo.received              = true;
-			sentInfo.recvInfo.receivedAtMs = result.receivedAtMs;
-			sentInfo.recvInfo.delta        = result.delta;
+			// Fill the received info.
+			sentInfo.received     = true;
+			sentInfo.receivedAtMs = result.receivedAtMs;
 
-			// Retrieve the RecvInfo of the previously received RTP packet in order to calculate
+			// Retrieve the received info of the previously received RTP packet in order to calculate
 			// the delta.
 			sentInfosIt = this->sentInfos.find(this->lastReceivedWideSeq);
 			if (sentInfosIt == this->sentInfos.end())
@@ -136,18 +135,18 @@ namespace RTC
 
 			auto& previousSentInfo = sentInfosIt->second;
 
-			sentInfo.recvInfo.dod = (result.receivedAtMs - previousSentInfo.recvInfo.receivedAtMs) -
-			                        (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
+			sentInfo.dod = (result.receivedAtMs - previousSentInfo.receivedAtMs) -
+			               (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
 
 			// TODO: Remove.
-			sentInfo.Dump();
+			// sentInfo.Dump();
 
 			// Create and store the DeltaOfDelta.
 			DeltaOfDelta deltaOfDelta;
 
 			deltaOfDelta.wideSeq  = wideSeq;
 			deltaOfDelta.sentAtMs = sentInfo.sentAtMs;
-			deltaOfDelta.dod      = sentInfo.recvInfo.dod;
+			deltaOfDelta.dod      = sentInfo.dod;
 
 			deltaOfDeltas.push_back(deltaOfDelta);
 
@@ -224,7 +223,8 @@ namespace RTC
 		{
 			if (sendRecvBitrates.recvBitrate > this->availableBitrate)
 			{
-				this->availableBitrate = Utils::ComputeEWMA(this->availableBitrate, sendRecvBitrates.recvBitrate, 0.8f);
+				this->availableBitrate =
+				  Utils::ComputeEWMA(this->availableBitrate, sendRecvBitrates.recvBitrate, 0.8f);
 
 				MS_DEBUG_DEV("BWE UP [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
 			}
@@ -235,7 +235,8 @@ namespace RTC
 			if (sendRecvBitrates.recvBitrate < this->availableBitrate)
 			{
 				// TODO: This 0.8 must be set acording to other values: dod, jitter, etc.
-				this->availableBitrate = Utils::ComputeEWMA(this->availableBitrate, sendRecvBitrates.recvBitrate, static_cast<float>(ratio - 1));
+				this->availableBitrate = Utils::ComputeEWMA(
+				  this->availableBitrate, sendRecvBitrates.recvBitrate, static_cast<float>(ratio - 1));
 
 				MS_DEBUG_DEV(
 				  "BWE DOWN [ratio:%f, availableBitrate:%" PRIu32 "]", ratio, this->availableBitrate);
@@ -344,9 +345,9 @@ namespace RTC
 			if (!firstSentAtMs)
 			{
 				firstSentAtMs = sentInfo.sentAtMs;
-				firstRecvAtMs = sentInfo.recvInfo.receivedAtMs;
+				firstRecvAtMs = sentInfo.receivedAtMs;
 				lastSentAtMs  = sentInfo.sentAtMs;
-				lastRecvAtMs  = sentInfo.recvInfo.receivedAtMs;
+				lastRecvAtMs  = sentInfo.receivedAtMs;
 			}
 
 			// Handle disorder on sending.
@@ -360,14 +361,13 @@ namespace RTC
 			}
 
 			// Handle disorder on receiving.
-			if (RTC::SeqManager<uint64_t>::IsSeqLowerThan(sentInfo.recvInfo.receivedAtMs, firstRecvAtMs))
+			if (RTC::SeqManager<uint64_t>::IsSeqLowerThan(sentInfo.receivedAtMs, firstRecvAtMs))
 			{
-				firstRecvAtMs = sentInfo.recvInfo.receivedAtMs;
+				firstRecvAtMs = sentInfo.receivedAtMs;
 			}
-			else if (RTC::SeqManager<uint64_t>::IsSeqHigherThan(
-			           sentInfo.recvInfo.receivedAtMs, lastRecvAtMs))
+			else if (RTC::SeqManager<uint64_t>::IsSeqHigherThan(sentInfo.receivedAtMs, lastRecvAtMs))
 			{
-				lastRecvAtMs = sentInfo.recvInfo.receivedAtMs;
+				lastRecvAtMs = sentInfo.receivedAtMs;
 			}
 
 			// Increase total bytes.
@@ -431,20 +431,10 @@ namespace RTC
 
 		if (this->received)
 		{
-			this->recvInfo.Dump();
+			MS_DUMP("  receivedAt : %" PRIu64, this->receivedAtMs);
+			MS_DUMP("  dod        : %" PRIi16, this->dod);
 		}
 
 		MS_DUMP("</SentInfo>");
-	}
-
-	void SenderBandwidthEstimator::RecvInfo::Dump() const
-	{
-		MS_TRACE();
-
-		MS_DUMP("<RecvInfo>");
-		MS_DUMP("    receivedAt : %" PRIu64, this->receivedAtMs);
-		MS_DUMP("    delta      : %" PRIi16, this->delta);
-		MS_DUMP("    dod        : %" PRIi16, this->dod);
-		MS_DUMP("</RecvInfo>");
 	}
 } // namespace RTC

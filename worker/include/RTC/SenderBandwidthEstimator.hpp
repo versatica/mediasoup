@@ -42,14 +42,6 @@ namespace RTC
 		};
 
 	public:
-		struct RecvInfo
-		{
-			void Dump() const;
-			uint64_t receivedAtMs{ 0u };
-			int16_t delta{ 0 };
-			int16_t dod{ 0 };
-		};
-
 		struct SentInfo
 		{
 			void Dump() const;
@@ -59,7 +51,8 @@ namespace RTC
 			uint64_t sendingAtMs{ 0u };
 			uint64_t sentAtMs{ 0u };
 			bool received{ false };
-			RecvInfo recvInfo;
+			uint64_t receivedAtMs{ 0u };
+			int16_t dod{ 0 };
 		};
 
 		struct SendRecvBitrates
