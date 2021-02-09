@@ -24,7 +24,7 @@ namespace RTC
 			uint64_t sendingAtMs{ 0u };
 			uint64_t sentAtMs{ 0u };
 			bool received{ false };
-			uint64_t receivedAtMs{ 0u };
+			int64_t receivedAtMs{ 0u };
 			int16_t dod{ 0 };
 		};
 
