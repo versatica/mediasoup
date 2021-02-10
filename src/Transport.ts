@@ -51,7 +51,7 @@ export interface TransportTuple
 /**
  * Valid types for 'trace' event.
  */
-export type TransportTraceEventType = 'probation' | 'bwe' | 'bwe-dod' | 'new-bwe';
+export type TransportTraceEventType = 'probation' | 'bwe' | 'rtp-feedback' | 'new-bwe';
 
 /**
  * 'trace' event data.

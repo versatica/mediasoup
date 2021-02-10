@@ -1236,10 +1236,10 @@ namespace RTC
 						newTraceEventTypes.probation = true;
 					if (typeStr == "bwe")
 						newTraceEventTypes.bwe = true;
-					if (typeStr == "bwe-dod")
-						newTraceEventTypes.bweDod = true;
 					if (typeStr == "new-bwe")
 						newTraceEventTypes.newBwe = true;
+					if (typeStr == "rtp-feedback")
+						newTraceEventTypes.rtpFeedback = true;
 				}
 
 				this->traceEventTypes = newTraceEventTypes;
@@ -3144,29 +3144,29 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->traceEventTypes.bweDod)
+		if (!this->traceEventTypes.rtpFeedback)
 			return;
 
 		json data = json::object();
 
-		data["type"]         = "bwe-dod";
-		data["timestamp"]    = DepLibUV::GetTimeMs();
-		data["direction"]    = "out";
-		data["info"]["type"] = "transport-cc";
-		data["info"]["dod"]  = json::array();
+		data["type"]          = "rtp-feedback";
+		data["timestamp"]     = DepLibUV::GetTimeMs();
+		data["direction"]     = "out";
+		data["info"]["type"]  = "transport-cc";
+		data["info"]["items"] = json::array();
 
 		for (const auto& sentInfo : sentInfos)
 		{
-			json dod = json::object();
+			json item = json::object();
 
-			dod["wideSeq"]      = sentInfo.wideSeq;
-			dod["size"]         = sentInfo.size;
-			dod["sentAtMs"]     = sentInfo.sentAtMs;
-			dod["receivedAtMs"] = sentInfo.receivedAtMs;
-			dod["rtt"]          = sentInfo.rtt;
-			dod["dod"]          = sentInfo.dod;
+			item["wideSeq"]      = sentInfo.wideSeq;
+			item["size"]         = sentInfo.size;
+			item["sentAtMs"]     = sentInfo.sentAtMs;
+			item["receivedAtMs"] = sentInfo.receivedAtMs;
+			item["rtt"]          = sentInfo.rtt;
+			item["dod"]          = sentInfo.dod;
 
-			data["info"]["dod"].push_back(dod);
+			data["info"]["items"].push_back(item);
 		}
 
 		Channel::Notifier::Emit(this->id, "trace", data);

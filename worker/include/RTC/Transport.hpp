@@ -108,7 +108,7 @@ namespace RTC
 		{
 			bool probation{ false };
 			bool bwe{ false };
-			bool bweDod{ false };
+			bool rtpFeedback{ false };
 			bool newBwe{ false };
 		};
 
