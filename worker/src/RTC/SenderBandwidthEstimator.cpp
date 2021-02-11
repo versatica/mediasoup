@@ -162,6 +162,7 @@ namespace RTC
 
 		auto previousDeltaOfDelta = this->currentDeltaOfDelta;
 
+		// TODO: This must be properly done.
 		for (const auto sentInfo : sentInfos)
 		{
 			this->currentDeltaOfDelta =
