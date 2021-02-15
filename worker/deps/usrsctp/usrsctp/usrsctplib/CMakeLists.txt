@@ -34,14 +34,21 @@
 # INCLUDE MODULES AND SETTINGS
 #################################################
 
-set(VERSION "1.0.0")
+set(VERSION "0.9.5.0")
 
-set(prefix 					${CMAKE_INSTALL_PREFIX})
-set(exec_prefix 			${prefix})
-set(libdir 					${exec_prefix}/lib)
-set(includedir 				${prefix}/include/usrsctp)
+# Shared library API and ABI versions
+# Notice: shared library version must be in X.Y.Z format only
+set(SOVERSION_FULL "2.0.0")
+set(SOVERSION_SHORT "2")
+
+include(GNUInstallDirs)
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix ${prefix})
+set(libdir ${exec_prefix}/${CMAKE_INSTALL_LIBDIR})
+set(includedir ${prefix}/${CMAKE_INSTALL_INCLUDEDIR}/usrsctp)
+
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR})
-set(CMAKE_MACOSX_RPATH 		1)
+set(CMAKE_MACOSX_RPATH 1)
 
 include(CheckCCompilerFlag)
 
@@ -79,7 +86,6 @@ endif ()
 if (sctp_build_shared_lib)
 	set(BUILD_SHARED_LIBS 1)
 endif ()
-
 
 #################################################
 # LIBRARY FILES
@@ -176,16 +182,18 @@ if (WIN32)
 endif ()
 
 set_target_properties(usrsctp PROPERTIES IMPORT_SUFFIX "_import.lib")
-set_target_properties(usrsctp PROPERTIES SOVERSION 1 VERSION 1.0.0)
-
-if (NOT DEFINED CMAKE_INSTALL_LIBDIR)
-	SET(CMAKE_INSTALL_LIBDIR lib)
-endif ()
-
+set_target_properties(usrsctp PROPERTIES SOVERSION ${SOVERSION_SHORT} VERSION ${SOVERSION_FULL})
 
 #################################################
 # INSTALL LIBRARY AND HEADER
 #################################################
 
 install(TARGETS usrsctp DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES usrsctp.h DESTINATION include)
+install(FILES usrsctp.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+#################################################
+# GENERATE AND INSTALL PKG-CONFIG FILE
+#################################################
+
+configure_file("${PROJECT_SOURCE_DIR}/usrsctp.pc.in" "${CMAKE_CURRENT_BINARY_DIR}/usrsctp.pc" @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/usrsctp.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
