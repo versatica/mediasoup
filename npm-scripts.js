@@ -39,7 +39,7 @@ switch (task)
 		}
 		else
 		{
-			execute('rmdir /s lib');
+			execute('rmdir /s /q lib');
 		}
 
 		execute('tsc');
@@ -58,7 +58,7 @@ switch (task)
 		}
 		else
 		{
-			execute('rmdir /s lib');
+			execute('rmdir /s /q lib');
 		}
 
 		const watch = new TscWatchClient();
