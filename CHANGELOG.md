@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.6.33 (WIP)
+
+* Update `nlohmann/json` to 3.9.1.
+* Update `usrsctp`.
+* Update NPM deps.
+
+
 ### 3.6.32
 
 * Fix notifications from `mediasoup-worker` being processed before responses received before them (issue #501).
