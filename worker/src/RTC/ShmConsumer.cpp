@@ -292,9 +292,9 @@ namespace RTC
 				origSeq);
 
 			if (this->GetKind() == Media::Kind::AUDIO)
-				shmCtx->bin_log_ctx.record.a_num_discarded_rtp_pkts += 1;
+				DepLibSfuShm::ShmCtx::bin_log_ctx.record.a_num_discarded_rtp_pkts += 1;
 			else
-				shmCtx->bin_log_ctx.record.v_num_discarded_rtp_pkts += 1;
+				DepLibSfuShm::ShmCtx::bin_log_ctx.record.v_num_discarded_rtp_pkts += 1;
 
 			return; 
 		}
@@ -332,20 +332,17 @@ namespace RTC
 				origSeq);
 		}
 
-
-
-	if (this->testNackEachMs != 0)
-	{
-		if (this->TestNACK(packet))
+		if (this->testNackEachMs != 0)
 		{
-			MS_DEBUG_TAG(rtp, "Pretend NACK ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
-			packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
-			return;
+			if (this->TestNACK(packet))
+			{
+				MS_DEBUG_TAG(rtp, "Pretend NACK ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
+				packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
+				return;
+			}
 		}
-	}
 
-// End of NACK test simulation
-
+		// End of NACK test simulation
 		if (shmCtx->CanWrite((this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO))
 		{
 			this->WritePacketToShm(packet);

@@ -1230,6 +1230,7 @@ namespace RTC
 				}
 
 				break;
+			}
 				
 			case Channel::Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT:
 			{

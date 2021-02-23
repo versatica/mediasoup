@@ -327,8 +327,6 @@ namespace RTC
 				break;
 			}
 
-			}
-
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_STREAM_META:
 			{
 				if (RecvStreamMeta(request->data))
@@ -338,12 +336,12 @@ namespace RTC
 				break;
 			}
 
-			case Request::MethodId::TRANSPORT_ROTATE_SHM_BINARY_LOG:
+			case Channel::Request::MethodId::TRANSPORT_ROTATE_SHM_BINARY_LOG:
 			{
-				if (RecvStreamMeta(request->data))
-					request->Accept();
-				else
-					request->Error("ShmTransport::RecvStreamMeta returned false");
+				/*
+					TODO: function that rotates shm binlog for this particular transport					
+				*/
+				request->Accept();
 				break;
 			}
 

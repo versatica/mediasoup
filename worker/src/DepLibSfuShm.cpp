@@ -10,6 +10,7 @@
 #include <time.h>
 #include <chrono>
 
+
 namespace DepLibSfuShm {
 
   uint8_t* ShmCtx::hex_dump(uint8_t *dst, uint8_t *src, size_t len)
@@ -23,6 +24,8 @@ namespace DepLibSfuShm {
 
       return dst;
   }
+
+  xcode_sfushm_bin_log_ctx_t ShmCtx::bin_log_ctx;
 
   std::unordered_map<int, const char*> ShmCtx::errToString =
     {
@@ -178,15 +181,13 @@ namespace DepLibSfuShm {
   {
     MS_TRACE();
     
-    if (iskeyframe && ts > this->lastKeyFrameTs)
+    if (iskeyframe && (ts > this->lastKeyFrameTs || this->lastKeyFrameTs == UINT64_UNSET))
     {
       this->lastKeyFrameTs = ts;
       bin_log_record.v_last_kf_rtp_time = this->lastKeyFrameTs;
     }
 
     auto startTime = std::chrono::system_clock::now();
-
-    uint16_t duration;
 
     if (useReverseIterator)
     {
@@ -196,14 +197,11 @@ namespace DepLibSfuShm {
         this->videoPktBuffer.emplace(this->videoPktBuffer.end(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
         
         auto endTime = std::chrono::system_clock::now();
-        //MS_DEBUG_TAG(xcode, "rev: l=%zu t=%" PRIu64, this->videoPktBuffer.size(), std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count());
-        log_bin_record.v_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-        log_bin_record.v_last_queue_len = this->videoPktBuffer.size();        
+        bin_log_record.v_last_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
+        bin_log_record.v_last_queue_len = this->videoPktBuffer.size();        
         return SHM_Q_PKT_QUEUED_OK;
       }
 
-      //MS_DEBUG_TAG(xcode, "out-of-order(r) seqid=%" PRIu64 " qsize=%zu", seqid, videoPktBuffer.size());
-      
       auto it = this->videoPktBuffer.rbegin();
       auto prevIt = it;
       it++;
@@ -211,10 +209,9 @@ namespace DepLibSfuShm {
       this->videoPktBuffer.emplace(prevIt.base(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
 
       auto endTime2 = std::chrono::system_clock::now();
-//      MS_DEBUG_TAG(xcode, "rev: l=%zu t=%" PRIu64, this->videoPktBuffer.size(), std::chrono::duration_cast<std::chrono::nanoseconds>(endTime2 - startTime).count());
-      log_bin_record.v_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime2 - startTime).count();
-      log_bin_record.v_last_queue_len = this->videoPktBuffer.size();
-      log_bin_record.v_enqueue_out_of_order += 1;
+      bin_log_record.v_last_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime2 - startTime).count();
+      bin_log_record.v_last_queue_len = this->videoPktBuffer.size();
+      bin_log_record.v_enqueue_out_of_order += 1;
     }
     else
     {
@@ -224,16 +221,16 @@ namespace DepLibSfuShm {
 
       if (it != this->videoPktBuffer.end())
       {
-        log_bin_record.v_enqueue_out_of_order += 1;
+        //MS_DEBUG_TAG(xcode, "L@@K out-of-order [ %" PRIu64 " ]", seqid);
+        bin_log_record.v_enqueue_out_of_order += 1;
       }
 
       this->videoPktBuffer.emplace(it, data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
 
       auto endTime = std::chrono::system_clock::now();
 
-      log_bin_record.v_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-      log_bin_record.v_last_queue_len = this->videoPktBuffer.size();        
-      //MS_DEBUG_TAG(xcode, "fwd: l=%zu t=%" PRIu64, this->videoPktBuffer.size(), std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count());
+      bin_log_record.v_last_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
+      bin_log_record.v_last_queue_len = this->videoPktBuffer.size();        
     }
 
     return SHM_Q_PKT_QUEUED_OK;
@@ -261,6 +258,7 @@ namespace DepLibSfuShm {
       WriteFrame(firstIt, lastIt, gaps || !complete);
     }
   }
+
 
   bool ShmCtx::GetNextFrame(std::list<ShmQueueItem>::iterator& firstIt, 
                             std::list<ShmQueueItem>::iterator& lastIt,
@@ -330,7 +328,7 @@ namespace DepLibSfuShm {
         keyframe = true;
       
       ShmQueueItem &item = *chunkIt;
-      this->WriteVideoChunk(&item, item.fragment && invalid); // don't set invalid flag for the whole NALU. TBD: is this correct? invalid setting is for shm-writer.
+      this->WriteVideoChunk(&item, invalid); // TODO: shm writer should respect "invalid" setting and does not throw errors
       
       bool end = (chunkIt == lastIt); // before erasing an item check if it is the last one in the frame
       chunkIt = this->videoPktBuffer.erase(chunkIt); //move to next item
@@ -347,12 +345,13 @@ namespace DepLibSfuShm {
       // TBD: should we also discard everything in videoPktBuffer and reset lastTs and lastSeqId while waiting for another keyframe?
       if (invalid)
       {
-        MS_DEBUG_TAG(xcode, "Invalid keyframe, request another");
+        MS_WARN_TAG(xcode, "Invalid kf, request another");
         this->listener->OnNeedToSync();
       }
     }
   }
-    
+
+
   // Will write into the log, rotate... Need signal_set and current data
   void ShmCtx::DumpBinLogDataIfNeeded(bool signal_set)
   {
@@ -385,7 +384,7 @@ namespace DepLibSfuShm {
     MS_TRACE();
 
     // see if need to dump data into binary log
-    DumpBinLogDataIfNeeded();
+    //DumpBinLogDataIfNeeded();
 
     sfushm_av_frame_frag_t frag;
     frag.ssrc = media[0].new_ssrc;
@@ -411,7 +410,7 @@ namespace DepLibSfuShm {
     }
 
     bin_log_record.a_egress_bytes += data->len;
-    bin_log_record.a_last_rtp_time = data->a_last_rtp_time;
+    bin_log_record.a_last_rtp_time = data->rtp_time;
     bin_log_record.a_num_wr += 1;
 
     int err = sfushm_av_write_audio(wrt_ctx, data);
@@ -436,7 +435,7 @@ namespace DepLibSfuShm {
   {
     MS_TRACE();
 
-    DumpBinLogDataIfNeeded();
+    //DumpBinLogDataIfNeeded();
 
     // Try to dequeue whatever data is already accumulated if:
     // 1) new pkt (not retransmitted) arrived, and it belongs to a new frame (based on timestamp diff)
@@ -477,6 +476,10 @@ namespace DepLibSfuShm {
         media[1].new_ssrc, item->seqid, item->ts);
       return;
     }
+
+    // TODO: remove when debugged
+    if (item->keyframe && invalid)
+      MS_WARN_TAG(xcode, "Got invalid kf seq=%" PRIu64 " ts=%" PRIu64 " lastkeyframets=%" PRIu64, item->seqid, item->ts, this->lastKeyFrameTs);
 
     sfushm_av_frame_frag_t frag;
     frag.ssrc = media[1].new_ssrc;

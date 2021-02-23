@@ -126,6 +126,9 @@ namespace DepLibSfuShm
     static xcode_sfushm_bin_log_ctx_t bin_log_ctx;                  // context for writing statistics to binary log
     #define bin_log_record bin_log_ctx.record
 
+    void DumpBinLogDataIfNeeded(bool signal_set);
+
+
   private:
     void WriteAudioChunk(sfushm_av_frame_frag_t* data);
     void WriteVideoChunk(ShmQueueItem* item, bool invalid);
