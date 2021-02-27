@@ -27,7 +27,7 @@ mod router {
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::VP8,
+                mime_type: MimeTypeVideo::Vp8,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::new(),

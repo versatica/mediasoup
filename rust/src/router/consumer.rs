@@ -190,7 +190,7 @@ pub enum ConsumerType {
     /// Two or more RTP streams are sent, each of them with one or more temporal layers.
     Simulcast,
     /// A single RTP stream is sent with spatial/temporal layers.
-    SVC,
+    Svc,
     /// Special type for consumers created on a
     /// [`PipeTransport`](crate::pipe_transport::PipeTransport).
     Pipe,
@@ -201,7 +201,7 @@ impl From<ProducerType> for ConsumerType {
         match producer_type {
             ProducerType::Simple => ConsumerType::Simple,
             ProducerType::Simulcast => ConsumerType::Simulcast,
-            ProducerType::SVC => ConsumerType::SVC,
+            ProducerType::Svc => ConsumerType::Svc,
         }
     }
 }
@@ -247,7 +247,7 @@ pub enum ConsumerStats {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ConsumerTraceEventData {
-    RTP {
+    Rtp {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -265,7 +265,7 @@ pub enum ConsumerTraceEventData {
         /// Per type specific information.
         info: Value,
     },
-    NACK {
+    Nack {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -274,7 +274,7 @@ pub enum ConsumerTraceEventData {
         /// Per type specific information.
         info: Value,
     },
-    PLI {
+    Pli {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -283,7 +283,7 @@ pub enum ConsumerTraceEventData {
         /// Per type specific information.
         info: Value,
     },
-    FIR {
+    Fir {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -299,15 +299,15 @@ pub enum ConsumerTraceEventData {
 #[serde(rename_all = "lowercase")]
 pub enum ConsumerTraceEventType {
     /// RTP packet.
-    RTP,
+    Rtp,
     /// RTP video keyframe packet.
     KeyFrame,
     /// RTCP NACK packet.
-    NACK,
+    Nack,
     /// RTCP PLI packet.
-    PLI,
+    Pli,
     /// RTCP FIR packet.
-    FIR,
+    Fir,
 }
 
 #[derive(Debug, Deserialize)]

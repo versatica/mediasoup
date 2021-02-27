@@ -87,10 +87,10 @@ pub enum RtpParametersMappingError {
     },
     /// No RTX codec for capability codec PT.
     #[error("No RTX codec for capability codec PT {preferred_payload_type}")]
-    UnsupportedRTXCodec { preferred_payload_type: u8 },
+    UnsupportedRtxCodec { preferred_payload_type: u8 },
     /// Missing media codec found for RTX PT.
     #[error("Missing media codec found for RTX PT {payload_type}")]
-    MissingMediaCodecForRTX { payload_type: u8 },
+    MissingMediaCodecForRtx { payload_type: u8 },
 }
 
 /// Error caused by bad consumer RTP parameters.
@@ -287,7 +287,7 @@ pub(crate) fn generate_router_rtp_capabilities(
             let payload_type = dynamic_payload_types.remove(0);
 
             let rtx_codec = RtpCodecCapabilityFinalized::Video {
-                mime_type: MimeTypeVideo::RTX,
+                mime_type: MimeTypeVideo::Rtx,
                 preferred_payload_type: payload_type,
                 clock_rate: codec_finalized.clock_rate(),
                 parameters: RtpCodecParametersParameters::from([(
@@ -399,14 +399,14 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
                         codec_to_cap_codec.insert(codec, Cow::Borrowed(associated_cap_rtx_codec));
                     }
                     None => {
-                        return Err(RtpParametersMappingError::UnsupportedRTXCodec {
+                        return Err(RtpParametersMappingError::UnsupportedRtxCodec {
                             preferred_payload_type: cap_media_codec.preferred_payload_type(),
                         });
                     }
                 }
             }
             None => {
-                return Err(RtpParametersMappingError::MissingMediaCodecForRTX {
+                return Err(RtpParametersMappingError::MissingMediaCodecForRtx {
                     payload_type: codec.payload_type(),
                 });
             }
@@ -714,7 +714,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     if consumer_params
         .header_extensions
         .iter()
-        .any(|ext| ext.uri == RtpHeaderExtensionUri::TransportWideCCDraft01)
+        .any(|ext| ext.uri == RtpHeaderExtensionUri::TransportWideCcDraft01)
     {
         for codec in consumer_params.codecs.iter_mut() {
             codec
@@ -729,13 +729,13 @@ pub(crate) fn get_consumer_rtp_parameters(
         for codec in consumer_params.codecs.iter_mut() {
             codec
                 .rtcp_feedback_mut()
-                .retain(|fb| fb != &RtcpFeedback::TransportCC);
+                .retain(|fb| fb != &RtcpFeedback::TransportCc);
         }
     } else {
         for codec in consumer_params.codecs.iter_mut() {
             codec
                 .rtcp_feedback_mut()
-                .retain(|fb| !matches!(fb, RtcpFeedback::GoogRemb | RtcpFeedback::TransportCC));
+                .retain(|fb| !matches!(fb, RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc));
         }
     }
 
@@ -844,9 +844,9 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         .filter(|ext| {
             !matches!(
                 ext.uri,
-                RtpHeaderExtensionUri::MID
+                RtpHeaderExtensionUri::Mid
                     | RtpHeaderExtensionUri::AbsSendTime
-                    | RtpHeaderExtensionUri::TransportWideCCDraft01
+                    | RtpHeaderExtensionUri::TransportWideCcDraft01
             )
         })
         .cloned()
@@ -1059,7 +1059,7 @@ fn match_codecs(
             }
         }
 
-        MimeType::Video(MimeTypeVideo::VP9) => {
+        MimeType::Video(MimeTypeVideo::Vp9) => {
             // If strict matching check profile-id.
             if strict {
                 let profile_id_a = codec_a

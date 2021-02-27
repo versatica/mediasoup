@@ -125,7 +125,7 @@ pub enum ProducerType {
     /// Two or more RTP streams are received, each of them with one or more temporal layers.
     Simulcast,
     /// A single RTP stream is received with spatial/temporal layers.
-    SVC,
+    Svc,
 }
 
 /// Score of the RTP stream in the producer representing its transmission quality.
@@ -199,7 +199,7 @@ pub struct ProducerStat {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ProducerTraceEventData {
-    RTP {
+    Rtp {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -217,7 +217,7 @@ pub enum ProducerTraceEventData {
         /// Per type specific information.
         info: Value,
     },
-    NACK {
+    Nack {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -226,7 +226,7 @@ pub enum ProducerTraceEventData {
         /// Per type specific information.
         info: Value,
     },
-    PLI {
+    Pli {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -235,7 +235,7 @@ pub enum ProducerTraceEventData {
         /// Per type specific information.
         info: Value,
     },
-    FIR {
+    Fir {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -251,15 +251,15 @@ pub enum ProducerTraceEventData {
 #[serde(rename_all = "lowercase")]
 pub enum ProducerTraceEventType {
     /// RTP packet.
-    RTP,
+    Rtp,
     /// RTP video keyframe packet.
     KeyFrame,
     /// RTCP NACK packet.
-    NACK,
+    Nack,
     /// RTCP PLI packet.
-    PLI,
+    Pli,
     /// RTCP FIR packet.
-    FIR,
+    Fir,
 }
 
 #[derive(Debug, Deserialize)]

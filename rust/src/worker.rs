@@ -106,27 +106,27 @@ pub enum WorkerLogTag {
     /// Logs about software/library versions, configuration and process information.
     Info,
     /// Logs about ICE.
-    ICE,
+    Ice,
     /// Logs about DTLS.
-    DTLS,
+    Dtls,
     /// Logs about RTP.
-    RTP,
+    Rtp,
     /// Logs about SRTP encryption/decryption.
-    SRTP,
+    Srtp,
     /// Logs about RTCP.
-    RTCP,
+    Rtcp,
     /// Logs about RTP retransmission, including NACK/PLI/FIR.
-    RTX,
+    Rtx,
     /// Logs about transport bandwidth estimation.
-    BWE,
+    Bwe,
     /// Logs related to the scores of Producers and Consumers.
     Score,
     /// Logs about video simulcast.
     Simulcast,
     /// Logs about video SVC.
-    SVC,
+    Svc,
     /// Logs about SCTP (DataChannel).
-    SCTP,
+    Sctp,
     /// Logs about messages (can be SCTP messages or direct messages).
     Message,
 }
@@ -135,17 +135,17 @@ impl WorkerLogTag {
     fn as_str(&self) -> &'static str {
         match self {
             Self::Info => "info",
-            Self::ICE => "ice",
-            Self::DTLS => "dtls",
-            Self::RTP => "rtp",
-            Self::SRTP => "srtp",
-            Self::RTCP => "rtcp",
-            Self::RTX => "rtx",
-            Self::BWE => "bwe",
+            Self::Ice => "ice",
+            Self::Dtls => "dtls",
+            Self::Rtp => "rtp",
+            Self::Srtp => "srtp",
+            Self::Rtcp => "rtcp",
+            Self::Rtx => "rtx",
+            Self::Bwe => "bwe",
             Self::Score => "score",
             Self::Simulcast => "simulcast",
-            Self::SVC => "svc",
-            Self::SCTP => "sctp",
+            Self::Svc => "svc",
+            Self::Sctp => "sctp",
             Self::Message => "message",
         }
     }

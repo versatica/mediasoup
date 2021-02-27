@@ -39,7 +39,7 @@ mod producer {
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::VP8,
+                mime_type: MimeTypeVideo::Vp8,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::new(),
@@ -80,7 +80,7 @@ mod producer {
                 }],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::MID,
+                        uri: RtpHeaderExtensionUri::Mid,
                         id: 10,
                         encrypt: false,
                     },
@@ -125,7 +125,7 @@ mod producer {
                         ],
                     },
                     RtpCodecParameters::Video {
-                        mime_type: MimeTypeVideo::RTX,
+                        mime_type: MimeTypeVideo::Rtx,
                         payload_type: 113,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([("apt", 112u32.into())]),
@@ -134,7 +134,7 @@ mod producer {
                 ],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::MID,
+                        uri: RtpHeaderExtensionUri::Mid,
                         id: 10,
                         encrypt: false,
                     },
@@ -401,7 +401,7 @@ mod producer {
                                 rtcp_feedback: vec![],
                             },
                             RtpCodecParameters::Video {
-                                mime_type: MimeTypeVideo::RTX,
+                                mime_type: MimeTypeVideo::Rtx,
                                 payload_type: 113,
                                 clock_rate: NonZeroU32::new(90000).unwrap(),
                                 parameters: RtpCodecParametersParameters::from([(
@@ -439,7 +439,7 @@ mod producer {
                                 rtcp_feedback: vec![],
                             },
                             RtpCodecParameters::Video {
-                                mime_type: MimeTypeVideo::RTX,
+                                mime_type: MimeTypeVideo::Rtx,
                                 payload_type: 113,
                                 clock_rate: NonZeroU32::new(90000).unwrap(),
                                 parameters: RtpCodecParametersParameters::from([(
@@ -481,7 +481,7 @@ mod producer {
                     .produce(ProducerOptions::new(MediaKind::Audio, {
                         let mut parameters = RtpParameters::default();
                         parameters.codecs = vec![RtpCodecParameters::Audio {
-                            mime_type: MimeTypeAudio::ISAC,
+                            mime_type: MimeTypeAudio::Isac,
                             payload_type: 108,
                             clock_rate: NonZeroU32::new(32000).unwrap(),
                             channels: NonZeroU8::new(1).unwrap(),
@@ -520,7 +520,7 @@ mod producer {
                                 rtcp_feedback: vec![],
                             },
                             RtpCodecParameters::Video {
-                                mime_type: MimeTypeVideo::RTX,
+                                mime_type: MimeTypeVideo::Rtx,
                                 payload_type: 113,
                                 clock_rate: NonZeroU32::new(90000).unwrap(),
                                 parameters: RtpCodecParametersParameters::from([(
@@ -598,7 +598,7 @@ mod producer {
                         let mut parameters = RtpParameters::default();
                         parameters.mid = Some("VIDEO2".to_string());
                         parameters.codecs = vec![RtpCodecParameters::Video {
-                            mime_type: MimeTypeVideo::VP8,
+                            mime_type: MimeTypeVideo::Vp8,
                             payload_type: 112,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::new(),
@@ -853,8 +853,8 @@ mod producer {
             {
                 audio_producer
                     .enable_trace_event(vec![
-                        ProducerTraceEventType::RTP,
-                        ProducerTraceEventType::PLI,
+                        ProducerTraceEventType::Rtp,
+                        ProducerTraceEventType::Pli,
                     ])
                     .await
                     .expect("Failed to enable trace event");

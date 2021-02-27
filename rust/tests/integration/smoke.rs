@@ -112,7 +112,7 @@ fn smoke() {
         println!(
             "WebRTC transport enable trace event: {:#?}",
             webrtc_transport
-                .enable_trace_event(vec![TransportTraceEventType::BWE])
+                .enable_trace_event(vec![TransportTraceEventType::Bwe])
                 .await
                 .unwrap()
         );
@@ -295,7 +295,7 @@ fn smoke() {
         println!(
             "Plain transport enable trace event: {:#?}",
             plain_transport
-                .enable_trace_event(vec![TransportTraceEventType::BWE])
+                .enable_trace_event(vec![TransportTraceEventType::Bwe])
                 .await
                 .unwrap()
         );
@@ -317,7 +317,7 @@ fn smoke() {
         println!(
             "Direct transport enable trace event: {:#?}",
             direct_transport
-                .enable_trace_event(vec![TransportTraceEventType::BWE])
+                .enable_trace_event(vec![TransportTraceEventType::Bwe])
                 .await
                 .unwrap()
         );

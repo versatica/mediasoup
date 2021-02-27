@@ -68,7 +68,7 @@ pub enum TransportTraceEventData {
         info: Value,
     },
     /// Transport bandwidth estimation changed.
-    BWE {
+    Bwe {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
@@ -86,7 +86,7 @@ pub enum TransportTraceEventType {
     /// RTP probation packet.
     Probation,
     /// Transport bandwidth estimation changed.
-    BWE,
+    Bwe,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]

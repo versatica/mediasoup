@@ -46,7 +46,7 @@ mod pipe_transport {
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::VP8,
+                mime_type: MimeTypeVideo::Vp8,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::new(),
@@ -72,7 +72,7 @@ mod pipe_transport {
                     rtcp_feedback: vec![],
                 }],
                 header_extensions: vec![RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::MID,
+                    uri: RtpHeaderExtensionUri::Mid,
                     id: 10,
                     encrypt: false,
                 }],
@@ -98,7 +98,7 @@ mod pipe_transport {
             RtpParameters {
                 mid: Some("VIDEO".to_string()),
                 codecs: vec![RtpCodecParameters::Video {
-                    mime_type: MimeTypeVideo::VP8,
+                    mime_type: MimeTypeVideo::Vp8,
                     payload_type: 112,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::default(),
@@ -110,7 +110,7 @@ mod pipe_transport {
                 }],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::MID,
+                        uri: RtpHeaderExtensionUri::Mid,
                         id: 10,
                         encrypt: false,
                     },
@@ -174,18 +174,18 @@ mod pipe_transport {
                     rtcp_feedback: vec![],
                 },
                 RtpCodecCapability::Video {
-                    mime_type: MimeTypeVideo::VP8,
+                    mime_type: MimeTypeVideo::Vp8,
                     preferred_payload_type: Some(101),
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::default(),
                     rtcp_feedback: vec![
                         RtcpFeedback::Nack,
                         RtcpFeedback::CcmFir,
-                        RtcpFeedback::TransportCC,
+                        RtcpFeedback::TransportCc,
                     ],
                 },
                 RtpCodecCapability::Video {
-                    mime_type: MimeTypeVideo::RTX,
+                    mime_type: MimeTypeVideo::Rtx,
                     preferred_payload_type: Some(102),
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
@@ -202,7 +202,7 @@ mod pipe_transport {
                 },
                 RtpHeaderExtension {
                     kind: Some(MediaKind::Video),
-                    uri: RtpHeaderExtensionUri::TransportWideCCDraft01,
+                    uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                     preferred_id: 5,
                     preferred_encrypt: false,
                     direction: RtpHeaderExtensionDirection::default(),
@@ -437,7 +437,7 @@ mod pipe_transport {
             assert_eq!(
                 pipe_consumer.rtp_parameters().codecs,
                 vec![RtpCodecParameters::Video {
-                    mime_type: MimeTypeVideo::VP8,
+                    mime_type: MimeTypeVideo::Vp8,
                     payload_type: 101,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::default(),
@@ -489,7 +489,7 @@ mod pipe_transport {
             assert_eq!(
                 pipe_consumer.rtp_parameters().codecs,
                 vec![RtpCodecParameters::Video {
-                    mime_type: MimeTypeVideo::VP8,
+                    mime_type: MimeTypeVideo::Vp8,
                     payload_type: 101,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::default(),
@@ -597,7 +597,7 @@ mod pipe_transport {
                 pipe_consumer.rtp_parameters().codecs,
                 vec![
                     RtpCodecParameters::Video {
-                        mime_type: MimeTypeVideo::VP8,
+                        mime_type: MimeTypeVideo::Vp8,
                         payload_type: 101,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::default(),
@@ -608,7 +608,7 @@ mod pipe_transport {
                         ],
                     },
                     RtpCodecParameters::Video {
-                        mime_type: MimeTypeVideo::RTX,
+                        mime_type: MimeTypeVideo::Rtx,
                         payload_type: 102,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
@@ -776,18 +776,18 @@ mod pipe_transport {
                 video_consumer.rtp_parameters().codecs,
                 vec![
                     RtpCodecParameters::Video {
-                        mime_type: MimeTypeVideo::VP8,
+                        mime_type: MimeTypeVideo::Vp8,
                         payload_type: 101,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::default(),
                         rtcp_feedback: vec![
                             RtcpFeedback::Nack,
                             RtcpFeedback::CcmFir,
-                            RtcpFeedback::TransportCC,
+                            RtcpFeedback::TransportCc,
                         ],
                     },
                     RtpCodecParameters::Video {
-                        mime_type: MimeTypeVideo::RTX,
+                        mime_type: MimeTypeVideo::Rtx,
                         payload_type: 102,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
@@ -804,7 +804,7 @@ mod pipe_transport {
                         encrypt: false,
                     },
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::TransportWideCCDraft01,
+                        uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                         id: 5,
                         encrypt: false,
                     },

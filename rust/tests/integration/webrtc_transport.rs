@@ -41,7 +41,7 @@ mod webrtc_transport {
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::VP8,
+                mime_type: MimeTypeVideo::Vp8,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::new(),
@@ -187,33 +187,33 @@ mod webrtc_transport {
                     let ice_candidates = transport1.ice_candidates();
                     assert_eq!(ice_candidates.len(), 6);
                     assert_eq!(ice_candidates[0].ip, "9.9.9.1".parse::<IpAddr>().unwrap());
-                    assert_eq!(ice_candidates[0].protocol, TransportProtocol::UDP);
+                    assert_eq!(ice_candidates[0].protocol, TransportProtocol::Udp);
                     assert_eq!(ice_candidates[0].r#type, IceCandidateType::Host);
                     assert_eq!(ice_candidates[0].tcp_type, None);
                     assert_eq!(ice_candidates[1].ip, "9.9.9.1".parse::<IpAddr>().unwrap());
-                    assert_eq!(ice_candidates[1].protocol, TransportProtocol::TCP);
+                    assert_eq!(ice_candidates[1].protocol, TransportProtocol::Tcp);
                     assert_eq!(ice_candidates[1].r#type, IceCandidateType::Host);
                     assert_eq!(
                         ice_candidates[1].tcp_type,
                         Some(IceCandidateTcpType::Passive),
                     );
                     assert_eq!(ice_candidates[2].ip, "9.9.9.2".parse::<IpAddr>().unwrap());
-                    assert_eq!(ice_candidates[2].protocol, TransportProtocol::UDP);
+                    assert_eq!(ice_candidates[2].protocol, TransportProtocol::Udp);
                     assert_eq!(ice_candidates[2].r#type, IceCandidateType::Host);
                     assert_eq!(ice_candidates[2].tcp_type, None);
                     assert_eq!(ice_candidates[3].ip, "9.9.9.2".parse::<IpAddr>().unwrap());
-                    assert_eq!(ice_candidates[3].protocol, TransportProtocol::TCP);
+                    assert_eq!(ice_candidates[3].protocol, TransportProtocol::Tcp);
                     assert_eq!(ice_candidates[3].r#type, IceCandidateType::Host);
                     assert_eq!(
                         ice_candidates[3].tcp_type,
                         Some(IceCandidateTcpType::Passive),
                     );
                     assert_eq!(ice_candidates[4].ip, "127.0.0.1".parse::<IpAddr>().unwrap());
-                    assert_eq!(ice_candidates[4].protocol, TransportProtocol::UDP);
+                    assert_eq!(ice_candidates[4].protocol, TransportProtocol::Udp);
                     assert_eq!(ice_candidates[4].r#type, IceCandidateType::Host);
                     assert_eq!(ice_candidates[4].tcp_type, None);
                     assert_eq!(ice_candidates[4].ip, "127.0.0.1".parse::<IpAddr>().unwrap());
-                    assert_eq!(ice_candidates[4].protocol, TransportProtocol::UDP);
+                    assert_eq!(ice_candidates[4].protocol, TransportProtocol::Udp);
                     assert_eq!(ice_candidates[4].r#type, IceCandidateType::Host);
                     assert_eq!(ice_candidates[4].tcp_type, None);
                     assert!(ice_candidates[0].priority > ice_candidates[1].priority);
@@ -477,7 +477,7 @@ mod webrtc_transport {
                 transport
                     .enable_trace_event(vec![
                         TransportTraceEventType::Probation,
-                        TransportTraceEventType::BWE,
+                        TransportTraceEventType::Bwe,
                     ])
                     .await
                     .expect("Failed to enable trace event");

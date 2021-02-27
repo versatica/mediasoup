@@ -17,7 +17,7 @@ fn generate_router_rtp_capabilities_succeeds() {
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
-            mime_type: MimeTypeVideo::VP8,
+            mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: Some(125), // Let's force it.
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::new(),
@@ -51,10 +51,10 @@ fn generate_router_rtp_capabilities_succeeds() {
                     ("useinbandfec", 1u32.into()),
                     ("foo", "bar".into()),
                 ]),
-                rtcp_feedback: vec![RtcpFeedback::TransportCC],
+                rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapabilityFinalized::Video {
-                mime_type: MimeTypeVideo::VP8,
+                mime_type: MimeTypeVideo::Vp8,
                 preferred_payload_type: 125,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::new(),
@@ -63,11 +63,11 @@ fn generate_router_rtp_capabilities_succeeds() {
                     RtcpFeedback::NackPli,
                     RtcpFeedback::CcmFir,
                     RtcpFeedback::GoogRemb,
-                    RtcpFeedback::TransportCC
+                    RtcpFeedback::TransportCc
                 ],
             },
             RtpCodecCapabilityFinalized::Video {
-                mime_type: MimeTypeVideo::RTX,
+                mime_type: MimeTypeVideo::Rtx,
                 preferred_payload_type: 101, // 101 is the second available dynamic PT.
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([("apt", 125u32.into())]),
@@ -88,11 +88,11 @@ fn generate_router_rtp_capabilities_succeeds() {
                     RtcpFeedback::NackPli,
                     RtcpFeedback::CcmFir,
                     RtcpFeedback::GoogRemb,
-                    RtcpFeedback::TransportCC,
+                    RtcpFeedback::TransportCc,
                 ],
             },
             RtpCodecCapabilityFinalized::Video {
-                mime_type: MimeTypeVideo::RTX,
+                mime_type: MimeTypeVideo::Rtx,
                 preferred_payload_type: 103,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([("apt", 102u32.into())]),
@@ -198,7 +198,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 ],
             },
             RtpCodecParameters::Video {
-                mime_type: MimeTypeVideo::RTX,
+                mime_type: MimeTypeVideo::Rtx,
                 payload_type: 112,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([("apt", 111u32.into())]),
@@ -207,7 +207,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         ],
         header_extensions: vec![
             RtpHeaderExtensionParameters {
-                uri: RtpHeaderExtensionUri::MID,
+                uri: RtpHeaderExtensionUri::Mid,
                 id: 1,
                 encrypt: false,
             },
@@ -297,11 +297,11 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                     RtcpFeedback::NackPli,
                     RtcpFeedback::CcmFir,
                     RtcpFeedback::GoogRemb,
-                    RtcpFeedback::TransportCC,
+                    RtcpFeedback::TransportCc,
                 ],
             },
             RtpCodecParameters::Video {
-                mime_type: MimeTypeVideo::RTX,
+                mime_type: MimeTypeVideo::Rtx,
                 payload_type: 102,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
@@ -406,7 +406,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 ],
             },
             RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::RTX,
+                mime_type: MimeTypeVideo::Rtx,
                 preferred_payload_type: Some(102),
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
@@ -416,14 +416,14 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         header_extensions: vec![
             RtpHeaderExtension {
                 kind: Some(MediaKind::Audio),
-                uri: RtpHeaderExtensionUri::MID,
+                uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: Some(MediaKind::Video),
-                uri: RtpHeaderExtensionUri::MID,
+                uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
@@ -483,7 +483,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 ],
             },
             RtpCodecParameters::Video {
-                mime_type: MimeTypeVideo::RTX,
+                mime_type: MimeTypeVideo::Rtx,
                 payload_type: 102,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
@@ -526,7 +526,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         consumer_rtp_parameters.header_extensions,
         vec![
             RtpHeaderExtensionParameters {
-                uri: RtpHeaderExtensionUri::MID,
+                uri: RtpHeaderExtensionUri::Mid,
                 id: 1,
                 encrypt: false,
             },
@@ -689,7 +689,7 @@ fn get_producer_rtp_parameters_mapping_unsupported() {
     let rtp_parameters = RtpParameters {
         mid: None,
         codecs: vec![RtpCodecParameters::Video {
-            mime_type: MimeTypeVideo::VP8,
+            mime_type: MimeTypeVideo::Vp8,
             payload_type: 120,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::default(),

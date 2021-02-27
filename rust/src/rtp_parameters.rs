@@ -254,8 +254,8 @@ pub enum RtpCodecCapabilityFinalized {
 impl RtpCodecCapabilityFinalized {
     pub(crate) fn is_rtx(&self) -> bool {
         match self {
-            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::RTX,
-            Self::Video { mime_type, .. } => mime_type == &MimeTypeVideo::RTX,
+            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::Rtx,
+            Self::Video { mime_type, .. } => mime_type == &MimeTypeVideo::Rtx,
         }
     }
 
@@ -328,47 +328,65 @@ pub enum MimeType {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub enum MimeTypeAudio {
+    /// Opus
     #[serde(rename = "audio/opus")]
     Opus,
+    /// PCMU
     #[serde(rename = "audio/PCMU")]
-    PCMU,
+    Pcmu,
+    /// PCMA
     #[serde(rename = "audio/PCMA")]
-    PCMA,
+    Pcma,
+    /// ISAC
     #[serde(rename = "audio/ISAC")]
-    ISAC,
+    Isac,
+    /// G722
     #[serde(rename = "audio/G722")]
     G722,
+    /// iLBC
     #[serde(rename = "audio/iLBC")]
-    iLBC,
+    Ilbc,
+    /// SILK
     #[serde(rename = "audio/SILK")]
-    SILK,
+    Silk,
+    /// CN
     #[serde(rename = "audio/CN")]
-    CN,
+    Cn,
+    /// TelephoneEvent
     #[serde(rename = "audio/telephone-event")]
     TelephoneEvent,
+    /// RTX
     #[serde(rename = "audio/rtx")]
-    RTX,
+    Rtx,
+    /// RED
     #[serde(rename = "audio/red")]
-    RED,
+    Red,
 }
 
 /// Known Video MIME types.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub enum MimeTypeVideo {
+    /// VP8
     #[serde(rename = "video/VP8")]
-    VP8,
+    Vp8,
+    /// VP9
     #[serde(rename = "video/VP9")]
-    VP9,
+    Vp9,
+    /// H264
     #[serde(rename = "video/H264")]
     H264,
+    /// H265
     #[serde(rename = "video/H265")]
     H265,
+    /// RTX
     #[serde(rename = "video/rtx")]
-    RTX,
+    Rtx,
+    /// RED
     #[serde(rename = "video/red")]
-    RED,
+    Red,
+    /// ULPFEC
     #[serde(rename = "video/ulpfec")]
-    ULPFEC,
+    Ulpfec,
 }
 
 /// Provides information on the capabilities of a codec within the RTP capabilities. The list of
@@ -501,7 +519,7 @@ impl Default for RtpHeaderExtensionDirection {
 pub enum RtpHeaderExtensionUri {
     /// urn:ietf:params:rtp-hdrext:sdes:mid
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:mid")]
-    MID,
+    Mid,
     /// urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id")]
     RtpStreamId,
@@ -525,7 +543,7 @@ pub enum RtpHeaderExtensionUri {
     TimeOffset,
     /// <http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01>
     #[serde(rename = "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01")]
-    TransportWideCCDraft01,
+    TransportWideCcDraft01,
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
     AbsSendTime,
@@ -537,7 +555,7 @@ pub enum RtpHeaderExtensionUri {
 impl RtpHeaderExtensionUri {
     pub fn as_str(&self) -> &'static str {
         match self {
-            RtpHeaderExtensionUri::MID => "urn:ietf:params:rtp-hdrext:sdes:mid",
+            RtpHeaderExtensionUri::Mid => "urn:ietf:params:rtp-hdrext:sdes:mid",
             RtpHeaderExtensionUri::RtpStreamId => "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
             RtpHeaderExtensionUri::RepairRtpStreamId => {
                 "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id"
@@ -549,7 +567,7 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::AudioLevel => "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
             RtpHeaderExtensionUri::VideoOrientation => "urn:3gpp:video-orientation",
             RtpHeaderExtensionUri::TimeOffset => "urn:ietf:params:rtp-hdrext:toffset",
-            RtpHeaderExtensionUri::TransportWideCCDraft01 => {
+            RtpHeaderExtensionUri::TransportWideCcDraft01 => {
                 "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
             }
             RtpHeaderExtensionUri::AbsSendTime => {
@@ -715,8 +733,8 @@ pub enum RtpCodecParameters {
 impl RtpCodecParameters {
     pub(crate) fn is_rtx(&self) -> bool {
         match self {
-            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::RTX,
-            Self::Video { mime_type, .. } => mime_type == &MimeTypeVideo::RTX,
+            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::Rtx,
+            Self::Video { mime_type, .. } => mime_type == &MimeTypeVideo::Rtx,
         }
     }
 
@@ -763,7 +781,7 @@ pub enum RtcpFeedback {
     /// goog-remb
     GoogRemb,
     /// transport-cc
-    TransportCC,
+    TransportCc,
     #[doc(hidden)]
     Unsupported,
 }
@@ -791,7 +809,7 @@ impl Serialize for RtcpFeedback {
                 rtcp_feedback.serialize_field("type", "goog-remb")?;
                 rtcp_feedback.serialize_field("parameter", "")?;
             }
-            RtcpFeedback::TransportCC => {
+            RtcpFeedback::TransportCc => {
                 rtcp_feedback.serialize_field("type", "transport-cc")?;
                 rtcp_feedback.serialize_field("parameter", "")?;
             }
@@ -856,7 +874,7 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
                     ("nack", "pli") => RtcpFeedback::NackPli,
                     ("ccm", "fir") => RtcpFeedback::CcmFir,
                     ("goog-remb", "") => RtcpFeedback::GoogRemb,
-                    ("transport-cc", "") => RtcpFeedback::TransportCC,
+                    ("transport-cc", "") => RtcpFeedback::TransportCc,
                     _ => RtcpFeedback::Unsupported,
                 })
             }

@@ -49,7 +49,7 @@ mod consumer {
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::VP8,
+                mime_type: MimeTypeVideo::Vp8,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::new(),
@@ -90,7 +90,7 @@ mod consumer {
                 }],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::MID,
+                        uri: RtpHeaderExtensionUri::Mid,
                         id: 10,
                         encrypt: false,
                     },
@@ -137,7 +137,7 @@ mod consumer {
                         ],
                     },
                     RtpCodecParameters::Video {
-                        mime_type: MimeTypeVideo::RTX,
+                        mime_type: MimeTypeVideo::Rtx,
                         payload_type: 113,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([("apt", 112u32.into())]),
@@ -146,7 +146,7 @@ mod consumer {
                 ],
                 header_extensions: vec![
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::MID,
+                        uri: RtpHeaderExtensionUri::Mid,
                         id: 10,
                         encrypt: false,
                     },
@@ -218,7 +218,7 @@ mod consumer {
                     ],
                 },
                 RtpCodecCapability::Video {
-                    mime_type: MimeTypeVideo::RTX,
+                    mime_type: MimeTypeVideo::Rtx,
                     preferred_payload_type: Some(102),
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
@@ -228,14 +228,14 @@ mod consumer {
             header_extensions: vec![
                 RtpHeaderExtension {
                     kind: Some(MediaKind::Audio),
-                    uri: RtpHeaderExtensionUri::MID,
+                    uri: RtpHeaderExtensionUri::Mid,
                     preferred_id: 1,
                     preferred_encrypt: false,
                     direction: RtpHeaderExtensionDirection::default(),
                 },
                 RtpHeaderExtension {
                     kind: Some(MediaKind::Video),
-                    uri: RtpHeaderExtensionUri::MID,
+                    uri: RtpHeaderExtensionUri::Mid,
                     preferred_id: 1,
                     preferred_encrypt: false,
                     direction: RtpHeaderExtensionDirection::default(),
@@ -492,7 +492,7 @@ mod consumer {
                             ],
                         },
                         RtpCodecParameters::Video {
-                            mime_type: MimeTypeVideo::RTX,
+                            mime_type: MimeTypeVideo::Rtx,
                             payload_type: 104,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([(
@@ -600,7 +600,7 @@ mod consumer {
                             ],
                         },
                         RtpCodecParameters::Video {
-                            mime_type: MimeTypeVideo::RTX,
+                            mime_type: MimeTypeVideo::Rtx,
                             payload_type: 104,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([(
@@ -710,7 +710,7 @@ mod consumer {
             {
                 let incompatible_device_capabilities = RtpCapabilities {
                     codecs: vec![RtpCodecCapability::Audio {
-                        mime_type: MimeTypeAudio::ISAC,
+                        mime_type: MimeTypeAudio::Isac,
                         preferred_payload_type: Some(100),
                         clock_rate: NonZeroU32::new(32_000).unwrap(),
                         channels: NonZeroU8::new(1).unwrap(),
@@ -821,7 +821,7 @@ mod consumer {
                     dump.rtp_parameters.header_extensions,
                     vec![
                         RtpHeaderExtensionParameters {
-                            uri: RtpHeaderExtensionUri::MID,
+                            uri: RtpHeaderExtensionUri::Mid,
                             id: 1,
                             encrypt: false,
                         },
@@ -921,7 +921,7 @@ mod consumer {
                             ],
                         },
                         RtpCodecParameters::Video {
-                            mime_type: MimeTypeVideo::RTX,
+                            mime_type: MimeTypeVideo::Rtx,
                             payload_type: 104,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([(
@@ -936,7 +936,7 @@ mod consumer {
                     dump.rtp_parameters.header_extensions,
                     vec![
                         RtpHeaderExtensionParameters {
-                            uri: RtpHeaderExtensionUri::MID,
+                            uri: RtpHeaderExtensionUri::Mid,
                             id: 1,
                             encrypt: false,
                         },

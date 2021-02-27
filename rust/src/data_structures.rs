@@ -111,8 +111,8 @@ pub enum IceCandidateTcpType {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TransportProtocol {
-    TCP,
-    UDP,
+    Tcp,
+    Udp,
 }
 
 /// ICE candidate

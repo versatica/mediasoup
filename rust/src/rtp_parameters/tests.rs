@@ -18,10 +18,10 @@ fn rtcp_feedback_serde() {
 
         assert_eq!(
             serde_json::from_str::<RtcpFeedback>(transport_cc_str).unwrap(),
-            RtcpFeedback::TransportCC
+            RtcpFeedback::TransportCc
         );
 
-        let result = serde_json::to_string(&RtcpFeedback::TransportCC).unwrap();
+        let result = serde_json::to_string(&RtcpFeedback::TransportCc).unwrap();
         assert_eq!(result.as_str(), transport_cc_str);
     }
     {

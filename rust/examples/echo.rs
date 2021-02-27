@@ -29,10 +29,10 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
             parameters: RtpCodecParametersParameters::from([("useinbandfec", 1u32.into())]),
-            rtcp_feedback: vec![RtcpFeedback::TransportCC],
+            rtcp_feedback: vec![RtcpFeedback::TransportCc],
         },
         RtpCodecCapability::Video {
-            mime_type: MimeTypeVideo::VP8,
+            mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::new(),
@@ -41,7 +41,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
                 RtcpFeedback::NackPli,
                 RtcpFeedback::CcmFir,
                 RtcpFeedback::GoogRemb,
-                RtcpFeedback::TransportCC,
+                RtcpFeedback::TransportCc,
             ],
         },
     ]
