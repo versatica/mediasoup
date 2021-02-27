@@ -52,8 +52,8 @@ mod worker {
                     settings.log_tags = vec![WorkerLogTag::Info];
                     settings.rtc_ports_range = 0..=9999;
                     settings.dtls_files = Some(WorkerDtlsFiles {
-                        certificate: "tests/data/dtls-cert.pem".into(),
-                        private_key: "tests/data/dtls-key.pem".into(),
+                        certificate: "tests/integration/data/dtls-cert.pem".into(),
+                        private_key: "tests/integration/data/dtls-key.pem".into(),
                     });
                     settings.app_data = AppData::new(CustomAppData { bar: 456 });
 
