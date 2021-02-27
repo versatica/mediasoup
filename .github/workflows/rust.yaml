@@ -1,0 +1,65 @@
+name: Rust
+
+on:
+  push:
+    # TODO: Remove `rust` from here after merge upstream
+    branches: [ v3, rust ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - nightly
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: ${{ matrix.rust }}
+            override: true
+            components: rustfmt, clippy
+
+      - name: Configure cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+
+      - env:
+          PYTHON: python3
+        run: npm install
+
+      - name: cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose
