@@ -14,7 +14,7 @@
 //! # Before you start
 //! This is very low-level **library**. Which means it doesn't come with a ready to use signaling
 //! mechanism or easy to customize app scaffold (see
-//! [design goals](https://github.com/nazar-pc/mediasoup/tree/rust/rust/readme.md#design-goals)).
+//! [design goals](https://github.com/versatica/mediasoup/tree/v3/rust/readme.md#design-goals)).
 //!
 //! It is recommended to visit mediasoup website and read
 //! [design overview](https://mediasoup.org/documentation/v3/mediasoup/design/) first.

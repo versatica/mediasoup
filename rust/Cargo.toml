@@ -8,7 +8,7 @@ edition = "2018"
 license = "ISC"
 keywords = ["webrtc", "ortc", "sfu"]
 documentation = "https://docs.rs/mediasoup"
-repository = "https://github.com/nazar-pc/mediasoup/tree/rust/rust"
+repository = "https://github.com/versatica/mediasoup/tree/v3/rust"
 readme = "readme.md"
 
 [dependencies]
