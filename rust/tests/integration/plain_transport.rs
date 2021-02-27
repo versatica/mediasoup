@@ -156,7 +156,10 @@ mod plain_transport {
                     "bar",
                 );
 
-                assert!(matches!(transport1.tuple(), TransportTuple::LocalOnly{ .. }));
+                assert!(matches!(
+                    transport1.tuple(),
+                    TransportTuple::LocalOnly { .. },
+                ));
                 if let TransportTuple::LocalOnly {
                     local_ip, protocol, ..
                 } = transport1.tuple()
@@ -211,7 +214,10 @@ mod plain_transport {
 
                 assert_eq!(transport2.closed(), false);
                 assert_eq!(transport2.app_data().downcast_ref::<()>().unwrap(), &(),);
-                assert!(matches!(transport2.tuple(), TransportTuple::LocalOnly{ .. }));
+                assert!(matches!(
+                    transport2.tuple(),
+                    TransportTuple::LocalOnly { .. },
+                ));
                 if let TransportTuple::LocalOnly {
                     local_ip, protocol, ..
                 } = transport2.tuple()
@@ -449,7 +455,10 @@ mod plain_transport {
                 Err(RequestError::Response { .. }),
             ));
 
-            assert!(matches!(transport.tuple(), TransportTuple::WithRemote{ .. }));
+            assert!(matches!(
+                transport.tuple(),
+                TransportTuple::WithRemote { .. },
+            ));
             if let TransportTuple::WithRemote {
                 remote_ip,
                 remote_port,
