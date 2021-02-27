@@ -1228,8 +1228,14 @@ impl Router {
     }
 
     /// Callback is called when the router is closed for whatever reason.
+    ///
+    /// NOTE: Callback will be called in place if router is already closed.
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.close.add(Box::new(callback))
+        let handler_id = self.inner.handlers.close.add(Box::new(callback));
+        if self.inner.closed.load(Ordering::Relaxed) {
+            self.inner.handlers.close.call_simple();
+        }
+        handler_id
     }
 
     async fn get_pipe_transport_pair(

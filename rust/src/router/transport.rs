@@ -256,6 +256,8 @@ pub trait Transport: Send + Sync + CloneTransport {
     fn on_router_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
 
     /// Callback is called when the router is closed for whatever reason.
+    ///
+    /// NOTE: Callback will be called in place if transport is already closed.
     fn on_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
 }
 

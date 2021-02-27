@@ -85,5 +85,7 @@ pub trait RtpObserver {
     fn on_router_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
 
     /// Callback is called when the RTP observer is closed for whatever reason.
+    ///
+    /// NOTE: Callback will be called in place if observer is already closed.
     fn on_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
 }

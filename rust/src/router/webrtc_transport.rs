@@ -467,7 +467,11 @@ impl Transport for WebRtcTransport {
     }
 
     fn on_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId {
-        self.inner.handlers.close.add(callback)
+        let handler_id = self.inner.handlers.close.add(Box::new(callback));
+        if self.inner.closed.load(Ordering::Relaxed) {
+            self.inner.handlers.close.call_simple();
+        }
+        handler_id
     }
 }
 

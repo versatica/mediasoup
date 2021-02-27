@@ -891,8 +891,14 @@ impl Consumer {
     }
 
     /// Callback is called when the consumer is closed for whatever reason.
+    ///
+    /// NOTE: Callback will be called in place if consumer is already closed.
     pub fn on_close<F: FnOnce() + Send + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.close.add(Box::new(callback))
+        let handler_id = self.inner.handlers.close.add(Box::new(callback));
+        if self.inner.closed.load(Ordering::Relaxed) {
+            self.inner.handlers.close.call_simple();
+        }
+        handler_id
     }
 
     /// Downgrade `Consumer` to [`WeakConsumer`] instance.
