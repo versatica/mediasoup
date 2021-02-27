@@ -281,7 +281,7 @@ struct Inner {
     pid: u32,
     handlers: Handlers,
     app_data: AppData,
-    closed: AtomicBool,
+    closed: Arc<AtomicBool>,
     // Make sure worker is not dropped until this worker manager is not dropped
     _worker_manager: WorkerManager,
 }
@@ -290,13 +290,15 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
+        let already_closed = self.closed.swap(true, Ordering::SeqCst);
+
         if matches!(self.child.try_status(), Ok(None)) {
             unsafe {
                 libc::kill(self.pid as libc::pid_t, libc::SIGTERM);
             }
         }
 
-        if !self.closed.swap(true, Ordering::SeqCst) {
+        if !already_closed {
             self.handlers.close.call_simple();
         }
     }
@@ -396,7 +398,7 @@ impl Inner {
             pid,
             handlers,
             app_data,
-            closed: AtomicBool::new(false),
+            closed: Arc::new(AtomicBool::new(false)),
             _worker_manager: worker_manager,
         };
 
@@ -446,11 +448,14 @@ impl Inner {
             .detach();
 
         let stderr = self.child.stderr.take().unwrap();
+        let closed = Arc::clone(&self.closed);
         self.executor
             .spawn(async move {
                 let mut lines = BufReader::new(stderr).lines();
                 while let Some(Ok(line)) = lines.next().await {
-                    error!("(stderr) {}", line);
+                    if !closed.load(Ordering::SeqCst) {
+                        error!("(stderr) {}", line);
+                    }
                 }
             })
             .detach();
@@ -513,13 +518,18 @@ impl Inner {
         let channel_receiver = self.channel.get_internal_message_receiver();
         let payload_channel_receiver = self.payload_channel.get_internal_message_receiver();
         let pid = self.pid;
+        let closed = Arc::clone(&self.closed);
         self.executor
             .spawn(async move {
                 while let Ok(message) = channel_receiver.recv().await {
                     match message {
                         channel::InternalMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
                         channel::InternalMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
-                        channel::InternalMessage::Error(text) => error!("[pid:{}] {}", pid, text),
+                        channel::InternalMessage::Error(text) => {
+                            if !closed.load(Ordering::SeqCst) {
+                                error!("[pid:{}] {}", pid, text)
+                            }
+                        }
                         channel::InternalMessage::Dump(text) => eprintln!("{}", text),
                         channel::InternalMessage::Unexpected(data) => error!(
                             "worker[pid:{}] unexpected channel data: {}",
