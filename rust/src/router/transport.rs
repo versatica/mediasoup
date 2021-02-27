@@ -511,6 +511,8 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let producer_id = id.unwrap_or_else(ProducerId::new);
 
+        let _buffer_guard = self.channel().buffer_messages_for(producer_id.into());
+
         let response = self
             .channel()
             .request(TransportProduceRequest {
@@ -605,6 +607,8 @@ pub(super) trait TransportImpl: TransportGeneric {
             producer.r#type().into()
         };
 
+        let _buffer_guard = self.channel().buffer_messages_for(consumer_id.into());
+
         let response = self
             .channel()
             .request(TransportConsumeRequest {
@@ -683,6 +687,8 @@ pub(super) trait TransportImpl: TransportGeneric {
         } = data_producer_options;
 
         let data_producer_id = id.unwrap_or_else(DataProducerId::new);
+
+        let _buffer_guard = self.channel().buffer_messages_for(data_producer_id.into());
 
         let response = self
             .channel()
@@ -769,6 +775,8 @@ pub(super) trait TransportImpl: TransportGeneric {
         };
 
         let data_consumer_id = DataConsumerId::new();
+
+        let _buffer_guard = self.channel().buffer_messages_for(data_consumer_id.into());
 
         let response = self
             .channel()

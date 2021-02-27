@@ -639,6 +639,8 @@ impl Worker {
         let router_id = RouterId::new();
         let internal = RouterInternal { router_id };
 
+        let _buffer_guard = self.inner.channel.buffer_messages_for(router_id.into());
+
         self.inner
             .channel
             .request(WorkerCreateRouterRequest { internal })

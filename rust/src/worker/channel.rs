@@ -7,6 +7,7 @@ use bytes::{BufMut, Bytes, BytesMut};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use log::*;
+use lru::LruCache;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -37,6 +38,24 @@ pub(super) enum InternalMessage {
     /// Unknown
     #[serde(skip)]
     Unexpected(Vec<u8>),
+}
+
+pub(crate) struct BufferMessagesGuard {
+    target_id: SubscriptionTarget,
+    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
+    event_handlers: EventHandlers<Value>,
+}
+
+impl Drop for BufferMessagesGuard {
+    fn drop(&mut self) {
+        let mut buffered_notifications_for = self.buffered_notifications_for.lock();
+        if let Some(notifications) = buffered_notifications_for.remove(&self.target_id) {
+            for notification in notifications {
+                self.event_handlers
+                    .call_callbacks_with_value(&self.target_id, notification);
+            }
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -97,6 +116,7 @@ struct Inner {
     sender: async_channel::Sender<Bytes>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container: Arc<Mutex<RequestsContainer>>,
+    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
     event_handlers: EventHandlers<Value>,
 }
 
@@ -115,10 +135,13 @@ pub(crate) struct Channel {
 impl Channel {
     pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
+        let buffered_notifications_for =
+            Arc::<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>::default();
         let event_handlers = EventHandlers::new(Arc::clone(&executor));
 
         let internal_message_receiver = {
             let requests_container = Arc::clone(&requests_container);
+            let buffered_notifications_for = buffered_notifications_for.clone();
             let event_handlers = event_handlers.clone();
             let (sender, receiver) = async_channel::bounded(1);
 
@@ -127,6 +150,10 @@ impl Channel {
                     let mut len_bytes = Vec::new();
                     let mut bytes = Vec::new();
                     let mut reader = BufReader::new(reader);
+                    // This this contain cache of targets that are known to not have buffering, so
+                    // that we can avoid Mutex locking overhead for them
+                    let mut non_buffered_notifications =
+                        LruCache::<SubscriptionTarget, ()>::new(1000);
 
                     loop {
                         let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
@@ -201,6 +228,21 @@ impl Channel {
 
                                 match target_id {
                                     Some(target_id) => {
+                                        if !non_buffered_notifications.contains(&target_id) {
+                                            let mut buffer_notifications_for =
+                                                buffered_notifications_for.lock();
+                                            // Check if we need to buffer notifications for this
+                                            // target_id
+                                            if let Some(list) =
+                                                buffer_notifications_for.get_mut(&target_id)
+                                            {
+                                                list.push(notification);
+                                                continue;
+                                            } else {
+                                                // Remember we don't need to buffer these
+                                                non_buffered_notifications.put(target_id, ());
+                                            }
+                                        }
                                         event_handlers
                                             .call_callbacks_with_value(&target_id, notification);
                                     }
@@ -254,6 +296,7 @@ impl Channel {
             sender,
             internal_message_receiver,
             requests_container,
+            buffered_notifications_for,
             event_handlers,
         });
 
@@ -262,6 +305,22 @@ impl Channel {
 
     pub(super) fn get_internal_message_receiver(&self) -> async_channel::Receiver<InternalMessage> {
         self.inner.internal_message_receiver.clone()
+    }
+
+    /// This allows to enable buffering for messages for specific target while the target itself is
+    /// being created. This allows to avoid missing notifications due to race conditions.
+    pub(crate) fn buffer_messages_for(&self, target_id: SubscriptionTarget) -> BufferMessagesGuard {
+        let buffered_notifications_for = Arc::clone(&self.inner.buffered_notifications_for);
+        let event_handlers = self.inner.event_handlers.clone();
+        buffered_notifications_for
+            .lock()
+            .entry(target_id)
+            .or_default();
+        BufferMessagesGuard {
+            target_id,
+            buffered_notifications_for,
+            event_handlers,
+        }
     }
 
     pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>

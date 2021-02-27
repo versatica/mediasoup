@@ -492,6 +492,9 @@ impl Router {
         debug!("create_direct_transport()");
 
         let transport_id = TransportId::new();
+
+        let _buffer_guard = self.inner.channel.buffer_messages_for(transport_id.into());
+
         self.inner
             .channel
             .request(RouterCreateDirectTransportRequest {
@@ -549,6 +552,9 @@ impl Router {
         debug!("create_webrtc_transport()");
 
         let transport_id = TransportId::new();
+
+        let _buffer_guard = self.inner.channel.buffer_messages_for(transport_id.into());
+
         let data = self
             .inner
             .channel
@@ -606,6 +612,9 @@ impl Router {
         debug!("create_pipe_transport()");
 
         let transport_id = TransportId::new();
+
+        let _buffer_guard = self.inner.channel.buffer_messages_for(transport_id.into());
+
         let data = self
             .inner
             .channel
@@ -663,6 +672,9 @@ impl Router {
         debug!("create_plain_transport()");
 
         let transport_id = TransportId::new();
+
+        let _buffer_guard = self.inner.channel.buffer_messages_for(transport_id.into());
+
         let data = self
             .inner
             .channel
@@ -723,6 +735,12 @@ impl Router {
         debug!("create_audio_level_observer()");
 
         let rtp_observer_id = RtpObserverId::new();
+
+        let _buffer_guard = self
+            .inner
+            .channel
+            .buffer_messages_for(rtp_observer_id.into());
+
         self.inner
             .channel
             .request(RouterCreateAudioLevelObserverRequest {
