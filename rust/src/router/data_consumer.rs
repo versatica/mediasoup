@@ -135,7 +135,6 @@ pub struct DataConsumerDump {
     pub label: String,
     pub protocol: String,
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
-    pub buffered_amount: u32,
     pub buffered_amount_low_threshold: u32,
 }
 
@@ -150,6 +149,7 @@ pub struct DataConsumerStat {
     pub protocol: String,
     pub messages_sent: usize,
     pub bytes_sent: usize,
+    pub buffered_amount: u32,
 }
 
 /// Data consumer type.
