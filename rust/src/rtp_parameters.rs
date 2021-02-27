@@ -198,9 +198,7 @@ where
     K: Into<String>,
 {
     fn from_iter<T: IntoIterator<Item = (K, RtpCodecParametersParametersValue)>>(iter: T) -> Self {
-        Self(BTreeMap::from_iter(
-            iter.into_iter().map(|(k, v)| (k.into(), v)),
-        ))
+        Self(iter.into_iter().map(|(k, v)| (k.into(), v)).collect())
     }
 }
 

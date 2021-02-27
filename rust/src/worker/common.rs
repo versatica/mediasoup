@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 struct EventHandlersList<V: Clone + 'static> {
     index: usize,
+    #[allow(clippy::type_complexity)]
     callbacks: HashMap<usize, Arc<Box<dyn Fn(V) + Send + Sync>>>,
 }
 

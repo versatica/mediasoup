@@ -641,13 +641,16 @@ pub(crate) fn can_consume(
 ///
 /// It reduces encodings to just one and takes into account given RTP capabilities to reduce codecs,
 /// codecs' RTCP feedback and header extensions, and also enables or disabled RTX.
+#[allow(clippy::suspicious_operation_groupings)]
 pub(crate) fn get_consumer_rtp_parameters(
     consumable_params: &RtpParameters,
     caps: RtpCapabilities,
     pipe: bool,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
-    let mut consumer_params = RtpParameters::default();
-    consumer_params.rtcp = consumable_params.rtcp.clone();
+    let mut consumer_params = RtpParameters {
+        rtcp: consumable_params.rtcp.clone(),
+        ..RtpParameters::default()
+    };
 
     for cap_codec in caps.codecs.iter() {
         validate_rtp_codec_capability(cap_codec)
