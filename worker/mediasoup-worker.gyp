@@ -333,6 +333,15 @@
       ]
     },
     {
+      'target_name': 'libmediasoup-worker',
+      'type': 'static_library',
+      'sources':
+      [
+        # C++ source files.
+        'src/lib.cpp'
+      ]
+    },
+    {
       'target_name': 'mediasoup-worker-test',
       'defines': [ 'MS_LOG_STD', 'MS_TEST' ],
       'sources':
