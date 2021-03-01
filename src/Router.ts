@@ -825,6 +825,20 @@ export class Router extends EnhancedEventEmitter
 						appData       : producer.appData
 					});
 
+				// Ensure that the producer has not been closed in the meanwhile.
+				if (producer.closed)
+					throw new InvalidStateError('original Producer closed');
+
+				// Ensure that producer.paused has not changed in the meanwhile and, if
+				// so, sych the pipeProducer.
+				if (pipeProducer.paused !== producer.paused)
+				{
+					if (producer.paused)
+						await pipeProducer.pause();
+					else
+						await pipeProducer.resume();
+				}
+
 				// Pipe events from the pipe Consumer to the pipe Producer.
 				pipeConsumer!.observer.on('close', () => pipeProducer!.close());
 				pipeConsumer!.observer.on('pause', () => pipeProducer!.pause());
@@ -870,6 +884,10 @@ export class Router extends EnhancedEventEmitter
 						protocol             : pipeDataConsumer!.protocol,
 						appData              : dataProducer.appData
 					});
+
+				// Ensure that the dataProducer has not been closed in the meanwhile.
+				if (dataProducer.closed)
+					throw new InvalidStateError('original DataProducer closed');
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.
 				pipeDataConsumer!.observer.on('close', () => pipeDataProducer!.close());

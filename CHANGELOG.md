@@ -3,6 +3,7 @@
 
 ### 3.6.33 (WIP)
 
+* `router.pipeToRouter()`: Fix possible inconsistency in `pipeProducer.paused` status (as discussed in this [thread](https://mediasoup.discourse.group/t/concurrency-architecture/2515/) in the mediasoup forum).
 * Update `nlohmann/json` to 3.9.1.
 * Update `usrsctp`.
 * Update NPM deps.
