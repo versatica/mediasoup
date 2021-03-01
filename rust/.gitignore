@@ -1,4 +1,0 @@
-/target
-/examples-frontend/*/node_modules
-/examples-frontend/*/package-lock.json
-Cargo.lock
