@@ -22,7 +22,6 @@ namespace RTC
 
 		// Reserve vectors capacity.
 		this->spatialLayerCounters = std::vector<std::vector<RTC::RtpDataCounter>>(spatialLayers);
-		;
 
 		for (auto& spatialLayerCounter : this->spatialLayerCounters)
 		{
