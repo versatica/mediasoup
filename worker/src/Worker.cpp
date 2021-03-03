@@ -197,6 +197,18 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 
 	switch (request->methodId)
 	{
+		case Channel::Request::MethodId::WORKER_CLOSE:
+		{
+			if (this->closed)
+				return;
+
+			MS_DEBUG_DEV("Worker close request, stopping");
+
+			Close();
+
+			break;
+		}
+
 		case Channel::Request::MethodId::WORKER_DUMP:
 		{
 			json data = json::object();
