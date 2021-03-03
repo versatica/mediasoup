@@ -174,6 +174,8 @@ macro_rules! request_response_generic {
     };
 }
 
+request_response!("worker.close", WorkerCloseRequest {});
+
 request_response!("worker.dump", WorkerDumpRequest {}, WorkerDump);
 
 request_response!(

@@ -9,8 +9,8 @@ mod utils;
 
 use crate::data_structures::AppData;
 use crate::messages::{
-    RouterInternal, WorkerCreateRouterRequest, WorkerDumpRequest, WorkerGetResourceRequest,
-    WorkerUpdateSettingsRequest,
+    RouterInternal, WorkerCloseRequest, WorkerCreateRouterRequest, WorkerDumpRequest,
+    WorkerGetResourceRequest, WorkerUpdateSettingsRequest,
 };
 use crate::ortc;
 use crate::ortc::RtpCapabilitiesError;
@@ -290,12 +290,18 @@ impl Drop for Inner {
 
         let already_closed = self.closed.swap(true, Ordering::SeqCst);
 
-        // TODO: Stop worker
-        // if matches!(self.child.try_status(), Ok(None)) {
-        //     unsafe {
-        //         libc::kill(self.pid as libc::pid_t, libc::SIGTERM);
-        //     }
-        // }
+        let channel = self.channel.clone();
+        let payload_channel = self.payload_channel.clone();
+
+        self.executor
+            .spawn(async move {
+                let _ = channel.request(WorkerCloseRequest {}).await;
+
+                // Drop channels in here after response from worker
+                drop(channel);
+                drop(payload_channel);
+            })
+            .detach();
 
         if !already_closed {
             self.handlers.close.call_simple();
