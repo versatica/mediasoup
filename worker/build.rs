@@ -30,4 +30,6 @@ fn main() {
             .into_string()
             .unwrap()
     );
+    // TODO: Fix: this is just for my machine
+    println!("cargo:rustc-link-search=native=/usr/lib/gcc/x86_64-linux-gnu/10");
 }

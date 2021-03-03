@@ -276,9 +276,7 @@ struct Handlers {
 struct Inner {
     channel: Channel,
     payload_channel: PayloadChannel,
-    child: Child,
     executor: Arc<Executor<'static>>,
-    pid: u32,
     handlers: Handlers,
     app_data: AppData,
     closed: Arc<AtomicBool>,
@@ -292,11 +290,12 @@ impl Drop for Inner {
 
         let already_closed = self.closed.swap(true, Ordering::SeqCst);
 
-        if matches!(self.child.try_status(), Ok(None)) {
-            unsafe {
-                libc::kill(self.pid as libc::pid_t, libc::SIGTERM);
-            }
-        }
+        // TODO: Stop worker
+        // if matches!(self.child.try_status(), Ok(None)) {
+        //     unsafe {
+        //         libc::kill(self.pid as libc::pid_t, libc::SIGTERM);
+        //     }
+        // }
 
         if !already_closed {
             self.handlers.close.call_simple();
@@ -320,19 +319,9 @@ impl Inner {
         debug!("new()");
 
         let mut spawn_args: Vec<OsString> = Vec::new();
-        let spawn_bin: PathBuf = match env::var("MEDIASOUP_USE_VALGRIND") {
-            Ok(value) if value.as_str() == "true" => {
-                let binary = match env::var("MEDIASOUP_VALGRIND_BIN") {
-                    Ok(binary) => binary.into(),
-                    _ => "valgrind".into(),
-                };
-
-                spawn_args.push(worker_binary.into_os_string());
-
-                binary
-            }
-            _ => worker_binary,
-        };
+        // TODO: This is no longer necessary for library-based worker
+        let spawn_bin: OsString = "DUMMY".into();
+        spawn_args.push(spawn_bin.clone());
 
         spawn_args.push(format!("--logLevel={}", log_level.as_str()).into());
         for log_tag in log_tags {
@@ -373,109 +362,79 @@ impl Inner {
                 .join(" ")
         );
 
-        let mut command = Command::new(spawn_bin);
-        command
-            .args(spawn_args)
-            .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .env("MEDIASOUP_VERSION", env!("CARGO_PKG_VERSION"));
-
         let SpawnResult {
-            child,
             channel,
             payload_channel,
-        } = utils::spawn_with_worker_channels(Arc::clone(&executor), &mut command)?;
+        } = utils::spawn_with_worker_channels(
+            Arc::clone(&executor),
+            spawn_args
+                .into_iter()
+                .map(|s| s.into_string().unwrap())
+                .collect(),
+        )?;
 
-        let pid = child.id();
         let handlers = Handlers::default();
 
         let mut inner = Self {
             channel,
             payload_channel,
-            child,
             executor,
-            pid,
             handlers,
             app_data,
             closed: Arc::new(AtomicBool::new(false)),
             _worker_manager: worker_manager,
         };
 
-        inner.setup_output_forwarding();
-
         inner.setup_message_handling();
 
         inner.wait_for_worker_process().await?;
 
-        let status_fut = inner.child.status();
+        // TODO: Port this to thread-based worker
+        // let status_fut = inner.child.status();
         let inner = Arc::new(inner);
-        {
-            let inner_weak = Arc::downgrade(&inner);
-            inner
-                .executor
-                .spawn(async move {
-                    let status = status_fut.await;
-
-                    if let Some(inner) = inner_weak.upgrade() {
-                        if let Ok(exit_status) = status {
-                            warn!("exit status {}", exit_status);
-
-                            if !inner.closed.swap(true, Ordering::SeqCst) {
-                                inner.handlers.dead.call(|callback| {
-                                    callback(exit_status);
-                                });
-                                inner.handlers.close.call_simple();
-                            }
-                        }
-                    }
-                })
-                .detach();
-        }
+        // {
+        //     let inner_weak = Arc::downgrade(&inner);
+        //     inner
+        //         .executor
+        //         .spawn(async move {
+        //             let status = status_fut.await;
+        //
+        //             if let Some(inner) = inner_weak.upgrade() {
+        //                 if let Ok(exit_status) = status {
+        //                     warn!("exit status {}", exit_status);
+        //
+        //                     if !inner.closed.swap(true, Ordering::SeqCst) {
+        //                         inner.handlers.dead.call(|callback| {
+        //                             callback(exit_status);
+        //                         });
+        //                         inner.handlers.close.call_simple();
+        //                     }
+        //                 }
+        //             }
+        //         })
+        //         .detach();
+        // }
 
         Ok(inner)
     }
 
-    fn setup_output_forwarding(&mut self) {
-        let stdout = self.child.stdout.take().unwrap();
-        self.executor
-            .spawn(async move {
-                let mut lines = BufReader::new(stdout).lines();
-                while let Some(Ok(line)) = lines.next().await {
-                    debug!("(stdout) {}", line);
-                }
-            })
-            .detach();
-
-        let stderr = self.child.stderr.take().unwrap();
-        let closed = Arc::clone(&self.closed);
-        self.executor
-            .spawn(async move {
-                let mut lines = BufReader::new(stderr).lines();
-                while let Some(Ok(line)) = lines.next().await {
-                    if !closed.load(Ordering::SeqCst) {
-                        error!("(stderr) {}", line);
-                    }
-                }
-            })
-            .detach();
-    }
-
     async fn wait_for_worker_process(&mut self) -> io::Result<()> {
-        let status = self.child.status();
-        future::or(
-            async move {
-                let status = status.await?;
-                let error_message = format!(
-                    "worker process exited before being ready, exit status {}, code {:?}",
-                    status,
-                    status.code(),
-                );
-                Err(io::Error::new(io::ErrorKind::NotFound, error_message))
-            },
-            self.wait_for_worker_ready(),
-        )
-        .await
+        // TODO: Port this to thread-based worker
+        // let status = self.child.status();
+        // future::or(
+        //     async move {
+        //         let status = status.await?;
+        //         let error_message = format!(
+        //             "worker process exited before being ready, exit status {}, code {:?}",
+        //             status,
+        //             status.code(),
+        //         );
+        //         Err(io::Error::new(io::ErrorKind::NotFound, error_message))
+        //     },
+        //     self.wait_for_worker_ready(),
+        // )
+        // .await
+        self.wait_for_worker_ready().await
     }
 
     async fn wait_for_worker_ready(&mut self) -> io::Result<()> {
@@ -486,30 +445,30 @@ impl Inner {
         }
 
         let (sender, receiver) = async_oneshot::oneshot();
-        let pid = self.pid;
+        let pid = std::process::id();
         let sender = Mutex::new(Some(sender));
-        let _handler =
-            self.channel
-                .subscribe_to_notifications(self.pid.into(), move |notification| {
-                    let result = match serde_json::from_value(notification.clone()) {
-                        Ok(Notification::Running) => {
-                            debug!("worker process running [pid:{}]", pid);
-                            Ok(())
-                        }
-                        Err(error) => Err(io::Error::new(
-                            io::ErrorKind::Other,
-                            format!(
+        let _handler = self
+            .channel
+            .subscribe_to_notifications(pid.into(), move |notification| {
+                let result = match serde_json::from_value(notification.clone()) {
+                    Ok(Notification::Running) => {
+                        debug!("worker process running [pid:{}]", pid);
+                        Ok(())
+                    }
+                    Err(error) => Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!(
                             "unexpected first notification from worker [pid:{}]: {:?}; error = {}",
                             pid, notification, error
                         ),
-                        )),
-                    };
-                    let _ = sender
-                        .lock()
-                        .take()
-                        .expect("Receiving more than one worker notification")
-                        .send(result);
-                });
+                    )),
+                };
+                let _ = sender
+                    .lock()
+                    .take()
+                    .expect("Receiving more than one worker notification")
+                    .send(result);
+            });
 
         receiver.await.map_err(|_closed| {
             io::Error::new(io::ErrorKind::Other, "Worker dropped before it is ready")
@@ -519,7 +478,7 @@ impl Inner {
     fn setup_message_handling(&mut self) {
         let channel_receiver = self.channel.get_internal_message_receiver();
         let payload_channel_receiver = self.payload_channel.get_internal_message_receiver();
-        let pid = self.pid;
+        let pid = std::process::id();
         let closed = Arc::clone(&self.closed);
         self.executor
             .spawn(async move {
@@ -576,11 +535,6 @@ impl Worker {
         let inner = Inner::new(executor, worker_binary, worker_settings, worker_manager).await?;
 
         Ok(Self { inner })
-    }
-
-    /// The PID of the worker process.
-    pub fn pid(&self) -> u32 {
-        self.inner.pid
     }
 
     /// Custom application data.

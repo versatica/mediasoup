@@ -555,7 +555,8 @@ fn router_close_event() {
         }));
 
         unsafe {
-            libc::kill(worker.pid() as i32, libc::SIGINT);
+            // TODO
+            // libc::kill(worker.pid() as i32, libc::SIGINT);
         }
 
         router_close_rx

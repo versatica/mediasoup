@@ -14,14 +14,14 @@ use std::sync::Arc;
 static SPAWNING: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
 pub(super) struct SpawnResult {
-    pub(super) child: Child,
     pub(super) channel: Channel,
     pub(super) payload_channel: PayloadChannel,
 }
 
+// TODO: Returns result even though never fails
 pub(super) fn spawn_with_worker_channels(
     executor: Arc<Executor<'static>>,
-    command: &mut Command,
+    args: Vec<String>,
 ) -> io::Result<SpawnResult> {
     // Take a lock to make sure we don't spawn workers from multiple threads concurrently, this
     // causes racy issues
@@ -31,50 +31,28 @@ pub(super) fn spawn_with_worker_channels(
     let (producer_payload_fd_read, producer_payload_fd_write) = unistd::pipe().unwrap();
     let (consumer_payload_fd_read, consumer_payload_fd_write) = unistd::pipe().unwrap();
 
-    unsafe {
-        command.pre_exec(move || {
-            // Unused in child
-            unistd::close(producer_fd_write).unwrap();
-            unistd::close(consumer_fd_read).unwrap();
-            unistd::close(producer_payload_fd_write).unwrap();
-            unistd::close(consumer_payload_fd_read).unwrap();
-            // Now duplicate into file descriptor indexes we need
-            if producer_fd_read != 3 {
-                unistd::dup2(producer_fd_read, 3).unwrap();
-                unistd::close(producer_fd_read).unwrap();
-            }
-            if consumer_fd_write != 4 {
-                unistd::dup2(consumer_fd_write, 4).unwrap();
-                unistd::close(consumer_fd_write).unwrap();
-            }
-            if producer_payload_fd_read != 5 {
-                unistd::dup2(producer_payload_fd_read, 5).unwrap();
-                unistd::close(producer_payload_fd_read).unwrap();
-            }
-            if consumer_payload_fd_write != 6 {
-                unistd::dup2(consumer_payload_fd_write, 6).unwrap();
-                unistd::close(consumer_payload_fd_write).unwrap();
-            }
+    // TODO: This is currently unstoppable thread
+    std::thread::spawn(move || {
+        let result = mediasoup_sys::run(
+            args,
+            producer_fd_read,
+            consumer_fd_write,
+            producer_payload_fd_read,
+            consumer_payload_fd_write,
+        );
 
-            Ok(())
-        });
-    };
+        println!("Worker exit result: {:?}", result);
+    });
+
+    // TODO: Remove, currently helps to run the thing for a bit longer
+    std::thread::sleep(std::time::Duration::from_secs(1));
 
     let producer_file = unsafe { File::from_raw_fd(producer_fd_write) };
     let consumer_file = unsafe { File::from_raw_fd(consumer_fd_read) };
     let producer_payload_file = unsafe { File::from_raw_fd(producer_payload_fd_write) };
     let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
 
-    let child = command.spawn()?;
-
-    // Unused in parent
-    unistd::close(producer_fd_read).expect("Failed to close fd");
-    unistd::close(consumer_fd_write).expect("Failed to close fd");
-    unistd::close(producer_payload_fd_read).expect("Failed to close fd");
-    unistd::close(consumer_payload_fd_write).expect("Failed to close fd");
-
     Ok(SpawnResult {
-        child,
         channel: Channel::new(Arc::clone(&executor), consumer_file, producer_file),
         payload_channel: PayloadChannel::new(
             executor,
