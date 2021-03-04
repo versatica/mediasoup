@@ -3,7 +3,8 @@
 [![][mediasoup-banner]][mediasoup-website]
 
 [![][npm-shield-mediasoup]][npm-mediasoup]
-[![][travis-ci-shield-mediasoup]][travis-ci-mediasoup]
+[![][github-actions-typescript-shield-mediasoup]][github-actions-typescript-mediasoup]
+[![][github-actions-cpp-shield-mediasoup]][github-actions-cpp-mediasoup]
 [![][codacy-grade-shield-mediasoup]][codacy-grade-mediasoup]
 [![][opencollective-shield-mediasoup]][opencollective-mediasoup]
 
@@ -90,8 +91,10 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [mediasoup-discourse]: https://mediasoup.discourse.group
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
-[travis-ci-shield-mediasoup]: https://travis-ci.com/versatica/mediasoup.svg?branch=master
-[travis-ci-mediasoup]: https://travis-ci.com/versatica/mediasoup
+[github-actions-typescript-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/typescript.yaml/badge.svg
+[github-actions-typescript-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/typescript.yaml
+[github-actions-cpp-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/cpp.yaml/badge.svg
+[github-actions-cpp-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/cpp.yaml
 [codacy-grade-shield-mediasoup]: https://img.shields.io/codacy/grade/3c8b9efc83674b6189707ab4188cfb2b.svg
 [codacy-grade-mediasoup]: https://www.codacy.com/app/versatica/mediasoup
 [opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
