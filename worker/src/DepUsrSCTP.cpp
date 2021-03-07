@@ -49,10 +49,10 @@ inline static void sctpDebug(const char* format, ...)
 
 /* Static variables. */
 
-DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
-uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
-uintptr_t DepUsrSCTP::nextSctpAssociationId{ 0u };
-std::unordered_map<uintptr_t, RTC::SctpAssociation*> DepUsrSCTP::mapIdSctpAssociation;
+thread_local DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
+thread_local uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
+thread_local uintptr_t DepUsrSCTP::nextSctpAssociationId{ 0u };
+thread_local std::unordered_map<uintptr_t, RTC::SctpAssociation*> DepUsrSCTP::mapIdSctpAssociation;
 
 /* Static methods. */
 
