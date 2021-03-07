@@ -7,7 +7,7 @@
 
 /* Static variables. */
 
-uv_loop_t* DepLibUV::loop{ nullptr };
+thread_local uv_loop_t* DepLibUV::loop{ nullptr };
 
 /* Static methods. */
 
