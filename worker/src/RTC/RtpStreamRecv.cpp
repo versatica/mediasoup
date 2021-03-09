@@ -623,6 +623,10 @@ namespace RTC
 
 		if (this->params.useNack)
 			this->nackGenerator->Reset();
+
+		// Reset jitter.
+		this->transit = 0;
+		this->jitter = 0;
 	}
 
 	void RtpStreamRecv::Resume()
@@ -643,6 +647,14 @@ namespace RTC
 		auto transit =
 		  static_cast<int>(DepLibUV::GetTimeMs() - (rtpTimestamp * 1000 / this->params.clockRate));
 		int d = transit - this->transit;
+
+		// First transit calculation, save and return.
+		if (this->transit == 0)
+		{
+			this->transit = transit;
+
+			return;
+		}
 
 		this->transit = transit;
 
