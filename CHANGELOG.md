@@ -7,6 +7,7 @@
 * Update `nlohmann/json` to 3.9.1.
 * Update `usrsctp`.
 * Update NPM deps.
+* Enhance Jitter calculation.
 
 
 ### 3.6.32
