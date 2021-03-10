@@ -449,14 +449,12 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 		}
 		else if (cb)
 		{
 			(*cb)(true);
-
 			delete cb;
 		}
 
