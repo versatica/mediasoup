@@ -186,7 +186,6 @@ namespace RTC
 		if (cb)
 		{
 			(*cb)(true);
-
 			delete cb;
 		}
 

@@ -34,7 +34,7 @@
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 366483 2020-10-06 11:29:08Z tuexen $");
+__FBSDID("$FreeBSD$");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -5180,6 +5180,10 @@ out:
 	if (net == asoc->last_control_chunk_from) {
 		/* Clear net */
 		asoc->last_control_chunk_from = NULL;
+	}
+	if (net == asoc->last_net_cmt_send_started) {
+		/* Clear net */
+		asoc->last_net_cmt_send_started = NULL;
 	}
 	if (net == stcb->asoc.alternate) {
 		sctp_free_remote_addr(stcb->asoc.alternate);

@@ -4,7 +4,7 @@
 
 # Best effort to prefer Python 2 executable since there are yet pending issues
 # with gyp and Python3.
-PYTHON ?= $(shell command -v python2 2> /dev/null || echo python)
+PYTHON ?= $(shell command -v python2 2> /dev/null || command -v python 2> /dev/null || echo python3)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
 MEDIASOUP_BUILDTYPE ?= Release
