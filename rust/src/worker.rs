@@ -17,7 +17,6 @@ use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
-use async_process::ExitStatus;
 pub(crate) use channel::Channel;
 pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -29,6 +28,7 @@ use std::ffi::OsString;
 use std::io;
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
+use std::process::ExitStatus;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
@@ -310,7 +310,6 @@ impl Drop for Inner {
 impl Inner {
     async fn new(
         executor: Arc<Executor<'static>>,
-        worker_binary: PathBuf,
         WorkerSettings {
             app_data,
             log_level,
@@ -533,11 +532,10 @@ pub struct Worker {
 impl Worker {
     pub(super) async fn new(
         executor: Arc<Executor<'static>>,
-        worker_binary: PathBuf,
         worker_settings: WorkerSettings,
         worker_manager: WorkerManager,
     ) -> io::Result<Self> {
-        let inner = Inner::new(executor, worker_binary, worker_settings, worker_manager).await?;
+        let inner = Inner::new(executor, worker_settings, worker_manager).await?;
 
         Ok(Self { inner })
     }

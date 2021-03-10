@@ -45,11 +45,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
         let _ = builder.is_test(true).try_init();
     }
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
 
     let worker = worker_manager
         .create_worker(WorkerSettings::default())

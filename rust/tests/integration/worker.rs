@@ -19,11 +19,7 @@ async fn init() -> WorkerManager {
         let _ = builder.is_test(true).try_init();
     }
 
-    WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    )
+    WorkerManager::new()
 }
 
 #[test]

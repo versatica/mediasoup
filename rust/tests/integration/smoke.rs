@@ -35,11 +35,7 @@ fn init() {
 fn smoke() {
     init();
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
 
     future::block_on(async move {
         let worker = worker_manager

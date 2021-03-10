@@ -10,7 +10,6 @@ use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::future;
 use log::debug;
 use std::io;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 #[derive(Default)]
@@ -24,7 +23,6 @@ struct Inner {
     /// This field is only used in order to be dropped with the worker manager itself to stop the
     /// thread created with `WorkerManager::new()` call
     _stop_sender: Option<Sender<()>>,
-    worker_binary: PathBuf,
 }
 /// Container that creates [`Worker`] instances.
 ///
@@ -35,9 +33,7 @@ struct Inner {
 /// use mediasoup::worker_manager::WorkerManager;
 ///
 /// // Create a manager that will use specified binary for spawning new worker processes
-/// let worker_manager = WorkerManager::new(
-///     "/path/to/mediasoup-worker".into(),
-/// );
+/// let worker_manager = WorkerManager::new();
 ///
 /// future::block_on(async move {
 ///     // Create a new worker with default settings
@@ -58,7 +54,7 @@ pub struct WorkerManager {
 
 impl WorkerManager {
     /// Create new worker manager, internally a new single-threaded executor will be created.
-    pub fn new(worker_binary: PathBuf) -> Self {
+    pub fn new() -> Self {
         let executor = Arc::new(Executor::new());
         let (stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
         {
@@ -75,21 +71,19 @@ impl WorkerManager {
             executor,
             handlers,
             _stop_sender: Some(stop_sender),
-            worker_binary,
         });
 
         Self { inner }
     }
 
     /// Create new worker manager, uses externally provided executor.
-    pub fn with_executor(worker_binary: PathBuf, executor: Arc<Executor<'static>>) -> Self {
+    pub fn with_executor(executor: Arc<Executor<'static>>) -> Self {
         let handlers = Handlers::default();
 
         let inner = Arc::new(Inner {
             executor,
             handlers,
             _stop_sender: None,
-            worker_binary,
         });
 
         Self { inner }
@@ -103,7 +97,6 @@ impl WorkerManager {
 
         let worker = Worker::new(
             Arc::clone(&self.inner.executor),
-            self.inner.worker_binary.clone(),
             worker_settings,
             self.clone(),
         )
