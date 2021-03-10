@@ -10,7 +10,7 @@
 /* Static. */
 
 static constexpr size_t ReadBufferSize{ 65536 };
-static uint8_t ReadBuffer[ReadBufferSize];
+thread_local static uint8_t ReadBuffer[ReadBufferSize];
 
 /* Static methods for UV callbacks. */
 
