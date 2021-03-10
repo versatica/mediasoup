@@ -298,7 +298,7 @@ struct Inner {
     transport: Box<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
-    _subscription_handler: SubscriptionHandler,
+    _subscription_handler: Option<SubscriptionHandler>,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
 

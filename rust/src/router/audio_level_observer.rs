@@ -95,7 +95,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to audio level observer-specific notifications when observer itself is
     // dropped
-    _subscription_handler: SubscriptionHandler,
+    _subscription_handler: Option<SubscriptionHandler>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 

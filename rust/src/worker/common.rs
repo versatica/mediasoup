@@ -1,7 +1,6 @@
-use async_executor::Executor;
 use parking_lot::Mutex;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use uuid::Uuid;
 
 struct EventHandlersList<V: Clone + 'static> {
@@ -21,14 +20,13 @@ impl<V: Clone + 'static> Default for EventHandlersList<V> {
 
 #[derive(Clone)]
 pub(super) struct EventHandlers<V: Clone + 'static> {
-    executor: Arc<Executor<'static>>,
     handlers: Arc<Mutex<HashMap<SubscriptionTarget, EventHandlersList<V>>>>,
 }
 
 impl<V: Clone + 'static> EventHandlers<V> {
-    pub(super) fn new(executor: Arc<Executor<'static>>) -> Self {
+    pub(super) fn new() -> Self {
         let handlers = Arc::<Mutex<HashMap<SubscriptionTarget, EventHandlersList<V>>>>::default();
-        Self { executor, handlers }
+        Self { handlers }
     }
 
     pub(super) fn add(
@@ -49,27 +47,30 @@ impl<V: Clone + 'static> EventHandlers<V> {
         }
 
         SubscriptionHandler::new({
-            let event_handlers = self.handlers.clone();
+            let event_handlers_weak = Arc::downgrade(&self.handlers);
 
             Box::new(move || {
-                // We store removed handler here in order to drop after `event_handlers` lock is
-                // released, otherwise handler will be dropped on removal from callbacks immediately
-                // and if it happens to hold another entity that held subscription handler, we may
-                // arrive here again trying to acquire lock that we didn't release yet. By dropping
-                // callback only when lock is released we avoid deadlocking.
-                let removed_handler;
-                {
-                    let mut handlers = event_handlers.lock();
-                    let is_empty = {
-                        let list = handlers.get_mut(&target_id).unwrap();
-                        removed_handler = list.callbacks.remove(&index);
-                        list.callbacks.is_empty()
-                    };
-                    if is_empty {
-                        handlers.remove(&target_id);
+                if let Some(event_handlers) = event_handlers_weak.upgrade() {
+                    // We store removed handler here in order to drop after `event_handlers` lock is
+                    // released, otherwise handler will be dropped on removal from callbacks
+                    // immediately and if it happens to hold another entity that held subscription
+                    // handler, we may arrive here again trying to acquire lock that we didn't
+                    // release yet. By dropping callback only when lock is released we avoid
+                    // deadlocking.
+                    let removed_handler;
+                    {
+                        let mut handlers = event_handlers.lock();
+                        let is_empty = {
+                            let list = handlers.get_mut(&target_id).unwrap();
+                            removed_handler = list.callbacks.remove(&index);
+                            list.callbacks.is_empty()
+                        };
+                        if is_empty {
+                            handlers.remove(&target_id);
+                        }
                     }
+                    drop(removed_handler);
                 }
-                drop(removed_handler);
             })
         })
     }
@@ -92,6 +93,25 @@ impl<V: Clone + 'static> EventHandlers<V> {
                 }
             }
         }
+    }
+
+    pub(super) fn downgrade(&self) -> WeakEventHandlers<V> {
+        WeakEventHandlers {
+            handlers: Arc::downgrade(&self.handlers),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub(super) struct WeakEventHandlers<V: Clone + 'static> {
+    handlers: Weak<Mutex<HashMap<SubscriptionTarget, EventHandlersList<V>>>>,
+}
+
+impl<V: Clone + 'static> WeakEventHandlers<V> {
+    pub(super) fn upgrade(&self) -> Option<EventHandlers<V>> {
+        self.handlers
+            .upgrade()
+            .map(|handlers| EventHandlers { handlers })
     }
 }
 

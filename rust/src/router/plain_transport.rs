@@ -219,7 +219,7 @@ struct Inner {
     router: Router,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
-    _subscription_handler: SubscriptionHandler,
+    _subscription_handler: Option<SubscriptionHandler>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 

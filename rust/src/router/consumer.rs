@@ -361,7 +361,7 @@ struct Inner {
     transport: Box<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
-    _subscription_handlers: Vec<SubscriptionHandler>,
+    _subscription_handlers: Vec<Option<SubscriptionHandler>>,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
 

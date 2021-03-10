@@ -1,5 +1,5 @@
 use crate::messages::{Notification, Request};
-use crate::worker::common::{EventHandlers, SubscriptionTarget};
+use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
 use std::io::Write;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use std::time::Duration;
 use thiserror::Error;
 
@@ -94,8 +94,8 @@ struct RequestsContainer {
 struct Inner {
     sender: async_channel::Sender<MessageWithPayload>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
-    requests_container: Arc<Mutex<RequestsContainer>>,
-    event_handlers: EventHandlers<NotificationMessage>,
+    requests_container_weak: Weak<Mutex<RequestsContainer>>,
+    event_handlers_weak: WeakEventHandlers<NotificationMessage>,
 }
 
 impl Drop for Inner {
@@ -113,11 +113,11 @@ pub(crate) struct PayloadChannel {
 impl PayloadChannel {
     pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
-        let event_handlers = EventHandlers::new(Arc::clone(&executor));
+        let requests_container_weak = Arc::downgrade(&requests_container);
+        let event_handlers = EventHandlers::new();
+        let event_handlers_weak = event_handlers.downgrade();
 
         let internal_message_receiver = {
-            let requests_container = Arc::clone(&requests_container);
-            let event_handlers = event_handlers.clone();
             let (sender, receiver) = async_channel::bounded(1);
 
             executor
@@ -287,8 +287,8 @@ impl PayloadChannel {
         let inner = Arc::new(Inner {
             sender,
             internal_message_receiver,
-            requests_container,
-            event_handlers,
+            requests_container_weak,
+            event_handlers_weak,
         });
 
         Self { inner }
@@ -340,11 +340,14 @@ impl PayloadChannel {
         &self,
         target_id: SubscriptionTarget,
         callback: F,
-    ) -> SubscriptionHandler
+    ) -> Option<SubscriptionHandler>
     where
         F: Fn(NotificationMessage) + Send + Sync + 'static,
     {
-        self.inner.event_handlers.add(target_id, Box::new(callback))
+        self.inner
+            .event_handlers_weak
+            .upgrade()
+            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
     }
 
     /// Non-generic method to avoid significant duplication in final binary
@@ -365,10 +368,14 @@ impl PayloadChannel {
         let id;
         let queue_len;
         let (result_sender, result_receiver) = async_oneshot::oneshot();
-        let requests_container = &self.inner.requests_container;
 
         {
-            let mut requests_container = requests_container.lock();
+            let requests_container_lock = self
+                .inner
+                .requests_container_weak
+                .upgrade()
+                .ok_or(RequestError::ChannelClosed)?;
+            let mut requests_container = requests_container_lock.lock();
 
             id = requests_container.next_id;
             queue_len = requests_container.handlers.len();
@@ -394,12 +401,24 @@ impl PayloadChannel {
         };
 
         if bytes.len() > NS_PAYLOAD_MAX_LEN {
-            requests_container.lock().handlers.remove(&id);
+            self.inner
+                .requests_container_weak
+                .upgrade()
+                .ok_or(RequestError::ChannelClosed)?
+                .lock()
+                .handlers
+                .remove(&id);
             return Err(RequestError::MessageTooLong);
         }
 
         if payload.len() > NS_PAYLOAD_MAX_LEN {
-            requests_container.lock().handlers.remove(&id);
+            self.inner
+                .requests_container_weak
+                .upgrade()
+                .ok_or(RequestError::ChannelClosed)?
+                .lock()
+                .handlers
+                .remove(&id);
             return Err(RequestError::PayloadTooLong);
         }
 
@@ -424,7 +443,9 @@ impl PayloadChannel {
                 ))
                 .await;
 
-                requests_container.lock().handlers.remove(&id);
+                if let Some(requests_container) = self.inner.requests_container_weak.upgrade() {
+                    requests_container.lock().handlers.remove(&id);
+                }
 
                 Err(RequestError::TimedOut)
             },

@@ -1,5 +1,5 @@
 use crate::messages::Request;
-use crate::worker::common::{EventHandlers, SubscriptionTarget};
+use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
 use std::io::Write;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use std::time::Duration;
 
 const NS_PAYLOAD_MAX_LEN: usize = 4_194_304;
@@ -43,16 +43,17 @@ pub(super) enum InternalMessage {
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
     buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
-    event_handlers: EventHandlers<Value>,
+    event_handlers_weak: WeakEventHandlers<Value>,
 }
 
 impl Drop for BufferMessagesGuard {
     fn drop(&mut self) {
         let mut buffered_notifications_for = self.buffered_notifications_for.lock();
         if let Some(notifications) = buffered_notifications_for.remove(&self.target_id) {
-            for notification in notifications {
-                self.event_handlers
-                    .call_callbacks_with_value(&self.target_id, notification);
+            if let Some(event_handlers) = self.event_handlers_weak.upgrade() {
+                for notification in notifications {
+                    event_handlers.call_callbacks_with_value(&self.target_id, notification);
+                }
             }
         }
     }
@@ -115,9 +116,9 @@ struct RequestsContainer {
 struct Inner {
     sender: async_channel::Sender<Bytes>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
-    requests_container: Arc<Mutex<RequestsContainer>>,
+    requests_container_weak: Weak<Mutex<RequestsContainer>>,
     buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
-    event_handlers: EventHandlers<Value>,
+    event_handlers_weak: WeakEventHandlers<Value>,
 }
 
 impl Drop for Inner {
@@ -135,14 +136,14 @@ pub(crate) struct Channel {
 impl Channel {
     pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
+        let requests_container_weak = Arc::downgrade(&requests_container);
         let buffered_notifications_for =
             Arc::<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>::default();
-        let event_handlers = EventHandlers::new(Arc::clone(&executor));
+        let event_handlers = EventHandlers::new();
+        let event_handlers_weak = event_handlers.downgrade();
 
         let internal_message_receiver = {
-            let requests_container = Arc::clone(&requests_container);
             let buffered_notifications_for = buffered_notifications_for.clone();
-            let event_handlers = event_handlers.clone();
             let (sender, receiver) = async_channel::bounded(1);
 
             executor
@@ -295,9 +296,9 @@ impl Channel {
         let inner = Arc::new(Inner {
             sender,
             internal_message_receiver,
-            requests_container,
+            requests_container_weak,
             buffered_notifications_for,
-            event_handlers,
+            event_handlers_weak,
         });
 
         Self { inner }
@@ -311,7 +312,7 @@ impl Channel {
     /// being created. This allows to avoid missing notifications due to race conditions.
     pub(crate) fn buffer_messages_for(&self, target_id: SubscriptionTarget) -> BufferMessagesGuard {
         let buffered_notifications_for = Arc::clone(&self.inner.buffered_notifications_for);
-        let event_handlers = self.inner.event_handlers.clone();
+        let event_handlers_weak = self.inner.event_handlers_weak.clone();
         buffered_notifications_for
             .lock()
             .entry(target_id)
@@ -319,7 +320,7 @@ impl Channel {
         BufferMessagesGuard {
             target_id,
             buffered_notifications_for,
-            event_handlers,
+            event_handlers_weak,
         }
     }
 
@@ -341,11 +342,14 @@ impl Channel {
         &self,
         target_id: SubscriptionTarget,
         callback: F,
-    ) -> SubscriptionHandler
+    ) -> Option<SubscriptionHandler>
     where
         F: Fn(Value) + Send + Sync + 'static,
     {
-        self.inner.event_handlers.add(target_id, Box::new(callback))
+        self.inner
+            .event_handlers_weak
+            .upgrade()
+            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
     }
 
     /// Non-generic method to avoid significant duplication in final binary
@@ -365,10 +369,14 @@ impl Channel {
         let id;
         let queue_len;
         let (result_sender, result_receiver) = async_oneshot::oneshot();
-        let requests_container = &self.inner.requests_container;
 
         {
-            let mut requests_container = requests_container.lock();
+            let requests_container_lock = self
+                .inner
+                .requests_container_weak
+                .upgrade()
+                .ok_or(RequestError::ChannelClosed)?;
+            let mut requests_container = requests_container_lock.lock();
 
             id = requests_container.next_id;
             queue_len = requests_container.handlers.len();
@@ -394,7 +402,13 @@ impl Channel {
         };
 
         if bytes.len() > NS_PAYLOAD_MAX_LEN {
-            requests_container.lock().handlers.remove(&id);
+            self.inner
+                .requests_container_weak
+                .upgrade()
+                .ok_or(RequestError::ChannelClosed)?
+                .lock()
+                .handlers
+                .remove(&id);
             return Err(RequestError::MessageTooLong);
         }
 
@@ -405,18 +419,20 @@ impl Channel {
             .map_err(|_| RequestError::ChannelClosed {})?;
 
         let result = future::or(
-            async move {
+            async {
                 result_receiver
                     .await
                     .map_err(|_| RequestError::ChannelClosed {})
             },
-            async move {
+            async {
                 async_io::Timer::after(Duration::from_millis(
                     (1000.0 * (15.0 + (0.1 * queue_len as f64))).round() as u64,
                 ))
                 .await;
 
-                requests_container.lock().handlers.remove(&id);
+                if let Some(requests_container) = self.inner.requests_container_weak.upgrade() {
+                    requests_container.lock().handlers.remove(&id);
+                }
 
                 Err(RequestError::TimedOut)
             },
