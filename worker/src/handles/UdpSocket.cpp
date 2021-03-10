@@ -287,7 +287,11 @@ inline void UdpSocket::OnUvSend(int status, UdpSocket::onSendCallback* cb)
 	if (status == 0)
 	{
 		if (cb)
+		{
 			(*cb)(true);
+
+			delete cb;
+		}
 	}
 	else
 	{
@@ -296,6 +300,10 @@ inline void UdpSocket::OnUvSend(int status, UdpSocket::onSendCallback* cb)
 #endif
 
 		if (cb)
+		{
 			(*cb)(false);
+
+			delete cb;
+		}
 	}
 }
