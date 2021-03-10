@@ -626,7 +626,7 @@ namespace RTC
 
 		// Reset jitter.
 		this->transit = 0;
-		this->jitter = 0;
+		this->jitter  = 0;
 	}
 
 	void RtpStreamRecv::Resume()
