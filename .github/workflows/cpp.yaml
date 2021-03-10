@@ -7,20 +7,46 @@ on:
 jobs:
   ci:
     strategy:
+      fail-fast: false
       matrix:
-        os:
-          #- ubuntu-16.04
-          #- ubuntu-18.04
-          - ubuntu-20.04
-          - macos-10.15
+        build:
+          - os: ubuntu-16.04
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-16.04
+            cc: clang
+            cxx: clang++
+          - os: ubuntu-18.04
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-18.04
+            cc: clang
+            cxx: clang++
+          - os: ubuntu-20.04
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-20.04
+            cc: clang
+            cxx: clang++
+          - os: macos-10.15
+            cc: gcc
+            cxx: g++
+          - os: macos-10.15
+            cc: clang
+            cxx: clang++
           # macOS 11 is in private preview currently
-          #- macos-11.0
+          #- os: macos-11.0
           # Windows needs to be tuned before it can run, I didn't bother, feel free to contribute
-          #- windows-2019
+          #- os: windows-2019
         # Just 1 Node.js version should be fine for C++
         node:
           - 14
-    runs-on: ${{ matrix.os }}
+
+    runs-on: ${{ matrix.build.os }}
+
+    env:
+      CC: ${{ matrix.build.cc }}
+      CXX: ${{ matrix.build.cxx }}
 
     steps:
       - name: Checkout
@@ -38,9 +64,9 @@ jobs:
             ~/.npm
             worker/deps
             worker/out
-          key: ${{ matrix.os }}-node-${{ hashFiles('**/package.json') }}
+          key: ${{ matrix.build.os }}-node-${{matrix.build.cc}}-${{ hashFiles('**/package.json') }}
           restore-keys: |
-            ${{ matrix.os }}-node-
+            ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
       - run: npm install
       - run: npm run lint:worker
