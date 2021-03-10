@@ -2,8 +2,6 @@
 use crate::worker::{Channel, PayloadChannel};
 use async_executor::Executor;
 use async_fs::File;
-use async_process::unix::CommandExt;
-use async_process::{Child, Command};
 use nix::unistd;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
@@ -41,11 +39,15 @@ pub(super) fn spawn_with_worker_channels(
             consumer_payload_fd_write,
         );
 
+        // TODO: We need to somehow avoid this, otherwise we may de-allocate fds created for other
+        //  workers
+        let _ = unistd::close(producer_fd_read);
+        let _ = unistd::close(consumer_fd_write);
+        let _ = unistd::close(producer_payload_fd_read);
+        let _ = unistd::close(consumer_payload_fd_write);
+
         println!("Worker exit result: {:?}", result);
     });
-
-    // TODO: Remove, currently helps to run the thing for a bit longer
-    std::thread::sleep(std::time::Duration::from_secs(1));
 
     let producer_file = unsafe { File::from_raw_fd(producer_fd_write) };
     let consumer_file = unsafe { File::from_raw_fd(consumer_fd_read) };

@@ -26,7 +26,6 @@ struct Inner {
     _stop_sender: Option<Sender<()>>,
     worker_binary: PathBuf,
 }
-
 /// Container that creates [`Worker`] instances.
 ///
 /// # Examples

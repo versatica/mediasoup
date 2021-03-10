@@ -17,22 +17,20 @@ use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker_manager::WorkerManager;
 use async_executor::Executor;
-use async_process::{Child, Command, ExitStatus, Stdio};
+use async_process::ExitStatus;
 pub(crate) use channel::Channel;
 pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
-use futures_lite::io::BufReader;
-use futures_lite::{future, AsyncBufReadExt, StreamExt};
 use log::*;
 use parking_lot::Mutex;
 pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
+use std::io;
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::{env, io};
 use thiserror::Error;
 use utils::SpawnResult;
 
@@ -368,6 +366,7 @@ impl Inner {
                 .join(" ")
         );
 
+        // TODO: Need to buffer messages for worker to catch when it is ready
         let SpawnResult {
             channel,
             payload_channel,
@@ -425,7 +424,7 @@ impl Inner {
     }
 
     async fn wait_for_worker_process(&mut self) -> io::Result<()> {
-        // TODO: Port this to thread-based worker
+        // TODO: Port this to thread-based worker (add timeout)
         // let status = self.child.status();
         // future::or(
         //     async move {
