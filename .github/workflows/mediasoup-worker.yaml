@@ -1,0 +1,74 @@
+name: mediasoup-worker
+
+on:
+  push:
+    branches: [ v3 ]
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - os: ubuntu-16.04
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-16.04
+            cc: clang
+            cxx: clang++
+          - os: ubuntu-18.04
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-18.04
+            cc: clang
+            cxx: clang++
+          - os: ubuntu-20.04
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-20.04
+            cc: clang
+            cxx: clang++
+          - os: macos-10.15
+            cc: gcc
+            cxx: g++
+          - os: macos-10.15
+            cc: clang
+            cxx: clang++
+          # macOS 11 is in private preview currently.
+          # - os: macos-11.0
+          # Windows needs to be tuned before it can run, I didn't bother, feel
+          # free to contribute.
+          # - os: windows-2019
+        # Just 1 Node.js version should be fine for C++.
+        node:
+          - 14
+
+    runs-on: ${{ matrix.build.os }}
+
+    env:
+      CC: ${{ matrix.build.cc }}
+      CXX: ${{ matrix.build.cxx }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Configure cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.npm
+            worker/deps
+            worker/out
+          key: ${{ matrix.build.os }}-node-${{matrix.build.cc}}-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
+
+      - run: npm install
+      - run: npm run lint:worker
+      - run: npm run test:worker

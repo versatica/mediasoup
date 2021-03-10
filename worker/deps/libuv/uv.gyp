@@ -245,7 +245,6 @@
             'libuv/src/unix/procfs-exepath.c',
             'libuv/src/unix/random-getrandom.c',
             'libuv/src/unix/random-sysctl-linux.c',
-            'libuv/src/unix/sysinfo-loadavg.c',
           ],
           'link_settings': {
             'libraries': [ '-ldl', '-lrt' ],
@@ -262,7 +261,6 @@
             'libuv/src/unix/procfs-exepath.c',
             'libuv/src/unix/random-getrandom.c',
             'libuv/src/unix/random-sysctl-linux.c',
-            'libuv/src/unix/sysinfo-loadavg.c',
           ],
           'link_settings': {
             'libraries': [ '-ldl' ],

@@ -183,7 +183,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		if (cb)
 		{
 			(*cb)(false);
-
 			delete cb;
 		}
 
@@ -195,7 +194,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		if (cb)
 		{
 			(*cb)(false);
-
 			delete cb;
 		}
 
@@ -217,7 +215,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		if (cb)
 		{
 			(*cb)(true);
-
 			delete cb;
 		}
 
@@ -281,7 +278,6 @@ void TcpConnection::Write(
 		if (cb)
 		{
 			(*cb)(false);
-
 			delete cb;
 		}
 
@@ -293,7 +289,6 @@ void TcpConnection::Write(
 		if (cb)
 		{
 			(*cb)(false);
-
 			delete cb;
 		}
 
@@ -321,7 +316,6 @@ void TcpConnection::Write(
 		if (cb)
 		{
 			(*cb)(true);
-
 			delete cb;
 		}
 
@@ -502,7 +496,10 @@ inline void TcpConnection::OnUvWrite(int status, TcpConnection::onSendCallback* 
 	if (status == 0)
 	{
 		if (cb)
+		{
 			(*cb)(true);
+			delete cb;
+		}
 	}
 	else
 	{
@@ -512,7 +509,10 @@ inline void TcpConnection::OnUvWrite(int status, TcpConnection::onSendCallback* 
 		MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(status));
 
 		if (cb)
+		{
 			(*cb)(false);
+			delete cb;
+		}
 
 		Close();
 
