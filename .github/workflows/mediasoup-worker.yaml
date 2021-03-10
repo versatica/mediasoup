@@ -1,4 +1,4 @@
-name: C++
+name: mediasoup-worker
 
 on:
   push:
@@ -34,11 +34,12 @@ jobs:
           - os: macos-10.15
             cc: clang
             cxx: clang++
-          # macOS 11 is in private preview currently
-          #- os: macos-11.0
-          # Windows needs to be tuned before it can run, I didn't bother, feel free to contribute
-          #- os: windows-2019
-        # Just 1 Node.js version should be fine for C++
+          # macOS 11 is in private preview currently.
+          # - os: macos-11.0
+          # Windows needs to be tuned before it can run, I didn't bother, feel
+          # free to contribute.
+          # - os: windows-2019
+        # Just 1 Node.js version should be fine for C++.
         node:
           - 14
 

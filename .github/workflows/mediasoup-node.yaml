@@ -1,4 +1,4 @@
-name: TypeScript
+name: mediasoup-node
 
 on:
   push:
@@ -8,11 +8,11 @@ jobs:
   ci:
     strategy:
       matrix:
-        # Just 1 OS should be fine for TypeScript
+        # Just 1 OS should be fine for TypeScript.
         os:
           - ubuntu-20.04
-#          - macos-11.0
-#          - windows-2019
+          # - macos-11.0
+          # - windows-2019
         node:
           - 10
           - 12
