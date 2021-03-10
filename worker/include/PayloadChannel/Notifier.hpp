@@ -23,7 +23,7 @@ namespace PayloadChannel
 
 	public:
 		// Passed by argument.
-		static PayloadChannel::UnixStreamSocket* payloadChannel;
+		thread_local static PayloadChannel::UnixStreamSocket* payloadChannel;
 	};
 } // namespace PayloadChannel
 

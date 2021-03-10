@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 		IgnoreSignals();
 
 		// Run the Worker.
-		Worker worker(channel, payloadChannel);
+		Worker worker(channel, payloadChannel, true);
 
 		// Free static stuff.
 		DepLibUV::ClassDestroy();

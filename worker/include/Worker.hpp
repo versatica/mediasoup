@@ -20,7 +20,8 @@ class Worker : public Channel::UnixStreamSocket::Listener,
                public SignalsHandler::Listener
 {
 public:
-	explicit Worker(Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel);
+	explicit Worker(
+	  Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel, bool handleSignals);
 	~Worker();
 
 private:

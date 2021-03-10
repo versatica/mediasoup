@@ -10,7 +10,8 @@
 
 /* Instance methods. */
 
-Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel)
+Worker::Worker(
+  ::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel, bool handleSignals)
   : channel(channel), payloadChannel(payloadChannel)
 {
 	MS_TRACE();
@@ -24,9 +25,12 @@ Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamS
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
 
-	// Add signals to handle.
-	this->signalsHandler->AddSignal(SIGINT, "INT");
-	this->signalsHandler->AddSignal(SIGTERM, "TERM");
+	if (handleSignals)
+	{
+		// Add signals to handle.
+		this->signalsHandler->AddSignal(SIGINT, "INT");
+		this->signalsHandler->AddSignal(SIGTERM, "TERM");
+	}
 
 	// Tell the Node process that we are running.
 	Channel::Notifier::Emit(std::to_string(Logger::pid), "running");

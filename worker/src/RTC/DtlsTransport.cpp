@@ -78,12 +78,12 @@ namespace RTC
 
 	/* Class variables. */
 
-	X509* DtlsTransport::certificate{ nullptr };
-	EVP_PKEY* DtlsTransport::privateKey{ nullptr };
-	SSL_CTX* DtlsTransport::sslCtx{ nullptr };
-	uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
+	thread_local X509* DtlsTransport::certificate{ nullptr };
+	thread_local EVP_PKEY* DtlsTransport::privateKey{ nullptr };
+	thread_local SSL_CTX* DtlsTransport::sslCtx{ nullptr };
+	thread_local uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
 	// clang-format off
-	std::map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::string2FingerprintAlgorithm =
+	thread_local std::map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::string2FingerprintAlgorithm =
 	{
 		{ "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
 		{ "sha-224", DtlsTransport::FingerprintAlgorithm::SHA224 },
@@ -91,7 +91,7 @@ namespace RTC
 		{ "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
 		{ "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
 	};
-	std::map<DtlsTransport::FingerprintAlgorithm, std::string> DtlsTransport::fingerprintAlgorithm2String =
+	thread_local std::map<DtlsTransport::FingerprintAlgorithm, std::string> DtlsTransport::fingerprintAlgorithm2String =
 	{
 		{ DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
 		{ DtlsTransport::FingerprintAlgorithm::SHA224, "sha-224" },
@@ -99,14 +99,14 @@ namespace RTC
 		{ DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
 		{ DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
 	};
-	std::map<std::string, DtlsTransport::Role> DtlsTransport::string2Role =
+	thread_local std::map<std::string, DtlsTransport::Role> DtlsTransport::string2Role =
 	{
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }
 	};
-	std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
-	std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
+	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
+	thread_local std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
 	{
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },

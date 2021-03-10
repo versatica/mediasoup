@@ -25,6 +25,9 @@
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
+#include <mutex>
+
+std::once_flag globalInitOnce;
 
 extern "C" int run(
     int argc,
@@ -112,11 +115,15 @@ extern "C" int run(
 
 	try
 	{
+		std::call_once(globalInitOnce, []{
+			// Initialize global static stuff once.
+			DepOpenSSL::ClassInit();
+			DepLibSRTP::ClassInit();
+			DepLibWebRTC::ClassInit();
+		});
+
 		// Initialize static stuff.
-		DepOpenSSL::ClassInit();
-		DepLibSRTP::ClassInit();
 		DepUsrSCTP::ClassInit();
-		DepLibWebRTC::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
@@ -124,13 +131,11 @@ extern "C" int run(
 		PayloadChannel::Notifier::ClassInit(payloadChannel);
 
 		// Run the Worker.
-		Worker worker(channel, payloadChannel);
+		Worker worker(channel, payloadChannel, false);
 
 		// Free static stuff.
 		DepLibUV::ClassDestroy();
-		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
-		DepLibWebRTC::ClassDestroy();
 		RTC::DtlsTransport::ClassDestroy();
 		DepUsrSCTP::ClassDestroy();
 
