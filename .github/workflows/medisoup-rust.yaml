@@ -1,9 +1,8 @@
-name: Rust
+name: mediasoup-rust
 
 on:
   push:
-    # TODO: Remove `rust` from here after merge upstream
-    branches: [ v3, rust ]
+    branches: [ v3 ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -54,9 +53,7 @@ jobs:
           command: clippy
           args: -- -D warnings
 
-      - env:
-          PYTHON: python3
-        run: npm install
+      - run: npm install
 
       - name: cargo test
         uses: actions-rs/cargo@v1
