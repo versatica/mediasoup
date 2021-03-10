@@ -13,6 +13,10 @@
 
 namespace RTC
 {
+	/* Static. */
+	static constexpr uint64_t ShmIdleCheckInterval{ 20000u }; // In ms.
+
+
 	void RtpLostPktRateCounter::Update(RTC::RtpPacket* packet)
 	{
 		// Each packet if in order will increate number of total received packets
@@ -75,6 +79,9 @@ namespace RTC
 		this->lastNACKTestTs = nowTs;
 
 		CreateRtpStream();
+
+		this->shmIdleCheckTimer = new Timer(this);
+		this->shmIdleCheckTimer->Start(ShmIdleCheckInterval);
 	}
 
 	ShmConsumer::~ShmConsumer()
@@ -82,7 +89,22 @@ namespace RTC
 		MS_TRACE();
 
 		delete this->rtpStream;
+		delete this->shmIdleCheckTimer;
 	}
+
+
+	inline void ShmConsumer::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->shmIdleCheckTimer)
+		{
+			this->idle = true;
+
+			this->OnIdleShmConsumer();
+		}
+	}
+
 
 	void ShmConsumer::FillJson(json& jsonObject) const
 	{
@@ -141,6 +163,16 @@ namespace RTC
 		// NOTE: Hardcoded values
 		jsonObject["score"]         = 10;
 		jsonObject["producerScore"] = 10;
+	}
+
+	
+	inline void ShmConsumer::OnIdleShmConsumer()
+	{
+		MS_TRACE();
+
+		MS_WARN_TAG(xcode, "Idle shm consumer");
+
+		Channel::Notifier::Emit(this->id, "idleshmconsumer");
 	}
 
 	void ShmConsumer::HandleRequest(Channel::Request* request)
@@ -212,6 +244,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Restart the shmIdleCheckTimer each time RTP packet arrived
+		if (this->shmIdleCheckTimer)
+			this->shmIdleCheckTimer->Restart();
+
 		if (!IsActive()) {
 			MS_DEBUG_TAG(rtp, "consumer is inactive, ignore pkt");
 			return;
@@ -278,7 +314,7 @@ namespace RTC
 			shmCtx->WriteVideoOrientation(this->rotation);
 		}
 
-		// Update received and missed packet counters
+		// Update stats: received and missed packet counters
 		lostPktRateCounter.Update(packet);
 
 		// Done with this pkt
@@ -755,6 +791,9 @@ namespace RTC
 
 		this->syncRequired = true;
 
+		if (this->shmIdleCheckTimer)
+			this->shmIdleCheckTimer->Restart();
+
 		if (IsActive())
 			RequestKeyFrame();
 	}
@@ -764,12 +803,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->shmIdleCheckTimer)
+			this->shmIdleCheckTimer->Stop();
+
 		this->rtpStream->Pause();
 	}
 
 	void ShmConsumer::UserOnPaused()
 	{
 		MS_TRACE();
+
+		if (this->shmIdleCheckTimer)
+			this->shmIdleCheckTimer->Stop();
 
 		this->rtpStream->Pause();
 	}
@@ -778,6 +823,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->shmIdleCheckTimer)
+			this->shmIdleCheckTimer->Restart();
+		
 		this->syncRequired = true;
 
 		if (IsActive())

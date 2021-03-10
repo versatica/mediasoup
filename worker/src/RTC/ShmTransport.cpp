@@ -188,17 +188,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		jsonArray.emplace_back(json::value_t::object);
-		auto& jsonObject = jsonArray[0];
+		Transport::FillJsonStats(jsonArray);
 
+		auto& jsonObject = jsonArray[0];
 		// Add type.
 		jsonObject["type"] = "shm-transport";
-
-		// Add transportId.
-		jsonObject["transportId"] = this->id;
-
-		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
 	}
 
 	void ShmTransport::SendStreamClosed(uint32_t /*ssrc*/)
@@ -336,15 +330,6 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_ROTATE_SHM_BINARY_LOG:
-			{
-				/*
-					TODO: function that rotates shm binlog for this particular transport					
-				*/
-				request->Accept();
-				break;
-			}
-
 			default:
 			{
 				// Pass it to the parent class.
@@ -402,21 +387,6 @@ namespace RTC
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(packet->GetSize());
-	}
-
-
-	bool ShmTransport::RotateShmBinaryLog(json& data)
-	{
-		MS_TRACE();
-		/*
-			const reqdata = {
-				binlogrotate: true|false, 1|0
-				shm: ...
-			};
-		*/
-		MS_DEBUG_TAG(xcode, "received rotate shm binary log signal [%s]", data.dump().c_str());
-
-		// TODO: implement actual code
 	}
 
 

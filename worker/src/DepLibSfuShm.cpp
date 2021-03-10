@@ -187,7 +187,7 @@ namespace DepLibSfuShm {
       bin_log_record.v_last_kf_rtp_time = this->lastKeyFrameTs;
     }
 
-    auto startTime = std::chrono::system_clock::now();
+    //auto startTime = std::chrono::system_clock::now();
 
     if (useReverseIterator)
     {
@@ -195,10 +195,10 @@ namespace DepLibSfuShm {
       if (this->videoPktBuffer.empty() || seqid >= this->videoPktBuffer.rbegin()->seqid)
       {
         this->videoPktBuffer.emplace(this->videoPktBuffer.end(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
-        
+        /* TODO: replace with sliding average and maybe deviation
         auto endTime = std::chrono::system_clock::now();
         bin_log_record.v_last_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-        bin_log_record.v_last_queue_len = this->videoPktBuffer.size();        
+        bin_log_record.v_last_queue_len = this->videoPktBuffer.size(); */
         return SHM_Q_PKT_QUEUED_OK;
       }
 
@@ -207,11 +207,11 @@ namespace DepLibSfuShm {
       it++;
       for (; it != this->videoPktBuffer.rend() && seqid < it->seqid; it++, prevIt++) {}
       this->videoPktBuffer.emplace(prevIt.base(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
-
+      /* TODO: replace with sliding average
       auto endTime2 = std::chrono::system_clock::now();
       bin_log_record.v_last_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime2 - startTime).count();
       bin_log_record.v_last_queue_len = this->videoPktBuffer.size();
-      bin_log_record.v_enqueue_out_of_order += 1;
+      bin_log_record.v_enqueue_out_of_order += 1; */
     }
     else
     {
@@ -227,10 +227,11 @@ namespace DepLibSfuShm {
 
       this->videoPktBuffer.emplace(it, data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
 
+      /* TODO: replace with sliding average
       auto endTime = std::chrono::system_clock::now();
-
       bin_log_record.v_last_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-      bin_log_record.v_last_queue_len = this->videoPktBuffer.size();        
+      bin_log_record.v_last_queue_len = this->videoPktBuffer.size();
+      */
     }
 
     return SHM_Q_PKT_QUEUED_OK;

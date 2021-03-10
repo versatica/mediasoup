@@ -13,7 +13,8 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class ShmTransport : public RTC::Transport, public RTC::UdpSocket::Listener
+	class ShmTransport : public RTC::Transport,
+											 public RTC::UdpSocket::Listener
 	{
 	private:
 		struct ListenIp
@@ -71,7 +72,6 @@ namespace RTC
 		bool multiSource{ false };
 
 		bool RecvStreamMeta(json& data);
-		bool RotateShmBinaryLog(json& data);
 		DepLibSfuShm::ShmCtx shmCtx; // shm writer context, needed here to begin shm initialization and correctly report transport stats
 	};
 } // namespace RTC

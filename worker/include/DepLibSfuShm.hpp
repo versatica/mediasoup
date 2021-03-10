@@ -5,6 +5,7 @@
 extern "C" 
 {
 #include "/root/build/ff_shm_api/include/sfushm_av_media.h"
+#include "/root/build/ff_shm_api/include/sfushm_bin_log.h"
 }
 #include <vector>
 #include <string>

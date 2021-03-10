@@ -7,6 +7,7 @@
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/RateCalculator.hpp"
+#include "handles/Timer.hpp"
 
 using json = nlohmann::json;
 
@@ -41,7 +42,10 @@ namespace RTC
 		uint64_t lastSeqId{ 0u };
 	};
 
-	class ShmConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener, public DepLibSfuShm::ShmCtx::Listener
+	class ShmConsumer : public RTC::Consumer,
+											public RTC::RtpStreamSend::Listener,
+											public DepLibSfuShm::ShmCtx::Listener,
+											public Timer::Listener
 	{
 	public:
 		ShmConsumer(const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, DepLibSfuShm::ShmCtx *shmCtx);
@@ -99,6 +103,10 @@ namespace RTC
 	public:
 		void OnNeedToSync() override;
 
+	/* Pure virtual methods inherited from Timer. */
+	protected:
+		void OnTimer(Timer* timer) override;
+
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
@@ -114,6 +122,12 @@ namespace RTC
 		bool                       rotationDetected{ false }; // Whether video rotation data was ever picked in this stream, then we only write it into shm if there was a change
 		RTC::RtpDataCounter        shmWriterCounter;          // Use to collect and report shm writing stats, for RTP only (RTCP is not handled by ShmConsumer) TODO: move into ShmCtx
 		RTC::RtpLostPktRateCounter lostPktRateCounter;
+
+	private:
+		void   OnIdleShmConsumer();          // Call from OnTimer() to notify nodejs Consumer
+		Timer* shmIdleCheckTimer{ nullptr }; // Check for incoming RTP packets, declare idle after 20 seconds
+		bool 	 idle{ false };                // Idle if inactivityCheckTime is not reset within 20 seconds
+
 	};
 
 	/* Inline methods. */
