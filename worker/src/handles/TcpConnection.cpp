@@ -493,13 +493,12 @@ inline void TcpConnection::OnUvWrite(int status, TcpConnection::onSendCallback* 
 {
 	MS_TRACE();
 
+	// NOTE: Do not delete cb here since it will be delete in onWrite() above.
+
 	if (status == 0)
 	{
 		if (cb)
-		{
 			(*cb)(true);
-			delete cb;
-		}
 	}
 	else
 	{
@@ -509,10 +508,7 @@ inline void TcpConnection::OnUvWrite(int status, TcpConnection::onSendCallback* 
 		MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(status));
 
 		if (cb)
-		{
 			(*cb)(false);
-			delete cb;
-		}
 
 		Close();
 

@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.6.34
+
+* Fix crash (regression, issue #529).
+
+
 ### 3.6.33
 
 * Add missing `delete cb` that otherwise would leak (PR #527 based on PR #526 by @vpalmisano).
