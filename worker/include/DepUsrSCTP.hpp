@@ -38,9 +38,9 @@ public:
 
 private:
 	thread_local static Checker* checker;
-	thread_local static uint64_t numSctpAssociations;
-	thread_local static uintptr_t nextSctpAssociationId;
-	thread_local static std::unordered_map<uintptr_t, RTC::SctpAssociation*> mapIdSctpAssociation;
+	static uint64_t numSctpAssociations;
+	static uintptr_t nextSctpAssociationId;
+	static std::unordered_map<uintptr_t, RTC::SctpAssociation*> mapIdSctpAssociation;
 };
 
 #endif

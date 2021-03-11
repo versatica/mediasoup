@@ -5,10 +5,13 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <usrsctp.h>
+#include <mutex>
 
 /* Static. */
 
 static constexpr size_t CheckerInterval{ 10u }; // In ms.
+static std::mutex globalSyncMutex;
+static size_t globalInstances = 0;
 
 /* Static methods for usrsctp global callbacks. */
 
@@ -50,9 +53,9 @@ inline static void sctpDebug(const char* format, ...)
 /* Static variables. */
 
 thread_local DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
-thread_local uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
-thread_local uintptr_t DepUsrSCTP::nextSctpAssociationId{ 0u };
-thread_local std::unordered_map<uintptr_t, RTC::SctpAssociation*> DepUsrSCTP::mapIdSctpAssociation;
+uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
+uintptr_t DepUsrSCTP::nextSctpAssociationId{ 0u };
+std::unordered_map<uintptr_t, RTC::SctpAssociation*> DepUsrSCTP::mapIdSctpAssociation;
 
 /* Static methods. */
 
@@ -62,14 +65,20 @@ void DepUsrSCTP::ClassInit()
 
 	MS_DEBUG_TAG(info, "usrsctp");
 
-	usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
+	{
+		std::lock_guard<std::mutex> lock (globalSyncMutex);
+		if (globalInstances == 0) {
+			usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
 
-	// Disable explicit congestion notifications (ecn).
-	usrsctp_sysctl_set_sctp_ecn_enable(0);
+			// Disable explicit congestion notifications (ecn).
+			usrsctp_sysctl_set_sctp_ecn_enable(0);
 
 #ifdef SCTP_DEBUG
-	usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
+			usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
 #endif
+		}
+		++globalInstances;
+	}
 
 	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
 }
@@ -78,7 +87,13 @@ void DepUsrSCTP::ClassDestroy()
 {
 	MS_TRACE();
 
-	usrsctp_finish();
+	{
+		std::lock_guard<std::mutex> lock (globalSyncMutex);
+		--globalInstances;
+		if (globalInstances == 0) {
+			usrsctp_finish();
+		}
+	}
 
 	delete DepUsrSCTP::checker;
 }
@@ -86,6 +101,8 @@ void DepUsrSCTP::ClassDestroy()
 uintptr_t DepUsrSCTP::GetNextSctpAssociationId()
 {
 	MS_TRACE();
+
+	std::lock_guard<std::mutex> lock (globalSyncMutex);
 
 	// NOTE: usrsctp_connect() fails with a value of 0.
 	if (DepUsrSCTP::nextSctpAssociationId == 0u)
@@ -109,6 +126,8 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 {
 	MS_TRACE();
 
+	std::lock_guard<std::mutex> lock (globalSyncMutex);
+
 	auto it = DepUsrSCTP::mapIdSctpAssociation.find(sctpAssociation->id);
 
 	MS_ASSERT(
@@ -125,6 +144,8 @@ void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation
 {
 	MS_TRACE();
 
+	std::lock_guard<std::mutex> lock (globalSyncMutex);
+
 	auto found = DepUsrSCTP::mapIdSctpAssociation.erase(sctpAssociation->id);
 
 	MS_ASSERT(found > 0, "SctpAssociation not found");
@@ -137,6 +158,8 @@ void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation
 RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
 {
 	MS_TRACE();
+
+	std::lock_guard<std::mutex> lock (globalSyncMutex);
 
 	auto it = DepUsrSCTP::mapIdSctpAssociation.find(id);
 

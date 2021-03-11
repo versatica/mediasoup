@@ -27,7 +27,9 @@
 #include <string>
 #include <mutex>
 
-std::once_flag globalInitOnce;
+/* Static. */
+
+static std::once_flag globalInitOnce;
 
 extern "C" int run(
     int argc,
