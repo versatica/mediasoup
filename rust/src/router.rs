@@ -75,7 +75,7 @@ use std::sync::{Arc, Weak};
 use thiserror::Error;
 
 uuid_based_wrapper_type!(
-    ///Router identifier.
+    /// Router identifier.
     RouterId
 );
 
