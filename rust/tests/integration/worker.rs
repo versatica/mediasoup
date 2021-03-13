@@ -138,8 +138,6 @@ fn dump_succeeds() {
 
         let dump = worker.dump().await.expect("Failed to dump worker");
 
-        // TODO
-        // assert_eq!(dump.pid, worker.pid());
         assert_eq!(dump.router_ids, vec![]);
     });
 }
