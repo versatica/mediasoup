@@ -332,7 +332,8 @@
       [
         # C++ source files.
         'src/main.cpp'
-      ]
+      ],
+	  'defines': [ 'MS_EXECUTABLE' ]
     },
     {
       'target_name': 'libmediasoup-worker',

@@ -27,7 +27,6 @@ int main(int argc, char* argv[])
 	  argc,
 	  argv,
 	  version.c_str(),
-	  true,
 	  ConsumerChannelFd,
 	  ProducerChannelFd,
 	  PayloadConsumerChannelFd,

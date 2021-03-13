@@ -32,7 +32,6 @@ extern "C" int run_worker(
   int argc,
   char* argv[],
   const char* version,
-  bool processMode,
   int consumerChannelFd,
   int producerChannelFd,
   int payloadConsumeChannelFd,
@@ -125,14 +124,15 @@ extern "C" int run_worker(
 		Channel::Notifier::ClassInit(channel);
 		PayloadChannel::Notifier::ClassInit(payloadChannel);
 
-		if (processMode)
+#ifdef MS_EXECUTABLE
 		{
 			// Ignore some signals.
 			IgnoreSignals();
 		}
+#endif
 
 		// Run the Worker.
-		Worker worker(channel, payloadChannel, processMode);
+		Worker worker(channel, payloadChannel);
 
 		// Free static stuff.
 		DepLibUV::ClassDestroy();
