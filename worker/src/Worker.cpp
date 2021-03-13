@@ -11,7 +11,9 @@
 /* Instance methods. */
 
 Worker::Worker(
-  ::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel, bool processMode)
+  ::Channel::UnixStreamSocket* channel,
+  PayloadChannel::UnixStreamSocket* payloadChannel,
+  bool processMode)
   : channel(channel), payloadChannel(payloadChannel)
 {
 	MS_TRACE();

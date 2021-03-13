@@ -17,9 +17,7 @@ void DepLibWebRTC::ClassInit()
 {
 	MS_TRACE();
 
-	std::call_once(globalInitOnce, []{
-		webrtc::field_trial::InitFieldTrialsFromString(FieldTrials);
-	});
+	std::call_once(globalInitOnce, [] { webrtc::field_trial::InitFieldTrialsFromString(FieldTrials); });
 }
 
 void DepLibWebRTC::ClassDestroy()

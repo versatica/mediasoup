@@ -9,8 +9,8 @@
 #include <cctype> // isprint()
 #include <cerrno>
 #include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
 #include <mutex>
+#include <sstream> // std::ostringstream
 extern "C"
 {
 #include <getopt.h>
@@ -68,7 +68,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Parse command line options. */
 
 	// getopt_long_only() is not thread-safe
-	std::lock_guard<std::mutex> lock (globalSyncMutex);
+	std::lock_guard<std::mutex> lock(globalSyncMutex);
 
 	optind = 1; // Set explicitly, otherwise subsequent runs will fail
 	opterr = 0; // Don't allow getopt to print error messages.

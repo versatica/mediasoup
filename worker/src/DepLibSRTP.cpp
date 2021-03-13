@@ -50,8 +50,9 @@ void DepLibSRTP::ClassInit()
 	MS_TRACE();
 
 	{
-		std::lock_guard<std::mutex> lock (globalSyncMutex);
-		if (globalInstances == 0) {
+		std::lock_guard<std::mutex> lock(globalSyncMutex);
+		if (globalInstances == 0)
+		{
 			MS_DEBUG_TAG(info, "libsrtp version: \"%s\"", srtp_get_version_string());
 
 			srtp_err_status_t err = srtp_init();
@@ -68,9 +69,10 @@ void DepLibSRTP::ClassDestroy()
 	MS_TRACE();
 
 	{
-		std::lock_guard<std::mutex> lock (globalSyncMutex);
+		std::lock_guard<std::mutex> lock(globalSyncMutex);
 		--globalInstances;
-		if (globalInstances == 0) {
+		if (globalInstances == 0)
+		{
 			srtp_shutdown();
 		}
 	}

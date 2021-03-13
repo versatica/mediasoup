@@ -29,15 +29,14 @@
 void IgnoreSignals();
 
 extern "C" int run_worker(
-    int argc,
-    char* argv[],
-    const char* version,
-    bool processMode,
-    int consumerChannelFd,
-    int producerChannelFd,
-    int payloadConsumeChannelFd,
-    int payloadProduceChannelFd
-)
+  int argc,
+  char* argv[],
+  const char* version,
+  bool processMode,
+  int consumerChannelFd,
+  int producerChannelFd,
+  int payloadConsumeChannelFd,
+  int payloadProduceChannelFd)
 {
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
@@ -126,7 +125,8 @@ extern "C" int run_worker(
 		Channel::Notifier::ClassInit(channel);
 		PayloadChannel::Notifier::ClassInit(payloadChannel);
 
-		if (processMode) {
+		if (processMode)
+		{
 			// Ignore some signals.
 			IgnoreSignals();
 		}

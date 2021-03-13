@@ -1,9 +1,9 @@
 #define MS_CLASS "mediasoup-worker"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "lib.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstdlib>  // std::_Exit(), std::genenv()
+#include "lib.hpp"
+#include <cstdlib> // std::_Exit(), std::genenv()
 #include <string>
 
 static constexpr int ConsumerChannelFd{ 3 };
@@ -31,8 +31,7 @@ int main(int argc, char* argv[])
 	  ConsumerChannelFd,
 	  ProducerChannelFd,
 	  PayloadConsumerChannelFd,
-	  PayloadProducerChannelFd
-	);
+	  PayloadProducerChannelFd);
 
 	switch (statusCode)
 	{

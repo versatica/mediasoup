@@ -66,8 +66,9 @@ void DepUsrSCTP::ClassInit()
 	MS_DEBUG_TAG(info, "usrsctp");
 
 	{
-		std::lock_guard<std::mutex> lock (globalSyncMutex);
-		if (globalInstances == 0) {
+		std::lock_guard<std::mutex> lock(globalSyncMutex);
+		if (globalInstances == 0)
+		{
 			usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
 
 			// Disable explicit congestion notifications (ecn).
@@ -88,13 +89,15 @@ void DepUsrSCTP::ClassDestroy()
 	MS_TRACE();
 
 	{
-		std::lock_guard<std::mutex> lock (globalSyncMutex);
+		std::lock_guard<std::mutex> lock(globalSyncMutex);
 		--globalInstances;
-		if (globalInstances == 0) {
+		if (globalInstances == 0)
+		{
 			usrsctp_finish();
-			// TODO: This cleanup currently causes assertion errors in DepUsrSCTP::DeregisterSctpAssociation()
-			// numSctpAssociations = 0u;
-			// nextSctpAssociationId = 0u;
+			// TODO: This cleanup currently causes assertion errors in
+			// DepUsrSCTP::DeregisterSctpAssociation()
+
+			// numSctpAssociations = 0u; nextSctpAssociationId = 0u;
 			// DepUsrSCTP::mapIdSctpAssociation.clear();
 		}
 	}
@@ -106,7 +109,7 @@ uintptr_t DepUsrSCTP::GetNextSctpAssociationId()
 {
 	MS_TRACE();
 
-	std::lock_guard<std::mutex> lock (globalSyncMutex);
+	std::lock_guard<std::mutex> lock(globalSyncMutex);
 
 	// NOTE: usrsctp_connect() fails with a value of 0.
 	if (DepUsrSCTP::nextSctpAssociationId == 0u)
@@ -130,7 +133,7 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 {
 	MS_TRACE();
 
-	std::lock_guard<std::mutex> lock (globalSyncMutex);
+	std::lock_guard<std::mutex> lock(globalSyncMutex);
 
 	auto it = DepUsrSCTP::mapIdSctpAssociation.find(sctpAssociation->id);
 
@@ -148,7 +151,7 @@ void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation
 {
 	MS_TRACE();
 
-	std::lock_guard<std::mutex> lock (globalSyncMutex);
+	std::lock_guard<std::mutex> lock(globalSyncMutex);
 
 	auto found = DepUsrSCTP::mapIdSctpAssociation.erase(sctpAssociation->id);
 
@@ -163,7 +166,7 @@ RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
 {
 	MS_TRACE();
 
-	std::lock_guard<std::mutex> lock (globalSyncMutex);
+	std::lock_guard<std::mutex> lock(globalSyncMutex);
 
 	auto it = DepUsrSCTP::mapIdSctpAssociation.find(id);
 

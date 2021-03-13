@@ -87,7 +87,7 @@ namespace Channel
 
 		if (nsPayloadLen == 0)
 		{
-			nsNumLen       = 1;
+			nsNumLen             = 1;
 			this->WriteBuffer[0] = '0';
 			this->WriteBuffer[1] = ':';
 			this->WriteBuffer[2] = ',';
