@@ -2,12 +2,29 @@
 use crate::worker::{Channel, PayloadChannel};
 use async_executor::Executor;
 use async_fs::File;
-use nix::unistd;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
-use std::io;
+use std::os::raw::c_int;
 use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
+use std::{io, mem};
+
+fn pipe() -> (c_int, c_int) {
+    unsafe {
+        let mut fds = mem::MaybeUninit::<[c_int; 2]>::uninit();
+
+        let res = libc::pipe(fds.as_mut_ptr() as *mut c_int);
+
+        if res != 0 {
+            panic!(
+                "libc::pipe() failed with code {}",
+                *libc::__errno_location()
+            );
+        }
+
+        (fds.assume_init()[0], fds.assume_init()[1])
+    }
+}
 
 static SPAWNING: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
@@ -24,10 +41,10 @@ pub(super) fn spawn_with_worker_channels(
     // Take a lock to make sure we don't spawn workers from multiple threads concurrently, this
     // causes racy issues
     let _lock = SPAWNING.lock();
-    let (producer_fd_read, producer_fd_write) = unistd::pipe().unwrap();
-    let (consumer_fd_read, consumer_fd_write) = unistd::pipe().unwrap();
-    let (producer_payload_fd_read, producer_payload_fd_write) = unistd::pipe().unwrap();
-    let (consumer_payload_fd_read, consumer_payload_fd_write) = unistd::pipe().unwrap();
+    let (producer_fd_read, producer_fd_write) = pipe();
+    let (consumer_fd_read, consumer_fd_write) = pipe();
+    let (producer_payload_fd_read, producer_payload_fd_write) = pipe();
+    let (consumer_payload_fd_read, consumer_payload_fd_write) = pipe();
 
     std::thread::spawn(move || {
         let result = mediasoup_sys::run(
