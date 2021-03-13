@@ -133,7 +133,7 @@ public:
 
 public:
 	static const int64_t pid;
-	static Channel::UnixStreamSocket* channel;
+	thread_local static Channel::UnixStreamSocket* channel;
 	static const size_t bufferSize {50000};
 	static char buffer[];
 };
