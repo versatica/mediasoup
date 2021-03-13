@@ -33,7 +33,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
-use utils::SpawnResult;
+use utils::WorkerRunResult;
 
 uuid_based_wrapper_type!(
     /// Worker identifier.
@@ -347,11 +347,11 @@ impl Inner {
         debug!("spawning worker with arguments: {}", spawn_args.join(" "));
 
         // TODO: Probably need to buffer messages for worker to catch when it is ready
-        let SpawnResult {
+        let WorkerRunResult {
             channel,
             payload_channel,
             status_receiver,
-        } = utils::spawn_with_worker_channels(Arc::clone(&executor), spawn_args)?;
+        } = utils::run_worker_with_channels(Arc::clone(&executor), spawn_args);
 
         let id = WorkerId::new();
         let handlers = Handlers::default();

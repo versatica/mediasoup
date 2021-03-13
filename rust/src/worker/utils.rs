@@ -47,17 +47,16 @@ fn pipe() -> (c_int, c_int) {
 
 static SPAWNING: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
-pub(super) struct SpawnResult {
+pub(super) struct WorkerRunResult {
     pub(super) channel: Channel,
     pub(super) payload_channel: PayloadChannel,
     pub(super) status_receiver: Receiver<Result<(), ExitError>>,
 }
 
-// TODO: Returns result even though never fails
-pub(super) fn spawn_with_worker_channels(
+pub(super) fn run_worker_with_channels(
     executor: Arc<Executor<'static>>,
     args: Vec<String>,
-) -> io::Result<SpawnResult> {
+) -> WorkerRunResult {
     // Take a lock to make sure we don't spawn workers from multiple threads concurrently, this
     // causes racy issues
     let _lock = SPAWNING.lock();
@@ -103,7 +102,7 @@ pub(super) fn spawn_with_worker_channels(
     let producer_payload_file = unsafe { File::from_raw_fd(producer_payload_fd_write) };
     let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
 
-    Ok(SpawnResult {
+    WorkerRunResult {
         channel: Channel::new(Arc::clone(&executor), consumer_file, producer_file),
         payload_channel: PayloadChannel::new(
             executor,
@@ -111,5 +110,5 @@ pub(super) fn spawn_with_worker_channels(
             producer_payload_file,
         ),
         status_receiver,
-    })
+    }
 }
