@@ -344,7 +344,12 @@ impl Inner {
             ));
         }
 
-        debug!("spawning worker with arguments: {}", spawn_args.join(" "));
+        let id = WorkerId::new();
+        debug!(
+            "spawning worker with arguments [id:{}]: {}",
+            id,
+            spawn_args.join(" ")
+        );
 
         // TODO: Probably need to buffer messages for worker to catch when it is ready
         let WorkerRunResult {
@@ -353,7 +358,6 @@ impl Inner {
             status_receiver,
         } = utils::run_worker_with_channels(Arc::clone(&executor), spawn_args);
 
-        let id = WorkerId::new();
         let handlers = Handlers::default();
 
         let mut inner = Self {

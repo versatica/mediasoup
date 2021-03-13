@@ -6,10 +6,10 @@ use async_oneshot::Receiver;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use std::ffi::CString;
+use std::mem;
 use std::os::raw::{c_char, c_int};
 use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
-use std::{io, mem};
 use thiserror::Error;
 
 #[derive(Debug, Copy, Clone, Error)]
