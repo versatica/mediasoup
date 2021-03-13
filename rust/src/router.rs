@@ -102,6 +102,12 @@ impl RouterOptions {
     }
 }
 
+impl Default for RouterOptions {
+    fn default() -> Self {
+        Self::new(vec![])
+    }
+}
+
 /// Options used for piping media or data producer to into another router on the same host.
 ///
 /// # Notes on usage
@@ -340,6 +346,12 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
+        self.close();
+    }
+}
+
+impl Inner {
+    fn close(&self) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             self.handlers.close.call_simple();
 
@@ -348,7 +360,7 @@ impl Drop for Inner {
                 let request = RouterCloseRequest {
                     internal: RouterInternal { router_id: self.id },
                 };
-                let worker = self.worker.take();
+                let worker = self.worker.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
@@ -1032,8 +1044,8 @@ impl Router {
     /// let worker2 = worker_manager.create_worker(WorkerSettings::default()).await?;
     ///
     /// // Create a router in each worker.
-    /// let router1 = worker1.create_router(RouterOptions::new(vec![])).await?;
-    /// let router2 = worker2.create_router(RouterOptions::new(vec![])).await?;
+    /// let router1 = worker1.create_router(RouterOptions::default()).await?;
+    /// let router2 = worker2.create_router(RouterOptions::default()).await?;
     ///
     /// // Produce in router1.
     /// let transport1 = router1
@@ -1446,5 +1458,10 @@ impl Router {
             .read()
             .get(data_producer_id)?
             .upgrade()
+    }
+
+    #[cfg(test)]
+    fn close(&self) {
+        self.inner.close();
     }
 }

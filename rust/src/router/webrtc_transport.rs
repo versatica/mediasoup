@@ -9,6 +9,9 @@
 //! [ICE Lite](https://tools.ietf.org/html/rfc5245#section-2.7), meaning that it does not initiate
 //! ICE connections but expects ICE Binding Requests from endpoints.
 
+#[cfg(test)]
+mod tests;
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};

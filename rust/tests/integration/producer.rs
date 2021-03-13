@@ -913,37 +913,3 @@ fn close_event() {
         }
     });
 }
-
-#[test]
-fn transport_close_event() {
-    future::block_on(async move {
-        let (worker, _router, transport_1, _transport_2) = init().await;
-
-        let audio_producer = transport_1
-            .produce(audio_producer_options())
-            .await
-            .expect("Failed to produce audio");
-
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_producer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (transport_close_tx, transport_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_producer.on_transport_close(move || {
-            let _ = transport_close_tx.send(());
-        });
-
-        unsafe {
-            // TODO
-            // libc::kill(worker.pid() as i32, libc::SIGINT);
-        }
-
-        transport_close_rx
-            .await
-            .expect("Failed to receive transport_close event");
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(audio_producer.closed(), true);
-    });
-}

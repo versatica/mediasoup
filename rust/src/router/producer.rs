@@ -1,6 +1,9 @@
 //! A producer represents an audio or video source being injected into a mediasoup router. It's
 //! created on top of a transport that defines how the media packets are carried.
 
+#[cfg(test)]
+mod tests;
+
 use crate::consumer::RtpStreamParams;
 use crate::data_structures::{AppData, EventDirection};
 use crate::messages::{

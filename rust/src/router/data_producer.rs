@@ -5,6 +5,9 @@
 //! those messages, or can directly send them from the Rust application if the data producer was
 //! created on top of a [`DirectTransport`](crate::direct_transport::DirectTransport).
 
+#[cfg(test)]
+mod tests;
+
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,

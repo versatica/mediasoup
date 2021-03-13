@@ -38,7 +38,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
         .expect("Failed to create worker");
 
     let router = worker
-        .create_router(RouterOptions::new(vec![]))
+        .create_router(RouterOptions::default())
         .await
         .expect("Failed to create router");
 
@@ -456,49 +456,5 @@ fn close_event() {
             assert_eq!(dump.data_producer_ids, vec![]);
             assert_eq!(dump.data_consumer_ids, vec![]);
         }
-    });
-}
-
-#[test]
-fn transport_close_event() {
-    future::block_on(async move {
-        let (worker, _router, transport1, _transport2) = init().await;
-
-        let data_producer = transport1
-            .produce_data({
-                let mut options =
-                    DataProducerOptions::new_sctp(SctpStreamParameters::new_ordered(666));
-
-                options.label = "foo".to_string();
-                options.protocol = "bar".to_string();
-                options.app_data = AppData::new(CustomAppData { foo: 1, baz: "2" });
-
-                options
-            })
-            .await
-            .expect("Failed to produce data");
-
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_producer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (transport_close_tx, transport_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_producer.on_transport_close(move || {
-            let _ = transport_close_tx.send(());
-        });
-
-        unsafe {
-            // TODO
-            // libc::kill(worker.pid() as i32, libc::SIGINT);
-        }
-
-        transport_close_rx
-            .await
-            .expect("Failed to receive transport_close event");
-
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(data_producer.closed(), true);
     });
 }

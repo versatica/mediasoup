@@ -1,5 +1,8 @@
 //! An audio level observer monitors the volume of the selected audio producers.
 
+#[cfg(test)]
+mod tests;
+
 use crate::data_structures::AppData;
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestInternal,

@@ -53,7 +53,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
         .expect("Failed to create worker");
 
     let router = worker
-        .create_router(RouterOptions::new(vec![]))
+        .create_router(RouterOptions::default())
         .await
         .expect("Failed to create router");
 
@@ -542,63 +542,6 @@ fn data_producer_close_event() {
             .await
             .expect("Failed to receive data_producer_close event");
 
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(data_consumer.closed(), true);
-    });
-}
-
-#[test]
-fn transport_close_event() {
-    future::block_on(async move {
-        let (worker, router, _transport1, data_producer) = init().await;
-
-        let transport2 = router
-            .create_plain_transport({
-                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
-                    announced_ip: None,
-                });
-
-                transport_options.enable_sctp = true;
-
-                transport_options
-            })
-            .await
-            .expect("Failed to create transport1");
-
-        let data_consumer = transport2
-            .consume_data({
-                let mut options = DataConsumerOptions::new_sctp_unordered_with_life_time(
-                    data_producer.id(),
-                    4000,
-                );
-
-                options.app_data = AppData::new(CustomAppData { baz: "LOL" });
-
-                options
-            })
-            .await
-            .expect("Failed to consume data");
-
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_consumer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (transport_close_tx, transport_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_consumer.on_transport_close(move || {
-            let _ = transport_close_tx.send(());
-        });
-
-        unsafe {
-            // TODO
-            // libc::kill(worker.pid() as i32, libc::SIGINT);
-        }
-
-        transport_close_rx
-            .await
-            .expect("Failed to receive transport_close event");
         close_rx.await.expect("Failed to receive close event");
 
         assert_eq!(data_consumer.closed(), true);

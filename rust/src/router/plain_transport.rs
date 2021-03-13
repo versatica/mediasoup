@@ -1,6 +1,9 @@
 //! A plain transport represents a network path through which RTP, RTCP (optionally secured with
 //! SRTP) and SCTP (DataChannel) is transmitted.
 
+#[cfg(test)]
+mod tests;
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};

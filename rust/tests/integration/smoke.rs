@@ -65,7 +65,7 @@ fn smoke() {
 
         let router = worker
             .create_router({
-                let mut router_options = RouterOptions::new(vec![]);
+                let mut router_options = RouterOptions::default();
                 router_options.media_codecs = vec![RtpCodecCapability::Audio {
                     mime_type: MimeTypeAudio::Opus,
                     preferred_payload_type: None,
