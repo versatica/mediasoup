@@ -11,7 +11,7 @@
 /* Instance methods. */
 
 Worker::Worker(
-  ::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel, bool handleSignals)
+  ::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel, bool processMode)
   : channel(channel), payloadChannel(payloadChannel)
 {
 	MS_TRACE();
@@ -25,7 +25,7 @@ Worker::Worker(
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
 
-	if (handleSignals)
+	if (processMode)
 	{
 		// Add signals to handle.
 		this->signalsHandler->AddSignal(SIGINT, "INT");

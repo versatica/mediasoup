@@ -21,7 +21,7 @@ class Worker : public Channel::UnixStreamSocket::Listener,
 {
 public:
 	explicit Worker(
-	  Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel, bool handleSignals);
+	  Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel, bool processMode);
 	~Worker();
 
 private:

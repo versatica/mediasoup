@@ -26,10 +26,13 @@
 #include <map>
 #include <string>
 
+void IgnoreSignals();
+
 extern "C" int run_worker(
     int argc,
     char* argv[],
-    char* version,
+    const char* version,
+    bool processMode,
     int consumerChannelFd,
     int producerChannelFd,
     int payloadConsumeChannelFd,
@@ -123,8 +126,13 @@ extern "C" int run_worker(
 		Channel::Notifier::ClassInit(channel);
 		PayloadChannel::Notifier::ClassInit(payloadChannel);
 
+		if (processMode) {
+			// Ignore some signals.
+			IgnoreSignals();
+		}
+
 		// Run the Worker.
-		Worker worker(channel, payloadChannel, false);
+		Worker worker(channel, payloadChannel, processMode);
 
 		// Free static stuff.
 		DepLibUV::ClassDestroy();
@@ -146,4 +154,43 @@ extern "C" int run_worker(
 
 		return 1;
 	}
+}
+
+void IgnoreSignals()
+{
+#ifndef _WIN32
+	MS_TRACE();
+
+	int err;
+	struct sigaction act; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+	// clang-format off
+	std::map<std::string, int> ignoredSignals =
+	{
+		{ "PIPE", SIGPIPE },
+		{ "HUP",  SIGHUP  },
+		{ "ALRM", SIGALRM },
+		{ "USR1", SIGUSR1 },
+		{ "USR2", SIGUSR2 }
+	};
+	// clang-format on
+
+	act.sa_handler = SIG_IGN; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+	act.sa_flags   = 0;
+	err            = sigfillset(&act.sa_mask);
+
+	if (err != 0)
+		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
+
+	for (auto& kv : ignoredSignals)
+	{
+		const auto& sigName = kv.first;
+		int sigId           = kv.second;
+
+		err = sigaction(sigId, &act, nullptr);
+
+		if (err != 0)
+			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
+	}
+#endif
 }
