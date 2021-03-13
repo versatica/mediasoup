@@ -24,7 +24,6 @@ use log::*;
 use parking_lot::Mutex;
 pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
 use serde::{Deserialize, Serialize};
-use std::ffi::OsString;
 use std::io;
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
@@ -321,10 +320,7 @@ impl Inner {
     ) -> io::Result<Arc<Self>> {
         debug!("new()");
 
-        let mut spawn_args: Vec<OsString> = Vec::new();
-        // TODO: This is no longer necessary for library-based worker
-        let spawn_bin: OsString = "DUMMY".into();
-        spawn_args.push(spawn_bin.clone());
+        let mut spawn_args: Vec<String> = vec!["".to_string()];
 
         spawn_args.push(format!("--logLevel={}", log_level.as_str()).into());
         for log_tag in log_tags {
@@ -341,41 +337,29 @@ impl Inner {
         spawn_args.push(format!("--rtcMaxPort={}", rtc_ports_range.end()).into());
 
         if let Some(dtls_files) = dtls_files {
-            {
-                let mut arg = OsString::new();
-                arg.push("--dtlsCertificateFile=");
-                arg.push(dtls_files.certificate);
-                spawn_args.push(arg);
-            }
-            {
-                let mut arg = OsString::new();
-                arg.push("--dtlsPrivateKeyFile=");
-                arg.push(dtls_files.private_key);
-                spawn_args.push(arg);
-            }
+            spawn_args.push(format!(
+                "--dtlsCertificateFile={}",
+                dtls_files
+                    .certificate
+                    .to_str()
+                    .expect("Paths are only expected to be utf8")
+            ));
+            spawn_args.push(format!(
+                "--dtlsPrivateKeyFile={}",
+                dtls_files
+                    .private_key
+                    .to_str()
+                    .expect("Paths are only expected to be utf8")
+            ));
         }
 
-        debug!(
-            "spawning worker process: {} {}",
-            spawn_bin.to_string_lossy(),
-            spawn_args
-                .iter()
-                .map(|arg| arg.to_string_lossy())
-                .collect::<Vec<_>>()
-                .join(" ")
-        );
+        debug!("spawning worker with arguments: {}", spawn_args.join(" "));
 
         // TODO: Need to buffer messages for worker to catch when it is ready
         let SpawnResult {
             channel,
             payload_channel,
-        } = utils::spawn_with_worker_channels(
-            Arc::clone(&executor),
-            spawn_args
-                .into_iter()
-                .map(|s| s.into_string().unwrap())
-                .collect(),
-        )?;
+        } = utils::spawn_with_worker_channels(Arc::clone(&executor), spawn_args)?;
 
         let handlers = Handlers::default();
 
