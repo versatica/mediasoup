@@ -248,7 +248,7 @@ pub struct WorkerResourceUsage {
 #[doc(hidden)]
 #[non_exhaustive]
 pub struct WorkerDump {
-    pub pid: u32,
+    // Dump has `pid` field too, but it is useless here because of thead-based worker usage
     pub router_ids: Vec<RouterId>,
 }
 

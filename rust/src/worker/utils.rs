@@ -4,10 +4,26 @@ use async_executor::Executor;
 use async_fs::File;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
-use std::os::raw::c_int;
+use std::ffi::CString;
+use std::os::raw::{c_char, c_int};
 use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
 use std::{io, mem};
+use thiserror::Error;
+
+// TODO: thiserror and stuff
+#[derive(Debug, Error)]
+pub enum MediasoupWorkerError {
+    /// Generic error.
+    #[error("Worker exited with generic error")]
+    Generic,
+    /// Settings error.
+    #[error("Worker exited with settings error")]
+    Settings,
+    /// Unknown error.
+    #[error("Worker exited with unknown error and status code {status_code}")]
+    Unknown { status_code: i32 },
+}
 
 fn pipe() -> (c_int, c_int) {
     unsafe {
@@ -47,13 +63,34 @@ pub(super) fn spawn_with_worker_channels(
     let (consumer_payload_fd_read, consumer_payload_fd_write) = pipe();
 
     std::thread::spawn(move || {
-        let result = mediasoup_sys::run(
-            args,
-            producer_fd_read,
-            consumer_fd_write,
-            producer_payload_fd_read,
-            consumer_payload_fd_write,
-        );
+        let argc = args.len() as c_int;
+        let args_cstring = args
+            .into_iter()
+            .map(|s| -> CString { CString::new(s).unwrap() })
+            .collect::<Vec<_>>();
+        let argv = args_cstring
+            .iter()
+            .map(|arg| arg.as_ptr() as *const c_char)
+            .collect::<Vec<_>>();
+        let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
+        let status_code = unsafe {
+            mediasoup_sys::run_worker(
+                argc,
+                argv.as_ptr(),
+                version.as_ptr(),
+                producer_fd_read,
+                consumer_fd_write,
+                producer_payload_fd_read,
+                consumer_payload_fd_write,
+            )
+        };
+
+        let result = match status_code {
+            0 => Ok(()),
+            1 => Err(MediasoupWorkerError::Generic),
+            42 => Err(MediasoupWorkerError::Settings),
+            status_code => Err(MediasoupWorkerError::Unknown { status_code }),
+        };
 
         // TODO: This result should be sent back somehow
         println!("Worker exit result: {:?}", result);
