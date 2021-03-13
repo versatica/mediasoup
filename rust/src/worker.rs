@@ -12,10 +12,10 @@ use crate::messages::{
     RouterInternal, WorkerCloseRequest, WorkerCreateRouterRequest, WorkerDumpRequest,
     WorkerGetResourceRequest, WorkerUpdateSettingsRequest,
 };
-use crate::ortc;
 use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker_manager::WorkerManager;
+use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 pub(crate) use channel::Channel;
 pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
@@ -32,6 +32,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
 use utils::SpawnResult;
+
+uuid_based_wrapper_type!(
+    /// Worker identifier.
+    WorkerId
+);
 
 /// Error that caused request to mediasoup-worker subprocess to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
@@ -271,6 +276,7 @@ struct Handlers {
 }
 
 struct Inner {
+    id: WorkerId,
     channel: Channel,
     payload_channel: PayloadChannel,
     executor: Arc<Executor<'static>>,
@@ -344,9 +350,11 @@ impl Inner {
             payload_channel,
         } = utils::spawn_with_worker_channels(Arc::clone(&executor), spawn_args)?;
 
+        let id = WorkerId::new();
         let handlers = Handlers::default();
 
         let mut inner = Self {
+            id,
             channel,
             payload_channel,
             executor,
@@ -416,21 +424,21 @@ impl Inner {
         }
 
         let (sender, receiver) = async_oneshot::oneshot();
-        let pid = std::process::id();
+        let id = self.id;
         let sender = Mutex::new(Some(sender));
-        let _handler = self
-            .channel
-            .subscribe_to_notifications(pid.into(), move |notification| {
+        let _handler = self.channel.subscribe_to_notifications(
+            std::process::id().into(),
+            move |notification| {
                 let result = match serde_json::from_value(notification.clone()) {
                     Ok(Notification::Running) => {
-                        debug!("worker process running [pid:{}]", pid);
+                        debug!("worker process running [id:{}]", id);
                         Ok(())
                     }
                     Err(error) => Err(io::Error::new(
                         io::ErrorKind::Other,
                         format!(
-                            "unexpected first notification from worker [pid:{}]: {:?}; error = {}",
-                            pid, notification, error
+                            "unexpected first notification from worker [id:{}]: {:?}; error = {}",
+                            id, notification, error
                         ),
                     )),
                 };
@@ -439,7 +447,8 @@ impl Inner {
                     .take()
                     .expect("Receiving more than one worker notification")
                     .send(result);
-            });
+            },
+        );
 
         receiver.await.map_err(|_closed| {
             io::Error::new(io::ErrorKind::Other, "Worker dropped before it is ready")
@@ -449,23 +458,23 @@ impl Inner {
     fn setup_message_handling(&mut self) {
         let channel_receiver = self.channel.get_internal_message_receiver();
         let payload_channel_receiver = self.payload_channel.get_internal_message_receiver();
-        let pid = std::process::id();
+        let id = self.id;
         let closed = Arc::clone(&self.closed);
         self.executor
             .spawn(async move {
                 while let Ok(message) = channel_receiver.recv().await {
                     match message {
-                        channel::InternalMessage::Debug(text) => debug!("[pid:{}] {}", pid, text),
-                        channel::InternalMessage::Warn(text) => warn!("[pid:{}] {}", pid, text),
+                        channel::InternalMessage::Debug(text) => debug!("[id:{}] {}", id, text),
+                        channel::InternalMessage::Warn(text) => warn!("[id:{}] {}", id, text),
                         channel::InternalMessage::Error(text) => {
                             if !closed.load(Ordering::SeqCst) {
-                                error!("[pid:{}] {}", pid, text)
+                                error!("[id:{}] {}", id, text)
                             }
                         }
                         channel::InternalMessage::Dump(text) => eprintln!("{}", text),
                         channel::InternalMessage::Unexpected(data) => error!(
-                            "worker[pid:{}] unexpected channel data: {}",
-                            pid,
+                            "worker[id:{}] unexpected channel data: {}",
+                            id,
                             String::from_utf8_lossy(&data)
                         ),
                     }
@@ -478,8 +487,8 @@ impl Inner {
                 while let Ok(message) = payload_channel_receiver.recv().await {
                     match message {
                         payload_channel::InternalMessage::UnexpectedData(data) => error!(
-                            "worker[pid:{}] unexpected payload channel data: {}",
-                            pid,
+                            "worker[id:{}] unexpected payload channel data: {}",
+                            id,
                             String::from_utf8_lossy(&data)
                         ),
                     }
@@ -526,6 +535,11 @@ impl Worker {
         let inner = Inner::new(executor, worker_settings, worker_manager).await?;
 
         Ok(Self { inner })
+    }
+
+    /// Worker id.
+    pub fn id(&self) -> WorkerId {
+        self.inner.id
     }
 
     /// Custom application data.
