@@ -285,24 +285,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        let already_closed = self.closed.swap(true, Ordering::SeqCst);
-
-        let channel = self.channel.clone();
-        let payload_channel = self.payload_channel.clone();
-
-        self.executor
-            .spawn(async move {
-                let _ = channel.request(WorkerCloseRequest {}).await;
-
-                // Drop channels in here after response from worker
-                drop(channel);
-                drop(payload_channel);
-            })
-            .detach();
-
-        if !already_closed {
-            self.handlers.close.call_simple();
-        }
+        self.close();
     }
 }
 
@@ -504,6 +487,27 @@ impl Inner {
             })
             .detach();
     }
+
+    fn close(&self) {
+        let already_closed = self.closed.swap(true, Ordering::SeqCst);
+
+        let channel = self.channel.clone();
+        let payload_channel = self.payload_channel.clone();
+
+        self.executor
+            .spawn(async move {
+                let _ = channel.request(WorkerCloseRequest {}).await;
+
+                // Drop channels in here after response from worker
+                drop(channel);
+                drop(payload_channel);
+            })
+            .detach();
+
+        if !already_closed {
+            self.handlers.close.call_simple();
+        }
+    }
 }
 
 /// A worker represents a mediasoup C++ subprocess that runs on a single CPU core and handles
@@ -626,5 +630,10 @@ impl Worker {
             self.inner.handlers.close.call_simple();
         }
         handler_id
+    }
+
+    #[cfg(test)]
+    pub(crate) fn close(&self) {
+        self.inner.close();
     }
 }

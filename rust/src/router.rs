@@ -24,6 +24,8 @@ pub mod plain_transport;
 pub mod producer;
 #[cfg(not(doc))]
 pub mod rtp_observer;
+#[cfg(test)]
+mod tests;
 #[cfg(not(doc))]
 pub mod transport;
 #[cfg(not(doc))]
