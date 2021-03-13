@@ -2,6 +2,7 @@
 use crate::worker::{Channel, PayloadChannel};
 use async_executor::Executor;
 use async_fs::File;
+use async_oneshot::Receiver;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use std::ffi::CString;
@@ -11,9 +12,8 @@ use std::sync::Arc;
 use std::{io, mem};
 use thiserror::Error;
 
-// TODO: thiserror and stuff
-#[derive(Debug, Error)]
-pub enum MediasoupWorkerError {
+#[derive(Debug, Copy, Clone, Error)]
+pub enum ExitError {
     /// Generic error.
     #[error("Worker exited with generic error")]
     Generic,
@@ -23,6 +23,9 @@ pub enum MediasoupWorkerError {
     /// Unknown error.
     #[error("Worker exited with unknown error and status code {status_code}")]
     Unknown { status_code: i32 },
+    /// Unexpected error.
+    #[error("Worker exited unexpectedly")]
+    Unexpected,
 }
 
 fn pipe() -> (c_int, c_int) {
@@ -47,6 +50,7 @@ static SPAWNING: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 pub(super) struct SpawnResult {
     pub(super) channel: Channel,
     pub(super) payload_channel: PayloadChannel,
+    pub(super) status_receiver: Receiver<Result<(), ExitError>>,
 }
 
 // TODO: Returns result even though never fails
@@ -61,6 +65,7 @@ pub(super) fn spawn_with_worker_channels(
     let (consumer_fd_read, consumer_fd_write) = pipe();
     let (producer_payload_fd_read, producer_payload_fd_write) = pipe();
     let (consumer_payload_fd_read, consumer_payload_fd_write) = pipe();
+    let (status_sender, status_receiver) = async_oneshot::oneshot();
 
     std::thread::spawn(move || {
         let argc = args.len() as c_int;
@@ -85,15 +90,12 @@ pub(super) fn spawn_with_worker_channels(
             )
         };
 
-        let result = match status_code {
+        let _ = status_sender.send(match status_code {
             0 => Ok(()),
-            1 => Err(MediasoupWorkerError::Generic),
-            42 => Err(MediasoupWorkerError::Settings),
-            status_code => Err(MediasoupWorkerError::Unknown { status_code }),
-        };
-
-        // TODO: This result should be sent back somehow
-        println!("Worker exit result: {:?}", result);
+            1 => Err(ExitError::Generic),
+            42 => Err(ExitError::Settings),
+            status_code => Err(ExitError::Unknown { status_code }),
+        });
     });
 
     let producer_file = unsafe { File::from_raw_fd(producer_fd_write) };
@@ -108,5 +110,6 @@ pub(super) fn spawn_with_worker_channels(
             consumer_payload_file,
             producer_payload_file,
         ),
+        status_receiver,
     })
 }

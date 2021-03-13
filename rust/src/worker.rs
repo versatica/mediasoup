@@ -14,20 +14,22 @@ use crate::messages::{
 };
 use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
+pub use crate::worker::utils::ExitError;
 use crate::worker_manager::WorkerManager;
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 pub(crate) use channel::Channel;
 pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
+use futures_lite::FutureExt;
 use log::*;
 use parking_lot::Mutex;
 pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
 use serde::{Deserialize, Serialize};
+use std::future::Future;
 use std::io;
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
-use std::process::ExitStatus;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
@@ -271,7 +273,7 @@ pub enum CreateRouterError {
 #[derive(Default)]
 struct Handlers {
     new_router: Bag<Box<dyn Fn(&Router) + Send + Sync>>,
-    dead: BagOnce<Box<dyn FnOnce(ExitStatus) + Send>>,
+    dead: BagOnce<Box<dyn FnOnce(Result<(), ExitError>) + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
@@ -344,10 +346,11 @@ impl Inner {
 
         debug!("spawning worker with arguments: {}", spawn_args.join(" "));
 
-        // TODO: Need to buffer messages for worker to catch when it is ready
+        // TODO: Probably need to buffer messages for worker to catch when it is ready
         let SpawnResult {
             channel,
             payload_channel,
+            status_receiver,
         } = utils::spawn_with_worker_channels(Arc::clone(&executor), spawn_args)?;
 
         let id = WorkerId::new();
@@ -366,57 +369,61 @@ impl Inner {
 
         inner.setup_message_handling();
 
-        inner.wait_for_worker_process().await?;
+        let (early_status_sender, early_status_receiver) = async_oneshot::oneshot();
 
-        // TODO: Port this to thread-based worker
-        // let status_fut = inner.child.status();
         let inner = Arc::new(inner);
-        // {
-        //     let inner_weak = Arc::downgrade(&inner);
-        //     inner
-        //         .executor
-        //         .spawn(async move {
-        //             let status = status_fut.await;
-        //
-        //             if let Some(inner) = inner_weak.upgrade() {
-        //                 if let Ok(exit_status) = status {
-        //                     warn!("exit status {}", exit_status);
-        //
-        //                     if !inner.closed.swap(true, Ordering::SeqCst) {
-        //                         inner.handlers.dead.call(|callback| {
-        //                             callback(exit_status);
-        //                         });
-        //                         inner.handlers.close.call_simple();
-        //                     }
-        //                 }
-        //             }
-        //         })
-        //         .detach();
-        // }
+        {
+            let inner_weak = Arc::downgrade(&inner);
+            inner
+                .executor
+                .spawn(async move {
+                    let status = status_receiver
+                        .await
+                        .unwrap_or_else(|_closed| Err(ExitError::Unexpected));
+                    let _ = early_status_sender.send(status);
+
+                    if let Some(inner) = inner_weak.upgrade() {
+                        warn!("worker exited [id:{}]: {:?}", id, status);
+
+                        if !inner.closed.swap(true, Ordering::SeqCst) {
+                            inner.handlers.dead.call(|callback| {
+                                callback(status);
+                            });
+                            inner.handlers.close.call_simple();
+                        }
+                    }
+                })
+                .detach();
+        }
+
+        inner
+            .wait_for_worker_process(async move {
+                early_status_receiver
+                    .await
+                    .unwrap_or_else(|_closed| Err(ExitError::Unexpected))
+            })
+            .await?;
 
         Ok(inner)
     }
 
-    async fn wait_for_worker_process(&mut self) -> io::Result<()> {
-        // TODO: Port this to thread-based worker (add timeout)
-        // let status = self.child.status();
-        // future::or(
-        //     async move {
-        //         let status = status.await?;
-        //         let error_message = format!(
-        //             "worker process exited before being ready, exit status {}, code {:?}",
-        //             status,
-        //             status.code(),
-        //         );
-        //         Err(io::Error::new(io::ErrorKind::NotFound, error_message))
-        //     },
-        //     self.wait_for_worker_ready(),
-        // )
-        // .await
-        self.wait_for_worker_ready().await
+    async fn wait_for_worker_process<F>(&self, early_status_receiver: F) -> io::Result<()>
+    where
+        F: Future<Output = Result<(), ExitError>>,
+    {
+        self.wait_for_worker_ready()
+            .or(async move {
+                let status = early_status_receiver.await;
+                let error_message = format!(
+                    "worker process exited before being ready [id:{}]: exit status {:?}",
+                    self.id, status,
+                );
+                Err(io::Error::new(io::ErrorKind::NotFound, error_message))
+            })
+            .await
     }
 
-    async fn wait_for_worker_ready(&mut self) -> io::Result<()> {
+    async fn wait_for_worker_ready(&self) -> io::Result<()> {
         #[derive(Deserialize)]
         #[serde(tag = "event", rename_all = "lowercase")]
         enum Notification {
@@ -631,7 +638,10 @@ impl Worker {
     }
 
     /// Callback is called when the worker process unexpectedly dies.
-    pub fn on_dead<F: FnOnce(ExitStatus) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_dead<F: FnOnce(Result<(), ExitError>) + Send + Sync + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner.handlers.dead.add(Box::new(callback))
     }
 

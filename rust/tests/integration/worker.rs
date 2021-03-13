@@ -4,7 +4,7 @@ use mediasoup::worker::{
     WorkerDtlsFiles, WorkerLogLevel, WorkerLogTag, WorkerSettings, WorkerUpdateSettings,
 };
 use mediasoup::worker_manager::WorkerManager;
-use std::env;
+use std::{env, io};
 
 async fn init() -> WorkerManager {
     {
@@ -63,44 +63,43 @@ fn create_worker_succeeds() {
     });
 }
 
-// TODO: Implement necessary logic
-// #[test]
-// fn create_worker_wrong_settings() {
-//     future::block_on(async move {
-//         let worker_manager = init().await;
-//
-//         {
-//             let worker_result = worker_manager
-//                 .create_worker({
-//                     let mut settings = WorkerSettings::default();
-//
-//                     settings.rtc_ports_range = 1000..=999;
-//
-//                     settings
-//                 })
-//                 .await;
-//
-//             assert!(matches!(worker_result, Err(io::Error { .. })));
-//         }
-//
-//         {
-//             let worker_result = worker_manager
-//                 .create_worker({
-//                     let mut settings = WorkerSettings::default();
-//
-//                     settings.dtls_files = Some(WorkerDtlsFiles {
-//                         certificate: "/notfound/cert.pem".into(),
-//                         private_key: "/notfound/priv.pem".into(),
-//                     });
-//
-//                     settings
-//                 })
-//                 .await;
-//
-//             assert!(matches!(worker_result, Err(io::Error { .. })));
-//         }
-//     });
-// }
+#[test]
+fn create_worker_wrong_settings() {
+    future::block_on(async move {
+        let worker_manager = init().await;
+
+        {
+            let worker_result = worker_manager
+                .create_worker({
+                    let mut settings = WorkerSettings::default();
+
+                    settings.rtc_ports_range = 1000..=999;
+
+                    settings
+                })
+                .await;
+
+            assert!(matches!(worker_result, Err(io::Error { .. })));
+        }
+
+        {
+            let worker_result = worker_manager
+                .create_worker({
+                    let mut settings = WorkerSettings::default();
+
+                    settings.dtls_files = Some(WorkerDtlsFiles {
+                        certificate: "/notfound/cert.pem".into(),
+                        private_key: "/notfound/priv.pem".into(),
+                    });
+
+                    settings
+                })
+                .await;
+
+            assert!(matches!(worker_result, Err(io::Error { .. })));
+        }
+    });
+}
 
 #[test]
 fn update_settings_succeeds() {
