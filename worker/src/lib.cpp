@@ -25,11 +25,6 @@
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
-#include <mutex>
-
-/* Static. */
-
-static std::once_flag globalInitOnce;
 
 extern "C" int run_worker(
     int argc,
@@ -117,15 +112,11 @@ extern "C" int run_worker(
 
 	try
 	{
-		std::call_once(globalInitOnce, []{
-			// Initialize global static stuff once.
-			DepOpenSSL::ClassInit();
-			DepLibSRTP::ClassInit();
-			DepLibWebRTC::ClassInit();
-		});
-
 		// Initialize static stuff.
+		DepOpenSSL::ClassInit();
+		DepLibSRTP::ClassInit();
 		DepUsrSCTP::ClassInit();
+		DepLibWebRTC::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
@@ -137,7 +128,9 @@ extern "C" int run_worker(
 
 		// Free static stuff.
 		DepLibUV::ClassDestroy();
+		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
+		DepLibWebRTC::ClassDestroy();
 		RTC::DtlsTransport::ClassDestroy();
 		DepUsrSCTP::ClassDestroy();
 

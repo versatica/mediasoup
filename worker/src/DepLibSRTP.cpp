@@ -4,8 +4,12 @@
 #include "DepLibSRTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <mutex>
 
 /* Static variables. */
+
+static std::mutex globalSyncMutex;
+static size_t globalInstances = 0;
 
 // clang-format off
 std::vector<const char*> DepLibSRTP::errors =
@@ -45,17 +49,29 @@ void DepLibSRTP::ClassInit()
 {
 	MS_TRACE();
 
-	MS_DEBUG_TAG(info, "libsrtp version: \"%s\"", srtp_get_version_string());
+	{
+		std::lock_guard<std::mutex> lock (globalSyncMutex);
+		if (globalInstances == 0) {
+			MS_DEBUG_TAG(info, "libsrtp version: \"%s\"", srtp_get_version_string());
 
-	srtp_err_status_t err = srtp_init();
+			srtp_err_status_t err = srtp_init();
 
-	if (DepLibSRTP::IsError(err))
-		MS_THROW_ERROR("srtp_init() failed: %s", DepLibSRTP::GetErrorString(err));
+			if (DepLibSRTP::IsError(err))
+				MS_THROW_ERROR("srtp_init() failed: %s", DepLibSRTP::GetErrorString(err));
+		}
+		++globalInstances;
+	}
 }
 
 void DepLibSRTP::ClassDestroy()
 {
 	MS_TRACE();
 
-	srtp_shutdown();
+	{
+		std::lock_guard<std::mutex> lock (globalSyncMutex);
+		--globalInstances;
+		if (globalInstances == 0) {
+			srtp_shutdown();
+		}
+	}
 }
