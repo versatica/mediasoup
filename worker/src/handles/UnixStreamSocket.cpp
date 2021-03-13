@@ -151,7 +151,7 @@ void UnixStreamSocket::Close()
 		err       = uv_shutdown(
       req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 
-		if (err != 0)
+		if (err != 0 && err != UV_ENOTCONN)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
 	// Otherwise directly close the socket.
