@@ -7,6 +7,7 @@ extern "C" {
         argc: c_int,
         argv: *const *const c_char,
         version: *const c_char,
+        process_mode: bool,
         consumer_channel_fd: c_int,
         producer_channel_fd: c_int,
         payload_consumer_channel_fd: c_int,
