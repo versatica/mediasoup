@@ -31,7 +31,7 @@
 
 static std::once_flag globalInitOnce;
 
-extern "C" int run(
+extern "C" int run_worker(
     int argc,
     char* argv[],
     char* version,
