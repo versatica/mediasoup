@@ -92,9 +92,10 @@ void DepUsrSCTP::ClassDestroy()
 		--globalInstances;
 		if (globalInstances == 0) {
 			usrsctp_finish();
-			numSctpAssociations = 0u;
-			nextSctpAssociationId = 0u;
-			DepUsrSCTP::mapIdSctpAssociation.clear();
+			// TODO: This cleanup currently causes assertion errors in DepUsrSCTP::DeregisterSctpAssociation()
+			// numSctpAssociations = 0u;
+			// nextSctpAssociationId = 0u;
+			// DepUsrSCTP::mapIdSctpAssociation.clear();
 		}
 	}
 
