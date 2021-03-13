@@ -96,7 +96,7 @@ export declare class ShmTransport extends Transport {
      *
      * @virtual
      */
-    consume({ producerId, rtpCapabilities, paused, preferredLayers, appData }: ConsumerOptions): Promise<Consumer>;
+    consume({ producerId, rtpCapabilities, paused, preferredLayers, pipe, appData }: ConsumerOptions): Promise<Consumer>;
     /**
      * Provide the ShmTransport remote parameters.
      *

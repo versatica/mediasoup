@@ -118,7 +118,7 @@ export declare function canConsume(consumableParams: RtpParameters, caps: RtpCap
  * to reduce codecs, codecs' RTCP feedback and header extensions, and also enables
  * or disabled RTX.
  */
-export declare function getConsumerRtpParameters(consumableParams: RtpParameters, caps: RtpCapabilities): RtpParameters;
+export declare function getConsumerRtpParameters(consumableParams: RtpParameters, caps: RtpCapabilities, pipe: boolean): RtpParameters;
 /**
  * Generate RTP parameters for a pipe Consumer.
  *

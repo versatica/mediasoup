@@ -13,6 +13,7 @@ let audioProducer;
 let videoProducer;
 let audioConsumer;
 let videoConsumer;
+let videoPipeConsumer;
 
 const mediaCodecs =
 [
@@ -396,21 +397,90 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.currentLayers).toBeUndefined();
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
+	const onObserverNewConsumer3 = jest.fn();
+
+	transport2.observer.once('newconsumer', onObserverNewConsumer3);
+
+	expect(router.canConsume(
+		{
+			producerId      : videoProducer.id,
+			rtpCapabilities : consumerDeviceCapabilities
+		}))
+		.toBe(true);
+
+	videoPipeConsumer = await transport2.consume(
+		{
+			producerId      : videoProducer.id,
+			rtpCapabilities : consumerDeviceCapabilities,
+			pipe            : true
+		});
+
+	expect(onObserverNewConsumer3).toHaveBeenCalledTimes(1);
+	expect(onObserverNewConsumer3).toHaveBeenCalledWith(videoPipeConsumer);
+	expect(videoPipeConsumer.id).toBeType('string');
+	expect(videoPipeConsumer.producerId).toBe(videoProducer.id);
+	expect(videoPipeConsumer.closed).toBe(false);
+	expect(videoPipeConsumer.kind).toBe('video');
+	expect(videoPipeConsumer.rtpParameters).toBeType('object');
+	expect(videoPipeConsumer.rtpParameters.mid).toBeUndefined();
+	expect(videoPipeConsumer.rtpParameters.codecs.length).toBe(2);
+	expect(videoPipeConsumer.rtpParameters.codecs[0]).toEqual(
+		{
+			mimeType    : 'video/H264',
+			payloadType : 103,
+			clockRate   : 90000,
+			parameters  :
 			{
-				mapProducerIdConsumerIds :
-				{
-					[audioProducer.id] : [ audioConsumer.id ],
-					[videoProducer.id] : [ videoConsumer.id ]
-				},
-				mapConsumerIdProducerId :
-				{
-					[audioConsumer.id] : audioProducer.id,
-					[videoConsumer.id] : videoProducer.id
-				}
-			});
+				'packetization-mode' : 1,
+				'profile-level-id'   : '4d0032'
+			},
+			rtcpFeedback :
+			[
+				{ type: 'nack', parameter: '' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb', parameter: '' }
+			]
+		});
+	expect(videoPipeConsumer.rtpParameters.codecs[1]).toEqual(
+		{
+			mimeType     : 'video/rtx',
+			payloadType  : 104,
+			clockRate    : 90000,
+			parameters   : { apt: 103 },
+			rtcpFeedback : []
+		});
+	expect(videoPipeConsumer.type).toBe('pipe');
+	expect(videoPipeConsumer.paused).toBe(false);
+	expect(videoPipeConsumer.producerPaused).toBe(true);
+	expect(videoPipeConsumer.priority).toBe(1);
+	expect(videoPipeConsumer.score).toEqual(
+		{ score: 10, producerScore: 10, producerScores: [ 0, 0, 0, 0 ] });
+	expect(videoPipeConsumer.preferredLayers).toBeUndefined();
+	expect(videoPipeConsumer.currentLayers).toBeUndefined();
+	expect(videoPipeConsumer.appData).toBeUndefined;
+
+	const dump = await router.dump();
+
+	for (const key of Object.keys(dump.mapProducerIdConsumerIds))
+	{
+		dump.mapProducerIdConsumerIds[key] = dump.mapProducerIdConsumerIds[key].sort();
+	}
+
+	expect(dump).toMatchObject(
+		{
+			mapProducerIdConsumerIds :
+			{
+				[audioProducer.id] : [ audioConsumer.id ],
+				[videoProducer.id] : [ videoConsumer.id, videoPipeConsumer.id ].sort()
+			},
+			mapConsumerIdProducerId :
+			{
+				[audioConsumer.id]     : audioProducer.id,
+				[videoConsumer.id]     : videoProducer.id,
+				[videoPipeConsumer.id] : videoProducer.id
+			}
+		});
 
 	await expect(transport2.dump())
 		.resolves
@@ -418,7 +488,12 @@ test('transport.consume() succeeds', async () =>
 			{
 				id          : transport2.id,
 				producerIds : [],
-				consumerIds : expect.arrayContaining([ audioConsumer.id, videoConsumer.id ])
+				consumerIds : expect.arrayContaining(
+					[
+						audioConsumer.id,
+						videoConsumer.id,
+						videoPipeConsumer.id
+					])
 			});
 }, 2000);
 
@@ -822,13 +897,16 @@ test('consumer.close() succeeds', async () =>
 				mapConsumerIdProducerId  : {}
 			});
 
-	await expect(transport2.dump())
-		.resolves
+	const dump = await transport2.dump();
+
+	dump.consumerIds = dump.consumerIds.sort();
+
+	expect(dump)
 		.toMatchObject(
 			{
 				id          : transport2.id,
 				producerIds : [],
-				consumerIds : [ videoConsumer.id ]
+				consumerIds : [ videoConsumer.id, videoPipeConsumer.id ].sort()
 			});
 }, 2000);
 

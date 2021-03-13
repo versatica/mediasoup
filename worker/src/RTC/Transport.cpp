@@ -2043,8 +2043,15 @@ namespace RTC
 							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
 							// Pass it to the TCC client.
-							if (this->tccClient)
+							// clang-format off
+							if (
+								this->tccClient &&
+								this->tccClient->GetBweType() == RTC::BweType::REMB
+							)
+							// clang-format on
+							{
 								this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
+							}
 
 							break;
 						}

@@ -7,8 +7,7 @@
 
 /* Static. */
 
-// TODO: Look for a proper value.
-static const char FieldTrials[]{ "WebRTC-Pacer-MinPacketLimitMs/Enabled,100/" };
+static constexpr char FieldTrials[] = "WebRTC-Bwe-AlrLimitedBackoff/Enabled/";
 
 /* Static methods. */
 

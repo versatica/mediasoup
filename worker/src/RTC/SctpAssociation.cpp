@@ -427,19 +427,17 @@ namespace RTC
 
 		this->sctpBufferedAmount += len;
 
+		// Notify the listener about the buffered amount increase regardless
+		// usrsctp_sendv result.
+		// In case of failure the correct value will be later provided by usrsctp
+		// via onSendSctpData.
+		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpBufferedAmount);
+
 		int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
-		if (ret > 0)
-		{
-			// NOTE: 'usrsctp_sendv' returns the number of bytes sent.
-			this->listener->OnSctpAssociationBufferedAmount(this, this->sctpBufferedAmount);
-		}
-
 		if (ret < 0)
 		{
-			this->sctpBufferedAmount -= ret;
-
 			MS_WARN_TAG(
 			  sctp,
 			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
@@ -451,14 +449,12 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 		}
 		else if (cb)
 		{
 			(*cb)(true);
-
 			delete cb;
 		}
 

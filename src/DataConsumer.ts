@@ -49,6 +49,7 @@ export type DataConsumerStat =
 	protocol: string;
 	messagesSent: number;
 	bytesSent: number;
+	bufferedAmount: number;
 }
 
 /**
@@ -256,6 +257,7 @@ export class DataConsumer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.dataConsumerId);
+		this._payloadChannel.removeAllListeners(this._internal.dataConsumerId);
 
 		this.safeEmit('transportclose');
 
@@ -369,6 +371,7 @@ export class DataConsumer extends EnhancedEventEmitter
 
 					// Remove notification subscriptions.
 					this._channel.removeAllListeners(this._internal.dataConsumerId);
+					this._payloadChannel.removeAllListeners(this._internal.dataConsumerId);
 
 					this.emit('@dataproducerclose');
 					this.safeEmit('dataproducerclose');

@@ -438,7 +438,6 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 
@@ -453,7 +452,6 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 

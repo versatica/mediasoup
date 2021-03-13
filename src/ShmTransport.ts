@@ -174,6 +174,7 @@ export class ShmTransport extends Transport
 			rtpCapabilities,
 			paused = false,
 			preferredLayers,
+			pipe = false,
 			appData = {}
 		}: ConsumerOptions
 	): Promise<Consumer>
@@ -195,7 +196,7 @@ export class ShmTransport extends Transport
 
 		// This may throw.
 		const rtpParameters = ortc.getConsumerRtpParameters(
-			producer.consumableRtpParameters, rtpCapabilities!);
+			producer.consumableRtpParameters, rtpCapabilities!, pipe);
 
 		// Skipped MID, see in Transport.ts: rtpParameters.mid = `${this._nextMidForConsumers++}`;
 

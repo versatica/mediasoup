@@ -144,7 +144,7 @@ void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
 }
 
 void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
-  MS_DEBUG_DEV("SignalNetworkState:%s", network_available ? "Up" : "Down");
+  MS_DEBUG_DEV("<<<<< network_available:%s", network_available ? "true" : "false");
 
   NetworkAvailability msg;
   msg.at_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
@@ -176,6 +176,8 @@ void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
 
 void RtpTransportControllerSend::OnSentPacket(
     const rtc::SentPacket& sent_packet, size_t size) {
+  MS_DEBUG_DEV("<<<<< size:%zu", size);
+
   absl::optional<SentPacket> packet_msg =
       transport_feedback_adapter_.ProcessSentPacket(sent_packet);
   if (packet_msg)
@@ -186,6 +188,8 @@ void RtpTransportControllerSend::OnSentPacket(
 
 void RtpTransportControllerSend::OnTransportOverheadChanged(
     size_t transport_overhead_bytes_per_packet) {
+  MS_DEBUG_DEV("<<<<< transport_overhead_bytes_per_packet:%zu", transport_overhead_bytes_per_packet);
+
   if (transport_overhead_bytes_per_packet >= kMaxOverheadBytes) {
     MS_ERROR("transport overhead exceeds: %zu", kMaxOverheadBytes);
     return;
@@ -193,6 +197,8 @@ void RtpTransportControllerSend::OnTransportOverheadChanged(
 }
 
 void RtpTransportControllerSend::OnReceivedEstimatedBitrate(uint32_t bitrate) {
+  MS_DEBUG_DEV("<<<<< bitrate:%zu", bitrate);
+
   RemoteBitrateReport msg;
   msg.receive_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
   msg.bandwidth = DataRate::bps(bitrate);
@@ -204,6 +210,8 @@ void RtpTransportControllerSend::OnReceivedRtcpReceiverReport(
     const ReportBlockList& report_blocks,
     int64_t rtt_ms,
     int64_t now_ms) {
+  MS_DEBUG_DEV("<<<<< rtt_ms:%" PRIi64, rtt_ms);
+
   OnReceivedRtcpReceiverReportBlocks(report_blocks, now_ms);
 
   RoundTripTimeUpdate report;
@@ -225,6 +233,8 @@ void RtpTransportControllerSend::OnAddPacket(
 
 void RtpTransportControllerSend::OnTransportFeedback(
     const RTC::RTCP::FeedbackRtpTransportPacket& feedback) {
+  MS_DEBUG_DEV("<<<<<");
+
   absl::optional<TransportPacketsFeedback> feedback_msg =
       transport_feedback_adapter_.ProcessTransportFeedback(
           feedback, Timestamp::ms(DepLibUV::GetTimeMsInt64()));
@@ -267,6 +277,8 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
 }
 
 void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
+  MS_DEBUG_DEV("<<<<<");
+
   // RTC_DCHECK(controller_);
   MS_ASSERT(controller_, "controller not set");
 
@@ -277,6 +289,8 @@ void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
 }
 
 void RtpTransportControllerSend::UpdateStreamsConfig() {
+  MS_DEBUG_DEV("<<<<<");
+
   streams_config_.at_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
   if (controller_)
     PostUpdates(controller_->OnStreamsConfig(streams_config_));

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2019 Felix Weinrank
+ * Copyright (c) 2020 Felix Weinrank
  *
  * All rights reserved.
  *
@@ -83,5 +83,8 @@ debug_printf_stack(const char *format, ...);
 
 void
 debug_set_target(FILE *fp);
+
+#define FUZZER_ASSERT(x) if (!(x)) { printf("USRSCTP assertion failed: function %s, file %s, line %d.\n", __PRETTY_FUNCTION__, __FILE__, __LINE__); abort(); }
+ 
 
 #endif /* __PROGRAMS_HELPER_H__ */

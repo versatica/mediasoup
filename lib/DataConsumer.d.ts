@@ -41,6 +41,7 @@ export declare type DataConsumerStat = {
     protocol: string;
     messagesSent: number;
     bytesSent: number;
+    bufferedAmount: number;
 };
 /**
  * DataConsumer type.

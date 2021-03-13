@@ -1,0 +1,46 @@
+name: mediasoup-node
+
+on:
+  push:
+    branches: [ v3 ]
+
+jobs:
+  ci:
+    strategy:
+      matrix:
+        # Just 1 OS should be fine for TypeScript.
+        os:
+          - ubuntu-20.04
+          # - macos-11.0
+          # - windows-2019
+        node:
+          - 10
+          - 12
+          - 14
+          - 15
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Configure cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.npm
+            worker/deps
+            worker/out
+          key: ${{ matrix.os }}-node-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ matrix.os }}-node-
+
+      - run: npm install
+      - run: npm run lint:node
+      - run: npm run typescript:build
+      - run: npm run test:node

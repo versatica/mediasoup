@@ -1,12 +1,94 @@
 # Changelog
 
 
+### 3.6.34
+
+* Fix crash (regression, issue #529).
+
+
+### 3.6.33
+
+* Add missing `delete cb` that otherwise would leak (PR #527 based on PR #526 by @vpalmisano).
+* `router.pipeToRouter()`: Fix possible inconsistency in `pipeProducer.paused` status (as discussed in this [thread](https://mediasoup.discourse.group/t/concurrency-architecture/2515/) in the mediasoup forum).
+* Update `nlohmann/json` to 3.9.1.
+* Update `usrsctp`.
+* Update NPM deps.
+* Enhance Jitter calculation.
+
+
+### 3.6.32
+
+* Fix notifications from `mediasoup-worker` being processed before responses received before them (issue #501).
+
+
+### 3.6.31
+
+* Move `bufferedAmount` from `dataConsumer.dump()` to `dataConsumer.getStats()`.
+* Update NPM deps.
+
+
+### 3.6.30
+
+* Add `pipe` option to `transport.consume()`(PR #494).
+  - So the receiver will get all streams from the `Producer`.
+  - It works for any kind of transport (but `PipeTransport` which is always like this).
+* Update NPM deps.
+* Add `LICENSE` and `PATENTS` files in `libwebrtc` dependency (issue #495).
+* Added `worker/src/Utils/README_BASE64_UTILS` (issue #497).
+* Update `Catch` to 2.13.4.
+* Update `usrsctp`.
+
+
+### 3.6.29
+
+* Fix wrong message about `rtcMinPort` and `rtcMaxPort`.
+* Update deps.
+* Improve `EnhancedEventEmitter.safeAsPromise()` (although not used).
+
+
+### 3.6.28
+
+* Fix replacement of `__MEDIASOUP_VERSION__` in `lib/index.d.ts` (issue #483).
+* Update NPM deps.
+* `worker/scripts/configure.py`: Handle 'mips64' (PR #485).
+
+
+### 3.6.27
+
+* Update NPM deps.
+* Allow the `mediasoup-worker` process to inherit all environment variables (issue #480).
+
+
+### 3.6.26
+
+* BWE tweaks and debug logs.
+* Update NPM deps.
+
+
+### 3.6.25
+
+* Update `Catch` to 2.13.2.
+* Update NPM deps.
+* sctp fixes #479.
+
+
+### 3.6.24
+
+* Update `awaitqueue` dependency.
+
+
+### 3.6.23
+
+* Fix yet another memory leak in Node.js layer due to `PayloadChannel` event listener not being removed.
+* Update NPM deps.
+
+
 ### 3.6.22
 
 * `Transport.cpp`: Provide transport congestion client with RTCP Receiver Reports (#464).
 * Update `libuv` to 1.40.0.
 * Update Node deps.
-* SctpAssociation: increase sctpBufferedAmount before sending any data (#472).
+* `SctpAssociation.cpp`: increase `sctpBufferedAmount` before sending any data (#472).
 
 
 ### 3.6.21

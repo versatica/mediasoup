@@ -55,7 +55,7 @@ function get_gyp()
 function get_json()
 {
 	GIT_REPO="https://github.com/nlohmann/json.git"
-	GIT_TAG="v3.9.0"
+	GIT_TAG="v3.9.1"
 	DEST="deps/json"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -126,7 +126,7 @@ function get_abseil_cpp()
 function get_catch()
 {
 	GIT_REPO="https://github.com/catchorg/Catch2.git"
-	GIT_TAG="v2.13.1"
+	GIT_TAG="v2.13.4"
 	DEST="deps/catch"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
