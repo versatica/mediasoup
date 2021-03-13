@@ -419,7 +419,7 @@ impl Inner {
             .or(async move {
                 let status = early_status_receiver.await;
                 let error_message = format!(
-                    "worker process exited before being ready [id:{}]: exit status {:?}",
+                    "worker thread exited before being ready [id:{}]: exit status {:?}",
                     self.id, status,
                 );
                 Err(io::Error::new(io::ErrorKind::NotFound, error_message))

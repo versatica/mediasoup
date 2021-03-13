@@ -80,7 +80,6 @@ pub(super) fn run_worker_with_channels(
                 argc,
                 argv.as_ptr(),
                 version.as_ptr(),
-                false,
                 producer_fd_read,
                 consumer_fd_write,
                 producer_payload_fd_read,
