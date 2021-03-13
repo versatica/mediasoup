@@ -38,8 +38,10 @@ pub fn run(
     let argc = args.len() as c_int;
     let args_cstring = args
         .into_iter()
-        .map(|s| -> CString { CString::new(s).unwrap() });
+        .map(|s| -> CString { CString::new(s).unwrap() })
+        .collect::<Vec<_>>();
     let argv = args_cstring
+        .iter()
         .map(|arg| arg.as_ptr() as *const c_char)
         .collect::<Vec<_>>();
     let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
@@ -58,7 +60,7 @@ pub fn run(
     match status_code {
         0 => Ok(()),
         1 => Err(MediasoupWorkerError::Generic),
-        2 => Err(MediasoupWorkerError::Settings),
+        42 => Err(MediasoupWorkerError::Settings),
         status_code => Err(MediasoupWorkerError::Unknown { status_code }),
     }
 }
