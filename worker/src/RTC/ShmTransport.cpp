@@ -188,17 +188,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		jsonArray.emplace_back(json::value_t::object);
-		auto& jsonObject = jsonArray[0];
+		Transport::FillJsonStats(jsonArray);
 
+		auto& jsonObject = jsonArray[0];
 		// Add type.
 		jsonObject["type"] = "shm-transport";
-
-		// Add transportId.
-		jsonObject["transportId"] = this->id;
-
-		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
 	}
 
 	void ShmTransport::SendStreamClosed(uint32_t /*ssrc*/)
@@ -327,6 +321,15 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::TRANSPORT_CONSUME_STREAM_META:
+			{
+				if (RecvStreamMeta(request->data))
+					request->Accept();
+				else
+					request->Error("ShmTransport::RecvStreamMeta returned false");
+				break;
+			}
+
 			default:
 			{
 				// Pass it to the parent class.
@@ -396,6 +399,7 @@ namespace RTC
 						shm: ...
 					};
 */
+		MS_DEBUG_TAG(xcode, "received stream metadata [%s]", data.dump().c_str());
 
 		std::string metadata;
 		auto jsonMetaIt = data.find("meta");

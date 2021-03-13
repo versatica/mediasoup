@@ -663,6 +663,16 @@ export class Consumer extends EnhancedEventEmitter
 					break;
 				}
 
+				case 'idleshmconsumer':
+				{
+					this.safeEmit('idleshmconsumer');
+
+					// Emit observer event.
+					this._observer.safeEmit('idleshmconsumer');
+
+					break;
+				}
+
 				default:
 				{
 					logger.error('ignoring unknown event "%s"', event);
