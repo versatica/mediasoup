@@ -17,7 +17,7 @@ extern "C"
 
 /* Class variables. */
 
-struct Settings::Configuration Settings::configuration;
+thread_local struct Settings::Configuration Settings::configuration;
 // clang-format off
 std::map<std::string, LogLevel> Settings::string2LogLevel =
 {
