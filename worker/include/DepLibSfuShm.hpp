@@ -5,6 +5,7 @@
 extern "C" 
 {
 #include "/root/build/ff_shm_api/include/sfushm_av_media.h"
+#include "/root/build/ff_shm_api/include/sfushm_bin_log.h"
 }
 #include <vector>
 #include <string>
@@ -87,7 +88,7 @@ namespace DepLibSfuShm
 		};
 
   public:
-    ShmCtx(): wrt_ctx(nullptr), wrt_status(SHM_WRT_UNDEFINED) {}
+    ShmCtx();
     ~ShmCtx();
 
     static uint8_t* hex_dump(uint8_t *dst, uint8_t *src, size_t len);
@@ -119,6 +120,15 @@ namespace DepLibSfuShm
     void WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReportTs, Media kind);
     int WriteStreamMeta(std::string metadata, std::string shm);
     void WriteVideoOrientation(uint16_t rotation);
+
+  public:
+    // Binary log, public so that ShmConsumer or ShmTransport can write some data in
+    uint64_t                          bin_log_rec_intervals {2000}; // optionally configurable via sfui config
+    static xcode_sfushm_bin_log_ctx_t bin_log_ctx;                  // context for writing statistics to binary log
+    #define bin_log_record bin_log_ctx.record
+
+    void DumpBinLogDataIfNeeded(bool signal_set);
+
 
   private:
     void WriteAudioChunk(sfushm_av_frame_frag_t* data);
