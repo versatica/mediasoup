@@ -22,6 +22,8 @@ fn main() {
     println!("cargo:rustc-link-lib=static=webrtc");
     println!("cargo:rustc-link-lib=static=mediasoup-worker");
     println!("cargo:rustc-link-lib=static=abseil");
+    #[cfg(windows)]
+    println!("cargo:rustc-link-lib=static=getopt");
     println!(
         "cargo:rustc-link-search=native={}/out/Release",
         std::env::current_dir()
