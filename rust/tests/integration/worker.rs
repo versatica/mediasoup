@@ -177,38 +177,3 @@ fn close_event() {
         rx.await.expect("Failed to receive close event");
     });
 }
-
-// TODO: Maybe port this over
-// #[test]
-// fn emits_dead() {
-//     future::block_on(async move {
-//         let worker_manager = init().await;
-//
-//         for &signal in &[libc::SIGINT, libc::SIGTERM, libc::SIGKILL] {
-//             let worker = worker_manager
-//                 .create_worker(WorkerSettings::default())
-//                 .await
-//                 .expect("Failed to create worker with default settings");
-//
-//             let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-//             let _handler = worker.on_close(move || {
-//                 let _ = close_tx.send(());
-//             });
-//
-//             let (dead_tx, dead_rx) = async_oneshot::oneshot::<()>();
-//             let _handler = worker.on_dead(move |_exit_status| {
-//                 let _ = dead_tx.send(());
-//             });
-//
-//             unsafe {
-//                 // TODO
-//                 // libc::kill(worker.pid() as i32, signal);
-//             }
-//
-//             dead_rx.await.expect("Failed to receive dead event");
-//             close_rx.await.expect("Failed to receive close event");
-//
-//             assert_eq!(worker.closed(), true);
-//         }
-//     });
-// }
