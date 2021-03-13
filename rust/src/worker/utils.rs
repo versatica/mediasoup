@@ -29,7 +29,6 @@ pub(super) fn spawn_with_worker_channels(
     let (producer_payload_fd_read, producer_payload_fd_write) = unistd::pipe().unwrap();
     let (consumer_payload_fd_read, consumer_payload_fd_write) = unistd::pipe().unwrap();
 
-    // TODO: This is currently unstoppable thread
     std::thread::spawn(move || {
         let result = mediasoup_sys::run(
             args,
@@ -39,6 +38,7 @@ pub(super) fn spawn_with_worker_channels(
             consumer_payload_fd_write,
         );
 
+        // TODO: This result should be sent back somehow
         println!("Worker exit result: {:?}", result);
     });
 
