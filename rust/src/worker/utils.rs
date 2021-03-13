@@ -28,20 +28,18 @@ pub enum ExitError {
     Unexpected,
 }
 
-fn pipe() -> (c_int, c_int) {
+fn pipe() -> [c_int; 2] {
     unsafe {
         let mut fds = mem::MaybeUninit::<[c_int; 2]>::uninit();
 
-        let res = libc::pipe(fds.as_mut_ptr() as *mut c_int);
-
-        if res != 0 {
+        if libc::pipe(fds.as_mut_ptr() as *mut c_int) != 0 {
             panic!(
                 "libc::pipe() failed with code {}",
                 *libc::__errno_location()
             );
         }
 
-        (fds.assume_init()[0], fds.assume_init()[1])
+        fds.assume_init()
     }
 }
 
@@ -60,10 +58,10 @@ pub(super) fn run_worker_with_channels(
     // Take a lock to make sure we don't spawn workers from multiple threads concurrently, this
     // causes racy issues
     let _lock = SPAWNING.lock();
-    let (producer_fd_read, producer_fd_write) = pipe();
-    let (consumer_fd_read, consumer_fd_write) = pipe();
-    let (producer_payload_fd_read, producer_payload_fd_write) = pipe();
-    let (consumer_payload_fd_read, consumer_payload_fd_write) = pipe();
+    let [producer_fd_read, producer_fd_write] = pipe();
+    let [consumer_fd_read, consumer_fd_write] = pipe();
+    let [producer_payload_fd_read, producer_payload_fd_write] = pipe();
+    let [consumer_payload_fd_read, consumer_payload_fd_write] = pipe();
     let (status_sender, status_receiver) = async_oneshot::oneshot();
 
     std::thread::spawn(move || {
