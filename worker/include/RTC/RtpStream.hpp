@@ -103,6 +103,10 @@ namespace RTC
 		{
 			return this->params.spatialLayers;
 		}
+		bool HasDtx() const
+		{
+			return this->params.useDtx;
+		}
 		uint8_t GetTemporalLayers() const
 		{
 			return this->params.temporalLayers;
