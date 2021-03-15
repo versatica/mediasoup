@@ -1,6 +1,15 @@
 # Changelog
 
 
+### 3.6.36 (WIP)
+
+
+### 3.6.35
+
+* `XxxxConsumer.hpp`: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled (PR #534 due to issue #532).
+* Update NPM deps.
+
+
 ### 3.6.34
 
 * Fix crash (regression, issue #529).
