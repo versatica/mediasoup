@@ -141,9 +141,9 @@ namespace RTC
 		thread_local static EVP_PKEY* privateKey;
 		thread_local static SSL_CTX* sslCtx;
 		thread_local static uint8_t sslReadBuffer[];
-		thread_local static std::map<std::string, Role> string2Role;
-		thread_local static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
-		thread_local static std::map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
+		static std::map<std::string, Role> string2Role;
+		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
+		static std::map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
 		thread_local static std::vector<Fingerprint> localFingerprints;
 		thread_local static std::vector<SrtpCryptoSuiteMapEntry> srtpCryptoSuites;
 

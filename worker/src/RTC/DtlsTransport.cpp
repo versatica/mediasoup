@@ -99,14 +99,14 @@ namespace RTC
 		{ DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
 		{ DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
 	};
-	thread_local std::map<std::string, DtlsTransport::Role> DtlsTransport::string2Role =
+	std::map<std::string, DtlsTransport::Role> DtlsTransport::string2Role =
 	{
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }
 	};
-	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
-	thread_local std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
+	std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
+	std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
 	{
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },
