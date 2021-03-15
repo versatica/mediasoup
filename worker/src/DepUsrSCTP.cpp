@@ -67,6 +67,7 @@ void DepUsrSCTP::ClassInit()
 
 	{
 		std::lock_guard<std::mutex> lock(globalSyncMutex);
+
 		if (globalInstances == 0)
 		{
 			usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
@@ -78,6 +79,7 @@ void DepUsrSCTP::ClassInit()
 			usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
 #endif
 		}
+
 		++globalInstances;
 	}
 
@@ -91,6 +93,7 @@ void DepUsrSCTP::ClassDestroy()
 	{
 		std::lock_guard<std::mutex> lock(globalSyncMutex);
 		--globalInstances;
+
 		if (globalInstances == 0)
 		{
 			usrsctp_finish();

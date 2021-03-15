@@ -51,6 +51,7 @@ void DepLibSRTP::ClassInit()
 
 	{
 		std::lock_guard<std::mutex> lock(globalSyncMutex);
+
 		if (globalInstances == 0)
 		{
 			MS_DEBUG_TAG(info, "libsrtp version: \"%s\"", srtp_get_version_string());
@@ -60,6 +61,7 @@ void DepLibSRTP::ClassInit()
 			if (DepLibSRTP::IsError(err))
 				MS_THROW_ERROR("srtp_init() failed: %s", DepLibSRTP::GetErrorString(err));
 		}
+
 		++globalInstances;
 	}
 }
@@ -71,6 +73,7 @@ void DepLibSRTP::ClassDestroy()
 	{
 		std::lock_guard<std::mutex> lock(globalSyncMutex);
 		--globalInstances;
+
 		if (globalInstances == 0)
 		{
 			srtp_shutdown();
