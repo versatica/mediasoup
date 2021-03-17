@@ -1,8 +1,6 @@
 name: mediasoup-rust
 
-on:
-  push:
-    branches: [ v3 ]
+on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
