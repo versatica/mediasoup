@@ -1,8 +1,6 @@
 name: mediasoup-node
 
-on:
-  push:
-    branches: [ v3 ]
+on: [push, pull_request]
 
 jobs:
   ci:
