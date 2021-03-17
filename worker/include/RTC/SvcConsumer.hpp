@@ -39,7 +39,7 @@ namespace RTC
 			return (
 				RTC::Consumer::IsActive() &&
 				this->producerRtpStream &&
-				this->producerRtpStream->GetScore() > 0u
+				(this->producerRtpStream->GetScore() > 0u || this->producerRtpStream->HasDtx())
 			);
 			// clang-format on
 		}
