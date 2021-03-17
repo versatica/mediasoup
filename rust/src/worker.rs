@@ -511,7 +511,9 @@ impl Inner {
                         .send(result);
                 });
 
-        receiver.await.unwrap()
+        receiver.await.map_err(|_closed| {
+            io::Error::new(io::ErrorKind::Other, "Worker dropped before it is ready")
+        })?
     }
 
     fn setup_message_handling(&mut self) {
