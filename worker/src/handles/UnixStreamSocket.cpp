@@ -143,7 +143,7 @@ void UnixStreamSocket::Close()
 	}
 
 	// If there is no error and the peer didn't close its pipe side then close gracefully.
-	if (!this->hasError && !this->isClosedByPeer)
+	if (this->role == UnixStreamSocket::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
 		auto req  = new uv_shutdown_t;
@@ -151,7 +151,7 @@ void UnixStreamSocket::Close()
 		err       = uv_shutdown(
       req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
 
-		if (err != 0 && err != UV_ENOTCONN)
+		if (err != 0)
 			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
 	}
 	// Otherwise directly close the socket.
