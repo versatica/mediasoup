@@ -6,7 +6,7 @@
 
 ### 3.6.36
 
-* Add new Producer stats field 'rtxPacketsDiscarded' (#536)
+* `Producer`: Add new stats field 'rtxPacketsDiscarded' (#536).
 
 
 ### 3.6.35
