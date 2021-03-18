@@ -1,7 +1,12 @@
 # Changelog
 
 
-### 3.6.36 (WIP)
+### 3.6.37 (WIP)
+
+
+### 3.6.36
+
+* Add new Producer stats field 'rtxPacketsDiscarded' (#536)
 
 
 ### 3.6.35
