@@ -448,7 +448,13 @@ namespace RTC
 				auto jsonFingerprintsIt = jsonDtlsParametersIt->find("fingerprints");
 
 				if (jsonFingerprintsIt == jsonDtlsParametersIt->end() || !jsonFingerprintsIt->is_array())
+				{
 					MS_THROW_TYPE_ERROR("missing dtlsParameters.fingerprints");
+				}
+				else if (jsonFingerprintsIt->empty())
+				{
+					MS_THROW_TYPE_ERROR("empty dtlsParameters.fingerprints array");
+				}
 
 				// NOTE: Just take the first fingerprint.
 				for (auto& jsonFingerprint : *jsonFingerprintsIt)
