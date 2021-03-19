@@ -129,6 +129,7 @@ export type ProducerStat =
 	byteCount: number;
 	bitrate: number;
 	roundTripTime?: number;
+	rtxPacketsDiscarded?: number;
 	// RtpStreamRecv specific.
 	jitter: number;
 	bitrateByLayer?: any;

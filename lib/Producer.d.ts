@@ -105,6 +105,7 @@ export declare type ProducerStat = {
     byteCount: number;
     bitrate: number;
     roundTripTime?: number;
+    rtxPacketsDiscarded?: number;
     jitter: number;
     bitrateByLayer?: any;
 };
