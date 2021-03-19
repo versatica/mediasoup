@@ -321,7 +321,7 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 	dtlsRemoteParameters =
 	{
 		fingerprints : [],
-		role         : 'chicken'
+		role         : 'client'
 	};
 
 	await expect(transport.connect({ dtlsParameters: dtlsRemoteParameters }))
