@@ -467,7 +467,9 @@ namespace RTC
 					  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get<std::string>());
 
 					if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+					{
 						MS_THROW_TYPE_ERROR("invalid fingerprint.algorithm value");
+					}
 
 					auto jsonValueIt = jsonFingerprint.find("value");
 
