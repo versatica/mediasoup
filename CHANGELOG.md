@@ -1,12 +1,16 @@
 # Changelog
 
 
-### 3.6.37 (WIP)
+### 3.6.38 (WIP)
 
+
+### 3.6.37
+
+* Fix crash if empty `fingerprints` array is given in `webrtcTransport.connect()` (issue #537).
 
 ### 3.6.36
 
-* `Producer`: Add new stats field 'rtxPacketsDiscarded' (#536).
+* `Producer`: Add new stats field 'rtxPacketsDiscarded' (PR #536).
 
 
 ### 3.6.35
