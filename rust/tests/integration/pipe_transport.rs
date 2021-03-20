@@ -46,7 +46,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
     ]
@@ -167,7 +167,7 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(100),
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {

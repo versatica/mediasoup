@@ -79,6 +79,7 @@ pub struct PlainTransportOptions {
 }
 
 impl PlainTransportOptions {
+    /// Create Plain transport options with given listen IP.
     pub fn new(listen_ip: TransportListenIp) -> Self {
         Self {
             listen_ip,
@@ -128,6 +129,7 @@ pub struct PlainTransportDump {
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct PlainTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here

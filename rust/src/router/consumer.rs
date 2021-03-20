@@ -89,6 +89,7 @@ pub struct ConsumerOptions {
 }
 
 impl ConsumerOptions {
+    /// Create consumer options with given producer ID and RTP capabilities.
     pub fn new(producer_id: ProducerId, rtp_capabilities: RtpCapabilities) -> Self {
         Self {
             producer_id,
@@ -213,6 +214,7 @@ impl From<ProducerType> for ConsumerType {
 /// RTC statistics of the consumer alone.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub struct ConsumerStat {
     // Common to all RtpStreams.

@@ -38,7 +38,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
@@ -477,7 +477,7 @@ fn produce_unsupported_codecs() {
                         payload_type: 108,
                         clock_rate: NonZeroU32::new(32000).unwrap(),
                         channels: NonZeroU8::new(1).unwrap(),
-                        parameters: RtpCodecParametersParameters::new(),
+                        parameters: RtpCodecParametersParameters::default(),
                         rtcp_feedback: vec![],
                     }];
                     parameters.header_extensions = vec![];
@@ -559,7 +559,7 @@ fn produce_already_used_mid_ssrc() {
                         payload_type: 0,
                         clock_rate: NonZeroU32::new(48000).unwrap(),
                         channels: NonZeroU8::new(2).unwrap(),
-                        parameters: RtpCodecParametersParameters::new(),
+                        parameters: RtpCodecParametersParameters::default(),
                         rtcp_feedback: vec![],
                     }];
                     parameters.header_extensions = vec![];
@@ -593,7 +593,7 @@ fn produce_already_used_mid_ssrc() {
                         mime_type: MimeTypeVideo::Vp8,
                         payload_type: 112,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
-                        parameters: RtpCodecParametersParameters::new(),
+                        parameters: RtpCodecParametersParameters::default(),
                         rtcp_feedback: vec![],
                     }];
                     parameters.encodings = vec![RtpEncodingParameters {
@@ -623,7 +623,7 @@ fn produce_no_mid_single_encoding_without_dir_or_ssrc() {
                     payload_type: 111,
                     clock_rate: NonZeroU32::new(48000).unwrap(),
                     channels: NonZeroU8::new(2).unwrap(),
-                    parameters: RtpCodecParametersParameters::new(),
+                    parameters: RtpCodecParametersParameters::default(),
                     rtcp_feedback: vec![],
                 }];
                 parameters.header_extensions = vec![];

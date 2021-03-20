@@ -51,10 +51,12 @@ use thiserror::Error;
 pub struct TransportListenIps(Vec<TransportListenIp>);
 
 impl TransportListenIps {
+    /// Create transport listen IPs with given IP populated initially.
     pub fn new(listen_ip: TransportListenIp) -> Self {
         Self(vec![listen_ip])
     }
 
+    /// Insert another listen IP.
     pub fn insert(mut self, listen_ip: TransportListenIp) -> Self {
         self.0.push(listen_ip);
         self
@@ -130,6 +132,7 @@ pub struct WebRtcTransportOptions {
 }
 
 impl WebRtcTransportOptions {
+    /// Create WebRtc transport options with given listen IPs.
     pub fn new(listen_ips: TransportListenIps) -> Self {
         Self {
             listen_ips,
@@ -182,6 +185,7 @@ pub struct WebRtcTransportDump {
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct WebRtcTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here

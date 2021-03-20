@@ -20,7 +20,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
         preferred_payload_type: None,
         clock_rate: NonZeroU32::new(48000).unwrap(),
         channels: NonZeroU8::new(2).unwrap(),
-        parameters: RtpCodecParametersParameters::new(),
+        parameters: RtpCodecParametersParameters::default(),
         rtcp_feedback: vec![],
     }]
 }
@@ -35,7 +35,7 @@ fn audio_producer_options() -> ProducerOptions {
                 payload_type: 111,
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             }],
             ..RtpParameters::default()
@@ -50,7 +50,7 @@ fn consumer_device_capabilities() -> RtpCapabilities {
             preferred_payload_type: Some(100),
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         }],
         ..RtpCapabilities::default()

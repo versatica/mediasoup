@@ -19,10 +19,7 @@ use std::num::{NonZeroU32, NonZeroU8};
 pub struct RtpCodecParametersParameters(BTreeMap<String, RtpCodecParametersParametersValue>);
 
 impl RtpCodecParametersParameters {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
+    /// Insert another parameter into collection.
     pub fn insert<K, V>(&mut self, key: K, value: V) -> &mut Self
     where
         K: Into<String>,
@@ -32,12 +29,14 @@ impl RtpCodecParametersParameters {
         self
     }
 
+    /// Iterate over parameters in collection.
     pub fn iter(
         &self,
     ) -> std::collections::btree_map::Iter<'_, String, RtpCodecParametersParametersValue> {
         self.0.iter()
     }
 
+    /// Get specific parameter from collection.
     pub fn get(&self, key: &str) -> Option<&RtpCodecParametersParametersValue> {
         self.0.get(key)
     }
@@ -665,6 +664,7 @@ pub struct RtpParameters {
     pub rtcp: RtcpParameters,
 }
 
+/// Single value used in RTP codec parameters.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum RtpCodecParametersParametersValue {
@@ -902,8 +902,10 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
     }
 }
 
+/// RTX stream information. It must contain a numeric ssrc field indicating the RTX SSRC.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtpEncodingParametersRtx {
+    /// The media SSRC.
     pub ssrc: u32,
 }
 
@@ -936,8 +938,10 @@ pub struct RtpEncodingParameters {
     /// See [webrtc-svc](https://w3c.github.io/webrtc-svc/).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scalability_mode: Option<String>,
+    /// Factor by which to reduce the size of a video track during encoding.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scale_resolution_down_by: Option<f64>,
+    /// Maximum number of bits per second to allow a track encoded with this encoding to use.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_bitrate: Option<u32>,
 }

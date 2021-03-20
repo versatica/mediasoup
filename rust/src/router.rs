@@ -97,6 +97,7 @@ pub struct RouterOptions {
 }
 
 impl RouterOptions {
+    /// Create router options with given list of declared media codecs.
     pub fn new(media_codecs: Vec<RtpCodecCapability>) -> Self {
         Self {
             media_codecs,
@@ -140,6 +141,7 @@ pub struct PipeToRouterOptions {
 }
 
 impl PipeToRouterOptions {
+    /// Crate pipe options for piping into given local router.
     pub fn new(router: Router) -> Self {
         Self {
             router,
@@ -481,6 +483,7 @@ impl Router {
         &self.inner.app_data
     }
 
+    /// Whether router is closed.
     pub fn closed(&self) -> bool {
         self.inner.closed.load(Ordering::SeqCst)
     }
@@ -908,7 +911,7 @@ impl Router {
     ///                    preferred_payload_type: Some(100),
     ///                    clock_rate: NonZeroU32::new(48000).unwrap(),
     ///                    channels: NonZeroU8::new(2).unwrap(),
-    ///                    parameters: RtpCodecParametersParameters::new(),
+    ///                    parameters: RtpCodecParametersParameters::default(),
     ///                    rtcp_feedback: vec![],
     ///                },
     ///            ],

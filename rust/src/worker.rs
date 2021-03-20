@@ -43,25 +43,31 @@ uuid_based_wrapper_type!(
 /// Error that caused request to mediasoup-worker thread to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RequestError {
-    /// Channel already closed
+    /// Channel already closed.
     #[error("Channel already closed")]
     ChannelClosed,
-    /// Message is too long
+    /// Message is too long.
     #[error("Message is too long")]
     MessageTooLong,
-    /// Payload is too long
+    /// Payload is too long.
     #[error("Payload is too long")]
     PayloadTooLong,
-    /// Request timed out
+    /// Request timed out.
     #[error("Request timed out")]
     TimedOut,
-    /// Received response error
+    /// Received response error.
     #[error("Received response error: {reason}")]
-    Response { reason: String },
-    /// Failed to parse response from worker
+    Response {
+        /// Error reason.
+        reason: String,
+    },
+    /// Failed to parse response from worker.
     #[error("Failed to parse response from worker: {error}")]
-    FailedToParse { error: String },
-    /// Worker did not return any data in response
+    FailedToParse {
+        /// Error reason.
+        error: String,
+    },
+    /// Worker did not return any data in response.
     #[error("Worker did not return any data in response")]
     NoData,
 }

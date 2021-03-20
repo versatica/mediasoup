@@ -23,7 +23,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -31,7 +31,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(0),
                 clock_rate: NonZeroU32::new(8000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -39,7 +39,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(8),
                 clock_rate: NonZeroU32::new(8000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -47,7 +47,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(32000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -55,7 +55,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(16000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -63,7 +63,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(9),
                 clock_rate: NonZeroU32::new(8000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -71,7 +71,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(8000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -79,7 +79,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(24000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -87,7 +87,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(16000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -95,7 +95,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(12000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -103,7 +103,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(8000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
@@ -111,7 +111,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(13),
                 clock_rate: NonZeroU32::new(32000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
@@ -119,7 +119,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(13),
                 clock_rate: NonZeroU32::new(16000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
@@ -127,7 +127,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(13),
                 clock_rate: NonZeroU32::new(8000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
@@ -135,7 +135,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
@@ -143,7 +143,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(32000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
@@ -151,7 +151,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(16000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Audio {
@@ -159,14 +159,14 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(8000).unwrap(),
                 channels: NonZeroU8::new(1).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::Vp8,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
                     RtcpFeedback::NackPli,
@@ -179,7 +179,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 mime_type: MimeTypeVideo::Vp9,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
                     RtcpFeedback::NackPli,

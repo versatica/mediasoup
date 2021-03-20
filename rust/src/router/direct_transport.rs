@@ -94,6 +94,7 @@ pub struct DirectTransportDump {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct DirectTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here

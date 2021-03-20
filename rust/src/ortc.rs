@@ -85,17 +85,23 @@ pub enum RtpParametersMappingError {
     /// Unsupported codec.
     #[error("Unsupported codec [mime_type:{mime_type:?}, payloadType:{payload_type}]")]
     UnsupportedCodec {
-        /// Mime type
+        /// Mime type.
         mime_type: MimeType,
-        /// Payload type
+        /// Payload type.
         payload_type: u8,
     },
     /// No RTX codec for capability codec PT.
     #[error("No RTX codec for capability codec PT {preferred_payload_type}")]
-    UnsupportedRtxCodec { preferred_payload_type: u8 },
+    UnsupportedRtxCodec {
+        /// Preferred payload type.
+        preferred_payload_type: u8,
+    },
     /// Missing media codec found for RTX PT.
     #[error("Missing media codec found for RTX PT {payload_type}")]
-    MissingMediaCodecForRtx { payload_type: u8 },
+    MissingMediaCodecForRtx {
+        /// Payload type.
+        payload_type: u8,
+    },
 }
 
 /// Error caused by bad consumer RTP parameters.

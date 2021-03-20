@@ -178,6 +178,7 @@ pub struct ProducerVideoOrientation {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct ProducerStat {
     // Common to all RtpStreams.
     // `type` field is present in worker, but ignored here
@@ -821,6 +822,7 @@ impl NonClosingProducer {
         }
     }
 
+    /// Get inner [`Producer`] (which will close on drop in contrast to `NonClosingProducer`).
     pub fn into_inner(mut self) -> Producer {
         self.on_drop.take();
         self.producer.clone()

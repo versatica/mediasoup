@@ -81,7 +81,7 @@ pub struct IceParameters {
     pub ice_lite: Option<bool>,
 }
 
-/// ICE candidate type
+/// ICE candidate type.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum IceCandidateType {
@@ -113,9 +113,9 @@ pub enum IceCandidateTcpType {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TransportProtocol {
-    /// Tcp
+    /// TCP.
     Tcp,
-    /// Udp
+    /// UDP.
     Udp,
 }
 

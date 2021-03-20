@@ -66,6 +66,7 @@ impl DataProducerOptions {
         }
     }
 
+    /// Data producer options for non-Direct transport.
     pub fn new_sctp(sctp_stream_parameters: SctpStreamParameters) -> Self {
         Self {
             id: None,
@@ -76,7 +77,7 @@ impl DataProducerOptions {
         }
     }
 
-    /// For DirectTransport.
+    /// Data producer options for Direct transport.
     pub fn new_direct() -> Self {
         Self {
             id: None,
@@ -114,6 +115,7 @@ pub struct DataProducerDump {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct DataProducerStat {
     // `type` field is present in worker, but ignored here
     pub timestamp: u64,
@@ -494,6 +496,8 @@ impl NonClosingDataProducer {
         }
     }
 
+    /// Get inner [`DataProducer`] (which will close on drop in contrast to
+    /// `NonClosingDataProducer`).
     pub fn into_inner(mut self) -> DataProducer {
         self.on_drop.take();
         self.data_producer.clone()

@@ -40,7 +40,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
