@@ -3,8 +3,6 @@ use crate::worker::{Channel, PayloadChannel};
 use async_executor::Executor;
 use async_fs::File;
 use async_oneshot::Receiver;
-use once_cell::sync::Lazy;
-use parking_lot::Mutex;
 use std::ffi::CString;
 use std::mem;
 use std::os::raw::{c_char, c_int};
@@ -43,8 +41,6 @@ fn pipe() -> [c_int; 2] {
     }
 }
 
-static SPAWNING: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
-
 pub(super) struct WorkerRunResult {
     pub(super) channel: Channel,
     pub(super) payload_channel: PayloadChannel,
@@ -55,9 +51,6 @@ pub(super) fn run_worker_with_channels(
     executor: Arc<Executor<'static>>,
     args: Vec<String>,
 ) -> WorkerRunResult {
-    // Take a lock to make sure we don't spawn workers from multiple threads concurrently, this
-    // causes racy issues
-    let _lock = SPAWNING.lock();
     let [producer_fd_read, producer_fd_write] = pipe();
     let [consumer_fd_read, consumer_fd_write] = pipe();
     let [producer_payload_fd_read, producer_payload_fd_write] = pipe();
