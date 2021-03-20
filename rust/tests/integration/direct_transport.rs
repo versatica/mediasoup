@@ -300,7 +300,7 @@ fn close_event() {
     future::block_on(async move {
         let (_worker, _router, transport) = init().await;
 
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
         let _handler = transport.on_close(Box::new(move || {
             let _ = close_tx.send(());
         }));

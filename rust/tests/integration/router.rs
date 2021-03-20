@@ -126,7 +126,7 @@ fn close_event() {
             .await
             .expect("Failed to create router");
 
-        let (tx, rx) = async_oneshot::oneshot::<()>();
+        let (mut tx, rx) = async_oneshot::oneshot::<()>();
         let _handler = router.on_close(move || {
             let _ = tx.send(());
         });

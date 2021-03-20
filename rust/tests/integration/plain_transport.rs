@@ -529,7 +529,7 @@ fn close_event() {
             .await
             .expect("Failed to create Plain transport");
 
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
         let _handler = transport.on_close(Box::new(move || {
             let _ = close_tx.send(());
         }));

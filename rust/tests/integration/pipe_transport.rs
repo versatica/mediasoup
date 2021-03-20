@@ -927,7 +927,7 @@ fn producer_close_is_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to consume video");
 
-        let (producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
+        let (mut producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
         let _handler = video_consumer.on_producer_close(move || {
             let _ = producer_close_tx.send(());
         });
@@ -1074,7 +1074,7 @@ fn data_producer_close_is_transmitted_to_pipe_data_consumer() {
             .await
             .expect("Failed to create data consumer");
 
-        let (data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
+        let (mut data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
         let _handler = data_consumer.on_data_producer_close(move || {
             let _ = data_producer_close_tx.send(());
         });

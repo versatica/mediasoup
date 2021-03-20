@@ -149,7 +149,7 @@ fn close_event() {
             .await
             .expect("Failed to create AudioLevelObserver");
 
-        let (tx, rx) = async_oneshot::oneshot::<()>();
+        let (mut tx, rx) = async_oneshot::oneshot::<()>();
         let _handler = audio_level_observer.on_close(Box::new(move || {
             let _ = tx.send(());
         }));

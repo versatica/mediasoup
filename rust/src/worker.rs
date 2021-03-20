@@ -335,7 +335,7 @@ impl Inner {
 
         inner.setup_message_handling();
 
-        let (early_status_sender, early_status_receiver) = async_oneshot::oneshot();
+        let (mut early_status_sender, early_status_receiver) = async_oneshot::oneshot();
 
         let inner = Arc::new(inner);
         {

@@ -886,7 +886,7 @@ fn close_event() {
             .expect("Failed to produce audio");
 
         {
-            let (tx, rx) = async_oneshot::oneshot::<()>();
+            let (mut tx, rx) = async_oneshot::oneshot::<()>();
             let _handler = audio_producer.on_close(move || {
                 let _ = tx.send(());
             });

@@ -31,12 +31,12 @@ fn worker_close_event() {
             .await
             .expect("Failed to create router");
 
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
         let _handler = router.on_close(move || {
             let _ = close_tx.send(());
         });
 
-        let (worker_close_tx, worker_close_rx) = async_oneshot::oneshot::<()>();
+        let (mut worker_close_tx, worker_close_rx) = async_oneshot::oneshot::<()>();
         let _handler = router.on_worker_close(move || {
             let _ = worker_close_tx.send(());
         });

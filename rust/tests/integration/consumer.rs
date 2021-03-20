@@ -1326,7 +1326,7 @@ fn close_event() {
             .expect("Failed to consume audio");
 
         {
-            let (tx, rx) = async_oneshot::oneshot::<()>();
+            let (mut tx, rx) = async_oneshot::oneshot::<()>();
             let _handler = audio_consumer.on_close(move || {
                 let _ = tx.send(());
             });
@@ -1376,12 +1376,12 @@ fn producer_close_event() {
             .await
             .expect("Failed to consume audio");
 
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
         let _handler = audio_consumer.on_close(move || {
             let _ = close_tx.send(());
         });
 
-        let (producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
+        let (mut producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
         let _handler = audio_consumer.on_producer_close(move || {
             let _ = producer_close_tx.send(());
         });

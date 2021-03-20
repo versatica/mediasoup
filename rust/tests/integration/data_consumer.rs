@@ -462,7 +462,7 @@ fn close_event() {
             .expect("Failed to consume data");
 
         {
-            let (tx, rx) = async_oneshot::oneshot::<()>();
+            let (mut tx, rx) = async_oneshot::oneshot::<()>();
             let _handler = data_consumer.on_close(move || {
                 let _ = tx.send(());
             });
@@ -527,12 +527,12 @@ fn data_producer_close_event() {
             .await
             .expect("Failed to consume data");
 
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
         let _handler = data_consumer.on_close(move || {
             let _ = close_tx.send(());
         });
 
-        let (data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
+        let (mut data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
         let _handler = data_consumer.on_data_producer_close(move || {
             let _ = data_producer_close_tx.send(());
         });

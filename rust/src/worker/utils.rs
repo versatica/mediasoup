@@ -58,7 +58,7 @@ pub(super) fn run_worker_with_channels(
     let [consumer_fd_read, consumer_fd_write] = pipe();
     let [producer_payload_fd_read, producer_payload_fd_write] = pipe();
     let [consumer_payload_fd_read, consumer_payload_fd_write] = pipe();
-    let (status_sender, status_receiver) = async_oneshot::oneshot();
+    let (mut status_sender, status_receiver) = async_oneshot::oneshot();
 
     let producer_file = unsafe { File::from_raw_fd(producer_fd_write) };
     let consumer_file = unsafe { File::from_raw_fd(consumer_fd_read) };

@@ -38,12 +38,12 @@ fn router_close_event() {
             .await
             .expect("Failed to create AudioLevelObserver");
 
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
         let _handler = audio_level_observer.on_close(Box::new(move || {
             let _ = close_tx.send(());
         }));
 
-        let (router_close_tx, router_close_rx) = async_oneshot::oneshot::<()>();
+        let (mut router_close_tx, router_close_rx) = async_oneshot::oneshot::<()>();
         let _handler = audio_level_observer.on_router_close(Box::new(move || {
             let _ = router_close_tx.send(());
         }));
