@@ -5,7 +5,7 @@
 mod tests;
 
 use crate::consumer::RtpStreamParams;
-use crate::data_structures::{AppData, EventDirection};
+use crate::data_structures::{AppData, TraceEventDirection};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
     ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
@@ -64,6 +64,7 @@ pub struct ProducerOptions {
 }
 
 impl ProducerOptions {
+    /// Create producer options that will be used with Pipe transport
     pub fn new_pipe_transport(
         producer_id: ProducerId,
         kind: MediaKind,
@@ -79,6 +80,7 @@ impl ProducerOptions {
         }
     }
 
+    /// Create producer options that will be used with non-Pipe transport
     pub fn new(kind: MediaKind, rtp_parameters: RtpParameters) -> Self {
         Self {
             id: None,
@@ -146,12 +148,17 @@ pub struct ProducerScore {
     pub score: u8,
 }
 
+/// Rotation angle
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]
 pub enum Rotation {
+    /// 0
     None = 0,
+    /// 90 (clockwise)
     Clockwise = 90,
+    /// 180
     Rotate180 = 180,
+    /// 270 (90 counter-clockwise)
     CounterClockwise = 270,
 }
 
@@ -204,47 +211,52 @@ pub struct ProducerStat {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ProducerTraceEventData {
+    /// RTP packet.
     Rtp {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTP video keyframe packet.
     KeyFrame {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP NACK packet.
     Nack {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP PLI packet.
     Pli {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP FIR packet.
     Fir {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,

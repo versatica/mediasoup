@@ -4,7 +4,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_structures::{AppData, EventDirection};
+use crate::data_structures::{AppData, TraceEventDirection};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
     ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
@@ -243,7 +243,9 @@ pub struct ConsumerStat {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum ConsumerStats {
+    /// RTC statistics without producer
     JustConsumer((ConsumerStat,)),
+    /// RTC statistics with producer
     WithProducer((ConsumerStat, ProducerStat)),
 }
 
@@ -251,47 +253,52 @@ pub enum ConsumerStats {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ConsumerTraceEventData {
+    /// RTP packet.
     Rtp {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTP video keyframe packet.
     KeyFrame {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP NACK packet.
     Nack {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP PLI packet.
     Pli {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP FIR packet.
     Fir {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,

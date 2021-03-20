@@ -218,6 +218,7 @@ where
 #[serde(tag = "kind", rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum RtpCodecCapabilityFinalized {
+    /// Audio codec
     #[serde(rename_all = "camelCase")]
     Audio {
         /// The codec MIME media type/subtype (e.g. 'audio/opus').
@@ -235,6 +236,7 @@ pub enum RtpCodecCapabilityFinalized {
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
+    /// Video codec
     #[serde(rename_all = "camelCase")]
     Video {
         /// The codec MIME media type/subtype (e.g. 'video/VP8').
@@ -312,7 +314,9 @@ pub struct RtpCapabilitiesFinalized {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum MediaKind {
+    /// Audio
     Audio,
+    /// Video
     Video,
 }
 
@@ -320,7 +324,9 @@ pub enum MediaKind {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum MimeType {
+    /// Audio
     Audio(MimeTypeAudio),
+    /// Video
     Video(MimeTypeVideo),
 }
 
@@ -406,6 +412,7 @@ pub enum MimeTypeVideo {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum RtpCodecCapability {
+    /// Audio codec capability
     #[serde(rename_all = "camelCase")]
     Audio {
         /// The codec MIME media type/subtype (e.g. 'audio/opus').
@@ -424,6 +431,7 @@ pub enum RtpCodecCapability {
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
+    /// Video codec capability
     #[serde(rename_all = "camelCase")]
     Video {
         /// The codec MIME media type/subtype (e.g. 'video/VP8').
@@ -502,9 +510,13 @@ pub struct RtpCapabilities {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RtpHeaderExtensionDirection {
+    /// SendRecv
     SendRecv,
+    /// SendOnly
     SendOnly,
+    /// RecvOnly
     RecvOnly,
+    /// Inactive
     Inactive,
 }
 
@@ -553,6 +565,7 @@ pub enum RtpHeaderExtensionUri {
 }
 
 impl RtpHeaderExtensionUri {
+    /// RTP header extension as a string
     pub fn as_str(&self) -> &'static str {
         match self {
             RtpHeaderExtensionUri::Mid => "urn:ietf:params:rtp-hdrext:sdes:mid",
@@ -655,7 +668,9 @@ pub struct RtpParameters {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum RtpCodecParametersParametersValue {
+    /// String value
     String(String),
+    /// Numerical value
     Number(u32),
 }
 
@@ -695,6 +710,7 @@ impl From<u32> for RtpCodecParametersParametersValue {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged, rename_all = "lowercase")]
 pub enum RtpCodecParameters {
+    /// Audio codec
     #[serde(rename_all = "camelCase")]
     Audio {
         /// The codec MIME media type/subtype (e.g. `audio/opus`).
@@ -713,6 +729,7 @@ pub enum RtpCodecParameters {
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
+    /// Video codec
     #[serde(rename_all = "camelCase")]
     Video {
         /// The codec MIME media type/subtype (e.g. `video/VP8`).

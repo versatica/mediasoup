@@ -11,7 +11,7 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, EventDirection};
+use crate::data_structures::{AppData, TraceEventDirection};
 use crate::messages::{
     ConsumerInternal, DataConsumerInternal, DataProducerInternal, ProducerInternal,
     TransportConsumeData, TransportConsumeDataData, TransportConsumeDataRequest,
@@ -62,7 +62,7 @@ pub enum TransportTraceEventData {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
@@ -72,7 +72,7 @@ pub enum TransportTraceEventData {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,

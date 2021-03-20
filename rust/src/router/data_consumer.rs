@@ -541,8 +541,8 @@ impl DataConsumer {
         Ok(response.buffered_amount)
     }
 
-    // Whenever the underlying SCTP association buffered bytes drop to this value,
-    // `on_buffered_amount_low` callback is called.
+    /// Whenever the underlying SCTP association buffered bytes drop to this value,
+    /// `on_buffered_amount_low` callback is called.
     pub async fn set_buffered_amount_low_threshold(
         &self,
         threshold: u32,

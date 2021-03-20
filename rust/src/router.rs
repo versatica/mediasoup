@@ -284,15 +284,20 @@ pub struct RouterDump {
 /// New transport that was just created.
 #[derive(Debug)]
 pub enum NewTransport<'a> {
+    /// Direct transport
     Direct(&'a DirectTransport),
+    /// Pipe transport
     Pipe(&'a PipeTransport),
+    /// Plain transport
     Plain(&'a PlainTransport),
+    /// WebRtc transport
     WebRtc(&'a WebRtcTransport),
 }
 
 /// New RTP observer that was just created.
 #[derive(Debug)]
 pub enum NewRtpObserver<'a> {
+    /// Audio level observer
     AudioLevel(&'a AudioLevelObserver),
 }
 

@@ -39,6 +39,7 @@ impl DerefMut for AppData {
 }
 
 impl AppData {
+    /// Construct app data from almost anything
     pub fn new<T: Any + Send + Sync>(app_data: T) -> Self {
         Self(Arc::new(app_data))
     }
@@ -104,6 +105,7 @@ pub enum IceCandidateType {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum IceCandidateTcpType {
+    /// Passive
     Passive,
 }
 
@@ -111,7 +113,9 @@ pub enum IceCandidateTcpType {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TransportProtocol {
+    /// Tcp
     Tcp,
+    /// Udp
     Udp,
 }
 
@@ -166,6 +170,7 @@ pub enum IceState {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum TransportTuple {
+    /// Transport tuple with remote endpoint info
     #[serde(rename_all = "camelCase")]
     WithRemote {
         /// Local IP address.
@@ -179,6 +184,7 @@ pub enum TransportTuple {
         /// Protocol
         protocol: TransportProtocol,
     },
+    /// Transport tuple without remote endpoint info
     #[serde(rename_all = "camelCase")]
     LocalOnly {
         /// Local IP address.
@@ -247,22 +253,27 @@ impl Default for DtlsRole {
 /// corresponding certificate fingerprint value.
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum DtlsFingerprint {
+    /// sha-1
     Sha1 {
         /// Certificate fingerprint value.
         value: [u8; 20],
     },
+    /// sha-224
     Sha224 {
         /// Certificate fingerprint value.
         value: [u8; 28],
     },
+    /// sha-256
     Sha256 {
         /// Certificate fingerprint value.
         value: [u8; 32],
     },
+    /// sha-384
     Sha384 {
         /// Certificate fingerprint value.
         value: [u8; 48],
     },
+    /// sha-512
     Sha512 {
         /// Certificate fingerprint value.
         value: [u8; 64],
@@ -685,10 +696,13 @@ pub struct DtlsParameters {
     pub fingerprints: Vec<DtlsFingerprint>,
 }
 
+/// Trace event direction
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum EventDirection {
+pub enum TraceEventDirection {
+    /// In
     In,
+    /// Out
     Out,
 }
 
@@ -696,9 +710,13 @@ pub enum EventDirection {
 /// consumers.
 #[derive(Debug, Clone)]
 pub enum WebRtcMessage {
+    /// String
     String(String),
+    /// Binary
     Binary(Bytes),
+    /// EmptyString
     EmptyString,
+    /// EmptyBinary
     EmptyBinary,
 }
 

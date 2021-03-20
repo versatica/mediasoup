@@ -11,6 +11,7 @@ use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
 use thiserror::Error;
 
+/// Worker exit error
 #[derive(Debug, Copy, Clone, Error)]
 pub enum ExitError {
     /// Generic error.
@@ -21,7 +22,10 @@ pub enum ExitError {
     Settings,
     /// Unknown error.
     #[error("Worker exited with unknown error and status code {status_code}")]
-    Unknown { status_code: i32 },
+    Unknown {
+        /// Status code returned by worker
+        status_code: i32,
+    },
     /// Unexpected error.
     #[error("Worker exited unexpectedly")]
     Unexpected,

@@ -64,7 +64,10 @@ pub enum RtpParametersError {
 pub enum RtpCapabilitiesError {
     /// Media codec not supported.
     #[error("Media codec not supported [mime_type:{mime_type:?}")]
-    UnsupportedCodec { mime_type: MimeType },
+    UnsupportedCodec {
+        /// Mime type
+        mime_type: MimeType,
+    },
     /// Cannot allocate more dynamic codec payload types.
     #[error("Cannot allocate more dynamic codec payload types")]
     CannotAllocate,
@@ -82,7 +85,9 @@ pub enum RtpParametersMappingError {
     /// Unsupported codec.
     #[error("Unsupported codec [mime_type:{mime_type:?}, payloadType:{payload_type}]")]
     UnsupportedCodec {
+        /// Mime type
         mime_type: MimeType,
+        /// Payload type
         payload_type: u8,
     },
     /// No RTX codec for capability codec PT.
