@@ -319,7 +319,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 
     // Match parameters media codecs to capabilities media codecs.
     let mut codec_to_cap_codec =
-        BTreeMap::<&RtpCodecParameters, Cow<RtpCodecCapabilityFinalized>>::new();
+        BTreeMap::<&RtpCodecParameters, Cow<'_, RtpCodecCapabilityFinalized>>::new();
 
     for codec in rtp_parameters.codecs.iter() {
         if codec.is_rtx() {
@@ -971,8 +971,8 @@ impl<'a> From<&'a RtpCodecParameters> for CodecToMatch<'a> {
 
 /// Returns selected `Ok(Some(profile-level-id))` for H264 codec and `Ok(None)` for others
 fn match_codecs(
-    codec_a: CodecToMatch,
-    codec_b: CodecToMatch,
+    codec_a: CodecToMatch<'_>,
+    codec_b: CodecToMatch<'_>,
     strict: bool,
 ) -> Result<Option<String>, ()> {
     if codec_a.mime_type != codec_b.mime_type {

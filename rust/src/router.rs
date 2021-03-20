@@ -319,8 +319,8 @@ impl WeakPipeTransportPair {
 
 #[derive(Default)]
 struct Handlers {
-    new_transport: Bag<Box<dyn Fn(NewTransport) + Send + Sync>>,
-    new_rtp_observer: Bag<Box<dyn Fn(NewRtpObserver) + Send + Sync>>,
+    new_transport: Bag<Box<dyn Fn(NewTransport<'_>) + Send + Sync>>,
+    new_rtp_observer: Bag<Box<dyn Fn(NewRtpObserver<'_>) + Send + Sync>>,
     worker_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -1219,7 +1219,7 @@ impl Router {
     }
 
     /// Callback is called when a new transport is created.
-    pub fn on_new_transport<F: Fn(NewTransport) + Send + Sync + 'static>(
+    pub fn on_new_transport<F: Fn(NewTransport<'_>) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
@@ -1227,7 +1227,7 @@ impl Router {
     }
 
     /// Callback is called when a new RTP observer is created.
-    pub fn on_new_rtp_observer<F: Fn(NewRtpObserver) + Send + Sync + 'static>(
+    pub fn on_new_rtp_observer<F: Fn(NewRtpObserver<'_>) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {

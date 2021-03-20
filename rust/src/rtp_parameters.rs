@@ -34,7 +34,7 @@ impl RtpCodecParametersParameters {
 
     pub fn iter(
         &self,
-    ) -> std::collections::btree_map::Iter<String, RtpCodecParametersParametersValue> {
+    ) -> std::collections::btree_map::Iter<'_, String, RtpCodecParametersParametersValue> {
         self.0.iter()
     }
 
@@ -839,7 +839,7 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
         impl<'de> Visitor<'de> for RtcpFeedbackVisitor {
             type Value = RtcpFeedback;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str(
                     r#"RTCP feedback type and parameter like {"type": "nack", "parameter": ""}"#,
                 )
@@ -849,7 +849,7 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
             where
                 V: MapAccess<'de>,
             {
-                let mut r#type = None::<Cow<str>>;
+                let mut r#type = None::<Cow<'_, str>>;
                 let mut parameter = Cow::Borrowed("");
                 while let Some(key) = map.next_key()? {
                     match key {

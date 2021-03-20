@@ -541,7 +541,7 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
         impl<'de> Visitor<'de> for DtlsFingerprintVisitor {
             type Value = DtlsFingerprint;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str(
                     r#"DTLS fingerprint algorithm and value like {"algorithm": "sha-256", "value": "1B:EA:BF:33:B8:11:26:6D:91:AD:1B:A0:16:FD:5D:60:59:33:F7:46:A3:BA:99:2A:1D:04:99:A6:F2:C6:2D:43"}"#,
                 )
@@ -551,8 +551,8 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
             where
                 V: MapAccess<'de>,
             {
-                let mut algorithm = None::<Cow<str>>;
-                let mut value = None::<Cow<str>>;
+                let mut algorithm = None::<Cow<'_, str>>;
+                let mut value = None::<Cow<'_, str>>;
                 while let Some(key) = map.next_key()? {
                     match key {
                         Field::Algorithm => {
