@@ -105,7 +105,7 @@ pub enum IceCandidateType {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum IceCandidateTcpType {
-    /// Passive
+    /// Passive.
     Passive,
 }
 
@@ -124,7 +124,7 @@ pub enum TransportProtocol {
 #[serde(rename_all = "camelCase")]
 pub struct IceCandidate {
     /// Unique identifier that allows ICE to correlate candidates that appear on multiple
-    /// `transports`.
+    /// transports.
     pub foundation: String,
     /// The assigned priority of the candidate.
     pub priority: u32,
@@ -155,7 +155,7 @@ pub enum IceState {
     /// ICE was `Connected` or `Completed` but it has suddenly failed (this can just happen if the
     /// selected tuple has `Tcp` protocol).
     Disconnected,
-    /// ICE state when the `transport` has been closed.
+    /// ICE state when the transport has been closed.
     Closed,
 }
 
@@ -170,7 +170,7 @@ pub enum IceState {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum TransportTuple {
-    /// Transport tuple with remote endpoint info
+    /// Transport tuple with remote endpoint info.
     #[serde(rename_all = "camelCase")]
     WithRemote {
         /// Local IP address.
@@ -184,7 +184,7 @@ pub enum TransportTuple {
         /// Protocol
         protocol: TransportProtocol,
     },
-    /// Transport tuple without remote endpoint info
+    /// Transport tuple without remote endpoint info.
     #[serde(rename_all = "camelCase")]
     LocalOnly {
         /// Local IP address.
