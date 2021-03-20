@@ -309,18 +309,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = ProducerCloseRequest {
                     internal: ProducerInternal {
@@ -444,7 +444,7 @@ impl Producer {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.transport_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             })
         });
@@ -677,7 +677,7 @@ impl Producer {
     }
 
     pub(super) fn close(&self) {
-        self.inner().close();
+        self.inner().close(true);
     }
 
     /// Downgrade `Producer` to [`WeakProducer`] instance.

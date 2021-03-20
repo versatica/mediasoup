@@ -167,18 +167,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
                     internal: TransportInternal {
@@ -501,7 +501,7 @@ impl DirectTransport {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.router_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             }
         });
