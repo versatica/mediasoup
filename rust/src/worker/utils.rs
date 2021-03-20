@@ -1,6 +1,6 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
 use crate::worker::channel::BufferMessagesGuard;
-use crate::worker::{Channel, PayloadChannel, SubscriptionTarget, WorkerId};
+use crate::worker::{Channel, PayloadChannel, WorkerId};
 use async_executor::Executor;
 use async_fs::File;
 use async_oneshot::Receiver;
@@ -68,8 +68,7 @@ pub(super) fn run_worker_with_channels(
     let channel = Channel::new(Arc::clone(&executor), consumer_file, producer_file);
     let payload_channel =
         PayloadChannel::new(executor, consumer_payload_file, producer_payload_file);
-    let buffer_worker_messages_guard =
-        channel.buffer_messages_for(SubscriptionTarget::Number(std::process::id().into()));
+    let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
 
     std::thread::Builder::new()
         .name(format!("mediasoup-worker-{}", id))

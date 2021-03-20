@@ -52,6 +52,12 @@ pub struct WorkerManager {
     inner: Arc<Inner>,
 }
 
+impl Default for WorkerManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WorkerManager {
     /// Create new worker manager, internally a new single-threaded executor will be created.
     pub fn new() -> Self {

@@ -235,6 +235,7 @@ pub enum CreateRouterError {
 #[derive(Default)]
 struct Handlers {
     new_router: Bag<Box<dyn Fn(&Router) + Send + Sync>>,
+    #[allow(clippy::type_complexity)]
     dead: BagOnce<Box<dyn FnOnce(Result<(), ExitError>) + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -275,9 +276,9 @@ impl Inner {
 
         let mut spawn_args: Vec<String> = vec!["".to_string()];
 
-        spawn_args.push(format!("--logLevel={}", log_level.as_str()).into());
+        spawn_args.push(format!("--logLevel={}", log_level.as_str()));
         for log_tag in log_tags {
-            spawn_args.push(format!("--logTag={}", log_tag.as_str()).into());
+            spawn_args.push(format!("--logTag={}", log_tag.as_str()));
         }
 
         if rtc_ports_range.is_empty() {
@@ -286,8 +287,8 @@ impl Inner {
                 "Invalid RTC ports range",
             ));
         }
-        spawn_args.push(format!("--rtcMinPort={}", rtc_ports_range.start()).into());
-        spawn_args.push(format!("--rtcMaxPort={}", rtc_ports_range.end()).into());
+        spawn_args.push(format!("--rtcMinPort={}", rtc_ports_range.start()));
+        spawn_args.push(format!("--rtcMaxPort={}", rtc_ports_range.end()));
 
         if let Some(dtls_files) = dtls_files {
             spawn_args.push(format!(
@@ -343,9 +344,7 @@ impl Inner {
             inner
                 .executor
                 .spawn(async move {
-                    let status = status_receiver
-                        .await
-                        .unwrap_or_else(|_closed| Err(ExitError::Unexpected));
+                    let status = status_receiver.await.unwrap_or(Err(ExitError::Unexpected));
                     let _ = early_status_sender.send(status);
 
                     if let Some(inner) = inner_weak.upgrade() {
@@ -367,7 +366,7 @@ impl Inner {
             .or(async {
                 let status = early_status_receiver
                     .await
-                    .unwrap_or_else(|_closed| Err(ExitError::Unexpected));
+                    .unwrap_or(Err(ExitError::Unexpected));
                 let error_message = format!(
                     "worker thread exited before being ready [id:{}]: exit status {:?}",
                     inner.id, status,
