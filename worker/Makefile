@@ -45,10 +45,12 @@ clean:
 
 clean-all:
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)
-	$(RM) -rf worker/mediasoup-worker.xcodeproj
-	$(RM) -rf worker/mediasoup-worker-test.xcodeproj
-	$(RM) -rf worker/deps/*/*.xcodeproj
-	$(RM) -rf worker/libwebrtc/*/*.xcodeproj
+	$(RM) -rf $(ROOT_DIR)/mediasoup-worker.xcodeproj
+	$(RM) -rf $(ROOT_DIR)/mediasoup-worker-test.xcodeproj
+	$(RM) -rf $(ROOT_DIR)/deps/gyp/pylib/gyp/__pycache__
+	$(RM) -rf $(ROOT_DIR)/deps/gyp/pylib/gyp/generator/__pycache__
+	$(RM) -rf $(ROOT_DIR)/deps/*/*.xcodeproj
+	$(RM) -rf $(ROOT_DIR)/libwebrtc/*/*.xcodeproj
 
 xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
