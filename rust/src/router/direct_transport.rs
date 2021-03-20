@@ -1,5 +1,5 @@
 //! A direct transport represents a direct connection between the mediasoup Rust process and a
-//! [`Router`] instance in a mediasoup-worker subprocess.
+//! [`Router`] instance in a mediasoup-worker thread.
 //!
 //! A direct transport can be used to directly send and receive data messages from/to Rust by means
 //! of [`DataProducer`]s and [`DataConsumer`]s of type `Direct` created on a direct transport.
@@ -202,7 +202,7 @@ impl Inner {
 }
 
 /// A direct transport represents a direct connection between the mediasoup Rust process and a
-/// [`Router`] instance in a mediasoup-worker subprocess.
+/// [`Router`] instance in a mediasoup-worker thread.
 ///
 /// A direct transport can be used to directly send and receive data messages from/to Rust by means
 /// of [`DataProducer`]s and [`DataConsumer`]s of type `Direct` created on a direct transport.

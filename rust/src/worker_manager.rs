@@ -32,7 +32,7 @@ struct Inner {
 /// use mediasoup::worker::WorkerSettings;
 /// use mediasoup::worker_manager::WorkerManager;
 ///
-/// // Create a manager that will use specified binary for spawning new worker processes
+/// // Create a manager that will use specified binary for spawning new worker thread
 /// let worker_manager = WorkerManager::new();
 ///
 /// future::block_on(async move {
