@@ -27,6 +27,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::collections::HashMap;
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -352,6 +353,25 @@ pub struct RegularProducer {
     inner: Arc<Inner>,
 }
 
+impl fmt::Debug for RegularProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RegularProducer")
+            .field("id", &self.inner.id)
+            .field("kind", &self.inner.kind)
+            .field("type", &self.inner.r#type)
+            .field("rtp_parameters", &self.inner.rtp_parameters)
+            .field(
+                "consumable_rtp_parameters",
+                &self.inner.consumable_rtp_parameters,
+            )
+            .field("paused", &self.inner.paused)
+            .field("score", &self.inner.score)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
+}
+
 impl From<RegularProducer> for Producer {
     fn from(producer: RegularProducer) -> Self {
         Producer::Regular(producer)
@@ -362,6 +382,25 @@ impl From<RegularProducer> for Producer {
 #[derive(Clone)]
 pub struct DirectProducer {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for DirectProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirectProducer")
+            .field("id", &self.inner.id)
+            .field("kind", &self.inner.kind)
+            .field("type", &self.inner.r#type)
+            .field("rtp_parameters", &self.inner.rtp_parameters)
+            .field(
+                "consumable_rtp_parameters",
+                &self.inner.consumable_rtp_parameters,
+            )
+            .field("paused", &self.inner.paused)
+            .field("score", &self.inner.score)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl From<DirectProducer> for Producer {
@@ -380,6 +419,15 @@ pub enum Producer {
     Regular(RegularProducer),
     /// Producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectProducer),
+}
+
+impl fmt::Debug for Producer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Producer::Regular(producer) => f.debug_tuple("Regular").field(&producer).finish(),
+            Producer::Direct(producer) => f.debug_tuple("Direct").field(&producer).finish(),
+        }
+    }
 }
 
 impl Producer {
@@ -732,6 +780,14 @@ pub struct NonClosingProducer {
     on_drop: Option<Box<dyn FnOnce(Producer) + Send + 'static>>,
 }
 
+impl fmt::Debug for NonClosingProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NonClosingProducer")
+            .field("producer", &self.producer)
+            .finish()
+    }
+}
+
 impl Drop for NonClosingProducer {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
@@ -766,6 +822,12 @@ impl NonClosingProducer {
 #[derive(Clone)]
 pub struct WeakProducer {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakProducer").finish()
+    }
 }
 
 impl WeakProducer {

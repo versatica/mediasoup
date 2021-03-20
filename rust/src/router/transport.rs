@@ -140,7 +140,7 @@ pub(super) enum TransportType {
 ///
 /// For additional methods see [`TransportGeneric`].
 #[async_trait(?Send)]
-pub trait Transport: Send + Sync + CloneTransport {
+pub trait Transport: Debug + Send + Sync + CloneTransport {
     /// Transport id.
     fn id(&self) -> TransportId;
 

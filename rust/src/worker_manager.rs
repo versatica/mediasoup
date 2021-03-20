@@ -9,8 +9,8 @@ use async_oneshot::Sender;
 use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::future;
 use log::debug;
-use std::io;
 use std::sync::Arc;
+use std::{fmt, io};
 
 #[derive(Default)]
 struct Handlers {
@@ -50,6 +50,12 @@ struct Inner {
 #[derive(Clone)]
 pub struct WorkerManager {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for WorkerManager {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WorkerManager").finish()
+    }
 }
 
 impl Default for WorkerManager {

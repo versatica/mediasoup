@@ -28,6 +28,7 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -259,6 +260,21 @@ pub struct RegularDataConsumer {
     inner: Arc<Inner>,
 }
 
+impl fmt::Debug for RegularDataConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RegularDataConsumer")
+            .field("id", &self.inner.id)
+            .field("type", &self.inner.r#type)
+            .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
+            .field("label", &self.inner.label)
+            .field("protocol", &self.inner.protocol)
+            .field("data_producer_id", &self.inner.data_producer_id)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
+}
+
 impl From<RegularDataConsumer> for DataConsumer {
     fn from(producer: RegularDataConsumer) -> Self {
         DataConsumer::Regular(producer)
@@ -269,6 +285,21 @@ impl From<RegularDataConsumer> for DataConsumer {
 #[derive(Clone)]
 pub struct DirectDataConsumer {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for DirectDataConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirectDataConsumer")
+            .field("id", &self.inner.id)
+            .field("type", &self.inner.r#type)
+            .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
+            .field("label", &self.inner.label)
+            .field("protocol", &self.inner.protocol)
+            .field("data_producer_id", &self.inner.data_producer_id)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl From<DirectDataConsumer> for DataConsumer {
@@ -292,6 +323,15 @@ pub enum DataConsumer {
     Regular(RegularDataConsumer),
     /// Data consumer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectDataConsumer),
+}
+
+impl fmt::Debug for DataConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            DataConsumer::Regular(producer) => f.debug_tuple("Regular").field(&producer).finish(),
+            DataConsumer::Direct(producer) => f.debug_tuple("Direct").field(&producer).finish(),
+        }
+    }
 }
 
 impl DataConsumer {
@@ -642,6 +682,12 @@ impl DirectDataConsumer {
 #[derive(Clone)]
 pub struct WeakDataConsumer {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakDataConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakDataConsumer").finish()
+    }
 }
 
 impl WeakDataConsumer {

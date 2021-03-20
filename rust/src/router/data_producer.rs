@@ -22,6 +22,7 @@ use event_listener_primitives::{BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -191,6 +192,20 @@ pub struct RegularDataProducer {
     inner: Arc<Inner>,
 }
 
+impl fmt::Debug for RegularDataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RegularDataProducer")
+            .field("id", &self.inner.id)
+            .field("type", &self.inner.r#type)
+            .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
+            .field("label", &self.inner.label)
+            .field("protocol", &self.inner.protocol)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
+}
+
 impl From<RegularDataProducer> for DataProducer {
     fn from(producer: RegularDataProducer) -> Self {
         DataProducer::Regular(producer)
@@ -201,6 +216,20 @@ impl From<RegularDataProducer> for DataProducer {
 #[derive(Clone)]
 pub struct DirectDataProducer {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for DirectDataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirectDataProducer")
+            .field("id", &self.inner.id)
+            .field("type", &self.inner.r#type)
+            .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
+            .field("label", &self.inner.label)
+            .field("protocol", &self.inner.protocol)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl From<DirectDataProducer> for DataProducer {
@@ -223,6 +252,15 @@ pub enum DataProducer {
     Regular(RegularDataProducer),
     /// Data producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectDataProducer),
+}
+
+impl fmt::Debug for DataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            DataProducer::Regular(producer) => f.debug_tuple("Regular").field(&producer).finish(),
+            DataProducer::Direct(producer) => f.debug_tuple("Direct").field(&producer).finish(),
+        }
+    }
 }
 
 impl DataProducer {
@@ -427,6 +465,14 @@ pub struct NonClosingDataProducer {
     on_drop: Option<Box<dyn FnOnce(DataProducer) + Send + 'static>>,
 }
 
+impl fmt::Debug for NonClosingDataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NonClosingDataProducer")
+            .field("data_producer", &self.data_producer)
+            .finish()
+    }
+}
+
 impl Drop for NonClosingDataProducer {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
@@ -461,6 +507,12 @@ impl NonClosingDataProducer {
 #[derive(Clone)]
 pub struct WeakDataProducer {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakDataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakDataProducer").finish()
+    }
 }
 
 impl WeakDataProducer {

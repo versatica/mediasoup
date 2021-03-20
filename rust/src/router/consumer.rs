@@ -25,6 +25,7 @@ use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -413,6 +414,26 @@ impl Inner {
 #[derive(Clone)]
 pub struct Consumer {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for Consumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Consumer")
+            .field("id", &self.inner.id)
+            .field("producer_id", &self.inner.producer_id)
+            .field("kind", &self.inner.r#kind)
+            .field("type", &self.inner.r#type)
+            .field("rtp_parameters", &self.inner.rtp_parameters)
+            .field("paused", &self.inner.paused)
+            .field("producer_paused", &self.inner.producer_paused)
+            .field("priority", &self.inner.priority)
+            .field("score", &self.inner.score)
+            .field("preferred_layers", &self.inner.preferred_layers)
+            .field("current_layers", &self.inner.current_layers)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl Consumer {
@@ -928,6 +949,12 @@ impl Consumer {
 #[derive(Clone)]
 pub struct WeakConsumer {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakConsumer").finish()
+    }
 }
 
 impl WeakConsumer {

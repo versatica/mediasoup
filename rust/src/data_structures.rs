@@ -694,7 +694,7 @@ pub enum EventDirection {
 
 /// Container used for sending/receiving messages using `DirectTransport` data producers and data
 /// consumers.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum WebRtcMessage {
     String(String),
     Binary(Bytes),

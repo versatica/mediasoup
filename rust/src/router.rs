@@ -70,6 +70,7 @@ use log::*;
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
@@ -114,6 +115,7 @@ impl Default for RouterOptions {
 ///
 /// # Notes on usage
 /// * SCTP arguments will only apply the first time the underlying transports are created.
+#[derive(Debug)]
 pub struct PipeToRouterOptions {
     /// Target Router instance.
     pub router: Router,
@@ -161,6 +163,7 @@ impl PipeToRouterOptions {
 /// otherwise pipe consumer and pipe producer lifetime will be tied to source producer lifetime.
 ///
 /// Pipe consumer is always tied to the lifetime of pipe producer.
+#[derive(Debug)]
 pub struct PipeProducerToRouterPair {
     /// The Consumer created in the current Router.
     pub pipe_consumer: Consumer,
@@ -216,6 +219,7 @@ impl From<ProduceError> for PipeProducerToRouterError {
 /// producer lifetime.
 ///
 /// Pipe data consumer is always tied to the lifetime of pipe data producer.
+#[derive(Debug)]
 pub struct PipeDataProducerToRouterPair {
     /// The DataConsumer created in the current Router.
     pub pipe_data_consumer: DataConsumer,
@@ -278,6 +282,7 @@ pub struct RouterDump {
 }
 
 /// New transport that was just created.
+#[derive(Debug)]
 pub enum NewTransport<'a> {
     Direct(&'a DirectTransport),
     Pipe(&'a PipeTransport),
@@ -286,6 +291,7 @@ pub enum NewTransport<'a> {
 }
 
 /// New RTP observer that was just created.
+#[derive(Debug)]
 pub enum NewRtpObserver<'a> {
     AudioLevel(&'a AudioLevelObserver),
 }
@@ -304,6 +310,7 @@ impl PipeTransportPair {
     }
 }
 
+#[derive(Debug)]
 struct WeakPipeTransportPair {
     local: WeakPipeTransport,
     remote: WeakPipeTransport,
@@ -387,6 +394,20 @@ impl Inner {
 #[derive(Clone)]
 pub struct Router {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for Router {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Router")
+            .field("id", &self.inner.id)
+            .field("rtp_capabilities", &self.inner.rtp_capabilities)
+            .field("producers", &self.inner.producers)
+            .field("data_producers", &self.inner.data_producers)
+            .field("mapped_pipe_transports", &self.inner.mapped_pipe_transports)
+            .field("worker", &self.inner.worker)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl Router {

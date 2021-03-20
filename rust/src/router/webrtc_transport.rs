@@ -40,6 +40,7 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::fmt;
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
@@ -331,6 +332,19 @@ impl Inner {
 #[derive(Clone)]
 pub struct WebRtcTransport {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for WebRtcTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WebRtcTransport")
+            .field("id", &self.inner.id)
+            .field("next_mid_for_consumers", &self.inner.next_mid_for_consumers)
+            .field("used_sctp_stream_ids", &self.inner.used_sctp_stream_ids)
+            .field("cname_for_producers", &self.inner.cname_for_producers)
+            .field("router", &self.inner.router)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 #[async_trait(?Send)]
@@ -838,6 +852,12 @@ impl WebRtcTransport {
 #[derive(Clone)]
 pub struct WeakWebRtcTransport {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakWebRtcTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakWebRtcTransport").finish()
+    }
 }
 
 impl WeakWebRtcTransport {

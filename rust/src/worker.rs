@@ -27,11 +27,11 @@ use log::*;
 use parking_lot::Mutex;
 pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
 use serde::{Deserialize, Serialize};
-use std::io;
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::{fmt, io};
 use thiserror::Error;
 use utils::WorkerRunResult;
 
@@ -492,6 +492,15 @@ impl Inner {
 #[derive(Clone)]
 pub struct Worker {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for Worker {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Worker")
+            .field("id", &self.inner.id)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl Worker {

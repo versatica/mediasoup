@@ -29,6 +29,7 @@ use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
 use std::net::IpAddr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
@@ -269,6 +270,19 @@ impl Inner {
 #[derive(Clone)]
 pub struct PlainTransport {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for PlainTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PlainTransport")
+            .field("id", &self.inner.id)
+            .field("next_mid_for_consumers", &self.inner.next_mid_for_consumers)
+            .field("used_sctp_stream_ids", &self.inner.used_sctp_stream_ids)
+            .field("cname_for_producers", &self.inner.cname_for_producers)
+            .field("router", &self.inner.router)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 #[async_trait(?Send)]
@@ -807,6 +821,12 @@ impl PlainTransport {
 #[derive(Clone)]
 pub struct WeakPlainTransport {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakPlainTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakPlainTransport").finish()
+    }
 }
 
 impl WeakPlainTransport {

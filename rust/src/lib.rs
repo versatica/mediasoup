@@ -1,4 +1,4 @@
-#![warn(rust_2018_idioms)]
+#![warn(rust_2018_idioms, missing_debug_implementations)]
 //! Rust port of [mediasoup](https://github.com/versatica/mediasoup) TypeScript library!
 //!
 //! For general information go to readme in repository.
