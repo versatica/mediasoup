@@ -1,10 +1,9 @@
-#define MS_CLASS "PayloadChannel::UnixStreamSocket"
+#define MS_CLASS "Channel::ChannelSocket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "PayloadChannel/UnixStreamSocket.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "PayloadChannel/Request.hpp"
 #include <cmath>   // std::ceil()
 #include <cstdio>  // sprintf()
 #include <cstring> // std::memcpy(), std::memmove()
@@ -13,7 +12,7 @@ extern "C"
 #include <netstring.h>
 }
 
-namespace PayloadChannel
+namespace Channel
 {
 	/* Static. */
 
@@ -22,60 +21,33 @@ namespace PayloadChannel
 	static constexpr size_t NsPayloadMaxLen{ 4194304 };
 
 	/* Instance methods. */
-	UnixStreamSocket::UnixStreamSocket(int consumerFd, int producerFd)
+	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(consumerFd, NsMessageMaxLen, this), producerSocket(producerFd, NsMessageMaxLen)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
-		this->WriteBuffer = (uint8_t*)std::malloc(NsMessageMaxLen);
+		this->WriteBuffer = static_cast<uint8_t*>(std::malloc(NsMessageMaxLen));
 	}
 
-	UnixStreamSocket::~UnixStreamSocket()
+	ChannelSocket::~ChannelSocket()
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
 		std::free(this->WriteBuffer);
-		delete this->ongoingNotification;
 	}
 
-	void UnixStreamSocket::SetListener(Listener* listener)
+	void ChannelSocket::SetListener(Listener* listener)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
 		this->listener = listener;
 	}
 
-	void UnixStreamSocket::Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen)
-	{
-		MS_TRACE();
-
-		if (this->producerSocket.IsClosed())
-			return;
-
-		std::string message = jsonMessage.dump();
-
-		if (message.length() > NsPayloadMaxLen)
-		{
-			MS_ERROR("mesage too big");
-
-			return;
-		}
-		else if (payloadLen > NsPayloadMaxLen)
-		{
-			MS_ERROR("payload too big");
-
-			return;
-		}
-
-		SendImpl(message.c_str(), message.length());
-		SendImpl(payload, payloadLen);
-	}
-
-	void UnixStreamSocket::Send(json& jsonMessage)
+	void ChannelSocket::Send(json& jsonMessage)
 	{
 		MS_TRACE_STD();
 
-		if (this->consumerSocket.IsClosed())
+		if (this->producerSocket.IsClosed())
 			return;
 
 		std::string message = jsonMessage.dump();
@@ -90,9 +62,26 @@ namespace PayloadChannel
 		SendImpl(message.c_str(), message.length());
 	}
 
-	inline void UnixStreamSocket::SendImpl(const void* nsPayload, size_t nsPayloadLen)
+	void ChannelSocket::SendLog(char* message, size_t messageLen)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
+
+		if (this->producerSocket.IsClosed())
+			return;
+
+		if (messageLen > NsPayloadMaxLen)
+		{
+			MS_ERROR_STD("mesage too big");
+
+			return;
+		}
+
+		SendImpl(message, messageLen);
+	}
+
+	inline void ChannelSocket::SendImpl(const void* nsPayload, size_t nsPayloadLen)
+	{
+		MS_TRACE_STD();
 
 		size_t nsNumLen;
 
@@ -116,111 +105,58 @@ namespace PayloadChannel
 		this->producerSocket.Write(this->WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::OnConsumerSocketMessage(
-	  ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)
+	void ChannelSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
-		if (!this->ongoingNotification && !this->ongoingRequest)
+		try
 		{
-			json jsonData = json::parse(msg, msg + msgLen);
-			if (Request::IsRequest(jsonData))
-			{
-				try
-				{
-					json jsonMessage     = json::parse(msg, msg + msgLen);
-					this->ongoingRequest = new PayloadChannel::Request(this, jsonMessage);
-				}
-				catch (const json::parse_error& error)
-				{
-					MS_ERROR_STD("JSON parsing error: %s", error.what());
-				}
-				catch (const MediaSoupError& error)
-				{
-					MS_ERROR("discarding wrong Payload Channel notification");
-				}
-			}
-
-			else if (Notification::IsNotification(jsonData))
-			{
-				try
-				{
-					json jsonMessage          = json::parse(msg, msg + msgLen);
-					this->ongoingNotification = new PayloadChannel::Notification(jsonMessage);
-				}
-				catch (const json::parse_error& error)
-				{
-					MS_ERROR_STD("JSON parsing error: %s", error.what());
-				}
-				catch (const MediaSoupError& error)
-				{
-					MS_ERROR("discarding wrong Payload Channel notification");
-				}
-			}
-
-			else
-			{
-				MS_ERROR("discarding wrong Payload Channel data");
-			}
-		}
-		else if (this->ongoingNotification)
-		{
-			this->ongoingNotification->SetPayload(reinterpret_cast<const uint8_t*>(msg), msgLen);
+			json jsonMessage = json::parse(msg, msg + msgLen);
+			auto* request    = new Channel::ChannelRequest(this, jsonMessage);
 
 			// Notify the listener.
 			try
 			{
-				this->listener->OnPayloadChannelNotification(this, this->ongoingNotification);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_ERROR("notification failed: %s", error.what());
-			}
-
-			// Delete the Notification.
-			delete this->ongoingNotification;
-			this->ongoingNotification = nullptr;
-		}
-		else if (this->ongoingRequest)
-		{
-			this->ongoingRequest->SetPayload(reinterpret_cast<const uint8_t*>(msg), msgLen);
-
-			// Notify the listener.
-			try
-			{
-				this->listener->OnPayloadChannelRequest(this, this->ongoingRequest);
+				this->listener->OnChannelRequest(this, request);
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				this->ongoingRequest->TypeError(error.what());
+				request->TypeError(error.what());
 			}
 			catch (const MediaSoupError& error)
 			{
-				this->ongoingRequest->Error(error.what());
+				request->Error(error.what());
 			}
 
 			// Delete the Request.
-			delete this->ongoingRequest;
-			this->ongoingRequest = nullptr;
+			delete request;
+		}
+		catch (const json::parse_error& error)
+		{
+			MS_ERROR_STD("JSON parsing error: %s", error.what());
+		}
+		catch (const MediaSoupError& error)
+		{
+			MS_ERROR_STD("discarding wrong Channel request");
 		}
 	}
 
-	void UnixStreamSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
+	void ChannelSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
-		this->listener->OnPayloadChannelClosed(this);
+		this->listener->OnChannelClosed(this);
 	}
 
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 	}
 
 	void ConsumerSocket::UserOnUnixStreamRead()
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
 		// Be ready to parse more than a single message in a single chunk.
 		while (true)
@@ -255,7 +191,7 @@ namespace PayloadChannel
 							// The message is too big, so discard it.
 							else
 							{
-								MS_ERROR(
+								MS_ERROR_STD(
 								  "no more space in the buffer for the unfinished message being parsed, "
 								  "discarding it");
 
@@ -270,35 +206,35 @@ namespace PayloadChannel
 
 					case NETSTRING_ERROR_TOO_LONG:
 					{
-						MS_ERROR("NETSTRING_ERROR_TOO_LONG");
+						MS_ERROR_STD("NETSTRING_ERROR_TOO_LONG");
 
 						break;
 					}
 
 					case NETSTRING_ERROR_NO_COLON:
 					{
-						MS_ERROR("NETSTRING_ERROR_NO_COLON");
+						MS_ERROR_STD("NETSTRING_ERROR_NO_COLON");
 
 						break;
 					}
 
 					case NETSTRING_ERROR_NO_COMMA:
 					{
-						MS_ERROR("NETSTRING_ERROR_NO_COMMA");
+						MS_ERROR_STD("NETSTRING_ERROR_NO_COMMA");
 
 						break;
 					}
 
 					case NETSTRING_ERROR_LEADING_ZERO:
 					{
-						MS_ERROR("NETSTRING_ERROR_LEADING_ZERO");
+						MS_ERROR_STD("NETSTRING_ERROR_LEADING_ZERO");
 
 						break;
 					}
 
 					case NETSTRING_ERROR_NO_LENGTH:
 					{
-						MS_ERROR("NETSTRING_ERROR_NO_LENGTH");
+						MS_ERROR_STD("NETSTRING_ERROR_NO_LENGTH");
 
 						break;
 					}
@@ -345,7 +281,7 @@ namespace PayloadChannel
 
 	void ConsumerSocket::UserOnUnixStreamSocketClosed()
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
 		// Notify the listener.
 		this->listener->OnConsumerSocketClosed(this);
@@ -354,6 +290,6 @@ namespace PayloadChannel
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 	}
-} // namespace PayloadChannel
+} // namespace Channel

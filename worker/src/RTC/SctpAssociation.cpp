@@ -5,7 +5,7 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memset(), std::memcpy()
 #include <string>
@@ -470,7 +470,7 @@ namespace RTC
 
 			if (sctpSendBufferFull)
 			{
-				Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
+				Channel::ChannelNotifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 			}
 		}
 		else if (cb)

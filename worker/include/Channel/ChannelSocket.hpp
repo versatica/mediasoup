@@ -1,13 +1,12 @@
-#ifndef MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
-#define MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include "PayloadChannel/Notification.hpp"
-#include "PayloadChannel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
 #include <json.hpp>
 
-namespace PayloadChannel
+namespace Channel
 {
 	class ConsumerSocket : public ::UnixStreamSocket
 	{
@@ -21,7 +20,6 @@ namespace PayloadChannel
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
-
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
@@ -49,28 +47,25 @@ namespace PayloadChannel
 		}
 	};
 
-	class UnixStreamSocket : public ConsumerSocket::Listener
+	class ChannelSocket : public ConsumerSocket::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void OnPayloadChannelNotification(
-			  PayloadChannel::UnixStreamSocket* payloadChannel,
-			  PayloadChannel::Notification* notification) = 0;
-			virtual void OnPayloadChannelRequest(
-			  PayloadChannel::UnixStreamSocket* payloadChannel, PayloadChannel::Request* request) = 0;
-			virtual void OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* payloadChannel) = 0;
+			virtual void OnChannelRequest(
+			  Channel::ChannelSocket* channel, Channel::ChannelRequest* request) = 0;
+			virtual void OnChannelClosed(Channel::ChannelSocket* channel)        = 0;
 		};
 
 	public:
-		explicit UnixStreamSocket(int consumerFd, int producerFd);
-		virtual ~UnixStreamSocket();
+		explicit ChannelSocket(int consumerFd, int producerFd);
+		virtual ~ChannelSocket();
 
 	public:
 		void SetListener(Listener* listener);
-		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
 		void Send(json& jsonMessage);
+		void SendLog(char* message, size_t messageLen);
 
 	private:
 		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
@@ -86,10 +81,8 @@ namespace PayloadChannel
 		// Others.
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
-		PayloadChannel::Notification* ongoingNotification{ nullptr };
-		PayloadChannel::Request* ongoingRequest{ nullptr };
 		uint8_t* WriteBuffer;
 	};
-} // namespace PayloadChannel
+} // namespace Channel
 
 #endif

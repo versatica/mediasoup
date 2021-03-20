@@ -12,9 +12,9 @@ namespace PayloadChannel
 {
 	// Avoid cyclic #include problem by declaring classes instead of including
 	// the corresponding header files.
-	class UnixStreamSocket;
+	class PayloadChannelSocket;
 
-	class Request
+	class PayloadChannelRequest
 	{
 	public:
 		enum class MethodId
@@ -29,8 +29,8 @@ namespace PayloadChannel
 		static std::unordered_map<std::string, MethodId> string2MethodId;
 
 	public:
-		Request(PayloadChannel::UnixStreamSocket* channel, json& jsonRequest);
-		virtual ~Request();
+		PayloadChannelRequest(PayloadChannel::PayloadChannelSocket* channel, json& jsonRequest);
+		virtual ~PayloadChannelRequest();
 
 	public:
 		void Accept();
@@ -41,7 +41,7 @@ namespace PayloadChannel
 
 	public:
 		// Passed by argument.
-		PayloadChannel::UnixStreamSocket* channel{ nullptr };
+		PayloadChannel::PayloadChannelSocket* channel{ nullptr };
 		uint32_t id{ 0u };
 		std::string method;
 		MethodId methodId;

@@ -4,7 +4,7 @@
 #include "RTC/DirectTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "PayloadChannel/Notifier.hpp"
+#include "PayloadChannel/PayloadChannelNotifier.hpp"
 
 namespace RTC
 {
@@ -43,7 +43,7 @@ namespace RTC
 		jsonObject["type"] = "direct-transport";
 	}
 
-	void DirectTransport::HandleRequest(Channel::Request* request)
+	void DirectTransport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
@@ -181,7 +181,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(consumer->id, "rtp", data, len);
+		PayloadChannel::PayloadChannelNotifier::Emit(consumer->id, "rtp", data, len);
 
 		if (cb)
 		{
@@ -201,7 +201,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(this->id, "rtcp", data, len);
+		PayloadChannel::PayloadChannelNotifier::Emit(this->id, "rtcp", data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -215,7 +215,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(this->id, "rtcp", data, len);
+		PayloadChannel::PayloadChannelNotifier::Emit(this->id, "rtcp", data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -231,7 +231,7 @@ namespace RTC
 
 		data["ppid"] = ppid;
 
-		PayloadChannel::Notifier::Emit(dataConsumer->id, "message", data, msg, len);
+		PayloadChannel::PayloadChannelNotifier::Emit(dataConsumer->id, "message", data, msg, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);

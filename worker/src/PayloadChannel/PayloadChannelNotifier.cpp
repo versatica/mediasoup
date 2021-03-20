@@ -1,45 +1,45 @@
 #define MS_CLASS "PayloadChannel::Notifier"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "PayloadChannel/Notifier.hpp"
+#include "PayloadChannel/PayloadChannelNotifier.hpp"
 #include "Logger.hpp"
 
 namespace PayloadChannel
 {
 	/* Class variables. */
 
-	thread_local PayloadChannel::UnixStreamSocket* Notifier::payloadChannel{ nullptr };
+	thread_local PayloadChannel::PayloadChannelSocket* PayloadChannelNotifier::payloadChannel{ nullptr };
 
 	/* Static methods. */
 
-	void Notifier::ClassInit(PayloadChannel::UnixStreamSocket* payloadChannel)
+	void PayloadChannelNotifier::ClassInit(PayloadChannel::PayloadChannelSocket* payloadChannel)
 	{
 		MS_TRACE();
 
-		Notifier::payloadChannel = payloadChannel;
+		PayloadChannelNotifier::payloadChannel = payloadChannel;
 	}
 
-	void Notifier::Emit(
+	void PayloadChannelNotifier::Emit(
 	  const std::string& targetId, const char* event, const uint8_t* payload, size_t payloadLen)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Notifier::payloadChannel, "payloadChannel unset");
+		MS_ASSERT(PayloadChannelNotifier::payloadChannel, "payloadChannel unset");
 
 		json jsonNotification = json::object();
 
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
 
-		Notifier::payloadChannel->Send(jsonNotification, payload, payloadLen);
+		PayloadChannelNotifier::payloadChannel->Send(jsonNotification, payload, payloadLen);
 	}
 
-	void Notifier::Emit(
+	void PayloadChannelNotifier::Emit(
 	  const std::string& targetId, const char* event, json& data, const uint8_t* payload, size_t payloadLen)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(Notifier::payloadChannel, "payloadChannel unset");
+		MS_ASSERT(PayloadChannelNotifier::payloadChannel, "payloadChannel unset");
 
 		json jsonNotification = json::object();
 
@@ -47,6 +47,6 @@ namespace PayloadChannel
 		jsonNotification["event"]    = event;
 		jsonNotification["data"]     = data;
 
-		Notifier::payloadChannel->Send(jsonNotification, payload, payloadLen);
+		PayloadChannelNotifier::payloadChannel->Send(jsonNotification, payload, payloadLen);
 	}
 } // namespace PayloadChannel

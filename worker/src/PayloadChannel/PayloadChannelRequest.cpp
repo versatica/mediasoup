@@ -1,25 +1,25 @@
-#define MS_CLASS "PayloadChannel::Request"
+#define MS_CLASS "PayloadChannel::PayloadChannelRequest"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "PayloadChannel/Request.hpp"
+#include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "PayloadChannel/UnixStreamSocket.hpp"
+#include "PayloadChannel/PayloadChannelSocket.hpp"
 
 namespace PayloadChannel
 {
 	/* Class variables. */
 
 	// clang-format off
-	std::unordered_map<std::string, Request::MethodId> Request::string2MethodId =
+	std::unordered_map<std::string, PayloadChannelRequest::MethodId> PayloadChannelRequest::string2MethodId =
 	{
-		{ "dataConsumer.send", Request::MethodId::DATA_CONSUMER_SEND },
+		{ "dataConsumer.send", PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND },
 	};
 	// clang-format on
 
 	/* Class methods. */
-	bool Request::IsRequest(json& jsonRequest)
+	bool PayloadChannelRequest::IsRequest(json& jsonRequest)
 	{
 		MS_TRACE();
 
@@ -38,7 +38,9 @@ namespace PayloadChannel
 
 	/* Instance methods. */
 
-	Request::Request(PayloadChannel::UnixStreamSocket* channel, json& jsonRequest) : channel(channel)
+	PayloadChannelRequest::PayloadChannelRequest(
+	  PayloadChannel::PayloadChannelSocket* channel, json& jsonRequest)
+	  : channel(channel)
 	{
 		MS_TRACE();
 
@@ -56,9 +58,9 @@ namespace PayloadChannel
 
 		this->method = jsonMethodIt->get<std::string>();
 
-		auto methodIdIt = Request::string2MethodId.find(this->method);
+		auto methodIdIt = PayloadChannelRequest::string2MethodId.find(this->method);
 
-		if (methodIdIt == Request::string2MethodId.end())
+		if (methodIdIt == PayloadChannelRequest::string2MethodId.end())
 		{
 			Error("unknown method");
 
@@ -82,12 +84,12 @@ namespace PayloadChannel
 			this->data = json::object();
 	}
 
-	Request::~Request()
+	PayloadChannelRequest::~PayloadChannelRequest()
 	{
 		MS_TRACE();
 	}
 
-	void Request::Accept()
+	void PayloadChannelRequest::Accept()
 	{
 		MS_TRACE();
 
@@ -103,7 +105,7 @@ namespace PayloadChannel
 		this->channel->Send(jsonResponse);
 	}
 
-	void Request::Accept(json& data)
+	void PayloadChannelRequest::Accept(json& data)
 	{
 		MS_TRACE();
 
@@ -122,7 +124,7 @@ namespace PayloadChannel
 		this->channel->Send(jsonResponse);
 	}
 
-	void Request::Error(const char* reason)
+	void PayloadChannelRequest::Error(const char* reason)
 	{
 		MS_TRACE();
 
@@ -141,7 +143,7 @@ namespace PayloadChannel
 		this->channel->Send(jsonResponse);
 	}
 
-	void Request::TypeError(const char* reason)
+	void PayloadChannelRequest::TypeError(const char* reason)
 	{
 		MS_TRACE();
 
@@ -160,7 +162,7 @@ namespace PayloadChannel
 		this->channel->Send(jsonResponse);
 	}
 
-	void Request::SetPayload(const uint8_t* payload, size_t payloadLen)
+	void PayloadChannelRequest::SetPayload(const uint8_t* payload, size_t payloadLen)
 	{
 		MS_TRACE();
 

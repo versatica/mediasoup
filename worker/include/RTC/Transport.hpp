@@ -4,9 +4,9 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "PayloadChannel/Notification.hpp"
-#include "PayloadChannel/Request.hpp"
+#include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -121,8 +121,8 @@ namespace RTC
 		virtual void FillJsonStats(json& jsonArray);
 		// Subclasses must implement these methods and call the parent's ones to
 		// handle common requests.
-		virtual void HandleRequest(Channel::Request* request);
-		virtual void HandleRequest(PayloadChannel::Request* request);
+		virtual void HandleRequest(Channel::ChannelRequest* request);
+		virtual void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
 		virtual void HandleNotification(PayloadChannel::Notification* notification);
 
 	protected:
