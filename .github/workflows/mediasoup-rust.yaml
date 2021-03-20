@@ -53,6 +53,8 @@ jobs:
 
       - name: cargo test
         uses: actions-rs/cargo@v1
+        env:
+          KEEP_BUILD_ARTIFACTS: '1'
         with:
           command: test
           args: --verbose

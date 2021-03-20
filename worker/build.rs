@@ -50,16 +50,18 @@ fn main() {
             });
         }
 
-        // Clean
-        if !Command::new("make")
-            .arg("clean-all")
-            .spawn()
-            .expect("Failed to start")
-            .wait()
-            .expect("Wasn't running")
-            .success()
-        {
-            panic!("Failed to clean libmediasoup-worker")
+        if env::var("KEEP_BUILD_ARTIFACTS") == Ok("1".to_string()) {
+            // Clean
+            if !Command::new("make")
+                .arg("clean-all")
+                .spawn()
+                .expect("Failed to start")
+                .wait()
+                .expect("Wasn't running")
+                .success()
+            {
+                panic!("Failed to clean libmediasoup-worker")
+            }
         }
     }
     // Add C++ std lib
