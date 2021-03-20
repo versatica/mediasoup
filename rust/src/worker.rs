@@ -14,6 +14,7 @@ use crate::messages::{
 };
 use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
+use crate::worker::channel::BufferMessagesGuard;
 pub use crate::worker::utils::ExitError;
 use crate::worker_manager::WorkerManager;
 use crate::{ortc, uuid_based_wrapper_type};
@@ -26,7 +27,6 @@ use log::*;
 use parking_lot::Mutex;
 pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
 use serde::{Deserialize, Serialize};
-use std::future::Future;
 use std::io;
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
@@ -351,11 +351,11 @@ impl Inner {
             spawn_args.join(" ")
         );
 
-        // TODO: Probably need to buffer messages for worker to catch when it is ready
         let WorkerRunResult {
             channel,
             payload_channel,
             status_receiver,
+            buffer_worker_messages_guard,
         } = utils::run_worker_with_channels(Arc::clone(&executor), spawn_args);
 
         let handlers = Handlers::default();
@@ -401,33 +401,26 @@ impl Inner {
         }
 
         inner
-            .wait_for_worker_process(async move {
-                early_status_receiver
+            .wait_for_worker_ready(buffer_worker_messages_guard)
+            .or(async {
+                let status = early_status_receiver
                     .await
-                    .unwrap_or_else(|_closed| Err(ExitError::Unexpected))
+                    .unwrap_or_else(|_closed| Err(ExitError::Unexpected));
+                let error_message = format!(
+                    "worker thread exited before being ready [id:{}]: exit status {:?}",
+                    inner.id, status,
+                );
+                Err(io::Error::new(io::ErrorKind::NotFound, error_message))
             })
             .await?;
 
         Ok(inner)
     }
 
-    async fn wait_for_worker_process<F>(&self, early_status_receiver: F) -> io::Result<()>
-    where
-        F: Future<Output = Result<(), ExitError>>,
-    {
-        self.wait_for_worker_ready()
-            .or(async move {
-                let status = early_status_receiver.await;
-                let error_message = format!(
-                    "worker thread exited before being ready [id:{}]: exit status {:?}",
-                    self.id, status,
-                );
-                Err(io::Error::new(io::ErrorKind::NotFound, error_message))
-            })
-            .await
-    }
-
-    async fn wait_for_worker_ready(&self) -> io::Result<()> {
+    async fn wait_for_worker_ready(
+        &self,
+        buffer_worker_messages_guard: BufferMessagesGuard,
+    ) -> io::Result<()> {
         #[derive(Deserialize)]
         #[serde(tag = "event", rename_all = "lowercase")]
         enum Notification {
@@ -460,6 +453,9 @@ impl Inner {
                     .send(result);
             },
         );
+
+        // Allow worker messages to go through
+        drop(buffer_worker_messages_guard);
 
         receiver.await.map_err(|_closed| {
             io::Error::new(io::ErrorKind::Other, "Worker dropped before it is ready")

@@ -1,5 +1,6 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
-use crate::worker::{Channel, PayloadChannel};
+use crate::worker::channel::BufferMessagesGuard;
+use crate::worker::{Channel, PayloadChannel, SubscriptionTarget};
 use async_executor::Executor;
 use async_fs::File;
 use async_oneshot::Receiver;
@@ -45,6 +46,7 @@ pub(super) struct WorkerRunResult {
     pub(super) channel: Channel,
     pub(super) payload_channel: PayloadChannel,
     pub(super) status_receiver: Receiver<Result<(), ExitError>>,
+    pub(super) buffer_worker_messages_guard: BufferMessagesGuard,
 }
 
 pub(super) fn run_worker_with_channels(
@@ -56,6 +58,17 @@ pub(super) fn run_worker_with_channels(
     let [producer_payload_fd_read, producer_payload_fd_write] = pipe();
     let [consumer_payload_fd_read, consumer_payload_fd_write] = pipe();
     let (status_sender, status_receiver) = async_oneshot::oneshot();
+
+    let producer_file = unsafe { File::from_raw_fd(producer_fd_write) };
+    let consumer_file = unsafe { File::from_raw_fd(consumer_fd_read) };
+    let producer_payload_file = unsafe { File::from_raw_fd(producer_payload_fd_write) };
+    let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
+
+    let channel = Channel::new(Arc::clone(&executor), consumer_file, producer_file);
+    let payload_channel =
+        PayloadChannel::new(executor, consumer_payload_file, producer_payload_file);
+    let buffer_worker_messages_guard =
+        channel.buffer_messages_for(SubscriptionTarget::Number(std::process::id().into()));
 
     std::thread::spawn(move || {
         let argc = args.len() as c_int;
@@ -88,18 +101,10 @@ pub(super) fn run_worker_with_channels(
         });
     });
 
-    let producer_file = unsafe { File::from_raw_fd(producer_fd_write) };
-    let consumer_file = unsafe { File::from_raw_fd(consumer_fd_read) };
-    let producer_payload_file = unsafe { File::from_raw_fd(producer_payload_fd_write) };
-    let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
-
     WorkerRunResult {
-        channel: Channel::new(Arc::clone(&executor), consumer_file, producer_file),
-        payload_channel: PayloadChannel::new(
-            executor,
-            consumer_payload_file,
-            producer_payload_file,
-        ),
+        channel,
+        payload_channel,
         status_receiver,
+        buffer_worker_messages_guard,
     }
 }
