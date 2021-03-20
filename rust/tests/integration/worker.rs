@@ -142,23 +142,6 @@ fn dump_succeeds() {
 }
 
 #[test]
-fn get_resource_usage_succeeds() {
-    future::block_on(async move {
-        let worker_manager = init().await;
-
-        let worker = worker_manager
-            .create_worker(WorkerSettings::default())
-            .await
-            .expect("Failed to create worker with default settings");
-
-        worker
-            .get_resource_usage()
-            .await
-            .expect("Failed to get worker's resource usage");
-    });
-}
-
-#[test]
 fn close_event() {
     future::block_on(async move {
         let worker_manager = init().await;

@@ -45,10 +45,6 @@ fn smoke() {
 
         println!("Worker dump: {:#?}", worker.dump().await.unwrap());
         println!(
-            "Resource usage: {:#?}",
-            worker.get_resource_usage().await.unwrap()
-        );
-        println!(
             "Update settings: {:?}",
             worker
                 .update_settings({
