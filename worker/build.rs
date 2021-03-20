@@ -2,18 +2,64 @@ use std::env;
 use std::process::Command;
 
 fn main() {
-    // Build
-    if !Command::new("make")
-        .arg("libmediasoup-worker")
-        .spawn()
-        .expect("Failed to start")
-        .wait()
-        .expect("Wasn't running")
-        .success()
-    {
-        panic!("Failed to build libmediasoup-worker")
-    }
+    let current_dir = std::env::current_dir()
+        .unwrap()
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    let out_dir = env::var("OUT_DIR").unwrap();
 
+    // The build here is a bit awkward since we can't just specify custom target directory as
+    // openssl will fail to build with `make[1]: /bin/sh: Argument list too long` due to large
+    // number of files. So instead we build in place, copy files to out directory and then clean
+    // after ourselves
+    {
+        // Build
+        if !Command::new("make")
+            .arg("libmediasoup-worker")
+            .spawn()
+            .expect("Failed to start")
+            .wait()
+            .expect("Wasn't running")
+            .success()
+        {
+            panic!("Failed to build libmediasoup-worker")
+        }
+
+        for file in &[
+            "libnetstring.a",
+            "libuv.a",
+            "libopenssl.a",
+            "libsrtp.a",
+            "libusrsctp.a",
+            "libwebrtc.a",
+            "libmediasoup-worker.a",
+            "libabseil.a",
+            #[cfg(windows)]
+            "libgetopt.a",
+        ] {
+            std::fs::copy(
+                format!("{}/out/Release/{}", current_dir, file),
+                format!("{}/{}", out_dir, file),
+            )
+            .expect(&format!(
+                "Failed to copy static library from {}/out/Release/{} to {}/{}",
+                current_dir, file, out_dir, file
+            ));
+        }
+
+        // Clean
+        if !Command::new("make")
+            .arg("clean-all")
+            .spawn()
+            .expect("Failed to start")
+            .wait()
+            .expect("Wasn't running")
+            .success()
+        {
+            panic!("Failed to clean libmediasoup-worker")
+        }
+    }
     // Add C++ std lib
     #[cfg(target_os = "linux")]
     {
@@ -65,12 +111,5 @@ fn main() {
     println!("cargo:rustc-link-lib=static=abseil");
     #[cfg(windows)]
     println!("cargo:rustc-link-lib=static=getopt");
-    println!(
-        "cargo:rustc-link-search=native={}/out/Release",
-        std::env::current_dir()
-            .unwrap()
-            .into_os_string()
-            .into_string()
-            .unwrap()
-    );
+    println!("cargo:rustc-link-search=native={}", out_dir);
 }
