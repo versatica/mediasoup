@@ -318,7 +318,7 @@ impl Inner {
             payload_channel,
             status_receiver,
             buffer_worker_messages_guard,
-        } = utils::run_worker_with_channels(Arc::clone(&executor), spawn_args);
+        } = utils::run_worker_with_channels(id, Arc::clone(&executor), spawn_args);
 
         let handlers = Handlers::default();
 

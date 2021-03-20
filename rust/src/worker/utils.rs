@@ -1,6 +1,6 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
 use crate::worker::channel::BufferMessagesGuard;
-use crate::worker::{Channel, PayloadChannel, SubscriptionTarget};
+use crate::worker::{Channel, PayloadChannel, SubscriptionTarget, WorkerId};
 use async_executor::Executor;
 use async_fs::File;
 use async_oneshot::Receiver;
@@ -50,6 +50,7 @@ pub(super) struct WorkerRunResult {
 }
 
 pub(super) fn run_worker_with_channels(
+    id: WorkerId,
     executor: Arc<Executor<'static>>,
     args: Vec<String>,
 ) -> WorkerRunResult {
@@ -70,36 +71,39 @@ pub(super) fn run_worker_with_channels(
     let buffer_worker_messages_guard =
         channel.buffer_messages_for(SubscriptionTarget::Number(std::process::id().into()));
 
-    std::thread::spawn(move || {
-        let argc = args.len() as c_int;
-        let args_cstring = args
-            .into_iter()
-            .map(|s| -> CString { CString::new(s).unwrap() })
-            .collect::<Vec<_>>();
-        let argv = args_cstring
-            .iter()
-            .map(|arg| arg.as_ptr() as *const c_char)
-            .collect::<Vec<_>>();
-        let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
-        let status_code = unsafe {
-            mediasoup_sys::run_worker(
-                argc,
-                argv.as_ptr(),
-                version.as_ptr(),
-                producer_fd_read,
-                consumer_fd_write,
-                producer_payload_fd_read,
-                consumer_payload_fd_write,
-            )
-        };
+    std::thread::Builder::new()
+        .name(format!("mediasoup-worker-{}", id))
+        .spawn(move || {
+            let argc = args.len() as c_int;
+            let args_cstring = args
+                .into_iter()
+                .map(|s| -> CString { CString::new(s).unwrap() })
+                .collect::<Vec<_>>();
+            let argv = args_cstring
+                .iter()
+                .map(|arg| arg.as_ptr() as *const c_char)
+                .collect::<Vec<_>>();
+            let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
+            let status_code = unsafe {
+                mediasoup_sys::run_worker(
+                    argc,
+                    argv.as_ptr(),
+                    version.as_ptr(),
+                    producer_fd_read,
+                    consumer_fd_write,
+                    producer_payload_fd_read,
+                    consumer_payload_fd_write,
+                )
+            };
 
-        let _ = status_sender.send(match status_code {
-            0 => Ok(()),
-            1 => Err(ExitError::Generic),
-            42 => Err(ExitError::Settings),
-            status_code => Err(ExitError::Unknown { status_code }),
-        });
-    });
+            let _ = status_sender.send(match status_code {
+                0 => Ok(()),
+                1 => Err(ExitError::Generic),
+                42 => Err(ExitError::Settings),
+                status_code => Err(ExitError::Unknown { status_code }),
+            });
+        })
+        .expect("Failed to spawn mediasoup-worker thread");
 
     WorkerRunResult {
         channel,
