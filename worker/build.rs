@@ -42,10 +42,12 @@ fn main() {
                 format!("{}/out/Release/{}", current_dir, file),
                 format!("{}/{}", out_dir, file),
             )
-            .expect(&format!(
-                "Failed to copy static library from {}/out/Release/{} to {}/{}",
-                current_dir, file, out_dir, file
-            ));
+            .unwrap_or_else(|_| {
+                panic!(
+                    "Failed to copy static library from {}/out/Release/{} to {}/{}",
+                    current_dir, file, out_dir, file
+                )
+            });
         }
 
         // Clean
@@ -65,7 +67,7 @@ fn main() {
     {
         println!("cargo:rustc-link-lib=static=stdc++");
 
-        let output = Command::new(env::var("c++").unwrap_or("c++".to_string()))
+        let output = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
             .arg("-print-search-dirs")
             .output()
             .expect("Failed to start");
@@ -87,7 +89,7 @@ fn main() {
     {
         println!("cargo:rustc-link-lib=static=c++");
 
-        let output = Command::new(env::var("c++").unwrap_or("c++".to_string()))
+        let output = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
             .arg("-print-search-dirs")
             .output()
             .expect("Failed to start");
