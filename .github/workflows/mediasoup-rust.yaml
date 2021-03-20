@@ -51,8 +51,6 @@ jobs:
           command: clippy
           args: -- -D warnings
 
-      - run: npm install
-
       - name: cargo test
         uses: actions-rs/cargo@v1
         with:
