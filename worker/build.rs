@@ -50,7 +50,7 @@ fn main() {
             });
         }
 
-        if env::var("KEEP_BUILD_ARTIFACTS") == Ok("1".to_string()) {
+        if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
             // Clean
             if !Command::new("make")
                 .arg("clean-all")
