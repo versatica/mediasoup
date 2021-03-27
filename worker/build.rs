@@ -2,6 +2,55 @@ use std::env;
 use std::process::Command;
 
 fn main() {
+    // Add C++ std lib
+    #[cfg(target_os = "linux")]
+    {
+        let path = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
+            .arg("--print-file-name=libstdc++.a")
+            .output()
+            .expect("Failed to start")
+            .stdout;
+        println!(
+            "cargo:rustc-link-search=native={}",
+            String::from_utf8_lossy(&path)
+                .trim()
+                .strip_suffix("libstdc++.a")
+                .expect("Failed to strip suffix"),
+        );
+        println!("cargo:rustc-link-lib=static=stdc++");
+    }
+    #[cfg(any(
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "openbsd",
+        target_os = "netbsd"
+    ))]
+    {
+        let path = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
+            .arg("--print-file-name=libc++.a")
+            .output()
+            .expect("Failed to start")
+            .stdout;
+        println!(
+            "cargo:rustc-link-search=native={}",
+            String::from_utf8_lossy(&path)
+                .trim()
+                .strip_suffix("libc++.a")
+                .expect("Failed to strip suffix"),
+        );
+        println!("cargo:rustc-link-lib=static=c++");
+    }
+    #[cfg(target_os = "macos")]
+    {
+        panic!("Building on macOS is not currently supported");
+        // TODO: The issue here is `libc++.a` that is not shipped with macOS's `c++` it seems
+    }
+    #[cfg(target_os = "windows")]
+    {
+        panic!("Building on Windows is not currently supported");
+        // TODO: Didn't bother, feel free to PR
+    }
+
     let current_dir = std::env::current_dir()
         .unwrap()
         .into_os_string()
@@ -64,46 +113,6 @@ fn main() {
             }
         }
     }
-    // Add C++ std lib
-    #[cfg(target_os = "linux")]
-    {
-        let path = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
-            .arg("--print-file-name=libstdc++.a")
-            .output()
-            .expect("Failed to start")
-            .stdout;
-        println!(
-            "cargo:rustc-link-search=native={}",
-            String::from_utf8_lossy(&path)
-                .trim()
-                .strip_suffix("libstdc++.a")
-                .expect("Failed to strip suffix"),
-        );
-        println!("cargo:rustc-link-lib=static=stdc++");
-    }
-    #[cfg(any(
-        target_os = "macos",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "openbsd",
-        target_os = "netbsd"
-    ))]
-    {
-        let path = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
-            .arg("--print-file-name=libc++.a")
-            .output()
-            .expect("Failed to start")
-            .stdout;
-        println!(
-            "cargo:rustc-link-search=native={}",
-            String::from_utf8_lossy(&path)
-                .trim()
-                .strip_suffix("libc++.a")
-                .expect("Failed to strip suffix"),
-        );
-        println!("cargo:rustc-link-lib=static=c++");
-    }
-    // TODO: Windows and check above BSDs if they even work
 
     println!("cargo:rustc-link-lib=static=netstring");
     println!("cargo:rustc-link-lib=static=uv");
