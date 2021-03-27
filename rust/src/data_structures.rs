@@ -740,9 +740,7 @@ impl WebRtcMessage {
             53 => Ok(WebRtcMessage::Binary(payload)),
             56 => Ok(WebRtcMessage::EmptyString),
             57 => Ok(WebRtcMessage::EmptyBinary),
-            ppid => {
-                return Err(ppid);
-            }
+            ppid => Err(ppid),
         }
     }
 
