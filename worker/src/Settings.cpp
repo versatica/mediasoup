@@ -161,7 +161,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	// Validate RTC ports.
 	if (Settings::configuration.rtcMaxPort < Settings::configuration.rtcMinPort)
-		MS_THROW_TYPE_ERROR("rtcMinPort cannot be less than than rtcMinPort");
+		MS_THROW_TYPE_ERROR("rtcMaxPort cannot be less than rtcMinPort");
 
 	// Set DTLS certificate files (if provided),
 	Settings::SetDtlsCertificateAndPrivateKeyFiles();

@@ -34,7 +34,7 @@
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.c 363323 2020-07-19 12:34:19Z tuexen $");
+__FBSDID("$FreeBSD$");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -760,7 +760,6 @@ sctp_auditing(int from, struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 			    stcb->asoc.total_flight, tot_out);
 		/* now corrective action */
 		TAILQ_FOREACH(lnet, &stcb->asoc.nets, sctp_next) {
-
 			tot_out = 0;
 			TAILQ_FOREACH(chk, &stcb->asoc.sent_queue, sctp_next) {
 				if ((chk->whoTo == lnet) &&
@@ -1334,9 +1333,8 @@ sctp_init_asoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 		 * that were dropped must be notified to the upper layer as
 		 * failed to send.
 		 */
-		asoc->strmout[i].next_mid_ordered = 0;
-		asoc->strmout[i].next_mid_unordered = 0;
 		TAILQ_INIT(&asoc->strmout[i].outqueue);
+		asoc->ss_functions.sctp_ss_init_stream(stcb, &asoc->strmout[i], NULL);
 		asoc->strmout[i].chunks_on_queues = 0;
 #if defined(SCTP_DETAILED_STR_STATS)
 		for (j = 0; j < SCTP_PR_SCTP_MAX + 1; j++) {
@@ -1347,10 +1345,11 @@ sctp_init_asoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 		asoc->strmout[i].abandoned_sent[0] = 0;
 		asoc->strmout[i].abandoned_unsent[0] = 0;
 #endif
+		asoc->strmout[i].next_mid_ordered = 0;
+		asoc->strmout[i].next_mid_unordered = 0;
 		asoc->strmout[i].sid = i;
 		asoc->strmout[i].last_msg_incomplete = 0;
 		asoc->strmout[i].state = SCTP_STREAM_OPENING;
-		asoc->ss_functions.sctp_ss_init_stream(stcb, &asoc->strmout[i], NULL);
 	}
 	asoc->ss_functions.sctp_ss_init(stcb, asoc, 0);
 
@@ -1479,7 +1478,6 @@ sctp_expand_mapping_array(struct sctp_association *asoc, uint32_t needed)
 	asoc->mapping_array_size = new_size;
 	return (0);
 }
-
 
 static void
 sctp_iterator_work(struct sctp_iterator *it)
@@ -1682,7 +1680,6 @@ sctp_iterator_worker(void)
 	return;
 }
 
-
 static void
 sctp_handle_addr_wq(void)
 {
@@ -1795,8 +1792,8 @@ sctp_timeout_handler(void *t)
 	net = (struct sctp_nets *)tmr->net;
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 	CURVNET_SET((struct vnet *)tmr->vnet);
+	NET_EPOCH_ENTER(et);
 #endif
-	did_output = 1;
 	released_asoc_reference = false;
 
 #ifdef SCTP_AUDITING_ENABLED
@@ -1855,9 +1852,6 @@ sctp_timeout_handler(void *t)
 
 	/* Record in stopped_from which timeout occurred. */
 	tmr->stopped_from = type;
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-	NET_EPOCH_ENTER(et);
-#endif
 	/* mark as being serviced now */
 	if (SCTP_OS_TIMER_PENDING(&tmr->timer)) {
 		/*
@@ -2078,7 +2072,6 @@ sctp_timeout_handler(void *t)
 		op_err = sctp_generate_cause(SCTP_BASE_SYSCTL(sctp_diag_info_code),
 		                             "Shutdown guard timer expired");
 		sctp_abort_an_association(inp, stcb, op_err, SCTP_SO_NOT_LOCKED);
-		did_output = true;
 		/* no need to unlock on tcb its gone */
 		goto out_decr;
 	case SCTP_TIMER_TYPE_AUTOCLOSE:
@@ -2124,14 +2117,13 @@ sctp_timeout_handler(void *t)
 		SCTP_SOCKET_UNLOCK(SCTP_INP_SO(inp), 1);
 #endif
 		inp = NULL;
-		goto out_no_decr;
+		goto out_decr;
 	case SCTP_TIMER_TYPE_ASOCKILL:
 		KASSERT(inp != NULL && stcb != NULL && net == NULL,
 		        ("timeout of type %d: inp = %p, stcb = %p, net = %p",
 		         type, inp, stcb, net));
 		SCTP_STAT_INCR(sctps_timoassockill);
 		/* Can we free it yet? */
-		SCTP_INP_DECR_REF(inp);
 		sctp_timer_stop(SCTP_TIMER_TYPE_ASOCKILL, inp, stcb, NULL,
 		                SCTP_FROM_SCTPUTIL + SCTP_LOC_1);
 #if defined(__APPLE__) && !defined(__Userspace__)
@@ -2152,7 +2144,7 @@ sctp_timeout_handler(void *t)
 		 * duplicate unlock or unlock of a free mtx :-0
 		 */
 		stcb = NULL;
-		goto out_no_decr;
+		goto out_decr;
 	case SCTP_TIMER_TYPE_ADDR_WQ:
 		KASSERT(inp == NULL && stcb == NULL && net == NULL,
 		        ("timeout of type %d: inp = %p, stcb = %p, net = %p",
@@ -2172,7 +2164,6 @@ sctp_timeout_handler(void *t)
 #ifdef INVARIANTS
 		panic("Unknown timer type %d", type);
 #else
-		did_output = false;
 		goto out;
 #endif
 	}
@@ -2181,7 +2172,7 @@ sctp_timeout_handler(void *t)
 	if (inp != NULL)
 		sctp_auditing(5, inp, stcb, net);
 #endif
-	if (did_output && (stcb != NULL) ) {
+	if (did_output && (stcb != NULL)) {
 		/*
 		 * Now we need to clean up the control chunk chain if an
 		 * ECNE is on it. It must be marked as UNSENT again so next
@@ -2222,7 +2213,6 @@ out_decr:
 	if (net != NULL) {
 		sctp_free_remote_addr(net);
 	}
-out_no_decr:
 	SCTPDBG(SCTP_DEBUG_TIMER2, "Timer type %d handler finished.\n", type);
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 	CURVNET_RESTORE();
@@ -2269,7 +2259,6 @@ sctp_timer_start(int t_type, struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 	        ("sctp_timer_start of type %d: inp = %p, stcb->sctp_ep %p",
 	         t_type, stcb, stcb->sctp_ep));
 	tmr = NULL;
-	to_ticks = 0;
 	if (stcb != NULL) {
 		SCTP_TCB_LOCK_ASSERT(stcb);
 	} else if (inp != NULL) {
@@ -2394,14 +2383,19 @@ sctp_timer_start(int t_type, struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 		}
 		rndval = sctp_select_initial_TSN(&inp->sctp_ep);
 		jitter = rndval % to_ticks;
-		if (jitter >= (to_ticks >> 1)) {
-			to_ticks = to_ticks + (jitter - (to_ticks >> 1));
+		to_ticks >>= 1;
+		if (jitter < (UINT32_MAX - to_ticks)) {
+			to_ticks += jitter;
 		} else {
-			to_ticks = to_ticks - jitter;
+			to_ticks = UINT32_MAX;
 		}
 		if (!(net->dest_state & SCTP_ADDR_UNCONFIRMED) &&
 		    !(net->dest_state & SCTP_ADDR_PF)) {
-			to_ticks += net->heart_beat_delay;
+			if (net->heart_beat_delay < (UINT32_MAX - to_ticks)) {
+				to_ticks += net->heart_beat_delay;
+			} else {
+				to_ticks = UINT32_MAX;
+			}
 		}
 		/*
 		 * Now we must convert the to_ticks that are now in
@@ -3034,7 +3028,6 @@ sctp_mtu_size_reset(struct sctp_inpcb *inp,
 	}
 }
 
-
 /*
  * Given an association and starting time of the current RTT period, update
  * RTO in number of msecs. net should point to the current network.
@@ -3196,8 +3189,6 @@ sctp_m_getptr(struct mbuf *m, int off, int len, uint8_t * in_ptr)
 	}
 }
 
-
-
 struct sctp_paramhdr *
 sctp_get_next_param(struct mbuf *m,
     int offset,
@@ -3208,7 +3199,6 @@ sctp_get_next_param(struct mbuf *m,
 	return ((struct sctp_paramhdr *)sctp_m_getptr(m, offset, pull_limit,
 	    (uint8_t *) pull));
 }
-
 
 struct mbuf *
 sctp_add_pad_tombuf(struct mbuf *m, int padlen)
@@ -3517,7 +3507,6 @@ sctp_notify_peer_addr_change(struct sctp_tcb *stcb, uint32_t state,
 	                  so_locked);
 }
 
-
 static void
 sctp_notify_send_failed(struct sctp_tcb *stcb, uint8_t sent, uint32_t error,
     struct sctp_tmit_chunk *chk, int so_locked)
@@ -3649,7 +3638,6 @@ sctp_notify_send_failed(struct sctp_tcb *stcb, uint8_t sent, uint32_t error,
 	                  so_locked);
 }
 
-
 static void
 sctp_notify_send_failed2(struct sctp_tcb *stcb, uint32_t error,
 			 struct sctp_stream_queue_pending *sp, int so_locked)
@@ -3745,8 +3733,6 @@ sctp_notify_send_failed2(struct sctp_tcb *stcb, uint32_t error,
 	    control,
 	    &stcb->sctp_socket->so_rcv, 1, SCTP_READ_LOCK_NOT_HELD, so_locked);
 }
-
-
 
 static void
 sctp_notify_adaptation_layer(struct sctp_tcb *stcb)
@@ -4002,7 +3988,6 @@ sctp_notify_sender_dry_event(struct sctp_tcb *stcb,
 	                  &stcb->sctp_socket->so_rcv, 1, SCTP_READ_LOCK_NOT_HELD, so_locked);
 }
 
-
 void
 sctp_notify_stream_reset_add(struct sctp_tcb *stcb, uint16_t numberin, uint16_t numberout, int flag)
 {
@@ -4109,8 +4094,6 @@ sctp_notify_stream_reset_tsn(struct sctp_tcb *stcb, uint32_t sending_tsn, uint32
 	    &stcb->sctp_socket->so_rcv, 1, SCTP_READ_LOCK_NOT_HELD, SCTP_SO_NOT_LOCKED);
 }
 
-
-
 static void
 sctp_notify_stream_reset(struct sctp_tcb *stcb,
     int number_entries, uint16_t * list, int flag)
@@ -4175,7 +4158,6 @@ sctp_notify_stream_reset(struct sctp_tcb *stcb,
 	                  &stcb->sctp_socket->so_rcv, 1, SCTP_READ_LOCK_NOT_HELD, SCTP_SO_NOT_LOCKED);
 }
 
-
 static void
 sctp_notify_remote_error(struct sctp_tcb *stcb, uint16_t error, struct sctp_error_chunk *chunk)
 {
@@ -4235,12 +4217,11 @@ sctp_notify_remote_error(struct sctp_tcb *stcb, uint16_t error, struct sctp_erro
 		sctp_add_to_readq(stcb->sctp_ep, stcb,
 		                  control,
 		                  &stcb->sctp_socket->so_rcv, 1,
-				  SCTP_READ_LOCK_NOT_HELD, SCTP_SO_NOT_LOCKED);
+		                  SCTP_READ_LOCK_NOT_HELD, SCTP_SO_NOT_LOCKED);
 	} else {
 		sctp_m_freem(m_notify);
 	}
 }
-
 
 void
 sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
@@ -4445,7 +4426,7 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 }
 
 void
-sctp_report_all_outbound(struct sctp_tcb *stcb, uint16_t error, int holds_lock, int so_locked)
+sctp_report_all_outbound(struct sctp_tcb *stcb, uint16_t error, int so_locked)
 {
 	struct sctp_association *asoc;
 	struct sctp_stream_out *outs;
@@ -4474,9 +4455,6 @@ sctp_report_all_outbound(struct sctp_tcb *stcb, uint16_t error, int holds_lock, 
 		return;
 	}
 	/* now through all the gunk freeing chunks */
-	if (holds_lock == 0) {
-		SCTP_TCB_SEND_LOCK(stcb);
-	}
 	/* sent queue SHOULD be empty */
 	TAILQ_FOREACH_SAFE(chk, &asoc->sent_queue, sctp_next, nchk) {
 		TAILQ_REMOVE(&asoc->sent_queue, chk, sctp_next);
@@ -4553,10 +4531,6 @@ sctp_report_all_outbound(struct sctp_tcb *stcb, uint16_t error, int holds_lock, 
 			/*sa_ignore FREED_MEMORY*/
 		}
 	}
-
-	if (holds_lock == 0) {
-		SCTP_TCB_SEND_UNLOCK(stcb);
-	}
 }
 
 void
@@ -4583,8 +4557,11 @@ sctp_abort_notification(struct sctp_tcb *stcb, uint8_t from_peer, uint16_t error
 	    (stcb->asoc.state & SCTP_STATE_CLOSED_SOCKET)) {
 		return;
 	}
+	SCTP_TCB_SEND_LOCK(stcb);
+	SCTP_ADD_SUBSTATE(stcb, SCTP_STATE_WAS_ABORTED);
 	/* Tell them we lost the asoc */
-	sctp_report_all_outbound(stcb, error, 0, so_locked);
+	sctp_report_all_outbound(stcb, error, so_locked);
+	SCTP_TCB_SEND_UNLOCK(stcb);
 	if (from_peer) {
 		sctp_ulp_notify(SCTP_NOTIFY_ASSOC_REM_ABORTED, stcb, error, abort, so_locked);
 	} else {
@@ -4620,7 +4597,6 @@ sctp_abort_association(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 	if (stcb != NULL) {
 		/* We have a TCB to abort, send notification too */
 		sctp_abort_notification(stcb, 0, 0, NULL, SCTP_SO_NOT_LOCKED);
-		SCTP_ADD_SUBSTATE(stcb, SCTP_STATE_WAS_ABORTED);
 		/* Ok, now lets free it */
 #if defined(__APPLE__) && !defined(__Userspace__)
 		so = SCTP_INP_SO(inp);
@@ -4742,8 +4718,6 @@ sctp_abort_an_association(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 			}
 		}
 		return;
-	} else {
-		SCTP_ADD_SUBSTATE(stcb, SCTP_STATE_WAS_ABORTED);
 	}
 	/* notify the peer */
 	sctp_send_abort_tcb(stcb, op_err, so_locked);
@@ -5519,7 +5493,6 @@ sctp_free_bufspace(struct sctp_tcb *stcb, struct sctp_association *asoc,
 			stcb->sctp_socket->so_snd.sb_cc -= tp1->book_size;
 		} else {
 			stcb->sctp_socket->so_snd.sb_cc = 0;
-
 		}
 	}
 }
@@ -6168,7 +6141,6 @@ sctp_sorecvmsg(struct socket *so,
 #if defined(__APPLE__) && !defined(__Userspace__)
 	error = sblock(&so->so_rcv, SBLOCKWAIT(in_flags));
 #endif
-
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 	error = sblock(&so->so_rcv, (block_allowed ? SBL_WAIT : 0));
 #endif
@@ -7131,7 +7103,6 @@ sctp_sorecvmsg(struct socket *so,
 	return (error);
 }
 
-
 #ifdef SCTP_MBUF_LOGGING
 struct mbuf *
 sctp_m_free(struct mbuf *m)
@@ -7199,7 +7170,6 @@ sctp_dynamic_set_primary(struct sockaddr *sa, uint32_t vrf_id)
 #if defined(__Userspace__)
 /* no sctp_soreceive for __Userspace__ now */
 #endif
-
 #if !defined(__Userspace__)
 int
 sctp_soreceive(	struct socket *so,
@@ -7288,7 +7258,6 @@ sctp_soreceive(	struct socket *so,
 	return (error);
 }
 
-
 #if defined(_WIN32) && !defined(__Userspace__)
 /*
  * General routine to allocate a hash table with control of memory flags.
@@ -7336,7 +7305,6 @@ sctp_hashinit_flags(int elements, struct malloc_type *type,
 	return (hashtbl);
 }
 #endif
-
 #else /*  __Userspace__ ifdef above sctp_soreceive */
 /*
  * __Userspace__ Defining sctp_hashinit_flags() and sctp_hashdestroy() for userland.
@@ -7387,7 +7355,6 @@ sctp_hashinit_flags(int elements, struct malloc_type *type,
 	return (hashtbl);
 }
 
-
 void
 sctp_hashdestroy(void *vhashtbl, struct malloc_type *type, u_long hashmask)
 {
@@ -7401,7 +7368,6 @@ sctp_hashdestroy(void *vhashtbl, struct malloc_type *type, u_long hashmask)
 		}
 	FREE(hashtbl, type);
 }
-
 
 void
 sctp_hashfreedestroy(void *vhashtbl, struct malloc_type *type, u_long hashmask)
@@ -7427,10 +7393,7 @@ sctp_hashfreedestroy(void *vhashtbl, struct malloc_type *type, u_long hashmask)
 	FREE(hashtbl, type);
 }
 
-
 #endif
-
-
 int
 sctp_connectx_helper_add(struct sctp_tcb *stcb, struct sockaddr *addr,
 			 int totaddr, int *error)

@@ -19,6 +19,27 @@ namespace PayloadChannel
 	};
 	// clang-format on
 
+	/* Class methods. */
+
+	bool Notification::IsNotification(json& jsonNotification)
+	{
+		MS_TRACE();
+
+		auto jsonEventIdIt = jsonNotification.find("event");
+
+		if (jsonEventIdIt == jsonNotification.end() || !jsonEventIdIt->is_string())
+			return false;
+
+		auto event = jsonEventIdIt->get<std::string>();
+
+		auto eventIdIt = Notification::string2EventId.find(event);
+
+		if (eventIdIt == Notification::string2EventId.end())
+			return false;
+
+		return true;
+	}
+
 	/* Instance methods. */
 
 	Notification::Notification(json& jsonNotification)

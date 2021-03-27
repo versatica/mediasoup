@@ -129,6 +129,7 @@ export type ProducerStat =
 	byteCount: number;
 	bitrate: number;
 	roundTripTime?: number;
+	rtxPacketsDiscarded?: number;
 	// RtpStreamRecv specific.
 	jitter: number;
 	bitrateByLayer?: any;
@@ -333,6 +334,7 @@ export class Producer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.producerId);
+		this._payloadChannel.removeAllListeners(this._internal.producerId);
 
 		this._channel.request('producer.close', this._internal)
 			.catch(() => {});
@@ -359,6 +361,7 @@ export class Producer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.producerId);
+		this._payloadChannel.removeAllListeners(this._internal.producerId);
 
 		this.safeEmit('transportclose');
 

@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/Request.hpp"
 #include "handles/UnixStreamSocket.hpp"
 #include <json.hpp>
 
@@ -56,7 +57,9 @@ namespace PayloadChannel
 		public:
 			virtual void OnPayloadChannelNotification(
 			  PayloadChannel::UnixStreamSocket* payloadChannel,
-			  PayloadChannel::Notification* notification)                                         = 0;
+			  PayloadChannel::Notification* notification) = 0;
+			virtual void OnPayloadChannelRequest(
+			  PayloadChannel::UnixStreamSocket* payloadChannel, PayloadChannel::Request* request) = 0;
 			virtual void OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* payloadChannel) = 0;
 		};
 
@@ -67,6 +70,7 @@ namespace PayloadChannel
 	public:
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
+		void Send(json& jsonMessage);
 
 	private:
 		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
@@ -83,6 +87,7 @@ namespace PayloadChannel
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
 		PayloadChannel::Notification* ongoingNotification{ nullptr };
+		PayloadChannel::Request* ongoingRequest{ nullptr };
 	};
 } // namespace PayloadChannel
 

@@ -5,7 +5,7 @@
  * Copyright (c) 2005-2011, Jouni Malinen <j@w1.fi>
  *
  * This software may be distributed under the terms of the BSD license.
- * See README for more details.
+ * See README_BASE64_UTILS for more details.
  */
 
 #define MS_CLASS "Utils::String"

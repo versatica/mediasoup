@@ -34,12 +34,15 @@ switch (task)
 	case 'typescript:build':
 	{
 		if (!isWindows)
+		{
 			execute('rm -rf lib');
+		}
 		else
-			execute('rmdir /s lib');
+		{
+			execute('rmdir /s /q lib');
+		}
 
 		execute('tsc');
-
 		taskReplaceVersion();
 
 		break;
@@ -50,9 +53,13 @@ switch (task)
 		const TscWatchClient = require('tsc-watch/client');
 
 		if (!isWindows)
+		{
 			execute('rm -rf lib');
+		}
 		else
-			execute('rmdir /s lib');
+		{
+			execute('rmdir /s /q lib');
+		}
 
 		const watch = new TscWatchClient();
 
@@ -89,9 +96,13 @@ switch (task)
 		taskReplaceVersion();
 
 		if (!process.env.TEST_FILE)
+		{
 			execute('jest');
+		}
 		else
+		{
 			execute(`jest --testPathPattern ${process.env.TEST_FILE}`);
+		}
 
 		break;
 	}
@@ -115,7 +126,6 @@ switch (task)
 	case 'coverage':
 	{
 		taskReplaceVersion();
-
 		execute('jest --coverage');
 		execute('open-cli coverage/lcov-report/index.html');
 
@@ -124,14 +134,17 @@ switch (task)
 
 	case 'postinstall':
 	{
-		if (!isWindows)
+		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			execute('make -C worker');
-		}
-		else if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`);
-			execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
+			if (!isWindows)
+			{
+				execute('make -C worker');
+			}
+			else
+			{
+				execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`);
+				execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
+			}
 		}
 
 		break;
@@ -158,7 +171,7 @@ switch (task)
 
 function taskReplaceVersion()
 {
-	const files = [ 'lib/index.js', 'lib/Worker.js' ];
+	const files = [ 'lib/index.js', 'lib/index.d.ts', 'lib/Worker.js' ];
 
 	for (const file of files)
 	{

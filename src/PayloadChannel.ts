@@ -7,6 +7,16 @@ import { InvalidStateError } from './errors';
 
 const logger = new Logger('PayloadChannel');
 
+type Sent =
+{
+	id: number;
+	method: string;
+	resolve: (data?: any) => void;
+	reject: (error: Error) => void;
+	timer: NodeJS.Timer;
+	close: () => void;
+}
+
 // netstring length for a 4194304 bytes payload.
 const NS_MESSAGE_MAX_LEN = 4194313;
 const NS_PAYLOAD_MAX_LEN = 4194304;
@@ -21,6 +31,12 @@ export class PayloadChannel extends EnhancedEventEmitter
 
 	// Unix Socket instance for receiving messages to the worker process.
 	private readonly _consumerSocket: Duplex;
+
+	// Next id for messages sent to the worker process.
+	private _nextId = 0;
+
+	// Map of pending sent requests.
+	private readonly _sents: Map<number, Sent> = new Map();
 
 	// Buffer for reading messages from the worker.
 	private _recvBuffer?: Buffer;
@@ -209,6 +225,79 @@ export class PayloadChannel extends EnhancedEventEmitter
 		}
 	}
 
+	/**
+	 * @private
+	 */
+	async request(
+		method: string,
+		internal: object,
+		data: any,
+		payload: string | Buffer): Promise<any>
+	{
+		this._nextId < 4294967295 ? ++this._nextId : (this._nextId = 1);
+
+		const id = this._nextId;
+
+		logger.debug('request() [method:%s, id:%s]', method, id);
+
+		if (this._closed)
+			throw new InvalidStateError('Channel closed');
+
+		const request = { id, method, internal, data };
+		const ns1 = netstring.nsWrite(JSON.stringify(request));
+		const ns2 = netstring.nsWrite(payload);
+
+		if (Buffer.byteLength(ns1) > NS_MESSAGE_MAX_LEN)
+			throw new Error('Channel request too big');
+		else if (Buffer.byteLength(ns2) > NS_MESSAGE_MAX_LEN)
+			throw new Error('PayloadChannel payload too big');
+
+		// This may throw if closed or remote side ended.
+		this._producerSocket.write(ns1);
+		this._producerSocket.write(ns2);
+
+		return new Promise((pResolve, pReject) =>
+		{
+			const timeout = 1000 * (15 + (0.1 * this._sents.size));
+			const sent: Sent =
+			{
+				id      : id,
+				method  : method,
+				resolve : (data2) =>
+				{
+					if (!this._sents.delete(id))
+						return;
+
+					clearTimeout(sent.timer);
+					pResolve(data2);
+				},
+				reject : (error) =>
+				{
+					if (!this._sents.delete(id))
+						return;
+
+					clearTimeout(sent.timer);
+					pReject(error);
+				},
+				timer : setTimeout(() =>
+				{
+					if (!this._sents.delete(id))
+						return;
+
+					pReject(new Error('Channel request timeout'));
+				}, timeout),
+				close : () =>
+				{
+					clearTimeout(sent.timer);
+					pReject(new InvalidStateError('Channel closed'));
+				}
+			};
+
+			// Add sent stuff to the map.
+			this._sents.set(id, sent);
+		});
+	}
+
 	private _processData(data: Buffer): void
 	{
 		if (!this._ongoingNotification)
@@ -228,19 +317,65 @@ export class PayloadChannel extends EnhancedEventEmitter
 				return;
 			}
 
-			if (!msg.targetId || !msg.event)
+			// If a response, retrieve its associated request.
+			if (msg.id)
 			{
-				logger.error('received message is not a notification');
+				const sent = this._sents.get(msg.id);
+
+				if (!sent)
+				{
+					logger.error(
+						'received response does not match any sent request [id:%s]', msg.id);
+
+					return;
+				}
+
+				if (msg.accepted)
+				{
+					logger.debug(
+						'request succeeded [method:%s, id:%s]', sent.method, sent.id);
+
+					sent.resolve(msg.data);
+				}
+				else if (msg.error)
+				{
+					logger.warn(
+						'request failed [method:%s, id:%s]: %s',
+						sent.method, sent.id, msg.reason);
+
+					switch (msg.error)
+					{
+						case 'TypeError':
+							sent.reject(new TypeError(msg.reason));
+							break;
+
+						default:
+							sent.reject(new Error(msg.reason));
+					}
+				}
+				else
+				{
+					logger.error(
+						'received response is not accepted nor rejected [method:%s, id:%s]',
+						sent.method, sent.id);
+				}
+			}
+			// If a notification, create the ongoing notification instance.
+			else if (msg.targetId && msg.event)
+			{
+				this._ongoingNotification =
+					{
+						targetId : msg.targetId,
+						event    : msg.event,
+						data     : msg.data
+					};
+			}
+			else
+			{
+				logger.error('received data is not a notification nor a response');
 
 				return;
 			}
-
-			this._ongoingNotification =
-			{
-				targetId : msg.targetId,
-				event    : msg.event,
-				data     : msg.data
-			};
 		}
 		else
 		{

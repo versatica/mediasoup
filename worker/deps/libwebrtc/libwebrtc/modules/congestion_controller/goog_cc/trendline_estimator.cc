@@ -29,7 +29,7 @@ namespace {
 
 // Parameters for linear least squares fit of regression line to noisy data.
 constexpr size_t kDefaultTrendlineWindowSize = 20;
-constexpr double kDefaultTrendlineSmoothingCoeff = 0.9;
+constexpr double kDefaultTrendlineSmoothingCoeff = 0.6;
 constexpr double kDefaultTrendlineThresholdGain = 4.0;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
@@ -77,7 +77,7 @@ absl::optional<double> LinearFitSlope(
 }
 
 constexpr double kMaxAdaptOffsetMs = 15.0;
-constexpr double kOverUsingTimeThreshold = 10;
+constexpr double kOverUsingTimeThreshold = 30;
 constexpr int kMinNumDeltas = 60;
 constexpr int kDeltaCounterMax = 1000;
 
@@ -143,8 +143,12 @@ void TrendlineEstimator::Update(double recv_delta_ms,
     accumulated_delay_ += delta_ms;
     // BWE_TEST_LOGGING_PLOT(1, "accumulated_delay_ms", arrival_time_ms,
                           // accumulated_delay_);
-    smoothed_delay_ = smoothing_coef_ * smoothed_delay_ +
-                      (1 - smoothing_coef_) * accumulated_delay_;
+    // smoothed_delay_ = smoothing_coef_ * smoothed_delay_ +
+                      // (1 - smoothing_coef_) * accumulated_delay_;
+    // MS_NOTE: Apply WEMA to the current delta_ms. Don't consider the
+    // accumulated delay. Tests show it behaves more robustly upon delta peaks.
+    smoothed_delay_ = smoothing_coef_ * delta_ms +
+                      (1 - smoothing_coef_) * smoothed_delay_;
     // BWE_TEST_LOGGING_PLOT(1, "smoothed_delay_ms", arrival_time_ms,
                           // smoothed_delay_);
 
@@ -166,8 +170,13 @@ void TrendlineEstimator::Update(double recv_delta_ms,
 
     // BWE_TEST_LOGGING_PLOT(1, "trendline_slope", arrival_time_ms, trend);
 
+    MS_DEBUG_DEV("trend:%f, send_delta_ms:%f, recv_delta_ms:%f, delta_ms:%f arrival_time_ms:%" PRIi64 ", accumulated_delay_:%f, smoothed_delay_:%f", trend, send_delta_ms, recv_delta_ms, delta_ms, arrival_time_ms, accumulated_delay_, smoothed_delay_);
     Detect(trend, send_delta_ms, arrival_time_ms);
   }
+  else {
+    MS_DEBUG_DEV("no calculated deltas");
+  }
+
   if (network_state_predictor_) {
     hypothesis_predicted_ = network_state_predictor_->Update(
         send_time_ms, arrival_time_ms, hypothesis_);
@@ -203,6 +212,14 @@ void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
       if (trend >= prev_trend_) {
         time_over_using_ = 0;
         overuse_counter_ = 0;
+        MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
+
+#if MS_LOG_DEV_LEVEL == 3
+        for (auto& kv : delay_hist_) {
+          MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f", kv.first, kv.second);
+        }
+#endif
+
         hypothesis_ = BandwidthUsage::kBwOverusing;
       }
     }
@@ -210,9 +227,11 @@ void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
     time_over_using_ = -1;
     overuse_counter_ = 0;
     hypothesis_ = BandwidthUsage::kBwUnderusing;
+    MS_DEBUG_DEV("---- BandwidthUsage::kBwUnderusing ---");
   } else {
     time_over_using_ = -1;
     overuse_counter_ = 0;
+    MS_DEBUG_DEV("---- BandwidthUsage::kBwNormal ---");
     hypothesis_ = BandwidthUsage::kBwNormal;
   }
   prev_trend_ = trend;

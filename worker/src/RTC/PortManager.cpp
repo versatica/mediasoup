@@ -197,14 +197,17 @@ namespace RTC
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
 					  flags);
 
-					MS_WARN_DEV(
-					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
-					  transportStr.c_str(),
-					  ip.c_str(),
-					  port,
-					  attempt,
-					  numAttempts,
-					  uv_strerror(err));
+					if (err)
+					{
+						MS_WARN_DEV(
+						  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  transportStr.c_str(),
+						  ip.c_str(),
+						  port,
+						  attempt,
+						  numAttempts,
+						  uv_strerror(err));
+					}
 
 					break;
 				}

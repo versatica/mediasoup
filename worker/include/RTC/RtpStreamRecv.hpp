@@ -28,7 +28,7 @@ namespace RTC
 		class TransmissionCounter
 		{
 		public:
-			TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers);
+			TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize);
 			void Update(RTC::RtpPacket* packet);
 			uint32_t GetBitrate(uint64_t nowMs);
 			uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
@@ -96,7 +96,7 @@ namespace RTC
 		                                   // sender report.
 		uint64_t lastSrReceived{ 0u };     // Wallclock time representing the most recent
 		                                   // sender report arrival.
-		uint32_t transit{ 0u };            // Relative transit time for prev packet.
+		int32_t transit{ 0u };             // Relative transit time for prev packet.
 		uint32_t jitter{ 0u };
 		uint8_t firSeqNumber{ 0u };
 		uint32_t reportedPacketLost{ 0u };

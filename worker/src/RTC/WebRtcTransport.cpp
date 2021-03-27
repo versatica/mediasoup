@@ -448,7 +448,13 @@ namespace RTC
 				auto jsonFingerprintsIt = jsonDtlsParametersIt->find("fingerprints");
 
 				if (jsonFingerprintsIt == jsonDtlsParametersIt->end() || !jsonFingerprintsIt->is_array())
+				{
 					MS_THROW_TYPE_ERROR("missing dtlsParameters.fingerprints");
+				}
+				else if (jsonFingerprintsIt->empty())
+				{
+					MS_THROW_TYPE_ERROR("empty dtlsParameters.fingerprints array");
+				}
 
 				// NOTE: Just take the first fingerprint.
 				for (auto& jsonFingerprint : *jsonFingerprintsIt)
@@ -467,7 +473,9 @@ namespace RTC
 					  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get<std::string>());
 
 					if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+					{
 						MS_THROW_TYPE_ERROR("invalid fingerprint.algorithm value");
+					}
 
 					auto jsonValueIt = jsonFingerprint.find("value");
 
@@ -703,7 +711,6 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 
@@ -718,7 +725,6 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 
@@ -733,7 +739,6 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 
@@ -801,11 +806,11 @@ namespace RTC
 	}
 
 	void WebRtcTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
-		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len);
+		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len, cb);
 	}
 
 	void WebRtcTransport::SendSctpData(const uint8_t* data, size_t len)

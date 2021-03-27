@@ -30,7 +30,7 @@
 
 /*
  * Usage: daytime_server [local_encaps_port] [remote_encaps_port]
- * 
+ *
  * Example
  * Server: $ ./daytime_server 11111 22222
  * Client: $ ./client 127.0.0.1 13 0 22222 11111
@@ -127,14 +127,6 @@ main(int argc, char *argv[])
 			perror("usrsctp_sendv");
 		}
 		usrsctp_close(conn_sock);
-	}
-	usrsctp_close(sock);
-	while (usrsctp_finish() != 0) {
-#ifdef _WIN32
-		Sleep(SLEEP * 1000);
-#else
-		sleep(SLEEP);
-#endif
 	}
 	return (0);
 }

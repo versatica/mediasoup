@@ -28,7 +28,7 @@
       'Debug':
       {
         'defines': [ 'DEBUG', 'MS_LOG_TRACE', 'MS_LOG_FILE_LINE' ],
-        'cflags': [ '-g', '-O0', '-fwrapv', '-Wno-parentheses-equality', '-Wno-unknown-warning-option', '-fPIC' ],
+        'cflags': [ '-g', '-O0', '-Wno-parentheses-equality', '-Wno-unknown-warning-option', '-fPIC' ],
         'xcode_settings':
         {
           'GCC_OPTIMIZATION_LEVEL': '0'

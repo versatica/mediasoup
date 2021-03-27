@@ -15,17 +15,20 @@ namespace RTC
 
 	/* TransmissionCounter methods. */
 
-	RtpStreamRecv::TransmissionCounter::TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers)
+	RtpStreamRecv::TransmissionCounter::TransmissionCounter(
+	  uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize)
 	{
 		MS_TRACE();
 
 		// Reserve vectors capacity.
 		this->spatialLayerCounters = std::vector<std::vector<RTC::RtpDataCounter>>(spatialLayers);
-		;
 
 		for (auto& spatialLayerCounter : this->spatialLayerCounters)
 		{
-			spatialLayerCounter = std::vector<RTC::RtpDataCounter>(temporalLayers);
+			for (uint8_t tIdx{ 0u }; tIdx < temporalLayers; ++tIdx)
+			{
+				spatialLayerCounter.emplace_back(RTC::RtpDataCounter(windowSize));
+			}
 		}
 	}
 
@@ -166,9 +169,9 @@ namespace RTC
 
 		size_t bytes{ 0u };
 
-		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		for (const auto& spatialLayerCounter : this->spatialLayerCounters)
 		{
-			for (auto& temporalLayerCounter : spatialLayerCounter)
+			for (const auto& temporalLayerCounter : spatialLayerCounter)
 			{
 				bytes += temporalLayerCounter.GetBytes();
 			}
@@ -181,7 +184,8 @@ namespace RTC
 
 	RtpStreamRecv::RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params)
 	  : RTC::RtpStream::RtpStream(listener, params, 10),
-	    transmissionCounter(params.spatialLayers, params.temporalLayers)
+	    transmissionCounter(
+	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500)
 	{
 		MS_TRACE();
 
@@ -619,6 +623,10 @@ namespace RTC
 
 		if (this->params.useNack)
 			this->nackGenerator->Reset();
+
+		// Reset jitter.
+		this->transit = 0;
+		this->jitter  = 0;
 	}
 
 	void RtpStreamRecv::Resume()
@@ -639,6 +647,14 @@ namespace RTC
 		auto transit =
 		  static_cast<int>(DepLibUV::GetTimeMs() - (rtpTimestamp * 1000 / this->params.clockRate));
 		int d = transit - this->transit;
+
+		// First transit calculation, save and return.
+		if (this->transit == 0)
+		{
+			this->transit = transit;
+
+			return;
+		}
 
 		this->transit = transit;
 

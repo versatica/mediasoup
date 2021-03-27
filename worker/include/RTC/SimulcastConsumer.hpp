@@ -42,7 +42,7 @@ namespace RTC
 					this->producerRtpStreams.end(),
 					[](const RTC::RtpStream* rtpStream)
 					{
-						return (rtpStream != nullptr && rtpStream->GetScore() > 0u);
+						return (rtpStream != nullptr && (rtpStream->GetScore() > 0u || rtpStream->HasDtx()));
 					}
 				)
 			);

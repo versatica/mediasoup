@@ -207,6 +207,7 @@ export class DataProducer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.dataProducerId);
+		this._payloadChannel.removeAllListeners(this._internal.dataProducerId);
 
 		this._channel.request('dataProducer.close', this._internal)
 			.catch(() => {});
@@ -230,6 +231,10 @@ export class DataProducer extends EnhancedEventEmitter
 		logger.debug('transportClosed()');
 
 		this._closed = true;
+
+		// Remove notification subscriptions.
+		this._channel.removeAllListeners(this._internal.dataProducerId);
+		this._payloadChannel.removeAllListeners(this._internal.dataProducerId);
 
 		this.safeEmit('transportclose');
 

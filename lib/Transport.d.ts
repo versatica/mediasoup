@@ -166,7 +166,7 @@ export declare class Transport extends EnhancedEventEmitter {
      *
      * @virtual
      */
-    consume({ producerId, rtpCapabilities, paused, preferredLayers, appData }: ConsumerOptions): Promise<Consumer>;
+    consume({ producerId, rtpCapabilities, paused, preferredLayers, pipe, appData }: ConsumerOptions): Promise<Consumer>;
     /**
      * Create a DataProducer.
      */

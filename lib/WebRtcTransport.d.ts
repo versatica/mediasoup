@@ -98,8 +98,6 @@ export declare type WebRtcTransportStat = {
     rtxRecvBitrate: number;
     rtxBytesSent: number;
     rtxSendBitrate: number;
-    probationBytesReceived: number;
-    probationRecvBitrate: number;
     probationBytesSent: number;
     probationSendBitrate: number;
     availableOutgoingBitrate?: number;
