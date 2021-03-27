@@ -67,19 +67,19 @@ fn main() {
     // Add C++ std lib
     #[cfg(target_os = "linux")]
     {
-        println!("cargo:rustc-link-lib=static=stdc++");
-
-        let output = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
-            .arg("-print-search-dirs")
+        let path = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
+            .arg("--print-file-name=libstdc++.a")
             .output()
-            .expect("Failed to start");
-        for line in String::from_utf8_lossy(&output.stdout).lines() {
-            if let Some(paths) = line.strip_prefix("libraries: =") {
-                for path in paths.split(':') {
-                    println!("cargo:rustc-link-search=native={}", path);
-                }
-            }
-        }
+            .expect("Failed to start")
+            .stdout;
+        println!(
+            "cargo:rustc-link-search=native={}",
+            String::from_utf8_lossy(&path)
+                .trim()
+                .strip_suffix("libstdc++.a")
+                .expect("Failed to strip suffix"),
+        );
+        println!("cargo:rustc-link-lib=static=stdc++");
     }
     #[cfg(any(
         target_os = "macos",
@@ -89,19 +89,19 @@ fn main() {
         target_os = "netbsd"
     ))]
     {
-        println!("cargo:rustc-link-lib=static=c++");
-
-        let output = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
-            .arg("-print-search-dirs")
+        let path = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
+            .arg("--print-file-name=libc++.a")
             .output()
-            .expect("Failed to start");
-        for line in String::from_utf8_lossy(&output.stdout).lines() {
-            if let Some(paths) = line.strip_prefix("libraries: =") {
-                for path in paths.split(':') {
-                    println!("cargo:rustc-link-search=native={}", path);
-                }
-            }
-        }
+            .expect("Failed to start")
+            .stdout;
+        println!(
+            "cargo:rustc-link-search=native={}",
+            String::from_utf8_lossy(&path)
+                .trim()
+                .strip_suffix("libc++.a")
+                .expect("Failed to strip suffix"),
+        );
+        println!("cargo:rustc-link-lib=static=c++");
     }
     // TODO: Windows and check above BSDs if they even work
 
