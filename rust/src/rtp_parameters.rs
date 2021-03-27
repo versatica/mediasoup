@@ -42,130 +42,13 @@ impl RtpCodecParametersParameters {
     }
 }
 
-// TODO: Unlock this once const generics are stable and remove subsequent impls:
-//  * https://github.com/rust-lang/rust/issues/74878
-//  * https://github.com/rust-lang/rust/issues/65798
-// impl<K, const N: usize> From<[(K, RtpCodecParametersParametersValue); N]> for RtpCodecParametersParameters
-// where
-//     K: Into<String>,
-// {
-//     fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
-//         Self::from_iter(std::array::IntoIter::new(array))
-//     }
-// }
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 1]> for RtpCodecParametersParameters
+impl<K, const N: usize> From<[(K, RtpCodecParametersParametersValue); N]>
+    for RtpCodecParametersParameters
 where
     K: Into<String>,
 {
-    fn from(array: [(K, RtpCodecParametersParametersValue); 1]) -> Self {
-        let mut this = Self::default();
-        let [one] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        this
-    }
-}
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 2]> for RtpCodecParametersParameters
-where
-    K: Into<String>,
-{
-    fn from(array: [(K, RtpCodecParametersParametersValue); 2]) -> Self {
-        let mut this = Self::default();
-        let [one, two] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = two;
-            this.insert(k, v);
-        }
-        this
-    }
-}
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 3]> for RtpCodecParametersParameters
-where
-    K: Into<String>,
-{
-    fn from(array: [(K, RtpCodecParametersParametersValue); 3]) -> Self {
-        let mut this = Self::default();
-        let [one, two, three] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = two;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = three;
-            this.insert(k, v);
-        }
-        this
-    }
-}
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 4]> for RtpCodecParametersParameters
-where
-    K: Into<String>,
-{
-    fn from(array: [(K, RtpCodecParametersParametersValue); 4]) -> Self {
-        let mut this = Self::default();
-        let [one, two, three, four] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = two;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = three;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = four;
-            this.insert(k, v);
-        }
-        this
-    }
-}
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 5]> for RtpCodecParametersParameters
-where
-    K: Into<String>,
-{
-    fn from(array: [(K, RtpCodecParametersParametersValue); 5]) -> Self {
-        let mut this = Self::default();
-        let [one, two, three, four, five] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = two;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = three;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = four;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = five;
-            this.insert(k, v);
-        }
-        this
+    fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
+        Self::from_iter(std::array::IntoIter::new(array))
     }
 }
 
