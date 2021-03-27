@@ -732,15 +732,16 @@ impl WebRtcMessage {
     // | WebRTC Binary Empty                | 57        |
     // +------------------------------------+-----------+
 
-    pub(crate) fn new(ppid: u32, payload: Bytes) -> Self {
-        // TODO: Make this fallible instead
+    pub(crate) fn new(ppid: u32, payload: Bytes) -> Result<Self, u32> {
         match ppid {
-            51 => WebRtcMessage::String(String::from_utf8(payload.to_vec()).unwrap()),
-            53 => WebRtcMessage::Binary(payload),
-            56 => WebRtcMessage::EmptyString,
-            57 => WebRtcMessage::EmptyBinary,
-            _ => {
-                panic!("Bad ppid {}", ppid);
+            51 => Ok(WebRtcMessage::String(
+                String::from_utf8(payload.to_vec()).unwrap(),
+            )),
+            53 => Ok(WebRtcMessage::Binary(payload)),
+            56 => Ok(WebRtcMessage::EmptyString),
+            57 => Ok(WebRtcMessage::EmptyBinary),
+            ppid => {
+                return Err(ppid);
             }
         }
     }

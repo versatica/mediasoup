@@ -397,11 +397,16 @@ impl DataConsumer {
                 match serde_json::from_value::<PayloadNotification>(message) {
                     Ok(notification) => match notification {
                         PayloadNotification::Message { ppid } => {
-                            let message = WebRtcMessage::new(ppid, payload);
-
-                            handlers.message.call(|callback| {
-                                callback(&message);
-                            });
+                            match WebRtcMessage::new(ppid, payload) {
+                                Ok(message) => {
+                                    handlers.message.call(|callback| {
+                                        callback(&message);
+                                    });
+                                }
+                                Err(ppid) => {
+                                    error!("Bad ppid {}", ppid);
+                                }
+                            }
                         }
                     },
                     Err(error) => {
