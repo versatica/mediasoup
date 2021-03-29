@@ -8,7 +8,7 @@ namespace Channel
 {
 	/* Class variables. */
 
-	Channel::UnixStreamSocket* Notifier::channel{ nullptr };
+	thread_local Channel::UnixStreamSocket* Notifier::channel{ nullptr };
 
 	/* Static methods. */
 

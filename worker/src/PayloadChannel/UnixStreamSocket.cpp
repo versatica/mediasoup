@@ -20,19 +20,21 @@ namespace PayloadChannel
 	// netstring length for a 4194304 bytes payload.
 	static constexpr size_t NsMessageMaxLen{ 4194313 };
 	static constexpr size_t NsPayloadMaxLen{ 4194304 };
-	static uint8_t WriteBuffer[NsMessageMaxLen];
 
 	/* Instance methods. */
 	UnixStreamSocket::UnixStreamSocket(int consumerFd, int producerFd)
 	  : consumerSocket(consumerFd, NsMessageMaxLen, this), producerSocket(producerFd, NsMessageMaxLen)
 	{
 		MS_TRACE();
+
+		this->WriteBuffer = (uint8_t*)std::malloc(NsMessageMaxLen);
 	}
 
 	UnixStreamSocket::~UnixStreamSocket()
 	{
 		MS_TRACE();
 
+		std::free(this->WriteBuffer);
 		delete this->ongoingNotification;
 	}
 
@@ -96,22 +98,22 @@ namespace PayloadChannel
 
 		if (nsPayloadLen == 0)
 		{
-			nsNumLen       = 1;
-			WriteBuffer[0] = '0';
-			WriteBuffer[1] = ':';
-			WriteBuffer[2] = ',';
+			nsNumLen             = 1;
+			this->WriteBuffer[0] = '0';
+			this->WriteBuffer[1] = ':';
+			this->WriteBuffer[2] = ',';
 		}
 		else
 		{
 			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			std::sprintf(reinterpret_cast<char*>(this->WriteBuffer), "%zu:", nsPayloadLen);
+			std::memcpy(this->WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
+			this->WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
 		size_t nsLen = nsNumLen + nsPayloadLen + 2;
 
-		this->producerSocket.Write(WriteBuffer, nsLen);
+		this->producerSocket.Write(this->WriteBuffer, nsLen);
 	}
 
 	void UnixStreamSocket::OnConsumerSocketMessage(

@@ -16,7 +16,7 @@ DOCKER ?= docker
 
 .PHONY:	\
 	default clean clean-all xcode lint format test bear tidy \
-	fuzzer fuzzer-run-all docker-build docker-run
+	fuzzer fuzzer-run-all docker-build docker-run libmediasoup-worker
 
 default:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
@@ -101,3 +101,7 @@ docker-run:
 		--cap-add SYS_PTRACE \
 		-v $(shell pwd)/../:/mediasoup \
 		mediasoup/docker:latest
+
+libmediasoup-worker:
+	$(PYTHON) ./scripts/configure.py --no-duplicate-basename-check -R libmediasoup-worker
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out

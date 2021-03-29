@@ -8,7 +8,7 @@ namespace PayloadChannel
 {
 	/* Class variables. */
 
-	PayloadChannel::UnixStreamSocket* Notifier::payloadChannel{ nullptr };
+	thread_local PayloadChannel::UnixStreamSocket* Notifier::payloadChannel{ nullptr };
 
 	/* Static methods. */
 
