@@ -56,7 +56,7 @@ export type PipeToRouterOptions =
 	listenIp?: TransportListenIp | string;
 
 	/**
-	 * Create a SCTP association. Default false.
+	 * Create a SCTP association. Default true.
 	 */
 	enableSctp?: boolean;
 
@@ -199,7 +199,7 @@ export class Router extends EnhancedEventEmitter
 	}
 
 	/**
-	 * RTC capabilities of the Router.
+	 * RTP capabilities of the Router.
 	 */
 	get rtpCapabilities(): RtpCapabilities
 	{

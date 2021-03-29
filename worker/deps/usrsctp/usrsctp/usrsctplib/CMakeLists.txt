@@ -45,7 +45,7 @@ include(GNUInstallDirs)
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(exec_prefix ${prefix})
 set(libdir ${exec_prefix}/${CMAKE_INSTALL_LIBDIR})
-set(includedir ${prefix}/${CMAKE_INSTALL_INCLUDEDIR}/usrsctp)
+set(includedir ${prefix}/${CMAKE_INSTALL_INCLUDEDIR})
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_MACOSX_RPATH 1)

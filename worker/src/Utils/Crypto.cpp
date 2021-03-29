@@ -9,9 +9,9 @@ namespace Utils
 {
 	/* Static variables. */
 
-	uint32_t Crypto::seed;
-	HMAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
-	uint8_t Crypto::hmacSha1Buffer[20]; // SHA-1 result is 20 bytes long.
+	thread_local uint32_t Crypto::seed;
+	thread_local HMAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
+	thread_local uint8_t Crypto::hmacSha1Buffer[20]; // SHA-1 result is 20 bytes long.
 	// clang-format off
 	const uint32_t Crypto::crc32Table[] =
 	{

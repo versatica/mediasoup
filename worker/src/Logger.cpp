@@ -7,7 +7,7 @@
 /* Class variables. */
 
 const int64_t Logger::pid{ static_cast<int64_t>(uv_os_getpid()) };
-Channel::UnixStreamSocket* Logger::channel{ nullptr };
+thread_local Channel::UnixStreamSocket* Logger::channel{ nullptr };
 char Logger::buffer[Logger::bufferSize];
 
 /* Class methods. */
