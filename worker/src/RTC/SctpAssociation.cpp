@@ -356,6 +356,15 @@ namespace RTC
 
 		// Add maxMessageSize.
 		jsonObject["maxMessageSize"] = this->maxSctpMessageSize;
+
+		// Add sendBufferSize.
+		jsonObject["sendBufferSize"] = this->sctpSendBufferSize;
+
+		// Add sctpBufferedAmountLowThreshold.
+		jsonObject["sctpBufferedAmount"] = this->sctpBufferedAmount;
+
+		// Add isDataChannel.
+		jsonObject["isDataChannel"] = this->isDataChannel;
 	}
 
 	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)

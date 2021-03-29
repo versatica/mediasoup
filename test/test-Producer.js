@@ -591,7 +591,7 @@ test('producer.dump() succeeds', async () =>
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
 	expect(data.rtpParameters.encodings.length).toBe(4);
-	expect(data.rtpParameters.encodings).toEqual(
+	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{
 				codecPayloadType : 112,
