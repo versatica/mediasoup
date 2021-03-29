@@ -27,11 +27,6 @@ const mediaCodecs =
 		kind      : 'video',
 		mimeType  : 'video/VP8',
 		clockRate : 90000
-	},
-	{
-		kind      : 'video',
-		mimeType  : 'video/VP8',
-		clockRate : 90000
 	}
 ];
 
@@ -153,7 +148,6 @@ const consumerDeviceCapabilities =
 			[
 				{ type: 'nack' },
 				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'google-remb' },
 				{ type: 'transport-cc' }
 			]
 		},
@@ -190,11 +184,7 @@ const consumerDeviceCapabilities =
 			preferredId      : 10,
 			preferredEncrypt : false
 		}
-	],
-	sctpCapabilities :
-	{
-		numSctpStreams : 2048
-	}
+	]
 };
 
 beforeAll(async () =>
@@ -234,16 +224,16 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 
 	dump = await router1.dump();
 
-	// There shoud be two Transports in router1:
+	// There should be two Transports in router1:
 	// - WebRtcTransport for audioProducer and videoProducer.
 	// - PipeTransport between router1 and router2.
 	expect(dump.transportIds.length).toBe(2);
 
 	dump = await router2.dump();
 
-	// There shoud be two Transports in router2:
+	// There should be two Transports in router2:
 	// - WebRtcTransport for audioConsumer and videoConsumer.
-	// - pipeTransport between router2 and router1.
+	// - PipeTransport between router2 and router1.
 	expect(dump.transportIds.length).toBe(2);
 
 	expect(pipeConsumer.id).toBeType('string');
@@ -448,32 +438,6 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 			enableRtx : true
 		});
 
-	expect(pipeTransport.srtpParameters).toBeUndefined();
-
-	// No SRTP enabled so passing srtpParameters must fail.
-	await expect(pipeTransport.connect(
-		{
-			ip             : '127.0.0.2',
-			port           : 9999,
-			srtpParameters :
-			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
-			}
-		}))
-		.rejects
-		.toThrow(TypeError);
-
-	// No SRTP enabled so passing srtpParameters (even if invalid) must fail.
-	await expect(pipeTransport.connect(
-		{
-			ip             : '127.0.0.2',
-			port           : 9999,
-			srtpParameters : 'invalid'
-		}))
-		.rejects
-		.toThrow(TypeError);
-
 	const pipeConsumer =
 		await pipeTransport.consume({ producerId: videoProducer.id });
 
@@ -542,6 +506,43 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 
 	pipeTransport.close();
 }, 2000);
+
+test('router.createPipeTransport() with invalid srtpParameters must fail', async () =>
+{
+	const pipeTransport = await router1.createPipeTransport(
+		{
+			listenIp  : '127.0.0.1',
+			enableRtx : true
+		});
+
+	expect(pipeTransport.srtpParameters).toBeUndefined();
+
+	// No SRTP enabled so passing srtpParameters must fail.
+	await expect(pipeTransport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+				{
+					cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+					keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				}
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	// No SRTP enabled so passing srtpParameters (even if invalid) must fail.
+	await expect(pipeTransport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters : 'invalid'
+		}))
+		.rejects
+		.toThrow(TypeError);
+
+	pipeTransport.close();
+});
 
 test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 {
@@ -683,7 +684,6 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				[
 					{ type: 'nack', parameter: '' },
 					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'google-remb', parameter: '' },
 					{ type: 'transport-cc', parameter: '' }
 				]
 			},
@@ -776,16 +776,16 @@ test('router.pipeToRouter() succeeds with data', async () =>
 
 	dump = await router1.dump();
 
-	// There shoud be two Transports in router1:
+	// There should be two Transports in router1:
 	// - WebRtcTransport for audioProducer, videoProducer and dataProducer.
 	// - PipeTransport between router1 and router2.
 	expect(dump.transportIds.length).toBe(2);
 
 	dump = await router2.dump();
 
-	// There shoud be two Transports in router2:
+	// There should be two Transports in router2:
 	// - WebRtcTransport for audioConsumer, videoConsumer and dataConsumer.
-	// - pipeTransport between router2 and router1.
+	// - PipeTransport between router2 and router1.
 	expect(dump.transportIds.length).toBe(2);
 
 	expect(pipeDataConsumer.id).toBeType('string');
@@ -868,14 +868,14 @@ test('router.pipeToRouter() called twice generates a single PipeTransport pair',
 
 	dump = await routerA.dump();
 
-	// There shoud be 3 Transports in routerA:
+	// There should be 3 Transports in routerA:
 	// - WebRtcTransport for audioProducer1 and audioProducer2.
 	// - PipeTransport between routerA and routerB.
 	expect(dump.transportIds.length).toBe(3);
 
 	dump = await routerB.dump();
 
-	// There shoud be 1 Transport in routerB:
+	// There should be 1 Transport in routerB:
 	// - PipeTransport between routerA and routerB.
 	expect(dump.transportIds.length).toBe(1);
 }, 2000);

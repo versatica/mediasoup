@@ -99,7 +99,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		{
 			kind                 : 'video',
 			mimeType             : 'video/H264',
-			preferredPayloadType : 102, // 102 is the second available dynamic PT.
+			preferredPayloadType : 102, // 102 is the third available dynamic PT.
 			clockRate            : 90000,
 			parameters           :
 			{
@@ -449,7 +449,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	};
 
 	const consumerRtpParameters =
-		ortc.getConsumerRtpParameters(consumableRtpParameters, remoteRtpCapabilities);
+		ortc.getConsumerRtpParameters(consumableRtpParameters, remoteRtpCapabilities, false);
 
 	expect(consumerRtpParameters.codecs.length).toEqual(2);
 	expect(consumerRtpParameters.codecs[0]).toEqual(
