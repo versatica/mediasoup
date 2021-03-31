@@ -35,7 +35,7 @@ namespace RTC
 				this->oldestIndex = 0;
 		}
 
-		// Update the latest item
+		// Update the latest item.
 		BufferItem& item = buffer[this->latestIndex];
 		item.count += size;
 		item.time        = nowMs;
