@@ -1,6 +1,5 @@
 use std::os::raw::{c_char, c_int};
 
-// TODO: handle MS_ABORT nicely (currently shuts down the whole app)
 #[link(name = "mediasoup-worker", kind = "static")]
 extern "C" {
     pub fn run_worker(
