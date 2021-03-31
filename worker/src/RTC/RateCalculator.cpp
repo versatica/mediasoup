@@ -83,7 +83,7 @@ namespace RTC
 
 		uint64_t newOldestTime = nowMs - this->windowSize;
 
-		// Oldest item already removed
+		// Oldest item already removed.
 		if (newOldestTime <= this->oldestTime)
 			return;
 
