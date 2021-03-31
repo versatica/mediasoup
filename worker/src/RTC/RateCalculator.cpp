@@ -20,14 +20,34 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		// Set data in the index before the oldest index.
-		uint32_t offset = this->windowSize - 1;
-		uint32_t index  = this->oldestIndex + offset;
+		// Increase the index
+		if (++this->latestIndex >= this->windowItems)
+			this->latestIndex = 0;
 
-		if (index >= this->windowSize)
-			index -= this->windowSize;
+		// Latest index overlaps with the oldest one, remove it
+		if (this->latestIndex == this->oldestIndex && this->oldestIndex != -1)
+		{
+			BufferItem& oldestItem = buffer[this->oldestIndex];
+			this->totalCount -= oldestItem.count;
+			oldestItem.count = 0u;
+			oldestItem.time = 0u;
+			if (++this->oldestIndex >= this->windowItems)
+				this->oldestIndex = 0;
+		}
 
-		this->buffer[index].count += size;
+		// Update the latest item
+		BufferItem& item = buffer[this->latestIndex];
+		item.count += size;
+		item.time = nowMs;
+		this->latestTime = nowMs;
+
+		// Set the oldest item index and time, if not set
+		if (this->oldestIndex < 0)
+		{
+			this->oldestIndex = this->latestIndex;
+			this->oldestTime = nowMs;
+		}
+
 		this->totalCount += size;
 
 		// Reset lastRate and lastTime so GetRate() will calculate rate again even
@@ -57,25 +77,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// No item set
+		if (this->latestIndex < 0 || this->oldestIndex < 0)
+			return;
+
 		uint64_t newOldestTime = nowMs - this->windowSize;
 
-		// Should never happen.
-		if (newOldestTime < this->oldestTime)
-		{
-			MS_ERROR(
-			  "current time [%" PRIu64 "] is older than a previous [%" PRIu64 "]",
-			  newOldestTime,
-			  this->oldestTime);
-
-			return;
-		}
-
-		// We are in the same time unit (ms) as the last entry.
-		if (newOldestTime == this->oldestTime)
+		// Oldest item already removed
+		if (newOldestTime <= this->oldestTime)
 			return;
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
-		if (newOldestTime > this->oldestTime + this->windowSize)
+		if (newOldestTime > this->latestTime)
 		{
 			Reset(nowMs);
 
@@ -84,18 +97,18 @@ namespace RTC
 
 		while (this->oldestTime < newOldestTime)
 		{
-			const BufferItem& oldestItem = buffer[this->oldestIndex];
-
+			BufferItem& oldestItem = buffer[this->oldestIndex];
 			this->totalCount -= oldestItem.count;
-			this->buffer[this->oldestIndex] = BufferItem();
+			oldestItem.count = 0u;
+			oldestItem.time = 0u;
 
-			if (++this->oldestIndex >= this->windowSize)
+			if (++this->oldestIndex >= this->windowItems)
 				this->oldestIndex = 0;
 
-			++this->oldestTime;
+			const BufferItem& newOldestItem = buffer[this->oldestIndex];
+			this->oldestTime = newOldestItem.time;
 		}
 
-		this->oldestTime = newOldestTime;
 	}
 
 	void RtpDataCounter::Update(RTC::RtpPacket* packet)
