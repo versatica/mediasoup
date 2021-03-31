@@ -20,11 +20,11 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		// Increase the index
+		// Increase the index.
 		if (++this->latestIndex >= this->windowItems)
 			this->latestIndex = 0;
 
-		// Latest index overlaps with the oldest one, remove it
+		// Latest index overlaps with the oldest one, remove it.
 		if (this->latestIndex == this->oldestIndex && this->oldestIndex != -1)
 		{
 			BufferItem& oldestItem = buffer[this->oldestIndex];
@@ -41,7 +41,7 @@ namespace RTC
 		item.time        = nowMs;
 		this->latestTime = nowMs;
 
-		// Set the oldest item index and time, if not set
+		// Set the oldest item index and time, if not set.
 		if (this->oldestIndex < 0)
 		{
 			this->oldestIndex = this->latestIndex;
