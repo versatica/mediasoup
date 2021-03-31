@@ -17,7 +17,10 @@ namespace RTC
 		static constexpr uint16_t DefaultWindowItems{ 1000u };
 
 	public:
-		RateCalculator(size_t windowSize = DefaultWindowSize, float scale = DefaultBpsScale, uint16_t windowItems = DefaultWindowItems)
+		RateCalculator(
+		  size_t windowSize    = DefaultWindowSize,
+		  float scale          = DefaultBpsScale,
+		  uint16_t windowItems = DefaultWindowItems)
 		  : windowSize(windowSize), scale(scale), windowItems(windowItems)
 		{
 			Reset();

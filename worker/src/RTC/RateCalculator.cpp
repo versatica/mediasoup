@@ -30,7 +30,7 @@ namespace RTC
 			BufferItem& oldestItem = buffer[this->oldestIndex];
 			this->totalCount -= oldestItem.count;
 			oldestItem.count = 0u;
-			oldestItem.time = 0u;
+			oldestItem.time  = 0u;
 			if (++this->oldestIndex >= this->windowItems)
 				this->oldestIndex = 0;
 		}
@@ -38,14 +38,14 @@ namespace RTC
 		// Update the latest item
 		BufferItem& item = buffer[this->latestIndex];
 		item.count += size;
-		item.time = nowMs;
+		item.time        = nowMs;
 		this->latestTime = nowMs;
 
 		// Set the oldest item index and time, if not set
 		if (this->oldestIndex < 0)
 		{
 			this->oldestIndex = this->latestIndex;
-			this->oldestTime = nowMs;
+			this->oldestTime  = nowMs;
 		}
 
 		this->totalCount += size;
@@ -100,15 +100,14 @@ namespace RTC
 			BufferItem& oldestItem = buffer[this->oldestIndex];
 			this->totalCount -= oldestItem.count;
 			oldestItem.count = 0u;
-			oldestItem.time = 0u;
+			oldestItem.time  = 0u;
 
 			if (++this->oldestIndex >= this->windowItems)
 				this->oldestIndex = 0;
 
 			const BufferItem& newOldestItem = buffer[this->oldestIndex];
-			this->oldestTime = newOldestItem.time;
+			this->oldestTime                = newOldestItem.time;
 		}
-
 	}
 
 	void RtpDataCounter::Update(RTC::RtpPacket* packet)
