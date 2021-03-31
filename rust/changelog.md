@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.7.0 (WIP)
+### 0.7.0
 
 * Switch from running C++ worker processes to worker threads using mediasoup-sys that wraps mediasoup-worker into library
 * Simplify `WorkerManager::new()` and `WorkerManager::with_executor()` API as the result of above
