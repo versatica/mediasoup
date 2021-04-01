@@ -2,6 +2,11 @@ use std::env;
 use std::process::Command;
 
 fn main() {
+    if std::env::var("DOCS_RS").is_ok() {
+        // Skip everything when building docs on docs.rs
+        return;
+    }
+
     // Add C++ std lib
     #[cfg(target_os = "linux")]
     {
