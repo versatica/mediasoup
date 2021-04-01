@@ -77,9 +77,6 @@ int main(int argc, char* argv[])
 		std::_Exit(EXIT_FAILURE);
 	}
 
-	// Initialize the Logger.
-	Logger::ClassInit(channel);
-
 	try
 	{
 		Settings::SetConfiguration(argc, argv);
@@ -98,30 +95,29 @@ int main(int argc, char* argv[])
 		std::_Exit(EXIT_FAILURE);
 	}
 
-	MS_DEBUG_TAG(info, "starting mediasoup-worker process [version:%s]", version.c_str());
+	MS_DEBUG_TAG_STD(info, "starting mediasoup-worker process [version:%s]", version.c_str());
 
 #if defined(MS_LITTLE_ENDIAN)
-	MS_DEBUG_TAG(info, "little-endian CPU detected");
+	MS_DEBUG_TAG_STD(info, "little-endian CPU detected");
 #elif defined(MS_BIG_ENDIAN)
-	MS_DEBUG_TAG(info, "big-endian CPU detected");
+	MS_DEBUG_TAG_STD(info, "big-endian CPU detected");
 #else
-	MS_WARN_TAG(info, "cannot determine whether little-endian or big-endian");
+	MS_WARN_TAG_STD(info, "cannot determine whether little-endian or big-endian");
 #endif
 
 #if defined(INTPTR_MAX) && defined(INT32_MAX) && (INTPTR_MAX == INT32_MAX)
-	MS_DEBUG_TAG(info, "32 bits architecture detected");
+	MS_DEBUG_TAG_STD(info, "32 bits architecture detected");
 #elif defined(INTPTR_MAX) && defined(INT64_MAX) && (INTPTR_MAX == INT64_MAX)
-	MS_DEBUG_TAG(info, "64 bits architecture detected");
+	MS_DEBUG_TAG_STD(info, "64 bits architecture detected");
 #else
-	MS_WARN_TAG(info, "cannot determine 32 or 64 bits architecture");
+	MS_WARN_TAG_STD(info, "cannot determine 32 or 64 bits architecture");
 #endif
-
-	Settings::PrintConfiguration();
-	DepLibUV::PrintVersion();
 
 	try
 	{
 		// Initialize static stuff.
+		Channel::Notifier::ClassInit(channel);
+		PayloadChannel::Notifier::ClassInit(payloadChannel);
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
 		DepUsrSCTP::ClassInit();
@@ -129,11 +125,12 @@ int main(int argc, char* argv[])
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
-		Channel::Notifier::ClassInit(channel);
-		PayloadChannel::Notifier::ClassInit(payloadChannel);
 
 		// Ignore some signals.
 		IgnoreSignals();
+
+		Settings::PrintConfiguration();
+		DepLibUV::PrintVersion();
 
 		// Run the Worker.
 		Worker worker(channel, payloadChannel);

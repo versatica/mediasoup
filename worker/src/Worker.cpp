@@ -13,7 +13,7 @@
 Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel)
   : channel(channel), payloadChannel(payloadChannel)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	// Set us as Channel's listener.
 	this->channel->SetListener(this);
@@ -40,13 +40,15 @@ Worker::~Worker()
 {
 	MS_TRACE();
 
-	if (!this->closed)
-		Close();
+	Close();
 }
 
 void Worker::Close()
 {
 	MS_TRACE();
+
+	// Release log fd
+	Logger::MSlogclose();
 
 	if (this->closed)
 		return;
@@ -223,6 +225,21 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 		{
 			Settings::HandleRequest(request);
 
+			break;
+		}
+
+		case Channel::Request::MethodId::WORKER_MSLOG_OPEN:
+		{
+			Logger::MSlogopen(request->data);
+			request->Accept();
+
+			break;
+		}
+
+		case Channel::Request::MethodId::WORKER_MSLOG_ROTATE:
+		{
+			Logger::MSlogrotate();
+			request->Accept();
 			break;
 		}
 

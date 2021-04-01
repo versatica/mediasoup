@@ -100,7 +100,6 @@ namespace RTC
 		if (timer == this->shmIdleCheckTimer)
 		{
 			this->idle = true;
-
 			this->OnIdleShmConsumer();
 		}
 	}
@@ -116,6 +115,7 @@ namespace RTC
 		// Add rtpStream.
 	  this->rtpStream->FillJson(jsonObject["rtpStream"]);
 	}
+
 
 	void ShmConsumer::FillJsonStats(json& jsonArray) const
 	{
@@ -137,6 +137,7 @@ namespace RTC
 		this->FillShmWriterStats(jsonArray[2]);
 	}
 
+
 	void ShmConsumer::FillShmWriterStats(json& jsonObject) const
 	{
 		MS_TRACE();
@@ -155,7 +156,8 @@ namespace RTC
 		jsonObject["packetLossRate"]   = totalRate != 0 ? (float)lossRate / (float)totalRate : 0.0f;
 		jsonObject["recvJitter"]       = recvStream != nullptr ? recvStream->GetJitter() : 0;
 	}
-
+ 
+ 
 	void ShmConsumer::FillJsonScore(json& jsonObject) const
 	{
 		MS_TRACE();
@@ -245,6 +247,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Restart the shmIdleCheckTimer each time RTP packet arrived
+		this->idle = false;
 		if (this->shmIdleCheckTimer)
 			this->shmIdleCheckTimer->Restart();
 

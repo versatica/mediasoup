@@ -49,6 +49,11 @@ export type WorkerSettings =
 	logTags?: WorkerLogTag[];
 
 	/**
+	 * MSWorker log file name
+	**/
+	logFile: string;
+
+	/**
 	 * Minimun RTC port for ICE, DTLS, RTP, etc. Default 10000.
 	 */
 	rtcMinPort?: number;
@@ -171,6 +176,31 @@ export type WorkerResourceUsage =
 	/* eslint-enable camelcase */
 }
 
+export type WorkerLoggerErrorType = 'open' | 'rotate' | 'write';
+
+export type WorkerLoggerError =
+{
+	/**
+	 * names a logger function or operation where error happenned
+	 */
+	source: WorkerLoggerErrorType;
+
+	/**
+	 * 
+	 */
+	error: string;
+
+	/**
+	 *
+	 */
+	file: string;
+
+	/**
+	 * Content of a message failed to be written into a log, maybe empty
+	 */
+	data: string;
+}
+
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -190,6 +220,9 @@ export class Worker extends EnhancedEventEmitter
 
 	// Worker process PID.
 	private readonly _pid: number;
+
+	// Worker log name.
+	private readonly _mslog: string;
 
 	// Channel instance.
 	private readonly _channel: Channel;
@@ -221,6 +254,7 @@ export class Worker extends EnhancedEventEmitter
 			logTags,
 			logDevLevel,
 			logTraceEnabled,
+			logFile,
 			rtcMinPort,
 			rtcMaxPort,
 			dtlsCertificateFile,
@@ -240,9 +274,7 @@ export class Worker extends EnhancedEventEmitter
 			spawnBin = process.env.MEDIASOUP_VALGRIND_BIN || 'valgrind';
 
 			if (process.env.MEDIASOUP_VALGRIND_OPTIONS)
-			{
 				spawnArgs = spawnArgs.concat(process.env.MEDIASOUP_VALGRIND_OPTIONS.split(/\s+/));
-			}
 
 			spawnArgs.push(workerBin);
 		}
@@ -286,11 +318,7 @@ export class Worker extends EnhancedEventEmitter
 			{
 				env :
 				{
-					MEDIASOUP_VERSION : '__MEDIASOUP_VERSION__',
-					// Let the worker process inherit all environment variables, useful
-					// if a custom and not in the path GCC is used so the user can set
-					// LD_LIBRARY_PATH environment variable for runtime.
-					...process.env
+					MEDIASOUP_VERSION : '__MEDIASOUP_VERSION__'
 				},
 
 				detached : false,
@@ -307,6 +335,8 @@ export class Worker extends EnhancedEventEmitter
 			});
 
 		this._pid = this._child.pid;
+
+		this._mslog = logFile; // all msworkers share the same log file
 
 		this._channel = new Channel(
 			{
@@ -328,16 +358,32 @@ export class Worker extends EnhancedEventEmitter
 
 		let spawnDone = false;
 
-		// Listen for 'running' notification.
-		this._channel.once(String(this._pid), (event: string) =>
+		this._channel.on(String(this._pid),  (event: string, data?: any) =>
 		{
-			if (!spawnDone && event === 'running')
+			// Listen for 'running' notification.
+			if (!spawnDone && event === 'running') 
 			{
 				spawnDone = true;
 
 				logger.debug('worker process running [pid:%s]', this._pid);
 
 				this.emit('@success');
+
+				// Tell C++ worker to begin logging. All workers share a single log file.
+				this.logOpen();
+			}
+			// Once worker started begin listening for issues with logging
+			else if (spawnDone)
+			{
+				if (event === 'failedlog')
+				{
+					const logerr = data as WorkerLoggerError;
+						
+					this.safeEmit('failedlog', logerr);
+
+					// Emit observer event.
+					this._observer.safeEmit('failedlog', logerr);
+				}
 			}
 		});
 
@@ -526,6 +572,29 @@ export class Worker extends EnhancedEventEmitter
 		logger.debug('getResourceUsage()');
 
 		return this._channel.request('worker.getResourceUsage');
+	}
+
+	/**
+	 * Open specified log file
+	 * TODO: need to return success/failure?
+	**/
+	async logOpen() : Promise<any>
+	{
+		logger.debug('logOpen(): %s', this._mslog);
+
+		const reqData = { mslogname: this._mslog};
+
+		await this._channel.request('worker.logopen', undefined, reqData);
+	}
+
+	/**
+	 * Reopen specific log file after logrotate 
+	**/
+	async logRotate() : Promise<any>
+	{
+		logger.debug('logRotate()');
+
+		await this._channel.request('worker.logrotate');
 	}
 
 	/**
