@@ -503,7 +503,7 @@ namespace RTC
 				{
 					auto* provisionalProducerRtpStream =
 					  this->producerRtpStreams.at(this->provisionalTargetSpatialLayer);
-					auto provisionalRequiredBitrate = provisionalProducerRtpStream->GetLayerBitrate(
+					auto provisionalRequiredBitrate = provisionalProducerRtpStream->GetBitrate(
 					  nowMs, 0, this->provisionalTargetTemporalLayer);
 
 					if (requiredBitrate > provisionalRequiredBitrate)
