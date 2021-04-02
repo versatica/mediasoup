@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <deque>
 
 namespace RTC
 {
@@ -39,8 +38,9 @@ namespace RTC
 		void RemoveOldData(uint64_t nowMs);
 		void Reset(uint64_t nowMs)
 		{
-			this->buffer.clear();
+			this->buffer.reset(new BufferItem[this->windowSize]);
 			this->oldestTime  = nowMs - this->windowSize;
+			this->oldestIndex = 0u;
 			this->totalCount  = 0u;
 			this->lastRate    = 0u;
 			this->lastTime    = 0u;
@@ -49,12 +49,6 @@ namespace RTC
 	private:
 		struct BufferItem
 		{
-		public:
-			BufferItem(uint64_t timestamp, size_t count) : timestamp(timestamp), count(count)
-			{
-			}
-
-			uint64_t timestamp{ 0u };
 			size_t count{ 0u };
 		};
 
@@ -64,9 +58,11 @@ namespace RTC
 		// Scale in which the rate is represented.
 		float scale{ DefaultBpsScale };
 		// Buffer to keep data.
-		std::deque<BufferItem> buffer;
+		std::unique_ptr<BufferItem[]> buffer;
 		// Time (in milliseconds) for oldest item in the time window.
 		uint64_t oldestTime{ 0u };
+		// Index for the oldest item in the time window.
+		uint32_t oldestIndex{ 0u };
 		// Total count in the time window.
 		size_t totalCount{ 0u };
 		// Total bytes transmitted.
