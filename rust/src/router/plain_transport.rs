@@ -1,6 +1,9 @@
 //! A plain transport represents a network path through which RTP, RTCP (optionally secured with
 //! SRTP) and SCTP (DataChannel) is transmitted.
 
+#[cfg(test)]
+mod tests;
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
@@ -26,6 +29,7 @@ use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
 use std::net::IpAddr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
@@ -75,6 +79,7 @@ pub struct PlainTransportOptions {
 }
 
 impl PlainTransportOptions {
+    /// Create Plain transport options with given listen IP.
     pub fn new(listen_ip: TransportListenIp) -> Self {
         Self {
             listen_ip,
@@ -124,6 +129,7 @@ pub struct PlainTransportDump {
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct PlainTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here
@@ -227,18 +233,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
                     internal: TransportInternal {
@@ -266,6 +272,19 @@ impl Inner {
 #[derive(Clone)]
 pub struct PlainTransport {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for PlainTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PlainTransport")
+            .field("id", &self.inner.id)
+            .field("next_mid_for_consumers", &self.inner.next_mid_for_consumers)
+            .field("used_sctp_stream_ids", &self.inner.used_sctp_stream_ids)
+            .field("cname_for_producers", &self.inner.cname_for_producers)
+            .field("router", &self.inner.router)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 #[async_trait(?Send)]
@@ -540,7 +559,7 @@ impl PlainTransport {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.router_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             }
         });
@@ -804,6 +823,12 @@ impl PlainTransport {
 #[derive(Clone)]
 pub struct WeakPlainTransport {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakPlainTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakPlainTransport").finish()
+    }
 }
 
 impl WeakPlainTransport {

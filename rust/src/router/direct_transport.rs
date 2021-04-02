@@ -1,5 +1,5 @@
 //! A direct transport represents a direct connection between the mediasoup Rust process and a
-//! [`Router`] instance in a mediasoup-worker subprocess.
+//! [`Router`] instance in a mediasoup-worker thread.
 //!
 //! A direct transport can be used to directly send and receive data messages from/to Rust by means
 //! of [`DataProducer`]s and [`DataConsumer`]s of type `Direct` created on a direct transport.
@@ -14,6 +14,9 @@
 //! by using the [`DirectProducer::send`](crate::producer::DirectProducer::send) and
 //! [`Consumer::on_rtp`] API (plus [`DirectTransport::send_rtcp`] and [`DirectTransport::on_rtcp`]
 //! API).
+
+#[cfg(test)]
+mod tests;
 
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
@@ -40,6 +43,7 @@ use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
@@ -90,6 +94,7 @@ pub struct DirectTransportDump {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct DirectTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here
@@ -164,18 +169,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
                     internal: TransportInternal {
@@ -199,7 +204,7 @@ impl Inner {
 }
 
 /// A direct transport represents a direct connection between the mediasoup Rust process and a
-/// [`Router`] instance in a mediasoup-worker subprocess.
+/// [`Router`] instance in a mediasoup-worker thread.
 ///
 /// A direct transport can be used to directly send and receive data messages from/to Rust by means
 /// of [`DataProducer`]s and [`DataConsumer`]s of type `Direct` created on a direct transport.
@@ -217,6 +222,19 @@ impl Inner {
 #[derive(Clone)]
 pub struct DirectTransport {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for DirectTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirectTransport")
+            .field("id", &self.inner.id)
+            .field("next_mid_for_consumers", &self.inner.next_mid_for_consumers)
+            .field("used_sctp_stream_ids", &self.inner.used_sctp_stream_ids)
+            .field("cname_for_producers", &self.inner.cname_for_producers)
+            .field("router", &self.inner.router)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 #[async_trait(?Send)]
@@ -498,7 +516,7 @@ impl DirectTransport {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.router_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             }
         });
@@ -565,6 +583,12 @@ impl DirectTransport {
 #[derive(Clone)]
 pub struct WeakDirectTransport {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakDirectTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakDirectTransport").finish()
+    }
 }
 
 impl WeakDirectTransport {

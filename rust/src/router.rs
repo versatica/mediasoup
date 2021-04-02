@@ -24,6 +24,8 @@ pub mod plain_transport;
 pub mod producer;
 #[cfg(not(doc))]
 pub mod rtp_observer;
+#[cfg(test)]
+mod tests;
 #[cfg(not(doc))]
 pub mod transport;
 #[cfg(not(doc))]
@@ -68,12 +70,13 @@ use log::*;
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
 
 uuid_based_wrapper_type!(
-    ///Router identifier.
+    /// Router identifier.
     RouterId
 );
 
@@ -94,6 +97,7 @@ pub struct RouterOptions {
 }
 
 impl RouterOptions {
+    /// Create router options with given list of declared media codecs.
     pub fn new(media_codecs: Vec<RtpCodecCapability>) -> Self {
         Self {
             media_codecs,
@@ -102,10 +106,17 @@ impl RouterOptions {
     }
 }
 
+impl Default for RouterOptions {
+    fn default() -> Self {
+        Self::new(vec![])
+    }
+}
+
 /// Options used for piping media or data producer to into another router on the same host.
 ///
 /// # Notes on usage
 /// * SCTP arguments will only apply the first time the underlying transports are created.
+#[derive(Debug)]
 pub struct PipeToRouterOptions {
     /// Target Router instance.
     pub router: Router,
@@ -130,6 +141,7 @@ pub struct PipeToRouterOptions {
 }
 
 impl PipeToRouterOptions {
+    /// Crate pipe options for piping into given local router.
     pub fn new(router: Router) -> Self {
         Self {
             router,
@@ -153,6 +165,7 @@ impl PipeToRouterOptions {
 /// otherwise pipe consumer and pipe producer lifetime will be tied to source producer lifetime.
 ///
 /// Pipe consumer is always tied to the lifetime of pipe producer.
+#[derive(Debug)]
 pub struct PipeProducerToRouterPair {
     /// The Consumer created in the current Router.
     pub pipe_consumer: Consumer,
@@ -208,6 +221,7 @@ impl From<ProduceError> for PipeProducerToRouterError {
 /// producer lifetime.
 ///
 /// Pipe data consumer is always tied to the lifetime of pipe data producer.
+#[derive(Debug)]
 pub struct PipeDataProducerToRouterPair {
     /// The DataConsumer created in the current Router.
     pub pipe_data_consumer: DataConsumer,
@@ -270,15 +284,22 @@ pub struct RouterDump {
 }
 
 /// New transport that was just created.
+#[derive(Debug)]
 pub enum NewTransport<'a> {
+    /// Direct transport
     Direct(&'a DirectTransport),
+    /// Pipe transport
     Pipe(&'a PipeTransport),
+    /// Plain transport
     Plain(&'a PlainTransport),
+    /// WebRtc transport
     WebRtc(&'a WebRtcTransport),
 }
 
 /// New RTP observer that was just created.
+#[derive(Debug)]
 pub enum NewRtpObserver<'a> {
+    /// Audio level observer
     AudioLevel(&'a AudioLevelObserver),
 }
 
@@ -296,6 +317,7 @@ impl PipeTransportPair {
     }
 }
 
+#[derive(Debug)]
 struct WeakPipeTransportPair {
     local: WeakPipeTransport,
     remote: WeakPipeTransport,
@@ -311,8 +333,8 @@ impl WeakPipeTransportPair {
 
 #[derive(Default)]
 struct Handlers {
-    new_transport: Bag<Box<dyn Fn(NewTransport) + Send + Sync>>,
-    new_rtp_observer: Bag<Box<dyn Fn(NewRtpObserver) + Send + Sync>>,
+    new_transport: Bag<Box<dyn Fn(NewTransport<'_>) + Send + Sync>>,
+    new_rtp_observer: Bag<Box<dyn Fn(NewRtpObserver<'_>) + Send + Sync>>,
     worker_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -340,6 +362,12 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
+        self.close();
+    }
+}
+
+impl Inner {
+    fn close(&self) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             self.handlers.close.call_simple();
 
@@ -348,7 +376,7 @@ impl Drop for Inner {
                 let request = RouterCloseRequest {
                     internal: RouterInternal { router_id: self.id },
                 };
-                let worker = self.worker.take();
+                let worker = self.worker.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
@@ -373,6 +401,20 @@ impl Drop for Inner {
 #[derive(Clone)]
 pub struct Router {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for Router {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Router")
+            .field("id", &self.inner.id)
+            .field("rtp_capabilities", &self.inner.rtp_capabilities)
+            .field("producers", &self.inner.producers)
+            .field("data_producers", &self.inner.data_producers)
+            .field("mapped_pipe_transports", &self.inner.mapped_pipe_transports)
+            .field("worker", &self.inner.worker)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl Router {
@@ -441,6 +483,7 @@ impl Router {
         &self.inner.app_data
     }
 
+    /// Whether router is closed.
     pub fn closed(&self) -> bool {
         self.inner.closed.load(Ordering::SeqCst)
     }
@@ -868,7 +911,7 @@ impl Router {
     ///                    preferred_payload_type: Some(100),
     ///                    clock_rate: NonZeroU32::new(48000).unwrap(),
     ///                    channels: NonZeroU8::new(2).unwrap(),
-    ///                    parameters: RtpCodecParametersParameters::new(),
+    ///                    parameters: RtpCodecParametersParameters::default(),
     ///                    rtcp_feedback: vec![],
     ///                },
     ///            ],
@@ -1032,8 +1075,8 @@ impl Router {
     /// let worker2 = worker_manager.create_worker(WorkerSettings::default()).await?;
     ///
     /// // Create a router in each worker.
-    /// let router1 = worker1.create_router(RouterOptions::new(vec![])).await?;
-    /// let router2 = worker2.create_router(RouterOptions::new(vec![])).await?;
+    /// let router1 = worker1.create_router(RouterOptions::default()).await?;
+    /// let router2 = worker2.create_router(RouterOptions::default()).await?;
     ///
     /// // Produce in router1.
     /// let transport1 = router1
@@ -1205,7 +1248,7 @@ impl Router {
     }
 
     /// Callback is called when a new transport is created.
-    pub fn on_new_transport<F: Fn(NewTransport) + Send + Sync + 'static>(
+    pub fn on_new_transport<F: Fn(NewTransport<'_>) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
@@ -1213,7 +1256,7 @@ impl Router {
     }
 
     /// Callback is called when a new RTP observer is created.
-    pub fn on_new_rtp_observer<F: Fn(NewRtpObserver) + Send + Sync + 'static>(
+    pub fn on_new_rtp_observer<F: Fn(NewRtpObserver<'_>) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
@@ -1446,5 +1489,10 @@ impl Router {
             .read()
             .get(data_producer_id)?
             .upgrade()
+    }
+
+    #[cfg(test)]
+    fn close(&self) {
+        self.inner.close();
     }
 }
