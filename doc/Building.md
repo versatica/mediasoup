@@ -83,6 +83,12 @@ $ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
 ```
 
 
+### `make libmediasoup-worker`
+
+Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
+
+`MEDIASOUP_MAX_CORES` and `MEDIASOUP_BUILDTYPE` environment variables from above still apply for static library build.
+
 ### `make clean`
 
 Cleans built objects and binaries.

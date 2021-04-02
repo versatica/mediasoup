@@ -672,7 +672,7 @@ test('consumer.dump() succeeds', async () =>
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
 	expect(data.rtpParameters.encodings.length).toBe(1);
-	expect(data.rtpParameters.encodings).toEqual(
+	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{
 				codecPayloadType : 103,
@@ -681,10 +681,7 @@ test('consumer.dump() succeeds', async () =>
 				{
 					ssrc : videoConsumer.rtpParameters.encodings[0].rtx.ssrc
 				},
-				scalabilityMode : 'S4T1',
-				spatialLayers   : 4,
-				temporalLayers  : 1,
-				ksvc            : false
+				scalabilityMode : 'S4T1'
 			}
 		]);
 	expect(data.consumableRtpEncodings).toBeType('array');

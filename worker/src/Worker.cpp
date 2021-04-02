@@ -24,9 +24,13 @@ Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamS
 	// Set the signals handler.
 	this->signalsHandler = new SignalsHandler(this);
 
-	// Add signals to handle.
-	this->signalsHandler->AddSignal(SIGINT, "INT");
-	this->signalsHandler->AddSignal(SIGTERM, "TERM");
+#ifdef MS_EXECUTABLE
+	{
+		// Add signals to handle.
+		this->signalsHandler->AddSignal(SIGINT, "INT");
+		this->signalsHandler->AddSignal(SIGTERM, "TERM");
+	}
+#endif
 
 	// Tell the Node process that we are running.
 	Channel::Notifier::Emit(std::to_string(Logger::pid), "running");
@@ -197,6 +201,18 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 
 	switch (request->methodId)
 	{
+		case Channel::Request::MethodId::WORKER_CLOSE:
+		{
+			if (this->closed)
+				return;
+
+			MS_DEBUG_DEV("Worker close request, stopping");
+
+			Close();
+
+			break;
+		}
+
 		case Channel::Request::MethodId::WORKER_DUMP:
 		{
 			json data = json::object();

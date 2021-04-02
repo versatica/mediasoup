@@ -1,7 +1,11 @@
 # Changelog
 
 
-### 3.6.38 (WIP)
+### 3.7.0
+
+* Welcome to `mediasoup-rust`! Authored by @nazar-pc (PRs #518 and #533).
+* Update NPM deps.
+* Update `usrsctp`.
 
 
 ### 3.6.37
