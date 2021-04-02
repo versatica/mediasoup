@@ -9,6 +9,9 @@
 //! [ICE Lite](https://tools.ietf.org/html/rfc5245#section-2.7), meaning that it does not initiate
 //! ICE connections but expects ICE Binding Requests from endpoints.
 
+#[cfg(test)]
+mod tests;
+
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
@@ -37,6 +40,7 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::fmt;
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
@@ -47,10 +51,12 @@ use thiserror::Error;
 pub struct TransportListenIps(Vec<TransportListenIp>);
 
 impl TransportListenIps {
+    /// Create transport listen IPs with given IP populated initially.
     pub fn new(listen_ip: TransportListenIp) -> Self {
         Self(vec![listen_ip])
     }
 
+    /// Insert another listen IP.
     pub fn insert(mut self, listen_ip: TransportListenIp) -> Self {
         self.0.push(listen_ip);
         self
@@ -126,6 +132,7 @@ pub struct WebRtcTransportOptions {
 }
 
 impl WebRtcTransportOptions {
+    /// Create WebRtc transport options with given listen IPs.
     pub fn new(listen_ips: TransportListenIps) -> Self {
         Self {
             listen_ips,
@@ -178,6 +185,7 @@ pub struct WebRtcTransportDump {
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct WebRtcTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here
@@ -281,18 +289,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
                     internal: TransportInternal {
@@ -328,6 +336,19 @@ impl Inner {
 #[derive(Clone)]
 pub struct WebRtcTransport {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for WebRtcTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WebRtcTransport")
+            .field("id", &self.inner.id)
+            .field("next_mid_for_consumers", &self.inner.next_mid_for_consumers)
+            .field("used_sctp_stream_ids", &self.inner.used_sctp_stream_ids)
+            .field("cname_for_producers", &self.inner.cname_for_producers)
+            .field("router", &self.inner.router)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 #[async_trait(?Send)]
@@ -614,7 +635,7 @@ impl WebRtcTransport {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.router_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             }
         });
@@ -835,6 +856,12 @@ impl WebRtcTransport {
 #[derive(Clone)]
 pub struct WeakWebRtcTransport {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakWebRtcTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakWebRtcTransport").finish()
+    }
 }
 
 impl WeakWebRtcTransport {

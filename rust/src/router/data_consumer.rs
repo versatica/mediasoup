@@ -6,6 +6,9 @@
 //! the data consumer was created on top of a
 //! [`DirectTransport`](crate::direct_transport::DirectTransport).
 
+#[cfg(test)]
+mod tests;
+
 use crate::data_producer::DataProducerId;
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
@@ -25,6 +28,7 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -142,6 +146,7 @@ pub struct DataConsumerDump {
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct DataConsumerStat {
     // `type` field is present in worker, but ignored here
     pub timestamp: u64,
@@ -213,18 +218,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = DataConsumerCloseRequest {
                     internal: DataConsumerInternal {
@@ -256,6 +261,21 @@ pub struct RegularDataConsumer {
     inner: Arc<Inner>,
 }
 
+impl fmt::Debug for RegularDataConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RegularDataConsumer")
+            .field("id", &self.inner.id)
+            .field("type", &self.inner.r#type)
+            .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
+            .field("label", &self.inner.label)
+            .field("protocol", &self.inner.protocol)
+            .field("data_producer_id", &self.inner.data_producer_id)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
+}
+
 impl From<RegularDataConsumer> for DataConsumer {
     fn from(producer: RegularDataConsumer) -> Self {
         DataConsumer::Regular(producer)
@@ -266,6 +286,21 @@ impl From<RegularDataConsumer> for DataConsumer {
 #[derive(Clone)]
 pub struct DirectDataConsumer {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for DirectDataConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirectDataConsumer")
+            .field("id", &self.inner.id)
+            .field("type", &self.inner.r#type)
+            .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
+            .field("label", &self.inner.label)
+            .field("protocol", &self.inner.protocol)
+            .field("data_producer_id", &self.inner.data_producer_id)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl From<DirectDataConsumer> for DataConsumer {
@@ -289,6 +324,15 @@ pub enum DataConsumer {
     Regular(RegularDataConsumer),
     /// Data consumer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectDataConsumer),
+}
+
+impl fmt::Debug for DataConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            DataConsumer::Regular(producer) => f.debug_tuple("Regular").field(&producer).finish(),
+            DataConsumer::Direct(producer) => f.debug_tuple("Direct").field(&producer).finish(),
+        }
+    }
 }
 
 impl DataConsumer {
@@ -326,7 +370,7 @@ impl DataConsumer {
                                 .as_ref()
                                 .and_then(|weak_inner| weak_inner.upgrade())
                             {
-                                inner.close();
+                                inner.close(false);
                             }
                         }
                         Notification::SctpSendBufferFull => {
@@ -353,11 +397,16 @@ impl DataConsumer {
                 match serde_json::from_value::<PayloadNotification>(message) {
                     Ok(notification) => match notification {
                         PayloadNotification::Message { ppid } => {
-                            let message = WebRtcMessage::new(ppid, payload);
-
-                            handlers.message.call(|callback| {
-                                callback(&message);
-                            });
+                            match WebRtcMessage::new(ppid, payload) {
+                                Ok(message) => {
+                                    handlers.message.call(|callback| {
+                                        callback(&message);
+                                    });
+                                }
+                                Err(ppid) => {
+                                    error!("Bad ppid {}", ppid);
+                                }
+                            }
                         }
                     },
                     Err(error) => {
@@ -377,7 +426,7 @@ impl DataConsumer {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.transport_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             })
         });
@@ -498,8 +547,8 @@ impl DataConsumer {
         Ok(response.buffered_amount)
     }
 
-    // Whenever the underlying SCTP association buffered bytes drop to this value,
-    // `on_buffered_amount_low` callback is called.
+    /// Whenever the underlying SCTP association buffered bytes drop to this value,
+    /// `on_buffered_amount_low` callback is called.
     pub async fn set_buffered_amount_low_threshold(
         &self,
         threshold: u32,
@@ -639,6 +688,12 @@ impl DirectDataConsumer {
 #[derive(Clone)]
 pub struct WeakDataConsumer {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakDataConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakDataConsumer").finish()
+    }
 }
 
 impl WeakDataConsumer {

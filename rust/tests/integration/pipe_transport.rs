@@ -46,7 +46,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
     ]
@@ -167,7 +167,7 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(100),
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {
@@ -225,11 +225,7 @@ async fn init() -> (Worker, Router, Router, WebRtcTransport, WebRtcTransport) {
         let _ = builder.is_test(true).try_init();
     }
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
 
     let worker = worker_manager
         .create_worker(WorkerSettings::default())
@@ -931,7 +927,7 @@ fn producer_close_is_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to consume video");
 
-        let (producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
+        let (mut producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
         let _handler = video_consumer.on_producer_close(move || {
             let _ = producer_close_tx.send(());
         });
@@ -1078,7 +1074,7 @@ fn data_producer_close_is_transmitted_to_pipe_data_consumer() {
             .await
             .expect("Failed to create data consumer");
 
-        let (data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
+        let (mut data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
         let _handler = data_consumer.on_data_producer_close(move || {
             let _ = data_producer_close_tx.send(());
         });

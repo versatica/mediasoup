@@ -5,6 +5,9 @@
 //! those messages, or can directly send them from the Rust application if the data producer was
 //! created on top of a [`DirectTransport`](crate::direct_transport::DirectTransport).
 
+#[cfg(test)]
+mod tests;
+
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
@@ -19,6 +22,7 @@ use event_listener_primitives::{BagOnce, HandlerId};
 use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -62,6 +66,7 @@ impl DataProducerOptions {
         }
     }
 
+    /// Data producer options for non-Direct transport.
     pub fn new_sctp(sctp_stream_parameters: SctpStreamParameters) -> Self {
         Self {
             id: None,
@@ -72,7 +77,7 @@ impl DataProducerOptions {
         }
     }
 
-    /// For DirectTransport.
+    /// Data producer options for Direct transport.
     pub fn new_direct() -> Self {
         Self {
             id: None,
@@ -110,6 +115,7 @@ pub struct DataProducerDump {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct DataProducerStat {
     // `type` field is present in worker, but ignored here
     pub timestamp: u64,
@@ -146,18 +152,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = DataProducerCloseRequest {
                     internal: DataProducerInternal {
@@ -188,6 +194,20 @@ pub struct RegularDataProducer {
     inner: Arc<Inner>,
 }
 
+impl fmt::Debug for RegularDataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RegularDataProducer")
+            .field("id", &self.inner.id)
+            .field("type", &self.inner.r#type)
+            .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
+            .field("label", &self.inner.label)
+            .field("protocol", &self.inner.protocol)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
+}
+
 impl From<RegularDataProducer> for DataProducer {
     fn from(producer: RegularDataProducer) -> Self {
         DataProducer::Regular(producer)
@@ -198,6 +218,20 @@ impl From<RegularDataProducer> for DataProducer {
 #[derive(Clone)]
 pub struct DirectDataProducer {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for DirectDataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirectDataProducer")
+            .field("id", &self.inner.id)
+            .field("type", &self.inner.r#type)
+            .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
+            .field("label", &self.inner.label)
+            .field("protocol", &self.inner.protocol)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl From<DirectDataProducer> for DataProducer {
@@ -220,6 +254,15 @@ pub enum DataProducer {
     Regular(RegularDataProducer),
     /// Data producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectDataProducer),
+}
+
+impl fmt::Debug for DataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            DataProducer::Regular(producer) => f.debug_tuple("Regular").field(&producer).finish(),
+            DataProducer::Direct(producer) => f.debug_tuple("Direct").field(&producer).finish(),
+        }
+    }
 }
 
 impl DataProducer {
@@ -252,7 +295,7 @@ impl DataProducer {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.transport_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             })
         });
@@ -367,7 +410,7 @@ impl DataProducer {
     }
 
     pub(super) fn close(&self) {
-        self.inner().close();
+        self.inner().close(true);
     }
 
     /// Downgrade `DataProducer` to [`WeakDataProducer`] instance.
@@ -424,6 +467,14 @@ pub struct NonClosingDataProducer {
     on_drop: Option<Box<dyn FnOnce(DataProducer) + Send + 'static>>,
 }
 
+impl fmt::Debug for NonClosingDataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NonClosingDataProducer")
+            .field("data_producer", &self.data_producer)
+            .finish()
+    }
+}
+
 impl Drop for NonClosingDataProducer {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
@@ -445,6 +496,8 @@ impl NonClosingDataProducer {
         }
     }
 
+    /// Get inner [`DataProducer`] (which will close on drop in contrast to
+    /// `NonClosingDataProducer`).
     pub fn into_inner(mut self) -> DataProducer {
         self.on_drop.take();
         self.data_producer.clone()
@@ -458,6 +511,12 @@ impl NonClosingDataProducer {
 #[derive(Clone)]
 pub struct WeakDataProducer {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakDataProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakDataProducer").finish()
+    }
 }
 
 impl WeakDataProducer {

@@ -11,7 +11,7 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, EventDirection};
+use crate::data_structures::{AppData, TraceEventDirection};
 use crate::messages::{
     ConsumerInternal, DataConsumerInternal, DataProducerInternal, ProducerInternal,
     TransportConsumeData, TransportConsumeDataData, TransportConsumeDataRequest,
@@ -62,7 +62,7 @@ pub enum TransportTraceEventData {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
@@ -72,7 +72,7 @@ pub enum TransportTraceEventData {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
@@ -140,7 +140,7 @@ pub(super) enum TransportType {
 ///
 /// For additional methods see [`TransportGeneric`].
 #[async_trait(?Send)]
-pub trait Transport: Send + Sync + CloneTransport {
+pub trait Transport: Debug + Send + Sync + CloneTransport {
     /// Transport id.
     fn id(&self) -> TransportId;
 
@@ -289,7 +289,10 @@ impl Clone for Box<dyn Transport> {
 /// Generic transport trait with methods available on all transports in addition to [`Transport`].
 #[async_trait(?Send)]
 pub trait TransportGeneric: Transport + Clone + 'static {
+    /// Dump data structure specific to each transport.
+    #[doc(hidden)]
     type Dump: Debug + DeserializeOwned + 'static;
+    /// Stats data structure specific to each transport.
     type Stat: Debug + DeserializeOwned + 'static;
 
     /// Dump Transport.
@@ -320,7 +323,7 @@ pub enum ProduceError {
 /// Error that caused [`Transport::consume`] to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ConsumeError {
-    // Producer with specified id not found.
+    /// Producer with specified id not found.
     #[error("Producer with id \"{0}\" not found")]
     ProducerNotFound(ProducerId),
     /// RTP capabilities error.

@@ -23,7 +23,7 @@ use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameter
 use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
-use crate::worker::{WorkerDump, WorkerResourceUsage, WorkerUpdateSettings};
+use crate::worker::{WorkerDump, WorkerUpdateSettings};
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -174,13 +174,9 @@ macro_rules! request_response_generic {
     };
 }
 
-request_response!("worker.dump", WorkerDumpRequest {}, WorkerDump);
+request_response!("worker.close", WorkerCloseRequest {});
 
-request_response!(
-    "worker.getResourceUsage",
-    WorkerGetResourceRequest {},
-    WorkerResourceUsage,
-);
+request_response!("worker.dump", WorkerDumpRequest {}, WorkerDump);
 
 request_response!(
     "worker.updateSettings",

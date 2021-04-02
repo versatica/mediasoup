@@ -1,7 +1,10 @@
 //! A consumer represents an audio or video source being forwarded from a mediasoup router to an
 //! endpoint. It's created on top of a transport that defines how the media packets are carried.
 
-use crate::data_structures::{AppData, EventDirection};
+#[cfg(test)]
+mod tests;
+
+use crate::data_structures::{AppData, TraceEventDirection};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
     ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
@@ -22,6 +25,7 @@ use log::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -85,6 +89,7 @@ pub struct ConsumerOptions {
 }
 
 impl ConsumerOptions {
+    /// Create consumer options with given producer ID and RTP capabilities.
     pub fn new(producer_id: ProducerId, rtp_capabilities: RtpCapabilities) -> Self {
         Self {
             producer_id,
@@ -209,6 +214,7 @@ impl From<ProducerType> for ConsumerType {
 /// RTC statistics of the consumer alone.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub struct ConsumerStat {
     // Common to all RtpStreams.
@@ -239,7 +245,9 @@ pub struct ConsumerStat {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum ConsumerStats {
+    /// RTC statistics without producer
     JustConsumer((ConsumerStat,)),
+    /// RTC statistics with producer
     WithProducer((ConsumerStat, ProducerStat)),
 }
 
@@ -247,47 +255,52 @@ pub enum ConsumerStats {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ConsumerTraceEventData {
+    /// RTP packet.
     Rtp {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTP video keyframe packet.
     KeyFrame {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP NACK packet.
     Nack {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP PLI packet.
     Pli {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP FIR packet.
     Fir {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
@@ -369,18 +382,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = ConsumerCloseRequest {
                     internal: ConsumerInternal {
@@ -410,6 +423,26 @@ impl Inner {
 #[derive(Clone)]
 pub struct Consumer {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for Consumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Consumer")
+            .field("id", &self.inner.id)
+            .field("producer_id", &self.inner.producer_id)
+            .field("kind", &self.inner.r#kind)
+            .field("type", &self.inner.r#type)
+            .field("rtp_parameters", &self.inner.rtp_parameters)
+            .field("paused", &self.inner.paused)
+            .field("producer_paused", &self.inner.producer_paused)
+            .field("priority", &self.inner.priority)
+            .field("score", &self.inner.score)
+            .field("preferred_layers", &self.inner.preferred_layers)
+            .field("current_layers", &self.inner.current_layers)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl Consumer {
@@ -459,7 +492,7 @@ impl Consumer {
                                 .as_ref()
                                 .and_then(|weak_inner| weak_inner.upgrade())
                             {
-                                inner.close();
+                                inner.close(false);
                             }
                         }
                         Notification::ProducerPause => {
@@ -540,7 +573,7 @@ impl Consumer {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.transport_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             })
         });
@@ -925,6 +958,12 @@ impl Consumer {
 #[derive(Clone)]
 pub struct WeakConsumer {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakConsumer").finish()
+    }
 }
 
 impl WeakConsumer {

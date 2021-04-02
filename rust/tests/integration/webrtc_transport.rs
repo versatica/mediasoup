@@ -43,7 +43,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
@@ -70,11 +70,7 @@ async fn init() -> (Worker, Router) {
         let _ = builder.is_test(true).try_init();
     }
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
 
     let worker = worker_manager
         .create_worker(WorkerSettings::default())
@@ -518,49 +514,13 @@ fn close_event() {
             .await
             .expect("Failed to create WebRTC transport");
 
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
+        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
         let _handler = transport.on_close(Box::new(move || {
             let _ = close_tx.send(());
         }));
 
         drop(transport);
 
-        close_rx.await.expect("Failed to receive close event");
-    });
-}
-
-#[test]
-fn router_close_event() {
-    future::block_on(async move {
-        let (worker, router) = init().await;
-
-        let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
-            .await
-            .expect("Failed to create WebRTC transport");
-
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = transport.on_close(Box::new(move || {
-            let _ = close_tx.send(());
-        }));
-
-        let (router_close_tx, router_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = transport.on_router_close(Box::new(move || {
-            let _ = router_close_tx.send(());
-        }));
-
-        unsafe {
-            libc::kill(worker.pid() as i32, libc::SIGINT);
-        }
-
-        router_close_rx
-            .await
-            .expect("Failed to receive router_close event");
         close_rx.await.expect("Failed to receive close event");
     });
 }

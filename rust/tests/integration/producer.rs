@@ -38,7 +38,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
@@ -184,11 +184,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
         let _ = builder.is_test(true).try_init();
     }
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
 
     let worker = worker_manager
         .create_worker(WorkerSettings::default())
@@ -481,7 +477,7 @@ fn produce_unsupported_codecs() {
                         payload_type: 108,
                         clock_rate: NonZeroU32::new(32000).unwrap(),
                         channels: NonZeroU8::new(1).unwrap(),
-                        parameters: RtpCodecParametersParameters::new(),
+                        parameters: RtpCodecParametersParameters::default(),
                         rtcp_feedback: vec![],
                     }];
                     parameters.header_extensions = vec![];
@@ -563,7 +559,7 @@ fn produce_already_used_mid_ssrc() {
                         payload_type: 0,
                         clock_rate: NonZeroU32::new(48000).unwrap(),
                         channels: NonZeroU8::new(2).unwrap(),
-                        parameters: RtpCodecParametersParameters::new(),
+                        parameters: RtpCodecParametersParameters::default(),
                         rtcp_feedback: vec![],
                     }];
                     parameters.header_extensions = vec![];
@@ -597,7 +593,7 @@ fn produce_already_used_mid_ssrc() {
                         mime_type: MimeTypeVideo::Vp8,
                         payload_type: 112,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
-                        parameters: RtpCodecParametersParameters::new(),
+                        parameters: RtpCodecParametersParameters::default(),
                         rtcp_feedback: vec![],
                     }];
                     parameters.encodings = vec![RtpEncodingParameters {
@@ -627,7 +623,7 @@ fn produce_no_mid_single_encoding_without_dir_or_ssrc() {
                     payload_type: 111,
                     clock_rate: NonZeroU32::new(48000).unwrap(),
                     channels: NonZeroU8::new(2).unwrap(),
-                    parameters: RtpCodecParametersParameters::new(),
+                    parameters: RtpCodecParametersParameters::default(),
                     rtcp_feedback: vec![],
                 }];
                 parameters.header_extensions = vec![];
@@ -890,7 +886,7 @@ fn close_event() {
             .expect("Failed to produce audio");
 
         {
-            let (tx, rx) = async_oneshot::oneshot::<()>();
+            let (mut tx, rx) = async_oneshot::oneshot::<()>();
             let _handler = audio_producer.on_close(move || {
                 let _ = tx.send(());
             });
@@ -915,38 +911,5 @@ fn close_event() {
             assert_eq!(dump.producer_ids, vec![]);
             assert_eq!(dump.consumer_ids, vec![]);
         }
-    });
-}
-
-#[test]
-fn transport_close_event() {
-    future::block_on(async move {
-        let (worker, _router, transport_1, _transport_2) = init().await;
-
-        let audio_producer = transport_1
-            .produce(audio_producer_options())
-            .await
-            .expect("Failed to produce audio");
-
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_producer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (transport_close_tx, transport_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_producer.on_transport_close(move || {
-            let _ = transport_close_tx.send(());
-        });
-
-        unsafe {
-            libc::kill(worker.pid() as i32, libc::SIGINT);
-        }
-
-        transport_close_rx
-            .await
-            .expect("Failed to receive transport_close event");
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(audio_producer.closed(), true);
     });
 }

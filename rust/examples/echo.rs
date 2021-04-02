@@ -18,7 +18,6 @@ use mediasoup::worker::WorkerSettings;
 use mediasoup::worker_manager::WorkerManager;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::env;
 use std::num::{NonZeroU32, NonZeroU8};
 
 fn media_codecs() -> Vec<RtpCodecCapability> {
@@ -35,7 +34,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![
                 RtcpFeedback::Nack,
                 RtcpFeedback::NackPli,
@@ -403,11 +402,7 @@ async fn ws_index(
 async fn main() -> std::io::Result<()> {
     env_logger::init();
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
     HttpServer::new(move || {
         App::new()
             .data(worker_manager.clone())

@@ -19,10 +19,7 @@ use std::num::{NonZeroU32, NonZeroU8};
 pub struct RtpCodecParametersParameters(BTreeMap<String, RtpCodecParametersParametersValue>);
 
 impl RtpCodecParametersParameters {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
+    /// Insert another parameter into collection.
     pub fn insert<K, V>(&mut self, key: K, value: V) -> &mut Self
     where
         K: Into<String>,
@@ -32,141 +29,26 @@ impl RtpCodecParametersParameters {
         self
     }
 
+    /// Iterate over parameters in collection.
     pub fn iter(
         &self,
-    ) -> std::collections::btree_map::Iter<String, RtpCodecParametersParametersValue> {
+    ) -> std::collections::btree_map::Iter<'_, String, RtpCodecParametersParametersValue> {
         self.0.iter()
     }
 
+    /// Get specific parameter from collection.
     pub fn get(&self, key: &str) -> Option<&RtpCodecParametersParametersValue> {
         self.0.get(key)
     }
 }
 
-// TODO: Unlock this once const generics are stable and remove subsequent impls:
-//  * https://github.com/rust-lang/rust/issues/74878
-//  * https://github.com/rust-lang/rust/issues/65798
-// impl<K, const N: usize> From<[(K, RtpCodecParametersParametersValue); N]> for RtpCodecParametersParameters
-// where
-//     K: Into<String>,
-// {
-//     fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
-//         Self::from_iter(std::array::IntoIter::new(array))
-//     }
-// }
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 1]> for RtpCodecParametersParameters
+impl<K, const N: usize> From<[(K, RtpCodecParametersParametersValue); N]>
+    for RtpCodecParametersParameters
 where
     K: Into<String>,
 {
-    fn from(array: [(K, RtpCodecParametersParametersValue); 1]) -> Self {
-        let mut this = Self::default();
-        let [one] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        this
-    }
-}
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 2]> for RtpCodecParametersParameters
-where
-    K: Into<String>,
-{
-    fn from(array: [(K, RtpCodecParametersParametersValue); 2]) -> Self {
-        let mut this = Self::default();
-        let [one, two] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = two;
-            this.insert(k, v);
-        }
-        this
-    }
-}
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 3]> for RtpCodecParametersParameters
-where
-    K: Into<String>,
-{
-    fn from(array: [(K, RtpCodecParametersParametersValue); 3]) -> Self {
-        let mut this = Self::default();
-        let [one, two, three] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = two;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = three;
-            this.insert(k, v);
-        }
-        this
-    }
-}
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 4]> for RtpCodecParametersParameters
-where
-    K: Into<String>,
-{
-    fn from(array: [(K, RtpCodecParametersParametersValue); 4]) -> Self {
-        let mut this = Self::default();
-        let [one, two, three, four] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = two;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = three;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = four;
-            this.insert(k, v);
-        }
-        this
-    }
-}
-
-impl<K> From<[(K, RtpCodecParametersParametersValue); 5]> for RtpCodecParametersParameters
-where
-    K: Into<String>,
-{
-    fn from(array: [(K, RtpCodecParametersParametersValue); 5]) -> Self {
-        let mut this = Self::default();
-        let [one, two, three, four, five] = array;
-        {
-            let (k, v) = one;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = two;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = three;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = four;
-            this.insert(k, v);
-        }
-        {
-            let (k, v) = five;
-            this.insert(k, v);
-        }
-        this
+    fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
+        Self::from_iter(std::array::IntoIter::new(array))
     }
 }
 
@@ -218,6 +100,7 @@ where
 #[serde(tag = "kind", rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum RtpCodecCapabilityFinalized {
+    /// Audio codec
     #[serde(rename_all = "camelCase")]
     Audio {
         /// The codec MIME media type/subtype (e.g. 'audio/opus').
@@ -235,6 +118,7 @@ pub enum RtpCodecCapabilityFinalized {
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
+    /// Video codec
     #[serde(rename_all = "camelCase")]
     Video {
         /// The codec MIME media type/subtype (e.g. 'video/VP8').
@@ -312,7 +196,9 @@ pub struct RtpCapabilitiesFinalized {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum MediaKind {
+    /// Audio
     Audio,
+    /// Video
     Video,
 }
 
@@ -320,7 +206,9 @@ pub enum MediaKind {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum MimeType {
+    /// Audio
     Audio(MimeTypeAudio),
+    /// Video
     Video(MimeTypeVideo),
 }
 
@@ -406,6 +294,7 @@ pub enum MimeTypeVideo {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum RtpCodecCapability {
+    /// Audio codec capability
     #[serde(rename_all = "camelCase")]
     Audio {
         /// The codec MIME media type/subtype (e.g. 'audio/opus').
@@ -424,6 +313,7 @@ pub enum RtpCodecCapability {
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
+    /// Video codec capability
     #[serde(rename_all = "camelCase")]
     Video {
         /// The codec MIME media type/subtype (e.g. 'video/VP8').
@@ -502,9 +392,13 @@ pub struct RtpCapabilities {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RtpHeaderExtensionDirection {
+    /// SendRecv
     SendRecv,
+    /// SendOnly
     SendOnly,
+    /// RecvOnly
     RecvOnly,
+    /// Inactive
     Inactive,
 }
 
@@ -553,6 +447,7 @@ pub enum RtpHeaderExtensionUri {
 }
 
 impl RtpHeaderExtensionUri {
+    /// RTP header extension as a string
     pub fn as_str(&self) -> &'static str {
         match self {
             RtpHeaderExtensionUri::Mid => "urn:ietf:params:rtp-hdrext:sdes:mid",
@@ -652,10 +547,13 @@ pub struct RtpParameters {
     pub rtcp: RtcpParameters,
 }
 
+/// Single value used in RTP codec parameters.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum RtpCodecParametersParametersValue {
+    /// String value
     String(String),
+    /// Numerical value
     Number(u32),
 }
 
@@ -695,6 +593,7 @@ impl From<u32> for RtpCodecParametersParametersValue {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged, rename_all = "lowercase")]
 pub enum RtpCodecParameters {
+    /// Audio codec
     #[serde(rename_all = "camelCase")]
     Audio {
         /// The codec MIME media type/subtype (e.g. `audio/opus`).
@@ -713,6 +612,7 @@ pub enum RtpCodecParameters {
         /// Transport layer and codec-specific feedback messages for this codec.
         rtcp_feedback: Vec<RtcpFeedback>,
     },
+    /// Video codec
     #[serde(rename_all = "camelCase")]
     Video {
         /// The codec MIME media type/subtype (e.g. `video/VP8`).
@@ -839,7 +739,7 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
         impl<'de> Visitor<'de> for RtcpFeedbackVisitor {
             type Value = RtcpFeedback;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str(
                     r#"RTCP feedback type and parameter like {"type": "nack", "parameter": ""}"#,
                 )
@@ -849,7 +749,7 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
             where
                 V: MapAccess<'de>,
             {
-                let mut r#type = None::<Cow<str>>;
+                let mut r#type = None::<Cow<'_, str>>;
                 let mut parameter = Cow::Borrowed("");
                 while let Some(key) = map.next_key()? {
                     match key {
@@ -885,8 +785,10 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
     }
 }
 
+/// RTX stream information. It must contain a numeric ssrc field indicating the RTX SSRC.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct RtpEncodingParametersRtx {
+    /// The media SSRC.
     pub ssrc: u32,
 }
 
@@ -919,8 +821,10 @@ pub struct RtpEncodingParameters {
     /// See [webrtc-svc](https://w3c.github.io/webrtc-svc/).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scalability_mode: Option<String>,
+    /// Factor by which to reduce the size of a video track during encoding.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scale_resolution_down_by: Option<f64>,
+    /// Maximum number of bits per second to allow a track encoded with this encoding to use.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_bitrate: Option<u32>,
 }

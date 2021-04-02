@@ -20,7 +20,7 @@ fn generate_router_rtp_capabilities_succeeds() {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: Some(125), // Let's force it.
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
@@ -57,7 +57,7 @@ fn generate_router_rtp_capabilities_succeeds() {
                 mime_type: MimeTypeVideo::Vp8,
                 preferred_payload_type: 125,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
                     RtcpFeedback::NackPli,
@@ -110,7 +110,7 @@ fn generate_router_rtp_capabilities_unsupported() {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(1).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         }]),
         Err(RtpCapabilitiesError::UnsupportedCodec { .. })
@@ -137,7 +137,7 @@ fn generate_router_rtp_capabilities_too_many_codecs() {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             })
             .take(100)
@@ -387,7 +387,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 preferred_payload_type: Some(100),
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
-                parameters: RtpCodecParametersParameters::new(),
+                parameters: RtpCodecParametersParameters::default(),
                 rtcp_feedback: vec![],
             },
             RtpCodecCapability::Video {

@@ -1,85 +1,117 @@
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
-use crate::worker::{Channel, PayloadChannel};
+use crate::worker::channel::BufferMessagesGuard;
+use crate::worker::{Channel, PayloadChannel, WorkerId};
 use async_executor::Executor;
 use async_fs::File;
-use async_process::unix::CommandExt;
-use async_process::{Child, Command};
-use nix::unistd;
-use once_cell::sync::Lazy;
-use parking_lot::Mutex;
-use std::io;
+use async_oneshot::Receiver;
+use std::ffi::CString;
+use std::mem;
+use std::os::raw::{c_char, c_int};
 use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
+use thiserror::Error;
 
-static SPAWNING: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
-
-pub(super) struct SpawnResult {
-    pub(super) child: Child,
-    pub(super) channel: Channel,
-    pub(super) payload_channel: PayloadChannel,
+/// Worker exit error
+#[derive(Debug, Copy, Clone, Error)]
+pub enum ExitError {
+    /// Generic error.
+    #[error("Worker exited with generic error")]
+    Generic,
+    /// Settings error.
+    #[error("Worker exited with settings error")]
+    Settings,
+    /// Unknown error.
+    #[error("Worker exited with unknown error and status code {status_code}")]
+    Unknown {
+        /// Status code returned by worker
+        status_code: i32,
+    },
+    /// Unexpected error.
+    #[error("Worker exited unexpectedly")]
+    Unexpected,
 }
 
-pub(super) fn spawn_with_worker_channels(
-    executor: Arc<Executor<'static>>,
-    command: &mut Command,
-) -> io::Result<SpawnResult> {
-    // Take a lock to make sure we don't spawn workers from multiple threads concurrently, this
-    // causes racy issues
-    let _lock = SPAWNING.lock();
-    let (producer_fd_read, producer_fd_write) = unistd::pipe().unwrap();
-    let (consumer_fd_read, consumer_fd_write) = unistd::pipe().unwrap();
-    let (producer_payload_fd_read, producer_payload_fd_write) = unistd::pipe().unwrap();
-    let (consumer_payload_fd_read, consumer_payload_fd_write) = unistd::pipe().unwrap();
-
+fn pipe() -> [c_int; 2] {
     unsafe {
-        command.pre_exec(move || {
-            // Unused in child
-            unistd::close(producer_fd_write).unwrap();
-            unistd::close(consumer_fd_read).unwrap();
-            unistd::close(producer_payload_fd_write).unwrap();
-            unistd::close(consumer_payload_fd_read).unwrap();
-            // Now duplicate into file descriptor indexes we need
-            if producer_fd_read != 3 {
-                unistd::dup2(producer_fd_read, 3).unwrap();
-                unistd::close(producer_fd_read).unwrap();
-            }
-            if consumer_fd_write != 4 {
-                unistd::dup2(consumer_fd_write, 4).unwrap();
-                unistd::close(consumer_fd_write).unwrap();
-            }
-            if producer_payload_fd_read != 5 {
-                unistd::dup2(producer_payload_fd_read, 5).unwrap();
-                unistd::close(producer_payload_fd_read).unwrap();
-            }
-            if consumer_payload_fd_write != 6 {
-                unistd::dup2(consumer_payload_fd_write, 6).unwrap();
-                unistd::close(consumer_payload_fd_write).unwrap();
-            }
+        let mut fds = mem::MaybeUninit::<[c_int; 2]>::uninit();
 
-            Ok(())
-        });
-    };
+        if libc::pipe(fds.as_mut_ptr() as *mut c_int) != 0 {
+            panic!(
+                "libc::pipe() failed with code {}",
+                *libc::__errno_location()
+            );
+        }
+
+        fds.assume_init()
+    }
+}
+
+pub(super) struct WorkerRunResult {
+    pub(super) channel: Channel,
+    pub(super) payload_channel: PayloadChannel,
+    pub(super) status_receiver: Receiver<Result<(), ExitError>>,
+    pub(super) buffer_worker_messages_guard: BufferMessagesGuard,
+}
+
+pub(super) fn run_worker_with_channels(
+    id: WorkerId,
+    executor: Arc<Executor<'static>>,
+    args: Vec<String>,
+) -> WorkerRunResult {
+    let [producer_fd_read, producer_fd_write] = pipe();
+    let [consumer_fd_read, consumer_fd_write] = pipe();
+    let [producer_payload_fd_read, producer_payload_fd_write] = pipe();
+    let [consumer_payload_fd_read, consumer_payload_fd_write] = pipe();
+    let (mut status_sender, status_receiver) = async_oneshot::oneshot();
 
     let producer_file = unsafe { File::from_raw_fd(producer_fd_write) };
     let consumer_file = unsafe { File::from_raw_fd(consumer_fd_read) };
     let producer_payload_file = unsafe { File::from_raw_fd(producer_payload_fd_write) };
     let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
 
-    let child = command.spawn()?;
+    let channel = Channel::new(Arc::clone(&executor), consumer_file, producer_file);
+    let payload_channel =
+        PayloadChannel::new(executor, consumer_payload_file, producer_payload_file);
+    let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
 
-    // Unused in parent
-    unistd::close(producer_fd_read).expect("Failed to close fd");
-    unistd::close(consumer_fd_write).expect("Failed to close fd");
-    unistd::close(producer_payload_fd_read).expect("Failed to close fd");
-    unistd::close(consumer_payload_fd_write).expect("Failed to close fd");
+    std::thread::Builder::new()
+        .name(format!("mediasoup-worker-{}", id))
+        .spawn(move || {
+            let argc = args.len() as c_int;
+            let args_cstring = args
+                .into_iter()
+                .map(|s| -> CString { CString::new(s).unwrap() })
+                .collect::<Vec<_>>();
+            let argv = args_cstring
+                .iter()
+                .map(|arg| arg.as_ptr() as *const c_char)
+                .collect::<Vec<_>>();
+            let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
+            let status_code = unsafe {
+                mediasoup_sys::run_worker(
+                    argc,
+                    argv.as_ptr(),
+                    version.as_ptr(),
+                    producer_fd_read,
+                    consumer_fd_write,
+                    producer_payload_fd_read,
+                    consumer_payload_fd_write,
+                )
+            };
 
-    Ok(SpawnResult {
-        child,
-        channel: Channel::new(Arc::clone(&executor), consumer_file, producer_file),
-        payload_channel: PayloadChannel::new(
-            executor,
-            consumer_payload_file,
-            producer_payload_file,
-        ),
-    })
+            let _ = status_sender.send(match status_code {
+                0 => Ok(()),
+                1 => Err(ExitError::Generic),
+                42 => Err(ExitError::Settings),
+                status_code => Err(ExitError::Unknown { status_code }),
+            });
+        })
+        .expect("Failed to spawn mediasoup-worker thread");
+
+    WorkerRunResult {
+        channel,
+        payload_channel,
+        status_receiver,
+        buffer_worker_messages_guard,
+    }
 }
