@@ -160,42 +160,6 @@ namespace RTC
 			return;
 		}
 
-		auto previousDeltaOfDelta = this->currentDeltaOfDelta;
-
-		// TODO: This must be properly done.
-		for (const auto sentInfo : sentInfos)
-		{
-			this->currentDeltaOfDelta =
-			  Utils::ComputeEWMA(this->currentDeltaOfDelta, static_cast<double>(sentInfo.dod), 0.6f);
-		}
-
-		if (this->currentDeltaOfDelta > previousDeltaOfDelta)
-		{
-			this->deltaOfdeltaTrend = INCREASE;
-		}
-		else if (this->currentDeltaOfDelta < previousDeltaOfDelta)
-		{
-			this->deltaOfdeltaTrend = DECREASE;
-		}
-		else
-		{
-			this->deltaOfdeltaTrend = HOLD;
-		}
-
-		// TODO: Remove.
-		// MS_DEBUG_DEV(
-		//   "Delta of Delta. Previous:%f, Current:%f, Trend: %s",
-		//   previousDeltaOfDelta,
-		//   this->currentDeltaOfDelta,
-		//   TrendToString(this->deltaOfdeltaTrend).c_str());
-
-		// for (const auto& deltaOfDelta : deltaOfDeltas)
-		// {
-		// 	MS_DEBUG_DEV("wideSeq:%" PRIu16 ", dod:%" PRIi16,
-		// 			deltaOfDelta.wideSeq,
-		// 			deltaOfDelta.dod);
-		// }
-
 		// Notify listener.
 		this->listener->OnSenderBandwidthEstimatorRtpFeedback(this, sentInfos);
 	}

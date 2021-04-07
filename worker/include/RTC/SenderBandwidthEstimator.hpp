@@ -113,8 +113,6 @@ namespace RTC
 		RTC::TrendCalculator sendTransmissionTrend;
 		Timer* timer{ nullptr };
 		uint16_t lastReceivedWideSeq{ 0u };
-		double currentDeltaOfDelta{ 0 };
-		Trend deltaOfdeltaTrend{ HOLD };
 	};
 } // namespace RTC
 
