@@ -20,9 +20,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include "RTC/SctpListener.hpp"
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 #include "RTC/SenderBandwidthEstimator.hpp"
-#endif
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "handles/Timer.hpp"
@@ -41,9 +39,7 @@ namespace RTC
 	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	                  public RTC::SenderBandwidthEstimator::Listener,
-#endif
 	                  public Timer::Listener
 	{
 	protected:
@@ -247,7 +243,6 @@ namespace RTC
 		void OnTransportCongestionControlServerSendRtcpPacket(
 		  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) override;
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 		/* Pure virtual methods inherited from RTC::SenderBandwidthEstimator::Listener. */
 	public:
 		void OnSenderBandwidthEstimatorAvailableBitrate(
@@ -257,7 +252,6 @@ namespace RTC
 		void OnSenderBandwidthEstimatorRtpFeedback(
 		  RTC::SenderBandwidthEstimator* senderBwe,
 		  std::vector<SenderBandwidthEstimator::SentInfo>& sentInfos) override;
-#endif
 
 		/* Pure virtual methods inherited from Timer::Listener. */
 	public:
@@ -285,9 +279,7 @@ namespace RTC
 		Timer* rtcpTimer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 		RTC::SenderBandwidthEstimator* senderBwe{ nullptr };
-#endif
 		// Others.
 		bool direct{ false }; // Whether this Transport allows PayloadChannel comm.
 		bool destroying{ false };

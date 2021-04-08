@@ -965,6 +965,7 @@ namespace RTC
 					consumer->SetExternallyManagedBitrate();
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+
 				// Create SenderBandwidthEstimator if:
 				// - not already created,
 				// - it's a video Consumer, and
@@ -2305,7 +2306,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->senderBwe, "no SenderBandwidthEstimator");
+		// TMP: We could reach here because tccClient is created for REMB.
+		if (!this->senderBwe)
+			return;
 
 		std::multimap<uint8_t, RTC::Consumer*> multimapPriorityConsumer;
 
@@ -2375,7 +2378,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->senderBwe, "no SenderBandwidthEstimator");
+		// TMP: We could reach here because tccClient is created for REMB.
+		if (!this->senderBwe)
+			return;
 
 		uint32_t totalDesiredBitrate{ 0u };
 
@@ -3123,7 +3128,6 @@ namespace RTC
 		SendRtcpPacket(packet);
 	}
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	inline void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
 	  RTC::SenderBandwidthEstimator* /*senderBwe*/, RTC::SenderBandwidthEstimator::Bitrates& bitrates)
 	{
@@ -3171,7 +3175,6 @@ namespace RTC
 
 		Channel::Notifier::Emit(this->id, "trace", data);
 	}
-#endif
 
 	inline void Transport::OnTimer(Timer* timer)
 	{
