@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::Transport"
 #define MS_LOG_DEV_LEVEL 3
+// #define USE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "RTC/Transport.hpp"
 #include "Logger.hpp"
@@ -2301,7 +2302,7 @@ namespace RTC
 		}
 	}
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+#ifdef USE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
 		MS_TRACE();
@@ -3028,8 +3029,10 @@ namespace RTC
 
 		MS_DEBUG_DEV("outgoing available bitrate:%" PRIu32, bitrates.availableBitrate);
 
+#ifndef USE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
+#endif
 
 		// May emit 'trace' event.
 		EmitTraceEventBweType(bitrates);
@@ -3138,8 +3141,10 @@ namespace RTC
 		  bitrates.availableBitrate,
 		  bitrates.previousAvailableBitrate);
 
+#ifdef USE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 		DistributeAvailableOutgoingBitrate();
 		EmitTraceEventNewBweType(bitrates);
+#endif
 	}
 
 	inline void Transport::OnSenderBandwidthEstimatorRtpFeedback(
