@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.7.2 (WIP)
+
+* Update `Catch` to 2.13.5.
+* Update NPM deps.
+
+
 ### 3.7.1
 
 * `SimulcastConsumer`: Fix miscalculation when increasing layer (PR #541 by @penguinol).
