@@ -3143,8 +3143,9 @@ namespace RTC
 
 #ifdef USE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 		DistributeAvailableOutgoingBitrate();
-		EmitTraceEventNewBweType(bitrates);
 #endif
+
+		EmitTraceEventNewBweType(bitrates);
 	}
 
 	inline void Transport::OnSenderBandwidthEstimatorRtpFeedback(
