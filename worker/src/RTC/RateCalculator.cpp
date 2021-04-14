@@ -12,7 +12,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ignore too old data. Should never happen.
-		if (nowMs < this->oldestTime)
+		if (nowMs < this->oldestTimeIndex)
 			return;
 
 		// Increase bytes.
@@ -21,11 +21,11 @@ namespace RTC
 		RemoveOldData(nowMs);
 
 		// Increase the index.
-		if (++this->latestIndex >= this->windowItems)
-			this->latestIndex = 0;
+		if (++this->newestTimeIndex >= this->windowItems)
+			this->newestTimeIndex = 0;
 
 		// Latest index overlaps with the oldest one, remove it.
-		if (this->latestIndex == this->oldestIndex && this->oldestIndex != -1)
+		if (this->newestTimeIndex == this->oldestIndex && this->oldestIndex != -1)
 		{
 			BufferItem& oldestItem = buffer[this->oldestIndex];
 			this->totalCount -= oldestItem.count;
@@ -36,16 +36,16 @@ namespace RTC
 		}
 
 		// Update the latest item.
-		BufferItem& item = buffer[this->latestIndex];
+		BufferItem& item = buffer[this->newestTimeIndex];
 		item.count += size;
 		item.time        = nowMs;
-		this->latestTime = nowMs;
+		this->newestTime = nowMs;
 
 		// Set the oldest item index and time, if not set.
 		if (this->oldestIndex < 0)
 		{
-			this->oldestIndex = this->latestIndex;
-			this->oldestTime  = nowMs;
+			this->oldestIndex     = this->newestTimeIndex;
+			this->oldestTimeIndex = nowMs;
 		}
 
 		this->totalCount += size;
@@ -78,24 +78,24 @@ namespace RTC
 		MS_TRACE();
 
 		// No item set
-		if (this->latestIndex < 0 || this->oldestIndex < 0)
+		if (this->newestTimeIndex < 0 || this->oldestIndex < 0)
 			return;
 
-		uint64_t newOldestTime = nowMs - this->windowSize;
+		uint64_t newoldestTimeIndex = nowMs - this->windowSize;
 
 		// Oldest item already removed.
-		if (newOldestTime <= this->oldestTime)
+		if (newoldestTimeIndex <= this->oldestTimeIndex)
 			return;
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
-		if (newOldestTime > this->latestTime)
+		if (newoldestTimeIndex > this->newestTime)
 		{
 			Reset(nowMs);
 
 			return;
 		}
 
-		while (this->oldestTime < newOldestTime)
+		while (this->oldestTimeIndex < newoldestTimeIndex)
 		{
 			BufferItem& oldestItem = buffer[this->oldestIndex];
 			this->totalCount -= oldestItem.count;
@@ -106,7 +106,7 @@ namespace RTC
 				this->oldestIndex = 0;
 
 			const BufferItem& newOldestItem = buffer[this->oldestIndex];
-			this->oldestTime                = newOldestItem.time;
+			this->oldestTimeIndex           = newOldestItem.time;
 		}
 	}
 
