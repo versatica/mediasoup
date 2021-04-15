@@ -21,7 +21,7 @@ namespace Channel
 
 	void Notifier::Emit(const std::string& targetId, const char* event)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
 		MS_ASSERT(Notifier::channel, "channel unset");
 
@@ -35,7 +35,7 @@ namespace Channel
 
 	void Notifier::Emit(const std::string& targetId, const char* event, json& data)
 	{
-		MS_TRACE();
+		MS_TRACE_STD();
 
 		MS_ASSERT(Notifier::channel, "channel unset");
 

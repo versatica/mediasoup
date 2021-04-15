@@ -31,7 +31,7 @@ Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamS
 	// Tell the Node process that we are running.
 	Channel::Notifier::Emit(std::to_string(Logger::pid), "running");
 
-	MS_DEBUG_DEV("starting libuv loop");
+	MS_DEBUG_DEV_STD("starting libuv loop");
 	DepLibUV::RunLoop();
 	MS_DEBUG_DEV("libuv loop ended");
 }

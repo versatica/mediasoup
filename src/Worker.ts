@@ -576,7 +576,6 @@ export class Worker extends EnhancedEventEmitter
 
 	/**
 	 * Open specified log file
-	 * TODO: need to return success/failure?
 	**/
 	async logOpen() : Promise<any>
 	{
@@ -588,7 +587,7 @@ export class Worker extends EnhancedEventEmitter
 	}
 
 	/**
-	 * Reopen specific log file after logrotate 
+	 * Reopen same log file by name after logrotate
 	**/
 	async logRotate() : Promise<any>
 	{

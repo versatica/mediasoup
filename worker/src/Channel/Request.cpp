@@ -17,7 +17,7 @@ namespace Channel
 		{ "worker.getResourceUsage",                     Request::MethodId::WORKER_GET_RESOURCE_USAGE                        },
 		{ "worker.updateSettings",                       Request::MethodId::WORKER_UPDATE_SETTINGS                           },
 		{ "worker.logopen",                              Request::MethodId::WORKER_MSLOG_OPEN                                },
-		{ "worker.logrorate",                            Request::MethodId::WORKER_MSLOG_ROTATE                              },
+		{ "worker.logrotate",                            Request::MethodId::WORKER_MSLOG_ROTATE                              },
 		{ "worker.createRouter",                         Request::MethodId::WORKER_CREATE_ROUTER                             },
 		{ "router.close",                                Request::MethodId::ROUTER_CLOSE                                     },
 		{ "router.dump",                                 Request::MethodId::ROUTER_DUMP                                      },

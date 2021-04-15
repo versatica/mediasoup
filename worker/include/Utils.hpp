@@ -7,6 +7,10 @@
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <string>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 #ifdef _WIN32
 #include <ws2ipdef.h>
 // https://stackoverflow.com/a/24550632/2085408
@@ -333,6 +337,28 @@ namespace Utils
 		static uint32_t TimeMsToAbsSendTime(uint64_t ms)
 		{
 			return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
+		}
+
+		static std::string currentStdTimestamp()
+		{
+			const std::chrono::time_point<std::chrono::system_clock> tnow = std::chrono::system_clock::now();
+
+			auto epoch_seconds = std::chrono::system_clock::to_time_t(tnow);
+			
+			// Format this as date time to seconds resolution e.g. 2016-08-30T08:18:51
+			std::stringstream tstream;
+			tstream << std::put_time(std::gmtime(&epoch_seconds), "%FT%T");
+
+			// Convert back to a time_point and get the time truncated to whole seconds 
+			auto truncated = std::chrono::system_clock::from_time_t(epoch_seconds);
+
+			// Get the number of extra milliseconds
+			auto milli = std::chrono::duration_cast<std::chrono::milliseconds>(tnow - truncated).count();
+	
+			// Final result w. milliseconds
+			tstream << "." << std::fixed << std::setw(3) << std::setfill('0') << milli << "Z";
+
+			return tstream.str();
 		}
 	};
 

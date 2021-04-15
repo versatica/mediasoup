@@ -37,7 +37,7 @@ void DepLibUV::ClassDestroy()
 
 void DepLibUV::PrintVersion()
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	MS_DEBUG_TAG(info, "libuv version: \"%s\"", uv_version_string());
 }

@@ -91,6 +91,7 @@
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Channel/UnixStreamSocket.hpp"
+#include "Utils.hpp"
 #include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
 #include <cstdlib> // std::abort()
 #include <cstring>
@@ -143,6 +144,7 @@ public:
 
 	static std::string logfilename;
 	static std::FILE*  logfd;
+	static bool openLogFile;
 };
 
 /* Logging macros. */
@@ -155,9 +157,9 @@ public:
 	#define _MS_FILE (std::strchr(__FILE__, '/') ? std::strchr(__FILE__, '/') + 1 : __FILE__)
 	#define _MS_LOG_ARG Logger::pid, _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
 #else
-	#define _MS_LOG_STR "%ld: %s::%s()"
+	#define _MS_LOG_STR "%ld %s %s::%s()"
 	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
-	#define _MS_LOG_ARG Logger::pid, MS_CLASS, __FUNCTION__
+	#define _MS_LOG_ARG Logger::pid, Utils::Time::currentStdTimestamp().c_str(), MS_CLASS, __FUNCTION__
 #endif
 
 #define MS_TRACE() \
