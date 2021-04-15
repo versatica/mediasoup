@@ -35,11 +35,7 @@ async fn init() -> Worker {
         let _ = builder.is_test(true).try_init();
     }
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
 
     worker_manager
         .create_worker(WorkerSettings::default())
@@ -153,51 +149,13 @@ fn close_event() {
             .await
             .expect("Failed to create AudioLevelObserver");
 
-        let (tx, rx) = async_oneshot::oneshot::<()>();
+        let (mut tx, rx) = async_oneshot::oneshot::<()>();
         let _handler = audio_level_observer.on_close(Box::new(move || {
             let _ = tx.send(());
         }));
         drop(audio_level_observer);
 
         rx.await.expect("Failed to receive close event");
-    });
-}
-
-#[test]
-fn router_close_event() {
-    future::block_on(async move {
-        let worker = init().await;
-
-        let router = worker
-            .create_router(RouterOptions::new(media_codecs()))
-            .await
-            .expect("Failed to create router");
-
-        let audio_level_observer = router
-            .create_audio_level_observer(AudioLevelObserverOptions::default())
-            .await
-            .expect("Failed to create AudioLevelObserver");
-
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_level_observer.on_close(Box::new(move || {
-            let _ = close_tx.send(());
-        }));
-
-        let (router_close_tx, router_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_level_observer.on_router_close(Box::new(move || {
-            let _ = router_close_tx.send(());
-        }));
-
-        unsafe {
-            libc::kill(worker.pid() as i32, libc::SIGINT);
-        }
-
-        router_close_rx
-            .await
-            .expect("Failed to receive router_close event");
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(audio_level_observer.closed(), true);
     });
 }
 

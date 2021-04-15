@@ -35,7 +35,7 @@ enable different use cases and scenarios, without any constraint or assumption. 
 * Congestion control.
 * Sender and receiver bandwidth estimation with spatial/temporal layers distribution algorithm.
 * Data message exchange (via WebRTC DataChannels, SCTP over plain UDP, and direct termination in Rust/Node.js).
-* Extremely powerful (media worker subprocess coded in C++ on top of [libuv](https://libuv.org)).
+* Extremely powerful (media worker subprocess/thead coded in C++ on top of [libuv](https://libuv.org)).
 
 ## Authors
 * Iñaki Baz Castillo [[website](https://inakibaz.me)|[github](https://github.com/ibc/)]

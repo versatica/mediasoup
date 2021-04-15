@@ -39,6 +39,7 @@ impl DerefMut for AppData {
 }
 
 impl AppData {
+    /// Construct app data from almost anything
     pub fn new<T: Any + Send + Sync>(app_data: T) -> Self {
         Self(Arc::new(app_data))
     }
@@ -80,7 +81,7 @@ pub struct IceParameters {
     pub ice_lite: Option<bool>,
 }
 
-/// ICE candidate type
+/// ICE candidate type.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum IceCandidateType {
@@ -104,6 +105,7 @@ pub enum IceCandidateType {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum IceCandidateTcpType {
+    /// Passive.
     Passive,
 }
 
@@ -111,7 +113,9 @@ pub enum IceCandidateTcpType {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TransportProtocol {
+    /// TCP.
     Tcp,
+    /// UDP.
     Udp,
 }
 
@@ -120,7 +124,7 @@ pub enum TransportProtocol {
 #[serde(rename_all = "camelCase")]
 pub struct IceCandidate {
     /// Unique identifier that allows ICE to correlate candidates that appear on multiple
-    /// `transports`.
+    /// transports.
     pub foundation: String,
     /// The assigned priority of the candidate.
     pub priority: u32,
@@ -151,7 +155,7 @@ pub enum IceState {
     /// ICE was `Connected` or `Completed` but it has suddenly failed (this can just happen if the
     /// selected tuple has `Tcp` protocol).
     Disconnected,
-    /// ICE state when the `transport` has been closed.
+    /// ICE state when the transport has been closed.
     Closed,
 }
 
@@ -166,6 +170,7 @@ pub enum IceState {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum TransportTuple {
+    /// Transport tuple with remote endpoint info.
     #[serde(rename_all = "camelCase")]
     WithRemote {
         /// Local IP address.
@@ -179,6 +184,7 @@ pub enum TransportTuple {
         /// Protocol
         protocol: TransportProtocol,
     },
+    /// Transport tuple without remote endpoint info.
     #[serde(rename_all = "camelCase")]
     LocalOnly {
         /// Local IP address.
@@ -247,22 +253,27 @@ impl Default for DtlsRole {
 /// corresponding certificate fingerprint value.
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum DtlsFingerprint {
+    /// sha-1
     Sha1 {
         /// Certificate fingerprint value.
         value: [u8; 20],
     },
+    /// sha-224
     Sha224 {
         /// Certificate fingerprint value.
         value: [u8; 28],
     },
+    /// sha-256
     Sha256 {
         /// Certificate fingerprint value.
         value: [u8; 32],
     },
+    /// sha-384
     Sha384 {
         /// Certificate fingerprint value.
         value: [u8; 48],
     },
+    /// sha-512
     Sha512 {
         /// Certificate fingerprint value.
         value: [u8; 64],
@@ -541,7 +552,7 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
         impl<'de> Visitor<'de> for DtlsFingerprintVisitor {
             type Value = DtlsFingerprint;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str(
                     r#"DTLS fingerprint algorithm and value like {"algorithm": "sha-256", "value": "1B:EA:BF:33:B8:11:26:6D:91:AD:1B:A0:16:FD:5D:60:59:33:F7:46:A3:BA:99:2A:1D:04:99:A6:F2:C6:2D:43"}"#,
                 )
@@ -551,8 +562,8 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
             where
                 V: MapAccess<'de>,
             {
-                let mut algorithm = None::<Cow<str>>;
-                let mut value = None::<Cow<str>>;
+                let mut algorithm = None::<Cow<'_, str>>;
+                let mut value = None::<Cow<'_, str>>;
                 while let Some(key) = map.next_key()? {
                     match key {
                         Field::Algorithm => {
@@ -685,20 +696,27 @@ pub struct DtlsParameters {
     pub fingerprints: Vec<DtlsFingerprint>,
 }
 
+/// Trace event direction
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum EventDirection {
+pub enum TraceEventDirection {
+    /// In
     In,
+    /// Out
     Out,
 }
 
 /// Container used for sending/receiving messages using `DirectTransport` data producers and data
 /// consumers.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum WebRtcMessage {
+    /// String
     String(String),
+    /// Binary
     Binary(Bytes),
+    /// EmptyString
     EmptyString,
+    /// EmptyBinary
     EmptyBinary,
 }
 
@@ -714,16 +732,15 @@ impl WebRtcMessage {
     // | WebRTC Binary Empty                | 57        |
     // +------------------------------------+-----------+
 
-    pub(crate) fn new(ppid: u32, payload: Bytes) -> Self {
-        // TODO: Make this fallible instead
+    pub(crate) fn new(ppid: u32, payload: Bytes) -> Result<Self, u32> {
         match ppid {
-            51 => WebRtcMessage::String(String::from_utf8(payload.to_vec()).unwrap()),
-            53 => WebRtcMessage::Binary(payload),
-            56 => WebRtcMessage::EmptyString,
-            57 => WebRtcMessage::EmptyBinary,
-            _ => {
-                panic!("Bad ppid {}", ppid);
-            }
+            51 => Ok(WebRtcMessage::String(
+                String::from_utf8(payload.to_vec()).unwrap(),
+            )),
+            53 => Ok(WebRtcMessage::Binary(payload)),
+            56 => Ok(WebRtcMessage::EmptyString),
+            57 => Ok(WebRtcMessage::EmptyBinary),
+            ppid => Err(ppid),
         }
     }
 

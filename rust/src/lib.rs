@@ -1,3 +1,4 @@
+#![warn(rust_2018_idioms, missing_debug_implementations, missing_docs)]
 //! Rust port of [mediasoup](https://github.com/versatica/mediasoup) TypeScript library!
 //!
 //! For general information go to readme in repository.
@@ -19,13 +20,8 @@
 //! It is recommended to visit mediasoup website and read
 //! [design overview](https://mediasoup.org/documentation/v3/mediasoup/design/) first.
 //!
-//! Pre-requisite for using this library is to have mediasoup worker. The simples way to get it is
-//! to run `npm i mediasoup` (see
-//! [installation instructions](https://mediasoup.org/documentation/v3/mediasoup/installation/)) and
-//! get worker binary from `node_modules/mediasoup/worker/out/Release/mediasoup-worker`.
-//!
-//! If you are hacking on the library just run `npm i` in the root of the repo and tests will pick
-//! up the worker binary automatically.
+//! There are some requirements for building underlying C++ `mediasoup-worker`, please find them in
+//! [installation instructions](https://mediasoup.org/documentation/v3/mediasoup/installation/)
 //!
 //! # Examples
 //! There are some examples in `examples` and `examples-frontend` directories (for server- and
@@ -36,7 +32,7 @@
 //! # How to start
 //! With that in mind, you want start with creating [`WorkerManager`](worker_manager::WorkerManager)
 //! instance and then 1 or more workers. Workers a responsible for low-level job of sending media
-//! and data back and forth. Each worker is backed by single-core C++ worker process. On each worker
+//! and data back and forth. Each worker is backed by single-core C++ worker thread. On each worker
 //! you create one or more routers that enable injection, selection and forwarding of media and data
 //! through [`transport`] instances. There are a few different transports available, but most likely
 //! you'll want to use [`WebRtcTransport`](webrtc_transport::WebRtcTransport) most often. With

@@ -1,5 +1,8 @@
 //! An audio level observer monitors the volume of the selected audio producers.
 
+#[cfg(test)]
+mod tests;
+
 use crate::data_structures::AppData;
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestInternal,
@@ -16,6 +19,7 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::Deserialize;
+use std::fmt;
 use std::num::NonZeroU16;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -49,7 +53,7 @@ impl Default for AudioLevelObserverOptions {
 }
 
 /// Represents volume of one audio producer.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct AudioLevelObserverVolume {
     /// The audio producer instance.
     pub producer: Producer,
@@ -103,18 +107,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = RtpObserverCloseRequest {
                     internal: RtpObserverInternal {
@@ -147,6 +151,17 @@ impl Inner {
 #[derive(Clone)]
 pub struct AudioLevelObserver {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for AudioLevelObserver {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AudioLevelObserver")
+            .field("id", &self.inner.id)
+            .field("paused", &self.inner.paused)
+            .field("router", &self.inner.router)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 #[async_trait(?Send)]
@@ -353,7 +368,7 @@ impl AudioLevelObserver {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.router_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             }
         });
@@ -414,6 +429,12 @@ impl AudioLevelObserver {
 #[derive(Clone)]
 pub struct WeakAudioLevelObserver {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakAudioLevelObserver {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakAudioLevelObserver").finish()
+    }
 }
 
 impl WeakAudioLevelObserver {
