@@ -27,6 +27,12 @@ namespace RTC
 		// Latest index overlaps with the oldest one, remove it.
 		if (this->latestIndex == this->oldestIndex && this->oldestIndex != -1)
 		{
+			MS_WARN_TAG(
+			  info,
+			  "calculation buffer full, windowSize:%" PRIu64 " ms windowItems:%" PRIu16,
+			  this->windowSize,
+			  this->windowItems);
+
 			BufferItem& oldestItem = buffer[this->oldestIndex];
 			this->totalCount -= oldestItem.count;
 			oldestItem.count = 0u;
