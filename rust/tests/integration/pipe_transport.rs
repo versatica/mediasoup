@@ -36,10 +36,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
-            parameters: RtpCodecParametersParameters::from([
-                ("useinbandfec", 1u32.into()),
-                ("foo", "bar".into()),
-            ]),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
