@@ -51,7 +51,7 @@ use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
 };
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
-use crate::producer::{NonClosingProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
+use crate::producer::{PipedProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
 use crate::rtp_observer::RtpObserverId;
 use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::sctp_parameters::NumSctpStreams;
@@ -161,7 +161,7 @@ impl PipeToRouterOptions {
 ///
 /// # Notes on usage
 /// Pipe consumer and Pipe producer will not be closed on drop, to control this manually get pipe
-/// producer out of non-closing variant with [`NonClosingProducer::into_inner()`] call,
+/// producer out of non-closing variant with [`PipedProducer::into_inner()`] call,
 /// otherwise pipe consumer and pipe producer lifetime will be tied to source producer lifetime.
 ///
 /// Pipe consumer is always tied to the lifetime of pipe producer.
@@ -170,8 +170,8 @@ pub struct PipeProducerToRouterPair {
     /// The Consumer created in the current Router.
     pub pipe_consumer: Consumer,
     /// The Producer created in the target Router, get regular instance with
-    /// [`NonClosingProducer::into_inner()`] call.
-    pub pipe_producer: NonClosingProducer,
+    /// [`PipedProducer::into_inner()`] call.
+    pub pipe_producer: PipedProducer,
 }
 
 /// Error that caused [`Router::pipe_producer_to_router()`] to fail.
@@ -1031,12 +1031,12 @@ impl Router {
             })
             .detach();
 
-        let pipe_producer = NonClosingProducer::new(pipe_producer, {
+        let pipe_producer = PipedProducer::new(pipe_producer, {
             let weak_producer = producer.downgrade();
 
             move |pipe_producer| {
                 if let Some(producer) = weak_producer.upgrade() {
-                    // In case `NonClosingProducer` was dropped without transforming into regular
+                    // In case `PipedProducer` was dropped without transforming into regular
                     // `Producer` first, we need to tie underlying pipe producer lifetime to the
                     // lifetime of original source producer in another router
                     producer

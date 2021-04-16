@@ -784,24 +784,33 @@ impl DirectProducer {
     }
 }
 
+// TODO: Remove with next major version
+#[deprecated(note = "Please use `PipedProducer` instead, it is an alias to the same type")]
+#[doc(hidden)]
+pub type NonClosingProducer = PipedProducer;
+
 /// Same as [`Producer`], but will not be closed when dropped.
 ///
-/// Use [`NonClosingProducer::into_inner()`] method to get regular [`Producer`] instead and restore
+/// The idea here is that [`ProducerId`] of both original [`Producer`] and `PipedProducer` is the
+/// same and lifetime of piped producer is also tied to original producer, so you may not need to
+/// store `PipedProducer` at all.
+///
+/// Use [`PipedProducer::into_inner()`] method to get regular [`Producer`] instead and restore
 /// regular behavior of [`Drop`] implementation.
-pub struct NonClosingProducer {
+pub struct PipedProducer {
     producer: Producer,
     on_drop: Option<Box<dyn FnOnce(Producer) + Send + 'static>>,
 }
 
-impl fmt::Debug for NonClosingProducer {
+impl fmt::Debug for PipedProducer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("NonClosingProducer")
+        f.debug_struct("PipedProducer")
             .field("producer", &self.producer)
             .finish()
     }
 }
 
-impl Drop for NonClosingProducer {
+impl Drop for PipedProducer {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
             on_drop(self.producer.clone())
@@ -809,7 +818,7 @@ impl Drop for NonClosingProducer {
     }
 }
 
-impl NonClosingProducer {
+impl PipedProducer {
     /// * `on_drop` - Callback that takes last `Producer` instance and must do something with it to
     ///   prevent dropping and thus closing
     pub(crate) fn new<F: FnOnce(Producer) + Send + 'static>(
@@ -822,7 +831,7 @@ impl NonClosingProducer {
         }
     }
 
-    /// Get inner [`Producer`] (which will close on drop in contrast to `NonClosingProducer`).
+    /// Get inner [`Producer`] (which will close on drop in contrast to `PipedProducer`).
     pub fn into_inner(mut self) -> Producer {
         self.on_drop.take();
         self.producer.clone()
