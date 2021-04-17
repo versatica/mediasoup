@@ -10,12 +10,12 @@ The `package.json` file in the main folder includes the following scripts:
 
 ### `npm run typescript:build`
 
-Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript and places it into the `lib` directory.
+Compiles mediasoup TypeScript code (`lib` folder) JavaScript and places it into the `lib` directory.
 
 
 ### `npm run typescript:watch`
 
-Compiles mediasoup TypeScript code (`lib` folder) into es2020 JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
+Compiles mediasoup TypeScript code (`lib` folder) JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
 
 ### `npm run lint`
 
@@ -66,6 +66,8 @@ The `worker` folder contains a `Makefile` for the mediasoup-worker C++ subprojec
 
 Builds the `mediasoup-worker` binary at `worker/out/Release/`.
 
+If the "MEDIASOUP_MAX_CORES" environment variable is set, the build process will use that number of CPU cores. Otherwise it will auto-detect the number of cores in the machine.
+
 If the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug", the binary is built at `worker/out/Debug/` with some C/C++ flags enabled (such as `-O0`) and some macros defined (such as `DEBUG`, `MS_LOG_TRACE` and `MS_LOG_FILE_LINE`). Check the meaning of these macros in the `worker/include/Logger.hpp` header file.
 
 In order to instruct the mediasoup Node.js module to use the `Debug` mediasoup-worker binary, an environment variable must be set before running the Node.js application:
@@ -80,6 +82,12 @@ If the "MEDIASOUP_WORKER_BIN" environment variable is set, mediasoup will use th
 $ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
 ```
 
+
+### `make libmediasoup-worker`
+
+Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
+
+`MEDIASOUP_MAX_CORES` and `MEDIASOUP_BUILDTYPE` environment variables from above still apply for static library build.
 
 ### `make clean`
 

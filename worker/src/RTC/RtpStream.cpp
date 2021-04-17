@@ -72,6 +72,9 @@ namespace RTC
 		if (this->params.rtxSsrc)
 			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
 
+		if (this->rtxStream)
+			jsonObject["rtxPacketsDiscarded"] = this->rtxStream->GetPacketsDiscarded();
+
 		if (this->hasRtt)
 			jsonObject["roundTripTime"] = this->rtt;
 	}
@@ -274,7 +277,7 @@ namespace RTC
 		// clang-tidy "thinks" that this can lead to division by zero but we are
 		// smarter.
 		// NOLINTNEXTLINE(clang-analyzer-core.DivideZero)
-		this->score = static_cast<uint8_t>(std::round(static_cast<float>(totalScore) / samples));
+		this->score = static_cast<uint8_t>(std::round(static_cast<double>(totalScore) / samples));
 
 		// Call the listener if the global score has changed.
 		if (this->score != previousScore)

@@ -110,7 +110,7 @@ namespace RTC
 		if (expectedInterval == 0 || lostInterval <= 0)
 			this->fractionLost = 0;
 		else
-			this->fractionLost = std::round(((lostInterval << 8) / expectedInterval));
+			this->fractionLost = std::round((static_cast<double>(lostInterval << 8) / expectedInterval));
 
 		this->reportedPacketLost += (this->packetsLost - prevPacketsLost);
 

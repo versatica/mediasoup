@@ -197,14 +197,17 @@ namespace RTC
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
 					  flags);
 
-					MS_WARN_DEV(
-					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
-					  transportStr.c_str(),
-					  ip.c_str(),
-					  port,
-					  attempt,
-					  numAttempts,
-					  uv_strerror(err));
+					if (err)
+					{
+						MS_WARN_DEV(
+						  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  transportStr.c_str(),
+						  ip.c_str(),
+						  port,
+						  attempt,
+						  numAttempts,
+						  uv_strerror(err));
+					}
 
 					break;
 				}
@@ -438,8 +441,8 @@ namespace RTC
 
 		for (auto& kv : PortManager::mapUdpIpPorts)
 		{
-			auto& ip    = kv.first;
-			auto& ports = kv.second;
+			const auto& ip = kv.first;
+			auto& ports    = kv.second;
 
 			(*jsonUdpIt)[ip] = json::array();
 			auto jsonIpIt    = jsonUdpIt->find(ip);
@@ -461,8 +464,8 @@ namespace RTC
 
 		for (auto& kv : PortManager::mapTcpIpPorts)
 		{
-			auto& ip    = kv.first;
-			auto& ports = kv.second;
+			const auto& ip = kv.first;
+			auto& ports    = kv.second;
 
 			(*jsonTcpIt)[ip] = json::array();
 			auto jsonIpIt    = jsonTcpIt->find(ip);

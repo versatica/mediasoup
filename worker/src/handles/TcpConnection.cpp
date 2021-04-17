@@ -183,7 +183,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		if (cb)
 		{
 			(*cb)(false);
-
 			delete cb;
 		}
 
@@ -195,7 +194,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		if (cb)
 		{
 			(*cb)(false);
-
 			delete cb;
 		}
 
@@ -217,7 +215,6 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 		if (cb)
 		{
 			(*cb)(true);
-
 			delete cb;
 		}
 
@@ -281,7 +278,6 @@ void TcpConnection::Write(
 		if (cb)
 		{
 			(*cb)(false);
-
 			delete cb;
 		}
 
@@ -293,7 +289,6 @@ void TcpConnection::Write(
 		if (cb)
 		{
 			(*cb)(false);
-
 			delete cb;
 		}
 
@@ -321,7 +316,6 @@ void TcpConnection::Write(
 		if (cb)
 		{
 			(*cb)(true);
-
 			delete cb;
 		}
 
@@ -429,7 +423,7 @@ inline void TcpConnection::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf
 	MS_TRACE();
 
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
-	if (this->buffer == nullptr)
+	if (!this->buffer)
 		this->buffer = new uint8_t[this->bufferSize];
 
 	// Tell UV to write after the last data byte in the buffer.
@@ -498,6 +492,8 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 inline void TcpConnection::OnUvWrite(int status, TcpConnection::onSendCallback* cb)
 {
 	MS_TRACE();
+
+	// NOTE: Do not delete cb here since it will be delete in onWrite() above.
 
 	if (status == 0)
 	{

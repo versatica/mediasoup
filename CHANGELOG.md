@@ -1,6 +1,232 @@
 # Changelog
 
 
+### 3.7.2 (WIP)
+
+* Update `Catch` to 2.13.5.
+* Update NPM deps.
+
+
+### 3.7.1
+
+* `SimulcastConsumer`: Fix miscalculation when increasing layer (PR #541 by @penguinol).
+* Rust version with thread-based worker (PR #540).
+* Update NPM deps.
+
+
+### 3.7.0
+
+* Welcome to `mediasoup-rust`! Authored by @nazar-pc (PRs #518 and #533).
+* Update NPM deps.
+* Update `usrsctp`.
+
+
+### 3.6.37
+
+* Fix crash if empty `fingerprints` array is given in `webrtcTransport.connect()` (issue #537).
+
+### 3.6.36
+
+* `Producer`: Add new stats field 'rtxPacketsDiscarded' (PR #536).
+
+
+### 3.6.35
+
+* `XxxxConsumer.hpp`: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled (PR #534 due to issue #532).
+* Update NPM deps.
+
+
+### 3.6.34
+
+* Fix crash (regression, issue #529).
+
+
+### 3.6.33
+
+* Add missing `delete cb` that otherwise would leak (PR #527 based on PR #526 by @vpalmisano).
+* `router.pipeToRouter()`: Fix possible inconsistency in `pipeProducer.paused` status (as discussed in this [thread](https://mediasoup.discourse.group/t/concurrency-architecture/2515/) in the mediasoup forum).
+* Update `nlohmann/json` to 3.9.1.
+* Update `usrsctp`.
+* Update NPM deps.
+* Enhance Jitter calculation.
+
+
+### 3.6.32
+
+* Fix notifications from `mediasoup-worker` being processed before responses received before them (issue #501).
+
+
+### 3.6.31
+
+* Move `bufferedAmount` from `dataConsumer.dump()` to `dataConsumer.getStats()`.
+* Update NPM deps.
+
+
+### 3.6.30
+
+* Add `pipe` option to `transport.consume()`(PR #494).
+  - So the receiver will get all streams from the `Producer`.
+  - It works for any kind of transport (but `PipeTransport` which is always like this).
+* Update NPM deps.
+* Add `LICENSE` and `PATENTS` files in `libwebrtc` dependency (issue #495).
+* Added `worker/src/Utils/README_BASE64_UTILS` (issue #497).
+* Update `Catch` to 2.13.4.
+* Update `usrsctp`.
+
+
+### 3.6.29
+
+* Fix wrong message about `rtcMinPort` and `rtcMaxPort`.
+* Update deps.
+* Improve `EnhancedEventEmitter.safeAsPromise()` (although not used).
+
+
+### 3.6.28
+
+* Fix replacement of `__MEDIASOUP_VERSION__` in `lib/index.d.ts` (issue #483).
+* Update NPM deps.
+* `worker/scripts/configure.py`: Handle 'mips64' (PR #485).
+
+
+### 3.6.27
+
+* Update NPM deps.
+* Allow the `mediasoup-worker` process to inherit all environment variables (issue #480).
+
+
+### 3.6.26
+
+* BWE tweaks and debug logs.
+* Update NPM deps.
+
+
+### 3.6.25
+
+* Update `Catch` to 2.13.2.
+* Update NPM deps.
+* sctp fixes #479.
+
+
+### 3.6.24
+
+* Update `awaitqueue` dependency.
+
+
+### 3.6.23
+
+* Fix yet another memory leak in Node.js layer due to `PayloadChannel` event listener not being removed.
+* Update NPM deps.
+
+
+### 3.6.22
+
+* `Transport.cpp`: Provide transport congestion client with RTCP Receiver Reports (#464).
+* Update `libuv` to 1.40.0.
+* Update Node deps.
+* `SctpAssociation.cpp`: increase `sctpBufferedAmount` before sending any data (#472).
+
+
+### 3.6.21
+
+* Fix memory leak in Node.js layer due to `PayloadChannel` event listener not being removed (related to #463).
+
+
+### 3.6.20
+
+* Remove `-fwrapv` when building mediasoup-worker in `Debug` mode (issue #460).
+* Add `MEDIASOUP_MAX_CORES` to limit `NUM_CORES` during mediasoup-worker build (PR #462).
+
+
+### 3.6.19
+
+* Update `usrsctp` dependency.
+* Update `typescript-eslint` deps.
+* Update Node deps.
+
+
+### 3.6.18
+
+* Fix `ortc.getConsumerRtpParameters()` RTX codec comparison issue (PR #453).
+* RtpObserver: expose `RtpObserverAddRemoveProducerOptions` for `addProducer()` and `removeProducer()` methods.
+
+
+### 3.6.17
+
+* Update `libuv` to 1.39.0.
+* Update Node deps.
+* SimulcastConsumer: Prefer the highest spatial layer initially (PR #450).
+* RtpStreamRecv: Set RtpDataCounter window size to 6 secs if DTX (#451)
+
+
+### 3.6.16
+
+* `SctpAssociation.cpp`: Fix `OnSctpAssociationBufferedAmount()` call.
+* Update deps.
+* New API to send data from Node throught SCTP DataConsumer.
+
+
+### 3.6.15
+
+* Avoid SRTP leak by deleting invalid SSRCs after STRP decryption (issue #437, thanks to @penguinol for reporting).
+* Update `usrsctp` dep.
+* DataConsumer 'bufferedAmount' implementation (PR #442).
+
+### 3.6.14
+
+* Fix `usrsctp` vulnerability (PR #439).
+* Fix issue #435 (thanks to @penguinol for reporting).
+* `TransportCongestionControlClient.cpp`: Enable periodic ALR probing to recover faster from network issues.
+* Update NPM deps.
+* Update `nlohmann::json` C++ dep to 3.9.0.
+* Update `Catch` to 2.13.0.
+
+
+### 3.6.13
+
+* RTP on `DirectTransport` (issue #433, PR #434):
+  - New API `producer.send(rtpPacket: Buffer)`.
+  - New API `consumer.on('rtp', (rtpPacket: Buffer)`.
+  - New API `directTransport.sendRtcp(rtcpPacket: Buffer)`.
+  - New API `directTransport.on('rtcp', (rtpPacket: Buffer)`.
+
+
+### 3.6.12
+
+* Release script.
+
+
+### 3.6.11
+
+* `Transport`: rename `maxSctpSendBufferSize` to `sctpSendBufferSize`.
+
+
+### 3.6.10
+
+* `Transport`: Implement `maxSctpSendBufferSize`.
+* Update `libuv` to 1.38.1.
+* Update `Catch` to 2.12.4.
+* Update NPM deps.
+
+
+### 3.6.9
+
+* `Transport::ReceiveRtpPacket()`: Call `RecvStreamClosed(packet->GetSsrc())` if received RTP packet does not match any `Producer`.
+* `Transport::HandleRtcpPacket()`: Ensure `Consumer` is found for received NACK Feedback packets.
+* Update NPM deps.
+* Update C++ `Catch` dep.
+* Fix issue #408.
+
+
+### 3.6.8
+
+* Fix SRTP leak due to streams not being removed when a `Producer` or `Consumer` is closed.
+  - PR #428 (fixes issues #426). 
+  - Credits to credits to @penguinol for reporting and initial work at PR #427.
+* Update `nlohmann::json` C++ dep to 3.8.0.
+* C++: Enhance `const` correctness.
+* Update NPM deps.
+
+
 ### 3.6.7
 
 * `ConsumerScore`: Add `producerScores`, scores of all RTP streams in the producer ordered by encoding (just useful when the producer uses simulcast).
@@ -47,7 +273,7 @@
 
 ### 3.6.0
 
-* DataChannel termination:
+* SCTP/DataChannel termination:
   - PR #409
   - Allow the Node application to directly send text/binary messages to mediasoup-worker C++ process so others can consume them using `DataConsumers`.
   - And vice-versa: allow the Node application to directly consume in Node messages send by `DataProducers`.
@@ -61,7 +287,7 @@
 
 ### 3.5.14
 
-* Update deps, speciall `uuid` and `@types/uuid` that had a TypeScript related bug.
+* Update deps, specially `uuid` and `@types/uuid` that had a TypeScript related bug.
 * `TransportCongestionClient.cpp`: Improve sender side bandwidth estimation by do not reporting `this->initialAvailableBitrate` as available bitrate due to strange behavior in the algorithm.
 
 

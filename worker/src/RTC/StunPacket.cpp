@@ -65,7 +65,7 @@ namespace RTC
 		uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
 		// Create a new StunPacket (data + 8 points to the received TransactionID field).
-		auto packet = new StunPacket(
+		auto* packet = new StunPacket(
 		  static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
 
 		/*
@@ -411,7 +411,7 @@ namespace RTC
 			case Class::INDICATION:
 			{
 				// Both USERNAME and MESSAGE-INTEGRITY must be present.
-				if (this->messageIntegrity == nullptr || this->username.empty())
+				if (!this->messageIntegrity || this->username.empty())
 					return Authentication::BAD_REQUEST;
 
 				// Check that USERNAME attribute begins with our local username plus ":".
@@ -481,7 +481,7 @@ namespace RTC
 		  this->klass == Class::REQUEST,
 		  "attempt to create an error response for a non Request STUN packet");
 
-		auto response =
+		auto* response =
 		  new StunPacket(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
 
 		response->SetErrorCode(errorCode);

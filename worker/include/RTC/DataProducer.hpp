@@ -33,7 +33,7 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
-		void HandleRequest(Channel::Request* request);
+		void HandleRequest(Channel::Request* request) const;
 		Type GetType() const
 		{
 			return this->type;

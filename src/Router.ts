@@ -56,7 +56,7 @@ export type PipeToRouterOptions =
 	listenIp?: TransportListenIp | string;
 
 	/**
-	 * Create a SCTP association. Default false.
+	 * Create a SCTP association. Default true.
 	 */
 	enableSctp?: boolean;
 
@@ -199,7 +199,7 @@ export class Router extends EnhancedEventEmitter
 	}
 
 	/**
-	 * RTC capabilities of the Router.
+	 * RTP capabilities of the Router.
 	 */
 	get rtpCapabilities(): RtpCapabilities
 	{
@@ -348,6 +348,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
+			sctpSendBufferSize = 262144,
 			appData = {}
 		}: WebRtcTransportOptions
 	): Promise<WebRtcTransport>
@@ -389,6 +390,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			sctpSendBufferSize,
 			isDataChannel : true
 		};
 
@@ -439,6 +441,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
+			sctpSendBufferSize = 262144,
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 			appData = {}
@@ -477,6 +480,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			sctpSendBufferSize,
 			isDataChannel : false,
 			enableSrtp,
 			srtpCryptoSuite
@@ -539,7 +543,8 @@ export class Router extends EnhancedEventEmitter
 			listenIp,
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
-			maxSctpMessageSize = 1073741823,
+			maxSctpMessageSize = 268435456,
+			sctpSendBufferSize = 268435456,
 			enableRtx = false,
 			enableSrtp = false,
 			appData = {}
@@ -576,6 +581,7 @@ export class Router extends EnhancedEventEmitter
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
+			sctpSendBufferSize,
 			isDataChannel : false,
 			enableRtx,
 			enableSrtp
@@ -819,6 +825,20 @@ export class Router extends EnhancedEventEmitter
 						appData       : producer.appData
 					});
 
+				// Ensure that the producer has not been closed in the meanwhile.
+				if (producer.closed)
+					throw new InvalidStateError('original Producer closed');
+
+				// Ensure that producer.paused has not changed in the meanwhile and, if
+				// so, sych the pipeProducer.
+				if (pipeProducer.paused !== producer.paused)
+				{
+					if (producer.paused)
+						await pipeProducer.pause();
+					else
+						await pipeProducer.resume();
+				}
+
 				// Pipe events from the pipe Consumer to the pipe Producer.
 				pipeConsumer!.observer.on('close', () => pipeProducer!.close());
 				pipeConsumer!.observer.on('pause', () => pipeProducer!.pause());
@@ -864,6 +884,10 @@ export class Router extends EnhancedEventEmitter
 						protocol             : pipeDataConsumer!.protocol,
 						appData              : dataProducer.appData
 					});
+
+				// Ensure that the dataProducer has not been closed in the meanwhile.
+				if (dataProducer.closed)
+					throw new InvalidStateError('original DataProducer closed');
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.
 				pipeDataConsumer!.observer.on('close', () => pipeDataProducer!.close());

@@ -179,7 +179,7 @@ namespace RTC
 			{
 				extIds.reserve(this->mapOneByteExtensions.size());
 
-				for (auto& kv : this->mapOneByteExtensions)
+				for (const auto& kv : this->mapOneByteExtensions)
 				{
 					extIds.push_back(std::to_string(kv.first));
 				}
@@ -188,7 +188,7 @@ namespace RTC
 			{
 				extIds.reserve(this->mapTwoBytesExtensions.size());
 
-				for (auto& kv : this->mapTwoBytesExtensions)
+				for (const auto& kv : this->mapTwoBytesExtensions)
 				{
 					extIds.push_back(std::to_string(kv.first));
 				}
@@ -407,7 +407,7 @@ namespace RTC
 		// Calculate total size required for all extensions (with padding if needed).
 		size_t extensionsTotalSize{ 0 };
 
-		for (auto& extension : extensions)
+		for (const auto& extension : extensions)
 		{
 			if (type == 1u)
 			{
@@ -484,7 +484,7 @@ namespace RTC
 		// Write the new extensions into the header extension value.
 		uint8_t* ptr = this->headerExtension->value;
 
-		for (auto& extension : extensions)
+		for (const auto& extension : extensions)
 		{
 			if (type == 1u)
 			{

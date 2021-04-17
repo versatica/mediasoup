@@ -83,7 +83,7 @@ test('directTransport.getStats() succeeds', async () =>
 	expect(data).toBeType('array');
 	expect(data.length).toBe(1);
 	expect(data[0].type).toBe('direct-transport');
-	expect(data[0].transportId).toBeType('string');
+	expect(data[0].transportId).toBe(transport.id);
 	expect(data[0].timestamp).toBeType('number');
 	expect(data[0].bytesReceived).toBe(0);
 	expect(data[0].recvBitrate).toBe(0);
@@ -99,8 +99,6 @@ test('directTransport.getStats() succeeds', async () =>
 	expect(data[0].rtxSendBitrate).toBe(0);
 	expect(data[0].probationBytesSent).toBe(0);
 	expect(data[0].probationSendBitrate).toBe(0);
-	expect(data[0].recvBitrate).toBe(0);
-	expect(data[0].sendBitrate).toBe(0);
 }, 2000);
 
 test('directTransport.connect() succeeds', async () =>

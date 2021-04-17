@@ -32,16 +32,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 360878 2020-05-10 17:19:19Z tuexen $");
+__FBSDID("$FreeBSD$");
 #endif
 
 #define _IP_VHL
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_pcb.h>
 #ifdef INET6
-#if defined(__Userspace_os_FreeBSD)
+#if defined(__FreeBSD__) && defined(__Userspace__)
 #include <netinet6/sctp6_var.h>
 #endif
 #endif
@@ -57,13 +57,9 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 360878 2020-05-10 17:19:19Z tu
 #include <netinet/sctp.h>
 #include <netinet/sctp_uio.h>
 #if defined(INET) || defined(INET6)
-#if !defined(__Userspace_os_Windows)
+#if !(defined(_WIN32) && defined(__Userspace__))
 #include <netinet/udp.h>
 #endif
-#endif
-
-#if defined(__APPLE__)
-#define APPLE_FILE_NO 6
 #endif
 
 void
@@ -175,8 +171,8 @@ sctp_threshold_management(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 }
 
 /*
- * sctp_find_alternate_net() returns a non-NULL pointer as long
- * the argument net is non-NULL.
+ * sctp_find_alternate_net() returns a non-NULL pointer as long as there
+ * exists nets, which are not being deleted.
  */
 struct sctp_nets *
 sctp_find_alternate_net(struct sctp_tcb *stcb,
@@ -185,13 +181,13 @@ sctp_find_alternate_net(struct sctp_tcb *stcb,
 {
 	/* Find and return an alternate network if possible */
 	struct sctp_nets *alt, *mnet, *min_errors_net = NULL , *max_cwnd_net = NULL;
-	int once;
+	bool looped;
 	/* JRS 5/14/07 - Initialize min_errors to an impossible value. */
 	int min_errors = -1;
 	uint32_t max_cwnd = 0;
 
 	if (stcb->asoc.numnets == 1) {
-		/* No others but net */
+		/* No selection can be made. */
 		return (TAILQ_FIRST(&stcb->asoc.nets));
 	}
 	/*
@@ -327,28 +323,25 @@ sctp_find_alternate_net(struct sctp_tcb *stcb,
 			return (max_cwnd_net);
 		}
 	}
-	mnet = net;
-	once = 0;
-
-	if (mnet == NULL) {
-		mnet = TAILQ_FIRST(&stcb->asoc.nets);
-		if (mnet == NULL) {
-			return (NULL);
-		}
+	/* Look for an alternate net, which is active. */
+	if ((net != NULL) && ((net->dest_state & SCTP_ADDR_BEING_DELETED) == 0)) {
+		alt = TAILQ_NEXT(net, sctp_next);;
+	} else {
+		alt = TAILQ_FIRST(&stcb->asoc.nets);
 	}
+	looped = false;
 	for (;;) {
-		alt = TAILQ_NEXT(mnet, sctp_next);
 		if (alt == NULL) {
-			once++;
-			if (once > 1) {
+			if (!looped) {
+				alt = TAILQ_FIRST(&stcb->asoc.nets);
+				looped = true;
+			}
+			/* Definitely out of candidates. */
+			if (alt == NULL) {
 				break;
 			}
-			alt = TAILQ_FIRST(&stcb->asoc.nets);
-			if (alt == NULL) {
-				return (NULL);
-			}
 		}
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 		if (alt->ro.ro_nh == NULL) {
 #else
 		if (alt->ro.ro_rt == NULL) {
@@ -360,48 +353,61 @@ sctp_find_alternate_net(struct sctp_tcb *stcb,
 			alt->src_addr_selected = 0;
 		}
 		if (((alt->dest_state & SCTP_ADDR_REACHABLE) == SCTP_ADDR_REACHABLE) &&
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 		    (alt->ro.ro_nh != NULL) &&
 #else
 		    (alt->ro.ro_rt != NULL) &&
 #endif
-		    (!(alt->dest_state & SCTP_ADDR_UNCONFIRMED))) {
-			/* Found a reachable address */
+		    (!(alt->dest_state & SCTP_ADDR_UNCONFIRMED)) &&
+		    (alt != net)) {
+			/* Found an alternate net, which is reachable. */
 			break;
 		}
-		mnet = alt;
+		alt = TAILQ_NEXT(alt, sctp_next);
 	}
 
 	if (alt == NULL) {
-		/* Case where NO insv network exists (dormant state) */
-		/* we rotate destinations */
-		once = 0;
-		mnet = net;
+		/*
+		 * In case no active alternate net has been found, look for
+		 * an alternate net, which is confirmed.
+		 */
+		if ((net != NULL) && ((net->dest_state & SCTP_ADDR_BEING_DELETED) == 0)) {
+			alt = TAILQ_NEXT(net, sctp_next);;
+		} else {
+			alt = TAILQ_FIRST(&stcb->asoc.nets);
+		}
+		looped = false;
 		for (;;) {
-			if (mnet == NULL) {
-				return (TAILQ_FIRST(&stcb->asoc.nets));
-			}
-			alt = TAILQ_NEXT(mnet, sctp_next);
 			if (alt == NULL) {
-				once++;
-				if (once > 1) {
-					break;
+				if (!looped) {
+					alt = TAILQ_FIRST(&stcb->asoc.nets);
+					looped = true;
 				}
-				alt = TAILQ_FIRST(&stcb->asoc.nets);
+				/* Definitely out of candidates. */
 				if (alt == NULL) {
 					break;
 				}
 			}
 			if ((!(alt->dest_state & SCTP_ADDR_UNCONFIRMED)) &&
 			    (alt != net)) {
-				/* Found an alternate address */
+				/* Found an alternate net, which is confirmed. */
 				break;
 			}
-			mnet = alt;
+			alt = TAILQ_NEXT(alt, sctp_next);
 		}
 	}
 	if (alt == NULL) {
-		return (net);
+		/*
+		 * In case no confirmed alternate net has been found, just
+		 * return net, if it is not being deleted. In the other case
+		 * just return the first net.
+		 */
+		if ((net != NULL) && ((net->dest_state & SCTP_ADDR_BEING_DELETED) == 0)) {
+			alt = net;
+		}
+		if (alt == NULL) {
+			alt = TAILQ_FIRST(&stcb->asoc.nets);
+		}
 	}
 	return (alt);
 }
@@ -503,7 +509,6 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 	uint32_t tsnlast, tsnfirst;
 	int recovery_cnt = 0;
 
-
 	/* none in flight now */
 	audit_tf = 0;
 	fir = 0;
@@ -525,7 +530,7 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 	}
 	tv.tv_sec = cur_rto / 1000000;
 	tv.tv_usec = cur_rto % 1000000;
-#ifndef __FreeBSD__
+#if !(defined(__FreeBSD__) && !defined(__Userspace__))
 	timersub(&now, &tv, &min_wait);
 #else
 	min_wait = now;
@@ -622,7 +627,7 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 			}
 			if (stcb->asoc.prsctp_supported && PR_SCTP_TTL_ENABLED(chk->flags)) {
 				/* Is it expired? */
-#ifndef __FreeBSD__
+#if !(defined(__FreeBSD__) && !defined(__Userspace__))
 				if (timercmp(&now, &chk->rec.data.timetodrop, >)) {
 #else
 				if (timevalcmp(&now, &chk->rec.data.timetodrop, >)) {
@@ -814,7 +819,6 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 	return (0);
 }
 
-
 int
 sctp_t3rxt_timer(struct sctp_inpcb *inp,
     struct sctp_tcb *stcb,
@@ -950,7 +954,7 @@ sctp_t3rxt_timer(struct sctp_inpcb *inp,
 		net->src_addr_selected = 0;
 
 		/* Force a route allocation too */
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 		RO_NHFREE(&net->ro);
 #else
 		if (net->ro.ro_rt) {
@@ -1459,7 +1463,7 @@ sctp_heartbeat_timer(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 
 		if ((net->last_sent_time.tv_sec > 0) ||
 		    (net->last_sent_time.tv_usec > 0)) {
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 			struct timeval diff;
 
 			SCTP_GETTIME_TIMEVAL(&diff);
@@ -1505,7 +1509,7 @@ sctp_pathmtu_timer(struct sctp_inpcb *inp,
 				if (net->ro._l_addr.sa.sa_family == AF_INET6) {
 					struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&net->ro._l_addr;
 					/* KAME hack: embed scopeid */
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 #if defined(APPLE_LEOPARD) || defined(APPLE_SNOWLEOPARD)
 					(void)in6_embedscope(&sin6->sin6_addr, sin6, NULL, NULL);
 #else
@@ -1538,7 +1542,7 @@ sctp_pathmtu_timer(struct sctp_inpcb *inp,
 				net->src_addr_selected = 1;
 		}
 		if (net->ro._s_addr) {
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 			mtu = SCTP_GATHER_MTU_FROM_ROUTE(net->ro._s_addr, &net->ro._s_addr.sa, net->ro.ro_nh);
 #else
 			mtu = SCTP_GATHER_MTU_FROM_ROUTE(net->ro._s_addr, &net->ro._s_addr.sa, net->ro.ro_rt);

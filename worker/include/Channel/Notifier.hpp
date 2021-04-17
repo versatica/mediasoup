@@ -17,7 +17,7 @@ namespace Channel
 
 	public:
 		// Passed by argument.
-		static Channel::UnixStreamSocket* channel;
+		thread_local static Channel::UnixStreamSocket* channel;
 	};
 } // namespace Channel
 

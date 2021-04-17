@@ -34,12 +34,12 @@
 
 #if defined(__Userspace__)
 #include <sys/types.h>
-#if !defined (__Userspace_os_Windows)
+#if !defined(_WIN32)
 #include <sys/wait.h>
 #include <unistd.h>
 #include <pthread.h>
 #endif
-#if defined(__Userspace_os_NaCl)
+#if defined(__native_client__)
 #include <sys/select.h>
 #endif
 #include <stdlib.h>
@@ -180,7 +180,7 @@ sctp_handle_tick(uint32_t elapsed_ticks)
 	SCTP_TIMERQ_UNLOCK();
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 void
 sctp_timeout(void *arg SCTP_UNUSED)
 {
@@ -197,7 +197,7 @@ user_sctp_timer_iterate(void *arg)
 {
 	sctp_userspace_set_threadname("SCTP timer");
 	for (;;) {
-#if defined (__Userspace_os_Windows)
+#if defined(_WIN32)
 		Sleep(TIMEOUT_INTERVAL);
 #else
 		struct timespec amount, remaining;
@@ -217,7 +217,7 @@ user_sctp_timer_iterate(void *arg)
 }
 
 void
-sctp_start_timer(void)
+sctp_start_timer_thread(void)
 {
 	/*
 	 * No need to do SCTP_TIMERQ_LOCK_INIT();
@@ -233,4 +233,17 @@ sctp_start_timer(void)
 	}
 }
 
+void
+sctp_stop_timer_thread(void)
+{
+	atomic_cmpset_int(&SCTP_BASE_VAR(timer_thread_should_exit), 0, 1);
+	if (SCTP_BASE_VAR(timer_thread_started)) {
+#if defined(_WIN32)
+		WaitForSingleObject(SCTP_BASE_VAR(timer_thread), INFINITE);
+		CloseHandle(SCTP_BASE_VAR(timer_thread));
+#else
+		pthread_join(SCTP_BASE_VAR(timer_thread), NULL);
+#endif
+	}
+}
 #endif

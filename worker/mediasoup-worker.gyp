@@ -16,6 +16,7 @@
     'sources':
     [
       # C++ source files.
+      'src/lib.cpp',
       'src/DepLibSRTP.cpp',
       'src/DepLibUV.cpp',
       'src/DepLibWebRTC.cpp',
@@ -39,6 +40,7 @@
       'src/Channel/UnixStreamSocket.cpp',
       'src/PayloadChannel/Notification.cpp',
       'src/PayloadChannel/Notifier.cpp',
+      'src/PayloadChannel/Request.cpp',
       'src/PayloadChannel/UnixStreamSocket.cpp',
       'src/RTC/AudioLevelObserver.cpp',
       'src/RTC/Consumer.cpp',
@@ -126,6 +128,7 @@
       'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
       'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
       # C++ include files.
+      'include/lib.hpp',
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
       'include/DepLibWebRTC.hpp',
@@ -149,6 +152,7 @@
       'include/Channel/UnixStreamSocket.hpp',
       'include/PayloadChannel/Notification.hpp',
       'include/PayloadChannel/Notifier.hpp',
+      'include/PayloadChannel/Request.hpp',
       'include/PayloadChannel/UnixStreamSocket.hpp',
       'include/RTC/BweType.hpp',
       'include/RTC/AudioLevelObserver.hpp',
@@ -328,7 +332,12 @@
       [
         # C++ source files.
         'src/main.cpp'
-      ]
+      ],
+	  'defines': [ 'MS_EXECUTABLE' ]
+    },
+    {
+      'target_name': 'libmediasoup-worker',
+      'type': 'static_library'
     },
     {
       'target_name': 'mediasoup-worker-test',

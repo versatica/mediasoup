@@ -254,9 +254,9 @@ namespace Utils
 		static const uint8_t* GetHmacShA1(const std::string& key, const uint8_t* data, size_t len);
 
 	private:
-		static uint32_t seed;
-		static HMAC_CTX* hmacSha1Ctx;
-		static uint8_t hmacSha1Buffer[];
+		thread_local static uint32_t seed;
+		thread_local static HMAC_CTX* hmacSha1Ctx;
+		thread_local static uint8_t hmacSha1Buffer[];
 		static const uint32_t crc32Table[256];
 	};
 

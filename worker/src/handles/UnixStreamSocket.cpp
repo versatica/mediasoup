@@ -143,7 +143,7 @@ void UnixStreamSocket::Close()
 	}
 
 	// If there is no error and the peer didn't close its pipe side then close gracefully.
-	if (!this->hasError && !this->isClosedByPeer)
+	if (this->role == UnixStreamSocket::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
 		auto req  = new uv_shutdown_t;
@@ -226,7 +226,7 @@ inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 	MS_TRACE_STD();
 
 	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
-	if (this->buffer == nullptr)
+	if (!this->buffer)
 		this->buffer = new uint8_t[this->bufferSize];
 
 	// Tell UV to write after the last data byte in the buffer.

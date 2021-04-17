@@ -9,15 +9,20 @@
 #include <cctype> // isprint()
 #include <cerrno>
 #include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
+#include <mutex>
+#include <sstream> // std::ostringstream
 extern "C"
 {
 #include <getopt.h>
 }
 
+/* Static. */
+
+static std::mutex globalSyncMutex;
+
 /* Class variables. */
 
-struct Settings::Configuration Settings::configuration;
+thread_local struct Settings::Configuration Settings::configuration;
 // clang-format off
 std::map<std::string, LogLevel> Settings::string2LogLevel =
 {
@@ -62,10 +67,14 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	/* Parse command line options. */
 
+	// getopt_long_only() is not thread-safe
+	std::lock_guard<std::mutex> lock(globalSyncMutex);
+
+	optind = 1; // Set explicitly, otherwise subsequent runs will fail.
 	opterr = 0; // Don't allow getopt to print error messages.
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
-		if (optarg == nullptr)
+		if (!optarg)
 			MS_THROW_TYPE_ERROR("unknown configuration parameter: %s", optarg);
 
 		switch (c)
@@ -161,7 +170,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	// Validate RTC ports.
 	if (Settings::configuration.rtcMaxPort < Settings::configuration.rtcMinPort)
-		MS_THROW_TYPE_ERROR("rtcMinPort cannot be less than than rtcMinPort");
+		MS_THROW_TYPE_ERROR("rtcMaxPort cannot be less than rtcMinPort");
 
 	// Set DTLS certificate files (if provided),
 	Settings::SetDtlsCertificateAndPrivateKeyFiles();

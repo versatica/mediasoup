@@ -418,7 +418,8 @@ namespace RTC
 		return !this->srtpKey.empty();
 	}
 
-	void PipeTransport::SendRtpPacket(RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	void PipeTransport::SendRtpPacket(
+	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 
@@ -427,7 +428,6 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 
@@ -442,7 +442,6 @@ namespace RTC
 			if (cb)
 			{
 				(*cb)(false);
-
 				delete cb;
 			}
 
@@ -493,6 +492,14 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
+	void PipeTransport::SendMessage(
+	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
+	{
+		MS_TRACE();
+
+		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len, cb);
+	}
+
 	void PipeTransport::SendSctpData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -504,6 +511,26 @@ namespace RTC
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
+	}
+
+	void PipeTransport::RecvStreamClosed(uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		if (this->srtpRecvSession)
+		{
+			this->srtpRecvSession->RemoveStream(ssrc);
+		}
+	}
+
+	void PipeTransport::SendStreamClosed(uint32_t ssrc)
+	{
+		MS_TRACE();
+
+		if (this->srtpSendSession)
+		{
+			this->srtpSendSession->RemoveStream(ssrc);
+		}
 	}
 
 	inline void PipeTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
@@ -565,19 +592,24 @@ namespace RTC
 			return;
 		}
 
+		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+
+		if (!packet)
+		{
+			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+
+			return;
+		}
+
 		// Verify that the packet's tuple matches our tuple.
 		if (!this->tuple->Compare(tuple))
 		{
 			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
 
-			return;
-		}
+			// Remove this SSRC.
+			RecvStreamClosed(packet->GetSsrc());
 
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
-
-		if (packet == nullptr)
-		{
-			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+			delete packet;
 
 			return;
 		}
@@ -610,7 +642,7 @@ namespace RTC
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
 
-		if (packet == nullptr)
+		if (!packet)
 		{
 			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
 

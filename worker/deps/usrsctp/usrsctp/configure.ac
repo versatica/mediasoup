@@ -28,7 +28,7 @@ dnl OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 dnl SUCH DAMAGE.
 dnl
 
-AC_INIT([libusrsctp], [0.9.3.0])
+AC_INIT([libusrsctp], [0.9.5.0])
 AM_INIT_AUTOMAKE([foreign])
 
 AC_PROG_CC
@@ -46,11 +46,9 @@ APPCFLAGS=""
 case $host_os in
 darwin*)
   CFLAGS="$CFLAGS -std=c99 -Wno-deprecated-declarations -D__APPLE_USE_RFC_2292"
-  LIBCFLAGS="$LIBCFLAGS -U__APPLE__ -D__Userspace_os_Darwin"
   ;;
 dragonfly*)
   CFLAGS="$CFLAGS -std=c99 -pthread"
-  LIBCFLAGS="$LIBCFLAGS -U__DragonFly__ -D__Userspace_os_DragonFly"
   ;;
 freebsd*)
   CFLAGS="$CFLAGS -std=c99 -pthread"
@@ -58,19 +56,15 @@ freebsd*)
     CFLAGS="$CFLAGS -Wno-unknown-warning-option"
     LDFLAGS="$LDFLAGS -Qunused-arguments"
   fi
-  LIBCFLAGS="$LIBCFLAGS -U__FreeBSD__ -D__Userspace_os_FreeBSD"
   ;;
 linux*)
   CFLAGS="$CFLAGS -std=c99 -pthread -D_GNU_SOURCE -Wno-address-of-packed-member"
-  LIBCFLAGS="$LIBCFLAGS -D__Userspace_os_Linux"
   ;;
 netbsd*)
   CFLAGS="$CFLAGS -std=c99 -pthread"
-  LIBCFLAGS="$LIBCFLAGS -U__NetBSD__ -D__Userspace_os_NetBSD"
   ;;
 openbsd*)
   CFLAGS="$CFLAGS -std=c99 -pthread"
-  LIBCFLAGS="$LIBCFLAGS -U__OpenBSD__ -D__Userspace_os_OpenBSD"
   ;;
 solaris*)
   CFLAGS="$CFLAGS -D_XPG4_2"

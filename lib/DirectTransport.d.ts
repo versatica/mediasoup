@@ -1,7 +1,6 @@
+/// <reference types="node" />
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport } from './Transport';
-import { Producer, ProducerOptions } from './Producer';
-import { Consumer, ConsumerOptions } from './Consumer';
 export declare type DirectTransportOptions = {
     /**
      * Maximum allowed size for direct messages sent from DataProducers.
@@ -29,8 +28,6 @@ export declare type DirectTransportStat = {
     rtxRecvBitrate: number;
     rtxBytesSent: number;
     rtxSendBitrate: number;
-    probationBytesReceived: number;
-    probationRecvBitrate: number;
     probationBytesSent: number;
     probationSendBitrate: number;
     availableOutgoingBitrate?: number;
@@ -41,6 +38,7 @@ export declare class DirectTransport extends Transport {
     protected readonly _data: {};
     /**
      * @private
+     * @emits rtcp - (packet: Buffer)
      * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
@@ -84,13 +82,9 @@ export declare class DirectTransport extends Transport {
      */
     setMaxIncomingBitrate(bitrate: number): Promise<void>;
     /**
-     * @override
+     * Send RTCP packet.
      */
-    produce(options: ProducerOptions): Promise<Producer>;
-    /**
-     * @override
-     */
-    consume(options: ConsumerOptions): Promise<Consumer>;
+    sendRtcp(rtcpPacket: Buffer): void;
     private _handleWorkerNotifications;
 }
 //# sourceMappingURL=DirectTransport.d.ts.map

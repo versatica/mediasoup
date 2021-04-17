@@ -142,7 +142,7 @@ receive_cb(struct socket *sock, union sctp_sockstore addr, void *data,
 			       rcv.rcv_sid,
 			       rcv.rcv_ssn,
 			       rcv.rcv_tsn,
-			       ntohl(rcv.rcv_ppid),
+			       (uint32_t)ntohl(rcv.rcv_ppid),
 			       rcv.rcv_context);
 		}
 		free(data);
@@ -248,7 +248,7 @@ main(int argc, char *argv[])
 	usrsctp_register_address((void *)&fd);
 #ifdef _WIN32
 	if ((tid = CreateThread(NULL, 0, &handle_packets, (void *)&fd, 0, NULL)) == NULL) {
-		fprintf(stderr, "CreateThread() failed with error: %d\n", GetLastError());
+		fprintf(stderr, "CreateThread() failed with error: %lu\n", GetLastError());
 		exit(EXIT_FAILURE);
 	}
 #else

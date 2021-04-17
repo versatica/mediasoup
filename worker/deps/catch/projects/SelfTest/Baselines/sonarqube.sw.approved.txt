@@ -99,6 +99,15 @@
     <testCase name="Generators internals/Range/Negative manual step/Integer/Slightly under end" duration="{duration}"/>
   </file>
   <file path="projects/<exe-name>/IntrospectiveTests/PartTracker.tests.cpp">
+    <testCase name="#1938 - GENERATE after a section/A" duration="{duration}"/>
+    <testCase name="#1938 - GENERATE after a section/B" duration="{duration}"/>
+    <testCase name="#1938 - Section followed by flat generate" duration="{duration}"/>
+    <testCase name="#1938 - Section followed by flat generate/A" duration="{duration}"/>
+    <testCase name="#1938 - flat generate" duration="{duration}"/>
+    <testCase name="#1938 - mixed sections and generates" duration="{duration}"/>
+    <testCase name="#1938 - mixed sections and generates/A" duration="{duration}"/>
+    <testCase name="#1938 - mixed sections and generates/B" duration="{duration}"/>
+    <testCase name="#1938 - nested generate" duration="{duration}"/>
     <testCase name="Tracker" duration="{duration}"/>
     <testCase name="Tracker/successfully close one section" duration="{duration}"/>
     <testCase name="Tracker/fail one section" duration="{duration}"/>
@@ -153,6 +162,7 @@
   </file>
   <file path="projects/<exe-name>/IntrospectiveTests/ToString.tests.cpp">
     <testCase name="Directly creating an EnumInfo" duration="{duration}"/>
+    <testCase name="Range type with sentinel" duration="{duration}"/>
     <testCase name="parseEnums/No enums" duration="{duration}"/>
     <testCase name="parseEnums/One enum value" duration="{duration}"/>
     <testCase name="parseEnums/Multiple enum values" duration="{duration}"/>
@@ -875,6 +885,8 @@ Exception.tests.cpp:<line number>
     </testCase>
   </file>
   <file path="projects/<exe-name>/UsageTests/Generators.tests.cpp">
+    <testCase name="#1913 - GENERATE inside a for loop should not keep recreating the generator" duration="{duration}"/>
+    <testCase name="#1913 - GENERATEs can share a line" duration="{duration}"/>
     <testCase name="3x3x3 ints" duration="{duration}"/>
     <testCase name="Copy and then generate a range/from var and iterators" duration="{duration}"/>
     <testCase name="Copy and then generate a range/From a temporary container" duration="{duration}"/>
@@ -900,6 +912,8 @@ Exception.tests.cpp:<line number>
     <testCase name="Arbitrary predicate matcher/Function pointer" duration="{duration}"/>
     <testCase name="Arbitrary predicate matcher/Lambdas + different type" duration="{duration}"/>
     <testCase name="Composed matchers are distinct" duration="{duration}"/>
+    <testCase name="Composed matchers shortcircuit/&amp;&amp;" duration="{duration}"/>
+    <testCase name="Composed matchers shortcircuit/||" duration="{duration}"/>
     <testCase name="Contains string matcher" duration="{duration}">
       <failure message="CHECK_THAT(testStringForMatching(), Contains(&quot;not there&quot;, Catch::CaseSensitive::No))">
 FAILED:
@@ -1350,6 +1364,9 @@ Message.tests.cpp:<line number>
   <file path="projects/<exe-name>/UsageTests/Misc.tests.cpp">
     <testCase name="# A test name that starts with a #" duration="{duration}"/>
     <testCase name="#1175 - Hidden Test" duration="{duration}"/>
+    <testCase name="#1954 - 7 arg template test case sig compiles - 1, 1, 1, 1, 1, 0, 0" duration="{duration}"/>
+    <testCase name="#1954 - 7 arg template test case sig compiles - 5, 1, 1, 1, 1, 0, 0" duration="{duration}"/>
+    <testCase name="#1954 - 7 arg template test case sig compiles - 5, 3, 1, 1, 1, 0, 0" duration="{duration}"/>
     <testCase name="#835 -- errno should not be touched by Catch" duration="{duration}">
       <skipped message="CHECK(f() == 0)">
 FAILED:

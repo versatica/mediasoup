@@ -47,6 +47,12 @@ export type PlainTransportOptions =
 	maxSctpMessageSize?: number;
 
 	/**
+	 * Maximum SCTP send buffer used by DataConsumers.
+	 * Default 262144.
+	 */
+	sctpSendBufferSize?: number;
+
+	/**
 	 * Enable SRTP. For this to work, connect() must be called
 	 * with remote SRTP parameters. Default false.
 	 */
@@ -88,8 +94,6 @@ export type PlainTransportStat =
 	rtxRecvBitrate: number;
 	rtxBytesSent: number;
 	rtxSendBitrate: number;
-	probationBytesReceived: number;
-	probationRecvBitrate: number;
 	probationBytesSent: number;
 	probationSendBitrate: number;
 	availableOutgoingBitrate?: number;
@@ -198,9 +202,9 @@ export class PlainTransport extends Transport
 	 * @override
 	 * @emits close
 	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (producer: Producer)
+	 * @emits newconsumer - (consumer: Consumer)
 	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataProducer: DataProducer)
+	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
 	 * @emits tuple - (tuple: TransportTuple)
 	 * @emits rtcptuple - (rtcpTuple: TransportTuple)
 	 * @emits sctpstatechange - (sctpState: SctpState)

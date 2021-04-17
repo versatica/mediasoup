@@ -5,6 +5,7 @@
 #include "Channel/Request.hpp"
 #include "Channel/UnixStreamSocket.hpp"
 #include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/Request.hpp"
 #include "PayloadChannel/UnixStreamSocket.hpp"
 #include "RTC/Router.hpp"
 #include "handles/SignalsHandler.hpp"
@@ -39,6 +40,8 @@ public:
 	void OnPayloadChannelNotification(
 	  PayloadChannel::UnixStreamSocket* payloadChannel,
 	  PayloadChannel::Notification* notification) override;
+	void OnPayloadChannelRequest(
+	  PayloadChannel::UnixStreamSocket* payloadChannel, PayloadChannel::Request* request) override;
 	void OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* payloadChannel) override;
 
 	/* Methods inherited from SignalsHandler::Listener. */

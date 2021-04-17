@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.5)
 # detect if Catch is being bundled,
 # disable testsuite in that case
 if(NOT DEFINED PROJECT_NAME)
-  set(NOT_SUBPROJECT ON)
+    set(NOT_SUBPROJECT ON)
+else()
+    set(NOT_SUBPROJECT OFF)
 endif()
 
 # Catch2's build breaks if done in-tree. You probably should not build
@@ -14,26 +16,22 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 endif()
 
 
-project(Catch2 LANGUAGES CXX VERSION 2.12.2)
+project(Catch2 LANGUAGES CXX VERSION 2.13.5)
 
 # Provide path for scripts
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMake")
 
 include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-include(CTest)
 
 option(CATCH_USE_VALGRIND "Perform SelfTests with Valgrind" OFF)
 option(CATCH_BUILD_TESTING "Build SelfTest project" ON)
 option(CATCH_BUILD_EXAMPLES "Build documentation examples" OFF)
 option(CATCH_BUILD_EXTRA_TESTS "Build extra tests" OFF)
+option(CATCH_BUILD_STATIC_LIBRARY "Builds static library from the main implementation. EXPERIMENTAL" OFF)
 option(CATCH_ENABLE_COVERAGE "Generate coverage for codecov.io" OFF)
 option(CATCH_ENABLE_WERROR "Enable all warnings as errors" ON)
 option(CATCH_INSTALL_DOCS "Install documentation alongside library" ON)
 option(CATCH_INSTALL_HELPERS "Install contrib alongside library" ON)
-
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # define some folders
 set(CATCH_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -45,12 +43,16 @@ if(USE_WMAIN)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:wmainCRTStartup")
 endif()
 
-if (BUILD_TESTING AND CATCH_BUILD_TESTING AND NOT_SUBPROJECT)
-    find_package(PythonInterp)
-    if (NOT PYTHONINTERP_FOUND)
-        message(FATAL_ERROR "Python not found, but required for tests")
+if(NOT_SUBPROJECT)
+    include(CTest)
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+    if(BUILD_TESTING AND CATCH_BUILD_TESTING)
+        find_package(PythonInterp)
+        if (NOT PYTHONINTERP_FOUND)
+            message(FATAL_ERROR "Python not found, but required for tests")
+        endif()
+        add_subdirectory(projects)
     endif()
-    add_subdirectory(projects)
 endif()
 
 if(CATCH_BUILD_EXAMPLES)
@@ -103,10 +105,24 @@ endif()
 # provide a namespaced alias for clients to 'link' against if catch is included as a sub-project
 add_library(Catch2::Catch2 ALIAS Catch2)
 
+# Hacky support for compiling the impl into a static lib
+if (CATCH_BUILD_STATIC_LIBRARY)
+  add_library(Catch2WithMain ${CMAKE_CURRENT_LIST_DIR}/src/catch_with_main.cpp)
+  target_link_libraries(Catch2WithMain PUBLIC Catch2)
+  add_library(Catch2::Catch2WithMain ALIAS Catch2WithMain)
+
+  # Make the build reproducible on versions of g++ and clang that supports -ffile-prefix-map
+  if(("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 8) OR
+     ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 10))
+    target_compile_options(Catch2WithMain PRIVATE "-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.")
+  endif()
+endif(CATCH_BUILD_STATIC_LIBRARY)
+
 # Only perform the installation steps when Catch is not being used as
 # a subproject via `add_subdirectory`, or the destinations will break,
 # see https://github.com/catchorg/Catch2/issues/1373
 if (NOT_SUBPROJECT)
+    include(CMakePackageConfigHelpers)
     set(CATCH_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Catch2")
 
     configure_package_config_file(
@@ -116,11 +132,17 @@ if (NOT_SUBPROJECT)
           ${CATCH_CMAKE_CONFIG_DESTINATION}
     )
 
+    # Workaround lack of generator expressions in install(TARGETS
+    set(InstallationTargets Catch2)
+    if (TARGET Catch2WithMain)
+      list(APPEND InstallationTargets Catch2WithMain)
+    endif()
+
 
     # create and install an export set for catch target as Catch2::Catch
     install(
       TARGETS
-        Catch2
+        ${InstallationTargets}
       EXPORT
         Catch2Targets
       DESTINATION

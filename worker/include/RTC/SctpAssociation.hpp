@@ -31,6 +31,9 @@ namespace RTC
 			OUTGOING
 		};
 
+	protected:
+		using onQueuedCallback = const std::function<void(bool queued)>;
+
 	public:
 		class Listener
 		{
@@ -47,6 +50,8 @@ namespace RTC
 			  uint32_t ppid,
 			  const uint8_t* msg,
 			  size_t len) = 0;
+			virtual void OnSctpAssociationBufferedAmount(
+			  RTC::SctpAssociation* sctpAssociation, uint32_t len) = 0;
 		};
 
 	public:
@@ -64,7 +69,12 @@ namespace RTC
 
 	public:
 		SctpAssociation(
-		  Listener* listener, uint16_t os, uint16_t mis, size_t maxSctpMessageSize, bool isDataChannel);
+		  Listener* listener,
+		  uint16_t os,
+		  uint16_t mis,
+		  size_t maxSctpMessageSize,
+		  size_t sctpSendBufferSize,
+		  bool isDataChannel);
 		~SctpAssociation();
 
 	public:
@@ -74,8 +84,17 @@ namespace RTC
 		{
 			return this->state;
 		}
+		size_t GetSctpBufferedAmount() const
+		{
+			return this->sctpBufferedAmount;
+		}
 		void ProcessSctpData(const uint8_t* data, size_t len);
-		void SendSctpMessage(RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len);
+		void SendSctpMessage(
+		  RTC::DataConsumer* dataConsumer,
+		  uint32_t ppid,
+		  const uint8_t* msg,
+		  size_t len,
+		  onQueuedCallback* cb = nullptr);
 		void HandleDataConsumer(RTC::DataConsumer* dataConsumer);
 		void DataProducerClosed(RTC::DataProducer* dataProducer);
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
@@ -90,6 +109,10 @@ namespace RTC
 		void OnUsrSctpReceiveSctpData(
 		  uint16_t streamId, uint16_t ssn, uint32_t ppid, int flags, const uint8_t* data, size_t len);
 		void OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len);
+		void OnUsrSctpSentData(uint32_t freeBuffer);
+
+	public:
+		uintptr_t id{ 0u };
 
 	private:
 		// Passed by argument.
@@ -97,6 +120,8 @@ namespace RTC
 		uint16_t os{ 1024u };
 		uint16_t mis{ 1024u };
 		size_t maxSctpMessageSize{ 262144u };
+		size_t sctpSendBufferSize{ 262144u };
+		size_t sctpBufferedAmount{ 0u };
 		bool isDataChannel{ false };
 		// Allocated by this.
 		uint8_t* messageBuffer{ nullptr };

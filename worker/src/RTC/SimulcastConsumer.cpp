@@ -100,7 +100,7 @@ namespace RTC
 		  this->producerRtpStreams.begin(), this->consumableRtpEncodings.size(), nullptr);
 
 		// Create the encoding context.
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		if (!RTC::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
 		{
@@ -178,6 +178,8 @@ namespace RTC
 	void SimulcastConsumer::FillJsonScore(json& jsonObject) const
 	{
 		MS_TRACE();
+
+		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
 
 		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
@@ -319,7 +321,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::ProducerRtpStreamScore(
-	  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
+	  RTC::RtpStream* /*rtpStream*/, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -455,7 +457,13 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				continue;
+				const auto* provisionalProducerRtpStream =
+				  this->producerRtpStreams.at(this->provisionalTargetSpatialLayer);
+
+				// The stream for the current provisional spatial layer has been active
+				// for enough time, move to the next spatial layer.
+				if (provisionalProducerRtpStream->GetActiveMs() >= StreamMinActiveMs)
+					continue;
 			}
 
 			// We may not yet switch to this spatial layer.
@@ -495,8 +503,8 @@ namespace RTC
 				{
 					auto* provisionalProducerRtpStream =
 					  this->producerRtpStreams.at(this->provisionalTargetSpatialLayer);
-					auto provisionalRequiredBitrate = provisionalProducerRtpStream->GetLayerBitrate(
-					  nowMs, 0, this->provisionalTargetTemporalLayer);
+					auto provisionalRequiredBitrate =
+					  provisionalProducerRtpStream->GetBitrate(nowMs, 0, this->provisionalTargetTemporalLayer);
 
 					if (requiredBitrate > provisionalRequiredBitrate)
 						requiredBitrate -= provisionalRequiredBitrate;
@@ -783,7 +791,10 @@ namespace RTC
 				// outgoing packet matches the highest seen in the previous stream. Fix it.
 				else if (tsExtraOffset == 0u)
 				{
-					tsExtraOffset = 1u;
+					// Apply an expected offset for a new frame in a 30fps stream.
+					static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
+
+					tsExtraOffset = MsOffset * this->rtpStream->GetClockRate() / 1000;
 				}
 
 				if (tsExtraOffset > 0u)
@@ -1067,8 +1078,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto& encoding         = this->rtpParameters.encodings[0];
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		MS_DEBUG_TAG(
 		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
@@ -1108,9 +1119,9 @@ namespace RTC
 			params.useDtx = true;
 		}
 
-		for (auto& fb : mediaCodec->rtcpFeedback)
+		for (const auto& fb : mediaCodec->rtcpFeedback)
 		{
-			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+			if (!params.useNack && fb.type == "nack" && fb.parameter.empty())
 			{
 				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 
@@ -1140,7 +1151,7 @@ namespace RTC
 		if (IsPaused() || IsProducerPaused())
 			this->rtpStream->Pause();
 
-		auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+		const auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 		if (rtxCodec && encoding.hasRtx)
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);

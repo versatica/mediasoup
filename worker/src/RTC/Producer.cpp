@@ -27,18 +27,24 @@ namespace RTC
 		auto jsonKindIt = data.find("kind");
 
 		if (jsonKindIt == data.end() || !jsonKindIt->is_string())
+		{
 			MS_THROW_TYPE_ERROR("missing kind");
+		}
 
 		// This may throw.
 		this->kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
 
 		if (this->kind == RTC::Media::Kind::ALL)
+		{
 			MS_THROW_TYPE_ERROR("invalid empty kind");
+		}
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");
 
 		if (jsonRtpParametersIt == data.end() || !jsonRtpParametersIt->is_object())
+		{
 			MS_THROW_TYPE_ERROR("missing rtpParameters");
+		}
 
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
@@ -65,17 +71,23 @@ namespace RTC
 		auto jsonRtpMappingIt = data.find("rtpMapping");
 
 		if (jsonRtpMappingIt == data.end() || !jsonRtpMappingIt->is_object())
+		{
 			MS_THROW_TYPE_ERROR("missing rtpMapping");
+		}
 
 		auto jsonCodecsIt = jsonRtpMappingIt->find("codecs");
 
 		if (jsonCodecsIt == jsonRtpMappingIt->end() || !jsonCodecsIt->is_array())
+		{
 			MS_THROW_TYPE_ERROR("missing rtpMapping.codecs");
+		}
 
 		for (auto& codec : *jsonCodecsIt)
 		{
 			if (!codec.is_object())
+			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (not an object)");
+			}
 
 			auto jsonPayloadTypeIt = codec.find("payloadType");
 
@@ -117,7 +129,9 @@ namespace RTC
 		for (auto& encoding : *jsonEncodingsIt)
 		{
 			if (!encoding.is_object())
+			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings");
+			}
 
 			this->rtpMapping.encodings.emplace_back();
 
@@ -140,7 +154,9 @@ namespace RTC
 			auto jsonRidIt = encoding.find("rid");
 
 			if (jsonRidIt != encoding.end() && jsonRidIt->is_string())
+			{
 				encodingMapping.rid = jsonRidIt->get<std::string>();
+			}
 
 			// However ssrc or rid must be present (if more than 1 encoding).
 			// clang-format off
@@ -187,7 +203,9 @@ namespace RTC
 		auto jsonPausedIt = data.find("paused");
 
 		if (jsonPausedIt != data.end() && jsonPausedIt->is_boolean())
+		{
 			this->paused = jsonPausedIt->get<bool>();
+		}
 
 		// The number of encodings in rtpParameters must match the number of encodings
 		// in rtpMapping.
@@ -201,7 +219,9 @@ namespace RTC
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
 			if (exten.id == 0u)
+			{
 				MS_THROW_TYPE_ERROR("RTP extension id cannot be 0");
+			}
 
 			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
@@ -354,8 +374,8 @@ namespace RTC
 			{
 				jsonEncodingsIt->emplace_back(json::value_t::object);
 
-				auto& jsonEntry       = (*jsonEncodingsIt)[i];
-				auto& encodingMapping = this->rtpMapping.encodings[i];
+				auto& jsonEntry             = (*jsonEncodingsIt)[i];
+				const auto& encodingMapping = this->rtpMapping.encodings[i];
 
 				if (!encodingMapping.rid.empty())
 					jsonEntry["rid"] = encodingMapping.rid;
@@ -587,7 +607,7 @@ namespace RTC
 
 		auto* rtpStream = GetRtpStream(packet);
 
-		if (rtpStream == nullptr)
+		if (!rtpStream)
 		{
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
@@ -840,11 +860,11 @@ namespace RTC
 		// First, look for an encoding with matching media or RTX ssrc value.
 		for (size_t i{ 0 }; i < this->rtpParameters.encodings.size(); ++i)
 		{
-			auto& encoding     = this->rtpParameters.encodings[i];
-			auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-			auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			bool isMediaPacket = (mediaCodec->payloadType == payloadType);
-			bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
+			auto& encoding         = this->rtpParameters.encodings[i];
+			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
+			bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket && encoding.ssrc == ssrc)
 			{
@@ -896,10 +916,10 @@ namespace RTC
 				if (encoding.rid != rid)
 					continue;
 
-				auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-				auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-				bool isMediaPacket = (mediaCodec->payloadType == payloadType);
-				bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
+				const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+				const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+				bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
+				bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 				if (isMediaPacket)
 				{
@@ -970,11 +990,11 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			auto& encoding     = this->rtpParameters.encodings[0];
-			auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
-			auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			bool isMediaPacket = (mediaCodec->payloadType == payloadType);
-			bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
+			auto& encoding         = this->rtpParameters.encodings[0];
+			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
+			bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket)
 			{
@@ -1090,9 +1110,9 @@ namespace RTC
 			params.useDtx = true;
 		}
 
-		for (auto& fb : mediaCodec.rtcpFeedback)
+		for (const auto& fb : mediaCodec.rtcpFeedback)
 		{
-			if (!params.useNack && fb.type == "nack" && fb.parameter == "")
+			if (!params.useNack && fb.type == "nack" && fb.parameter.empty())
 			{
 				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
 

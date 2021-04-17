@@ -78,10 +78,10 @@ namespace RTC
 
 	/* Class variables. */
 
-	X509* DtlsTransport::certificate{ nullptr };
-	EVP_PKEY* DtlsTransport::privateKey{ nullptr };
-	SSL_CTX* DtlsTransport::sslCtx{ nullptr };
-	uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
+	thread_local X509* DtlsTransport::certificate{ nullptr };
+	thread_local EVP_PKEY* DtlsTransport::privateKey{ nullptr };
+	thread_local SSL_CTX* DtlsTransport::sslCtx{ nullptr };
+	thread_local uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
 	// clang-format off
 	std::map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::string2FingerprintAlgorithm =
 	{
@@ -105,7 +105,7 @@ namespace RTC
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }
 	};
-	std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
+	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
 	std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
 	{
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
@@ -165,7 +165,7 @@ namespace RTC
 		// Create key with curve.
 		ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
 
-		if (ecKey == nullptr)
+		if (!ecKey)
 		{
 			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
 

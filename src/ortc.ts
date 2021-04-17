@@ -939,7 +939,8 @@ export function canConsume(
  */
 export function getConsumerRtpParameters(
 	consumableParams: RtpParameters,
-	caps: RtpCapabilities
+	caps: RtpCapabilities,
+	pipe: boolean
 ): RtpParameters
 {
 	const consumerParams: RtpParameters =
@@ -971,9 +972,24 @@ export function getConsumerRtpParameters(
 		codec.rtcpFeedback = matchedCapCodec.rtcpFeedback;
 
 		consumerParams.codecs.push(codec);
+	}
 
-		if (!rtxSupported && isRtxCodec(codec))
-			rtxSupported = true;
+	// Must sanitize the list of matched codecs by removing useless RTX codecs.
+	for (let idx = consumerParams.codecs.length -1; idx >= 0; --idx)
+	{
+		const codec = consumerParams.codecs[idx];
+
+		if (isRtxCodec(codec))
+		{
+			// Search for the associated media codec.
+			const associatedMediaCodec = consumerParams.codecs
+				.find((mediaCodec) => mediaCodec.payloadType === codec.parameters.apt);
+
+			if (associatedMediaCodec)
+				rtxSupported = true;
+			else
+				consumerParams.codecs.splice(idx, 1);
+		}
 	}
 
 	// Ensure there is at least one media codec.
@@ -1028,53 +1044,74 @@ export function getConsumerRtpParameters(
 		}
 	}
 
-	const consumerEncoding: RtpEncodingParameters =
+	if (!pipe)
 	{
-		ssrc : utils.generateRandomNumber()
-	};
+		const consumerEncoding: RtpEncodingParameters =
+		{
+			ssrc : utils.generateRandomNumber()
+		};
 
-	if (rtxSupported)
-		consumerEncoding.rtx = { ssrc: utils.generateRandomNumber() };
+		if (rtxSupported)
+			consumerEncoding.rtx = { ssrc: consumerEncoding.ssrc! + 1 };
 
-	// If any of the consumableParams.encodings has scalabilityMode, process it
-	// (assume all encodings have the same value).
-	const encodingWithScalabilityMode =
-		consumableParams.encodings!.find((encoding) => encoding.scalabilityMode);
+		// If any of the consumableParams.encodings has scalabilityMode, process it
+		// (assume all encodings have the same value).
+		const encodingWithScalabilityMode =
+			consumableParams.encodings!.find((encoding) => encoding.scalabilityMode);
 
-	let scalabilityMode = encodingWithScalabilityMode
-		? encodingWithScalabilityMode.scalabilityMode
-		: undefined;
+		let scalabilityMode = encodingWithScalabilityMode
+			? encodingWithScalabilityMode.scalabilityMode
+			: undefined;
 
-	// If there is simulast, mangle spatial layers in scalabilityMode.
-	if (consumableParams.encodings!.length > 1)
-	{
-		const { temporalLayers } = parseScalabilityMode(scalabilityMode);
+		// If there is simulast, mangle spatial layers in scalabilityMode.
+		if (consumableParams.encodings!.length > 1)
+		{
+			const { temporalLayers } = parseScalabilityMode(scalabilityMode);
 
-		scalabilityMode = `S${consumableParams.encodings!.length}T${temporalLayers}`;
+			scalabilityMode = `S${consumableParams.encodings!.length}T${temporalLayers}`;
+		}
+
+		if (scalabilityMode)
+			consumerEncoding.scalabilityMode = scalabilityMode;
+
+		// Use the maximum maxBitrate in any encoding and honor it in the Consumer's
+		// encoding.
+		const maxEncodingMaxBitrate =
+			consumableParams.encodings!.reduce((maxBitrate, encoding) => (
+				encoding.maxBitrate && encoding.maxBitrate > maxBitrate
+					? encoding.maxBitrate
+					: maxBitrate
+			), 0);
+
+		if (maxEncodingMaxBitrate)
+		{
+			consumerEncoding.maxBitrate = maxEncodingMaxBitrate;
+		}
+
+		// Set a single encoding for the Consumer.
+		consumerParams.encodings!.push(consumerEncoding);
 	}
-
-	if (scalabilityMode)
-		consumerEncoding.scalabilityMode = scalabilityMode;
-
-	// Use the maximum maxBitrate in any encoding and honor it in the Consumer's
-	// encoding.
-	const maxEncodingMaxBitrate =
-		consumableParams.encodings!.reduce((maxBitrate, encoding) => (
-			encoding.maxBitrate && encoding.maxBitrate > maxBitrate
-				? encoding.maxBitrate
-				: maxBitrate
-		), 0);
-
-	if (maxEncodingMaxBitrate)
+	else
 	{
-		consumerEncoding.maxBitrate = maxEncodingMaxBitrate;
+		const consumableEncodings =
+			utils.clone(consumableParams.encodings) as RtpEncodingParameters[];
+		const baseSsrc = utils.generateRandomNumber();
+		const baseRtxSsrc = utils.generateRandomNumber();
+
+		for (let i = 0; i < consumableEncodings.length; ++i)
+		{
+			const encoding = consumableEncodings[i];
+
+			encoding.ssrc = baseSsrc + i;
+
+			if (rtxSupported)
+				encoding.rtx = { ssrc: baseRtxSsrc + i };
+			else
+				delete encoding.rtx;
+
+			consumerParams.encodings!.push(encoding);
+		}
 	}
-
-	// Set a single encoding for the Consumer.
-	consumerParams.encodings!.push(consumerEncoding);
-
-	// Copy verbatim.
-	consumerParams.rtcp = consumableParams.rtcp;
 
 	return consumerParams;
 }
@@ -1126,10 +1163,18 @@ export function getPipeConsumerRtpParameters(
 
 	const consumableEncodings =
 		utils.clone(consumableParams.encodings) as RtpEncodingParameters[];
+	const baseSsrc = utils.generateRandomNumber();
+	const baseRtxSsrc = utils.generateRandomNumber();
 
-	for (const encoding of consumableEncodings)
+	for (let i = 0; i < consumableEncodings.length; ++i)
 	{
-		if (!enableRtx)
+		const encoding = consumableEncodings[i];
+
+		encoding.ssrc = baseSsrc + i;
+
+		if (enableRtx)
+			encoding.rtx = { ssrc: baseRtxSsrc + i };
+		else
 			delete encoding.rtx;
 
 		consumerParams.encodings!.push(encoding);

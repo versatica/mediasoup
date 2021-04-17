@@ -231,7 +231,9 @@ export class Worker extends EnhancedEventEmitter
 			spawnBin = process.env.MEDIASOUP_VALGRIND_BIN || 'valgrind';
 
 			if (process.env.MEDIASOUP_VALGRIND_OPTIONS)
+			{
 				spawnArgs = spawnArgs.concat(process.env.MEDIASOUP_VALGRIND_OPTIONS.split(/\s+/));
+			}
 
 			spawnArgs.push(workerBin);
 		}
@@ -269,7 +271,11 @@ export class Worker extends EnhancedEventEmitter
 			{
 				env :
 				{
-					MEDIASOUP_VERSION : '__MEDIASOUP_VERSION__'
+					MEDIASOUP_VERSION : '__MEDIASOUP_VERSION__',
+					// Let the worker process inherit all environment variables, useful
+					// if a custom and not in the path GCC is used so the user can set
+					// LD_LIBRARY_PATH environment variable for runtime.
+					...process.env
 				},
 
 				detached : false,

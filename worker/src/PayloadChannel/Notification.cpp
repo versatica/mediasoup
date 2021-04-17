@@ -13,9 +13,32 @@ namespace PayloadChannel
 	// clang-format off
 	std::unordered_map<std::string, Notification::EventId> Notification::string2EventId =
 	{
-		{ "dataProducer.send", Notification::EventId::DATA_PRODUCER_SEND }
+		{ "transport.sendRtcp", Notification::EventId::TRANSPORT_SEND_RTCP },
+		{ "producer.send",      Notification::EventId::PRODUCER_SEND       },
+		{ "dataProducer.send",  Notification::EventId::DATA_PRODUCER_SEND  }
 	};
 	// clang-format on
+
+	/* Class methods. */
+
+	bool Notification::IsNotification(json& jsonNotification)
+	{
+		MS_TRACE();
+
+		auto jsonEventIdIt = jsonNotification.find("event");
+
+		if (jsonEventIdIt == jsonNotification.end() || !jsonEventIdIt->is_string())
+			return false;
+
+		auto event = jsonEventIdIt->get<std::string>();
+
+		auto eventIdIt = Notification::string2EventId.find(event);
+
+		if (eventIdIt == Notification::string2EventId.end())
+			return false;
+
+		return true;
+	}
 
 	/* Instance methods. */
 

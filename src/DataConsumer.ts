@@ -49,6 +49,7 @@ export type DataConsumerStat =
 	protocol: string;
 	messagesSent: number;
 	bytesSent: number;
+	bufferedAmount: number;
 }
 
 /**
@@ -98,6 +99,8 @@ export class DataConsumer extends EnhancedEventEmitter
 	 * @emits transportclose
 	 * @emits dataproducerclose
 	 * @emits message - (message: Buffer, ppid: number)
+	 * @emits sctpsendbufferfull
+	 * @emits bufferedamountlow - (bufferedAmount: number)
 	 * @emits @close
 	 * @emits @dataproducerclose
 	 */
@@ -227,6 +230,7 @@ export class DataConsumer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.dataConsumerId);
+		this._payloadChannel.removeAllListeners(this._internal.dataConsumerId);
 
 		this._channel.request('dataConsumer.close', this._internal)
 			.catch(() => {});
@@ -253,6 +257,7 @@ export class DataConsumer extends EnhancedEventEmitter
 
 		// Remove notification subscriptions.
 		this._channel.removeAllListeners(this._internal.dataConsumerId);
+		this._payloadChannel.removeAllListeners(this._internal.dataConsumerId);
 
 		this.safeEmit('transportclose');
 
@@ -280,9 +285,80 @@ export class DataConsumer extends EnhancedEventEmitter
 		return this._channel.request('dataConsumer.getStats', this._internal);
 	}
 
+	/**
+	 * Set buffered amount low threshold.
+	 */
+	async setBufferedAmountLowThreshold(threshold: number): Promise<void>
+	{
+		logger.debug('setBufferedAmountLowThreshold() [threshold:%s]', threshold);
+
+		const reqData = { threshold };
+
+		await this._channel.request(
+			'dataConsumer.setBufferedAmountLowThreshold', this._internal, reqData);
+	}
+
+	/**
+	 * Send data.
+	 */
+	async send(message: string | Buffer, ppid?: number): Promise<void>
+	{
+		if (typeof message !== 'string' && !Buffer.isBuffer(message))
+		{
+			throw new TypeError('message must be a string or a Buffer');
+		}
+
+		/*
+		 * +-------------------------------+----------+
+		 * | Value                         | SCTP     |
+		 * |                               | PPID     |
+		 * +-------------------------------+----------+
+		 * | WebRTC String                 | 51       |
+		 * | WebRTC Binary Partial         | 52       |
+		 * | (Deprecated)                  |          |
+		 * | WebRTC Binary                 | 53       |
+		 * | WebRTC String Partial         | 54       |
+		 * | (Deprecated)                  |          |
+		 * | WebRTC String Empty           | 56       |
+		 * | WebRTC Binary Empty           | 57       |
+		 * +-------------------------------+----------+
+		 */
+
+		if (typeof ppid !== 'number')
+		{
+			ppid = (typeof message === 'string')
+				? message.length > 0 ? 51 : 56
+				: message.length > 0 ? 53 : 57;
+		}
+
+		// Ensure we honor PPIDs.
+		if (ppid === 56)
+			message = ' ';
+		else if (ppid === 57)
+			message = Buffer.alloc(1);
+
+		const requestData = { ppid };
+
+		await this._payloadChannel.request(
+			'dataConsumer.send', this._internal, requestData, message);
+	}
+
+	/**
+	 * Get buffered amount size.
+	 */
+	async getBufferedAmount(): Promise<number>
+	{
+		logger.debug('getBufferedAmount()');
+
+		const { bufferedAmount } =
+			await this._channel.request('dataConsumer.getBufferedAmount', this._internal);
+
+		return bufferedAmount;
+	}
+
 	private _handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.dataConsumerId, (event: string) =>
+		this._channel.on(this._internal.dataConsumerId, (event: string, data: any) =>
 		{
 			switch (event)
 			{
@@ -295,6 +371,7 @@ export class DataConsumer extends EnhancedEventEmitter
 
 					// Remove notification subscriptions.
 					this._channel.removeAllListeners(this._internal.dataConsumerId);
+					this._payloadChannel.removeAllListeners(this._internal.dataConsumerId);
 
 					this.emit('@dataproducerclose');
 					this.safeEmit('dataproducerclose');
@@ -305,9 +382,25 @@ export class DataConsumer extends EnhancedEventEmitter
 					break;
 				}
 
+				case 'sctpsendbufferfull':
+				{
+					this.safeEmit('sctpsendbufferfull');
+
+					break;
+				}
+
+				case 'bufferedamountlow':
+				{
+					const { bufferedAmount } = data as { bufferedAmount: number };
+
+					this.safeEmit('bufferedamountlow', bufferedAmount);
+
+					break;
+				}
+
 				default:
 				{
-					logger.error('ignoring unknown event "%s"', event);
+					logger.error('ignoring unknown event "%s" in channel listener', event);
 				}
 			}
 		});
@@ -333,7 +426,7 @@ export class DataConsumer extends EnhancedEventEmitter
 
 					default:
 					{
-						logger.error('ignoring unknown event "%s"', event);
+						logger.error('ignoring unknown event "%s" in payload channel listener', event);
 					}
 				}
 			});

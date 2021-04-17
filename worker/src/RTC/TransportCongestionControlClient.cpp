@@ -29,7 +29,8 @@ namespace RTC
 
 		webrtc::GoogCcFactoryConfig config;
 
-		config.feedback_only = bweType == RTC::BweType::TRANSPORT_CC;
+		// Provide RTCP feedback as well as Receiver Reports.
+		config.feedback_only = false;
 
 		this->controllerFactory = new webrtc::GoogCcNetworkControllerFactory(std::move(config));
 
@@ -46,8 +47,9 @@ namespace RTC
 
 		this->processTimer = new Timer(this);
 
-		// TODO: Let's see.
-		// this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
+		// NOTE: This is supposed to recover computed available bandwidth after
+		// network issues.
+		this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
 
 		// clang-format off
 		this->processTimer->Start(std::min(
@@ -128,12 +130,29 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpReceiverReport(
-	  const webrtc::RTCPReportBlock& report, float rtt, int64_t nowMs)
+	  RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t nowMs)
 	{
 		MS_TRACE();
 
+		webrtc::ReportBlockList reportBlockList;
+
+		for (auto it = packet->Begin(); it != packet->End(); ++it)
+		{
+			auto& report = *it;
+
+			reportBlockList.emplace_back(
+			  packet->GetSsrc(),
+			  report->GetSsrc(),
+			  report->GetFractionLost(),
+			  report->GetTotalLost(),
+			  report->GetLastSeq(),
+			  report->GetJitter(),
+			  report->GetLastSenderReport(),
+			  report->GetDelaySinceLastSenderReport());
+		}
+
 		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
-		  { report }, static_cast<int64_t>(rtt), nowMs);
+		  reportBlockList, static_cast<int64_t>(rtt), nowMs);
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpTransportFeedback(
@@ -159,21 +178,20 @@ namespace RTC
 		this->bitrates.desiredBitrate          = desiredBitrate;
 		this->bitrates.effectiveDesiredBitrate = this->desiredBitrateTrend.GetValue();
 		this->bitrates.minBitrate              = MinBitrate;
+		// NOTE: Setting 'startBitrate' to 'availableBitrate' has proven to generate
+		// more stable values.
+		this->bitrates.startBitrate = std::max<uint32_t>(MinBitrate, this->bitrates.availableBitrate);
 
 		if (this->desiredBitrateTrend.GetValue() > 0u)
 		{
 			this->bitrates.maxBitrate = std::max<uint32_t>(
 			  this->initialAvailableBitrate,
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
-			this->bitrates.startBitrate = std::min<uint32_t>(
-			  this->bitrates.maxBitrate,
-			  std::max<uint32_t>(this->bitrates.availableBitrate, this->initialAvailableBitrate));
 			this->bitrates.maxPaddingBitrate = this->bitrates.maxBitrate * MaxPaddingBitrateFactor;
 		}
 		else
 		{
 			this->bitrates.maxBitrate        = this->initialAvailableBitrate;
-			this->bitrates.startBitrate      = this->initialAvailableBitrate;
 			this->bitrates.maxPaddingBitrate = 0u;
 		}
 
