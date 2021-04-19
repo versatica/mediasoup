@@ -1,10 +1,3 @@
-//! A data producer represents an endpoint capable of injecting data messages into a mediasoup
-//! [`Router`](crate::router::Router).
-//!
-//! A data producer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA DataChannel) to deliver
-//! those messages, or can directly send them from the Rust application if the data producer was
-//! created on top of a [`DirectTransport`](crate::direct_transport::DirectTransport).
-
 #[cfg(test)]
 mod tests;
 

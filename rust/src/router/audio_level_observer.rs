@@ -1,5 +1,3 @@
-//! An audio level observer monitors the volume of the selected audio producers.
-
 #[cfg(test)]
 mod tests;
 

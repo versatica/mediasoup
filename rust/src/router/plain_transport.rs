@@ -1,6 +1,3 @@
-//! A plain transport represents a network path through which RTP, RTCP (optionally secured with
-//! SRTP) and SCTP (DataChannel) is transmitted.
-
 #[cfg(test)]
 mod tests;
 
@@ -13,13 +10,14 @@ use crate::messages::{
     TransportConnectRequestPlainData, TransportInternal,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::{Router, RouterId};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
-    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
-    TransportTraceEventData, TransportTraceEventType, TransportType,
+    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
+    TransportTraceEventType,
 };
 use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;

@@ -6,30 +6,19 @@
 //! high level use cases (for instance, a "multi-party conference room" could involve various
 //! mediasoup routers, even in different physicals hosts).
 
-#[cfg(not(doc))]
-pub mod audio_level_observer;
-#[cfg(not(doc))]
-pub mod consumer;
-#[cfg(not(doc))]
-pub mod data_consumer;
-#[cfg(not(doc))]
-pub mod data_producer;
-#[cfg(not(doc))]
-pub mod direct_transport;
-#[cfg(not(doc))]
-pub mod pipe_transport;
-#[cfg(not(doc))]
-pub mod plain_transport;
-#[cfg(not(doc))]
-pub mod producer;
-#[cfg(not(doc))]
-pub mod rtp_observer;
+pub(super) mod audio_level_observer;
+pub(super) mod consumer;
+pub(super) mod data_consumer;
+pub(super) mod data_producer;
+pub(super) mod direct_transport;
+pub(super) mod pipe_transport;
+pub(super) mod plain_transport;
+pub(super) mod producer;
+pub(super) mod rtp_observer;
 #[cfg(test)]
 mod tests;
-#[cfg(not(doc))]
-pub mod transport;
-#[cfg(not(doc))]
-pub mod webrtc_transport;
+pub(super) mod transport;
+pub(super) mod webrtc_transport;
 
 use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};

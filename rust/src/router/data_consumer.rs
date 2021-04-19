@@ -1,11 +1,3 @@
-//! A data consumer represents an endpoint capable of receiving data messages from a mediasoup
-//! [`Router`](crate::router::Router).
-//!
-//! A data consumer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA
-//! DataChannel) to receive those messages, or can directly receive them in the Rust application if
-//! the data consumer was created on top of a
-//! [`DirectTransport`](crate::direct_transport::DirectTransport).
-
 #[cfg(test)]
 mod tests;
 

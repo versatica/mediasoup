@@ -1,13 +1,3 @@
-//! A pipe transport represents a network path through which RTP, RTCP (optionally secured with
-//! SRTP) and SCTP (DataChannel) is transmitted. Pipe transports are intended to intercommunicate
-//! two [`Router`] instances collocated on the same host or on separate hosts.
-//!
-//! # Notes on usage
-//! When calling [`PipeTransport::consume`], all RTP streams of the [`Producer`] are transmitted
-//! verbatim (in contrast to what happens in [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
-//! and [`PlainTransport`](crate::plain_transport::PlainTransport) in which a single and continuous
-//! RTP stream is sent to the consuming endpoint).
-
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
@@ -17,13 +7,14 @@ use crate::messages::{
     TransportConnectRequestPipeData, TransportInternal,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::{Router, RouterId};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::srtp_parameters::SrtpParameters;
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
-    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
-    TransportTraceEventData, TransportTraceEventType, TransportType,
+    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
+    TransportTraceEventType,
 };
 use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;

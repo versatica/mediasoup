@@ -1,13 +1,3 @@
-//! A transport connects an endpoint with a mediasoup router and enables transmission of media in
-//! both directions by means of [`Producer`], [`Consumer`], [`DataProducer`] and [`DataConsumer`]
-//! instances created on it.
-//!
-//! mediasoup implements the following transports:
-//! * [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
-//! * [`PlainTransport`](crate::plain_transport::PlainTransport)
-//! * [`PipeTransport`](crate::pipe_transport::PipeTransport)
-//! * [`DirectTransport`](crate::direct_transport::DirectTransport)
-
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
