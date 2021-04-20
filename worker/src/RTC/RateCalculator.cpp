@@ -24,7 +24,7 @@ namespace RTC
 		if (++this->newestTimeIndex >= this->windowItems)
 			this->newestTimeIndex = 0;
 
-		// Latest index overlaps with the oldest one, remove it.
+		// Newest index overlaps with the oldest one, remove it.
 		if (this->newestTimeIndex == this->oldestIndex && this->oldestIndex != -1)
 		{
 			MS_WARN_TAG(
