@@ -1,8 +1,9 @@
 # Changelog
 
 
-### 3.7.2 (WIP)
+### 3.7.2
 
+* Rate calculator optimization (PR #538 by @vpalmisano).
 * Update `Catch` to 2.13.5.
 * Update NPM deps.
 

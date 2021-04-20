@@ -76,6 +76,29 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 
 		validate(rate, nowMs, input);
 
-		REQUIRE(rate.GetRate(nowMs + 3000) == 0);
+		REQUIRE(rate.GetRate(nowMs + 3001) == 0);
+	}
+
+	SECTION("wrap")
+	{
+		RateCalculator rate(1000, 8000, 5);
+
+		// clang-format off
+		std::vector<data> input =
+		{
+			{ 1000, 1, 1*8 },
+			{ 1001, 1, 1*8 + 1*8 },
+			{ 1002, 1, 1*8 + 2*8 },
+			{ 1003, 1, 1*8 + 3*8 },
+			{ 1004, 1, 1*8 + 4*8 },
+			{ 1005, 1, 1*8 + (5-1)*8 }, // starts wrap here
+			{ 1006, 1, 1*8 + (6-2)*8 },
+			{ 1007, 1, 1*8 + (7-3)*8 },
+			{ 1008, 1, 1*8 + (8-4)*8 },
+			{ 1009, 1, 1*8 + (9-5)*8 },
+		};
+		// clang-format on
+
+		validate(rate, nowMs, input);
 	}
 }
