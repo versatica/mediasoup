@@ -14,10 +14,14 @@ namespace RTC
 	public:
 		static constexpr size_t DefaultWindowSize{ 1000u };
 		static constexpr float DefaultBpsScale{ 8000.0f };
+		static constexpr uint16_t DefaultWindowItems{ 1000u };
 
 	public:
-		RateCalculator(size_t windowSize = DefaultWindowSize, float scale = DefaultBpsScale)
-		  : windowSize(windowSize), scale(scale)
+		RateCalculator(
+		  size_t windowSize    = DefaultWindowSize,
+		  float scale          = DefaultBpsScale,
+		  uint16_t windowItems = DefaultWindowItems)
+		  : windowSize(windowSize), scale(scale), windowItems(windowItems)
 		{
 			Reset();
 		}
@@ -38,18 +42,21 @@ namespace RTC
 		void RemoveOldData(uint64_t nowMs);
 		void Reset(uint64_t nowMs)
 		{
-			this->buffer.reset(new BufferItem[this->windowSize]);
-			this->oldestTime  = nowMs - this->windowSize;
-			this->oldestIndex = 0u;
-			this->totalCount  = 0u;
-			this->lastRate    = 0u;
-			this->lastTime    = 0u;
+			this->buffer.reset(new BufferItem[this->windowItems]);
+			this->newestTime      = 0u;
+			this->newestTimeIndex = -1;
+			this->oldestTimeIndex = 0u;
+			this->oldestIndex     = -1;
+			this->totalCount      = 0u;
+			this->lastRate        = 0u;
+			this->lastTime        = 0u;
 		}
 
 	private:
 		struct BufferItem
 		{
 			size_t count{ 0u };
+			uint64_t time{ 0u };
 		};
 
 	private:
@@ -57,12 +64,18 @@ namespace RTC
 		size_t windowSize{ DefaultWindowSize };
 		// Scale in which the rate is represented.
 		float scale{ DefaultBpsScale };
+		// Window Size (number of items).
+		uint16_t windowItems{ DefaultWindowItems };
 		// Buffer to keep data.
 		std::unique_ptr<BufferItem[]> buffer;
+		// Time (in milliseconds) for last item in the time window.
+		uint64_t newestTime{ 0u };
+		// Index for the last item in the time window.
+		int32_t newestTimeIndex{ -1 };
 		// Time (in milliseconds) for oldest item in the time window.
-		uint64_t oldestTime{ 0u };
+		uint64_t oldestTimeIndex{ 0u };
 		// Index for the oldest item in the time window.
-		uint32_t oldestIndex{ 0u };
+		int32_t oldestIndex{ -1 };
 		// Total count in the time window.
 		size_t totalCount{ 0u };
 		// Total bytes transmitted.

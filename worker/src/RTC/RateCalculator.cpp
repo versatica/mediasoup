@@ -12,7 +12,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ignore too old data. Should never happen.
-		if (nowMs < this->oldestTime)
+		if (nowMs < this->oldestTimeIndex)
 			return;
 
 		// Increase bytes.
@@ -20,14 +20,40 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		// Set data in the index before the oldest index.
-		uint32_t offset = this->windowSize - 1;
-		uint32_t index  = this->oldestIndex + offset;
+		// Increase the index.
+		if (++this->newestTimeIndex >= this->windowItems)
+			this->newestTimeIndex = 0;
 
-		if (index >= this->windowSize)
-			index -= this->windowSize;
+		// Newest index overlaps with the oldest one, remove it.
+		if (this->newestTimeIndex == this->oldestIndex && this->oldestIndex != -1)
+		{
+			MS_WARN_TAG(
+			  info,
+			  "calculation buffer full, windowSize:%" PRIu64 " ms windowItems:%" PRIu16,
+			  this->windowSize,
+			  this->windowItems);
 
-		this->buffer[index].count += size;
+			BufferItem& oldestItem = buffer[this->oldestIndex];
+			this->totalCount -= oldestItem.count;
+			oldestItem.count = 0u;
+			oldestItem.time  = 0u;
+			if (++this->oldestIndex >= this->windowItems)
+				this->oldestIndex = 0;
+		}
+
+		// Update the newest item.
+		BufferItem& item = buffer[this->newestTimeIndex];
+		item.count += size;
+		item.time        = nowMs;
+		this->newestTime = nowMs;
+
+		// Set the oldest item index and time, if not set.
+		if (this->oldestIndex < 0)
+		{
+			this->oldestIndex     = this->newestTimeIndex;
+			this->oldestTimeIndex = nowMs;
+		}
+
 		this->totalCount += size;
 
 		// Reset lastRate and lastTime so GetRate() will calculate rate again even
@@ -57,45 +83,37 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t newOldestTime = nowMs - this->windowSize;
-
-		// Should never happen.
-		if (newOldestTime < this->oldestTime)
-		{
-			MS_ERROR(
-			  "current time [%" PRIu64 "] is older than a previous [%" PRIu64 "]",
-			  newOldestTime,
-			  this->oldestTime);
-
+		// No item set
+		if (this->newestTimeIndex < 0 || this->oldestIndex < 0)
 			return;
-		}
 
-		// We are in the same time unit (ms) as the last entry.
-		if (newOldestTime == this->oldestTime)
+		uint64_t newoldestTimeIndex = nowMs - this->windowSize;
+
+		// Oldest item already removed.
+		if (newoldestTimeIndex <= this->oldestTimeIndex)
 			return;
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
-		if (newOldestTime > this->oldestTime + this->windowSize)
+		if (newoldestTimeIndex > this->newestTime)
 		{
 			Reset(nowMs);
 
 			return;
 		}
 
-		while (this->oldestTime < newOldestTime)
+		while (this->oldestTimeIndex < newoldestTimeIndex)
 		{
-			const BufferItem& oldestItem = buffer[this->oldestIndex];
-
+			BufferItem& oldestItem = buffer[this->oldestIndex];
 			this->totalCount -= oldestItem.count;
-			this->buffer[this->oldestIndex] = BufferItem();
+			oldestItem.count = 0u;
+			oldestItem.time  = 0u;
 
-			if (++this->oldestIndex >= this->windowSize)
+			if (++this->oldestIndex >= this->windowItems)
 				this->oldestIndex = 0;
 
-			++this->oldestTime;
+			const BufferItem& newOldestItem = buffer[this->oldestIndex];
+			this->oldestTimeIndex           = newOldestItem.time;
 		}
-
-		this->oldestTime = newOldestTime;
 	}
 
 	void RtpDataCounter::Update(RTC::RtpPacket* packet)
