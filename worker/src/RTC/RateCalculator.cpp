@@ -12,7 +12,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ignore too old data. Should never happen.
-		if (nowMs < this->oldestTimeIndex)
+		if (nowMs < this->oldestTime)
 			return;
 
 		// Increase bytes.
@@ -20,38 +20,49 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		// Increase the index.
-		if (++this->newestTimeIndex >= this->windowItems)
-			this->newestTimeIndex = 0;
-
-		// Newest index overlaps with the oldest one, remove it.
-		if (this->newestTimeIndex == this->oldestIndex && this->oldestIndex != -1)
+		// If the elapsed time from the last used item is greater than the
+		// window granularity, increase the index.
+		if (this->newestTimeIndex < 0 || nowMs - this->newestTime >= windowSize / windowItems)
 		{
-			MS_WARN_TAG(
-			  info,
-			  "calculation buffer full, windowSize:%zu ms windowItems:%" PRIu16,
-			  this->windowSize,
-			  this->windowItems);
+			this->newestTimeIndex++;
+			this->newestTime = nowMs;
+			if (this->newestTimeIndex >= this->windowItems)
+				this->newestTimeIndex = 0;
 
-			BufferItem& oldestItem = buffer[this->oldestIndex];
-			this->totalCount -= oldestItem.count;
-			oldestItem.count = 0u;
-			oldestItem.time  = 0u;
-			if (++this->oldestIndex >= this->windowItems)
-				this->oldestIndex = 0;
+			// Newest index overlaps with the oldest one, remove it.
+			if (this->newestTimeIndex == this->oldestTimeIndex && this->oldestTimeIndex != -1)
+			{
+				MS_WARN_TAG(
+				  info,
+				  "calculation buffer full, windowSize:%zu ms windowItems:%" PRIu16,
+				  this->windowSize,
+				  this->windowItems);
+
+				BufferItem& oldestItem = buffer[this->oldestTimeIndex];
+				this->totalCount -= oldestItem.count;
+				oldestItem.count = 0u;
+				oldestItem.time  = 0u;
+				if (++this->oldestTimeIndex >= this->windowItems)
+					this->oldestTimeIndex = 0;
+			}
+
+			// Set the newest item.
+			BufferItem& item = buffer[this->newestTimeIndex];
+			item.count       = size;
+			item.time        = nowMs;
+		}
+		else
+		{
+			// Update the newest item.
+			BufferItem& item = buffer[this->newestTimeIndex];
+			item.count += size;
 		}
 
-		// Update the newest item.
-		BufferItem& item = buffer[this->newestTimeIndex];
-		item.count += size;
-		item.time        = nowMs;
-		this->newestTime = nowMs;
-
 		// Set the oldest item index and time, if not set.
-		if (this->oldestIndex < 0)
+		if (this->oldestTimeIndex < 0)
 		{
-			this->oldestIndex     = this->newestTimeIndex;
-			this->oldestTimeIndex = nowMs;
+			this->oldestTimeIndex = this->newestTimeIndex;
+			this->oldestTime      = nowMs;
 		}
 
 		this->totalCount += size;
@@ -83,36 +94,36 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// No item set
-		if (this->newestTimeIndex < 0 || this->oldestIndex < 0)
+		// No item set.
+		if (this->newestTimeIndex < 0 || this->oldestTimeIndex < 0)
 			return;
 
-		uint64_t newoldestTimeIndex = nowMs - this->windowSize;
+		uint64_t newoldestTime = nowMs - this->windowSize;
 
 		// Oldest item already removed.
-		if (newoldestTimeIndex <= this->oldestTimeIndex)
+		if (newoldestTime <= this->oldestTime)
 			return;
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
-		if (newoldestTimeIndex > this->newestTime)
+		if (newoldestTime > this->newestTime)
 		{
 			Reset(nowMs);
 
 			return;
 		}
 
-		while (this->oldestTimeIndex < newoldestTimeIndex)
+		while (this->oldestTime < newoldestTime)
 		{
-			BufferItem& oldestItem = buffer[this->oldestIndex];
+			BufferItem& oldestItem = buffer[this->oldestTimeIndex];
 			this->totalCount -= oldestItem.count;
 			oldestItem.count = 0u;
 			oldestItem.time  = 0u;
 
-			if (++this->oldestIndex >= this->windowItems)
-				this->oldestIndex = 0;
+			if (++this->oldestTimeIndex >= this->windowItems)
+				this->oldestTimeIndex = 0;
 
-			const BufferItem& newOldestItem = buffer[this->oldestIndex];
-			this->oldestTimeIndex           = newOldestItem.time;
+			const BufferItem& newOldestItem = buffer[this->oldestTimeIndex];
+			this->oldestTime                = newOldestItem.time;
 		}
 	}
 

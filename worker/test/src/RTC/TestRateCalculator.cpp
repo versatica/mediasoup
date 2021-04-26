@@ -61,7 +61,7 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 
 	SECTION("slide")
 	{
-		RateCalculator rate;
+		RateCalculator rate(1000, 8000, 1000);
 
 		// clang-format off
 		std::vector<data> input =
@@ -81,21 +81,22 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 
 	SECTION("wrap")
 	{
+		// window: 1000ms, items: 5 (granularity: 200ms)
 		RateCalculator rate(1000, 8000, 5);
 
 		// clang-format off
 		std::vector<data> input =
 		{
 			{ 1000, 1, 1*8 },
-			{ 1001, 1, 1*8 + 1*8 },
-			{ 1002, 1, 1*8 + 2*8 },
-			{ 1003, 1, 1*8 + 3*8 },
-			{ 1004, 1, 1*8 + 4*8 },
-			{ 1005, 1, 1*8 + (5-1)*8 }, // starts wrap here
-			{ 1006, 1, 1*8 + (6-2)*8 },
-			{ 1007, 1, 1*8 + (7-3)*8 },
-			{ 1008, 1, 1*8 + (8-4)*8 },
-			{ 1009, 1, 1*8 + (9-5)*8 },
+			{ 1200, 1, 1*8 + 1*8 },
+			{ 1400, 1, 1*8 + 2*8 },
+			{ 1600, 1, 1*8 + 3*8 },
+			{ 1800, 1, 1*8 + 4*8 },
+			{ 2000, 1, 1*8 + (5-1)*8 }, // starts wrap here
+			{ 2200, 1, 1*8 + (6-2)*8 },
+			{ 2400, 1, 1*8 + (7-3)*8 },
+			{ 2600, 1, 1*8 + (8-4)*8 },
+			{ 2800, 1, 1*8 + (9-5)*8 },
 		};
 		// clang-format on
 

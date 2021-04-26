@@ -14,7 +14,7 @@ namespace RTC
 	public:
 		static constexpr size_t DefaultWindowSize{ 1000u };
 		static constexpr float DefaultBpsScale{ 8000.0f };
-		static constexpr uint16_t DefaultWindowItems{ 1000u };
+		static constexpr uint16_t DefaultWindowItems{ 100u };
 
 	public:
 		RateCalculator(
@@ -46,7 +46,7 @@ namespace RTC
 			this->newestTime      = 0u;
 			this->newestTimeIndex = -1;
 			this->oldestTimeIndex = 0u;
-			this->oldestIndex     = -1;
+			this->oldestTimeIndex = -1;
 			this->totalCount      = 0u;
 			this->lastRate        = 0u;
 			this->lastTime        = 0u;
@@ -73,9 +73,9 @@ namespace RTC
 		// Index for the last item in the time window.
 		int32_t newestTimeIndex{ -1 };
 		// Time (in milliseconds) for oldest item in the time window.
-		uint64_t oldestTimeIndex{ 0u };
+		uint64_t oldestTime{ 0u };
 		// Index for the oldest item in the time window.
-		int32_t oldestIndex{ -1 };
+		int32_t oldestTimeIndex{ -1 };
 		// Total count in the time window.
 		size_t totalCount{ 0u };
 		// Total bytes transmitted.
