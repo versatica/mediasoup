@@ -15,6 +15,7 @@ uuid_based_wrapper_type!(
     RtpObserverId
 );
 
+/// Options for adding producer to RTP observer
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct RtpObserverAddProducerOptions {

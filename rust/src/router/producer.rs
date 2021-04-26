@@ -1,8 +1,11 @@
 //! A producer represents an audio or video source being injected into a mediasoup router. It's
 //! created on top of a transport that defines how the media packets are carried.
 
+#[cfg(test)]
+mod tests;
+
 use crate::consumer::RtpStreamParams;
-use crate::data_structures::{AppData, EventDirection};
+use crate::data_structures::{AppData, TraceEventDirection};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
     ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
@@ -24,6 +27,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::collections::HashMap;
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -60,6 +64,7 @@ pub struct ProducerOptions {
 }
 
 impl ProducerOptions {
+    /// Create producer options that will be used with Pipe transport
     pub fn new_pipe_transport(
         producer_id: ProducerId,
         kind: MediaKind,
@@ -75,6 +80,7 @@ impl ProducerOptions {
         }
     }
 
+    /// Create producer options that will be used with non-Pipe transport
     pub fn new(kind: MediaKind, rtp_parameters: RtpParameters) -> Self {
         Self {
             id: None,
@@ -142,12 +148,17 @@ pub struct ProducerScore {
     pub score: u8,
 }
 
+/// Rotation angle
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]
 pub enum Rotation {
+    /// 0
     None = 0,
+    /// 90 (clockwise)
     Clockwise = 90,
+    /// 180
     Rotate180 = 180,
+    /// 270 (90 counter-clockwise)
     CounterClockwise = 270,
 }
 
@@ -167,6 +178,7 @@ pub struct ProducerVideoOrientation {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
+#[allow(missing_docs)]
 pub struct ProducerStat {
     // Common to all RtpStreams.
     // `type` field is present in worker, but ignored here
@@ -190,6 +202,7 @@ pub struct ProducerStat {
     pub byte_count: usize,
     pub bitrate: u32,
     pub round_trip_time: Option<u32>,
+    pub rtx_packets_discarded: Option<u32>,
     // RtpStreamRecv specific.
     pub jitter: u32,
     pub bitrate_by_layer: HashMap<String, u32>,
@@ -199,47 +212,52 @@ pub struct ProducerStat {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ProducerTraceEventData {
+    /// RTP packet.
     Rtp {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTP video keyframe packet.
     KeyFrame {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP NACK packet.
     Nack {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP PLI packet.
     Pli {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
     },
+    /// RTCP FIR packet.
     Fir {
         /// Event timestamp.
         timestamp: u64,
         /// Event direction.
-        direction: EventDirection,
+        direction: TraceEventDirection,
         // TODO: Clarify value structure
         /// Per type specific information.
         info: Value,
@@ -306,18 +324,18 @@ impl Drop for Inner {
     fn drop(&mut self) {
         debug!("drop()");
 
-        self.close();
+        self.close(true);
     }
 }
 
 impl Inner {
-    fn close(&self) {
+    fn close(&self, close_request: bool) {
         if !self.closed.swap(true, Ordering::SeqCst) {
             debug!("close()");
 
             self.handlers.close.call_simple();
 
-            {
+            if close_request {
                 let channel = self.channel.clone();
                 let request = ProducerCloseRequest {
                     internal: ProducerInternal {
@@ -348,6 +366,25 @@ pub struct RegularProducer {
     inner: Arc<Inner>,
 }
 
+impl fmt::Debug for RegularProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RegularProducer")
+            .field("id", &self.inner.id)
+            .field("kind", &self.inner.kind)
+            .field("type", &self.inner.r#type)
+            .field("rtp_parameters", &self.inner.rtp_parameters)
+            .field(
+                "consumable_rtp_parameters",
+                &self.inner.consumable_rtp_parameters,
+            )
+            .field("paused", &self.inner.paused)
+            .field("score", &self.inner.score)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
+}
+
 impl From<RegularProducer> for Producer {
     fn from(producer: RegularProducer) -> Self {
         Producer::Regular(producer)
@@ -358,6 +395,25 @@ impl From<RegularProducer> for Producer {
 #[derive(Clone)]
 pub struct DirectProducer {
     inner: Arc<Inner>,
+}
+
+impl fmt::Debug for DirectProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirectProducer")
+            .field("id", &self.inner.id)
+            .field("kind", &self.inner.kind)
+            .field("type", &self.inner.r#type)
+            .field("rtp_parameters", &self.inner.rtp_parameters)
+            .field(
+                "consumable_rtp_parameters",
+                &self.inner.consumable_rtp_parameters,
+            )
+            .field("paused", &self.inner.paused)
+            .field("score", &self.inner.score)
+            .field("transport", &self.inner.transport)
+            .field("closed", &self.inner.closed)
+            .finish()
+    }
 }
 
 impl From<DirectProducer> for Producer {
@@ -376,6 +432,15 @@ pub enum Producer {
     Regular(RegularProducer),
     /// Producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
     Direct(DirectProducer),
+}
+
+impl fmt::Debug for Producer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Producer::Regular(producer) => f.debug_tuple("Regular").field(&producer).finish(),
+            Producer::Direct(producer) => f.debug_tuple("Direct").field(&producer).finish(),
+        }
+    }
 }
 
 impl Producer {
@@ -441,7 +506,7 @@ impl Producer {
                     .and_then(|weak_inner| weak_inner.upgrade())
                 {
                     inner.handlers.transport_close.call_simple();
-                    inner.close();
+                    inner.close(false);
                 }
             })
         });
@@ -674,7 +739,7 @@ impl Producer {
     }
 
     pub(super) fn close(&self) {
-        self.inner().close();
+        self.inner().close(true);
     }
 
     /// Downgrade `Producer` to [`WeakProducer`] instance.
@@ -728,6 +793,14 @@ pub struct NonClosingProducer {
     on_drop: Option<Box<dyn FnOnce(Producer) + Send + 'static>>,
 }
 
+impl fmt::Debug for NonClosingProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NonClosingProducer")
+            .field("producer", &self.producer)
+            .finish()
+    }
+}
+
 impl Drop for NonClosingProducer {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
@@ -749,6 +822,7 @@ impl NonClosingProducer {
         }
     }
 
+    /// Get inner [`Producer`] (which will close on drop in contrast to `NonClosingProducer`).
     pub fn into_inner(mut self) -> Producer {
         self.on_drop.take();
         self.producer.clone()
@@ -762,6 +836,12 @@ impl NonClosingProducer {
 #[derive(Clone)]
 pub struct WeakProducer {
     inner: Weak<Inner>,
+}
+
+impl fmt::Debug for WeakProducer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeakProducer").finish()
+    }
 }
 
 impl WeakProducer {

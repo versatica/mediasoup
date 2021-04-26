@@ -29,7 +29,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  info,
-			  "calculation buffer full, windowSize:%" PRIu64 " ms windowItems:%" PRIu16,
+			  "calculation buffer full, windowSize:%zu ms windowItems:%" PRIu16,
 			  this->windowSize,
 			  this->windowItems);
 

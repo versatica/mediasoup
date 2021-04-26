@@ -1,6 +1,20 @@
 # Changelog
 
 
+### 3.7.2
+
+* Rate calculator optimization (PR #538 by @vpalmisano).
+* Update `Catch` to 2.13.5.
+* Update NPM deps.
+
+
+### 3.7.1
+
+* `SimulcastConsumer`: Fix miscalculation when increasing layer (PR #541 by @penguinol).
+* Rust version with thread-based worker (PR #540).
+* Update NPM deps.
+
+
 ### 3.7.0
 
 * Welcome to `mediasoup-rust`! Authored by @nazar-pc (PRs #518 and #533).

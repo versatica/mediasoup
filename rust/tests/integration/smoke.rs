@@ -35,11 +35,7 @@ fn init() {
 fn smoke() {
     init();
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
 
     future::block_on(async move {
         let worker = worker_manager
@@ -48,10 +44,6 @@ fn smoke() {
             .unwrap();
 
         println!("Worker dump: {:#?}", worker.dump().await.unwrap());
-        println!(
-            "Resource usage: {:#?}",
-            worker.get_resource_usage().await.unwrap()
-        );
         println!(
             "Update settings: {:?}",
             worker
@@ -69,7 +61,7 @@ fn smoke() {
 
         let router = worker
             .create_router({
-                let mut router_options = RouterOptions::new(vec![]);
+                let mut router_options = RouterOptions::default();
                 router_options.media_codecs = vec![RtpCodecCapability::Audio {
                     mime_type: MimeTypeAudio::Opus,
                     preferred_payload_type: None,

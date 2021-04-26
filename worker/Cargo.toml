@@ -1,0 +1,39 @@
+[package]
+name = "mediasoup-sys"
+version = "0.1.1"
+description = "FFI bindings to C++ libmediasoup-worker"
+authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
+edition = "2018"
+license = "ISC"
+documentation = "https://docs.rs/mediasoup-sys"
+repository = "https://github.com/versatica/mediasoup/tree/v3/worker"
+include = [
+    "/deps/getops",
+    "/deps/gyp",
+    "!/deps/gyp/{samples,test}",
+    "/deps/json",
+    "!/deps/json/{include,ChangeLog.md}",
+    "!/deps/json/ChangeLog.md",
+    "/deps/libsrtp",
+    "!/deps/libsrtp/srtp/{doc,fuzzer,test,CHANGES}",
+    "/deps/libuv",
+    "!/deps/libuv/libuv/{docs,img,m4,test,ChangeLog}",
+    "/deps/libwebrtc",
+    "/deps/netstring",
+    "/deps/openssl",
+    "!/deps/openssl/openssl/{apps,demos,docs,fuzz,test,tools,CHANGES}",
+    "/deps/usrsctp",
+    "!/deps/usrsctp/programs",
+    "/include",
+    "/scripts",
+    "/src",
+    "/build.rs",
+    "/Cargo.toml",
+    "/common.gypi",
+    "/Makefile",
+    "/mediasoup-worker.gyp",
+]
+
+[package.metadata.docs.rs]
+default-target = "x86_64-unknown-linux-gnu"
+targets = []

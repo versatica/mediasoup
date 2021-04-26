@@ -193,7 +193,7 @@ impl Channel {
                                 data,
                             } => {
                                 let sender = requests_container.lock().handlers.remove(&id);
-                                if let Some(sender) = sender {
+                                if let Some(mut sender) = sender {
                                     let _ = sender.send(Ok(data));
                                 } else {
                                     warn!(
@@ -209,7 +209,7 @@ impl Channel {
                                 reason,
                             } => {
                                 let sender = requests_container.lock().handlers.remove(&id);
-                                if let Some(sender) = sender {
+                                if let Some(mut sender) = sender {
                                     let _ = sender.send(Err(ResponseError { reason }));
                                 } else {
                                     warn!(

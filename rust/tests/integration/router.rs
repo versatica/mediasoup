@@ -29,7 +29,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             mime_type: MimeTypeVideo::Vp8,
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::new(),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
@@ -55,11 +55,7 @@ async fn init() -> Worker {
         let _ = builder.is_test(true).try_init();
     }
 
-    let worker_manager = WorkerManager::new(
-        env::var("MEDIASOUP_WORKER_BIN")
-            .map(|path| path.into())
-            .unwrap_or_else(|_| "../worker/out/Release/mediasoup-worker".into()),
-    );
+    let worker_manager = WorkerManager::new();
 
     worker_manager
         .create_worker(WorkerSettings::default())
@@ -130,45 +126,12 @@ fn close_event() {
             .await
             .expect("Failed to create router");
 
-        let (tx, rx) = async_oneshot::oneshot::<()>();
+        let (mut tx, rx) = async_oneshot::oneshot::<()>();
         let _handler = router.on_close(move || {
             let _ = tx.send(());
         });
         drop(router);
 
         rx.await.expect("Failed to receive close event");
-    });
-}
-
-#[test]
-fn worker_close_event() {
-    future::block_on(async move {
-        let worker = init().await;
-
-        let router = worker
-            .create_router(RouterOptions::new(media_codecs()))
-            .await
-            .expect("Failed to create router");
-
-        let (close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = router.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (worker_close_tx, worker_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = router.on_worker_close(move || {
-            let _ = worker_close_tx.send(());
-        });
-
-        unsafe {
-            libc::kill(worker.pid() as i32, libc::SIGINT);
-        }
-
-        worker_close_rx
-            .await
-            .expect("Failed to receive worker_close event");
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(router.closed(), true);
     });
 }

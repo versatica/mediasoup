@@ -7,6 +7,7 @@
 PYTHON ?= $(shell command -v python2 2> /dev/null || command -v python 2> /dev/null || echo python3)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
+MEDIASOUP_OUT_DIR ?= out
 MEDIASOUP_BUILDTYPE ?= Release
 GULP = ../node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
@@ -21,29 +22,35 @@ DOCKER ?= docker
 default:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)
 endif
 
 clean:
-	$(RM) -rf out/Release/mediasoup-worker
-	$(RM) -rf out/Release/obj.target/mediasoup-worker
-	$(RM) -rf out/Release/mediasoup-worker-test
-	$(RM) -rf out/Release/obj.target/mediasoup-worker-test
-	$(RM) -rf out/Release/mediasoup-worker-fuzzer
-	$(RM) -rf out/Release/obj.target/mediasoup-worker-fuzzer
-	$(RM) -rf out/Debug/mediasoup-worker
-	$(RM) -rf out/Debug/obj.target/mediasoup-worker
-	$(RM) -rf out/Debug/mediasoup-worker-test
-	$(RM) -rf out/Debug/obj.target/mediasoup-worker-test
-	$(RM) -rf out/Debug/mediasoup-worker-fuzzer
-	$(RM) -rf out/Debug/obj.target/mediasoup-worker-fuzzer
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/mediasoup-worker
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/obj.target/mediasoup-worker
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/mediasoup-worker-test
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/obj.target/mediasoup-worker-test
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/mediasoup-worker-fuzzer
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/obj.target/mediasoup-worker-fuzzer
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/libmediasoup-worker.a
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/obj.target/libmediasoup-worker.a
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/mediasoup-worker
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/obj.target/mediasoup-worker
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/mediasoup-worker-test
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/obj.target/mediasoup-worker-test
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/mediasoup-worker-fuzzer
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/obj.target/mediasoup-worker-fuzzer
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/libmediasoup-worker.a
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/obj.target/libmediasoup-worker.a
 
 clean-all:
-	$(RM) -rf out
-	$(RM) -rf worker/mediasoup-worker.xcodeproj
-	$(RM) -rf worker/mediasoup-worker-test.xcodeproj
-	$(RM) -rf worker/deps/*/*.xcodeproj
-	$(RM) -rf worker/libwebrtc/*/*.xcodeproj
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)
+	$(RM) -rf $(ROOT_DIR)/mediasoup-worker.xcodeproj
+	$(RM) -rf $(ROOT_DIR)/mediasoup-worker-test.xcodeproj
+	$(RM) -rf $(ROOT_DIR)/deps/gyp/pylib/gyp/__pycache__
+	$(RM) -rf $(ROOT_DIR)/deps/gyp/pylib/gyp/generator/__pycache__
+	$(RM) -rf $(ROOT_DIR)/deps/*/*.xcodeproj
+	$(RM) -rf $(ROOT_DIR)/libwebrtc/*/*.xcodeproj
 
 xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
@@ -57,9 +64,9 @@ format:
 test:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)
 	$(LCOV) --directory ./ --zerocounters
-	./out/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+	./$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 endif
 
 bear:
@@ -81,11 +88,11 @@ tidy:
 fuzzer:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)
 endif
 
 fuzzer-run-all:
-	LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+	LSAN_OPTIONS=verbosity=1:log_threads=1 ./$(MEDIASOUP_OUT_DIR)/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
@@ -104,4 +111,4 @@ docker-run:
 
 libmediasoup-worker:
 	$(PYTHON) ./scripts/configure.py --no-duplicate-basename-check -R libmediasoup-worker
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C out
+	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)

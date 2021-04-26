@@ -64,7 +64,10 @@ pub enum RtpParametersError {
 pub enum RtpCapabilitiesError {
     /// Media codec not supported.
     #[error("Media codec not supported [mime_type:{mime_type:?}")]
-    UnsupportedCodec { mime_type: MimeType },
+    UnsupportedCodec {
+        /// Mime type
+        mime_type: MimeType,
+    },
     /// Cannot allocate more dynamic codec payload types.
     #[error("Cannot allocate more dynamic codec payload types")]
     CannotAllocate,
@@ -82,15 +85,23 @@ pub enum RtpParametersMappingError {
     /// Unsupported codec.
     #[error("Unsupported codec [mime_type:{mime_type:?}, payloadType:{payload_type}]")]
     UnsupportedCodec {
+        /// Mime type.
         mime_type: MimeType,
+        /// Payload type.
         payload_type: u8,
     },
     /// No RTX codec for capability codec PT.
     #[error("No RTX codec for capability codec PT {preferred_payload_type}")]
-    UnsupportedRtxCodec { preferred_payload_type: u8 },
+    UnsupportedRtxCodec {
+        /// Preferred payload type.
+        preferred_payload_type: u8,
+    },
     /// Missing media codec found for RTX PT.
     #[error("Missing media codec found for RTX PT {payload_type}")]
-    MissingMediaCodecForRtx { payload_type: u8 },
+    MissingMediaCodecForRtx {
+        /// Payload type.
+        payload_type: u8,
+    },
 }
 
 /// Error caused by bad consumer RTP parameters.
@@ -319,7 +330,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 
     // Match parameters media codecs to capabilities media codecs.
     let mut codec_to_cap_codec =
-        BTreeMap::<&RtpCodecParameters, Cow<RtpCodecCapabilityFinalized>>::new();
+        BTreeMap::<&RtpCodecParameters, Cow<'_, RtpCodecCapabilityFinalized>>::new();
 
     for codec in rtp_parameters.codecs.iter() {
         if codec.is_rtx() {
@@ -971,8 +982,8 @@ impl<'a> From<&'a RtpCodecParameters> for CodecToMatch<'a> {
 
 /// Returns selected `Ok(Some(profile-level-id))` for H264 codec and `Ok(None)` for others
 fn match_codecs(
-    codec_a: CodecToMatch,
-    codec_b: CodecToMatch,
+    codec_a: CodecToMatch<'_>,
+    codec_b: CodecToMatch<'_>,
     strict: bool,
 ) -> Result<Option<String>, ()> {
     if codec_a.mime_type != codec_b.mime_type {
