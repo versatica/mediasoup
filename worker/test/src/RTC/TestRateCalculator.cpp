@@ -61,16 +61,18 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 
 	SECTION("slide")
 	{
-		RateCalculator rate(1000, 8000, 1000);
+		RateCalculator rate(1000, 8000, 100);
 
 		// clang-format off
 		std::vector<data> input =
 		{
 			{ 0,    5, 40 },
 			{ 999,  2, 56 },
-			{ 1001, 1, 24 },
-			{ 1001, 1, 32 },
-			{ 2000, 1, 24 }
+			{ 1001, 1, 24 }, // merged inside 999
+			{ 1001, 1, 32 }, // merged inside 999
+			{ 2000, 1, 8 } 	 // it will erase the item with timestamp=999, 
+							 // removing also the next two samples. 
+							 // The end estimation will include only the last sample.
 		};
 		// clang-format on
 
