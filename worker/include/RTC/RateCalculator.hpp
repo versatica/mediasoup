@@ -45,7 +45,7 @@ namespace RTC
 			this->buffer.reset(new BufferItem[this->windowItems]);
 			this->newestTime      = 0u;
 			this->newestTimeIndex = -1;
-			this->oldestTimeIndex = 0u;
+			this->oldestTime      = 0u;
 			this->oldestTimeIndex = -1;
 			this->totalCount      = 0u;
 			this->lastRate        = 0u;
