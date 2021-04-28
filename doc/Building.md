@@ -76,7 +76,7 @@ In order to instruct the mediasoup Node.js module to use the `Debug` mediasoup-w
 $ MEDIASOUP_BUILDTYPE=Debug node myapp.js
 ```
 
-If the "MEDIASOUP_WORKER_BIN" environment variable is set, mediasoup will use the it as mediasoup-worker binary:
+If the "MEDIASOUP_WORKER_BIN" environment variable is set, mediasoup will use the it as mediasoup-worker binary and **won't** compile the binary:
 
 ```bash
 $ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
