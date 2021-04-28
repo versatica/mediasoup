@@ -22,7 +22,7 @@ namespace RTC
 
 		// If the elapsed time from the last used item is greater than the
 		// window granularity, increase the index.
-		if (this->newestTimeIndex < 0 || nowMs - this->newestTime >= windowSize / windowItems)
+		if (this->newestTimeIndex < 0 || nowMs - this->newestTime >= this->itemSize)
 		{
 			this->newestTimeIndex++;
 			this->newestTime = nowMs;

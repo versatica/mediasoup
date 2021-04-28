@@ -23,6 +23,8 @@ namespace RTC
 		  uint16_t windowItems = DefaultWindowItems)
 		  : windowSize(windowSize), scale(scale), windowItems(windowItems)
 		{
+			this->itemSize = windowSize / windowItems;
+
 			Reset();
 		}
 		void Update(size_t size, uint64_t nowMs);
@@ -66,6 +68,8 @@ namespace RTC
 		float scale{ DefaultBpsScale };
 		// Window Size (number of items).
 		uint16_t windowItems{ DefaultWindowItems };
+		// Item Size (in milliseconds), calculated as: windowSize / windowItems.
+		size_t itemSize{ 0u };
 		// Buffer to keep data.
 		std::unique_ptr<BufferItem[]> buffer;
 		// Time (in milliseconds) for last item in the time window.
