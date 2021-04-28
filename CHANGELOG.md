@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.7.3
+
+* Make worker M1 compilable.
+
+
 ### 3.7.2
 
 * Rate calculator optimization (PR #538 by @vpalmisano).
