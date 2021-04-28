@@ -23,7 +23,7 @@ namespace RTC
 		  uint16_t windowItems = DefaultWindowItems)
 		  : windowSize(windowSize), scale(scale), windowItems(windowItems)
 		{
-			this->itemSize = windowSize / windowItems;
+			this->itemSize = std::max(windowSize / windowItems, static_cast<size_t>(1));
 
 			Reset();
 		}
