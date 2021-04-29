@@ -61,6 +61,26 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 
 	SECTION("slide")
 	{
+		RateCalculator rate(1000, 8000, 1000);
+
+		// clang-format off
+		std::vector<data> input =
+		{
+			{ 0,    5, 40 },
+			{ 999,  2, 56 },
+			{ 1001, 1, 24 },
+			{ 1001, 1, 32 },
+			{ 2000, 1, 24 }
+		};
+		// clang-format on
+
+		validate(rate, nowMs, input);
+
+		REQUIRE(rate.GetRate(nowMs + 3001) == 0);
+	}
+
+	SECTION("slide with 100 items")
+	{
 		RateCalculator rate(1000, 8000, 100);
 
 		// clang-format off
