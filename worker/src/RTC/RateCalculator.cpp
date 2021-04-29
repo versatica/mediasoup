@@ -12,7 +12,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ignore too old data. Should never happen.
-		if (nowMs < this->oldestTimeIndex)
+		if (nowMs < this->oldestItemStartTime)
 			return;
 
 		// Increase bytes.
@@ -20,38 +20,49 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		// Increase the index.
-		if (++this->newestTimeIndex >= this->windowItems)
-			this->newestTimeIndex = 0;
-
-		// Newest index overlaps with the oldest one, remove it.
-		if (this->newestTimeIndex == this->oldestIndex && this->oldestIndex != -1)
+		// If the elapsed time from the newest item start time is greater than the
+		// item size (in milliseconds), increase the item index.
+		if (this->newestItemIndex < 0 || nowMs - this->newestItemStartTime >= this->itemSizeMs)
 		{
-			MS_WARN_TAG(
-			  info,
-			  "calculation buffer full, windowSize:%zu ms windowItems:%" PRIu16,
-			  this->windowSize,
-			  this->windowItems);
+			this->newestItemIndex++;
+			this->newestItemStartTime = nowMs;
+			if (this->newestItemIndex >= this->windowItems)
+				this->newestItemIndex = 0;
 
-			BufferItem& oldestItem = buffer[this->oldestIndex];
-			this->totalCount -= oldestItem.count;
-			oldestItem.count = 0u;
-			oldestItem.time  = 0u;
-			if (++this->oldestIndex >= this->windowItems)
-				this->oldestIndex = 0;
+			// Newest index overlaps with the oldest one, remove it.
+			if (this->newestItemIndex == this->oldestItemIndex && this->oldestItemIndex != -1)
+			{
+				MS_WARN_TAG(
+				  info,
+				  "calculation buffer full, windowSizeMs:%zu ms windowItems:%" PRIu16,
+				  this->windowSizeMs,
+				  this->windowItems);
+
+				BufferItem& oldestItem = buffer[this->oldestItemIndex];
+				this->totalCount -= oldestItem.count;
+				oldestItem.count = 0u;
+				oldestItem.time  = 0u;
+				if (++this->oldestItemIndex >= this->windowItems)
+					this->oldestItemIndex = 0;
+			}
+
+			// Set the newest item.
+			BufferItem& item = buffer[this->newestItemIndex];
+			item.count       = size;
+			item.time        = nowMs;
+		}
+		else
+		{
+			// Update the newest item.
+			BufferItem& item = buffer[this->newestItemIndex];
+			item.count += size;
 		}
 
-		// Update the newest item.
-		BufferItem& item = buffer[this->newestTimeIndex];
-		item.count += size;
-		item.time        = nowMs;
-		this->newestTime = nowMs;
-
 		// Set the oldest item index and time, if not set.
-		if (this->oldestIndex < 0)
+		if (this->oldestItemIndex < 0)
 		{
-			this->oldestIndex     = this->newestTimeIndex;
-			this->oldestTimeIndex = nowMs;
+			this->oldestItemIndex     = this->newestItemIndex;
+			this->oldestItemStartTime = nowMs;
 		}
 
 		this->totalCount += size;
@@ -71,7 +82,7 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		float scale = this->scale / this->windowSize;
+		float scale = this->scale / this->windowSizeMs;
 
 		this->lastTime = nowMs;
 		this->lastRate = static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
@@ -83,36 +94,36 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// No item set
-		if (this->newestTimeIndex < 0 || this->oldestIndex < 0)
+		// No item set.
+		if (this->newestItemIndex < 0 || this->oldestItemIndex < 0)
 			return;
 
-		uint64_t newoldestTimeIndex = nowMs - this->windowSize;
+		uint64_t newoldestTime = nowMs - this->windowSizeMs;
 
 		// Oldest item already removed.
-		if (newoldestTimeIndex <= this->oldestTimeIndex)
+		if (newoldestTime <= this->oldestItemStartTime)
 			return;
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
-		if (newoldestTimeIndex > this->newestTime)
+		if (newoldestTime > this->newestItemStartTime)
 		{
 			Reset(nowMs);
 
 			return;
 		}
 
-		while (this->oldestTimeIndex < newoldestTimeIndex)
+		while (this->oldestItemStartTime < newoldestTime)
 		{
-			BufferItem& oldestItem = buffer[this->oldestIndex];
+			BufferItem& oldestItem = buffer[this->oldestItemIndex];
 			this->totalCount -= oldestItem.count;
 			oldestItem.count = 0u;
 			oldestItem.time  = 0u;
 
-			if (++this->oldestIndex >= this->windowItems)
-				this->oldestIndex = 0;
+			if (++this->oldestItemIndex >= this->windowItems)
+				this->oldestItemIndex = 0;
 
-			const BufferItem& newOldestItem = buffer[this->oldestIndex];
-			this->oldestTimeIndex           = newOldestItem.time;
+			const BufferItem& newOldestItem = buffer[this->oldestItemIndex];
+			this->oldestItemStartTime       = newOldestItem.time;
 		}
 	}
 
