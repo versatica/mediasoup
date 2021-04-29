@@ -20,8 +20,8 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		// If the elapsed time from the last used item is greater than the
-		// window granularity, increase the index.
+		// If the elapsed time from the newest item start time is greater than the
+		// item size (in milliseconds), increase the item index.
 		if (this->newestItemIndex < 0 || nowMs - this->newestItemStartTime >= this->itemSizeMs)
 		{
 			this->newestItemIndex++;
