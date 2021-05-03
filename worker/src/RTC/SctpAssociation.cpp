@@ -446,21 +446,23 @@ namespace RTC
 			  len,
 			  std::strerror(errno));
 
+			bool sctpSendBufferFull = errno == EWOULDBLOCK || errno == EAGAIN;
+
 			if (cb)
 			{
-				(*cb)(false);
+				(*cb)(false, sctpSendBufferFull);
 				delete cb;
+			}
+
+			if (sctpSendBufferFull)
+			{
+				Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 			}
 		}
 		else if (cb)
 		{
-			(*cb)(true);
+			(*cb)(true, false);
 			delete cb;
-		}
-
-		if (errno == EWOULDBLOCK || errno == EAGAIN)
-		{
-			Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 		}
 	}
 

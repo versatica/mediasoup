@@ -48,7 +48,7 @@ namespace RTC
 	{
 	protected:
 		using onSendCallback   = const std::function<void(bool sent)>;
-		using onQueuedCallback = const std::function<void(bool queued)>;
+		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;
 
 	public:
 		class Listener
