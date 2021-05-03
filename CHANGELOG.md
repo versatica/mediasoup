@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.7.5 (WIP)
+### 3.7.5
 
 * SctpAssociation: provide 'sctpsendbufferfull' reason on send error (#552).
 
