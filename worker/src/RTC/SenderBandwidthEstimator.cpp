@@ -12,7 +12,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
-	static constexpr float MinSentInfoTimeWindowMs{ 200u };
+	static constexpr float MaxSentInfoTimeWindowMs{ 4000u };
 	static constexpr float DefaultRtt{ 100 };
 	static constexpr uint16_t TimerInterval{ 500u };
 
@@ -273,7 +273,7 @@ namespace RTC
 		// Remove all SentInfo's that are older than RTT.
 		for (auto it = this->sentInfos.begin(); it != this->sentInfos.end();)
 		{
-			if (it->second.sentAtMs < nowMs - std::max<float>(MinSentInfoTimeWindowMs, 2 * this->rtt))
+			if (it->second.sentAtMs < nowMs - MaxSentInfoTimeWindowMs)
 			{
 				it = this->sentInfos.erase(it);
 			}
