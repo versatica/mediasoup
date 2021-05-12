@@ -66,6 +66,9 @@
       [ 'target_arch == "x64"', {
         'xcode_settings': { 'ARCHS': [ 'x86_64' ] }
       }],
+      [ 'target_arch == "arm64"', {
+        'xcode_settings': { 'ARCHS': [ 'arm64' ] }
+      }],
       [ 'OS in "linux freebsd openbsd solaris"', {
         'target_conditions':
         [

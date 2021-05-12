@@ -1,9 +1,30 @@
 # Changelog
 
 
+### 3.7.6 (WIP)
+
+* SctpAssociation: don't warn if SCTP send buffer is full.
+
+
+### 3.7.5
+
+* SctpAssociation: provide 'sctpsendbufferfull' reason on send error (#552).
+
+
+### 3.7.4
+
+* Improve `RateCalculator` (PR #547 by @vpalmisano).
+* Update NPM deps.
+
+
+### 3.7.3
+
+* Make worker M1 compilable.
+
+
 ### 3.7.2
 
-* Rate calculator optimization (PR #538 by @vpalmisano).
+* `RateCalculator` optimization (PR #538 by @vpalmisano).
 * Update `Catch` to 2.13.5.
 * Update NPM deps.
 
