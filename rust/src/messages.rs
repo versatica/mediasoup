@@ -505,6 +505,20 @@ request_response!(
     },
 );
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct TransportSetMaxOutgoingBitrateData {
+    pub(crate) bitrate: u32,
+}
+
+request_response!(
+    "transport.setMaxOutgoingBitrate",
+    TransportSetMaxOutgoingBitrateRequest {
+        internal: TransportInternal,
+        data: TransportSetMaxOutgoingBitrateData,
+    },
+);
+
 request_response!(
     "transport.restartIce",
     TransportRestartIceRequest {

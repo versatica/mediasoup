@@ -82,6 +82,10 @@ export declare class DirectTransport extends Transport {
      */
     setMaxIncomingBitrate(bitrate: number): Promise<void>;
     /**
+     * @override
+     */
+    setMaxOutgoingBitrate(bitrate: number): Promise<void>;
+    /**
      * Send RTCP packet.
      */
     sendRtcp(rtcpPacket: Buffer): void;

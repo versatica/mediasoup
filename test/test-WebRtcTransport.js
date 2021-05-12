@@ -337,6 +337,13 @@ test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
 		.toBeUndefined();
 }, 2000);
 
+test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () =>
+{
+	await expect(transport.setMaxIncomingBitrate(100000))
+		.resolves
+		.toBeUndefined();
+}, 2000);
+
 test('webRtcTransport.restartIce() succeeds', async () =>
 {
 	const previousIceUsernameFragment = transport.iceParameters.usernameFragment;
@@ -472,6 +479,10 @@ test('WebRtcTransport methods reject if closed', async () =>
 		.toThrow(Error);
 
 	await expect(transport.setMaxIncomingBitrate())
+		.rejects
+		.toThrow(Error);
+
+	await expect(transport.setMaxOutgoingBitrate())
 		.rejects
 		.toThrow(Error);
 

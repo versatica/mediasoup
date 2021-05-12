@@ -30,6 +30,7 @@ namespace Channel
 		{ "transport.getStats",                          Request::MethodId::TRANSPORT_GET_STATS                              },
 		{ "transport.connect",                           Request::MethodId::TRANSPORT_CONNECT                                },
 		{ "transport.setMaxIncomingBitrate",             Request::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE               },
+		{ "transport.setMaxOutgoingBitrate",             Request::MethodId::TRANSPORT_SET_MAX_OUTGOING_BITRATE               },
 		{ "transport.restartIce",                        Request::MethodId::TRANSPORT_RESTART_ICE                            },
 		{ "transport.produce",                           Request::MethodId::TRANSPORT_PRODUCE                                },
 		{ "transport.consume",                           Request::MethodId::TRANSPORT_CONSUME                                },

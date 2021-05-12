@@ -608,6 +608,35 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::TRANSPORT_SET_MAX_OUTGOING_BITRATE:
+			{
+				auto jsonBitrateIt = request->data.find("bitrate");
+
+				// clang-format off
+				if (
+					jsonBitrateIt == request->data.end() ||
+					!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
+				)
+				// clang-format on
+				{
+					MS_THROW_TYPE_ERROR("missing bitrate");
+				}
+
+				this->maxOutgoingBitrate = jsonBitrateIt->get<uint32_t>();
+
+				MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
+
+				request->Accept();
+
+				if (this->tccClient)
+				{
+					this->tccClient->SetMaxOutgoingBitrate(this->maxOutgoingBitrate);
+					ComputeOutgoingDesiredBitrate();
+				}
+
+				break;
+			}
+
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE:
 			{
 				std::string producerId;
@@ -952,7 +981,7 @@ namespace RTC
 						};
 
 						this->tccClient = new RTC::TransportCongestionControlClient(
-						  this, bweType, this->initialAvailableOutgoingBitrate);
+						  this, bweType, this->initialAvailableOutgoingBitrate, this->maxOutgoingBitrate);
 
 						if (IsConnected())
 							this->tccClient->TransportConnected();
