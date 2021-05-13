@@ -183,12 +183,12 @@ namespace RTC
 
 			auto* context = static_cast<RTC::Codecs::H264::EncodingContext*>(encodingContext);
 
-			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be negative");
 
 			// Check if the payload should contain temporal layer info.
 			if (context->GetTemporalLayers() > 1 && !this->payloadDescriptor->hasTid)
 			{
-				MS_WARN_DEV("stream is supposed to have >1 temporal layers but does not have tid field");
+				MS_WARN_DEV("stream is supposed to have  %" PRIu8 " temporal layers but does not have tid field", context->GetTemporalLayers());
 			}
 
 			// clang-format off

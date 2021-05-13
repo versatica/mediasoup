@@ -9,6 +9,7 @@
 /* Class variables. */
 
 const int64_t Logger::pid{ static_cast<int64_t>(uv_os_getpid()) };
+std::string Logger::levelPrefix;
 char Logger::buffer[Logger::bufferSize];
 std::string Logger::logfilename = "";
 std::FILE* Logger::logfd {nullptr};
@@ -122,7 +123,7 @@ void Logger::MSlogwrite(int written)
 	if (!Logger::openLogFile
 		|| !Logger::logfd 
 		|| (EOF == std::fputs(Logger::buffer, Logger::logfd)) 
-		|| (EOF == std::fputc('\n', Logger::logfd)))
+		|| (EOF == std::fputs("\"\n", Logger::logfd)))
 	{
 	  Logger::backupBuffer.assign(Logger::buffer, written);
 		
