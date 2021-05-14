@@ -50,7 +50,7 @@ namespace RTC
 		  RTC::TransportCongestionControlClient::Listener* listener,
 		  RTC::BweType bweType,
 		  uint32_t initialAvailableBitrate,
-		  uint32_t maxAvailableBitrate);
+		  uint32_t maxOutgoingBitrate);
 		virtual ~TransportCongestionControlClient();
 
 	public:
@@ -105,7 +105,7 @@ namespace RTC
 		// Others.
 		RTC::BweType bweType;
 		uint32_t initialAvailableBitrate{ 0u };
-		uint32_t maxAvailableBitrate{ 0u };
+		uint32_t maxOutgoingBitrate{ 0u };
 		Bitrates bitrates;
 		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };

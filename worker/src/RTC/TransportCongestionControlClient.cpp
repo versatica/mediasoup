@@ -23,10 +23,10 @@ namespace RTC
 	  RTC::TransportCongestionControlClient::Listener* listener,
 	  RTC::BweType bweType,
 	  uint32_t initialAvailableBitrate,
-	  uint32_t maxAvailableBitrate)
+	  uint32_t maxOutgoingBitrate)
 	  : listener(listener), bweType(bweType),
 	    initialAvailableBitrate(std::max<uint32_t>(initialAvailableBitrate, MinBitrate)),
-	    maxAvailableBitrate(maxAvailableBitrate)
+	    maxOutgoingBitrate(maxOutgoingBitrate)
 	{
 		MS_TRACE();
 
@@ -174,7 +174,7 @@ namespace RTC
 		if (maxBitrate < MinBitrate)
 			MS_THROW_ERROR("maxOutgoingBitrate must be >= 30000bps");
 
-		this->maxAvailableBitrate = maxBitrate;
+		this->maxOutgoingBitrate = maxBitrate;
 	}
 
 	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate, bool force)
@@ -202,10 +202,10 @@ namespace RTC
 			  this->initialAvailableBitrate,
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
 
-			if (this->maxAvailableBitrate > 0u)
+			if (this->maxOutgoingBitrate > 0u)
 			{
 				this->bitrates.maxBitrate =
-				  std::min<uint32_t>(this->maxAvailableBitrate, this->bitrates.maxBitrate);
+				  std::min<uint32_t>(this->maxOutgoingBitrate, this->bitrates.maxBitrate);
 			}
 
 			this->bitrates.maxPaddingBitrate = this->bitrates.maxBitrate * MaxPaddingBitrateFactor;

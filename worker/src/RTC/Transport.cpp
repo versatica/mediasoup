@@ -622,17 +622,22 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("missing bitrate");
 				}
 
-				this->maxOutgoingBitrate = jsonBitrateIt->get<uint32_t>();
-
-				MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
-
-				request->Accept();
-
 				if (this->tccClient)
 				{
-					this->tccClient->SetMaxOutgoingBitrate(this->maxOutgoingBitrate);
+					uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+
+					// NOTE: This may throw if given bitrate is less than current
+					// initialAvailableOutgoingBitrate, so don't update things before
+					// calling this method.
+					this->tccClient->SetMaxOutgoingBitrate(bitrate);
+					this->maxOutgoingBitrate = bitrate;
+
+					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
+
 					ComputeOutgoingDesiredBitrate();
 				}
+
+				request->Accept();
 
 				break;
 			}
