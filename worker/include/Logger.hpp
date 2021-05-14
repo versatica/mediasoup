@@ -135,7 +135,7 @@ public:
 	static const int64_t pid;
 	thread_local static Channel::ChannelSocket* channel;
 	static const size_t bufferSize {50000};
-	static char buffer[];
+	thread_local static char buffer[];
 };
 
 /* Logging macros. */

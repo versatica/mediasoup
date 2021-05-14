@@ -770,7 +770,7 @@ namespace RTC
 						if (notification->sn_header.sn_length > 0)
 						{
 							static const size_t BufferSize{ 1024 };
-							static char buffer[BufferSize];
+							thread_local static char buffer[BufferSize];
 
 							uint32_t len = notification->sn_header.sn_length;
 
@@ -838,7 +838,7 @@ namespace RTC
 						if (notification->sn_header.sn_length > 0)
 						{
 							static const size_t BufferSize{ 1024 };
-							static char buffer[BufferSize];
+							thread_local static char buffer[BufferSize];
 
 							uint32_t len = notification->sn_header.sn_length;
 
@@ -879,7 +879,7 @@ namespace RTC
 			case SCTP_REMOTE_ERROR:
 			{
 				static const size_t BufferSize{ 1024 };
-				static char buffer[BufferSize];
+				thread_local static char buffer[BufferSize];
 
 				uint32_t len = notification->sn_remote_error.sre_length - sizeof(struct sctp_remote_error);
 
@@ -915,7 +915,7 @@ namespace RTC
 			case SCTP_SEND_FAILED_EVENT:
 			{
 				static const size_t BufferSize{ 1024 };
-				static char buffer[BufferSize];
+				thread_local static char buffer[BufferSize];
 
 				uint32_t len =
 				  notification->sn_send_failed_event.ssfe_length - sizeof(struct sctp_send_failed_event);

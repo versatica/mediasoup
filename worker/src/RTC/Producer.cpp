@@ -1206,8 +1206,8 @@ namespace RTC
 
 		// Mangle RTP header extensions.
 		{
-			static uint8_t buffer[4096];
-			static std::vector<RTC::RtpPacket::GenericExtension> extensions;
+			thread_local static uint8_t buffer[4096];
+			thread_local static std::vector<RTC::RtpPacket::GenericExtension> extensions;
 
 			// This happens just once.
 			if (extensions.capacity() != 24)
