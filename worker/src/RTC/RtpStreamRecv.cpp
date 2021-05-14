@@ -465,10 +465,9 @@ namespace RTC
 		else
 		{
 			// Recalculate packetsLost.
-			uint32_t newLostInterval     = (worstRemoteFractionLost * expectedInterval) >> 8;
-			uint32_t newReceivedInterval = expectedInterval - newLostInterval;
+			uint32_t newLostInterval = (worstRemoteFractionLost * expectedInterval) >> 8;
 
-			this->reportedPacketLost += (receivedInterval - newReceivedInterval);
+			this->reportedPacketLost += newLostInterval;
 
 			report->SetTotalLost(this->reportedPacketLost);
 			report->SetFractionLost(worstRemoteFractionLost);
