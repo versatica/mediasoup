@@ -69,6 +69,7 @@ namespace PayloadChannel
 		virtual ~PayloadChannelSocket();
 
 	public:
+		void Close();
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
 		void Send(json& jsonMessage);

@@ -63,6 +63,7 @@ namespace Channel
 		virtual ~ChannelSocket();
 
 	public:
+		void Close();
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage);
 		void SendLog(char* message, size_t messageLen);

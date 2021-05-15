@@ -70,10 +70,10 @@ void Worker::Close()
 	this->mapRouters.clear();
 
 	// Close the Channel.
-	delete this->channel;
+	this->channel->Close();
 
 	// Close the PayloadChannel.
-	delete this->payloadChannel;
+	this->payloadChannel->Close();
 }
 
 void Worker::FillJson(json& jsonObject) const
