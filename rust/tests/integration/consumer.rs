@@ -57,8 +57,8 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("level-asymmetry-allowed", 1u32.into()),
-                ("packetization-mode", 1u32.into()),
+                ("level-asymmetry-allowed", 1_u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "4d0032".into()),
                 ("foo", "bar".into()),
             ]),
@@ -78,8 +78,8 @@ fn audio_producer_options() -> ProducerOptions {
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
-                    ("usedtx", 1u32.into()),
+                    ("useinbandfec", 1_u32.into()),
+                    ("usedtx", 1_u32.into()),
                     ("foo", "222.222".into()),
                     ("bar", "333".into()),
                 ]),
@@ -124,7 +124,7 @@ fn video_producer_options() -> ProducerOptions {
                     payload_type: 112,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::from([
-                        ("packetization-mode", 1u32.into()),
+                        ("packetization-mode", 1_u32.into()),
                         ("profile-level-id", "4d0032".into()),
                     ]),
                     rtcp_feedback: vec![
@@ -203,8 +203,8 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(101),
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("level-asymmetry-allowed", 1u32.into()),
-                    ("packetization-mode", 1u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
+                    ("packetization-mode", 1_u32.into()),
                     ("profile-level-id", "4d0032".into()),
                 ]),
                 rtcp_feedback: vec![
@@ -218,7 +218,7 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 mime_type: MimeTypeVideo::Rtx,
                 preferred_payload_type: Some(102),
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
+                parameters: RtpCodecParametersParameters::from([("apt", 101_u32.into())]),
                 rtcp_feedback: vec![],
             },
         ],
@@ -387,8 +387,8 @@ fn consume_succeeds() {
                     clock_rate: NonZeroU32::new(48000).unwrap(),
                     channels: NonZeroU8::new(2).unwrap(),
                     parameters: RtpCodecParametersParameters::from([
-                        ("useinbandfec", 1u32.into()),
-                        ("usedtx", 1u32.into()),
+                        ("useinbandfec", 1_u32.into()),
+                        ("usedtx", 1_u32.into()),
                         ("foo", "222.222".into()),
                         ("bar", "333".into()),
                     ]),
@@ -474,7 +474,7 @@ fn consume_succeeds() {
                         payload_type: 103,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([
-                            ("packetization-mode", 1u32.into()),
+                            ("packetization-mode", 1_u32.into()),
                             ("profile-level-id", "4d0032".into()),
                         ]),
                         rtcp_feedback: vec![
@@ -579,7 +579,7 @@ fn consume_succeeds() {
                         payload_type: 103,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([
-                            ("packetization-mode", 1u32.into()),
+                            ("packetization-mode", 1_u32.into()),
                             ("profile-level-id", "4d0032".into()),
                         ]),
                         rtcp_feedback: vec![
@@ -796,8 +796,8 @@ fn dump_succeeds() {
                     clock_rate: NonZeroU32::new(48000).unwrap(),
                     channels: NonZeroU8::new(2).unwrap(),
                     parameters: RtpCodecParametersParameters::from([
-                        ("useinbandfec", 1u32.into()),
-                        ("usedtx", 1u32.into()),
+                        ("useinbandfec", 1_u32.into()),
+                        ("usedtx", 1_u32.into()),
                         ("foo", "222.222".into()),
                         ("bar", "333".into()),
                     ]),
@@ -897,7 +897,7 @@ fn dump_succeeds() {
                         payload_type: 103,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([
-                            ("packetization-mode", 1u32.into()),
+                            ("packetization-mode", 1_u32.into()),
                             ("profile-level-id", "4d0032".into()),
                         ]),
                         rtcp_feedback: vec![

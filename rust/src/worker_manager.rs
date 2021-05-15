@@ -48,6 +48,7 @@ struct Inner {
 /// multi-threaded executor, [`WorkerManager::with_executor()`] can be used to create an instance
 /// instead.
 #[derive(Clone)]
+#[must_use]
 pub struct WorkerManager {
     inner: Arc<Inner>,
 }
@@ -66,6 +67,7 @@ impl Default for WorkerManager {
 
 impl WorkerManager {
     /// Create new worker manager, internally a new single-threaded executor will be created.
+    #[must_use]
     pub fn new() -> Self {
         let executor = Arc::new(Executor::new());
         let (stop_sender, stop_receiver) = async_oneshot::oneshot::<()>();
@@ -89,6 +91,7 @@ impl WorkerManager {
     }
 
     /// Create new worker manager, uses externally provided executor.
+    #[must_use]
     pub fn with_executor(executor: Arc<Executor<'static>>) -> Self {
         let handlers = Handlers::default();
 

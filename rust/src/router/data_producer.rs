@@ -12,7 +12,7 @@ use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationError, PayloadChannel, RequestError};
 use async_executor::Executor;
 use event_listener_primitives::{BagOnce, HandlerId};
-use log::*;
+use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -21,11 +21,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(
-    /// Data producer identifier.
+    /// [`DataProducer`] identifier.
     DataProducerId
 );
 
-/// Data producer options.
+/// [`DataProducer`] options.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DataProducerOptions {
@@ -46,6 +46,7 @@ pub struct DataProducerOptions {
 }
 
 impl DataProducerOptions {
+    #[must_use]
     pub(super) fn new_pipe_transport(
         data_producer_id: DataProducerId,
         sctp_stream_parameters: SctpStreamParameters,
@@ -60,6 +61,7 @@ impl DataProducerOptions {
     }
 
     /// Data producer options for non-Direct transport.
+    #[must_use]
     pub fn new_sctp(sctp_stream_parameters: SctpStreamParameters) -> Self {
         Self {
             id: None,
@@ -71,6 +73,7 @@ impl DataProducerOptions {
     }
 
     /// Data producer options for Direct transport.
+    #[must_use]
     pub fn new_direct() -> Self {
         Self {
             id: None,
@@ -183,6 +186,7 @@ impl Inner {
 /// Data producer created on transport other than
 /// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
+#[must_use = "Data producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct RegularDataProducer {
     inner: Arc<Inner>,
 }
@@ -209,6 +213,7 @@ impl From<RegularDataProducer> for DataProducer {
 
 /// Data producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
+#[must_use = "Data producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct DirectDataProducer {
     inner: Arc<Inner>,
 }
@@ -241,6 +246,7 @@ impl From<DirectDataProducer> for DataProducer {
 /// created on top of a [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 #[non_exhaustive]
+#[must_use = "Data producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub enum DataProducer {
     /// Data producer created on transport other than
     /// [`DirectTransport`](crate::direct_transport::DirectTransport).
@@ -282,11 +288,7 @@ impl DataProducer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -319,36 +321,43 @@ impl DataProducer {
     }
 
     /// Data producer identifier.
+    #[must_use]
     pub fn id(&self) -> DataProducerId {
         self.inner().id
     }
 
     /// The type of the data producer.
+    #[must_use]
     pub fn r#type(&self) -> DataProducerType {
         self.inner().r#type
     }
 
     /// The SCTP stream parameters (just if the data producer type is `Sctp`).
+    #[must_use]
     pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
         self.inner().sctp_stream_parameters
     }
 
     /// The data producer label.
+    #[must_use]
     pub fn label(&self) -> &String {
         &self.inner().label
     }
 
     /// The data producer sub-protocol.
+    #[must_use]
     pub fn protocol(&self) -> &String {
         &self.inner().protocol
     }
 
     /// Custom application data.
+    #[must_use]
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
     }
 
     /// Whether the data producer is closed.
+    #[must_use]
     pub fn closed(&self) -> bool {
         self.inner().closed.load(Ordering::SeqCst)
     }
@@ -407,6 +416,7 @@ impl DataProducer {
     }
 
     /// Downgrade `DataProducer` to [`WeakDataProducer`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakDataProducer {
         WeakDataProducer {
             inner: Arc::downgrade(&self.inner()),
@@ -491,6 +501,7 @@ impl NonClosingDataProducer {
 
     /// Get inner [`DataProducer`] (which will close on drop in contrast to
     /// `NonClosingDataProducer`).
+    #[must_use]
     pub fn into_inner(mut self) -> DataProducer {
         self.on_drop.take();
         self.data_producer.clone()
@@ -515,6 +526,7 @@ impl fmt::Debug for WeakDataProducer {
 impl WeakDataProducer {
     /// Attempts to upgrade `WeakDataProducer` to [`DataProducer`] if last instance of one wasn't
     /// dropped yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<DataProducer> {
         let inner = self.inner.upgrade()?;
 

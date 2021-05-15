@@ -22,7 +22,7 @@ use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
-use log::*;
+use log::{error, warn};
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -132,15 +132,19 @@ pub(super) enum TransportType {
 #[async_trait(?Send)]
 pub trait Transport: Debug + Send + Sync + CloneTransport {
     /// Transport id.
+    #[must_use]
     fn id(&self) -> TransportId;
 
     /// Router id.
+    #[must_use]
     fn router_id(&self) -> RouterId;
 
     /// Custom application data.
+    #[must_use]
     fn app_data(&self) -> &AppData;
 
     /// Whether the transport is closed.
+    #[must_use]
     fn closed(&self) -> bool;
 
     /// Instructs the router to receive audio or video RTP (or SRTP depending on the transport).
@@ -575,7 +579,7 @@ pub(super) trait TransportImpl: TransportGeneric {
         } else {
             let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
                 producer.consumable_rtp_parameters(),
-                rtp_capabilities,
+                &rtp_capabilities,
                 pipe,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
@@ -637,7 +641,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.paused,
             Arc::clone(self.executor()),
             self.channel().clone(),
-            self.payload_channel().clone(),
+            self.payload_channel(),
             response.producer_paused,
             response.score,
             response.preferred_layers,

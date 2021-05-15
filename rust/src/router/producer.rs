@@ -18,7 +18,7 @@ use crate::worker::{
 use async_executor::Executor;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
-use log::*;
+use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -30,11 +30,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(
-    /// Producer identifier.
+    /// [`Producer`] identifier.
     ProducerId
 );
 
-/// Producer options.
+/// [`Producer`] options.
 ///
 /// # Notes on usage
 /// Check the
@@ -62,6 +62,7 @@ pub struct ProducerOptions {
 
 impl ProducerOptions {
     /// Create producer options that will be used with Pipe transport
+    #[must_use]
     pub fn new_pipe_transport(
         producer_id: ProducerId,
         kind: MediaKind,
@@ -78,6 +79,7 @@ impl ProducerOptions {
     }
 
     /// Create producer options that will be used with non-Pipe transport
+    #[must_use]
     pub fn new(kind: MediaKind, rtp_parameters: RtpParameters) -> Self {
         Self {
             id: None,
@@ -359,6 +361,7 @@ impl Inner {
 /// Producer created on transport other than
 /// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
+#[must_use = "Producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct RegularProducer {
     inner: Arc<Inner>,
 }
@@ -390,6 +393,7 @@ impl From<RegularProducer> for Producer {
 
 /// Producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
+#[must_use = "Producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct DirectProducer {
     inner: Arc<Inner>,
 }
@@ -423,6 +427,7 @@ impl From<DirectProducer> for Producer {
 /// created on top of a transport that defines how the media packets are carried.
 #[derive(Clone)]
 #[non_exhaustive]
+#[must_use = "Producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub enum Producer {
     /// Producer created on transport other than
     /// [`DirectTransport`](crate::direct_transport::DirectTransport).
@@ -497,11 +502,7 @@ impl Producer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -537,11 +538,13 @@ impl Producer {
     }
 
     /// Producer identifier.
+    #[must_use]
     pub fn id(&self) -> ProducerId {
         self.inner().id
     }
 
     /// Media kind.
+    #[must_use]
     pub fn kind(&self) -> MediaKind {
         self.inner().kind
     }
@@ -551,31 +554,37 @@ impl Producer {
     /// Check the
     /// [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
     /// section for more details (TypeScript-oriented, but concepts apply here as well).
+    #[must_use]
     pub fn rtp_parameters(&self) -> &RtpParameters {
         &self.inner().rtp_parameters
     }
 
     /// Producer type.
+    #[must_use]
     pub fn r#type(&self) -> ProducerType {
         self.inner().r#type
     }
 
     /// Whether the Producer is paused.
+    #[must_use]
     pub fn paused(&self) -> bool {
         self.inner().paused.load(Ordering::SeqCst)
     }
 
     /// The score of each RTP stream being received, representing their transmission quality.
+    #[must_use]
     pub fn score(&self) -> Vec<ProducerScore> {
         self.inner().score.lock().clone()
     }
 
     /// Custom application data.
+    #[must_use]
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
     }
 
     /// Whether the producer is closed.
+    #[must_use]
     pub fn closed(&self) -> bool {
         self.inner().closed.load(Ordering::SeqCst)
     }
@@ -731,6 +740,7 @@ impl Producer {
     /// Consumable RTP parameters.
     // This is used in tests, otherwise would have been `pub(super)`
     #[doc(hidden)]
+    #[must_use]
     pub fn consumable_rtp_parameters(&self) -> &RtpParameters {
         &self.inner().consumable_rtp_parameters
     }
@@ -740,6 +750,7 @@ impl Producer {
     }
 
     /// Downgrade `Producer` to [`WeakProducer`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakProducer {
         WeakProducer {
             inner: Arc::downgrade(&self.inner()),
@@ -829,6 +840,7 @@ impl PipedProducer {
     }
 
     /// Get inner [`Producer`] (which will close on drop in contrast to `PipedProducer`).
+    #[must_use]
     pub fn into_inner(mut self) -> Producer {
         self.on_drop.take();
         self.producer.clone()
@@ -853,6 +865,7 @@ impl fmt::Debug for WeakProducer {
 impl WeakProducer {
     /// Attempts to upgrade `WeakProducer` to [`Producer`] if last instance of one wasn't dropped
     /// yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<Producer> {
         let inner = self.inner.upgrade()?;
 

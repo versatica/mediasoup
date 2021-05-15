@@ -23,7 +23,7 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
-use log::*;
+use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -31,7 +31,7 @@ use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
-/// Direct transport options.
+/// [`DirectTransport`] options.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DirectTransportOptions {
@@ -204,6 +204,7 @@ impl Inner {
 /// [`Consumer::on_rtp`] API (plus [`DirectTransport::send_rtcp`] and [`DirectTransport::on_rtcp`]
 /// API).
 #[derive(Clone)]
+#[must_use = "Transport will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct DirectTransport {
     inner: Arc<Inner>,
 }
@@ -494,11 +495,7 @@ impl DirectTransport {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.router_close.call_simple();
                     inner.close(false);
                 }
@@ -546,6 +543,7 @@ impl DirectTransport {
     }
 
     /// Downgrade `DirectTransport` to [`WeakDirectTransport`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakDirectTransport {
         WeakDirectTransport {
             inner: Arc::downgrade(&self.inner),
@@ -578,6 +576,7 @@ impl fmt::Debug for WeakDirectTransport {
 impl WeakDirectTransport {
     /// Attempts to upgrade `WeakDirectTransport` to [`DirectTransport`] if last instance of one
     /// wasn't dropped yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<DirectTransport> {
         let inner = self.inner.upgrade()?;
 
