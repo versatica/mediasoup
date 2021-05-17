@@ -40,6 +40,7 @@
 #include "absl/base/internal/hide_ptr.h"
 #include "absl/base/internal/raw_logging.h"
 #include "absl/base/internal/spinlock.h"
+#include <limits>
 
 // Do not use STL.   This module does not use standard memory allocation.
 
