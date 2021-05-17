@@ -501,7 +501,6 @@ impl NonClosingDataProducer {
 
     /// Get inner [`DataProducer`] (which will close on drop in contrast to
     /// `NonClosingDataProducer`).
-    #[must_use]
     pub fn into_inner(mut self) -> DataProducer {
         self.on_drop.take();
         self.data_producer.clone()

@@ -840,7 +840,6 @@ impl PipedProducer {
     }
 
     /// Get inner [`Producer`] (which will close on drop in contrast to `PipedProducer`).
-    #[must_use]
     pub fn into_inner(mut self) -> Producer {
         self.on_drop.take();
         self.producer.clone()
