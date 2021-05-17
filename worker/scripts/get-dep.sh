@@ -117,7 +117,7 @@ function get_usrsctp()
 function get_abseil_cpp()
 {
 	GIT_REPO="https://github.com/abseil/abseil-cpp"
-	GIT_TAG="93d155bc4414f6c121bb1f19dba9fdb27c8943bc"
+	GIT_TAG="lts_2021_03_24"
 	DEST="libwebrtc/deps/abseil-cpp/abseil-cpp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
