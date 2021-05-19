@@ -11,8 +11,9 @@ public:
 	explicit MediaSoupError(const char* description) : std::runtime_error(description)
 	{
 	}
+
 public:
-	static const size_t bufferSize {2000};
+	static const size_t bufferSize{ 2000 };
 	thread_local static char buffer[];
 };
 
