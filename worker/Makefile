@@ -110,5 +110,5 @@ docker-run:
 		mediasoup/docker:latest
 
 libmediasoup-worker:
-	$(PYTHON) ./scripts/configure.py --no-duplicate-basename-check -R libmediasoup-worker
+	$(PYTHON) ./scripts/configure.py -R libmediasoup-worker
 	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)

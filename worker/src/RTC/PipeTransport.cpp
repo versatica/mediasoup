@@ -179,13 +179,13 @@ namespace RTC
 		}
 	}
 
-	void PipeTransport::HandleRequest(Channel::Request* request)
+	void PipeTransport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->tuple)

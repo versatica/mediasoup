@@ -12,10 +12,10 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
-#include "Channel/Notifier.hpp"
-#include "Channel/UnixStreamSocket.hpp"
-#include "PayloadChannel/Notifier.hpp"
-#include "PayloadChannel/UnixStreamSocket.hpp"
+#include "Channel/ChannelNotifier.hpp"
+#include "Channel/ChannelSocket.hpp"
+#include "PayloadChannel/PayloadChannelNotifier.hpp"
+#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
 #include <uv.h>
@@ -41,14 +41,14 @@ extern "C" int run_worker(
 	DepLibUV::ClassInit();
 
 	// Channel socket (it will be handled and deleted by the Worker).
-	Channel::UnixStreamSocket* channel{ nullptr };
+	Channel::ChannelSocket* channel{ nullptr };
 
 	// PayloadChannel socket (it will be handled and deleted by the Worker).
-	PayloadChannel::UnixStreamSocket* payloadChannel{ nullptr };
+	PayloadChannel::PayloadChannelSocket* payloadChannel{ nullptr };
 
 	try
 	{
-		channel = new Channel::UnixStreamSocket(consumerChannelFd, producerChannelFd);
+		channel = new Channel::ChannelSocket(consumerChannelFd, producerChannelFd);
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -60,7 +60,7 @@ extern "C" int run_worker(
 	try
 	{
 		payloadChannel =
-		  new PayloadChannel::UnixStreamSocket(payloadConsumeChannelFd, payloadProduceChannelFd);
+		  new PayloadChannel::PayloadChannelSocket(payloadConsumeChannelFd, payloadProduceChannelFd);
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -121,8 +121,8 @@ extern "C" int run_worker(
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
-		Channel::Notifier::ClassInit(channel);
-		PayloadChannel::Notifier::ClassInit(payloadChannel);
+		Channel::ChannelNotifier::ClassInit(channel);
+		PayloadChannel::PayloadChannelNotifier::ClassInit(payloadChannel);
 
 #ifdef MS_EXECUTABLE
 		{

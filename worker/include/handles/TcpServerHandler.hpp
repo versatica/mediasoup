@@ -2,19 +2,19 @@
 #define MS_TCP_SERVER_HPP
 
 #include "common.hpp"
-#include "handles/TcpConnection.hpp"
+#include "handles/TcpConnectionHandler.hpp"
 #include <uv.h>
 #include <string>
 #include <unordered_set>
 
-class TcpServer : public TcpConnection::Listener
+class TcpServerHandler : public TcpConnectionHandler::Listener
 {
 public:
 	/**
 	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
 	 */
-	TcpServer(uv_tcp_t* uvHandle, int backlog);
-	virtual ~TcpServer() override;
+	TcpServerHandler(uv_tcp_t* uvHandle, int backlog);
+	virtual ~TcpServerHandler() override;
 
 public:
 	void Close();
@@ -41,23 +41,23 @@ public:
 	}
 
 protected:
-	void AcceptTcpConnection(TcpConnection* connection);
+	void AcceptTcpConnection(TcpConnectionHandler* connection);
 
 private:
 	bool SetLocalAddress();
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnTcpConnectionAlloc()                           = 0;
-	virtual void UserOnTcpConnectionClosed(TcpConnection* connection) = 0;
+	virtual void UserOnTcpConnectionAlloc()                                  = 0;
+	virtual void UserOnTcpConnectionClosed(TcpConnectionHandler* connection) = 0;
 
 	/* Callbacks fired by UV events. */
 public:
 	void OnUvConnection(int status);
 
-	/* Methods inherited from TcpConnection::Listener. */
+	/* Methods inherited from TcpConnectionHandler::Listener. */
 public:
-	void OnTcpConnectionClosed(TcpConnection* connection) override;
+	void OnTcpConnectionClosed(TcpConnectionHandler* connection) override;
 
 protected:
 	struct sockaddr_storage localAddr;
@@ -68,7 +68,7 @@ private:
 	// Allocated by this (may be passed by argument).
 	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
-	std::unordered_set<TcpConnection*> connections;
+	std::unordered_set<TcpConnectionHandler*> connections;
 	bool closed{ false };
 };
 

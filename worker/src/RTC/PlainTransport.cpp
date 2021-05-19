@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 
 namespace RTC
 {
@@ -267,13 +267,13 @@ namespace RTC
 			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
 	}
 
-	void PlainTransport::HandleRequest(Channel::Request* request)
+	void PlainTransport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
@@ -824,7 +824,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::Notifier::Emit(this->id, "tuple", data);
+				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}
@@ -889,7 +889,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::Notifier::Emit(this->id, "tuple", data);
+				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}
@@ -917,7 +917,7 @@ namespace RTC
 
 			this->rtcpTuple->FillJson(data["rtcpTuple"]);
 
-			Channel::Notifier::Emit(this->id, "rtcptuple", data);
+			Channel::ChannelNotifier::Emit(this->id, "rtcptuple", data);
 		}
 		// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
 		else if (this->rtcpMux && !this->tuple->Compare(tuple))
@@ -979,7 +979,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::Notifier::Emit(this->id, "tuple", data);
+				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}
