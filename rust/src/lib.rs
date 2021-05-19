@@ -51,6 +51,7 @@
 pub mod data_structures;
 mod macros;
 mod messages;
+// TODO: Check public items in this module
 mod ortc;
 pub mod router;
 pub mod rtp_parameters;
@@ -62,68 +63,144 @@ pub mod worker;
 pub mod worker_manager;
 
 // TODO: The mess below is because of https://github.com/rust-lang/rust/issues/59368
-#[cfg(not(doc))]
-pub use router::audio_level_observer;
-#[cfg(doc)]
-#[path = "router/audio_level_observer.rs"]
-pub mod audio_level_observer;
+pub mod audio_level_observer {
+    //! An audio level observer monitors the volume of the selected audio producers.
 
-#[cfg(not(doc))]
-pub use router::consumer;
-#[cfg(doc)]
-#[path = "router/consumer.rs"]
-pub mod consumer;
+    pub use crate::router::audio_level_observer::*;
+}
 
-#[cfg(not(doc))]
-pub use router::data_consumer;
-#[cfg(doc)]
-#[path = "router/data_consumer.rs"]
-pub mod data_consumer;
+pub mod consumer {
+    //! A consumer represents an audio or video source being forwarded from a mediasoup router to an
+    //! endpoint. It's created on top of a transport that defines how the media packets are carried.
 
-#[cfg(not(doc))]
-pub use router::producer;
-#[cfg(doc)]
-#[path = "router/producer.rs"]
-pub mod producer;
+    pub use crate::router::consumer::*;
+}
 
-#[cfg(not(doc))]
-pub use router::data_producer;
-#[cfg(doc)]
-#[path = "router/data_producer.rs"]
-pub mod data_producer;
+pub mod data_consumer {
+    //! A data consumer represents an endpoint capable of receiving data messages from a mediasoup
+    //! [`Router`](router::Router).
+    //!
+    //! A data consumer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA
+    //! DataChannel) to receive those messages, or can directly receive them in the Rust application
+    //! if the data consumer was created on top of a
+    //! [`DirectTransport`](direct_transport::DirectTransport).
 
-#[cfg(not(doc))]
-pub use router::transport;
-#[cfg(doc)]
-#[path = "router/transport.rs"]
-pub mod transport;
+    #[cfg(doc)]
+    use super::*;
+    pub use crate::router::data_consumer::*;
+}
 
-#[cfg(not(doc))]
-pub use router::direct_transport;
-#[cfg(doc)]
-#[path = "router/direct_transport.rs"]
-pub mod direct_transport;
+pub mod producer {
+    //! A producer represents an audio or video source being injected into a mediasoup router. It's
+    //! created on top of a transport that defines how the media packets are carried.
 
-#[cfg(not(doc))]
-pub use router::pipe_transport;
-#[cfg(doc)]
-#[path = "router/pipe_transport.rs"]
-pub mod pipe_transport;
+    pub use crate::router::producer::*;
+}
 
-#[cfg(not(doc))]
-pub use router::plain_transport;
-#[cfg(doc)]
-#[path = "router/plain_transport.rs"]
-pub mod plain_transport;
+pub mod data_producer {
+    //! A data producer represents an endpoint capable of injecting data messages into a mediasoup
+    //! [`Router`](router::Router).
+    //!
+    //! A data producer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA DataChannel) to
+    //! deliver those messages, or can directly send them from the Rust application if the data
+    //! producer was created on top of a [`DirectTransport`](direct_transport::DirectTransport).
 
-#[cfg(not(doc))]
-pub use router::rtp_observer;
-#[cfg(doc)]
-#[path = "router/rtp_observer.rs"]
-pub mod rtp_observer;
+    #[cfg(doc)]
+    use super::*;
+    pub use crate::router::data_producer::*;
+}
 
-#[cfg(not(doc))]
-pub use router::webrtc_transport;
-#[cfg(doc)]
-#[path = "router/webrtc_transport.rs"]
-pub mod webrtc_transport;
+pub mod transport {
+    //! A transport connects an endpoint with a mediasoup router and enables transmission of media
+    //! in both directions by means of [`Producer`](producer::Producer),
+    //! [`Consumer`](consumer::Consumer), [`DataProducer`](data_producer::DataProducer) and
+    //! [`DataConsumer`](data_consumer::DataConsumer) instances created on it.
+    //!
+    //! mediasoup implements the following transports:
+    //! * [`WebRtcTransport`](webrtc_transport::WebRtcTransport)
+    //! * [`PlainTransport`](plain_transport::PlainTransport)
+    //! * [`PipeTransport`](pipe_transport::PipeTransport)
+    //! * [`DirectTransport`](direct_transport::DirectTransport)
+
+    #[cfg(doc)]
+    use super::*;
+    pub use crate::router::transport::*;
+}
+
+pub mod direct_transport {
+    //! A direct transport represents a direct connection between the mediasoup Rust process and a
+    //! [`Router`](router::Router) instance in a mediasoup-worker thread.
+    //!
+    //! A direct transport can be used to directly send and receive data messages from/to Rust by
+    //! means of [`DataProducer`](data_producer::DataProducer)s and
+    //! [`DataConsumer`](data_consumer::DataConsumer)s of type `Direct` created on a direct
+    //! transport.
+    //! Direct messages sent by a [`DataProducer`](data_producer::DataProducer) in a direct
+    //! transport can be consumed by endpoints connected through a SCTP capable transport
+    //! ([`WebRtcTransport`](webrtc_transport::WebRtcTransport),
+    //! [`PlainTransport`](plain_transport::PlainTransport),
+    //! [`PipeTransport`](pipe_transport::PipeTransport) and also by the Rust application by means
+    //! of a [`DataConsumer`](data_consumer::DataConsumer) created on a [`DirectTransport`] (and
+    //! vice-versa: messages sent over SCTP/DataChannel can be consumed by the Rust application by
+    //! means of a [`DataConsumer`](data_consumer::DataConsumer) created on a [`DirectTransport`]).
+    //!
+    //! A direct transport can also be used to inject and directly consume RTP and RTCP packets in
+    //! Rust by using the [`DirectProducer::send`](producer::DirectProducer::send) and
+    //! [`Consumer::on_rtp`](consumer::Consumer::on_rtp) API (plus [`DirectTransport::send_rtcp`]
+    //! and [`DirectTransport::on_rtcp`] API).
+
+    #[cfg(doc)]
+    use super::*;
+    pub use crate::router::direct_transport::*;
+}
+
+pub mod pipe_transport {
+    //! A pipe transport represents a network path through which RTP, RTCP (optionally secured with
+    //! SRTP) and SCTP (DataChannel) is transmitted. Pipe transports are intended to
+    //! intercommunicate two [`Router`](router::Router) instances collocated on the same host or on
+    //! separate hosts.
+    //!
+    //! # Notes on usage
+    //! When calling [`PipeTransport::consume`](transport::Transport::consume), all RTP streams of
+    //! the [`Producer`](producer::Producer) are transmitted verbatim (in contrast to what happens
+    //! in [`WebRtcTransport`](webrtc_transport::WebRtcTransport) and
+    //! [`PlainTransport`](plain_transport::PlainTransport) in which a single and continuous RTP
+    //! stream is sent to the consuming endpoint).
+
+    #[cfg(doc)]
+    use super::*;
+    pub use crate::router::pipe_transport::*;
+}
+
+pub mod plain_transport {
+    //! A plain transport represents a network path through which RTP, RTCP (optionally secured with
+    //! SRTP) and SCTP (DataChannel) is transmitted.
+
+    pub use crate::router::plain_transport::*;
+}
+
+pub mod rtp_observer {
+    //! An RTP observer inspects the media received by a set of selected producers.
+    //!
+    //! mediasoup implements the following RTP observers:
+    //! * [`AudioLevelObserver`](audio_level_observer::AudioLevelObserver)
+
+    #[cfg(doc)]
+    use super::*;
+    pub use crate::router::rtp_observer::*;
+}
+
+pub mod webrtc_transport {
+    //! A WebRTC transport represents a network path negotiated by both, a WebRTC endpoint and
+    //! mediasoup, via ICE and DTLS procedures. A WebRTC transport may be used to receive media, to
+    //! send media or to both receive and send. There is no limitation in mediasoup. However, due to
+    //! their design, mediasoup-client and libmediasoupclient require separate WebRTC transports for
+    //! sending and receiving.
+    //!
+    //! # Notes on usage
+    //! The WebRTC transport implementation of mediasoup is
+    //! [ICE Lite](https://tools.ietf.org/html/rfc5245#section-2.7), meaning that it does not
+    //! initiate ICE connections but expects ICE Binding Requests from endpoints.
+
+    pub use crate::router::webrtc_transport::*;
+}

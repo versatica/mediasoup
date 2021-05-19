@@ -10,6 +10,7 @@ use crate::supported_rtp_capabilities;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 use std::mem;
 use std::num::{NonZeroU32, NonZeroU8};
 use std::ops::Deref;
@@ -116,21 +117,21 @@ pub enum ConsumerRtpParametersError {
 }
 
 fn generate_ssrc() -> u32 {
-    fastrand::u32(100000000..999999999)
+    fastrand::u32(100_000_000..999_999_999)
 }
 
-/// Validates RtpParameters.
+/// Validates [`RtpParameters`].
 pub(crate) fn validate_rtp_parameters(
     rtp_parameters: &RtpParameters,
 ) -> Result<(), RtpParametersError> {
-    for codec in rtp_parameters.codecs.iter() {
+    for codec in &rtp_parameters.codecs {
         validate_rtp_codec_parameters(codec)?;
     }
 
     Ok(())
 }
 
-/// Validates RtpCodecParameters.
+/// Validates [`RtpCodecParameters`].
 fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpParametersError> {
     for (key, value) in codec.parameters().iter() {
         // Specific parameters validation.
@@ -149,7 +150,7 @@ fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpPa
     Ok(())
 }
 
-// Validates RtpCodecCapability.
+// Validates [`RtpCodecCapability`].
 fn validate_rtp_codec_capability(codec: &RtpCodecCapability) -> Result<(), RtpCapabilitiesError> {
     for (key, value) in codec.parameters().iter() {
         // Specific parameters validation.
@@ -168,11 +169,11 @@ fn validate_rtp_codec_capability(codec: &RtpCodecCapability) -> Result<(), RtpCa
     Ok(())
 }
 
-/// Validates RtpCapabilities.
+/// Validates [`RtpCapabilities`].
 pub(crate) fn validate_rtp_capabilities(
     caps: &RtpCapabilities,
 ) -> Result<(), RtpCapabilitiesError> {
-    for codec in caps.codecs.iter() {
+    for codec in &caps.codecs {
         validate_rtp_codec_capability(codec)?;
     }
 
@@ -195,7 +196,7 @@ pub(crate) fn generate_router_rtp_capabilities(
         fec_mechanisms: vec![],
     };
 
-    for media_codec in media_codecs.iter_mut() {
+    for media_codec in &mut media_codecs {
         validate_rtp_codec_capability(media_codec)?;
 
         let codec = match supported_rtp_capabilities
@@ -213,34 +214,31 @@ pub(crate) fn generate_router_rtp_capabilities(
         };
 
         let preferred_payload_type = match media_codec.preferred_payload_type() {
-            // If the given media codec has preferred_payload_type, keep it.
             Some(preferred_payload_type) => {
+                // If the given media codec has preferred_payload_type, keep it.
                 // Also remove the payload_type from the list of available dynamic values.
                 dynamic_payload_types.retain(|&pt| pt != preferred_payload_type);
 
                 preferred_payload_type
             }
             None => {
-                match codec.preferred_payload_type() {
+                if let Some(preferred_payload_type) = codec.preferred_payload_type() {
                     // Otherwise if the supported codec has preferredPayloadType, use it.
-                    Some(preferred_payload_type) => {
-                        // No need to remove it from the list since it's not a dynamic value.
-                        preferred_payload_type
-                    }
+                    // No need to remove it from the list since it's not a dynamic value.
+                    preferred_payload_type
+                } else {
                     // Otherwise choose a dynamic one.
-                    None => {
-                        if dynamic_payload_types.is_empty() {
-                            return Err(RtpCapabilitiesError::CannotAllocate);
-                        }
-                        // Take the first available payload type and remove it from the list.
-                        dynamic_payload_types.remove(0)
+                    if dynamic_payload_types.is_empty() {
+                        return Err(RtpCapabilitiesError::CannotAllocate);
                     }
+                    // Take the first available payload type and remove it from the list.
+                    dynamic_payload_types.remove(0)
                 }
             }
         };
 
         // Ensure there is not duplicated preferredPayloadType values.
-        for codec in caps.codecs.iter() {
+        for codec in &caps.codecs {
             if codec.preferred_payload_type() == preferred_payload_type {
                 return Err(RtpCapabilitiesError::DuplicatedPreferredPayloadType(
                     preferred_payload_type,
@@ -332,7 +330,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
     let mut codec_to_cap_codec =
         BTreeMap::<&RtpCodecParameters, Cow<'_, RtpCodecCapabilityFinalized>>::new();
 
-    for codec in rtp_parameters.codecs.iter() {
+    for codec in &rtp_parameters.codecs {
         if codec.is_rtx() {
             continue;
         }
@@ -344,15 +342,13 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
                 .map(|profile_level_id| {
                     // This is rather ugly, but we need to fix `profile-level-id` and this was the
                     // quickest way to do it
-                    if let Some(profile_level_id) = profile_level_id {
+                    profile_level_id.map_or(Cow::Borrowed(cap_codec), |profile_level_id| {
                         let mut cap_codec = cap_codec.clone();
                         cap_codec
                             .parameters_mut()
                             .insert("profile-level-id", profile_level_id);
                         Cow::Owned(cap_codec)
-                    } else {
-                        Cow::Borrowed(cap_codec)
-                    }
+                    })
                 })
         }) {
             Some(matched_codec_capability) => {
@@ -368,7 +364,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
     }
 
     // Match parameters RTX codecs to capabilities RTX codecs.
-    for codec in rtp_parameters.codecs.iter() {
+    for codec in &rtp_parameters.codecs {
         if !codec.is_rtx() {
             continue;
         }
@@ -380,7 +376,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 
             match codec_parameters_apt {
                 Some(RtpCodecParametersParametersValue::Number(apt)) => {
-                    media_codec_payload_type as u32 == *apt
+                    u32::from(media_codec_payload_type) == *apt
                 }
                 _ => false,
             }
@@ -399,7 +395,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
                     let cap_codec_parameters_apt = cap_codec.parameters().get(&"apt".to_string());
                     match cap_codec_parameters_apt {
                         Some(RtpCodecParametersParametersValue::Number(apt)) => {
-                            cap_media_codec.preferred_payload_type() as u32 == *apt
+                            u32::from(cap_media_codec.preferred_payload_type()) == *apt
                         }
                         _ => false,
                     }
@@ -435,7 +431,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
     // Generate encodings mapping.
     let mut mapped_ssrc: u32 = generate_ssrc();
 
-    for encoding in rtp_parameters.encodings.iter() {
+    for encoding in &rtp_parameters.encodings {
         rtp_mapping.encodings.push(RtpMappingEncoding {
             ssrc: encoding.ssrc,
             rid: encoding.rid.clone(),
@@ -459,7 +455,7 @@ pub(crate) fn get_consumable_rtp_parameters(
 ) -> RtpParameters {
     let mut consumable_params = RtpParameters::default();
 
-    for codec in params.codecs.iter() {
+    for codec in &params.codecs {
         if codec.is_rtx() {
             continue;
         }
@@ -522,7 +518,7 @@ pub(crate) fn get_consumable_rtp_parameters(
 
             match cap_rtx_codec_parameters_apt {
                 Some(RtpCodecParametersParametersValue::Number(apt)) => {
-                    *apt as u8 == consumable_codec.payload_type()
+                    u8::try_from(*apt).map_or(false, |apt| apt == consumable_codec.payload_type())
                 }
                 _ => false,
             }
@@ -566,7 +562,7 @@ pub(crate) fn get_consumable_rtp_parameters(
         }
     }
 
-    for cap_ext in caps.header_extensions.iter() {
+    for cap_ext in &caps.header_extensions {
         // Just take RTP header extension that can be used in Consumers.
         match cap_ext.kind {
             Some(cap_ext_kind) => {
@@ -631,7 +627,7 @@ pub(crate) fn can_consume(
 
     let mut matching_codecs = Vec::<&RtpCodecParameters>::new();
 
-    for codec in consumable_params.codecs.iter() {
+    for codec in &consumable_params.codecs {
         if caps
             .codecs
             .iter()
@@ -655,7 +651,7 @@ pub(crate) fn can_consume(
 #[allow(clippy::suspicious_operation_groupings)]
 pub(crate) fn get_consumer_rtp_parameters(
     consumable_params: &RtpParameters,
-    caps: RtpCapabilities,
+    caps: &RtpCapabilities,
     pipe: bool,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
     let mut consumer_params = RtpParameters {
@@ -663,7 +659,7 @@ pub(crate) fn get_consumer_rtp_parameters(
         ..RtpParameters::default()
     };
 
-    for cap_codec in caps.codecs.iter() {
+    for cap_codec in &caps.codecs {
         validate_rtp_codec_capability(cap_codec)
             .map_err(ConsumerRtpParametersError::InvalidCapabilities)?;
     }
@@ -688,7 +684,7 @@ pub(crate) fn get_consumer_rtp_parameters(
             let associated_media_codec = consumer_params.codecs.iter().find(|media_codec| {
                 match codec.parameters().get("apt") {
                     Some(RtpCodecParametersParametersValue::Number(apt)) => {
-                        media_codec.payload_type() as u32 == *apt
+                        u8::try_from(*apt).map_or(false, |apt| media_codec.payload_type() == apt)
                     }
                     _ => false,
                 }
@@ -727,7 +723,7 @@ pub(crate) fn get_consumer_rtp_parameters(
         .iter()
         .any(|ext| ext.uri == RtpHeaderExtensionUri::TransportWideCcDraft01)
     {
-        for codec in consumer_params.codecs.iter_mut() {
+        for codec in &mut consumer_params.codecs {
             codec
                 .rtcp_feedback_mut()
                 .retain(|fb| fb != &RtcpFeedback::GoogRemb);
@@ -737,13 +733,13 @@ pub(crate) fn get_consumer_rtp_parameters(
         .iter()
         .any(|ext| ext.uri == RtpHeaderExtensionUri::AbsSendTime)
     {
-        for codec in consumer_params.codecs.iter_mut() {
+        for codec in &mut consumer_params.codecs {
             codec
                 .rtcp_feedback_mut()
                 .retain(|fb| fb != &RtcpFeedback::TransportCc);
         }
     } else {
-        for codec in consumer_params.codecs.iter_mut() {
+        for codec in &mut consumer_params.codecs {
             codec
                 .rtcp_feedback_mut()
                 .retain(|fb| !matches!(fb, RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc));
@@ -793,8 +789,7 @@ pub(crate) fn get_consumer_rtp_parameters(
                 consumable_params.encodings.len(),
                 scalability_mode
                     .as_ref()
-                    .map(|s| s.parse::<ScalabilityMode>().ok())
-                    .flatten()
+                    .and_then(|s| s.parse::<ScalabilityMode>().ok())
                     .unwrap_or_default()
                     .temporal_layers
             ));
@@ -833,7 +828,7 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         rtcp: consumable_params.rtcp.clone(),
     };
 
-    for codec in consumable_params.codecs.iter() {
+    for codec in &consumable_params.codecs {
         if !enable_rtx && codec.is_rtx() {
             continue;
         }

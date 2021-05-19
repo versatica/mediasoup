@@ -293,9 +293,12 @@ inline void Worker::OnChannelClosed(Channel::UnixStreamSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
+	// Only needed for executable, library user can close channel earlier and it is fine.
+#ifdef MS_EXECUTABLE
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("channel remotely closed, closing myself");
+#endif
 
 	Close();
 }
@@ -333,9 +336,12 @@ inline void Worker::OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* /*p
 {
 	MS_TRACE();
 
+	// Only needed for executable, library user can close channel earlier and it is fine.
+#ifdef MS_EXECUTABLE
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("payloadChannel remotely closed, closing myself");
+#endif
 
 	Close();
 }

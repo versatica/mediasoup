@@ -1,14 +1,3 @@
-//! A WebRTC transport represents a network path negotiated by both, a WebRTC endpoint and
-//! mediasoup, via ICE and DTLS procedures. A WebRTC transport may be used to receive media, to send
-//! media or to both receive and send. There is no limitation in mediasoup. However, due to their
-//! design, mediasoup-client and libmediasoupclient require separate WebRTC transports for sending
-//! and receiving.
-//!
-//! # Notes on usage
-//! The WebRTC transport implementation of mediasoup is
-//! [ICE Lite](https://tools.ietf.org/html/rfc5245#section-2.7), meaning that it does not initiate
-//! ICE connections but expects ICE Binding Requests from endpoints.
-
 #[cfg(test)]
 mod tests;
 
@@ -24,18 +13,20 @@ use crate::messages::{
     TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::{Router, RouterId};
+
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
-    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
-    TransportTraceEventData, TransportTraceEventType, TransportType,
+    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
+    TransportTraceEventType,
 };
 use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
-use log::*;
+use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -52,11 +43,13 @@ pub struct TransportListenIps(Vec<TransportListenIp>);
 
 impl TransportListenIps {
     /// Create transport listen IPs with given IP populated initially.
+    #[must_use]
     pub fn new(listen_ip: TransportListenIp) -> Self {
         Self(vec![listen_ip])
     }
 
     /// Insert another listen IP.
+    #[must_use]
     pub fn insert(mut self, listen_ip: TransportListenIp) -> Self {
         self.0.push(listen_ip);
         self
@@ -88,7 +81,7 @@ impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
     }
 }
 
-/// Plain transport options.
+/// [`WebRtcTransport`] options.
 ///
 /// # Notes on usage
 /// * Do not use "0.0.0.0" into `listen_ips`. Values in `listen_ips` must be specific bindable IPs
@@ -132,7 +125,8 @@ pub struct WebRtcTransportOptions {
 }
 
 impl WebRtcTransportOptions {
-    /// Create WebRtc transport options with given listen IPs.
+    /// Create [`WebRtcTransport`] options with given listen IPs.
+    #[must_use]
     pub fn new(listen_ips: TransportListenIps) -> Self {
         Self {
             listen_ips,
@@ -143,8 +137,8 @@ impl WebRtcTransportOptions {
             initial_available_outgoing_bitrate: 600_000,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 262144,
-            sctp_send_buffer_size: 262144,
+            max_sctp_message_size: 262_144,
+            sctp_send_buffer_size: 262_144,
             app_data: AppData::default(),
         }
     }
@@ -181,7 +175,7 @@ pub struct WebRtcTransportDump {
     pub ice_selected_tuple: Option<TransportTuple>,
 }
 
-/// RTC statistics of the WebRTC transport.
+/// RTC statistics of the [`WebRtcTransport`].
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -220,7 +214,7 @@ pub struct WebRtcTransportStat {
     pub dtls_state: DtlsState,
 }
 
-/// Remote parameters for WebRTC transport.
+/// Remote parameters for [`WebRtcTransport`].
 #[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportRemoteParameters {
@@ -323,17 +317,18 @@ impl Inner {
     }
 }
 
-/// A WebRTC transport represents a network path negotiated by both, a WebRTC endpoint and
-/// mediasoup, via ICE and DTLS procedures. A WebRTC transport may be used to receive media, to send
-/// media or to both receive and send. There is no limitation in mediasoup. However, due to their
-/// design, mediasoup-client and libmediasoupclient require separate WebRTC transports for sending
-/// and receiving.
+/// A [`WebRtcTransport`] represents a network path negotiated by both, a WebRTC endpoint and
+/// mediasoup, via ICE and DTLS procedures. A [`WebRtcTransport`] may be used to receive media, to
+/// send media or to both receive and send. There is no limitation in mediasoup. However, due to
+/// their design, mediasoup-client and libmediasoupclient require separate [`WebRtcTransport`]s for
+/// sending and receiving.
 ///
 /// # Notes on usage
-/// The WebRTC transport implementation of mediasoup is
+/// The [`WebRtcTransport`] implementation of mediasoup is
 /// [ICE Lite](https://tools.ietf.org/html/rfc5245#section-2.7), meaning that it does not initiate
 /// ICE connections but expects ICE Binding Requests from endpoints.
 #[derive(Clone)]
+#[must_use = "Transport will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct WebRtcTransport {
     inner: Arc<Inner>,
 }
@@ -629,11 +624,7 @@ impl WebRtcTransport {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.router_close.call_simple();
                     inner.close(false);
                 }
@@ -661,7 +652,7 @@ impl WebRtcTransport {
         Self { inner }
     }
 
-    /// Provide the WebRtcTransport with remote parameters.
+    /// Provide the [`WebRtcTransport`] with remote parameters.
     ///
     /// # Example
     /// ```rust
@@ -722,37 +713,44 @@ impl WebRtcTransport {
     }
 
     /// Local ICE role. Due to the mediasoup ICE Lite design, this is always `Controlled`.
+    #[must_use]
     pub fn ice_role(&self) -> IceRole {
         self.inner.data.ice_role
     }
 
     /// Local ICE parameters.
+    #[must_use]
     pub fn ice_parameters(&self) -> &IceParameters {
         &self.inner.data.ice_parameters
     }
 
     /// Local ICE candidates.
+    #[must_use]
     pub fn ice_candidates(&self) -> &Vec<IceCandidate> {
         &self.inner.data.ice_candidates
     }
 
     /// Current ICE state.
+    #[must_use]
     pub fn ice_state(&self) -> IceState {
         *self.inner.data.ice_state.lock()
     }
 
     /// The selected transport tuple if ICE is in `Connected` or `Completed` state. It is `None` if
     /// ICE is not established (no working candidate pair was found).
+    #[must_use]
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
         *self.inner.data.ice_selected_tuple.lock()
     }
 
     /// Local DTLS parameters.
+    #[must_use]
     pub fn dtls_parameters(&self) -> DtlsParameters {
         self.inner.data.dtls_parameters.lock().clone()
     }
 
     /// Current DTLS state.
+    #[must_use]
     pub fn dtls_state(&self) -> DtlsState {
         *self.inner.data.dtls_state.lock()
     }
@@ -762,16 +760,19 @@ impl WebRtcTransport {
     /// # Notes on usage
     /// The application may want to inspect the remote certificate for authorization purposes by
     /// using some certificates utility.
+    #[must_use]
     pub fn dtls_remote_cert(&self) -> Option<String> {
         self.inner.data.dtls_remote_cert.lock().clone()
     }
 
     /// Local SCTP parameters. Or `None` if SCTP is not enabled.
+    #[must_use]
     pub fn sctp_parameters(&self) -> Option<SctpParameters> {
         self.inner.data.sctp_parameters
     }
 
     /// Current SCTP state. Or `None` if SCTP is not enabled.
+    #[must_use]
     pub fn sctp_state(&self) -> Option<SctpState> {
         *self.inner.data.sctp_state.lock()
     }
@@ -835,6 +836,7 @@ impl WebRtcTransport {
     }
 
     /// Downgrade `WebRtcTransport` to [`WeakWebRtcTransport`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakWebRtcTransport {
         WeakWebRtcTransport {
             inner: Arc::downgrade(&self.inner),
@@ -849,8 +851,9 @@ impl WebRtcTransport {
     }
 }
 
-/// [`WeakWebRtcTransport`] doesn't own WebRTC transport instance on mediasoup-worker and will not
-/// prevent one from being destroyed once last instance of regular [`WebRtcTransport`] is dropped.
+/// [`WeakWebRtcTransport`] doesn't own [`WebRtcTransport`] instance on mediasoup-worker and will
+/// not prevent one from being destroyed once last instance of regular [`WebRtcTransport`] is
+/// dropped.
 ///
 /// [`WeakWebRtcTransport`] vs [`WebRtcTransport`] is similar to [`Weak`] vs [`Arc`].
 #[derive(Clone)]
@@ -867,6 +870,7 @@ impl fmt::Debug for WeakWebRtcTransport {
 impl WeakWebRtcTransport {
     /// Attempts to upgrade `WeakWebRtcTransport` to [`WebRtcTransport`] if last instance of one
     /// wasn't dropped yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<WebRtcTransport> {
         let inner = self.inner.upgrade()?;
 

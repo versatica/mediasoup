@@ -1,5 +1,3 @@
-//! An audio level observer monitors the volume of the selected audio producers.
-
 #[cfg(test)]
 mod tests;
 
@@ -24,7 +22,7 @@ use std::num::NonZeroU16;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
-/// AudioLevelObserver options
+/// [`AudioLevelObserver`] options
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct AudioLevelObserverOptions {
@@ -149,6 +147,7 @@ impl Inner {
 /// Audio levels are read from an RTP header extension. No decoding of audio data is done. See
 /// [RFC6464](https://tools.ietf.org/html/rfc6464) for more information.
 #[derive(Clone)]
+#[must_use = "Audio level observer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct AudioLevelObserver {
     inner: Arc<Inner>,
 }
@@ -362,11 +361,7 @@ impl AudioLevelObserver {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.router_close.call_simple();
                     inner.close(false);
                 }
@@ -407,6 +402,7 @@ impl AudioLevelObserver {
     }
 
     /// Downgrade `AudioLevelObserver` to [`WeakAudioLevelObserver`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakAudioLevelObserver {
         WeakAudioLevelObserver {
             inner: Arc::downgrade(&self.inner),
@@ -440,6 +436,7 @@ impl fmt::Debug for WeakAudioLevelObserver {
 impl WeakAudioLevelObserver {
     /// Attempts to upgrade `WeakAudioLevelObserver` to [`AudioLevelObserver`] if last instance of one wasn't
     /// dropped yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<AudioLevelObserver> {
         let inner = self.inner.upgrade()?;
 

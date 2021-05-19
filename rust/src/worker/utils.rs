@@ -35,7 +35,7 @@ fn pipe() -> [c_int; 2] {
     unsafe {
         let mut fds = mem::MaybeUninit::<[c_int; 2]>::uninit();
 
-        if libc::pipe(fds.as_mut_ptr() as *mut c_int) != 0 {
+        if libc::pipe(fds.as_mut_ptr().cast::<c_int>()) != 0 {
             panic!(
                 "libc::pipe() failed with code {}",
                 *libc::__errno_location()
@@ -69,9 +69,9 @@ pub(super) fn run_worker_with_channels(
     let producer_payload_file = unsafe { File::from_raw_fd(producer_payload_fd_write) };
     let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
 
-    let channel = Channel::new(Arc::clone(&executor), consumer_file, producer_file);
+    let channel = Channel::new(&executor, consumer_file, producer_file);
     let payload_channel =
-        PayloadChannel::new(executor, consumer_payload_file, producer_payload_file);
+        PayloadChannel::new(&executor, consumer_payload_file, producer_payload_file);
     let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
 
     std::thread::Builder::new()
@@ -84,7 +84,7 @@ pub(super) fn run_worker_with_channels(
                 .collect::<Vec<_>>();
             let argv = args_cstring
                 .iter()
-                .map(|arg| arg.as_ptr() as *const c_char)
+                .map(|arg| arg.as_ptr().cast::<c_char>())
                 .collect::<Vec<_>>();
             let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
             let status_code = unsafe {
