@@ -3,7 +3,9 @@
 
 ### 3.7.6 (WIP)
 
-* SctpAssociation: don't warn if SCTP send buffer is full.
+* `SctpAssociation`: Don't warn if SCTP send buffer is full.
+* Update modules structure and other minor improvements for Rust version (PR #558).
+* Update NPM deps.
 
 
 ### 3.7.5
