@@ -27,7 +27,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
-            parameters: RtpCodecParametersParameters::from([("useinbandfec", 1u32.into())]),
+            parameters: RtpCodecParametersParameters::from([("useinbandfec", 1_u32.into())]),
             rtcp_feedback: vec![RtcpFeedback::TransportCc],
         },
         RtpCodecCapability::Video {
@@ -55,8 +55,9 @@ struct TransportOptions {
     ice_parameters: IceParameters,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Message)]
 #[serde(tag = "action")]
+#[rtype(result = "()")]
 enum ServerMessage {
     #[serde(rename_all = "camelCase")]
     Init {
@@ -79,12 +80,9 @@ enum ServerMessage {
     },
 }
 
-impl Message for ServerMessage {
-    type Result = ();
-}
-
-#[derive(Deserialize)]
+#[derive(Deserialize, Message)]
 #[serde(tag = "action")]
+#[rtype(result = "()")]
 enum ClientMessage {
     #[serde(rename_all = "camelCase")]
     Init { rtp_capabilities: RtpCapabilities },
@@ -103,18 +101,12 @@ enum ClientMessage {
     ConsumerResume { id: ConsumerId },
 }
 
-impl Message for ClientMessage {
-    type Result = ();
-}
-
+#[derive(Message)]
+#[rtype(result = "()")]
 enum InternalMessage {
     SaveProducer(Producer),
     SaveConsumer(Consumer),
     Stop,
-}
-
-impl Message for InternalMessage {
-    type Result = ();
 }
 
 struct Transports {
@@ -331,28 +323,29 @@ impl Handler<ClientMessage> for EchoServer {
                     }
                 });
             }
-            ClientMessage::ConsumerResume { id } => match self.consumers.get(&id).cloned() {
-                Some(consumer) => actix::spawn(async move {
-                    match consumer.resume().await {
-                        Ok(_) => {
-                            println!(
-                                "Successfully resumed {:?} consumer {}",
-                                consumer.kind(),
-                                consumer.id(),
-                            );
+            ClientMessage::ConsumerResume { id } => {
+                if let Some(consumer) = self.consumers.get(&id).cloned() {
+                    actix::spawn(async move {
+                        match consumer.resume().await {
+                            Ok(_) => {
+                                println!(
+                                    "Successfully resumed {:?} consumer {}",
+                                    consumer.kind(),
+                                    consumer.id(),
+                                );
+                            }
+                            Err(error) => {
+                                println!(
+                                    "Failed to resume {:?} consumer {}: {}",
+                                    consumer.kind(),
+                                    consumer.id(),
+                                    error,
+                                );
+                            }
                         }
-                        Err(error) => {
-                            println!(
-                                "Failed to resume {:?} consumer {}: {}",
-                                consumer.kind(),
-                                consumer.id(),
-                                error,
-                            );
-                        }
-                    }
-                }),
-                None => {}
-            },
+                    })
+                }
+            }
         }
     }
 }
@@ -385,7 +378,7 @@ impl Handler<InternalMessage> for EchoServer {
 }
 
 async fn ws_index(
-    r: HttpRequest,
+    request: HttpRequest,
     worker_manager: Data<WorkerManager>,
     stream: Payload,
 ) -> Result<HttpResponse, Error> {
@@ -395,7 +388,7 @@ async fn ws_index(
         HttpResponse::InternalServerError().finish()
     })?;
 
-    ws::start(echo_server, &r, stream)
+    ws::start(echo_server, &request, stream)
 }
 
 #[actix_web::main]

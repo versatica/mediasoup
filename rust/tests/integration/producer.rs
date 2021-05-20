@@ -46,8 +46,8 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("level-asymmetry-allowed", 1u32.into()),
-                ("packetization-mode", 1u32.into()),
+                ("level-asymmetry-allowed", 1_u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "4d0032".into()),
                 ("foo", "bar".into()),
             ]),
@@ -67,8 +67,8 @@ fn audio_producer_options() -> ProducerOptions {
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
-                    ("usedtx", 1u32.into()),
+                    ("useinbandfec", 1_u32.into()),
+                    ("usedtx", 1_u32.into()),
                     ("foo", "222.222".into()),
                     ("bar", "333".into()),
                 ]),
@@ -111,7 +111,7 @@ fn video_producer_options() -> ProducerOptions {
                     payload_type: 112,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::from([
-                        ("packetization-mode", 1u32.into()),
+                        ("packetization-mode", 1_u32.into()),
                         ("profile-level-id", "4d0032".into()),
                     ]),
                     rtcp_feedback: vec![
@@ -387,7 +387,7 @@ fn produce_wrong_arguments() {
                             payload_type: 112,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([
-                                ("packetization-mode", 1u32.into()),
+                                ("packetization-mode", 1_u32.into()),
                                 ("profile-level-id", "4d0032".into()),
                             ]),
                             rtcp_feedback: vec![],
@@ -425,7 +425,7 @@ fn produce_wrong_arguments() {
                             payload_type: 112,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([
-                                ("packetization-mode", 1u32.into()),
+                                ("packetization-mode", 1_u32.into()),
                                 ("profile-level-id", "4d0032".into()),
                             ]),
                             rtcp_feedback: vec![],
@@ -436,7 +436,7 @@ fn produce_wrong_arguments() {
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([(
                                 "apt",
-                                111u32.into(),
+                                111_u32.into(),
                             )]),
                             rtcp_feedback: vec![],
                         },
@@ -506,7 +506,7 @@ fn produce_unsupported_codecs() {
                             payload_type: 112,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([
-                                ("packetization-mode", 1u32.into()),
+                                ("packetization-mode", 1_u32.into()),
                                 ("profile-level-id", "CHICKEN".into()),
                             ]),
                             rtcp_feedback: vec![],

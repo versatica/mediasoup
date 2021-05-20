@@ -2,22 +2,22 @@
 #define MS_CHANNEL_NOTIFIER_HPP
 
 #include "common.hpp"
-#include "Channel/UnixStreamSocket.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include <json.hpp>
 #include <string>
 
 namespace Channel
 {
-	class Notifier
+	class ChannelNotifier
 	{
 	public:
-		static void ClassInit(Channel::UnixStreamSocket* channel);
+		static void ClassInit(Channel::ChannelSocket* channel);
 		static void Emit(const std::string& targetId, const char* event);
 		static void Emit(const std::string& targetId, const char* event, json& data);
 
 	public:
 		// Passed by argument.
-		thread_local static Channel::UnixStreamSocket* channel;
+		thread_local static Channel::ChannelSocket* channel;
 	};
 } // namespace Channel
 

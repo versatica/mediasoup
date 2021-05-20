@@ -337,11 +337,11 @@
             "-std=c++11",
             "-I/usr/local/opt/openssl/include",
             "-o",
-            "PATH/out/Release/obj.target/mediasoup-worker/src/Channel/Request.o",
-            "../src/Channel/Request.cpp"
+            "PATH/out/Release/obj.target/mediasoup-worker/src/Channel/ChannelRequest.o",
+            "../src/Channel/ChannelRequest.cpp"
         ],
         "directory": "PATH/out",
-        "file": "../src/Channel/Request.cpp"
+        "file": "../src/Channel/ChannelRequest.cpp"
     },
     {
         "arguments": [
@@ -466,11 +466,11 @@
             "-std=c++11",
             "-I/usr/local/opt/openssl/include",
             "-o",
-            "PATH/out/Release/obj.target/mediasoup-worker/src/handles/UdpSocket.o",
-            "../src/handles/UdpSocket.cpp"
+            "PATH/out/Release/obj.target/mediasoup-worker/src/handles/UdpSocketHandler.o",
+            "../src/handles/UdpSocketHandler.cpp"
         ],
         "directory": "PATH/out",
-        "file": "../src/handles/UdpSocket.cpp"
+        "file": "../src/handles/UdpSocketHandler.cpp"
     },
     {
         "arguments": [
@@ -1670,11 +1670,11 @@
             "-std=c++11",
             "-I/usr/local/opt/openssl/include",
             "-o",
-            "PATH/out/Release/obj.target/mediasoup-worker/src/PayloadChannel/UnixStreamSocket.o",
-            "../src/PayloadChannel/UnixStreamSocket.cpp"
+            "PATH/out/Release/obj.target/mediasoup-worker/src/PayloadChannel/PayloadChannelSocket.o",
+            "../src/PayloadChannel/PayloadChannelSocket.cpp"
         ],
         "directory": "PATH/out",
-        "file": "../src/PayloadChannel/UnixStreamSocket.cpp"
+        "file": "../src/PayloadChannel/PayloadChannelSocket.cpp"
     },
     {
         "arguments": [
@@ -1842,11 +1842,11 @@
             "-std=c++11",
             "-I/usr/local/opt/openssl/include",
             "-o",
-            "PATH/out/Release/obj.target/mediasoup-worker/src/PayloadChannel/Notifier.o",
-            "../src/PayloadChannel/Notifier.cpp"
+            "PATH/out/Release/obj.target/mediasoup-worker/src/PayloadChannel/PayloadChannelNotifier.o",
+            "../src/PayloadChannel/PayloadChannelNotifier.cpp"
         ],
         "directory": "PATH/out",
-        "file": "../src/PayloadChannel/Notifier.cpp"
+        "file": "../src/PayloadChannel/PayloadChannelNotifier.cpp"
     },
     {
         "arguments": [
@@ -1885,11 +1885,11 @@
             "-std=c++11",
             "-I/usr/local/opt/openssl/include",
             "-o",
-            "PATH/out/Release/obj.target/mediasoup-worker/src/handles/TcpConnection.o",
-            "../src/handles/TcpConnection.cpp"
+            "PATH/out/Release/obj.target/mediasoup-worker/src/handles/TcpConnectionHandler.o",
+            "../src/handles/TcpConnectionHandler.cpp"
         ],
         "directory": "PATH/out",
-        "file": "../src/handles/TcpConnection.cpp"
+        "file": "../src/handles/TcpConnectionHandler.cpp"
     },
     {
         "arguments": [
@@ -2444,11 +2444,11 @@
             "-std=c++11",
             "-I/usr/local/opt/openssl/include",
             "-o",
-            "PATH/out/Release/obj.target/mediasoup-worker/src/handles/TcpServer.o",
-            "../src/handles/TcpServer.cpp"
+            "PATH/out/Release/obj.target/mediasoup-worker/src/handles/TcpServerHandler.o",
+            "../src/handles/TcpServerHandler.cpp"
         ],
         "directory": "PATH/out",
-        "file": "../src/handles/TcpServer.cpp"
+        "file": "../src/handles/TcpServerHandler.cpp"
     },
     {
         "arguments": [
@@ -2702,11 +2702,11 @@
             "-std=c++11",
             "-I/usr/local/opt/openssl/include",
             "-o",
-            "PATH/out/Release/obj.target/mediasoup-worker/src/Channel/UnixStreamSocket.o",
-            "../src/Channel/UnixStreamSocket.cpp"
+            "PATH/out/Release/obj.target/mediasoup-worker/src/Channel/ChannelSocket.o",
+            "../src/Channel/ChannelSocket.cpp"
         ],
         "directory": "PATH/out",
-        "file": "../src/Channel/UnixStreamSocket.cpp"
+        "file": "../src/Channel/ChannelSocket.cpp"
     },
     {
         "arguments": [
@@ -3691,11 +3691,11 @@
             "-std=c++11",
             "-I/usr/local/opt/openssl/include",
             "-o",
-            "PATH/out/Release/obj.target/mediasoup-worker/src/Channel/Notifier.o",
-            "../src/Channel/Notifier.cpp"
+            "PATH/out/Release/obj.target/mediasoup-worker/src/Channel/ChannelNotifier.o",
+            "../src/Channel/ChannelNotifier.cpp"
         ],
         "directory": "PATH/out",
-        "file": "../src/Channel/Notifier.cpp"
+        "file": "../src/Channel/ChannelNotifier.cpp"
     },
     {
         "arguments": [

@@ -3,7 +3,10 @@
 
 ### 3.7.6 (WIP)
 
-* SctpAssociation: don't warn if SCTP send buffer is full.
+* `SctpAssociation`: Don't warn if SCTP send buffer is full.
+* Rust: Update modules structure and other minor improvements for Rust version (PR #558).
+* `mediasoup-worker`: Avoid duplicated basenames so that libmediasoup-worker is compilable on macOS (PR #557).
+* Update NPM deps.
 
 
 ### 3.7.5

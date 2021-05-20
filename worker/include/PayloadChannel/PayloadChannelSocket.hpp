@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "PayloadChannel/Notification.hpp"
-#include "PayloadChannel/Request.hpp"
+#include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
 #include <json.hpp>
 
@@ -49,23 +49,24 @@ namespace PayloadChannel
 		}
 	};
 
-	class UnixStreamSocket : public ConsumerSocket::Listener
+	class PayloadChannelSocket : public ConsumerSocket::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
 			virtual void OnPayloadChannelNotification(
-			  PayloadChannel::UnixStreamSocket* payloadChannel,
+			  PayloadChannel::PayloadChannelSocket* payloadChannel,
 			  PayloadChannel::Notification* notification) = 0;
 			virtual void OnPayloadChannelRequest(
-			  PayloadChannel::UnixStreamSocket* payloadChannel, PayloadChannel::Request* request) = 0;
-			virtual void OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* payloadChannel) = 0;
+			  PayloadChannel::PayloadChannelSocket* payloadChannel,
+			  PayloadChannel::PayloadChannelRequest* request)                                         = 0;
+			virtual void OnPayloadChannelClosed(PayloadChannel::PayloadChannelSocket* payloadChannel) = 0;
 		};
 
 	public:
-		explicit UnixStreamSocket(int consumerFd, int producerFd);
-		virtual ~UnixStreamSocket();
+		explicit PayloadChannelSocket(int consumerFd, int producerFd);
+		virtual ~PayloadChannelSocket();
 
 	public:
 		void SetListener(Listener* listener);
@@ -87,8 +88,8 @@ namespace PayloadChannel
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
 		PayloadChannel::Notification* ongoingNotification{ nullptr };
-		PayloadChannel::Request* ongoingRequest{ nullptr };
-		uint8_t* WriteBuffer;
+		PayloadChannel::PayloadChannelRequest* ongoingRequest{ nullptr };
+		uint8_t* writeBuffer;
 	};
 } // namespace PayloadChannel
 

@@ -48,6 +48,7 @@ struct Inner {
 /// multi-threaded executor, [`WorkerManager::with_executor()`] can be used to create an instance
 /// instead.
 #[derive(Clone)]
+#[must_use]
 pub struct WorkerManager {
     inner: Arc<Inner>,
 }

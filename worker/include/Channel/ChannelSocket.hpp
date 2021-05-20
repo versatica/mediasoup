@@ -2,7 +2,7 @@
 #define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
 
 #include "common.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
 #include <json.hpp>
 
@@ -47,19 +47,20 @@ namespace Channel
 		}
 	};
 
-	class UnixStreamSocket : public ConsumerSocket::Listener
+	class ChannelSocket : public ConsumerSocket::Listener
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
-			virtual void OnChannelClosed(Channel::UnixStreamSocket* channel) = 0;
+			virtual void OnChannelRequest(
+			  Channel::ChannelSocket* channel, Channel::ChannelRequest* request) = 0;
+			virtual void OnChannelClosed(Channel::ChannelSocket* channel)        = 0;
 		};
 
 	public:
-		explicit UnixStreamSocket(int consumerFd, int producerFd);
-		virtual ~UnixStreamSocket();
+		explicit ChannelSocket(int consumerFd, int producerFd);
+		virtual ~ChannelSocket();
 
 	public:
 		void SetListener(Listener* listener);
@@ -80,7 +81,7 @@ namespace Channel
 		// Others.
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
-		uint8_t* WriteBuffer;
+		uint8_t* writeBuffer;
 	};
 } // namespace Channel
 

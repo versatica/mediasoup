@@ -160,13 +160,13 @@ namespace RTC
 		}
 	}
 
-	void Router::HandleRequest(Channel::Request* request)
+	void Router::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::ROUTER_DUMP:
+			case Channel::ChannelRequest::MethodId::ROUTER_DUMP:
 			{
 				json data = json::object();
 
@@ -177,7 +177,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
+			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
 			{
 				std::string transportId;
 
@@ -201,7 +201,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT:
+			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{
 				std::string transportId;
 
@@ -224,7 +224,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_CREATE_PIPE_TRANSPORT:
+			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_PIPE_TRANSPORT:
 			{
 				std::string transportId;
 
@@ -247,7 +247,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT:
+			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT:
 			{
 				std::string transportId;
 
@@ -270,7 +270,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
+			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
 			{
 				std::string rtpObserverId;
 
@@ -289,7 +289,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_CLOSE:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE:
 			{
 				// This may throw.
 				RTC::Transport* transport = GetTransportFromInternal(request->internal);
@@ -311,7 +311,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::RTP_OBSERVER_CLOSE:
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_CLOSE:
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
@@ -337,7 +337,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::RTP_OBSERVER_PAUSE:
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_PAUSE:
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
@@ -349,7 +349,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::RTP_OBSERVER_RESUME:
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_RESUME:
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
@@ -361,7 +361,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::RTP_OBSERVER_ADD_PRODUCER:
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER:
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
@@ -377,7 +377,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
@@ -406,7 +406,7 @@ namespace RTC
 		}
 	}
 
-	void Router::HandleRequest(PayloadChannel::Request* request)
+	void Router::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
 	{
 		MS_TRACE();
 

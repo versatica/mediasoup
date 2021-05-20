@@ -23,7 +23,7 @@ pub(crate) use channel::Channel;
 pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;
-use log::*;
+use log::{debug, error, warn};
 use parking_lot::Mutex;
 pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
 use serde::{Deserialize, Serialize};
@@ -98,7 +98,7 @@ impl Default for WorkerLogLevel {
 }
 
 impl WorkerLogLevel {
-    fn as_str(&self) -> &'static str {
+    fn as_str(self) -> &'static str {
         match self {
             Self::Debug => "debug",
             Self::Warn => "warn",
@@ -142,7 +142,7 @@ pub enum WorkerLogTag {
 }
 
 impl WorkerLogTag {
-    fn as_str(&self) -> &'static str {
+    fn as_str(self) -> &'static str {
         match self {
             Self::Info => "info",
             Self::Ice => "ice",
@@ -497,6 +497,7 @@ impl Inner {
 /// A worker represents a mediasoup C++ thread that runs on a single CPU core and handles
 /// [`Router`] instances.
 #[derive(Clone)]
+#[must_use = "Worker will be destroyed on drop, make sure to keep it around for as long as needed"]
 pub struct Worker {
     inner: Arc<Inner>,
 }
@@ -522,16 +523,19 @@ impl Worker {
     }
 
     /// Worker id.
+    #[must_use]
     pub fn id(&self) -> WorkerId {
         self.inner.id
     }
 
     /// Custom application data.
+    #[must_use]
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
     }
 
     /// Whether the worker is closed.
+    #[must_use]
     pub fn closed(&self) -> bool {
         self.inner.closed.load(Ordering::SeqCst)
     }

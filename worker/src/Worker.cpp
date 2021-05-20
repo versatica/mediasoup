@@ -6,11 +6,11 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 
 /* Instance methods. */
 
-Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamSocket* payloadChannel)
+Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannelSocket* payloadChannel)
   : channel(channel), payloadChannel(payloadChannel)
 {
 	MS_TRACE();
@@ -33,7 +33,7 @@ Worker::Worker(::Channel::UnixStreamSocket* channel, PayloadChannel::UnixStreamS
 #endif
 
 	// Tell the Node process that we are running.
-	Channel::Notifier::Emit(std::to_string(Logger::pid), "running");
+	Channel::ChannelNotifier::Emit(std::to_string(Logger::pid), "running");
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -192,7 +192,7 @@ RTC::Router* Worker::GetRouterFromInternal(json& internal) const
 	return router;
 }
 
-inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
+inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
@@ -201,7 +201,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 
 	switch (request->methodId)
 	{
-		case Channel::Request::MethodId::WORKER_CLOSE:
+		case Channel::ChannelRequest::MethodId::WORKER_CLOSE:
 		{
 			if (this->closed)
 				return;
@@ -213,7 +213,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 			break;
 		}
 
-		case Channel::Request::MethodId::WORKER_DUMP:
+		case Channel::ChannelRequest::MethodId::WORKER_DUMP:
 		{
 			json data = json::object();
 
@@ -224,7 +224,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 			break;
 		}
 
-		case Channel::Request::MethodId::WORKER_GET_RESOURCE_USAGE:
+		case Channel::ChannelRequest::MethodId::WORKER_GET_RESOURCE_USAGE:
 		{
 			json data = json::object();
 
@@ -235,14 +235,14 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 			break;
 		}
 
-		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
+		case Channel::ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS:
 		{
 			Settings::HandleRequest(request);
 
 			break;
 		}
 
-		case Channel::Request::MethodId::WORKER_CREATE_ROUTER:
+		case Channel::ChannelRequest::MethodId::WORKER_CREATE_ROUTER:
 		{
 			std::string routerId;
 
@@ -260,7 +260,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 			break;
 		}
 
-		case Channel::Request::MethodId::ROUTER_CLOSE:
+		case Channel::ChannelRequest::MethodId::ROUTER_CLOSE:
 		{
 			// This may throw.
 			RTC::Router* router = GetRouterFromInternal(request->internal);
@@ -289,19 +289,22 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 	}
 }
 
-inline void Worker::OnChannelClosed(Channel::UnixStreamSocket* /*socket*/)
+inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
+	// Only needed for executable, library user can close channel earlier and it is fine.
+#ifdef MS_EXECUTABLE
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("channel remotely closed, closing myself");
+#endif
 
 	Close();
 }
 
 inline void Worker::OnPayloadChannelNotification(
-  PayloadChannel::UnixStreamSocket* /*payloadChannel*/, PayloadChannel::Notification* notification)
+  PayloadChannel::PayloadChannelSocket* /*payloadChannel*/, PayloadChannel::Notification* notification)
 {
 	MS_TRACE();
 
@@ -314,7 +317,8 @@ inline void Worker::OnPayloadChannelNotification(
 }
 
 inline void Worker::OnPayloadChannelRequest(
-  PayloadChannel::UnixStreamSocket* /*payloadChannel*/, PayloadChannel::Request* request)
+  PayloadChannel::PayloadChannelSocket* /*payloadChannel*/,
+  PayloadChannel::PayloadChannelRequest* request)
 {
 	MS_TRACE();
 
@@ -329,13 +333,16 @@ inline void Worker::OnPayloadChannelRequest(
 	router->HandleRequest(request);
 }
 
-inline void Worker::OnPayloadChannelClosed(PayloadChannel::UnixStreamSocket* /*payloadChannel*/)
+inline void Worker::OnPayloadChannelClosed(PayloadChannel::PayloadChannelSocket* /*payloadChannel*/)
 {
 	MS_TRACE();
 
+	// Only needed for executable, library user can close channel earlier and it is fine.
+#ifdef MS_EXECUTABLE
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
 	MS_ERROR_STD("payloadChannel remotely closed, closing myself");
+#endif
 
 	Close();
 }

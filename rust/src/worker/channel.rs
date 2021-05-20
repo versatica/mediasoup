@@ -6,7 +6,7 @@ use async_fs::File;
 use bytes::{BufMut, Bytes, BytesMut};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
-use log::*;
+use log::{debug, trace, warn};
 use lru::LruCache;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -134,7 +134,7 @@ pub(crate) struct Channel {
 }
 
 impl Channel {
-    pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
+    pub(super) fn new(executor: &Executor<'static>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
         let buffered_notifications_for =
@@ -179,7 +179,7 @@ impl Channel {
                             bytes.resize(length + 1, 0);
                         }
                         // +1 because of netstring `,` at the very end
-                        reader.read_exact(&mut bytes[..(length + 1)]).await?;
+                        reader.read_exact(&mut bytes[..=length]).await?;
 
                         trace!(
                             "received raw message: {}",
@@ -227,33 +227,29 @@ impl Channel {
                                     })
                                 });
 
-                                match target_id {
-                                    Some(target_id) => {
-                                        if !non_buffered_notifications.contains(&target_id) {
-                                            let mut buffer_notifications_for =
-                                                buffered_notifications_for.lock();
-                                            // Check if we need to buffer notifications for this
-                                            // target_id
-                                            if let Some(list) =
-                                                buffer_notifications_for.get_mut(&target_id)
-                                            {
-                                                list.push(notification);
-                                                continue;
-                                            } else {
-                                                // Remember we don't need to buffer these
-                                                non_buffered_notifications.put(target_id, ());
-                                            }
+                                if let Some(target_id) = target_id {
+                                    if !non_buffered_notifications.contains(&target_id) {
+                                        let mut buffer_notifications_for =
+                                            buffered_notifications_for.lock();
+                                        // Check if we need to buffer notifications for this
+                                        // target_id
+                                        if let Some(list) =
+                                            buffer_notifications_for.get_mut(&target_id)
+                                        {
+                                            list.push(notification);
+                                            continue;
                                         }
-                                        event_handlers
-                                            .call_callbacks_with_value(&target_id, notification);
+
+                                        // Remember we don't need to buffer these
+                                        non_buffered_notifications.put(target_id, ());
                                     }
-                                    None => {
-                                        let unexpected_message = InternalMessage::Unexpected(
-                                            Vec::from(&bytes[..length]),
-                                        );
-                                        if sender.send(unexpected_message).await.is_err() {
-                                            break;
-                                        }
+                                    event_handlers
+                                        .call_callbacks_with_value(&target_id, notification);
+                                } else {
+                                    let unexpected_message =
+                                        InternalMessage::Unexpected(Vec::from(&bytes[..length]));
+                                    if sender.send(unexpected_message).await.is_err() {
+                                        break;
                                     }
                                 }
                             }

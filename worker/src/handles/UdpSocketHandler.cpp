@@ -1,7 +1,7 @@
-#define MS_CLASS "UdpSocket"
+#define MS_CLASS "UdpSocketHandler"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "handles/UdpSocket.hpp"
+#include "handles/UdpSocketHandler.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -16,7 +16,7 @@ thread_local static uint8_t ReadBuffer[ReadBufferSize];
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	auto* socket = static_cast<UdpSocket*>(handle->data);
+	auto* socket = static_cast<UdpSocketHandler*>(handle->data);
 
 	if (socket)
 		socket->OnUvRecvAlloc(suggestedSize, buf);
@@ -25,7 +25,7 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 inline static void onRecv(
   uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
-	auto* socket = static_cast<UdpSocket*>(handle->data);
+	auto* socket = static_cast<UdpSocketHandler*>(handle->data);
 
 	if (socket)
 		socket->OnUvRecv(nread, buf, addr, flags);
@@ -33,9 +33,9 @@ inline static void onRecv(
 
 inline static void onSend(uv_udp_send_t* req, int status)
 {
-	auto* sendData = static_cast<UdpSocket::UvSendData*>(req->data);
+	auto* sendData = static_cast<UdpSocketHandler::UvSendData*>(req->data);
 	auto* handle   = req->handle;
-	auto* socket   = static_cast<UdpSocket*>(handle->data);
+	auto* socket   = static_cast<UdpSocketHandler*>(handle->data);
 	auto* cb       = sendData->cb;
 
 	if (socket)
@@ -53,7 +53,7 @@ inline static void onClose(uv_handle_t* handle)
 /* Instance methods. */
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
+UdpSocketHandler::UdpSocketHandler(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 {
 	MS_TRACE();
 
@@ -80,7 +80,7 @@ UdpSocket::UdpSocket(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 	}
 }
 
-UdpSocket::~UdpSocket()
+UdpSocketHandler::~UdpSocketHandler()
 {
 	MS_TRACE();
 
@@ -88,7 +88,7 @@ UdpSocket::~UdpSocket()
 		Close();
 }
 
-void UdpSocket::Close()
+void UdpSocketHandler::Close()
 {
 	MS_TRACE();
 
@@ -97,7 +97,7 @@ void UdpSocket::Close()
 
 	this->closed = true;
 
-	// Tell the UV handle that the UdpSocket has been closed.
+	// Tell the UV handle that the UdpSocketHandler has been closed.
 	this->uvHandle->data = nullptr;
 
 	// Don't read more.
@@ -109,17 +109,17 @@ void UdpSocket::Close()
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }
 
-void UdpSocket::Dump() const
+void UdpSocketHandler::Dump() const
 {
-	MS_DUMP("<UdpSocket>");
+	MS_DUMP("<UdpSocketHandler>");
 	MS_DUMP("  localIp   : %s", this->localIp.c_str());
 	MS_DUMP("  localPort : %" PRIu16, static_cast<uint16_t>(this->localPort));
 	MS_DUMP("  closed    : %s", !this->closed ? "open" : "closed");
-	MS_DUMP("</UdpSocket>");
+	MS_DUMP("</UdpSocketHandler>");
 }
 
-void UdpSocket::Send(
-  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocket::onSendCallback* cb)
+void UdpSocketHandler::Send(
+  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandler::onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -216,7 +216,7 @@ void UdpSocket::Send(
 	}
 }
 
-bool UdpSocket::SetLocalAddress()
+bool UdpSocketHandler::SetLocalAddress()
 {
 	MS_TRACE();
 
@@ -241,7 +241,7 @@ bool UdpSocket::SetLocalAddress()
 	return true;
 }
 
-inline void UdpSocket::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
+inline void UdpSocketHandler::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
@@ -251,7 +251,7 @@ inline void UdpSocket::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 	buf->len = ReadBufferSize;
 }
 
-inline void UdpSocket::OnUvRecv(
+inline void UdpSocketHandler::OnUvRecv(
   ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
 	MS_TRACE();
@@ -284,7 +284,7 @@ inline void UdpSocket::OnUvRecv(
 	}
 }
 
-inline void UdpSocket::OnUvSend(int status, UdpSocket::onSendCallback* cb)
+inline void UdpSocketHandler::OnUvSend(int status, UdpSocketHandler::onSendCallback* cb)
 {
 	MS_TRACE();
 
