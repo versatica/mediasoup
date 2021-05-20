@@ -298,6 +298,7 @@ namespace RTC
 		uint16_t transportWideCcSeq{ 0u };
 		uint32_t initialAvailableOutgoingBitrate{ 600000u };
 		uint32_t maxIncomingBitrate{ 0u };
+		uint32_t maxOutgoingBitrate{ 0u };
 		struct TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC

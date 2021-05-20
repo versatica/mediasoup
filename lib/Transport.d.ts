@@ -158,6 +158,10 @@ export declare class Transport extends EnhancedEventEmitter {
      */
     setMaxIncomingBitrate(bitrate: number): Promise<void>;
     /**
+     * Set maximum outgoing bitrate for sending media.
+     */
+    setMaxOutgoingBitrate(bitrate: number): Promise<void>;
+    /**
      * Create a Producer.
      */
     produce({ id, kind, rtpParameters, paused, keyFrameRequestDelay, appData }: ProducerOptions): Promise<Producer>;
