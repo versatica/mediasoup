@@ -26,14 +26,14 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		this->WriteBuffer = static_cast<uint8_t*>(std::malloc(NsMessageMaxLen));
+		this->writeBuffer = static_cast<uint8_t*>(std::malloc(NsMessageMaxLen));
 	}
 
 	ChannelSocket::~ChannelSocket()
 	{
 		MS_TRACE_STD();
 
-		std::free(this->WriteBuffer);
+		std::free(this->writeBuffer);
 	}
 
 	void ChannelSocket::SetListener(Listener* listener)
@@ -88,21 +88,21 @@ namespace Channel
 		if (nsPayloadLen == 0)
 		{
 			nsNumLen             = 1;
-			this->WriteBuffer[0] = '0';
-			this->WriteBuffer[1] = ':';
-			this->WriteBuffer[2] = ',';
+			this->writeBuffer[0] = '0';
+			this->writeBuffer[1] = ':';
+			this->writeBuffer[2] = ',';
 		}
 		else
 		{
 			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(this->WriteBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(this->WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-			this->WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			std::sprintf(reinterpret_cast<char*>(this->writeBuffer), "%zu:", nsPayloadLen);
+			std::memcpy(this->writeBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
+			this->writeBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
 		size_t nsLen = nsNumLen + nsPayloadLen + 2;
 
-		this->producerSocket.Write(this->WriteBuffer, nsLen);
+		this->producerSocket.Write(this->writeBuffer, nsLen);
 	}
 
 	void ChannelSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)

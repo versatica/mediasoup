@@ -81,7 +81,7 @@ namespace Channel
 		// Others.
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
-		uint8_t* WriteBuffer;
+		uint8_t* writeBuffer;
 	};
 } // namespace Channel
 
