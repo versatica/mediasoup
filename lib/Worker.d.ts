@@ -18,6 +18,10 @@ export declare type WorkerSettings = {
      */
     logTags?: WorkerLogTag[];
     /**
+     * MSWorker log file name
+    **/
+    logFile: string;
+    /**
      * Minimun RTC port for ICE, DTLS, RTP, etc. Default 10000.
      */
     rtcMinPort?: number;
@@ -113,9 +117,29 @@ export declare type WorkerResourceUsage = {
      */
     ru_nivcsw: number;
 };
+export declare type WorkerLoggerErrorType = 'open' | 'rotate' | 'write';
+export declare type WorkerLoggerError = {
+    /**
+     * names a logger function or operation where error happenned
+     */
+    source: WorkerLoggerErrorType;
+    /**
+     *
+     */
+    error: string;
+    /**
+     *
+     */
+    file: string;
+    /**
+     * Content of a message failed to be written into a log, maybe empty
+     */
+    data: string;
+};
 export declare class Worker extends EnhancedEventEmitter {
     private _child?;
     private readonly _pid;
+    private readonly _mslog;
     private readonly _channel;
     private readonly _payloadChannel;
     private _closed;
@@ -128,7 +152,7 @@ export declare class Worker extends EnhancedEventEmitter {
      * @emits @success
      * @emits @failure - (error: Error)
      */
-    constructor({ logLevel, logTags, logDevLevel, logTraceEnabled, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData }: WorkerSettings);
+    constructor({ logLevel, logTags, logDevLevel, logTraceEnabled, logFile, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData }: WorkerSettings);
     /**
      * Worker process identifier (PID).
      */
@@ -164,6 +188,14 @@ export declare class Worker extends EnhancedEventEmitter {
      * Get mediasoup-worker process resource usage.
      */
     getResourceUsage(): Promise<WorkerResourceUsage>;
+    /**
+     * Open specified log file
+    **/
+    logOpen(): Promise<any>;
+    /**
+     * Reopen same log file by name after logrotate
+    **/
+    logRotate(): Promise<any>;
     /**
      * Update settings.
      */

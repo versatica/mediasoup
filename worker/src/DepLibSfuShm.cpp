@@ -221,7 +221,7 @@ namespace DepLibSfuShm {
 
       if (it != this->videoPktBuffer.end())
       {
-        //MS_DEBUG_TAG(xcode, "L@@K out-of-order [ %" PRIu64 " ]", seqid);
+        //MS_DEBUG_TAG(xcode, "out-of-order [ %" PRIu64 " ]", seqid);
         bin_log_record.v_enqueue_out_of_order += 1;
       }
 

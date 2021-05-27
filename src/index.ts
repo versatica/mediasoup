@@ -40,12 +40,13 @@ export async function createWorker(
 		logTags,
 		logDevLevel = 'none',
 		logTraceEnabled = false,
+		logFile,
 		rtcMinPort = 10000,
 		rtcMaxPort = 59999,
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
 		appData = {}
-	}: WorkerSettings = {}
+	}: WorkerSettings
 ): Promise<Worker>
 {
 	logger.debug('createWorker()');
@@ -59,6 +60,7 @@ export async function createWorker(
 			logTags,
 			logDevLevel,
 			logTraceEnabled,
+			logFile,	
 			rtcMinPort,
 			rtcMaxPort,
 			dtlsCertificateFile,
