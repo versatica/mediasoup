@@ -27,7 +27,7 @@ mediasoup and its client side libraries are designed to accomplish with the foll
 
 * Be a [SFU](https://webrtcglossary.com/sfu/) (Selective Forwarding Unit).
 * Support both WebRTC and plain RTP input and output.
-* Be a Rust crate/Node.js module in server side.
+* Be a Node.js module/Rust crate in server side.
 * Be a tiny JavaScript and C++ libraries in client side.
 * Be minimalist: just handle the media layer.
 * Be signaling agnostic: do not mandate any signaling protocol.
@@ -52,14 +52,14 @@ mediasoup and its client side libraries provide a super low level API. They are 
 
 ## Features
 
-* Idiomatic Rust/ECMAScript 6 low level API.
+* ECMAScript 6/Idiomatic Rust low level API.
 * Multi-stream: multiple audio/video streams over a single ICE + DTLS transport.
 * IPv6 ready.
 * ICE / DTLS / RTP / RTCP over UDP and TCP.
 * Simulcast and SVC support.
 * Congestion control.
 * Sender and receiver bandwidth estimation with spatial/temporal layers distribution algorithm.
-* Data message exchange (via WebRTC DataChannels, SCTP over plain UDP, and direct termination in Rust/Node.js).
+* Data message exchange (via WebRTC DataChannels, SCTP over plain UDP, and direct termination in Node.js/Rust).
 * Extremely powerful (media worker thread/subprocess coded in C++ on top of [libuv](https://libuv.org)).
 
 
