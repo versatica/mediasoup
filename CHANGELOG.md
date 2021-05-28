@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.7.7 (WIP)
+
+* Thread and memory safety fixes needed for mediasoup-rust (PR #562 by @nazar-pc).
+* Update NPM deps.
+
+
 ### 3.7.6
 
 * `Transport`: Implement new `setMaxOutgoingBitrate()` method (PR #555 by @t-mullen). 
