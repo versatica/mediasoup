@@ -45,11 +45,6 @@ fn main() {
         );
         println!("cargo:rustc-link-lib=static=c++");
     }
-    #[cfg(target_os = "macos")]
-    {
-        panic!("Building on macOS is not currently supported");
-        // TODO: The issue here is `libc++.a` that is not shipped with macOS's `c++` it seems
-    }
     #[cfg(target_os = "windows")]
     {
         panic!("Building on Windows is not currently supported");
