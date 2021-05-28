@@ -8,7 +8,7 @@
 
 const int64_t Logger::pid{ static_cast<int64_t>(uv_os_getpid()) };
 thread_local Channel::ChannelSocket* Logger::channel{ nullptr };
-char Logger::buffer[Logger::bufferSize];
+thread_local char Logger::buffer[Logger::bufferSize];
 
 /* Class methods. */
 

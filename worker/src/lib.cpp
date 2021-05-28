@@ -135,14 +135,14 @@ extern "C" int run_worker(
 		Worker worker(channel, payloadChannel);
 
 		// Free static stuff.
-		DepLibUV::ClassDestroy();
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
 		DepLibWebRTC::ClassDestroy();
 		RTC::DtlsTransport::ClassDestroy();
 		DepUsrSCTP::ClassDestroy();
+		DepLibUV::ClassDestroy();
 
-		// Wait a bit so peding messages to stdout/Channel arrive to the Node
+		// Wait a bit so pending messages to stdout/Channel arrive to the Node
 		// process.
 		uv_sleep(200);
 

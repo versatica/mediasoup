@@ -36,6 +36,14 @@ namespace Channel
 		std::free(this->writeBuffer);
 	}
 
+	void ChannelSocket::Close()
+	{
+		MS_TRACE_STD();
+
+		this->consumerSocket.Close();
+		this->producerSocket.Close();
+	}
+
 	void ChannelSocket::SetListener(Listener* listener)
 	{
 		MS_TRACE_STD();

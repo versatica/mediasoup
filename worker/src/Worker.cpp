@@ -44,6 +44,12 @@ Worker::~Worker()
 {
 	MS_TRACE();
 
+	// Delete the Channel.
+	delete this->channel;
+
+	// Delete the PayloadChannel.
+	delete this->payloadChannel;
+
 	if (!this->closed)
 		Close();
 }
@@ -70,10 +76,10 @@ void Worker::Close()
 	this->mapRouters.clear();
 
 	// Close the Channel.
-	delete this->channel;
+	this->channel->Close();
 
 	// Close the PayloadChannel.
-	delete this->payloadChannel;
+	this->payloadChannel->Close();
 }
 
 void Worker::FillJson(json& jsonObject) const

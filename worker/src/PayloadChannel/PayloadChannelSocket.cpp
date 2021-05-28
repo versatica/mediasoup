@@ -38,6 +38,14 @@ namespace PayloadChannel
 		delete this->ongoingNotification;
 	}
 
+	void PayloadChannelSocket::Close()
+	{
+		MS_TRACE_STD();
+
+		this->consumerSocket.Close();
+		this->producerSocket.Close();
+	}
+
 	void PayloadChannelSocket::SetListener(Listener* listener)
 	{
 		MS_TRACE();
