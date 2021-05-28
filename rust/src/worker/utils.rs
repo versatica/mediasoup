@@ -38,7 +38,7 @@ fn pipe() -> [c_int; 2] {
         if libc::pipe(fds.as_mut_ptr().cast::<c_int>()) != 0 {
             panic!(
                 "libc::pipe() failed with code {}",
-                *libc::__errno_location()
+                std::io::Error::last_os_error()
             );
         }
 
