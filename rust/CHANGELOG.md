@@ -1,6 +1,7 @@
 # Changelog
 
 ### 0.7.2
+
 * Thread and memory safety fixes in mediasoup-sys
 * macOS support
 * `NonClosingProducer` renamed into `PipedProducer` with better docs
