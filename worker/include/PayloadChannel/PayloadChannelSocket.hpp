@@ -21,6 +21,7 @@ namespace PayloadChannel
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
+		~ConsumerSocket();
 
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
@@ -30,6 +31,8 @@ namespace PayloadChannel
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		// Allocated by this.
+		uint8_t* readBuffer{ nullptr };
 		// Others.
 		size_t msgStart{ 0u }; // Where the latest message starts.
 	};
