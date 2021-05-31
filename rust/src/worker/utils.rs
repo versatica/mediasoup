@@ -36,10 +36,7 @@ fn pipe() -> [c_int; 2] {
         let mut fds = mem::MaybeUninit::<[c_int; 2]>::uninit();
 
         if libc::pipe(fds.as_mut_ptr().cast::<c_int>()) != 0 {
-            panic!(
-                "libc::pipe() failed with code {}",
-                *libc::__errno_location()
-            );
+            panic!("libc::pipe() failed: {:?}", std::io::Error::last_os_error());
         }
 
         fds.assume_init()
