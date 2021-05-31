@@ -1,9 +1,12 @@
 # Changelog
 
 
-### 3.7.7 (WIP)
+### 3.7.7
 
 * Thread and memory safety fixes needed for mediasoup-rust (PR #562 by @nazar-pc).
+* mediasoup-rust support on macOS (PR #567 by @nazar-pc).
+* mediasoup-rust release 0.7.2.
+* `PayloadChannel`: Copy received messages into a separate buffer to avoid memory corruption if the message is later modified (PR #570 by @aggresss).
 * Update NPM deps.
 
 
