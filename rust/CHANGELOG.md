@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.7.2
+
+* Thread and memory safety fixes in mediasoup-sys
+* macOS support
+* `NonClosingProducer` renamed into `PipedProducer` with better docs
+* Internal restructuring of modules for better compatibility with IDEs
+* Feature level updated to mediasoup `3.7.6`
+
 ### 0.7.0
 
 * Switch from running C++ worker processes to worker threads using mediasoup-sys that wraps mediasoup-worker into library
