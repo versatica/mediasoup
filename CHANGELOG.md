@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.7.9
+
+* Code clean up.
+
+
 ### 3.7.8
 
 * `PayloadChannel`: Copy received messages into a separate buffer to avoid memory corruption if the message is later modified (PR #570 by @aggresss).
