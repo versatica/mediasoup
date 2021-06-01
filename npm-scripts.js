@@ -70,21 +70,21 @@ switch (task)
 	case 'lint:node':
 	{
 		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js npm-scripts.js test/');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js npm-scripts.js test/ worker/scripts/gulpfile.js');
 
 		break;
 	}
 
 	case 'lint:worker':
 	{
-		execute('cd worker && make lint');
+		execute('make lint -C worker');
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute('cd worker && make format');
+		execute('make format -C worker');
 
 		break;
 	}
