@@ -56,10 +56,10 @@ xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
 
 lint:
-	$(GULP) lint:worker
+	$(GULP) --gulpfile ./scripts/gulpfile.js lint:worker
 
 format:
-	$(GULP) format:worker
+	$(GULP) --gulpfile ./scripts/gulpfile.js format:worker
 
 test:
 ifeq ($(MEDIASOUP_WORKER_BIN),)

@@ -7,8 +7,6 @@ const { version } = require('./package.json');
 const isWindows = os.platform() === 'win32';
 const task = process.argv.slice(2).join(' ');
 
-const GULP = process.env.GULP || 'gulp';
-
 // mediasoup mayor version.
 const MAYOR_VERSION = 3;
 
@@ -79,14 +77,14 @@ switch (task)
 
 	case 'lint:worker':
 	{
-		execute(`cd worker/scripts && ${GULP} lint:worker`);
+		execute(`cd worker && make lint`);
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute(`cd worker/scripts && ${GULP} format:worker`);
+		execute(`cd worker && make format`);
 
 		break;
 	}
