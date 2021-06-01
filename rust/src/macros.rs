@@ -32,6 +32,12 @@ macro_rules! uuid_based_wrapper_type {
             }
         }
 
+        impl From<uuid::Uuid> for $struct_name {
+            fn from(id: uuid::Uuid) -> Self {
+                $struct_name(id)
+            }
+        }
+
         impl $struct_name {
             pub(super) fn new() -> Self {
                 $struct_name(uuid::Uuid::new_v4())
