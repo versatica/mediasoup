@@ -69,8 +69,8 @@ jobs:
 
       - run: npm install
       - run: |
-          pushd worker/scripts
+          cd worker/scripts
           npm install
-          popd
+          cd ../..
       - run: npm run lint:worker
       - run: npm run test:worker
