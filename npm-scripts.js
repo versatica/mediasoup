@@ -77,14 +77,14 @@ switch (task)
 
 	case 'lint:worker':
 	{
-		execute(`cd worker && make lint`);
+		execute('cd worker && make lint');
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute(`cd worker && make format`);
+		execute('cd worker && make format');
 
 		break;
 	}
