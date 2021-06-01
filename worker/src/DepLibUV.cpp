@@ -9,20 +9,6 @@
 
 thread_local uv_loop_t* DepLibUV::loop{ nullptr };
 
-void on_uv_close(uv_handle_t* handle)
-{
-	if (handle != NULL)
-	{
-		delete handle;
-	}
-}
-
-void on_uv_walk(uv_handle_t* handle, void* arg)
-{
-	if (!uv_is_closing(handle))
-		uv_close(handle, on_uv_close);
-}
-
 /* Static methods. */
 
 void DepLibUV::ClassInit()
@@ -45,17 +31,12 @@ void DepLibUV::ClassDestroy()
 	{
 		int err;
 
-		uv_stop(DepLibUV::loop);
-		uv_walk(DepLibUV::loop, on_uv_walk, NULL);
-
 		while (true)
 		{
 			err = uv_loop_close(DepLibUV::loop);
 
 			if (err != UV_EBUSY)
-			{
 				break;
-			}
 
 			uv_run(DepLibUV::loop, UV_RUN_NOWAIT);
 		}
