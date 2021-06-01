@@ -27,7 +27,6 @@ void DepLibUV::ClassDestroy()
 {
 	MS_TRACE();
 
-	// This should never happen.
 	if (DepLibUV::loop != nullptr)
 	{
 		uv_loop_close(DepLibUV::loop);
