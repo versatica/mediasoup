@@ -41,7 +41,6 @@ void DepLibUV::ClassDestroy()
 {
 	MS_TRACE();
 
-	// This should never happen.
 	if (DepLibUV::loop != nullptr)
 	{
 		int err;
