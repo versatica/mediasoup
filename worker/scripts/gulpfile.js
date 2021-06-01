@@ -3,12 +3,12 @@ const clangFormat = require('gulp-clang-format');
 
 const workerFiles =
 [
-	'worker/src/**/*.cpp',
-	'worker/include/**/*.hpp',
-	'worker/test/src/**/*.cpp',
-	'worker/test/include/helpers.hpp',
-	'worker/fuzzer/src/**/*.cpp',
-	'worker/fuzzer/include/**/*.hpp'
+	'../src/**/*.cpp',
+	'../include/**/*.hpp',
+	'../test/src/**/*.cpp',
+	'../test/include/helpers.hpp',
+	'../fuzzer/src/**/*.cpp',
+	'../fuzzer/include/**/*.hpp'
 ];
 
 gulp.task('lint:worker', () =>

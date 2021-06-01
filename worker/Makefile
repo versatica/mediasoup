@@ -77,8 +77,8 @@ bear:
 tidy:
 	$(SED) "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
 	$(PYTHON) ./scripts/clang-tidy.py \
-		-clang-tidy-binary=../node_modules/.bin/clang-tidy \
-		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
+		-clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy \
+		-clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements \
 		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
 		-p=. \
 		-j=$(CORES) \
