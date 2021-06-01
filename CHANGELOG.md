@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.7.10
+
+* Remove clang tools binaries from regular installation.
+
+
 ### 3.7.9
 
 * Code clean up.
