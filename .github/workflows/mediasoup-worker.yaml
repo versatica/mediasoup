@@ -68,6 +68,9 @@ jobs:
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
       - run: npm install
-      - run: pushd worker/scripts && npm install && popd
+      - run: |
+          pushd worker/scripts
+          npm install
+          popd
       - run: npm run lint:worker
       - run: npm run test:worker
