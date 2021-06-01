@@ -51,5 +51,5 @@ void DepLibUV::RunLoop()
 
 	int ret = uv_run(DepLibUV::loop, UV_RUN_DEFAULT);
 
-	MS_ASSERT(ret == 0, "uv_run() returned %d (!= 0)", ret);
+	MS_ASSERT(ret == 0, "uv_run() returned %s", uv_err_name(ret));
 }
