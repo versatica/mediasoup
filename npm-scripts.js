@@ -161,6 +161,13 @@ switch (task)
 		break;
 	}
 
+	case 'install-clang-tools':
+	{
+		execute('cd worker/scripts && npm install');
+
+		break;
+	}
+
 	default:
 	{
 		throw new TypeError(`unknown task "${task}"`);

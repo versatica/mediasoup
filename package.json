@@ -39,7 +39,8 @@
     "test:worker": "node npm-scripts.js test:worker",
     "coverage": "npm run postinstall && node npm-scripts.js coverage",
     "postinstall": "node npm-scripts.js postinstall",
-    "release": "node npm-scripts.js release"
+    "release": "node npm-scripts.js release",
+    "install-clang-tools": "node npm-scripts.js install-clang-tools"
   },
   "jest": {
     "verbose": true,
