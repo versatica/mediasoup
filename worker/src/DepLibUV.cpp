@@ -5,6 +5,14 @@
 #include "Logger.hpp"
 #include <cstdlib> // std::abort()
 
+#include <iostream>
+#include <fstream>
+
+using std::cout; using std::ofstream;
+using std::endl; using std::string;
+using std::cerr;
+using std::fstream;
+
 /* Static variables. */
 
 thread_local uv_loop_t* DepLibUV::loop{ nullptr };
@@ -25,6 +33,12 @@ inline static void onWalk(uv_handle_t* handle, void* arg)
 		uv_is_closing(handle),
 		uv_has_ref(handle)
 	);
+
+	string filename("/tmp/kk.txt");
+	fstream output_fstream;
+
+	output_fstream.open(filename, std::ios_base::app);
+	output_fstream << "handle type:" << handle->type << endl;
 
 	if (!uv_is_closing(handle))
 		uv_close(handle, onClose);
