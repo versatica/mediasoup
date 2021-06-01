@@ -90,8 +90,9 @@
 #include "json.hpp"
 #include "LogLevel.hpp"
 #include "Settings.hpp"
-#include "Channel/UnixStreamSocket.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "Utils.hpp"
+
 #include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
 #include <cstdlib> // std::abort()
 #include <cstring>
@@ -140,8 +141,8 @@ public:
   static std::string levelPrefix;
 	static const int64_t pid;
 	static const size_t bufferSize {50000};
-	static char buffer[];
-	static std::string backupBuffer;
+	thread_local static char buffer[];
+	thread_local static std::string backupBuffer;
 
 	static std::string logfilename;
 	static std::FILE*  logfd;

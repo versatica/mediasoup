@@ -353,7 +353,7 @@ namespace RTC
 		}
 		MS_DUMP("  size: %zu bytes", this->size);
 
-		static char transactionId[25];
+		char transactionId[25];
 
 		for (int i{ 0 }; i < 12; ++i)
 		{
@@ -385,7 +385,7 @@ namespace RTC
 		}
 		if (this->messageIntegrity != nullptr)
 		{
-			static char messageIntegrity[41];
+			char messageIntegrity[41];
 
 			for (int i{ 0 }; i < 20; ++i)
 			{

@@ -11,7 +11,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t StunSerializeBufferSize{ 65536 };
-	static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
+	thread_local static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
 
 	/* Instance methods. */
 

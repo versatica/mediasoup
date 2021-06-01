@@ -13,7 +13,7 @@ import sys
 CC = os.environ.get('CC', 'cc')
 script_dir = os.path.dirname(__file__)
 root = os.path.normpath(os.path.join(script_dir, '..'))
-output_dir = os.path.join(os.path.abspath(root), 'out')
+output_dir = os.environ.get('MEDIASOUP_OUT_DIR', os.path.join(os.path.abspath(root), 'out'))
 
 sys.path.insert(0, os.path.join(root, 'deps', 'gyp', 'pylib'))
 try:
@@ -28,6 +28,7 @@ def host_arch():
     if machine == 'i386': return 'ia32'
     if machine == 'x86_64': return 'x64'
     if machine == 'aarch64': return 'arm64'
+    if machine == 'arm64': return 'arm64'
     if machine == 'mips64': return 'mips64el'
     if machine.startswith('arm'): return 'arm'
     if machine.startswith('mips'): return 'mips'

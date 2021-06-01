@@ -3,17 +3,17 @@
 
 #include "Logger.hpp"
 #include <uv.h>
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include <json.hpp>
 
 /* Class variables. */
 
-const int64_t Logger::pid{ static_cast<int64_t>(uv_os_getpid()) };
 std::string Logger::levelPrefix;
-char Logger::buffer[Logger::bufferSize];
+const int64_t Logger::pid{ static_cast<int64_t>(uv_os_getpid()) };
+thread_local char Logger::buffer[Logger::bufferSize];
+thread_local std::string Logger::backupBuffer;
 std::string Logger::logfilename = "";
 std::FILE* Logger::logfd {nullptr};
-std::string Logger::backupBuffer;
 bool Logger::openLogFile {false};
 
 /* Class methods. */
@@ -40,8 +40,8 @@ bool Logger::MSlogopen(json& data)
 		msg["file"] = Logger::logfilename;
 		msg["data"] = data.dump();
 
-		if (Channel::Notifier::channel)
-			Channel::Notifier::Emit(std::to_string(Logger::pid), "failedlog", msg);
+		if (Channel::ChannelNotifier::channel)
+			Channel::ChannelNotifier::Emit(std::to_string(Logger::pid), "failedlog", msg);
 	}
 	else
 	{
@@ -51,8 +51,8 @@ bool Logger::MSlogopen(json& data)
 		msg["file"] = "";
 		msg["data"] = data.dump();
 	
-		if (Channel::Notifier::channel)
-			Channel::Notifier::Emit(std::to_string(Logger::pid), "failedlog", msg);
+		if (Channel::ChannelNotifier::channel)
+			Channel::ChannelNotifier::Emit(std::to_string(Logger::pid), "failedlog", msg);
 	}
 	// unsuccessful 
 	Logger::logfd = nullptr;
@@ -87,8 +87,8 @@ void Logger::MSlogrotate()
 	data["file"] = Logger::logfilename;
 	data["data"] = Logger::openLogFile ? "failed logrotate" : "skip logrotate";
 
-	if (Channel::Notifier::channel)
-		Channel::Notifier::Emit(std::to_string(Logger::pid), "failedlog", data);
+	if (Channel::ChannelNotifier::channel)
+		Channel::ChannelNotifier::Emit(std::to_string(Logger::pid), "failedlog", data);
 }
 
 
@@ -112,8 +112,8 @@ void Logger::MSlogwrite(int written)
 			// Back up a new log msg, try writing it out next time
 			Logger::backupBuffer.assign(Logger::buffer, written);
 
-			if (Channel::Notifier::channel)
-				Channel::Notifier::Emit(std::to_string(Logger::pid), "failedlog", data);
+			if (Channel::ChannelNotifier::channel)
+				Channel::ChannelNotifier::Emit(std::to_string(Logger::pid), "failedlog", data);
 			return;
 		}
 

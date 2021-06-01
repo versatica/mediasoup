@@ -72,6 +72,9 @@ namespace RTC
 		if (this->params.rtxSsrc)
 			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
 
+		if (this->rtxStream)
+			jsonObject["rtxPacketsDiscarded"] = this->rtxStream->GetPacketsDiscarded();
+
 		if (this->hasRtt)
 			jsonObject["roundTripTime"] = this->rtt;
 	}

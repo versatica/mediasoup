@@ -37,7 +37,7 @@ public:
 	static RTC::SctpAssociation* RetrieveSctpAssociation(uintptr_t id);
 
 private:
-	static Checker* checker;
+	thread_local static Checker* checker;
 	static uint64_t numSctpAssociations;
 	static uintptr_t nextSctpAssociationId;
 	static std::unordered_map<uintptr_t, RTC::SctpAssociation*> mapIdSctpAssociation;

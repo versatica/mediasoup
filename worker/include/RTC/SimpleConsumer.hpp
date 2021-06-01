@@ -21,14 +21,14 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
-		void HandleRequest(Channel::Request* request) override;
+		void HandleRequest(Channel::ChannelRequest* request) override;
 		bool IsActive() const override
 		{
 			// clang-format off
 			return (
 				RTC::Consumer::IsActive() &&
 				this->producerRtpStream &&
-				this->producerRtpStream->GetScore() > 0u
+				(this->producerRtpStream->GetScore() > 0u || this->producerRtpStream->HasDtx())
 			);
 			// clang-format on
 		}

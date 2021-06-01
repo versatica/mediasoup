@@ -405,6 +405,19 @@ export class Transport extends EnhancedEventEmitter
 	}
 
 	/**
+	 * Set maximum outgoing bitrate for sending media.
+	 */
+	async setMaxOutgoingBitrate(bitrate: number): Promise<void>
+	{
+		logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
+
+		const reqData = { bitrate };
+
+		await this._channel.request(
+			'transport.setMaxOutgoingBitrate', this._internal, reqData);
+	}
+
+	/**
 	 * Create a Producer.
 	 */
 	async produce(

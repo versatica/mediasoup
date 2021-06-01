@@ -12,7 +12,8 @@ namespace RTC
 
 	// 17: 16 bit mask + the initial sequence number.
 	static constexpr size_t MaxRequestedPackets{ 17 };
-	static std::vector<RTC::RtpStreamSend::StorageItem*> RetransmissionContainer(MaxRequestedPackets + 1);
+	thread_local static std::vector<RTC::RtpStreamSend::StorageItem*> RetransmissionContainer(
+	  MaxRequestedPackets + 1);
 	// Don't retransmit packets older than this (ms).
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };

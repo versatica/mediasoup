@@ -23,7 +23,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
-		void HandleRequest(Channel::Request* request) override;
+		void HandleRequest(Channel::ChannelRequest* request) override;
 		RTC::Consumer::Layers GetPreferredLayers() const override
 		{
 			RTC::Consumer::Layers layers;
@@ -39,7 +39,7 @@ namespace RTC
 			return (
 				RTC::Consumer::IsActive() &&
 				this->producerRtpStream &&
-				this->producerRtpStream->GetScore() > 0u
+				(this->producerRtpStream->GetScore() > 0u || this->producerRtpStream->HasDtx())
 			);
 			// clang-format on
 		}

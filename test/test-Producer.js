@@ -591,16 +591,13 @@ test('producer.dump() succeeds', async () =>
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
 	expect(data.rtpParameters.encodings.length).toBe(4);
-	expect(data.rtpParameters.encodings).toEqual(
+	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{
 				codecPayloadType : 112,
 				ssrc             : 22222222,
 				rtx              : { ssrc: 22222223 },
-				scalabilityMode  : 'L1T3',
-				spatialLayers    : 1,
-				temporalLayers   : 3,
-				ksvc             : false
+				scalabilityMode  : 'L1T3'
 			},
 			{ codecPayloadType: 112, ssrc: 22222224, rtx: { ssrc: 22222225 } },
 			{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },

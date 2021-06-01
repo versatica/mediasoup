@@ -1,6 +1,85 @@
 # Changelog
 
 
+### 3.7.9
+
+* Code clean up.
+
+
+### 3.7.8
+
+* `PayloadChannel`: Copy received messages into a separate buffer to avoid memory corruption if the message is later modified (PR #570 by @aggresss).
+
+
+### 3.7.7
+
+* Thread and memory safety fixes needed for mediasoup-rust (PR #562 by @nazar-pc).
+* mediasoup-rust support on macOS (PR #567 by @nazar-pc).
+* mediasoup-rust release 0.7.2.
+* Update NPM deps.
+
+
+### 3.7.6
+
+* `Transport`: Implement new `setMaxOutgoingBitrate()` method (PR #555 by @t-mullen). 
+* `SctpAssociation`: Don't warn if SCTP send buffer is full.
+* Rust: Update modules structure and other minor improvements for Rust version (PR #558).
+* `mediasoup-worker`: Avoid duplicated basenames so that libmediasoup-worker is compilable on macOS (PR #557).
+* Update NPM deps.
+
+
+### 3.7.5
+
+* SctpAssociation: provide 'sctpsendbufferfull' reason on send error (#552).
+
+
+### 3.7.4
+
+* Improve `RateCalculator` (PR #547 by @vpalmisano).
+* Update NPM deps.
+
+
+### 3.7.3
+
+* Make worker M1 compilable.
+
+
+### 3.7.2
+
+* `RateCalculator` optimization (PR #538 by @vpalmisano).
+* Update `Catch` to 2.13.5.
+* Update NPM deps.
+
+
+### 3.7.1
+
+* `SimulcastConsumer`: Fix miscalculation when increasing layer (PR #541 by @penguinol).
+* Rust version with thread-based worker (PR #540).
+* Update NPM deps.
+
+
+### 3.7.0
+
+* Welcome to `mediasoup-rust`! Authored by @nazar-pc (PRs #518 and #533).
+* Update NPM deps.
+* Update `usrsctp`.
+
+
+### 3.6.37
+
+* Fix crash if empty `fingerprints` array is given in `webrtcTransport.connect()` (issue #537).
+
+### 3.6.36
+
+* `Producer`: Add new stats field 'rtxPacketsDiscarded' (PR #536).
+
+
+### 3.6.35
+
+* `XxxxConsumer.hpp`: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled (PR #534 due to issue #532).
+* Update NPM deps.
+
+
 ### 3.6.34
 
 * Fix crash (regression, issue #529).

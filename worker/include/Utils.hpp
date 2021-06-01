@@ -226,7 +226,7 @@ namespace Utils
 
 		static const std::string GetRandomString(size_t len)
 		{
-			static char buffer[64];
+			char buffer[64];
 			static const char chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
 				                            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
 				                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
@@ -258,9 +258,9 @@ namespace Utils
 		static const uint8_t* GetHmacShA1(const std::string& key, const uint8_t* data, size_t len);
 
 	private:
-		static uint32_t seed;
-		static HMAC_CTX* hmacSha1Ctx;
-		static uint8_t hmacSha1Buffer[];
+		thread_local static uint32_t seed;
+		thread_local static HMAC_CTX* hmacSha1Ctx;
+		thread_local static uint8_t hmacSha1Buffer[];
 		static const uint32_t crc32Table[256];
 	};
 

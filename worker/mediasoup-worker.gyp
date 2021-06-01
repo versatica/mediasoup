@@ -16,12 +16,14 @@
     'sources':
     [
       # C++ source files.
+      'src/lib.cpp',
       'src/DepLibSRTP.cpp',
       'src/DepLibUV.cpp',
       'src/DepLibWebRTC.cpp',
       'src/DepOpenSSL.cpp',
       'src/DepUsrSCTP.cpp',
       'src/Logger.cpp',
+      'src/MediaSoupErrors.cpp',
       'src/Settings.cpp',
       'src/Worker.cpp',
       'src/Utils/Crypto.cpp',
@@ -29,18 +31,18 @@
       'src/Utils/IP.cpp',
       'src/Utils/String.cpp',
       'src/handles/SignalsHandler.cpp',
-      'src/handles/TcpConnection.cpp',
-      'src/handles/TcpServer.cpp',
+      'src/handles/TcpConnectionHandler.cpp',
+      'src/handles/TcpServerHandler.cpp',
       'src/handles/Timer.cpp',
-      'src/handles/UdpSocket.cpp',
+      'src/handles/UdpSocketHandler.cpp',
       'src/handles/UnixStreamSocket.cpp',
-      'src/Channel/Notifier.cpp',
-      'src/Channel/Request.cpp',
-      'src/Channel/UnixStreamSocket.cpp',
+      'src/Channel/ChannelNotifier.cpp',
+      'src/Channel/ChannelRequest.cpp',
+      'src/Channel/ChannelSocket.cpp',
       'src/PayloadChannel/Notification.cpp',
-      'src/PayloadChannel/Notifier.cpp',
-      'src/PayloadChannel/Request.cpp',
-      'src/PayloadChannel/UnixStreamSocket.cpp',
+      'src/PayloadChannel/PayloadChannelNotifier.cpp',
+      'src/PayloadChannel/PayloadChannelRequest.cpp',
+      'src/PayloadChannel/PayloadChannelSocket.cpp',
       'src/RTC/AudioLevelObserver.cpp',
       'src/RTC/Consumer.cpp',
       'src/RTC/DataConsumer.cpp',
@@ -127,6 +129,7 @@
       'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
       'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
       # C++ include files.
+      'include/lib.hpp',
       'include/DepLibSRTP.hpp',
       'include/DepLibUV.hpp',
       'include/DepLibWebRTC.hpp',
@@ -140,18 +143,18 @@
       'include/Worker.hpp',
       'include/common.hpp',
       'include/handles/SignalsHandler.hpp',
-      'include/handles/TcpConnection.hpp',
-      'include/handles/TcpServer.hpp',
+      'include/handles/TcpConnectionHandler.hpp',
+      'include/handles/TcpServerHandler.hpp',
       'include/handles/Timer.hpp',
-      'include/handles/UdpSocket.hpp',
+      'include/handles/UdpSocketHandler.hpp',
       'include/handles/UnixStreamSocket.hpp',
-      'include/Channel/Notifier.hpp',
-      'include/Channel/Request.hpp',
-      'include/Channel/UnixStreamSocket.hpp',
+      'include/Channel/ChannelNotifier.hpp',
+      'include/Channel/ChannelRequest.hpp',
+      'include/Channel/ChannelSocket.hpp',
       'include/PayloadChannel/Notification.hpp',
-      'include/PayloadChannel/Notifier.hpp',
-      'include/PayloadChannel/Request.hpp',
-      'include/PayloadChannel/UnixStreamSocket.hpp',
+      'include/PayloadChannel/PayloadChannelNotifier.hpp',
+      'include/PayloadChannel/PayloadChannelRequest.hpp',
+      'include/PayloadChannel/PayloadChannelSocket.hpp',
       'include/RTC/BweType.hpp',
       'include/RTC/AudioLevelObserver.hpp',
       'include/RTC/Consumer.hpp',
@@ -334,7 +337,7 @@
       #  - make as usually
       #  - publish: update package.json with a distinct version name (x.x.x-noshm), run 'npm run typescript:build' and 'npm publish'
       'target_name': 'mediasoup-worker',
-      'defines': [ 'TRANSCODE', 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
+      'defines': [ 'MS_EXECUTABLE', 'TRANSCODE', 'FFNGXSHM_MAX_NUM_CHANNELS=10', 'SFUSHM_AV_MAX_NUM_CHANNELS=10', 'STREAM_SHM_MAX_CHANNELS=10' ],
       'sources': [
         # C++ source files.
         'src/main.cpp',
@@ -364,6 +367,10 @@
           '-lz'
         ]
       }
+    },
+    {
+      'target_name': 'libmediasoup-worker',
+      'type': 'static_library'
     },
     {
       'target_name': 'mediasoup-worker-test',

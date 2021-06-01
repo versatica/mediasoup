@@ -1,0 +1,21 @@
+{
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=14"
+  },
+  "scripts": {
+    "start": "webpack serve"
+  },
+  "author": "Nazar Mokrynskyi <nazar@mokrynskyi.com>",
+  "dependencies": {
+    "mediasoup-client": "^3.6.30"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.2.2",
+    "typescript": "^4.2.4",
+    "webpack": "^5.37.1",
+    "webpack-cli": "^4.7.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}

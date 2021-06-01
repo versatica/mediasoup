@@ -2,7 +2,7 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
@@ -67,7 +67,7 @@ namespace RTC
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray) const  = 0;
 		virtual void FillJsonScore(json& jsonObject) const = 0;
-		virtual void HandleRequest(Channel::Request* request);
+		virtual void HandleRequest(Channel::ChannelRequest* request);
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;

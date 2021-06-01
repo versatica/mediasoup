@@ -5,7 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include "RTC/Codecs/Tools.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RtpStreamRecv.hpp"
@@ -174,16 +174,16 @@ namespace RTC
 
 		MS_WARN_TAG(xcode, "Idle shm consumer");
 
-		Channel::Notifier::Emit(this->id, "idleshmconsumer");
+		Channel::ChannelNotifier::Emit(this->id, "idleshmconsumer");
 	}
 
-	void ShmConsumer::HandleRequest(Channel::Request* request)
+	void ShmConsumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			case Channel::ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
 					RequestKeyFrame();

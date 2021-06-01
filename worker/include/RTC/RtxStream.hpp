@@ -8,7 +8,6 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtxStream.hpp"
 #include <json.hpp>
 #include <string>
 
@@ -67,6 +66,10 @@ namespace RTC
 		float GetLossPercentage() const
 		{
 			return static_cast<float>(this->fractionLost) * 100 / 256;
+		}
+		size_t GetPacketsDiscarded() const
+		{
+			return this->packetsDiscarded;
 		}
 		bool ReceivePacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();

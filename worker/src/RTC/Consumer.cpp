@@ -5,7 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
@@ -230,13 +230,13 @@ namespace RTC
 		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
 	}
 
-	void Consumer::HandleRequest(Channel::Request* request)
+	void Consumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::CONSUMER_DUMP:
+			case Channel::ChannelRequest::MethodId::CONSUMER_DUMP:
 			{
 				json data = json::object();
 
@@ -247,7 +247,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_GET_STATS:
+			case Channel::ChannelRequest::MethodId::CONSUMER_GET_STATS:
 			{
 				json data = json::array();
 
@@ -258,7 +258,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_PAUSE:
+			case Channel::ChannelRequest::MethodId::CONSUMER_PAUSE:
 			{
 				if (this->paused)
 				{
@@ -281,7 +281,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_RESUME:
+			case Channel::ChannelRequest::MethodId::CONSUMER_RESUME:
 			{
 				if (!this->paused)
 				{
@@ -302,7 +302,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_SET_PRIORITY:
+			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PRIORITY:
 			{
 				auto jsonPriorityIt = request->data.find("priority");
 
@@ -325,7 +325,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_ENABLE_TRACE_EVENT:
+			case Channel::ChannelRequest::MethodId::CONSUMER_ENABLE_TRACE_EVENT:
 			{
 				auto jsonTypesIt = request->data.find("types");
 
@@ -407,7 +407,7 @@ namespace RTC
 		if (wasActive)
 			UserOnPaused();
 
-		Channel::Notifier::Emit(this->id, "producerpause");
+		Channel::ChannelNotifier::Emit(this->id, "producerpause");
 	}
 
 	void Consumer::ProducerResumed()
@@ -424,7 +424,7 @@ namespace RTC
 		if (IsActive())
 			UserOnResumed();
 
-		Channel::Notifier::Emit(this->id, "producerresume");
+		Channel::ChannelNotifier::Emit(this->id, "producerresume");
 	}
 
 	void Consumer::ProducerRtpStreamScores(const std::vector<uint8_t>* scores)
@@ -445,7 +445,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
 
-		Channel::Notifier::Emit(this->id, "producerclose");
+		Channel::ChannelNotifier::Emit(this->id, "producerclose");
 
 		this->listener->OnConsumerProducerClosed(this);
 	}
@@ -467,7 +467,7 @@ namespace RTC
 			if (isRtx)
 				data["info"]["isRtx"] = true;
 
-			Channel::Notifier::Emit(this->id, "trace", data);
+			Channel::ChannelNotifier::Emit(this->id, "trace", data);
 		}
 		else if (this->traceEventTypes.rtp)
 		{
@@ -482,7 +482,7 @@ namespace RTC
 			if (isRtx)
 				data["info"]["isRtx"] = true;
 
-			Channel::Notifier::Emit(this->id, "trace", data);
+			Channel::ChannelNotifier::Emit(this->id, "trace", data);
 		}
 	}
 
@@ -500,7 +500,7 @@ namespace RTC
 		data["direction"]    = "in";
 		data["info"]["ssrc"] = ssrc;
 
-		Channel::Notifier::Emit(this->id, "trace", data);
+		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
 
 	void Consumer::EmitTraceEventFirType(uint32_t ssrc) const
@@ -517,7 +517,7 @@ namespace RTC
 		data["direction"]    = "in";
 		data["info"]["ssrc"] = ssrc;
 
-		Channel::Notifier::Emit(this->id, "trace", data);
+		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
 
 	void Consumer::EmitTraceEventNackType() const
@@ -534,6 +534,6 @@ namespace RTC
 		data["direction"] = "in";
 		data["info"]      = json::object();
 
-		Channel::Notifier::Emit(this->id, "trace", data);
+		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
 } // namespace RTC

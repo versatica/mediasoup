@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include "RTC/Codecs/Tools.hpp"
 
 namespace RTC
@@ -100,7 +100,7 @@ namespace RTC
 		  this->producerRtpStreams.begin(), this->consumableRtpEncodings.size(), nullptr);
 
 		// Create the encoding context.
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		MS_DEBUG_TAG(simulcast,
 			"SimulcastConsumer ctor() data [%s] media codec [%s] encoding.spatialLayers=%" PRIu8 " encoding.temporalLayers=%" PRIu8,
@@ -205,13 +205,13 @@ namespace RTC
 		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
-	void SimulcastConsumer::HandleRequest(Channel::Request* request)
+	void SimulcastConsumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			case Channel::ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
 					RequestKeyFrames();
@@ -221,7 +221,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
 			{
 				auto previousPreferredSpatialLayer  = this->preferredSpatialLayer;
 				auto previousPreferredTemporalLayer = this->preferredTemporalLayer;
@@ -515,8 +515,8 @@ namespace RTC
 				{
 					auto* provisionalProducerRtpStream =
 					  this->producerRtpStreams.at(this->provisionalTargetSpatialLayer);
-					auto provisionalRequiredBitrate = provisionalProducerRtpStream->GetLayerBitrate(
-					  nowMs, 0, this->provisionalTargetTemporalLayer);
+					auto provisionalRequiredBitrate =
+					  provisionalProducerRtpStream->GetBitrate(nowMs, 0, this->provisionalTargetTemporalLayer);
 
 					if (requiredBitrate > provisionalRequiredBitrate)
 						requiredBitrate -= provisionalRequiredBitrate;
@@ -1425,7 +1425,7 @@ namespace RTC
 
 		FillJsonScore(data);
 
-		Channel::Notifier::Emit(this->id, "score", data);
+		Channel::ChannelNotifier::Emit(this->id, "score", data);
 	}
 
 	inline void SimulcastConsumer::EmitLayersChange() const
@@ -1450,7 +1450,7 @@ namespace RTC
 			data = nullptr;
 		}
 
-		Channel::Notifier::Emit(this->id, "layerschange", data);
+		Channel::ChannelNotifier::Emit(this->id, "layerschange", data);
 	}
 
 	inline RTC::RtpStream* SimulcastConsumer::GetProducerCurrentRtpStream() const

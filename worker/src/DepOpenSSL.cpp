@@ -5,6 +5,11 @@
 #include "Logger.hpp"
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
+#include <mutex>
+
+/* Static. */
+
+static std::once_flag globalInitOnce;
 
 /* Static methods. */
 
@@ -12,8 +17,10 @@ void DepOpenSSL::ClassInit()
 {
 	MS_TRACE();
 
-	MS_DEBUG_TAG(info, "openssl version: \"%s\"", OpenSSL_version(OPENSSL_VERSION));
+	std::call_once(globalInitOnce, [] {
+		MS_DEBUG_TAG(info, "openssl version: \"%s\"", OpenSSL_version(OPENSSL_VERSION));
 
-	// Initialize some crypto stuff.
-	RAND_poll();
+		// Initialize some crypto stuff.
+		RAND_poll();
+	});
 }
