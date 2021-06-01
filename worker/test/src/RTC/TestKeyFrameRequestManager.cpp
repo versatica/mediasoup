@@ -1,16 +1,12 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
-#include "handles/Timer.hpp"
 #include <catch.hpp>
 
 using namespace RTC;
 
 SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 {
-	// Start LibUV.
-	DepLibUV::ClassInit();
-
 	class TestKeyFrameRequestManagerListener : public KeyFrameRequestManager::Listener
 	{
 	public:
