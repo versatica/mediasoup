@@ -163,7 +163,7 @@ switch (task)
 
 	case 'install-clang-tools':
 	{
-		execute('cd worker/scripts && npm install');
+		execute('npm install --prefix worker/scripts');
 
 		break;
 	}
