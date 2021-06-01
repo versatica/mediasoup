@@ -68,5 +68,6 @@ jobs:
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
       - run: npm install
+      - run: npm run install-clang-tools
       - run: npm run lint:worker
       - run: npm run test:worker

@@ -9,7 +9,7 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
 MEDIASOUP_OUT_DIR ?= out
 MEDIASOUP_BUILDTYPE ?= Release
-GULP = ../node_modules/.bin/gulp
+GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
 BEAR ?= bear
 SED ?= sed
@@ -56,10 +56,10 @@ xcode:
 	$(PYTHON) ./scripts/configure.py --format=xcode
 
 lint:
-	$(GULP) lint:worker
+	$(GULP) --gulpfile ./scripts/gulpfile.js lint:worker
 
 format:
-	$(GULP) format:worker
+	$(GULP) --gulpfile ./scripts/gulpfile.js format:worker
 
 test:
 ifeq ($(MEDIASOUP_WORKER_BIN),)
@@ -77,8 +77,8 @@ bear:
 tidy:
 	$(SED) "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
 	$(PYTHON) ./scripts/clang-tidy.py \
-		-clang-tidy-binary=../node_modules/.bin/clang-tidy \
-		-clang-apply-replacements-binary=../node_modules/.bin/clang-apply-replacements \
+		-clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy \
+		-clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements \
 		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
 		-p=. \
 		-j=$(CORES) \

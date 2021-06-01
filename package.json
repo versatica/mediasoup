@@ -28,6 +28,7 @@
     "node": ">=10"
   },
   "scripts": {
+    "install-clang-tools": "node npm-scripts.js install-clang-tools",
     "typescript:build": "node npm-scripts.js typescript:build",
     "typescript:watch": "node npm-scripts.js typescript:watch",
     "lint": "npm run lint:node && npm run lint:worker",
@@ -65,16 +66,11 @@
     "cross-env": "^7.0.3",
     "eslint": "^7.27.0",
     "eslint-plugin-jest": "^24.3.6",
-    "gulp": "^4.0.2",
-    "gulp-clang-format": "^1.0.27",
     "jest": "^27.0.3",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^6.0.1",
     "sctp": "^1.0.0",
     "tsc-watch": "^4.4.0",
     "typescript": "~3.8.3"
-  },
-  "optionalDependencies": {
-    "clang-tools-prebuilt": "^0.1.4"
   }
 }
