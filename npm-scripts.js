@@ -79,14 +79,14 @@ switch (task)
 
 	case 'lint:worker':
 	{
-		execute(`pushd worker/scripts && ${GULP} lint:worker && popd`);
+		execute(`cd worker/scripts && ${GULP} lint:worker`);
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute(`pushd worker/scripts && ${GULP} format:worker && popd`);
+		execute(`cd worker/scripts && ${GULP} format:worker`);
 
 		break;
 	}
