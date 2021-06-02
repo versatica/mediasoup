@@ -19,7 +19,7 @@ inline static void onClose(uv_handle_t* handle)
 inline static void onWalk(uv_handle_t* handle, void* arg)
 {
 	MS_ERROR(
-	  "active UV handle found (this shouldn't happen) [type:%d, active:%d, closing:%d, has_ref:%d]",
+	  "alive UV handle found (this shouldn't happen) [type:%d, active:%d, closing:%d, has_ref:%d]",
 	  handle->type,
 	  uv_is_active(handle),
 	  uv_is_closing(handle),
