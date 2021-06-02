@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
 	DepLibSRTP::ClassInit();
-	DepUsrSCTP::ClassInit();
+	// DepUsrSCTP::ClassInit();
 	DepLibWebRTC::ClassInit();
 	Utils::Crypto::ClassInit();
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 	DepLibSRTP::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
 	DepLibWebRTC::ClassDestroy();
-	DepUsrSCTP::ClassDestroy();
+	// DepUsrSCTP::ClassDestroy();
 	DepLibUV::ClassDestroy();
 
 	return status;

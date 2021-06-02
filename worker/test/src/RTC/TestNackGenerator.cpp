@@ -160,8 +160,6 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
 
 	SECTION("generate NACK for missing ordered packet")
@@ -175,8 +173,6 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
 
 	SECTION("sequence wrap generates no NACK")
@@ -191,8 +187,6 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
 
 	SECTION("generate NACK after sequence wrap")
@@ -207,8 +201,6 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
 
 	SECTION("generate NACK after sequence wrap, and yet another NACK")
@@ -226,8 +218,6 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
 
 	SECTION("intercalated missing packets")
@@ -244,8 +234,6 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
 
 	SECTION("non contiguous intercalated missing packets")
@@ -261,8 +249,6 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
 
 	SECTION("big jump")
@@ -279,8 +265,6 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
 
 	SECTION("Key Frame required. Nack list too large to be requested")
@@ -294,7 +278,8 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 		// clang-format on
 
 		validate(inputs);
-
-		DepLibUV::RunLoop();
 	}
+
+	// Must run the loop to wait for UV timers and close them.
+	DepLibUV::RunLoop();
 }

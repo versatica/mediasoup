@@ -18,7 +18,8 @@ inline static void onClose(uv_handle_t* handle)
 
 inline static void onWalk(uv_handle_t* handle, void* arg)
 {
-	MS_ERROR(
+	// Must use MS_ERROR_STD since at this point the Channel is already closed.
+	MS_ERROR_STD(
 	  "alive UV handle found (this shouldn't happen) [type:%d, active:%d, closing:%d, has_ref:%d]",
 	  handle->type,
 	  uv_is_active(handle),
@@ -68,7 +69,7 @@ void DepLibUV::ClassDestroy()
 	}
 
 	if (err != 0)
-		MS_ERROR("failed to close libuv loop: %s", uv_err_name(err));
+		MS_ERROR_STD("failed to close libuv loop: %s", uv_err_name(err));
 
 	delete DepLibUV::loop;
 }
