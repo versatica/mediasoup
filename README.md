@@ -3,6 +3,7 @@
 [![][mediasoup-banner]][mediasoup-website]
 
 [![][npm-shield-mediasoup]][npm-mediasoup]
+[![][crates-shield-mediasoup]][crates-mediasoup]
 [![][github-actions-shield-mediasoup-node]][github-actions-mediasoup-node]
 [![][github-actions-shield-mediasoup-worker]][github-actions-mediasoup-worker]
 [![][github-actions-shield-mediasoup-rust]][github-actions-mediasoup-rust]
@@ -26,7 +27,7 @@ mediasoup and its client side libraries are designed to accomplish with the foll
 
 * Be a [SFU](https://webrtcglossary.com/sfu/) (Selective Forwarding Unit).
 * Support both WebRTC and plain RTP input and output.
-* Be a Node.js module in server side.
+* Be a Node.js module/Rust crate in server side.
 * Be a tiny JavaScript and C++ libraries in client side.
 * Be minimalist: just handle the media layer.
 * Be signaling agnostic: do not mandate any signaling protocol.
@@ -51,15 +52,15 @@ mediasoup and its client side libraries provide a super low level API. They are 
 
 ## Features
 
-* ECMAScript 6 low level API.
+* ECMAScript 6/Idiomatic Rust low level API.
 * Multi-stream: multiple audio/video streams over a single ICE + DTLS transport.
 * IPv6 ready.
 * ICE / DTLS / RTP / RTCP over UDP and TCP.
 * Simulcast and SVC support.
 * Congestion control.
 * Sender and receiver bandwidth estimation with spatial/temporal layers distribution algorithm.
-* Data message exchange (via WebRTC DataChannels, SCTP over plain UDP, and direct termination in Node.js).
-* Extremely powerful (media worker subprocess coded in C++ on top of [libuv](https://libuv.org)).
+* Data message exchange (via WebRTC DataChannels, SCTP over plain UDP, and direct termination in Node.js/Rust).
+* Extremely powerful (media worker thread/subprocess coded in C++ on top of [libuv](https://libuv.org)).
 
 
 ## Demo Online
@@ -92,6 +93,8 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [mediasoup-discourse]: https://mediasoup.discourse.group
 [npm-shield-mediasoup]: https://img.shields.io/npm/v/mediasoup.svg
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
+[crates-shield-mediasoup]: https://img.shields.io/crates/v/mediasoup.svg
+[crates-mediasoup]: https://crates.io/crates/mediasoup
 [github-actions-shield-mediasoup-node]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-node.yaml/badge.svg
 [github-actions-mediasoup-node]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-node.yaml
 [github-actions-shield-mediasoup-worker]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker.yaml/badge.svg

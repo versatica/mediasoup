@@ -2,16 +2,16 @@
 #define MS_PAYLOAD_CHANNEL_NOTIFIER_HPP
 
 #include "common.hpp"
-#include "PayloadChannel/UnixStreamSocket.hpp"
+#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include <json.hpp>
 #include <string>
 
 namespace PayloadChannel
 {
-	class Notifier
+	class PayloadChannelNotifier
 	{
 	public:
-		static void ClassInit(PayloadChannel::UnixStreamSocket* payloadChannel);
+		static void ClassInit(PayloadChannel::PayloadChannelSocket* payloadChannel);
 		static void Emit(
 		  const std::string& targetId, const char* event, const uint8_t* payload, size_t payloadLen);
 		static void Emit(
@@ -23,7 +23,7 @@ namespace PayloadChannel
 
 	public:
 		// Passed by argument.
-		thread_local static PayloadChannel::UnixStreamSocket* payloadChannel;
+		thread_local static PayloadChannel::PayloadChannelSocket* payloadChannel;
 	};
 } // namespace PayloadChannel
 

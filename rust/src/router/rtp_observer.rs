@@ -1,8 +1,3 @@
-//! An RTP observer inspects the media received by a set of selected producers.
-//!
-//! mediasoup implements the following RTP observers:
-//! * [`AudioLevelObserver`](crate::audio_level_observer::AudioLevelObserver)
-
 use crate::data_structures::AppData;
 use crate::producer::{Producer, ProducerId};
 use crate::uuid_based_wrapper_type;
@@ -11,11 +6,11 @@ use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
 
 uuid_based_wrapper_type!(
-    /// RTP observer identifier.
+    /// [`RtpObserver`] identifier.
     RtpObserverId
 );
 
-/// Options for adding producer to RTP observer
+/// Options for adding producer to `[RtpObserver`]
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct RtpObserverAddProducerOptions {
@@ -24,7 +19,8 @@ pub struct RtpObserverAddProducerOptions {
 }
 
 impl RtpObserverAddProducerOptions {
-    /// * `producer_id` - The id of the Producer to be added.
+    /// * `producer_id` - The id of the [`Producer`] to be added.
+    #[must_use]
     pub fn new(producer_id: ProducerId) -> Self {
         Self { producer_id }
     }
@@ -37,15 +33,19 @@ impl RtpObserverAddProducerOptions {
 #[async_trait(?Send)]
 pub trait RtpObserver {
     /// RtpObserver id.
+    #[must_use]
     fn id(&self) -> RtpObserverId;
 
     /// Whether the RtpObserver is paused.
+    #[must_use]
     fn paused(&self) -> bool;
 
     /// Custom application data.
+    #[must_use]
     fn app_data(&self) -> &AppData;
 
     /// Whether the RTP observer is closed.
+    #[must_use]
     fn closed(&self) -> bool;
 
     /// Pauses the RTP observer. No RTP is inspected until resume() is called.

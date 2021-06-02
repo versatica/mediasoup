@@ -6,8 +6,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/Notifier.hpp"
-#include "PayloadChannel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
+#include "PayloadChannel/PayloadChannelNotifier.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -555,13 +555,13 @@ namespace RTC
 			jsonObject["maxIncomingBitrate"] = this->maxIncomingBitrate;
 	}
 
-	void Transport::HandleRequest(Channel::Request* request)
+	void Transport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::TRANSPORT_DUMP:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_DUMP:
 			{
 				json data = json::object();
 
@@ -572,7 +572,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_GET_STATS:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_GET_STATS:
 			{
 				json data = json::array();
 
@@ -583,7 +583,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE:
 			{
 				auto jsonBitrateIt = request->data.find("bitrate");
 
@@ -609,7 +609,41 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_PRODUCE:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_SET_MAX_OUTGOING_BITRATE:
+			{
+				auto jsonBitrateIt = request->data.find("bitrate");
+
+				// clang-format off
+				if (
+					jsonBitrateIt == request->data.end() ||
+					!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
+				)
+				// clang-format on
+				{
+					MS_THROW_TYPE_ERROR("missing bitrate");
+				}
+
+				if (this->tccClient)
+				{
+					uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+
+					// NOTE: This may throw if given bitrate is less than current
+					// initialAvailableOutgoingBitrate, so don't update things before
+					// calling this method.
+					this->tccClient->SetMaxOutgoingBitrate(bitrate);
+					this->maxOutgoingBitrate = bitrate;
+
+					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
+
+					ComputeOutgoingDesiredBitrate();
+				}
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::MethodId::TRANSPORT_PRODUCE:
 			{
 				std::string producerId;
 
@@ -766,7 +800,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_CONSUME:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CONSUME:
 			{
 				auto jsonProducerIdIt = request->internal.find("producerId");
 
@@ -953,7 +987,7 @@ namespace RTC
 						};
 
 						this->tccClient = new RTC::TransportCongestionControlClient(
-						  this, bweType, this->initialAvailableOutgoingBitrate);
+						  this, bweType, this->initialAvailableOutgoingBitrate, this->maxOutgoingBitrate);
 
 						if (IsConnected())
 							this->tccClient->TransportConnected();
@@ -1019,7 +1053,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_PRODUCE_DATA:
 			{
 				// Early check. The Transport must support SCTP or be direct.
 				if (!this->sctpAssociation && !this->direct)
@@ -1115,7 +1149,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CONSUME_DATA:
 			{
 				// Early check. The Transport must support SCTP or be direct.
 				if (!this->sctpAssociation && !this->direct)
@@ -1216,7 +1250,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_ENABLE_TRACE_EVENT:
 			{
 				auto jsonTypesIt = request->data.find("types");
 
@@ -1251,7 +1285,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::PRODUCER_CLOSE:
+			case Channel::ChannelRequest::MethodId::PRODUCER_CLOSE:
 			{
 				// This may throw.
 				RTC::Producer* producer = GetProducerFromInternal(request->internal);
@@ -1286,7 +1320,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_CLOSE:
+			case Channel::ChannelRequest::MethodId::CONSUMER_CLOSE:
 			{
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromInternal(request->internal);
@@ -1327,11 +1361,11 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::PRODUCER_DUMP:
-			case Channel::Request::MethodId::PRODUCER_GET_STATS:
-			case Channel::Request::MethodId::PRODUCER_PAUSE:
-			case Channel::Request::MethodId::PRODUCER_RESUME:
-			case Channel::Request::MethodId::PRODUCER_ENABLE_TRACE_EVENT:
+			case Channel::ChannelRequest::MethodId::PRODUCER_DUMP:
+			case Channel::ChannelRequest::MethodId::PRODUCER_GET_STATS:
+			case Channel::ChannelRequest::MethodId::PRODUCER_PAUSE:
+			case Channel::ChannelRequest::MethodId::PRODUCER_RESUME:
+			case Channel::ChannelRequest::MethodId::PRODUCER_ENABLE_TRACE_EVENT:
 			{
 				// This may throw.
 				RTC::Producer* producer = GetProducerFromInternal(request->internal);
@@ -1341,14 +1375,14 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_DUMP:
-			case Channel::Request::MethodId::CONSUMER_GET_STATS:
-			case Channel::Request::MethodId::CONSUMER_PAUSE:
-			case Channel::Request::MethodId::CONSUMER_RESUME:
-			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
-			case Channel::Request::MethodId::CONSUMER_SET_PRIORITY:
-			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
-			case Channel::Request::MethodId::CONSUMER_ENABLE_TRACE_EVENT:
+			case Channel::ChannelRequest::MethodId::CONSUMER_DUMP:
+			case Channel::ChannelRequest::MethodId::CONSUMER_GET_STATS:
+			case Channel::ChannelRequest::MethodId::CONSUMER_PAUSE:
+			case Channel::ChannelRequest::MethodId::CONSUMER_RESUME:
+			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PRIORITY:
+			case Channel::ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			case Channel::ChannelRequest::MethodId::CONSUMER_ENABLE_TRACE_EVENT:
 			{
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromInternal(request->internal);
@@ -1358,7 +1392,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_PRODUCER_CLOSE:
+			case Channel::ChannelRequest::MethodId::DATA_PRODUCER_CLOSE:
 			{
 				// This may throw.
 				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(request->internal);
@@ -1391,7 +1425,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_CONSUMER_CLOSE:
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_CLOSE:
 			{
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
@@ -1418,8 +1452,8 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_PRODUCER_DUMP:
-			case Channel::Request::MethodId::DATA_PRODUCER_GET_STATS:
+			case Channel::ChannelRequest::MethodId::DATA_PRODUCER_DUMP:
+			case Channel::ChannelRequest::MethodId::DATA_PRODUCER_GET_STATS:
 			{
 				// This may throw.
 				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(request->internal);
@@ -1429,8 +1463,8 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_CONSUMER_DUMP:
-			case Channel::Request::MethodId::DATA_CONSUMER_GET_STATS:
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_DUMP:
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_STATS:
 			{
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
@@ -1440,7 +1474,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
 			{
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
@@ -1465,7 +1499,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
@@ -1487,13 +1521,13 @@ namespace RTC
 		}
 	}
 
-	void Transport::HandleRequest(PayloadChannel::Request* request)
+	void Transport::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case PayloadChannel::Request::MethodId::DATA_CONSUMER_SEND:
+			case PayloadChannel::PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND:
 			{
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
@@ -2520,7 +2554,7 @@ namespace RTC
 
 		packet->FillJson(data["info"]);
 
-		Channel::Notifier::Emit(this->id, "trace", data);
+		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::EmitTraceEventBweType(
@@ -2554,7 +2588,7 @@ namespace RTC
 				break;
 		}
 
-		Channel::Notifier::Emit(this->id, "trace", data);
+		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::EmitTraceEventNewBweType(RTC::SenderBandwidthEstimator::Bitrates& bitrates) const
@@ -2889,7 +2923,7 @@ namespace RTC
 
 		data["sctpState"] = "connecting";
 
-		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2912,7 +2946,7 @@ namespace RTC
 
 		data["sctpState"] = "connected";
 
-		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2935,7 +2969,7 @@ namespace RTC
 
 		data["sctpState"] = "failed";
 
-		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2958,7 +2992,7 @@ namespace RTC
 
 		data["sctpState"] = "closed";
 
-		Channel::Notifier::Emit(this->id, "sctpstatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationSendData(

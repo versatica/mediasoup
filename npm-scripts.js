@@ -7,8 +7,6 @@ const { version } = require('./package.json');
 const isWindows = os.platform() === 'win32';
 const task = process.argv.slice(2).join(' ');
 
-const GULP = process.env.GULP || 'gulp';
-
 // mediasoup mayor version.
 const MAYOR_VERSION = 3;
 
@@ -72,21 +70,21 @@ switch (task)
 	case 'lint:node':
 	{
 		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js gulpfile.js npm-scripts.js test/');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js npm-scripts.js test/ worker/scripts/gulpfile.js');
 
 		break;
 	}
 
 	case 'lint:worker':
 	{
-		execute(`${GULP} lint:worker`);
+		execute('make lint -C worker');
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute(`${GULP} format:worker`);
+		execute('make format -C worker');
 
 		break;
 	}
@@ -159,6 +157,13 @@ switch (task)
 		execute(`git tag -a ${version} -m '${version}'`);
 		execute(`git push origin v${MAYOR_VERSION} && git push origin --tags`);
 		execute('npm publish');
+
+		break;
+	}
+
+	case 'install-clang-tools':
+	{
+		execute('npm install --prefix worker/scripts');
 
 		break;
 	}

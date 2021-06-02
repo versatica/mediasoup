@@ -7,10 +7,17 @@ fn main() {
         return;
     }
 
+    let current_dir = std::env::current_dir()
+        .unwrap()
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    let out_dir = env::var("OUT_DIR").unwrap();
+
     // Add C++ std lib
     #[cfg(target_os = "linux")]
     {
-        let path = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
+        let path = Command::new(env::var("CXX").unwrap_or_else(|_| "c++".to_string()))
             .arg("--print-file-name=libstdc++.a")
             .output()
             .expect("Failed to start")
@@ -31,7 +38,7 @@ fn main() {
         target_os = "netbsd"
     ))]
     {
-        let path = Command::new(env::var("c++").unwrap_or_else(|_| "c++".to_string()))
+        let path = Command::new(env::var("CXX").unwrap_or_else(|_| "c++".to_string()))
             .arg("--print-file-name=libc++.a")
             .output()
             .expect("Failed to start")
@@ -47,21 +54,62 @@ fn main() {
     }
     #[cfg(target_os = "macos")]
     {
-        panic!("Building on macOS is not currently supported");
-        // TODO: The issue here is `libc++.a` that is not shipped with macOS's `c++` it seems
+        let clang_llvm_version = "clang+llvm-12.0.0-x86_64-apple-darwin";
+        let status = Command::new("curl")
+            .args(&[
+                "-L",
+                "-s",
+                "-O",
+                &format!("https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/{}.tar.xz", clang_llvm_version),
+            ])
+            .current_dir(&out_dir)
+            .status()
+            .expect("Failed to start");
+
+        if !status.success() {
+            panic!("Failed to download libc++");
+        }
+
+        let status = Command::new("tar")
+            .args(&[
+                "-xf",
+                &format!("{}.tar.xz", clang_llvm_version),
+                &format!("{}/lib/libc++.a", clang_llvm_version),
+                &format!("{}/lib/libc++abi.a", clang_llvm_version),
+            ])
+            .current_dir(&out_dir)
+            .status()
+            .expect("Failed to start");
+        if !status.success() {
+            panic!("Failed to download libc++");
+        }
+
+        for file in &["libc++.a", "libc++abi.a"] {
+            std::fs::copy(
+                format!("{}/{}/lib/{}", out_dir, clang_llvm_version, file),
+                format!("{}/{}", out_dir, file),
+            )
+            .unwrap_or_else(|_| {
+                panic!(
+                    "Failed to copy static library from {}/{}/lib/{} to {}/{}",
+                    out_dir, clang_llvm_version, file, out_dir, file
+                )
+            });
+        }
+
+        std::fs::remove_file(format!("{}/{}.tar.xz", out_dir, clang_llvm_version))
+            .expect("Failed to remove downloaded clang+llvm archive");
+        std::fs::remove_dir_all(format!("{}/{}", out_dir, clang_llvm_version))
+            .expect("Failed to remove extracted clang+llvm files");
+
+        println!("cargo:rustc-link-lib=static=c++");
+        println!("cargo:rustc-link-lib=static=c++abi");
     }
     #[cfg(target_os = "windows")]
     {
         panic!("Building on Windows is not currently supported");
         // TODO: Didn't bother, feel free to PR
     }
-
-    let current_dir = std::env::current_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap();
-    let out_dir = env::var("OUT_DIR").unwrap();
 
     // The build here is a bit awkward since we can't just specify custom target directory as
     // openssl will fail to build with `make[1]: /bin/sh: Argument list too long` due to large

@@ -1,7 +1,7 @@
-#define MS_CLASS "TcpConnection"
+#define MS_CLASS "TcpConnectionHandler"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "handles/TcpConnection.hpp"
+#include "handles/TcpConnectionHandler.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -12,7 +12,7 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	auto* connection = static_cast<TcpConnection*>(handle->data);
+	auto* connection = static_cast<TcpConnectionHandler*>(handle->data);
 
 	if (connection)
 		connection->OnUvReadAlloc(suggestedSize, buf);
@@ -20,7 +20,7 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
-	auto* connection = static_cast<TcpConnection*>(handle->data);
+	auto* connection = static_cast<TcpConnectionHandler*>(handle->data);
 
 	if (connection)
 		connection->OnUvRead(nread, buf);
@@ -28,9 +28,9 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	auto* writeData  = static_cast<TcpConnection::UvWriteData*>(req->data);
+	auto* writeData  = static_cast<TcpConnectionHandler::UvWriteData*>(req->data);
 	auto* handle     = req->handle;
-	auto* connection = static_cast<TcpConnection*>(handle->data);
+	auto* connection = static_cast<TcpConnectionHandler*>(handle->data);
 	auto* cb         = writeData->cb;
 
 	if (connection)
@@ -58,7 +58,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 /* Instance methods. */
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
+TcpConnectionHandler::TcpConnectionHandler(size_t bufferSize) : bufferSize(bufferSize)
 {
 	MS_TRACE();
 
@@ -68,7 +68,7 @@ TcpConnection::TcpConnection(size_t bufferSize) : bufferSize(bufferSize)
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
 }
 
-TcpConnection::~TcpConnection()
+TcpConnectionHandler::~TcpConnectionHandler()
 {
 	MS_TRACE();
 
@@ -78,7 +78,7 @@ TcpConnection::~TcpConnection()
 	delete[] this->buffer;
 }
 
-void TcpConnection::Close()
+void TcpConnectionHandler::Close()
 {
 	MS_TRACE();
 
@@ -89,7 +89,7 @@ void TcpConnection::Close()
 
 	this->closed = true;
 
-	// Tell the UV handle that the TcpConnection has been closed.
+	// Tell the UV handle that the TcpConnectionHandler has been closed.
 	this->uvHandle->data = nullptr;
 
 	// Don't read more.
@@ -118,18 +118,18 @@ void TcpConnection::Close()
 	}
 }
 
-void TcpConnection::Dump() const
+void TcpConnectionHandler::Dump() const
 {
-	MS_DUMP("<TcpConnection>");
+	MS_DUMP("<TcpConnectionHandler>");
 	MS_DUMP("  localIp    : %s", this->localIp.c_str());
 	MS_DUMP("  localPort  : %" PRIu16, static_cast<uint16_t>(this->localPort));
 	MS_DUMP("  remoteIp   : %s", this->peerIp.c_str());
 	MS_DUMP("  remotePort : %" PRIu16, static_cast<uint16_t>(this->peerPort));
 	MS_DUMP("  closed     : %s", !this->closed ? "open" : "closed");
-	MS_DUMP("</TcpConnection>");
+	MS_DUMP("</TcpConnectionHandler>");
 }
 
-void TcpConnection::Setup(
+void TcpConnectionHandler::Setup(
   Listener* listener, struct sockaddr_storage* localAddr, const std::string& localIp, uint16_t localPort)
 {
 	MS_TRACE();
@@ -154,7 +154,7 @@ void TcpConnection::Setup(
 	this->localPort = localPort;
 }
 
-void TcpConnection::Start()
+void TcpConnectionHandler::Start()
 {
 	MS_TRACE();
 
@@ -174,7 +174,8 @@ void TcpConnection::Start()
 		MS_THROW_ERROR("error setting peer IP and port");
 }
 
-void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSendCallback* cb)
+void TcpConnectionHandler::Write(
+  const uint8_t* data, size_t len, TcpConnectionHandler::onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -268,8 +269,12 @@ void TcpConnection::Write(const uint8_t* data, size_t len, TcpConnection::onSend
 	}
 }
 
-void TcpConnection::Write(
-  const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, TcpConnection::onSendCallback* cb)
+void TcpConnectionHandler::Write(
+  const uint8_t* data1,
+  size_t len1,
+  const uint8_t* data2,
+  size_t len2,
+  TcpConnectionHandler::onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -385,7 +390,7 @@ void TcpConnection::Write(
 	}
 }
 
-void TcpConnection::ErrorReceiving()
+void TcpConnectionHandler::ErrorReceiving()
 {
 	MS_TRACE();
 
@@ -394,7 +399,7 @@ void TcpConnection::ErrorReceiving()
 	this->listener->OnTcpConnectionClosed(this);
 }
 
-bool TcpConnection::SetPeerAddress()
+bool TcpConnectionHandler::SetPeerAddress()
 {
 	MS_TRACE();
 
@@ -418,7 +423,7 @@ bool TcpConnection::SetPeerAddress()
 	return true;
 }
 
-inline void TcpConnection::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
+inline void TcpConnectionHandler::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
@@ -442,7 +447,7 @@ inline void TcpConnection::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf
 	}
 }
 
-inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
+inline void TcpConnectionHandler::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 {
 	MS_TRACE();
 
@@ -489,7 +494,7 @@ inline void TcpConnection::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 	}
 }
 
-inline void TcpConnection::OnUvWrite(int status, TcpConnection::onSendCallback* cb)
+inline void TcpConnectionHandler::OnUvWrite(int status, TcpConnectionHandler::onSendCallback* cb)
 {
 	MS_TRACE();
 

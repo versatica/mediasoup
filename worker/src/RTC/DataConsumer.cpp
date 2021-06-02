@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 
 namespace RTC
 {
@@ -125,13 +125,13 @@ namespace RTC
 		jsonObject["bufferedAmount"] = this->bufferedAmount;
 	}
 
-	void DataConsumer::HandleRequest(Channel::Request* request)
+	void DataConsumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::DATA_CONSUMER_DUMP:
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_DUMP:
 			{
 				json data = json::object();
 
@@ -142,7 +142,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_CONSUMER_GET_STATS:
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_STATS:
 			{
 				json data = json::array();
 
@@ -153,7 +153,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
 				auto jsonThresholdIt = request->data.find("threshold");
 
@@ -173,7 +173,7 @@ namespace RTC
 
 					data["bufferedAmount"] = this->bufferedAmount;
 
-					Channel::Notifier::Emit(this->id, "bufferedamountlow", data);
+					Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
 				}
 				// Force the trigger of 'bufferedamountlow' once there is less or same
 				// buffered data than the given threshold.
@@ -192,13 +192,13 @@ namespace RTC
 		}
 	}
 
-	void DataConsumer::HandleRequest(PayloadChannel::Request* request)
+	void DataConsumer::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case PayloadChannel::Request::MethodId::DATA_CONSUMER_SEND:
+			case PayloadChannel::PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND:
 			{
 				auto jsonPpidIt = request->data.find("ppid");
 
@@ -299,7 +299,7 @@ namespace RTC
 
 			data["bufferedAmount"] = this->bufferedAmount;
 
-			Channel::Notifier::Emit(this->id, "bufferedamountlow", data);
+			Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
 		}
 	}
 
@@ -313,7 +313,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
 
-		Channel::Notifier::Emit(this->id, "dataproducerclose");
+		Channel::ChannelNotifier::Emit(this->id, "dataproducerclose");
 
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}

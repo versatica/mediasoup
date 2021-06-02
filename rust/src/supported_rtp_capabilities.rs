@@ -12,9 +12,11 @@ use std::num::{NonZeroU32, NonZeroU8};
 /// # Notes on usage
 /// Those are NOT the RTP capabilities needed by mediasoup-client's
 /// [device.load()](https://mediasoup.org/documentation/v3/mediasoup-client/api/#device-load) and
-/// libmediasoupclient's [device.Load()](https://mediasoup.org/documentation/v3/libmediasoupclient/api/#device-Load)
-/// methods. There you must use [`Router::rtp_capabilities`](crate::router::Router::rtp_capabilities)
-/// getter instead.
+/// libmediasoupclient's
+/// [device.Load()](https://mediasoup.org/documentation/v3/libmediasoupclient/api/#device-Load)
+/// methods. There you must use
+/// [`Router::rtp_capabilities`](crate::router::Router::rtp_capabilities) getter instead.
+#[must_use]
 pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
     RtpCapabilities {
         codecs: vec![
@@ -193,8 +195,8 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 1u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 1_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -209,8 +211,8 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 0u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 0_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -225,8 +227,8 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 1u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 1_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -241,8 +243,8 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 0u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 0_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,

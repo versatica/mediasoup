@@ -5,7 +5,7 @@
 #include <uv.h>
 #include <string>
 
-class TcpConnection
+class TcpConnectionHandler
 {
 protected:
 	using onSendCallback = const std::function<void(bool sent)>;
@@ -17,7 +17,7 @@ public:
 		virtual ~Listener() = default;
 
 	public:
-		virtual void OnTcpConnectionClosed(TcpConnection* connection) = 0;
+		virtual void OnTcpConnectionClosed(TcpConnectionHandler* connection) = 0;
 	};
 
 public:
@@ -40,14 +40,14 @@ public:
 
 		uv_write_t req;
 		uint8_t* store{ nullptr };
-		TcpConnection::onSendCallback* cb{ nullptr };
+		TcpConnectionHandler::onSendCallback* cb{ nullptr };
 	};
 
 public:
-	explicit TcpConnection(size_t bufferSize);
-	TcpConnection& operator=(const TcpConnection&) = delete;
-	TcpConnection(const TcpConnection&)            = delete;
-	virtual ~TcpConnection();
+	explicit TcpConnectionHandler(size_t bufferSize);
+	TcpConnectionHandler& operator=(const TcpConnectionHandler&) = delete;
+	TcpConnectionHandler(const TcpConnectionHandler&)            = delete;
+	virtual ~TcpConnectionHandler();
 
 public:
 	void Close();
@@ -66,13 +66,13 @@ public:
 		return this->uvHandle;
 	}
 	void Start();
-	void Write(const uint8_t* data, size_t len, TcpConnection::onSendCallback* cb);
+	void Write(const uint8_t* data, size_t len, TcpConnectionHandler::onSendCallback* cb);
 	void Write(
 	  const uint8_t* data1,
 	  size_t len1,
 	  const uint8_t* data2,
 	  size_t len2,
-	  TcpConnection::onSendCallback* cb);
+	  TcpConnectionHandler::onSendCallback* cb);
 	void ErrorReceiving();
 	const struct sockaddr* GetLocalAddress() const
 	{

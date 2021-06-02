@@ -1,6 +1,3 @@
-//! A plain transport represents a network path through which RTP, RTCP (optionally secured with
-//! SRTP) and SCTP (DataChannel) is transmitted.
-
 #[cfg(test)]
 mod tests;
 
@@ -13,19 +10,20 @@ use crate::messages::{
     TransportConnectRequestPlainData, TransportInternal,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::{Router, RouterId};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
-    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
-    TransportTraceEventData, TransportTraceEventType, TransportType,
+    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
+    TransportTraceEventType,
 };
 use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
-use log::*;
+use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -34,7 +32,7 @@ use std::net::IpAddr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
-/// Plain transport options.
+/// [`PlainTransport`] options.
 ///
 /// # Notes on usage
 /// * Note that `comedia` mode just makes sense when the remote endpoint is gonna produce RTP on
@@ -80,6 +78,7 @@ pub struct PlainTransportOptions {
 
 impl PlainTransportOptions {
     /// Create Plain transport options with given listen IP.
+    #[must_use]
     pub fn new(listen_ip: TransportListenIp) -> Self {
         Self {
             listen_ip,
@@ -87,8 +86,8 @@ impl PlainTransportOptions {
             comedia: false,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 262144,
-            sctp_send_buffer_size: 262144,
+            max_sctp_message_size: 262_144,
+            sctp_send_buffer_size: 262_144,
             enable_srtp: false,
             srtp_crypto_suite: SrtpCryptoSuite::default(),
             app_data: AppData::default(),
@@ -270,6 +269,7 @@ impl Inner {
 /// A plain transport represents a network path through which RTP, RTCP (optionally secured with
 /// SRTP) and SCTP (DataChannel) is transmitted.
 #[derive(Clone)]
+#[must_use = "Transport will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct PlainTransport {
     inner: Arc<Inner>,
 }
@@ -553,11 +553,7 @@ impl PlainTransport {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.router_close.call_simple();
                     inner.close(false);
                 }
@@ -585,7 +581,7 @@ impl PlainTransport {
         Self { inner }
     }
 
-    /// Provide the PlainTransport with remote parameters.
+    /// Provide the [`PlainTransport`] with remote parameters.
     ///
     /// # Notes on usage
     /// * If `comedia` is enabled in this plain transport and SRTP is not, `connect()` must not be
@@ -737,6 +733,7 @@ impl PlainTransport {
     /// * Information about `remote_ip` and `remote_port` will be set:
     ///   * after calling `connect()` method, or
     ///   * via dynamic remote address detection when using `comedia` mode.
+    #[must_use]
     pub fn tuple(&self) -> TransportTuple {
         *self.inner.data.tuple.lock()
     }
@@ -750,16 +747,19 @@ impl PlainTransport {
     /// * Information about `remote_ip` and `remote_port` will be set:
     ///   * after calling `connect()` method, or
     ///   * via dynamic remote address detection when using `comedia` mode.
+    #[must_use]
     pub fn rtcp_tuple(&self) -> Option<TransportTuple> {
         *self.inner.data.rtcp_tuple.lock()
     }
 
     /// Current SCTP state. Or `None` if SCTP is not enabled.
+    #[must_use]
     pub fn sctp_parameters(&self) -> Option<SctpParameters> {
         self.inner.data.sctp_parameters
     }
 
     /// Current SCTP state. Or `None` if SCTP is not enabled.
+    #[must_use]
     pub fn sctp_state(&self) -> Option<SctpState> {
         *self.inner.data.sctp_state.lock()
     }
@@ -768,6 +768,7 @@ impl PlainTransport {
     /// RTP and SRTP. Note that, if `comedia` mode is set, these local SRTP parameters may change
     /// after calling `connect()` with the remote SRTP parameters (to override the local SRTP crypto
     /// suite with the one given in `connect()`).
+    #[must_use]
     pub fn srtp_parameters(&self) -> Option<SrtpParameters> {
         self.inner.data.srtp_parameters.lock().clone()
     }
@@ -802,6 +803,7 @@ impl PlainTransport {
     }
 
     /// Downgrade `PlainTransport` to [`WeakPlainTransport`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakPlainTransport {
         WeakPlainTransport {
             inner: Arc::downgrade(&self.inner),
@@ -834,6 +836,7 @@ impl fmt::Debug for WeakPlainTransport {
 impl WeakPlainTransport {
     /// Attempts to upgrade `WeakPlainTransport` to [`PlainTransport`] if last instance of one
     /// wasn't dropped yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<PlainTransport> {
         let inner = self.inner.upgrade()?;
 

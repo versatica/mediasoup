@@ -27,7 +27,6 @@ void DepLibUV::ClassDestroy()
 {
 	MS_TRACE();
 
-	// This should never happen.
 	if (DepLibUV::loop != nullptr)
 	{
 		uv_loop_close(DepLibUV::loop);
@@ -49,5 +48,7 @@ void DepLibUV::RunLoop()
 	// This should never happen.
 	MS_ASSERT(DepLibUV::loop != nullptr, "loop unset");
 
-	uv_run(DepLibUV::loop, UV_RUN_DEFAULT);
+	int ret = uv_run(DepLibUV::loop, UV_RUN_DEFAULT);
+
+	MS_ASSERT(ret == 0, "uv_run() returned %s", uv_err_name(ret));
 }

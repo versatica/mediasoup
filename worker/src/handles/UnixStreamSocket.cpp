@@ -113,10 +113,10 @@ UnixStreamSocket::~UnixStreamSocket()
 {
 	MS_TRACE_STD();
 
+	delete[] this->buffer;
+
 	if (!this->closed)
 		Close();
-
-	delete[] this->buffer;
 }
 
 void UnixStreamSocket::Close()

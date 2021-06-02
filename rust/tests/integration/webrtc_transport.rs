@@ -34,7 +34,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("useinbandfec", 1u32.into()),
+                ("useinbandfec", 1_u32.into()),
                 ("foo", "bar".into()),
             ]),
             rtcp_feedback: vec![],
@@ -51,8 +51,8 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("level-asymmetry-allowed", 1u32.into()),
-                ("packetization-mode", 1u32.into()),
+                ("level-asymmetry-allowed", 1_u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "4d0032".into()),
                 ("foo", "bar".into()),
             ]),
@@ -403,6 +403,28 @@ fn set_max_incoming_bitrate_succeeds() {
             .set_max_incoming_bitrate(100000)
             .await
             .expect("Failed to set max incoming bitrate on WebRTC transport");
+    });
+}
+
+#[test]
+fn set_max_outgoing_bitrate_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                },
+            )))
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        transport
+            .set_max_outgoing_bitrate(100000)
+            .await
+            .expect("Failed to set max outgoing bitrate on WebRTC transport");
     });
 }
 

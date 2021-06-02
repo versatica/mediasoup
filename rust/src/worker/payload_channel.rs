@@ -6,7 +6,7 @@ use async_fs::File;
 use bytes::{BufMut, Bytes, BytesMut};
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
-use log::*;
+use log::{debug, error, trace, warn};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -111,7 +111,7 @@ pub(crate) struct PayloadChannel {
 }
 
 impl PayloadChannel {
-    pub(super) fn new(executor: Arc<Executor<'static>>, reader: File, mut writer: File) -> Self {
+    pub(super) fn new(executor: &Executor<'static>, reader: File, mut writer: File) -> Self {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
         let event_handlers = EventHandlers::new();
@@ -149,7 +149,7 @@ impl PayloadChannel {
                             bytes.resize(length + 1, 0);
                         }
                         // +1 because of netstring `,` at the very end
-                        reader.read_exact(&mut bytes[..(length + 1)]).await?;
+                        reader.read_exact(&mut bytes[..=length]).await?;
 
                         trace!(
                             "received raw message: {}",
@@ -216,29 +216,26 @@ impl PayloadChannel {
 
                                 len_bytes.clear();
                                 // +1 because of netstring `,` at the very end
-                                reader.read_exact(&mut bytes[..(length + 1)]).await?;
+                                reader.read_exact(&mut bytes[..=length]).await?;
 
                                 trace!("received notification payload of {} bytes", length);
 
                                 let payload = Bytes::copy_from_slice(&bytes[..length]);
 
-                                match target_id {
-                                    Some(target_id) => {
-                                        event_handlers.call_callbacks_with_value(
-                                            &target_id,
-                                            NotificationMessage {
-                                                message: notification,
-                                                payload,
-                                            },
-                                        );
-                                    }
-                                    None => {
-                                        let unexpected_message = InternalMessage::UnexpectedData(
-                                            Vec::from(&bytes[..length]),
-                                        );
-                                        if sender.send(unexpected_message).await.is_err() {
-                                            break;
-                                        }
+                                if let Some(target_id) = target_id {
+                                    event_handlers.call_callbacks_with_value(
+                                        &target_id,
+                                        NotificationMessage {
+                                            message: notification,
+                                            payload,
+                                        },
+                                    );
+                                } else {
+                                    let unexpected_message = InternalMessage::UnexpectedData(
+                                        Vec::from(&bytes[..length]),
+                                    );
+                                    if sender.send(unexpected_message).await.is_err() {
+                                        break;
                                     }
                                 }
                             }
