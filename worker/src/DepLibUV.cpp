@@ -20,14 +20,18 @@ void DepLibUV::ClassInit()
 	int err = uv_loop_init(DepLibUV::loop);
 
 	if (err != 0)
-		MS_ABORT("libuv initialization failed");
+		MS_ABORT("libuv loop initialization failed");
 }
 
 void DepLibUV::ClassDestroy()
 {
 	MS_TRACE();
 
-	uv_loop_close(DepLibUV::loop);
+	int err = uv_loop_close(DepLibUV::loop);
+
+	if (err != 0)
+		MS_ABORT("failed to close libuv loop: %s", uv_err_name(err));
+
 	delete DepLibUV::loop;
 }
 

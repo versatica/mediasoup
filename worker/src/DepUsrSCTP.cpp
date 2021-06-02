@@ -95,6 +95,13 @@ void DepUsrSCTP::ClassDestroy()
 		if (globalInstances == 0)
 		{
 			usrsctp_finish();
+
+			// TODO: This cleanup currently causes assertion errors in
+			// DepUsrSCTP::DeregisterSctpAssociation() when using mediasoup-worker
+			// in thread mode (Rust).
+			//
+			// numSctpAssociations = 0u; nextSctpAssociationId = 0u;
+			// DepUsrSCTP::mapIdSctpAssociation.clear();
 		}
 	}
 }
