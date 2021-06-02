@@ -8,7 +8,7 @@
 
 class DepUsrSCTP
 {
-public:
+private:
 	class Checker : public Timer::Listener
 	{
 	public:
