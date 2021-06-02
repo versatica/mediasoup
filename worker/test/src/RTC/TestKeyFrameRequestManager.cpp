@@ -33,6 +33,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 
+		// Must run the loop here to consume the timer before doing the check.
 		DepLibUV::RunLoop();
 
 		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
@@ -48,6 +49,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 
+		// Must run the loop here to consume the timer before doing the check.
 		DepLibUV::RunLoop();
 
 		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
@@ -61,6 +63,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.KeyFrameReceived(1111);
 
+		// Must run the loop here to consume the timer before doing the check.
 		DepLibUV::RunLoop();
 
 		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
@@ -74,6 +77,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.ForceKeyFrameNeeded(1111);
 
+		// Must run the loop here to consume the timer before doing the check.
 		DepLibUV::RunLoop();
 
 		REQUIRE(listener.onKeyFrameNeededTimesCalled == 3);
@@ -88,8 +92,14 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 		keyFrameRequestManager.ForceKeyFrameNeeded(1111);
 		keyFrameRequestManager.KeyFrameReceived(1111);
 
+		// Must run the loop here to consume the timer before doing the check.
 		DepLibUV::RunLoop();
 
 		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
 	}
+
+	// Must run the loop to wait for UV timers and close them.
+	// NOTE: Not really needed in this file since we run it in each SECTION in
+	// purpose.
+	DepLibUV::RunLoop();
 }

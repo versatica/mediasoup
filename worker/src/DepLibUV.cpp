@@ -9,6 +9,27 @@
 
 thread_local uv_loop_t* DepLibUV::loop{ nullptr };
 
+/* Static methods for UV callbacks. */
+
+inline static void onClose(uv_handle_t* handle)
+{
+	delete handle;
+}
+
+inline static void onWalk(uv_handle_t* handle, void* arg)
+{
+	// Must use MS_ERROR_STD since at this point the Channel is already closed.
+	MS_ERROR_STD(
+	  "alive UV handle found (this shouldn't happen) [type:%d, active:%d, closing:%d, has_ref:%d]",
+	  handle->type,
+	  uv_is_active(handle),
+	  uv_is_closing(handle),
+	  uv_has_ref(handle));
+
+	if (!uv_is_closing(handle))
+		uv_close(handle, onClose);
+}
+
 /* Static methods. */
 
 void DepLibUV::ClassInit()
@@ -20,18 +41,37 @@ void DepLibUV::ClassInit()
 	int err = uv_loop_init(DepLibUV::loop);
 
 	if (err != 0)
-		MS_ABORT("libuv initialization failed");
+		MS_ABORT("libuv loop initialization failed");
 }
 
 void DepLibUV::ClassDestroy()
 {
 	MS_TRACE();
 
-	if (DepLibUV::loop != nullptr)
+	// Here we should not have any UV handle left. All them should have been
+	// already closed+freed. However, in order to not introduce regressions
+	// in the future, we check this anyway.
+	// More context: https://github.com/versatica/mediasoup/pull/576
+
+	int err;
+
+	uv_stop(DepLibUV::loop);
+	uv_walk(DepLibUV::loop, onWalk, nullptr);
+
+	while (true)
 	{
-		uv_loop_close(DepLibUV::loop);
-		delete DepLibUV::loop;
+		err = uv_loop_close(DepLibUV::loop);
+
+		if (err != UV_EBUSY)
+			break;
+
+		uv_run(DepLibUV::loop, UV_RUN_NOWAIT);
 	}
+
+	if (err != 0)
+		MS_ERROR_STD("failed to close libuv loop: %s", uv_err_name(err));
+
+	delete DepLibUV::loop;
 }
 
 void DepLibUV::PrintVersion()
