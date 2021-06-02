@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "DepLibUV.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
@@ -163,6 +164,8 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		rtpStream.ReceivePacket(packet);
 
 		REQUIRE(listener.nackedSeqNumbers.size() == 0);
+
+		DepLibUV::RunLoop();
 	}
 
 	SECTION("wrapping sequence numbers")
@@ -183,6 +186,8 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		REQUIRE(listener.nackedSeqNumbers[0] == 0xffff);
 		REQUIRE(listener.nackedSeqNumbers[1] == 0);
 		listener.nackedSeqNumbers.clear();
+
+		DepLibUV::RunLoop();
 	}
 
 	SECTION("require key frame")
@@ -199,6 +204,8 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		listener.shouldTriggerPLI = true;
 		listener.shouldTriggerFIR = false;
 		rtpStream.ReceivePacket(packet);
+
+		DepLibUV::RunLoop();
 	}
 
 	delete packet;
