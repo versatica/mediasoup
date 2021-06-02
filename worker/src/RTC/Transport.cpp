@@ -2608,7 +2608,7 @@ namespace RTC
 		data["info"]["sendBitrate"]      = bitrates.sendBitrate;
 		data["info"]["recvBitrate"]      = bitrates.recvBitrate;
 
-		Channel::Notifier::Emit(this->id, "trace", data);
+		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -3213,7 +3213,7 @@ namespace RTC
 			data["info"]["items"].push_back(item);
 		}
 
-		Channel::Notifier::Emit(this->id, "trace", data);
+		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnTimer(Timer* timer)
