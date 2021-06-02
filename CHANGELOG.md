@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.7.11
+
+* Fix `DepUsrSCTP::Checker::timer` not being freed on `Worker` close (PR #576). Thanks @nazar-pc for discovering this.
+* Update NPM deps.
+
+
 ### 3.7.10
 
 * Remove clang tools binaries from regular installation.
