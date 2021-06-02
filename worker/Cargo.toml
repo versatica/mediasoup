@@ -26,6 +26,7 @@ include = [
     "!/deps/usrsctp/programs",
     "/include",
     "/scripts",
+    "!/scripts/node_modules",
     "/src",
     "/build.rs",
     "/Cargo.toml",
