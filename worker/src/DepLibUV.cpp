@@ -30,7 +30,7 @@ void DepLibUV::ClassDestroy()
 	int err = uv_loop_close(DepLibUV::loop);
 
 	if (err != 0)
-		MS_ABORT("failed to close libuv loop: %s", uv_err_name(err));
+		MS_ERROR("failed to close libuv loop: %s", uv_err_name(err));
 
 	delete DepLibUV::loop;
 }
