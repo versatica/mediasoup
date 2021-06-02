@@ -3,6 +3,7 @@
 
 #include "Worker.hpp"
 #include "DepLibUV.hpp"
+#include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -31,6 +32,9 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 		this->signalsHandler->AddSignal(SIGTERM, "TERM");
 	}
 #endif
+
+	// Create the Checker instance in DepUsrSCTP.
+	DepUsrSCTP::CreateChecker();
 
 	// Tell the Node process that we are running.
 	Channel::ChannelNotifier::Emit(std::to_string(Logger::pid), "running");
@@ -74,6 +78,9 @@ void Worker::Close()
 		delete router;
 	}
 	this->mapRouters.clear();
+
+	// Close the Checker instance in DepUsrSCTP.
+	DepUsrSCTP::CloseChecker();
 
 	// Close the Channel.
 	this->channel->Close();

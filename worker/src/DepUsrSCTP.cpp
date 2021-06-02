@@ -82,8 +82,6 @@ void DepUsrSCTP::ClassInit()
 
 		++globalInstances;
 	}
-
-	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
 }
 
 void DepUsrSCTP::ClassDestroy()
@@ -97,13 +95,24 @@ void DepUsrSCTP::ClassDestroy()
 		if (globalInstances == 0)
 		{
 			usrsctp_finish();
-			// TODO: This cleanup currently causes assertion errors in
-			// DepUsrSCTP::DeregisterSctpAssociation()
-
-			// numSctpAssociations = 0u; nextSctpAssociationId = 0u;
-			// DepUsrSCTP::mapIdSctpAssociation.clear();
 		}
 	}
+}
+
+void DepUsrSCTP::CreateChecker()
+{
+	MS_TRACE();
+
+	MS_ASSERT(DepUsrSCTP::checker == nullptr, "Checker already created");
+
+	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
+}
+
+void DepUsrSCTP::CloseChecker()
+{
+	MS_TRACE();
+
+	MS_ASSERT(DepUsrSCTP::checker != nullptr, "Checker not created");
 
 	delete DepUsrSCTP::checker;
 }
@@ -138,6 +147,8 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 
 	std::lock_guard<std::mutex> lock(globalSyncMutex);
 
+	MS_ASSERT(DepUsrSCTP::checker != nullptr, "Checker not created");
+
 	auto it = DepUsrSCTP::mapIdSctpAssociation.find(sctpAssociation->id);
 
 	MS_ASSERT(
@@ -155,6 +166,8 @@ void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation
 	MS_TRACE();
 
 	std::lock_guard<std::mutex> lock(globalSyncMutex);
+
+	MS_ASSERT(DepUsrSCTP::checker != nullptr, "Checker not created");
 
 	auto found = DepUsrSCTP::mapIdSctpAssociation.erase(sctpAssociation->id);
 
