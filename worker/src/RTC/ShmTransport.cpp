@@ -301,13 +301,13 @@ namespace RTC
 	}
 
 
-	void ShmTransport::HandleRequest(Channel::Request* request)
+	void ShmTransport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CONNECT:
 			{
 				if (this->IsConnected())
 				{
@@ -321,7 +321,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_CONSUME_STREAM_META:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CONSUME_STREAM_META:
 			{
 				if (RecvStreamMeta(request->data))
 					request->Accept();

@@ -443,7 +443,7 @@ namespace RTC
 			// SCTP send buffer being full is legit, not an error.
 			if (sctpSendBufferFull)
 			{
-				MS_DEBUG_DEV(
+				MS_DEBUG_TAG(
 				  sctp,
 				  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
 				  parameters.streamId,
