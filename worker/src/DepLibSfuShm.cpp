@@ -47,15 +47,8 @@ namespace DepLibSfuShm {
   ShmCtx::~ShmCtx()
   {
     MS_TRACE();
-
-    // Call if writer is not closed
-    if (SHM_WRT_READY == wrt_status)
-    {
-      if ( wrt_ctx == nullptr)
-        MS_WARN_TAG(xcode, "Warning: shm writer context is null but shm is still in ready state.");
-      else
-        sfushm_av_close_writer(wrt_ctx, 0);
-    }
+    
+    CloseShmWriterCtx();
   }
 
 

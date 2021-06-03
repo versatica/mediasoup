@@ -150,6 +150,8 @@ namespace RTC
 	ShmTransport::~ShmTransport()
 	{
 		MS_TRACE();
+		
+		this->shmCtx.CloseShmWriterCtx();
 	}
 
 	void ShmTransport::FillJson(json& jsonObject) const
