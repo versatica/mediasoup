@@ -142,10 +142,8 @@ extern "C" int run_worker(
 		PayloadChannel::PayloadChannelNotifier::ClassInit(payloadChannel.get());
 
 #ifdef MS_EXECUTABLE
-		{
-			// Ignore some signals.
-			IgnoreSignals();
-		}
+		// Ignore some signals.
+		IgnoreSignals();
 #endif
 
 		// Run the Worker.
@@ -159,9 +157,11 @@ extern "C" int run_worker(
 		DepUsrSCTP::ClassDestroy();
 		DepLibUV::ClassDestroy();
 
+#ifdef MS_EXECUTABLE
 		// Wait a bit so pending messages to stdout/Channel arrive to the Node
 		// process.
 		uv_sleep(200);
+#endif
 
 		return 0;
 	}
