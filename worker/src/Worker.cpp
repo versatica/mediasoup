@@ -48,12 +48,6 @@ Worker::~Worker()
 {
 	MS_TRACE();
 
-	// Delete the Channel.
-	delete this->channel;
-
-	// Delete the PayloadChannel.
-	delete this->payloadChannel;
-
 	if (!this->closed)
 		Close();
 }

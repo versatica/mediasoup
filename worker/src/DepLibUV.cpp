@@ -20,8 +20,8 @@ inline static void onWalk(uv_handle_t* handle, void* arg)
 {
 	// Must use MS_ERROR_STD since at this point the Channel is already closed.
 	MS_ERROR_STD(
-	  "alive UV handle found (this shouldn't happen) [type:%d, active:%d, closing:%d, has_ref:%d]",
-	  handle->type,
+	  "alive UV handle found (this shouldn't happen) [type:%s, active:%d, closing:%d, has_ref:%d]",
+	  uv_handle_type_name(handle->type),
 	  uv_is_active(handle),
 	  uv_is_closing(handle),
 	  uv_has_ref(handle));
