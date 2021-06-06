@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.7.12 (WIP)
+### 3.7.12
 
 * `mediasoup-worker`: Fix memory leaks on error exit (PR #581).
 * Update NPM deps.
