@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.7.12 (WIP)
+
+* `mediasoup-worker`: Fix memory leaks on error exit (PR #581).
+* Update NPM deps.
+
+
 ### 3.7.11
 
 * Fix `DepUsrSCTP::Checker::timer` not being freed on `Worker` close (PR #576). Thanks @nazar-pc for discovering this.
