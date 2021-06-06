@@ -89,6 +89,7 @@ namespace PayloadChannel
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Others.
+		bool closed{ false };
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
 		PayloadChannel::Notification* ongoingNotification{ nullptr };

@@ -40,10 +40,14 @@ extern "C" int run_worker(
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
-	// Channel socket.
+	// Channel socket. If Worker instance runs properly, this socket is closed by
+	// it in its destructor. Otherwise it's closed here by also letting libuv
+	// deallocate its UV handles.
 	std::unique_ptr<Channel::ChannelSocket> channel{ nullptr };
 
-	// PayloadChannel socket.
+	// PayloadChannel socket. If Worker instance runs properly, this socket is
+	// closed by it in its destructor. Otherwise it's closed here by also letting
+	// libuv deallocate its UV handles.
 	std::unique_ptr<PayloadChannel::PayloadChannelSocket> payloadChannel{ nullptr };
 
 	try
