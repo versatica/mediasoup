@@ -61,8 +61,6 @@ jobs:
         with:
           path: |
             ~/.npm
-            worker/deps
-            worker/out
           key: ${{ matrix.build.os }}-node-${{matrix.build.cc}}-${{ hashFiles('**/package.json') }}
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-

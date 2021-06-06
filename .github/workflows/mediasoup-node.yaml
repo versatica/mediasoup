@@ -32,8 +32,6 @@ jobs:
         with:
           path: |
             ~/.npm
-            worker/deps
-            worker/out
           key: ${{ matrix.os }}-node-${{ hashFiles('**/package.json') }}
           restore-keys: |
             ${{ matrix.os }}-node-
