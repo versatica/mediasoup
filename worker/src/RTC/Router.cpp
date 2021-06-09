@@ -328,6 +328,7 @@ namespace RTC
 				this->mapTransports.erase(transport->id);
 
 				MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
+				MS_DEBUG_TAG(xcode, "Transport closed [transportId:%s] shm[%s]", transport->id.c_str(), transport->ShmName().c_str());
 
 				// Delete it.
 				delete transport;

@@ -56,13 +56,18 @@ namespace DepLibSfuShm {
   {
     MS_TRACE();
 
+    MS_DEBUG_TAG(xcode, "shm[%s] writer will be closed", this->stream_name.c_str());
+
     // Call if writer is not closed
     if (SHM_WRT_READY == wrt_status)
     {
       if ( wrt_ctx == nullptr)
-        MS_WARN_TAG(xcode, "Warning: shm writer context is null but shm is still in ready state.");
+        MS_WARN_TAG(xcode, "shm[%s] warning: writer context is null but shm is in ready state.");
       else
+      {
+        MS_DEBUG_TAG(xcode, "shm[%s] writer closing, wrt_ctx[%p]", wrt_init.stream_name, wrt_ctx);
         sfushm_av_close_writer(wrt_ctx, 0);
+      }
     }
 
     wrt_status = SHM_WRT_CLOSED;
@@ -111,32 +116,42 @@ namespace DepLibSfuShm {
     this->media[0].new_ssrc =  wrt_init.conf.channels[0].ssrc;
     this->media[1].new_ssrc =  wrt_init.conf.channels[1].ssrc;
 
-    MS_DEBUG_TAG(xcode, "shm ctx ssrc mapping: audio[%" PRIu32 "] video[%" PRIu32 "]",
-      this->media[0].new_ssrc, this->media[1].new_ssrc);
-    MS_DEBUG_TAG(xcode, "shm ctx maxVideoPktDelay=%" PRIu64 " testNackEachMs=%" PRIu64 " useReverseIterator=%s",
-      maxVideoPktDelay, testNackEachMs, useReverseIterator ? "true" : "false");
+    MS_DEBUG_TAG(xcode, "shm[%s] ctx ssrc mapping: audio[%" PRIu32 "] video[%" PRIu32 "]",
+      this->stream_name.c_str(),
+      this->media[0].new_ssrc,
+      this->media[1].new_ssrc);
+    MS_DEBUG_TAG(xcode, "shm[%s] ctx maxVideoPktDelay=%" PRIu64 " testNackEachMs=%" PRIu64 " useReverseIterator=%s",
+      this->stream_name.c_str(),
+      maxVideoPktDelay, 
+      testNackEachMs, 
+      useReverseIterator ? "true" : "false");
 
     int err = SFUSHM_AV_OK;
     if ((err = sfushm_av_open_writer( &wrt_init, &wrt_ctx)) != SFUSHM_AV_OK) {
-      MS_DEBUG_TAG(xcode, "FAILED in sfushm_av_open_writer() to initialize sfu shm %s with error %s", this->wrt_init.stream_name, GetErrorString(err));
+      MS_DEBUG_TAG(xcode, "shm[%s] failed sfushm_av_open_writer() error='%s'", 
+        this->wrt_init.stream_name, 
+        GetErrorString(err));
       this->wrt_status = SHM_WRT_UNDEFINED;
     }
     else
     { 
       this->wrt_status = SHM_WRT_READY;
+      MS_DEBUG_TAG(xcode, "shm[%s] writer ready, wrt_ctx[%p]", this->stream_name.c_str(), this->wrt_ctx);
 
       // Write any stored sender reports into shm and possibly notify ShmConsumer(s)
       if (this->media[0].sr_received)
       {
         WriteSR(Media::AUDIO);
         this->media[0].sr_written = true;
-        MS_DEBUG_TAG(xcode, "shm is ready and first audio SR received and written");
+        MS_DEBUG_TAG(xcode, "shm[%s] first audio SR received and written",
+          this->stream_name.c_str());
       }
       if (this->media[1].sr_received)
       {
         WriteSR(Media::VIDEO);
         this->media[1].sr_written = true;
-        MS_DEBUG_TAG(xcode, "shm is ready and first video SR received and written");
+        MS_DEBUG_TAG(xcode, "shm[%s] first video SR received and written",
+          this->stream_name.c_str());
         this->listener->OnNeedToSync();
       }
     }
@@ -248,7 +263,8 @@ namespace DepLibSfuShm {
     // We have to iterate over all fragments of a frame in order to tell to shm-writer if it is complete, or some chunks are missing. TBD: perf hit?
     while(GetNextFrame(firstIt, lastIt, gaps, complete)) 
     {
-      MS_DEBUG_TAG(xcode, "Got frame [ %" PRIu64 " - %" PRIu64 " ] gaps=%d complete=%d  qsize=%zu", firstIt->seqid, lastIt->seqid, gaps, complete, videoPktBuffer.size());
+      MS_DEBUG_TAG(xcode, "shm[%s] got frame [ %" PRIu64 " - %" PRIu64 " ] gaps=%d complete=%d  qsize=%zu", 
+        this->stream_name.c_str(), firstIt->seqid, lastIt->seqid, gaps, complete, videoPktBuffer.size());
       WriteFrame(firstIt, lastIt, gaps || !complete);
     }
   }
@@ -276,8 +292,8 @@ namespace DepLibSfuShm {
     {
       if (it->seqid > prevseqid + 1)
       {
-        MS_DEBUG_TAG(xcode, "Gap [seq=%" PRIu64 " prev=%" PRIu64 " ts=%" PRIu64 " expired=%d] qsize=%zu",
-          it->seqid, prevseqid, frameTs, frameTsExpired, videoPktBuffer.size());
+        MS_DEBUG_TAG(xcode, "shm[%s] gap [seq=%" PRIu64 " prev=%" PRIu64 " ts=%" PRIu64 " expired=%d] qsize=%zu",
+          this->stream_name.c_str(), it->seqid, prevseqid, frameTs, frameTsExpired, videoPktBuffer.size());
         if (!frameTsExpired)
         {
           return false; // let's wait
@@ -339,7 +355,7 @@ namespace DepLibSfuShm {
       // TBD: should we also discard everything in videoPktBuffer and reset lastTs and lastSeqId while waiting for another keyframe?
       if (invalid)
       {
-        MS_WARN_TAG(xcode, "Invalid kf, request another");
+        MS_WARN_TAG(xcode, "shm[%s] invalid kf, request another", this->stream_name.c_str());
         this->listener->OnNeedToSync();
       }
     }
@@ -398,8 +414,8 @@ namespace DepLibSfuShm {
 
     if (!this->CanWrite(Media::AUDIO))
     {
-      MS_WARN_TAG(xcode, "Cannot write audio ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because shm writer is not initialized",
-        data->ssrc, data->first_rtp_seq, data->rtp_time);
+      MS_WARN_TAG(xcode, "shm[%s] cannot write audio ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because writer is not initialized",
+        this->stream_name.c_str(), data->ssrc, data->first_rtp_seq, data->rtp_time);
       return;
     }
 
@@ -410,7 +426,7 @@ namespace DepLibSfuShm {
     int err = sfushm_av_write_audio(wrt_ctx, data);
     if (IsError(err))
     {
-      MS_WARN_TAG(xcode, "ERROR writing audio ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " inv=%d to shm: %d - %s", data->ssrc, data->first_rtp_seq, data->rtp_time, data->invalid, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "shm[%s] error writing audio ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " inv=%d: %d - %s", this->stream_name.c_str(), data->ssrc, data->first_rtp_seq, data->rtp_time, data->invalid, err, GetErrorString(err));
       bin_log_record.a_num_wr_err += 1;
     }
   }
@@ -447,14 +463,14 @@ namespace DepLibSfuShm {
                                               ispictureend,
                                               iskeyframe))
     {
-      MS_WARN_TAG(xcode, "Enqueue() put nothing in"); // TBD: see if there is ever a reason for Enqueue() to reject an item, right now it always enqueues
+      MS_WARN_TAG(xcode, "shm[%s] enqueue() put nothing in", this->stream_name.c_str()); // TBD: see if there is ever a reason for Enqueue() to reject an item, right now it always enqueues
       return;
     }
 
     if ( ts - this->videoPktBuffer.begin()->ts > this->maxVideoPktDelay || tsIncrement > 0)
     {
-      MS_DEBUG_TAG(xcode, "DEQUEUE [ %" PRIu64 " - %" PRIu64 " ] age=%" PRIu64 " incr=%" PRIu64, 
-      this->videoPktBuffer.begin()->seqid, this->videoPktBuffer.rbegin()->seqid, ts - this->videoPktBuffer.begin()->ts, tsIncrement);
+      MS_DEBUG_TAG(xcode, "shm [%s] Dequeue [ %" PRIu64 " - %" PRIu64 " ] age=%" PRIu64 " incr=%" PRIu64, 
+        this->stream_name.c_str(), this->videoPktBuffer.begin()->seqid, this->videoPktBuffer.rbegin()->seqid, ts - this->videoPktBuffer.begin()->ts, tsIncrement);
       this->Dequeue();
     }
   }
@@ -466,14 +482,14 @@ namespace DepLibSfuShm {
 
     if (!this->CanWrite(Media::VIDEO))
     {
-      MS_WARN_TAG(xcode, "Cannot write video ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because shm writer is not initialized",
-        media[1].new_ssrc, item->seqid, item->ts);
+      MS_WARN_TAG(xcode, "shm[%s] cannot write video ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " because writer is not initialized",
+        this->stream_name.c_str(), media[1].new_ssrc, item->seqid, item->ts);
       return;
     }
 
     // TODO: remove when debugged
     if (item->keyframe && invalid)
-      MS_WARN_TAG(xcode, "Got invalid kf seq=%" PRIu64 " ts=%" PRIu64 " lastkeyframets=%" PRIu64, item->seqid, item->ts, this->lastKeyFrameTs);
+      MS_WARN_TAG(xcode, "shm[%s] got invalid kf seq=%" PRIu64 " ts=%" PRIu64 " lastkeyframets=%" PRIu64, this->stream_name.c_str(), item->seqid, item->ts, this->lastKeyFrameTs);
 
     sfushm_av_frame_frag_t frag;
     frag.ssrc = media[1].new_ssrc;
@@ -523,8 +539,8 @@ namespace DepLibSfuShm {
     int err = sfushm_av_write_video(wrt_ctx, &frag);
     if (IsError(err))
     {
-      MS_WARN_TAG(xcode, "ERROR writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " len=%zu inv=%d: %d - %s",
-        frag.ssrc, frag.first_rtp_seq, frag.rtp_time, frag.len, frag.invalid, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "shm[%s] error writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " len=%zu inv=%d: %d - %s",
+        this->stream_name.c_str(), frag.ssrc, frag.first_rtp_seq, frag.rtp_time, frag.len, frag.invalid, err, GetErrorString(err));
       bin_log_record.v_num_wr_err += 1;
     }
     /*else
@@ -568,7 +584,8 @@ namespace DepLibSfuShm {
     this->media[idx].sr_ntp_lsb = ntp.fractions;
     this->media[idx].sr_rtp_tm = lastSenderReportTs;
 
-    MS_DEBUG_TAG(xcode, "Received SR: SSRC=%" PRIu32 " ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
+    MS_DEBUG_TAG(xcode, "shm[%s] received SR: SSRC=%" PRIu32 " ReportNTP(ms)=%" PRIu64 " RtpTs=%" PRIu32 " uv_hrtime(ms)=%" PRIu64 " clock_gettime(s)=%" PRIu64 " clock_gettime(ms)=%" PRIu64,
+      this->stream_name.c_str(),
       this->media[idx].new_ssrc,
       lastSenderReportNtpMs,
       lastSenderReportTs,
@@ -598,7 +615,8 @@ namespace DepLibSfuShm {
     int err = sfushm_av_write_rtcp_sr_ts(wrt_ctx, this->media[idx].sr_ntp_msb, this->media[idx].sr_ntp_lsb, this->media[idx].sr_rtp_tm, this->media[idx].new_ssrc);
     if (IsError(err))
     {
-      MS_WARN_TAG(xcode, "ERROR writing RTCP SR (ssrc:%" PRIu32 ") %d - %s", this->media[idx].new_ssrc, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "shm[%s] error writing RTCP SR (ssrc:%" PRIu32 ") %d - %s",
+        this->stream_name.c_str(), this->media[idx].new_ssrc, err, GetErrorString(err));
     }
   }
 
@@ -609,7 +627,7 @@ namespace DepLibSfuShm {
 
     if (SHM_WRT_READY != this->wrt_status)
     {
-      MS_WARN_TAG(xcode, "Cannot write stream metadata because shm writer is not initialized");
+      MS_WARN_TAG(xcode, "shm[%s] cannot write stream metadata because shm writer is not initialized", this->stream_name.c_str());
       return -1; // shm writer is not set up yet
     }
 
@@ -618,20 +636,20 @@ namespace DepLibSfuShm {
 
     if (0 != this->stream_name.compare(shm))
     {
-      MS_WARN_TAG(xcode, "input metadata shm name '%s' does not match '%s'", shm.c_str(), this->stream_name.c_str());
+      MS_WARN_TAG(xcode, "shm[%s] wrong input metadata shm name '%s' does not match '%s'", this->stream_name.c_str(), shm.c_str());
       return -1;
     }
 
     if (metadata.length() > 255)
     {
-      MS_WARN_TAG(xcode, "input metadata is too long: %s", metadata.c_str());
+      MS_WARN_TAG(xcode, "shm[%s] input metadata is too long: %s", this->stream_name.c_str(), metadata.c_str());
     }
     std::copy(metadata.begin(), metadata.end(), data);
 
     err = sfushm_av_write_stream_metadata(wrt_ctx, data, metadata.length());
     if (IsError(err))
     {
-      MS_WARN_TAG(xcode, "ERROR writing stream metadata: %d - %s", err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "shm[%s] error writing stream metadata: %d - %s", this->stream_name.c_str(), err, GetErrorString(err));
       return -1;
     }
 
@@ -645,13 +663,13 @@ namespace DepLibSfuShm {
 
     if (SHM_WRT_READY != this->wrt_status)
     {
-      MS_WARN_TAG(xcode, "Cannot write video rotation because shm writer is not initialized");
+      MS_WARN_TAG(xcode, "shm[%s] write not initialized, cannot write video rotation", this->stream_name.c_str());
       return; // shm writer is not set up yet
     }
 
     int err = sfushm_av_write_video_rotation(wrt_ctx, rotation);
 
     if (IsError(err))
-      MS_WARN_TAG(xcode, "ERROR writing video rotation: %d - %s", err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "shm[%s] error writing video rotation: %d - %s", this->stream_name.c_str(), err, GetErrorString(err));
   }
 } // namespace DepLibSfuShm

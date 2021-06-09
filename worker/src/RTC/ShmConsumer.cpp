@@ -172,7 +172,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_WARN_TAG(xcode, "Idle shm consumer");
+		MS_WARN_TAG(xcode, "shm[%s] idle shm consumer", this->shmCtx->StreamName().c_str());
 
 		Channel::Notifier::Emit(this->id, "idleshmconsumer");
 	}
@@ -231,7 +231,7 @@ namespace RTC
 
 		if (!this->producerRtpStream || !this->producerRtpStream->GetSenderReportNtpMs() || !this->producerRtpStream->GetSenderReportTs())
 		{
-			MS_DEBUG_2TAGS(rtcp, xcode, "Producer stream failed to read SR RTCP msg");
+			MS_DEBUG_2TAGS(rtcp, xcode, "shm[%s] Producer stream failed to read SR RTCP msg", this->shmCtx->StreamName().c_str());
 			return;
 		}
 
@@ -308,11 +308,12 @@ namespace RTC
 		// Check for video orientation changes and discover ssrc.
 		if (VideoOrientationChanged(packet))
 		{
-				MS_DEBUG_2TAGS(rtp, xcode, "Video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-				this->rotation,
-				packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetTimestamp());
+				MS_DEBUG_2TAGS(rtp, xcode, "shm[%s] video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+					this->shmCtx->StreamName().c_str(),
+					this->rotation,
+					packet->GetSsrc(),
+					packet->GetSequenceNumber(),
+					packet->GetTimestamp());
 			
 			shmCtx->WriteVideoOrientation(this->rotation);
 		}
@@ -390,7 +391,8 @@ namespace RTC
 			this->shmWriterCounter.Update(packet);
 		}
 		else {
-			MS_DEBUG_TAG(xcode, "shm-writer not ready, skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			MS_DEBUG_TAG(xcode, "shm[%s] writer not ready, skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				this->shmCtx->StreamName().c_str(),
 				packet->GetSsrc(),
 				packet->GetSequenceNumber(),
 				packet->GetTimestamp());
@@ -519,8 +521,8 @@ namespace RTC
 			{
 				if (len >= 1)
 				{
-					MS_DEBUG_TAG(xcode, "single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " keyframe=%d newpic=%d marker=%d lastTs=%" PRIu64,
-						nal, len, ts, seq, keyframe, tsIncremented, marker, shmCtx->LastVideoTs());
+					MS_DEBUG_TAG(xcode, "shm[%s] single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " keyframe=%d newpic=%d marker=%d lastTs=%" PRIu64,
+						this->shmCtx->StreamName().c_str(), nal, len, ts, seq, keyframe, tsIncremented, marker, shmCtx->LastVideoTs());
 
 					shmCtx->WriteVideoRtpDataToShm( data, len, seq, ts, nal,
 																					false, // not a fragment
@@ -530,7 +532,7 @@ namespace RTC
 																					keyframe);
 				}
 				else{
-					MS_WARN_TAG(xcode, "NALU data len < 1: %lu", len);
+					MS_WARN_TAG(xcode, "shm[%s] NALU data len < 1: %lu", this->shmCtx->StreamName().c_str(), len);
 				}
 			}
 			else
@@ -568,7 +570,8 @@ namespace RTC
 							uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset);
 
 							if ( offset + naluSize > len) {
-								MS_WARN_TAG(xcode, "payload left to read from STAP-A is too short: %zu > %zu", offset + naluSize, len);
+								MS_WARN_TAG(xcode, "shm[%s] payload left to read from STAP-A is too short: %zu > %zu",
+									this->shmCtx->StreamName().c_str(), offset + naluSize, len);
 								break;
 							}
 
@@ -588,8 +591,8 @@ namespace RTC
 								beginpicture = 0;
 							}
 
-							MS_DEBUG_TAG(xcode, "STAP-A: NAL=%" PRIu8 " seq=%" PRIu64 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
-								subnal, seq, len, naluSize, chunksize, ts,
+							MS_DEBUG_TAG(xcode, "shm[%s] STAP-A: NAL=%" PRIu8 " seq=%" PRIu64 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
+								this->shmCtx->StreamName().c_str(), subnal, seq, len, naluSize, chunksize, ts,
 								shmCtx->LastVideoTs(), keyframe, beginpicture, endpicture);
 
 							shmCtx->WriteVideoRtpDataToShm(data + offset, chunksize, seq, ts, subnal,
@@ -621,7 +624,7 @@ namespace RTC
 					{
 						if (len < 3)
 						{
-							MS_WARN_TAG(xcode, "FU-A payload too short");
+							MS_WARN_TAG(xcode, "shm[%s] FU-A payload too short", this->shmCtx->StreamName().c_str());
 							break;
 						}
 						// Parse FU header octet
@@ -656,8 +659,8 @@ namespace RTC
 							data += 1;
 						}
 
-						MS_DEBUG_TAG(xcode, "FU-A NAL=%" PRIu8 " seq=%" PRIu64 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
-							subnal, seq, chunksize, ts, shmCtx->LastVideoTs(), keyframe, startBit, endBit, marker, beginpicture, endpicture);
+						MS_DEBUG_TAG(xcode, "shm[%s] FU-A NAL=%" PRIu8 " seq=%" PRIu64 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
+							this->shmCtx->StreamName().c_str(), subnal, seq, chunksize, ts, shmCtx->LastVideoTs(), keyframe, startBit, endBit, marker, beginpicture, endpicture);
 						shmCtx->WriteVideoRtpDataToShm(data, chunksize, seq, ts, subnal, true, startfragment, beginpicture, endpicture, keyframe);
 						break;
 					}
@@ -666,12 +669,14 @@ namespace RTC
 					case 27: // MTAP-24
 					case 29: // FU-B
 					{
-						MS_WARN_TAG(xcode, "Unsupported NAL unit type %u in video packet", nal);
+						MS_WARN_TAG(xcode, "shm[%s] Unsupported NAL unit type %u in video packet",
+							this->shmCtx->StreamName().c_str(), nal);
 						break;
 					}
 					default: // ignore the rest
 					{
-						MS_DEBUG_TAG(xcode, "Unknown NAL unit type %u in video packet", nal);
+						MS_DEBUG_TAG(xcode, "shm[%s] unknown NAL unit type %u in video packet",
+							this->shmCtx->StreamName().c_str(), nal);
 						break;
 					}
 				}
@@ -919,7 +924,8 @@ namespace RTC
 		if (this->kind != RTC::Media::Kind::VIDEO)
 			return;
 
-		MS_DEBUG_2TAGS(rtp, xcode, "shm-writer needs kf: consumer.IsActive()=%d consumer.syncRequired=%d", IsActive(), this->syncRequired);
+		MS_DEBUG_2TAGS(rtp, xcode, "shm[%s] writer needs kf: consumer.IsActive()=%d consumer.syncRequired=%d", 
+			this->shmCtx->StreamName().c_str(), IsActive(), this->syncRequired);
 
 		if (this->syncRequired)
 			return; // we have already asked for a key frame and waiting, no need to re-request

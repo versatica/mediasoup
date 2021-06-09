@@ -62,6 +62,9 @@ namespace RTC
 		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnSctpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
+	public:
+		std::string ShmName() const { return this->shmCtx.StreamName().c_str();}
+
 	private:
 		// Allocated by this.
 		// Others.

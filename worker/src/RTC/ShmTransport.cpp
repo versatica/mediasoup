@@ -31,7 +31,7 @@ namespace RTC
 			}
 		*/
 
-		MS_DEBUG_TAG(rtp, "ShmTransport ctor() with [%s]", data.dump().c_str());
+		MS_DEBUG_TAG(rtp, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
 
 		// Read shm.name
 		std::string shm;
@@ -150,7 +150,7 @@ namespace RTC
 	ShmTransport::~ShmTransport()
 	{
 		MS_TRACE();
-		
+		MS_DEBUG_TAG(xcode, "shm[%s] ShmTransport dtor[transportId:%s]", this->shmCtx.StreamName().c_str(), this->id.c_str());
 		this->shmCtx.CloseShmWriterCtx();
 	}
 
@@ -401,7 +401,7 @@ namespace RTC
 						shm: ...
 					};
 */
-		MS_DEBUG_TAG(xcode, "received stream metadata [%s]", data.dump().c_str());
+		MS_DEBUG_TAG(xcode, "shm[%s] received stream metadata [%s]", this->shmCtx.StreamName().c_str(), data.dump().c_str());
 
 		std::string metadata;
 		auto jsonMetaIt = data.find("meta");

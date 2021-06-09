@@ -125,6 +125,9 @@ namespace RTC
 		virtual void HandleRequest(PayloadChannel::Request* request);
 		virtual void HandleNotification(PayloadChannel::Notification* notification);
 
+		// Only makes sense for ShmTransport, needed on a Router level for debug logging
+		virtual std::string ShmName() const { return "not applicable"; }
+
 	protected:
 		// Must be called from the subclass.
 		void Connected();
