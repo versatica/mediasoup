@@ -610,6 +610,7 @@ impl Router {
             data,
             webrtc_transport_options.app_data,
             self.clone(),
+            webrtc_transport_options.initial_mid_for_consumers,
         );
 
         self.inner.handlers.new_transport.call(|callback| {

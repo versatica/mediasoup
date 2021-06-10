@@ -90,12 +90,13 @@ export declare class Transport extends EnhancedEventEmitter {
      * @emits @newdataproducer - (dataProducer: DataProducer)
      * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
-    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
+    constructor({ internal, data, channel, payloadChannel, appData, initialMidForConsumers, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
         internal: any;
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
         appData: any;
+        initialMidForConsumers: number;
         getRouterRtpCapabilities: () => RtpCapabilities;
         getProducerById: (producerId: string) => Producer;
         getDataProducerById: (dataProducerId: string) => DataProducer;

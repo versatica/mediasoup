@@ -120,6 +120,9 @@ pub struct WebRtcTransportOptions {
     /// Maximum SCTP send buffer used by DataConsumers.
     /// Default 262144.
     pub sctp_send_buffer_size: u32,
+    /// Initial MID value for consumers crated 
+    /// on this transport.
+    pub initial_mid_for_consumers: usize,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -139,6 +142,7 @@ impl WebRtcTransportOptions {
             num_sctp_streams: NumSctpStreams::default(),
             max_sctp_message_size: 262_144,
             sctp_send_buffer_size: 262_144,
+            initial_mid_for_consumers: 0,
             app_data: AppData::default(),
         }
     }
@@ -549,6 +553,7 @@ impl WebRtcTransport {
         data: WebRtcTransportData,
         app_data: AppData,
         router: Router,
+        initial_mid_for_consumers: usize,
     ) -> Self {
         debug!("new()");
 
@@ -608,7 +613,7 @@ impl WebRtcTransport {
             })
         };
 
-        let next_mid_for_consumers = AtomicUsize::default();
+        let next_mid_for_consumers = AtomicUsize::new(initial_mid_for_consumers);
         let used_sctp_stream_ids = Mutex::new({
             let mut used_used_sctp_stream_ids = HashMap::new();
             if let Some(sctp_parameters) = &data.sctp_parameters {

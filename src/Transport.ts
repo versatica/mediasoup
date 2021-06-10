@@ -136,7 +136,7 @@ export class Transport extends EnhancedEventEmitter
 	private _cnameForProducers?: string;
 
 	// Next MID for Consumers. It's converted into string when used.
-	private _nextMidForConsumers = 0;
+	private _nextMidForConsumers: number;
 
 	// Buffer with available SCTP stream ids.
 	private _sctpStreamIds?: Buffer;
@@ -164,6 +164,7 @@ export class Transport extends EnhancedEventEmitter
 			channel,
 			payloadChannel,
 			appData,
+			initialMidForConsumers,
 			getRouterRtpCapabilities,
 			getProducerById,
 			getDataProducerById
@@ -174,6 +175,7 @@ export class Transport extends EnhancedEventEmitter
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData: any;
+			initialMidForConsumers: number;
 			getRouterRtpCapabilities: () => RtpCapabilities;
 			getProducerById: (producerId: string) => Producer;
 			getDataProducerById: (dataProducerId: string) => DataProducer;
@@ -184,6 +186,7 @@ export class Transport extends EnhancedEventEmitter
 
 		logger.debug('constructor()');
 
+		this._nextMidForConsumers = (initialMidForConsumers >>> 0);
 		this._internal = internal;
 		this._data = data;
 		this._channel = channel;
