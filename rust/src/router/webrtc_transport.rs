@@ -120,7 +120,7 @@ pub struct WebRtcTransportOptions {
     /// Maximum SCTP send buffer used by DataConsumers.
     /// Default 262144.
     pub sctp_send_buffer_size: u32,
-    /// Initial MID value for consumers crated 
+    /// Initial MID value for consumers created
     /// on this transport.
     pub initial_mid_for_consumers: usize,
     /// Custom application data.
