@@ -6,9 +6,9 @@ OS="$(uname -s)"
 NUM_CORES=
 
 case "${OS}" in
-	Linux*)   NUM_CORES=$(nproc);;
-	Darwin*)  NUM_CORES=$(sysctl -n hw.ncpu);;
-	*)        NUM_CORES=1;;
+	Linux*)           NUM_CORES=$(nproc);;
+	Darwin*|FreeBSD)  NUM_CORES=$(sysctl -n hw.ncpu);;
+	*)                NUM_CORES=1;;
 esac
 
 if [ -n "${MEDIASOUP_MAX_CORES}" ]; then
