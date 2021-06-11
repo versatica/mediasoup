@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.7.14
+
+* Update `usrsctp` to include a "possible use after free bug" fix (commit [here](https://github.com/sctplab/usrsctp/commit/0f8d58300b1fdcd943b4a9dd3fbd830825390d4d)).
+* Update NPM deps.
+
+
 ### 3.7.13
 
 * Fix build on FreeBSD (PR #585 by @smortex).
