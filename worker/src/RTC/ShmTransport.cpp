@@ -105,16 +105,6 @@ namespace RTC
 				loglevel = jsonLogLevelIt->get<int>();
 		}
 
-		auto redirect_stdio = 0; // default, otherwise anything but 0 means redirect
-		auto jsonLogRedirectIt = jsonLogIt->find("stdio");
-		if (jsonLogRedirectIt != jsonLogIt->end())
-		{
-			if (!jsonLogRedirectIt->is_number())
-				MS_THROW_TYPE_ERROR("wrong log.stdio (not a number) in [%s]", data.dump().c_str());
-			else
-				redirect_stdio = (jsonLogRedirectIt->get<int>() != 0) ? 1 : 0;
-		}
-
 		// data contains listenIp: {ip: ..., announcedIp: ...}
 		auto jsonListenIpIt = data.find("listenIp");
 		if (jsonListenIpIt == data.end())
@@ -144,7 +134,7 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
- 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname, loglevel, redirect_stdio);
+ 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname + "." + this->shmCtx.StreamName() + "." + this->id, loglevel);
 	}
 
 	ShmTransport::~ShmTransport()

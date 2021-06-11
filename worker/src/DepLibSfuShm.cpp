@@ -75,7 +75,7 @@ namespace DepLibSfuShm {
   }
 
 
-  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, int stdio)
+  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level)
   {
     MS_TRACE();
 
@@ -92,7 +92,7 @@ namespace DepLibSfuShm {
     wrt_init.stats_win_size = 300;
     wrt_init.conf.log_file_name = log_name.c_str();
     wrt_init.conf.log_level = level;
-    wrt_init.conf.redirect_stdio = stdio;
+    wrt_init.conf.redirect_stdio = false;
     
     // TODO: if needed, target_kbps may be passed as config param instead
     // and codec_id, sample_rate may be read from ShmConsumer in the same way as in ShmConsumer::CreateRtpStream()
