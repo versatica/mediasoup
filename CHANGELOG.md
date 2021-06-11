@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.7.13
+
+* Fix build on FreeBSD (PR #585 by @smortex).
+
+
 ### 3.7.12
 
 * `mediasoup-worker`: Fix memory leaks on error exit (PR #581).
