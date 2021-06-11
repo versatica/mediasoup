@@ -76,6 +76,9 @@ pub struct ConsumerOptions {
     /// consuming endpoint even before it's ready to consume it, generating “black” video until the
     /// device requests a keyframe by itself.
     pub paused: bool,
+    /// The preferred MID for consumer created. If not specified will be assigned automatically
+    /// to sequentlially growing number serialized to string.
+    pub preferred_mid: Option<String>,
     /// Preferred spatial and temporal layer for simulcast or SVC media sources.
     /// If `None`, the highest ones are selected.
     pub preferred_layers: Option<ConsumerLayers>,
@@ -95,6 +98,7 @@ impl ConsumerOptions {
             paused: false,
             preferred_layers: None,
             pipe: false,
+            preferred_mid: None,
             app_data: AppData::default(),
         }
     }
