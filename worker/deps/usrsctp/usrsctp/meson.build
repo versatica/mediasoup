@@ -114,6 +114,11 @@ if have_sys_types and have_netinet_in and have_netinet_ip and have_netinet_ip_ic
     add_project_arguments('-DHAVE_NETINET_IP_ICMP_H', language: 'c')
 endif
 
+# Feature: net/route
+if compiler.has_header('net/route.h')
+    add_project_arguments('-DHAVE_NET_ROUTE_H', language: 'c')
+endif
+
 # Feature: stdatomic
 if compiler.has_header('stdatomic.h')
     add_project_arguments('-DHAVE_STDATOMIC_H', language: 'c')
