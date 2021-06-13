@@ -4,6 +4,7 @@
 * `NonClosingProducer` removed (use `PipedProducer` instead, they were identical)
 * `RtpHeaderExtensionUri::as_str()` now takes `self` instead of `&self`
 * `kind` field of `RtpHeaderExtension` is no longer optional
+* Refactor `ScalabilityMode` from being a string to enum, make sure layers are not zero on type system level
 
 ### 0.7.2
 

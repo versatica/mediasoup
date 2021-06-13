@@ -4,6 +4,7 @@
 #[cfg(test)]
 mod tests;
 
+use crate::scalability_modes::ScalabilityMode;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -800,12 +801,9 @@ pub struct RtpEncodingParameters {
     /// Default false.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dtx: Option<bool>,
-    // TODO: Enum for scalability modes, they should all be defined in the spec
-    /// Number of spatial and temporal layers in the RTP stream (e.g. `L1T3`).
-    ///
-    /// See [webrtc-svc](https://w3c.github.io/webrtc-svc/).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalability_mode: Option<String>,
+    /// Number of spatial and temporal layers in the RTP stream.
+    #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
+    pub scalability_mode: ScalabilityMode,
     /// Factor by which to reduce the size of a video track during encoding.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scale_resolution_down_by: Option<f64>,

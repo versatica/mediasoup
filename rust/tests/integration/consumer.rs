@@ -14,6 +14,7 @@ use mediasoup::rtp_parameters::{
     RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
     RtpParameters,
 };
+use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::{ConsumeError, Transport, TransportGeneric};
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
@@ -827,7 +828,7 @@ fn dump_succeeds() {
                     codec_payload_type: Some(100),
                     rtx: None,
                     dtx: None,
-                    scalability_mode: None,
+                    scalability_mode: ScalabilityMode::None,
                     scale_resolution_down_by: None,
                     ssrc: audio_consumer
                         .rtp_parameters()
@@ -854,7 +855,7 @@ fn dump_succeeds() {
                         max_bitrate: None,
                         max_framerate: None,
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         spatial_layers: None,
                         temporal_layers: None,
                         ksvc: None
@@ -955,7 +956,7 @@ fn dump_succeeds() {
                         .unwrap()
                         .rtx,
                     dtx: None,
-                    scalability_mode: Some("S4T1".to_string()),
+                    scalability_mode: "S4T1".parse().unwrap(),
                     scale_resolution_down_by: None,
                     rid: None,
                     max_bitrate: None,
@@ -976,7 +977,7 @@ fn dump_succeeds() {
                         max_bitrate: None,
                         max_framerate: None,
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         spatial_layers: None,
                         temporal_layers: None,
                         ksvc: None,

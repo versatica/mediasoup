@@ -10,6 +10,7 @@ use crate::messages::{
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
+use crate::scalability_modes::ScalabilityMode;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
@@ -147,7 +148,8 @@ pub struct ConsumableRtpEncoding {
     pub max_bitrate: Option<u32>,
     pub max_framerate: Option<f64>,
     pub dtx: Option<bool>,
-    pub scalability_mode: Option<String>,
+    #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
+    pub scalability_mode: ScalabilityMode,
     pub spatial_layers: Option<u8>,
     pub temporal_layers: Option<u8>,
     pub ksvc: Option<bool>,
