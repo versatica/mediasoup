@@ -586,7 +586,6 @@ pub(super) trait TransportImpl: TransportGeneric {
             }
         };
 
-        // TODO: Maybe RtpParametersFinalized would be a better fit here
         let rtp_parameters = if transport_type == TransportType::Pipe {
             ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
         } else {

@@ -48,7 +48,6 @@ pub struct ProducerOptions {
     pub(super) id: Option<ProducerId>,
     /// Media kind.
     pub kind: MediaKind,
-    // TODO: Docs have distinction between RtpSendParameters and RtpReceiveParameters
     /// RTP parameters defining what the endpoint is sending.
     pub rtp_parameters: RtpParameters,
     /// Whether the producer must start in paused mode. Default false.
