@@ -51,8 +51,8 @@
 pub mod data_structures;
 mod macros;
 mod messages;
-// TODO: Check public items in this module
-mod ortc;
+#[doc(hidden)]
+pub mod ortc;
 pub mod router;
 pub mod rtp_parameters;
 pub mod scalability_modes;
