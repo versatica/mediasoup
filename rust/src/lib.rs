@@ -62,7 +62,6 @@ pub mod supported_rtp_capabilities;
 pub mod worker;
 pub mod worker_manager;
 
-// TODO: The mess below is because of https://github.com/rust-lang/rust/issues/59368
 pub mod audio_level_observer {
     //! An audio level observer monitors the volume of the selected audio producers.
 

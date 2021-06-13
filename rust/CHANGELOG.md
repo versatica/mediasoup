@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.8.0
+* `NonClosingProducer` removed (use `PipedProducer` instead, they were identical)
+* `RtpHeaderExtensionUri::as_str()` now takes `self` instead of `&self`
+
 ### 0.7.2
 
 * Thread and memory safety fixes in mediasoup-sys

@@ -444,10 +444,9 @@ pub enum RtpHeaderExtensionUri {
 }
 
 impl RtpHeaderExtensionUri {
-    // TODO: Replace `&self` with `self` in next major version
     /// RTP header extension as a string
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         match self {
             RtpHeaderExtensionUri::Mid => "urn:ietf:params:rtp-hdrext:sdes:mid",
             RtpHeaderExtensionUri::RtpStreamId => "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
@@ -483,8 +482,6 @@ impl RtpHeaderExtensionUri {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpHeaderExtension {
-    // TODO: TypeScript version makes this field both optional and possible to set to "",
-    //  check if "" is actually needed
     /// Media kind. If `None`, it's valid for all kinds.
     /// Default any media kind.
     #[serde(skip_serializing_if = "Option::is_none")]

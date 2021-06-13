@@ -792,11 +792,6 @@ impl DirectProducer {
     }
 }
 
-// TODO: Remove with next major version
-#[deprecated(note = "Please use `PipedProducer` instead, it is an alias to the same type")]
-#[doc(hidden)]
-pub type NonClosingProducer = PipedProducer;
-
 /// Same as [`Producer`], but will not be closed when dropped.
 ///
 /// The idea here is that [`ProducerId`] of both original [`Producer`] and `PipedProducer` is the
