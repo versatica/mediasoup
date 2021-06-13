@@ -563,16 +563,8 @@ pub(crate) fn get_consumable_rtp_parameters(
 
     for cap_ext in &caps.header_extensions {
         // Just take RTP header extension that can be used in Consumers.
-        match cap_ext.kind {
-            Some(cap_ext_kind) => {
-                if cap_ext_kind != kind {
-                    continue;
-                }
-            }
-            None => {
-                // TODO: Should this really skip "any" extensions?
-                continue;
-            }
+        if cap_ext.kind != kind {
+            continue;
         }
         if !matches!(
             cap_ext.direction,

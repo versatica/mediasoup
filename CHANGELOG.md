@@ -1,5 +1,7 @@
 # Changelog
 
+### Unreleased
+* `kind` field of `RtpHeaderExtension` is no longer optional
 
 ### 3.7.12
 

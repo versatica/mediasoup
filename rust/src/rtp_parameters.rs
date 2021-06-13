@@ -475,10 +475,8 @@ impl RtpHeaderExtensionUri {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpHeaderExtension {
-    /// Media kind. If `None`, it's valid for all kinds.
-    /// Default any media kind.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub kind: Option<MediaKind>,
+    /// Media kind.
+    pub kind: MediaKind,
     /// The URI of the RTP header extension, as defined in RFC 5285.
     pub uri: RtpHeaderExtensionUri,
     /// The preferred numeric identifier that goes in the RTP packet. Must be unique.
