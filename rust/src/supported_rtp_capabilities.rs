@@ -350,6 +350,5 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
         ],
-        fec_mechanisms: vec![],
     }
 }

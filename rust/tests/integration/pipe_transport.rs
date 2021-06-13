@@ -209,7 +209,6 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 direction: RtpHeaderExtensionDirection::default(),
             },
         ],
-        fec_mechanisms: vec![],
     }
 }
 

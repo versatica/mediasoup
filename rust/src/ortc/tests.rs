@@ -457,7 +457,6 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
         ],
-        fec_mechanisms: vec![],
     };
 
     let consumer_rtp_parameters =

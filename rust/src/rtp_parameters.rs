@@ -187,9 +187,6 @@ pub struct RtpCapabilitiesFinalized {
     pub codecs: Vec<RtpCodecCapabilityFinalized>,
     /// Supported RTP header extensions.
     pub header_extensions: Vec<RtpHeaderExtension>,
-    // TODO: Enum instead of string?
-    /// Supported FEC mechanisms.
-    pub fec_mechanisms: Vec<String>,
 }
 
 /// Media kind
@@ -379,10 +376,6 @@ pub struct RtpCapabilities {
     pub codecs: Vec<RtpCodecCapability>,
     /// Supported RTP header extensions.
     pub header_extensions: Vec<RtpHeaderExtension>,
-    // TODO: Enum instead of string?
-    /// Supported FEC mechanisms.
-    #[serde(default)]
-    pub fec_mechanisms: Vec<String>,
 }
 
 /// Direction of RTP header extension.

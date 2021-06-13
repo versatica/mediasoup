@@ -160,7 +160,6 @@ fn smoke() {
                         rtcp_feedback: vec![],
                     }],
                     header_extensions: vec![],
-                    fec_mechanisms: vec![],
                 },
             ))
             .await

@@ -193,7 +193,6 @@ pub(crate) fn generate_router_rtp_capabilities(
     let mut caps = RtpCapabilitiesFinalized {
         codecs: vec![],
         header_extensions: supported_rtp_capabilities.header_extensions,
-        fec_mechanisms: vec![],
     };
 
     for media_codec in &mut media_codecs {

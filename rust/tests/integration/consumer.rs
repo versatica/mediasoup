@@ -280,7 +280,6 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 direction: RtpHeaderExtensionDirection::default(),
             },
         ],
-        fec_mechanisms: vec![],
     }
 }
 
@@ -705,7 +704,6 @@ fn consume_incompatible_rtp_capabilities() {
                     rtcp_feedback: vec![],
                 }],
                 header_extensions: vec![],
-                fec_mechanisms: vec![],
             };
 
             assert_eq!(
@@ -728,7 +726,6 @@ fn consume_incompatible_rtp_capabilities() {
             let invalid_device_capabilities = RtpCapabilities {
                 codecs: vec![],
                 header_extensions: vec![],
-                fec_mechanisms: vec![],
             };
 
             assert_eq!(

@@ -13,11 +13,6 @@ export type RtpCapabilities =
 	 * Supported RTP header extensions.
 	 */
 	headerExtensions?: RtpHeaderExtension[];
-
-	/**
-	 * Supported FEC mechanisms.
-	 */
-	fecMechanisms?: string[];
 }
 
 /**
