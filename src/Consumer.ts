@@ -38,6 +38,12 @@ export type ConsumerOptions =
 	paused?: boolean;
 
 	/**
+	 * The preferred MID for consumer created. If not specified will be assigned 
+	 * automatically to sequentlially growing number serialized to string.
+	 */
+	preferredMid?: string;
+
+	/**
 	 * Preferred spatial and temporal layer for simulcast or SVC media sources.
 	 * If unset, the highest ones are selected.
 	 */

@@ -240,8 +240,12 @@ const consumerDeviceCapabilities =
 	]
 };
 
-beforeAll(async () =>
+const initializeWorker = async () => 
 {
+	if (worker) 
+	{
+		await worker.close();
+	}
 	worker = await createWorker();
 	router = await worker.createRouter({ mediaCodecs });
 	transport1 = await router.createWebRtcTransport(
@@ -257,9 +261,22 @@ beforeAll(async () =>
 
 	// Pause the videoProducer.
 	await videoProducer.pause();
+};
+
+const shutdownWorker = async () => 
+{ 
+	await worker.close();
+};
+
+beforeAll(async () =>
+{
+	await initializeWorker();
 });
 
-afterAll(() => worker.close());
+afterAll(async () => 
+{
+	await shutdownWorker();
+});
 
 test('transport.consume() succeeds', async () =>
 {
@@ -989,3 +1006,44 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 				mapConsumerIdProducerId  : {}
 			});
 }, 2000);
+
+describe('Tests which should run on fresh worker/router/transport', () => 
+{
+	beforeEach(async () => 
+	{
+		await initializeWorker();
+	});
+
+	afterEach(async () => 
+	{
+		await shutdownWorker();
+	});
+  
+	test('transport.consume() can be created with user provided mid', async () => 
+	{
+		const audioConsumer1 = await transport2.consume(
+			{
+				producerId      : audioProducer.id,
+				rtpCapabilities : consumerDeviceCapabilities
+			});
+
+		expect(audioConsumer1.rtpParameters.mid).toBe('0');
+	
+		const audioConsumer2 = await transport2.consume(
+			{
+				producerId      : audioProducer.id,
+				preferredMid    : 'custom-mid',
+				rtpCapabilities : consumerDeviceCapabilities
+			});
+
+		expect(audioConsumer2.rtpParameters.mid).toBe('custom-mid');
+	
+		const audioConsumer3 = await transport2.consume(
+			{
+				producerId      : audioProducer.id,
+				rtpCapabilities : consumerDeviceCapabilities
+			});
+
+		expect(audioConsumer3.rtpParameters.mid).toBe('1');
+	}, 2000);
+});
