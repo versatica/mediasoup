@@ -8,12 +8,6 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - os: ubuntu-16.04
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-16.04
-            cc: clang
-            cxx: clang++
           - os: ubuntu-18.04
             cc: gcc
             cxx: g++
