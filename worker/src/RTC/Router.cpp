@@ -494,13 +494,13 @@ namespace RTC
 		return rtpObserver;
 	}
 
-	RTC::Producer* Router::GetProducerFromData(json& internal) const
+	RTC::Producer* Router::GetProducerFromData(json& data) const
 	{
 		MS_TRACE();
 
-		auto jsonProducerIdIt = internal.find("producerId");
+		auto jsonProducerIdIt = data.find("producerId");
 
-		if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
+		if (jsonProducerIdIt == data.end() || !jsonProducerIdIt->is_string())
 			MS_THROW_ERROR("missing data.producerId");
 
 		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
