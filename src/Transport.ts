@@ -565,8 +565,11 @@ export class Transport extends EnhancedEventEmitter
 		// Set MID.
 		if (!pipe)
 		{
-			rtpParameters.mid = preferredMid;
-			if (!rtpParameters.mid)
+			if (preferredMid)
+			{
+				rtpParameters.mid = preferredMid;
+			}
+			else
 			{
 				rtpParameters.mid = `${this._nextMidForConsumers++}`;
 

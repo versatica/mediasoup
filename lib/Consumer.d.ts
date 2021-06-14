@@ -28,8 +28,8 @@ export declare type ConsumerOptions = {
      */
     paused?: boolean;
     /**
-     * The preferred MID for consumer created. If not specified will be assigned
-     * automatically to sequentlially growing number serialized to string.
+     * The preferred MID for the Consumer. If not specified, a sequentially growing
+     * number will be assigned.
      */
     preferredMid?: string;
     /**
