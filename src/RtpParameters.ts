@@ -96,8 +96,7 @@ export type RtpHeaderExtensionDirection = 'sendrecv' | 'sendonly' | 'recvonly' |
 export type RtpHeaderExtension =
 {
 	/**
-	 * Media kind. If empty string, it's valid for all kinds.
-	 * Default any media kind.
+	 * Media kind.
 	 */
 	kind: MediaKind;
 

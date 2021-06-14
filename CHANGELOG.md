@@ -1,6 +1,7 @@
 # Changelog
 
 ### Unreleased
+
 * `kind` field of `RtpHeaderExtension` is no longer optional.
 * Refactor API inconsistency in internal RTP Observer communication with worker.
 

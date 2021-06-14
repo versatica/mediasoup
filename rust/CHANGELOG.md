@@ -1,6 +1,7 @@
 # Changelog
 
 ### 0.8.0
+
 * `NonClosingProducer` removed (use `PipedProducer` instead, they were identical)
 * `RtpHeaderExtensionUri::as_str()` now takes `self` instead of `&self`
 * `kind` field of `RtpHeaderExtension` is no longer optional
