@@ -908,7 +908,6 @@ impl Router {
     ///                },
     ///            ],
     ///            header_extensions: vec![],
-    ///            fec_mechanisms: vec![],
     ///        }
     ///     ))
     ///     .await?;

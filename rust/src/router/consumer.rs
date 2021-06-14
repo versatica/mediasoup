@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_structures::{AppData, TraceEventDirection};
+use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
     ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
@@ -10,6 +10,7 @@ use crate::messages::{
 };
 use crate::producer::{ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
+use crate::scalability_modes::ScalabilityMode;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
@@ -21,7 +22,6 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -147,7 +147,8 @@ pub struct ConsumableRtpEncoding {
     pub max_bitrate: Option<u32>,
     pub max_framerate: Option<f64>,
     pub dtx: Option<bool>,
-    pub scalability_mode: Option<String>,
+    #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
+    pub scalability_mode: ScalabilityMode,
     pub spatial_layers: Option<u8>,
     pub temporal_layers: Option<u8>,
     pub ksvc: Option<bool>,
@@ -259,9 +260,8 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// RTP video keyframe packet.
     KeyFrame {
@@ -269,9 +269,8 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// RTCP NACK packet.
     Nack {
@@ -279,9 +278,6 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
     },
     /// RTCP PLI packet.
     Pli {
@@ -289,9 +285,8 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// SSRC info.
+        info: SsrcTraceInfo,
     },
     /// RTCP FIR packet.
     Fir {
@@ -299,9 +294,8 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// SSRC info.
+        info: SsrcTraceInfo,
     },
 }
 

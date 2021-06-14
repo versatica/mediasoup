@@ -8,6 +8,7 @@ use mediasoup::rtp_parameters::{
     RtpCodecParameters, RtpCodecParametersParameters, RtpEncodingParameters,
     RtpEncodingParametersRtx, RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
+use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::{ProduceError, Transport, TransportGeneric};
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
@@ -144,7 +145,7 @@ fn video_producer_options() -> ProducerOptions {
                 RtpEncodingParameters {
                     ssrc: Some(22222222),
                     rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
-                    scalability_mode: Some("L1T3".to_string()),
+                    scalability_mode: "L1T3".parse().unwrap(),
                     ..RtpEncodingParameters::default()
                 },
                 RtpEncodingParameters {
@@ -674,7 +675,7 @@ fn dump_succeeds() {
                     codec_payload_type: Some(0),
                     rtx: None,
                     dtx: None,
-                    scalability_mode: None,
+                    scalability_mode: ScalabilityMode::None,
                     scale_resolution_down_by: None,
                     max_bitrate: None
                 }],
@@ -712,7 +713,7 @@ fn dump_succeeds() {
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
                         dtx: None,
-                        scalability_mode: Some("L1T3".to_string()),
+                        scalability_mode: "L1T3".parse().unwrap(),
                         scale_resolution_down_by: None,
                         max_bitrate: None
                     },
@@ -722,7 +723,7 @@ fn dump_succeeds() {
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222225 }),
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         scale_resolution_down_by: None,
                         max_bitrate: None
                     },
@@ -732,7 +733,7 @@ fn dump_succeeds() {
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222227 }),
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         scale_resolution_down_by: None,
                         max_bitrate: None
                     },
@@ -742,7 +743,7 @@ fn dump_succeeds() {
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222229 }),
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         scale_resolution_down_by: None,
                         max_bitrate: None
                     },

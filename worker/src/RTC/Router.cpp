@@ -365,7 +365,7 @@ namespace RTC
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::Producer* producer       = GetProducerFromInternal(request->internal);
+				RTC::Producer* producer       = GetProducerFromData(request->data);
 
 				rtpObserver->AddProducer(producer);
 
@@ -381,7 +381,7 @@ namespace RTC
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::Producer* producer       = GetProducerFromInternal(request->internal);
+				RTC::Producer* producer       = GetProducerFromData(request->data);
 
 				rtpObserver->RemoveProducer(producer);
 
@@ -494,14 +494,14 @@ namespace RTC
 		return rtpObserver;
 	}
 
-	RTC::Producer* Router::GetProducerFromInternal(json& internal) const
+	RTC::Producer* Router::GetProducerFromData(json& data) const
 	{
 		MS_TRACE();
 
-		auto jsonProducerIdIt = internal.find("producerId");
+		auto jsonProducerIdIt = data.find("producerId");
 
-		if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.producerId");
+		if (jsonProducerIdIt == data.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("missing data.producerId");
 
 		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
 

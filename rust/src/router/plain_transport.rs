@@ -162,7 +162,6 @@ pub struct PlainTransportStat {
     pub rtcp_tuple: Option<TransportTuple>,
 }
 
-// TODO: Impl with methods that only allow working invariants
 /// Remote parameters for plain transport.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

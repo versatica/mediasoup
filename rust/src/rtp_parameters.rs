@@ -4,6 +4,7 @@
 #[cfg(test)]
 mod tests;
 
+use crate::scalability_modes::ScalabilityMode;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -187,9 +188,6 @@ pub struct RtpCapabilitiesFinalized {
     pub codecs: Vec<RtpCodecCapabilityFinalized>,
     /// Supported RTP header extensions.
     pub header_extensions: Vec<RtpHeaderExtension>,
-    // TODO: Enum instead of string?
-    /// Supported FEC mechanisms.
-    pub fec_mechanisms: Vec<String>,
 }
 
 /// Media kind
@@ -379,10 +377,6 @@ pub struct RtpCapabilities {
     pub codecs: Vec<RtpCodecCapability>,
     /// Supported RTP header extensions.
     pub header_extensions: Vec<RtpHeaderExtension>,
-    // TODO: Enum instead of string?
-    /// Supported FEC mechanisms.
-    #[serde(default)]
-    pub fec_mechanisms: Vec<String>,
 }
 
 /// Direction of RTP header extension.
@@ -444,10 +438,9 @@ pub enum RtpHeaderExtensionUri {
 }
 
 impl RtpHeaderExtensionUri {
-    // TODO: Replace `&self` with `self` in next major version
     /// RTP header extension as a string
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         match self {
             RtpHeaderExtensionUri::Mid => "urn:ietf:params:rtp-hdrext:sdes:mid",
             RtpHeaderExtensionUri::RtpStreamId => "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
@@ -483,12 +476,8 @@ impl RtpHeaderExtensionUri {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpHeaderExtension {
-    // TODO: TypeScript version makes this field both optional and possible to set to "",
-    //  check if "" is actually needed
-    /// Media kind. If `None`, it's valid for all kinds.
-    /// Default any media kind.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub kind: Option<MediaKind>,
+    /// Media kind.
+    pub kind: MediaKind,
     /// The URI of the RTP header extension, as defined in RFC 5285.
     pub uri: RtpHeaderExtensionUri,
     /// The preferred numeric identifier that goes in the RTP packet. Must be unique.
@@ -534,7 +523,7 @@ pub struct RtpHeaderExtension {
 #[derive(Debug, Default, Clone, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpParameters {
-    /// The MID RTP extension value as defined in the BUNDLE specification
+    /// The MID RTP extension value as defined in the BUNDLE specification.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mid: Option<String>,
     /// Media and RTX codecs in use.
@@ -812,12 +801,9 @@ pub struct RtpEncodingParameters {
     /// Default false.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dtx: Option<bool>,
-    // TODO: Enum for scalability modes, they should all be defined in the spec
-    /// Number of spatial and temporal layers in the RTP stream (e.g. `L1T3`).
-    ///
-    /// See [webrtc-svc](https://w3c.github.io/webrtc-svc/).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalability_mode: Option<String>,
+    /// Number of spatial and temporal layers in the RTP stream.
+    #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
+    pub scalability_mode: ScalabilityMode,
     /// Factor by which to reduce the size of a video track during encoding.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scale_resolution_down_by: Option<f64>,

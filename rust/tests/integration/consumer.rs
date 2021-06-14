@@ -14,6 +14,7 @@ use mediasoup::rtp_parameters::{
     RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
     RtpParameters,
 };
+use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::{ConsumeError, Transport, TransportGeneric};
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
@@ -224,63 +225,62 @@ fn consumer_device_capabilities() -> RtpCapabilities {
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::RtpStreamId,
                 preferred_id: 2,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::VideoOrientation,
                 preferred_id: 11,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TimeOffset,
                 preferred_id: 12,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
         ],
-        fec_mechanisms: vec![],
     }
 }
 
@@ -705,7 +705,6 @@ fn consume_incompatible_rtp_capabilities() {
                     rtcp_feedback: vec![],
                 }],
                 header_extensions: vec![],
-                fec_mechanisms: vec![],
             };
 
             assert_eq!(
@@ -728,7 +727,6 @@ fn consume_incompatible_rtp_capabilities() {
             let invalid_device_capabilities = RtpCapabilities {
                 codecs: vec![],
                 header_extensions: vec![],
-                fec_mechanisms: vec![],
             };
 
             assert_eq!(
@@ -830,7 +828,7 @@ fn dump_succeeds() {
                     codec_payload_type: Some(100),
                     rtx: None,
                     dtx: None,
-                    scalability_mode: None,
+                    scalability_mode: ScalabilityMode::None,
                     scale_resolution_down_by: None,
                     ssrc: audio_consumer
                         .rtp_parameters()
@@ -857,7 +855,7 @@ fn dump_succeeds() {
                         max_bitrate: None,
                         max_framerate: None,
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         spatial_layers: None,
                         temporal_layers: None,
                         ksvc: None
@@ -958,7 +956,7 @@ fn dump_succeeds() {
                         .unwrap()
                         .rtx,
                     dtx: None,
-                    scalability_mode: Some("S4T1".to_string()),
+                    scalability_mode: "S4T1".parse().unwrap(),
                     scale_resolution_down_by: None,
                     rid: None,
                     max_bitrate: None,
@@ -979,7 +977,7 @@ fn dump_succeeds() {
                         max_bitrate: None,
                         max_framerate: None,
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         spatial_layers: None,
                         temporal_layers: None,
                         ksvc: None,

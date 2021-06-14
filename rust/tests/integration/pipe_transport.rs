@@ -188,28 +188,27 @@ fn consumer_device_capabilities() -> RtpCapabilities {
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                 preferred_id: 5,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
         ],
-        fec_mechanisms: vec![],
     }
 }
 

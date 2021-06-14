@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.8.0
+
+* `NonClosingProducer` removed (use `PipedProducer` instead, they were identical)
+* `RtpHeaderExtensionUri::as_str()` now takes `self` instead of `&self`
+* `kind` field of `RtpHeaderExtension` is no longer optional
+* Refactor `ScalabilityMode` from being a string to enum, make sure layers are not zero on type system level
+* Concrete types for info field of tracing events
+
 ### 0.7.2
 
 * Thread and memory safety fixes in mediasoup-sys

@@ -3,7 +3,7 @@ mod tests;
 
 use crate::data_structures::AppData;
 use crate::messages::{
-    RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestInternal,
+    RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestData,
     RtpObserverCloseRequest, RtpObserverInternal, RtpObserverPauseRequest,
     RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
 };
@@ -232,11 +232,8 @@ impl RtpObserver for AudioLevelObserver {
         self.inner
             .channel
             .request(RtpObserverAddProducerRequest {
-                internal: RtpObserverAddRemoveProducerRequestInternal {
-                    router_id: self.inner.router.id(),
-                    rtp_observer_id: self.inner.id,
-                    producer_id,
-                },
+                internal: self.get_internal(),
+                data: RtpObserverAddRemoveProducerRequestData { producer_id },
             })
             .await?;
 
@@ -257,11 +254,8 @@ impl RtpObserver for AudioLevelObserver {
         self.inner
             .channel
             .request(RtpObserverRemoveProducerRequest {
-                internal: RtpObserverAddRemoveProducerRequestInternal {
-                    router_id: self.inner.router.id(),
-                    rtp_observer_id: self.inner.id,
-                    producer_id,
-                },
+                internal: self.get_internal(),
+                data: RtpObserverAddRemoveProducerRequestData { producer_id },
             })
             .await?;
 

@@ -39,7 +39,7 @@ namespace RTC
 		RTC::Transport* GetTransportFromInternal(json& internal) const;
 		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
 		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
-		RTC::Producer* GetProducerFromInternal(json& internal) const;
+		RTC::Producer* GetProducerFromData(json& data) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
