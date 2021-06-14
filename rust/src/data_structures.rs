@@ -753,3 +753,80 @@ impl WebRtcMessage {
         }
     }
 }
+
+/// RTP packet info in trace event.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RtpPacketTraceInfo {
+    /// RTP payload type.
+    pub payload_type: u8,
+    /// Sequence number.
+    pub sequence_number: u16,
+    /// Timestamp.
+    pub timestamp: u32,
+    /// Whether packet has marker or not.
+    pub marker: bool,
+    /// RTP stream SSRC.
+    pub ssrc: u32,
+    /// Whether packet contains a key frame.
+    pub is_key_frame: bool,
+    /// Packet size.
+    pub size: usize,
+    /// Payload size.
+    pub payload_size: usize,
+    /// The spatial layer index (from 0 to N).
+    pub spatial_layer: u8,
+    /// The temporal layer index (from 0 to N).
+    pub temporal_layer: u8,
+    /// The MID RTP extension value as defined in the BUNDLE specification
+    pub mid: Option<String>,
+    /// RTP stream RID value.
+    pub rid: Option<String>,
+    /// RTP stream RRID value.
+    pub rrid: Option<String>,
+    /// Transport-wide sequence number.
+    pub wide_sequence_number: Option<u16>,
+    /// Whether this is an RTX packet.
+    #[serde(default)]
+    pub is_rtx: bool,
+}
+
+/// SSRC info in trace event.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+pub struct SsrcTraceInfo {
+    /// RTP stream SSRC.
+    ssrc: u32,
+}
+
+/// Bandwidth estimation type.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+pub enum BweType {
+    /// Transport-wide Congestion Control.
+    #[serde(rename = "transport-cc")]
+    TransportCc,
+    /// Receiver Estimated Maximum Bitrate.
+    #[serde(rename = "remb")]
+    Remb,
+}
+
+/// BWE info in trace event.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BweTraceInfo {
+    /// Bandwidth estimation type.
+    r#type: BweType,
+    /// Desired bitrate
+    desired_bitrate: u32,
+    /// Effective desired bitrate.
+    effective_desired_bitrate: u32,
+    /// Min bitrate.
+    min_bitrate: u32,
+    /// Max bitrate.
+    max_bitrate: u32,
+    /// Start bitrate.
+    start_bitrate: u32,
+    /// Max padding bitrate.
+    max_padding_bitrate: u32,
+    /// Available bitrate.
+    available_bitrate: u32,
+}

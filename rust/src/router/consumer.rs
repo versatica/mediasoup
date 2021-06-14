@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_structures::{AppData, TraceEventDirection};
+use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
     ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
@@ -22,7 +22,6 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -261,9 +260,8 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// RTP video keyframe packet.
     KeyFrame {
@@ -271,9 +269,8 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// RTCP NACK packet.
     Nack {
@@ -281,9 +278,6 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
     },
     /// RTCP PLI packet.
     Pli {
@@ -291,9 +285,8 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// SSRC info.
+        info: SsrcTraceInfo,
     },
     /// RTCP FIR packet.
     Fir {
@@ -301,9 +294,8 @@ pub enum ConsumerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// SSRC info.
+        info: SsrcTraceInfo,
     },
 }
 

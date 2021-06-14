@@ -2,7 +2,7 @@
 mod tests;
 
 use crate::consumer::RtpStreamParams;
-use crate::data_structures::{AppData, TraceEventDirection};
+use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
     ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
@@ -21,7 +21,6 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::collections::HashMap;
 use std::fmt;
@@ -216,9 +215,8 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// RTP video keyframe packet.
     KeyFrame {
@@ -226,9 +224,8 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// RTCP NACK packet.
     Nack {
@@ -236,9 +233,6 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
     },
     /// RTCP PLI packet.
     Pli {
@@ -246,9 +240,8 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// SSRC info.
+        info: SsrcTraceInfo,
     },
     /// RTCP FIR packet.
     Fir {
@@ -256,9 +249,8 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// SSRC info.
+        info: SsrcTraceInfo,
     },
 }
 

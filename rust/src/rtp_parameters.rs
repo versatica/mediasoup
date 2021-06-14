@@ -523,7 +523,7 @@ pub struct RtpHeaderExtension {
 #[derive(Debug, Default, Clone, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RtpParameters {
-    /// The MID RTP extension value as defined in the BUNDLE specification
+    /// The MID RTP extension value as defined in the BUNDLE specification.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mid: Option<String>,
     /// Media and RTX codecs in use.
