@@ -3209,6 +3209,7 @@ namespace RTC
 			item["receivedAtMs"] = sentInfo.receivedAtMs;
 			item["rtt"]          = sentInfo.rtt;
 			item["dod"]          = sentInfo.dod;
+			item["probation"]    = sentInfo.isProbation;
 
 			data["info"]["items"].push_back(item);
 		}
