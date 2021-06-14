@@ -134,7 +134,7 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
- 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname + "." + this->shmCtx.StreamName() + "." + this->id, loglevel);
+ 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname + "." + shm + "." + this->id, loglevel);
 	}
 
 	ShmTransport::~ShmTransport()
