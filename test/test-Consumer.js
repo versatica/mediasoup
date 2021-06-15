@@ -514,6 +514,41 @@ test('transport.consume() succeeds', async () =>
 			});
 }, 2000);
 
+test('transport.consume() can be created with user provided mid', async () => 
+{
+	const audioConsumer1 = await transport2.consume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : consumerDeviceCapabilities
+		});
+
+	expect(audioConsumer1.rtpParameters.mid).toEqual(
+		expect.stringMatching(/^[0-9]+/));
+
+	const audioConsumer2 = await transport2.consume(
+		{
+			producerId      : audioProducer.id,
+			preferredMid    : 'custom-mid',
+			rtpCapabilities : consumerDeviceCapabilities
+		});
+
+	expect(audioConsumer2.rtpParameters.mid).toBe('custom-mid');
+
+	const audioConsumer3 = await transport2.consume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : consumerDeviceCapabilities
+		});
+
+	expect(audioConsumer3.rtpParameters.mid).toEqual(
+		expect.stringMatching(/^[0-9]+/));
+	expect(Number(audioConsumer1.rtpParameters.mid) + 1).toBe(
+		Number(audioConsumer3.rtpParameters.mid));
+	audioConsumer3.close();
+	audioConsumer2.close();
+	audioConsumer1.close();
+}, 2000);
+
 test('transport.consume() with incompatible rtpCapabilities rejects with UnsupportedError', async () =>
 {
 	let invalidDeviceCapabilities;
@@ -1006,44 +1041,3 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 				mapConsumerIdProducerId  : {}
 			});
 }, 2000);
-
-describe('Tests which should run on fresh worker/router/transport', () => 
-{
-	beforeEach(async () => 
-	{
-		await initializeWorker();
-	});
-
-	afterEach(async () => 
-	{
-		await shutdownWorker();
-	});
-  
-	test('transport.consume() can be created with user provided mid', async () => 
-	{
-		const audioConsumer1 = await transport2.consume(
-			{
-				producerId      : audioProducer.id,
-				rtpCapabilities : consumerDeviceCapabilities
-			});
-
-		expect(audioConsumer1.rtpParameters.mid).toBe('0');
-	
-		const audioConsumer2 = await transport2.consume(
-			{
-				producerId      : audioProducer.id,
-				preferredMid    : 'custom-mid',
-				rtpCapabilities : consumerDeviceCapabilities
-			});
-
-		expect(audioConsumer2.rtpParameters.mid).toBe('custom-mid');
-	
-		const audioConsumer3 = await transport2.consume(
-			{
-				producerId      : audioProducer.id,
-				rtpCapabilities : consumerDeviceCapabilities
-			});
-
-		expect(audioConsumer3.rtpParameters.mid).toBe('1');
-	}, 2000);
-});
