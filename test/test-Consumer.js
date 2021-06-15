@@ -240,12 +240,8 @@ const consumerDeviceCapabilities =
 	]
 };
 
-const initializeWorker = async () => 
+beforeAll(async () =>
 {
-	if (worker) 
-	{
-		await worker.close();
-	}
 	worker = await createWorker();
 	router = await worker.createRouter({ mediaCodecs });
 	transport1 = await router.createWebRtcTransport(
@@ -261,22 +257,9 @@ const initializeWorker = async () =>
 
 	// Pause the videoProducer.
 	await videoProducer.pause();
-};
-
-const shutdownWorker = async () => 
-{ 
-	await worker.close();
-};
-
-beforeAll(async () =>
-{
-	await initializeWorker();
 });
 
-afterAll(async () => 
-{
-	await shutdownWorker();
-});
+afterAll(() => worker.close());
 
 test('transport.consume() succeeds', async () =>
 {
