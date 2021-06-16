@@ -511,7 +511,7 @@ test('transport.consume() can be created with user provided mid', async () =>
 	const audioConsumer2 = await transport2.consume(
 		{
 			producerId      : audioProducer.id,
-			preferredMid    : 'custom-mid',
+			mid             : 'custom-mid',
 			rtpCapabilities : consumerDeviceCapabilities
 		});
 

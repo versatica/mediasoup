@@ -534,7 +534,7 @@ export class Transport extends EnhancedEventEmitter
 			producerId,
 			rtpCapabilities,
 			paused = false,
-			preferredMid,
+			mid,
 			preferredLayers,
 			pipe = false,
 			appData = {}
@@ -547,8 +547,8 @@ export class Transport extends EnhancedEventEmitter
 			throw new TypeError('missing producerId');
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
-		else if (preferredMid && (typeof preferredMid !== 'string' || preferredMid.length === 0))
-			throw new TypeError('if given, preferredMid must be non empty string');
+		else if (mid && (typeof mid !== 'string' || mid.length === 0))
+			throw new TypeError('if given, mid must be non empty string');
 
 		// This may throw.
 		ortc.validateRtpCapabilities(rtpCapabilities!);
@@ -565,9 +565,9 @@ export class Transport extends EnhancedEventEmitter
 		// Set MID.
 		if (!pipe)
 		{
-			if (preferredMid)
+			if (mid)
 			{
-				rtpParameters.mid = preferredMid;
+				rtpParameters.mid = mid;
 			}
 			else
 			{

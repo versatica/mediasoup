@@ -28,10 +28,10 @@ export declare type ConsumerOptions = {
      */
     paused?: boolean;
     /**
-     * The preferred MID for the Consumer. If not specified, a sequentially growing
+     * The MID for the Consumer. If not specified, a sequentially growing
      * number will be assigned.
      */
-    preferredMid?: string;
+    mid?: string;
     /**
      * Preferred spatial and temporal layer for simulcast or SVC media sources.
      * If unset, the highest ones are selected.
