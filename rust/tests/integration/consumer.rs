@@ -681,7 +681,7 @@ fn consumer_with_user_defined_mid() {
             .consume({
                 let mut options =
                     ConsumerOptions::new(producer_1.id(), consumer_device_capabilities());
-                options.preferred_mid = Some("custom-mid".to_owned());
+                options.mid = Some("custom-mid".to_owned());
                 options
             })
             .await

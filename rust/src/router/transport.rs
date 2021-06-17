@@ -569,7 +569,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             producer_id,
             rtp_capabilities,
             paused,
-            preferred_mid,
+            mid,
             preferred_layers,
             pipe,
             app_data,
@@ -596,7 +596,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
             if !pipe {
                 // Set MID.
-                rtp_parameters.mid = preferred_mid.or_else(|| {
+                rtp_parameters.mid = mid.or_else(|| {
                     // We use up to 8 bytes for MID (string).
                     let next_mid_for_consumers = self
                         .next_mid_for_consumers()
