@@ -31,7 +31,7 @@ namespace RTC
 			}
 		*/
 
-		MS_DEBUG_TAG(rtp, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
+		MS_DEBUG_TAG(xcode, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
 
 		// Read shm.name
 		std::string shm;
@@ -134,7 +134,7 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
- 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname + "." + shm + "." + this->id, loglevel);
+ 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname /* + "." + shm + "." + this->id */, loglevel);
 	}
 
 	ShmTransport::~ShmTransport()

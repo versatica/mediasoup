@@ -62,10 +62,10 @@ namespace DepLibSfuShm {
     if (SHM_WRT_READY == wrt_status)
     {
       if ( wrt_ctx == nullptr)
-        MS_WARN_TAG(xcode, "shm[%s] warning: writer context is null but shm is in ready state.");
+        MS_WARN_TAG(xcode, "shm[%s] warning: writer ctx is null but shm is in ready state");
       else
       {
-        MS_DEBUG_TAG(xcode, "shm[%s] writer closing, wrt_ctx[%p]", wrt_init.stream_name, wrt_ctx);
+        MS_DEBUG_TAG(xcode, "shm[%s] writer closing", wrt_init.stream_name);
         sfushm_av_close_writer(wrt_ctx, 0);
       }
     }
@@ -136,7 +136,7 @@ namespace DepLibSfuShm {
     else
     { 
       this->wrt_status = SHM_WRT_READY;
-      MS_DEBUG_TAG(xcode, "shm[%s] writer ready, wrt_ctx[%p]", this->stream_name.c_str(), this->wrt_ctx);
+      MS_DEBUG_TAG(xcode, "shm[%s] writer ready", this->stream_name.c_str());
 
       // Write any stored sender reports into shm and possibly notify ShmConsumer(s)
       if (this->media[0].sr_received)
