@@ -93,8 +93,8 @@ namespace DepLibSfuShm
 
     static uint8_t* hex_dump(uint8_t *dst, uint8_t *src, size_t len);
 
-    void InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, int stdio);
-    void CloseShmWriterCtx(); //TBD: nobody calls it 
+    void InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level);
+    void CloseShmWriterCtx();
 
     std::string StreamName() const { return this->stream_name; }
     std::string LogName() const { return this->log_name; }

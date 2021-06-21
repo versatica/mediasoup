@@ -31,7 +31,7 @@ namespace RTC
 			}
 		*/
 
-		MS_DEBUG_TAG(rtp, "ShmTransport ctor() with [%s]", data.dump().c_str());
+		MS_DEBUG_TAG(xcode, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
 
 		// Read shm.name
 		std::string shm;
@@ -105,16 +105,6 @@ namespace RTC
 				loglevel = jsonLogLevelIt->get<int>();
 		}
 
-		auto redirect_stdio = 0; // default, otherwise anything but 0 means redirect
-		auto jsonLogRedirectIt = jsonLogIt->find("stdio");
-		if (jsonLogRedirectIt != jsonLogIt->end())
-		{
-			if (!jsonLogRedirectIt->is_number())
-				MS_THROW_TYPE_ERROR("wrong log.stdio (not a number) in [%s]", data.dump().c_str());
-			else
-				redirect_stdio = (jsonLogRedirectIt->get<int>() != 0) ? 1 : 0;
-		}
-
 		// data contains listenIp: {ip: ..., announcedIp: ...}
 		auto jsonListenIpIt = data.find("listenIp");
 		if (jsonListenIpIt == data.end())
@@ -144,12 +134,14 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
- 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname, loglevel, redirect_stdio);
+ 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname /* + "." + shm + "." + this->id */, loglevel);
 	}
 
 	ShmTransport::~ShmTransport()
 	{
 		MS_TRACE();
+		MS_DEBUG_TAG(xcode, "shm[%s] ShmTransport dtor[transportId:%s]", this->shmCtx.StreamName().c_str(), this->id.c_str());
+		this->shmCtx.CloseShmWriterCtx();
 	}
 
 	void ShmTransport::FillJson(json& jsonObject) const
@@ -399,7 +391,7 @@ namespace RTC
 						shm: ...
 					};
 */
-		MS_DEBUG_TAG(xcode, "received stream metadata [%s]", data.dump().c_str());
+		MS_DEBUG_TAG(xcode, "shm[%s] received stream metadata [%s]", this->shmCtx.StreamName().c_str(), data.dump().c_str());
 
 		std::string metadata;
 		auto jsonMetaIt = data.find("meta");
