@@ -527,6 +527,7 @@ test('transport.consume() can be created with user provided mid', async () =>
 		expect.stringMatching(/^[0-9]+/));
 	expect(Number(audioConsumer1.rtpParameters.mid) + 1).toBe(
 		Number(audioConsumer3.rtpParameters.mid));
+
 	audioConsumer3.close();
 	audioConsumer2.close();
 	audioConsumer1.close();
