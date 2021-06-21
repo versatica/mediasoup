@@ -1,8 +1,7 @@
 use async_io::Timer;
 use futures_lite::future;
 use mediasoup::consumer::{
-    ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerStats,
-    ConsumerType,
+    ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType,
 };
 use mediasoup::data_structures::{AppData, TransportListenIp};
 use mediasoup::producer::ProducerOptions;
@@ -1071,10 +1070,7 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Audio consumer get_stats failed");
 
-            let consumer_stat = match stats {
-                ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
-                ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
-            };
+            let consumer_stat = stats.consumer_stats();
 
             assert_eq!(consumer_stat.kind, MediaKind::Audio);
             assert_eq!(
@@ -1123,10 +1119,7 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Video consumer get_stats failed");
 
-            let consumer_stat = match stats {
-                ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
-                ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
-            };
+            let consumer_stat = stats.consumer_stats();
 
             assert_eq!(consumer_stat.kind, MediaKind::Video);
             assert_eq!(

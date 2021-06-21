@@ -199,26 +199,20 @@ pub enum TransportTuple {
 impl TransportTuple {
     /// Local IP address.
     pub fn local_ip(&self) -> IpAddr {
-        match self {
-            TransportTuple::WithRemote { local_ip, .. } => *local_ip,
-            TransportTuple::LocalOnly { local_ip, .. } => *local_ip,
-        }
+        let (Self::WithRemote { local_ip, .. } | Self::LocalOnly { local_ip, .. }) = self;
+        *local_ip
     }
 
     /// Local port.
     pub fn local_port(&self) -> u16 {
-        match self {
-            TransportTuple::WithRemote { local_port, .. } => *local_port,
-            TransportTuple::LocalOnly { local_port, .. } => *local_port,
-        }
+        let (Self::WithRemote { local_port, .. } | Self::LocalOnly { local_port, .. }) = self;
+        *local_port
     }
 
     /// Protocol.
     pub fn protocol(&self) -> TransportProtocol {
-        match self {
-            TransportTuple::WithRemote { protocol, .. } => *protocol,
-            TransportTuple::LocalOnly { protocol, .. } => *protocol,
-        }
+        let (Self::WithRemote { protocol, .. } | Self::LocalOnly { protocol, .. }) = self;
+        *protocol
     }
 
     /// Remote IP address.
