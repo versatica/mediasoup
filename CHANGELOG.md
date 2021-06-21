@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.7.16
+
+* Add `mid` option in `ConsumerOptions` to provide way to override MID (PR #586 by @mstyura).
+* Update NPM deps.
+
+
 ### 3.7.15
 
 * `kind` field of `RtpHeaderExtension` is no longer optional. It must be 'audio' or 'video'.
