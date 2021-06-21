@@ -196,6 +196,44 @@ pub enum TransportTuple {
     },
 }
 
+impl TransportTuple {
+    /// Local IP address.
+    pub fn local_ip(&self) -> IpAddr {
+        let (Self::WithRemote { local_ip, .. } | Self::LocalOnly { local_ip, .. }) = self;
+        *local_ip
+    }
+
+    /// Local port.
+    pub fn local_port(&self) -> u16 {
+        let (Self::WithRemote { local_port, .. } | Self::LocalOnly { local_port, .. }) = self;
+        *local_port
+    }
+
+    /// Protocol.
+    pub fn protocol(&self) -> TransportProtocol {
+        let (Self::WithRemote { protocol, .. } | Self::LocalOnly { protocol, .. }) = self;
+        *protocol
+    }
+
+    /// Remote IP address.
+    pub fn remote_ip(&self) -> Option<IpAddr> {
+        if let TransportTuple::WithRemote { remote_ip, .. } = self {
+            Some(*remote_ip)
+        } else {
+            None
+        }
+    }
+
+    /// Remote port.
+    pub fn remote_port(&self) -> Option<u16> {
+        if let TransportTuple::WithRemote { remote_port, .. } = self {
+            Some(*remote_port)
+        } else {
+            None
+        }
+    }
+}
+
 /// DTLS state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

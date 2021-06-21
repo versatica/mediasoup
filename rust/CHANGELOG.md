@@ -1,5 +1,11 @@
 # Changelog
 
+### 0.8.1
+
+* Add convenience methods for getting information from `TransportTuple` enum, especially local IP/port
+* Add `mid` option in `ConsumerOptions` to provide way to override MID
+* Add convenience method `ConsumerStats::cosumer_stat()`
+
 ### 0.8.0
 
 * `NonClosingProducer` removed (use `PipedProducer` instead, they were identical)

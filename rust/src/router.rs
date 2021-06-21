@@ -26,7 +26,7 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{
     DataProducer, DataProducerId, DataProducerOptions, NonClosingDataProducer, WeakDataProducer,
 };
-use crate::data_structures::{AppData, TransportListenIp, TransportTuple};
+use crate::data_structures::{AppData, TransportListenIp};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverRequest,
@@ -939,7 +939,9 @@ impl Router {
             }
         };
 
-        let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
+        let pipe_transport_pair = self
+            .get_or_create_pipe_transport_pair(pipe_to_router_options)
+            .await?;
 
         let pipe_consumer = pipe_transport_pair
             .local
@@ -1143,7 +1145,9 @@ impl Router {
             }
         };
 
-        let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
+        let pipe_transport_pair = self
+            .get_or_create_pipe_transport_pair(pipe_to_router_options)
+            .await?;
 
         let pipe_data_consumer = pipe_transport_pair
             .local
@@ -1272,7 +1276,7 @@ impl Router {
         handler_id
     }
 
-    async fn get_pipe_transport_pair(
+    async fn get_or_create_pipe_transport_pair(
         &self,
         pipe_to_router_options: PipeToRouterOptions,
     ) -> Result<PipeTransportPair, RequestError> {
@@ -1343,43 +1347,21 @@ impl Router {
             future::try_zip(local_pipe_transport_fut, remote_pipe_transport_fut).await?;
 
         let local_connect_fut = local_pipe_transport.connect({
-            let (ip, port) = match remote_pipe_transport.tuple() {
-                TransportTuple::LocalOnly {
-                    local_ip,
-                    local_port,
-                    ..
-                }
-                | TransportTuple::WithRemote {
-                    local_ip,
-                    local_port,
-                    ..
-                } => (local_ip, local_port),
-            };
+            let tuple = remote_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip,
-                port,
+                ip: tuple.local_ip(),
+                port: tuple.local_port(),
                 srtp_parameters: remote_pipe_transport.srtp_parameters(),
             }
         });
 
         let remote_connect_fut = remote_pipe_transport.connect({
-            let (ip, port) = match local_pipe_transport.tuple() {
-                TransportTuple::LocalOnly {
-                    local_ip,
-                    local_port,
-                    ..
-                }
-                | TransportTuple::WithRemote {
-                    local_ip,
-                    local_port,
-                    ..
-                } => (local_ip, local_port),
-            };
+            let tuple = local_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip,
-                port,
+                ip: tuple.local_ip(),
+                port: tuple.local_port(),
                 srtp_parameters: local_pipe_transport.srtp_parameters(),
             }
         });

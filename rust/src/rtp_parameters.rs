@@ -51,7 +51,7 @@ where
     K: Into<String>,
 {
     fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
-        Self::from_iter(std::array::IntoIter::new(array))
+        std::array::IntoIter::new(array).collect()
     }
 }
 
@@ -148,21 +148,18 @@ impl RtpCodecCapabilityFinalized {
     }
 
     pub(crate) fn clock_rate(&self) -> NonZeroU32 {
-        match self {
-            Self::Audio { clock_rate, .. } | Self::Video { clock_rate, .. } => *clock_rate,
-        }
+        let (Self::Audio { clock_rate, .. } | Self::Video { clock_rate, .. }) = self;
+        *clock_rate
     }
 
     pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
-        match self {
-            Self::Audio { parameters, .. } | Self::Video { parameters, .. } => parameters,
-        }
+        let (Self::Audio { parameters, .. } | Self::Video { parameters, .. }) = self;
+        parameters
     }
 
     pub(crate) fn parameters_mut(&mut self) -> &mut RtpCodecParametersParameters {
-        match self {
-            Self::Audio { parameters, .. } | Self::Video { parameters, .. } => parameters,
-        }
+        let (Self::Audio { parameters, .. } | Self::Video { parameters, .. }) = self;
+        parameters
     }
 
     pub(crate) fn preferred_payload_type(&self) -> u8 {
@@ -338,15 +335,13 @@ impl RtpCodecCapability {
     }
 
     pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
-        match self {
-            Self::Audio { parameters, .. } | Self::Video { parameters, .. } => parameters,
-        }
+        let (Self::Audio { parameters, .. } | Self::Video { parameters, .. }) = self;
+        parameters
     }
 
     pub(crate) fn parameters_mut(&mut self) -> &mut RtpCodecParametersParameters {
-        match self {
-            Self::Audio { parameters, .. } | Self::Video { parameters, .. } => parameters,
-        }
+        let (Self::Audio { parameters, .. } | Self::Video { parameters, .. }) = self;
+        parameters
     }
 
     pub(crate) fn preferred_payload_type(&self) -> Option<u8> {
@@ -363,9 +358,8 @@ impl RtpCodecCapability {
     }
 
     pub(crate) fn rtcp_feedback(&self) -> &Vec<RtcpFeedback> {
-        match self {
-            Self::Audio { rtcp_feedback, .. } | Self::Video { rtcp_feedback, .. } => rtcp_feedback,
-        }
+        let (Self::Audio { rtcp_feedback, .. } | Self::Video { rtcp_feedback, .. }) = self;
+        rtcp_feedback
     }
 }
 
@@ -635,21 +629,18 @@ impl RtpCodecParameters {
     }
 
     pub(crate) fn payload_type(&self) -> u8 {
-        match self {
-            Self::Audio { payload_type, .. } | Self::Video { payload_type, .. } => *payload_type,
-        }
+        let (Self::Audio { payload_type, .. } | Self::Video { payload_type, .. }) = self;
+        *payload_type
     }
 
     pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
-        match self {
-            Self::Audio { parameters, .. } | Self::Video { parameters, .. } => parameters,
-        }
+        let (Self::Audio { parameters, .. } | Self::Video { parameters, .. }) = self;
+        parameters
     }
 
     pub(crate) fn rtcp_feedback_mut(&mut self) -> &mut Vec<RtcpFeedback> {
-        match self {
-            Self::Audio { rtcp_feedback, .. } | Self::Video { rtcp_feedback, .. } => rtcp_feedback,
-        }
+        let (Self::Audio { rtcp_feedback, .. } | Self::Video { rtcp_feedback, .. }) = self;
+        rtcp_feedback
     }
 }
 

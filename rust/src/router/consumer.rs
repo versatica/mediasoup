@@ -253,6 +253,16 @@ pub enum ConsumerStats {
     WithProducer((ConsumerStat, ProducerStat)),
 }
 
+impl ConsumerStats {
+    /// RTC statistics of the consumer
+    pub fn consumer_stats(&self) -> &ConsumerStat {
+        match self {
+            ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
+            ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
+        }
+    }
+}
+
 /// 'trace' event data.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
