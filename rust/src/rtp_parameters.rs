@@ -51,7 +51,7 @@ where
     K: Into<String>,
 {
     fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
-        Self::from_iter(std::array::IntoIter::new(array))
+        std::array::IntoIter::new(array).collect()
     }
 }
 
