@@ -28,6 +28,11 @@ export declare type ConsumerOptions = {
      */
     paused?: boolean;
     /**
+     * The MID for the Consumer. If not specified, a sequentially growing
+     * number will be assigned.
+     */
+    mid?: string;
+    /**
      * Preferred spatial and temporal layer for simulcast or SVC media sources.
      * If unset, the highest ones are selected.
      */

@@ -534,6 +534,7 @@ export class Transport extends EnhancedEventEmitter
 			producerId,
 			rtpCapabilities,
 			paused = false,
+			mid,
 			preferredLayers,
 			pipe = false,
 			appData = {}
@@ -546,6 +547,8 @@ export class Transport extends EnhancedEventEmitter
 			throw new TypeError('missing producerId');
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
+		else if (mid && (typeof mid !== 'string' || mid.length === 0))
+			throw new TypeError('if given, mid must be non empty string');
 
 		// This may throw.
 		ortc.validateRtpCapabilities(rtpCapabilities!);
@@ -562,15 +565,22 @@ export class Transport extends EnhancedEventEmitter
 		// Set MID.
 		if (!pipe)
 		{
-			rtpParameters.mid = `${this._nextMidForConsumers++}`;
-
-			// We use up to 8 bytes for MID (string).
-			if (this._nextMidForConsumers === 100000000)
+			if (mid)
 			{
-				logger.error(
-					`consume() | reaching max MID value "${this._nextMidForConsumers}"`);
+				rtpParameters.mid = mid;
+			}
+			else
+			{
+				rtpParameters.mid = `${this._nextMidForConsumers++}`;
 
-				this._nextMidForConsumers = 0;
+				// We use up to 8 bytes for MID (string).
+				if (this._nextMidForConsumers === 100000000)
+				{
+					logger.error(
+						`consume() | reaching max MID value "${this._nextMidForConsumers}"`);
+	
+					this._nextMidForConsumers = 0;
+				}
 			}
 		}
 

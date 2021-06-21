@@ -655,6 +655,59 @@ fn consume_succeeds() {
 }
 
 #[test]
+fn consumer_with_user_defined_mid() {
+    future::block_on(async move {
+        let (_worker, _router, transport_1, transport_2) = init().await;
+
+        let producer_1 = transport_1
+            .produce(audio_producer_options())
+            .await
+            .expect("Failed to produce audio");
+
+        let consumer_2_1 = transport_2
+            .consume(ConsumerOptions::new(
+                producer_1.id(),
+                consumer_device_capabilities(),
+            ))
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_1.rtp_parameters().mid,
+            Some("0".to_string()),
+            "MID automatically assigned to sequential number"
+        );
+
+        let consumer_2_2 = transport_2
+            .consume({
+                let mut options =
+                    ConsumerOptions::new(producer_1.id(), consumer_device_capabilities());
+                options.mid = Some("custom-mid".to_owned());
+                options
+            })
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_2.rtp_parameters().mid,
+            Some("custom-mid".to_string()),
+            "MID is assigned to user-provided value"
+        );
+
+        let consumer_2_3 = transport_2
+            .consume(ConsumerOptions::new(
+                producer_1.id(),
+                consumer_device_capabilities(),
+            ))
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_3.rtp_parameters().mid,
+            Some("1".to_string()),
+            "MID automatically assigned to next sequential number"
+        );
+    })
+}
+
+#[test]
 fn weak() {
     future::block_on(async move {
         let (_worker, _router, transport_1, transport_2) = init().await;
