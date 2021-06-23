@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+* Introduce `PipeConsumerOptions` to avoid incorrect type information on `PipeTransport.consume()` arguments.
+* Make `ConsumerOptions.rtpCapabilities` field required as it should have always been.
 
 ### 3.7.16
 
