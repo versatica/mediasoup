@@ -9,7 +9,7 @@ import {
 	TransportTraceEventData,
 	SctpState
 } from './Transport';
-import { Consumer, ConsumerOptions } from './Consumer';
+import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 
@@ -88,6 +88,19 @@ export type PipeTransportStat =
 	maxIncomingBitrate?: number;
 	// PipeTransport specific.
 	tuple: TransportTuple;
+}
+
+export type PipeConsumerOptions =
+{
+	/**
+	 * The id of the Producer to consume.
+	 */
+	producerId: string;
+
+	/**
+	 * Custom application data.
+	 */
+	appData?: any;
 }
 
 const logger = new Logger('PipeTransport');
@@ -257,7 +270,7 @@ export class PipeTransport extends Transport
 	 *
 	 * @override
 	 */
-	async consume({ producerId, appData = {} }: ConsumerOptions): Promise<Consumer>
+	async consume({ producerId, appData = {} }: PipeConsumerOptions): Promise<Consumer>
 	{
 		logger.debug('consume()');
 

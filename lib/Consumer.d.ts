@@ -11,7 +11,7 @@ export declare type ConsumerOptions = {
     /**
      * RTP capabilities of the consuming endpoint.
      */
-    rtpCapabilities?: RtpCapabilities;
+    rtpCapabilities: RtpCapabilities;
     /**
      * Whether the Consumer must start in paused mode. Default false.
      *
