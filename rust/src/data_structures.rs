@@ -137,6 +137,7 @@ pub struct IceCandidate {
     /// The type of candidate (always `Host`).
     pub r#type: IceCandidateType,
     /// The type of TCP candidate (always `Passive`).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tcp_type: Option<IceCandidateTcpType>,
 }
 
