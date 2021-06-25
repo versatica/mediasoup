@@ -1,10 +1,16 @@
 # Changelog
 
 
+# Unreleased
+
+* Support for optional fixed port on transports
+
+
 ### 3.7.17
 
 * Introduce `PipeConsumerOptions` to avoid incorrect type information on `PipeTransport.consume()` arguments.
 * Make `ConsumerOptions.rtpCapabilities` field required as it should have always been.
+
 
 ### 3.7.16
 

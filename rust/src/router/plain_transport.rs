@@ -47,6 +47,8 @@ use std::sync::{Arc, Weak};
 pub struct PlainTransportOptions {
     /// Listening IP address.
     pub listen_ip: TransportListenIp,
+    /// Fixed port to listen on instead of selecting automatically from Worker's port range.
+    pub port: Option<u16>,
     /// Use RTCP-mux (RTP and RTCP in the same port).
     /// Default true.
     pub rtcp_mux: bool,
@@ -82,6 +84,7 @@ impl PlainTransportOptions {
     pub fn new(listen_ip: TransportListenIp) -> Self {
         Self {
             listen_ip,
+            port: None,
             rtcp_mux: true,
             comedia: false,
             enable_sctp: false,

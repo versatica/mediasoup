@@ -879,3 +879,16 @@ test('router.pipeToRouter() called twice generates a single PipeTransport pair',
 	// - PipeTransport between routerA and routerB.
 	expect(dump.transportIds.length).toBe(1);
 }, 2000);
+
+test('router.createPipeTransport() with fixed port succeeds', async () =>
+{
+	const pipeTransport = await router1.createPipeTransport(
+		{
+			listenIp : '127.0.0.1',
+			port     : 60000
+		});
+
+	expect(pipeTransport.tuple.localPort).toEqual(60000);
+
+	pipeTransport.close();
+}, 2000);

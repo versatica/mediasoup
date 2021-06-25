@@ -247,6 +247,28 @@ fn create_succeeds() {
 }
 
 #[test]
+fn create_with_fixed_port_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_plain_transport({
+                let mut plain_transport_options = PlainTransportOptions::new(TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                });
+                plain_transport_options.port = Some(60_001);
+
+                plain_transport_options
+            })
+            .await
+            .expect("Failed to create Plain transport");
+
+        assert_eq!(transport.tuple().local_port(), 60_001);
+    });
+}
+
+#[test]
 fn weak() {
     future::block_on(async move {
         let (_worker, router) = init().await;

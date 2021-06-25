@@ -9,6 +9,11 @@ export declare type PipeTransportOptions = {
      */
     listenIp: TransportListenIp | string;
     /**
+     * Fixed port to listen on instead of selecting automatically from Worker's port
+     * range.
+     */
+    port?: number;
+    /**
      * Create a SCTP association. Default false.
      */
     enableSctp?: boolean;

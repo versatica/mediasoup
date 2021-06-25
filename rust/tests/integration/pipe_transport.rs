@@ -544,6 +544,28 @@ fn weak() {
 }
 
 #[test]
+fn create_with_fixed_port_succeeds() {
+    future::block_on(async move {
+        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+
+        let pipe_transport = router1
+            .create_pipe_transport({
+                let mut options = PipeTransportOptions::new(TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: None,
+                });
+                options.port = Some(60_000);
+
+                options
+            })
+            .await
+            .expect("Failed to create Pipe transport");
+
+        assert_eq!(pipe_transport.tuple().local_port(), 60_000);
+    });
+}
+
+#[test]
 fn create_with_enable_rtx_succeeds() {
     future::block_on(async move {
         let (_worker, router1, _router2, transport1, _transport2) = init().await;

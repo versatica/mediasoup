@@ -236,6 +236,8 @@ request_response!(
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateWebrtcTransportData {
     listen_ips: TransportListenIps,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    port: Option<u16>,
     enable_udp: bool,
     enable_tcp: bool,
     prefer_udp: bool,
@@ -252,6 +254,7 @@ impl RouterCreateWebrtcTransportData {
     pub(crate) fn from_options(webrtc_transport_options: &WebRtcTransportOptions) -> Self {
         Self {
             listen_ips: webrtc_transport_options.listen_ips.clone(),
+            port: webrtc_transport_options.port,
             enable_udp: webrtc_transport_options.enable_udp,
             enable_tcp: webrtc_transport_options.enable_tcp,
             prefer_udp: webrtc_transport_options.prefer_udp,
@@ -291,6 +294,8 @@ request_response!(
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePlainTransportData {
     listen_ip: TransportListenIp,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    port: Option<u16>,
     rtcp_mux: bool,
     comedia: bool,
     enable_sctp: bool,
@@ -306,6 +311,7 @@ impl RouterCreatePlainTransportData {
     pub(crate) fn from_options(plain_transport_options: &PlainTransportOptions) -> Self {
         Self {
             listen_ip: plain_transport_options.listen_ip,
+            port: plain_transport_options.port,
             rtcp_mux: plain_transport_options.rtcp_mux,
             comedia: plain_transport_options.comedia,
             enable_sctp: plain_transport_options.enable_sctp,
@@ -339,13 +345,15 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePipeTransportData {
-    pub(crate) listen_ip: TransportListenIp,
-    pub(crate) enable_sctp: bool,
-    pub(crate) num_sctp_streams: NumSctpStreams,
-    pub(crate) max_sctp_message_size: u32,
-    pub(crate) sctp_send_buffer_size: u32,
-    pub(crate) enable_rtx: bool,
-    pub(crate) enable_srtp: bool,
+    listen_ip: TransportListenIp,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    port: Option<u16>,
+    enable_sctp: bool,
+    num_sctp_streams: NumSctpStreams,
+    max_sctp_message_size: u32,
+    sctp_send_buffer_size: u32,
+    enable_rtx: bool,
+    enable_srtp: bool,
     is_data_channel: bool,
 }
 
@@ -353,6 +361,7 @@ impl RouterCreatePipeTransportData {
     pub(crate) fn from_options(pipe_transport_options: &PipeTransportOptions) -> Self {
         Self {
             listen_ip: pipe_transport_options.listen_ip,
+            port: pipe_transport_options.port,
             enable_sctp: pipe_transport_options.enable_sctp,
             num_sctp_streams: pipe_transport_options.num_sctp_streams,
             max_sctp_message_size: pipe_transport_options.max_sctp_message_size,

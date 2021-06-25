@@ -491,6 +491,19 @@ test('WebRtcTransport methods reject if closed', async () =>
 		.toThrow(Error);
 }, 2000);
 
+test('router.createWebRtcTransport() with fixed port succeeds', async () =>
+{
+	const webRtcTransport = await router.createWebRtcTransport(
+		{
+			listenIps : [ '127.0.0.1' ],
+			port      : 60000
+		});
+
+	expect(webRtcTransport.iceCandidates[0].port).toEqual(60000);
+
+	webRtcTransport.close();
+}, 2000);
+
 test('WebRtcTransport emits "routerclose" if Router is closed', async () =>
 {
 	// We need different Router and WebRtcTransport instances here.
