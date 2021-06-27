@@ -335,7 +335,7 @@ impl fmt::Debug for DtlsFingerprint {
 }
 
 impl Serialize for DtlsFingerprint {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -347,7 +347,7 @@ impl Serialize for DtlsFingerprint {
 }
 
 impl<'de> Deserialize<'de> for DtlsFingerprint {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
