@@ -34,7 +34,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		RTC::TcpConnection::Listener* connListener{ nullptr };
-		bool fixedPort;
+		bool fixedPort{ false };
 	};
 } // namespace RTC
 

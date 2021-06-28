@@ -29,7 +29,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		bool fixedPort;
+		bool fixedPort{ false };
 	};
 } // namespace RTC
 
