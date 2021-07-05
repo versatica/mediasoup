@@ -732,68 +732,7 @@ namespace RTC
 				// Set TransportCongestionControlServer.
 				if (!this->tccServer)
 				{
-					bool createTccServer{ false };
-					RTC::BweType bweType;
-
-					// Use transport-cc if:
-					// - there is transport-wide-cc-01 RTP header extension, and
-					// - there is "transport-cc" in codecs RTCP feedback.
-					//
-					// clang-format off
-					if (
-						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-									{
-										return fb.type == "transport-cc";
-									});
-							})
-					)
-					// clang-format on
-					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
-
-						createTccServer = true;
-						bweType         = RTC::BweType::TRANSPORT_CC;
-					}
-					// Use REMB if:
-					// - there is abs-send-time RTP header extension, and
-					// - there is "remb" in codecs RTCP feedback.
-					//
-					// clang-format off
-					else if (
-						rtpHeaderExtensionIds.absSendTime != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-									{
-										return fb.type == "goog-remb";
-									});
-							})
-					)
-					// clang-format on
-					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
-
-						createTccServer = true;
-						bweType         = RTC::BweType::REMB;
-					}
-
-					if (createTccServer)
-					{
-						this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
-
-						if (this->maxIncomingBitrate != 0u)
-							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
-
-						if (IsConnected())
-							this->tccServer->TransportConnected();
-					}
+                    SetTransportCongestionControlServer(rtpHeaderExtensionIds, codecs);
 				}
 
 				break;
@@ -1515,7 +1454,73 @@ namespace RTC
 		}
 	}
 
-	void Transport::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
+    void Transport::SetTransportCongestionControlServer(const RtpHeaderExtensionIds &rtpHeaderExtensionIds,
+                                                        const std::vector<RtpCodecParameters> &codecs) {
+        bool createTccServer{ false };
+        BweType bweType;
+
+        // Use transport-cc if:
+        // - there is transport-wide-cc-01 RTP header extension, and
+        // - there is "transport-cc" in codecs RTCP feedback.
+        //
+        // clang-format off
+        if (
+            rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+            std::any_of(
+                codecs.begin(), codecs.end(), [](const RtpCodecParameters& codec)
+                {
+                    return std::any_of(
+                        codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RtcpFeedback& fb)
+                        {
+                            return fb.type == "transport-cc";
+                        });
+                })
+        )
+        // clang-format on
+        {
+            MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
+
+            createTccServer = true;
+            bweType         = BweType::TRANSPORT_CC;
+        }
+        // Use REMB if:
+        // - there is abs-send-time RTP header extension, and
+        // - there is "remb" in codecs RTCP feedback.
+        //
+        // clang-format off
+        else if (
+            rtpHeaderExtensionIds.absSendTime != 0u &&
+            std::any_of(
+                codecs.begin(), codecs.end(), [](const RtpCodecParameters& codec)
+                {
+                    return std::any_of(
+                        codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RtcpFeedback& fb)
+                        {
+                            return fb.type == "goog-remb";
+                        });
+                })
+        )
+        // clang-format on
+        {
+            MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
+
+            createTccServer = true;
+            bweType         = BweType::REMB;
+        }
+
+        if (createTccServer)
+        {
+            tccServer = new TransportCongestionControlServer(this, bweType, MtuSize);
+
+            if (maxIncomingBitrate != 0u)
+                tccServer->SetMaxIncomingBitrate(maxIncomingBitrate);
+
+            if (IsConnected())
+                tccServer->TransportConnected();
+        }
+    }
+
+    void Transport::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
 	{
 		MS_TRACE();
 
