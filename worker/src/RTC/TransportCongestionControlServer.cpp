@@ -69,6 +69,7 @@ namespace RTC
 
 		// In case this is the first unlimited REMB packet, send it fast.
 		// clang-format off
+    // note: only for twcc????
 		if (NeedSendREMB() &&
         (nowMs - limitationRembSentAtMs > LimitationRembInterval
           || unlimitedRembCounter == UnlimitedRembNumPackets))
@@ -102,6 +103,7 @@ namespace RTC
 
     if (previousMaxIncomingBitrate != 0u && maxIncomingBitrate == 0u)
     {
+      // note: only for twcc????
       // This is to ensure that we send N REMB packets with bitrate 0 (unlimited).
       unlimitedRembCounter = UnlimitedRembNumPackets;
 
