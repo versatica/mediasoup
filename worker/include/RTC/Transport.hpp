@@ -303,6 +303,14 @@ namespace RTC
 		uint32_t maxIncomingBitrate{ 0u };
 		uint32_t maxOutgoingBitrate{ 0u };
 		struct TraceEventTypes traceEventTypes;
+
+		void SetTransportCongestionControlServer(
+		  const RtpHeaderExtensionIds &rtpHeaderExtensionIds,
+		  const std::vector<RtpCodecParameters> &codecs);
+
+		void SetTransportCongestionControlClient(
+		  const RtpHeaderExtensionIds& rtpHeaderExtensionIds,
+		  const std::vector<RtpCodecParameters>& codecs);
 	};
 } // namespace RTC
 
