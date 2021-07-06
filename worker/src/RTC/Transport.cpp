@@ -2564,49 +2564,7 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			this->transportWideCcSeq++;
-
-			auto* tccClient = this->tccClient;
-			webrtc::RtpPacketSendInfo packetInfo;
-
-			packetInfo.ssrc                      = packet->GetSsrc();
-			packetInfo.transport_sequence_number = this->transportWideCcSeq;
-			packetInfo.has_rtp_sequence_number   = true;
-			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
-			packetInfo.length                    = packet->GetSize();
-			packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
-
-			// Indicate the pacer (and prober) that a packet is to be sent.
-			this->tccClient->InsertPacket(packetInfo);
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetSize();
-			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
-
-			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
-				if (sent)
-				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-
-					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
-
-					senderBwe->RtpPacketSent(sentInfo);
-				}
-			});
-
-			SendRtpPacket(consumer, packet, cb);
-#else
-			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
-				if (sent)
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-			});
-
-			SendRtpPacket(consumer, packet, cb);
-#endif
+			DoSendRtpPacket(packet, tccClient->GetPacingInfo(), false, consumer);
 		}
 		else
 		{
@@ -2632,49 +2590,7 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			this->transportWideCcSeq++;
-
-			auto* tccClient = this->tccClient;
-			webrtc::RtpPacketSendInfo packetInfo;
-
-			packetInfo.ssrc                      = packet->GetSsrc();
-			packetInfo.transport_sequence_number = this->transportWideCcSeq;
-			packetInfo.has_rtp_sequence_number   = true;
-			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
-			packetInfo.length                    = packet->GetSize();
-			packetInfo.pacing_info               = this->tccClient->GetPacingInfo();
-
-			// Indicate the pacer (and prober) that a packet is to be sent.
-			this->tccClient->InsertPacket(packetInfo);
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetSize();
-			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
-
-			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
-				if (sent)
-				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-
-					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
-
-					senderBwe->RtpPacketSent(sentInfo);
-				}
-			});
-
-			SendRtpPacket(consumer, packet, cb);
-#else
-			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
-				if (sent)
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-			});
-
-			SendRtpPacket(consumer, packet, cb);
-#endif
+			DoSendRtpPacket(packet, tccClient->GetPacingInfo(), false, consumer);
 		}
 		else
 		{
@@ -2682,6 +2598,56 @@ namespace RTC
 		}
 
 		this->sendRtxTransmission.Update(packet);
+	}
+
+	void Transport::DoSendRtpPacket(
+	  RtpPacket* packet,
+	  const webrtc::PacedPacketInfo& pacingInfo,
+	  bool isProbation,
+	  Consumer* consumer)
+	{
+		transportWideCcSeq++;
+
+		webrtc::RtpPacketSendInfo packetInfo;
+
+		packetInfo.ssrc                      = packet->GetSsrc();
+		packetInfo.transport_sequence_number = transportWideCcSeq;
+		packetInfo.has_rtp_sequence_number   = true;
+		packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
+		packetInfo.length                    = packet->GetSize();
+		packetInfo.pacing_info               = pacingInfo;
+
+		// Indicate the pacer (and prober) that a packet is to be sent.
+		tccClient->InsertPacket(packetInfo);
+
+#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+    RTC::SenderBandwidthEstimator::SentInfo sentInfo;
+
+    sentInfo.wideSeq     = transportWideCcSeq;
+    sentInfo.size        = packet->GetSize();
+		sentInfo.isProbation = isProbation;
+    sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
+
+    auto cb = new onSendCallback(
+      [this, &packetInfo, &sentInfo](bool sent)
+      {
+        if (sent)
+        {
+          tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+
+          sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+
+          senderBwe->RtpPacketSent(sentInfo);
+        }
+      });
+#else
+		auto cb = new onSendCallback([this, &packetInfo](bool sent) {
+      if (sent)
+        tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+		  });
+#endif
+		
+		SendRtpPacket(consumer, packet, cb);
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
@@ -2956,6 +2922,9 @@ namespace RTC
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
 
+    // May emit 'trace' event.
+    EmitTraceEventProbationType(packet);
+
 		// Update transport wide sequence number if present.
 		// clang-format off
 		if (
@@ -2964,58 +2933,10 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			this->transportWideCcSeq++;
-
-			// May emit 'trace' event.
-			EmitTraceEventProbationType(packet);
-
-			webrtc::RtpPacketSendInfo packetInfo;
-
-			packetInfo.ssrc                      = packet->GetSsrc();
-			packetInfo.transport_sequence_number = this->transportWideCcSeq;
-			packetInfo.has_rtp_sequence_number   = true;
-			packetInfo.rtp_sequence_number       = packet->GetSequenceNumber();
-			packetInfo.length                    = packet->GetSize();
-			packetInfo.pacing_info               = pacingInfo;
-
-			// Indicate the pacer (and prober) that a packet is to be sent.
-			this->tccClient->InsertPacket(packetInfo);
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetSize();
-			sentInfo.isProbation = true;
-			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
-
-			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
-				if (sent)
-				{
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-
-					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
-
-					senderBwe->RtpPacketSent(sentInfo);
-				}
-			});
-
-			SendRtpPacket(nullptr, packet, cb);
-#else
-			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
-				if (sent)
-					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-			});
-
-			SendRtpPacket(nullptr, packet, cb);
-#endif
+			DoSendRtpPacket(packet, pacingInfo, true, nullptr);
 		}
 		else
 		{
-			// May emit 'trace' event.
-			EmitTraceEventProbationType(packet);
-
 			SendRtpPacket(nullptr, packet);
 		}
 

@@ -311,6 +311,12 @@ namespace RTC
 		void SetTransportCongestionControlClient(
 		  const RtpHeaderExtensionIds& rtpHeaderExtensionIds,
 		  const std::vector<RtpCodecParameters>& codecs);
+
+		void DoSendRtpPacket(
+		  RtpPacket* packet,
+		  const webrtc::PacedPacketInfo& pacingInfo,
+		  bool isProbation,
+		  Consumer* consumer);
 	};
 } // namespace RTC
 
