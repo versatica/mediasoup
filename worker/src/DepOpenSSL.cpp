@@ -24,3 +24,11 @@ void DepOpenSSL::ClassInit()
 		RAND_poll();
 	});
 }
+
+
+void DepOpenSSL::DetectAESNI()
+{
+	MS_TRACE();
+
+	MS_DEBUG_TAG(info, "Intel CPU: %s AES-NI: %s", DepOpenSSL::HasIntelCpu() ? "true" : "false", DepOpenSSL::HasAESNI() ? "true" : "false");
+}

@@ -82,6 +82,8 @@ namespace RTC
 
 		this->shmIdleCheckTimer = new Timer(this);
 		this->shmIdleCheckTimer->Start(ShmIdleCheckInterval);
+
+		this->shmCtx->ResetShmMediaStatsAndQueue((this->GetKind() == RTC::Media::Kind::AUDIO) ? DepLibSfuShm::Media::AUDIO : DepLibSfuShm::Media::VIDEO);
 	}
 
 	ShmConsumer::~ShmConsumer()
@@ -351,7 +353,7 @@ namespace RTC
 				origSeq);
 		}
 
-		// Process the packet. In case of shm writer this is still needed for NACKs
+		// Process the packet. In case of shm writer this logic is still needed for NACKs
 		if (this->rtpStream->ReceivePacket(packet))
 		{
 			// Send the packet.
@@ -391,7 +393,7 @@ namespace RTC
 			this->shmWriterCounter.Update(packet);
 		}
 		else {
-			MS_DEBUG_TAG(xcode, "shm[%s] writer not ready, skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			MS_DEBUG_DEV("shm[%s] writer not ready, skip pkt [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 				this->shmCtx->StreamName().c_str(),
 				packet->GetSsrc(),
 				packet->GetSequenceNumber(),
@@ -500,7 +502,7 @@ namespace RTC
 			shmCtx->WriteAudioRtpDataToShm(data, len, seq, ts);
 
 			// Update last ts and seq even if we failed to write pkt
-			shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::Media::AUDIO);
+			shmCtx->UpdateRtpStats(seq, ts, DepLibSfuShm::Media::AUDIO);
 		} // end of audio
 		else
 		{ // video
@@ -521,7 +523,7 @@ namespace RTC
 			{
 				if (len >= 1)
 				{
-					MS_DEBUG_TAG(xcode, "shm[%s] single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " keyframe=%d newpic=%d marker=%d lastTs=%" PRIu64,
+					MS_DEBUG_DEV("shm[%s] single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " keyframe=%d newpic=%d marker=%d lastTs=%" PRIu64,
 						this->shmCtx->StreamName().c_str(), nal, len, ts, seq, keyframe, tsIncremented, marker, shmCtx->LastVideoTs());
 
 					shmCtx->WriteVideoRtpDataToShm( data, len, seq, ts, nal,
@@ -591,7 +593,7 @@ namespace RTC
 								beginpicture = 0;
 							}
 
-							MS_DEBUG_TAG(xcode, "shm[%s] STAP-A: NAL=%" PRIu8 " seq=%" PRIu64 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
+							MS_DEBUG_DEV("shm[%s] STAP-A: NAL=%" PRIu8 " seq=%" PRIu64 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
 								this->shmCtx->StreamName().c_str(), subnal, seq, len, naluSize, chunksize, ts,
 								shmCtx->LastVideoTs(), keyframe, beginpicture, endpicture);
 
@@ -659,7 +661,7 @@ namespace RTC
 							data += 1;
 						}
 
-						MS_DEBUG_TAG(xcode, "shm[%s] FU-A NAL=%" PRIu8 " seq=%" PRIu64 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
+						MS_DEBUG_DEV("shm[%s] FU-A NAL=%" PRIu8 " seq=%" PRIu64 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
 							this->shmCtx->StreamName().c_str(), subnal, seq, chunksize, ts, shmCtx->LastVideoTs(), keyframe, startBit, endBit, marker, beginpicture, endpicture);
 						shmCtx->WriteVideoRtpDataToShm(data, chunksize, seq, ts, subnal, true, startfragment, beginpicture, endpicture, keyframe);
 						break;
@@ -675,14 +677,14 @@ namespace RTC
 					}
 					default: // ignore the rest
 					{
-						MS_DEBUG_TAG(xcode, "shm[%s] unknown NAL unit type %u in video packet",
+						MS_WARN_TAG(xcode, "shm[%s] unknown NAL unit type %u in video packet",
 							this->shmCtx->StreamName().c_str(), nal);
 						break;
 					}
 				}
 			} // Aggregated or fragmented NALUs
 
-			shmCtx->UpdatePktStat(seq, ts, DepLibSfuShm::Media::VIDEO); // Update last ts and seq even if we failed to write pkt
+			shmCtx->UpdateRtpStats(seq, ts, DepLibSfuShm::Media::VIDEO); // Update last ts and seq even if we failed to write pkt
 		} // end of video
 	}
 
