@@ -6,7 +6,7 @@
     # openssl variables.
     'library%': 'static_library',
     'openssl_fips%': '',
-    'openssl_no_asm%': 1, # Must be defined in OpenSSL >= 1.1.0g.
+    'openssl_no_asm%': 0,
     'libopenssl': '<(PRODUCT_DIR)/libopenssl.a',
     # usrsctp variables.
     'sctp_debug%': 'false',
@@ -23,7 +23,7 @@
     {
       'Release':
       {
-        'cflags': [ '-g', '-Wno-unknown-warning-option', '-fPIC' ]
+        'cflags': [ '-O3', '-Wno-unknown-warning-option', '-fPIC' ]
       },
       'Debug':
       {
