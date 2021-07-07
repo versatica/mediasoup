@@ -129,6 +129,7 @@ extern "C" int run_worker(
 
 		Settings::PrintConfiguration();
 		DepLibUV::PrintVersion();
+		DepOpenSSL::DetectAESNI();
 
 		// Run the Worker.
 		Worker worker(channel, payloadChannel);

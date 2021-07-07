@@ -56,6 +56,7 @@ namespace DepLibSfuShm
     uint32_t sr_ntp_msb{ 0 };
     uint32_t sr_ntp_lsb{ 0 };
     uint64_t sr_rtp_tm{ 0 };
+    uint64_t rtp_seq_offset{ 0 };
   };
 
   // Video NALUs queue item
@@ -108,8 +109,8 @@ namespace DepLibSfuShm
     uint64_t AdjustAudioPktTs(uint64_t ts);
     uint64_t AdjustVideoPktSeq(uint64_t seq);
     uint64_t AdjustAudioPktSeq(uint64_t seq);
-    void UpdatePktStat(uint64_t seq, uint64_t ts, Media kind);
-    void ResetPktStat(Media kind);
+    void UpdateRtpStats(uint64_t seq, uint64_t ts, Media kind);
+    void ResetShmMediaStatsAndQueue(Media kind);
 
     bool IsLastVideoSeqNotSet() const;  
     uint64_t LastVideoTs() const;
@@ -154,11 +155,11 @@ namespace DepLibSfuShm
     Listener                *listener{nullptr}; // can notify video consumer that shm writer is ready, and request a key frame
 
     std::list<ShmQueueItem> videoPktBuffer;                // Video frames queue: newest items (by seqId) added at the end of queue, oldest are read from the front
-    uint64_t                lastKeyFrameTs {UINT64_UNSET}; // keep track of the keyframes sitting in videoPktBuffer queue: if there is one waiting - do not re-request another
     uint64_t                maxVideoPktDelay {9000};       // Default is 100ms at 90000 sample rate
     bool                    useReverseIterator {false};    // Test Enqueue() with plain or reverse iterator 
-
     uint64_t testNackEachMs {0}; // Pass this value to ShmConsumer, if not 0 it will drop incoming pkt periodically and form NACK request
+
+    uint64_t                lastKeyFrameTs {UINT64_UNSET}; // keep track of the keyframes sitting in videoPktBuffer queue: if there is one waiting - do not re-request another
 
   	static std::unordered_map<int, const char*> errToString;
   };
@@ -206,7 +207,7 @@ namespace DepLibSfuShm
     return seq;
   }
   
-  inline void ShmCtx::UpdatePktStat(uint64_t seq, uint64_t ts, Media kind)
+  inline void ShmCtx::UpdateRtpStats(uint64_t seq, uint64_t ts, Media kind)
   {
     //No checks, just update values since we have just written that pkt's data into shm
     if (kind == Media::AUDIO)
@@ -219,11 +220,6 @@ namespace DepLibSfuShm
       this->media[1].last_rtp_seq = seq;
       this->media[1].last_ts = ts;
     }
-  }
-
-  inline void ShmCtx::ResetPktStat(Media kind)
-  {
-    ShmCtx::UpdatePktStat(UINT64_UNSET, UINT64_UNSET, kind);
   }
 
   inline bool ShmCtx::IsLastVideoSeqNotSet() const
