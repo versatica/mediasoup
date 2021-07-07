@@ -2453,6 +2453,17 @@ namespace RTC
 		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
 
+  const char* to_string(BweType type) {
+    switch (type) {
+      case BweType::TRANSPORT_CC:
+        return "transport-cc";
+      case BweType::REMB:
+        return "remb";
+			default:
+				return "unknown";
+    }
+  }
+
 	inline void Transport::EmitTraceEventBweType(
 	  RTC::TransportCongestionControlClient::Bitrates& bitrates) const
 	{
@@ -2473,16 +2484,7 @@ namespace RTC
 		data["info"]["startBitrate"]            = bitrates.startBitrate;
 		data["info"]["maxPaddingBitrate"]       = bitrates.maxPaddingBitrate;
 		data["info"]["availableBitrate"]        = bitrates.availableBitrate;
-
-		switch (this->tccClient->GetBweType())
-		{
-			case RTC::BweType::TRANSPORT_CC:
-				data["info"]["type"] = "transport-cc";
-				break;
-			case RTC::BweType::REMB:
-				data["info"]["type"] = "remb";
-				break;
-		}
+    data["info"]["type"]                    = to_string(tccClient->GetBweType());
 
 		Channel::ChannelNotifier::Emit(this->id, "trace", data);
 	}
