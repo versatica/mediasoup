@@ -1,9 +1,14 @@
 # Changelog
 
 
-# Unreleased
+### 3.7.18
 
-* Support for optional fixed port on transports
+* Support for optional fixed port on transports (PR #593 by @nazar-pc).
+* Upgrade and optimize OpenSSL dependency (PR #598 by @vpalmisano):
+  - OpenSSL upgraded to version 1.1.1k.
+  - Enable the compilation of assembly extensions for OpenSSL.
+  - Optimize the worker build (`-O3`) and disable the debug flag (`-g`).
+* Update NPM deps.
 
 
 ### 3.7.17
