@@ -1,6 +1,11 @@
 # Changelog
 
 
+### Unreleased
+
+* Update `libuv` to 1.41.0. 
+
+
 ### 3.7.18
 
 * Support for optional fixed port on transports (PR #593 by @nazar-pc).
