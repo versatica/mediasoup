@@ -137,6 +137,7 @@ pub struct IceCandidate {
     /// The type of candidate (always `Host`).
     pub r#type: IceCandidateType,
     /// The type of TCP candidate (always `Passive`).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tcp_type: Option<IceCandidateTcpType>,
 }
 
@@ -289,7 +290,7 @@ impl Default for DtlsRole {
 /// The hash function algorithm (as defined in the "Hash function Textual Names" registry initially
 /// specified in [RFC 4572](https://tools.ietf.org/html/rfc4572#section-8) Section 8) and its
 /// corresponding certificate fingerprint value.
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Copy, Clone, PartialOrd, PartialEq)]
 pub enum DtlsFingerprint {
     /// sha-1
     Sha1 {
@@ -318,263 +319,35 @@ pub enum DtlsFingerprint {
     },
 }
 
+impl fmt::Debug for DtlsFingerprint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            DtlsFingerprint::Sha1 { .. } => "Sha1",
+            DtlsFingerprint::Sha224 { .. } => "Sha224",
+            DtlsFingerprint::Sha256 { .. } => "Sha256",
+            DtlsFingerprint::Sha384 { .. } => "Sha384",
+            DtlsFingerprint::Sha512 { .. } => "Sha512",
+        };
+        f.debug_struct(name)
+            .field("value", &self.value_string())
+            .finish()
+    }
+}
+
 impl Serialize for DtlsFingerprint {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         let mut rtcp_feedback = serializer.serialize_struct("DtlsFingerprint", 2)?;
-        match self {
-            DtlsFingerprint::Sha1 { value } => {
-                let value = format!(
-                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
-                    value[0],
-                    value[1],
-                    value[2],
-                    value[3],
-                    value[4],
-                    value[5],
-                    value[6],
-                    value[7],
-                    value[8],
-                    value[9],
-                    value[10],
-                    value[11],
-                    value[12],
-                    value[13],
-                    value[14],
-                    value[15],
-                    value[16],
-                    value[17],
-                    value[18],
-                    value[19],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-1")?;
-                rtcp_feedback.serialize_field("value", &value)?;
-            }
-            DtlsFingerprint::Sha224 { value } => {
-                let value = format!(
-                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
-                    value[0],
-                    value[1],
-                    value[2],
-                    value[3],
-                    value[4],
-                    value[5],
-                    value[6],
-                    value[7],
-                    value[8],
-                    value[9],
-                    value[10],
-                    value[11],
-                    value[12],
-                    value[13],
-                    value[14],
-                    value[15],
-                    value[16],
-                    value[17],
-                    value[18],
-                    value[19],
-                    value[20],
-                    value[21],
-                    value[22],
-                    value[23],
-                    value[24],
-                    value[25],
-                    value[26],
-                    value[27],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-224")?;
-                rtcp_feedback.serialize_field("value", &value)?;
-            }
-            DtlsFingerprint::Sha256 { value } => {
-                let value = format!(
-                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}",
-                    value[0],
-                    value[1],
-                    value[2],
-                    value[3],
-                    value[4],
-                    value[5],
-                    value[6],
-                    value[7],
-                    value[8],
-                    value[9],
-                    value[10],
-                    value[11],
-                    value[12],
-                    value[13],
-                    value[14],
-                    value[15],
-                    value[16],
-                    value[17],
-                    value[18],
-                    value[19],
-                    value[20],
-                    value[21],
-                    value[22],
-                    value[23],
-                    value[24],
-                    value[25],
-                    value[26],
-                    value[27],
-                    value[28],
-                    value[29],
-                    value[30],
-                    value[31],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-256")?;
-                rtcp_feedback.serialize_field("value", &value)?;
-            }
-            DtlsFingerprint::Sha384 { value } => {
-                let value = format!(
-                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
-                    value[0],
-                    value[1],
-                    value[2],
-                    value[3],
-                    value[4],
-                    value[5],
-                    value[6],
-                    value[7],
-                    value[8],
-                    value[9],
-                    value[10],
-                    value[11],
-                    value[12],
-                    value[13],
-                    value[14],
-                    value[15],
-                    value[16],
-                    value[17],
-                    value[18],
-                    value[19],
-                    value[20],
-                    value[21],
-                    value[22],
-                    value[23],
-                    value[24],
-                    value[25],
-                    value[26],
-                    value[27],
-                    value[28],
-                    value[29],
-                    value[30],
-                    value[31],
-                    value[32],
-                    value[33],
-                    value[34],
-                    value[35],
-                    value[36],
-                    value[37],
-                    value[38],
-                    value[39],
-                    value[40],
-                    value[41],
-                    value[42],
-                    value[43],
-                    value[44],
-                    value[45],
-                    value[46],
-                    value[47],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-384")?;
-                rtcp_feedback.serialize_field("value", &value)?;
-            }
-            DtlsFingerprint::Sha512 { value } => {
-                let value = format!(
-                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
-                    {:02X}:{:02X}:{:02X}:{:02X}",
-                    value[0],
-                    value[1],
-                    value[2],
-                    value[3],
-                    value[4],
-                    value[5],
-                    value[6],
-                    value[7],
-                    value[8],
-                    value[9],
-                    value[10],
-                    value[11],
-                    value[12],
-                    value[13],
-                    value[14],
-                    value[15],
-                    value[16],
-                    value[17],
-                    value[18],
-                    value[19],
-                    value[20],
-                    value[21],
-                    value[22],
-                    value[23],
-                    value[24],
-                    value[25],
-                    value[26],
-                    value[27],
-                    value[28],
-                    value[29],
-                    value[30],
-                    value[31],
-                    value[32],
-                    value[33],
-                    value[34],
-                    value[35],
-                    value[36],
-                    value[37],
-                    value[38],
-                    value[39],
-                    value[40],
-                    value[41],
-                    value[42],
-                    value[43],
-                    value[44],
-                    value[45],
-                    value[46],
-                    value[47],
-                    value[48],
-                    value[49],
-                    value[50],
-                    value[51],
-                    value[52],
-                    value[53],
-                    value[54],
-                    value[55],
-                    value[56],
-                    value[57],
-                    value[58],
-                    value[59],
-                    value[60],
-                    value[61],
-                    value[62],
-                    value[63],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-512")?;
-                rtcp_feedback.serialize_field("value", &value)?;
-            }
-        }
+        rtcp_feedback.serialize_field("algorithm", self.algorithm_str())?;
+        rtcp_feedback.serialize_field("value", &self.value_string())?;
         rtcp_feedback.end()
     }
 }
 
 impl<'de> Deserialize<'de> for DtlsFingerprint {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -722,6 +495,256 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
 
         const FIELDS: &[&str] = &["algorithm", "value"];
         deserializer.deserialize_struct("DtlsFingerprint", FIELDS, DtlsFingerprintVisitor)
+    }
+}
+
+impl DtlsFingerprint {
+    fn value_string(&self) -> String {
+        match self {
+            DtlsFingerprint::Sha1 { value } => {
+                format!(
+                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+                    value[0],
+                    value[1],
+                    value[2],
+                    value[3],
+                    value[4],
+                    value[5],
+                    value[6],
+                    value[7],
+                    value[8],
+                    value[9],
+                    value[10],
+                    value[11],
+                    value[12],
+                    value[13],
+                    value[14],
+                    value[15],
+                    value[16],
+                    value[17],
+                    value[18],
+                    value[19],
+                )
+            }
+            DtlsFingerprint::Sha224 { value } => {
+                format!(
+                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+                    value[0],
+                    value[1],
+                    value[2],
+                    value[3],
+                    value[4],
+                    value[5],
+                    value[6],
+                    value[7],
+                    value[8],
+                    value[9],
+                    value[10],
+                    value[11],
+                    value[12],
+                    value[13],
+                    value[14],
+                    value[15],
+                    value[16],
+                    value[17],
+                    value[18],
+                    value[19],
+                    value[20],
+                    value[21],
+                    value[22],
+                    value[23],
+                    value[24],
+                    value[25],
+                    value[26],
+                    value[27],
+                )
+            }
+            DtlsFingerprint::Sha256 { value } => {
+                format!(
+                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}",
+                    value[0],
+                    value[1],
+                    value[2],
+                    value[3],
+                    value[4],
+                    value[5],
+                    value[6],
+                    value[7],
+                    value[8],
+                    value[9],
+                    value[10],
+                    value[11],
+                    value[12],
+                    value[13],
+                    value[14],
+                    value[15],
+                    value[16],
+                    value[17],
+                    value[18],
+                    value[19],
+                    value[20],
+                    value[21],
+                    value[22],
+                    value[23],
+                    value[24],
+                    value[25],
+                    value[26],
+                    value[27],
+                    value[28],
+                    value[29],
+                    value[30],
+                    value[31],
+                )
+            }
+            DtlsFingerprint::Sha384 { value } => {
+                format!(
+                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+                    value[0],
+                    value[1],
+                    value[2],
+                    value[3],
+                    value[4],
+                    value[5],
+                    value[6],
+                    value[7],
+                    value[8],
+                    value[9],
+                    value[10],
+                    value[11],
+                    value[12],
+                    value[13],
+                    value[14],
+                    value[15],
+                    value[16],
+                    value[17],
+                    value[18],
+                    value[19],
+                    value[20],
+                    value[21],
+                    value[22],
+                    value[23],
+                    value[24],
+                    value[25],
+                    value[26],
+                    value[27],
+                    value[28],
+                    value[29],
+                    value[30],
+                    value[31],
+                    value[32],
+                    value[33],
+                    value[34],
+                    value[35],
+                    value[36],
+                    value[37],
+                    value[38],
+                    value[39],
+                    value[40],
+                    value[41],
+                    value[42],
+                    value[43],
+                    value[44],
+                    value[45],
+                    value[46],
+                    value[47],
+                )
+            }
+            DtlsFingerprint::Sha512 { value } => {
+                format!(
+                    "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
+                    {:02X}:{:02X}:{:02X}:{:02X}",
+                    value[0],
+                    value[1],
+                    value[2],
+                    value[3],
+                    value[4],
+                    value[5],
+                    value[6],
+                    value[7],
+                    value[8],
+                    value[9],
+                    value[10],
+                    value[11],
+                    value[12],
+                    value[13],
+                    value[14],
+                    value[15],
+                    value[16],
+                    value[17],
+                    value[18],
+                    value[19],
+                    value[20],
+                    value[21],
+                    value[22],
+                    value[23],
+                    value[24],
+                    value[25],
+                    value[26],
+                    value[27],
+                    value[28],
+                    value[29],
+                    value[30],
+                    value[31],
+                    value[32],
+                    value[33],
+                    value[34],
+                    value[35],
+                    value[36],
+                    value[37],
+                    value[38],
+                    value[39],
+                    value[40],
+                    value[41],
+                    value[42],
+                    value[43],
+                    value[44],
+                    value[45],
+                    value[46],
+                    value[47],
+                    value[48],
+                    value[49],
+                    value[50],
+                    value[51],
+                    value[52],
+                    value[53],
+                    value[54],
+                    value[55],
+                    value[56],
+                    value[57],
+                    value[58],
+                    value[59],
+                    value[60],
+                    value[61],
+                    value[62],
+                    value[63],
+                )
+            }
+        }
+    }
+
+    fn algorithm_str(&self) -> &'static str {
+        match self {
+            DtlsFingerprint::Sha1 { .. } => "sha-1",
+            DtlsFingerprint::Sha224 { .. } => "sha-224",
+            DtlsFingerprint::Sha256 { .. } => "sha-256",
+            DtlsFingerprint::Sha384 { .. } => "sha-384",
+            DtlsFingerprint::Sha512 { .. } => "sha-512",
+        }
     }
 }
 

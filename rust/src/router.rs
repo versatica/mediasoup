@@ -41,7 +41,7 @@ use crate::pipe_transport::{
 };
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{PipedProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
-use crate::rtp_observer::RtpObserverId;
+use crate::rtp_observer::{RtpObserver, RtpObserverId};
 use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::sctp_parameters::NumSctpStreams;
 use crate::transport::{
@@ -60,6 +60,7 @@ use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
+use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
@@ -287,11 +288,34 @@ pub enum NewTransport<'a> {
     WebRtc(&'a WebRtcTransport),
 }
 
+impl<'a> Deref for NewTransport<'a> {
+    type Target = dyn Transport;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Direct(transport) => *transport as &Self::Target,
+            Self::Pipe(transport) => *transport as &Self::Target,
+            Self::Plain(transport) => *transport as &Self::Target,
+            Self::WebRtc(transport) => *transport as &Self::Target,
+        }
+    }
+}
+
 /// New RTP observer that was just created.
 #[derive(Debug)]
 pub enum NewRtpObserver<'a> {
     /// Audio level observer
     AudioLevel(&'a AudioLevelObserver),
+}
+
+impl<'a> Deref for NewRtpObserver<'a> {
+    type Target = dyn RtpObserver;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::AudioLevel(observer) => *observer as &Self::Target,
+        }
+    }
 }
 
 struct PipeTransportPair {
