@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2021 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -188,6 +188,7 @@ static STRINT_PAIR cert_type_list[] = {
     {"RSA fixed ECDH", TLS_CT_RSA_FIXED_ECDH},
     {"ECDSA fixed ECDH", TLS_CT_ECDSA_FIXED_ECDH},
     {"GOST01 Sign", TLS_CT_GOST01_SIGN},
+    {"GOST12 Sign", TLS_CT_GOST12_SIGN},
     {NULL}
 };
 
@@ -933,7 +934,8 @@ static int set_cert_cb(SSL *ssl, void *arg)
                 if (!SSL_build_cert_chain(ssl, 0))
                     return 0;
             } else if (exc->chain != NULL) {
-                SSL_set1_chain(ssl, exc->chain);
+                if (!SSL_set1_chain(ssl, exc->chain))
+                    return 0;
             }
         }
         exc = exc->prev;
