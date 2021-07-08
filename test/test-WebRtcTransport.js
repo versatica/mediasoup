@@ -1,4 +1,5 @@
 const { toBeType } = require('jest-tobetype');
+const pickPort = require('pick-port');
 const mediasoup = require('../');
 const { createWorker } = mediasoup;
 
@@ -493,13 +494,15 @@ test('WebRtcTransport methods reject if closed', async () =>
 
 test('router.createWebRtcTransport() with fixed port succeeds', async () =>
 {
+
+	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const webRtcTransport = await router.createWebRtcTransport(
 		{
 			listenIps : [ '127.0.0.1' ],
-			port      : 23456
+			port
 		});
 
-	expect(webRtcTransport.iceCandidates[0].port).toEqual(23456);
+	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
 
 	webRtcTransport.close();
 }, 2000);
