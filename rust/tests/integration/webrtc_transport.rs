@@ -251,6 +251,29 @@ fn create_succeeds() {
 }
 
 #[test]
+fn create_with_fixed_port_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_webrtc_transport({
+                let mut options =
+                    WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    }));
+                options.port = Some(60_002);
+
+                options
+            })
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        assert_eq!(transport.ice_candidates().get(0).unwrap().port, 60_002);
+    });
+}
+
+#[test]
 fn weak() {
     future::block_on(async move {
         let (_worker, router) = init().await;

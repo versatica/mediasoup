@@ -403,6 +403,19 @@ test('PlainTransport methods reject if closed', async () =>
 		.toThrow(Error);
 }, 2000);
 
+test('router.createPlainTransport() with fixed port succeeds', async () =>
+{
+	const plainTransport = await router.createPlainTransport(
+		{
+			listenIp : '127.0.0.1',
+			port     : 60000
+		});
+
+	expect(plainTransport.tuple.localPort).toEqual(60000);
+
+	plainTransport.close();
+}, 2000);
+
 test('PlainTransport emits "routerclose" if Router is closed', async () =>
 {
 	// We need different Router and PlainTransport instances here.
