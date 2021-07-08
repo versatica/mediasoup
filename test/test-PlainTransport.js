@@ -408,10 +408,10 @@ test('router.createPlainTransport() with fixed port succeeds', async () =>
 	const plainTransport = await router.createPlainTransport(
 		{
 			listenIp : '127.0.0.1',
-			port     : 60000
+			port     : 23456
 		});
 
-	expect(plainTransport.tuple.localPort).toEqual(60000);
+	expect(plainTransport.tuple.localPort).toEqual(23456);
 
 	plainTransport.close();
 }, 2000);

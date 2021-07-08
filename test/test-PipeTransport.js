@@ -885,10 +885,10 @@ test('router.createPipeTransport() with fixed port succeeds', async () =>
 	const pipeTransport = await router1.createPipeTransport(
 		{
 			listenIp : '127.0.0.1',
-			port     : 60000
+			port     : 23456
 		});
 
-	expect(pipeTransport.tuple.localPort).toEqual(60000);
+	expect(pipeTransport.tuple.localPort).toEqual(23456);
 
 	pipeTransport.close();
 }, 2000);

@@ -496,10 +496,10 @@ test('router.createWebRtcTransport() with fixed port succeeds', async () =>
 	const webRtcTransport = await router.createWebRtcTransport(
 		{
 			listenIps : [ '127.0.0.1' ],
-			port      : 60000
+			port      : 23456
 		});
 
-	expect(webRtcTransport.iceCandidates[0].port).toEqual(60000);
+	expect(webRtcTransport.iceCandidates[0].port).toEqual(23456);
 
 	webRtcTransport.close();
 }, 2000);
