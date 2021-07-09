@@ -2716,7 +2716,7 @@ namespace RTC
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					sentInfo.rtpSentAtMs = DepLibUV::GetTimeMs();
 
 					senderBwe->RtpPacketSent(sentInfo);
 				}
@@ -2784,7 +2784,7 @@ namespace RTC
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					sentInfo.rtpSentAtMs = DepLibUV::GetTimeMs();
 
 					senderBwe->RtpPacketSent(sentInfo);
 				}
@@ -3121,7 +3121,7 @@ namespace RTC
 				{
 					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					sentInfo.rtpSentAtMs = DepLibUV::GetTimeMs();
 
 					senderBwe->RtpPacketSent(sentInfo);
 				}
@@ -3203,13 +3203,14 @@ namespace RTC
 		{
 			json item = json::object();
 
-			item["wideSeq"]      = sentInfo.wideSeq;
-			item["size"]         = sentInfo.size;
-			item["sentAtMs"]     = sentInfo.sentAtMs;
-			item["receivedAtMs"] = sentInfo.receivedAtMs;
-			item["rtt"]          = sentInfo.rtt;
-			item["dod"]          = sentInfo.dod;
-			item["probation"]    = sentInfo.isProbation;
+			item["wideSeq"]              = sentInfo.wideSeq;
+			item["size"]                 = sentInfo.size;
+			item["rtpSentAtMs"]          = sentInfo.rtpSentAtMs;
+			item["rtpReceivedAtMs"]      = sentInfo.rtpReceivedAtMs;
+			item["feedbackReceivedAtMs"] = sentInfo.feedbackReceivedAtMs;
+			item["rtt"]                  = sentInfo.rtt;
+			item["dod"]                  = sentInfo.dod;
+			item["probation"]            = sentInfo.isProbation;
 
 			data["info"]["items"].push_back(item);
 		}

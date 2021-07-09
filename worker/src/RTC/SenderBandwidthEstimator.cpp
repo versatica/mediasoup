@@ -66,7 +66,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs = sentInfo.sentAtMs;
+		auto nowMs = sentInfo.rtpSentAtMs;
 
 		// Insert the sent info into the map.
 		this->sentInfos[sentInfo.wideSeq] = sentInfo;
@@ -93,6 +93,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		const auto nowMs         = DepLibUV::GetTimeMs();
 		const auto packetResults = feedback->GetPacketResults();
 
 		// TODO: Remove.
@@ -118,8 +119,9 @@ namespace RTC
 			auto& sentInfo = sentInfosIt->second;
 
 			// Fill the received info.
-			sentInfo.received     = true;
-			sentInfo.receivedAtMs = result.receivedAtMs;
+			sentInfo.received             = true;
+			sentInfo.rtpReceivedAtMs      = result.receivedAtMs;
+			sentInfo.feedbackReceivedAtMs = nowMs;
 
 			// TODO: Properly retrieve RTT.
 			sentInfo.rtt = this->rtt;
@@ -138,8 +140,8 @@ namespace RTC
 
 			auto& previousSentInfo = sentInfosIt->second;
 
-			sentInfo.dod = (result.receivedAtMs - previousSentInfo.receivedAtMs) -
-			               (sentInfo.sentAtMs - previousSentInfo.sentAtMs);
+			sentInfo.dod = (result.receivedAtMs - previousSentInfo.rtpReceivedAtMs) -
+			               (sentInfo.rtpSentAtMs - previousSentInfo.rtpSentAtMs);
 
 			// TODO: Remove.
 			// sentInfo.Dump();
@@ -151,7 +153,7 @@ namespace RTC
 			//   "received delta for packet [wideSeq:%" PRIu16 ", send delta:%" PRIi32
 			//   ", recv delta:%" PRIu64 "]",
 			//   wideSeq,
-			//   sentInfo.sentAtMs - previousSentInfo.sentAtMs,
+			//   sentInfo.rtpSentAtMs - previousSentInfo.rtpSentAtMs,
 			//   result.delta / 4);
 		}
 
@@ -273,7 +275,7 @@ namespace RTC
 		// Remove all SentInfo's that are older than RTT.
 		for (auto it = this->sentInfos.begin(); it != this->sentInfos.end();)
 		{
-			if (it->second.sentAtMs < nowMs - MaxSentInfoTimeWindowMs)
+			if (it->second.rtpSentAtMs < nowMs - MaxSentInfoTimeWindowMs)
 			{
 				it = this->sentInfos.erase(it);
 			}
@@ -305,30 +307,30 @@ namespace RTC
 
 			if (!firstSentAtMs)
 			{
-				firstSentAtMs = sentInfo.sentAtMs;
-				firstRecvAtMs = sentInfo.receivedAtMs;
-				lastSentAtMs  = sentInfo.sentAtMs;
-				lastRecvAtMs  = sentInfo.receivedAtMs;
+				firstSentAtMs = sentInfo.rtpSentAtMs;
+				firstRecvAtMs = sentInfo.rtpReceivedAtMs;
+				lastSentAtMs  = sentInfo.rtpSentAtMs;
+				lastRecvAtMs  = sentInfo.rtpReceivedAtMs;
 			}
 
 			// Handle disorder on sending.
-			if (RTC::SeqManager<uint64_t>::IsSeqLowerThan(sentInfo.sentAtMs, firstSentAtMs))
+			if (RTC::SeqManager<uint64_t>::IsSeqLowerThan(sentInfo.rtpSentAtMs, firstSentAtMs))
 			{
-				firstSentAtMs = sentInfo.sentAtMs;
+				firstSentAtMs = sentInfo.rtpSentAtMs;
 			}
-			else if (RTC::SeqManager<uint64_t>::IsSeqHigherThan(sentInfo.sentAtMs, lastSentAtMs))
+			else if (RTC::SeqManager<uint64_t>::IsSeqHigherThan(sentInfo.rtpSentAtMs, lastSentAtMs))
 			{
-				lastSentAtMs = sentInfo.sentAtMs;
+				lastSentAtMs = sentInfo.rtpSentAtMs;
 			}
 
 			// Handle disorder on receiving.
-			if (RTC::SeqManager<uint64_t>::IsSeqLowerThan(sentInfo.receivedAtMs, firstRecvAtMs))
+			if (RTC::SeqManager<uint64_t>::IsSeqLowerThan(sentInfo.rtpReceivedAtMs, firstRecvAtMs))
 			{
-				firstRecvAtMs = sentInfo.receivedAtMs;
+				firstRecvAtMs = sentInfo.rtpReceivedAtMs;
 			}
-			else if (RTC::SeqManager<uint64_t>::IsSeqHigherThan(sentInfo.receivedAtMs, lastRecvAtMs))
+			else if (RTC::SeqManager<uint64_t>::IsSeqHigherThan(sentInfo.rtpReceivedAtMs, lastRecvAtMs))
 			{
-				lastRecvAtMs = sentInfo.receivedAtMs;
+				lastRecvAtMs = sentInfo.rtpReceivedAtMs;
 			}
 
 			// Increase total bytes.
@@ -386,14 +388,15 @@ namespace RTC
 		MS_DUMP("  wideSeq     : %" PRIu16, this->wideSeq);
 		MS_DUMP("  size        : %zu", this->size);
 		MS_DUMP("  isProbation : %s", this->isProbation ? "true" : "false");
-		MS_DUMP("  sendingAt   : %" PRIu64, this->sendingAtMs);
-		MS_DUMP("  sentAt      : %" PRIu64, this->sentAtMs);
+		MS_DUMP("  sendingAtMs : %" PRIu64, this->sendingAtMs);
+		MS_DUMP("  rtpSentAtMs : %" PRIu64, this->rtpSentAtMs);
 		MS_DUMP("  received    : %s", this->received ? "true" : "false");
 
 		if (this->received)
 		{
-			MS_DUMP("  receivedAt : %" PRIu64, this->receivedAtMs);
-			MS_DUMP("  dod        : %" PRIi16, this->dod);
+			MS_DUMP("  rtpReceivedAt        : %" PRIu64, this->rtpReceivedAtMs);
+			MS_DUMP("  feedbackReceivedAtMs : %" PRIu64, this->feedbackReceivedAtMs);
+			MS_DUMP("  dod                  : %" PRIi16, this->dod);
 		}
 
 		MS_DUMP("</SentInfo>");

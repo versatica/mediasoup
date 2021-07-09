@@ -22,9 +22,10 @@ namespace RTC
 			size_t size{ 0u };
 			bool isProbation{ false };
 			uint64_t sendingAtMs{ 0u };
-			uint64_t sentAtMs{ 0u };
+			uint64_t rtpSentAtMs{ 0u };
 			bool received{ false };
-			int64_t receivedAtMs{ 0u };
+			int64_t rtpReceivedAtMs{ 0u };
+			int64_t feedbackReceivedAtMs{ 0u };
 			float rtt{ 0.f };
 			int16_t dod{ 0 };
 		};
