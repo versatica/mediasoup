@@ -26,7 +26,7 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{
     DataProducer, DataProducerId, DataProducerOptions, NonClosingDataProducer, WeakDataProducer,
 };
-use crate::data_structures::{AppData, TransportListenIp, TransportTuple};
+use crate::data_structures::{AppData, TransportListenIp};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverRequest,
@@ -41,7 +41,7 @@ use crate::pipe_transport::{
 };
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{PipedProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
-use crate::rtp_observer::RtpObserverId;
+use crate::rtp_observer::{RtpObserver, RtpObserverId};
 use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::sctp_parameters::NumSctpStreams;
 use crate::transport::{
@@ -60,6 +60,7 @@ use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
+use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
@@ -287,11 +288,34 @@ pub enum NewTransport<'a> {
     WebRtc(&'a WebRtcTransport),
 }
 
+impl<'a> Deref for NewTransport<'a> {
+    type Target = dyn Transport;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Direct(transport) => *transport as &Self::Target,
+            Self::Pipe(transport) => *transport as &Self::Target,
+            Self::Plain(transport) => *transport as &Self::Target,
+            Self::WebRtc(transport) => *transport as &Self::Target,
+        }
+    }
+}
+
 /// New RTP observer that was just created.
 #[derive(Debug)]
 pub enum NewRtpObserver<'a> {
     /// Audio level observer
     AudioLevel(&'a AudioLevelObserver),
+}
+
+impl<'a> Deref for NewRtpObserver<'a> {
+    type Target = dyn RtpObserver;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::AudioLevel(observer) => *observer as &Self::Target,
+        }
+    }
 }
 
 struct PipeTransportPair {
@@ -908,7 +932,6 @@ impl Router {
     ///                },
     ///            ],
     ///            header_extensions: vec![],
-    ///            fec_mechanisms: vec![],
     ///        }
     ///     ))
     ///     .await?;
@@ -940,7 +963,9 @@ impl Router {
             }
         };
 
-        let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
+        let pipe_transport_pair = self
+            .get_or_create_pipe_transport_pair(pipe_to_router_options)
+            .await?;
 
         let pipe_consumer = pipe_transport_pair
             .local
@@ -1144,7 +1169,9 @@ impl Router {
             }
         };
 
-        let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
+        let pipe_transport_pair = self
+            .get_or_create_pipe_transport_pair(pipe_to_router_options)
+            .await?;
 
         let pipe_data_consumer = pipe_transport_pair
             .local
@@ -1273,7 +1300,7 @@ impl Router {
         handler_id
     }
 
-    async fn get_pipe_transport_pair(
+    async fn get_or_create_pipe_transport_pair(
         &self,
         pipe_to_router_options: PipeToRouterOptions,
     ) -> Result<PipeTransportPair, RequestError> {
@@ -1344,43 +1371,21 @@ impl Router {
             future::try_zip(local_pipe_transport_fut, remote_pipe_transport_fut).await?;
 
         let local_connect_fut = local_pipe_transport.connect({
-            let (ip, port) = match remote_pipe_transport.tuple() {
-                TransportTuple::LocalOnly {
-                    local_ip,
-                    local_port,
-                    ..
-                }
-                | TransportTuple::WithRemote {
-                    local_ip,
-                    local_port,
-                    ..
-                } => (local_ip, local_port),
-            };
+            let tuple = remote_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip,
-                port,
+                ip: tuple.local_ip(),
+                port: tuple.local_port(),
                 srtp_parameters: remote_pipe_transport.srtp_parameters(),
             }
         });
 
         let remote_connect_fut = remote_pipe_transport.connect({
-            let (ip, port) = match local_pipe_transport.tuple() {
-                TransportTuple::LocalOnly {
-                    local_ip,
-                    local_port,
-                    ..
-                }
-                | TransportTuple::WithRemote {
-                    local_ip,
-                    local_port,
-                    ..
-                } => (local_ip, local_port),
-            };
+            let tuple = local_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip,
-                port,
+                ip: tuple.local_ip(),
+                port: tuple.local_port(),
                 srtp_parameters: local_pipe_transport.srtp_parameters(),
             }
         });

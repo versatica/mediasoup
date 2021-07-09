@@ -55,6 +55,17 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
+		uint16_t port{ 0 };
+		auto jsonPortIt = data.find("port");
+
+		if (jsonPortIt != data.end())
+		{
+			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
+				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
+
+			port = jsonPortIt->get<uint16_t>();
+		}
+
 		auto jsonEnableRtxIt = data.find("enableRtx");
 
 		if (jsonEnableRtxIt != data.end() && jsonEnableRtxIt->is_boolean())
@@ -77,7 +88,10 @@ namespace RTC
 		try
 		{
 			// This may throw.
-			this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+			if (port != 0)
+				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, port);
+			else
+				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 		}
 		catch (const MediaSoupError& error)
 		{

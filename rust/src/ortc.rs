@@ -40,8 +40,8 @@ pub struct RtpMappingEncoding {
     pub ssrc: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rid: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalability_mode: Option<String>,
+    #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
+    pub scalability_mode: ScalabilityMode,
     pub mapped_ssrc: u32,
 }
 
@@ -193,7 +193,6 @@ pub(crate) fn generate_router_rtp_capabilities(
     let mut caps = RtpCapabilitiesFinalized {
         codecs: vec![],
         header_extensions: supported_rtp_capabilities.header_extensions,
-        fec_mechanisms: vec![],
     };
 
     for media_codec in &mut media_codecs {
@@ -564,16 +563,8 @@ pub(crate) fn get_consumable_rtp_parameters(
 
     for cap_ext in &caps.header_extensions {
         // Just take RTP header extension that can be used in Consumers.
-        match cap_ext.kind {
-            Some(cap_ext_kind) => {
-                if cap_ext_kind != kind {
-                    continue;
-                }
-            }
-            None => {
-                // TODO: Should this really skip "any" extensions?
-                continue;
-            }
+        if cap_ext.kind != kind {
+            continue;
         }
         if !matches!(
             cap_ext.direction,
@@ -779,20 +770,19 @@ pub(crate) fn get_consumer_rtp_parameters(
         // (assume all encodings have the same value).
         let mut scalability_mode = consumable_params
             .encodings
-            .iter()
-            .find_map(|encoding| encoding.scalability_mode.clone());
+            .get(0)
+            .map(|encoding| encoding.scalability_mode.clone())
+            .unwrap_or_default();
 
-        // If there is simulast, mangle spatial layers in scalabilityMode.
+        // If there is simulcast, mangle spatial layers in scalabilityMode.
         if consumable_params.encodings.len() > 1 {
-            scalability_mode = Some(format!(
+            scalability_mode = format!(
                 "S{}T{}",
                 consumable_params.encodings.len(),
-                scalability_mode
-                    .as_ref()
-                    .and_then(|s| s.parse::<ScalabilityMode>().ok())
-                    .unwrap_or_default()
-                    .temporal_layers
-            ));
+                scalability_mode.temporal_layers()
+            )
+            .parse()
+            .unwrap();
         }
 
         consumer_encoding.scalability_mode = scalability_mode;

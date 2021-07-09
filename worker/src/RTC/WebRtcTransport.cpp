@@ -121,6 +121,17 @@ namespace RTC
 			}
 		}
 
+		uint16_t port{ 0 };
+		auto jsonPortIt = data.find("port");
+
+		if (jsonPortIt != data.end())
+		{
+			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
+				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
+
+			port = jsonPortIt->get<uint16_t>();
+		}
+
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement{ 0 };
@@ -143,7 +154,11 @@ namespace RTC
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
-					auto* udpSocket = new RTC::UdpSocket(this, listenIp.ip);
+					RTC::UdpSocket* udpSocket;
+					if (port != 0)
+						udpSocket = new RTC::UdpSocket(this, listenIp.ip, port);
+					else
+						udpSocket = new RTC::UdpSocket(this, listenIp.ip);
 
 					this->udpSockets[udpSocket] = listenIp.announcedIp;
 
@@ -164,7 +179,11 @@ namespace RTC
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
-					auto* tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
+					RTC::TcpServer* tcpServer;
+					if (port != 0)
+						tcpServer = new RTC::TcpServer(this, this, listenIp.ip, port);
+					else
+						tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
 
 					this->tcpServers[tcpServer] = listenIp.announcedIp;
 

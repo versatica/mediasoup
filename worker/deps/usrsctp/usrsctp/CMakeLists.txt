@@ -38,6 +38,8 @@ if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "DEBUG")
 endif ()
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 include(CheckStructHasMember)
 include(CheckIncludeFile)
 include(CheckIncludeFiles)
@@ -106,6 +108,11 @@ endif ()
 check_include_files("sys/types.h;netinet/in.h;netinet/ip.h;netinet/ip_icmp.h" have_netinet_ip_icmp_h)
 if (have_netinet_ip_icmp_h)
 	add_definitions(-DHAVE_NETINET_IP_ICMP_H)
+endif ()
+
+check_include_files("net/route.h" have_net_route_h)
+if (have_net_route_h)
+	add_definitions(-DHAVE_NET_ROUTE_H)
 endif ()
 
 check_include_files("stdatomic.h" have_stdatomic_h)

@@ -80,6 +80,7 @@ namespace Channel
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Others.
+		bool closed{ false };
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
 		uint8_t* writeBuffer;

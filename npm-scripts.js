@@ -4,6 +4,7 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const { version } = require('./package.json');
 
+const isFreeBSD = os.platform() === 'freebsd';
 const isWindows = os.platform() === 'win32';
 const task = process.argv.slice(2).join(' ');
 
@@ -22,6 +23,17 @@ if (isWindows)
 	MSBUILD = process.env.MSBUILD || 'MSBuild';
 	MEDIASOUP_BUILDTYPE = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	MEDIASOUP_TEST_TAGS = process.env.MEDIASOUP_TEST_TAGS || '';
+}
+
+let MAKE;
+
+if (isFreeBSD)
+{
+	MAKE = process.env.MAKE || 'gmake';
+}
+else
+{
+	MAKE = process.env.MAKE || 'make';
 }
 
 // eslint-disable-next-line no-console
@@ -77,14 +89,14 @@ switch (task)
 
 	case 'lint:worker':
 	{
-		execute('make lint -C worker');
+		execute(`${MAKE} lint -C worker`);
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute('make format -C worker');
+		execute(`${MAKE} format -C worker`);
 
 		break;
 	}
@@ -109,7 +121,7 @@ switch (task)
 	{
 		if (!isWindows)
 		{
-			execute('make test -C worker');
+			execute(`${MAKE} test -C worker`);
 		}
 		else if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
@@ -136,7 +148,7 @@ switch (task)
 		{
 			if (!isWindows)
 			{
-				execute('make -C worker');
+				execute(`${MAKE} -C worker`);
 			}
 			else
 			{

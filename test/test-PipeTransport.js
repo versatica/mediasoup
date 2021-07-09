@@ -1,4 +1,5 @@
 const { toBeType } = require('jest-tobetype');
+const pickPort = require('pick-port');
 const mediasoup = require('../');
 const { createWorker } = mediasoup;
 
@@ -878,4 +879,18 @@ test('router.pipeToRouter() called twice generates a single PipeTransport pair',
 	// There should be 1 Transport in routerB:
 	// - PipeTransport between routerA and routerB.
 	expect(dump.transportIds.length).toBe(1);
+}, 2000);
+
+test('router.createPipeTransport() with fixed port succeeds', async () =>
+{
+	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
+	const pipeTransport = await router1.createPipeTransport(
+		{
+			listenIp : '127.0.0.1',
+			port
+		});
+
+	expect(pipeTransport.tuple.localPort).toEqual(port);
+
+	pipeTransport.close();
 }, 2000);

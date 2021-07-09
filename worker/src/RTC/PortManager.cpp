@@ -98,7 +98,7 @@ namespace RTC
 		  static_cast<uint32_t>(0), static_cast<uint32_t>(ports.size() - 1)));
 
 		// Iterate all ports until getting one available. Fail if none found and also
-		// if bind() fails N times in theorically available ports.
+		// if bind() fails N times in theoretically available ports.
 		while (true)
 		{
 			// Increase attempt number.
@@ -142,7 +142,7 @@ namespace RTC
 				continue;
 			}
 
-			// Here we already have a theorically available port. Now let's check
+			// Here we already have a theoretically available port. Now let's check
 			// whether no other process is binding into it.
 
 			// Set the chosen port into the sockaddr struct.
@@ -197,7 +197,7 @@ namespace RTC
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
 					  flags);
 
-					if (err)
+					if (err != 0)
 					{
 						MS_WARN_DEV(
 						  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
@@ -219,7 +219,7 @@ namespace RTC
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
 					  flags);
 
-					if (err)
+					if (err != 0)
 					{
 						MS_WARN_DEV(
 						  "uv_tcp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
@@ -310,6 +310,184 @@ namespace RTC
 		  port,
 		  attempt,
 		  numAttempts);
+
+		return static_cast<uv_handle_t*>(uvHandle);
+	}
+
+	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, uint16_t port)
+	{
+		MS_TRACE();
+
+		// First normalize the IP. This may throw if invalid IP.
+		Utils::IP::NormalizeIp(ip);
+
+		int err;
+		int family = Utils::IP::GetFamily(ip);
+		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		int flags{ 0 };
+		uv_handle_t* uvHandle{ nullptr };
+		std::string transportStr;
+
+		switch (transport)
+		{
+			case Transport::UDP:
+				transportStr.assign("udp");
+				break;
+
+			case Transport::TCP:
+				transportStr.assign("tcp");
+				break;
+		}
+
+		switch (family)
+		{
+			case AF_INET:
+			{
+				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
+
+				if (err != 0)
+					MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
+
+				if (err != 0)
+					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+
+				// Don't also bind into IPv4 when listening in IPv6.
+				flags |= UV_UDP_IPV6ONLY;
+
+				break;
+			}
+
+			// This cannot happen.
+			default:
+			{
+				MS_THROW_ERROR("unknown IP family");
+			}
+		}
+
+		// Set the port into the sockaddr struct.
+		switch (family)
+		{
+			case AF_INET:
+				(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(port);
+				break;
+
+			case AF_INET6:
+				(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(port);
+				break;
+		}
+
+		// Try to bind on it.
+		switch (transport)
+		{
+			case Transport::UDP:
+				uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
+				err      = uv_udp_init_ex(
+          DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+				break;
+
+			case Transport::TCP:
+				uvHandle = reinterpret_cast<uv_handle_t*>(new uv_tcp_t());
+				err      = uv_tcp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_tcp_t*>(uvHandle));
+				break;
+		}
+
+		if (err != 0)
+		{
+			delete uvHandle;
+
+			switch (transport)
+			{
+				case Transport::UDP:
+					MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
+					break;
+
+				case Transport::TCP:
+					MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
+					break;
+			}
+		}
+
+		switch (transport)
+		{
+			case Transport::UDP:
+			{
+				err = uv_udp_bind(
+				  reinterpret_cast<uv_udp_t*>(uvHandle),
+				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
+				  flags);
+
+				if (err != 0)
+				{
+					// If it failed, close the handle and check the reason.
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+
+					MS_THROW_ERROR(
+					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ": %s",
+					  transportStr.c_str(),
+					  ip.c_str(),
+					  port,
+					  uv_strerror(err));
+				}
+
+				break;
+			}
+
+			case Transport::TCP:
+			{
+				err = uv_tcp_bind(
+				  reinterpret_cast<uv_tcp_t*>(uvHandle),
+				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
+				  flags);
+
+				if (err != 0)
+				{
+					// If it failed, close the handle and check the reason.
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+
+					MS_THROW_ERROR(
+					  "uv_tcp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
+					  transportStr.c_str(),
+					  ip.c_str(),
+					  port,
+					  uv_strerror(err));
+				}
+
+				// uv_tcp_bind() may succeed even if later uv_listen() fails, so
+				// double check it.
+				err = uv_listen(
+				  reinterpret_cast<uv_stream_t*>(uvHandle),
+				  256,
+				  static_cast<uv_connection_cb>(onFakeConnection));
+
+				if (err != 0)
+				{
+					// If it failed, close the handle and check the reason.
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+
+					MS_THROW_ERROR(
+					  "uv_listen() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
+					  transportStr.c_str(),
+					  ip.c_str(),
+					  port,
+					  uv_strerror(err));
+				}
+
+				break;
+			}
+		}
+
+		MS_DEBUG_DEV(
+		  "bind succeeded [transport:%s, ip:'%s', port:%" PRIu16 "]",
+		  transportStr.c_str(),
+		  ip.c_str(),
+		  port);
 
 		return static_cast<uv_handle_t*>(uvHandle);
 	}

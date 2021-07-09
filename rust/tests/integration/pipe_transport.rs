@@ -188,28 +188,27 @@ fn consumer_device_capabilities() -> RtpCapabilities {
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                 preferred_id: 5,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
         ],
-        fec_mechanisms: vec![],
     }
 }
 
@@ -541,6 +540,28 @@ fn weak() {
         drop(pipe_transport);
 
         assert!(weak_pipe_transport.upgrade().is_none());
+    });
+}
+
+#[test]
+fn create_with_fixed_port_succeeds() {
+    future::block_on(async move {
+        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+
+        let pipe_transport = router1
+            .create_pipe_transport({
+                let mut options = PipeTransportOptions::new(TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: None,
+                });
+                options.port = Some(60_000);
+
+                options
+            })
+            .await
+            .expect("Failed to create Pipe transport");
+
+        assert_eq!(pipe_transport.tuple().local_port(), 60_000);
     });
 }
 

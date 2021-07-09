@@ -1,7 +1,7 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, TraceEventDirection};
+use crate::data_structures::{AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection};
 use crate::messages::{
     ConsumerInternal, DataConsumerInternal, DataProducerInternal, ProducerInternal,
     TransportConsumeData, TransportConsumeDataData, TransportConsumeDataRequest,
@@ -27,7 +27,6 @@ use log::{error, warn};
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -54,9 +53,8 @@ pub enum TransportTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// Transport bandwidth estimation changed.
     Bwe {
@@ -64,9 +62,8 @@ pub enum TransportTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// BWE info.
+        info: BweTraceInfo,
     },
 }
 
@@ -572,6 +569,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             producer_id,
             rtp_capabilities,
             paused,
+            mid,
             preferred_layers,
             pipe,
             app_data,
@@ -586,7 +584,6 @@ pub(super) trait TransportImpl: TransportGeneric {
             }
         };
 
-        // TODO: Maybe RtpParametersFinalized would be a better fit here
         let rtp_parameters = if transport_type == TransportType::Pipe {
             ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
         } else {
@@ -598,14 +595,15 @@ pub(super) trait TransportImpl: TransportGeneric {
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 
             if !pipe {
-                // We use up to 8 bytes for MID (string).
-                let next_mid_for_consumers = self
-                    .next_mid_for_consumers()
-                    .fetch_add(1, Ordering::Relaxed);
-                let mid = next_mid_for_consumers % 100_000_000;
-
                 // Set MID.
-                rtp_parameters.mid = Some(format!("{}", mid));
+                rtp_parameters.mid = mid.or_else(|| {
+                    // We use up to 8 bytes for MID (string).
+                    let next_mid_for_consumers = self
+                        .next_mid_for_consumers()
+                        .fetch_add(1, Ordering::Relaxed);
+                    let mid = next_mid_for_consumers % 100_000_000;
+                    Some(format!("{}", mid))
+                })
             }
 
             rtp_parameters

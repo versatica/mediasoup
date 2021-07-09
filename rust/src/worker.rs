@@ -12,7 +12,7 @@ use crate::messages::{
     RouterInternal, WorkerCloseRequest, WorkerCreateRouterRequest, WorkerDumpRequest,
     WorkerUpdateSettingsRequest,
 };
-use crate::ortc::RtpCapabilitiesError;
+pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
 use crate::worker::channel::BufferMessagesGuard;
 pub use crate::worker::utils::ExitError;

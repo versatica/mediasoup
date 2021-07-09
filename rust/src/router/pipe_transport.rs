@@ -35,6 +35,8 @@ use std::sync::{Arc, Weak};
 pub struct PipeTransportOptions {
     /// Listening IP address.
     pub listen_ip: TransportListenIp,
+    /// Fixed port to listen on instead of selecting automatically from Worker's port range.
+    pub port: Option<u16>,
     /// Create a SCTP association.
     /// Default false.
     pub enable_sctp: bool,
@@ -65,6 +67,7 @@ impl PipeTransportOptions {
     pub fn new(listen_ip: TransportListenIp) -> Self {
         Self {
             listen_ip,
+            port: None,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
             max_sctp_message_size: 268_435_456,
