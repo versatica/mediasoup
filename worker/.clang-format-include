@@ -1,0 +1,6 @@
+src/**/*.cpp
+include/**/*.hpp
+test/src/**/*.cpp
+test/include/helpers.hpp
+fuzzer/src/**/*.cpp
+fuzzer/include/**/*.hpp

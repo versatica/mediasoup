@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/cisco/libsrtp
+# Snapshot of `master` that already has Meson support upstream
+revision = bd0f27ec0e299ad101a396dde3f7c90d48efc8fc
+depth = 1
+
+[provide]
+libsrtp2 = libsrtp2_dep

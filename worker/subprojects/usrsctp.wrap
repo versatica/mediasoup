@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/sctplab/usrsctp
+revision = 0f8d58300b1fdcd943b4a9dd3fbd830825390d4d
+depth = 1
+
+[provide]
+usrsctp = usrsctp_dep
