@@ -1,0 +1,12 @@
+[wrap-file]
+directory = netstring-c-92104d314ad885fd444b70bffd12a2963ef37a2f
+source_url = https://github.com/PeterScott/netstring-c/archive/92104d314ad885fd444b70bffd12a2963ef37a2f.tar.gz
+source_filename = 92104d314ad885fd444b70bffd12a2963ef37a2f.tar.gz
+source_hash = 233bf6c0a9c8516139bb3b4c80ab4345e47e423c28039f3c85aeefd69d3a8fbf
+patch_filename = netstring-c_0.0.0-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/netstring-c_0.0.0-1/get_patch
+patch_hash = e323e7e1f5a802d9cfad71f1bf2046683541250cd3371fca1b9138746b0821d9
+
+[provide]
+netstring-c = netstring_c_dep
+

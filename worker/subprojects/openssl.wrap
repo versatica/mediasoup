@@ -1,0 +1,14 @@
+[wrap-file]
+directory = openssl-1.1.1k
+source_url = https://www.openssl.org/source/openssl-1.1.1k.tar.gz
+source_filename = openssl-1.1.1k.tar.gz
+source_hash = 892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5
+patch_filename = openssl_1.1.1k-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/openssl_1.1.1k-2/get_patch
+patch_hash = c6b10f1beba2534b1b542aff6978cbc6cbc06ac5016a463b52cb88e31bf78330
+
+[provide]
+libcrypto = libcrypto_dep
+libssl = libssl_dep
+openssl = openssl_dep
+

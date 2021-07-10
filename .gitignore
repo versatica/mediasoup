@@ -50,3 +50,9 @@
 # Rust examples.
 /rust/examples-frontend/*/node_modules
 /rust/examples-frontend/*/package-lock.json
+
+# Meson.
+/worker/subprojects/*
+!/worker/subprojects/*.wrap
+# Temporarily included meson.build files
+!/worker/subprojects/packagefiles
