@@ -16,7 +16,7 @@ inline static void onClose(uv_handle_t* handle)
 	delete handle;
 }
 
-inline static void onWalk(uv_handle_t* handle, void* arg)
+inline static void onWalk(uv_handle_t* handle, void* /*arg*/)
 {
 	// Must use MS_ERROR_STD since at this point the Channel is already closed.
 	MS_ERROR_STD(
