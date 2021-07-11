@@ -19,6 +19,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer,
 			  uint32_t ppid,

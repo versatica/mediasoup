@@ -15,6 +15,9 @@ namespace PayloadChannel
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
 			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) = 0;
 		};
@@ -57,6 +60,9 @@ namespace PayloadChannel
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnPayloadChannelNotification(
 			  PayloadChannel::PayloadChannelSocket* payloadChannel,
