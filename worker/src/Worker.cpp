@@ -306,6 +306,10 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 
 				router->HandleRequest(request);
 			}
+			catch (const MediaSoupTypeError& error)
+			{
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+			}
 			catch (const MediaSoupError& error)
 			{
 				MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
@@ -343,6 +347,10 @@ inline void Worker::OnPayloadChannelNotification(
 
 		router->HandleNotification(notification);
 	}
+	catch (const MediaSoupTypeError& error)
+	{
+		MS_THROW_TYPE_ERROR("%s [event:%s]", error.buffer, notification->event.c_str());
+	}
 	catch (const MediaSoupError& error)
 	{
 		MS_THROW_ERROR("%s [method:%s]", error.buffer, notification->event.c_str());
@@ -365,6 +373,10 @@ inline void Worker::OnPayloadChannelRequest(
 		RTC::Router* router = GetRouterFromInternal(request->internal);
 
 		router->HandleRequest(request);
+	}
+	catch (const MediaSoupTypeError& error)
+	{
+		MS_THROW_TYPE_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
 	}
 	catch (const MediaSoupError& error)
 	{
