@@ -16,6 +16,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnSenderBandwidthEstimatorAvailableBitrate(
 			  RTC::SenderBandwidthEstimator* senderBwe,
 			  uint32_t availableBitrate,

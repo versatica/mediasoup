@@ -18,6 +18,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnTransportCongestionControlServerSendRtcpPacket(
 			  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) = 0;
 		};

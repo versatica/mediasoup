@@ -54,6 +54,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) = 0;
