@@ -12,6 +12,8 @@
 // Videoconferencing by Ilana Volfin and Israel Cohen. This
 // implementation uses the RTP Audio Level extension from RFC-6464
 // for the input signal.
+// This has been ported from DominantSpeakerIdentification.java in Jitsi.
+// https://github.com/jitsi/jitsi-utils/blob/master/src/main/java/org/jitsi/utils/dsi/DominantSpeakerIdentification.java
 namespace RTC
 {
 	class Speaker;
