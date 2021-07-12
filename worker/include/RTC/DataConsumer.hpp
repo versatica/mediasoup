@@ -13,7 +13,7 @@ namespace RTC
 	class DataConsumer
 	{
 	protected:
-		using onQueuedCallback = const std::function<void(bool queued)>;
+		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;
 
 	public:
 		class Listener

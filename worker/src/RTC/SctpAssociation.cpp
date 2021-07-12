@@ -438,29 +438,45 @@ namespace RTC
 
 		if (ret < 0)
 		{
-			MS_WARN_TAG(
-			  sctp,
-			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
-			  parameters.streamId,
-			  ppid,
-			  len,
-			  std::strerror(errno));
+			bool sctpSendBufferFull = errno == EWOULDBLOCK || errno == EAGAIN;
+
+			// SCTP send buffer being full is legit, not an error.
+			if (sctpSendBufferFull)
+			{
+				MS_DEBUG_DEV(
+				  sctp,
+				  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
+				  parameters.streamId,
+				  ppid,
+				  len,
+				  std::strerror(errno));
+			}
+			else
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
+				  parameters.streamId,
+				  ppid,
+				  len,
+				  std::strerror(errno));
+			}
 
 			if (cb)
 			{
-				(*cb)(false);
+				(*cb)(false, sctpSendBufferFull);
 				delete cb;
+			}
+
+			if (sctpSendBufferFull)
+			{
+				Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 			}
 		}
 		else if (cb)
 		{
-			(*cb)(true);
+			(*cb)(true, false);
 			delete cb;
-		}
-
-		if (errno == EWOULDBLOCK || errno == EAGAIN)
-		{
-			Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 		}
 	}
 
