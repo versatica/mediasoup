@@ -31,6 +31,8 @@ private:
 public:
 	static void ClassInit();
 	static void ClassDestroy();
+	static void CreateChecker();
+	static void CloseChecker();
 	static uintptr_t GetNextSctpAssociationId();
 	static void RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation);
 	static void DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation);

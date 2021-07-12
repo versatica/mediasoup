@@ -11,7 +11,7 @@ fn generate_router_rtp_capabilities_succeeds() {
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("useinbandfec", 1u32.into()),
+                ("useinbandfec", 1_u32.into()),
                 ("foo", "bar".into()),
             ]),
             rtcp_feedback: vec![],
@@ -28,7 +28,7 @@ fn generate_router_rtp_capabilities_succeeds() {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("level-asymmetry-allowed", 1u32.into()),
+                ("level-asymmetry-allowed", 1_u32.into()),
                 ("profile-level-id", "42e01f".into()),
                 ("foo", "bar".into()),
             ]),
@@ -48,7 +48,7 @@ fn generate_router_rtp_capabilities_succeeds() {
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
+                    ("useinbandfec", 1_u32.into()),
                     ("foo", "bar".into()),
                 ]),
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
@@ -78,8 +78,8 @@ fn generate_router_rtp_capabilities_succeeds() {
                 preferred_payload_type: 102, // 102 is the third available dynamic PT.
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 0u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 0_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                     ("profile-level-id", "42e01f".into()),
                     ("foo", "bar".into()),
                 ]),
@@ -157,7 +157,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("useinbandfec", 1u32.into()),
+                ("useinbandfec", 1_u32.into()),
                 ("foo", "bar".into()),
             ]),
             rtcp_feedback: vec![],
@@ -167,8 +167,8 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("level-asymmetry-allowed", 1u32.into()),
-                ("packetization-mode", 1u32.into()),
+                ("level-asymmetry-allowed", 1_u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "4d0032".into()),
                 ("foo", "lalala".into()),
             ]),
@@ -188,7 +188,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
                     ("foo", 1234u32.into()),
-                    ("packetization-mode", 1u32.into()),
+                    ("packetization-mode", 1_u32.into()),
                     ("profile-level-id", "4d0032".into()),
                 ]),
                 rtcp_feedback: vec![
@@ -201,7 +201,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 mime_type: MimeTypeVideo::Rtx,
                 payload_type: 112,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([("apt", 111u32.into())]),
+                parameters: RtpCodecParametersParameters::from([("apt", 111_u32.into())]),
                 rtcp_feedback: vec![],
             },
         ],
@@ -221,20 +221,20 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             RtpEncodingParameters {
                 ssrc: Some(11111111),
                 rtx: Some(RtpEncodingParametersRtx { ssrc: 11111112 }),
-                scalability_mode: Some("L1T3".to_string()),
+                scalability_mode: ScalabilityMode::L1T3,
                 max_bitrate: Some(111111),
                 ..RtpEncodingParameters::default()
             },
             RtpEncodingParameters {
                 ssrc: Some(21111111),
                 rtx: Some(RtpEncodingParametersRtx { ssrc: 21111112 }),
-                scalability_mode: Some("L1T3".to_string()),
+                scalability_mode: ScalabilityMode::L1T3,
                 max_bitrate: Some(222222),
                 ..RtpEncodingParameters::default()
             },
             RtpEncodingParameters {
                 rid: Some("high".to_string()),
-                scalability_mode: Some("L1T3".to_string()),
+                scalability_mode: ScalabilityMode::L1T3,
                 max_bitrate: Some(333333),
                 ..RtpEncodingParameters::default()
             },
@@ -289,7 +289,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
                     ("foo", 1234u32.into()),
-                    ("packetization-mode", 1u32.into()),
+                    ("packetization-mode", 1_u32.into()),
                     ("profile-level-id", "4d0032".into()),
                 ]),
                 rtcp_feedback: vec![
@@ -304,7 +304,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 mime_type: MimeTypeVideo::Rtx,
                 payload_type: 102,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
+                parameters: RtpCodecParametersParameters::from([("apt", 101_u32.into())]),
                 rtcp_feedback: vec![],
             },
         ]
@@ -328,7 +328,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(0)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
     assert_eq!(
         consumable_rtp_parameters.encodings.get(1).unwrap().ssrc,
@@ -348,7 +348,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(1)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
     assert_eq!(
         consumable_rtp_parameters.encodings.get(2).unwrap().ssrc,
@@ -368,7 +368,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(2)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
 
     assert_eq!(
@@ -395,7 +395,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 preferred_payload_type: Some(101),
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 1u32.into()),
+                    ("packetization-mode", 1_u32.into()),
                     ("profile-level-id", "4d0032".into()),
                     ("baz", "LOLOLO".into()),
                 ]),
@@ -409,59 +409,58 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 mime_type: MimeTypeVideo::Rtx,
                 preferred_payload_type: Some(102),
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
+                parameters: RtpCodecParametersParameters::from([("apt", 101_u32.into())]),
                 rtcp_feedback: vec![],
             },
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::RtpStreamId,
                 preferred_id: 2,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 8,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::VideoOrientation,
                 preferred_id: 11,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TimeOffset,
                 preferred_id: 12,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
         ],
-        fec_mechanisms: vec![],
     };
 
     let consumer_rtp_parameters =
-        get_consumer_rtp_parameters(&consumable_rtp_parameters, remote_rtp_capabilities, false)
+        get_consumer_rtp_parameters(&consumable_rtp_parameters, &remote_rtp_capabilities, false)
             .expect("Failed to get consumer RTP parameters");
 
     assert_eq!(
@@ -473,7 +472,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
                     ("foo", 1234u32.into()),
-                    ("packetization-mode", 1u32.into()),
+                    ("packetization-mode", 1_u32.into()),
                     ("profile-level-id", "4d0032".into()),
                 ]),
                 rtcp_feedback: vec![
@@ -486,7 +485,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 mime_type: MimeTypeVideo::Rtx,
                 payload_type: 102,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
+                parameters: RtpCodecParametersParameters::from([("apt", 101_u32.into())]),
                 rtcp_feedback: vec![],
             },
         ]
@@ -511,7 +510,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(0)
             .unwrap()
             .scalability_mode,
-        Some("S3T3".to_string()),
+        ScalabilityMode::S3T3,
     );
     assert_eq!(
         consumer_rtp_parameters
@@ -563,7 +562,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
                 ("foo", 1234u32.into()),
-                ("packetization-mode", 1u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "4d0032".into()),
             ]),
             rtcp_feedback: vec![RtcpFeedback::NackPli, RtcpFeedback::CcmFir],
@@ -595,7 +594,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(0)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
     assert!(pipe_consumer_rtp_parameters
         .encodings
@@ -621,7 +620,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(1)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
     assert!(pipe_consumer_rtp_parameters
         .encodings
@@ -647,7 +646,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(2)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
 
     assert_eq!(
@@ -676,7 +675,7 @@ fn get_producer_rtp_parameters_mapping_unsupported() {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("packetization-mode", 1u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "640032".into()),
             ]),
             rtcp_feedback: vec![],

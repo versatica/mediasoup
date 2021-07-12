@@ -91,13 +91,13 @@ namespace RTC
 		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
-	void PipeConsumer::HandleRequest(Channel::Request* request)
+	void PipeConsumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			case Channel::ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
 					RequestKeyFrame();
@@ -107,7 +107,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
 			{
 				// Do nothing.
 

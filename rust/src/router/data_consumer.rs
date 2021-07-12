@@ -1,11 +1,3 @@
-//! A data consumer represents an endpoint capable of receiving data messages from a mediasoup
-//! [`Router`](crate::router::Router).
-//!
-//! A data consumer can use [SCTP](https://tools.ietf.org/html/rfc4960) (AKA
-//! DataChannel) to receive those messages, or can directly receive them in the Rust application if
-//! the data consumer was created on top of a
-//! [`DirectTransport`](crate::direct_transport::DirectTransport).
-
 #[cfg(test)]
 mod tests;
 
@@ -25,7 +17,7 @@ use crate::worker::{
 };
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
-use log::*;
+use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -34,15 +26,15 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(
-    /// Data consumer identifier.
+    /// [`DataConsumer`] identifier.
     DataConsumerId
 );
 
-/// Data consumer options.
+/// [`DataConsumer`] options.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DataConsumerOptions {
-    // The id of the DataProducer to consume.
+    // The id of the [`DataProducer`](crate::data_producer::DataProducer) to consume.
     pub(super) data_producer_id: DataProducerId,
     /// Just if consuming over SCTP.
     /// Whether data messages must be received in order. If true the messages will be sent reliably.
@@ -57,15 +49,17 @@ pub struct DataConsumerOptions {
     pub(super) max_packet_life_time: Option<u16>,
     /// Just if consuming over SCTP.
     /// When ordered is false indicates the maximum number of times a packet will be retransmitted.
-    /// Defaults to the value in the DataProducer if it has type `Sctp` or unset if it has type
-    /// `Direct`.
+    /// Defaults to the value in the [`DataProducer`](crate::data_producer::DataProducer) if it
+    /// has type `Sctp` or unset if it has type `Direct`.
     pub(super) max_retransmits: Option<u16>,
     /// Custom application data.
     pub app_data: AppData,
 }
 
 impl DataConsumerOptions {
-    /// Inherits parameters of corresponding DataProducer.
+    /// Inherits parameters of corresponding
+    /// [`DataProducer`](crate::data_producer::DataProducer).
+    #[must_use]
     pub fn new_sctp(data_producer_id: DataProducerId) -> Self {
         Self {
             data_producer_id,
@@ -76,7 +70,8 @@ impl DataConsumerOptions {
         }
     }
 
-    /// For DirectTransport.
+    /// For [`DirectTransport`](crate::direct_transport::DirectTransport).
+    #[must_use]
     pub fn new_direct(data_producer_id: DataProducerId) -> Self {
         Self {
             data_producer_id,
@@ -88,6 +83,7 @@ impl DataConsumerOptions {
     }
 
     /// Messages will be sent reliably in order.
+    #[must_use]
     pub fn new_sctp_ordered(data_producer_id: DataProducerId) -> Self {
         Self {
             data_producer_id,
@@ -100,6 +96,7 @@ impl DataConsumerOptions {
 
     /// Messages will be sent unreliably with time (in milliseconds) after which a SCTP packet will
     /// stop being retransmitted.
+    #[must_use]
     pub fn new_sctp_unordered_with_life_time(
         data_producer_id: DataProducerId,
         max_packet_life_time: u16,
@@ -114,6 +111,7 @@ impl DataConsumerOptions {
     }
 
     /// Messages will be sent unreliably with a limited number of retransmission attempts.
+    #[must_use]
     pub fn new_sctp_unordered_with_retransmits(
         data_producer_id: DataProducerId,
         max_retransmits: u16,
@@ -257,6 +255,7 @@ impl Inner {
 /// Data consumer created on transport other than
 /// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
+#[must_use = "Data consumer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct RegularDataConsumer {
     inner: Arc<Inner>,
 }
@@ -284,6 +283,7 @@ impl From<RegularDataConsumer> for DataConsumer {
 
 /// Data consumer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
+#[must_use = "Data consumer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct DirectDataConsumer {
     inner: Arc<Inner>,
 }
@@ -318,6 +318,7 @@ impl From<DirectDataConsumer> for DataConsumer {
 /// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
 #[non_exhaustive]
+#[must_use = "Data consumer will be closed on drop, make sure to keep it around for as long as needed"]
 pub enum DataConsumer {
     /// Data consumer created on transport other than
     /// [`DirectTransport`](crate::direct_transport::DirectTransport).
@@ -365,10 +366,7 @@ impl DataConsumer {
                     Ok(notification) => match notification {
                         Notification::DataProducerClose => {
                             handlers.data_producer_close.call_simple();
-                            if let Some(inner) = inner_weak
-                                .lock()
-                                .as_ref()
-                                .and_then(|weak_inner| weak_inner.upgrade())
+                            if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade)
                             {
                                 inner.close(false);
                             }
@@ -420,11 +418,7 @@ impl DataConsumer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -459,41 +453,49 @@ impl DataConsumer {
     }
 
     /// Data consumer identifier.
+    #[must_use]
     pub fn id(&self) -> DataConsumerId {
         self.inner().id
     }
 
     /// The associated data producer identifier.
+    #[must_use]
     pub fn data_producer_id(&self) -> DataProducerId {
         self.inner().data_producer_id
     }
 
     /// The type of the data consumer.
+    #[must_use]
     pub fn r#type(&self) -> DataConsumerType {
         self.inner().r#type
     }
 
     /// The SCTP stream parameters (just if the data consumer type is `Sctp`).
+    #[must_use]
     pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
         self.inner().sctp_stream_parameters
     }
 
     /// The data consumer label.
+    #[must_use]
     pub fn label(&self) -> &String {
         &self.inner().label
     }
 
     /// The data consumer sub-protocol.
+    #[must_use]
     pub fn protocol(&self) -> &String {
         &self.inner().protocol
     }
 
     /// Custom application data.
+    #[must_use]
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
     }
 
     /// Whether the data consumer is closed.
+    #[must_use]
     pub fn closed(&self) -> bool {
         self.inner().closed.load(Ordering::SeqCst)
     }
@@ -635,6 +637,7 @@ impl DataConsumer {
     }
 
     /// Downgrade `DataConsumer` to [`WeakDataConsumer`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakDataConsumer {
         WeakDataConsumer {
             inner: Arc::downgrade(&self.inner()),
@@ -699,6 +702,7 @@ impl fmt::Debug for WeakDataConsumer {
 impl WeakDataConsumer {
     /// Attempts to upgrade `WeakDataConsumer` to [`DataConsumer`] if last instance of one wasn't
     /// dropped yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<DataConsumer> {
         let inner = self.inner.upgrade()?;
 

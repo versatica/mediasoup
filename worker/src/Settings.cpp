@@ -237,13 +237,13 @@ void Settings::PrintConfiguration()
 	MS_DEBUG_TAG(info, "</configuration>");
 }
 
-void Settings::HandleRequest(Channel::Request* request)
+void Settings::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
 	switch (request->methodId)
 	{
-		case Channel::Request::MethodId::WORKER_UPDATE_SETTINGS:
+		case Channel::ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS:
 		{
 			auto jsonLogLevelIt = request->data.find("logLevel");
 			auto jsonLogTagsIt  = request->data.find("logTags");

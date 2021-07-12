@@ -8,6 +8,7 @@ use mediasoup::rtp_parameters::{
     RtpCodecParameters, RtpCodecParametersParameters, RtpEncodingParameters,
     RtpEncodingParametersRtx, RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
+use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::{ProduceError, Transport, TransportGeneric};
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
@@ -46,8 +47,8 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("level-asymmetry-allowed", 1u32.into()),
-                ("packetization-mode", 1u32.into()),
+                ("level-asymmetry-allowed", 1_u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "4d0032".into()),
                 ("foo", "bar".into()),
             ]),
@@ -67,8 +68,8 @@ fn audio_producer_options() -> ProducerOptions {
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
-                    ("usedtx", 1u32.into()),
+                    ("useinbandfec", 1_u32.into()),
+                    ("usedtx", 1_u32.into()),
                     ("foo", "222.222".into()),
                     ("bar", "333".into()),
                 ]),
@@ -111,7 +112,7 @@ fn video_producer_options() -> ProducerOptions {
                     payload_type: 112,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::from([
-                        ("packetization-mode", 1u32.into()),
+                        ("packetization-mode", 1_u32.into()),
                         ("profile-level-id", "4d0032".into()),
                     ]),
                     rtcp_feedback: vec![
@@ -144,7 +145,7 @@ fn video_producer_options() -> ProducerOptions {
                 RtpEncodingParameters {
                     ssrc: Some(22222222),
                     rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
-                    scalability_mode: Some("L1T3".to_string()),
+                    scalability_mode: "L1T3".parse().unwrap(),
                     ..RtpEncodingParameters::default()
                 },
                 RtpEncodingParameters {
@@ -387,7 +388,7 @@ fn produce_wrong_arguments() {
                             payload_type: 112,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([
-                                ("packetization-mode", 1u32.into()),
+                                ("packetization-mode", 1_u32.into()),
                                 ("profile-level-id", "4d0032".into()),
                             ]),
                             rtcp_feedback: vec![],
@@ -425,7 +426,7 @@ fn produce_wrong_arguments() {
                             payload_type: 112,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([
-                                ("packetization-mode", 1u32.into()),
+                                ("packetization-mode", 1_u32.into()),
                                 ("profile-level-id", "4d0032".into()),
                             ]),
                             rtcp_feedback: vec![],
@@ -436,7 +437,7 @@ fn produce_wrong_arguments() {
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([(
                                 "apt",
-                                111u32.into(),
+                                111_u32.into(),
                             )]),
                             rtcp_feedback: vec![],
                         },
@@ -506,7 +507,7 @@ fn produce_unsupported_codecs() {
                             payload_type: 112,
                             clock_rate: NonZeroU32::new(90000).unwrap(),
                             parameters: RtpCodecParametersParameters::from([
-                                ("packetization-mode", 1u32.into()),
+                                ("packetization-mode", 1_u32.into()),
                                 ("profile-level-id", "CHICKEN".into()),
                             ]),
                             rtcp_feedback: vec![],
@@ -674,7 +675,7 @@ fn dump_succeeds() {
                     codec_payload_type: Some(0),
                     rtx: None,
                     dtx: None,
-                    scalability_mode: None,
+                    scalability_mode: ScalabilityMode::None,
                     scale_resolution_down_by: None,
                     max_bitrate: None
                 }],
@@ -712,7 +713,7 @@ fn dump_succeeds() {
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
                         dtx: None,
-                        scalability_mode: Some("L1T3".to_string()),
+                        scalability_mode: "L1T3".parse().unwrap(),
                         scale_resolution_down_by: None,
                         max_bitrate: None
                     },
@@ -722,7 +723,7 @@ fn dump_succeeds() {
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222225 }),
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         scale_resolution_down_by: None,
                         max_bitrate: None
                     },
@@ -732,7 +733,7 @@ fn dump_succeeds() {
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222227 }),
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         scale_resolution_down_by: None,
                         max_bitrate: None
                     },
@@ -742,7 +743,7 @@ fn dump_succeeds() {
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222229 }),
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         scale_resolution_down_by: None,
                         max_bitrate: None
                     },

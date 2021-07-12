@@ -31,7 +31,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("useinbandfec", 1u32.into()),
+                ("useinbandfec", 1_u32.into()),
                 ("foo", "bar".into()),
             ]),
             rtcp_feedback: vec![],
@@ -48,8 +48,8 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("level-asymmetry-allowed", 1u32.into()),
-                ("packetization-mode", 1u32.into()),
+                ("level-asymmetry-allowed", 1_u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "4d0032".into()),
                 ("foo", "bar".into()),
             ]),
@@ -168,7 +168,7 @@ fn create_succeeds() {
                     port: 5000,
                     os: 1024,
                     mis: 1024,
-                    max_message_size: 262144,
+                    max_message_size: 262_144,
                 }),
             );
             assert_eq!(transport1.sctp_state(), Some(SctpState::New));
@@ -243,6 +243,28 @@ fn create_succeeds() {
                 assert_eq!(transport_dump.sctp_state, transport2.sctp_state());
             }
         }
+    });
+}
+
+#[test]
+fn create_with_fixed_port_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_plain_transport({
+                let mut plain_transport_options = PlainTransportOptions::new(TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                });
+                plain_transport_options.port = Some(60_001);
+
+                plain_transport_options
+            })
+            .await
+            .expect("Failed to create Plain transport");
+
+        assert_eq!(transport.tuple().local_port(), 60_001);
     });
 }
 

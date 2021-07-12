@@ -1,9 +1,92 @@
 # Changelog
 
 
-### 3.7.6 (WIP)
+### Unreleased
 
-* SctpAssociation: don't warn if SCTP send buffer is full.
+* Update `libuv` to 1.41.0. 
+
+
+### 3.7.18
+
+* Support for optional fixed port on transports (PR #593 by @nazar-pc).
+* Upgrade and optimize OpenSSL dependency (PR #598 by @vpalmisano):
+  - OpenSSL upgraded to version 1.1.1k.
+  - Enable the compilation of assembly extensions for OpenSSL.
+  - Optimize the worker build (`-O3`) and disable the debug flag (`-g`).
+* Update NPM deps.
+
+
+### 3.7.17
+
+* Introduce `PipeConsumerOptions` to avoid incorrect type information on `PipeTransport.consume()` arguments.
+* Make `ConsumerOptions.rtpCapabilities` field required as it should have always been.
+
+
+### 3.7.16
+
+* Add `mid` option in `ConsumerOptions` to provide way to override MID (PR #586 by @mstyura).
+* Update NPM deps.
+
+
+### 3.7.15
+
+* `kind` field of `RtpHeaderExtension` is no longer optional. It must be 'audio' or 'video'.
+* Refactor API inconsistency in internal RTP Observer communication with worker.
+
+
+### 3.7.14
+
+* Update `usrsctp` to include a "possible use after free bug" fix (commit [here](https://github.com/sctplab/usrsctp/commit/0f8d58300b1fdcd943b4a9dd3fbd830825390d4d)).
+* Update NPM deps.
+
+
+### 3.7.13
+
+* Fix build on FreeBSD (PR #585 by @smortex).
+
+
+### 3.7.12
+
+* `mediasoup-worker`: Fix memory leaks on error exit (PR #581).
+* Update NPM deps.
+
+
+### 3.7.11
+
+* Fix `DepUsrSCTP::Checker::timer` not being freed on `Worker` close (PR #576). Thanks @nazar-pc for discovering this.
+* Update NPM deps.
+
+
+### 3.7.10
+
+* Remove clang tools binaries from regular installation.
+
+
+### 3.7.9
+
+* Code clean up.
+
+
+### 3.7.8
+
+* `PayloadChannel`: Copy received messages into a separate buffer to avoid memory corruption if the message is later modified (PR #570 by @aggresss).
+
+
+### 3.7.7
+
+* Thread and memory safety fixes needed for mediasoup-rust (PR #562 by @nazar-pc).
+* mediasoup-rust support on macOS (PR #567 by @nazar-pc).
+* mediasoup-rust release 0.7.2.
+* Update NPM deps.
+
+
+### 3.7.6
+
+* `Transport`: Implement new `setMaxOutgoingBitrate()` method (PR #555 by @t-mullen). 
+* `SctpAssociation`: Don't warn if SCTP send buffer is full.
+* Rust: Update modules structure and other minor improvements for Rust version (PR #558).
+* `mediasoup-worker`: Avoid duplicated basenames so that libmediasoup-worker is compilable on macOS (PR #557).
+* Update NPM deps.
 
 
 ### 3.7.5

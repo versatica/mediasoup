@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "LogLevel.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include <map>
 #include <string>
 #include <vector>
@@ -43,7 +43,7 @@ public:
 public:
 	static void SetConfiguration(int argc, char* argv[]);
 	static void PrintConfiguration();
-	static void HandleRequest(Channel::Request* request);
+	static void HandleRequest(Channel::ChannelRequest* request);
 
 private:
 	static void SetLogLevel(std::string& level);
