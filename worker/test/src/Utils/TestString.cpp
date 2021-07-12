@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "Utils.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
 
 using namespace Utils;

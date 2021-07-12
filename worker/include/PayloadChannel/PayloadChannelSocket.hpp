@@ -5,7 +5,7 @@
 #include "PayloadChannel/Notification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 namespace PayloadChannel
 {

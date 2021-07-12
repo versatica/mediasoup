@@ -2,10 +2,10 @@
 #define MS_UTILS_HPP
 
 #include "common.hpp"
-#include <json.hpp>
 #include <openssl/hmac.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
+#include <nlohmann/json.hpp>
 #include <string>
 #ifdef _WIN32
 #include <ws2ipdef.h>

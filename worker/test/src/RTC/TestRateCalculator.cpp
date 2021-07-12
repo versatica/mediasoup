@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/RateCalculator.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <vector>
 
 using namespace RTC;
@@ -90,8 +90,8 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 			{ 999,  2, 56 },
 			{ 1001, 1, 24 }, // merged inside 999
 			{ 1001, 1, 32 }, // merged inside 999
-			{ 2000, 1, 8 } 	 // it will erase the item with timestamp=999, 
-							 // removing also the next two samples. 
+			{ 2000, 1, 8 } 	 // it will erase the item with timestamp=999,
+							 // removing also the next two samples.
 							 // The end estimation will include only the last sample.
 		};
 		// clang-format on

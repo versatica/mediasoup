@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_DICTIONARIES_HPP
 
 #include "common.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 
 using json = nlohmann::json;
