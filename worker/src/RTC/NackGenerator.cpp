@@ -16,7 +16,7 @@ namespace RTC
 	constexpr size_t MaxNackPackets{ 1000u };
 	constexpr uint32_t DefaultRtt{ 100u };
 	constexpr uint8_t MaxNackRetries{ 10u };
-	constexpr uint64_t TimerInterval{ 20u };
+	constexpr uint64_t TimerInterval{ 40u };
 
 	/* Instance methods. */
 
