@@ -1,8 +1,7 @@
 use async_io::Timer;
 use futures_lite::future;
 use mediasoup::consumer::{
-    ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerStats,
-    ConsumerType,
+    ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType,
 };
 use mediasoup::data_structures::{AppData, TransportListenIp};
 use mediasoup::producer::ProducerOptions;
@@ -14,6 +13,7 @@ use mediasoup::rtp_parameters::{
     RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
     RtpParameters,
 };
+use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::{ConsumeError, Transport, TransportGeneric};
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
@@ -57,8 +57,8 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(90000).unwrap(),
             parameters: RtpCodecParametersParameters::from([
-                ("level-asymmetry-allowed", 1u32.into()),
-                ("packetization-mode", 1u32.into()),
+                ("level-asymmetry-allowed", 1_u32.into()),
+                ("packetization-mode", 1_u32.into()),
                 ("profile-level-id", "4d0032".into()),
                 ("foo", "bar".into()),
             ]),
@@ -78,8 +78,8 @@ fn audio_producer_options() -> ProducerOptions {
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
-                    ("usedtx", 1u32.into()),
+                    ("useinbandfec", 1_u32.into()),
+                    ("usedtx", 1_u32.into()),
                     ("foo", "222.222".into()),
                     ("bar", "333".into()),
                 ]),
@@ -124,7 +124,7 @@ fn video_producer_options() -> ProducerOptions {
                     payload_type: 112,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
                     parameters: RtpCodecParametersParameters::from([
-                        ("packetization-mode", 1u32.into()),
+                        ("packetization-mode", 1_u32.into()),
                         ("profile-level-id", "4d0032".into()),
                     ]),
                     rtcp_feedback: vec![
@@ -203,8 +203,8 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 preferred_payload_type: Some(101),
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("level-asymmetry-allowed", 1u32.into()),
-                    ("packetization-mode", 1u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
+                    ("packetization-mode", 1_u32.into()),
                     ("profile-level-id", "4d0032".into()),
                 ]),
                 rtcp_feedback: vec![
@@ -218,69 +218,68 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 mime_type: MimeTypeVideo::Rtx,
                 preferred_payload_type: Some(102),
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
+                parameters: RtpCodecParametersParameters::from([("apt", 101_u32.into())]),
                 rtcp_feedback: vec![],
             },
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::RtpStreamId,
                 preferred_id: 2,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::VideoOrientation,
                 preferred_id: 11,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TimeOffset,
                 preferred_id: 12,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
         ],
-        fec_mechanisms: vec![],
     }
 }
 
@@ -387,8 +386,8 @@ fn consume_succeeds() {
                     clock_rate: NonZeroU32::new(48000).unwrap(),
                     channels: NonZeroU8::new(2).unwrap(),
                     parameters: RtpCodecParametersParameters::from([
-                        ("useinbandfec", 1u32.into()),
-                        ("usedtx", 1u32.into()),
+                        ("useinbandfec", 1_u32.into()),
+                        ("usedtx", 1_u32.into()),
                         ("foo", "222.222".into()),
                         ("bar", "333".into()),
                     ]),
@@ -474,7 +473,7 @@ fn consume_succeeds() {
                         payload_type: 103,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([
-                            ("packetization-mode", 1u32.into()),
+                            ("packetization-mode", 1_u32.into()),
                             ("profile-level-id", "4d0032".into()),
                         ]),
                         rtcp_feedback: vec![
@@ -579,7 +578,7 @@ fn consume_succeeds() {
                         payload_type: 103,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([
-                            ("packetization-mode", 1u32.into()),
+                            ("packetization-mode", 1_u32.into()),
                             ("profile-level-id", "4d0032".into()),
                         ]),
                         rtcp_feedback: vec![
@@ -655,6 +654,59 @@ fn consume_succeeds() {
 }
 
 #[test]
+fn consumer_with_user_defined_mid() {
+    future::block_on(async move {
+        let (_worker, _router, transport_1, transport_2) = init().await;
+
+        let producer_1 = transport_1
+            .produce(audio_producer_options())
+            .await
+            .expect("Failed to produce audio");
+
+        let consumer_2_1 = transport_2
+            .consume(ConsumerOptions::new(
+                producer_1.id(),
+                consumer_device_capabilities(),
+            ))
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_1.rtp_parameters().mid,
+            Some("0".to_string()),
+            "MID automatically assigned to sequential number"
+        );
+
+        let consumer_2_2 = transport_2
+            .consume({
+                let mut options =
+                    ConsumerOptions::new(producer_1.id(), consumer_device_capabilities());
+                options.mid = Some("custom-mid".to_owned());
+                options
+            })
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_2.rtp_parameters().mid,
+            Some("custom-mid".to_string()),
+            "MID is assigned to user-provided value"
+        );
+
+        let consumer_2_3 = transport_2
+            .consume(ConsumerOptions::new(
+                producer_1.id(),
+                consumer_device_capabilities(),
+            ))
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_3.rtp_parameters().mid,
+            Some("1".to_string()),
+            "MID automatically assigned to next sequential number"
+        );
+    })
+}
+
+#[test]
 fn weak() {
     future::block_on(async move {
         let (_worker, _router, transport_1, transport_2) = init().await;
@@ -705,7 +757,6 @@ fn consume_incompatible_rtp_capabilities() {
                     rtcp_feedback: vec![],
                 }],
                 header_extensions: vec![],
-                fec_mechanisms: vec![],
             };
 
             assert_eq!(
@@ -728,7 +779,6 @@ fn consume_incompatible_rtp_capabilities() {
             let invalid_device_capabilities = RtpCapabilities {
                 codecs: vec![],
                 header_extensions: vec![],
-                fec_mechanisms: vec![],
             };
 
             assert_eq!(
@@ -796,8 +846,8 @@ fn dump_succeeds() {
                     clock_rate: NonZeroU32::new(48000).unwrap(),
                     channels: NonZeroU8::new(2).unwrap(),
                     parameters: RtpCodecParametersParameters::from([
-                        ("useinbandfec", 1u32.into()),
-                        ("usedtx", 1u32.into()),
+                        ("useinbandfec", 1_u32.into()),
+                        ("usedtx", 1_u32.into()),
                         ("foo", "222.222".into()),
                         ("bar", "333".into()),
                     ]),
@@ -830,7 +880,7 @@ fn dump_succeeds() {
                     codec_payload_type: Some(100),
                     rtx: None,
                     dtx: None,
-                    scalability_mode: None,
+                    scalability_mode: ScalabilityMode::None,
                     scale_resolution_down_by: None,
                     ssrc: audio_consumer
                         .rtp_parameters()
@@ -857,7 +907,7 @@ fn dump_succeeds() {
                         max_bitrate: None,
                         max_framerate: None,
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         spatial_layers: None,
                         temporal_layers: None,
                         ksvc: None
@@ -897,7 +947,7 @@ fn dump_succeeds() {
                         payload_type: 103,
                         clock_rate: NonZeroU32::new(90000).unwrap(),
                         parameters: RtpCodecParametersParameters::from([
-                            ("packetization-mode", 1u32.into()),
+                            ("packetization-mode", 1_u32.into()),
                             ("profile-level-id", "4d0032".into()),
                         ]),
                         rtcp_feedback: vec![
@@ -958,7 +1008,7 @@ fn dump_succeeds() {
                         .unwrap()
                         .rtx,
                     dtx: None,
-                    scalability_mode: Some("S4T1".to_string()),
+                    scalability_mode: "S4T1".parse().unwrap(),
                     scale_resolution_down_by: None,
                     rid: None,
                     max_bitrate: None,
@@ -979,7 +1029,7 @@ fn dump_succeeds() {
                         max_bitrate: None,
                         max_framerate: None,
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         spatial_layers: None,
                         temporal_layers: None,
                         ksvc: None,
@@ -1020,10 +1070,7 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Audio consumer get_stats failed");
 
-            let consumer_stat = match stats {
-                ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
-                ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
-            };
+            let consumer_stat = stats.consumer_stats();
 
             assert_eq!(consumer_stat.kind, MediaKind::Audio);
             assert_eq!(
@@ -1072,10 +1119,7 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Video consumer get_stats failed");
 
-            let consumer_stat = match stats {
-                ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
-                ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
-            };
+            let consumer_stat = stats.consumer_stats();
 
             assert_eq!(consumer_stat.kind, MediaKind::Video);
             assert_eq!(

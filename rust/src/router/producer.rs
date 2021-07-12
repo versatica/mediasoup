@@ -1,11 +1,8 @@
-//! A producer represents an audio or video source being injected into a mediasoup router. It's
-//! created on top of a transport that defines how the media packets are carried.
-
 #[cfg(test)]
 mod tests;
 
 use crate::consumer::RtpStreamParams;
-use crate::data_structures::{AppData, TraceEventDirection};
+use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
     ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
@@ -21,10 +18,9 @@ use crate::worker::{
 use async_executor::Executor;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
-use log::*;
+use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::collections::HashMap;
 use std::fmt;
@@ -33,11 +29,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
 uuid_based_wrapper_type!(
-    /// Producer identifier.
+    /// [`Producer`] identifier.
     ProducerId
 );
 
-/// Producer options.
+/// [`Producer`] options.
 ///
 /// # Notes on usage
 /// Check the
@@ -51,7 +47,6 @@ pub struct ProducerOptions {
     pub(super) id: Option<ProducerId>,
     /// Media kind.
     pub kind: MediaKind,
-    // TODO: Docs have distinction between RtpSendParameters and RtpReceiveParameters
     /// RTP parameters defining what the endpoint is sending.
     pub rtp_parameters: RtpParameters,
     /// Whether the producer must start in paused mode. Default false.
@@ -65,6 +60,7 @@ pub struct ProducerOptions {
 
 impl ProducerOptions {
     /// Create producer options that will be used with Pipe transport
+    #[must_use]
     pub fn new_pipe_transport(
         producer_id: ProducerId,
         kind: MediaKind,
@@ -81,6 +77,7 @@ impl ProducerOptions {
     }
 
     /// Create producer options that will be used with non-Pipe transport
+    #[must_use]
     pub fn new(kind: MediaKind, rtp_parameters: RtpParameters) -> Self {
         Self {
             id: None,
@@ -218,9 +215,8 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// RTP video keyframe packet.
     KeyFrame {
@@ -228,9 +224,8 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// RTCP NACK packet.
     Nack {
@@ -238,9 +233,6 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
     },
     /// RTCP PLI packet.
     Pli {
@@ -248,9 +240,8 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// SSRC info.
+        info: SsrcTraceInfo,
     },
     /// RTCP FIR packet.
     Fir {
@@ -258,9 +249,8 @@ pub enum ProducerTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// SSRC info.
+        info: SsrcTraceInfo,
     },
 }
 
@@ -362,6 +352,7 @@ impl Inner {
 /// Producer created on transport other than
 /// [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
+#[must_use = "Producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct RegularProducer {
     inner: Arc<Inner>,
 }
@@ -393,6 +384,7 @@ impl From<RegularProducer> for Producer {
 
 /// Producer created on [`DirectTransport`](crate::direct_transport::DirectTransport).
 #[derive(Clone)]
+#[must_use = "Producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct DirectProducer {
     inner: Arc<Inner>,
 }
@@ -426,6 +418,7 @@ impl From<DirectProducer> for Producer {
 /// created on top of a transport that defines how the media packets are carried.
 #[derive(Clone)]
 #[non_exhaustive]
+#[must_use = "Producer will be closed on drop, make sure to keep it around for as long as needed"]
 pub enum Producer {
     /// Producer created on transport other than
     /// [`DirectTransport`](crate::direct_transport::DirectTransport).
@@ -500,11 +493,7 @@ impl Producer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -540,11 +529,13 @@ impl Producer {
     }
 
     /// Producer identifier.
+    #[must_use]
     pub fn id(&self) -> ProducerId {
         self.inner().id
     }
 
     /// Media kind.
+    #[must_use]
     pub fn kind(&self) -> MediaKind {
         self.inner().kind
     }
@@ -554,31 +545,37 @@ impl Producer {
     /// Check the
     /// [RTP Parameters and Capabilities](https://mediasoup.org/documentation/v3/mediasoup/rtp-parameters-and-capabilities/)
     /// section for more details (TypeScript-oriented, but concepts apply here as well).
+    #[must_use]
     pub fn rtp_parameters(&self) -> &RtpParameters {
         &self.inner().rtp_parameters
     }
 
     /// Producer type.
+    #[must_use]
     pub fn r#type(&self) -> ProducerType {
         self.inner().r#type
     }
 
     /// Whether the Producer is paused.
+    #[must_use]
     pub fn paused(&self) -> bool {
         self.inner().paused.load(Ordering::SeqCst)
     }
 
     /// The score of each RTP stream being received, representing their transmission quality.
+    #[must_use]
     pub fn score(&self) -> Vec<ProducerScore> {
         self.inner().score.lock().clone()
     }
 
     /// Custom application data.
+    #[must_use]
     pub fn app_data(&self) -> &AppData {
         &self.inner().app_data
     }
 
     /// Whether the producer is closed.
+    #[must_use]
     pub fn closed(&self) -> bool {
         self.inner().closed.load(Ordering::SeqCst)
     }
@@ -734,6 +731,7 @@ impl Producer {
     /// Consumable RTP parameters.
     // This is used in tests, otherwise would have been `pub(super)`
     #[doc(hidden)]
+    #[must_use]
     pub fn consumable_rtp_parameters(&self) -> &RtpParameters {
         &self.inner().consumable_rtp_parameters
     }
@@ -743,6 +741,7 @@ impl Producer {
     }
 
     /// Downgrade `Producer` to [`WeakProducer`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakProducer {
         WeakProducer {
             inner: Arc::downgrade(&self.inner()),
@@ -786,22 +785,26 @@ impl DirectProducer {
 
 /// Same as [`Producer`], but will not be closed when dropped.
 ///
-/// Use [`NonClosingProducer::into_inner()`] method to get regular [`Producer`] instead and restore
+/// The idea here is that [`ProducerId`] of both original [`Producer`] and `PipedProducer` is the
+/// same and lifetime of piped producer is also tied to original producer, so you may not need to
+/// store `PipedProducer` at all.
+///
+/// Use [`PipedProducer::into_inner()`] method to get regular [`Producer`] instead and restore
 /// regular behavior of [`Drop`] implementation.
-pub struct NonClosingProducer {
+pub struct PipedProducer {
     producer: Producer,
     on_drop: Option<Box<dyn FnOnce(Producer) + Send + 'static>>,
 }
 
-impl fmt::Debug for NonClosingProducer {
+impl fmt::Debug for PipedProducer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("NonClosingProducer")
+        f.debug_struct("PipedProducer")
             .field("producer", &self.producer)
             .finish()
     }
 }
 
-impl Drop for NonClosingProducer {
+impl Drop for PipedProducer {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
             on_drop(self.producer.clone())
@@ -809,7 +812,7 @@ impl Drop for NonClosingProducer {
     }
 }
 
-impl NonClosingProducer {
+impl PipedProducer {
     /// * `on_drop` - Callback that takes last `Producer` instance and must do something with it to
     ///   prevent dropping and thus closing
     pub(crate) fn new<F: FnOnce(Producer) + Send + 'static>(
@@ -822,7 +825,7 @@ impl NonClosingProducer {
         }
     }
 
-    /// Get inner [`Producer`] (which will close on drop in contrast to `NonClosingProducer`).
+    /// Get inner [`Producer`] (which will close on drop in contrast to `PipedProducer`).
     pub fn into_inner(mut self) -> Producer {
         self.on_drop.take();
         self.producer.clone()
@@ -847,6 +850,7 @@ impl fmt::Debug for WeakProducer {
 impl WeakProducer {
     /// Attempts to upgrade `WeakProducer` to [`Producer`] if last instance of one wasn't dropped
     /// yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<Producer> {
         let inner = self.inner.upgrade()?;
 

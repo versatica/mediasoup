@@ -18,6 +18,12 @@ export type PlainTransportOptions =
 	listenIp: TransportListenIp | string;
 
 	/**
+	 * Fixed port to listen on instead of selecting automatically from Worker's port
+	 * range.
+	 */
+	port?: number;
+
+	/**
 	 * Use RTCP-mux (RTP and RTCP in the same port). Default true.
 	 */
 	rtcpMux?: boolean;

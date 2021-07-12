@@ -6,30 +6,19 @@
 //! high level use cases (for instance, a "multi-party conference room" could involve various
 //! mediasoup routers, even in different physicals hosts).
 
-#[cfg(not(doc))]
-pub mod audio_level_observer;
-#[cfg(not(doc))]
-pub mod consumer;
-#[cfg(not(doc))]
-pub mod data_consumer;
-#[cfg(not(doc))]
-pub mod data_producer;
-#[cfg(not(doc))]
-pub mod direct_transport;
-#[cfg(not(doc))]
-pub mod pipe_transport;
-#[cfg(not(doc))]
-pub mod plain_transport;
-#[cfg(not(doc))]
-pub mod producer;
-#[cfg(not(doc))]
-pub mod rtp_observer;
+pub(super) mod audio_level_observer;
+pub(super) mod consumer;
+pub(super) mod data_consumer;
+pub(super) mod data_producer;
+pub(super) mod direct_transport;
+pub(super) mod pipe_transport;
+pub(super) mod plain_transport;
+pub(super) mod producer;
+pub(super) mod rtp_observer;
 #[cfg(test)]
 mod tests;
-#[cfg(not(doc))]
-pub mod transport;
-#[cfg(not(doc))]
-pub mod webrtc_transport;
+pub(super) mod transport;
+pub(super) mod webrtc_transport;
 
 use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
@@ -37,7 +26,7 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{
     DataProducer, DataProducerId, DataProducerOptions, NonClosingDataProducer, WeakDataProducer,
 };
-use crate::data_structures::{AppData, TransportListenIp, TransportTuple};
+use crate::data_structures::{AppData, TransportListenIp};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverRequest,
@@ -51,8 +40,8 @@ use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
 };
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
-use crate::producer::{NonClosingProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
-use crate::rtp_observer::RtpObserverId;
+use crate::producer::{PipedProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
+use crate::rtp_observer::{RtpObserver, RtpObserverId};
 use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
 use crate::sctp_parameters::NumSctpStreams;
 use crate::transport::{
@@ -66,21 +55,22 @@ use async_executor::Executor;
 use async_lock::Mutex as AsyncMutex;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::future;
-use log::*;
+use log::{debug, error};
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
+use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
 
 uuid_based_wrapper_type!(
-    /// Router identifier.
+    /// [`Router`] identifier.
     RouterId
 );
 
-/// Router options.
+/// [`Router`] options.
 ///
 /// # Notes on usage
 ///
@@ -98,6 +88,7 @@ pub struct RouterOptions {
 
 impl RouterOptions {
     /// Create router options with given list of declared media codecs.
+    #[must_use]
     pub fn new(media_codecs: Vec<RtpCodecCapability>) -> Self {
         Self {
             media_codecs,
@@ -142,6 +133,7 @@ pub struct PipeToRouterOptions {
 
 impl PipeToRouterOptions {
     /// Crate pipe options for piping into given local router.
+    #[must_use]
     pub fn new(router: Router) -> Self {
         Self {
             router,
@@ -150,7 +142,7 @@ impl PipeToRouterOptions {
                 announced_ip: None,
             },
             enable_sctp: true,
-            num_sctp_streams: Default::default(),
+            num_sctp_streams: NumSctpStreams::default(),
             enable_rtx: false,
             enable_srtp: false,
         }
@@ -161,7 +153,7 @@ impl PipeToRouterOptions {
 ///
 /// # Notes on usage
 /// Pipe consumer and Pipe producer will not be closed on drop, to control this manually get pipe
-/// producer out of non-closing variant with [`NonClosingProducer::into_inner()`] call,
+/// producer out of non-closing variant with [`PipedProducer::into_inner()`] call,
 /// otherwise pipe consumer and pipe producer lifetime will be tied to source producer lifetime.
 ///
 /// Pipe consumer is always tied to the lifetime of pipe producer.
@@ -170,8 +162,8 @@ pub struct PipeProducerToRouterPair {
     /// The Consumer created in the current Router.
     pub pipe_consumer: Consumer,
     /// The Producer created in the target Router, get regular instance with
-    /// [`NonClosingProducer::into_inner()`] call.
-    pub pipe_producer: NonClosingProducer,
+    /// [`PipedProducer::into_inner()`] call.
+    pub pipe_producer: PipedProducer,
 }
 
 /// Error that caused [`Router::pipe_producer_to_router()`] to fail.
@@ -296,11 +288,34 @@ pub enum NewTransport<'a> {
     WebRtc(&'a WebRtcTransport),
 }
 
+impl<'a> Deref for NewTransport<'a> {
+    type Target = dyn Transport;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Direct(transport) => *transport as &Self::Target,
+            Self::Pipe(transport) => *transport as &Self::Target,
+            Self::Plain(transport) => *transport as &Self::Target,
+            Self::WebRtc(transport) => *transport as &Self::Target,
+        }
+    }
+}
+
 /// New RTP observer that was just created.
 #[derive(Debug)]
 pub enum NewRtpObserver<'a> {
     /// Audio level observer
     AudioLevel(&'a AudioLevelObserver),
+}
+
+impl<'a> Deref for NewRtpObserver<'a> {
+    type Target = dyn RtpObserver;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::AudioLevel(observer) => *observer as &Self::Target,
+        }
+    }
 }
 
 struct PipeTransportPair {
@@ -399,6 +414,7 @@ impl Inner {
 /// high level use cases (for instance, a "multi-party conference room" could involve various
 /// mediasoup routers, even in different physicals hosts).
 #[derive(Clone)]
+#[must_use = "Router will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct Router {
     inner: Arc<Inner>,
 }
@@ -440,11 +456,7 @@ impl Router {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.worker_close.call_simple();
                     if !inner.closed.swap(true, Ordering::SeqCst) {
                         inner.handlers.close.call_simple();
@@ -474,16 +486,19 @@ impl Router {
     }
 
     /// Router id.
+    #[must_use]
     pub fn id(&self) -> RouterId {
         self.inner.id
     }
 
     /// Custom application data.
+    #[must_use]
     pub fn app_data(&self) -> &AppData {
         &self.inner.app_data
     }
 
     /// Whether router is closed.
+    #[must_use]
     pub fn closed(&self) -> bool {
         self.inner.closed.load(Ordering::SeqCst)
     }
@@ -496,6 +511,7 @@ impl Router {
     ///   section for more details.
     /// * See also how to [filter these RTP capabilities](https://mediasoup.org/documentation/v3/tricks/#rtp-capabilities-filtering)
     ///   before using them into a client.
+    #[must_use]
     pub fn rtp_capabilities(&self) -> &RtpCapabilitiesFinalized {
         &self.inner.rtp_capabilities
     }
@@ -515,7 +531,7 @@ impl Router {
             .await
     }
 
-    /// Create a DirectTransport.
+    /// Create a [`DirectTransport`].
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
     ///
@@ -567,7 +583,7 @@ impl Router {
         Ok(transport)
     }
 
-    /// Create a `WebRtcTransport`.
+    /// Create a [`WebRtcTransport`].
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
     ///
@@ -629,7 +645,7 @@ impl Router {
         Ok(transport)
     }
 
-    /// Create a `PipeTransport`.
+    /// Create a [`PipeTransport`].
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
     ///
@@ -689,7 +705,7 @@ impl Router {
         Ok(transport)
     }
 
-    /// Create a `PlainTransport`.
+    /// Create a [`PlainTransport`].
     ///
     /// Router will be kept alive as long as at least one transport instance is alive.
     ///
@@ -749,7 +765,7 @@ impl Router {
         Ok(transport)
     }
 
-    /// Create an `AudioLevelObserver`.
+    /// Create an [`AudioLevelObserver`].
     ///
     /// Router will be kept alive as long as at least one observer instance is alive.
     ///
@@ -812,7 +828,7 @@ impl Router {
         Ok(audio_level_observer)
     }
 
-    /// Pipes `Producer` with the given `producer_id` into another `Router` on same host.
+    /// Pipes [`Producer`] with the given `producer_id` into another [`Router`] on same host.
     ///
     /// # Example
     /// ```rust
@@ -844,7 +860,7 @@ impl Router {
     ///         clock_rate: NonZeroU32::new(48000).unwrap(),
     ///         channels: NonZeroU8::new(2).unwrap(),
     ///         parameters: RtpCodecParametersParameters::from([
-    ///             ("useinbandfec", 1u32.into()),
+    ///             ("useinbandfec", 1_u32.into()),
     ///         ]),
     ///         rtcp_feedback: vec![],
     ///     },
@@ -872,8 +888,8 @@ impl Router {
     ///                 clock_rate: NonZeroU32::new(48000).unwrap(),
     ///                 channels: NonZeroU8::new(2).unwrap(),
     ///                 parameters: RtpCodecParametersParameters::from([
-    ///                     ("useinbandfec", 1u32.into()),
-    ///                     ("usedtx", 1u32.into()),
+    ///                     ("useinbandfec", 1_u32.into()),
+    ///                     ("usedtx", 1_u32.into()),
     ///                 ]),
     ///                 rtcp_feedback: vec![],
     ///             }],
@@ -916,7 +932,6 @@ impl Router {
     ///                },
     ///            ],
     ///            header_extensions: vec![],
-    ///            fec_mechanisms: vec![],
     ///        }
     ///     ))
     ///     .await?;
@@ -948,7 +963,9 @@ impl Router {
             }
         };
 
-        let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
+        let pipe_transport_pair = self
+            .get_or_create_pipe_transport_pair(pipe_to_router_options)
+            .await?;
 
         let pipe_consumer = pipe_transport_pair
             .local
@@ -980,7 +997,7 @@ impl Router {
 
                 move || {
                     if let Some(pipe_producer) = pipe_producer_weak.upgrade() {
-                        let _ = pipe_producer.close();
+                        pipe_producer.close();
                     }
                 }
             })
@@ -1031,12 +1048,12 @@ impl Router {
             })
             .detach();
 
-        let pipe_producer = NonClosingProducer::new(pipe_producer, {
+        let pipe_producer = PipedProducer::new(pipe_producer, {
             let weak_producer = producer.downgrade();
 
             move |pipe_producer| {
                 if let Some(producer) = weak_producer.upgrade() {
-                    // In case `NonClosingProducer` was dropped without transforming into regular
+                    // In case `PipedProducer` was dropped without transforming into regular
                     // `Producer` first, we need to tie underlying pipe producer lifetime to the
                     // lifetime of original source producer in another router
                     producer
@@ -1054,7 +1071,8 @@ impl Router {
         })
     }
 
-    /// Pipes `DataProducer` with the given `data_producer_id` into another `Router` on same host.
+    /// Pipes [`DataProducer`] with the given `data_producer_id` into another [`Router`] on same
+    /// host.
     ///
     /// # Example
     /// ```rust
@@ -1151,7 +1169,9 @@ impl Router {
             }
         };
 
-        let pipe_transport_pair = self.get_pipe_transport_pair(pipe_to_router_options).await?;
+        let pipe_transport_pair = self
+            .get_or_create_pipe_transport_pair(pipe_to_router_options)
+            .await?;
 
         let pipe_data_consumer = pipe_transport_pair
             .local
@@ -1163,6 +1183,7 @@ impl Router {
             .produce_data({
                 let mut producer_options = DataProducerOptions::new_pipe_transport(
                     data_producer_id,
+                    // We've created `DataConsumer` with SCTP above, so this should never panic
                     pipe_data_consumer.sctp_stream_parameters().unwrap(),
                 );
                 producer_options.label = pipe_data_consumer.label().clone();
@@ -1180,7 +1201,7 @@ impl Router {
 
                 move || {
                     if let Some(pipe_data_producer) = pipe_data_producer_weak.upgrade() {
-                        let _ = pipe_data_producer.close();
+                        pipe_data_producer.close();
                     }
                 }
             })
@@ -1222,28 +1243,26 @@ impl Router {
     }
 
     /// Check whether the given RTP capabilities are valid to consume the given producer.
+    #[must_use]
     pub fn can_consume(
         &self,
         producer_id: &ProducerId,
         rtp_capabilities: &RtpCapabilities,
     ) -> bool {
-        match self.get_producer(producer_id) {
-            Some(producer) => {
-                match ortc::can_consume(producer.consumable_rtp_parameters(), rtp_capabilities) {
-                    Ok(result) => result,
-                    Err(error) => {
-                        error!("can_consume() | unexpected error: {}", error);
-                        false
-                    }
+        if let Some(producer) = self.get_producer(producer_id) {
+            match ortc::can_consume(producer.consumable_rtp_parameters(), rtp_capabilities) {
+                Ok(result) => result,
+                Err(error) => {
+                    error!("can_consume() | unexpected error: {}", error);
+                    false
                 }
             }
-            None => {
-                error!(
-                    "can_consume() | Producer with id \"{}\" not found",
-                    producer_id
-                );
-                false
-            }
+        } else {
+            error!(
+                "can_consume() | Producer with id \"{}\" not found",
+                producer_id
+            );
+            false
         }
     }
 
@@ -1281,7 +1300,7 @@ impl Router {
         handler_id
     }
 
-    async fn get_pipe_transport_pair(
+    async fn get_or_create_pipe_transport_pair(
         &self,
         pipe_to_router_options: PipeToRouterOptions,
     ) -> Result<PipeTransportPair, RequestError> {
@@ -1341,7 +1360,7 @@ impl Router {
             num_sctp_streams,
             enable_rtx,
             enable_srtp,
-            app_data: Default::default(),
+            app_data: AppData::default(),
             ..PipeTransportOptions::new(listen_ip)
         };
         let local_pipe_transport_fut = self.create_pipe_transport(transport_options.clone());
@@ -1352,43 +1371,21 @@ impl Router {
             future::try_zip(local_pipe_transport_fut, remote_pipe_transport_fut).await?;
 
         let local_connect_fut = local_pipe_transport.connect({
-            let (ip, port) = match remote_pipe_transport.tuple() {
-                TransportTuple::LocalOnly {
-                    local_ip,
-                    local_port,
-                    ..
-                } => (local_ip, local_port),
-                TransportTuple::WithRemote {
-                    local_ip,
-                    local_port,
-                    ..
-                } => (local_ip, local_port),
-            };
+            let tuple = remote_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip,
-                port,
+                ip: tuple.local_ip(),
+                port: tuple.local_port(),
                 srtp_parameters: remote_pipe_transport.srtp_parameters(),
             }
         });
 
         let remote_connect_fut = remote_pipe_transport.connect({
-            let (ip, port) = match local_pipe_transport.tuple() {
-                TransportTuple::LocalOnly {
-                    local_ip,
-                    local_port,
-                    ..
-                } => (local_ip, local_port),
-                TransportTuple::WithRemote {
-                    local_ip,
-                    local_port,
-                    ..
-                } => (local_ip, local_port),
-            };
+            let tuple = local_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip,
-                port,
+                ip: tuple.local_ip(),
+                port: tuple.local_port(),
                 srtp_parameters: local_pipe_transport.srtp_parameters(),
             }
         });

@@ -1,4 +1,5 @@
 const { toBeType } = require('jest-tobetype');
+const pickPort = require('pick-port');
 const mediasoup = require('../');
 const { createWorker } = mediasoup;
 
@@ -337,6 +338,13 @@ test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
 		.toBeUndefined();
 }, 2000);
 
+test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () =>
+{
+	await expect(transport.setMaxIncomingBitrate(100000))
+		.resolves
+		.toBeUndefined();
+}, 2000);
+
 test('webRtcTransport.restartIce() succeeds', async () =>
 {
 	const previousIceUsernameFragment = transport.iceParameters.usernameFragment;
@@ -475,9 +483,28 @@ test('WebRtcTransport methods reject if closed', async () =>
 		.rejects
 		.toThrow(Error);
 
+	await expect(transport.setMaxOutgoingBitrate())
+		.rejects
+		.toThrow(Error);
+
 	await expect(transport.restartIce())
 		.rejects
 		.toThrow(Error);
+}, 2000);
+
+test('router.createWebRtcTransport() with fixed port succeeds', async () =>
+{
+
+	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
+	const webRtcTransport = await router.createWebRtcTransport(
+		{
+			listenIps : [ '127.0.0.1' ],
+			port
+		});
+
+	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
+
+	webRtcTransport.close();
 }, 2000);
 
 test('WebRtcTransport emits "routerclose" if Router is closed', async () =>

@@ -62,7 +62,7 @@ namespace RTC
 		this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt(0, 4294967295));
 
 		// Add BWE related RTP header extensions.
-		static uint8_t buffer[4096];
+		thread_local static uint8_t buffer[4096];
 
 		std::vector<RTC::RtpPacket::GenericExtension> extensions;
 		uint8_t extenLen;

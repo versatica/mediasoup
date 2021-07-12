@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -121,6 +121,17 @@ namespace RTC
 			}
 		}
 
+		uint16_t port{ 0 };
+		auto jsonPortIt = data.find("port");
+
+		if (jsonPortIt != data.end())
+		{
+			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
+				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
+
+			port = jsonPortIt->get<uint16_t>();
+		}
+
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement{ 0 };
@@ -143,7 +154,11 @@ namespace RTC
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
-					auto* udpSocket = new RTC::UdpSocket(this, listenIp.ip);
+					RTC::UdpSocket* udpSocket;
+					if (port != 0)
+						udpSocket = new RTC::UdpSocket(this, listenIp.ip, port);
+					else
+						udpSocket = new RTC::UdpSocket(this, listenIp.ip);
 
 					this->udpSockets[udpSocket] = listenIp.announcedIp;
 
@@ -164,7 +179,11 @@ namespace RTC
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
-					auto* tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
+					RTC::TcpServer* tcpServer;
+					if (port != 0)
+						tcpServer = new RTC::TcpServer(this, this, listenIp.ip, port);
+					else
+						tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
 
 					this->tcpServers[tcpServer] = listenIp.announcedIp;
 
@@ -425,13 +444,13 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::HandleRequest(Channel::Request* request)
+	void WebRtcTransport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
@@ -561,7 +580,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::TRANSPORT_RESTART_ICE:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_RESTART_ICE:
 			{
 				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
 				std::string password         = Utils::Crypto::GetRandomString(32);
@@ -1111,7 +1130,7 @@ namespace RTC
 
 		this->iceServer->GetSelectedTuple()->FillJson(data["iceSelectedTuple"]);
 
-		Channel::Notifier::Emit(this->id, "iceselectedtuplechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "iceselectedtuplechange", data);
 	}
 
 	inline void WebRtcTransport::OnIceServerConnected(const RTC::IceServer* /*iceServer*/)
@@ -1125,7 +1144,7 @@ namespace RTC
 
 		data["iceState"] = "connected";
 
-		Channel::Notifier::Emit(this->id, "icestatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "icestatechange", data);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1148,7 +1167,7 @@ namespace RTC
 
 		data["iceState"] = "completed";
 
-		Channel::Notifier::Emit(this->id, "icestatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "icestatechange", data);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1171,7 +1190,7 @@ namespace RTC
 
 		data["iceState"] = "disconnected";
 
-		Channel::Notifier::Emit(this->id, "icestatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "icestatechange", data);
 
 		// If DTLS was already connected, notify the parent class.
 		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
@@ -1191,7 +1210,7 @@ namespace RTC
 
 		data["dtlsState"] = "connecting";
 
-		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportConnected(
@@ -1235,7 +1254,7 @@ namespace RTC
 			data["dtlsState"]      = "connected";
 			data["dtlsRemoteCert"] = remoteCert;
 
-			Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
+			Channel::ChannelNotifier::Emit(this->id, "dtlsstatechange", data);
 
 			// Tell the parent class.
 			RTC::Transport::Connected();
@@ -1260,7 +1279,7 @@ namespace RTC
 
 		data["dtlsState"] = "failed";
 
-		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "dtlsstatechange", data);
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1274,7 +1293,7 @@ namespace RTC
 
 		data["dtlsState"] = "closed";
 
-		Channel::Notifier::Emit(this->id, "dtlsstatechange", data);
+		Channel::ChannelNotifier::Emit(this->id, "dtlsstatechange", data);
 
 		// Tell the parent class.
 		RTC::Transport::Disconnected();

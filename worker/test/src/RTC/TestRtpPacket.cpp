@@ -130,8 +130,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		auto* clonedPacket = packet->Clone(buffer2);
 
-		delete packet;
-
 		std::memset(buffer, '0', sizeof(buffer));
 
 		REQUIRE(clonedPacket->HasMarker() == false);
@@ -166,6 +164,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
+		delete packet;
 		delete clonedPacket;
 	}
 

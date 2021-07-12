@@ -3,13 +3,13 @@
 
 #include "common.hpp"
 #include "RTC/TcpConnection.hpp"
-#include "handles/TcpConnection.hpp"
-#include "handles/TcpServer.hpp"
+#include "handles/TcpConnectionHandler.hpp"
+#include "handles/TcpServerHandler.hpp"
 #include <string>
 
 namespace RTC
 {
-	class TcpServer : public ::TcpServer
+	class TcpServer : public ::TcpServerHandler
 	{
 	public:
 		class Listener
@@ -21,17 +21,20 @@ namespace RTC
 
 	public:
 		TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip);
+		TcpServer(
+		  Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip, uint16_t port);
 		~TcpServer() override;
 
-		/* Pure virtual methods inherited from ::TcpServer. */
+		/* Pure virtual methods inherited from ::TcpServerHandler. */
 	public:
 		void UserOnTcpConnectionAlloc() override;
-		void UserOnTcpConnectionClosed(::TcpConnection* connection) override;
+		void UserOnTcpConnectionClosed(::TcpConnectionHandler* connection) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		RTC::TcpConnection::Listener* connListener{ nullptr };
+		bool fixedPort{ false };
 	};
 } // namespace RTC
 

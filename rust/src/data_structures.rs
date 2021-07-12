@@ -137,6 +137,7 @@ pub struct IceCandidate {
     /// The type of candidate (always `Host`).
     pub r#type: IceCandidateType,
     /// The type of TCP candidate (always `Passive`).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tcp_type: Option<IceCandidateTcpType>,
 }
 
@@ -196,6 +197,44 @@ pub enum TransportTuple {
     },
 }
 
+impl TransportTuple {
+    /// Local IP address.
+    pub fn local_ip(&self) -> IpAddr {
+        let (Self::WithRemote { local_ip, .. } | Self::LocalOnly { local_ip, .. }) = self;
+        *local_ip
+    }
+
+    /// Local port.
+    pub fn local_port(&self) -> u16 {
+        let (Self::WithRemote { local_port, .. } | Self::LocalOnly { local_port, .. }) = self;
+        *local_port
+    }
+
+    /// Protocol.
+    pub fn protocol(&self) -> TransportProtocol {
+        let (Self::WithRemote { protocol, .. } | Self::LocalOnly { protocol, .. }) = self;
+        *protocol
+    }
+
+    /// Remote IP address.
+    pub fn remote_ip(&self) -> Option<IpAddr> {
+        if let TransportTuple::WithRemote { remote_ip, .. } = self {
+            Some(*remote_ip)
+        } else {
+            None
+        }
+    }
+
+    /// Remote port.
+    pub fn remote_port(&self) -> Option<u16> {
+        if let TransportTuple::WithRemote { remote_port, .. } = self {
+            Some(*remote_port)
+        } else {
+            None
+        }
+    }
+}
+
 /// DTLS state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -251,7 +290,7 @@ impl Default for DtlsRole {
 /// The hash function algorithm (as defined in the "Hash function Textual Names" registry initially
 /// specified in [RFC 4572](https://tools.ietf.org/html/rfc4572#section-8) Section 8) and its
 /// corresponding certificate fingerprint value.
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Copy, Clone, PartialOrd, PartialEq)]
 pub enum DtlsFingerprint {
     /// sha-1
     Sha1 {
@@ -280,15 +319,190 @@ pub enum DtlsFingerprint {
     },
 }
 
+impl fmt::Debug for DtlsFingerprint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            DtlsFingerprint::Sha1 { .. } => "Sha1",
+            DtlsFingerprint::Sha224 { .. } => "Sha224",
+            DtlsFingerprint::Sha256 { .. } => "Sha256",
+            DtlsFingerprint::Sha384 { .. } => "Sha384",
+            DtlsFingerprint::Sha512 { .. } => "Sha512",
+        };
+        f.debug_struct(name)
+            .field("value", &self.value_string())
+            .finish()
+    }
+}
+
 impl Serialize for DtlsFingerprint {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         let mut rtcp_feedback = serializer.serialize_struct("DtlsFingerprint", 2)?;
+        rtcp_feedback.serialize_field("algorithm", self.algorithm_str())?;
+        rtcp_feedback.serialize_field("value", &self.value_string())?;
+        rtcp_feedback.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for DtlsFingerprint {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field {
+            Algorithm,
+            Value,
+        }
+
+        struct DtlsFingerprintVisitor;
+
+        impl<'de> Visitor<'de> for DtlsFingerprintVisitor {
+            type Value = DtlsFingerprint;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str(
+                    r#"DTLS fingerprint algorithm and value like {"algorithm": "sha-256", "value": "1B:EA:BF:33:B8:11:26:6D:91:AD:1B:A0:16:FD:5D:60:59:33:F7:46:A3:BA:99:2A:1D:04:99:A6:F2:C6:2D:43"}"#,
+                )
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                fn parse_as_bytes(input: &str, output: &mut [u8]) -> Result<(), String> {
+                    for (i, v) in output.iter_mut().enumerate() {
+                        *v = u8::from_str_radix(&input[i * 3..(i * 3) + 2], 16).map_err(
+                            |error| {
+                                format!(
+                                    "Failed to parse value {} as series of hex bytes: {}",
+                                    input, error,
+                                )
+                            },
+                        )?;
+                    }
+
+                    Ok(())
+                }
+
+                let mut algorithm = None::<Cow<'_, str>>;
+                let mut value = None::<Cow<'_, str>>;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Algorithm => {
+                            if algorithm.is_some() {
+                                return Err(de::Error::duplicate_field("algorithm"));
+                            }
+                            algorithm = Some(map.next_value()?);
+                        }
+                        Field::Value => {
+                            if value.is_some() {
+                                return Err(de::Error::duplicate_field("value"));
+                            }
+                            value = map.next_value()?;
+                        }
+                    }
+                }
+                let algorithm = algorithm.ok_or_else(|| de::Error::missing_field("algorithm"))?;
+                let value = value.ok_or_else(|| de::Error::missing_field("value"))?;
+
+                match algorithm.as_ref() {
+                    "sha-1" => {
+                        if value.len() == (20 * 3 - 1) {
+                            let mut value_result = [0_u8; 20];
+                            parse_as_bytes(value.as_ref(), &mut value_result)
+                                .map_err(de::Error::custom)?;
+
+                            Ok(DtlsFingerprint::Sha1 {
+                                value: value_result,
+                            })
+                        } else {
+                            Err(de::Error::custom(
+                                "Value doesn't have correct length for SHA-1",
+                            ))
+                        }
+                    }
+                    "sha-224" => {
+                        if value.len() == (28 * 3 - 1) {
+                            let mut value_result = [0_u8; 28];
+                            parse_as_bytes(value.as_ref(), &mut value_result)
+                                .map_err(de::Error::custom)?;
+
+                            Ok(DtlsFingerprint::Sha224 {
+                                value: value_result,
+                            })
+                        } else {
+                            Err(de::Error::custom(
+                                "Value doesn't have correct length for SHA-224",
+                            ))
+                        }
+                    }
+                    "sha-256" => {
+                        if value.len() == (32 * 3 - 1) {
+                            let mut value_result = [0_u8; 32];
+                            parse_as_bytes(value.as_ref(), &mut value_result)
+                                .map_err(de::Error::custom)?;
+
+                            Ok(DtlsFingerprint::Sha256 {
+                                value: value_result,
+                            })
+                        } else {
+                            Err(de::Error::custom(
+                                "Value doesn't have correct length for SHA-256",
+                            ))
+                        }
+                    }
+                    "sha-384" => {
+                        if value.len() == (48 * 3 - 1) {
+                            let mut value_result = [0_u8; 48];
+                            parse_as_bytes(value.as_ref(), &mut value_result)
+                                .map_err(de::Error::custom)?;
+
+                            Ok(DtlsFingerprint::Sha384 {
+                                value: value_result,
+                            })
+                        } else {
+                            Err(de::Error::custom(
+                                "Value doesn't have correct length for SHA-384",
+                            ))
+                        }
+                    }
+                    "sha-512" => {
+                        if value.len() == (64 * 3 - 1) {
+                            let mut value_result = [0_u8; 64];
+                            parse_as_bytes(value.as_ref(), &mut value_result)
+                                .map_err(de::Error::custom)?;
+
+                            Ok(DtlsFingerprint::Sha512 {
+                                value: value_result,
+                            })
+                        } else {
+                            Err(de::Error::custom(
+                                "Value doesn't have correct length for SHA-512",
+                            ))
+                        }
+                    }
+                    algorithm => Err(de::Error::unknown_variant(
+                        algorithm,
+                        &["sha-1", "sha-224", "sha-256", "sha-384", "sha-512"],
+                    )),
+                }
+            }
+        }
+
+        const FIELDS: &[&str] = &["algorithm", "value"];
+        deserializer.deserialize_struct("DtlsFingerprint", FIELDS, DtlsFingerprintVisitor)
+    }
+}
+
+impl DtlsFingerprint {
+    fn value_string(&self) -> String {
         match self {
             DtlsFingerprint::Sha1 { value } => {
-                let value = format!(
+                format!(
                     "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
                     value[0],
@@ -311,12 +525,10 @@ impl Serialize for DtlsFingerprint {
                     value[17],
                     value[18],
                     value[19],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-1")?;
-                rtcp_feedback.serialize_field("value", &value)?;
+                )
             }
             DtlsFingerprint::Sha224 { value } => {
-                let value = format!(
+                format!(
                     "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
@@ -348,12 +560,10 @@ impl Serialize for DtlsFingerprint {
                     value[25],
                     value[26],
                     value[27],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-224")?;
-                rtcp_feedback.serialize_field("value", &value)?;
+                )
             }
             DtlsFingerprint::Sha256 { value } => {
-                let value = format!(
+                format!(
                     "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
@@ -390,12 +600,10 @@ impl Serialize for DtlsFingerprint {
                     value[29],
                     value[30],
                     value[31],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-256")?;
-                rtcp_feedback.serialize_field("value", &value)?;
+                )
             }
             DtlsFingerprint::Sha384 { value } => {
-                let value = format!(
+                format!(
                     "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
@@ -449,12 +657,10 @@ impl Serialize for DtlsFingerprint {
                     value[45],
                     value[46],
                     value[47],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-384")?;
-                rtcp_feedback.serialize_field("value", &value)?;
+                )
             }
             DtlsFingerprint::Sha512 { value } => {
-                let value = format!(
+                format!(
                     "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
                     {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:\
@@ -526,164 +732,19 @@ impl Serialize for DtlsFingerprint {
                     value[61],
                     value[62],
                     value[63],
-                );
-                rtcp_feedback.serialize_field("algorithm", "sha-512")?;
-                rtcp_feedback.serialize_field("value", &value)?;
-            }
-        }
-        rtcp_feedback.end()
-    }
-}
-
-impl<'de> Deserialize<'de> for DtlsFingerprint {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "lowercase")]
-        enum Field {
-            Algorithm,
-            Value,
-        }
-
-        struct DtlsFingerprintVisitor;
-
-        impl<'de> Visitor<'de> for DtlsFingerprintVisitor {
-            type Value = DtlsFingerprint;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str(
-                    r#"DTLS fingerprint algorithm and value like {"algorithm": "sha-256", "value": "1B:EA:BF:33:B8:11:26:6D:91:AD:1B:A0:16:FD:5D:60:59:33:F7:46:A3:BA:99:2A:1D:04:99:A6:F2:C6:2D:43"}"#,
                 )
             }
-
-            fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
-            where
-                V: MapAccess<'de>,
-            {
-                let mut algorithm = None::<Cow<'_, str>>;
-                let mut value = None::<Cow<'_, str>>;
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        Field::Algorithm => {
-                            if algorithm.is_some() {
-                                return Err(de::Error::duplicate_field("algorithm"));
-                            }
-                            algorithm = Some(map.next_value()?);
-                        }
-                        Field::Value => {
-                            if value.is_some() {
-                                return Err(de::Error::duplicate_field("value"));
-                            }
-                            value = map.next_value()?;
-                        }
-                    }
-                }
-                let algorithm = algorithm.ok_or_else(|| de::Error::missing_field("algorithm"))?;
-                let value = value.ok_or_else(|| de::Error::missing_field("value"))?;
-
-                fn parse_as_bytes(input: &str, output: &mut [u8]) -> Result<(), String> {
-                    for (i, v) in output.iter_mut().enumerate() {
-                        *v = u8::from_str_radix(&input[i * 3..(i * 3) + 2], 16).map_err(
-                            |error| {
-                                format!(
-                                    "Failed to parse value {} as series of hex bytes: {}",
-                                    input, error,
-                                )
-                            },
-                        )?;
-                    }
-
-                    Ok(())
-                }
-
-                match algorithm.as_ref() {
-                    "sha-1" => {
-                        if value.len() != (20 * 3 - 1) {
-                            Err(de::Error::custom(
-                                "Value doesn't have correct length for SHA-1",
-                            ))
-                        } else {
-                            let mut value_result = [0u8; 20];
-                            parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(de::Error::custom)?;
-
-                            Ok(DtlsFingerprint::Sha1 {
-                                value: value_result,
-                            })
-                        }
-                    }
-                    "sha-224" => {
-                        if value.len() != (28 * 3 - 1) {
-                            Err(de::Error::custom(
-                                "Value doesn't have correct length for SHA-224",
-                            ))
-                        } else {
-                            let mut value_result = [0u8; 28];
-                            parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(de::Error::custom)?;
-
-                            Ok(DtlsFingerprint::Sha224 {
-                                value: value_result,
-                            })
-                        }
-                    }
-                    "sha-256" => {
-                        if value.len() != (32 * 3 - 1) {
-                            Err(de::Error::custom(
-                                "Value doesn't have correct length for SHA-256",
-                            ))
-                        } else {
-                            let mut value_result = [0u8; 32];
-                            parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(de::Error::custom)?;
-
-                            Ok(DtlsFingerprint::Sha256 {
-                                value: value_result,
-                            })
-                        }
-                    }
-                    "sha-384" => {
-                        if value.len() != (48 * 3 - 1) {
-                            Err(de::Error::custom(
-                                "Value doesn't have correct length for SHA-384",
-                            ))
-                        } else {
-                            let mut value_result = [0u8; 48];
-                            parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(de::Error::custom)?;
-
-                            Ok(DtlsFingerprint::Sha384 {
-                                value: value_result,
-                            })
-                        }
-                    }
-                    "sha-512" => {
-                        if value.len() != (64 * 3 - 1) {
-                            Err(de::Error::custom(
-                                "Value doesn't have correct length for SHA-512",
-                            ))
-                        } else {
-                            let mut value_result = [0u8; 64];
-                            parse_as_bytes(value.as_ref(), &mut value_result)
-                                .map_err(de::Error::custom)?;
-
-                            Ok(DtlsFingerprint::Sha512 {
-                                value: value_result,
-                            })
-                        }
-                    }
-                    algorithm => Err(de::Error::unknown_variant(
-                        algorithm,
-                        &["sha-1", "sha-224", "sha-256", "sha-384", "sha-512"],
-                    )),
-                }
-            }
         }
+    }
 
-        const FIELDS: &[&str] = &["algorithm", "value"];
-        deserializer.deserialize_struct("DtlsFingerprint", FIELDS, DtlsFingerprintVisitor)
+    fn algorithm_str(&self) -> &'static str {
+        match self {
+            DtlsFingerprint::Sha1 { .. } => "sha-1",
+            DtlsFingerprint::Sha224 { .. } => "sha-224",
+            DtlsFingerprint::Sha256 { .. } => "sha-256",
+            DtlsFingerprint::Sha384 { .. } => "sha-384",
+            DtlsFingerprint::Sha512 { .. } => "sha-512",
+        }
     }
 }
 
@@ -749,7 +810,84 @@ impl WebRtcMessage {
             WebRtcMessage::String(string) => (51_u32, Bytes::from(string)),
             WebRtcMessage::Binary(binary) => (53_u32, binary),
             WebRtcMessage::EmptyString => (56_u32, Bytes::from_static(b" ")),
-            WebRtcMessage::EmptyBinary => (57_u32, Bytes::from(vec![0u8])),
+            WebRtcMessage::EmptyBinary => (57_u32, Bytes::from(vec![0_u8])),
         }
     }
+}
+
+/// RTP packet info in trace event.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RtpPacketTraceInfo {
+    /// RTP payload type.
+    pub payload_type: u8,
+    /// Sequence number.
+    pub sequence_number: u16,
+    /// Timestamp.
+    pub timestamp: u32,
+    /// Whether packet has marker or not.
+    pub marker: bool,
+    /// RTP stream SSRC.
+    pub ssrc: u32,
+    /// Whether packet contains a key frame.
+    pub is_key_frame: bool,
+    /// Packet size.
+    pub size: usize,
+    /// Payload size.
+    pub payload_size: usize,
+    /// The spatial layer index (from 0 to N).
+    pub spatial_layer: u8,
+    /// The temporal layer index (from 0 to N).
+    pub temporal_layer: u8,
+    /// The MID RTP extension value as defined in the BUNDLE specification
+    pub mid: Option<String>,
+    /// RTP stream RID value.
+    pub rid: Option<String>,
+    /// RTP stream RRID value.
+    pub rrid: Option<String>,
+    /// Transport-wide sequence number.
+    pub wide_sequence_number: Option<u16>,
+    /// Whether this is an RTX packet.
+    #[serde(default)]
+    pub is_rtx: bool,
+}
+
+/// SSRC info in trace event.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+pub struct SsrcTraceInfo {
+    /// RTP stream SSRC.
+    ssrc: u32,
+}
+
+/// Bandwidth estimation type.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+pub enum BweType {
+    /// Transport-wide Congestion Control.
+    #[serde(rename = "transport-cc")]
+    TransportCc,
+    /// Receiver Estimated Maximum Bitrate.
+    #[serde(rename = "remb")]
+    Remb,
+}
+
+/// BWE info in trace event.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BweTraceInfo {
+    /// Bandwidth estimation type.
+    r#type: BweType,
+    /// Desired bitrate
+    desired_bitrate: u32,
+    /// Effective desired bitrate.
+    effective_desired_bitrate: u32,
+    /// Min bitrate.
+    min_bitrate: u32,
+    /// Max bitrate.
+    max_bitrate: u32,
+    /// Start bitrate.
+    start_bitrate: u32,
+    /// Max padding bitrate.
+    max_padding_bitrate: u32,
+    /// Available bitrate.
+    available_bitrate: u32,
 }

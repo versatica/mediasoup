@@ -104,7 +104,7 @@ before ultimately calling OPENSSL_free().
 
 OPENSSL_cleanse() fills B<ptr> of size B<len> with a string of 0's.
 Use OPENSSL_cleanse() with care if the memory is a mapping of a file.
-If the storage controller uses write compression, then its possible
+If the storage controller uses write compression, then it's possible
 that sensitive tail bytes will survive zeroization because the block of
 zeros will be compressed. If the storage controller uses wear leveling,
 then the old sensitive data will not be overwritten; rather, a block of
@@ -160,7 +160,7 @@ about what is being done.
 For example, identifying the field names when parsing a complicated
 data structure.
 OPENSSL_mem_debug_push() (which calls CRYPTO_mem_debug_push())
-attachs an identifying string to the allocation stack.
+attaches an identifying string to the allocation stack.
 This must be a global or other static string; it is not copied.
 OPENSSL_mem_debug_pop() removes identifying state from the stack.
 
@@ -245,7 +245,7 @@ only, say, the malloc() implementation is outright dangerous.>
 
 =head1 COPYRIGHT
 
-Copyright 2016-2019 The OpenSSL Project Authors. All Rights Reserved.
+Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
 
 Licensed under the OpenSSL license (the "License").  You may not use
 this file except in compliance with the License.  You can obtain a copy

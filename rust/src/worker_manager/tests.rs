@@ -18,7 +18,7 @@ fn worker_manager_test() {
     let worker_manager = WorkerManager::new();
 
     future::block_on(async move {
-        worker_manager
+        let _ = worker_manager
             .create_worker(WorkerSettings::default())
             .await
             .unwrap();

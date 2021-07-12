@@ -1,20 +1,3 @@
-//! A direct transport represents a direct connection between the mediasoup Rust process and a
-//! [`Router`] instance in a mediasoup-worker thread.
-//!
-//! A direct transport can be used to directly send and receive data messages from/to Rust by means
-//! of [`DataProducer`]s and [`DataConsumer`]s of type `Direct` created on a direct transport.
-//! Direct messages sent by a [`DataProducer`] in a direct transport can be consumed by endpoints
-//! connected through a SCTP capable transport ([`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport),
-//! [`PlainTransport`](crate::plain_transport::PlainTransport), [`PipeTransport`](crate::pipe_transport::PipeTransport)
-//! and also by the Rust application by means of a [`DataConsumer`] created on a [`DirectTransport`]
-//! (and vice-versa: messages sent over SCTP/DataChannel can be consumed by the Rust application by
-//! means of a [`DataConsumer`] created on a [`DirectTransport`]).
-//!
-//! A direct transport can also be used to inject and directly consume RTP and RTCP packets in Rust
-//! by using the [`DirectProducer::send`](crate::producer::DirectProducer::send) and
-//! [`Consumer::on_rtp`] API (plus [`DirectTransport::send_rtcp`] and [`DirectTransport::on_rtcp`]
-//! API).
-
 #[cfg(test)]
 mod tests;
 
@@ -24,12 +7,13 @@ use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, Da
 use crate::data_structures::{AppData, SctpState};
 use crate::messages::{TransportCloseRequest, TransportInternal, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
+use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::{Router, RouterId};
 use crate::sctp_parameters::SctpParameters;
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
-    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportImpl,
-    TransportTraceEventData, TransportTraceEventType, TransportType,
+    RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
+    TransportTraceEventType,
 };
 use crate::worker::{
     Channel, NotificationError, NotificationMessage, PayloadChannel, RequestError,
@@ -39,7 +23,7 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
-use log::*;
+use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -47,7 +31,7 @@ use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
-/// Direct transport options.
+/// [`DirectTransport`] options.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DirectTransportOptions {
@@ -220,6 +204,7 @@ impl Inner {
 /// [`Consumer::on_rtp`] API (plus [`DirectTransport::send_rtcp`] and [`DirectTransport::on_rtcp`]
 /// API).
 #[derive(Clone)]
+#[must_use = "Transport will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct DirectTransport {
     inner: Arc<Inner>,
 }
@@ -510,11 +495,7 @@ impl DirectTransport {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak
-                    .lock()
-                    .as_ref()
-                    .and_then(|weak_inner| weak_inner.upgrade())
-                {
+                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
                     inner.handlers.router_close.call_simple();
                     inner.close(false);
                 }
@@ -562,6 +543,7 @@ impl DirectTransport {
     }
 
     /// Downgrade `DirectTransport` to [`WeakDirectTransport`] instance.
+    #[must_use]
     pub fn downgrade(&self) -> WeakDirectTransport {
         WeakDirectTransport {
             inner: Arc::downgrade(&self.inner),
@@ -594,6 +576,7 @@ impl fmt::Debug for WeakDirectTransport {
 impl WeakDirectTransport {
     /// Attempts to upgrade `WeakDirectTransport` to [`DirectTransport`] if last instance of one
     /// wasn't dropped yet.
+    #[must_use]
     pub fn upgrade(&self) -> Option<DirectTransport> {
         let inner = self.inner.upgrade()?;
 

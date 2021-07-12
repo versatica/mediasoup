@@ -12,10 +12,10 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
-#include "Channel/Notifier.hpp"
-#include "Channel/UnixStreamSocket.hpp"
-#include "PayloadChannel/Notifier.hpp"
-#include "PayloadChannel/UnixStreamSocket.hpp"
+#include "Channel/ChannelNotifier.hpp"
+#include "Channel/ChannelSocket.hpp"
+#include "PayloadChannel/PayloadChannelNotifier.hpp"
+#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
 #include <uv.h>
@@ -40,37 +40,48 @@ extern "C" int run_worker(
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
-	// Channel socket (it will be handled and deleted by the Worker).
-	Channel::UnixStreamSocket* channel{ nullptr };
+	// Channel socket. If Worker instance runs properly, this socket is closed by
+	// it in its destructor. Otherwise it's closed here by also letting libuv
+	// deallocate its UV handles.
+	std::unique_ptr<Channel::ChannelSocket> channel{ nullptr };
 
-	// PayloadChannel socket (it will be handled and deleted by the Worker).
-	PayloadChannel::UnixStreamSocket* payloadChannel{ nullptr };
+	// PayloadChannel socket. If Worker instance runs properly, this socket is
+	// closed by it in its destructor. Otherwise it's closed here by also letting
+	// libuv deallocate its UV handles.
+	std::unique_ptr<PayloadChannel::PayloadChannelSocket> payloadChannel{ nullptr };
 
 	try
 	{
-		channel = new Channel::UnixStreamSocket(consumerChannelFd, producerChannelFd);
+		channel.reset(new Channel::ChannelSocket(consumerChannelFd, producerChannelFd));
 	}
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("error creating the Channel: %s", error.what());
 
+		DepLibUV::RunLoop();
+		DepLibUV::ClassDestroy();
+
 		return 1;
 	}
 
 	try
 	{
-		payloadChannel =
-		  new PayloadChannel::UnixStreamSocket(payloadConsumeChannelFd, payloadProduceChannelFd);
+		payloadChannel.reset(
+		  new PayloadChannel::PayloadChannelSocket(payloadConsumeChannelFd, payloadProduceChannelFd));
 	}
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("error creating the RTC Channel: %s", error.what());
 
+		channel->Close();
+		DepLibUV::RunLoop();
+		DepLibUV::ClassDestroy();
+
 		return 1;
 	}
 
 	// Initialize the Logger.
-	Logger::ClassInit(channel);
+	Logger::ClassInit(channel.get());
 
 	try
 	{
@@ -80,12 +91,22 @@ extern "C" int run_worker(
 	{
 		MS_ERROR_STD("settings error: %s", error.what());
 
+		channel->Close();
+		payloadChannel->Close();
+		DepLibUV::RunLoop();
+		DepLibUV::ClassDestroy();
+
 		// 42 is a custom exit code to notify "settings error" to the Node library.
 		return 42;
 	}
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("unexpected settings error: %s", error.what());
+
+		channel->Close();
+		payloadChannel->Close();
+		DepLibUV::RunLoop();
+		DepLibUV::ClassDestroy();
 
 		return 1;
 	}
@@ -121,30 +142,30 @@ extern "C" int run_worker(
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
-		Channel::Notifier::ClassInit(channel);
-		PayloadChannel::Notifier::ClassInit(payloadChannel);
+		Channel::ChannelNotifier::ClassInit(channel.get());
+		PayloadChannel::PayloadChannelNotifier::ClassInit(payloadChannel.get());
 
 #ifdef MS_EXECUTABLE
-		{
-			// Ignore some signals.
-			IgnoreSignals();
-		}
+		// Ignore some signals.
+		IgnoreSignals();
 #endif
 
 		// Run the Worker.
-		Worker worker(channel, payloadChannel);
+		Worker worker(channel.get(), payloadChannel.get());
 
 		// Free static stuff.
-		DepLibUV::ClassDestroy();
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
 		DepLibWebRTC::ClassDestroy();
 		RTC::DtlsTransport::ClassDestroy();
 		DepUsrSCTP::ClassDestroy();
+		DepLibUV::ClassDestroy();
 
-		// Wait a bit so peding messages to stdout/Channel arrive to the Node
+#ifdef MS_EXECUTABLE
+		// Wait a bit so pending messages to stdout/Channel arrive to the Node
 		// process.
 		uv_sleep(200);
+#endif
 
 		return 0;
 	}

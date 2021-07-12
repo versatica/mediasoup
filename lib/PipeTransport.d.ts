@@ -1,6 +1,6 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
-import { Consumer, ConsumerOptions } from './Consumer';
+import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 export declare type PipeTransportOptions = {
@@ -8,6 +8,11 @@ export declare type PipeTransportOptions = {
      * Listening IP address.
      */
     listenIp: TransportListenIp | string;
+    /**
+     * Fixed port to listen on instead of selecting automatically from Worker's port
+     * range.
+     */
+    port?: number;
     /**
      * Create a SCTP association. Default false.
      */
@@ -66,6 +71,16 @@ export declare type PipeTransportStat = {
     availableIncomingBitrate?: number;
     maxIncomingBitrate?: number;
     tuple: TransportTuple;
+};
+export declare type PipeConsumerOptions = {
+    /**
+     * The id of the Producer to consume.
+     */
+    producerId: string;
+    /**
+     * Custom application data.
+     */
+    appData?: any;
 };
 export declare class PipeTransport extends Transport {
     protected readonly _data: {
@@ -144,7 +159,7 @@ export declare class PipeTransport extends Transport {
      *
      * @override
      */
-    consume({ producerId, appData }: ConsumerOptions): Promise<Consumer>;
+    consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>;
     private _handleWorkerNotifications;
 }
 //# sourceMappingURL=PipeTransport.d.ts.map

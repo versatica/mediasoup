@@ -12,9 +12,11 @@ use std::num::{NonZeroU32, NonZeroU8};
 /// # Notes on usage
 /// Those are NOT the RTP capabilities needed by mediasoup-client's
 /// [device.load()](https://mediasoup.org/documentation/v3/mediasoup-client/api/#device-load) and
-/// libmediasoupclient's [device.Load()](https://mediasoup.org/documentation/v3/libmediasoupclient/api/#device-Load)
-/// methods. There you must use [`Router::rtp_capabilities`](crate::router::Router::rtp_capabilities)
-/// getter instead.
+/// libmediasoupclient's
+/// [device.Load()](https://mediasoup.org/documentation/v3/libmediasoupclient/api/#device-Load)
+/// methods. There you must use
+/// [`Router::rtp_capabilities`](crate::router::Router::rtp_capabilities) getter instead.
+#[must_use]
 pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
     RtpCapabilities {
         codecs: vec![
@@ -193,8 +195,8 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 1u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 1_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -209,8 +211,8 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 0u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 0_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -225,8 +227,8 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 1u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 1_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -241,8 +243,8 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 0u32.into()),
-                    ("level-asymmetry-allowed", 1u32.into()),
+                    ("packetization-mode", 0_u32.into()),
+                    ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
@@ -255,42 +257,42 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::RtpStreamId,
                 preferred_id: 2,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::RecvOnly,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::RepairRtpStreamId,
                 preferred_id: 3,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::RecvOnly,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
@@ -298,14 +300,14 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             },
             // NOTE: For audio we just enable transport-wide-cc-01 when receiving media.
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                 preferred_id: 5,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::RecvOnly,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                 preferred_id: 5,
                 preferred_encrypt: false,
@@ -313,41 +315,40 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
             },
             // NOTE: Remove this once framemarking draft becomes RFC.
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::FrameMarkingDraft07,
                 preferred_id: 6,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::FrameMarking,
                 preferred_id: 7,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::VideoOrientation,
                 preferred_id: 11,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TimeOffset,
                 preferred_id: 12,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
         ],
-        fec_mechanisms: vec![],
     }
 }

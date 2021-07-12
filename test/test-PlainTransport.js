@@ -1,4 +1,5 @@
 const { toBeType } = require('jest-tobetype');
+const pickPort = require('pick-port');
 const mediasoup = require('../');
 const { createWorker } = mediasoup;
 
@@ -401,6 +402,20 @@ test('PlainTransport methods reject if closed', async () =>
 	await expect(transport.connect({}))
 		.rejects
 		.toThrow(Error);
+}, 2000);
+
+test('router.createPlainTransport() with fixed port succeeds', async () =>
+{
+	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
+	const plainTransport = await router.createPlainTransport(
+		{
+			listenIp : '127.0.0.1',
+			port
+		});
+
+	expect(plainTransport.tuple.localPort).toEqual(port);
+
+	plainTransport.close();
 }, 2000);
 
 test('PlainTransport emits "routerclose" if Router is closed', async () =>

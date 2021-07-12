@@ -36,10 +36,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             preferred_payload_type: None,
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(2).unwrap(),
-            parameters: RtpCodecParametersParameters::from([
-                ("useinbandfec", 1u32.into()),
-                ("foo", "bar".into()),
-            ]),
+            parameters: RtpCodecParametersParameters::default(),
             rtcp_feedback: vec![],
         },
         RtpCodecCapability::Video {
@@ -63,7 +60,7 @@ fn audio_producer_options() -> ProducerOptions {
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
+                    ("useinbandfec", 1_u32.into()),
                     ("foo", "bar1".into()),
                 ]),
                 rtcp_feedback: vec![],
@@ -185,34 +182,33 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 mime_type: MimeTypeVideo::Rtx,
                 preferred_payload_type: Some(102),
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
+                parameters: RtpCodecParametersParameters::from([("apt", 101_u32.into())]),
                 rtcp_feedback: vec![],
             },
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                 preferred_id: 5,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
         ],
-        fec_mechanisms: vec![],
     }
 }
 
@@ -313,7 +309,7 @@ fn pipe_to_router_succeeds_with_audio() {
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
+                    ("useinbandfec", 1_u32.into()),
                     ("foo", "bar1".into()),
                 ]),
                 rtcp_feedback: vec![],
@@ -351,7 +347,7 @@ fn pipe_to_router_succeeds_with_audio() {
                 clock_rate: NonZeroU32::new(48000).unwrap(),
                 channels: NonZeroU8::new(2).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("useinbandfec", 1u32.into()),
+                    ("useinbandfec", 1_u32.into()),
                     ("foo", "bar1".into()),
                 ]),
                 rtcp_feedback: vec![],
@@ -548,6 +544,28 @@ fn weak() {
 }
 
 #[test]
+fn create_with_fixed_port_succeeds() {
+    future::block_on(async move {
+        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+
+        let pipe_transport = router1
+            .create_pipe_transport({
+                let mut options = PipeTransportOptions::new(TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: None,
+                });
+                options.port = Some(60_000);
+
+                options
+            })
+            .await
+            .expect("Failed to create Pipe transport");
+
+        assert_eq!(pipe_transport.tuple().local_port(), 60_000);
+    });
+}
+
+#[test]
 fn create_with_enable_rtx_succeeds() {
     future::block_on(async move {
         let (_worker, router1, _router2, transport1, _transport2) = init().await;
@@ -604,7 +622,7 @@ fn create_with_enable_rtx_succeeds() {
                     mime_type: MimeTypeVideo::Rtx,
                     payload_type: 102,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
+                    parameters: RtpCodecParametersParameters::from([("apt", 101_u32.into())]),
                     rtcp_feedback: vec![],
                 },
             ],
@@ -783,7 +801,7 @@ fn consume_for_pipe_producer_succeeds() {
                     mime_type: MimeTypeVideo::Rtx,
                     payload_type: 102,
                     clock_rate: NonZeroU32::new(90000).unwrap(),
-                    parameters: RtpCodecParametersParameters::from([("apt", 101u32.into())]),
+                    parameters: RtpCodecParametersParameters::from([("apt", 101_u32.into())]),
                     rtcp_feedback: vec![],
                 },
             ],

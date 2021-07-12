@@ -4,6 +4,7 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include <libwebrtc/api/transport/network_types.h> // webrtc::TargetRateConstraints
 #include <limits>
 
@@ -21,9 +22,11 @@ namespace RTC
 	TransportCongestionControlClient::TransportCongestionControlClient(
 	  RTC::TransportCongestionControlClient::Listener* listener,
 	  RTC::BweType bweType,
-	  uint32_t initialAvailableBitrate)
+	  uint32_t initialAvailableBitrate,
+	  uint32_t maxOutgoingBitrate)
 	  : listener(listener), bweType(bweType),
-	    initialAvailableBitrate(std::max<uint32_t>(initialAvailableBitrate, MinBitrate))
+	    initialAvailableBitrate(std::max<uint32_t>(initialAvailableBitrate, MinBitrate)),
+	    maxOutgoingBitrate(maxOutgoingBitrate)
 	{
 		MS_TRACE();
 
@@ -163,6 +166,17 @@ namespace RTC
 		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
 	}
 
+	void TransportCongestionControlClient::SetMaxOutgoingBitrate(uint32_t maxBitrate)
+	{
+		if (maxBitrate < this->initialAvailableBitrate)
+			MS_THROW_ERROR("maxOutgoingBitrate must be >= initialAvailableOutgoingBitrate");
+
+		if (maxBitrate < MinBitrate)
+			MS_THROW_ERROR("maxOutgoingBitrate must be >= 30000bps");
+
+		this->maxOutgoingBitrate = maxBitrate;
+	}
+
 	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate, bool force)
 	{
 		MS_TRACE();
@@ -187,6 +201,13 @@ namespace RTC
 			this->bitrates.maxBitrate = std::max<uint32_t>(
 			  this->initialAvailableBitrate,
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
+
+			if (this->maxOutgoingBitrate > 0u)
+			{
+				this->bitrates.maxBitrate =
+				  std::min<uint32_t>(this->maxOutgoingBitrate, this->bitrates.maxBitrate);
+			}
+
 			this->bitrates.maxPaddingBitrate = this->bitrates.maxBitrate * MaxPaddingBitrateFactor;
 		}
 		else

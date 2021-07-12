@@ -1,17 +1,7 @@
-//! A transport connects an endpoint with a mediasoup router and enables transmission of media in
-//! both directions by means of [`Producer`], [`Consumer`], [`DataProducer`] and [`DataConsumer`]
-//! instances created on it.
-//!
-//! mediasoup implements the following transports:
-//! * [`WebRtcTransport`](crate::webrtc_transport::WebRtcTransport)
-//! * [`PlainTransport`](crate::plain_transport::PlainTransport)
-//! * [`PipeTransport`](crate::pipe_transport::PipeTransport)
-//! * [`DirectTransport`](crate::direct_transport::DirectTransport)
-
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, TraceEventDirection};
+use crate::data_structures::{AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection};
 use crate::messages::{
     ConsumerInternal, DataConsumerInternal, DataProducerInternal, ProducerInternal,
     TransportConsumeData, TransportConsumeDataData, TransportConsumeDataRequest,
@@ -19,7 +9,8 @@ use crate::messages::{
     TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportInternal,
     TransportProduceData, TransportProduceDataData, TransportProduceDataRequest,
     TransportProduceRequest, TransportSetMaxIncomingBitrateData,
-    TransportSetMaxIncomingBitrateRequest,
+    TransportSetMaxIncomingBitrateRequest, TransportSetMaxOutgoingBitrateData,
+    TransportSetMaxOutgoingBitrateRequest,
 };
 pub use crate::ortc::{
     ConsumerRtpParametersError, RtpCapabilitiesError, RtpParametersError, RtpParametersMappingError,
@@ -32,11 +23,10 @@ use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
-use log::*;
+use log::{error, warn};
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -63,9 +53,8 @@ pub enum TransportTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// RTP packet info.
+        info: RtpPacketTraceInfo,
     },
     /// Transport bandwidth estimation changed.
     Bwe {
@@ -73,9 +62,8 @@ pub enum TransportTraceEventData {
         timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
-        // TODO: Clarify value structure
-        /// Per type specific information.
-        info: Value,
+        /// BWE info.
+        info: BweTraceInfo,
     },
 }
 
@@ -142,15 +130,19 @@ pub(super) enum TransportType {
 #[async_trait(?Send)]
 pub trait Transport: Debug + Send + Sync + CloneTransport {
     /// Transport id.
+    #[must_use]
     fn id(&self) -> TransportId;
 
     /// Router id.
+    #[must_use]
     fn router_id(&self) -> RouterId;
 
     /// Custom application data.
+    #[must_use]
     fn app_data(&self) -> &AppData;
 
     /// Whether the transport is closed.
+    #[must_use]
     fn closed(&self) -> bool;
 
     /// Instructs the router to receive audio or video RTP (or SRTP depending on the transport).
@@ -437,6 +429,18 @@ pub(super) trait TransportImpl: TransportGeneric {
             .await
     }
 
+    async fn set_max_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
+        self.channel()
+            .request(TransportSetMaxOutgoingBitrateRequest {
+                internal: TransportInternal {
+                    router_id: self.router().id(),
+                    transport_id: self.id(),
+                },
+                data: TransportSetMaxOutgoingBitrateData { bitrate },
+            })
+            .await
+    }
+
     async fn enable_trace_event_impl(
         &self,
         types: Vec<TransportTraceEventType>,
@@ -565,6 +569,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             producer_id,
             rtp_capabilities,
             paused,
+            mid,
             preferred_layers,
             pipe,
             app_data,
@@ -579,26 +584,26 @@ pub(super) trait TransportImpl: TransportGeneric {
             }
         };
 
-        // TODO: Maybe RtpParametersFinalized would be a better fit here
         let rtp_parameters = if transport_type == TransportType::Pipe {
             ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
         } else {
             let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
                 producer.consumable_rtp_parameters(),
-                rtp_capabilities,
+                &rtp_capabilities,
                 pipe,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 
             if !pipe {
-                // We use up to 8 bytes for MID (string).
-                let next_mid_for_consumers = self
-                    .next_mid_for_consumers()
-                    .fetch_add(1, Ordering::Relaxed);
-                let mid = next_mid_for_consumers % 100_000_000;
-
                 // Set MID.
-                rtp_parameters.mid = Some(format!("{}", mid));
+                rtp_parameters.mid = mid.or_else(|| {
+                    // We use up to 8 bytes for MID (string).
+                    let next_mid_for_consumers = self
+                        .next_mid_for_consumers()
+                        .fetch_add(1, Ordering::Relaxed);
+                    let mid = next_mid_for_consumers % 100_000_000;
+                    Some(format!("{}", mid))
+                })
             }
 
             rtp_parameters
@@ -647,7 +652,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.paused,
             Arc::clone(self.executor()),
             self.channel().clone(),
-            self.payload_channel().clone(),
+            self.payload_channel(),
             response.producer_paused,
             response.score,
             response.preferred_layers,

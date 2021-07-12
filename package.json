@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.7.5",
+  "version": "3.7.18",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -28,6 +28,7 @@
     "node": ">=10"
   },
   "scripts": {
+    "install-clang-tools": "node npm-scripts.js install-clang-tools",
     "typescript:build": "node npm-scripts.js typescript:build",
     "typescript:watch": "node npm-scripts.js typescript:watch",
     "lint": "npm run lint:node && npm run lint:worker",
@@ -49,7 +50,7 @@
   "dependencies": {
     "@types/node": "^14.14.43",
     "awaitqueue": "^2.3.3",
-    "debug": "^4.3.1",
+    "debug": "^4.3.2",
     "h264-profile-level-id": "^1.0.1",
     "netstring": "^0.3.0",
     "random-number": "^0.0.9",
@@ -57,24 +58,20 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.5",
+    "@types/debug": "^4.1.6",
     "@types/random-number": "0.0.0",
-    "@types/uuid": "^8.3.0",
-    "@typescript-eslint/eslint-plugin": "^4.22.0",
-    "@typescript-eslint/parser": "^4.22.0",
+    "@types/uuid": "^8.3.1",
+    "@typescript-eslint/eslint-plugin": "^4.28.2",
+    "@typescript-eslint/parser": "^4.28.2",
     "cross-env": "^7.0.3",
-    "eslint": "^7.25.0",
+    "eslint": "^7.30.0",
     "eslint-plugin-jest": "^24.3.6",
-    "gulp": "^4.0.2",
-    "gulp-clang-format": "^1.0.27",
-    "jest": "^26.6.3",
+    "jest": "^27.0.6",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^6.0.1",
+    "pick-port": "^1.0.0",
     "sctp": "^1.0.0",
-    "tsc-watch": "^4.2.9",
+    "tsc-watch": "^4.4.0",
     "typescript": "~3.8.3"
-  },
-  "optionalDependencies": {
-    "clang-tools-prebuilt": "^0.1.4"
   }
 }
