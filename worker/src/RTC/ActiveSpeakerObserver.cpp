@@ -236,6 +236,7 @@ namespace RTC
 	void ActiveSpeakerObserver::OnTimer(Timer* timer)
 	{
 		MS_TRACE();
+
 		Update();
 	}
 
