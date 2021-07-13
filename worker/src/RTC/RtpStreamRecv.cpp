@@ -4,6 +4,7 @@
 #include "RTC/RtpStreamRecv.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include "Settings.hpp"
 #include "RTC/Codecs/Tools.hpp"
 
 namespace RTC
@@ -190,7 +191,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->params.useNack)
-			this->nackGenerator.reset(new RTC::NackGenerator(this));
+			this->nackGenerator.reset(new RTC::NackGenerator(this, Settings::configuration.sendNackDelayMs));
 
 		// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 		// enabled).

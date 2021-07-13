@@ -1145,7 +1145,7 @@ namespace RTC
 		}
 
 		// Create a RtpStreamRecv for receiving a media stream.
-		auto* rtpStream = new RTC::RtpStreamRecv(this, params, this->sendNackDelayMs);
+		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
 
 		// Insert into the maps.
 		this->mapSsrcRtpStream[ssrc]              = rtpStream;

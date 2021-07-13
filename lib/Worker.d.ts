@@ -23,6 +23,10 @@ export declare type WorkerSettings = {
      */
     rtcMaxPort?: number;
     /**
+     * Delay ms before sending RTCP NACK. Default 0.
+     */
+    sendNackDelayMs? : number;
+    /**
      * Path to the DTLS public certificate file in PEM format. If unset, a
      * certificate is dynamically created.
      */
