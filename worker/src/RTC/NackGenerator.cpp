@@ -20,9 +20,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(
-	  Listener* listener,
-	  uint64_t sendNackDelayMs)
+	NackGenerator::NackGenerator(Listener* listener, uint64_t sendNackDelayMs)
 	  : listener(listener), rtt(DefaultRtt), sendNackDelayMs(sendNackDelayMs)
 	{
 		MS_TRACE();
@@ -79,7 +77,7 @@ namespace RTC
 
 				this->nackList.erase(it);
 
-				if(it->second.retries != 0)
+				if (it->second.retries != 0)
 					return true;
 				else
 					return false;

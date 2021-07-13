@@ -3,8 +3,8 @@
 
 #include "RTC/RtpStreamRecv.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include "Settings.hpp"
+#include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
 
 namespace RTC
