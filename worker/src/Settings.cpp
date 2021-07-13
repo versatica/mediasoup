@@ -132,6 +132,13 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				break;
 			}
 
+			case 'p':
+			{
+				stringValue                                = std::string(optarg);
+				Settings::configuration.dtlsPrivateKeyFile = stringValue;
+				break;
+			}
+
 			case 'n':
 			{
 				try
