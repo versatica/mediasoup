@@ -299,7 +299,6 @@ namespace RTC
 
 			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
 		}
-
 	}
 
 	Producer::~Producer()
@@ -436,7 +435,6 @@ namespace RTC
 		}
 
 		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
-
 	}
 
 	void Producer::FillJsonStats(json& jsonArray) const
