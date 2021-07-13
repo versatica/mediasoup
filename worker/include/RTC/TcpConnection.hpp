@@ -12,6 +12,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnTcpConnectionPacketReceived(
 			  RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
 		};

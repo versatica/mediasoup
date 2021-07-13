@@ -38,6 +38,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) = 0;
 			virtual void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation)  = 0;
 			virtual void OnSctpAssociationFailed(RTC::SctpAssociation* sctpAssociation)     = 0;

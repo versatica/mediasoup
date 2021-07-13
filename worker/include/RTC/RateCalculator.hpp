@@ -33,16 +33,10 @@ namespace RTC
 		{
 			return this->bytes;
 		}
-		void Reset()
-		{
-			uint64_t nowMs = DepLibUV::GetTimeMs();
-
-			Reset(nowMs);
-		}
 
 	private:
 		void RemoveOldData(uint64_t nowMs);
-		void Reset(uint64_t nowMs)
+		void Reset()
 		{
 			this->buffer.reset(new BufferItem[this->windowItems]);
 			this->newestItemStartTime = 0u;
