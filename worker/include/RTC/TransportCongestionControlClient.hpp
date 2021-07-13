@@ -36,6 +36,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnTransportCongestionControlClientBitrates(
 			  RTC::TransportCongestionControlClient* tccClient,
 			  RTC::TransportCongestionControlClient::Bitrates& bitrates) = 0;

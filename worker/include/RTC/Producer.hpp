@@ -27,6 +27,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
 			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
 			virtual void OnProducerNewRtpStream(

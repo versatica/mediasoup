@@ -17,6 +17,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnNackGeneratorNackRequired(const std::vector<uint16_t>& seqNumbers) = 0;
 			virtual void OnNackGeneratorKeyFrameRequired()                                    = 0;
 		};
