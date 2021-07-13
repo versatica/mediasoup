@@ -936,6 +936,7 @@ export class Router extends EnhancedEventEmitter
 	): Promise<ActiveSpeakerObserver>
 	{
 		logger.debug('createActiveSpeakerObserver()');
+
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 		
@@ -961,6 +962,7 @@ export class Router extends EnhancedEventEmitter
 			this._rtpObservers.delete(activeSpeakerObserver.id);
 		});
 
+		// Emit observer event.
 		this._observer.safeEmit('newrtpobserver', activeSpeakerObserver);
 
 		return activeSpeakerObserver;

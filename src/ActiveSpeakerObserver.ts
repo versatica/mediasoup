@@ -4,7 +4,6 @@ import { RtpObserver } from './RtpObserver';
 import { Producer } from './Producer';
 
 export interface ActiveSpeakerObserverOptions {
-
 	interval?: number;
 	/**
 	 * Custom application data.
@@ -14,7 +13,7 @@ export interface ActiveSpeakerObserverOptions {
 
 export interface ActiveSpeakerObserverActivity {
 	/**
-	 * The producer instance
+	 * The producer instance.
 	 */
 	producer: Producer;
 }
@@ -29,6 +28,7 @@ export class ActiveSpeakerObserver extends RtpObserver
 	constructor(params: any)
 	{
 		super(params);
+
 		this._handleWorkerNotifications();
 	}
 
@@ -46,14 +46,14 @@ export class ActiveSpeakerObserver extends RtpObserver
 		{
 			switch (event)
 			{
-				case 'dominantSpeaker':
+				case 'dominantspeaker':
 				{
 					const dominantSpeaker = {
 						producer : this._getProducerById(data.producerId)
 					};
 
-					this.safeEmit('dominantSpeaker', dominantSpeaker);
-					this._observer.safeEmit('dominantSpeaker');
+					this.safeEmit('dominantspeaker', dominantSpeaker);
+					this._observer.safeEmit('dominantspeaker');
 					break;
 				}
 				default:
