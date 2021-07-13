@@ -51,11 +51,6 @@ export type WorkerSettings =
 	 */
 	rtcMaxPort?: number;
 
-    /**
-     * Delay ms before sending RTCP NACK. Default 0.
-     */
-    sendNackDelayMs? : number;
-	
 	/**
 	 * Path to the DTLS public certificate file in PEM format. If unset, a
 	 * certificate is dynamically created.
@@ -219,7 +214,6 @@ export class Worker extends EnhancedEventEmitter
 			logTags,
 			rtcMinPort,
 			rtcMaxPort,
-			sendNackDelayMs,
 			dtlsCertificateFile,
 			dtlsPrivateKeyFile,
 			appData
@@ -258,9 +252,6 @@ export class Worker extends EnhancedEventEmitter
 
 		if (typeof rtcMaxPort === 'number' && !Number.isNaN(rtcMaxPort))
 			spawnArgs.push(`--rtcMaxPort=${rtcMaxPort}`);
-		
-        if (typeof sendNackDelayMs === 'number' && !Number.isNaN(sendNackDelayMs))
-			spawnArgs.push(`--sendNackDelayMs=${sendNackDelayMs}`);
 
 		if (typeof dtlsCertificateFile === 'string' && dtlsCertificateFile)
 			spawnArgs.push(`--dtlsCertificateFile=${dtlsCertificateFile}`);
