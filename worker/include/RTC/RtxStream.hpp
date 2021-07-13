@@ -8,7 +8,7 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 
 using json = nlohmann::json;

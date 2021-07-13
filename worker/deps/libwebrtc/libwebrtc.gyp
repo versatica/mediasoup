@@ -129,7 +129,7 @@
     [
       'libwebrtc',
       '../../include',
-      '../json/single_include/nlohmann'
+      '../json/single_include'
     ],
     'conditions':
     [
