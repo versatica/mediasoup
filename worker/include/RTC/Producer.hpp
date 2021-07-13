@@ -180,7 +180,6 @@ namespace RTC
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
-		uint64_t sendNackDelayMs{ 0u };
 	};
 } // namespace RTC
 

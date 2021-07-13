@@ -300,15 +300,6 @@ namespace RTC
 			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
 		}
 
-		auto jsonSendNackDelayIt = data.find("sendNackDelay");
-
-		if (jsonSendNackDelayIt != data.end())
-		{
-			if (!Utils::Json::IsPositiveInteger(*jsonSendNackDelayIt))
-				MS_THROW_TYPE_ERROR("wrong sendNackDelay (not a number)");
-
-			this->sendNackDelayMs = jsonSendNackDelayIt->get<uint64_t>();
-		}
 	}
 
 	Producer::~Producer()
@@ -446,7 +437,6 @@ namespace RTC
 
 		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
 
-		jsonObject["sendNackDelay"] = this->sendNackDelayMs;
 	}
 
 	void Producer::FillJsonStats(json& jsonArray) const
