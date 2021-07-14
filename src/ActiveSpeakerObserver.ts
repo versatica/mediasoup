@@ -54,6 +54,7 @@ export class ActiveSpeakerObserver extends RtpObserver
 
 					this.safeEmit('dominantspeaker', dominantSpeaker);
 					this._observer.safeEmit('dominantspeaker');
+
 					break;
 				}
 				default:

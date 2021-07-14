@@ -275,7 +275,7 @@ namespace RTC
 			{
 				std::string rtpObserverId;
 
-				// This may throw
+				// This may throw.
 				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
 
 				auto* activeSpeakerObserver = new RTC::ActiveSpeakerObserver(rtpObserverId, request->data);
