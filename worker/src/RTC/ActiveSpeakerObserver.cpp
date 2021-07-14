@@ -15,57 +15,20 @@ namespace RTC
 	constexpr uint32_t N1{ 13 };
 	constexpr uint32_t N2{ 5 };
 	constexpr uint32_t N3{ 10 };
+	constexpr uint32_t LongCount{ 1 };
 	constexpr uint32_t LevelIdleTimeout{ 40 };
 	constexpr uint64_t SpeakerIdleTimeout{ 60 * 60 * 1000 };
-	constexpr uint32_t LongCount{ 1 };
 	constexpr uint32_t LongThreashold{ 4 };
 	constexpr uint32_t MaxLevel{ 127 };
 	constexpr uint32_t MinLevel{ 0 };
 	constexpr uint32_t MinLevelWindowLen{ 15 * 1000 / 20 };
-	constexpr double MinActivityScore{ 0.0000000001 };
 	constexpr uint32_t MediumThreshold{ 7 };
 	constexpr uint32_t SubunitLengthN1{ (MaxLevel - MinLevel + N1 - 1) / N1 };
-
-	class Speaker
-	{
-	public:
-		static constexpr uint32_t ImmediateBuffLen{ LongCount * N3 * N2 };
-		static constexpr uint32_t MediumsBuffLen{ LongCount * N3 };
-		static constexpr uint32_t LongsBuffLen{ LongCount };
-		static constexpr uint32_t LevelsBuffLen{ LongCount * N3 * N2 };
-		double immediateActivityScore{ MinActivityScore };
-		double mediumActivityScore{ MinActivityScore };
-		double longActivityScore{ MinActivityScore };
-		uint64_t lastLevelChangeTime{ 0 };
-
-		bool paused{ false };
-
-		Speaker();
-
-		void EvalActivityScores();
-		double GetActivityScore(int32_t interval);
-		void LevelChanged(uint32_t level, uint64_t time);
-		void LevelTimedOut();
-
-	private:
-		std::array<uint8_t, ImmediateBuffLen> immediates;
-		std::array<uint8_t, MediumsBuffLen> mediums;
-		std::array<uint8_t, LongsBuffLen> longs;
-		std::array<uint8_t, LevelsBuffLen> levels;
-
-		uint8_t minLevel{ MinLevel };
-		uint8_t nextMinLevel{ MinLevel };
-		uint32_t nextMinLevelWindowLen{ 0 };
-
-	private:
-		bool ComputeImmediates();
-		bool ComputeLongs();
-		bool ComputeMediums();
-		void EvalImmediateActivityScore();
-		void EvalMediumActivityScore();
-		void EvalLongActivityScore();
-		void UpdateMinLevel(int8_t level);
-	};
+	constexpr uint32_t ImmediateBuffLen{ LongCount * N3 * N2 };
+	constexpr uint32_t MediumsBuffLen{ LongCount * N3 };
+	constexpr uint32_t LongsBuffLen{ LongCount };
+	constexpr uint32_t LevelsBuffLen{ LongCount * N3 * N2 };
+	constexpr double MinActivityScore{ 0.0000000001 };
 
 	inline int64_t BinomialCoefficient(int32_t n, int32_t r)
 	{
@@ -99,12 +62,11 @@ namespace RTC
 		return activityScore;
 	}
 
-	template<std::size_t L, std::size_t B>
 	inline bool ComputeBigs(
-	  const std::array<uint8_t, L>& littles, std::array<uint8_t, B>& bigs, uint8_t threashold)
+	  const std::vector<uint8_t>& littles, std::vector<uint8_t>& bigs, uint8_t threashold)
 	{
-		uint32_t littleLen       = L;
-		uint32_t bigLen          = B;
+		uint32_t littleLen       = littles.size();
+		uint32_t bigLen          = bigs.size();
 		uint32_t littleLenPerBig = littleLen / bigLen;
 		bool changed             = false;
 
@@ -301,8 +263,8 @@ namespace RTC
 
 			for (auto itt = mapProducerSpeaker.begin(); itt != mapProducerSpeaker.end(); itt++)
 			{
-				RTC::Speaker* speaker = itt->second.speaker;
-				const std::string id  = itt->second.producer->id;
+				Speaker* speaker     = itt->second.speaker;
+				const std::string id = itt->second.producer->id;
 
 				if (id == dominantId || speaker->paused)
 				{
@@ -344,7 +306,7 @@ namespace RTC
 
 		for (auto itt = mapProducerSpeaker.begin(); itt != mapProducerSpeaker.end(); itt++)
 		{
-			RTC::Speaker* speaker = itt->second.speaker;
+			Speaker* speaker      = itt->second.speaker;
 			const std::string& id = itt->second.producer->id;
 			uint64_t idle         = now - speaker->lastLevelChangeTime;
 
@@ -359,14 +321,25 @@ namespace RTC
 		}
 	}
 
-	Speaker::Speaker()
+	ActiveSpeakerObserver::Speaker::Speaker()
 	{
 		MS_TRACE();
+
+		minLevel               = MinLevel;
+		nextMinLevel           = MinLevel;
+		immediateActivityScore = MinActivityScore;
+		mediumActivityScore    = MinActivityScore;
+		longActivityScore      = MinActivityScore;
+
+		immediates.resize(ImmediateBuffLen);
+		mediums.resize(MediumsBuffLen);
+		longs.resize(LongsBuffLen);
+		levels.resize(LevelsBuffLen);
 
 		lastLevelChangeTime = DepLibUV::GetTimeMs();
 	}
 
-	void Speaker::EvalActivityScores()
+	void ActiveSpeakerObserver::Speaker::EvalActivityScores()
 	{
 		MS_TRACE();
 
@@ -384,7 +357,7 @@ namespace RTC
 		}
 	}
 
-	double Speaker::GetActivityScore(int32_t interval)
+	double ActiveSpeakerObserver::Speaker::GetActivityScore(int32_t interval)
 	{
 		MS_TRACE();
 
@@ -403,7 +376,7 @@ namespace RTC
 		return 0;
 	}
 
-	void Speaker::LevelChanged(uint32_t level, uint64_t time)
+	void ActiveSpeakerObserver::Speaker::LevelChanged(uint32_t level, uint64_t time)
 	{
 		if (lastLevelChangeTime <= time)
 		{
@@ -432,14 +405,14 @@ namespace RTC
 		}
 	}
 
-	void Speaker::LevelTimedOut()
+	void ActiveSpeakerObserver::Speaker::LevelTimedOut()
 	{
 		MS_TRACE();
 
 		LevelChanged(MinLevel, lastLevelChangeTime);
 	}
 
-	bool Speaker::ComputeImmediates()
+	bool ActiveSpeakerObserver::Speaker::ComputeImmediates()
 	{
 		MS_TRACE();
 
@@ -467,37 +440,37 @@ namespace RTC
 		return changed;
 	}
 
-	bool Speaker::ComputeMediums()
+	bool ActiveSpeakerObserver::Speaker::ComputeMediums()
 	{
 		MS_TRACE();
-		return ComputeBigs<ImmediateBuffLen, MediumsBuffLen>(immediates, mediums, MediumThreshold);
+		return ComputeBigs(immediates, mediums, MediumThreshold);
 	}
 
-	bool Speaker::ComputeLongs()
+	bool ActiveSpeakerObserver::Speaker::ComputeLongs()
 	{
 		MS_TRACE();
-		return ComputeBigs<MediumsBuffLen, LongsBuffLen>(mediums, longs, LongThreashold);
+		return ComputeBigs(mediums, longs, LongThreashold);
 	}
 
-	void Speaker::EvalImmediateActivityScore()
+	void ActiveSpeakerObserver::Speaker::EvalImmediateActivityScore()
 	{
 		MS_TRACE();
 		immediateActivityScore = ComputeActivityScore(immediates[0], N1, 0.5, 0.78);
 	}
 
-	void Speaker::EvalMediumActivityScore()
+	void ActiveSpeakerObserver::Speaker::EvalMediumActivityScore()
 	{
 		MS_TRACE();
 		mediumActivityScore = ComputeActivityScore(mediums[0], N2, 0.5, 24);
 	}
 
-	void Speaker::EvalLongActivityScore()
+	void ActiveSpeakerObserver::Speaker::EvalLongActivityScore()
 	{
 		MS_TRACE();
 		longActivityScore = ComputeActivityScore(longs[0], N3, 0.5, 47);
 	}
 
-	void Speaker::UpdateMinLevel(int8_t level)
+	void ActiveSpeakerObserver::Speaker::UpdateMinLevel(int8_t level)
 	{
 		MS_TRACE();
 

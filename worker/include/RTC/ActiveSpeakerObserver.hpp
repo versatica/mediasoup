@@ -16,15 +16,48 @@
 // https://github.com/jitsi/jitsi-utils/blob/master/src/main/java/org/jitsi/utils/dsi/DominantSpeakerIdentification.java
 namespace RTC
 {
-	class Speaker;
-
 	class ActiveSpeakerObserver : public RTC::RtpObserver, public Timer::Listener
 	{
 	private:
+		class Speaker
+		{
+		public:
+			bool paused{ false };
+			double immediateActivityScore;
+			double mediumActivityScore;
+			double longActivityScore;
+			uint64_t lastLevelChangeTime{ 0 };
+
+			Speaker();
+			void EvalActivityScores();
+			double GetActivityScore(int32_t interval);
+			void LevelChanged(uint32_t level, uint64_t time);
+			void LevelTimedOut();
+
+		private:
+			uint8_t minLevel;
+			uint8_t nextMinLevel;
+			uint32_t nextMinLevelWindowLen{ 0 };
+
+			std::vector<uint8_t> immediates;
+			std::vector<uint8_t> mediums;
+			std::vector<uint8_t> longs;
+			std::vector<uint8_t> levels;
+
+		private:
+			bool ComputeImmediates();
+			bool ComputeLongs();
+			bool ComputeMediums();
+			void EvalImmediateActivityScore();
+			void EvalMediumActivityScore();
+			void EvalLongActivityScore();
+			void UpdateMinLevel(int8_t level);
+		};
+
 		struct ProducerSpeaker
 		{
 			RTC::Producer* producer;
-			RTC::Speaker* speaker;
+			Speaker* speaker;
 		};
 
 	public:
