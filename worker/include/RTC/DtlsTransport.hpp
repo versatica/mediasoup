@@ -63,6 +63,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			// DTLS is in the process of negotiating a secure connection. Incoming
 			// media can flow through.
 			// NOTE: The caller MUST NOT call any method during this callback.

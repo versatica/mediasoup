@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 using namespace RTC;
 

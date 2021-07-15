@@ -2,7 +2,7 @@
 #define MS_PAYLOAD_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 

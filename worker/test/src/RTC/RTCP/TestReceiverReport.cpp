@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp" // sizeof(SenderReport::Header)
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 using namespace RTC::RTCP;
 

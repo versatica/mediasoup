@@ -127,7 +127,7 @@ function get_catch()
 {
 	GIT_REPO="https://github.com/catchorg/Catch2.git"
 	GIT_TAG="v2.13.5"
-	DEST="deps/catch"
+	DEST="deps/catch2"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }

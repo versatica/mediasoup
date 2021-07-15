@@ -5,8 +5,8 @@
 #include "Utils.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
-#include <json.hpp>
 #include <usrsctp.h>
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
@@ -37,6 +37,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) = 0;
 			virtual void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation)  = 0;

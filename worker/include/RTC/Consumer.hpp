@@ -14,7 +14,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -28,6 +28,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;

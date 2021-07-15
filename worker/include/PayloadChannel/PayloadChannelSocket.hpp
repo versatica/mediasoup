@@ -5,7 +5,7 @@
 #include "PayloadChannel/Notification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 namespace PayloadChannel
 {
@@ -14,6 +14,9 @@ namespace PayloadChannel
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
 			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) = 0;
@@ -57,6 +60,9 @@ namespace PayloadChannel
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnPayloadChannelNotification(
 			  PayloadChannel::PayloadChannelSocket* payloadChannel,
