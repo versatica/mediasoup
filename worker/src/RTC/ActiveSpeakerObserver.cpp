@@ -151,10 +151,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (producer->GetKind() != RTC::Media::Kind::AUDIO)
-			MS_THROW_TYPE_ERROR("not an audio Producer");
-
-		this->mapProducerSpeaker[producer->id].speaker->paused = false;
+		auto it = this->mapProducerSpeaker.find(producer->id);
+		
+		if (it != this->mapProducerSpeaker.end())
+		{
+			auto& rtpObserver = it->second;
+			
+			rtpObserver.speaker->paused = false;
+		}
 	}
 
 	void ActiveSpeakerObserver::ProducerPaused(RTC::Producer* producer)
