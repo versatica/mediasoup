@@ -44,6 +44,7 @@ namespace Channel
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
 		jsonNotification["data"]     = data;
+
 		ChannelNotifier::channel->Send(jsonNotification);
 	}
 } // namespace Channel

@@ -152,11 +152,11 @@ namespace RTC
 		MS_TRACE();
 
 		auto it = this->mapProducerSpeaker.find(producer->id);
-		
+
 		if (it != this->mapProducerSpeaker.end())
 		{
 			auto& rtpObserver = it->second;
-			
+
 			rtpObserver.speaker->paused = false;
 		}
 	}
@@ -165,7 +165,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->mapProducerSpeaker[producer->id].speaker->paused = true;
+		auto it = this->mapProducerSpeaker.find(producer->id);
+
+		if (it != this->mapProducerSpeaker.end())
+		{
+			auto& rtpObserver = it->second;
+
+			rtpObserver.speaker->paused = true;
+		}
 	}
 
 	void ActiveSpeakerObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
@@ -181,8 +188,15 @@ namespace RTC
 		if (!packet->ReadSsrcAudioLevel(volume, voice))
 			return;
 
-		uint64_t now = DepLibUV::GetTimeMs();
-		this->mapProducerSpeaker[producer->id].speaker->LevelChanged(volume, now);
+		auto it = this->mapProducerSpeaker.find(producer->id);
+
+		if (it != this->mapProducerSpeaker.end())
+		{
+			auto& rtpObserver = it->second;
+			uint64_t now      = DepLibUV::GetTimeMs();
+
+			rtpObserver.speaker->paused = LevelChanged(volume, now);
+		}
 	}
 
 	void ActiveSpeakerObserver::Paused()
