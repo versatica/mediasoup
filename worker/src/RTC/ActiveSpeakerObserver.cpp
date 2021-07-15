@@ -195,7 +195,7 @@ namespace RTC
 			auto& rtpObserver = it->second;
 			uint64_t now      = DepLibUV::GetTimeMs();
 
-			rtpObserver.speaker->paused = LevelChanged(volume, now);
+			rtpObserver.speaker->LevelChanged(volume, now);
 		}
 	}
 
