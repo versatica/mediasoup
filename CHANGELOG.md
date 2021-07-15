@@ -3,7 +3,10 @@
 
 ### Unreleased
 
-* Update `libuv` to 1.41.0. 
+
+### 3.7.19
+
+* Update `libuv` to 1.41.0.
 * Update NPM deps.
 * C++:
   - Move header includes (PR #608).
