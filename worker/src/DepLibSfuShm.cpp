@@ -171,27 +171,24 @@ namespace DepLibSfuShm {
     }
     else // video
     {
-      this->media[1].rtp_seq_offset = (this->media[1].last_rtp_seq == UINT64_UNSET) ? 0 : this->media[1].last_rtp_seq;
-      this->media[1].sr_written = false;
-      this->media[1].sr_received = false;
-
       // drain video frames queue
       if (videoPktBuffer.size() > 0)
       {
-        std::list<ShmQueueItem>::iterator firstIt, lastIt;
-        firstIt = this->videoPktBuffer.begin();
-        lastIt = this->videoPktBuffer.end();
+        auto firstIt = this->videoPktBuffer.begin();
+        auto lastIt = this->videoPktBuffer.rend();
 
-        MS_DEBUG_TAG(xcode, "shm[%s] start draining video buffer [%" PRIu64 "-%" PRIu64 "] qsize=%zu", 
-          this->stream_name.c_str(), firstIt->seqid, lastIt->seqid, videoPktBuffer.size());
+        MS_DEBUG_TAG(xcode, "shm[%s] start draining video buffer qsize=%zu", this->stream_name.c_str(), videoPktBuffer.size());
 
         this->Dequeue();
 
         // remove whatever might have still be in the list
         this->videoPktBuffer.clear();
-
-        MS_DEBUG_TAG(xcode, "shm[%s] end draining video buffer , new offset %" PRIu64, this->stream_name.c_str(), this->media[1].rtp_seq_offset);
       }
+      this->media[1].rtp_seq_offset = (this->media[1].last_rtp_seq == UINT64_UNSET) ? 0 : this->media[1].last_rtp_seq;
+      this->media[1].sr_written = false;
+      this->media[1].sr_received = false;
+
+      MS_DEBUG_TAG(xcode, "shm[%s] new video seqid offset %" PRIu64, this->stream_name.c_str(), this->media[1].rtp_seq_offset);
     }
 
     ShmCtx::UpdateRtpStats(UINT64_UNSET, UINT64_UNSET, kind);
