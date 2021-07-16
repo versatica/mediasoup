@@ -387,8 +387,7 @@ namespace RTC
 			case 2:
 				return longActivityScore;
 			default:
-				MS_ASSERT(false, "Interval is invalid");
-				break;
+				MS_ABORT("interval is invalid");
 		}
 		return 0;
 	}
