@@ -327,10 +327,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto itt = mapProducerSpeaker.begin(); itt != mapProducerSpeaker.end(); itt++)
+		for (auto it = mapProducerSpeaker.begin(); it != mapProducerSpeaker.end(); ++it)
 		{
-			Speaker* speaker      = itt->second.speaker;
-			const std::string& id = itt->second.producer->id;
+			Speaker* speaker      = it->second.speaker;
+			const std::string& id = it->second.producer->id;
 			uint64_t idle         = now - speaker->lastLevelChangeTime;
 
 			if (SpeakerIdleTimeout < idle && (dominantId.empty() || id != dominantId))
