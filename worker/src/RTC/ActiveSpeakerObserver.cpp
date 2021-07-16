@@ -40,7 +40,7 @@ namespace RTC
 		}
 
 		int64_t t = 1;
-		for (int64_t i = n, j = 1; i > r; i--, j++)
+		for (int64_t i = n, j = 1; i > r; i--, ++j)
 		{
 			t = t * i / j;
 		}
@@ -74,19 +74,21 @@ namespace RTC
 		{
 			uint8_t sum = 0;
 
-			for (uint32_t lEnd = l + littleLenPerBig; l < lEnd; l++)
+			for (uint32_t lEnd = l + littleLenPerBig; l < lEnd; ++l)
 			{
 				if (littles[l] > threashold)
 				{
 					sum++;
 				}
 			}
+
 			if (bigs[b] != sum)
 			{
 				bigs[b] = sum;
 				changed = true;
 			}
 		}
+
 		return changed;
 	}
 
