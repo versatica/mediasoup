@@ -136,9 +136,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (mapProducerSpeaker[producer->id].speaker != nullptr)
+		auto it = this->mapProducerSpeaker.find(producer->id);
+
+		if (it == this->mapProducerSpeaker.end())
 		{
-			delete mapProducerSpeaker[producer->id].speaker;
+			return;
+		}
+
+		if (this->mapProducerSpeaker[producer->id].speaker != nullptr)
+		{
+			delete this->mapProducerSpeaker[producer->id].speaker;
 		}
 
 		this->mapProducerSpeaker.erase(producer->id);

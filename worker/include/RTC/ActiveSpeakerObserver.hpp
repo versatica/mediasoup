@@ -3,7 +3,7 @@
 
 #include "RTC/RtpObserver.hpp"
 #include "handles/Timer.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -38,7 +38,6 @@ namespace RTC
 			uint8_t minLevel;
 			uint8_t nextMinLevel;
 			uint32_t nextMinLevelWindowLen{ 0 };
-
 			std::vector<uint8_t> immediates;
 			std::vector<uint8_t> mediums;
 			std::vector<uint8_t> longs;
