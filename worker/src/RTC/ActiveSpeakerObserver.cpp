@@ -490,6 +490,7 @@ namespace RTC
 	void ActiveSpeakerObserver::Speaker::EvalLongActivityScore()
 	{
 		MS_TRACE();
+
 		longActivityScore = ComputeActivityScore(longs[0], N3, 0.5, 47);
 	}
 
