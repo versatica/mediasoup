@@ -392,6 +392,7 @@ namespace RTC
 			default:
 				MS_ABORT("interval is invalid");
 		}
+
 		return 0;
 	}
 
