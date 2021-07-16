@@ -470,6 +470,7 @@ namespace RTC
 	bool ActiveSpeakerObserver::Speaker::ComputeLongs()
 	{
 		MS_TRACE();
+
 		return ComputeBigs(mediums, longs, LongThreashold);
 	}
 
