@@ -256,8 +256,9 @@ namespace RTC
 		}
 		else if (speakerCount == 1)
 		{
-			auto ittr     = mapProducerSpeaker.begin();
-			newDominantId = ittr->second.producer->id;
+			auto it = mapProducerSpeaker.begin();
+
+			newDominantId = it->second.producer->id;
 		}
 		else
 		{
