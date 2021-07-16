@@ -251,7 +251,7 @@ namespace Utils
 			return crc ^ ~0U;
 		}
 
-		static const uint8_t* GetHmacShA1(const std::string& key, const uint8_t* data, size_t len);
+		static const uint8_t* GetHmacSha1(const std::string& key, const uint8_t* data, size_t len);
 
 	private:
 		thread_local static uint32_t seed;
