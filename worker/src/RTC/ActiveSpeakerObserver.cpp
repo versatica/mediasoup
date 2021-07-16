@@ -228,6 +228,7 @@ namespace RTC
 
 		uint64_t now              = DepLibUV::GetTimeMs();
 		uint64_t levelIdleTimeout = LevelIdleTimeout - (now - lastLevelIdleTime);
+
 		if (levelIdleTimeout <= 0)
 		{
 			if (lastLevelIdleTime != 0)
