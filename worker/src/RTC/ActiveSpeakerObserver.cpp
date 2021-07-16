@@ -484,6 +484,7 @@ namespace RTC
 	void ActiveSpeakerObserver::Speaker::EvalMediumActivityScore()
 	{
 		MS_TRACE();
+
 		mediumActivityScore = ComputeActivityScore(mediums[0], N2, 0.5, 24);
 	}
 
