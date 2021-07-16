@@ -463,6 +463,7 @@ namespace RTC
 	bool ActiveSpeakerObserver::Speaker::ComputeMediums()
 	{
 		MS_TRACE();
+
 		return ComputeBigs(immediates, mediums, MediumThreshold);
 	}
 
