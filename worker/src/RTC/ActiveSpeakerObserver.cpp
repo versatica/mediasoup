@@ -242,7 +242,8 @@ namespace RTC
 		{
 			json data          = json::object();
 			data["producerId"] = this->dominantId;
-			Channel::ChannelNotifier::Emit(this->id, "dominantSpeaker", data);
+
+			Channel::ChannelNotifier::Emit(this->id, "dominantspeaker", data);
 		}
 	}
 
