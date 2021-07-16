@@ -314,6 +314,7 @@ namespace RTC
 		if (!newDominantId.empty() && newDominantId != dominantId)
 		{
 			dominantId = newDominantId;
+
 			return true;
 		}
 
