@@ -279,10 +279,10 @@ namespace RTC
 			dominantSpeaker->EvalActivityScores();
 			double newDominantC2 = C2;
 
-			for (auto itt = mapProducerSpeaker.begin(); itt != mapProducerSpeaker.end(); itt++)
+			for (auto it = mapProducerSpeaker.begin(); it != mapProducerSpeaker.end(); ++it)
 			{
-				Speaker* speaker     = itt->second.speaker;
-				const std::string id = itt->second.producer->id;
+				Speaker* speaker     = it->second.speaker;
+				const std::string id = it->second.producer->id;
 
 				if (id == dominantId || speaker->paused)
 				{
