@@ -57,6 +57,7 @@ export class ActiveSpeakerObserver extends RtpObserver
 
 					break;
 				}
+
 				default:
 				{
 					logger.error('ignoring unknown event "%s"', event);
