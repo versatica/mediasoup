@@ -369,9 +369,11 @@ namespace RTC
 		if (ComputeImmediates())
 		{
 			EvalImmediateActivityScore();
+
 			if (ComputeMediums())
 			{
 				EvalMediumActivityScore();
+
 				if (ComputeLongs())
 				{
 					EvalLongActivityScore();
