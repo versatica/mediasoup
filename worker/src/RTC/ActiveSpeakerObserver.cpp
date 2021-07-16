@@ -477,6 +477,7 @@ namespace RTC
 	void ActiveSpeakerObserver::Speaker::EvalImmediateActivityScore()
 	{
 		MS_TRACE();
+
 		immediateActivityScore = ComputeActivityScore(immediates[0], N1, 0.5, 0.78);
 	}
 
