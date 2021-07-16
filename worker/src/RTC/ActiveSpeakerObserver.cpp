@@ -78,7 +78,7 @@ namespace RTC
 			{
 				if (littles[l] > threashold)
 				{
-					sum++;
+					++sum;
 				}
 			}
 
