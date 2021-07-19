@@ -10,7 +10,7 @@ export interface ActiveSpeakerObserverOptions {
 }
 export interface ActiveSpeakerObserverActivity {
     /**
-     * The producer instance
+     * The producer instance.
      */
     producer: Producer;
 }
