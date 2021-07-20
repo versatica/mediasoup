@@ -234,18 +234,18 @@ namespace RTC
 		MS_TRACE();
 
 		uint64_t now              = DepLibUV::GetTimeMs();
-		uint64_t levelIdleTimeout = LevelIdleTimeout - (now - lastLevelIdleTime);
+		uint64_t levelIdleTimeout = LevelIdleTimeout - (now - this->lastLevelIdleTime);
 
 		if (levelIdleTimeout <= 0)
 		{
-			if (lastLevelIdleTime != 0)
+			if (this->lastLevelIdleTime != 0)
 			{
 				TimeoutIdleLevels(now);
 			}
-			lastLevelIdleTime = now;
+			this->lastLevelIdleTime = now;
 		}
 
-		if (mapProducerSpeaker.size() > 0 && CalculateActiveSpeaker())
+		if (!this->mapProducerSpeaker.empty() && CalculateActiveSpeaker())
 		{
 			json data          = json::object();
 			data["producerId"] = this->dominantId;
@@ -259,7 +259,7 @@ namespace RTC
 		MS_TRACE();
 
 		std::string newDominantId;
-		int32_t speakerCount = mapProducerSpeaker.size();
+		int32_t speakerCount = this->mapProducerSpeaker.size();
 
 		if (speakerCount == 0)
 		{
@@ -267,14 +267,14 @@ namespace RTC
 		}
 		else if (speakerCount == 1)
 		{
-			auto it = mapProducerSpeaker.begin();
+			auto it = this->mapProducerSpeaker.begin();
 
 			newDominantId = it->second.producer->id;
 		}
 		else
 		{
 			Speaker* dominantSpeaker =
-			  (dominantId.empty()) ? nullptr : mapProducerSpeaker[dominantId].speaker;
+			  (this->dominantId.empty()) ? nullptr : this->mapProducerSpeaker[this->dominantId].speaker;
 
 			if (dominantSpeaker == nullptr)
 			{
@@ -290,27 +290,27 @@ namespace RTC
 			dominantSpeaker->EvalActivityScores();
 			double newDominantC2 = C2;
 
-			for (auto it = mapProducerSpeaker.begin(); it != mapProducerSpeaker.end(); ++it)
+			for (auto it = this->mapProducerSpeaker.begin(); it != this->mapProducerSpeaker.end(); ++it)
 			{
-				Speaker* speaker     = it->second.speaker;
-				const std::string id = it->second.producer->id;
+				Speaker* speaker      = it->second.speaker;
+				const std::string& id  = it->second.producer->id;
 
-				if (id == dominantId || speaker->paused)
+				if (id == this->dominantId || speaker->paused)
 				{
 					continue;
 				}
 
 				speaker->EvalActivityScores();
 
-				for (int interval = 0; interval < relativeSpeachActivitiesLen; interval++)
+				for (int interval = 0; interval < this->relativeSpeachActivitiesLen; ++interval)
 				{
-					relativeSpeachActivities[interval] = std::log(
+					this->relativeSpeachActivities[interval] = std::log(
 					  dominantSpeaker->GetActivityScore(interval) / speaker->GetActivityScore(interval));
 				}
 
-				double c1 = relativeSpeachActivities[0];
-				double c2 = relativeSpeachActivities[1];
-				double c3 = relativeSpeachActivities[2];
+				double c1 = this->relativeSpeachActivities[0];
+				double c2 = this->relativeSpeachActivities[1];
+				double c3 = this->relativeSpeachActivities[2];
 
 				if ((c1 > C1) && (c2 > C2) && (c3 > C3) && (c2 > newDominantC2))
 				{
@@ -320,9 +320,9 @@ namespace RTC
 			}
 		}
 
-		if (!newDominantId.empty() && newDominantId != dominantId)
+		if (!newDominantId.empty() && newDominantId != this->dominantId)
 		{
-			dominantId = newDominantId;
+			this->dominantId = newDominantId;
 
 			return true;
 		}
@@ -334,13 +334,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = mapProducerSpeaker.begin(); it != mapProducerSpeaker.end(); ++it)
+		for (auto it = this->mapProducerSpeaker.begin(); it != this->mapProducerSpeaker.end(); ++it)
 		{
 			Speaker* speaker      = it->second.speaker;
 			const std::string& id = it->second.producer->id;
 			uint64_t idle         = now - speaker->lastLevelChangeTime;
 
-			if (SpeakerIdleTimeout < idle && (dominantId.empty() || id != dominantId))
+			if (SpeakerIdleTimeout < idle && (this->dominantId.empty() || id != this->dominantId))
 			{
 				speaker->paused = true;
 			}
@@ -355,18 +355,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		minLevel               = MinLevel;
-		nextMinLevel           = MinLevel;
-		immediateActivityScore = MinActivityScore;
-		mediumActivityScore    = MinActivityScore;
-		longActivityScore      = MinActivityScore;
+		this->minLevel               = MinLevel;
+		this->nextMinLevel           = MinLevel;
+		this->immediateActivityScore = MinActivityScore;
+		this->mediumActivityScore    = MinActivityScore;
+		this->longActivityScore      = MinActivityScore;
 
-		immediates.resize(ImmediateBuffLen);
-		mediums.resize(MediumsBuffLen);
-		longs.resize(LongsBuffLen);
-		levels.resize(LevelsBuffLen);
+		this->immediates.resize(ImmediateBuffLen);
+		this->mediums.resize(MediumsBuffLen);
+		this->longs.resize(LongsBuffLen);
+		this->levels.resize(LevelsBuffLen);
 
-		lastLevelChangeTime = DepLibUV::GetTimeMs();
+		this->lastLevelChangeTime = DepLibUV::GetTimeMs();
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalActivityScores()
@@ -396,11 +396,11 @@ namespace RTC
 		switch (interval)
 		{
 			case 0:
-				return immediateActivityScore;
+				return this->immediateActivityScore;
 			case 1:
-				return mediumActivityScore;
+				return this->mediumActivityScore;
 			case 2:
-				return longActivityScore;
+				return this->longActivityScore;
 			default:
 				MS_ABORT("interval is invalid");
 		}
@@ -410,9 +410,9 @@ namespace RTC
 
 	void ActiveSpeakerObserver::Speaker::LevelChanged(uint32_t level, uint64_t time)
 	{
-		if (lastLevelChangeTime <= time)
+		if (this->lastLevelChangeTime <= time)
 		{
-			lastLevelChangeTime = time;
+			this->lastLevelChangeTime = time;
 
 			int8_t b = 0;
 
@@ -429,9 +429,9 @@ namespace RTC
 				b = level;
 			}
 
-			std::copy(levels.begin(), levels.end() - 1, levels.begin() + 1);
+			std::copy(this->levels.begin(), this->levels.end() - 1, this->levels.begin() + 1);
 
-			levels[0] = b;
+			this->levels[0] = b;
 			UpdateMinLevel(b);
 			this->paused = false;
 		}
@@ -441,7 +441,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		LevelChanged(MinLevel, lastLevelChangeTime);
+		LevelChanged(MinLevel, this->lastLevelChangeTime);
 	}
 
 	bool ActiveSpeakerObserver::Speaker::ComputeImmediates()
@@ -453,7 +453,7 @@ namespace RTC
 
 		for (uint32_t i = 0; i < ImmediateBuffLen; ++i)
 		{
-			uint8_t level = levels[i];
+			uint8_t level = this->levels[i];
 
 			if (level < minLevel)
 			{
@@ -462,9 +462,9 @@ namespace RTC
 
 			uint8_t immediate = (level / SubunitLengthN1);
 
-			if (immediates[i] != immediate)
+			if (this->immediates[i] != immediate)
 			{
-				immediates[i] = immediate;
+				this->immediates[i] = immediate;
 				changed       = true;
 			}
 		}
@@ -476,35 +476,35 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return ComputeBigs(immediates, mediums, MediumThreshold);
+		return ComputeBigs(this->immediates, this->mediums, MediumThreshold);
 	}
 
 	bool ActiveSpeakerObserver::Speaker::ComputeLongs()
 	{
 		MS_TRACE();
 
-		return ComputeBigs(mediums, longs, LongThreashold);
+		return ComputeBigs(this->mediums, this->longs, LongThreashold);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalImmediateActivityScore()
 	{
 		MS_TRACE();
 
-		immediateActivityScore = ComputeActivityScore(immediates[0], N1, 0.5, 0.78);
+		this->immediateActivityScore = ComputeActivityScore(this->immediates[0], N1, 0.5, 0.78);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalMediumActivityScore()
 	{
 		MS_TRACE();
 
-		mediumActivityScore = ComputeActivityScore(mediums[0], N2, 0.5, 24);
+		this->mediumActivityScore = ComputeActivityScore(this->mediums[0], N2, 0.5, 24);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalLongActivityScore()
 	{
 		MS_TRACE();
 
-		longActivityScore = ComputeActivityScore(longs[0], N3, 0.5, 47);
+		this->longActivityScore = ComputeActivityScore(this->longs[0], N3, 0.5, 47);
 	}
 
 	void ActiveSpeakerObserver::Speaker::UpdateMinLevel(int8_t level)
@@ -516,43 +516,44 @@ namespace RTC
 			return;
 		}
 
-		if ((minLevel == MinLevel) || (minLevel > level))
+		if ((this->minLevel == MinLevel) || (this->minLevel > level))
 		{
-			minLevel              = level;
-			nextMinLevel          = MinLevel;
-			nextMinLevelWindowLen = 0;
+			this->minLevel              = level;
+			this->nextMinLevel          = MinLevel;
+			this->nextMinLevelWindowLen = 0;
 		}
 		else
 		{
-			if (nextMinLevel == MinLevel)
+			if (this->nextMinLevel == MinLevel)
 			{
-				nextMinLevel          = level;
-				nextMinLevelWindowLen = 1;
+				this->nextMinLevel          = level;
+				this->nextMinLevelWindowLen = 1;
 			}
 			else
 			{
-				if (nextMinLevel > level)
+				if (this->nextMinLevel > level)
 				{
-					nextMinLevel = level;
+					this->nextMinLevel = level;
 				}
-				nextMinLevelWindowLen++;
-				if (nextMinLevelWindowLen >= MinLevelWindowLen)
+				this->nextMinLevelWindowLen++;
+
+				if (this->nextMinLevelWindowLen >= MinLevelWindowLen)
 				{
-					double newMinLevel = std::sqrt((double)(minLevel * nextMinLevel));
+					double newMinLevel = std::sqrt(static_cast<double>(this->minLevel * this->nextMinLevel));
 
-					if (newMinLevel < MinLevel)
+					if (this->newMinLevel < MinLevel)
 					{
-						newMinLevel = MinLevel;
+						this->newMinLevel = MinLevel;
 					}
-					else if (newMinLevel > MaxLevel)
+					else if (this->newMinLevel > MaxLevel)
 					{
-						newMinLevel = MaxLevel;
+						this->newMinLevel = MaxLevel;
 					}
 
-					minLevel = (int8_t)newMinLevel;
+					this->minLevel = static_cast<int8_t>(this->newMinLevel);
 
-					nextMinLevel          = MinLevel;
-					nextMinLevelWindowLen = 0;
+					this->nextMinLevel          = MinLevel;
+					this->nextMinLevelWindowLen = 0;
 				}
 			}
 		}
