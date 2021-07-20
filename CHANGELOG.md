@@ -3,6 +3,9 @@
 
 ### Unreleased
 
+* Update `libuv` to 1.42.0.
+* Update NPM deps.
+
 
 ### 3.7.19
 

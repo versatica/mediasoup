@@ -206,6 +206,7 @@ TEST_DECLARE   (connection_fail_doesnt_auto_close)
 TEST_DECLARE   (shutdown_close_tcp)
 TEST_DECLARE   (shutdown_close_pipe)
 TEST_DECLARE   (shutdown_eof)
+TEST_DECLARE   (shutdown_simultaneous)
 TEST_DECLARE   (shutdown_twice)
 TEST_DECLARE   (callback_stack)
 TEST_DECLARE   (env_vars)
@@ -504,6 +505,10 @@ TEST_DECLARE   (handle_type_name)
 TEST_DECLARE   (req_type_name)
 TEST_DECLARE   (getters_setters)
 
+TEST_DECLARE   (not_writable_after_shutdown)
+TEST_DECLARE   (not_readable_nor_writable_on_read_error)
+TEST_DECLARE   (not_readable_on_eof)
+
 #ifndef _WIN32
 TEST_DECLARE  (fork_timer)
 TEST_DECLARE  (fork_socketpair)
@@ -524,6 +529,7 @@ TEST_DECLARE  (fork_threadpool_queue_work_simple)
 
 TEST_DECLARE  (idna_toascii)
 TEST_DECLARE  (utf8_decode1)
+TEST_DECLARE  (utf8_decode1_overrun)
 TEST_DECLARE  (uname)
 
 TEST_DECLARE  (metrics_idle_time)
@@ -778,6 +784,9 @@ TASK_LIST_START
 
   TEST_ENTRY  (shutdown_eof)
   TEST_HELPER (shutdown_eof, tcp4_echo_server)
+
+  TEST_ENTRY  (shutdown_simultaneous)
+  TEST_HELPER (shutdown_simultaneous, tcp4_echo_server)
 
   TEST_ENTRY  (shutdown_twice)
   TEST_HELPER (shutdown_twice, tcp4_echo_server)
@@ -1120,12 +1129,20 @@ TASK_LIST_START
 #endif
 
   TEST_ENTRY  (utf8_decode1)
+  TEST_ENTRY  (utf8_decode1_overrun)
   TEST_ENTRY  (uname)
 
 /* Doesn't work on z/OS because that platform uses EBCDIC, not ASCII. */
 #ifndef __MVS__
   TEST_ENTRY  (idna_toascii)
 #endif
+
+  TEST_ENTRY    (not_writable_after_shutdown)
+  TEST_HELPER   (not_writable_after_shutdown, tcp4_echo_server)
+  TEST_ENTRY    (not_readable_nor_writable_on_read_error)
+  TEST_HELPER   (not_readable_nor_writable_on_read_error, tcp4_echo_server)
+  TEST_ENTRY    (not_readable_on_eof)
+  TEST_HELPER   (not_readable_on_eof, tcp4_echo_server)
 
   TEST_ENTRY  (metrics_idle_time)
   TEST_ENTRY  (metrics_idle_time_thread)
