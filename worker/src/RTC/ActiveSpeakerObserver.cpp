@@ -128,6 +128,9 @@ namespace RTC
 		if (producer->GetKind() != RTC::Media::Kind::AUDIO)
 			MS_THROW_TYPE_ERROR("not an audio Producer");
 
+		if (this->mapProducerSpeaker.find(producer->id) != this->mapProducerSpeaker.end())
+			MS_THROW_ERROR("Producer already in map");
+
 		this->mapProducerSpeaker[producer->id].producer = producer;
 		this->mapProducerSpeaker[producer->id].speaker  = new Speaker();
 	}
@@ -541,16 +544,16 @@ namespace RTC
 				{
 					double newMinLevel = std::sqrt(static_cast<double>(this->minLevel * this->nextMinLevel));
 
-					if (this->newMinLevel < MinLevel)
+					if (newMinLevel < MinLevel)
 					{
-						this->newMinLevel = MinLevel;
+						newMinLevel = MinLevel;
 					}
-					else if (this->newMinLevel > MaxLevel)
+					else if (newMinLevel > MaxLevel)
 					{
-						this->newMinLevel = MaxLevel;
+						newMinLevel = MaxLevel;
 					}
 
-					this->minLevel = static_cast<int8_t>(this->newMinLevel);
+					this->minLevel = static_cast<int8_t>(newMinLevel);
 
 					this->nextMinLevel          = MinLevel;
 					this->nextMinLevelWindowLen = 0;

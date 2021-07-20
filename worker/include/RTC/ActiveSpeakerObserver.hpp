@@ -22,17 +22,27 @@ namespace RTC
 		class Speaker
 		{
 		public:
-			bool paused{ false };
-			double immediateActivityScore;
-			double mediumActivityScore;
-			double longActivityScore;
-			uint64_t lastLevelChangeTime{ 0 };
-
 			Speaker();
 			void EvalActivityScores();
 			double GetActivityScore(int32_t interval);
 			void LevelChanged(uint32_t level, uint64_t time);
 			void LevelTimedOut();
+			
+		private:
+			bool ComputeImmediates();
+			bool ComputeLongs();
+			bool ComputeMediums();
+			void EvalImmediateActivityScore();
+			void EvalMediumActivityScore();
+			void EvalLongActivityScore();
+			void UpdateMinLevel(int8_t level);
+
+		public:
+			bool paused{ false };
+			double immediateActivityScore;
+			double mediumActivityScore;
+			double longActivityScore;
+			uint64_t lastLevelChangeTime{ 0 };
 
 		private:
 			uint8_t minLevel;
@@ -42,15 +52,6 @@ namespace RTC
 			std::vector<uint8_t> mediums;
 			std::vector<uint8_t> longs;
 			std::vector<uint8_t> levels;
-
-		private:
-			bool ComputeImmediates();
-			bool ComputeLongs();
-			bool ComputeMediums();
-			void EvalImmediateActivityScore();
-			void EvalMediumActivityScore();
-			void EvalLongActivityScore();
-			void UpdateMinLevel(int8_t level);
 		};
 
 		struct ProducerSpeaker
