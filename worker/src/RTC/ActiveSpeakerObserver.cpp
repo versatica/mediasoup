@@ -237,7 +237,7 @@ namespace RTC
 		MS_TRACE();
 
 		uint64_t now              = DepLibUV::GetTimeMs();
-		uint64_t levelIdleTimeout = LevelIdleTimeout - (now - this->lastLevelIdleTime);
+		int64_t levelIdleTimeout = LevelIdleTimeout - (now - this->lastLevelIdleTime);
 
 		if (levelIdleTimeout <= 0)
 		{
