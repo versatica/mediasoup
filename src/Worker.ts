@@ -336,7 +336,14 @@ export class Worker extends EnhancedEventEmitter
 
 		this._pid = this._child.pid;
 
-		this._mslog = logFile; // all msworkers share the same log file
+		// each worker writes into its own log file: insert pid before file extension
+		this._mslog = path.format(
+			{
+				dir: path.dirname(logFile),
+				name: path.basename(logFile, path.extname(logFile)) + "." + this._pid,
+				ext: path.extname(logFile)
+			});
+
 
 		this._channel = new Channel(
 			{
@@ -365,7 +372,7 @@ export class Worker extends EnhancedEventEmitter
 			{
 				spawnDone = true;
 
-				logger.debug('worker process running [pid:%s]', this._pid);
+				logger.debug('worker process running [pid:%s][log:%s]', this._pid, this._mslog);
 
 				this.emit('@success');
 

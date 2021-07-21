@@ -1267,7 +1267,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_WARN_TAG(dtls, "DTLS remotely closed");
+		MS_DEBUG_TAG(dtls, "DTLS remotely closed");
 
 		// Notify the Node WebRtcTransport.
 		json data = json::object();

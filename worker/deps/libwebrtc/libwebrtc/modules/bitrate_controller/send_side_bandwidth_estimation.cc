@@ -93,7 +93,7 @@ bool ReadBweLossExperimentParameters(float* low_loss_threshold,
         // << "Bitrate must be smaller enough to avoid overflows.";
     return true;
   }
-  MS_WARN_TAG(bwe, "Failed to parse parameters for BweLossExperiment "
+  MS_DEBUG_TAG(bwe, "Failed to parse parameters for BweLossExperiment "
       "experiment from field trial string. Using default");
 
   *low_loss_threshold = kDefaultLowLossThreshold;
@@ -550,7 +550,7 @@ void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
              (last_timeout_.IsInfinite() ||
               at_time - last_timeout_ > kTimeoutInterval)) {
     if (in_timeout_experiment_) {
-      MS_WARN_TAG(bwe, "Feedback timed out (%s), reducint bitrate",
+      MS_DEBUG_TAG(bwe, "Feedback timed out (%s), reducint bitrate",
                           ToString(time_since_loss_feedback).c_str());
       new_bitrate = new_bitrate * 0.8;
       // Reset accumulators since we've already acted on missing feedback and
@@ -615,7 +615,7 @@ DataRate SendSideBandwidthEstimation::MaybeRampupOrBackoff(DataRate new_bitrate,
              (last_timeout_.IsInfinite() ||
               at_time - last_timeout_ > kTimeoutInterval)) {
     if (in_timeout_experiment_) {
-      MS_WARN_TAG(bwe,"Feedback timed out (%s), reducint bitrate",
+      MS_DEBUG_TAG(bwe,"Feedback timed out (%s), reducint bitrate",
                           ToString(time_since_loss_feedback).c_str());
       new_bitrate = new_bitrate * 0.8;
       // Reset accumulators since we've already acted on missing feedback and
@@ -652,7 +652,7 @@ void SendSideBandwidthEstimation::CapBitrateToThresholds(Timestamp at_time,
     MS_DEBUG_DEV("bitrate < min_bitrate_configured_");
     if (last_low_bitrate_log_.IsInfinite() ||
         at_time - last_low_bitrate_log_ > kLowBitrateLogPeriod) {
-      MS_WARN_TAG(bwe, "Estimated available bandwidth %s"
+      MS_DEBUG_TAG(bwe, "Estimated available bandwidth %s"
                         " is below configured min bitrate %s",
                         ToString(bitrate).c_str(),
                         ToString(min_bitrate_configured_).c_str());

@@ -157,7 +157,7 @@ int64_t PacedSender::UpdateTimeAndGetElapsedMs(int64_t now_us) {
   int64_t elapsed_time_ms = (now_us - time_last_process_us_ + 500) / 1000;
   time_last_process_us_ = now_us;
   if (elapsed_time_ms > kMaxElapsedTimeMs) {
-    MS_WARN_TAG(bwe, "elapsed time (%" PRIi64 " ms) longer than expected,"
+    MS_DEBUG_TAG(bwe, "elapsed time (%" PRIi64 " ms) longer than expected,"
                      " limiting to %" PRIi64 " ms",
                         elapsed_time_ms,
                         kMaxElapsedTimeMs);

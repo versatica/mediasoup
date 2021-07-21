@@ -462,7 +462,7 @@ namespace RTC
 				{
 					if (!tooOldPacketFound)
 					{
-						MS_WARN_TAG(
+						MS_DEBUG_TAG(
 						  rtx,
 						  "ignoring retransmission for too old packet "
 						  "[seq:%" PRIu16 ", max age:%" PRIu32 "ms, packet age:%" PRIu32 "ms]",
