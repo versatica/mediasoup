@@ -245,6 +245,7 @@
             'libuv/src/unix/procfs-exepath.c',
             'libuv/src/unix/random-getrandom.c',
             'libuv/src/unix/random-sysctl-linux.c',
+            'libuv/src/unix/epoll.c',
           ],
           'link_settings': {
             'libraries': [ '-ldl', '-lrt' ],
@@ -261,6 +262,7 @@
             'libuv/src/unix/procfs-exepath.c',
             'libuv/src/unix/random-getrandom.c',
             'libuv/src/unix/random-sysctl-linux.c',
+            'libuv/src/unix/epoll.c',
           ],
           'link_settings': {
             'libraries': [ '-ldl' ],
@@ -358,6 +360,7 @@
             'libuv/src/unix/pthread-fixes.c',
             'libuv/src/unix/os390.c',
             'libuv/src/unix/os390-syscalls.c'
+            'libuv/src/unix/os390-proctitle.c'
           ]
         }],
       ]
