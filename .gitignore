@@ -2,16 +2,8 @@
 /coverage/
 /NO_GIT/
 
-# clang-tidy stuff.
-/worker/compile_commands.json
-
-# gyp generated stuff.
+# Generated stuff.
 /worker/out/
-/worker/**/*.xcodeproj/
-/worker/**/*.sln
-/worker/**/*.vcxproj
-/worker/**/*.vcxproj.filters
-/worker/**/*.vcxproj.user
 
 # clang-fuzzer stuff is too big.
 /worker/deps/clang-fuzzer

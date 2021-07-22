@@ -96,7 +96,7 @@ Cleans built objects and binaries.
 
 ### `make clean-all`
 
-Cleans all objects and binaries, including those generated for library dependencies (such as libuv, openssl, libsrtp, etc).
+Cleans all objects and binaries as well as `meson` and `ninja` installed in local prefix with pip.
 
 
 ### `make xcode`
@@ -119,25 +119,13 @@ Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/
 Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
 
 
-### `make bear`
-
-Generates the `worker/compile_commands_template.json` file which is a ["Clang compilation database"](https://clang.llvm.org/docs/JSONCompilationDatabase.html).
-
-**Requirements:**
-
-* [Bear](https://github.com/rizsotto/Bear) is required.
-  - Install it in Debian/Ubuntu via `apt install bear` and in OSX via `brew install bear`.
-  - For now, Bear version must be 2.1.X.
-* Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean-all && make` before running `make bear`.
-
-
 ### `make tidy`
 
 Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code checks following `worker/.clang-tidy` rules.
 
 **Requirements:**
 
-* `make clean-all`, then `make` and then `make bear` must have been called first.
+* `make clean` and `make` must have been called first.
 * [PyYAML](https://pyyaml.org/) is required.
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 

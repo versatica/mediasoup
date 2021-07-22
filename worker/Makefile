@@ -2,58 +2,69 @@
 # make tasks for mediasoup-worker.
 #
 
-# Best effort to prefer Python 2 executable since there are yet pending issues
-# with gyp and Python3.
-PYTHON ?= $(shell command -v python2 2> /dev/null || command -v python 2> /dev/null || echo python3)
+# We need Python 3 here.
+PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
 MEDIASOUP_OUT_DIR ?= out
 MEDIASOUP_BUILDTYPE ?= Release
 GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
-BEAR ?= bear
-SED ?= sed
 DOCKER ?= docker
+PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
+MESON ?= $(PIP_DIR)/bin/meson
+MESON_ARGS ?= ""
+
+# Disable `*.pyc` files creation
+export PYTHONDONTWRITEBYTECODE = 1
+# Instruct `meson` where to look for ninja binary
+export NINJA = $(PIP_DIR)/bin/ninja
+# Instruct Python where to look for modules it needs, such that `meson` actually runs from installed location
+export PYTHONPATH = $(PIP_DIR)
 
 .PHONY:	\
-	default clean clean-all xcode lint format test bear tidy \
+	default meson-ninja setup clean clean-all mediasoup-worker xcode lint format test tidy \
 	fuzzer fuzzer-run-all docker-build docker-run libmediasoup-worker
 
-default:
-ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)
+default: mediasoup-worker
+
+meson-ninja:
+ifeq ($(wildcard $(PIP_DIR)),)
+	# Updated pip and setuptools are needed for meson
+	# `--system` is not present everywhere and is only needed as workaround for Debian-specific issue (copied from
+	# https://github.com/gluster/gstatus/pull/33), fallback to command without `--system` if the first one fails.
+	$(PYTHON) -m pip install --system --target=$(PIP_DIR) pip setuptools || \
+		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools
+	# Install `meson` and `ninja` using `pip` into custom location, so we don't depend on system-wide installation
+	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) meson ninja
+endif
+
+setup: meson-ninja
+ifeq ($(wildcard $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)),)
+ifeq ($(MEDIASOUP_BUILDTYPE),Release)
+	$(MESON) setup --buildtype release $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+else
+ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
+	$(MESON) setup --buildtype debug $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+else
+	$(MESON) setup --buildtype $(MEDIASOUP_BUILDTYPE) $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+endif
+endif
 endif
 
 clean:
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/mediasoup-worker
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/obj.target/mediasoup-worker
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/mediasoup-worker-test
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/obj.target/mediasoup-worker-test
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/mediasoup-worker-fuzzer
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/obj.target/mediasoup-worker-fuzzer
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/libmediasoup-worker.a
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Release/obj.target/libmediasoup-worker.a
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/mediasoup-worker
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/obj.target/mediasoup-worker
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/mediasoup-worker-test
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/obj.target/mediasoup-worker-test
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/mediasoup-worker-fuzzer
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/obj.target/mediasoup-worker-fuzzer
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/libmediasoup-worker.a
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/Debug/obj.target/libmediasoup-worker.a
+	$(RM) -rf $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 
 clean-all:
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)
-	$(RM) -rf $(ROOT_DIR)/mediasoup-worker.xcodeproj
-	$(RM) -rf $(ROOT_DIR)/mediasoup-worker-test.xcodeproj
-	$(RM) -rf $(ROOT_DIR)/deps/gyp/pylib/gyp/__pycache__
-	$(RM) -rf $(ROOT_DIR)/deps/gyp/pylib/gyp/generator/__pycache__
-	$(RM) -rf $(ROOT_DIR)/deps/*/*.xcodeproj
-	$(RM) -rf $(ROOT_DIR)/libwebrtc/*/*.xcodeproj
 
-xcode:
-	$(PYTHON) ./scripts/configure.py --format=xcode
+mediasoup-worker: setup
+ifeq ($(MEDIASOUP_WORKER_BIN),)
+	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker
+endif
+
+xcode: setup
+	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
 
 lint:
 	$(GULP) --gulpfile ./scripts/gulpfile.js lint:worker
@@ -61,38 +72,30 @@ lint:
 format:
 	$(GULP) --gulpfile ./scripts/gulpfile.js format:worker
 
-test:
+test: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-test
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)
+	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker-test
 	$(LCOV) --directory ./ --zerocounters
 	./$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 endif
 
-bear:
-	$(MAKE) clean
-	$(BEAR) -o compile_commands_template.json $(MAKE)
-	$(SED) -i" " "s|$(PWD)|PATH|g" compile_commands_template.json
-
 tidy:
-	$(SED) "s|PATH|$(PWD)|g" compile_commands_template.json > compile_commands.json
 	$(PYTHON) ./scripts/clang-tidy.py \
 		-clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy \
 		-clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements \
 		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
-		-p=. \
+		-p=$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) \
 		-j=$(CORES) \
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
 		-quiet
 
-fuzzer:
+fuzzer: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(PYTHON) ./scripts/configure.py -R mediasoup-worker-fuzzer
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)
+	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker-fuzzer
 endif
 
 fuzzer-run-all:
-	LSAN_OPTIONS=verbosity=1:log_threads=1 ./$(MEDIASOUP_OUT_DIR)/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+	LSAN_OPTIONS=verbosity=1:log_threads=1 ./$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
@@ -109,6 +112,5 @@ docker-run:
 		-v $(shell pwd)/../:/mediasoup \
 		mediasoup/docker:latest
 
-libmediasoup-worker:
-	$(PYTHON) ./scripts/configure.py -R libmediasoup-worker
-	$(MAKE) -j$(CORES) BUILDTYPE=$(MEDIASOUP_BUILDTYPE) -C $(MEDIASOUP_OUT_DIR)
+libmediasoup-worker: setup
+	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) libmediasoup-worker
