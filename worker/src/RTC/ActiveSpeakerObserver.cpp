@@ -281,7 +281,7 @@ namespace RTC
 
 			if (dominantSpeaker == nullptr)
 			{
-				auto item       = mapProducerSpeaker.begin();
+				auto item       = this->mapProducerSpeaker.begin();
 				newDominantId   = item->first;
 				dominantSpeaker = item->second.speaker;
 			}
