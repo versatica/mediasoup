@@ -6,8 +6,8 @@
 //! high level use cases (for instance, a "multi-party conference room" could involve various
 //! mediasoup routers, even in different physicals hosts).
 
-pub(super) mod audio_level_observer;
 pub(super) mod active_speaker_observer;
+pub(super) mod audio_level_observer;
 pub(super) mod consumer;
 pub(super) mod data_consumer;
 pub(super) mod data_producer;
@@ -21,8 +21,8 @@ mod tests;
 pub(super) mod transport;
 pub(super) mod webrtc_transport;
 
-use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
 use crate::active_speaker_observer::{ActiveSpeakerObserver, ActiveSpeakerObserverOptions};
+use crate::audio_level_observer::{AudioLevelObserver, AudioLevelObserverOptions};
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{
@@ -31,14 +31,14 @@ use crate::data_producer::{
 use crate::data_structures::{AppData, TransportListenIp};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
-    RouterCloseRequest,
-    RouterCreateAudioLevelObserverData, RouterCreateAudioLevelObserverRequest,
-    RouterCreateActiveSpeakerObserverData, RouterCreateActiveSpeakerObserverRequest,
-    RouterCreateDirectTransportData, RouterCreateDirectTransportRequest,
-    RouterCreatePipeTransportData, RouterCreatePipeTransportRequest,
-    RouterCreatePlainTransportData, RouterCreatePlainTransportRequest,
-    RouterCreateWebrtcTransportData, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
-    RouterInternal, RtpObserverInternal, TransportInternal,
+    RouterCloseRequest, RouterCreateActiveSpeakerObserverData,
+    RouterCreateActiveSpeakerObserverRequest, RouterCreateAudioLevelObserverData,
+    RouterCreateAudioLevelObserverRequest, RouterCreateDirectTransportData,
+    RouterCreateDirectTransportRequest, RouterCreatePipeTransportData,
+    RouterCreatePipeTransportRequest, RouterCreatePlainTransportData,
+    RouterCreatePlainTransportRequest, RouterCreateWebrtcTransportData,
+    RouterCreateWebrtcTransportRequest, RouterDumpRequest, RouterInternal, RtpObserverInternal,
+    TransportInternal,
 };
 use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,

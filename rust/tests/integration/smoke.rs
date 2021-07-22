@@ -1,6 +1,6 @@
 use futures_lite::future;
-use mediasoup::audio_level_observer::AudioLevelObserverOptions;
 use mediasoup::active_speaker_observer::ActiveSpeakerObserverOptions;
+use mediasoup::audio_level_observer::AudioLevelObserverOptions;
 use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventType};
 use mediasoup::data_consumer::DataConsumerOptions;
 use mediasoup::data_producer::DataProducerOptions;
@@ -333,7 +333,10 @@ fn smoke() {
             .await
             .unwrap();
 
-        println!("Active speaker observer: {:#?}", active_speaker_observer.id());
+        println!(
+            "Active speaker observer: {:#?}",
+            active_speaker_observer.id()
+        );
         println!(
             "Add producer to active speaker observer: {:#?}",
             active_speaker_observer

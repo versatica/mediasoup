@@ -308,22 +308,23 @@ impl ActiveSpeakerObserver {
                 match serde_json::from_value::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::DominantSpeaker(dominant_speaker) => {
-                            let DominantSpeakerNotification {
-                                producer_id,
-                            } = dominant_speaker;
-                             match router.get_producer(&producer_id) {
+                            let DominantSpeakerNotification { producer_id } = dominant_speaker;
+                            match router.get_producer(&producer_id) {
                                 Some(producer) => {
-                                    let dominant_speaker = ActiveSpeakerObserverDominantSpeaker { producer };
+                                    let dominant_speaker =
+                                        ActiveSpeakerObserverDominantSpeaker { producer };
 
                                     handlers.dominant_speaker.call(|callback| {
                                         callback(&dominant_speaker);
                                     });
-                                },
+                                }
                                 None => {
-                                    error!("Producer for dominant speaker event not found: {}", producer_id);
+                                    error!(
+                                        "Producer for dominant speaker event not found: {}",
+                                        producer_id
+                                    );
                                 }
                             };
-                            
                         }
                     },
                     Err(error) => {
@@ -363,7 +364,9 @@ impl ActiveSpeakerObserver {
     }
 
     /// Callback is called at most every interval (see [`ActiveSpeakerObserverOptions`]).
-    pub fn on_dominant_speaker<F: Fn(&ActiveSpeakerObserverDominantSpeaker) + Send + Sync + 'static>(
+    pub fn on_dominant_speaker<
+        F: Fn(&ActiveSpeakerObserverDominantSpeaker) + Send + Sync + 'static,
+    >(
         &self,
         callback: F,
     ) -> HandlerId {

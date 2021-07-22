@@ -1,5 +1,5 @@
-mod audio_level_observer;
 mod active_speaker_observer;
+mod audio_level_observer;
 mod consumer;
 mod data_consumer;
 mod data_producer;

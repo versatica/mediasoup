@@ -1,5 +1,5 @@
-use crate::audio_level_observer::AudioLevelObserverOptions;
 use crate::active_speaker_observer::ActiveSpeakerObserverOptions;
+use crate::audio_level_observer::AudioLevelObserverOptions;
 use crate::consumer::{
     ConsumerDump, ConsumerId, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
     ConsumerType,
@@ -422,7 +422,9 @@ pub(crate) struct RouterCreateActiveSpeakerObserverData {
 }
 
 impl RouterCreateActiveSpeakerObserverData {
-    pub(crate) fn from_options(active_speaker_observer_options: &ActiveSpeakerObserverOptions) -> Self {
+    pub(crate) fn from_options(
+        active_speaker_observer_options: &ActiveSpeakerObserverOptions,
+    ) -> Self {
         Self {
             interval: active_speaker_observer_options.interval,
         }

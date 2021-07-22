@@ -123,7 +123,10 @@ fn pause_resume() {
             .await
             .expect("Failed to create ActiveSpeakerObserver");
 
-            active_speaker_observer.pause().await.expect("Failed to pause");
+        active_speaker_observer
+            .pause()
+            .await
+            .expect("Failed to pause");
         assert_eq!(active_speaker_observer.paused(), true);
 
         active_speaker_observer
