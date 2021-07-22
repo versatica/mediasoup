@@ -16,7 +16,8 @@
         'OPENSSL_NO_HW',
       ],
       'conditions': [
-        [ 'openssl_no_asm==1', {
+        # Skip ASM on Windows due to linking challenges (see https://github.com/versatica/mediasoup/issues/604)
+        [ 'openssl_no_asm==1 or OS=="win"', {
           'includes': ['./openssl_no_asm.gypi'],
         }, 'target_arch=="arm64" and OS=="win"', {
           # VC-WIN64-ARM inherits from VC-noCE-common that has no asms.
