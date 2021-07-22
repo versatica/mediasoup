@@ -27,7 +27,7 @@ namespace RTC
 			double GetActivityScore(int32_t interval);
 			void LevelChanged(uint32_t level, uint64_t time);
 			void LevelTimedOut();
-			
+
 		private:
 			bool ComputeImmediates();
 			bool ComputeLongs();

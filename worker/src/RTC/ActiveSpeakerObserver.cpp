@@ -236,7 +236,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now              = DepLibUV::GetTimeMs();
+		uint64_t now             = DepLibUV::GetTimeMs();
 		int64_t levelIdleTimeout = LevelIdleTimeout - (now - this->lastLevelIdleTime);
 
 		if (levelIdleTimeout <= 0)
@@ -296,7 +296,7 @@ namespace RTC
 			for (auto it = this->mapProducerSpeaker.begin(); it != this->mapProducerSpeaker.end(); ++it)
 			{
 				Speaker* speaker      = it->second.speaker;
-				const std::string& id  = it->second.producer->id;
+				const std::string& id = it->second.producer->id;
 
 				if (id == this->dominantId || speaker->paused)
 				{
@@ -468,7 +468,7 @@ namespace RTC
 			if (this->immediates[i] != immediate)
 			{
 				this->immediates[i] = immediate;
-				changed       = true;
+				changed             = true;
 			}
 		}
 
