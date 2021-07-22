@@ -319,7 +319,7 @@ namespace RTC
 		jsonObject["timestamp"] = GetTimestamp();
 
 		// Add marker.
-		jsonObject["marker"] = HasMarker() ? "true" : "false";
+		jsonObject["marker"] = HasMarker();
 
 		// Add ssrc.
 		jsonObject["ssrc"] = GetSsrc();
