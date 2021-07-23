@@ -28,10 +28,16 @@ jobs:
             cxx: clang++
           # macOS 11 is in private preview currently.
           # - os: macos-11.0
-          # Windows needs to be tuned before it can run, I didn't bother, feel
-          # free to contribute.
-          # - os: windows-2019
-        # Just 1 Node.js version should be fine for C++.
+          - os: windows-2019
+            cc: gcc
+            cxx: g++
+          - os: windows-2019
+            cc: clang
+            cxx: clang++
+          - os: windows-2019
+            cc: cl
+            cxx: cl
+        # A single Node.js version should be fine for C++.
         node:
           - 14
 
@@ -42,8 +48,33 @@ jobs:
       CXX: ${{ matrix.build.cxx }}
 
     steps:
+      - name: Add MSVC compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows' && matrix.build.cc == 'cl'
+
+      # This is needed as a workaround for GNU linker being first in PATH and thus preventing Meson from finding MSVC
+      # linker.
+      - name: Remove GNU linker for MSVC
+        shell: bash
+        run: rm /usr/bin/link
+        if: runner.os == 'Windows' && matrix.build.cc == 'cl'
+
+      # Clang is in MSYS2's bin directory, but adding it to PATH breaks a lot of stuff, so let's just fix paths.
+      - name: Specify full path to Clang on Windows
+        run: |
+          echo "CC=C:\msys64\mingw64\bin\${env:CC}" >> $env:GITHUB_ENV
+          echo "CXX=C:\msys64\mingw64\bin\${env:CXX}" >> $env:GITHUB_ENV
+        if: runner.os == 'Windows' && matrix.build.cc == 'clang'
+
       - name: Checkout
         uses: actions/checkout@v2
+
+      - run: npm run install-clang-tools
+        # TODO: Maybe fix this one day
+        if: runner.os != 'Windows'
+      - run: npm run lint:worker
+        # TODO: Maybe fix this one day
+        if: runner.os != 'Windows'
 
       - name: Node.js
         uses: actions/setup-node@v2
@@ -59,7 +90,8 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      - run: npm install
-      - run: npm run install-clang-tools
-      - run: npm run lint:worker
+      - run: npm run postinstall
       - run: npm run test:worker
+        # All compilers on Windows can build everything, but tests fail to run on GCC/Clang with "Error -1073741511",
+        # remove condition below if you fixed it.
+        if: runner.os != 'Windows' || matrix.build.cc == 'cl'

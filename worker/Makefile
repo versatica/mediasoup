@@ -15,11 +15,16 @@ PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_ARGS ?= ""
 
-# Disable `*.pyc` files creation
+# Disable `*.pyc` files creation.
 export PYTHONDONTWRITEBYTECODE = 1
-# Instruct `meson` where to look for ninja binary
-export NINJA = $(PIP_DIR)/bin/ninja
-# Instruct Python where to look for modules it needs, such that `meson` actually runs from installed location
+# Instruct `meson` where to look for ninja binary.
+ifeq ($(OS),Windows_NT)
+	# Windows is, of course, special.
+    export NINJA = $(PIP_DIR)/bin/ninja.exe
+else
+    export NINJA = $(PIP_DIR)/bin/ninja
+endif
+# Instruct Python where to look for modules it needs, such that `meson` actually runs from installed location.
 export PYTHONPATH = $(PIP_DIR)
 
 .PHONY:	\
@@ -35,7 +40,7 @@ ifeq ($(wildcard $(PIP_DIR)),)
 	# https://github.com/gluster/gstatus/pull/33), fallback to command without `--system` if the first one fails.
 	$(PYTHON) -m pip install --system --target=$(PIP_DIR) pip setuptools || \
 		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools
-	# Install `meson` and `ninja` using `pip` into custom location, so we don't depend on system-wide installation
+	# Install `meson` and `ninja` using `pip` into custom location, so we don't depend on system-wide installation.
 	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) meson ninja
 endif
 
@@ -75,8 +80,13 @@ format:
 test: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker-test
+	# On Windows lcov doesn't work (at least not yet) and we need to add `.exe` to the binary path.
+ifeq ($(OS),Windows_NT)
+	./$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test.exe --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+else
 	$(LCOV) --directory ./ --zerocounters
 	./$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+endif
 endif
 
 tidy:

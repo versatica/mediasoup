@@ -19,8 +19,6 @@
 # Mac Stuff.
 .DS_Store
 
-# Python generated stuff in Windows.
-/worker/scripts/configure.pyc
 # worker scripts node-modules.
 /worker/scripts/node_modules/
 
