@@ -43,86 +43,6 @@ function get_dep()
 	cd ${WORKER_PWD}
 }
 
-function get_gyp()
-{
-	GIT_REPO="https://chromium.googlesource.com/external/gyp.git"
-	GIT_TAG="master"
-	DEST="deps/gyp"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-}
-
-function get_json()
-{
-	GIT_REPO="https://github.com/nlohmann/json.git"
-	GIT_TAG="v3.9.1"
-	DEST="deps/json"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-
-	echo ">>> [INFO] deleting large files and directories ..."
-	rm -rf \
-		${DEST}/benchmarks/ \
-		${DEST}/doc/ \
-		${DEST}/test/ \
-		${DEST}/third_party/
-}
-
-function get_libuv()
-{
-	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.42.0"
-	DEST="deps/libuv/libuv"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-}
-
-function get_openssl()
-{
-	echo ">>> [WARN] openssl dep must be entirely copied from Node project as it is" >&2
-	exit 1
-}
-
-function get_libsrtp()
-{
-	GIT_REPO="https://github.com/cisco/libsrtp.git"
-	GIT_TAG="v2.3.0"
-	DEST="deps/libsrtp/srtp"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-}
-
-function get_usrsctp()
-{
-	GIT_REPO="https://github.com/sctplab/usrsctp.git"
-	GIT_TAG="master"
-	DEST="deps/usrsctp/usrsctp"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-
-	echo ">>> [INFO] deleting large files and directories ..."
-	rm -rf \
-		${DEST}/fuzzer/
-}
-
-function get_abseil_cpp()
-{
-	GIT_REPO="https://github.com/abseil/abseil-cpp"
-	GIT_TAG="93d155bc4414f6c121bb1f19dba9fdb27c8943bc"
-	DEST="libwebrtc/deps/abseil-cpp/abseil-cpp"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-}
-
-function get_catch()
-{
-	GIT_REPO="https://github.com/catchorg/Catch2.git"
-	GIT_TAG="v2.13.7"
-	DEST="deps/catch2"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-}
-
 function get_lcov()
 {
 	GIT_REPO="https://github.com/linux-test-project/lcov.git"
@@ -162,44 +82,11 @@ function get_fuzzer_corpora()
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
 }
 
-function get_win_getopt()
-{
-	GIT_REPO="git@github.com:alex85k/wingetopt.git"
-	GIT_TAG="master"
-	DEST="deps/getopt/getopt"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-}
-
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|json|libuv|openssl|libsrtp|usrsctp|abseil-cpp|catch|lcov|clang-fuzzer|fuzzer-corpora|win-getopt]"
+		echo "  ./scripts/$(basename $0) [lcov|clang-fuzzer|fuzzer-corpora]"
 		echo
-		;;
-	gyp)
-		get_gyp
-		;;
-	json)
-		get_json
-		;;
-	libuv)
-		get_libuv
-		;;
-	openssl)
-		get_openssl
-		;;
-	libsrtp)
-		get_libsrtp
-		;;
-	usrsctp)
-		get_usrsctp
-		;;
-	abseil-cpp)
-		get_abseil_cpp
-		;;
-	catch)
-		get_catch
 		;;
 	lcov)
 		get_lcov
@@ -209,9 +96,6 @@ case "${DEP}" in
 		;;
 	fuzzer-corpora)
 		get_fuzzer_corpora
-		;;
-	win-getopt)
-		get_win_getopt
 		;;
 	*)
 		echo ">>> [ERROR] unknown dep '${DEP}'" >&2
