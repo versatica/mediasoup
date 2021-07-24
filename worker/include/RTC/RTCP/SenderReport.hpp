@@ -48,51 +48,51 @@ namespace RTC
 			}
 			uint32_t GetSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->ssrc) };
+				return (uint32_t){ ntohl(this->header->ssrc) };
 			}
 			void SetSsrc(uint32_t ssrc)
 			{
-				this->header->ssrc = uint32_t{ htonl(ssrc) };
+				this->header->ssrc = (uint32_t){ htonl(ssrc) };
 			}
 			uint32_t GetNtpSec() const
 			{
-				return uint32_t{ ntohl(this->header->ntpSec) };
+				return (uint32_t){ ntohl(this->header->ntpSec) };
 			}
 			void SetNtpSec(uint32_t ntpSec)
 			{
-				this->header->ntpSec = uint32_t{ htonl(ntpSec) };
+				this->header->ntpSec = (uint32_t){ htonl(ntpSec) };
 			}
 			uint32_t GetNtpFrac() const
 			{
-				return uint32_t{ ntohl(this->header->ntpFrac) };
+				return (uint32_t){ ntohl(this->header->ntpFrac) };
 			}
 			void SetNtpFrac(uint32_t ntpFrac)
 			{
-				this->header->ntpFrac = uint32_t{ htonl(ntpFrac) };
+				this->header->ntpFrac = (uint32_t){ htonl(ntpFrac) };
 			}
 			uint32_t GetRtpTs() const
 			{
-				return uint32_t{ ntohl(this->header->rtpTs) };
+				return (uint32_t){ ntohl(this->header->rtpTs) };
 			}
 			void SetRtpTs(uint32_t rtpTs)
 			{
-				this->header->rtpTs = uint32_t{ htonl(rtpTs) };
+				this->header->rtpTs = (uint32_t){ htonl(rtpTs) };
 			}
 			uint32_t GetPacketCount() const
 			{
-				return uint32_t{ ntohl(this->header->packetCount) };
+				return (uint32_t){ ntohl(this->header->packetCount) };
 			}
 			void SetPacketCount(uint32_t packetCount)
 			{
-				this->header->packetCount = uint32_t{ htonl(packetCount) };
+				this->header->packetCount = (uint32_t){ htonl(packetCount) };
 			}
 			uint32_t GetOctetCount() const
 			{
-				return uint32_t{ ntohl(this->header->octetCount) };
+				return (uint32_t){ ntohl(this->header->octetCount) };
 			}
 			void SetOctetCount(uint32_t octetCount)
 			{
-				this->header->octetCount = uint32_t{ htonl(octetCount) };
+				this->header->octetCount = (uint32_t){ htonl(octetCount) };
 			}
 
 		private:

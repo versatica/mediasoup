@@ -55,31 +55,31 @@ namespace RTC
 
 			uint32_t GetSequenceNumber() const
 			{
-				return uint32_t{ ntohl(this->header->sequenceNumber) };
+				return (uint32_t){ ntohl(this->header->sequenceNumber) };
 			}
 			uint32_t GetEct0Counter() const
 			{
-				return uint32_t{ ntohl(this->header->ect0Counter) };
+				return (uint32_t){ ntohl(this->header->ect0Counter) };
 			}
 			uint32_t GetEct1Counter() const
 			{
-				return uint32_t{ ntohl(this->header->ect1Counter) };
+				return (uint32_t){ ntohl(this->header->ect1Counter) };
 			}
 			uint16_t GetEcnCeCounter() const
 			{
-				return uint16_t{ ntohs(this->header->ecnCeCounter) };
+				return (uint16_t){ ntohs(this->header->ecnCeCounter) };
 			}
 			uint16_t GetNotEctCounter() const
 			{
-				return uint16_t{ ntohs(this->header->notEctCounter) };
+				return (uint16_t){ ntohs(this->header->notEctCounter) };
 			}
 			uint16_t GetLostPackets() const
 			{
-				return uint16_t{ ntohs(this->header->lostPackets) };
+				return (uint16_t){ ntohs(this->header->lostPackets) };
 			}
 			uint16_t GetDuplicatedPackets() const
 			{
-				return uint16_t{ ntohs(this->header->duplicatedPackets) };
+				return (uint16_t){ ntohs(this->header->duplicatedPackets) };
 			}
 
 			/* Virtual methods inherited from FeedbackItem. */

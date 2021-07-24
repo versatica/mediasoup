@@ -16,7 +16,7 @@ namespace RTC
 
 			this->raw          = new uint8_t[sizeof(Header)];
 			this->header       = reinterpret_cast<Header*>(this->raw);
-			this->header->ssrc = uint32_t{ htonl(ssrc) };
+			this->header->ssrc = (uint32_t){ htonl(ssrc) };
 		}
 
 		size_t FeedbackPsLeiItem::Serialize(uint8_t* buffer)

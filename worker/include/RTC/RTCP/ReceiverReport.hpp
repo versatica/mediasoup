@@ -50,15 +50,15 @@ namespace RTC
 			}
 			uint32_t GetSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->ssrc) };
+				return (uint32_t){ ntohl(this->header->ssrc) };
 			}
 			void SetSsrc(uint32_t ssrc)
 			{
-				this->header->ssrc = uint32_t{ htonl(ssrc) };
+				this->header->ssrc = (uint32_t){ htonl(ssrc) };
 			}
 			uint8_t GetFractionLost() const
 			{
-				return uint8_t{ Utils::Byte::Get1Byte((uint8_t*)this->header, 4) };
+				return (uint8_t){ Utils::Byte::Get1Byte((uint8_t*)this->header, 4) };
 			}
 			void SetFractionLost(uint8_t fractionLost)
 			{
@@ -66,7 +66,7 @@ namespace RTC
 			}
 			int32_t GetTotalLost() const
 			{
-				auto value = uint32_t{ Utils::Byte::Get3Bytes((uint8_t*)this->header, 5) };
+				auto value = (uint32_t){ Utils::Byte::Get3Bytes((uint8_t*)this->header, 5) };
 
 				// Possitive value.
 				if (((value >> 23) & 1) == 0)
@@ -90,35 +90,35 @@ namespace RTC
 			}
 			uint32_t GetLastSeq() const
 			{
-				return uint32_t{ ntohl(this->header->lastSeq) };
+				return (uint32_t){ ntohl(this->header->lastSeq) };
 			}
 			void SetLastSeq(uint32_t lastSeq)
 			{
-				this->header->lastSeq = uint32_t{ htonl(lastSeq) };
+				this->header->lastSeq = (uint32_t){ htonl(lastSeq) };
 			}
 			uint32_t GetJitter() const
 			{
-				return uint32_t{ ntohl(this->header->jitter) };
+				return (uint32_t){ ntohl(this->header->jitter) };
 			}
 			void SetJitter(uint32_t jitter)
 			{
-				this->header->jitter = uint32_t{ htonl(jitter) };
+				this->header->jitter = (uint32_t){ htonl(jitter) };
 			}
 			uint32_t GetLastSenderReport() const
 			{
-				return uint32_t{ ntohl(this->header->lsr) };
+				return (uint32_t){ ntohl(this->header->lsr) };
 			}
 			void SetLastSenderReport(uint32_t lsr)
 			{
-				this->header->lsr = uint32_t{ htonl(lsr) };
+				this->header->lsr = (uint32_t){ htonl(lsr) };
 			}
 			uint32_t GetDelaySinceLastSenderReport() const
 			{
-				return uint32_t{ ntohl(this->header->dlsr) };
+				return (uint32_t){ ntohl(this->header->dlsr) };
 			}
 			void SetDelaySinceLastSenderReport(uint32_t dlsr)
 			{
-				this->header->dlsr = uint32_t{ htonl(dlsr) };
+				this->header->dlsr = (uint32_t){ htonl(dlsr) };
 			}
 
 		private:

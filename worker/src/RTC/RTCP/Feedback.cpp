@@ -56,8 +56,8 @@ namespace RTC
 		{
 			this->raw                = new uint8_t[sizeof(Header)];
 			this->header             = reinterpret_cast<Header*>(this->raw);
-			this->header->senderSsrc = uint32_t{ htonl(senderSsrc) };
-			this->header->mediaSsrc  = uint32_t{ htonl(mediaSsrc) };
+			this->header->senderSsrc = (uint32_t){ htonl(senderSsrc) };
+			this->header->mediaSsrc  = (uint32_t){ htonl(mediaSsrc) };
 		}
 
 		template<typename T>

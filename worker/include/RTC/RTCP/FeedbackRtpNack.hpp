@@ -42,11 +42,11 @@ namespace RTC
 
 			uint16_t GetPacketId() const
 			{
-				return uint16_t{ ntohs(this->header->packetId) };
+				return (uint16_t){ ntohs(this->header->packetId) };
 			}
 			uint16_t GetLostPacketBitmask() const
 			{
-				return uint16_t{ ntohs(this->header->lostPacketBitmask) };
+				return (uint16_t){ ntohs(this->header->lostPacketBitmask) };
 			}
 			size_t CountRequestedPackets() const
 			{

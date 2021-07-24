@@ -16,8 +16,8 @@ namespace RTC
 			this->raw    = new uint8_t[sizeof(Header)];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
-			this->header->packetId          = uint16_t{ htons(packetId) };
-			this->header->lostPacketBitmask = uint16_t{ htons(lostPacketBitmask) };
+			this->header->packetId          = (uint16_t){ htons(packetId) };
+			this->header->lostPacketBitmask = (uint16_t){ htons(lostPacketBitmask) };
 		}
 
 		size_t FeedbackRtpNackItem::Serialize(uint8_t* buffer)

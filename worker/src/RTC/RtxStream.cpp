@@ -130,7 +130,7 @@ namespace RTC
 			// Express delay in units of 1/65536 seconds.
 			uint32_t dlsr = (delayMs / 1000) << 16;
 
-			dlsr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
+			dlsr |= (uint32_t){ (delayMs % 1000) * 65536 / 1000 };
 
 			report->SetDelaySinceLastSenderReport(dlsr);
 			report->SetLastSenderReport(this->lastSrTimestamp);

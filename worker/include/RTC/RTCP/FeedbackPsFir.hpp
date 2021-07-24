@@ -49,7 +49,7 @@ namespace RTC
 
 			uint32_t GetSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->ssrc) };
+				return (uint32_t){ ntohl(this->header->ssrc) };
 			}
 			uint8_t GetSequenceNumber() const
 			{

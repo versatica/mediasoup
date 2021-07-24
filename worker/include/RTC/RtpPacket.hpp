@@ -186,32 +186,32 @@ namespace RTC
 
 		uint16_t GetSequenceNumber() const
 		{
-			return uint16_t{ ntohs(this->header->sequenceNumber) };
+			return (uint16_t){ ntohs(this->header->sequenceNumber) };
 		}
 
 		void SetSequenceNumber(uint16_t seq)
 		{
-			this->header->sequenceNumber = uint16_t{ htons(seq) };
+			this->header->sequenceNumber = (uint16_t){ htons(seq) };
 		}
 
 		uint32_t GetTimestamp() const
 		{
-			return uint32_t{ ntohl(this->header->timestamp) };
+			return (uint32_t){ ntohl(this->header->timestamp) };
 		}
 
 		void SetTimestamp(uint32_t timestamp)
 		{
-			this->header->timestamp = uint32_t{ htonl(timestamp) };
+			this->header->timestamp = (uint32_t){ htonl(timestamp) };
 		}
 
 		uint32_t GetSsrc() const
 		{
-			return uint32_t{ ntohl(this->header->ssrc) };
+			return (uint32_t){ ntohl(this->header->ssrc) };
 		}
 
 		void SetSsrc(uint32_t ssrc)
 		{
-			this->header->ssrc = uint32_t{ htonl(ssrc) };
+			this->header->ssrc = (uint32_t){ htonl(ssrc) };
 		}
 
 		bool HasHeaderExtension() const
@@ -227,7 +227,7 @@ namespace RTC
 			if (!this->headerExtension)
 				return 0u;
 
-			return uint16_t{ ntohs(this->headerExtension->id) };
+			return (uint16_t){ ntohs(this->headerExtension->id) };
 		}
 
 		size_t GetHeaderExtensionLength() const

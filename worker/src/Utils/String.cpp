@@ -108,7 +108,7 @@ namespace Utils
 		{
 			dtable[Base64Table[i]] = static_cast<uint8_t>(i);
 		}
-		dtable[uint8_t{ '=' }] = 0;
+		dtable[(uint8_t){ '=' }] = 0;
 
 		count = 0;
 		for (i = 0; i < len; ++i)

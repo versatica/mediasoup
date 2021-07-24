@@ -99,7 +99,7 @@ namespace RTC
 			// Fill the common header.
 			this->header->blockType = static_cast<uint8_t>(this->type);
 			this->header->reserved  = 0;
-			this->header->length    = uint16_t{ htons(length) };
+			this->header->length    = (uint16_t){ htons(length) };
 
 			std::memcpy(buffer, this->header, sizeof(ExtendedReportBlock::CommonHeader));
 

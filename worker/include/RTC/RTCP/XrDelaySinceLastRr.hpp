@@ -65,27 +65,27 @@ namespace RTC
 				}
 				uint32_t GetSsrc() const
 				{
-					return uint32_t{ ntohl(this->body->ssrc) };
+					return (uint32_t){ ntohl(this->body->ssrc) };
 				}
 				void SetSsrc(uint32_t ssrc)
 				{
-					this->body->ssrc = uint32_t{ htonl(ssrc) };
+					this->body->ssrc = (uint32_t){ htonl(ssrc) };
 				}
 				uint32_t GetLastReceiverReport() const
 				{
-					return uint32_t{ ntohl(this->body->lrr) };
+					return (uint32_t){ ntohl(this->body->lrr) };
 				}
 				void SetLastReceiverReport(uint32_t lrr)
 				{
-					this->body->lrr = uint32_t{ htonl(lrr) };
+					this->body->lrr = (uint32_t){ htonl(lrr) };
 				}
 				uint32_t GetDelaySinceLastReceiverReport() const
 				{
-					return uint32_t{ ntohl(this->body->dlrr) };
+					return (uint32_t){ ntohl(this->body->dlrr) };
 				}
 				void SetDelaySinceLastReceiverReport(uint32_t dlrr)
 				{
-					this->body->dlrr = uint32_t{ htonl(dlrr) };
+					this->body->dlrr = (uint32_t){ htonl(dlrr) };
 				}
 
 			private:

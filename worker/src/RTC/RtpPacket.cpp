@@ -399,9 +399,9 @@ namespace RTC
 		else if (this->headerExtension)
 		{
 			if (type == 1u)
-				this->headerExtension->id = uint16_t{ htons(0xBEDE) };
+				this->headerExtension->id = (uint16_t){ htons(0xBEDE) };
 			else if (type == 2u)
-				this->headerExtension->id = uint16_t{ htons(0b0001000000000000) };
+				this->headerExtension->id = (uint16_t){ htons(0b0001000000000000) };
 		}
 
 		// Calculate total size required for all extensions (with padding if needed).
@@ -473,9 +473,9 @@ namespace RTC
 
 			// Set the header extension id.
 			if (type == 1u)
-				this->headerExtension->id = uint16_t{ htons(0xBEDE) };
+				this->headerExtension->id = (uint16_t){ htons(0xBEDE) };
 			else if (type == 2u)
-				this->headerExtension->id = uint16_t{ htons(0b0001000000000000) };
+				this->headerExtension->id = (uint16_t){ htons(0b0001000000000000) };
 
 			// Set the header extension length.
 			this->headerExtension->length = htons(extensionsTotalSize / 4);

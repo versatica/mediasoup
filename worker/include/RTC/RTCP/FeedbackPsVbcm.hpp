@@ -52,19 +52,19 @@ namespace RTC
 
 			uint32_t GetSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->ssrc) };
+				return (uint32_t){ ntohl(this->header->ssrc) };
 			}
 			uint8_t GetSequenceNumber() const
 			{
-				return uint8_t{ this->header->sequenceNumber };
+				return (uint8_t){ this->header->sequenceNumber };
 			}
 			uint8_t GetPayloadType() const
 			{
-				return uint8_t{ this->header->payloadType };
+				return (uint8_t){ this->header->payloadType };
 			}
 			uint16_t GetLength() const
 			{
-				return uint16_t{ ntohs(this->header->length) };
+				return (uint16_t){ ntohs(this->header->length) };
 			}
 			uint8_t* GetValue() const
 			{

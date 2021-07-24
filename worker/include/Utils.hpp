@@ -110,23 +110,23 @@ namespace Utils
 
 		static uint16_t Get2Bytes(const uint8_t* data, size_t i)
 		{
-			return uint16_t{ data[i + 1] } | uint16_t{ data[i] } << 8;
+			return (uint16_t){ data[i + 1] } | (uint16_t){ data[i] } << 8;
 		}
 
 		static uint32_t Get3Bytes(const uint8_t* data, size_t i)
 		{
-			return uint32_t{ data[i + 2] } | uint32_t{ data[i + 1] } << 8 | uint32_t{ data[i] } << 16;
+			return (uint32_t){ data[i + 2] } | (uint32_t){ data[i + 1] } << 8 | (uint32_t){ data[i] } << 16;
 		}
 
 		static uint32_t Get4Bytes(const uint8_t* data, size_t i)
 		{
-			return uint32_t{ data[i + 3] } | uint32_t{ data[i + 2] } << 8 |
-			       uint32_t{ data[i + 1] } << 16 | uint32_t{ data[i] } << 24;
+			return (uint32_t){ data[i + 3] } | (uint32_t){ data[i + 2] } << 8 |
+			       (uint32_t){ data[i + 1] } << 16 | (uint32_t){ data[i] } << 24;
 		}
 
 		static uint64_t Get8Bytes(const uint8_t* data, size_t i)
 		{
-			return uint64_t{ Byte::Get4Bytes(data, i) } << 32 | Byte::Get4Bytes(data, i + 4);
+			return (uint64_t){ Byte::Get4Bytes(data, i) } << 32 | Byte::Get4Bytes(data, i + 4);
 		}
 
 		static void Set1Byte(uint8_t* data, size_t i, uint8_t value)
@@ -208,7 +208,7 @@ namespace Utils
 			// return (((Crypto::seed>>16)&0x7FFF) % (max - min + 1)) + min;
 
 			// This seems to produce better results.
-			Crypto::seed = uint32_t{ ((214013 * Crypto::seed) + 2531011) };
+			Crypto::seed = (uint32_t){ ((214013 * Crypto::seed) + 2531011) };
 
 			// Special case.
 			if (max == 4294967295)
