@@ -28,7 +28,7 @@ endif
 export PYTHONPATH = $(PIP_DIR)
 
 .PHONY:	\
-	default meson-ninja setup clean clean-all mediasoup-worker xcode lint format test tidy \
+	default meson-ninja setup clean clean-pip clean-subprojects clean-all mediasoup-worker xcode lint format test tidy \
 	fuzzer fuzzer-run-all docker-build docker-run libmediasoup-worker
 
 default: mediasoup-worker
@@ -45,22 +45,30 @@ ifeq ($(wildcard $(PIP_DIR)),)
 endif
 
 setup: meson-ninja
-ifeq ($(wildcard $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)),)
+# We try to call `--reconfigure` first as a workaround for https://github.com/ninja-build/ninja/issues/1997
 ifeq ($(MEDIASOUP_BUILDTYPE),Release)
-	$(MESON) setup --buildtype release $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+	$(MESON) setup --buildtype release --reconfigure $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(MESON) setup --buildtype release $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 else
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
-	$(MESON) setup --buildtype debug $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+	$(MESON) setup --buildtype debug --reconfigure $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(MESON) setup --buildtype debug $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 else
-	$(MESON) setup --buildtype $(MEDIASOUP_BUILDTYPE) $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
-endif
+	$(MESON) setup --buildtype $(MEDIASOUP_BUILDTYPE) --reconfigure $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(MESON) setup --buildtype $(MEDIASOUP_BUILDTYPE) $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 endif
 endif
 
 clean:
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 
-clean-all:
+clean-pip:
+	$(RM) -rf $(PIP_DIR)
+
+clean-subprojects: meson-ninja
+	$(MESON) subprojects purge --include-cache --confirm
+
+clean-all: clean-subprojects
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)
 
 mediasoup-worker: setup

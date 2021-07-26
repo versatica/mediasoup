@@ -94,9 +94,19 @@ Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
 Cleans built objects and binaries.
 
 
+### `make clean-pip`
+
+Cleans `meson` and `ninja` installed in local prefix with pip.
+
+
+### `make clean-subprojects`
+
+Cleans subprojects downloaded with Meson.
+
+
 ### `make clean-all`
 
-Cleans all objects and binaries as well as `meson` and `ninja` installed in local prefix with pip.
+Cleans built objects and binaries, `meson` and `ninja` installed in local prefix with pip and all subprojects downloaded with Meson.
 
 
 ### `make xcode`

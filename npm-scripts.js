@@ -65,6 +65,16 @@ switch (task)
 		break;
 	}
 
+	case 'worker:build':
+	{
+		if (!process.env.MEDIASOUP_WORKER_BIN)
+		{
+			execute(`${MAKE} -C worker`);
+		}
+
+		break;
+	}
+
 	case 'lint:node':
 	{
 		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
@@ -120,10 +130,9 @@ switch (task)
 
 	case 'postinstall':
 	{
-		if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute(`${MAKE} -C worker`);
-		}
+		execute('node npm-scripts.js worker:build');
+		execute(`${MAKE} clean-pip -C worker`);
+		execute(`${MAKE} clean-subprojects -C worker`);
 
 		break;
 	}

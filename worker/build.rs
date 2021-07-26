@@ -7,11 +7,6 @@ fn main() {
         return;
     }
 
-    let current_dir = std::env::current_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap();
     let out_dir = env::var("OUT_DIR").unwrap();
 
     // Add C++ std lib
@@ -119,6 +114,8 @@ fn main() {
         if !Command::new("make")
             .arg("libmediasoup-worker")
             .env("PYTHONDONTWRITEBYTECODE", "1")
+            .env("MEDIASOUP_OUT_DIR", &out_dir)
+            .env("MEDIASOUP_BUILDTYPE", "Release")
             .spawn()
             .expect("Failed to start")
             .wait()
@@ -128,23 +125,11 @@ fn main() {
             panic!("Failed to build libmediasoup-worker")
         }
 
-        for file in &["libmediasoup-worker.a"] {
-            std::fs::copy(
-                format!("{}/out/Release/{}", current_dir, file),
-                format!("{}/{}", out_dir, file),
-            )
-            .unwrap_or_else(|_| {
-                panic!(
-                    "Failed to copy static library from {}/out/Release/{} to {}/{}",
-                    current_dir, file, out_dir, file
-                )
-            });
-        }
-
         if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
             // Clean
             if !Command::new("make")
                 .arg("clean-all")
+                .env("PYTHONDONTWRITEBYTECODE", "1")
                 .spawn()
                 .expect("Failed to start")
                 .wait()
@@ -158,4 +143,5 @@ fn main() {
 
     println!("cargo:rustc-link-lib=static=mediasoup-worker");
     println!("cargo:rustc-link-search=native={}", out_dir);
+    println!("cargo:rustc-link-search=native={}/Release", out_dir);
 }
