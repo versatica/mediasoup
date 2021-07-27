@@ -44,7 +44,7 @@ class PacedSender {
   PacedSender(PacketRouter* packet_router,
               const WebRtcKeyValueConfig* field_trials = nullptr);
 
-  ~PacedSender() = default;
+  virtual ~PacedSender() = default;
 
   virtual void CreateProbeCluster(int bitrate_bps, int cluster_id);
 
