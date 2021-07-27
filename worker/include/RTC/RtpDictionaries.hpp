@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/Parameters.hpp"
-#include <json.hpp>
 #include <map>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>

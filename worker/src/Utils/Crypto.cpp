@@ -56,7 +56,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		// Init the vrypto seed with a random number taken from the address
+		// Init the crypto seed with a random number taken from the address
 		// of the seed variable itself (which is random).
 		Crypto::seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed)));
 
@@ -72,7 +72,7 @@ namespace Utils
 			HMAC_CTX_free(Crypto::hmacSha1Ctx);
 	}
 
-	const uint8_t* Crypto::GetHmacShA1(const std::string& key, const uint8_t* data, size_t len)
+	const uint8_t* Crypto::GetHmacSha1(const std::string& key, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

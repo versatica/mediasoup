@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/RTCP/Sdes.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
 #include <string>
 

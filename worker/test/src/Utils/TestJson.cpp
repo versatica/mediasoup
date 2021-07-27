@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
-#include <json.hpp>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
+#include <nlohmann/json.hpp>
 
 using namespace Utils;
 using json = nlohmann::json;

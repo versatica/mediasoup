@@ -3,7 +3,17 @@
 
 ### Unreleased
 
-* Update `libuv` to 1.41.0. 
+* Update `libuv` to 1.42.0.
+* Update NPM deps.
+
+
+### 3.7.19
+
+* Update `libuv` to 1.41.0.
+* Update NPM deps.
+* C++:
+  - Move header includes (PR #608).
+  - Enhance debugging on channel request/notification error (PR #607).
 
 
 ### 3.7.18

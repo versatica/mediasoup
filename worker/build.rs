@@ -119,6 +119,7 @@ fn main() {
         // Build
         if !Command::new("make")
             .arg("libmediasoup-worker")
+            .env("PYTHONDONTWRITEBYTECODE", "1")
             .spawn()
             .expect("Failed to start")
             .wait()

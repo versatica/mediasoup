@@ -240,7 +240,7 @@
     'include_dirs':
     [
       'include',
-      'deps/json/single_include/nlohmann'
+      'deps/json/single_include'
     ],
     'conditions':
     [
@@ -389,7 +389,7 @@
       'include_dirs':
       [
         'test/include',
-        'deps/catch/single_include/catch2'
+        'deps/catch2/single_include'
       ],
       'xcode_settings':
       {

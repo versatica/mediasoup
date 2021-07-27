@@ -5,8 +5,8 @@
 #include "Utils.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
-#include <json.hpp>
 #include <usrsctp.h>
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
