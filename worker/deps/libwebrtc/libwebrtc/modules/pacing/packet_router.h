@@ -29,7 +29,7 @@ namespace webrtc {
 class PacketRouter {
  public:
   PacketRouter() = default;
-  ~PacketRouter() = default;
+  virtual ~PacketRouter() = default;
 
   virtual void SendPacket(RTC::RtpPacket* packet,
                           const PacedPacketInfo& cluster_info) = 0;
