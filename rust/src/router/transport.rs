@@ -647,8 +647,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         Ok(Consumer::new(
             consumer_id,
-            producer.id(),
-            producer.kind(),
+            producer,
             r#type,
             rtp_parameters,
             response.paused,
@@ -815,7 +814,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.sctp_stream_parameters,
             response.label,
             response.protocol,
-            data_producer.id(),
+            data_producer,
             Arc::clone(self.executor()),
             self.channel().clone(),
             self.payload_channel().clone(),

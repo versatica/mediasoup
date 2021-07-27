@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_producer::DataProducerId;
+use crate::data_producer::{DataProducer, DataProducerId};
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
@@ -198,7 +198,7 @@ struct Inner {
     sctp_stream_parameters: Option<SctpStreamParameters>,
     label: String,
     protocol: String,
-    data_producer_id: DataProducerId,
+    data_producer: DataProducer,
     direct: bool,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -234,16 +234,19 @@ impl Inner {
                         router_id: self.transport.router_id(),
                         transport_id: self.transport.id(),
                         data_consumer_id: self.id,
-                        data_producer_id: self.data_producer_id,
+                        data_producer_id: self.data_producer.id(),
                     },
                 };
+                let data_producer = self.data_producer.clone();
                 let transport = self.transport.clone();
+
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("consumer closing failed on drop: {}", error);
                         }
 
+                        drop(data_producer);
                         drop(transport);
                     })
                     .detach();
@@ -268,7 +271,7 @@ impl fmt::Debug for RegularDataConsumer {
             .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
             .field("label", &self.inner.label)
             .field("protocol", &self.inner.protocol)
-            .field("data_producer_id", &self.inner.data_producer_id)
+            .field("data_producer_id", &self.inner.data_producer.id())
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
@@ -296,7 +299,7 @@ impl fmt::Debug for DirectDataConsumer {
             .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
             .field("label", &self.inner.label)
             .field("protocol", &self.inner.protocol)
-            .field("data_producer_id", &self.inner.data_producer_id)
+            .field("data_producer_id", &self.inner.data_producer.id())
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
@@ -344,7 +347,7 @@ impl DataConsumer {
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
-        data_producer_id: DataProducerId,
+        data_producer: DataProducer,
         executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: PayloadChannel,
@@ -430,7 +433,7 @@ impl DataConsumer {
             sctp_stream_parameters,
             label,
             protocol,
-            data_producer_id,
+            data_producer,
             direct,
             executor,
             channel,
@@ -461,7 +464,7 @@ impl DataConsumer {
     /// The associated data producer identifier.
     #[must_use]
     pub fn data_producer_id(&self) -> DataProducerId {
-        self.inner().data_producer_id
+        self.inner().data_producer.id()
     }
 
     /// The type of the data consumer.
@@ -656,7 +659,7 @@ impl DataConsumer {
             router_id: self.inner().transport.router_id(),
             transport_id: self.inner().transport.id(),
             data_consumer_id: self.inner().id,
-            data_producer_id: self.inner().data_producer_id,
+            data_producer_id: self.inner().data_producer.id(),
         }
     }
 }
@@ -674,7 +677,7 @@ impl DirectDataConsumer {
                         router_id: self.inner.transport.router_id(),
                         transport_id: self.inner.transport.id(),
                         data_consumer_id: self.inner.id,
-                        data_producer_id: self.inner.data_producer_id,
+                        data_producer_id: self.inner.data_producer.id(),
                     },
                     data: DataConsumerSendRequestData { ppid },
                 },
