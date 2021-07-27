@@ -753,10 +753,14 @@ namespace RTC
 				// Max delay in ms we allow for the stream when switching.
 				// https://en.wikipedia.org/wiki/Audio-to-video_synchronization#Recommendations
 				static const uint32_t MaxExtraOffsetMs{ 75u };
+				
+				// It's common that, when switching spatial layer, the resulting TS for the
+				// outgoing packet matches the highest seen in the previous stream. Fix it.
+				static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
 
 				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
 				uint32_t tsExtraOffset =
-				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + tsOffset;
+				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
 
 				// NOTE: Don't ask for a key frame if already done.
 				if (this->keyFrameForTsOffsetRequested)
@@ -786,15 +790,6 @@ namespace RTC
 					this->keyFrameForTsOffsetRequested = true;
 
 					return;
-				}
-				// It's common that, when switching spatial layer, the resulting TS for the
-				// outgoing packet matches the highest seen in the previous stream. Fix it.
-				else if (tsExtraOffset == 0u)
-				{
-					// Apply an expected offset for a new frame in a 30fps stream.
-					static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
-
-					tsExtraOffset = MsOffset * this->rtpStream->GetClockRate() / 1000;
 				}
 
 				if (tsExtraOffset > 0u)
