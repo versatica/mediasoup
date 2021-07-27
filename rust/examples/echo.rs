@@ -330,7 +330,7 @@ impl Handler<ClientMessage> for EchoServer {
                                 );
                             }
                         }
-                    })
+                    });
                 }
             }
         }
@@ -369,23 +369,24 @@ async fn ws_index(
     worker_manager: Data<WorkerManager>,
     stream: Payload,
 ) -> Result<HttpResponse, Error> {
-    let echo_server = EchoServer::new(&worker_manager).await.map_err(|error| {
-        eprintln!("{}", error);
+    match EchoServer::new(&worker_manager).await {
+        Ok(echo_server) => ws::start(echo_server, &request, stream),
+        Err(error) => {
+            eprintln!("{}", error);
 
-        HttpResponse::InternalServerError().finish()
-    })?;
-
-    ws::start(echo_server, &request, stream)
+            Ok(HttpResponse::InternalServerError().finish())
+        }
+    }
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
 
-    let worker_manager = WorkerManager::new();
+    let worker_manager = Data::new(WorkerManager::new());
     HttpServer::new(move || {
         App::new()
-            .data(worker_manager.clone())
+            .app_data(worker_manager.clone())
             .route("/ws", web::get().to(ws_index))
     })
     .workers(2)
