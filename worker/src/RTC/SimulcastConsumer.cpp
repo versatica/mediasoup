@@ -760,7 +760,7 @@ namespace RTC
 
 				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
 				uint32_t tsExtraOffset   = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
-										 tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
+				                         tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
 
 				// NOTE: Don't ask for a key frame if already done.
 				if (this->keyFrameForTsOffsetRequested)
