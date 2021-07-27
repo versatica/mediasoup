@@ -53,6 +53,7 @@ mod macros;
 mod messages;
 #[doc(hidden)]
 pub mod ortc;
+pub mod prelude;
 pub mod router;
 pub mod rtp_parameters;
 pub mod scalability_modes;

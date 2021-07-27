@@ -2,6 +2,10 @@
 
 # Unreleased
 
+* prelude module containing traits and structs that should be sufficient for most basic mediasoup-based apps
+
+### 0.8.2
+
 * Support for optional fixed port on transports
 
 ### 0.8.1

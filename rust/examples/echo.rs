@@ -2,20 +2,7 @@ use actix::prelude::*;
 use actix_web::web::{Data, Payload};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
-use mediasoup::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use mediasoup::data_structures::{DtlsParameters, IceCandidate, IceParameters, TransportListenIp};
-use mediasoup::producer::{Producer, ProducerId, ProducerOptions};
-use mediasoup::router::{Router, RouterOptions};
-use mediasoup::rtp_parameters::{
-    MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities,
-    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecParametersParameters, RtpParameters,
-};
-use mediasoup::transport::{Transport, TransportId};
-use mediasoup::webrtc_transport::{
-    TransportListenIps, WebRtcTransport, WebRtcTransportOptions, WebRtcTransportRemoteParameters,
-};
-use mediasoup::worker::WorkerSettings;
-use mediasoup::worker_manager::WorkerManager;
+use mediasoup::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::num::{NonZeroU32, NonZeroU8};
