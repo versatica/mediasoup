@@ -40,6 +40,27 @@ uuid_based_wrapper_type!(
     TransportId
 );
 
+// We don't want this to be a public API, but have to use it like this to be able to still use as
+// trait object
+mod private {
+    use super::Transport;
+
+    #[doc(hidden)]
+    pub trait CloneTransport {
+        #[doc(hidden)]
+        fn clone_box(&self) -> Box<dyn Transport>;
+    }
+
+    impl<T> CloneTransport for T
+    where
+        T: Transport + Clone + 'static,
+    {
+        fn clone_box(&self) -> Box<dyn Transport> {
+            Box::new(self.clone())
+        }
+    }
+}
+
 /// Data contained in transport trace events.
 ///
 /// See also "trace" event in the [Debugging](https://mediasoup.org/documentation/v3/mediasoup/debugging#trace-Event)
@@ -128,7 +149,7 @@ pub(super) enum TransportType {
 ///
 /// For additional methods see [`TransportGeneric`].
 #[async_trait(?Send)]
-pub trait Transport: Debug + Send + Sync + CloneTransport {
+pub trait Transport: Debug + Send + Sync + private::CloneTransport {
     /// Transport id.
     #[must_use]
     fn id(&self) -> TransportId;
@@ -253,28 +274,9 @@ pub trait Transport: Debug + Send + Sync + CloneTransport {
     fn on_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId;
 }
 
-// We don't want this to be a public API, but have to use it like this to be able to still use as
-// trait object
-/// This is a private method, don't use it outside of the library
-#[doc(hidden)]
-pub trait CloneTransport {
-    /// This is a private method, don't use it outside of the library
-    #[doc(hidden)]
-    fn clone_transport(&self) -> Box<dyn Transport>;
-}
-
-impl<T> CloneTransport for T
-where
-    T: Transport + Clone + 'static,
-{
-    fn clone_transport(&self) -> Box<dyn Transport> {
-        Box::new(self.clone())
-    }
-}
-
 impl Clone for Box<dyn Transport> {
     fn clone(&self) -> Self {
-        self.clone_transport()
+        self.clone_box()
     }
 }
 
