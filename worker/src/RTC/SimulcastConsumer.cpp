@@ -753,7 +753,7 @@ namespace RTC
 				// Max delay in ms we allow for the stream when switching.
 				// https://en.wikipedia.org/wiki/Audio-to-video_synchronization#Recommendations
 				static const uint32_t MaxExtraOffsetMs{ 75u };
-				
+
 				// outgoing packet matches the highest seen in the previous stream.
 				// Apply an expected offset for a new frame in a 30fps stream.
 				static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
