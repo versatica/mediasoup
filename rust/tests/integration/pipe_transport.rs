@@ -920,45 +920,6 @@ fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
 }
 
 #[test]
-fn producer_close_is_transmitted_to_pipe_consumer() {
-    future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
-
-        let video_producer = transport1
-            .produce(video_producer_options())
-            .await
-            .expect("Failed to produce video");
-
-        router1
-            .pipe_producer_to_router(
-                video_producer.id(),
-                PipeToRouterOptions::new(router2.clone()),
-            )
-            .await
-            .expect("Failed to pipe video producer to router");
-
-        let video_consumer = transport2
-            .consume(ConsumerOptions::new(
-                video_producer.id(),
-                consumer_device_capabilities(),
-            ))
-            .await
-            .expect("Failed to consume video");
-
-        let (mut producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = video_consumer.on_producer_close(move || {
-            let _ = producer_close_tx.send(());
-        });
-
-        drop(video_producer);
-
-        producer_close_rx
-            .await
-            .expect("Failed to receive producer close event");
-    });
-}
-
-#[test]
 fn pipe_to_router_succeeds_with_data() {
     future::block_on(async move {
         let (_worker, router1, router2, transport1, _transport2) = init().await;
@@ -1066,42 +1027,6 @@ fn data_consume_for_pipe_data_producer_succeeds() {
         }
         assert_eq!(data_consumer.label().as_str(), "foo");
         assert_eq!(data_consumer.protocol().as_str(), "bar");
-    });
-}
-
-#[test]
-fn data_producer_close_is_transmitted_to_pipe_data_consumer() {
-    future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
-
-        let data_producer = transport1
-            .produce_data(data_producer_options())
-            .await
-            .expect("Failed to produce data");
-
-        router1
-            .pipe_data_producer_to_router(
-                data_producer.id(),
-                PipeToRouterOptions::new(router2.clone()),
-            )
-            .await
-            .expect("Failed to pipe data producer to router");
-
-        let data_consumer = transport2
-            .consume_data(DataConsumerOptions::new_sctp(data_producer.id()))
-            .await
-            .expect("Failed to create data consumer");
-
-        let (mut data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_consumer.on_data_producer_close(move || {
-            let _ = data_producer_close_tx.send(());
-        });
-
-        drop(data_producer);
-
-        data_producer_close_rx
-            .await
-            .expect("Failed to receive data producer close event");
     });
 }
 
