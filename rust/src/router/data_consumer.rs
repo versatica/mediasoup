@@ -643,7 +643,7 @@ impl DataConsumer {
     #[must_use]
     pub fn downgrade(&self) -> WeakDataConsumer {
         WeakDataConsumer {
-            inner: Arc::downgrade(&self.inner()),
+            inner: Arc::downgrade(self.inner()),
         }
     }
 
