@@ -6,7 +6,7 @@
 * Update `libuv` to 1.42.0.
 * Use non-ASM OpenSSL on Windows (PR #614).
 * Fix minor memory leak caused by non-virtual destructor (PR #625).
-* Dominant Speaker Event (PR #603 by @@SteveMcFarlin).
+* Dominant Speaker Event (PR #603 by @SteveMcFarlin).
 * Update NPM deps.
 
 
