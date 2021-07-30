@@ -8,7 +8,7 @@ use crate::messages::{
     ConsumerPauseRequest, ConsumerRequestKeyFrameRequest, ConsumerResumeRequest,
     ConsumerSetPreferredLayersRequest, ConsumerSetPriorityData, ConsumerSetPriorityRequest,
 };
-use crate::producer::{ProducerId, ProducerStat, ProducerType};
+use crate::producer::{Producer, ProducerId, ProducerStat, ProducerType};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
 use crate::scalability_modes::ScalabilityMode;
 use crate::transport::Transport;
@@ -362,8 +362,7 @@ struct Handlers {
 
 struct Inner {
     id: ConsumerId,
-    producer_id: ProducerId,
-    kind: MediaKind,
+    producer: Producer,
     r#type: ConsumerType,
     rtp_parameters: RtpParameters,
     paused: Arc<Mutex<bool>>,
@@ -405,16 +404,19 @@ impl Inner {
                         router_id: self.transport.router_id(),
                         transport_id: self.transport.id(),
                         consumer_id: self.id,
-                        producer_id: self.producer_id,
+                        producer_id: self.producer.id(),
                     },
                 };
+                let producer = self.producer.clone();
                 let transport = self.transport.clone();
+
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("consumer closing failed on drop: {}", error);
                         }
 
+                        drop(producer);
                         drop(transport);
                     })
                     .detach();
@@ -435,8 +437,8 @@ impl fmt::Debug for Consumer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Consumer")
             .field("id", &self.inner.id)
-            .field("producer_id", &self.inner.producer_id)
-            .field("kind", &self.inner.r#kind)
+            .field("producer_id", &self.inner.producer.id())
+            .field("kind", &self.inner.producer.kind())
             .field("type", &self.inner.r#type)
             .field("rtp_parameters", &self.inner.rtp_parameters)
             .field("paused", &self.inner.paused)
@@ -455,8 +457,7 @@ impl Consumer {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn new(
         id: ConsumerId,
-        producer_id: ProducerId,
-        kind: MediaKind,
+        producer: Producer,
         r#type: ConsumerType,
         rtp_parameters: RtpParameters,
         paused: bool,
@@ -578,8 +579,7 @@ impl Consumer {
         });
         let inner = Arc::new(Inner {
             id,
-            producer_id,
-            kind,
+            producer,
             r#type,
             rtp_parameters,
             paused,
@@ -612,13 +612,13 @@ impl Consumer {
     /// Associated Producer id.
     #[must_use]
     pub fn producer_id(&self) -> ProducerId {
-        self.inner.producer_id
+        self.inner.producer.id()
     }
 
     /// Media kind.
     #[must_use]
     pub fn kind(&self) -> MediaKind {
-        self.inner.kind
+        self.inner.producer.kind()
     }
 
     /// Consumer RTP parameters.
@@ -959,7 +959,7 @@ impl Consumer {
             router_id: self.inner.transport.router_id(),
             transport_id: self.inner.transport.id(),
             consumer_id: self.inner.id,
-            producer_id: self.inner.producer_id,
+            producer_id: self.inner.producer.id(),
         }
     }
 }

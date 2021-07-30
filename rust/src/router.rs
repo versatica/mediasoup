@@ -544,9 +544,9 @@ impl Router {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::direct_transport::DirectTransportOptions;
+    /// use mediasoup::prelude::*;
     ///
-    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router.create_direct_transport(DirectTransportOptions::default()).await?;
     /// # Ok(())
     /// # }
@@ -596,10 +596,9 @@ impl Router {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::data_structures::TransportListenIp;
-    /// use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
+    /// use mediasoup::prelude::*;
     ///
-    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
     ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
     ///         TransportListenIp {
@@ -658,10 +657,9 @@ impl Router {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::data_structures::TransportListenIp;
-    /// use mediasoup::pipe_transport::PipeTransportOptions;
+    /// use mediasoup::prelude::*;
     ///
-    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
     ///     .create_pipe_transport(PipeTransportOptions::new(TransportListenIp {
     ///         ip: "127.0.0.1".parse().unwrap(),
@@ -718,10 +716,9 @@ impl Router {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::data_structures::TransportListenIp;
-    /// use mediasoup::plain_transport::PlainTransportOptions;
+    /// use mediasoup::prelude::*;
     ///
-    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
     ///     .create_plain_transport(PlainTransportOptions::new(TransportListenIp {
     ///         ip: "127.0.0.1".parse().unwrap(),
@@ -778,10 +775,10 @@ impl Router {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::audio_level_observer::AudioLevelObserverOptions;
+    /// use mediasoup::prelude::*;
     /// use std::num::NonZeroU16;
     ///
-    /// # async fn f(router: mediasoup::router::Router) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let observer = router
     ///     .create_audio_level_observer({
     ///         let mut options = AudioLevelObserverOptions::default();
@@ -899,17 +896,8 @@ impl Router {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::consumer::ConsumerOptions;
-    /// use mediasoup::data_structures::TransportListenIp;
-    /// use mediasoup::producer::ProducerOptions;
-    /// use mediasoup::router::{PipeToRouterOptions, RouterOptions};
-    /// use mediasoup::rtp_parameters::{
-    ///    MediaKind, MimeTypeAudio, RtcpParameters, RtpCapabilities, RtpCodecCapability,
-    ///    RtpCodecParameters, RtpCodecParametersParameters, RtpParameters,
-    /// };
-    /// use mediasoup::transport::Transport;
-    /// use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
-    /// use mediasoup::worker::WorkerSettings;
+    /// use mediasoup::prelude::*;
+    /// use mediasoup::rtp_parameters::RtpCodecParameters;
     /// use std::num::{NonZeroU32, NonZeroU8};
     ///
     /// # async fn f(
@@ -960,9 +948,7 @@ impl Router {
     ///                 ]),
     ///                 rtcp_feedback: vec![],
     ///             }],
-    ///             header_extensions: vec![],
-    ///             encodings: vec![],
-    ///             rtcp: RtcpParameters::default(),
+    ///             ..RtpParameters::default()
     ///         },
     ///     ))
     ///     .await?;
@@ -1143,14 +1129,7 @@ impl Router {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::data_consumer::DataConsumerOptions;
-    /// use mediasoup::data_structures::TransportListenIp;
-    /// use mediasoup::data_producer::DataProducerOptions;
-    /// use mediasoup::router::{PipeToRouterOptions, RouterOptions};
-    /// use mediasoup::sctp_parameters::SctpStreamParameters;
-    /// use mediasoup::transport::Transport;
-    /// use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
-    /// use mediasoup::worker::WorkerSettings;
+    /// use mediasoup::prelude::*;
     ///
     /// # async fn f(
     /// #     worker_manager: mediasoup::worker_manager::WorkerManager,

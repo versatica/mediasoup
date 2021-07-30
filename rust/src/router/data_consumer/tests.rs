@@ -58,6 +58,55 @@ async fn init() -> (Router, DataProducer) {
 }
 
 #[test]
+fn data_producer_close_event() {
+    future::block_on(async move {
+        let (router, data_producer) = init().await;
+
+        let transport2 = router
+            .create_plain_transport({
+                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: None,
+                });
+
+                transport_options.enable_sctp = true;
+
+                transport_options
+            })
+            .await
+            .expect("Failed to create transport1");
+
+        let data_consumer = transport2
+            .consume_data(DataConsumerOptions::new_sctp_unordered_with_life_time(
+                data_producer.id(),
+                4000,
+            ))
+            .await
+            .expect("Failed to consume data");
+
+        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
+        let _handler = data_consumer.on_close(move || {
+            let _ = close_tx.send(());
+        });
+
+        let (mut data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
+        let _handler = data_consumer.on_data_producer_close(move || {
+            let _ = data_producer_close_tx.send(());
+        });
+
+        data_producer.close();
+
+        data_producer_close_rx
+            .await
+            .expect("Failed to receive data_producer_close event");
+
+        close_rx.await.expect("Failed to receive close event");
+
+        assert_eq!(data_consumer.closed(), true);
+    });
+}
+
+#[test]
 fn transport_close_event() {
     future::block_on(async move {
         let (router, data_producer) = init().await;
