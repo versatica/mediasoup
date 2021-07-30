@@ -41,7 +41,7 @@ impl Default for ActiveSpeakerObserverOptions {
     }
 }
 
-/// Represents volume of one audio producer.
+/// Represents dominant speaker.
 #[derive(Debug, Clone)]
 pub struct ActiveSpeakerObserverDominantSpeaker {
     /// The audio producer instance.
@@ -78,10 +78,10 @@ struct Inner {
     handlers: Arc<Handlers>,
     paused: AtomicBool,
     app_data: AppData,
-    // Make sure router is not dropped until this audio level observer is not dropped
+    // Make sure router is not dropped until this active speaker observer is not dropped
     router: Router,
     closed: AtomicBool,
-    // Drop subscription to audio level observer-specific notifications when observer itself is
+    // Drop subscription to audio speaker observer-specific notifications when observer itself is
     // dropped
     _subscription_handler: Option<SubscriptionHandler>,
     _on_router_close_handler: Mutex<HandlerId>,
@@ -133,7 +133,7 @@ impl Inner {
 /// Audio levels are read from an RTP header extension. No decoding of audio data is done. See
 /// [RFC6464](https://tools.ietf.org/html/rfc6464) for more information.
 #[derive(Clone)]
-#[must_use = "Audio level observer will be closed on drop, make sure to keep it around for as long as needed"]
+#[must_use = "Active speaker observer will be closed on drop, make sure to keep it around for as long as needed"]
 pub struct ActiveSpeakerObserver {
     inner: Arc<Inner>,
 }
@@ -389,9 +389,9 @@ impl ActiveSpeakerObserver {
     }
 }
 
-/// [`WeakActiveSpeakerObserver`] doesn't own audio level observer instance on mediasoup-worker and
-/// will not prevent one from being destroyed once last instance of regular [`ActiveSpeakerObserver`]
-/// is dropped.
+/// [`WeakActiveSpeakerObserver`] doesn't own active speaker observer instance on mediasoup-worker
+/// and will not prevent one from being destroyed once last instance of regular
+/// [`ActiveSpeakerObserver`] is dropped.
 ///
 /// [`WeakActiveSpeakerObserver`] vs [`ActiveSpeakerObserver`] is similar to [`Weak`] vs [`Arc`].
 #[derive(Clone)]
