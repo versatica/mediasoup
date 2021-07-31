@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup-sys"
-version = "0.2.3"
+version = "0.2.4"
 description = "FFI bindings to C++ libmediasoup-worker"
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
 edition = "2018"

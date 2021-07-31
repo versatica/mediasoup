@@ -1,8 +1,8 @@
 use async_io::Timer;
 use futures_lite::future;
-use mediasoup::audio_level_observer::AudioLevelObserverOptions;
-use mediasoup::prelude::*;
+use mediasoup::active_speaker_observer::ActiveSpeakerObserverOptions;
 use mediasoup::router::RouterOptions;
+use mediasoup::rtp_observer::RtpObserver;
 use mediasoup::rtp_parameters::{MimeTypeAudio, RtpCodecCapability, RtpCodecParametersParameters};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -65,20 +65,20 @@ fn create() {
             })
             .detach();
 
-        let audio_level_observer = router
-            .create_audio_level_observer(AudioLevelObserverOptions::default())
+        let active_speaker_observer = router
+            .create_active_speaker_observer(ActiveSpeakerObserverOptions::default())
             .await
-            .expect("Failed to create AudioLevelObserver");
+            .expect("Failed to create ActiveSpeakerObserver");
 
         assert_eq!(new_observer_count.load(Ordering::SeqCst), 1);
-        assert_eq!(audio_level_observer.closed(), false);
-        assert_eq!(audio_level_observer.paused(), false);
+        assert_eq!(active_speaker_observer.closed(), false);
+        assert_eq!(active_speaker_observer.paused(), false);
 
         let dump = router.dump().await.expect("Failed to get router dump");
 
         assert_eq!(
             dump.rtp_observer_ids.into_iter().collect::<Vec<_>>(),
-            vec![audio_level_observer.id()]
+            vec![active_speaker_observer.id()]
         );
     });
 }
@@ -93,18 +93,18 @@ fn weak() {
             .await
             .expect("Failed to create router");
 
-        let audio_level_observer = router
-            .create_audio_level_observer(AudioLevelObserverOptions::default())
+        let active_speaker_observer = router
+            .create_active_speaker_observer(ActiveSpeakerObserverOptions::default())
             .await
-            .expect("Failed to create AudioLevelObserver");
+            .expect("Failed to create ActiveSpeakerObserver");
 
-        let weak_audio_level_observer = audio_level_observer.downgrade();
+        let weak_active_speaker_observer = active_speaker_observer.downgrade();
 
-        assert!(weak_audio_level_observer.upgrade().is_some());
+        assert!(weak_active_speaker_observer.upgrade().is_some());
 
-        drop(audio_level_observer);
+        drop(active_speaker_observer);
 
-        assert!(weak_audio_level_observer.upgrade().is_none());
+        assert!(weak_active_speaker_observer.upgrade().is_none());
     });
 }
 
@@ -118,19 +118,22 @@ fn pause_resume() {
             .await
             .expect("Failed to create router");
 
-        let audio_level_observer = router
-            .create_audio_level_observer(AudioLevelObserverOptions::default())
+        let active_speaker_observer = router
+            .create_active_speaker_observer(ActiveSpeakerObserverOptions::default())
             .await
-            .expect("Failed to create AudioLevelObserver");
+            .expect("Failed to create ActiveSpeakerObserver");
 
-        audio_level_observer.pause().await.expect("Failed to pause");
-        assert_eq!(audio_level_observer.paused(), true);
+        active_speaker_observer
+            .pause()
+            .await
+            .expect("Failed to pause");
+        assert_eq!(active_speaker_observer.paused(), true);
 
-        audio_level_observer
+        active_speaker_observer
             .resume()
             .await
             .expect("Failed to resume");
-        assert_eq!(audio_level_observer.paused(), false);
+        assert_eq!(active_speaker_observer.paused(), false);
     });
 }
 
@@ -144,16 +147,16 @@ fn close_event() {
             .await
             .expect("Failed to create router");
 
-        let audio_level_observer = router
-            .create_audio_level_observer(AudioLevelObserverOptions::default())
+        let active_speaker_observer = router
+            .create_active_speaker_observer(ActiveSpeakerObserverOptions::default())
             .await
-            .expect("Failed to create AudioLevelObserver");
+            .expect("Failed to create ActiveSpeakerObserver");
 
         let (mut tx, rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_level_observer.on_close(Box::new(move || {
+        let _handler = active_speaker_observer.on_close(Box::new(move || {
             let _ = tx.send(());
         }));
-        drop(audio_level_observer);
+        drop(active_speaker_observer);
 
         rx.await.expect("Failed to receive close event");
     });
@@ -169,21 +172,21 @@ fn drop_test() {
             .await
             .expect("Failed to create router");
 
-        let _audio_level_observer = router
-            .create_audio_level_observer(AudioLevelObserverOptions::default())
+        let _active_speaker_observer = router
+            .create_active_speaker_observer(ActiveSpeakerObserverOptions::default())
             .await
-            .expect("Failed to create AudioLevelObserver");
+            .expect("Failed to create ActiveSpeakerObserver");
 
-        let audio_level_observer_2 = router
-            .create_audio_level_observer(AudioLevelObserverOptions::default())
+        let active_speaker_observer_2 = router
+            .create_active_speaker_observer(ActiveSpeakerObserverOptions::default())
             .await
-            .expect("Failed to create AudioLevelObserver");
+            .expect("Failed to create ActiveSpeakerObserver");
 
         let dump = router.dump().await.expect("Failed to get router dump");
 
         assert_eq!(dump.rtp_observer_ids.len(), 2);
 
-        drop(audio_level_observer_2);
+        drop(active_speaker_observer_2);
 
         // Drop is async, give it a bit of time to finish
         Timer::after(Duration::from_millis(200)).await;

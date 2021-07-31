@@ -11,7 +11,7 @@ namespace Utils
 
 	thread_local uint32_t Crypto::seed;
 	thread_local HMAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
-	thread_local uint8_t Crypto::hmacSha1Buffer[20]; // SHA-1 result is 20 bytes long.
+	thread_local uint8_t Crypto::hmacSha1Buffer[SHA_DIGEST_LENGTH];
 	// clang-format off
 	const uint32_t Crypto::crc32Table[] =
 	{
@@ -96,7 +96,8 @@ namespace Utils
 
 		MS_ASSERT(
 		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key.c_str(), len);
-		MS_ASSERT(resultLen == 20, "OpenSSL HMAC_Final() resultLen is %u instead of 20", resultLen);
+		MS_ASSERT(
+		  resultLen == SHA_DIGEST_LENGTH, "OpenSSL HMAC_Final() resultLen is %u instead of 20", resultLen);
 
 		return Crypto::hmacSha1Buffer;
 	}

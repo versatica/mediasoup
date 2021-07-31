@@ -4,6 +4,7 @@ use mediasoup::consumer::{
     ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType,
 };
 use mediasoup::data_structures::{AppData, TransportListenIp};
+use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::rtp_parameters::{
@@ -14,7 +15,7 @@ use mediasoup::rtp_parameters::{
     RtpParameters,
 };
 use mediasoup::scalability_modes::ScalabilityMode;
-use mediasoup::transport::{ConsumeError, Transport, TransportGeneric};
+use mediasoup::transport::ConsumeError;
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -1399,44 +1400,5 @@ fn close_event() {
             assert_eq!(dump.producer_ids, vec![]);
             assert_eq!(dump.consumer_ids, vec![]);
         }
-    });
-}
-
-#[test]
-fn producer_close_event() {
-    future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
-
-        let audio_producer = transport_1
-            .produce(audio_producer_options())
-            .await
-            .expect("Failed to produce audio");
-
-        let audio_consumer = transport_2
-            .consume(ConsumerOptions::new(
-                audio_producer.id(),
-                consumer_device_capabilities(),
-            ))
-            .await
-            .expect("Failed to consume audio");
-
-        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_consumer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (mut producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_consumer.on_producer_close(move || {
-            let _ = producer_close_tx.send(());
-        });
-        drop(audio_producer);
-
-        producer_close_rx
-            .await
-            .expect("Failed to receive producer_close event");
-
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(audio_consumer.closed(), true);
     });
 }

@@ -614,7 +614,7 @@ pub(crate) fn can_consume(
     consumable_params: &RtpParameters,
     caps: &RtpCapabilities,
 ) -> Result<bool, RtpCapabilitiesError> {
-    validate_rtp_capabilities(&caps)?;
+    validate_rtp_capabilities(caps)?;
 
     let mut matching_codecs = Vec::<&RtpCodecParameters>::new();
 

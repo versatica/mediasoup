@@ -744,7 +744,7 @@ impl Producer {
     #[must_use]
     pub fn downgrade(&self) -> WeakProducer {
         WeakProducer {
-            inner: Arc::downgrade(&self.inner()),
+            inner: Arc::downgrade(self.inner()),
         }
     }
 
