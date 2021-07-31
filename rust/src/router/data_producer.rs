@@ -419,7 +419,7 @@ impl DataProducer {
     #[must_use]
     pub fn downgrade(&self) -> WeakDataProducer {
         WeakDataProducer {
-            inner: Arc::downgrade(&self.inner()),
+            inner: Arc::downgrade(self.inner()),
         }
     }
 

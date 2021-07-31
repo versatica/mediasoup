@@ -2,20 +2,7 @@ use actix::prelude::*;
 use actix_web::web::{Data, Payload};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
-use mediasoup::consumer::{Consumer, ConsumerId, ConsumerOptions};
-use mediasoup::data_structures::{DtlsParameters, IceCandidate, IceParameters, TransportListenIp};
-use mediasoup::producer::{Producer, ProducerId, ProducerOptions};
-use mediasoup::router::{Router, RouterOptions};
-use mediasoup::rtp_parameters::{
-    MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities,
-    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecParametersParameters, RtpParameters,
-};
-use mediasoup::transport::{Transport, TransportId};
-use mediasoup::webrtc_transport::{
-    TransportListenIps, WebRtcTransport, WebRtcTransportOptions, WebRtcTransportRemoteParameters,
-};
-use mediasoup::worker::WorkerSettings;
-use mediasoup::worker_manager::WorkerManager;
+use mediasoup::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::num::{NonZeroU32, NonZeroU8};
@@ -343,7 +330,7 @@ impl Handler<ClientMessage> for EchoServer {
                                 );
                             }
                         }
-                    })
+                    });
                 }
             }
         }
@@ -382,23 +369,24 @@ async fn ws_index(
     worker_manager: Data<WorkerManager>,
     stream: Payload,
 ) -> Result<HttpResponse, Error> {
-    let echo_server = EchoServer::new(&worker_manager).await.map_err(|error| {
-        eprintln!("{}", error);
+    match EchoServer::new(&worker_manager).await {
+        Ok(echo_server) => ws::start(echo_server, &request, stream),
+        Err(error) => {
+            eprintln!("{}", error);
 
-        HttpResponse::InternalServerError().finish()
-    })?;
-
-    ws::start(echo_server, &request, stream)
+            Ok(HttpResponse::InternalServerError().finish())
+        }
+    }
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
 
-    let worker_manager = WorkerManager::new();
+    let worker_manager = Data::new(WorkerManager::new());
     HttpServer::new(move || {
         App::new()
-            .data(worker_manager.clone())
+            .app_data(worker_manager.clone())
             .route("/ws", web::get().to(ws_index))
     })
     .workers(2)
