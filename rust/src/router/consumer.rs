@@ -378,7 +378,7 @@ struct Inner {
     app_data: AppData,
     transport: Box<dyn Transport>,
     weak_producer: WeakProducer,
-    closed: AtomicBool,
+    closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<Option<SubscriptionHandler>>,
     _on_transport_close_handler: Mutex<HandlerId>,
@@ -478,6 +478,7 @@ impl Consumer {
 
         let handlers = Arc::<Handlers>::default();
         let score = Arc::new(Mutex::new(score));
+        let closed = Arc::new(AtomicBool::new(false));
         #[allow(clippy::mutex_atomic)]
         let paused = Arc::new(Mutex::new(paused));
         #[allow(clippy::mutex_atomic)]
@@ -487,6 +488,7 @@ impl Consumer {
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
+            let closed = Arc::clone(&closed);
             let paused = Arc::clone(&paused);
             let producer_paused = Arc::clone(&producer_paused);
             let score = Arc::clone(&score);
@@ -497,10 +499,13 @@ impl Consumer {
                 match serde_json::from_value::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::ProducerClose => {
-                            handlers.producer_close.call_simple();
-                            if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade)
-                            {
-                                inner.close(false);
+                            if !closed.load(Ordering::SeqCst) {
+                                handlers.producer_close.call_simple();
+                                if let Some(inner) =
+                                    inner_weak.lock().as_ref().and_then(Weak::upgrade)
+                                {
+                                    inner.close(false);
+                                }
                             }
                         }
                         Notification::ProducerPause => {
@@ -599,7 +604,7 @@ impl Consumer {
             app_data,
             transport,
             weak_producer: producer.downgrade(),
-            closed: AtomicBool::new(false),
+            closed,
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
