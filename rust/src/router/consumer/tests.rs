@@ -125,7 +125,7 @@ fn producer_close_event() {
             let _ = producer_close_tx.send(());
         });
 
-        audio_producer.close();
+        drop(audio_producer);
 
         producer_close_rx
             .await

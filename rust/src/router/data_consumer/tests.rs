@@ -94,7 +94,7 @@ fn data_producer_close_event() {
             let _ = data_producer_close_tx.send(());
         });
 
-        data_producer.close();
+        drop(data_producer);
 
         data_producer_close_rx
             .await

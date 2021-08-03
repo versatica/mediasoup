@@ -1,5 +1,10 @@
 # Changelog
 
+# 0.8.4
+
+* Add Active Speaker Observer to prelude
+* Fix consumers preventing producers from being closed (regression introduced in 0.8.3)
+
 # 0.8.3
 
 * prelude module containing traits and structs that should be sufficient for most basic mediasoup-based apps

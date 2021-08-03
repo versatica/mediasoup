@@ -8,7 +8,7 @@ use crate::messages::{
     ConsumerPauseRequest, ConsumerRequestKeyFrameRequest, ConsumerResumeRequest,
     ConsumerSetPreferredLayersRequest, ConsumerSetPriorityData, ConsumerSetPriorityRequest,
 };
-use crate::producer::{Producer, ProducerId, ProducerStat, ProducerType};
+use crate::producer::{Producer, ProducerId, ProducerStat, ProducerType, WeakProducer};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
 use crate::scalability_modes::ScalabilityMode;
 use crate::transport::Transport;
@@ -362,7 +362,8 @@ struct Handlers {
 
 struct Inner {
     id: ConsumerId,
-    producer: Producer,
+    producer_id: ProducerId,
+    kind: MediaKind,
     r#type: ConsumerType,
     rtp_parameters: RtpParameters,
     paused: Arc<Mutex<bool>>,
@@ -376,7 +377,8 @@ struct Inner {
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Box<dyn Transport>,
-    closed: AtomicBool,
+    weak_producer: WeakProducer,
+    closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<Option<SubscriptionHandler>>,
     _on_transport_close_handler: Mutex<HandlerId>,
@@ -404,16 +406,18 @@ impl Inner {
                         router_id: self.transport.router_id(),
                         transport_id: self.transport.id(),
                         consumer_id: self.id,
-                        producer_id: self.producer.id(),
+                        producer_id: self.producer_id,
                     },
                 };
-                let producer = self.producer.clone();
+                let producer = self.weak_producer.upgrade();
                 let transport = self.transport.clone();
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
-                            error!("consumer closing failed on drop: {}", error);
+                        if producer.is_some() {
+                            if let Err(error) = channel.request(request).await {
+                                error!("consumer closing failed on drop: {}", error);
+                            }
                         }
 
                         drop(producer);
@@ -437,8 +441,8 @@ impl fmt::Debug for Consumer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Consumer")
             .field("id", &self.inner.id)
-            .field("producer_id", &self.inner.producer.id())
-            .field("kind", &self.inner.producer.kind())
+            .field("producer_id", &self.inner.producer_id)
+            .field("kind", &self.inner.kind)
             .field("type", &self.inner.r#type)
             .field("rtp_parameters", &self.inner.rtp_parameters)
             .field("paused", &self.inner.paused)
@@ -474,6 +478,7 @@ impl Consumer {
 
         let handlers = Arc::<Handlers>::default();
         let score = Arc::new(Mutex::new(score));
+        let closed = Arc::new(AtomicBool::new(false));
         #[allow(clippy::mutex_atomic)]
         let paused = Arc::new(Mutex::new(paused));
         #[allow(clippy::mutex_atomic)]
@@ -483,6 +488,7 @@ impl Consumer {
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
+            let closed = Arc::clone(&closed);
             let paused = Arc::clone(&paused);
             let producer_paused = Arc::clone(&producer_paused);
             let score = Arc::clone(&score);
@@ -493,10 +499,13 @@ impl Consumer {
                 match serde_json::from_value::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::ProducerClose => {
-                            handlers.producer_close.call_simple();
-                            if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade)
-                            {
-                                inner.close(false);
+                            if !closed.load(Ordering::SeqCst) {
+                                handlers.producer_close.call_simple();
+                                if let Some(inner) =
+                                    inner_weak.lock().as_ref().and_then(Weak::upgrade)
+                                {
+                                    inner.close(false);
+                                }
                             }
                         }
                         Notification::ProducerPause => {
@@ -579,7 +588,8 @@ impl Consumer {
         });
         let inner = Arc::new(Inner {
             id,
-            producer,
+            producer_id: producer.id(),
+            kind: producer.kind(),
             r#type,
             rtp_parameters,
             paused,
@@ -593,7 +603,8 @@ impl Consumer {
             handlers,
             app_data,
             transport,
-            closed: AtomicBool::new(false),
+            weak_producer: producer.downgrade(),
+            closed,
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
@@ -612,13 +623,13 @@ impl Consumer {
     /// Associated Producer id.
     #[must_use]
     pub fn producer_id(&self) -> ProducerId {
-        self.inner.producer.id()
+        self.inner.producer_id
     }
 
     /// Media kind.
     #[must_use]
     pub fn kind(&self) -> MediaKind {
-        self.inner.producer.kind()
+        self.inner.kind
     }
 
     /// Consumer RTP parameters.
@@ -959,7 +970,7 @@ impl Consumer {
             router_id: self.inner.transport.router_id(),
             transport_id: self.inner.transport.id(),
             consumer_id: self.inner.id,
-            producer_id: self.inner.producer.id(),
+            producer_id: self.inner.producer_id,
         }
     }
 }

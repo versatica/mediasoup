@@ -140,7 +140,7 @@ fn producer_close_is_transmitted_to_pipe_consumer() {
             let _ = producer_close_tx.send(());
         });
 
-        video_producer.close();
+        drop(video_producer);
 
         producer_close_rx
             .await
