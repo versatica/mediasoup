@@ -1409,6 +1409,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (IsPaused())
+			return;
+
 		json data = json::object();
 
 		FillJsonScore(data);
