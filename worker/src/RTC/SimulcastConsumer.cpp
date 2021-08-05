@@ -759,7 +759,7 @@ namespace RTC
 				static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
 
 				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
-				uint32_t tsExtraOffset   = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
+				uint32_t tsExtraOffset = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
 				                         tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
 
 				// NOTE: Don't ask for a key frame if already done.
@@ -891,7 +891,8 @@ namespace RTC
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
-			this->lastSentPacketHasMarker = packet->HasMarker();
+			if (this->rtpSeqManager.GetMaxOutput() == packet->GetSequenceNumber())
+				this->lastSentPacketHasMarker = packet->HasMarker();
 
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
