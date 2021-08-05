@@ -759,6 +759,7 @@ namespace RTC
 				static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
 
 				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
+
 				uint32_t tsExtraOffset = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
 				                         tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
 
