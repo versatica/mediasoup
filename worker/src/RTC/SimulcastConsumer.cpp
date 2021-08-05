@@ -808,7 +808,11 @@ namespace RTC
 			this->tsOffset = tsOffset;
 
 			// Sync our RTP stream's sequence number.
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+			// If previous frame has not been sent completely when we switch layer,
+			// We can tell libwebrtc that previous frame is uncompletely by skipping one RTP sequence num.
+			// 'packet->GetSequenceNumber() -2' may increase SeqManager::base and increase the output seqence num. 
+			// https://github.com/versatica/mediasoup/issues/408
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - (this->lastSentPacketHasMarker ? 1 : 2));
 
 			this->encodingContext->SyncRequired();
 
@@ -886,6 +890,8 @@ namespace RTC
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
+			this->lastSentPacketHasMarker = packet->HasMarker();
+
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 
