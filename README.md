@@ -28,10 +28,10 @@ mediasoup and its client side libraries are designed to accomplish with the foll
 * Be a [SFU](https://webrtcglossary.com/sfu/) (Selective Forwarding Unit).
 * Support both WebRTC and plain RTP input and output.
 * Be a Node.js module/Rust crate in server side.
-* Be a tiny JavaScript and C++ libraries in client side.
+* Be a tiny JavaScript and C++ library on the client side.
 * Be minimalist: just handle the media layer.
 * Be signaling agnostic: do not mandate any signaling protocol.
-* Be super low level API.
+* Be a super low level API.
 * Support all existing WebRTC endpoints.
 * Enable integration with well known multimedia libraries/tools.
 
