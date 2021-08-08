@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.8.1
+
+* `SimulcastConsumer`: Fix RTP timestamp when switching layers (PR #626 by @penguinol).
+* Update NPM deps.
+
+
 ### 3.8.0
 
 * Update `libuv` to 1.42.0.
