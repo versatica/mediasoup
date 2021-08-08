@@ -754,9 +754,14 @@ namespace RTC
 				// https://en.wikipedia.org/wiki/Audio-to-video_synchronization#Recommendations
 				static const uint32_t MaxExtraOffsetMs{ 75u };
 
+				// Outgoing packet matches the highest timestamp seen in the previous stream.
+				// Apply an expected offset for a new frame in a 30fps stream.
+				static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
+
 				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
-				uint32_t tsExtraOffset =
-				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + tsOffset;
+
+				uint32_t tsExtraOffset = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
+				                         tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
 
 				// NOTE: Don't ask for a key frame if already done.
 				if (this->keyFrameForTsOffsetRequested)
@@ -787,15 +792,6 @@ namespace RTC
 
 					return;
 				}
-				// It's common that, when switching spatial layer, the resulting TS for the
-				// outgoing packet matches the highest seen in the previous stream. Fix it.
-				else if (tsExtraOffset == 0u)
-				{
-					// Apply an expected offset for a new frame in a 30fps stream.
-					static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
-
-					tsExtraOffset = MsOffset * this->rtpStream->GetClockRate() / 1000;
-				}
 
 				if (tsExtraOffset > 0u)
 				{
@@ -813,7 +809,12 @@ namespace RTC
 			this->tsOffset = tsOffset;
 
 			// Sync our RTP stream's sequence number.
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+			// If previous frame has not been sent completely when we switch layer, we can tell
+			// libwebrtc that previous frame is incomplete by skipping one RTP sequence number.
+			// 'packet->GetSequenceNumber() -2' may increase SeqManager::base and increase the
+			// output sequence number.
+			// https://github.com/versatica/mediasoup/issues/408
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - (this->lastSentPacketHasMarker ? 1 : 2));
 
 			this->encodingContext->SyncRequired();
 
@@ -891,6 +892,9 @@ namespace RTC
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
+			if (this->rtpSeqManager.GetMaxOutput() == packet->GetSequenceNumber())
+				this->lastSentPacketHasMarker = packet->HasMarker();
+
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 
