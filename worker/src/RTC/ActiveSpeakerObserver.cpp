@@ -155,6 +155,7 @@ namespace RTC
 
 		if (producer->id == this->dominantId)
 		{
+			this->dominantId.erase();
 			Update();
 		}
 	}
