@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.8.2
+
+* `ActiveSpeakerObserver`: Fix crash due to a `nullptr` (PR #634).
+* Update NPM deps.
+
+
 ### 3.8.1
 
 * `SimulcastConsumer`: Fix RTP timestamp when switching layers (PR #626 by @penguinol).
