@@ -149,12 +149,14 @@ namespace RTC
 		if (it->second.speaker != nullptr)
 		{
 			delete it->second.speaker;
+			it->second.speaker = nullptr;
 		}
 
 		this->mapProducerSpeaker.erase(producer->id);
 
 		if (producer->id == this->dominantId)
 		{
+			this->dominantId.erase();
 			Update();
 		}
 	}
