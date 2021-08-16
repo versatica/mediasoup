@@ -28,7 +28,7 @@ namespace RTC
 		public:
 			struct Header
 			{
-				uint8_t paddingBits : 8;
+				uint8_t paddingBits;
 #if defined(MS_LITTLE_ENDIAN)
 				uint8_t payloadType : 7;
 				uint8_t zero : 1;
