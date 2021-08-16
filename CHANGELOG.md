@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.8.3
+
+* Fix wrong `size_t*` to `int*` conversion in 64bit Big-Endian hosts (PR #637).
+
+
 ### 3.8.2
 
 * `ActiveSpeakerObserver`: Fix crash due to a `nullptr` (PR #634).
