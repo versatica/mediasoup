@@ -634,9 +634,9 @@ namespace RTC
 		}
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(&data, &len))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(&data, &intLen))
 		{
 			if (cb)
 			{
@@ -646,6 +646,8 @@ namespace RTC
 
 			return;
 		}
+
+		auto len = static_cast<size_t>(intLen);
 
 		this->tuple->Send(data, len, cb);
 
@@ -661,10 +663,12 @@ namespace RTC
 			return;
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &len))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &intLen))
 			return;
+
+		auto len = static_cast<size_t>(intLen);
 
 		if (this->rtcpMux)
 			this->tuple->Send(data, len);
@@ -683,10 +687,12 @@ namespace RTC
 			return;
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &len))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &intLen))
 			return;
+
+		auto len = static_cast<size_t>(intLen);
 
 		if (this->rtcpMux)
 			this->tuple->Send(data, len);
@@ -775,9 +781,11 @@ namespace RTC
 			return;
 
 		// Decrypt the SRTP packet.
-		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
+		auto intLen = static_cast<int>(len);
+
+		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &intLen))
 		{
-			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
 
 			if (!packet)
 			{
@@ -798,7 +806,7 @@ namespace RTC
 			return;
 		}
 
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
 
 		if (!packet)
 		{
@@ -871,7 +879,9 @@ namespace RTC
 			return;
 
 		// Decrypt the SRTCP packet.
-		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &len))
+		auto intLen = static_cast<int>(len);
+
+		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &intLen))
 		{
 			return;
 		}
@@ -949,7 +959,7 @@ namespace RTC
 			return;
 		}
 
-		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
+		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, static_cast<size_t>(intLen));
 
 		if (!packet)
 		{
