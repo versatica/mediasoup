@@ -44,8 +44,8 @@ namespace RTC
 				uint8_t padding : 1;
 				uint8_t count : 5;
 #endif
-				uint8_t packetType : 8;
-				uint16_t length : 16;
+				uint8_t packetType;
+				uint16_t length;
 			};
 
 		public:

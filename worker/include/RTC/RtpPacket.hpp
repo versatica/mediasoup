@@ -74,8 +74,8 @@ namespace RTC
 		/* Struct for Two-Bytes extension. */
 		struct TwoBytesExtension
 		{
-			uint8_t id : 8;
-			uint8_t len : 8;
+			uint8_t id;
+			uint8_t len;
 			uint8_t value[1];
 		};
 
@@ -85,8 +85,8 @@ namespace RTC
 		{
 			GenericExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value){};
 
-			uint8_t id : 8;
-			uint8_t len : 8;
+			uint8_t id;
+			uint8_t len;
 			uint8_t* value;
 		};
 

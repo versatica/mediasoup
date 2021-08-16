@@ -28,9 +28,16 @@ namespace RTC
 			struct Header
 			{
 				uint32_t ssrc;
-				uint32_t sequenceNumber : 8;
-				uint32_t reserved : 19;
-				uint32_t index : 5;
+				uint8_t sequenceNumber;
+				uint8_t reserved1;
+				uint8_t reserved2;
+#if defined(MS_LITTLE_ENDIAN)
+				uint8_t index : 5;
+				uint8_t reserved3 : 3;
+#elif defined(MS_BIG_ENDIAN)
+				uint8_t reserved3 : 3;
+				uint8_t index : 5;
+#endif
 			};
 
 		public:
@@ -52,11 +59,11 @@ namespace RTC
 			}
 			uint8_t GetSequenceNumber() const
 			{
-				return static_cast<uint8_t>(this->header->sequenceNumber);
+				return this->header->sequenceNumber;
 			}
 			uint8_t GetIndex() const
 			{
-				return static_cast<uint8_t>(this->header->index);
+				return this->header->index;
 			}
 
 			/* Virtual methods inherited from FeedbackItem. */
