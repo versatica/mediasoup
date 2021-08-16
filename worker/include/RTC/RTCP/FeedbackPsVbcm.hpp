@@ -30,8 +30,13 @@ namespace RTC
 			{
 				uint32_t ssrc;
 				uint8_t sequenceNumber;
+#if defined(MS_LITTLE_ENDIAN)
+				uint8_t payloadType : 7;
+				uint8_t zero : 1;
+#elif defined(MS_BIG_ENDIAN)
 				uint8_t zero : 1;
 				uint8_t payloadType : 7;
+#endif
 				uint16_t length;
 				uint8_t value[];
 			};

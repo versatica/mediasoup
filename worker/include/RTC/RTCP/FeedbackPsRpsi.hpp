@@ -28,17 +28,15 @@ namespace RTC
 		public:
 			struct Header
 			{
+				uint8_t paddingBits : 8;
 #if defined(MS_LITTLE_ENDIAN)
-				uint8_t paddingBits : 8;
 				uint8_t payloadType : 7;
 				uint8_t zero : 1;
-				uint8_t bitString[maxBitStringSize];
 #elif defined(MS_BIG_ENDIAN)
-				uint8_t paddingBits : 8;
 				uint8_t zero : 1;
 				uint8_t payloadType : 7;
-				uint8_t bitString[maxBitStringSize];
 #endif
+				uint8_t bitString[maxBitStringSize];
 			};
 
 		public:
