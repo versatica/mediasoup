@@ -930,7 +930,7 @@ export class Router extends EnhancedEventEmitter
 	 */
 	async createActiveSpeakerObserver(
 		{
-			interval = 300,
+			interval = 1000,
 			appData = {}
 		}: ActiveSpeakerObserverOptions = {}
 	): Promise<ActiveSpeakerObserver>

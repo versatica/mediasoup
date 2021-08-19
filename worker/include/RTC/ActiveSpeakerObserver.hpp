@@ -87,7 +87,7 @@ namespace RTC
 		double relativeSpeachActivities[relativeSpeachActivitiesLen];
 		std::string dominantId{ "" };
 		Timer* periodicTimer{ nullptr };
-		uint16_t interval{ 300u };
+		uint16_t interval{ 1000u };
 		std::unordered_map<std::string, struct ProducerSpeaker> mapProducerSpeaker;
 		uint64_t lastLevelIdleTime{ 0 };
 	};
