@@ -250,7 +250,9 @@ namespace RTC
 			this->lastLevelIdleTime = now;
 		}
 
-		if (!this->mapProducerSpeaker.empty() && CalculateActiveSpeaker())
+		CalculateActiveSpeaker();
+
+		if (!this->mapProducerSpeaker.empty())
 		{
 			json data          = json::object();
 			data["producerId"] = this->dominantId;
