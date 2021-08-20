@@ -237,11 +237,11 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for EchoConnection {
                     ctx.address().do_send(message);
                 }
                 Err(error) => {
-                    eprint!("Failed to parse client message: {}\n{}", error, text);
+                    eprintln!("Failed to parse client message: {}\n{}", error, text);
                 }
             },
             Ok(ws::Message::Binary(bin)) => {
-                eprint!("Unexpected binary message: {:?}", bin);
+                eprintln!("Unexpected binary message: {:?}", bin);
             }
             Ok(ws::Message::Close(reason)) => {
                 ctx.close(reason);
@@ -278,7 +278,7 @@ impl Handler<ClientMessage> for EchoConnection {
                             println!("Producer transport connected");
                         }
                         Err(error) => {
-                            eprint!("Failed to connect producer transport: {}", error);
+                            eprintln!("Failed to connect producer transport: {}", error);
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -306,7 +306,7 @@ impl Handler<ClientMessage> for EchoConnection {
                             println!("{:?} producer created: {}", kind, id);
                         }
                         Err(error) => {
-                            eprint!("Failed to create {:?} producer: {}", kind, error);
+                            eprintln!("Failed to create {:?} producer: {}", kind, error);
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -326,7 +326,7 @@ impl Handler<ClientMessage> for EchoConnection {
                             println!("Consumer transport connected");
                         }
                         Err(error) => {
-                            eprint!("Failed to connect consumer transport: {}", error);
+                            eprintln!("Failed to connect consumer transport: {}", error);
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -365,7 +365,7 @@ impl Handler<ClientMessage> for EchoConnection {
                             println!("{:?} consumer created: {}", kind, id);
                         }
                         Err(error) => {
-                            eprint!("Failed to create consumer: {}", error);
+                            eprintln!("Failed to create consumer: {}", error);
                             address.do_send(InternalMessage::Stop);
                         }
                     }

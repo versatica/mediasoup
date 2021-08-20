@@ -43,6 +43,7 @@ mod room {
 
     struct Inner {
         id: RoomId,
+        router: Router,
         handlers: Handlers,
         clients: Mutex<HashMap<ParticipantId, Vec<Producer>>>,
     }
@@ -57,6 +58,14 @@ mod room {
         }
     }
 
+    impl Drop for Inner {
+        fn drop(&mut self) {
+            println!("Room {} closed", self.id);
+
+            self.handlers.close.call_simple();
+        }
+    }
+
     /// Room holds producers of the participants such that other participants can consume audio and
     /// video tracks of each other
     #[derive(Debug, Clone)]
@@ -64,36 +73,46 @@ mod room {
         inner: Arc<Inner>,
     }
 
-    impl Drop for Room {
-        fn drop(&mut self) {
-            println!("Room {} closed", self.inner.id);
-
-            self.inner.handlers.close.call_simple();
-        }
-    }
-
     impl Room {
         /// Create new `Room` with random `RoomId`
-        pub fn new() -> Self {
-            Self::new_with_id(RoomId::new())
+        pub async fn new(worker_manager: &WorkerManager) -> Result<Self, String> {
+            Self::new_with_id(worker_manager, RoomId::new()).await
         }
 
         /// Create new `Room` with a specific `RoomId`
-        pub fn new_with_id(id: RoomId) -> Room {
+        pub async fn new_with_id(
+            worker_manager: &WorkerManager,
+            id: RoomId,
+        ) -> Result<Room, String> {
+            let worker = worker_manager
+                .create_worker(WorkerSettings::default())
+                .await
+                .map_err(|error| format!("Failed to create worker: {}", error))?;
+            let router = worker
+                .create_router(RouterOptions::new(crate::media_codecs()))
+                .await
+                .map_err(|error| format!("Failed to create router: {}", error))?;
+
             println!("Room {} created", id);
 
-            Self {
+            Ok(Self {
                 inner: Arc::new(Inner {
                     id,
+                    router,
                     handlers: Handlers::default(),
                     clients: Mutex::default(),
                 }),
-            }
+            })
         }
 
         /// ID of the room
         pub fn id(&self) -> RoomId {
             self.inner.id
+        }
+
+        /// Get router associated with this room
+        pub fn router(&self) -> &Router {
+            &self.inner.router
         }
 
         /// Add producer to the room, this will trigger notifications to other participants that
@@ -186,7 +205,8 @@ mod room {
 
 mod rooms_registry {
     use crate::room::{Room, RoomId, WeakRoom};
-    use parking_lot::Mutex;
+    use async_lock::Mutex;
+    use mediasoup::prelude::*;
     use std::collections::hash_map::Entry;
     use std::collections::HashMap;
     use std::sync::Arc;
@@ -200,58 +220,74 @@ mod rooms_registry {
 
     impl RoomsRegistry {
         /// Retrieves existing room or creates a new one with specified `RoomId`
-        pub fn get_or_create_room(&self, room_id: RoomId) -> Room {
-            let mut rooms = self.rooms.lock();
+        pub async fn get_or_create_room(
+            &self,
+            worker_manager: &WorkerManager,
+            room_id: RoomId,
+        ) -> Result<Room, String> {
+            let mut rooms = self.rooms.lock().await;
             match rooms.entry(room_id) {
                 Entry::Occupied(mut entry) => match entry.get().upgrade() {
-                    Some(room) => room,
+                    Some(room) => Ok(room),
                     None => {
-                        let room = Room::new_with_id(room_id);
+                        let room = Room::new_with_id(worker_manager, room_id).await?;
                         entry.insert(room.downgrade());
                         room.on_close({
                             let room_id = room.id();
                             let rooms = Arc::clone(&self.rooms);
 
                             move || {
-                                rooms.lock().remove(&room_id);
+                                std::thread::spawn(move || {
+                                    futures_lite::future::block_on(async move {
+                                        rooms.lock().await.remove(&room_id);
+                                    });
+                                });
                             }
                         })
                         .detach();
-                        room
+                        Ok(room)
                     }
                 },
                 Entry::Vacant(entry) => {
-                    let room = Room::new_with_id(room_id);
+                    let room = Room::new_with_id(worker_manager, room_id).await?;
                     entry.insert(room.downgrade());
                     room.on_close({
                         let room_id = room.id();
                         let rooms = Arc::clone(&self.rooms);
 
                         move || {
-                            rooms.lock().remove(&room_id);
+                            std::thread::spawn(move || {
+                                futures_lite::future::block_on(async move {
+                                    rooms.lock().await.remove(&room_id);
+                                });
+                            });
                         }
                     })
                     .detach();
-                    room
+                    Ok(room)
                 }
             }
         }
 
         /// Create new room with random `RoomId`
-        pub fn create_room(&self) -> Room {
-            let mut rooms = self.rooms.lock();
-            let room = Room::new();
+        pub async fn create_room(&self, worker_manager: &WorkerManager) -> Result<Room, String> {
+            let mut rooms = self.rooms.lock().await;
+            let room = Room::new(worker_manager).await?;
             rooms.insert(room.id(), room.downgrade());
             room.on_close({
                 let room_id = room.id();
                 let rooms = Arc::clone(&self.rooms);
 
                 move || {
-                    rooms.lock().remove(&room_id);
+                    std::thread::spawn(move || {
+                        futures_lite::future::block_on(async move {
+                            rooms.lock().await.remove(&room_id);
+                        });
+                    });
                 }
             })
             .detach();
-            room
+            Ok(room)
         }
     }
 }
@@ -411,8 +447,6 @@ mod participant {
         consumers: HashMap<ConsumerId, Consumer>,
         /// Producers associated with this client, preventing them from being destroyed
         producers: Vec<Producer>,
-        /// Producers associated with this client, useful to get its RTP capabilities later
-        router: Router,
         /// Consumer and producer transports associated with this client
         transports: Transports,
         /// Room to which the client belongs
@@ -430,16 +464,7 @@ mod participant {
 
     impl ParticipantConnection {
         /// Create a new instance representing WebSocket connection
-        pub async fn new(worker_manager: &WorkerManager, room: Room) -> Result<Self, String> {
-            let worker = worker_manager
-                .create_worker(WorkerSettings::default())
-                .await
-                .map_err(|error| format!("Failed to create worker: {}", error))?;
-            let router = worker
-                .create_router(RouterOptions::new(crate::media_codecs()))
-                .await
-                .map_err(|error| format!("Failed to create router: {}", error))?;
-
+        pub async fn new(room: Room) -> Result<Self, String> {
             // We know that for videoroom example we'll need 2 transports, so we can create both
             // right away. This may not be the case for real-world applications or you may create
             // this at a different time and/or in different order.
@@ -448,12 +473,14 @@ mod participant {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 }));
-            let producer_transport = router
+            let producer_transport = room
+                .router()
                 .create_webrtc_transport(transport_options.clone())
                 .await
                 .map_err(|error| format!("Failed to create producer transport: {}", error))?;
 
-            let consumer_transport = router
+            let consumer_transport = room
+                .router()
                 .create_webrtc_transport(transport_options)
                 .await
                 .map_err(|error| format!("Failed to create consumer transport: {}", error))?;
@@ -463,7 +490,6 @@ mod participant {
                 client_rtp_capabilities: None,
                 consumers: HashMap::new(),
                 producers: vec![],
-                router,
                 transports: Transports {
                     consumer: consumer_transport,
                     producer: producer_transport,
@@ -497,7 +523,7 @@ mod participant {
                     ice_candidates: self.transports.producer.ice_candidates().clone(),
                     ice_parameters: self.transports.producer.ice_parameters().clone(),
                 },
-                router_rtp_capabilities: self.router.rtp_capabilities().clone(),
+                router_rtp_capabilities: self.room.router().rtp_capabilities().clone(),
             };
 
             let address = ctx.address();
@@ -567,11 +593,11 @@ mod participant {
                         ctx.address().do_send(message);
                     }
                     Err(error) => {
-                        eprint!("Failed to parse client message: {}\n{}", error, text);
+                        eprintln!("Failed to parse client message: {}\n{}", error, text);
                     }
                 },
                 Ok(ws::Message::Binary(bin)) => {
-                    eprint!("Unexpected binary message: {:?}", bin);
+                    eprintln!("Unexpected binary message: {:?}", bin);
                 }
                 Ok(ws::Message::Close(reason)) => {
                     ctx.close(reason);
@@ -612,7 +638,7 @@ mod participant {
                                 );
                             }
                             Err(error) => {
-                                eprint!("Failed to connect producer transport: {}", error);
+                                eprintln!("Failed to connect producer transport: {}", error);
                                 address.do_send(InternalMessage::Stop);
                             }
                         }
@@ -647,7 +673,7 @@ mod participant {
                                 );
                             }
                             Err(error) => {
-                                eprint!(
+                                eprintln!(
                                     "[participant_id {}] Failed to create {:?} producer: {}",
                                     participant_id, kind, error
                                 );
@@ -674,7 +700,7 @@ mod participant {
                                 );
                             }
                             Err(error) => {
-                                eprint!(
+                                eprintln!(
                                     "[participant_id {}] Failed to connect consumer transport: {}",
                                     participant_id, error,
                                 );
@@ -724,7 +750,7 @@ mod participant {
                                 );
                             }
                             Err(error) => {
-                                eprint!(
+                                eprintln!(
                                     "[participant_id {}] Failed to create consumer: {}",
                                     participant_id, error,
                                 );
@@ -840,11 +866,24 @@ async fn ws_index(
     stream: Payload,
 ) -> Result<HttpResponse, Error> {
     let room = match query_parameters.room_id {
-        Some(room_id) => rooms_registry.get_or_create_room(room_id),
-        None => rooms_registry.create_room(),
+        Some(room_id) => {
+            rooms_registry
+                .get_or_create_room(&worker_manager, room_id)
+                .await
+        }
+        None => rooms_registry.create_room(&worker_manager).await,
     };
 
-    match ParticipantConnection::new(&worker_manager, room).await {
+    let room = match room {
+        Ok(room) => room,
+        Err(error) => {
+            eprintln!("{}", error);
+
+            return Ok(HttpResponse::InternalServerError().finish());
+        }
+    };
+
+    match ParticipantConnection::new(room).await {
         Ok(echo_server) => ws::start(echo_server, &request, stream),
         Err(error) => {
             eprintln!("{}", error);
