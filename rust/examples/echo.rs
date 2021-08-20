@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::num::{NonZeroU32, NonZeroU8};
 
+/// List of codecs that SFU will accept from clients
 fn media_codecs() -> Vec<RtpCodecCapability> {
     vec![
         RtpCodecCapability::Audio {
@@ -33,6 +34,8 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
     ]
 }
 
+/// Data structure containing all the necessary information about transport options required from
+/// the server to establish transport connection on the client
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TransportOptions {
@@ -42,22 +45,31 @@ struct TransportOptions {
     ice_parameters: IceParameters,
 }
 
+/// Server messages sent to the client
 #[derive(Serialize, Message)]
 #[serde(tag = "action")]
 #[rtype(result = "()")]
 enum ServerMessage {
+    /// Initialization message with consumer/producer transport options and Router's RTP
+    /// capabilities necessary to establish WebRTC transport connection client-side
     #[serde(rename_all = "camelCase")]
     Init {
         consumer_transport_options: TransportOptions,
         producer_transport_options: TransportOptions,
         router_rtp_capabilities: RtpCapabilitiesFinalized,
     },
+    /// Notification that producer transport was connected successfully (in case of error connection
+    /// is just dropped, in real-world application you probably want to handle it better)
     ConnectedProducerTransport,
+    /// Notification that producer was created on the server, in this simple example client will try
+    /// to consume it right away, hence `echo` example
     #[serde(rename_all = "camelCase")]
-    Produced {
-        id: ProducerId,
-    },
+    Produced { id: ProducerId },
+    /// Notification that consumer transport was connected successfully (in case of error connection
+    /// is just dropped, in real-world application you probably want to handle it better)
     ConnectedConsumerTransport,
+    /// Notification that consumer was successfully created server-side, client can resume the
+    /// consumer after this
     #[serde(rename_all = "camelCase")]
     Consumed {
         id: ConsumerId,
@@ -67,49 +79,72 @@ enum ServerMessage {
     },
 }
 
+/// Client messages sent to the server
 #[derive(Deserialize, Message)]
 #[serde(tag = "action")]
 #[rtype(result = "()")]
 enum ClientMessage {
+    /// Client-side initialization with its RTP capabilities, in this simple case we expect those to
+    /// match server Router's RTP capabilities
     #[serde(rename_all = "camelCase")]
     Init { rtp_capabilities: RtpCapabilities },
+    /// Request to connect producer transport with client-side DTLS parameters
     #[serde(rename_all = "camelCase")]
     ConnectProducerTransport { dtls_parameters: DtlsParameters },
+    /// Request to produce a new audio or video track with specified RTP parameters
     #[serde(rename_all = "camelCase")]
     Produce {
         kind: MediaKind,
         rtp_parameters: RtpParameters,
     },
+    /// Request to connect consumer transport with client-side DTLS parameters
     #[serde(rename_all = "camelCase")]
     ConnectConsumerTransport { dtls_parameters: DtlsParameters },
+    /// Request to consume specified producer
     #[serde(rename_all = "camelCase")]
     Consume { producer_id: ProducerId },
+    /// Request to resume consumer that was previously created
     #[serde(rename_all = "camelCase")]
     ConsumerResume { id: ConsumerId },
 }
 
+/// Internal actor messages for convenience
 #[derive(Message)]
 #[rtype(result = "()")]
 enum InternalMessage {
+    /// Save producer in connection-specific hashmap to prevent it from being destroyed
     SaveProducer(Producer),
+    /// Save consumer in connection-specific hashmap to prevent it from being destroyed
     SaveConsumer(Consumer),
+    /// Stop/close the WebSocket connection
     Stop,
 }
 
+/// Consumer/producer transports pair for the client
 struct Transports {
     consumer: WebRtcTransport,
     producer: WebRtcTransport,
 }
 
-struct EchoServer {
+/// Actor that will represent WebSocket connection from the client, it will handle inbound and
+/// outbound WebSocket messages in JSON.
+///
+/// See https://actix.rs/docs/websockets/ for official `actix-web` documentation.
+struct EchoConnection {
+    /// RTP capabilities received from the client
     client_rtp_capabilities: Option<RtpCapabilities>,
+    /// Consumers associated with this client, preventing them from being destroyed
     consumers: HashMap<ConsumerId, Consumer>,
+    /// Producers associated with this client, preventing them from being destroyed
     producers: Vec<Producer>,
+    /// Producers associated with this client, useful to get its RTP capabilities later
     router: Router,
+    /// Consumer and producer transports associated with this client
     transports: Transports,
 }
 
-impl EchoServer {
+impl EchoConnection {
+    /// Create a new instance representing WebSocket connection
     async fn new(worker_manager: &WorkerManager) -> Result<Self, String> {
         let worker = worker_manager
             .create_worker(WorkerSettings::default())
@@ -120,6 +155,9 @@ impl EchoServer {
             .await
             .map_err(|error| format!("Failed to create router: {}", error))?;
 
+        // We know that for echo example we'll need 2 transports, so we can create both right away.
+        // This may not be the case for real-world applications or you may create this at a
+        // different time and/or in different order.
         let transport_options =
             WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
                 ip: "127.0.0.1".parse().unwrap(),
@@ -148,12 +186,15 @@ impl EchoServer {
     }
 }
 
-impl Actor for EchoServer {
+impl Actor for EchoConnection {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
         println!("WebSocket connection created");
 
+        // We know that both consumer and producer transports will be used, so we sent server
+        // information about both in an initialization message alongside with router capabilities
+        // to the client right after WebSocket connection is established
         let server_init_message = ServerMessage::Init {
             consumer_transport_options: TransportOptions {
                 id: self.transports.consumer.id(),
@@ -170,7 +211,7 @@ impl Actor for EchoServer {
             router_rtp_capabilities: self.router.rtp_capabilities().clone(),
         };
 
-        ctx.text(serde_json::to_string(&server_init_message).unwrap());
+        ctx.address().do_send(server_init_message);
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
@@ -178,8 +219,11 @@ impl Actor for EchoServer {
     }
 }
 
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for EchoServer {
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for EchoConnection {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
+        // Here we handle incoming WebSocket messages, intentionally not handling continuation
+        // messages since we know all messages will fit into a single frame, but in real-world apps
+        // you need to handle continuation frames too (`ws::Message::Continuation`)
         match msg {
             Ok(ws::Message::Ping(msg)) => {
                 ctx.pong(&msg);
@@ -187,14 +231,17 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for EchoServer {
             Ok(ws::Message::Pong(_)) => {}
             Ok(ws::Message::Text(text)) => match serde_json::from_str::<ClientMessage>(&text) {
                 Ok(message) => {
+                    // Parse JSON into an enum and just send it back to the actor to be processed
+                    // by another handler below, it is much more convenient to just parse it in one
+                    // place and have typed data structure everywhere else
                     ctx.address().do_send(message);
                 }
                 Err(error) => {
-                    eprint!("Failed to parse client message: {}\n{}", error, text);
+                    eprintln!("Failed to parse client message: {}\n{}", error, text);
                 }
             },
             Ok(ws::Message::Binary(bin)) => {
-                eprint!("Unexpected binary message: {:?}", bin);
+                eprintln!("Unexpected binary message: {:?}", bin);
             }
             Ok(ws::Message::Close(reason)) => {
                 ctx.close(reason);
@@ -205,17 +252,22 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for EchoServer {
     }
 }
 
-impl Handler<ClientMessage> for EchoServer {
+impl Handler<ClientMessage> for EchoConnection {
     type Result = ();
 
     fn handle(&mut self, message: ClientMessage, ctx: &mut Self::Context) {
         match message {
             ClientMessage::Init { rtp_capabilities } => {
+                // We need to know client's RTP capabilities, those are sent using initialization
+                // message and are stored in connection struct for future use
                 self.client_rtp_capabilities.replace(rtp_capabilities);
             }
             ClientMessage::ConnectProducerTransport { dtls_parameters } => {
                 let address = ctx.address();
                 let transport = self.transports.producer.clone();
+                // Establish connection for producer transport using DTLS parameters received
+                // from the client, but doing so in a background task since this handler is
+                // synchronous
                 actix::spawn(async move {
                     match transport
                         .connect(WebRtcTransportRemoteParameters { dtls_parameters })
@@ -226,7 +278,7 @@ impl Handler<ClientMessage> for EchoServer {
                             println!("Producer transport connected");
                         }
                         Err(error) => {
-                            eprint!("Failed to connect producer transport: {}", error);
+                            eprintln!("Failed to connect producer transport: {}", error);
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -238,6 +290,8 @@ impl Handler<ClientMessage> for EchoServer {
             } => {
                 let address = ctx.address();
                 let transport = self.transports.producer.clone();
+                // Use producer transport to create a new producer on the server with given RTP
+                // parameters
                 actix::spawn(async move {
                     match transport
                         .produce(ProducerOptions::new(kind, rtp_parameters))
@@ -246,11 +300,13 @@ impl Handler<ClientMessage> for EchoServer {
                         Ok(producer) => {
                             let id = producer.id();
                             address.do_send(ServerMessage::Produced { id });
+                            // Producer is stored in a hashmap since if we don't do it, it will get
+                            // destroyed as soon as its instance goes out out scope
                             address.do_send(InternalMessage::SaveProducer(producer));
                             println!("{:?} producer created: {}", kind, id);
                         }
                         Err(error) => {
-                            eprint!("Failed to create {:?} producer: {}", kind, error);
+                            eprintln!("Failed to create {:?} producer: {}", kind, error);
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -259,6 +315,7 @@ impl Handler<ClientMessage> for EchoServer {
             ClientMessage::ConnectConsumerTransport { dtls_parameters } => {
                 let address = ctx.address();
                 let transport = self.transports.consumer.clone();
+                // The same as producer transport, but for consumer transport
                 actix::spawn(async move {
                     match transport
                         .connect(WebRtcTransportRemoteParameters { dtls_parameters })
@@ -269,7 +326,7 @@ impl Handler<ClientMessage> for EchoServer {
                             println!("Consumer transport connected");
                         }
                         Err(error) => {
-                            eprint!("Failed to connect consumer transport: {}", error);
+                            eprintln!("Failed to connect consumer transport: {}", error);
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -285,6 +342,8 @@ impl Handler<ClientMessage> for EchoServer {
                         return;
                     }
                 };
+                // Create consumer for given producer ID, while first making sure that RTP
+                // capabilities were sent by the client prior to that
                 actix::spawn(async move {
                     let mut options = ConsumerOptions::new(producer_id, rtp_capabilities);
                     options.paused = true;
@@ -300,11 +359,13 @@ impl Handler<ClientMessage> for EchoServer {
                                 kind,
                                 rtp_parameters,
                             });
+                            // Consumer is stored in a hashmap since if we don't do it, it will get
+                            // destroyed as soon as its instance goes out out scope
                             address.do_send(InternalMessage::SaveConsumer(consumer));
                             println!("{:?} consumer created: {}", kind, id);
                         }
                         Err(error) => {
-                            eprint!("Failed to create consumer: {}", error);
+                            eprintln!("Failed to create consumer: {}", error);
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -337,7 +398,9 @@ impl Handler<ClientMessage> for EchoServer {
     }
 }
 
-impl Handler<ServerMessage> for EchoServer {
+/// Simple handler that will transform typed server messages into JSON and send them over to the
+/// client over WebSocket connection
+impl Handler<ServerMessage> for EchoConnection {
     type Result = ();
 
     fn handle(&mut self, message: ServerMessage, ctx: &mut Self::Context) {
@@ -345,7 +408,10 @@ impl Handler<ServerMessage> for EchoServer {
     }
 }
 
-impl Handler<InternalMessage> for EchoServer {
+/// Convenience handler for internal messages, these actions require mutable access to the
+/// connection struct and having such message handler makes it easy to use from background tasks
+/// where otherwise Mutex would have to be used instead
+impl Handler<InternalMessage> for EchoConnection {
     type Result = ();
 
     fn handle(&mut self, message: InternalMessage, ctx: &mut Self::Context) {
@@ -364,12 +430,15 @@ impl Handler<InternalMessage> for EchoServer {
     }
 }
 
+/// Function that receives HTTP request on WebSocket route and upgrades it to WebSocket connection.
+///
+/// See https://actix.rs/docs/websockets/ for official `actix-web` documentation.
 async fn ws_index(
     request: HttpRequest,
     worker_manager: Data<WorkerManager>,
     stream: Payload,
 ) -> Result<HttpResponse, Error> {
-    match EchoServer::new(&worker_manager).await {
+    match EchoConnection::new(&worker_manager).await {
         Ok(echo_server) => ws::start(echo_server, &request, stream),
         Err(error) => {
             eprintln!("{}", error);
@@ -383,12 +452,15 @@ async fn ws_index(
 async fn main() -> std::io::Result<()> {
     env_logger::init();
 
+    // We will reuse the same worker manager across all connections, this is more than enough for
+    // this use case
     let worker_manager = Data::new(WorkerManager::new());
     HttpServer::new(move || {
         App::new()
             .app_data(worker_manager.clone())
             .route("/ws", web::get().to(ws_index))
     })
+    // 2 threads is plenty for this example, default is to have as many threads as CPU cores
     .workers(2)
     .bind("127.0.0.1:3000")?
     .run()
