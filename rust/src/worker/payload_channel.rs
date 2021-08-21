@@ -13,7 +13,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
-use std::io::Write;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 use thiserror::Error;
@@ -246,19 +245,16 @@ impl PayloadChannel {
 
             executor
                 .spawn(async move {
-                    let mut len = Vec::new();
                     while let Ok(message) = receiver.recv().await {
-                        len.clear();
-                        write!(&mut len, "{}:", message.message.len()).unwrap();
-                        writer.write_all(&len).await?;
+                        writer
+                            .write_all(&(message.message.len() as u32).to_ne_bytes())
+                            .await?;
                         writer.write_all(&message.message).await?;
-                        writer.write_all(&[b',']).await?;
 
-                        len.clear();
-                        write!(&mut len, "{}:", message.payload.len()).unwrap();
-                        writer.write_all(&len).await?;
+                        writer
+                            .write_all(&(message.payload.len() as u32).to_ne_bytes())
+                            .await?;
                         writer.write_all(&message.payload).await?;
-                        writer.write_all(&[b',']).await?;
                     }
 
                     io::Result::Ok(())

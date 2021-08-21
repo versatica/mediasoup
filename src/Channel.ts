@@ -1,6 +1,4 @@
 import { Duplex } from 'stream';
-// @ts-ignore
-import * as netstring from 'netstring';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
@@ -230,13 +228,15 @@ export class Channel extends EnhancedEventEmitter
 			throw new InvalidStateError('Channel closed');
 
 		const request = { id, method, internal, data };
-		const ns = netstring.nsWrite(JSON.stringify(request));
+		const payload = JSON.stringify(request);
 
-		if (Buffer.byteLength(ns) > NS_MESSAGE_MAX_LEN)
+		if (Buffer.byteLength(payload) > NS_MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
 
 		// This may throw if closed or remote side ended.
-		this._producerSocket.write(ns);
+		this._producerSocket.write(
+			Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
+		this._producerSocket.write(payload);
 
 		return new Promise((pResolve, pReject) =>
 		{

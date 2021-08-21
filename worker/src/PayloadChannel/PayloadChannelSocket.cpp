@@ -8,10 +8,6 @@
 #include <cmath>   // std::ceil()
 #include <cstdio>  // sprintf()
 #include <cstring> // std::memcpy(), std::memmove()
-extern "C"
-{
-#include <netstring.h>
-}
 
 namespace PayloadChannel
 {
@@ -110,14 +106,14 @@ namespace PayloadChannel
 	{
 		MS_TRACE();
 
-		std::memcpy(this->writeBuffer, &nsPayloadLen, 4);
+		std::memcpy(this->writeBuffer, &nsPayloadLen, sizeof(uint32_t));
 
 		if (nsPayloadLen != 0)
 		{
-			std::memcpy(this->writeBuffer + 4, nsPayload, nsPayloadLen);
+			std::memcpy(this->writeBuffer + sizeof(uint32_t), nsPayload, nsPayloadLen);
 		}
 
-		size_t nsLen = 4 + nsPayloadLen;
+		size_t nsLen = sizeof(uint32_t) + nsPayloadLen;
 
 		this->producerSocket.Write(this->writeBuffer, nsLen);
 	}
@@ -222,20 +218,18 @@ namespace PayloadChannel
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
 	{
 		MS_TRACE();
-
-		this->readBuffer = static_cast<uint8_t*>(std::malloc(NsMessageMaxLen));
 	}
 
 	ConsumerSocket::~ConsumerSocket()
 	{
 		MS_TRACE();
-
-		std::free(this->readBuffer);
 	}
 
 	void ConsumerSocket::UserOnUnixStreamRead()
 	{
 		MS_TRACE();
+
+		size_t msgStart{ 0 };
 
 		// Be ready to parse more than a single message in a single chunk.
 		while (true)
@@ -243,119 +237,40 @@ namespace PayloadChannel
 			if (IsClosed())
 				return;
 
-			size_t readLen = this->bufferDataLen - this->msgStart;
-			char* msgStart = nullptr;
-			size_t msgLen;
-			int nsRet = netstring_read(
-			  reinterpret_cast<char*>(this->buffer + this->msgStart), readLen, &msgStart, &msgLen);
+			size_t readLen = this->bufferDataLen - msgStart;
 
-			if (nsRet != 0)
+			if (readLen < sizeof(uint32_t))
 			{
-				switch (nsRet)
-				{
-					case NETSTRING_ERROR_TOO_SHORT:
-					{
-						// Check if the buffer is full.
-						if (this->bufferDataLen == this->bufferSize)
-						{
-							// First case: the incomplete message does not begin at position 0 of
-							// the buffer, so move the incomplete message to the position 0.
-							if (this->msgStart != 0)
-							{
-								std::memmove(this->buffer, this->buffer + this->msgStart, readLen);
-								this->msgStart      = 0;
-								this->bufferDataLen = readLen;
-							}
-							// Second case: the incomplete message begins at position 0 of the buffer.
-							// The message is too big, so discard it.
-							else
-							{
-								MS_ERROR(
-								  "no more space in the buffer for the unfinished message being parsed, "
-								  "discarding it");
-
-								this->msgStart      = 0;
-								this->bufferDataLen = 0;
-							}
-						}
-
-						// Otherwise the buffer is not full, just wait.
-						return;
-					}
-
-					case NETSTRING_ERROR_TOO_LONG:
-					{
-						MS_ERROR("NETSTRING_ERROR_TOO_LONG");
-
-						break;
-					}
-
-					case NETSTRING_ERROR_NO_COLON:
-					{
-						MS_ERROR("NETSTRING_ERROR_NO_COLON");
-
-						break;
-					}
-
-					case NETSTRING_ERROR_NO_COMMA:
-					{
-						MS_ERROR("NETSTRING_ERROR_NO_COMMA");
-
-						break;
-					}
-
-					case NETSTRING_ERROR_LEADING_ZERO:
-					{
-						MS_ERROR("NETSTRING_ERROR_LEADING_ZERO");
-
-						break;
-					}
-
-					case NETSTRING_ERROR_NO_LENGTH:
-					{
-						MS_ERROR("NETSTRING_ERROR_NO_LENGTH");
-
-						break;
-					}
-				}
-
-				// Error, so reset and exit the parsing loop.
-				this->msgStart      = 0;
-				this->bufferDataLen = 0;
-
-				return;
+				// Incomplete data.
+				break;
 			}
 
-			// If here it means that msgStart points to the beginning of a message
-			// with msgLen bytes length, so recalculate readLen.
-			readLen =
-			  reinterpret_cast<const uint8_t*>(msgStart) - (this->buffer + this->msgStart) + msgLen + 1;
+			uint32_t msgLen;
+			// Read message length.
+			std::memcpy(&msgLen, this->buffer + msgStart, sizeof(uint32_t));
 
-			std::memcpy(this->readBuffer, msgStart, msgLen);
-			this->listener->OnConsumerSocketMessage(this, reinterpret_cast<char*>(this->readBuffer), msgLen);
-
-			// If there is no more space available in the buffer and that is because
-			// the latest parsed message filled it, then empty the full buffer.
-			if ((this->msgStart + readLen) == this->bufferSize)
+			if (readLen < sizeof(uint32_t) + static_cast<size_t>(msgLen))
 			{
-				this->msgStart      = 0;
-				this->bufferDataLen = 0;
-			}
-			// If there is still space in the buffer, set the beginning of the next
-			// parsing to the next position after the parsed message.
-			else
-			{
-				this->msgStart += readLen;
+				// Incomplete data.
+				break;
 			}
 
-			// If there is more data in the buffer after the parsed message
-			// then parse again. Otherwise break here and wait for more data.
-			if (this->bufferDataLen > this->msgStart)
-			{
-				continue;
-			}
+			this->listener->OnConsumerSocketMessage(
+			  this,
+			  reinterpret_cast<char*>(this->buffer + msgStart + sizeof(uint32_t)),
+			  static_cast<size_t>(msgLen));
 
-			break;
+			msgStart += sizeof(uint32_t) + static_cast<size_t>(msgLen);
+		}
+
+		if (msgStart != 0)
+		{
+			this->bufferDataLen = this->bufferDataLen - msgStart;
+
+			if (this->bufferDataLen != 0)
+			{
+				std::memmove(this->buffer, this->buffer + msgStart, this->bufferDataLen);
+			}
 		}
 	}
 

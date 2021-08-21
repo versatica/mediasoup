@@ -14,7 +14,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
-use std::io::Write;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
@@ -265,13 +264,11 @@ impl Channel {
 
             executor
                 .spawn(async move {
-                    let mut len = Vec::new();
                     while let Ok(message) = receiver.recv().await {
-                        len.clear();
-                        write!(&mut len, "{}:", message.len()).unwrap();
-                        writer.write_all(&len).await?;
+                        writer
+                            .write_all(&(message.len() as u32).to_ne_bytes())
+                            .await?;
                         writer.write_all(&message).await?;
-                        writer.write_all(&[b',']).await?;
                     }
 
                     io::Result::Ok(())

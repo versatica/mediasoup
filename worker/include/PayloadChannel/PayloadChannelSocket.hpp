@@ -34,10 +34,6 @@ namespace PayloadChannel
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		// Allocated by this.
-		uint8_t* readBuffer{ nullptr };
-		// Others.
-		size_t msgStart{ 0u }; // Where the latest message starts.
 	};
 
 	class ProducerSocket : public ::UnixStreamSocket

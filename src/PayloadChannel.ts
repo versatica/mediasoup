@@ -1,6 +1,4 @@
 import { Duplex } from 'stream';
-// @ts-ignore
-import * as netstring from 'netstring';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
@@ -182,19 +180,19 @@ export class PayloadChannel extends EnhancedEventEmitter
 		if (this._closed)
 			throw new InvalidStateError('PayloadChannel closed');
 
-		const notification = { event, internal, data };
-		const ns1 = netstring.nsWrite(JSON.stringify(notification));
-		const ns2 = netstring.nsWrite(payload);
+		const notification = JSON.stringify({ event, internal, data });
 
-		if (Buffer.byteLength(ns1) > NS_MESSAGE_MAX_LEN)
+		if (Buffer.byteLength(notification) > NS_MESSAGE_MAX_LEN)
 			throw new Error('PayloadChannel notification too big');
-		else if (Buffer.byteLength(ns2) > NS_MESSAGE_MAX_LEN)
+		else if (Buffer.byteLength(payload) > NS_MESSAGE_MAX_LEN)
 			throw new Error('PayloadChannel payload too big');
 
 		try
 		{
 			// This may throw if closed or remote side ended.
-			this._producerSocket.write(ns1);
+			this._producerSocket.write(
+				Buffer.from(Uint32Array.of(Buffer.byteLength(notification)).buffer));
+			this._producerSocket.write(notification);
 		}
 		catch (error)
 		{
@@ -206,7 +204,9 @@ export class PayloadChannel extends EnhancedEventEmitter
 		try
 		{
 			// This may throw if closed or remote side ended.
-			this._producerSocket.write(ns2);
+			this._producerSocket.write(
+				Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
+			this._producerSocket.write(payload);
 		}
 		catch (error)
 		{
@@ -234,18 +234,20 @@ export class PayloadChannel extends EnhancedEventEmitter
 		if (this._closed)
 			throw new InvalidStateError('Channel closed');
 
-		const request = { id, method, internal, data };
-		const ns1 = netstring.nsWrite(JSON.stringify(request));
-		const ns2 = netstring.nsWrite(payload);
+		const request = JSON.stringify({ id, method, internal, data });
 
-		if (Buffer.byteLength(ns1) > NS_MESSAGE_MAX_LEN)
+		if (Buffer.byteLength(request) > NS_MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
-		else if (Buffer.byteLength(ns2) > NS_MESSAGE_MAX_LEN)
+		else if (Buffer.byteLength(payload) > NS_MESSAGE_MAX_LEN)
 			throw new Error('PayloadChannel payload too big');
 
 		// This may throw if closed or remote side ended.
-		this._producerSocket.write(ns1);
-		this._producerSocket.write(ns2);
+		this._producerSocket.write(
+			Buffer.from(Uint32Array.of(Buffer.byteLength(request)).buffer));
+		this._producerSocket.write(request);
+		this._producerSocket.write(
+			Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
+		this._producerSocket.write(payload);
 
 		return new Promise((pResolve, pReject) =>
 		{

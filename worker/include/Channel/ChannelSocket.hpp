@@ -31,8 +31,6 @@ namespace Channel
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		// Others.
-		size_t msgStart{ 0u }; // Where the latest message starts.
 	};
 
 	class ProducerSocket : public ::UnixStreamSocket
