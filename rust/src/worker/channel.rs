@@ -3,7 +3,7 @@ use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
-use bytes::{BufMut, Bytes, BytesMut};
+use bytes::Bytes;
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncReadExt, AsyncWriteExt};
 use log::{debug, trace, warn};
@@ -372,19 +372,14 @@ impl Channel {
 
         debug!("request() [method:{}, id:{}]: {}", method, id, message);
 
-        let bytes = {
-            let mut bytes = BytesMut::new().writer();
-            serde_json::to_writer(
-                &mut bytes,
-                &RequestMessagePrivate {
-                    id,
-                    method,
-                    message,
-                },
-            )
-            .unwrap();
-            bytes.into_inner()
-        };
+        let bytes = Bytes::from(
+            serde_json::to_vec(&RequestMessagePrivate {
+                id,
+                method,
+                message,
+            })
+            .unwrap(),
+        );
 
         if bytes.len() > NS_PAYLOAD_MAX_LEN {
             self.inner
@@ -399,7 +394,7 @@ impl Channel {
 
         self.inner
             .sender
-            .send(bytes.freeze())
+            .send(bytes)
             .await
             .map_err(|_| RequestError::ChannelClosed {})?;
 

@@ -3,7 +3,7 @@ use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
-use bytes::{BufMut, Bytes, BytesMut};
+use bytes::Bytes;
 use futures_lite::io::BufReader;
 use futures_lite::{future, AsyncReadExt, AsyncWriteExt};
 use log::{debug, error, trace, warn};
@@ -366,19 +366,14 @@ impl PayloadChannel {
 
         debug!("request() [method:{}, id:{}]: {}", method, id, message);
 
-        let bytes = {
-            let mut bytes = BytesMut::new().writer();
-            serde_json::to_writer(
-                &mut bytes,
-                &RequestMessagePrivate {
-                    id,
-                    method,
-                    message,
-                },
-            )
-            .unwrap();
-            bytes.into_inner()
-        };
+        let bytes = Bytes::from(
+            serde_json::to_vec(&RequestMessagePrivate {
+                id,
+                method,
+                message,
+            })
+            .unwrap(),
+        );
 
         if bytes.len() > NS_PAYLOAD_MAX_LEN {
             self.inner
@@ -405,7 +400,7 @@ impl PayloadChannel {
         self.inner
             .sender
             .send(MessageWithPayload {
-                message: bytes.freeze(),
+                message: bytes,
                 payload,
             })
             .await
@@ -465,18 +460,13 @@ impl PayloadChannel {
             return Err(NotificationError::PayloadTooLong);
         }
 
-        let bytes = {
-            let mut bytes = BytesMut::new().writer();
-            serde_json::to_writer(
-                &mut bytes,
-                &NotificationMessagePrivate {
-                    event,
-                    notification,
-                },
-            )
-            .unwrap();
-            bytes.into_inner()
-        };
+        let bytes = Bytes::from(
+            serde_json::to_vec(&NotificationMessagePrivate {
+                event,
+                notification,
+            })
+            .unwrap(),
+        );
 
         if bytes.len() > NS_PAYLOAD_MAX_LEN {
             return Err(NotificationError::MessageTooLong);
@@ -485,7 +475,7 @@ impl PayloadChannel {
         self.inner
             .sender
             .send(MessageWithPayload {
-                message: bytes.freeze(),
+                message: bytes,
                 payload,
             })
             .await
