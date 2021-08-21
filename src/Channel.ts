@@ -87,26 +87,32 @@ export class Channel extends EnhancedEventEmitter
 				return;
 			}
 
+			let msgStart = 0;
+
 			while (true) // eslint-disable-line no-constant-condition
 			{
-				if (this._recvBuffer.length < 4)
+				const readLen = this._recvBuffer.length - msgStart;
+
+				if (readLen < 4)
 				{
 					// Incomplete data.
-					return;
+					break;
 				}
 
 				const dataView = new DataView(
 					this._recvBuffer.buffer,
-					this._recvBuffer.byteOffset);
-				const payloadLen = dataView.getUint32(0, littleEndian);
+					this._recvBuffer.byteOffset + msgStart);
+				const msgLen = dataView.getUint32(0, littleEndian);
 
-				if (this._recvBuffer.length < payloadLen + 4)
+				if (readLen < 4 + msgLen)
 				{
 					// Incomplete data.
-					return;
+					break;
 				}
 
-				const payload = this._recvBuffer.subarray(4, payloadLen + 4);
+				const payload = this._recvBuffer.subarray(msgStart + 4, msgStart + 4 + msgLen);
+
+				msgStart += 4 + msgLen;
 
 				try
 				{
@@ -152,9 +158,11 @@ export class Channel extends EnhancedEventEmitter
 						'received invalid message from the worker process: %s',
 						String(error));
 				}
+			}
 
-				// Remove the read payload from the buffer.
-				this._recvBuffer = this._recvBuffer.slice(payloadLen + 4);
+			if (msgStart != 0)
+			{
+				this._recvBuffer = this._recvBuffer.slice(msgStart);
 			}
 		});
 
