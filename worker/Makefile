@@ -39,7 +39,8 @@ ifeq ($(wildcard $(PIP_DIR)),)
 	# `--system` is not present everywhere and is only needed as workaround for Debian-specific issue (copied from
 	# https://github.com/gluster/gstatus/pull/33), fallback to command without `--system` if the first one fails.
 	$(PYTHON) -m pip install --system --target=$(PIP_DIR) pip setuptools || \
-		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools
+		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
+		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
 	# Install `meson` and `ninja` using `pip` into custom location, so we don't depend on system-wide installation.
 	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) meson ninja
 endif
@@ -47,15 +48,52 @@ endif
 setup: meson-ninja
 # We try to call `--reconfigure` first as a workaround for https://github.com/ninja-build/ninja/issues/1997
 ifeq ($(MEDIASOUP_BUILDTYPE),Release)
-	$(MESON) setup --buildtype release --reconfigure $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
-		$(MESON) setup --buildtype release $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+	$(MESON) setup \
+		--buildtype release \
+		-Db_ndebug=true \
+		-Db_pie=true \
+		-Db_staticpic=true \
+		--reconfigure \
+		$(MESON_ARGS) \
+		$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(MESON) setup \
+			--buildtype release \
+			-Db_ndebug=true \
+			-Db_pie=true \
+			-Db_staticpic=true \
+			$(MESON_ARGS) \
+			$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 else
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
-	$(MESON) setup --buildtype debug --reconfigure $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
-		$(MESON) setup --buildtype debug $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+	$(MESON) setup \
+		--buildtype debug \
+		-Db_pie=true \
+		-Db_staticpic=true \
+		--reconfigure \
+		$(MESON_ARGS) \
+		$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(MESON) setup \
+			--buildtype debug \
+			-Db_pie=true \
+			-Db_staticpic=true \
+			$(MESON_ARGS) \
+			$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 else
-	$(MESON) setup --buildtype $(MEDIASOUP_BUILDTYPE) --reconfigure $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
-		$(MESON) setup --buildtype $(MEDIASOUP_BUILDTYPE) $(MESON_ARGS) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+	$(MESON) setup \
+		--buildtype $(MEDIASOUP_BUILDTYPE) \
+		-Db_ndebug=if-release \
+		-Db_pie=true \
+		-Db_staticpic=true \
+		--reconfigure \
+		$(MESON_ARGS) \
+		$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(MESON) setup \
+			--buildtype $(MEDIASOUP_BUILDTYPE) \
+			-Db_ndebug=if-release \
+			-Db_pie=true \
+			-Db_staticpic=true \
+			$(MESON_ARGS) \
+			$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 endif
 endif
 
