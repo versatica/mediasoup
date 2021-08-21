@@ -4,7 +4,9 @@ import * as netstring from 'netstring';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
+import * as os from 'os';
 
+const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('PayloadChannel');
 
 type Sent =
@@ -39,7 +41,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 	private readonly _sents: Map<number, Sent> = new Map();
 
 	// Buffer for reading messages from the worker.
-	private _recvBuffer?: Buffer;
+	private _recvBuffer = Buffer.alloc(0);
 
 	// Ongoing notification (waiting for its payload).
 	private _ongoingNotification?: { targetId: string; event: string; data?: any };
@@ -67,7 +69,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 		// Read PayloadChannel notifications from the worker.
 		this._consumerSocket.on('data', (buffer: Buffer) =>
 		{
-			if (!this._recvBuffer)
+			if (!this._recvBuffer.length)
 			{
 				this._recvBuffer = buffer;
 			}
@@ -78,52 +80,41 @@ export class PayloadChannel extends EnhancedEventEmitter
 					this._recvBuffer.length + buffer.length);
 			}
 
-			if (this._recvBuffer!.length > NS_PAYLOAD_MAX_LEN)
+			if (this._recvBuffer.length > NS_PAYLOAD_MAX_LEN)
 			{
-				logger.error('receiving buffer is full, discarding all data into it');
+				logger.error('receiving buffer is full, discarding all data in it');
 
 				// Reset the buffer and exit.
-				this._recvBuffer = undefined;
+				this._recvBuffer = Buffer.alloc(0);
 
 				return;
 			}
 
 			while (true) // eslint-disable-line no-constant-condition
 			{
-				let nsPayload;
-
-				try
+				if (this._recvBuffer.length < 4)
 				{
-					nsPayload = netstring.nsPayload(this._recvBuffer);
-				}
-				catch (error)
-				{
-					logger.error(
-						'invalid netstring data received from the worker process: %s',
-						String(error));
-
-					// Reset the buffer and exit.
-					this._recvBuffer = undefined;
-
+					// Incomplete data.
 					return;
 				}
 
-				// Incomplete netstring message.
-				if (nsPayload === -1)
-					return;
+				const dataView = new DataView(
+					this._recvBuffer.buffer,
+					this._recvBuffer.byteOffset);
+				const payloadLen = dataView.getUint32(0, littleEndian);
 
-				this._processData(nsPayload);
+				if (this._recvBuffer.length < payloadLen + 4)
+				{
+					// Incomplete data.
+					return;
+				}
+
+				const payload = this._recvBuffer.slice(4, payloadLen + 4);
+
+				this._processData(payload);
 
 				// Remove the read payload from the buffer.
-				this._recvBuffer =
-					this._recvBuffer!.slice(netstring.nsLength(this._recvBuffer));
-
-				if (!this._recvBuffer.length)
-				{
-					this._recvBuffer = undefined;
-
-					return;
-				}
+				this._recvBuffer = this._recvBuffer.slice(payloadLen + 4);
 			}
 		});
 

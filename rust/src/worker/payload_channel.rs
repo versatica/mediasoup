@@ -5,7 +5,7 @@ use async_executor::Executor;
 use async_fs::File;
 use bytes::{BufMut, Bytes, BytesMut};
 use futures_lite::io::BufReader;
-use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
+use futures_lite::{future, AsyncReadExt, AsyncWriteExt};
 use log::{debug, error, trace, warn};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -122,19 +122,13 @@ impl PayloadChannel {
 
             executor
                 .spawn(async move {
-                    let mut len_bytes = Vec::new();
+                    let mut len_bytes = [0u8; 4];
                     let mut bytes = Vec::new();
                     let mut reader = BufReader::new(reader);
 
                     loop {
-                        let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
-                        if read_bytes == 0 {
-                            // EOF
-                            break;
-                        }
-                        let length = String::from_utf8_lossy(&len_bytes[..(read_bytes - 1)])
-                            .parse::<usize>()
-                            .unwrap();
+                        reader.read_exact(&mut len_bytes).await?;
+                        let length = u32::from_ne_bytes(len_bytes) as usize;
 
                         if length > NS_PAYLOAD_MAX_LEN {
                             warn!(
@@ -143,13 +137,11 @@ impl PayloadChannel {
                             );
                         }
 
-                        len_bytes.clear();
-                        if bytes.len() < length + 1 {
+                        if bytes.len() < length {
                             // Increase bytes size if/when needed
-                            bytes.resize(length + 1, 0);
+                            bytes.resize(length, 0);
                         }
-                        // +1 because of netstring `,` at the very end
-                        reader.read_exact(&mut bytes[..=length]).await?;
+                        reader.read_exact(&mut bytes[..length]).await?;
 
                         trace!(
                             "received raw message: {}",
@@ -197,15 +189,8 @@ impl PayloadChannel {
                                     })
                                 });
 
-                                let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
-                                if read_bytes == 0 {
-                                    // EOF
-                                    break;
-                                }
-                                let length =
-                                    String::from_utf8_lossy(&len_bytes[..(read_bytes - 1)])
-                                        .parse::<usize>()
-                                        .unwrap();
+                                reader.read_exact(&mut len_bytes).await?;
+                                let length = u32::from_ne_bytes(len_bytes) as usize;
 
                                 if length > NS_PAYLOAD_MAX_LEN {
                                     warn!(
@@ -214,13 +199,11 @@ impl PayloadChannel {
                                     );
                                 }
 
-                                len_bytes.clear();
-                                if bytes.len() < length + 1 {
+                                if bytes.len() < length {
                                     // Increase bytes size if/when needed
-                                    bytes.resize(length + 1, 0);
+                                    bytes.resize(length, 0);
                                 }
-                                // +1 because of netstring `,` at the very end
-                                reader.read_exact(&mut bytes[..=length]).await?;
+                                reader.read_exact(&mut bytes[..length]).await?;
 
                                 trace!("received notification payload of {} bytes", length);
 

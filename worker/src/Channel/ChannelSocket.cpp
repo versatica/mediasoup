@@ -70,15 +70,15 @@ namespace Channel
 
 		if (message.length() > NsPayloadMaxLen)
 		{
-			MS_ERROR_STD("mesage too big");
+			MS_ERROR_STD("message too big");
 
 			return;
 		}
 
-		SendImpl(message.c_str(), message.length());
+		SendImpl(message.c_str(), static_cast<uint32_t>(message.length()));
 	}
 
-	void ChannelSocket::SendLog(char* message, size_t messageLen)
+	void ChannelSocket::SendLog(char* message, uint32_t messageLen)
 	{
 		MS_TRACE_STD();
 
@@ -87,7 +87,7 @@ namespace Channel
 
 		if (messageLen > NsPayloadMaxLen)
 		{
-			MS_ERROR_STD("mesage too big");
+			MS_ERROR_STD("message too big");
 
 			return;
 		}
@@ -95,28 +95,18 @@ namespace Channel
 		SendImpl(message, messageLen);
 	}
 
-	inline void ChannelSocket::SendImpl(const void* nsPayload, size_t nsPayloadLen)
+	inline void ChannelSocket::SendImpl(const void* nsPayload, uint32_t nsPayloadLen)
 	{
 		MS_TRACE_STD();
 
-		size_t nsNumLen;
+		std::memcpy(this->writeBuffer, &nsPayloadLen, 4);
 
-		if (nsPayloadLen == 0)
+		if (nsPayloadLen != 0)
 		{
-			nsNumLen             = 1;
-			this->writeBuffer[0] = '0';
-			this->writeBuffer[1] = ':';
-			this->writeBuffer[2] = ',';
-		}
-		else
-		{
-			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(this->writeBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(this->writeBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-			this->writeBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			std::memcpy(this->writeBuffer + 4, nsPayload, nsPayloadLen);
 		}
 
-		size_t nsLen = nsNumLen + nsPayloadLen + 2;
+		size_t nsLen = 4 + nsPayloadLen;
 
 		this->producerSocket.Write(this->writeBuffer, nsLen);
 	}

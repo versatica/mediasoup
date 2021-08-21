@@ -72,10 +72,10 @@ namespace Channel
 		void Close();
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage);
-		void SendLog(char* message, size_t messageLen);
+		void SendLog(char* message, uint32_t messageLen);
 
 	private:
-		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
+		void SendImpl(const void* nsPayload, uint32_t nsPayloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:

@@ -4,7 +4,9 @@ import * as netstring from 'netstring';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
+import * as os from 'os';
 
+const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('Channel');
 
 type Sent =
@@ -39,7 +41,7 @@ export class Channel extends EnhancedEventEmitter
 	private readonly _sents: Map<number, Sent> = new Map();
 
 	// Buffer for reading messages from the worker.
-	private _recvBuffer?: Buffer;
+	private _recvBuffer = Buffer.alloc(0);
 
 	/**
 	 * @private
@@ -66,7 +68,7 @@ export class Channel extends EnhancedEventEmitter
 		// Read Channel responses/notifications from the worker.
 		this._consumerSocket.on('data', (buffer: Buffer) =>
 		{
-			if (!this._recvBuffer)
+			if (!this._recvBuffer.length)
 			{
 				this._recvBuffer = buffer;
 			}
@@ -77,76 +79,73 @@ export class Channel extends EnhancedEventEmitter
 					this._recvBuffer.length + buffer.length);
 			}
 
-			if (this._recvBuffer!.length > NS_PAYLOAD_MAX_LEN)
+			if (this._recvBuffer.length > NS_PAYLOAD_MAX_LEN)
 			{
-				logger.error('receiving buffer is full, discarding all data into it');
+				logger.error('receiving buffer is full, discarding all data in it');
 
 				// Reset the buffer and exit.
-				this._recvBuffer = undefined;
+				this._recvBuffer = Buffer.alloc(0);
 
 				return;
 			}
 
 			while (true) // eslint-disable-line no-constant-condition
 			{
-				let nsPayload;
-
-				try
+				if (this._recvBuffer.length < 4)
 				{
-					nsPayload = netstring.nsPayload(this._recvBuffer);
-				}
-				catch (error)
-				{
-					logger.error(
-						'invalid netstring data received from the worker process: %s',
-						String(error));
-
-					// Reset the buffer and exit.
-					this._recvBuffer = undefined;
-
+					// Incomplete data.
 					return;
 				}
 
-				// Incomplete netstring message.
-				if (nsPayload === -1)
+				const dataView = new DataView(
+					this._recvBuffer.buffer,
+					this._recvBuffer.byteOffset);
+				const payloadLen = dataView.getUint32(0, littleEndian);
+
+				if (this._recvBuffer.length < payloadLen + 4)
+				{
+					// Incomplete data.
 					return;
+				}
+
+				const payload = this._recvBuffer.subarray(4, payloadLen + 4);
 
 				try
 				{
 					// We can receive JSON messages (Channel messages) or log strings.
-					switch (nsPayload[0])
+					switch (payload[0])
 					{
-						// 123 = '{' (a Channel JSON messsage).
+						// 123 = '{' (a Channel JSON message).
 						case 123:
-							this._processMessage(JSON.parse(nsPayload.toString('utf8')));
+							this._processMessage(JSON.parse(payload.toString('utf8')));
 							break;
 
 						// 68 = 'D' (a debug log).
 						case 68:
-							logger.debug(`[pid:${pid}] ${nsPayload.toString('utf8', 1)}`);
+							logger.debug(`[pid:${pid}] ${payload.toString('utf8', 1)}`);
 							break;
 
 						// 87 = 'W' (a warn log).
 						case 87:
-							logger.warn(`[pid:${pid}] ${nsPayload.toString('utf8', 1)}`);
+							logger.warn(`[pid:${pid}] ${payload.toString('utf8', 1)}`);
 							break;
 
 						// 69 = 'E' (an error log).
 						case 69:
-							logger.error(`[pid:${pid} ${nsPayload.toString('utf8', 1)}`);
+							logger.error(`[pid:${pid} ${payload.toString('utf8', 1)}`);
 							break;
 
 						// 88 = 'X' (a dump log).
 						case 88:
 							// eslint-disable-next-line no-console
-							console.log(nsPayload.toString('utf8', 1));
+							console.log(payload.toString('utf8', 1));
 							break;
 
 						default:
 							// eslint-disable-next-line no-console
 							console.warn(
 								`worker[pid:${pid}] unexpected data: %s`,
-								nsPayload.toString('utf8', 1));
+								payload.toString('utf8', 1));
 					}
 				}
 				catch (error)
@@ -157,15 +156,7 @@ export class Channel extends EnhancedEventEmitter
 				}
 
 				// Remove the read payload from the buffer.
-				this._recvBuffer =
-					this._recvBuffer!.slice(netstring.nsLength(this._recvBuffer));
-
-				if (!this._recvBuffer.length)
-				{
-					this._recvBuffer = undefined;
-
-					return;
-				}
+				this._recvBuffer = this._recvBuffer.slice(payloadLen + 4);
 			}
 		});
 
