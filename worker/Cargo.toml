@@ -19,7 +19,6 @@ include = [
     "/deps/libuv",
     "!/deps/libuv/libuv/{docs,img,m4,test,ChangeLog}",
     "/deps/libwebrtc",
-    "/deps/netstring",
     "/deps/openssl",
     "!/deps/openssl/openssl/{apps,demos,docs,fuzz,test,tools,CHANGES}",
     "/deps/usrsctp",
