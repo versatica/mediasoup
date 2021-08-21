@@ -3,6 +3,7 @@
 # Unreleased
 
 * Fix for receiving data over payload channel
+* Support thread initializer function for worker threads, can be used for pinning worker threads to CPU cores
 
 # 0.8.5
 

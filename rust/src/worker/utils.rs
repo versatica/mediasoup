@@ -52,6 +52,7 @@ pub(super) struct WorkerRunResult {
 
 pub(super) fn run_worker_with_channels(
     id: WorkerId,
+    thread_initializer: Option<Arc<dyn Fn() + Send + Sync>>,
     executor: Arc<Executor<'static>>,
     args: Vec<String>,
 ) -> WorkerRunResult {
@@ -74,6 +75,9 @@ pub(super) fn run_worker_with_channels(
     std::thread::Builder::new()
         .name(format!("mediasoup-worker-{}", id))
         .spawn(move || {
+            if let Some(thread_initializer) = thread_initializer {
+                thread_initializer();
+            }
             let argc = args.len() as c_int;
             let args_cstring = args
                 .into_iter()
