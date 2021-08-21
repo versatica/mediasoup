@@ -1,5 +1,9 @@
 # Changelog
 
+# Unreleased
+
+* Fix for receiving data over payload channel
+
 # 0.8.4
 
 * Add Active Speaker Observer to prelude

@@ -215,6 +215,10 @@ impl PayloadChannel {
                                 }
 
                                 len_bytes.clear();
+                                if bytes.len() < length + 1 {
+                                    // Increase bytes size if/when needed
+                                    bytes.resize(length + 1, 0);
+                                }
                                 // +1 because of netstring `,` at the very end
                                 reader.read_exact(&mut bytes[..=length]).await?;
 
