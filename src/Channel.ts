@@ -17,9 +17,9 @@ type Sent =
 	close: () => void;
 }
 
-// netstring length for a 4194304 bytes payload.
-const NS_MESSAGE_MAX_LEN = 4194313;
-const NS_PAYLOAD_MAX_LEN = 4194304;
+// binary length for a 4194304 bytes payload.
+const MESSAGE_MAX_LEN = 4194308;
+const PAYLOAD_MAX_LEN = 4194304;
 
 export class Channel extends EnhancedEventEmitter
 {
@@ -77,7 +77,7 @@ export class Channel extends EnhancedEventEmitter
 					this._recvBuffer.length + buffer.length);
 			}
 
-			if (this._recvBuffer.length > NS_PAYLOAD_MAX_LEN)
+			if (this._recvBuffer.length > PAYLOAD_MAX_LEN)
 			{
 				logger.error('receiving buffer is full, discarding all data in it');
 
@@ -230,7 +230,7 @@ export class Channel extends EnhancedEventEmitter
 		const request = { id, method, internal, data };
 		const payload = JSON.stringify(request);
 
-		if (Buffer.byteLength(payload) > NS_MESSAGE_MAX_LEN)
+		if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
 
 		// This may throw if closed or remote side ended.

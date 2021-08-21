@@ -12,17 +12,17 @@ namespace Channel
 {
 	/* Static. */
 
-	// netstring length for a 4194304 bytes payload.
-	static constexpr size_t NsMessageMaxLen{ 4194313 };
-	static constexpr size_t NsPayloadMaxLen{ 4194304 };
+	// binary length for a 4194304 bytes payload.
+	static constexpr size_t MessageMaxLen{ 4194308 };
+	static constexpr size_t PayloadMaxLen{ 4194304 };
 
 	/* Instance methods. */
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
-	  : consumerSocket(consumerFd, NsMessageMaxLen, this), producerSocket(producerFd, NsMessageMaxLen)
+	  : consumerSocket(consumerFd, MessageMaxLen, this), producerSocket(producerFd, MessageMaxLen)
 	{
 		MS_TRACE_STD();
 
-		this->writeBuffer = static_cast<uint8_t*>(std::malloc(NsMessageMaxLen));
+		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
 	}
 
 	ChannelSocket::~ChannelSocket()
@@ -64,7 +64,7 @@ namespace Channel
 
 		std::string message = jsonMessage.dump();
 
-		if (message.length() > NsPayloadMaxLen)
+		if (message.length() > PayloadMaxLen)
 		{
 			MS_ERROR_STD("message too big");
 
@@ -81,7 +81,7 @@ namespace Channel
 		if (this->closed)
 			return;
 
-		if (messageLen > NsPayloadMaxLen)
+		if (messageLen > PayloadMaxLen)
 		{
 			MS_ERROR_STD("message too big");
 
