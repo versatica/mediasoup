@@ -6,7 +6,7 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, Da
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, SctpState, TransportListenIp, TransportTuple};
 use crate::messages::{
-    PipeTransportData, TransportCloseRequest, TransportConnectRequestPipe,
+    PipeTransportData, TransportCloseRequest, TransportConnectPipeRequest,
     TransportConnectRequestPipeData, TransportInternal,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
@@ -566,7 +566,7 @@ impl PipeTransport {
         let response = self
             .inner
             .channel
-            .request(TransportConnectRequestPipe {
+            .request(TransportConnectPipeRequest {
                 internal: self.get_internal(),
                 data: TransportConnectRequestPipeData {
                     ip: remote_parameters.ip,

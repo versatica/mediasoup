@@ -444,7 +444,7 @@ pub(crate) struct TransportConnectRequestWebRtcData {
 
 request_response!(
     "transport.connect",
-    TransportConnectRequestWebRtc {
+    TransportConnectWebRtcRequest {
         internal: TransportInternal,
         data: TransportConnectRequestWebRtcData,
     },
@@ -464,7 +464,7 @@ pub(crate) struct TransportConnectRequestPipeData {
 
 request_response!(
     "transport.connect",
-    TransportConnectRequestPipe {
+    TransportConnectPipeRequest {
         internal: TransportInternal,
         data: TransportConnectRequestPipeData,
     },
@@ -488,7 +488,7 @@ pub(crate) struct TransportConnectRequestPlainData {
 
 request_response!(
     "transport.connect",
-    TransportConnectRequestPlain {
+    TransportConnectPlainRequest {
         internal: TransportInternal,
         data: TransportConnectRequestPlainData,
     },
@@ -948,453 +948,451 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub(crate) enum MetaRequest {
-    WorkerCloseRequest(WorkerCloseRequest),
-    WorkerDumpRequest(WorkerDumpRequest),
-    WorkerUpdateSettingsRequest(WorkerUpdateSettingsRequest),
-    WorkerCreateRouterRequest(WorkerCreateRouterRequest),
-    RouterCloseRequest(RouterCloseRequest),
-    RouterDumpRequest(RouterDumpRequest),
-    RouterCreateDirectTransportRequest(RouterCreateDirectTransportRequest),
-    RouterCreateWebrtcTransportRequest(RouterCreateWebrtcTransportRequest),
-    RouterCreatePlainTransportRequest(RouterCreatePlainTransportRequest),
-    RouterCreatePipeTransportRequest(RouterCreatePipeTransportRequest),
-    RouterCreateAudioLevelObserverRequest(RouterCreateAudioLevelObserverRequest),
-    RouterCreateActiveSpeakerObserverRequest(RouterCreateActiveSpeakerObserverRequest),
-    TransportCloseRequest(TransportCloseRequest),
-    TransportDumpRequest(TransportDumpRequest),
-    TransportGetStatsRequest(TransportGetStatsRequest),
-    TransportConnectRequestWebRtc(TransportConnectRequestWebRtc),
-    TransportConnectRequestPipe(TransportConnectRequestPipe),
-    TransportConnectRequestPlain(TransportConnectRequestPlain),
-    TransportSetMaxIncomingBitrateRequest(TransportSetMaxIncomingBitrateRequest),
-    TransportSetMaxOutgoingBitrateRequest(TransportSetMaxOutgoingBitrateRequest),
-    TransportRestartIceRequest(TransportRestartIceRequest),
-    TransportProduceRequest(TransportProduceRequest),
-    TransportConsumeRequest(TransportConsumeRequest),
-    TransportProduceDataRequest(TransportProduceDataRequest),
-    TransportConsumeDataRequest(TransportConsumeDataRequest),
-    TransportEnableTraceEventRequest(TransportEnableTraceEventRequest),
-    ProducerCloseRequest(ProducerCloseRequest),
-    ProducerDumpRequest(ProducerDumpRequest),
-    ProducerGetStatsRequest(ProducerGetStatsRequest),
-    ProducerPauseRequest(ProducerPauseRequest),
-    ProducerResumeRequest(ProducerResumeRequest),
-    ProducerEnableTraceEventRequest(ProducerEnableTraceEventRequest),
-    ConsumerCloseRequest(ConsumerCloseRequest),
-    ConsumerDumpRequest(ConsumerDumpRequest),
-    ConsumerGetStatsRequest(ConsumerGetStatsRequest),
-    ConsumerPauseRequest(ConsumerPauseRequest),
-    ConsumerResumeRequest(ConsumerResumeRequest),
-    ConsumerSetPreferredLayersRequest(ConsumerSetPreferredLayersRequest),
-    ConsumerSetPriorityRequest(ConsumerSetPriorityRequest),
-    ConsumerRequestKeyFrameRequest(ConsumerRequestKeyFrameRequest),
-    ConsumerEnableTraceEventRequest(ConsumerEnableTraceEventRequest),
-    DataProducerCloseRequest(DataProducerCloseRequest),
-    DataProducerDumpRequest(DataProducerDumpRequest),
-    DataProducerGetStatsRequest(DataProducerGetStatsRequest),
-    DataConsumerCloseRequest(DataConsumerCloseRequest),
-    DataConsumerDumpRequest(DataConsumerDumpRequest),
-    DataConsumerGetStatsRequest(DataConsumerGetStatsRequest),
-    DataConsumerGetBufferedAmountRequest(DataConsumerGetBufferedAmountRequest),
-    DataConsumerSetBufferedAmountLowThresholdRequest(
-        DataConsumerSetBufferedAmountLowThresholdRequest,
-    ),
-    DataConsumerSendRequest(DataConsumerSendRequest),
-    RtpObserverCloseRequest(RtpObserverCloseRequest),
-    RtpObserverPauseRequest(RtpObserverPauseRequest),
-    RtpObserverResumeRequest(RtpObserverResumeRequest),
-    RtpObserverAddProducerRequest(RtpObserverAddProducerRequest),
-    RtpObserverRemoveProducerRequest(RtpObserverRemoveProducerRequest),
+    WorkerClose(WorkerCloseRequest),
+    WorkerDump(WorkerDumpRequest),
+    WorkerUpdateSettings(WorkerUpdateSettingsRequest),
+    WorkerCreateRouter(WorkerCreateRouterRequest),
+    RouterClose(RouterCloseRequest),
+    RouterDump(RouterDumpRequest),
+    RouterCreateDirectTransport(RouterCreateDirectTransportRequest),
+    RouterCreateWebrtcTransport(RouterCreateWebrtcTransportRequest),
+    RouterCreatePlainTransport(RouterCreatePlainTransportRequest),
+    RouterCreatePipeTransport(RouterCreatePipeTransportRequest),
+    RouterCreateAudioLevelObserver(RouterCreateAudioLevelObserverRequest),
+    RouterCreateActiveSpeakerObserver(RouterCreateActiveSpeakerObserverRequest),
+    TransportClose(TransportCloseRequest),
+    TransportDump(TransportDumpRequest),
+    TransportGetStats(TransportGetStatsRequest),
+    TransportConnectWebRtc(TransportConnectWebRtcRequest),
+    TransportConnectPipe(TransportConnectPipeRequest),
+    TransportConnectPlain(TransportConnectPlainRequest),
+    TransportSetMaxIncomingBitrate(TransportSetMaxIncomingBitrateRequest),
+    TransportSetMaxOutgoingBitrate(TransportSetMaxOutgoingBitrateRequest),
+    TransportRestartIce(TransportRestartIceRequest),
+    TransportProduce(TransportProduceRequest),
+    TransportConsume(TransportConsumeRequest),
+    TransportProduceData(TransportProduceDataRequest),
+    TransportConsumeData(TransportConsumeDataRequest),
+    TransportEnableTraceEvent(TransportEnableTraceEventRequest),
+    ProducerClose(ProducerCloseRequest),
+    ProducerDump(ProducerDumpRequest),
+    ProducerGetStats(ProducerGetStatsRequest),
+    ProducerPause(ProducerPauseRequest),
+    ProducerResume(ProducerResumeRequest),
+    ProducerEnableTraceEvent(ProducerEnableTraceEventRequest),
+    ConsumerClose(ConsumerCloseRequest),
+    ConsumerDump(ConsumerDumpRequest),
+    ConsumerGetStats(ConsumerGetStatsRequest),
+    ConsumerPause(ConsumerPauseRequest),
+    ConsumerResume(ConsumerResumeRequest),
+    ConsumerSetPreferredLayers(ConsumerSetPreferredLayersRequest),
+    ConsumerSetPriority(ConsumerSetPriorityRequest),
+    ConsumerRequestKeyFrame(ConsumerRequestKeyFrameRequest),
+    ConsumerEnableTraceEvent(ConsumerEnableTraceEventRequest),
+    DataProducerClose(DataProducerCloseRequest),
+    DataProducerDump(DataProducerDumpRequest),
+    DataProducerGetStats(DataProducerGetStatsRequest),
+    DataConsumerClose(DataConsumerCloseRequest),
+    DataConsumerDump(DataConsumerDumpRequest),
+    DataConsumerGetStats(DataConsumerGetStatsRequest),
+    DataConsumerGetBufferedAmount(DataConsumerGetBufferedAmountRequest),
+    DataConsumerSetBufferedAmountLowThreshold(DataConsumerSetBufferedAmountLowThresholdRequest),
+    DataConsumerSend(DataConsumerSendRequest),
+    RtpObserverClose(RtpObserverCloseRequest),
+    RtpObserverPause(RtpObserverPauseRequest),
+    RtpObserverResume(RtpObserverResumeRequest),
+    RtpObserverAddProducer(RtpObserverAddProducerRequest),
+    RtpObserverRemoveProducer(RtpObserverRemoveProducerRequest),
 }
 
 impl From<WorkerCloseRequest> for MetaRequest {
     fn from(r: WorkerCloseRequest) -> Self {
-        Self::WorkerCloseRequest(r)
+        Self::WorkerClose(r)
     }
 }
 
 impl From<WorkerDumpRequest> for MetaRequest {
     fn from(r: WorkerDumpRequest) -> Self {
-        Self::WorkerDumpRequest(r)
+        Self::WorkerDump(r)
     }
 }
 
 impl From<WorkerUpdateSettingsRequest> for MetaRequest {
     fn from(r: WorkerUpdateSettingsRequest) -> Self {
-        Self::WorkerUpdateSettingsRequest(r)
+        Self::WorkerUpdateSettings(r)
     }
 }
 
 impl From<WorkerCreateRouterRequest> for MetaRequest {
     fn from(r: WorkerCreateRouterRequest) -> Self {
-        Self::WorkerCreateRouterRequest(r)
+        Self::WorkerCreateRouter(r)
     }
 }
 
 impl From<RouterCloseRequest> for MetaRequest {
     fn from(r: RouterCloseRequest) -> Self {
-        Self::RouterCloseRequest(r)
+        Self::RouterClose(r)
     }
 }
 
 impl From<RouterDumpRequest> for MetaRequest {
     fn from(r: RouterDumpRequest) -> Self {
-        Self::RouterDumpRequest(r)
+        Self::RouterDump(r)
     }
 }
 
 impl From<RouterCreateDirectTransportRequest> for MetaRequest {
     fn from(r: RouterCreateDirectTransportRequest) -> Self {
-        Self::RouterCreateDirectTransportRequest(r)
+        Self::RouterCreateDirectTransport(r)
     }
 }
 
 impl From<RouterCreateWebrtcTransportRequest> for MetaRequest {
     fn from(r: RouterCreateWebrtcTransportRequest) -> Self {
-        Self::RouterCreateWebrtcTransportRequest(r)
+        Self::RouterCreateWebrtcTransport(r)
     }
 }
 
 impl From<RouterCreatePlainTransportRequest> for MetaRequest {
     fn from(r: RouterCreatePlainTransportRequest) -> Self {
-        Self::RouterCreatePlainTransportRequest(r)
+        Self::RouterCreatePlainTransport(r)
     }
 }
 
 impl From<RouterCreatePipeTransportRequest> for MetaRequest {
     fn from(r: RouterCreatePipeTransportRequest) -> Self {
-        Self::RouterCreatePipeTransportRequest(r)
+        Self::RouterCreatePipeTransport(r)
     }
 }
 
 impl From<RouterCreateAudioLevelObserverRequest> for MetaRequest {
     fn from(r: RouterCreateAudioLevelObserverRequest) -> Self {
-        Self::RouterCreateAudioLevelObserverRequest(r)
+        Self::RouterCreateAudioLevelObserver(r)
     }
 }
 
 impl From<RouterCreateActiveSpeakerObserverRequest> for MetaRequest {
     fn from(r: RouterCreateActiveSpeakerObserverRequest) -> Self {
-        Self::RouterCreateActiveSpeakerObserverRequest(r)
+        Self::RouterCreateActiveSpeakerObserver(r)
     }
 }
 
 impl From<TransportCloseRequest> for MetaRequest {
     fn from(r: TransportCloseRequest) -> Self {
-        Self::TransportCloseRequest(r)
+        Self::TransportClose(r)
     }
 }
 
 impl From<TransportDumpRequest> for MetaRequest {
     fn from(r: TransportDumpRequest) -> Self {
-        Self::TransportDumpRequest(r)
+        Self::TransportDump(r)
     }
 }
 
 impl From<TransportGetStatsRequest> for MetaRequest {
     fn from(r: TransportGetStatsRequest) -> Self {
-        Self::TransportGetStatsRequest(r)
+        Self::TransportGetStats(r)
     }
 }
 
-impl From<TransportConnectRequestWebRtc> for MetaRequest {
-    fn from(r: TransportConnectRequestWebRtc) -> Self {
-        Self::TransportConnectRequestWebRtc(r)
+impl From<TransportConnectWebRtcRequest> for MetaRequest {
+    fn from(r: TransportConnectWebRtcRequest) -> Self {
+        Self::TransportConnectWebRtc(r)
     }
 }
 
-impl From<TransportConnectRequestPipe> for MetaRequest {
-    fn from(r: TransportConnectRequestPipe) -> Self {
-        Self::TransportConnectRequestPipe(r)
+impl From<TransportConnectPipeRequest> for MetaRequest {
+    fn from(r: TransportConnectPipeRequest) -> Self {
+        Self::TransportConnectPipe(r)
     }
 }
 
-impl From<TransportConnectRequestPlain> for MetaRequest {
-    fn from(r: TransportConnectRequestPlain) -> Self {
-        Self::TransportConnectRequestPlain(r)
+impl From<TransportConnectPlainRequest> for MetaRequest {
+    fn from(r: TransportConnectPlainRequest) -> Self {
+        Self::TransportConnectPlain(r)
     }
 }
 
 impl From<TransportSetMaxIncomingBitrateRequest> for MetaRequest {
     fn from(r: TransportSetMaxIncomingBitrateRequest) -> Self {
-        Self::TransportSetMaxIncomingBitrateRequest(r)
+        Self::TransportSetMaxIncomingBitrate(r)
     }
 }
 
 impl From<TransportSetMaxOutgoingBitrateRequest> for MetaRequest {
     fn from(r: TransportSetMaxOutgoingBitrateRequest) -> Self {
-        Self::TransportSetMaxOutgoingBitrateRequest(r)
+        Self::TransportSetMaxOutgoingBitrate(r)
     }
 }
 
 impl From<TransportRestartIceRequest> for MetaRequest {
     fn from(r: TransportRestartIceRequest) -> Self {
-        Self::TransportRestartIceRequest(r)
+        Self::TransportRestartIce(r)
     }
 }
 
 impl From<TransportProduceRequest> for MetaRequest {
     fn from(r: TransportProduceRequest) -> Self {
-        Self::TransportProduceRequest(r)
+        Self::TransportProduce(r)
     }
 }
 
 impl From<TransportConsumeRequest> for MetaRequest {
     fn from(r: TransportConsumeRequest) -> Self {
-        Self::TransportConsumeRequest(r)
+        Self::TransportConsume(r)
     }
 }
 
 impl From<TransportProduceDataRequest> for MetaRequest {
     fn from(r: TransportProduceDataRequest) -> Self {
-        Self::TransportProduceDataRequest(r)
+        Self::TransportProduceData(r)
     }
 }
 
 impl From<TransportConsumeDataRequest> for MetaRequest {
     fn from(r: TransportConsumeDataRequest) -> Self {
-        Self::TransportConsumeDataRequest(r)
+        Self::TransportConsumeData(r)
     }
 }
 
 impl From<TransportEnableTraceEventRequest> for MetaRequest {
     fn from(r: TransportEnableTraceEventRequest) -> Self {
-        Self::TransportEnableTraceEventRequest(r)
+        Self::TransportEnableTraceEvent(r)
     }
 }
 
 impl From<ProducerCloseRequest> for MetaRequest {
     fn from(r: ProducerCloseRequest) -> Self {
-        Self::ProducerCloseRequest(r)
+        Self::ProducerClose(r)
     }
 }
 
 impl From<ProducerDumpRequest> for MetaRequest {
     fn from(r: ProducerDumpRequest) -> Self {
-        Self::ProducerDumpRequest(r)
+        Self::ProducerDump(r)
     }
 }
 
 impl From<ProducerGetStatsRequest> for MetaRequest {
     fn from(r: ProducerGetStatsRequest) -> Self {
-        Self::ProducerGetStatsRequest(r)
+        Self::ProducerGetStats(r)
     }
 }
 
 impl From<ProducerPauseRequest> for MetaRequest {
     fn from(r: ProducerPauseRequest) -> Self {
-        Self::ProducerPauseRequest(r)
+        Self::ProducerPause(r)
     }
 }
 
 impl From<ProducerResumeRequest> for MetaRequest {
     fn from(r: ProducerResumeRequest) -> Self {
-        Self::ProducerResumeRequest(r)
+        Self::ProducerResume(r)
     }
 }
 
 impl From<ProducerEnableTraceEventRequest> for MetaRequest {
     fn from(r: ProducerEnableTraceEventRequest) -> Self {
-        Self::ProducerEnableTraceEventRequest(r)
+        Self::ProducerEnableTraceEvent(r)
     }
 }
 
 impl From<ConsumerCloseRequest> for MetaRequest {
     fn from(r: ConsumerCloseRequest) -> Self {
-        Self::ConsumerCloseRequest(r)
+        Self::ConsumerClose(r)
     }
 }
 
 impl From<ConsumerDumpRequest> for MetaRequest {
     fn from(r: ConsumerDumpRequest) -> Self {
-        Self::ConsumerDumpRequest(r)
+        Self::ConsumerDump(r)
     }
 }
 
 impl From<ConsumerGetStatsRequest> for MetaRequest {
     fn from(r: ConsumerGetStatsRequest) -> Self {
-        Self::ConsumerGetStatsRequest(r)
+        Self::ConsumerGetStats(r)
     }
 }
 
 impl From<ConsumerPauseRequest> for MetaRequest {
     fn from(r: ConsumerPauseRequest) -> Self {
-        Self::ConsumerPauseRequest(r)
+        Self::ConsumerPause(r)
     }
 }
 
 impl From<ConsumerResumeRequest> for MetaRequest {
     fn from(r: ConsumerResumeRequest) -> Self {
-        Self::ConsumerResumeRequest(r)
+        Self::ConsumerResume(r)
     }
 }
 
 impl From<ConsumerSetPreferredLayersRequest> for MetaRequest {
     fn from(r: ConsumerSetPreferredLayersRequest) -> Self {
-        Self::ConsumerSetPreferredLayersRequest(r)
+        Self::ConsumerSetPreferredLayers(r)
     }
 }
 
 impl From<ConsumerSetPriorityRequest> for MetaRequest {
     fn from(r: ConsumerSetPriorityRequest) -> Self {
-        Self::ConsumerSetPriorityRequest(r)
+        Self::ConsumerSetPriority(r)
     }
 }
 
 impl From<ConsumerRequestKeyFrameRequest> for MetaRequest {
     fn from(r: ConsumerRequestKeyFrameRequest) -> Self {
-        Self::ConsumerRequestKeyFrameRequest(r)
+        Self::ConsumerRequestKeyFrame(r)
     }
 }
 
 impl From<ConsumerEnableTraceEventRequest> for MetaRequest {
     fn from(r: ConsumerEnableTraceEventRequest) -> Self {
-        Self::ConsumerEnableTraceEventRequest(r)
+        Self::ConsumerEnableTraceEvent(r)
     }
 }
 
 impl From<DataProducerCloseRequest> for MetaRequest {
     fn from(r: DataProducerCloseRequest) -> Self {
-        Self::DataProducerCloseRequest(r)
+        Self::DataProducerClose(r)
     }
 }
 
 impl From<DataProducerDumpRequest> for MetaRequest {
     fn from(r: DataProducerDumpRequest) -> Self {
-        Self::DataProducerDumpRequest(r)
+        Self::DataProducerDump(r)
     }
 }
 
 impl From<DataProducerGetStatsRequest> for MetaRequest {
     fn from(r: DataProducerGetStatsRequest) -> Self {
-        Self::DataProducerGetStatsRequest(r)
+        Self::DataProducerGetStats(r)
     }
 }
 
 impl From<DataConsumerCloseRequest> for MetaRequest {
     fn from(r: DataConsumerCloseRequest) -> Self {
-        Self::DataConsumerCloseRequest(r)
+        Self::DataConsumerClose(r)
     }
 }
 
 impl From<DataConsumerDumpRequest> for MetaRequest {
     fn from(r: DataConsumerDumpRequest) -> Self {
-        Self::DataConsumerDumpRequest(r)
+        Self::DataConsumerDump(r)
     }
 }
 
 impl From<DataConsumerGetStatsRequest> for MetaRequest {
     fn from(r: DataConsumerGetStatsRequest) -> Self {
-        Self::DataConsumerGetStatsRequest(r)
+        Self::DataConsumerGetStats(r)
     }
 }
 
 impl From<DataConsumerGetBufferedAmountRequest> for MetaRequest {
     fn from(r: DataConsumerGetBufferedAmountRequest) -> Self {
-        Self::DataConsumerGetBufferedAmountRequest(r)
+        Self::DataConsumerGetBufferedAmount(r)
     }
 }
 
 impl From<DataConsumerSetBufferedAmountLowThresholdRequest> for MetaRequest {
     fn from(r: DataConsumerSetBufferedAmountLowThresholdRequest) -> Self {
-        Self::DataConsumerSetBufferedAmountLowThresholdRequest(r)
+        Self::DataConsumerSetBufferedAmountLowThreshold(r)
     }
 }
 
 impl From<DataConsumerSendRequest> for MetaRequest {
     fn from(r: DataConsumerSendRequest) -> Self {
-        Self::DataConsumerSendRequest(r)
+        Self::DataConsumerSend(r)
     }
 }
 
 impl From<RtpObserverCloseRequest> for MetaRequest {
     fn from(r: RtpObserverCloseRequest) -> Self {
-        Self::RtpObserverCloseRequest(r)
+        Self::RtpObserverClose(r)
     }
 }
 
 impl From<RtpObserverPauseRequest> for MetaRequest {
     fn from(r: RtpObserverPauseRequest) -> Self {
-        Self::RtpObserverPauseRequest(r)
+        Self::RtpObserverPause(r)
     }
 }
 
 impl From<RtpObserverResumeRequest> for MetaRequest {
     fn from(r: RtpObserverResumeRequest) -> Self {
-        Self::RtpObserverResumeRequest(r)
+        Self::RtpObserverResume(r)
     }
 }
 
 impl From<RtpObserverAddProducerRequest> for MetaRequest {
     fn from(r: RtpObserverAddProducerRequest) -> Self {
-        Self::RtpObserverAddProducerRequest(r)
+        Self::RtpObserverAddProducer(r)
     }
 }
 
 impl From<RtpObserverRemoveProducerRequest> for MetaRequest {
     fn from(r: RtpObserverRemoveProducerRequest) -> Self {
-        Self::RtpObserverRemoveProducerRequest(r)
+        Self::RtpObserverRemoveProducer(r)
     }
 }
 
 impl MetaRequest {
     pub(crate) fn as_method(&self) -> &'static str {
         match self {
-            MetaRequest::WorkerCloseRequest(m) => m.as_method(),
-            MetaRequest::WorkerDumpRequest(m) => m.as_method(),
-            MetaRequest::WorkerUpdateSettingsRequest(m) => m.as_method(),
-            MetaRequest::WorkerCreateRouterRequest(m) => m.as_method(),
-            MetaRequest::RouterCloseRequest(m) => m.as_method(),
-            MetaRequest::RouterDumpRequest(m) => m.as_method(),
-            MetaRequest::RouterCreateDirectTransportRequest(m) => m.as_method(),
-            MetaRequest::RouterCreateWebrtcTransportRequest(m) => m.as_method(),
-            MetaRequest::RouterCreatePlainTransportRequest(m) => m.as_method(),
-            MetaRequest::RouterCreatePipeTransportRequest(m) => m.as_method(),
-            MetaRequest::RouterCreateAudioLevelObserverRequest(m) => m.as_method(),
-            MetaRequest::RouterCreateActiveSpeakerObserverRequest(m) => m.as_method(),
-            MetaRequest::TransportCloseRequest(m) => m.as_method(),
-            MetaRequest::TransportDumpRequest(m) => m.as_method(),
-            MetaRequest::TransportGetStatsRequest(m) => m.as_method(),
-            MetaRequest::TransportConnectRequestWebRtc(m) => m.as_method(),
-            MetaRequest::TransportConnectRequestPipe(m) => m.as_method(),
-            MetaRequest::TransportConnectRequestPlain(m) => m.as_method(),
-            MetaRequest::TransportSetMaxIncomingBitrateRequest(m) => m.as_method(),
-            MetaRequest::TransportSetMaxOutgoingBitrateRequest(m) => m.as_method(),
-            MetaRequest::TransportRestartIceRequest(m) => m.as_method(),
-            MetaRequest::TransportProduceRequest(m) => m.as_method(),
-            MetaRequest::TransportConsumeRequest(m) => m.as_method(),
-            MetaRequest::TransportProduceDataRequest(m) => m.as_method(),
-            MetaRequest::TransportConsumeDataRequest(m) => m.as_method(),
-            MetaRequest::TransportEnableTraceEventRequest(m) => m.as_method(),
-            MetaRequest::ProducerCloseRequest(m) => m.as_method(),
-            MetaRequest::ProducerDumpRequest(m) => m.as_method(),
-            MetaRequest::ProducerGetStatsRequest(m) => m.as_method(),
-            MetaRequest::ProducerPauseRequest(m) => m.as_method(),
-            MetaRequest::ProducerResumeRequest(m) => m.as_method(),
-            MetaRequest::ProducerEnableTraceEventRequest(m) => m.as_method(),
-            MetaRequest::ConsumerCloseRequest(m) => m.as_method(),
-            MetaRequest::ConsumerDumpRequest(m) => m.as_method(),
-            MetaRequest::ConsumerGetStatsRequest(m) => m.as_method(),
-            MetaRequest::ConsumerPauseRequest(m) => m.as_method(),
-            MetaRequest::ConsumerResumeRequest(m) => m.as_method(),
-            MetaRequest::ConsumerSetPreferredLayersRequest(m) => m.as_method(),
-            MetaRequest::ConsumerSetPriorityRequest(m) => m.as_method(),
-            MetaRequest::ConsumerRequestKeyFrameRequest(m) => m.as_method(),
-            MetaRequest::ConsumerEnableTraceEventRequest(m) => m.as_method(),
-            MetaRequest::DataProducerCloseRequest(m) => m.as_method(),
-            MetaRequest::DataProducerDumpRequest(m) => m.as_method(),
-            MetaRequest::DataProducerGetStatsRequest(m) => m.as_method(),
-            MetaRequest::DataConsumerCloseRequest(m) => m.as_method(),
-            MetaRequest::DataConsumerDumpRequest(m) => m.as_method(),
-            MetaRequest::DataConsumerGetStatsRequest(m) => m.as_method(),
-            MetaRequest::DataConsumerGetBufferedAmountRequest(m) => m.as_method(),
-            MetaRequest::DataConsumerSetBufferedAmountLowThresholdRequest(m) => m.as_method(),
-            MetaRequest::DataConsumerSendRequest(m) => m.as_method(),
-            MetaRequest::RtpObserverCloseRequest(m) => m.as_method(),
-            MetaRequest::RtpObserverPauseRequest(m) => m.as_method(),
-            MetaRequest::RtpObserverResumeRequest(m) => m.as_method(),
-            MetaRequest::RtpObserverAddProducerRequest(m) => m.as_method(),
-            MetaRequest::RtpObserverRemoveProducerRequest(m) => m.as_method(),
+            MetaRequest::WorkerClose(m) => m.as_method(),
+            MetaRequest::WorkerDump(m) => m.as_method(),
+            MetaRequest::WorkerUpdateSettings(m) => m.as_method(),
+            MetaRequest::WorkerCreateRouter(m) => m.as_method(),
+            MetaRequest::RouterClose(m) => m.as_method(),
+            MetaRequest::RouterDump(m) => m.as_method(),
+            MetaRequest::RouterCreateDirectTransport(m) => m.as_method(),
+            MetaRequest::RouterCreateWebrtcTransport(m) => m.as_method(),
+            MetaRequest::RouterCreatePlainTransport(m) => m.as_method(),
+            MetaRequest::RouterCreatePipeTransport(m) => m.as_method(),
+            MetaRequest::RouterCreateAudioLevelObserver(m) => m.as_method(),
+            MetaRequest::RouterCreateActiveSpeakerObserver(m) => m.as_method(),
+            MetaRequest::TransportClose(m) => m.as_method(),
+            MetaRequest::TransportDump(m) => m.as_method(),
+            MetaRequest::TransportGetStats(m) => m.as_method(),
+            MetaRequest::TransportConnectWebRtc(m) => m.as_method(),
+            MetaRequest::TransportConnectPipe(m) => m.as_method(),
+            MetaRequest::TransportConnectPlain(m) => m.as_method(),
+            MetaRequest::TransportSetMaxIncomingBitrate(m) => m.as_method(),
+            MetaRequest::TransportSetMaxOutgoingBitrate(m) => m.as_method(),
+            MetaRequest::TransportRestartIce(m) => m.as_method(),
+            MetaRequest::TransportProduce(m) => m.as_method(),
+            MetaRequest::TransportConsume(m) => m.as_method(),
+            MetaRequest::TransportProduceData(m) => m.as_method(),
+            MetaRequest::TransportConsumeData(m) => m.as_method(),
+            MetaRequest::TransportEnableTraceEvent(m) => m.as_method(),
+            MetaRequest::ProducerClose(m) => m.as_method(),
+            MetaRequest::ProducerDump(m) => m.as_method(),
+            MetaRequest::ProducerGetStats(m) => m.as_method(),
+            MetaRequest::ProducerPause(m) => m.as_method(),
+            MetaRequest::ProducerResume(m) => m.as_method(),
+            MetaRequest::ProducerEnableTraceEvent(m) => m.as_method(),
+            MetaRequest::ConsumerClose(m) => m.as_method(),
+            MetaRequest::ConsumerDump(m) => m.as_method(),
+            MetaRequest::ConsumerGetStats(m) => m.as_method(),
+            MetaRequest::ConsumerPause(m) => m.as_method(),
+            MetaRequest::ConsumerResume(m) => m.as_method(),
+            MetaRequest::ConsumerSetPreferredLayers(m) => m.as_method(),
+            MetaRequest::ConsumerSetPriority(m) => m.as_method(),
+            MetaRequest::ConsumerRequestKeyFrame(m) => m.as_method(),
+            MetaRequest::ConsumerEnableTraceEvent(m) => m.as_method(),
+            MetaRequest::DataProducerClose(m) => m.as_method(),
+            MetaRequest::DataProducerDump(m) => m.as_method(),
+            MetaRequest::DataProducerGetStats(m) => m.as_method(),
+            MetaRequest::DataConsumerClose(m) => m.as_method(),
+            MetaRequest::DataConsumerDump(m) => m.as_method(),
+            MetaRequest::DataConsumerGetStats(m) => m.as_method(),
+            MetaRequest::DataConsumerGetBufferedAmount(m) => m.as_method(),
+            MetaRequest::DataConsumerSetBufferedAmountLowThreshold(m) => m.as_method(),
+            MetaRequest::DataConsumerSend(m) => m.as_method(),
+            MetaRequest::RtpObserverClose(m) => m.as_method(),
+            MetaRequest::RtpObserverPause(m) => m.as_method(),
+            MetaRequest::RtpObserverResume(m) => m.as_method(),
+            MetaRequest::RtpObserverAddProducer(m) => m.as_method(),
+            MetaRequest::RtpObserverRemoveProducer(m) => m.as_method(),
         }
     }
 }
@@ -1402,33 +1400,33 @@ impl MetaRequest {
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub(crate) enum MetaNotification {
-    TransportSendRtcpNotification(TransportSendRtcpNotification),
-    ProducerSendNotification(ProducerSendNotification),
-    DataProducerSendNotification(DataProducerSendNotification),
+    TransportSendRtcp(TransportSendRtcpNotification),
+    ProducerSend(ProducerSendNotification),
+    DataProducerSend(DataProducerSendNotification),
 }
 
 impl From<TransportSendRtcpNotification> for MetaNotification {
     fn from(n: TransportSendRtcpNotification) -> Self {
-        Self::TransportSendRtcpNotification(n)
+        Self::TransportSendRtcp(n)
     }
 }
 impl From<ProducerSendNotification> for MetaNotification {
     fn from(n: ProducerSendNotification) -> Self {
-        Self::ProducerSendNotification(n)
+        Self::ProducerSend(n)
     }
 }
 impl From<DataProducerSendNotification> for MetaNotification {
     fn from(n: DataProducerSendNotification) -> Self {
-        Self::DataProducerSendNotification(n)
+        Self::DataProducerSend(n)
     }
 }
 
 impl MetaNotification {
     pub(crate) fn as_event(&self) -> &'static str {
         match self {
-            Self::TransportSendRtcpNotification(n) => n.as_event(),
-            Self::ProducerSendNotification(n) => n.as_event(),
-            Self::DataProducerSendNotification(n) => n.as_event(),
+            Self::TransportSendRtcp(n) => n.as_event(),
+            Self::ProducerSend(n) => n.as_event(),
+            Self::DataProducerSend(n) => n.as_event(),
         }
     }
 }
