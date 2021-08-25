@@ -127,25 +127,21 @@ impl PayloadChannel {
             executor
                 .spawn(async move {
                     let mut len_bytes = [0u8; 4];
-                    let mut bytes = Vec::with_capacity(PAYLOAD_MAX_LEN);
+                    let mut read_buffer = vec![0u8; PAYLOAD_MAX_LEN];
                     let mut reader = BufReader::new(reader);
 
                     loop {
                         reader.read_exact(&mut len_bytes).await?;
                         let length = u32::from_ne_bytes(len_bytes) as usize;
 
-                        if bytes.len() < length {
-                            // Increase bytes size if/when needed
-                            bytes.resize(length, 0);
-                        }
-                        reader.read_exact(&mut bytes[..length]).await?;
+                        reader.read_exact(&mut read_buffer[..length]).await?;
 
                         trace!(
                             "received raw message: {}",
-                            String::from_utf8_lossy(&bytes[..length]),
+                            String::from_utf8_lossy(&read_buffer[..length]),
                         );
 
-                        match deserialize_message(&bytes[..length]) {
+                        match deserialize_message(&read_buffer[..length]) {
                             PayloadChannelReceiveMessage::ResponseSuccess {
                                 id,
                                 accepted: _,
@@ -189,15 +185,11 @@ impl PayloadChannel {
                                 reader.read_exact(&mut len_bytes).await?;
                                 let length = u32::from_ne_bytes(len_bytes) as usize;
 
-                                if bytes.len() < length {
-                                    // Increase bytes size if/when needed
-                                    bytes.resize(length, 0);
-                                }
-                                reader.read_exact(&mut bytes[..length]).await?;
+                                reader.read_exact(&mut read_buffer[..length]).await?;
 
                                 trace!("received notification payload of {} bytes", length);
 
-                                let payload = Bytes::copy_from_slice(&bytes[..length]);
+                                let payload = Bytes::copy_from_slice(&read_buffer[..length]);
 
                                 if let Some(target_id) = target_id {
                                     event_handlers.call_callbacks_with_value(
@@ -209,7 +201,7 @@ impl PayloadChannel {
                                     );
                                 } else {
                                     let unexpected_message = InternalMessage::UnexpectedData(
-                                        Vec::from(&bytes[..length]),
+                                        Vec::from(&read_buffer[..length]),
                                     );
                                     if sender.send(unexpected_message).await.is_err() {
                                         break;

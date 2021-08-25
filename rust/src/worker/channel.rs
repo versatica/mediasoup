@@ -148,7 +148,7 @@ impl Channel {
             executor
                 .spawn(async move {
                     let mut len_bytes = [0u8; 4];
-                    let mut bytes = Vec::with_capacity(PAYLOAD_MAX_LEN);
+                    let mut read_buffer = vec![0u8; PAYLOAD_MAX_LEN];
                     let mut reader = BufReader::new(reader);
                     // This this contain cache of targets that are known to not have buffering, so
                     // that we can avoid Mutex locking overhead for them
@@ -159,18 +159,14 @@ impl Channel {
                         reader.read_exact(&mut len_bytes).await?;
                         let length = u32::from_ne_bytes(len_bytes) as usize;
 
-                        if bytes.len() < length {
-                            // Increase bytes size if/when needed
-                            bytes.resize(length, 0);
-                        }
-                        reader.read_exact(&mut bytes[..length]).await?;
+                        reader.read_exact(&mut read_buffer[..length]).await?;
 
                         trace!(
                             "received raw message: {}",
-                            String::from_utf8_lossy(&bytes[..length]),
+                            String::from_utf8_lossy(&read_buffer[..length]),
                         );
 
-                        match deserialize_message(&bytes[..length]) {
+                        match deserialize_message(&read_buffer[..length]) {
                             ChannelReceiveMessage::ResponseSuccess {
                                 id,
                                 accepted: _,
@@ -230,8 +226,9 @@ impl Channel {
                                     event_handlers
                                         .call_callbacks_with_value(&target_id, notification);
                                 } else {
-                                    let unexpected_message =
-                                        InternalMessage::Unexpected(Vec::from(&bytes[..length]));
+                                    let unexpected_message = InternalMessage::Unexpected(
+                                        Vec::from(&read_buffer[..length]),
+                                    );
                                     if sender.send(unexpected_message).await.is_err() {
                                         break;
                                     }
