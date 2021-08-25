@@ -1,4 +1,5 @@
 use futures_lite::future;
+use mediasoup::active_speaker_observer::ActiveSpeakerObserverOptions;
 use mediasoup::audio_level_observer::AudioLevelObserverOptions;
 use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventType};
 use mediasoup::data_consumer::DataConsumerOptions;
@@ -6,15 +7,16 @@ use mediasoup::data_producer::DataProducerOptions;
 use mediasoup::data_structures::TransportListenIp;
 use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
+use mediasoup::prelude::*;
 use mediasoup::producer::{ProducerOptions, ProducerTraceEventType};
 use mediasoup::router::{PipeToRouterOptions, RouterOptions};
-use mediasoup::rtp_observer::{RtpObserver, RtpObserverAddProducerOptions};
+use mediasoup::rtp_observer::RtpObserverAddProducerOptions;
 use mediasoup::rtp_parameters::{
     MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
     RtpParameters,
 };
 use mediasoup::sctp_parameters::SctpStreamParameters;
-use mediasoup::transport::{Transport, TransportGeneric, TransportTraceEventType};
+use mediasoup::transport::TransportTraceEventType;
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use mediasoup::worker::{WorkerLogLevel, WorkerSettings, WorkerUpdateSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -326,6 +328,24 @@ fn smoke() {
                 .await
                 .unwrap()
         );
+
+        let active_speaker_observer = router
+            .create_active_speaker_observer(ActiveSpeakerObserverOptions::default())
+            .await
+            .unwrap();
+
+        println!(
+            "Active speaker observer: {:#?}",
+            active_speaker_observer.id()
+        );
+        println!(
+            "Add producer to active speaker observer: {:#?}",
+            active_speaker_observer
+                .add_producer(RtpObserverAddProducerOptions::new(producer.id()))
+                .await
+                .unwrap()
+        );
+
         println!("Router dump: {:#?}", router.dump().await.unwrap());
         println!(
             "Remove producer from audio level observer: {:#?}",

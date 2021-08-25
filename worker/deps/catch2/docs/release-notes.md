@@ -2,6 +2,8 @@
 
 # Release notes
 **Contents**<br>
+[2.13.7](#2137)<br>
+[2.13.6](#2136)<br>
 [2.13.5](#2135)<br>
 [2.13.4](#2134)<br>
 [2.13.3](#2133)<br>
@@ -44,6 +46,25 @@
 [2.0.1](#201)<br>
 [Older versions](#older-versions)<br>
 [Even Older versions](#even-older-versions)<br>
+
+
+## 2.13.7
+
+### Fixes
+* Added missing `<iterator>` include in benchmarking. (#2231)
+* Fixed noexcept build with benchmarking enabled (#2235)
+* Fixed build for compilers with C++17 support but without C++17 library support (#2195)
+* JUnit only uses 3 decimal places when reporting durations (#2221)
+* `!mayfail` tagged tests are now marked as `skipped` in JUnit reporter output (#2116)
+
+
+## 2.13.6
+
+### Fixes
+* Disabling all signal handlers no longer breaks compilation  (#2212, #2213)
+
+### Miscellaneous
+* `catch_discover_tests` should handle escaped semicolon (`;`) better (#2214, #2215)
 
 
 ## 2.13.5

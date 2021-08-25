@@ -24,7 +24,6 @@ namespace RTC
 		class FeedbackPsRpsiItem : public FeedbackItem
 		{
 			const static size_t maxBitStringSize{ 6 };
-			const static size_t bitStringOffset{ 2 };
 
 		public:
 			struct Header

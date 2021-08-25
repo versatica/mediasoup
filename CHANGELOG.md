@@ -1,7 +1,35 @@
 # Changelog
 
 
-### Unreleased
+### 3.8.4 (WIP)
+
+* Update NPM deps.
+
+
+### 3.8.3
+
+* Fix wrong `size_t*` to `int*` conversion in 64bit Big-Endian hosts (PR #637).
+
+
+### 3.8.2
+
+* `ActiveSpeakerObserver`: Fix crash due to a `nullptr` (PR #634).
+* Update NPM deps.
+
+
+### 3.8.1
+
+* `SimulcastConsumer`: Fix RTP timestamp when switching layers (PR #626 by @penguinol).
+* Update NPM deps.
+
+
+### 3.8.0
+
+* Update `libuv` to 1.42.0.
+* Use non-ASM OpenSSL on Windows (PR #614).
+* Fix minor memory leak caused by non-virtual destructor (PR #625).
+* Dominant Speaker Event (PR #603 by @SteveMcFarlin).
+* Update NPM deps.
 
 
 ### 3.7.19

@@ -80,7 +80,7 @@ function get_netstring()
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
-	GIT_TAG="v1.41.0"
+	GIT_TAG="v1.42.0"
 	DEST="deps/libuv/libuv"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -126,7 +126,7 @@ function get_abseil_cpp()
 function get_catch()
 {
 	GIT_REPO="https://github.com/catchorg/Catch2.git"
-	GIT_TAG="v2.13.5"
+	GIT_TAG="v2.13.7"
 	DEST="deps/catch2"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"

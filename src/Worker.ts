@@ -291,7 +291,7 @@ export class Worker extends EnhancedEventEmitter
 				windowsHide : true
 			});
 
-		this._pid = this._child.pid;
+		this._pid = this._child.pid!;
 
 		this._channel = new Channel(
 			{

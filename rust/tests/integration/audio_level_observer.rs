@@ -1,8 +1,8 @@
 use async_io::Timer;
 use futures_lite::future;
 use mediasoup::audio_level_observer::AudioLevelObserverOptions;
+use mediasoup::prelude::*;
 use mediasoup::router::RouterOptions;
-use mediasoup::rtp_observer::RtpObserver;
 use mediasoup::rtp_parameters::{MimeTypeAudio, RtpCodecCapability, RtpCodecParametersParameters};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
