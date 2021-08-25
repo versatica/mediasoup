@@ -313,42 +313,14 @@ impl Channel {
     where
         R: Request,
     {
-        // Default will work for `()` response
-        let data = self
-            .request_internal(request.as_method(), serde_json::to_value(request).unwrap())
-            .await?
-            .unwrap_or_default();
-        serde_json::from_value(data).map_err(|error| RequestError::FailedToParse {
-            error: error.to_string(),
-        })
-    }
+        let method = request.as_method();
 
-    pub(crate) fn subscribe_to_notifications<F>(
-        &self,
-        target_id: SubscriptionTarget,
-        callback: F,
-    ) -> Option<SubscriptionHandler>
-    where
-        F: Fn(Value) + Send + Sync + 'static,
-    {
-        self.inner
-            .event_handlers_weak
-            .upgrade()
-            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
-    }
-
-    /// Non-generic method to avoid significant duplication in final binary
-    async fn request_internal(
-        &self,
-        method: &'static str,
-        message: Value,
-    ) -> Result<Option<Value>, RequestError> {
         #[derive(Debug, Serialize)]
-        struct RequestMessagePrivate {
+        struct RequestMessagePrivate<'a, R: Serialize> {
             id: u32,
             method: &'static str,
             #[serde(flatten)]
-            message: Value,
+            request: &'a R,
         }
 
         let id;
@@ -370,13 +342,13 @@ impl Channel {
             requests_container.handlers.insert(id, result_sender);
         }
 
-        debug!("request() [method:{}, id:{}]: {}", method, id, message);
+        debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
         let bytes = Bytes::from(
             serde_json::to_vec(&RequestMessagePrivate {
                 id,
                 method,
-                message,
+                request: &request,
             })
             .unwrap(),
         );
@@ -419,16 +391,37 @@ impl Channel {
         )
         .await?;
 
-        match result {
+        let data = match result {
             Ok(data) => {
                 debug!("request succeeded [method:{}, id:{}]", method, id);
-                Ok(data)
+                data
             }
             Err(ResponseError { reason }) => {
                 debug!("request failed [method:{}, id:{}]: {}", method, id, reason);
 
-                Err(RequestError::Response { reason })
+                return Err(RequestError::Response { reason });
             }
-        }
+        };
+
+        // Default will work for `()` response
+        serde_json::from_value(data.unwrap_or_default()).map_err(|error| {
+            RequestError::FailedToParse {
+                error: error.to_string(),
+            }
+        })
+    }
+
+    pub(crate) fn subscribe_to_notifications<F>(
+        &self,
+        target_id: SubscriptionTarget,
+        callback: F,
+    ) -> Option<SubscriptionHandler>
+    where
+        F: Fn(Value) + Send + Sync + 'static,
+    {
+        self.inner
+            .event_handlers_weak
+            .upgrade()
+            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
     }
 }

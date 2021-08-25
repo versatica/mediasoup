@@ -286,63 +286,14 @@ impl PayloadChannel {
     where
         R: Request,
     {
-        // Default will work for `()` response
-        let data = self
-            .request_internal(
-                request.as_method(),
-                serde_json::to_value(request).unwrap(),
-                payload,
-            )
-            .await?
-            .unwrap_or_default();
-        serde_json::from_value(data).map_err(|error| RequestError::FailedToParse {
-            error: error.to_string(),
-        })
-    }
+        let method = request.as_method();
 
-    pub(crate) async fn notify<N>(
-        &self,
-        notification: N,
-        payload: Bytes,
-    ) -> Result<(), NotificationError>
-    where
-        N: Notification,
-    {
-        self.notify_internal(
-            notification.as_event(),
-            serde_json::to_value(notification).unwrap(),
-            payload,
-        )
-        .await
-    }
-
-    pub(crate) fn subscribe_to_notifications<F>(
-        &self,
-        target_id: SubscriptionTarget,
-        callback: F,
-    ) -> Option<SubscriptionHandler>
-    where
-        F: Fn(NotificationMessage) + Send + Sync + 'static,
-    {
-        self.inner
-            .event_handlers_weak
-            .upgrade()
-            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
-    }
-
-    /// Non-generic method to avoid significant duplication in final binary
-    async fn request_internal(
-        &self,
-        method: &'static str,
-        message: Value,
-        payload: Bytes,
-    ) -> Result<Option<Value>, RequestError> {
         #[derive(Debug, Serialize)]
-        struct RequestMessagePrivate {
+        struct RequestMessagePrivate<'a, R> {
             id: u32,
             method: &'static str,
             #[serde(flatten)]
-            message: Value,
+            request: &'a R,
         }
 
         let id;
@@ -364,13 +315,13 @@ impl PayloadChannel {
             requests_container.handlers.insert(id, result_sender);
         }
 
-        debug!("request() [method:{}, id:{}]: {}", method, id, message);
+        debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
         let bytes = Bytes::from(
             serde_json::to_vec(&RequestMessagePrivate {
                 id,
                 method,
-                message,
+                request: &request,
             })
             .unwrap(),
         );
@@ -427,31 +378,41 @@ impl PayloadChannel {
         )
         .await?;
 
-        match result {
+        let data = match result {
             Ok(data) => {
                 debug!("request succeeded [method:{}, id:{}]", method, id);
-                Ok(data)
+                data
             }
             Err(ResponseError { reason }) => {
                 debug!("request failed [method:{}, id:{}]: {}", method, id, reason);
 
-                Err(RequestError::Response { reason })
+                return Err(RequestError::Response { reason });
             }
-        }
+        };
+
+        // Default will work for `()` response
+        serde_json::from_value(data.unwrap_or_default()).map_err(|error| {
+            RequestError::FailedToParse {
+                error: error.to_string(),
+            }
+        })
     }
 
-    /// Non-generic method to avoid significant duplication in final binary
-    async fn notify_internal(
+    pub(crate) async fn notify<N>(
         &self,
-        event: &'static str,
-        notification: Value,
+        notification: N,
         payload: Bytes,
-    ) -> Result<(), NotificationError> {
+    ) -> Result<(), NotificationError>
+    where
+        N: Notification,
+    {
+        let event = notification.as_event();
+
         #[derive(Debug, Serialize)]
-        struct NotificationMessagePrivate {
+        struct NotificationMessagePrivate<'a, N: Serialize> {
             event: &'static str,
             #[serde(flatten)]
-            notification: Value,
+            notification: &'a N,
         }
 
         debug!("notify() [event:{}]", event);
@@ -463,7 +424,7 @@ impl PayloadChannel {
         let bytes = Bytes::from(
             serde_json::to_vec(&NotificationMessagePrivate {
                 event,
-                notification,
+                notification: &notification,
             })
             .unwrap(),
         );
@@ -480,5 +441,19 @@ impl PayloadChannel {
             })
             .await
             .map_err(|_| NotificationError::ChannelClosed {})
+    }
+
+    pub(crate) fn subscribe_to_notifications<F>(
+        &self,
+        target_id: SubscriptionTarget,
+        callback: F,
+    ) -> Option<SubscriptionHandler>
+    where
+        F: Fn(NotificationMessage) + Send + Sync + 'static,
+    {
+        self.inner
+            .event_handlers_weak
+            .upgrade()
+            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
     }
 }
