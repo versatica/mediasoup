@@ -17,7 +17,7 @@ use std::io;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
-const NS_PAYLOAD_MAX_LEN: usize = 4_194_304;
+const PAYLOAD_MAX_LEN: usize = 4_194_304;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -148,7 +148,7 @@ impl Channel {
             executor
                 .spawn(async move {
                     let mut len_bytes = [0u8; 4];
-                    let mut bytes = Vec::new();
+                    let mut bytes = Vec::with_capacity(PAYLOAD_MAX_LEN);
                     let mut reader = BufReader::new(reader);
                     // This this contain cache of targets that are known to not have buffering, so
                     // that we can avoid Mutex locking overhead for them
@@ -158,13 +158,6 @@ impl Channel {
                     loop {
                         reader.read_exact(&mut len_bytes).await?;
                         let length = u32::from_ne_bytes(len_bytes) as usize;
-
-                        if length > NS_PAYLOAD_MAX_LEN {
-                            warn!(
-                                "received message {} is too long, max supported is {}",
-                                length, NS_PAYLOAD_MAX_LEN,
-                            );
-                        }
 
                         if bytes.len() < length {
                             // Increase bytes size if/when needed
@@ -353,7 +346,7 @@ impl Channel {
             .unwrap(),
         );
 
-        if bytes.len() > NS_PAYLOAD_MAX_LEN {
+        if bytes.len() > PAYLOAD_MAX_LEN {
             self.inner
                 .requests_container_weak
                 .upgrade()

@@ -1,4 +1,4 @@
-use crate::messages::{Notification, Request};
+use crate::messages::{MetaNotification, MetaRequest, Notification, Request};
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::{RequestError, SubscriptionHandler};
 use async_executor::Executor;
@@ -17,7 +17,7 @@ use std::sync::{Arc, Weak};
 use std::time::Duration;
 use thiserror::Error;
 
-const NS_PAYLOAD_MAX_LEN: usize = 4_194_304;
+const PAYLOAD_MAX_LEN: usize = 4_194_304;
 
 #[derive(Debug)]
 pub(super) enum InternalMessage {
@@ -25,9 +25,16 @@ pub(super) enum InternalMessage {
     UnexpectedData(Vec<u8>),
 }
 
-struct MessageWithPayload {
-    message: Bytes,
-    payload: Bytes,
+enum RequestOrNotificationWithPayload {
+    Request {
+        id: u32,
+        request: MetaRequest,
+        payload: Bytes,
+    },
+    Notification {
+        notification: MetaNotification,
+        payload: Bytes,
+    },
 }
 
 #[derive(Clone)]
@@ -72,8 +79,6 @@ fn deserialize_message(bytes: &[u8]) -> PayloadChannelReceiveMessage {
 pub enum NotificationError {
     #[error("Channel already closed")]
     ChannelClosed,
-    #[error("Message is too long")]
-    MessageTooLong,
     #[error("Payload is too long")]
     PayloadTooLong,
 }
@@ -91,7 +96,7 @@ struct RequestsContainer {
 }
 
 struct Inner {
-    sender: async_channel::Sender<MessageWithPayload>,
+    sender: async_channel::Sender<RequestOrNotificationWithPayload>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
     event_handlers_weak: WeakEventHandlers<NotificationMessage>,
@@ -122,19 +127,12 @@ impl PayloadChannel {
             executor
                 .spawn(async move {
                     let mut len_bytes = [0u8; 4];
-                    let mut bytes = Vec::new();
+                    let mut bytes = Vec::with_capacity(PAYLOAD_MAX_LEN);
                     let mut reader = BufReader::new(reader);
 
                     loop {
                         reader.read_exact(&mut len_bytes).await?;
                         let length = u32::from_ne_bytes(len_bytes) as usize;
-
-                        if length > NS_PAYLOAD_MAX_LEN {
-                            warn!(
-                                "received message {} is too long, max supported is {}",
-                                length, NS_PAYLOAD_MAX_LEN,
-                            );
-                        }
 
                         if bytes.len() < length {
                             // Increase bytes size if/when needed
@@ -191,13 +189,6 @@ impl PayloadChannel {
                                 reader.read_exact(&mut len_bytes).await?;
                                 let length = u32::from_ne_bytes(len_bytes) as usize;
 
-                                if length > NS_PAYLOAD_MAX_LEN {
-                                    warn!(
-                                        "received payload {} is too long, max supported is {}",
-                                        length, NS_PAYLOAD_MAX_LEN,
-                                    );
-                                }
-
                                 if bytes.len() < length {
                                     // Increase bytes size if/when needed
                                     bytes.resize(length, 0);
@@ -241,20 +232,85 @@ impl PayloadChannel {
         };
 
         let sender = {
-            let (sender, receiver) = async_channel::bounded::<MessageWithPayload>(1);
+            let (sender, receiver) = async_channel::bounded::<RequestOrNotificationWithPayload>(1);
 
             executor
                 .spawn(async move {
-                    while let Ok(message) = receiver.recv().await {
-                        writer
-                            .write_all(&(message.message.len() as u32).to_ne_bytes())
-                            .await?;
-                        writer.write_all(&message.message).await?;
+                    let mut write_buffer = Vec::with_capacity(PAYLOAD_MAX_LEN);
 
-                        writer
-                            .write_all(&(message.payload.len() as u32).to_ne_bytes())
-                            .await?;
-                        writer.write_all(&message.payload).await?;
+                    while let Ok(message) = receiver.recv().await {
+                        write_buffer.resize(4, 0);
+
+                        match message {
+                            RequestOrNotificationWithPayload::Request {
+                                id,
+                                request,
+                                payload,
+                            } => {
+                                #[derive(Debug, Serialize)]
+                                struct RequestMessagePrivate<'a, R> {
+                                    id: u32,
+                                    method: &'static str,
+                                    #[serde(flatten)]
+                                    request: &'a R,
+                                }
+
+                                serde_json::to_writer(
+                                    &mut write_buffer[4..],
+                                    &RequestMessagePrivate {
+                                        id,
+                                        method: request.as_method(),
+                                        request: &request,
+                                    },
+                                )
+                                .unwrap();
+
+                                {
+                                    let len = write_buffer.len() as u32 - 4;
+                                    write_buffer[..4].copy_from_slice(&len.to_ne_bytes());
+                                }
+
+                                write_buffer
+                                    .extend_from_slice(&(payload.len() as u32).to_ne_bytes());
+
+                                writer.write_all(&write_buffer).await?;
+
+                                writer.write_all(&payload).await?;
+                            }
+                            RequestOrNotificationWithPayload::Notification {
+                                notification,
+                                payload,
+                            } => {
+                                #[derive(Debug, Serialize)]
+                                struct NotificationMessagePrivate<'a, N: Serialize> {
+                                    event: &'static str,
+                                    #[serde(flatten)]
+                                    notification: &'a N,
+                                }
+
+                                serde_json::to_writer(
+                                    &mut write_buffer,
+                                    &NotificationMessagePrivate {
+                                        event: notification.as_event(),
+                                        notification: &notification,
+                                    },
+                                )
+                                .unwrap();
+
+                                {
+                                    let len = write_buffer.len() as u32 - 4;
+                                    write_buffer[..4].copy_from_slice(&len.to_ne_bytes());
+                                }
+
+                                write_buffer
+                                    .extend_from_slice(&(payload.len() as u32).to_ne_bytes());
+
+                                writer.write_all(&write_buffer).await?;
+
+                                // Payload is written directly as it can be relatively large
+                                writer.write_all(&payload).await?;
+                            }
+                        }
                     }
 
                     io::Result::Ok(())
@@ -284,17 +340,9 @@ impl PayloadChannel {
         payload: Bytes,
     ) -> Result<R::Response, RequestError>
     where
-        R: Request,
+        R: Request + Into<MetaRequest>,
     {
         let method = request.as_method();
-
-        #[derive(Debug, Serialize)]
-        struct RequestMessagePrivate<'a, R> {
-            id: u32,
-            method: &'static str,
-            #[serde(flatten)]
-            request: &'a R,
-        }
 
         let id;
         let queue_len;
@@ -317,27 +365,7 @@ impl PayloadChannel {
 
         debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
-        let bytes = Bytes::from(
-            serde_json::to_vec(&RequestMessagePrivate {
-                id,
-                method,
-                request: &request,
-            })
-            .unwrap(),
-        );
-
-        if bytes.len() > NS_PAYLOAD_MAX_LEN {
-            self.inner
-                .requests_container_weak
-                .upgrade()
-                .ok_or(RequestError::ChannelClosed)?
-                .lock()
-                .handlers
-                .remove(&id);
-            return Err(RequestError::MessageTooLong);
-        }
-
-        if payload.len() > NS_PAYLOAD_MAX_LEN {
+        if payload.len() > PAYLOAD_MAX_LEN {
             self.inner
                 .requests_container_weak
                 .upgrade()
@@ -350,8 +378,9 @@ impl PayloadChannel {
 
         self.inner
             .sender
-            .send(MessageWithPayload {
-                message: bytes,
+            .send(RequestOrNotificationWithPayload::Request {
+                id,
+                request: request.into(),
                 payload,
             })
             .await
@@ -404,39 +433,18 @@ impl PayloadChannel {
         payload: Bytes,
     ) -> Result<(), NotificationError>
     where
-        N: Notification,
+        N: Notification + Into<MetaNotification>,
     {
-        let event = notification.as_event();
+        debug!("notify() [event:{}]", notification.as_event());
 
-        #[derive(Debug, Serialize)]
-        struct NotificationMessagePrivate<'a, N: Serialize> {
-            event: &'static str,
-            #[serde(flatten)]
-            notification: &'a N,
-        }
-
-        debug!("notify() [event:{}]", event);
-
-        if payload.len() > NS_PAYLOAD_MAX_LEN {
+        if payload.len() > PAYLOAD_MAX_LEN {
             return Err(NotificationError::PayloadTooLong);
-        }
-
-        let bytes = Bytes::from(
-            serde_json::to_vec(&NotificationMessagePrivate {
-                event,
-                notification: &notification,
-            })
-            .unwrap(),
-        );
-
-        if bytes.len() > NS_PAYLOAD_MAX_LEN {
-            return Err(NotificationError::MessageTooLong);
         }
 
         self.inner
             .sender
-            .send(MessageWithPayload {
-                message: bytes,
+            .send(RequestOrNotificationWithPayload::Notification {
+                notification: notification.into(),
                 payload,
             })
             .await
