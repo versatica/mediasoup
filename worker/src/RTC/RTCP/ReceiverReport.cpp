@@ -20,7 +20,7 @@ namespace RTC
 			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// Packet size must be >= header size.
-			if (len < sizeof(Header))
+			if (len < HeaderSize)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for receiver report, packet discarded");
 
@@ -52,9 +52,9 @@ namespace RTC
 			MS_TRACE();
 
 			// Copy the header.
-			std::memcpy(buffer, this->header, sizeof(Header));
+			std::memcpy(buffer, this->header, HeaderSize);
 
-			return sizeof(Header);
+			return HeaderSize;
 		}
 
 		/* Class methods. */
@@ -73,7 +73,7 @@ namespace RTC
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			// Ensure there is space for the common header and the SSRC of packet sender.
-			if (len < sizeof(CommonHeader) + 4u /* ssrc */)
+			if (len < Packet::CommonHeaderSize + 4u /* ssrc */)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for receiver report packet, packet discarded");
 
@@ -83,12 +83,12 @@ namespace RTC
 			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket(header));
 
 			uint32_t ssrc =
-			  Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(header), sizeof(CommonHeader));
+			  Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(header), Packet::CommonHeaderSize);
 
 			packet->SetSsrc(ssrc);
 
 			if (offset == 0)
-				offset = sizeof(Packet::CommonHeader) + 4u /* ssrc */;
+				offset = Packet::CommonHeaderSize + 4u /* ssrc */;
 
 			uint8_t count = header->count;
 
@@ -119,7 +119,7 @@ namespace RTC
 			size_t offset = Packet::Serialize(buffer);
 
 			// Copy the SSRC.
-			Utils::Byte::Set4Bytes(buffer, sizeof(Packet::CommonHeader), this->ssrc);
+			Utils::Byte::Set4Bytes(buffer, Packet::CommonHeaderSize, this->ssrc);
 			offset += 4u;
 
 			// Serialize reports.

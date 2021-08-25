@@ -42,6 +42,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize = 8;
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::FIR };
 
 		public:
@@ -82,7 +83,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{
-				size_t size = 8 + static_cast<size_t>(GetLength());
+				size_t size = FeedbackPsVbcmItem::HeaderSize + static_cast<size_t>(GetLength());
 
 				// Consider pading to 32 bits (4 bytes) boundary.
 				return (size + 3) & ~3;

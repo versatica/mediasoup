@@ -37,6 +37,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize = 2;
 			static SdesItem* Parse(const uint8_t* data, size_t len);
 			static const std::string& Type2String(SdesItem::Type type);
 
@@ -197,7 +198,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				size_t size = sizeof(Packet::CommonHeader);
+				size_t size = Packet::CommonHeaderSize;
 
 				for (auto* chunk : this->chunks)
 				{

@@ -16,7 +16,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Ensure there is space for the common header and the body.
-			if (len < sizeof(ExtendedReportBlock::CommonHeader) + sizeof(ReceiverReferenceTime::Body))
+			if (len < ExtendedReportBlock::CommonHeaderSize + sizeof(ReceiverReferenceTime::Body))
 			{
 				MS_WARN_TAG(rtcp, "not enough space for a extended RRT block, block discarded");
 
@@ -52,9 +52,9 @@ namespace RTC
 			this->header->reserved  = 0;
 			this->header->length    = htons(2);
 
-			std::memcpy(buffer, this->header, sizeof(ExtendedReportBlock::CommonHeader));
+			std::memcpy(buffer, this->header, ExtendedReportBlock::CommonHeaderSize);
 
-			size_t offset{ sizeof(ExtendedReportBlock::CommonHeader) };
+			size_t offset{ ExtendedReportBlock::CommonHeaderSize };
 
 			// Copy the body.
 			std::memcpy(buffer + offset, this->body, sizeof(ReceiverReferenceTime::Body));

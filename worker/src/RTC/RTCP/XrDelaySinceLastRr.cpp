@@ -63,7 +63,7 @@ namespace RTC
 			auto* header = const_cast<ExtendedReportBlock::CommonHeader*>(
 			  reinterpret_cast<const ExtendedReportBlock::CommonHeader*>(data));
 			std::unique_ptr<DelaySinceLastRr> report(new DelaySinceLastRr(header));
-			size_t offset{ sizeof(ExtendedReportBlock::CommonHeader) };
+			size_t offset{ ExtendedReportBlock::CommonHeaderSize };
 			uint16_t reportLength = ntohs(header->length) * 4;
 
 			while (len > offset && reportLength >= sizeof(DelaySinceLastRr::SsrcInfo::Body))
@@ -101,9 +101,9 @@ namespace RTC
 			this->header->reserved  = 0;
 			this->header->length    = uint16_t{ htons(length) };
 
-			std::memcpy(buffer, this->header, sizeof(ExtendedReportBlock::CommonHeader));
+			std::memcpy(buffer, this->header, ExtendedReportBlock::CommonHeaderSize);
 
-			size_t offset{ sizeof(ExtendedReportBlock::CommonHeader) };
+			size_t offset{ ExtendedReportBlock::CommonHeaderSize };
 
 			// Serialize sub-blocks.
 			for (auto* ssrcInfo : this->ssrcInfos)
