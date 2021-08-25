@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.8.4 (WIP)
+
+* Update NPM deps.
+
+
 ### 3.8.3
 
 * Fix wrong `size_t*` to `int*` conversion in 64bit Big-Endian hosts (PR #637).
