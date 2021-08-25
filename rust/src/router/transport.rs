@@ -27,9 +27,9 @@ use log::{error, warn};
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
@@ -395,26 +395,24 @@ pub(super) trait TransportImpl: TransportGeneric {
         }
     }
 
-    async fn dump_impl(&self) -> Result<Self::Dump, RequestError> {
+    async fn dump_impl(&self) -> Result<Value, RequestError> {
         self.channel()
             .request(TransportDumpRequest {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
                 },
-                phantom_data: PhantomData {},
             })
             .await
     }
 
-    async fn get_stats_impl(&self) -> Result<Vec<Self::Stat>, RequestError> {
+    async fn get_stats_impl(&self) -> Result<Value, RequestError> {
         self.channel()
             .request(TransportGetStatsRequest {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
                 },
-                phantom_data: PhantomData {},
             })
             .await
     }
