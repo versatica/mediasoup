@@ -14,11 +14,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->raw    = new uint8_t[sizeof(Header)];
+			this->raw    = new uint8_t[FeedbackPsTstItem::headerSize];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
 			// Set reserved bits to zero.
-			std::memset(this->header, 0, sizeof(Header));
+			std::memset(this->header, 0, FeedbackPsTstItem::headerSize);
 
 			this->header->ssrc           = uint32_t{ htonl(ssrc) };
 			this->header->sequenceNumber = sequenceNumber;
@@ -30,9 +30,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::memcpy(buffer, this->header, sizeof(Header));
+			std::memcpy(buffer, this->header, FeedbackPsTstItem::headerSize);
 
-			return sizeof(Header);
+			return FeedbackPsTstItem::headerSize;
 		}
 
 		template<typename T>
@@ -52,12 +52,16 @@ namespace RTC
 		template<>
 		const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::messageType =
 		  FeedbackPs::MessageType::TSTR;
+		template<>
+		const size_t FeedbackPsTstItem<Tstr>::headerSize = 8;
 
 		/* Specialization for Tstn class. */
 
 		template<>
 		const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::messageType =
 		  FeedbackPs::MessageType::TSTN;
+		template<>
+		const size_t FeedbackPsTstItem<Tstn>::headerSize = 8;
 
 		// Explicit instantiation to have all definitions in this file.
 		template class FeedbackPsTstItem<Tstr>;

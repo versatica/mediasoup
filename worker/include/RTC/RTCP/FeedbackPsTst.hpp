@@ -28,19 +28,19 @@ namespace RTC
 			{
 				uint32_t ssrc;
 				uint8_t sequenceNumber;
-				uint8_t reserved1;
-				uint8_t reserved2;
+				uint16_t reserved1;
 #if defined(MS_LITTLE_ENDIAN)
 				uint8_t index : 5;
-				uint8_t reserved3 : 3;
+				uint8_t reserved2 : 3;
 #elif defined(MS_BIG_ENDIAN)
-				uint8_t reserved3 : 3;
+				uint8_t reserved2 : 3;
 				uint8_t index : 5;
 #endif
 			};
 
 		public:
 			static const FeedbackPs::MessageType messageType;
+			static const size_t headerSize;
 
 		public:
 			explicit FeedbackPsTstItem(Header* header) : header(header)
