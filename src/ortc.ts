@@ -1227,6 +1227,7 @@ function matchCodecs(
 
 			break;
 		}
+
 		case 'video/h264':
 		{
 			const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;
