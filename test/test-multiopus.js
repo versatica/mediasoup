@@ -181,31 +181,6 @@ test('fails to produce wrong parameters', async () =>
 							channels    : 6,
 							parameters  :
 								{
-									'channel_mapping' : '0,1,2,3',
-									'num_streams'     : 4,
-									'coupled_streams' : 2
-								}
-						}
-					]
-			}
-	}))
-		.rejects
-		.toThrow(UnsupportedError);
-
-	await expect(transport.produce({
-		kind          : 'audio',
-		rtpParameters :
-			{
-				mid    : 'AUDIO',
-				codecs :
-					[
-						{
-							mimeType    : 'audio/multiopus',
-							payloadType : 0,
-							clockRate   : 48000,
-							channels    : 6,
-							parameters  :
-								{
 									'channel_mapping' : '0,4,1,2,3,5',
 									'num_streams'     : 2,
 									'coupled_streams' : 2

@@ -170,7 +170,7 @@ impl EchoConnection {
                         channels: NonZeroU8::new(6).unwrap(),
                         parameters: RtpCodecParametersParameters::from([
                             ("useinbandfec", 1_u32.into()),
-                            ("channel_mapping", "0,4,1,2,3,5".into()),
+                            ("channel_mapping", "0,1,4,5,2,3".into()),
                             ("num_streams", 4_u32.into()),
                             ("coupled_streams", 2_u32.into()),
                         ]),
@@ -198,8 +198,6 @@ impl EchoConnection {
             plain_transport.rtcp_tuple().unwrap().local_port(),
         );
 
-        // This also remixes channels from `FL, FR, FC, LFE, RL, RR` to `FL, FC, FR, RR, LFE, RL`.
-        // Don't ask me why it is not `FL, FC, FR, RR, RL, LFE` as in `0,4,1,2,3,5`, I do not know.
         println!(
             "Use following command with GStreamer (1.20+) to play a sample audio:\n\
               gst-launch-1.0 \\\n  \
@@ -208,14 +206,7 @@ impl EchoConnection {
                 queue ! \\\n  \
                 decodebin ! \\\n  \
                 audioresample ! \\\n  \
-                audioconvert mix-matrix='<\
-                  <1.0, 0.0, 0.0, 0.0, 0.0, 0.0>, \
-                  <0.0, 0.0, 1.0, 0.0, 0.0, 0.0>, \
-                  <0.0, 1.0, 0.0, 0.0, 0.0, 0.0>, \
-                  <0.0, 0.0, 0.0, 0.0, 0.0, 1.0>, \
-                  <0.0, 0.0, 0.0, 1.0, 0.0, 0.0>, \
-                  <0.0, 0.0, 0.0, 0.0, 1.0, 0.0>\
-                >' ! \\\n  \
+                audioconvert ! \\\n  \
                 opusenc inband-fec=true ! \\\n  \
                 queue ! \\\n  \
                 clocksync ! \\\n  \

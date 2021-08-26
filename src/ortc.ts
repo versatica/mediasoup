@@ -1207,12 +1207,6 @@ function matchCodecs(
 	{
 		case 'audio/multiopus':
 		{
-			const aChannelMapping = aCodec.parameters['channel_mapping'];
-			const bChannelMapping = bCodec.parameters['channel_mapping'];
-
-			if (aChannelMapping !== bChannelMapping)
-				return false;
-
 			const aNumStreams = aCodec.parameters['num_streams'];
 			const bNumStreams = bCodec.parameters['num_streams'];
 

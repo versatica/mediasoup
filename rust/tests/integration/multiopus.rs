@@ -214,29 +214,6 @@ fn fails_to_consume_wrong_parameters() {
                         clock_rate: NonZeroU32::new(48000).unwrap(),
                         channels: NonZeroU8::new(6).unwrap(),
                         parameters: RtpCodecParametersParameters::from([
-                            ("channel_mapping", "0,1,2,3".into()),
-                            ("num_streams", 4_u32.into()),
-                            ("coupled_streams", 2_u32.into()),
-                        ]),
-                        rtcp_feedback: vec![],
-                    }],
-                    ..RtpParameters::default()
-                },
-            ))
-            .await
-            .is_err());
-
-        assert!(transport
-            .produce(ProducerOptions::new(
-                MediaKind::Audio,
-                RtpParameters {
-                    mid: Some("AUDIO".to_string()),
-                    codecs: vec![RtpCodecParameters::Audio {
-                        mime_type: MimeTypeAudio::MultiChannelOpus,
-                        payload_type: 0,
-                        clock_rate: NonZeroU32::new(48000).unwrap(),
-                        channels: NonZeroU8::new(6).unwrap(),
-                        parameters: RtpCodecParametersParameters::from([
                             ("channel_mapping", "0,4,1,2,3,5".into()),
                             ("num_streams", 2_u32.into()),
                             ("coupled_streams", 2_u32.into()),

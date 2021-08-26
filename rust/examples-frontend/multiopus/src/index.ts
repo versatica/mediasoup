@@ -105,7 +105,7 @@ async function init()
 									channels   : 6,
 									parameters : {
 										useinbandfec      : 1,
-										'channel_mapping' : '0,4,1,2,3,5',
+										'channel_mapping' : '0,1,4,5,2,3',
 										'num_streams'     : 4,
 										'coupled_streams' : 2
 									},

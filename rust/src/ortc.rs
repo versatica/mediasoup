@@ -985,13 +985,6 @@ fn match_codecs(
     // Per codec special checks.
     match codec_a.mime_type {
         MimeType::Audio(MimeTypeAudio::MultiChannelOpus) => {
-            let channel_mapping_a = codec_a.parameters.get("channel_mapping");
-            let channel_mapping_b = codec_b.parameters.get("channel_mapping");
-
-            if channel_mapping_a != channel_mapping_b {
-                return Err(());
-            }
-
             let num_streams_a = codec_a.parameters.get("num_streams");
             let num_streams_b = codec_b.parameters.get("num_streams");
 
