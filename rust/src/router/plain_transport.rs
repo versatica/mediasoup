@@ -206,8 +206,13 @@ struct Handlers {
 #[derive(Debug, Deserialize)]
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
-    Tuple(TransportTuple),
-    RtcpTuple(TransportTuple),
+    Tuple {
+        tuple: TransportTuple,
+    },
+    #[serde(rename_all = "camelCase")]
+    RtcpTuple {
+        rtcp_tuple: TransportTuple,
+    },
     #[serde(rename_all = "camelCase")]
     SctpStateChange {
         sctp_state: SctpState,
@@ -517,14 +522,14 @@ impl PlainTransport {
             channel.subscribe_to_notifications(id.into(), move |notification| {
                 match serde_json::from_value::<Notification>(notification) {
                     Ok(notification) => match notification {
-                        Notification::Tuple(tuple) => {
+                        Notification::Tuple { tuple } => {
                             *data.tuple.lock() = tuple;
 
                             handlers.tuple.call(|callback| {
                                 callback(&tuple);
                             });
                         }
-                        Notification::RtcpTuple(rtcp_tuple) => {
+                        Notification::RtcpTuple { rtcp_tuple } => {
                             data.rtcp_tuple.lock().replace(rtcp_tuple);
 
                             handlers.rtcp_tuple.call(|callback| {
