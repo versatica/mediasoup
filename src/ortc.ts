@@ -1205,6 +1205,28 @@ function matchCodecs(
 	// Per codec special checks.
 	switch (aMimeType)
 	{
+		case 'audio/multiopus':
+		{
+			const aChannelMapping = aCodec.parameters['channel_mapping'];
+			const bChannelMapping = bCodec.parameters['channel_mapping'];
+
+			if (aChannelMapping !== bChannelMapping)
+				return false;
+
+			const aNumStreams = aCodec.parameters['num_streams'];
+			const bNumStreams = bCodec.parameters['num_streams'];
+
+			if (aNumStreams !== bNumStreams)
+				return false;
+
+			const aCoupledStreams = aCodec.parameters['coupled_streams'];
+			const bCoupledStreams = bCodec.parameters['coupled_streams'];
+
+			if (aCoupledStreams !== bCoupledStreams)
+				return false;
+
+			break;
+		}
 		case 'video/h264':
 		{
 			const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;

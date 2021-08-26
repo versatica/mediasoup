@@ -49,6 +49,8 @@ namespace RTC
 			UNSET = 0,
 			// Audio codecs:
 			OPUS = 100,
+			// Multi-channel Opus (Surround sound in Chromium)
+			MULTIOPUS,
 			PCMA,
 			PCMU,
 			ISAC,

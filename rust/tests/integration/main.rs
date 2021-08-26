@@ -4,6 +4,7 @@ mod consumer;
 mod data_consumer;
 mod data_producer;
 mod direct_transport;
+mod multiopus;
 mod pipe_transport;
 mod plain_transport;
 mod producer;
