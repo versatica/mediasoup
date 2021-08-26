@@ -31,7 +31,7 @@ namespace RTC
 	};
 	// clang-format on
 
-	static const size_t ProbationPacketHeaderSize = 32;
+	static constexpr size_t ProbationPacketHeaderSize{ 32 };
 	static constexpr size_t MaxProbationPacketSize{ 1400u };
 	static const std::string MidValue{ "probator" }; // 8 bytes, same as RTC::MidMaxLength.
 

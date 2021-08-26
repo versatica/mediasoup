@@ -10,10 +10,6 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		/* Class variables. */
-
-		uint32_t FeedbackPsRembPacket::uniqueIdentifier{ 0x52454D42 };
-
 		/* Class methods. */
 
 		FeedbackPsRembPacket* FeedbackPsRembPacket::Parse(const uint8_t* data, size_t len)
@@ -72,7 +68,7 @@ namespace RTC
 			}
 
 			// Verify the "REMB" unique identifier.
-			if (Utils::Byte::Get4Bytes(data, 0) != FeedbackPsRembPacket::uniqueIdentifier)
+			if (Utils::Byte::Get4Bytes(data, 0) != FeedbackPsRembPacket::UniqueIdentifier)
 			{
 				MS_WARN_TAG(rtcp, "invalid unique indentifier in REMB packet");
 
@@ -122,8 +118,8 @@ namespace RTC
 				++exponent;
 			}
 
-			Utils::Byte::Set4Bytes(buffer, offset, FeedbackPsRembPacket::uniqueIdentifier);
-			offset += sizeof(FeedbackPsRembPacket::uniqueIdentifier);
+			Utils::Byte::Set4Bytes(buffer, offset, FeedbackPsRembPacket::UniqueIdentifier);
+			offset += FeedbackPsRembPacket::UniqueIdentifierSize;
 
 			buffer[offset] = this->ssrcs.size();
 			offset += 1;

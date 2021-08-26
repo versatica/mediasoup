@@ -34,7 +34,7 @@ namespace RTC
 			// clang-format off
 			if (
 				len >= Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 4 &&
-				Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::uniqueIdentifier
+				Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::UniqueIdentifier
 			)
 			// clang-format on
 			{
