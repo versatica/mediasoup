@@ -29,5 +29,12 @@ typedef SSIZE_T ssize_t;
 using ChannelWriteCtx = void*;
 using ChannelWriteFn =
   void (*)(const uint8_t* /* message */, uint32_t /* messageLen */, ChannelWriteCtx /* ctx */);
+using PayloadChannelWriteCtx = void*;
+using PayloadChannelWriteFn  = void (*)(
+  const uint8_t* /* message */,
+  uint32_t /* messageLen */,
+  const uint8_t* /* payload */,
+  uint32_t /* payloadLen */,
+  ChannelWriteCtx /* ctx */);
 
 #endif

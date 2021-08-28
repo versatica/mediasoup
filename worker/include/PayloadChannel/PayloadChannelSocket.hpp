@@ -71,6 +71,11 @@ namespace PayloadChannel
 
 	public:
 		explicit PayloadChannelSocket(int consumerFd, int producerFd);
+		explicit PayloadChannelSocket(
+		  int consumerFd,
+		  int producerFd,
+		  PayloadChannelWriteFn payloadChannelWriteFn,
+		  PayloadChannelWriteCtx payloadChannelWriteCtx);
 		virtual ~PayloadChannelSocket();
 
 	public:
@@ -80,7 +85,9 @@ namespace PayloadChannel
 		void Send(json& jsonMessage);
 
 	private:
-		void SendImpl(const void* payload, uint32_t payloadLen);
+		void SendImpl(const uint8_t* message, uint32_t messageLen);
+		void SendImpl(
+		  const uint8_t* message, uint32_t messageLen, const uint8_t* payload, uint32_t payloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
@@ -94,6 +101,8 @@ namespace PayloadChannel
 		bool closed{ false };
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
+		PayloadChannelWriteFn payloadChannelWriteFn{ nullptr };
+		PayloadChannelWriteCtx payloadChannelWriteCtx{ nullptr };
 		PayloadChannel::Notification* ongoingNotification{ nullptr };
 		PayloadChannel::PayloadChannelRequest* ongoingRequest{ nullptr };
 		uint8_t* writeBuffer;

@@ -7,6 +7,15 @@ pub type ChannelWriteFn = unsafe extern "C" fn(
     /* ctx: */ ChannelWriteCtx,
 );
 
+pub type PayloadChannelWriteCtx = *const c_void;
+pub type PayloadChannelWriteFn = unsafe extern "C" fn(
+    /* message: */ *const u8,
+    /* message_len: */ u32,
+    /* payload: */ *const u8,
+    /* payload_len: */ u32,
+    /* ctx: */ ChannelWriteCtx,
+);
+
 #[link(name = "mediasoup-worker", kind = "static")]
 extern "C" {
     pub fn run_worker(
@@ -19,5 +28,7 @@ extern "C" {
         payload_producer_channel_fd: c_int,
         channel_write_fn: ChannelWriteFn,
         channel_write_ctx: ChannelWriteCtx,
+        payload_channel_write_fn: PayloadChannelWriteFn,
+        payload_channel_write_ctx: PayloadChannelWriteCtx,
     ) -> c_int;
 }

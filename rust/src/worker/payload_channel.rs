@@ -1,6 +1,7 @@
 use crate::messages::{MetaNotification, MetaRequest, Notification, Request};
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
-use crate::worker::{RequestError, SubscriptionHandler};
+use crate::worker::utils::PreparedPayloadChannelWrite;
+use crate::worker::{utils, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_fs::File;
 use bytes::Bytes;
@@ -115,112 +116,197 @@ pub(crate) struct PayloadChannel {
 }
 
 impl PayloadChannel {
-    pub(super) fn new(executor: &Executor<'static>, reader: File, mut writer: File) -> Self {
+    pub(super) fn new(
+        executor: &Executor<'static>,
+        reader: File,
+        mut writer: File,
+    ) -> (Self, PreparedPayloadChannelWrite) {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
         let event_handlers = EventHandlers::new();
         let event_handlers_weak = event_handlers.downgrade();
 
-        let internal_message_receiver = {
+        let (internal_message_receiver, prepared_payload_channel_write) = {
             let (sender, receiver) = async_channel::bounded(1);
 
             executor
-                .spawn(async move {
-                    let mut len_bytes = [0u8; 4];
-                    let mut read_buffer = vec![0u8; PAYLOAD_MAX_LEN];
-                    let mut reader = BufReader::new(reader);
+                .spawn({
+                    let requests_container = Arc::clone(&requests_container);
+                    let event_handlers = event_handlers.clone();
+                    let sender = sender.clone();
 
-                    loop {
-                        reader.read_exact(&mut len_bytes).await?;
-                        let length = u32::from_ne_bytes(len_bytes) as usize;
+                    async move {
+                        let mut len_bytes = [0u8; 4];
+                        let mut read_buffer = vec![0u8; PAYLOAD_MAX_LEN];
+                        let mut reader = BufReader::new(reader);
 
-                        reader.read_exact(&mut read_buffer[..length]).await?;
+                        loop {
+                            reader.read_exact(&mut len_bytes).await?;
+                            let length = u32::from_ne_bytes(len_bytes) as usize;
 
-                        trace!(
-                            "received raw message: {}",
-                            String::from_utf8_lossy(&read_buffer[..length]),
-                        );
+                            reader.read_exact(&mut read_buffer[..length]).await?;
 
-                        match deserialize_message(&read_buffer[..length]) {
-                            PayloadChannelReceiveMessage::ResponseSuccess {
-                                id,
-                                accepted: _,
-                                data,
-                            } => {
-                                let sender = requests_container.lock().handlers.remove(&id);
-                                if let Some(mut sender) = sender {
-                                    let _ = sender.send(Ok(data));
-                                } else {
-                                    warn!(
+                            trace!(
+                                "received raw message: {}",
+                                String::from_utf8_lossy(&read_buffer[..length]),
+                            );
+
+                            match deserialize_message(&read_buffer[..length]) {
+                                PayloadChannelReceiveMessage::ResponseSuccess {
+                                    id,
+                                    accepted: _,
+                                    data,
+                                } => {
+                                    let sender = requests_container.lock().handlers.remove(&id);
+                                    if let Some(mut sender) = sender {
+                                        let _ = sender.send(Ok(data));
+                                    } else {
+                                        warn!(
                                         "received success response does not match any sent request \
                                          [id:{}]",
                                         id,
                                     );
+                                    }
                                 }
-                            }
-                            PayloadChannelReceiveMessage::ResponseError {
-                                id,
-                                error: _,
-                                reason,
-                            } => {
-                                let sender = requests_container.lock().handlers.remove(&id);
-                                if let Some(mut sender) = sender {
-                                    let _ = sender.send(Err(ResponseError { reason }));
-                                } else {
-                                    warn!(
+                                PayloadChannelReceiveMessage::ResponseError {
+                                    id,
+                                    error: _,
+                                    reason,
+                                } => {
+                                    let sender = requests_container.lock().handlers.remove(&id);
+                                    if let Some(mut sender) = sender {
+                                        let _ = sender.send(Err(ResponseError { reason }));
+                                    } else {
+                                        warn!(
                                         "received error response does not match any sent request \
                                         [id:{}]",
                                         id,
                                     );
+                                    }
                                 }
-                            }
-                            PayloadChannelReceiveMessage::Notification(notification) => {
-                                let target_id = notification.get("targetId").and_then(|value| {
-                                    let str = value.as_str()?;
-                                    str.parse().ok().map(SubscriptionTarget::Uuid).or_else(|| {
-                                        str.parse().ok().map(SubscriptionTarget::Number)
-                                    })
-                                });
+                                PayloadChannelReceiveMessage::Notification(notification) => {
+                                    let target_id =
+                                        notification.get("targetId").and_then(|value| {
+                                            let str = value.as_str()?;
+                                            str.parse().ok().map(SubscriptionTarget::Uuid).or_else(
+                                                || str.parse().ok().map(SubscriptionTarget::Number),
+                                            )
+                                        });
 
-                                reader.read_exact(&mut len_bytes).await?;
-                                let length = u32::from_ne_bytes(len_bytes) as usize;
+                                    reader.read_exact(&mut len_bytes).await?;
+                                    let length = u32::from_ne_bytes(len_bytes) as usize;
 
-                                reader.read_exact(&mut read_buffer[..length]).await?;
+                                    reader.read_exact(&mut read_buffer[..length]).await?;
 
-                                trace!("received notification payload of {} bytes", length);
+                                    trace!("received notification payload of {} bytes", length);
 
-                                let payload = Bytes::copy_from_slice(&read_buffer[..length]);
+                                    let payload = Bytes::copy_from_slice(&read_buffer[..length]);
 
-                                if let Some(target_id) = target_id {
-                                    event_handlers.call_callbacks_with_value(
-                                        &target_id,
-                                        NotificationMessage {
-                                            message: notification,
-                                            payload,
-                                        },
-                                    );
-                                } else {
-                                    let unexpected_message = InternalMessage::UnexpectedData(
-                                        Vec::from(&read_buffer[..length]),
-                                    );
-                                    if sender.send(unexpected_message).await.is_err() {
+                                    if let Some(target_id) = target_id {
+                                        event_handlers.call_callbacks_with_value(
+                                            &target_id,
+                                            NotificationMessage {
+                                                message: notification,
+                                                payload,
+                                            },
+                                        );
+                                    } else {
+                                        let unexpected_message = InternalMessage::UnexpectedData(
+                                            Vec::from(&read_buffer[..length]),
+                                        );
+                                        if sender.send(unexpected_message).await.is_err() {
+                                            break;
+                                        }
+                                    }
+                                }
+                                PayloadChannelReceiveMessage::Internal(internal_message) => {
+                                    if sender.send(internal_message).await.is_err() {
                                         break;
                                     }
                                 }
                             }
-                            PayloadChannelReceiveMessage::Internal(internal_message) => {
-                                if sender.send(internal_message).await.is_err() {
-                                    break;
-                                }
-                            }
                         }
-                    }
 
-                    io::Result::Ok(())
+                        io::Result::Ok(())
+                    }
                 })
                 .detach();
 
-            receiver
+            let prepared_payload_channel_write =
+                utils::prepare_payload_channel_write_fn(move |message, payload| {
+                    trace!("received raw message: {}", String::from_utf8_lossy(message));
+
+                    match deserialize_message(message) {
+                        PayloadChannelReceiveMessage::ResponseSuccess {
+                            id,
+                            accepted: _,
+                            data,
+                        } => {
+                            let sender = requests_container.lock().handlers.remove(&id);
+                            if let Some(mut sender) = sender {
+                                let _ = sender.send(Ok(data));
+                            } else {
+                                warn!(
+                                    "received success response does not match any sent request \
+                                    [id:{}]",
+                                    id,
+                                );
+                            }
+                        }
+                        PayloadChannelReceiveMessage::ResponseError {
+                            id,
+                            error: _,
+                            reason,
+                        } => {
+                            let sender = requests_container.lock().handlers.remove(&id);
+                            if let Some(mut sender) = sender {
+                                let _ = sender.send(Err(ResponseError { reason }));
+                            } else {
+                                warn!(
+                                    "received error response does not match any sent request \
+                                    [id:{}]",
+                                    id,
+                                );
+                            }
+                        }
+                        PayloadChannelReceiveMessage::Notification(notification) => {
+                            let target_id = notification.get("targetId").and_then(|value| {
+                                let str = value.as_str()?;
+                                str.parse()
+                                    .ok()
+                                    .map(SubscriptionTarget::Uuid)
+                                    .or_else(|| str.parse().ok().map(SubscriptionTarget::Number))
+                            });
+
+                            trace!("received notification payload of {} bytes", payload.len());
+
+                            let payload = Bytes::copy_from_slice(payload);
+
+                            if let Some(target_id) = target_id {
+                                event_handlers.call_callbacks_with_value(
+                                    &target_id,
+                                    NotificationMessage {
+                                        message: notification,
+                                        payload,
+                                    },
+                                );
+                            } else {
+                                let unexpected_message =
+                                    InternalMessage::UnexpectedData(Vec::from(message));
+                                if sender.try_send(unexpected_message).is_err() {
+                                    return;
+                                }
+                            }
+                        }
+                        PayloadChannelReceiveMessage::Internal(internal_message) => {
+                            if sender.try_send(internal_message).is_err() {
+                                return;
+                            }
+                        }
+                    }
+                });
+
+            (receiver, prepared_payload_channel_write)
         };
 
         let sender = {
@@ -319,7 +405,7 @@ impl PayloadChannel {
             event_handlers_weak,
         });
 
-        Self { inner }
+        (Self { inner }, prepared_payload_channel_write)
     }
 
     pub(super) fn get_internal_message_receiver(&self) -> async_channel::Receiver<InternalMessage> {

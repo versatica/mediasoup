@@ -6,7 +6,10 @@ use crate::worker::{Channel, PayloadChannel, WorkerId};
 use async_executor::Executor;
 use async_fs::File;
 use async_oneshot::Receiver;
-pub(super) use channel_write_fn::{prepare_channel_write_fn, PreparedChannelWrite};
+pub(super) use channel_write_fn::{
+    prepare_channel_write_fn, prepare_payload_channel_write_fn, PreparedChannelWrite,
+    PreparedPayloadChannelWrite,
+};
 use std::ffi::CString;
 use std::mem;
 use std::os::raw::{c_char, c_int};
@@ -71,7 +74,7 @@ pub(super) fn run_worker_with_channels(
     let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
 
     let (channel, prepared_channel_write) = Channel::new(&executor, consumer_file, producer_file);
-    let payload_channel =
+    let (payload_channel, prepared_payload_channel_write) =
         PayloadChannel::new(&executor, consumer_payload_file, producer_payload_file);
     let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
 
@@ -93,8 +96,13 @@ pub(super) fn run_worker_with_channels(
             let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
 
             let status_code = unsafe {
-                let (channel_write_fn, channel_write_ctx, _read_callback) =
+                let (channel_write_fn, channel_write_ctx, _channel_read_callback) =
                     prepared_channel_write.deconstruct();
+                let (
+                    payload_channel_write_fn,
+                    payload_channel_write_ctx,
+                    _payload_channel_read_callback,
+                ) = prepared_payload_channel_write.deconstruct();
 
                 mediasoup_sys::run_worker(
                     argc,
@@ -106,6 +114,8 @@ pub(super) fn run_worker_with_channels(
                     consumer_payload_fd_write,
                     channel_write_fn,
                     channel_write_ctx,
+                    payload_channel_write_fn,
+                    payload_channel_write_ctx,
                 )
             };
 

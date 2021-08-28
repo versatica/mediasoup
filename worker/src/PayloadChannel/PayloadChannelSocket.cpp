@@ -23,7 +23,20 @@ namespace PayloadChannel
 	{
 		MS_TRACE();
 
-		this->writeBuffer = (uint8_t*)std::malloc(MessageMaxLen);
+		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
+	}
+
+	PayloadChannelSocket::PayloadChannelSocket(
+	  int consumerFd,
+	  int producerFd,
+	  PayloadChannelWriteFn payloadChannelWriteFn,
+	  PayloadChannelWriteCtx payloadChannelWriteCtx)
+	  : consumerSocket(consumerFd, MessageMaxLen, this), producerSocket(producerFd, MessageMaxLen),
+	    payloadChannelWriteFn(payloadChannelWriteFn), payloadChannelWriteCtx(payloadChannelWriteCtx)
+	{
+		MS_TRACE();
+
+		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
 	}
 
 	PayloadChannelSocket::~PayloadChannelSocket()
@@ -79,8 +92,11 @@ namespace PayloadChannel
 			return;
 		}
 
-		SendImpl(message.c_str(), static_cast<uint32_t>(message.length()));
-		SendImpl(payload, static_cast<uint32_t>(payloadLen));
+		SendImpl(
+		  reinterpret_cast<const uint8_t*>(message.c_str()),
+		  static_cast<uint32_t>(message.length()),
+		  payload,
+		  static_cast<uint32_t>(payloadLen));
 	}
 
 	void PayloadChannelSocket::Send(json& jsonMessage)
@@ -99,23 +115,50 @@ namespace PayloadChannel
 			return;
 		}
 
-		SendImpl(message.c_str(), static_cast<uint32_t>(message.length()));
+		SendImpl(
+		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
-	inline void PayloadChannelSocket::SendImpl(const void* payload, uint32_t payloadLen)
+	inline void PayloadChannelSocket::SendImpl(const uint8_t* message, uint32_t messageLen)
 	{
 		MS_TRACE();
 
-		std::memcpy(this->writeBuffer, &payloadLen, sizeof(uint32_t));
-
-		if (payloadLen != 0)
+		// Write using function call if provided.
+		if (this->payloadChannelWriteFn)
 		{
-			std::memcpy(this->writeBuffer + sizeof(uint32_t), payload, payloadLen);
+			this->payloadChannelWriteFn(message, messageLen, nullptr, 0, this->payloadChannelWriteCtx);
 		}
+		else
+		{
+			std::memcpy(this->writeBuffer, &messageLen, sizeof(uint32_t));
 
-		size_t len = sizeof(uint32_t) + payloadLen;
+			if (messageLen != 0)
+			{
+				std::memcpy(this->writeBuffer + sizeof(uint32_t), message, messageLen);
+			}
 
-		this->producerSocket.Write(this->writeBuffer, len);
+			size_t len = sizeof(uint32_t) + messageLen;
+
+			this->producerSocket.Write(this->writeBuffer, len);
+		}
+	}
+
+	inline void PayloadChannelSocket::SendImpl(
+	  const uint8_t* message, uint32_t messageLen, const uint8_t* payload, uint32_t payloadLen)
+	{
+		MS_TRACE();
+
+		// Write using function call if provided.
+		if (this->payloadChannelWriteFn)
+		{
+			this->payloadChannelWriteFn(
+			  message, messageLen, payload, payloadLen, this->payloadChannelWriteCtx);
+		}
+		else
+		{
+			SendImpl(message, messageLen);
+			SendImpl(payload, payloadLen);
+		}
 	}
 
 	void PayloadChannelSocket::OnConsumerSocketMessage(
