@@ -74,9 +74,9 @@ namespace Channel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
+		bool CallbackRead();
 		void Send(json& jsonMessage);
 		void SendLog(const char* message, uint32_t messageLen);
-		bool CallbackRead();
 
 	private:
 		void SendImpl(const uint8_t* payload, uint32_t payloadLen);

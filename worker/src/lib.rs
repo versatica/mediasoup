@@ -35,6 +35,29 @@ pub type ChannelWriteFn = unsafe extern "C" fn(
 );
 
 #[repr(transparent)]
+pub struct PayloadChannelReadCtx(pub *const c_void);
+pub type PayloadChannelReadFreeFn = Option<
+    unsafe extern "C" fn(
+        /* message: */ *mut u8,
+        /* message_len: */ u32,
+        /* message_capacity: */ usize,
+    ),
+>;
+pub type PayloadChannelReadFn = unsafe extern "C" fn(
+    /* message: */ *mut *mut u8,
+    /* message_len: */ *mut u32,
+    /* message_capacity: */ *mut usize,
+    /* payload: */ *mut *mut u8,
+    /* payload_len: */ *mut u32,
+    /* payload_capacity: */ *mut usize,
+    // This is `uv_async_t` handle that can be called later with `uv_async_send()` when there is
+    // more data to read
+    /* handle */
+    UvAsyncT,
+    /* ctx: */ PayloadChannelReadCtx,
+) -> PayloadChannelReadFreeFn;
+
+#[repr(transparent)]
 pub struct PayloadChannelWriteCtx(pub *const c_void);
 pub type PayloadChannelWriteFn = unsafe extern "C" fn(
     /* message: */ *const u8,
@@ -61,6 +84,8 @@ extern "C" {
         channel_read_ctx: ChannelReadCtx,
         channel_write_fn: ChannelWriteFn,
         channel_write_ctx: ChannelWriteCtx,
+        payload_channel_read_fn: PayloadChannelReadFn,
+        payload_channel_read_ctx: PayloadChannelReadCtx,
         payload_channel_write_fn: PayloadChannelWriteFn,
         payload_channel_write_ctx: PayloadChannelWriteCtx,
     ) -> c_int;

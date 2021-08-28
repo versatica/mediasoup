@@ -40,6 +40,8 @@ extern "C" int run_worker(
   ChannelReadCtx channelReadCtx,
   ChannelWriteFn channelWriteFn,
   ChannelWriteCtx channelWriteCtx,
+  PayloadChannelReadFn payloadChannelReadFn,
+  PayloadChannelReadCtx payloadChannelReadCtx,
   PayloadChannelWriteFn payloadChannelWriteFn,
   PayloadChannelWriteCtx payloadChannelWriteCtx)
 {
@@ -80,8 +82,16 @@ extern "C" int run_worker(
 
 	try
 	{
-		payloadChannel.reset(new PayloadChannel::PayloadChannelSocket(
-		  payloadConsumeChannelFd, payloadProduceChannelFd, payloadChannelWriteFn, payloadChannelWriteCtx));
+		if (payloadChannelReadFn)
+		{
+			payloadChannel.reset(new PayloadChannel::PayloadChannelSocket(
+			  payloadChannelReadFn, payloadChannelReadCtx, payloadChannelWriteFn, payloadChannelWriteCtx));
+		}
+		else
+		{
+			payloadChannel.reset(
+			  new PayloadChannel::PayloadChannelSocket(payloadConsumeChannelFd, payloadProduceChannelFd));
+		}
 	}
 	catch (const MediaSoupError& error)
 	{

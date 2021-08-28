@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "PayloadChannel/PayloadChannelSocket.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
@@ -12,6 +13,18 @@
 namespace PayloadChannel
 {
 	/* Static. */
+	inline static void onAsync(uv_handle_t* handle)
+	{
+		while (static_cast<PayloadChannelSocket*>(handle->data)->CallbackRead())
+		{
+			// Read while there are new messages
+		}
+	}
+
+	inline static void onClose(uv_handle_t* handle)
+	{
+		delete handle;
+	}
 
 	// Binary length for a 4194304 bytes payload.
 	static constexpr size_t MessageMaxLen{ 4194308 };
@@ -19,24 +32,48 @@ namespace PayloadChannel
 
 	/* Instance methods. */
 	PayloadChannelSocket::PayloadChannelSocket(int consumerFd, int producerFd)
-	  : consumerSocket(consumerFd, MessageMaxLen, this), producerSocket(producerFd, MessageMaxLen)
+	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
+	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
+	    writeBuffer(static_cast<uint8_t*>(std::malloc(MessageMaxLen)))
 	{
 		MS_TRACE();
-
-		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
 	}
 
 	PayloadChannelSocket::PayloadChannelSocket(
-	  int consumerFd,
-	  int producerFd,
+	  PayloadChannelReadFn payloadChannelReadFn,
+	  PayloadChannelReadCtx payloadChannelReadCtx,
 	  PayloadChannelWriteFn payloadChannelWriteFn,
 	  PayloadChannelWriteCtx payloadChannelWriteCtx)
-	  : consumerSocket(consumerFd, MessageMaxLen, this), producerSocket(producerFd, MessageMaxLen),
+	  : payloadChannelReadFn(payloadChannelReadFn), payloadChannelReadCtx(payloadChannelReadCtx),
 	    payloadChannelWriteFn(payloadChannelWriteFn), payloadChannelWriteCtx(payloadChannelWriteCtx)
 	{
 		MS_TRACE();
 
-		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
+		int err;
+
+		this->uvReadHandle       = new uv_async_t;
+		this->uvReadHandle->data = static_cast<void*>(this);
+
+		err =
+		  uv_async_init(DepLibUV::GetLoop(), this->uvReadHandle, reinterpret_cast<uv_async_cb>(onAsync));
+
+		if (err != 0)
+		{
+			delete this->uvReadHandle;
+			this->uvReadHandle = nullptr;
+
+			MS_THROW_ERROR("uv_async_init() failed: %s", uv_strerror(err));
+		}
+
+		err = uv_async_send(this->uvReadHandle);
+
+		if (err != 0)
+		{
+			delete this->uvReadHandle;
+			this->uvReadHandle = nullptr;
+
+			MS_THROW_ERROR("uv_async_send() failed: %s", uv_strerror(err));
+		}
 	}
 
 	PayloadChannelSocket::~PayloadChannelSocket()
@@ -48,6 +85,9 @@ namespace PayloadChannel
 
 		if (!this->closed)
 			Close();
+
+		delete this->consumerSocket;
+		delete this->producerSocket;
 	}
 
 	void PayloadChannelSocket::Close()
@@ -59,8 +99,20 @@ namespace PayloadChannel
 
 		this->closed = true;
 
-		this->consumerSocket.Close();
-		this->producerSocket.Close();
+		if (this->uvReadHandle)
+		{
+			uv_close(reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onClose));
+		}
+
+		if (this->consumerSocket)
+		{
+			this->consumerSocket->Close();
+		}
+
+		if (this->producerSocket)
+		{
+			this->producerSocket->Close();
+		}
 	}
 
 	void PayloadChannelSocket::SetListener(Listener* listener)
@@ -119,6 +171,122 @@ namespace PayloadChannel
 		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
+	bool PayloadChannelSocket::CallbackRead()
+	{
+		MS_TRACE();
+
+		if (this->closed)
+			return false;
+
+		uint8_t* message{ nullptr };
+		uint32_t messageLen;
+		size_t messageCapacity;
+
+		uint8_t* payload{ nullptr };
+		uint32_t payloadLen;
+		size_t payloadCapacity;
+
+		auto free = this->payloadChannelReadFn(
+		  &message,
+		  &messageLen,
+		  &messageCapacity,
+		  &payload,
+		  &payloadLen,
+		  &payloadCapacity,
+		  this->uvReadHandle,
+		  this->payloadChannelReadCtx);
+
+		if (free)
+		{
+			try
+			{
+				json jsonData = json::parse(message, message + static_cast<size_t>(messageLen));
+
+				if (PayloadChannelRequest::IsRequest(jsonData))
+				{
+					try
+					{
+						auto* request = new PayloadChannel::PayloadChannelRequest(this, jsonData);
+						request->SetPayload(payload, payloadLen);
+
+						// Notify the listener.
+						try
+						{
+							this->listener->OnPayloadChannelRequest(this, request);
+						}
+						catch (const MediaSoupTypeError& error)
+						{
+							request->TypeError(error.what());
+						}
+						catch (const MediaSoupError& error)
+						{
+							request->Error(error.what());
+						}
+
+						// Delete the Request.
+						delete request;
+					}
+					catch (const json::parse_error& error)
+					{
+						MS_ERROR_STD("JSON parsing error: %s", error.what());
+					}
+					catch (const MediaSoupError& error)
+					{
+						MS_ERROR("discarding wrong Payload Channel notification");
+					}
+				}
+
+				else if (Notification::IsNotification(jsonData))
+				{
+					try
+					{
+						auto* notification = new PayloadChannel::Notification(jsonData);
+						notification->SetPayload(payload, payloadLen);
+
+						// Notify the listener.
+						try
+						{
+							this->listener->OnPayloadChannelNotification(this, notification);
+						}
+						catch (const MediaSoupError& error)
+						{
+							MS_ERROR("notification failed: %s", error.what());
+						}
+
+						// Delete the Notification.
+						delete notification;
+					}
+					catch (const json::parse_error& error)
+					{
+						MS_ERROR_STD("JSON parsing error: %s", error.what());
+					}
+					catch (const MediaSoupError& error)
+					{
+						MS_ERROR("discarding wrong Payload Channel notification");
+					}
+				}
+
+				else
+				{
+					MS_ERROR("discarding wrong Payload Channel data");
+				}
+			}
+			catch (const json::parse_error& error)
+			{
+				MS_ERROR("JSON parsing error: %s", error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("discarding wrong Channel request");
+			}
+
+			free(message, messageLen, messageCapacity);
+			free(payload, payloadLen, payloadCapacity);
+		}
+
+		return free != nullptr;
+	}
+
 	inline void PayloadChannelSocket::SendImpl(const uint8_t* message, uint32_t messageLen)
 	{
 		MS_TRACE();
@@ -139,7 +307,7 @@ namespace PayloadChannel
 
 			size_t len = sizeof(uint32_t) + messageLen;
 
-			this->producerSocket.Write(this->writeBuffer, len);
+			this->producerSocket->Write(this->writeBuffer, len);
 		}
 	}
 

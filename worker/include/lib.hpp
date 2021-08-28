@@ -12,5 +12,7 @@ extern "C" int run_worker(
   ChannelReadCtx channelReadCtx,
   ChannelWriteFn channelWriteFn,
   ChannelWriteCtx channelWriteCtx,
+  PayloadChannelReadFn payloadChannelReadFn,
+  PayloadChannelReadCtx payloadChannelReadCtx,
   PayloadChannelWriteFn payloadChannelWriteFn,
   PayloadChannelWriteCtx payloadChannelWriteCtx);
