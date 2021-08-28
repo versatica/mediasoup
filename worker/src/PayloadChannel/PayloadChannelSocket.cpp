@@ -173,8 +173,7 @@ namespace PayloadChannel
 			{
 				try
 				{
-					json jsonMessage     = json::parse(msg, msg + msgLen);
-					this->ongoingRequest = new PayloadChannel::PayloadChannelRequest(this, jsonMessage);
+					this->ongoingRequest = new PayloadChannel::PayloadChannelRequest(this, jsonData);
 				}
 				catch (const json::parse_error& error)
 				{
@@ -190,8 +189,7 @@ namespace PayloadChannel
 			{
 				try
 				{
-					json jsonMessage          = json::parse(msg, msg + msgLen);
-					this->ongoingNotification = new PayloadChannel::Notification(jsonMessage);
+					this->ongoingNotification = new PayloadChannel::Notification(jsonData);
 				}
 				catch (const json::parse_error& error)
 				{
