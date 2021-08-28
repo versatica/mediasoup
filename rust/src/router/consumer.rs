@@ -17,7 +17,6 @@ use crate::worker::{
     Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
 };
 use async_executor::Executor;
-use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
@@ -347,7 +346,7 @@ enum PayloadNotification {
 
 #[derive(Default)]
 struct Handlers {
-    rtp: Bag<Box<dyn Fn(&Bytes) + Send + Sync>>,
+    rtp: Bag<Box<dyn Fn(&Vec<u8>) + Send + Sync>>,
     pause: Bag<Box<dyn Fn() + Send + Sync>>,
     resume: Bag<Box<dyn Fn() + Send + Sync>>,
     producer_pause: Bag<Box<dyn Fn() + Send + Sync>>,
@@ -868,7 +867,7 @@ impl Consumer {
     /// # Notes on usage
     /// Just available in direct transports, this is, those created via
     /// [`Router::create_direct_transport`](crate::router::Router::create_direct_transport).
-    pub fn on_rtp<F: Fn(&Bytes) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_rtp<F: Fn(&Vec<u8>) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.rtp.add(Box::new(callback))
     }
 

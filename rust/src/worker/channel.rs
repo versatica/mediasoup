@@ -3,7 +3,6 @@ use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers
 use crate::worker::utils;
 use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
 use crate::worker::{RequestError, SubscriptionHandler};
-use bytes::Bytes;
 use futures_lite::future;
 use log::{debug, error, trace, warn};
 use lru::LruCache;
@@ -282,7 +281,6 @@ impl Channel {
         }
     }
 
-    // TODO: Replace `Bytes` with simple `Vec<u8>`
     pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
     where
         R: Request,
@@ -318,16 +316,14 @@ impl Channel {
 
         debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
-        let bytes = Bytes::from(
-            serde_json::to_vec(&RequestMessagePrivate {
-                id,
-                method,
-                request: &request,
-            })
-            .unwrap(),
-        );
+        let message = serde_json::to_vec(&RequestMessagePrivate {
+            id,
+            method,
+            request: &request,
+        })
+        .unwrap();
 
-        if bytes.len() > PAYLOAD_MAX_LEN {
+        if message.len() > PAYLOAD_MAX_LEN {
             self.inner
                 .requests_container_weak
                 .upgrade()
@@ -340,7 +336,7 @@ impl Channel {
 
         {
             let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
-            outgoing_message_buffer.messages.push_back(bytes.to_vec());
+            outgoing_message_buffer.messages.push_back(message);
             if let Some(handle) = &outgoing_message_buffer.handle {
                 unsafe {
                     // Notify worker that there is something to read

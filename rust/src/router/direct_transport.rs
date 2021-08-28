@@ -21,7 +21,6 @@ use crate::worker::{
 };
 use async_executor::Executor;
 use async_trait::async_trait;
-use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
@@ -113,7 +112,7 @@ pub struct DirectTransportStat {
 
 #[derive(Default)]
 struct Handlers {
-    rtcp: Bag<Box<dyn Fn(&Bytes) + Send + Sync>>,
+    rtcp: Bag<Box<dyn Fn(&Vec<u8>) + Send + Sync>>,
     new_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
     new_consumer: Bag<Box<dyn Fn(&Consumer) + Send + Sync>>,
     new_data_producer: Bag<Box<dyn Fn(&DataProducer) + Send + Sync>>,
@@ -537,7 +536,7 @@ impl DirectTransport {
     /// Send a RTCP packet from the Rust process.
     ///
     /// * `rtcp_packet` - Bytes containing a valid RTCP packet (can be a compound packet).
-    pub async fn send_rtcp(&self, rtcp_packet: Bytes) -> Result<(), NotificationError> {
+    pub async fn send_rtcp(&self, rtcp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner
             .payload_channel
             .notify(
@@ -550,7 +549,7 @@ impl DirectTransport {
     }
 
     /// Callback is called when the direct transport receives a RTCP packet from its router.
-    pub fn on_rtcp<F: Fn(&Bytes) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_rtcp<F: Fn(&Vec<u8>) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.rtcp.add(Box::new(callback))
     }
 

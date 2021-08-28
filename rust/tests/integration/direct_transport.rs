@@ -1,4 +1,3 @@
-use bytes::Bytes;
 use futures_lite::future;
 use mediasoup::data_consumer::DataConsumerOptions;
 use mediasoup::data_producer::{DataProducer, DataProducerOptions};
@@ -240,7 +239,7 @@ fn send_succeeds() {
                 sent_message_bytes += content.len();
                 WebRtcMessage::String(content)
             } else {
-                let content = Bytes::from(id.to_string().into_bytes());
+                let content = id.to_string().into_bytes();
                 sent_message_bytes += content.len();
                 WebRtcMessage::Binary(content)
             };

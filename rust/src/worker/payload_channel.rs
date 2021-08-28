@@ -2,7 +2,6 @@ use crate::messages::{Notification, Request};
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::utils::{PreparedPayloadChannelRead, PreparedPayloadChannelWrite};
 use crate::worker::{utils, RequestError, SubscriptionHandler};
-use bytes::Bytes;
 use futures_lite::future;
 use log::{debug, error, trace, warn};
 use mediasoup_sys::UvAsyncT;
@@ -26,7 +25,7 @@ pub(super) enum InternalMessage {
 #[derive(Clone)]
 pub(crate) struct NotificationMessage {
     pub(crate) message: Value,
-    pub(crate) payload: Bytes,
+    pub(crate) payload: Vec<u8>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -180,7 +179,7 @@ impl PayloadChannel {
 
                         trace!("received notification payload of {} bytes", payload.len());
 
-                        let payload = Bytes::copy_from_slice(payload);
+                        let payload = Vec::from(payload);
 
                         if let Some(target_id) = target_id {
                             event_handlers.call_callbacks_with_value(
@@ -227,11 +226,10 @@ impl PayloadChannel {
         self.inner.internal_message_receiver.clone()
     }
 
-    // TODO: Replace `Bytes` with simple `Vec<u8>`
     pub(crate) async fn request<R>(
         &self,
         request: R,
-        payload: Bytes,
+        payload: Vec<u8>,
     ) -> Result<R::Response, RequestError>
     where
         R: Request,
@@ -289,7 +287,7 @@ impl PayloadChannel {
             let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
             outgoing_message_buffer
                 .messages
-                .push_back((message, payload.to_vec()));
+                .push_back((message, payload));
             if let Some(handle) = &outgoing_message_buffer.handle {
                 unsafe {
                     // Notify worker that there is something to read
@@ -343,11 +341,10 @@ impl PayloadChannel {
         })
     }
 
-    // TODO: Replace `Bytes` with simple `Vec<u8>`
     pub(crate) async fn notify<N>(
         &self,
         notification: N,
-        payload: Bytes,
+        payload: Vec<u8>,
     ) -> Result<(), NotificationError>
     where
         N: Notification,
@@ -375,7 +372,7 @@ impl PayloadChannel {
             let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
             outgoing_message_buffer
                 .messages
-                .push_back((message, payload.to_vec()));
+                .push_back((message, payload));
             if let Some(handle) = &outgoing_message_buffer.handle {
                 unsafe {
                     // Notify worker that there is something to read

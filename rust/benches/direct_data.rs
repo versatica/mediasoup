@@ -1,4 +1,3 @@
-use bytes::Bytes;
 use criterion::async_executor::FuturesExecutor;
 use criterion::{criterion_group, criterion_main, Criterion};
 use futures_lite::StreamExt;
@@ -29,11 +28,9 @@ async fn create_data_producer_consumer_pair(
 pub fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("direct_data");
 
-    let data = Bytes::from(
-        std::iter::repeat_with(|| fastrand::u8(..))
-            .take(512)
-            .collect::<Vec<u8>>(),
-    );
+    let data = std::iter::repeat_with(|| fastrand::u8(..))
+        .take(512)
+        .collect::<Vec<u8>>();
 
     {
         let (data_producer, _data_consumer) = futures_lite::future::block_on(async {

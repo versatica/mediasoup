@@ -16,7 +16,6 @@ use crate::worker::{
     Channel, NotificationError, PayloadChannel, RequestError, SubscriptionHandler,
 };
 use async_executor::Executor;
-use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
@@ -766,7 +765,7 @@ impl Producer {
 
 impl DirectProducer {
     /// Sends a RTP packet from the Rust process.
-    pub async fn send(&self, rtp_packet: Bytes) -> Result<(), NotificationError> {
+    pub async fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner
             .payload_channel
             .notify(

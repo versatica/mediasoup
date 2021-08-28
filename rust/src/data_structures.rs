@@ -3,7 +3,6 @@
 #[cfg(test)]
 mod tests;
 
-use bytes::Bytes;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -774,7 +773,7 @@ pub enum WebRtcMessage {
     /// String
     String(String),
     /// Binary
-    Binary(Bytes),
+    Binary(Vec<u8>),
     /// EmptyString
     EmptyString,
     /// EmptyBinary
@@ -793,7 +792,7 @@ impl WebRtcMessage {
     // | WebRTC Binary Empty                | 57        |
     // +------------------------------------+-----------+
 
-    pub(crate) fn new(ppid: u32, payload: Bytes) -> Result<Self, u32> {
+    pub(crate) fn new(ppid: u32, payload: Vec<u8>) -> Result<Self, u32> {
         match ppid {
             51 => Ok(WebRtcMessage::String(
                 String::from_utf8(payload.to_vec()).unwrap(),
@@ -805,12 +804,12 @@ impl WebRtcMessage {
         }
     }
 
-    pub(crate) fn into_ppid_and_payload(self) -> (u32, Bytes) {
+    pub(crate) fn into_ppid_and_payload(self) -> (u32, Vec<u8>) {
         match self {
-            WebRtcMessage::String(string) => (51_u32, Bytes::from(string)),
+            WebRtcMessage::String(string) => (51_u32, string.into_bytes()),
             WebRtcMessage::Binary(binary) => (53_u32, binary),
-            WebRtcMessage::EmptyString => (56_u32, Bytes::from_static(b" ")),
-            WebRtcMessage::EmptyBinary => (57_u32, Bytes::from(vec![0_u8])),
+            WebRtcMessage::EmptyString => (56_u32, Vec::from(b" ".as_ref())),
+            WebRtcMessage::EmptyBinary => (57_u32, vec![0_u8]),
         }
     }
 }
