@@ -35,7 +35,9 @@ extern "C" int run_worker(
   int consumerChannelFd,
   int producerChannelFd,
   int payloadConsumeChannelFd,
-  int payloadProduceChannelFd)
+  int payloadProduceChannelFd,
+  ChannelWriteFn channelWriteFn,
+  ChannelWriteCtx channelWriteCtx)
 {
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
@@ -52,7 +54,8 @@ extern "C" int run_worker(
 
 	try
 	{
-		channel.reset(new Channel::ChannelSocket(consumerChannelFd, producerChannelFd));
+		channel.reset(new Channel::ChannelSocket(
+		  consumerChannelFd, producerChannelFd, channelWriteFn, channelWriteCtx));
 	}
 	catch (const MediaSoupError& error)
 	{

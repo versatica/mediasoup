@@ -26,4 +26,8 @@ typedef SSIZE_T ssize_t;
 #include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #endif
 
+using ChannelWriteCtx = void*;
+using ChannelWriteFn =
+  void (*)(const uint8_t* /* message */, uint32_t /* messageLen */, ChannelWriteCtx /* ctx */);
+
 #endif

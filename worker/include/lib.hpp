@@ -1,3 +1,5 @@
+#include "common.hpp"
+
 extern "C" int run_worker(
   int argc,
   char* argv[],
@@ -5,4 +7,6 @@ extern "C" int run_worker(
   int consumerChannelFd,
   int producerChannelFd,
   int payloadConsumeChannelFd,
-  int payloadProduceChannelFd);
+  int payloadProduceChannelFd,
+  ChannelWriteFn channelWriteFn,
+  ChannelWriteCtx channelWriteCtx);

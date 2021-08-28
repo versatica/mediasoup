@@ -1,9 +1,12 @@
+mod channel_write_fn;
+
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
 use crate::worker::channel::BufferMessagesGuard;
 use crate::worker::{Channel, PayloadChannel, WorkerId};
 use async_executor::Executor;
 use async_fs::File;
 use async_oneshot::Receiver;
+pub(super) use channel_write_fn::{prepare_channel_write_fn, PreparedChannelWrite};
 use std::ffi::CString;
 use std::mem;
 use std::os::raw::{c_char, c_int};
@@ -67,7 +70,7 @@ pub(super) fn run_worker_with_channels(
     let producer_payload_file = unsafe { File::from_raw_fd(producer_payload_fd_write) };
     let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
 
-    let channel = Channel::new(&executor, consumer_file, producer_file);
+    let (channel, prepared_channel_write) = Channel::new(&executor, consumer_file, producer_file);
     let payload_channel =
         PayloadChannel::new(&executor, consumer_payload_file, producer_payload_file);
     let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
@@ -88,7 +91,11 @@ pub(super) fn run_worker_with_channels(
                 .map(|arg| arg.as_ptr().cast::<c_char>())
                 .collect::<Vec<_>>();
             let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
+
             let status_code = unsafe {
+                let (channel_write_fn, channel_write_ctx, _read_callback) =
+                    prepared_channel_write.deconstruct();
+
                 mediasoup_sys::run_worker(
                     argc,
                     argv.as_ptr(),
@@ -97,6 +104,8 @@ pub(super) fn run_worker_with_channels(
                     consumer_fd_write,
                     producer_payload_fd_read,
                     consumer_payload_fd_write,
+                    channel_write_fn,
+                    channel_write_ctx,
                 )
             };
 

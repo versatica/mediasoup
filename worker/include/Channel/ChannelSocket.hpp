@@ -64,16 +64,18 @@ namespace Channel
 
 	public:
 		explicit ChannelSocket(int consumerFd, int producerFd);
+		explicit ChannelSocket(
+		  int consumerFd, int producerFd, ChannelWriteFn channelWriteFn, ChannelWriteCtx channelWriteCtx);
 		virtual ~ChannelSocket();
 
 	public:
 		void Close();
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage);
-		void SendLog(char* message, uint32_t messageLen);
+		void SendLog(const char* message, uint32_t messageLen);
 
 	private:
-		void SendImpl(const void* payload, uint32_t payloadLen);
+		void SendImpl(const uint8_t* payload, uint32_t payloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
@@ -87,6 +89,8 @@ namespace Channel
 		bool closed{ false };
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
+		ChannelWriteFn channelWriteFn{ nullptr };
+		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uint8_t* writeBuffer;
 	};
 } // namespace Channel

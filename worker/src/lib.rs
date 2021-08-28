@@ -1,4 +1,11 @@
-use std::os::raw::{c_char, c_int};
+use std::os::raw::{c_char, c_int, c_void};
+
+pub type ChannelWriteCtx = *const c_void;
+pub type ChannelWriteFn = unsafe extern "C" fn(
+    /* message: */ *const u8,
+    /* message_len: */ u32,
+    /* ctx: */ ChannelWriteCtx,
+);
 
 #[link(name = "mediasoup-worker", kind = "static")]
 extern "C" {
@@ -10,5 +17,7 @@ extern "C" {
         producer_channel_fd: c_int,
         payload_consumer_channel_fd: c_int,
         payload_producer_channel_fd: c_int,
+        channel_write_fn: ChannelWriteFn,
+        channel_write_ctx: ChannelWriteCtx,
     ) -> c_int;
 }

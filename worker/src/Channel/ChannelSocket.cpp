@@ -25,6 +25,16 @@ namespace Channel
 		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
 	}
 
+	ChannelSocket::ChannelSocket(
+	  int consumerFd, int producerFd, ChannelWriteFn channelWriteFn, ChannelWriteCtx channelWriteCtx)
+	  : consumerSocket(consumerFd, MessageMaxLen, this), producerSocket(producerFd, MessageMaxLen),
+	    channelWriteFn(channelWriteFn), channelWriteCtx(channelWriteCtx)
+	{
+		MS_TRACE_STD();
+
+		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
+	}
+
 	ChannelSocket::~ChannelSocket()
 	{
 		MS_TRACE_STD();
@@ -71,10 +81,11 @@ namespace Channel
 			return;
 		}
 
-		SendImpl(message.c_str(), static_cast<uint32_t>(message.length()));
+		SendImpl(
+		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
-	void ChannelSocket::SendLog(char* message, uint32_t messageLen)
+	void ChannelSocket::SendLog(const char* message, uint32_t messageLen)
 	{
 		MS_TRACE_STD();
 
@@ -88,23 +99,31 @@ namespace Channel
 			return;
 		}
 
-		SendImpl(message, messageLen);
+		SendImpl(reinterpret_cast<const uint8_t*>(message), messageLen);
 	}
 
-	inline void ChannelSocket::SendImpl(const void* payload, uint32_t payloadLen)
+	inline void ChannelSocket::SendImpl(const uint8_t* payload, uint32_t payloadLen)
 	{
 		MS_TRACE_STD();
 
-		std::memcpy(this->writeBuffer, &payloadLen, sizeof(uint32_t));
-
-		if (payloadLen != 0)
+		// Write using function call if provided.
+		if (this->channelWriteFn)
 		{
-			std::memcpy(this->writeBuffer + sizeof(uint32_t), payload, payloadLen);
+			this->channelWriteFn(payload, payloadLen, this->channelWriteCtx);
 		}
+		else
+		{
+			std::memcpy(this->writeBuffer, &payloadLen, sizeof(uint32_t));
 
-		size_t len = sizeof(uint32_t) + payloadLen;
+			if (payloadLen != 0)
+			{
+				std::memcpy(this->writeBuffer + sizeof(uint32_t), payload, payloadLen);
+			}
 
-		this->producerSocket.Write(this->writeBuffer, len);
+			size_t len = sizeof(uint32_t) + payloadLen;
+
+			this->producerSocket.Write(this->writeBuffer, len);
+		}
 	}
 
 	void ChannelSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)

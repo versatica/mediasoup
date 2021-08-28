@@ -30,7 +30,9 @@ int main(int argc, char* argv[])
 	  ConsumerChannelFd,
 	  ProducerChannelFd,
 	  PayloadConsumerChannelFd,
-	  PayloadProducerChannelFd);
+	  PayloadProducerChannelFd,
+	  nullptr,
+      nullptr);
 
 	switch (statusCode)
 	{
