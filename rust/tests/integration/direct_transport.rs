@@ -8,6 +8,7 @@ use mediasoup::router::{Router, RouterOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::env;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -241,7 +242,7 @@ fn send_succeeds() {
             } else {
                 let content = id.to_string().into_bytes();
                 sent_message_bytes += content.len();
-                WebRtcMessage::Binary(content)
+                WebRtcMessage::Binary(Cow::from(content))
             };
 
             direct_data_producer

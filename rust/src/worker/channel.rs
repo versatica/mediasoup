@@ -40,7 +40,7 @@ pub(super) enum InternalMessage {
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
     buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
-    event_handlers_weak: WeakEventHandlers<Value>,
+    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(Value) + Send + Sync + 'static>>,
 }
 
 impl Drop for BufferMessagesGuard {
@@ -49,7 +49,7 @@ impl Drop for BufferMessagesGuard {
         if let Some(notifications) = buffered_notifications_for.remove(&self.target_id) {
             if let Some(event_handlers) = self.event_handlers_weak.upgrade() {
                 for notification in notifications {
-                    event_handlers.call_callbacks_with_value(&self.target_id, notification);
+                    event_handlers.call_callbacks_with_single_value(&self.target_id, notification);
                 }
             }
         }
@@ -120,7 +120,7 @@ struct Inner {
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
     buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
-    event_handlers_weak: WeakEventHandlers<Value>,
+    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(Value) + Send + Sync + 'static>>,
 }
 
 impl Drop for Inner {
@@ -225,7 +225,8 @@ impl Channel {
                                 // Remember we don't need to buffer these
                                 non_buffered_notifications.put(target_id, ());
                             }
-                            event_handlers.call_callbacks_with_value(&target_id, notification);
+                            event_handlers
+                                .call_callbacks_with_single_value(&target_id, notification);
                         } else {
                             let unexpected_message =
                                 InternalMessage::Unexpected(Vec::from(message));
@@ -401,6 +402,6 @@ impl Channel {
         self.inner
             .event_handlers_weak
             .upgrade()
-            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
+            .map(|event_handlers| event_handlers.add(target_id, Arc::new(callback)))
     }
 }

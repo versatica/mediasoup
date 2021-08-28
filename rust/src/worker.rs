@@ -24,7 +24,7 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;
 use log::{debug, error, warn};
 use parking_lot::Mutex;
-pub(crate) use payload_channel::{NotificationError, NotificationMessage, PayloadChannel};
+pub(crate) use payload_channel::{NotificationError, PayloadChannel};
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 use std::path::PathBuf;

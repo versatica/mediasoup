@@ -3,13 +3,13 @@ use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 use uuid::Uuid;
 
-struct EventHandlersList<V: Clone + 'static> {
+struct EventHandlersList<F> {
     index: usize,
     #[allow(clippy::type_complexity)]
-    callbacks: HashMap<usize, Arc<dyn Fn(V) + Send + Sync>>,
+    callbacks: HashMap<usize, F>,
 }
 
-impl<V: Clone + 'static> Default for EventHandlersList<V> {
+impl<F> Default for EventHandlersList<F> {
     fn default() -> Self {
         Self {
             index: 0,
@@ -19,21 +19,17 @@ impl<V: Clone + 'static> Default for EventHandlersList<V> {
 }
 
 #[derive(Clone)]
-pub(super) struct EventHandlers<V: Clone + 'static> {
-    handlers: Arc<Mutex<HashMap<SubscriptionTarget, EventHandlersList<V>>>>,
+pub(super) struct EventHandlers<F> {
+    handlers: Arc<Mutex<HashMap<SubscriptionTarget, EventHandlersList<F>>>>,
 }
 
-impl<V: Clone + 'static> EventHandlers<V> {
+impl<F: Sized + Send + Sync + 'static> EventHandlers<F> {
     pub(super) fn new() -> Self {
-        let handlers = Arc::<Mutex<HashMap<SubscriptionTarget, EventHandlersList<V>>>>::default();
+        let handlers = Arc::<Mutex<HashMap<SubscriptionTarget, EventHandlersList<F>>>>::default();
         Self { handlers }
     }
 
-    pub(super) fn add(
-        &self,
-        target_id: SubscriptionTarget,
-        callback: Box<dyn Fn(V) + Send + Sync + 'static>,
-    ) -> SubscriptionHandler {
+    pub(super) fn add(&self, target_id: SubscriptionTarget, callback: F) -> SubscriptionHandler {
         let index;
         {
             let mut event_handlers = self.handlers.lock();
@@ -42,7 +38,7 @@ impl<V: Clone + 'static> EventHandlers<V> {
                 .or_insert_with(EventHandlersList::default);
             index = list.index;
             list.index += 1;
-            list.callbacks.insert(index, Arc::new(Box::new(callback)));
+            list.callbacks.insert(index, callback);
             drop(event_handlers);
         }
 
@@ -75,7 +71,19 @@ impl<V: Clone + 'static> EventHandlers<V> {
         })
     }
 
-    pub(super) fn call_callbacks_with_value(&self, target_id: &SubscriptionTarget, value: V) {
+    pub(super) fn downgrade(&self) -> WeakEventHandlers<F> {
+        WeakEventHandlers {
+            handlers: Arc::downgrade(&self.handlers),
+        }
+    }
+}
+
+impl<V: Clone> EventHandlers<Arc<dyn Fn(V) + Send + Sync + 'static>> {
+    pub(super) fn call_callbacks_with_single_value(
+        &self,
+        target_id: &SubscriptionTarget,
+        value: V,
+    ) {
         let handlers = self.handlers.lock();
         if let Some(list) = handlers.get(target_id) {
             // Tiny optimization that avoids cloning `value` unless necessary
@@ -94,21 +102,42 @@ impl<V: Clone + 'static> EventHandlers<V> {
             }
         }
     }
+}
 
-    pub(super) fn downgrade(&self) -> WeakEventHandlers<V> {
-        WeakEventHandlers {
-            handlers: Arc::downgrade(&self.handlers),
+impl<V1: Clone, V2: ?Sized> EventHandlers<Arc<dyn Fn(V1, &V2) + Send + Sync + 'static>> {
+    pub(super) fn call_callbacks_with_two_values(
+        &self,
+        target_id: &SubscriptionTarget,
+        value1: V1,
+        value2: &V2,
+    ) {
+        let handlers = self.handlers.lock();
+        if let Some(list) = handlers.get(target_id) {
+            // Tiny optimization that avoids cloning `value` unless necessary
+            if list.callbacks.len() == 1 {
+                let callback = list.callbacks.values().next().cloned().unwrap();
+                // Drop mutex guard before running callbacks to avoid deadlocks
+                drop(handlers);
+                callback(value1, value2);
+            } else {
+                let callbacks = list.callbacks.values().cloned().collect::<Vec<_>>();
+                // Drop mutex guard before running callbacks to avoid deadlocks
+                drop(handlers);
+                for callback in callbacks {
+                    callback(value1.clone(), value2);
+                }
+            }
         }
     }
 }
 
 #[derive(Clone)]
-pub(super) struct WeakEventHandlers<V: Clone + 'static> {
-    handlers: Weak<Mutex<HashMap<SubscriptionTarget, EventHandlersList<V>>>>,
+pub(super) struct WeakEventHandlers<F> {
+    handlers: Weak<Mutex<HashMap<SubscriptionTarget, EventHandlersList<F>>>>,
 }
 
-impl<V: Clone + 'static> WeakEventHandlers<V> {
-    pub(super) fn upgrade(&self) -> Option<EventHandlers<V>> {
+impl<F> WeakEventHandlers<F> {
+    pub(super) fn upgrade(&self) -> Option<EventHandlers<F>> {
         self.handlers
             .upgrade()
             .map(|handlers| EventHandlers { handlers })

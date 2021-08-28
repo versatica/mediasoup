@@ -16,8 +16,7 @@ use crate::transport::{
     TransportTraceEventType,
 };
 use crate::worker::{
-    Channel, NotificationError, NotificationMessage, PayloadChannel, RequestError,
-    SubscriptionHandler,
+    Channel, NotificationError, PayloadChannel, RequestError, SubscriptionHandler,
 };
 use async_executor::Executor;
 use async_trait::async_trait;
@@ -112,7 +111,7 @@ pub struct DirectTransportStat {
 
 #[derive(Default)]
 struct Handlers {
-    rtcp: Bag<Box<dyn Fn(&Vec<u8>) + Send + Sync>>,
+    rtcp: Bag<Box<dyn Fn(&[u8]) + Send + Sync>>,
     new_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
     new_consumer: Bag<Box<dyn Fn(&Consumer) + Send + Sync>>,
     new_data_producer: Bag<Box<dyn Fn(&DataProducer) + Send + Sync>>,
@@ -481,13 +480,12 @@ impl DirectTransport {
         let payload_subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            payload_channel.subscribe_to_notifications(id.into(), move |notification| {
-                let NotificationMessage { message, payload } = notification;
+            payload_channel.subscribe_to_notifications(id.into(), move |message, payload| {
                 match serde_json::from_value::<PayloadNotification>(message) {
                     Ok(notification) => match notification {
                         PayloadNotification::Rtcp => {
                             handlers.rtcp.call(|callback| {
-                                callback(&payload);
+                                callback(payload);
                             });
                         }
                     },
@@ -549,7 +547,7 @@ impl DirectTransport {
     }
 
     /// Callback is called when the direct transport receives a RTCP packet from its router.
-    pub fn on_rtcp<F: Fn(&Vec<u8>) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_rtcp<F: Fn(&[u8]) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.rtcp.add(Box::new(callback))
     }
 

@@ -13,9 +13,7 @@ use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters}
 use crate::scalability_modes::ScalabilityMode;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{
-    Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
-};
+use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
@@ -346,7 +344,7 @@ enum PayloadNotification {
 
 #[derive(Default)]
 struct Handlers {
-    rtp: Bag<Box<dyn Fn(&Vec<u8>) + Send + Sync>>,
+    rtp: Bag<Box<dyn Fn(&[u8]) + Send + Sync>>,
     pause: Bag<Box<dyn Fn() + Send + Sync>>,
     resume: Bag<Box<dyn Fn() + Send + Sync>>,
     producer_pause: Bag<Box<dyn Fn() + Send + Sync>>,
@@ -558,13 +556,12 @@ impl Consumer {
         let payload_subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            payload_channel.subscribe_to_notifications(id.into(), move |notification| {
-                let NotificationMessage { message, payload } = notification;
+            payload_channel.subscribe_to_notifications(id.into(), move |message, payload| {
                 match serde_json::from_value::<PayloadNotification>(message) {
                     Ok(notification) => match notification {
                         PayloadNotification::Rtp => {
                             handlers.rtp.call(|callback| {
-                                callback(&payload);
+                                callback(payload);
                             });
                         }
                     },
@@ -867,7 +864,7 @@ impl Consumer {
     /// # Notes on usage
     /// Just available in direct transports, this is, those created via
     /// [`Router::create_direct_transport`](crate::router::Router::create_direct_transport).
-    pub fn on_rtp<F: Fn(&Vec<u8>) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_rtp<F: Fn(&[u8]) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
         self.inner.handlers.rtp.add(Box::new(callback))
     }
 

@@ -2,6 +2,7 @@ use criterion::async_executor::FuturesExecutor;
 use criterion::{criterion_group, criterion_main, Criterion};
 use futures_lite::StreamExt;
 use mediasoup::prelude::*;
+use std::borrow::Cow;
 
 async fn create_data_producer_consumer_pair(
 ) -> Result<(DataProducer, DataConsumer), Box<dyn std::error::Error>> {
@@ -47,7 +48,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         group.bench_with_input("send", &data, |b, data| {
             b.to_async(FuturesExecutor).iter(|| async {
                 let _ = direct_data_producer
-                    .send(WebRtcMessage::Binary(data.clone()))
+                    .send(WebRtcMessage::Binary(Cow::from(data)))
                     .await;
             })
         });
@@ -72,7 +73,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 });
 
                 let _ = direct_data_producer
-                    .send(WebRtcMessage::Binary(data.clone()))
+                    .send(WebRtcMessage::Binary(Cow::from(data)))
                     .await;
 
                 let _ = receiver.next().await;

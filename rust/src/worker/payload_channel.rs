@@ -22,12 +22,6 @@ pub(super) enum InternalMessage {
     UnexpectedData(Vec<u8>),
 }
 
-#[derive(Clone)]
-pub(crate) struct NotificationMessage {
-    pub(crate) message: Value,
-    pub(crate) payload: Vec<u8>,
-}
-
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum PayloadChannelReceiveMessage {
@@ -89,7 +83,7 @@ struct Inner {
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
-    event_handlers_weak: WeakEventHandlers<NotificationMessage>,
+    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(Value, &[u8]) + Send + Sync + 'static>>,
 }
 
 impl Drop for Inner {
@@ -179,15 +173,11 @@ impl PayloadChannel {
 
                         trace!("received notification payload of {} bytes", payload.len());
 
-                        let payload = Vec::from(payload);
-
                         if let Some(target_id) = target_id {
-                            event_handlers.call_callbacks_with_value(
+                            event_handlers.call_callbacks_with_two_values(
                                 &target_id,
-                                NotificationMessage {
-                                    message: notification,
-                                    payload,
-                                },
+                                notification,
+                                payload,
                             );
                         } else {
                             let unexpected_message =
@@ -394,11 +384,11 @@ impl PayloadChannel {
         callback: F,
     ) -> Option<SubscriptionHandler>
     where
-        F: Fn(NotificationMessage) + Send + Sync + 'static,
+        F: Fn(Value, &[u8]) + Send + Sync + 'static,
     {
         self.inner
             .event_handlers_weak
             .upgrade()
-            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
+            .map(|event_handlers| event_handlers.add(target_id, Arc::new(callback)))
     }
 }
