@@ -65,7 +65,10 @@ namespace Channel
 	public:
 		explicit ChannelSocket(int consumerFd, int producerFd);
 		explicit ChannelSocket(
-		  int consumerFd, int producerFd, ChannelWriteFn channelWriteFn, ChannelWriteCtx channelWriteCtx);
+		  ChannelReadFn channelReadFn,
+		  ChannelReadCtx channelReadCtx,
+		  ChannelWriteFn channelWriteFn,
+		  ChannelWriteCtx channelWriteCtx);
 		virtual ~ChannelSocket();
 
 	public:
@@ -73,6 +76,7 @@ namespace Channel
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage);
 		void SendLog(const char* message, uint32_t messageLen);
+		bool CallbackRead();
 
 	private:
 		void SendImpl(const uint8_t* payload, uint32_t payloadLen);
@@ -87,11 +91,14 @@ namespace Channel
 		Listener* listener{ nullptr };
 		// Others.
 		bool closed{ false };
-		ConsumerSocket consumerSocket;
-		ProducerSocket producerSocket;
+		ConsumerSocket* consumerSocket{ nullptr };
+		ProducerSocket* producerSocket{ nullptr };
+		ChannelReadFn channelReadFn{ nullptr };
+		ChannelReadCtx channelReadCtx{ nullptr };
 		ChannelWriteFn channelWriteFn{ nullptr };
 		ChannelWriteCtx channelWriteCtx{ nullptr };
-		uint8_t* writeBuffer;
+		uv_async_t* uvReadHandle{ nullptr };
+		uint8_t* writeBuffer{ nullptr };
 	};
 } // namespace Channel
 

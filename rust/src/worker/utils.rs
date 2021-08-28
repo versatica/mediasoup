@@ -1,3 +1,4 @@
+mod channel_read_fn;
 mod channel_write_fn;
 
 // Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
@@ -6,6 +7,7 @@ use crate::worker::{Channel, PayloadChannel, WorkerId};
 use async_executor::Executor;
 use async_fs::File;
 use async_oneshot::Receiver;
+pub(super) use channel_read_fn::{prepare_channel_read_fn, PreparedChannelRead};
 pub(super) use channel_write_fn::{
     prepare_channel_write_fn, prepare_payload_channel_write_fn, PreparedChannelWrite,
     PreparedPayloadChannelWrite,
@@ -62,18 +64,14 @@ pub(super) fn run_worker_with_channels(
     executor: Arc<Executor<'static>>,
     args: Vec<String>,
 ) -> WorkerRunResult {
-    let [producer_fd_read, producer_fd_write] = pipe();
-    let [consumer_fd_read, consumer_fd_write] = pipe();
     let [producer_payload_fd_read, producer_payload_fd_write] = pipe();
     let [consumer_payload_fd_read, consumer_payload_fd_write] = pipe();
     let (mut status_sender, status_receiver) = async_oneshot::oneshot();
 
-    let producer_file = unsafe { File::from_raw_fd(producer_fd_write) };
-    let consumer_file = unsafe { File::from_raw_fd(consumer_fd_read) };
     let producer_payload_file = unsafe { File::from_raw_fd(producer_payload_fd_write) };
     let consumer_payload_file = unsafe { File::from_raw_fd(consumer_payload_fd_read) };
 
-    let (channel, prepared_channel_write) = Channel::new(&executor, consumer_file, producer_file);
+    let (channel, prepared_channel_read, prepared_channel_write) = Channel::new();
     let (payload_channel, prepared_payload_channel_write) =
         PayloadChannel::new(&executor, consumer_payload_file, producer_payload_file);
     let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
@@ -96,6 +94,8 @@ pub(super) fn run_worker_with_channels(
             let version = CString::new(env!("CARGO_PKG_VERSION")).unwrap();
 
             let status_code = unsafe {
+                let (channel_read_fn, channel_read_ctx, _channel_write_callback) =
+                    prepared_channel_read.deconstruct();
                 let (channel_write_fn, channel_write_ctx, _channel_read_callback) =
                     prepared_channel_write.deconstruct();
                 let (
@@ -108,16 +108,20 @@ pub(super) fn run_worker_with_channels(
                     argc,
                     argv.as_ptr(),
                     version.as_ptr(),
-                    producer_fd_read,
-                    consumer_fd_write,
+                    0,
+                    0,
                     producer_payload_fd_read,
                     consumer_payload_fd_write,
+                    channel_read_fn,
+                    channel_read_ctx,
                     channel_write_fn,
                     channel_write_ctx,
                     payload_channel_write_fn,
                     payload_channel_write_ctx,
                 )
             };
+
+            println!("Status sent {}", status_code);
 
             let _ = status_sender.send(match status_code {
                 0 => Ok(()),

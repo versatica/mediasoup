@@ -1,21 +1,18 @@
 use crate::messages::Request;
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::utils;
-use crate::worker::utils::PreparedChannelWrite;
+use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
 use crate::worker::{RequestError, SubscriptionHandler};
-use async_executor::Executor;
-use async_fs::File;
 use bytes::Bytes;
-use futures_lite::io::BufReader;
-use futures_lite::{future, AsyncReadExt, AsyncWriteExt};
-use log::{debug, trace, warn};
+use futures_lite::future;
+use log::{debug, error, trace, warn};
 use lru::LruCache;
+use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
-use std::io;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
@@ -114,8 +111,13 @@ struct RequestsContainer {
     handlers: HashMap<u32, async_oneshot::Sender<Response<Value>>>,
 }
 
+struct OutgoingMessageBuffer {
+    handle: Option<UvAsyncT>,
+    messages: VecDeque<Vec<u8>>,
+}
+
 struct Inner {
-    sender: async_channel::Sender<Bytes>,
+    outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
     buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
@@ -124,7 +126,6 @@ struct Inner {
 
 impl Drop for Inner {
     fn drop(&mut self) {
-        self.sender.close();
         self.internal_message_receiver.close();
     }
 }
@@ -135,11 +136,11 @@ pub(crate) struct Channel {
 }
 
 impl Channel {
-    pub(super) fn new(
-        executor: &Executor<'static>,
-        reader: File,
-        mut writer: File,
-    ) -> (Self, PreparedChannelWrite) {
+    pub(super) fn new() -> (Self, PreparedChannelRead, PreparedChannelWrite) {
+        let outgoing_message_buffer = Arc::new(Mutex::new(OutgoingMessageBuffer {
+            handle: None,
+            messages: VecDeque::<Vec<u8>>::with_capacity(10),
+        }));
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
         let buffered_notifications_for =
@@ -147,124 +148,28 @@ impl Channel {
         let event_handlers = EventHandlers::new();
         let event_handlers_weak = event_handlers.downgrade();
 
-        let (internal_message_receiver, prepared_channel_write) = {
-            let (sender, receiver) = async_channel::unbounded();
+        let prepared_channel_read = utils::prepare_channel_read_fn({
+            let outgoing_message_buffer = Arc::clone(&outgoing_message_buffer);
 
-            executor
-                .spawn({
-                    let requests_container = Arc::clone(&requests_container);
-                    let buffered_notifications_for = Arc::clone(&buffered_notifications_for);
-                    let event_handlers = event_handlers.clone();
-                    let sender = sender.clone();
+            move |handle| {
+                let mut outgoing_message_buffer = outgoing_message_buffer.lock();
+                if outgoing_message_buffer.handle.is_none() {
+                    outgoing_message_buffer.handle.insert(handle);
+                }
 
-                    async move {
-                        let mut len_bytes = [0u8; 4];
-                        let mut read_buffer = vec![0u8; PAYLOAD_MAX_LEN];
-                        let mut reader = BufReader::new(reader);
-                        // This this contain cache of targets that are known to not have buffering, so
-                        // that we can avoid Mutex locking overhead for them
-                        let mut non_buffered_notifications =
-                            LruCache::<SubscriptionTarget, ()>::new(1000);
+                outgoing_message_buffer.messages.pop_front()
+            }
+        });
 
-                        loop {
-                            reader.read_exact(&mut len_bytes).await?;
-                            let length = u32::from_ne_bytes(len_bytes) as usize;
+        let (internal_message_sender, internal_message_receiver) = async_channel::unbounded();
 
-                            reader.read_exact(&mut read_buffer[..length]).await?;
-
-                            trace!(
-                                "received raw message: {}",
-                                String::from_utf8_lossy(&read_buffer[..length]),
-                            );
-
-                            match deserialize_message(&read_buffer[..length]) {
-                                ChannelReceiveMessage::ResponseSuccess {
-                                    id,
-                                    accepted: _,
-                                    data,
-                                } => {
-                                    let sender = requests_container.lock().handlers.remove(&id);
-                                    if let Some(mut sender) = sender {
-                                        let _ = sender.send(Ok(data));
-                                    } else {
-                                        warn!(
-                                        "received success response does not match any sent request \
-                                        [id:{}]",
-                                        id,
-                                    );
-                                    }
-                                }
-                                ChannelReceiveMessage::ResponseError {
-                                    id,
-                                    error: _,
-                                    reason,
-                                } => {
-                                    let sender = requests_container.lock().handlers.remove(&id);
-                                    if let Some(mut sender) = sender {
-                                        let _ = sender.send(Err(ResponseError { reason }));
-                                    } else {
-                                        warn!(
-                                        "received error response does not match any sent request \
-                                        [id:{}]",
-                                        id,
-                                    );
-                                    }
-                                }
-                                ChannelReceiveMessage::Notification(notification) => {
-                                    let target_id =
-                                        notification.get("targetId").and_then(|value| {
-                                            let str = value.as_str()?;
-                                            str.parse().ok().map(SubscriptionTarget::Uuid).or_else(
-                                                || str.parse().ok().map(SubscriptionTarget::Number),
-                                            )
-                                        });
-
-                                    if let Some(target_id) = target_id {
-                                        if !non_buffered_notifications.contains(&target_id) {
-                                            let mut buffer_notifications_for =
-                                                buffered_notifications_for.lock();
-                                            // Check if we need to buffer notifications for this
-                                            // target_id
-                                            if let Some(list) =
-                                                buffer_notifications_for.get_mut(&target_id)
-                                            {
-                                                list.push(notification);
-                                                continue;
-                                            }
-
-                                            // Remember we don't need to buffer these
-                                            non_buffered_notifications.put(target_id, ());
-                                        }
-                                        event_handlers
-                                            .call_callbacks_with_value(&target_id, notification);
-                                    } else {
-                                        let unexpected_message = InternalMessage::Unexpected(
-                                            Vec::from(&read_buffer[..length]),
-                                        );
-                                        if sender.send(unexpected_message).await.is_err() {
-                                            break;
-                                        }
-                                    }
-                                }
-                                ChannelReceiveMessage::Event(event_message) => {
-                                    if sender.send(event_message).await.is_err() {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        io::Result::Ok(())
-                    }
-                })
-                .detach();
-
+        let prepared_channel_write = utils::prepare_channel_write_fn({
             let buffered_notifications_for = Arc::clone(&buffered_notifications_for);
             // This this contain cache of targets that are known to not have buffering, so
             // that we can avoid Mutex locking overhead for them
             let mut non_buffered_notifications = LruCache::<SubscriptionTarget, ()>::new(1000);
 
-            let prepared_channel_write = utils::prepare_channel_write_fn(move |message| {
+            move |message| {
                 trace!("received raw message: {}", String::from_utf8_lossy(message));
 
                 match deserialize_message(message) {
@@ -325,50 +230,36 @@ impl Channel {
                         } else {
                             let unexpected_message =
                                 InternalMessage::Unexpected(Vec::from(message));
-                            if sender.try_send(unexpected_message).is_err() {
+                            if internal_message_sender
+                                .try_send(unexpected_message)
+                                .is_err()
+                            {
                                 return;
                             }
                         }
                     }
                     ChannelReceiveMessage::Event(event_message) => {
-                        if sender.try_send(event_message).is_err() {
+                        if internal_message_sender.try_send(event_message).is_err() {
                             return;
                         }
                     }
                 }
-            });
-
-            (receiver, prepared_channel_write)
-        };
-
-        let sender = {
-            let (sender, receiver) = async_channel::bounded::<Bytes>(1);
-
-            executor
-                .spawn(async move {
-                    while let Ok(message) = receiver.recv().await {
-                        writer
-                            .write_all(&(message.len() as u32).to_ne_bytes())
-                            .await?;
-                        writer.write_all(&message).await?;
-                    }
-
-                    io::Result::Ok(())
-                })
-                .detach();
-
-            sender
-        };
+            }
+        });
 
         let inner = Arc::new(Inner {
-            sender,
+            outgoing_message_buffer,
             internal_message_receiver,
             requests_container_weak,
             buffered_notifications_for,
             event_handlers_weak,
         });
 
-        (Self { inner }, prepared_channel_write)
+        (
+            Self { inner },
+            prepared_channel_read,
+            prepared_channel_write,
+        )
     }
 
     pub(super) fn get_internal_message_receiver(&self) -> async_channel::Receiver<InternalMessage> {
@@ -391,6 +282,7 @@ impl Channel {
         }
     }
 
+    // TODO: Replace `Bytes` with simple `Vec<u8>`
     pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
     where
         R: Request,
@@ -446,11 +338,20 @@ impl Channel {
             return Err(RequestError::MessageTooLong);
         }
 
-        self.inner
-            .sender
-            .send(bytes)
-            .await
-            .map_err(|_| RequestError::ChannelClosed {})?;
+        {
+            let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
+            outgoing_message_buffer.messages.push_back(bytes.to_vec());
+            if let Some(handle) = &outgoing_message_buffer.handle {
+                unsafe {
+                    // Notify worker that there is something to read
+                    let ret = mediasoup_sys::uv_async_send(*handle);
+                    if ret != 0 {
+                        error!("uv_async_send call failed with code {}", ret);
+                        return Err(RequestError::ChannelClosed);
+                    }
+                }
+            }
+        }
 
         let result = future::or(
             async {

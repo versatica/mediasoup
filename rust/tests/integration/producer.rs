@@ -279,6 +279,19 @@ fn produce_succeeds() {
 
             assert_eq!(transport_1_dump.producer_ids, vec![audio_producer.id()]);
             assert_eq!(transport_1_dump.consumer_ids, vec![]);
+
+            let (mut tx, rx) = async_oneshot::oneshot::<()>();
+            transport_1
+                .on_close(Box::new(move || {
+                    let _ = tx.send(());
+                }))
+                .detach();
+
+            drop(audio_producer);
+            drop(transport_1);
+
+            // This means producer was definitely dropped
+            rx.await.expect("Failed to receive transport close event");
         }
 
         {

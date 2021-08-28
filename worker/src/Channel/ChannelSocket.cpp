@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelSocket.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cmath>   // std::ceil()
@@ -11,6 +12,18 @@
 namespace Channel
 {
 	/* Static. */
+	inline static void onAsync(uv_handle_t* handle)
+	{
+		while (static_cast<ChannelSocket*>(handle->data)->CallbackRead())
+		{
+			// Read while there are new messages
+		}
+	}
+
+	inline static void onClose(uv_handle_t* handle)
+	{
+		delete handle;
+	}
 
 	// Binary length for a 4194304 bytes payload.
 	static constexpr size_t MessageMaxLen{ 4194308 };
@@ -18,21 +31,48 @@ namespace Channel
 
 	/* Instance methods. */
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
-	  : consumerSocket(consumerFd, MessageMaxLen, this), producerSocket(producerFd, MessageMaxLen)
+	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
+	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
+	    writeBuffer(static_cast<uint8_t*>(std::malloc(MessageMaxLen)))
 	{
 		MS_TRACE_STD();
-
-		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
 	}
 
 	ChannelSocket::ChannelSocket(
-	  int consumerFd, int producerFd, ChannelWriteFn channelWriteFn, ChannelWriteCtx channelWriteCtx)
-	  : consumerSocket(consumerFd, MessageMaxLen, this), producerSocket(producerFd, MessageMaxLen),
-	    channelWriteFn(channelWriteFn), channelWriteCtx(channelWriteCtx)
+	  ChannelReadFn channelReadFn,
+	  ChannelReadCtx channelReadCtx,
+	  ChannelWriteFn channelWriteFn,
+	  ChannelWriteCtx channelWriteCtx)
+	  : channelReadFn(channelReadFn), channelReadCtx(channelReadCtx), channelWriteFn(channelWriteFn),
+	    channelWriteCtx(channelWriteCtx)
 	{
 		MS_TRACE_STD();
 
-		this->writeBuffer = static_cast<uint8_t*>(std::malloc(MessageMaxLen));
+		int err;
+
+		this->uvReadHandle       = new uv_async_t;
+		this->uvReadHandle->data = static_cast<void*>(this);
+
+		err =
+		  uv_async_init(DepLibUV::GetLoop(), this->uvReadHandle, reinterpret_cast<uv_async_cb>(onAsync));
+
+		if (err != 0)
+		{
+			delete this->uvReadHandle;
+			this->uvReadHandle = nullptr;
+
+			MS_THROW_ERROR_STD("uv_async_init() failed: %s", uv_strerror(err));
+		}
+
+		err = uv_async_send(this->uvReadHandle);
+
+		if (err != 0)
+		{
+			delete this->uvReadHandle;
+			this->uvReadHandle = nullptr;
+
+			MS_THROW_ERROR_STD("uv_async_send() failed: %s", uv_strerror(err));
+		}
 	}
 
 	ChannelSocket::~ChannelSocket()
@@ -43,6 +83,9 @@ namespace Channel
 
 		if (!this->closed)
 			Close();
+
+		delete this->consumerSocket;
+		delete this->producerSocket;
 	}
 
 	void ChannelSocket::Close()
@@ -54,8 +97,19 @@ namespace Channel
 
 		this->closed = true;
 
-		this->consumerSocket.Close();
-		this->producerSocket.Close();
+		if (this->uvReadHandle)
+		{
+			uv_close(reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onClose));
+		}
+
+		if (this->consumerSocket)
+		{
+			this->consumerSocket->Close();
+		}
+		if (this->producerSocket)
+		{
+			this->producerSocket->Close();
+		}
 	}
 
 	void ChannelSocket::SetListener(Listener* listener)
@@ -102,6 +156,59 @@ namespace Channel
 		SendImpl(reinterpret_cast<const uint8_t*>(message), messageLen);
 	}
 
+	bool ChannelSocket::CallbackRead()
+	{
+		MS_TRACE_STD();
+
+		if (this->closed)
+			return false;
+
+		uint8_t* message{ nullptr };
+		uint32_t messageLen;
+		size_t messageCapacity;
+
+		auto free = this->channelReadFn(
+		  &message, &messageLen, &messageCapacity, this->uvReadHandle, this->channelReadCtx);
+
+		if (free)
+		{
+			try
+			{
+				json jsonMessage = json::parse(message, message + static_cast<size_t>(messageLen));
+				auto* request    = new Channel::ChannelRequest(this, jsonMessage);
+
+				// Notify the listener.
+				try
+				{
+					this->listener->OnChannelRequest(this, request);
+				}
+				catch (const MediaSoupTypeError& error)
+				{
+					request->TypeError(error.what());
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Error(error.what());
+				}
+
+				// Delete the Request.
+				delete request;
+			}
+			catch (const json::parse_error& error)
+			{
+				MS_ERROR_STD("JSON parsing error: %s", error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR_STD("discarding wrong Channel request");
+			}
+
+			free(message, messageLen, messageCapacity);
+		}
+
+		return free != nullptr;
+	}
+
 	inline void ChannelSocket::SendImpl(const uint8_t* payload, uint32_t payloadLen)
 	{
 		MS_TRACE_STD();
@@ -122,7 +229,7 @@ namespace Channel
 
 			size_t len = sizeof(uint32_t) + payloadLen;
 
-			this->producerSocket.Write(this->writeBuffer, len);
+			this->producerSocket->Write(this->writeBuffer, len);
 		}
 	}
 

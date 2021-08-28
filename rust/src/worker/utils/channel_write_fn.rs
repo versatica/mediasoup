@@ -16,8 +16,8 @@ unsafe impl Send for PreparedChannelWrite {}
 
 impl PreparedChannelWrite {
     /// SAFETY:
-    /// 1) `ReadCallback` returned must be dropped AFTER last usage of returned function and context
-    ///   pointers
+    /// 1) `ChannelReadCallback` returned must be dropped AFTER last usage of returned function and
+    ///    context pointers
     /// 2) `ChannelWriteCtx` should not be called from multiple threads concurrently
     pub(super) unsafe fn deconstruct(
         self,
@@ -38,8 +38,11 @@ pub(crate) fn prepare_channel_write_fn<F>(read_callback: F) -> PreparedChannelWr
 where
     F: FnMut(&[u8]) + Send + 'static,
 {
-    unsafe extern "C" fn wrapper<F>(message: *const u8, message_len: u32, ctx: *const c_void)
-    where
+    unsafe extern "C" fn wrapper<F>(
+        message: *const u8,
+        message_len: u32,
+        ChannelWriteCtx(ctx): ChannelWriteCtx,
+    ) where
         F: FnMut(&[u8]) + Send + 'static,
     {
         let message = slice::from_raw_parts(message, message_len as usize);
@@ -51,7 +54,7 @@ where
 
     PreparedChannelWrite {
         channel_write_fn: wrapper::<F>,
-        channel_write_ctx: read_callback.as_ref() as *const F as *const c_void,
+        channel_write_ctx: ChannelWriteCtx(read_callback.as_ref() as *const F as *const c_void),
         read_callback: ChannelReadCallback(read_callback),
     }
 }
@@ -68,8 +71,8 @@ unsafe impl Send for PreparedPayloadChannelWrite {}
 
 impl PreparedPayloadChannelWrite {
     /// SAFETY:
-    /// 1) `ReadCallback` returned must be dropped AFTER last usage of returned function and context
-    ///   pointers
+    /// 1) `PayloadChannelReadCallback` returned must be dropped AFTER last usage of returned
+    ///    function and context pointers
     /// 2) `PayloadChannelWriteCtx` should not be called from multiple threads concurrently
     pub(super) unsafe fn deconstruct(
         self,
@@ -99,7 +102,7 @@ where
         message_len: u32,
         payload: *const u8,
         payload_len: u32,
-        ctx: *const c_void,
+        PayloadChannelWriteCtx(ctx): PayloadChannelWriteCtx,
     ) where
         F: FnMut(&[u8], &[u8]) + Send + 'static,
     {
@@ -117,7 +120,9 @@ where
 
     PreparedPayloadChannelWrite {
         channel_write_fn: wrapper::<F>,
-        channel_write_ctx: read_callback.as_ref() as *const F as *const c_void,
+        channel_write_ctx: PayloadChannelWriteCtx(
+            read_callback.as_ref() as *const F as *const c_void
+        ),
         read_callback: PayloadChannelReadCallback(read_callback),
     }
 }

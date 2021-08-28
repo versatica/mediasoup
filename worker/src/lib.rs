@@ -1,23 +1,54 @@
 use std::os::raw::{c_char, c_int, c_void};
 
-pub type ChannelWriteCtx = *const c_void;
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+pub struct UvAsyncT(*const c_void);
+
+unsafe impl Send for UvAsyncT {}
+
+#[repr(transparent)]
+pub struct ChannelReadCtx(pub *const c_void);
+pub type ChannelReadFreeFn = Option<
+    unsafe extern "C" fn(
+        /* message: */ *mut u8,
+        /* message_len: */ u32,
+        /* message_capacity: */ usize,
+    ),
+>;
+pub type ChannelReadFn = unsafe extern "C" fn(
+    /* message: */ *mut *mut u8,
+    /* message_len: */ *mut u32,
+    /* message_capacity: */ *mut usize,
+    // This is `uv_async_t` handle that can be called later with `uv_async_send()` when there is
+    // more data to read
+    /* handle */
+    UvAsyncT,
+    /* ctx: */ ChannelReadCtx,
+) -> ChannelReadFreeFn;
+
+#[repr(transparent)]
+pub struct ChannelWriteCtx(pub *const c_void);
 pub type ChannelWriteFn = unsafe extern "C" fn(
     /* message: */ *const u8,
     /* message_len: */ u32,
     /* ctx: */ ChannelWriteCtx,
 );
 
-pub type PayloadChannelWriteCtx = *const c_void;
+#[repr(transparent)]
+pub struct PayloadChannelWriteCtx(pub *const c_void);
 pub type PayloadChannelWriteFn = unsafe extern "C" fn(
     /* message: */ *const u8,
     /* message_len: */ u32,
     /* payload: */ *const u8,
     /* payload_len: */ u32,
-    /* ctx: */ ChannelWriteCtx,
+    /* ctx: */ PayloadChannelWriteCtx,
 );
 
 #[link(name = "mediasoup-worker", kind = "static")]
 extern "C" {
+    /// Returns `0` on success, or an error code `< 0` on failure
+    pub fn uv_async_send(handle: UvAsyncT) -> c_int;
+
     pub fn run_worker(
         argc: c_int,
         argv: *const *const c_char,
@@ -26,6 +57,8 @@ extern "C" {
         producer_channel_fd: c_int,
         payload_consumer_channel_fd: c_int,
         payload_producer_channel_fd: c_int,
+        channel_read_fn: ChannelReadFn,
+        channel_read_ctx: ChannelReadCtx,
         channel_write_fn: ChannelWriteFn,
         channel_write_ctx: ChannelWriteCtx,
         payload_channel_write_fn: PayloadChannelWriteFn,
