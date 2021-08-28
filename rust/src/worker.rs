@@ -1,7 +1,6 @@
 //! A worker represents a mediasoup C++ thread that runs on a single CPU core and handles
 //! [`Router`] instances.
 
-// TODO: This is Unix-specific and doesn't support Windows in any way
 mod channel;
 mod common;
 mod payload_channel;

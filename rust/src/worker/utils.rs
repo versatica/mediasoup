@@ -1,7 +1,6 @@
 mod channel_read_fn;
 mod channel_write_fn;
 
-// Contents of this module is inspired by https://github.com/Srinivasa314/alcro/tree/master/src/chrome
 use crate::worker::channel::BufferMessagesGuard;
 use crate::worker::{Channel, PayloadChannel, WorkerId};
 use async_oneshot::Receiver;
