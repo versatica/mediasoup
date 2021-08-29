@@ -575,7 +575,7 @@ impl WebRtcTransport {
             let data = Arc::clone(&data);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_value::<Notification>(notification) {
+                match serde_json::from_slice::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::IceStateChange { ice_state } => {
                             *data.ice_state.lock() = ice_state;

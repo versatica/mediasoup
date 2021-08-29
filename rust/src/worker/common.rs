@@ -79,11 +79,11 @@ impl<F: Sized + Send + Sync + 'static> EventHandlers<F> {
     }
 }
 
-impl<V: Clone> EventHandlers<Arc<dyn Fn(V) + Send + Sync + 'static>> {
+impl<V: ?Sized> EventHandlers<Arc<dyn Fn(&V) + Send + Sync + 'static>> {
     pub(super) fn call_callbacks_with_single_value(
         &self,
         target_id: &SubscriptionTarget,
-        value: V,
+        value: &V,
     ) {
         let handlers = self.handlers.lock();
         if let Some(list) = handlers.get(target_id) {
@@ -98,7 +98,7 @@ impl<V: Clone> EventHandlers<Arc<dyn Fn(V) + Send + Sync + 'static>> {
                 // Drop mutex guard before running callbacks to avoid deadlocks
                 drop(handlers);
                 for callback in callbacks {
-                    callback(value.clone());
+                    callback(value);
                 }
             }
         }
@@ -149,11 +149,17 @@ impl<F> WeakEventHandlers<F> {
 #[serde(untagged)]
 pub(crate) enum SubscriptionTarget {
     Uuid(Uuid),
-    Number(u32),
+    Number(u64),
 }
 
 impl From<u32> for SubscriptionTarget {
     fn from(number: u32) -> Self {
+        Self::Number(u64::from(number))
+    }
+}
+
+impl From<u64> for SubscriptionTarget {
+    fn from(number: u64) -> Self {
         Self::Number(number)
     }
 }

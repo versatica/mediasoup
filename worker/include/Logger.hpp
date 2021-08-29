@@ -132,7 +132,7 @@ public:
 	static void ClassInit(Channel::ChannelSocket* channel);
 
 public:
-	static const int64_t pid;
+	static const uint64_t pid;
 	thread_local static Channel::ChannelSocket* channel;
 	static const size_t bufferSize {50000};
 	thread_local static char buffer[];

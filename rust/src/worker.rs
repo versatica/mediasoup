@@ -430,7 +430,7 @@ impl Inner {
         let _handler = self.channel.subscribe_to_notifications(
             std::process::id().into(),
             move |notification| {
-                let result = match serde_json::from_value(notification.clone()) {
+                let result = match serde_json::from_slice(notification) {
                     Ok(Notification::Running) => {
                         debug!("worker thread running [id:{}]", id);
                         Ok(())

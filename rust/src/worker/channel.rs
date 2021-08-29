@@ -39,8 +39,8 @@ pub(super) enum InternalMessage {
 
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
-    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
-    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(Value) + Send + Sync + 'static>>,
+    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
+    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
 }
 
 impl Drop for BufferMessagesGuard {
@@ -49,7 +49,7 @@ impl Drop for BufferMessagesGuard {
         if let Some(notifications) = buffered_notifications_for.remove(&self.target_id) {
             if let Some(event_handlers) = self.event_handlers_weak.upgrade() {
                 for notification in notifications {
-                    event_handlers.call_callbacks_with_single_value(&self.target_id, notification);
+                    event_handlers.call_callbacks_with_single_value(&self.target_id, &notification);
                 }
             }
         }
@@ -59,6 +59,10 @@ impl Drop for BufferMessagesGuard {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum ChannelReceiveMessage {
+    #[serde(rename_all = "camelCase")]
+    Notification {
+        target_id: SubscriptionTarget,
+    },
     ResponseSuccess {
         id: u32,
         accepted: bool,
@@ -69,7 +73,6 @@ enum ChannelReceiveMessage {
         error: Value,
         reason: String,
     },
-    Notification(Value),
     Event(InternalMessage),
 }
 
@@ -119,8 +122,8 @@ struct Inner {
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
-    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
-    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(Value) + Send + Sync + 'static>>,
+    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
+    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
 }
 
 impl Drop for Inner {
@@ -143,7 +146,7 @@ impl Channel {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
         let buffered_notifications_for =
-            Arc::<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>::default();
+            Arc::<Mutex<HashMap<SubscriptionTarget, Vec<Vec<u8>>>>>::default();
         let event_handlers = EventHandlers::new();
         let event_handlers_weak = event_handlers.downgrade();
 
@@ -172,6 +175,21 @@ impl Channel {
                 trace!("received raw message: {}", String::from_utf8_lossy(message));
 
                 match deserialize_message(message) {
+                    ChannelReceiveMessage::Notification { target_id } => {
+                        if !non_buffered_notifications.contains(&target_id) {
+                            let mut buffer_notifications_for = buffered_notifications_for.lock();
+                            // Check if we need to buffer notifications for this
+                            // target_id
+                            if let Some(list) = buffer_notifications_for.get_mut(&target_id) {
+                                list.push(Vec::from(message));
+                                return;
+                            }
+
+                            // Remember we don't need to buffer these
+                            non_buffered_notifications.put(target_id, ());
+                        }
+                        event_handlers.call_callbacks_with_single_value(&target_id, message);
+                    }
                     ChannelReceiveMessage::ResponseSuccess {
                         id,
                         accepted: _,
@@ -200,37 +218,6 @@ impl Channel {
                                 "received error response does not match any sent request [id:{}]",
                                 id,
                             );
-                        }
-                    }
-                    ChannelReceiveMessage::Notification(notification) => {
-                        let target_id = notification.get("targetId").and_then(|value| {
-                            let str = value.as_str()?;
-                            str.parse()
-                                .ok()
-                                .map(SubscriptionTarget::Uuid)
-                                .or_else(|| str.parse().ok().map(SubscriptionTarget::Number))
-                        });
-
-                        if let Some(target_id) = target_id {
-                            if !non_buffered_notifications.contains(&target_id) {
-                                let mut buffer_notifications_for =
-                                    buffered_notifications_for.lock();
-                                // Check if we need to buffer notifications for this
-                                // target_id
-                                if let Some(list) = buffer_notifications_for.get_mut(&target_id) {
-                                    list.push(notification);
-                                    return;
-                                }
-
-                                // Remember we don't need to buffer these
-                                non_buffered_notifications.put(target_id, ());
-                            }
-                            event_handlers
-                                .call_callbacks_with_single_value(&target_id, notification);
-                        } else {
-                            let unexpected_message =
-                                InternalMessage::Unexpected(Vec::from(message));
-                            let _ = internal_message_sender.try_send(unexpected_message);
                         }
                     }
                     ChannelReceiveMessage::Event(event_message) => {
@@ -390,7 +377,7 @@ impl Channel {
         callback: F,
     ) -> Option<SubscriptionHandler>
     where
-        F: Fn(Value) + Send + Sync + 'static,
+        F: Fn(&[u8]) + Send + Sync + 'static,
     {
         self.inner
             .event_handlers_weak
