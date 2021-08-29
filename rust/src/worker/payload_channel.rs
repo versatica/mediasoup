@@ -35,7 +35,8 @@ enum PayloadChannelReceiveMessage {
         error: Value,
         reason: String,
     },
-    Notification(Value),
+    #[serde(rename_all = "camelCase")]
+    Notification { target_id: SubscriptionTarget },
     /// Unknown data
     #[serde(skip)]
     Internal(InternalMessage),
@@ -84,7 +85,7 @@ struct Inner {
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
     #[allow(clippy::type_complexity)]
-    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(Value, &[u8]) + Send + Sync + 'static>>,
+    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8], &[u8]) + Send + Sync + 'static>>,
 }
 
 impl Drop for Inner {
@@ -163,28 +164,10 @@ impl PayloadChannel {
                             );
                         }
                     }
-                    PayloadChannelReceiveMessage::Notification(notification) => {
-                        let target_id = notification.get("targetId").and_then(|value| {
-                            let str = value.as_str()?;
-                            str.parse()
-                                .ok()
-                                .map(SubscriptionTarget::Uuid)
-                                .or_else(|| str.parse().ok().map(SubscriptionTarget::Number))
-                        });
-
+                    PayloadChannelReceiveMessage::Notification { target_id } => {
                         trace!("received notification payload of {} bytes", payload.len());
 
-                        if let Some(target_id) = target_id {
-                            event_handlers.call_callbacks_with_two_values(
-                                &target_id,
-                                notification,
-                                payload,
-                            );
-                        } else {
-                            let unexpected_message =
-                                InternalMessage::UnexpectedData(Vec::from(message));
-                            let _ = internal_message_sender.try_send(unexpected_message);
-                        }
+                        event_handlers.call_callbacks_with_two_values(&target_id, message, payload);
                     }
                     PayloadChannelReceiveMessage::Internal(internal_message) => {
                         let _ = internal_message_sender.try_send(internal_message);
@@ -378,7 +361,7 @@ impl PayloadChannel {
         callback: F,
     ) -> Option<SubscriptionHandler>
     where
-        F: Fn(Value, &[u8]) + Send + Sync + 'static,
+        F: Fn(&[u8], &[u8]) + Send + Sync + 'static,
     {
         self.inner
             .event_handlers_weak

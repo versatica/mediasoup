@@ -1,4 +1,5 @@
 use parking_lot::Mutex;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 use uuid::Uuid;
@@ -104,11 +105,11 @@ impl<V: Clone> EventHandlers<Arc<dyn Fn(V) + Send + Sync + 'static>> {
     }
 }
 
-impl<V1: Clone, V2: ?Sized> EventHandlers<Arc<dyn Fn(V1, &V2) + Send + Sync + 'static>> {
+impl<V1: ?Sized, V2: ?Sized> EventHandlers<Arc<dyn Fn(&V1, &V2) + Send + Sync + 'static>> {
     pub(super) fn call_callbacks_with_two_values(
         &self,
         target_id: &SubscriptionTarget,
-        value1: V1,
+        value1: &V1,
         value2: &V2,
     ) {
         let handlers = self.handlers.lock();
@@ -124,7 +125,7 @@ impl<V1: Clone, V2: ?Sized> EventHandlers<Arc<dyn Fn(V1, &V2) + Send + Sync + 's
                 // Drop mutex guard before running callbacks to avoid deadlocks
                 drop(handlers);
                 for callback in callbacks {
-                    callback(value1.clone(), value2);
+                    callback(value1, value2);
                 }
             }
         }
@@ -144,7 +145,8 @@ impl<F> WeakEventHandlers<F> {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize)]
+#[serde(untagged)]
 pub(crate) enum SubscriptionTarget {
     Uuid(Uuid),
     Number(u32),

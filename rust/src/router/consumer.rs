@@ -557,7 +557,7 @@ impl Consumer {
             let handlers = Arc::clone(&handlers);
 
             payload_channel.subscribe_to_notifications(id.into(), move |message, payload| {
-                match serde_json::from_value::<PayloadNotification>(message) {
+                match serde_json::from_slice::<PayloadNotification>(message) {
                     Ok(notification) => match notification {
                         PayloadNotification::Rtp => {
                             handlers.rtp.call(|callback| {
