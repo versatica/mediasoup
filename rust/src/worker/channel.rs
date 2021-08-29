@@ -230,18 +230,11 @@ impl Channel {
                         } else {
                             let unexpected_message =
                                 InternalMessage::Unexpected(Vec::from(message));
-                            if internal_message_sender
-                                .try_send(unexpected_message)
-                                .is_err()
-                            {
-                                return;
-                            }
+                            let _ = internal_message_sender.try_send(unexpected_message);
                         }
                     }
                     ChannelReceiveMessage::Event(event_message) => {
-                        if internal_message_sender.try_send(event_message).is_err() {
-                            return;
-                        }
+                        let _ = internal_message_sender.try_send(event_message);
                     }
                 }
             }

@@ -2,7 +2,7 @@ use std::os::raw::{c_char, c_int, c_void};
 
 #[repr(transparent)]
 #[derive(Copy, Clone)]
-pub struct UvAsyncT(*const c_void);
+pub struct UvAsyncT(pub *const c_void);
 
 unsafe impl Send for UvAsyncT {}
 

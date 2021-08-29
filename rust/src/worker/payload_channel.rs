@@ -83,6 +83,7 @@ struct Inner {
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
+    #[allow(clippy::type_complexity)]
     event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(Value, &[u8]) + Send + Sync + 'static>>,
 }
 
@@ -182,18 +183,11 @@ impl PayloadChannel {
                         } else {
                             let unexpected_message =
                                 InternalMessage::UnexpectedData(Vec::from(message));
-                            if internal_message_sender
-                                .try_send(unexpected_message)
-                                .is_err()
-                            {
-                                return;
-                            }
+                            let _ = internal_message_sender.try_send(unexpected_message);
                         }
                     }
                     PayloadChannelReceiveMessage::Internal(internal_message) => {
-                        if internal_message_sender.try_send(internal_message).is_err() {
-                            return;
-                        }
+                        let _ = internal_message_sender.try_send(internal_message);
                     }
                 }
             });

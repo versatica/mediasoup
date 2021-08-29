@@ -441,7 +441,7 @@ impl DataProducer {
 
 impl DirectDataProducer {
     /// Sends direct messages from the Rust process.
-    pub async fn send<'a>(&self, message: WebRtcMessage<'a>) -> Result<(), NotificationError> {
+    pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<(), NotificationError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner

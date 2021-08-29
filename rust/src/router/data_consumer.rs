@@ -673,7 +673,7 @@ impl DataConsumer {
 
 impl DirectDataConsumer {
     /// Sends direct messages from the Rust process.
-    pub async fn send<'a>(&self, message: WebRtcMessage<'a>) -> Result<(), RequestError> {
+    pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<(), RequestError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner

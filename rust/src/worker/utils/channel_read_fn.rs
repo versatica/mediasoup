@@ -78,6 +78,7 @@ where
     }
 }
 
+#[allow(clippy::type_complexity)]
 pub(super) struct PayloadChannelReadCallback(
     Box<dyn (FnMut(UvAsyncT) -> Option<(Vec<u8>, Vec<u8>)>) + Send + 'static>,
 );
