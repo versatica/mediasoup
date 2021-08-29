@@ -25,6 +25,8 @@ pub(super) enum InternalMessage {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum PayloadChannelReceiveMessage {
+    #[serde(rename_all = "camelCase")]
+    Notification { target_id: SubscriptionTarget },
     ResponseSuccess {
         id: u32,
         accepted: bool,
@@ -35,8 +37,6 @@ enum PayloadChannelReceiveMessage {
         error: Value,
         reason: String,
     },
-    #[serde(rename_all = "camelCase")]
-    Notification { target_id: SubscriptionTarget },
     /// Unknown data
     #[serde(skip)]
     Internal(InternalMessage),
@@ -134,6 +134,11 @@ impl PayloadChannel {
                 trace!("received raw message: {}", String::from_utf8_lossy(message));
 
                 match deserialize_message(message) {
+                    PayloadChannelReceiveMessage::Notification { target_id } => {
+                        trace!("received notification payload of {} bytes", payload.len());
+
+                        event_handlers.call_callbacks_with_two_values(&target_id, message, payload);
+                    }
                     PayloadChannelReceiveMessage::ResponseSuccess {
                         id,
                         accepted: _,
@@ -163,11 +168,6 @@ impl PayloadChannel {
                                 id,
                             );
                         }
-                    }
-                    PayloadChannelReceiveMessage::Notification { target_id } => {
-                        trace!("received notification payload of {} bytes", payload.len());
-
-                        event_handlers.call_callbacks_with_two_values(&target_id, message, payload);
                     }
                     PayloadChannelReceiveMessage::Internal(internal_message) => {
                         let _ = internal_message_sender.try_send(internal_message);
