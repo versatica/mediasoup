@@ -105,7 +105,7 @@ fn consume_data_succeeds() {
             .on_new_data_consumer({
                 let new_data_consumer_count = Arc::clone(&new_data_consumer_count);
 
-                Box::new(move |_data_consumer| {
+                Arc::new(move |_data_consumer| {
                     new_data_consumer_count.fetch_add(1, Ordering::SeqCst);
                 })
             })
@@ -316,7 +316,7 @@ fn consume_data_on_direct_transport_succeeds() {
             .on_new_data_consumer({
                 let new_data_consumer_count = Arc::clone(&new_data_consumer_count);
 
-                Box::new(move |_data_consumer| {
+                Arc::new(move |_data_consumer| {
                     new_data_consumer_count.fetch_add(1, Ordering::SeqCst);
                 })
             })

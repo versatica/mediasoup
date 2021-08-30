@@ -355,8 +355,8 @@ impl WeakPipeTransportPair {
 
 #[derive(Default)]
 struct Handlers {
-    new_transport: Bag<Box<dyn Fn(NewTransport<'_>) + Send + Sync>>,
-    new_rtp_observer: Bag<Box<dyn Fn(NewRtpObserver<'_>) + Send + Sync>>,
+    new_transport: Bag<Arc<dyn Fn(NewTransport<'_>) + Send + Sync>>,
+    new_rtp_observer: Bag<Arc<dyn Fn(NewRtpObserver<'_>) + Send + Sync>>,
     worker_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -1317,7 +1317,7 @@ impl Router {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.new_transport.add(Box::new(callback))
+        self.inner.handlers.new_transport.add(Arc::new(callback))
     }
 
     /// Callback is called when a new RTP observer is created.
@@ -1325,7 +1325,7 @@ impl Router {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.new_rtp_observer.add(Box::new(callback))
+        self.inner.handlers.new_rtp_observer.add(Arc::new(callback))
     }
 
     /// Callback is called when the worker this router belongs to is closed for whatever reason.
@@ -1468,7 +1468,7 @@ impl Router {
         {
             let producers_weak = Arc::downgrade(&self.inner.producers);
             transport
-                .on_new_producer(Box::new(move |producer| {
+                .on_new_producer(Arc::new(move |producer| {
                     let producer_id = producer.id();
                     if let Some(producers) = producers_weak.upgrade() {
                         producers.write().insert(producer_id, producer.downgrade());
@@ -1489,7 +1489,7 @@ impl Router {
         {
             let data_producers_weak = Arc::downgrade(&self.inner.data_producers);
             transport
-                .on_new_data_producer(Box::new(move |data_producer| {
+                .on_new_data_producer(Arc::new(move |data_producer| {
                     let data_producer_id = data_producer.id();
                     if let Some(data_producers) = data_producers_weak.upgrade() {
                         data_producers

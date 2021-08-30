@@ -86,7 +86,7 @@ fn transport_1_produce_data_succeeds() {
             .on_new_data_producer({
                 let new_data_producer_count = Arc::clone(&new_data_producer_count);
 
-                Box::new(move |_data_producer| {
+                Arc::new(move |_data_producer| {
                     new_data_producer_count.fetch_add(1, Ordering::SeqCst);
                 })
             })
@@ -159,7 +159,7 @@ fn transport_2_produce_data_succeeds() {
             .on_new_data_producer({
                 let new_data_producer_count = Arc::clone(&new_data_producer_count);
 
-                Box::new(move |_data_producer| {
+                Arc::new(move |_data_producer| {
                     new_data_producer_count.fetch_add(1, Ordering::SeqCst);
                 })
             })

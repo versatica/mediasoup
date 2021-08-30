@@ -269,7 +269,7 @@ pub enum CreateRouterError {
 
 #[derive(Default)]
 struct Handlers {
-    new_router: Bag<Box<dyn Fn(&Router) + Send + Sync>>,
+    new_router: Bag<Arc<dyn Fn(&Router) + Send + Sync>, Router>,
     #[allow(clippy::type_complexity)]
     dead: BagOnce<Box<dyn FnOnce(Result<(), ExitError>) + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
@@ -625,16 +625,14 @@ impl Worker {
             self.clone(),
         );
 
-        self.inner.handlers.new_router.call(|callback| {
-            callback(&router);
-        });
+        self.inner.handlers.new_router.call_simple(&router);
 
         Ok(router)
     }
 
     /// Callback is called when a new router is created.
     pub fn on_new_router<F: Fn(&Router) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.new_router.add(Box::new(callback))
+        self.inner.handlers.new_router.add(Arc::new(callback))
     }
 
     /// Callback is called when the worker thread unexpectedly dies.

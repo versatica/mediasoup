@@ -183,9 +183,9 @@ enum PayloadNotification {
 
 #[derive(Default)]
 struct Handlers {
-    message: Bag<Box<dyn Fn(&WebRtcMessage<'_>) + Send + Sync>>,
-    sctp_send_buffer_full: Bag<Box<dyn Fn() + Send + Sync>>,
-    buffered_amount_low: Bag<Box<dyn Fn(u32) + Send + Sync>>,
+    message: Bag<Arc<dyn Fn(&WebRtcMessage<'_>) + Send + Sync>>,
+    sctp_send_buffer_full: Bag<Arc<dyn Fn() + Send + Sync>>,
+    buffered_amount_low: Bag<Arc<dyn Fn(u32) + Send + Sync>>,
     data_producer_close: BagOnce<Box<dyn FnOnce() + Send>>,
     transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
@@ -588,7 +588,7 @@ impl DataConsumer {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner().handlers.message.add(Box::new(callback))
+        self.inner().handlers.message.add(Arc::new(callback))
     }
 
     /// Callback is called when a message could not be sent because the SCTP send buffer was full.
@@ -599,7 +599,7 @@ impl DataConsumer {
         self.inner()
             .handlers
             .sctp_send_buffer_full
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Emitted when the underlying SCTP association buffered bytes drop down to the value set with
@@ -614,7 +614,7 @@ impl DataConsumer {
         self.inner()
             .handlers
             .buffered_amount_low
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the associated data producer is closed for whatever reason. The data

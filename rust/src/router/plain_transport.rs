@@ -191,14 +191,14 @@ pub struct PlainTransportRemoteParameters {
 
 #[derive(Default)]
 struct Handlers {
-    new_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
-    new_consumer: Bag<Box<dyn Fn(&Consumer) + Send + Sync>>,
-    new_data_producer: Bag<Box<dyn Fn(&DataProducer) + Send + Sync>>,
-    new_data_consumer: Bag<Box<dyn Fn(&DataConsumer) + Send + Sync>>,
-    tuple: Bag<Box<dyn Fn(&TransportTuple) + Send + Sync>>,
-    rtcp_tuple: Bag<Box<dyn Fn(&TransportTuple) + Send + Sync>>,
-    sctp_state_change: Bag<Box<dyn Fn(SctpState) + Send + Sync>>,
-    trace: Bag<Box<dyn Fn(&TransportTraceEventData) + Send + Sync>>,
+    new_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
+    new_consumer: Bag<Arc<dyn Fn(&Consumer) + Send + Sync>, Consumer>,
+    new_data_producer: Bag<Arc<dyn Fn(&DataProducer) + Send + Sync>, DataProducer>,
+    new_data_consumer: Bag<Arc<dyn Fn(&DataConsumer) + Send + Sync>, DataConsumer>,
+    tuple: Bag<Arc<dyn Fn(&TransportTuple) + Send + Sync>, TransportTuple>,
+    rtcp_tuple: Bag<Arc<dyn Fn(&TransportTuple) + Send + Sync>, TransportTuple>,
+    sctp_state_change: Bag<Arc<dyn Fn(SctpState) + Send + Sync>>,
+    trace: Bag<Arc<dyn Fn(&TransportTraceEventData) + Send + Sync>, TransportTraceEventData>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -323,9 +323,7 @@ impl Transport for PlainTransport {
             .produce_impl(producer_options, TransportType::Plain)
             .await?;
 
-        self.inner.handlers.new_producer.call(|callback| {
-            callback(&producer);
-        });
+        self.inner.handlers.new_producer.call_simple(&producer);
 
         Ok(producer)
     }
@@ -337,9 +335,7 @@ impl Transport for PlainTransport {
             .consume_impl(consumer_options, TransportType::Plain, false)
             .await?;
 
-        self.inner.handlers.new_consumer.call(|callback| {
-            callback(&consumer);
-        });
+        self.inner.handlers.new_consumer.call_simple(&consumer);
 
         Ok(consumer)
     }
@@ -358,9 +354,10 @@ impl Transport for PlainTransport {
             )
             .await?;
 
-        self.inner.handlers.new_data_producer.call(|callback| {
-            callback(&data_producer);
-        });
+        self.inner
+            .handlers
+            .new_data_producer
+            .call_simple(&data_producer);
 
         Ok(data_producer)
     }
@@ -379,9 +376,10 @@ impl Transport for PlainTransport {
             )
             .await?;
 
-        self.inner.handlers.new_data_consumer.call(|callback| {
-            callback(&data_consumer);
-        });
+        self.inner
+            .handlers
+            .new_data_consumer
+            .call_simple(&data_consumer);
 
         Ok(data_consumer)
     }
@@ -397,35 +395,35 @@ impl Transport for PlainTransport {
 
     fn on_new_producer(
         &self,
-        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_producer.add(callback)
     }
 
     fn on_new_consumer(
         &self,
-        callback: Box<dyn Fn(&Consumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Consumer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_consumer.add(callback)
     }
 
     fn on_new_data_producer(
         &self,
-        callback: Box<dyn Fn(&DataProducer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataProducer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_data_producer.add(callback)
     }
 
     fn on_new_data_consumer(
         &self,
-        callback: Box<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_data_consumer.add(callback)
     }
 
     fn on_trace(
         &self,
-        callback: Box<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.trace.add(callback)
     }
@@ -525,16 +523,12 @@ impl PlainTransport {
                         Notification::Tuple { tuple } => {
                             *data.tuple.lock() = tuple;
 
-                            handlers.tuple.call(|callback| {
-                                callback(&tuple);
-                            });
+                            handlers.tuple.call_simple(&tuple);
                         }
                         Notification::RtcpTuple { rtcp_tuple } => {
                             data.rtcp_tuple.lock().replace(rtcp_tuple);
 
-                            handlers.rtcp_tuple.call(|callback| {
-                                callback(&rtcp_tuple);
-                            });
+                            handlers.rtcp_tuple.call_simple(&rtcp_tuple);
                         }
                         Notification::SctpStateChange { sctp_state } => {
                             data.sctp_state.lock().replace(sctp_state);
@@ -544,9 +538,7 @@ impl PlainTransport {
                             });
                         }
                         Notification::Trace(trace_event_data) => {
-                            handlers.trace.call(|callback| {
-                                callback(&trace_event_data);
-                            });
+                            handlers.trace.call_simple(&trace_event_data);
                         }
                     },
                     Err(error) => {
@@ -798,7 +790,7 @@ impl PlainTransport {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.tuple.add(Box::new(callback))
+        self.inner.handlers.tuple.add(Arc::new(callback))
     }
 
     /// Callback is called after the remote RTCP origin has been discovered. Only if `comedia` mode
@@ -807,7 +799,7 @@ impl PlainTransport {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.rtcp_tuple.add(Box::new(callback))
+        self.inner.handlers.rtcp_tuple.add(Arc::new(callback))
     }
 
     /// Callback is called when the transport SCTP state changes.
@@ -818,7 +810,7 @@ impl PlainTransport {
         self.inner
             .handlers
             .sctp_state_change
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Downgrade `PlainTransport` to [`WeakPlainTransport`] instance.

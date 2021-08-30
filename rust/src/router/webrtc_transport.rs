@@ -231,15 +231,15 @@ pub struct WebRtcTransportRemoteParameters {
 
 #[derive(Default)]
 struct Handlers {
-    new_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
-    new_consumer: Bag<Box<dyn Fn(&Consumer) + Send + Sync>>,
-    new_data_producer: Bag<Box<dyn Fn(&DataProducer) + Send + Sync>>,
-    new_data_consumer: Bag<Box<dyn Fn(&DataConsumer) + Send + Sync>>,
-    ice_state_change: Bag<Box<dyn Fn(IceState) + Send + Sync>>,
-    ice_selected_tuple_change: Bag<Box<dyn Fn(&TransportTuple) + Send + Sync>>,
-    dtls_state_change: Bag<Box<dyn Fn(DtlsState) + Send + Sync>>,
-    sctp_state_change: Bag<Box<dyn Fn(SctpState) + Send + Sync>>,
-    trace: Bag<Box<dyn Fn(&TransportTraceEventData) + Send + Sync>>,
+    new_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
+    new_consumer: Bag<Arc<dyn Fn(&Consumer) + Send + Sync>, Consumer>,
+    new_data_producer: Bag<Arc<dyn Fn(&DataProducer) + Send + Sync>, DataProducer>,
+    new_data_consumer: Bag<Arc<dyn Fn(&DataConsumer) + Send + Sync>, DataConsumer>,
+    ice_state_change: Bag<Arc<dyn Fn(IceState) + Send + Sync>>,
+    ice_selected_tuple_change: Bag<Arc<dyn Fn(&TransportTuple) + Send + Sync>, TransportTuple>,
+    dtls_state_change: Bag<Arc<dyn Fn(DtlsState) + Send + Sync>>,
+    sctp_state_change: Bag<Arc<dyn Fn(SctpState) + Send + Sync>>,
+    trace: Bag<Arc<dyn Fn(&TransportTraceEventData) + Send + Sync>, TransportTraceEventData>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -378,9 +378,7 @@ impl Transport for WebRtcTransport {
             .produce_impl(producer_options, TransportType::WebRtc)
             .await?;
 
-        self.inner.handlers.new_producer.call(|callback| {
-            callback(&producer);
-        });
+        self.inner.handlers.new_producer.call_simple(&producer);
 
         Ok(producer)
     }
@@ -392,9 +390,7 @@ impl Transport for WebRtcTransport {
             .consume_impl(consumer_options, TransportType::WebRtc, false)
             .await?;
 
-        self.inner.handlers.new_consumer.call(|callback| {
-            callback(&consumer);
-        });
+        self.inner.handlers.new_consumer.call_simple(&consumer);
 
         Ok(consumer)
     }
@@ -413,9 +409,10 @@ impl Transport for WebRtcTransport {
             )
             .await?;
 
-        self.inner.handlers.new_data_producer.call(|callback| {
-            callback(&data_producer);
-        });
+        self.inner
+            .handlers
+            .new_data_producer
+            .call_simple(&data_producer);
 
         Ok(data_producer)
     }
@@ -434,9 +431,10 @@ impl Transport for WebRtcTransport {
             )
             .await?;
 
-        self.inner.handlers.new_data_consumer.call(|callback| {
-            callback(&data_consumer);
-        });
+        self.inner
+            .handlers
+            .new_data_consumer
+            .call_simple(&data_consumer);
 
         Ok(data_consumer)
     }
@@ -452,35 +450,35 @@ impl Transport for WebRtcTransport {
 
     fn on_new_producer(
         &self,
-        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_producer.add(callback)
     }
 
     fn on_new_consumer(
         &self,
-        callback: Box<dyn Fn(&Consumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Consumer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_consumer.add(callback)
     }
 
     fn on_new_data_producer(
         &self,
-        callback: Box<dyn Fn(&DataProducer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataProducer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_data_producer.add(callback)
     }
 
     fn on_new_data_consumer(
         &self,
-        callback: Box<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_data_consumer.add(callback)
     }
 
     fn on_trace(
         &self,
-        callback: Box<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.trace.add(callback)
     }
@@ -585,9 +583,9 @@ impl WebRtcTransport {
                         }
                         Notification::IceSelectedTupleChange { ice_selected_tuple } => {
                             data.ice_selected_tuple.lock().replace(ice_selected_tuple);
-                            handlers.ice_selected_tuple_change.call(|callback| {
-                                callback(&ice_selected_tuple);
-                            });
+                            handlers
+                                .ice_selected_tuple_change
+                                .call_simple(&ice_selected_tuple);
                         }
                         Notification::DtlsStateChange {
                             dtls_state,
@@ -611,9 +609,7 @@ impl WebRtcTransport {
                             });
                         }
                         Notification::Trace(trace_event_data) => {
-                            handlers.trace.call(|callback| {
-                                callback(&trace_event_data);
-                            });
+                            handlers.trace.call_simple(&trace_event_data);
                         }
                     },
                     Err(error) => {
@@ -821,7 +817,7 @@ impl WebRtcTransport {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.ice_state_change.add(Box::new(callback))
+        self.inner.handlers.ice_state_change.add(Arc::new(callback))
     }
 
     /// Callback is called after ICE state becomes `Completed` and when the ICE selected tuple
@@ -833,7 +829,7 @@ impl WebRtcTransport {
         self.inner
             .handlers
             .ice_selected_tuple_change
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the transport DTLS state changes.
@@ -844,7 +840,7 @@ impl WebRtcTransport {
         self.inner
             .handlers
             .dtls_state_change
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the transport SCTP state changes.
@@ -855,7 +851,7 @@ impl WebRtcTransport {
         self.inner
             .handlers
             .sctp_state_change
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Downgrade `WebRtcTransport` to [`WeakWebRtcTransport`] instance.

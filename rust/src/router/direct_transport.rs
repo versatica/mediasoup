@@ -111,12 +111,12 @@ pub struct DirectTransportStat {
 
 #[derive(Default)]
 struct Handlers {
-    rtcp: Bag<Box<dyn Fn(&[u8]) + Send + Sync>>,
-    new_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
-    new_consumer: Bag<Box<dyn Fn(&Consumer) + Send + Sync>>,
-    new_data_producer: Bag<Box<dyn Fn(&DataProducer) + Send + Sync>>,
-    new_data_consumer: Bag<Box<dyn Fn(&DataConsumer) + Send + Sync>>,
-    trace: Bag<Box<dyn Fn(&TransportTraceEventData) + Send + Sync>>,
+    rtcp: Bag<Arc<dyn Fn(&[u8]) + Send + Sync>>,
+    new_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
+    new_consumer: Bag<Arc<dyn Fn(&Consumer) + Send + Sync>, Consumer>,
+    new_data_producer: Bag<Arc<dyn Fn(&DataProducer) + Send + Sync>, DataProducer>,
+    new_data_consumer: Bag<Arc<dyn Fn(&DataConsumer) + Send + Sync>, DataConsumer>,
+    trace: Bag<Arc<dyn Fn(&TransportTraceEventData) + Send + Sync>, TransportTraceEventData>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -254,9 +254,7 @@ impl Transport for DirectTransport {
             .produce_impl(producer_options, TransportType::Direct)
             .await?;
 
-        self.inner.handlers.new_producer.call(|callback| {
-            callback(&producer);
-        });
+        self.inner.handlers.new_producer.call_simple(&producer);
 
         Ok(producer)
     }
@@ -271,9 +269,7 @@ impl Transport for DirectTransport {
             .consume_impl(consumer_options, TransportType::Direct, false)
             .await?;
 
-        self.inner.handlers.new_consumer.call(|callback| {
-            callback(&consumer);
-        });
+        self.inner.handlers.new_consumer.call_simple(&consumer);
 
         Ok(consumer)
     }
@@ -295,9 +291,10 @@ impl Transport for DirectTransport {
             )
             .await?;
 
-        self.inner.handlers.new_data_producer.call(|callback| {
-            callback(&data_producer);
-        });
+        self.inner
+            .handlers
+            .new_data_producer
+            .call_simple(&data_producer);
 
         Ok(data_producer)
     }
@@ -319,9 +316,10 @@ impl Transport for DirectTransport {
             )
             .await?;
 
-        self.inner.handlers.new_data_consumer.call(|callback| {
-            callback(&data_consumer);
-        });
+        self.inner
+            .handlers
+            .new_data_consumer
+            .call_simple(&data_consumer);
 
         Ok(data_consumer)
     }
@@ -337,35 +335,35 @@ impl Transport for DirectTransport {
 
     fn on_new_producer(
         &self,
-        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_producer.add(callback)
     }
 
     fn on_new_consumer(
         &self,
-        callback: Box<dyn Fn(&Consumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Consumer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_consumer.add(callback)
     }
 
     fn on_new_data_producer(
         &self,
-        callback: Box<dyn Fn(&DataProducer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataProducer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_data_producer.add(callback)
     }
 
     fn on_new_data_consumer(
         &self,
-        callback: Box<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_data_consumer.add(callback)
     }
 
     fn on_trace(
         &self,
-        callback: Box<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.trace.add(callback)
     }
@@ -465,9 +463,7 @@ impl DirectTransport {
                 match serde_json::from_slice::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::Trace(trace_event_data) => {
-                            handlers.trace.call(|callback| {
-                                callback(&trace_event_data);
-                            });
+                            handlers.trace.call_simple(&trace_event_data);
                         }
                     },
                     Err(error) => {
@@ -545,7 +541,7 @@ impl DirectTransport {
 
     /// Callback is called when the direct transport receives a RTCP packet from its router.
     pub fn on_rtcp<F: Fn(&[u8]) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.rtcp.add(Box::new(callback))
+        self.inner.handlers.rtcp.add(Arc::new(callback))
     }
 
     /// Downgrade `DirectTransport` to [`WeakDirectTransport`] instance.

@@ -229,7 +229,7 @@ fn produce_succeeds() {
                 .on_new_producer({
                     let new_producers_count = Arc::clone(&new_producers_count);
 
-                    Box::new(move |_producer| {
+                    Arc::new(move |_producer| {
                         new_producers_count.fetch_add(1, Ordering::SeqCst);
                     })
                 })
@@ -301,7 +301,7 @@ fn produce_succeeds() {
                 .on_new_producer({
                     let new_producers_count = Arc::clone(&new_producers_count);
 
-                    Box::new(move |_producer| {
+                    Arc::new(move |_producer| {
                         new_producers_count.fetch_add(1, Ordering::SeqCst);
                     })
                 })
