@@ -50,12 +50,14 @@ namespace RTC
 					return 0u;
 			}
 		}
+		double GetPacketLoss() const;
 		void IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet);
 		void SetMaxIncomingBitrate(uint32_t bitrate);
 
 	private:
 		void SendTransportCcFeedback();
 		void MaySendLimitationRembFeedback();
+		void UpdatePacketLoss(double packetLoss);
 
 		/* Pure virtual methods inherited from webrtc::RemoteBitrateEstimator::Listener. */
 	public:
@@ -84,6 +86,8 @@ namespace RTC
 		uint32_t maxIncomingBitrate{ 0u };
 		uint64_t limitationRembSentAtMs{ 0u };
 		uint8_t unlimitedRembCounter{ 0u };
+		std::vector<double> packetLossHistory;
+		double packetLoss{ 0 };
 	};
 } // namespace RTC
 

@@ -76,10 +76,12 @@ namespace RTC
 			return this->bitrates;
 		}
 		uint32_t GetAvailableBitrate() const;
+		double GetPacketLoss() const;
 		void RescheduleNextAvailableBitrateEvent();
 
 	private:
 		void MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate);
+		void UpdatePacketLoss(double packetLoss);
 
 		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
@@ -113,6 +115,8 @@ namespace RTC
 		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		RTC::TrendCalculator desiredBitrateTrend;
+		std::vector<double> packetLossHistory;
+		double packetLoss{ 0 };
 	};
 } // namespace RTC
 
