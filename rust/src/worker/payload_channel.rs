@@ -308,7 +308,7 @@ impl PayloadChannel {
         })
     }
 
-    pub(crate) async fn notify<N>(
+    pub(crate) fn notify<N>(
         &self,
         notification: N,
         payload: Vec<u8>,

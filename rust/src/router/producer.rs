@@ -765,20 +765,17 @@ impl Producer {
 
 impl DirectProducer {
     /// Sends a RTP packet from the Rust process.
-    pub async fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
-        self.inner
-            .payload_channel
-            .notify(
-                ProducerSendNotification {
-                    internal: ProducerInternal {
-                        router_id: self.inner.transport.router_id(),
-                        transport_id: self.inner.transport.id(),
-                        producer_id: self.inner.id,
-                    },
+    pub fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
+        self.inner.payload_channel.notify(
+            ProducerSendNotification {
+                internal: ProducerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    producer_id: self.inner.id,
                 },
-                rtp_packet,
-            )
-            .await
+            },
+            rtp_packet,
+        )
     }
 }
 

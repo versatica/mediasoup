@@ -534,16 +534,13 @@ impl DirectTransport {
     /// Send a RTCP packet from the Rust process.
     ///
     /// * `rtcp_packet` - Bytes containing a valid RTCP packet (can be a compound packet).
-    pub async fn send_rtcp(&self, rtcp_packet: Vec<u8>) -> Result<(), NotificationError> {
-        self.inner
-            .payload_channel
-            .notify(
-                TransportSendRtcpNotification {
-                    internal: self.get_internal(),
-                },
-                rtcp_packet,
-            )
-            .await
+    pub fn send_rtcp(&self, rtcp_packet: Vec<u8>) -> Result<(), NotificationError> {
+        self.inner.payload_channel.notify(
+            TransportSendRtcpNotification {
+                internal: self.get_internal(),
+            },
+            rtcp_packet,
+        )
     }
 
     /// Callback is called when the direct transport receives a RTCP packet from its router.

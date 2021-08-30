@@ -247,7 +247,6 @@ fn send_succeeds() {
 
             direct_data_producer
                 .send(message)
-                .await
                 .expect("Failed to send message");
 
             if id == num_messages {
