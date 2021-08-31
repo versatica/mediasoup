@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -8,9 +8,9 @@
  */
 
 #include <openssl/ocsp.h>
-#include "../ssl_locl.h"
+#include "../ssl_local.h"
 #include "internal/cryptlib.h"
-#include "statem_locl.h"
+#include "statem_local.h"
 
 EXT_RETURN tls_construct_ctos_renegotiate(SSL *s, WPACKET *pkt,
                                           unsigned int context, X509 *x,
@@ -816,6 +816,7 @@ EXT_RETURN tls_construct_ctos_early_data(SSL *s, WPACKET *pkt,
         OPENSSL_free(s->psksession_id);
         s->psksession_id = OPENSSL_memdup(id, idlen);
         if (s->psksession_id == NULL) {
+            s->psksession_id_len = 0;
             SSLfatal(s, SSL_AD_INTERNAL_ERROR,
                      SSL_F_TLS_CONSTRUCT_CTOS_EARLY_DATA, ERR_R_INTERNAL_ERROR);
             return EXT_RETURN_FAIL;
@@ -1214,7 +1215,49 @@ EXT_RETURN tls_construct_ctos_post_handshake_auth(SSL *s, WPACKET *pkt,
 #endif
 }
 
+#ifndef OPENSSL_NO_QUIC
+EXT_RETURN tls_construct_ctos_quic_transport_params_draft(SSL *s, WPACKET *pkt,
+                                                          unsigned int context, X509 *x,
+                                                          size_t chainidx)
+{
+    if (s->quic_transport_version == TLSEXT_TYPE_quic_transport_parameters
+            || s->ext.quic_transport_params == NULL
+            || s->ext.quic_transport_params_len == 0) {
+        return EXT_RETURN_NOT_SENT;
+    }
 
+    if (!WPACKET_put_bytes_u16(pkt, TLSEXT_TYPE_quic_transport_parameters_draft)
+        || !WPACKET_sub_memcpy_u16(pkt, s->ext.quic_transport_params,
+                                   s->ext.quic_transport_params_len)) {
+        SSLfatal(s, SSL_AD_INTERNAL_ERROR,
+                 SSL_F_TLS_CONSTRUCT_CTOS_QUIC_TRANSPORT_PARAMS_DRAFT, ERR_R_INTERNAL_ERROR);
+        return EXT_RETURN_FAIL;
+    }
+
+    return EXT_RETURN_SENT;
+}
+
+EXT_RETURN tls_construct_ctos_quic_transport_params(SSL *s, WPACKET *pkt,
+                                                    unsigned int context, X509 *x,
+                                                    size_t chainidx)
+{
+    if (s->quic_transport_version == TLSEXT_TYPE_quic_transport_parameters_draft
+            || s->ext.quic_transport_params == NULL
+            || s->ext.quic_transport_params_len == 0) {
+        return EXT_RETURN_NOT_SENT;
+    }
+
+    if (!WPACKET_put_bytes_u16(pkt, TLSEXT_TYPE_quic_transport_parameters)
+        || !WPACKET_sub_memcpy_u16(pkt, s->ext.quic_transport_params,
+                                   s->ext.quic_transport_params_len)) {
+        SSLfatal(s, SSL_AD_INTERNAL_ERROR,
+                 SSL_F_TLS_CONSTRUCT_CTOS_QUIC_TRANSPORT_PARAMS, ERR_R_INTERNAL_ERROR);
+        return EXT_RETURN_FAIL;
+    }
+
+    return EXT_RETURN_SENT;
+}
+#endif
 /*
  * Parse the server's renegotiation binding and abort if it's not right
  */
@@ -1375,6 +1418,7 @@ int tls_parse_stoc_ec_pt_formats(SSL *s, PACKET *pkt, unsigned int context,
         OPENSSL_free(s->ext.peer_ecpointformats);
         s->ext.peer_ecpointformats = OPENSSL_malloc(ecpointformats_len);
         if (s->ext.peer_ecpointformats == NULL) {
+            s->ext.peer_ecpointformats_len = 0;
             SSLfatal(s, SSL_AD_INTERNAL_ERROR,
                      SSL_F_TLS_PARSE_STOC_EC_PT_FORMATS, ERR_R_INTERNAL_ERROR);
             return 0;
@@ -1492,8 +1536,13 @@ int tls_parse_stoc_sct(SSL *s, PACKET *pkt, unsigned int context, X509 *x,
         s->ext.scts_len = (uint16_t)size;
         if (size > 0) {
             s->ext.scts = OPENSSL_malloc(size);
-            if (s->ext.scts == NULL
-                    || !PACKET_copy_bytes(pkt, s->ext.scts, size)) {
+            if (s->ext.scts == NULL) {
+                s->ext.scts_len = 0;
+                SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_F_TLS_PARSE_STOC_SCT,
+                         ERR_R_MALLOC_FAILURE);
+                return 0;
+            }
+            if (!PACKET_copy_bytes(pkt, s->ext.scts, size)) {
                 SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_F_TLS_PARSE_STOC_SCT,
                          ERR_R_INTERNAL_ERROR);
                 return 0;
@@ -1592,6 +1641,7 @@ int tls_parse_stoc_npn(SSL *s, PACKET *pkt, unsigned int context, X509 *x,
     OPENSSL_free(s->ext.npn);
     s->ext.npn = OPENSSL_malloc(selected_len);
     if (s->ext.npn == NULL) {
+        s->ext.npn_len = 0;
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_F_TLS_PARSE_STOC_NPN,
                  ERR_R_INTERNAL_ERROR);
         return 0;
@@ -1632,6 +1682,7 @@ int tls_parse_stoc_alpn(SSL *s, PACKET *pkt, unsigned int context, X509 *x,
     OPENSSL_free(s->s3->alpn_selected);
     s->s3->alpn_selected = OPENSSL_malloc(len);
     if (s->s3->alpn_selected == NULL) {
+        s->s3->alpn_selected_len = 0;
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_F_TLS_PARSE_STOC_ALPN,
                  ERR_R_INTERNAL_ERROR);
         return 0;
@@ -1663,6 +1714,7 @@ int tls_parse_stoc_alpn(SSL *s, PACKET *pkt, unsigned int context, X509 *x,
         s->session->ext.alpn_selected =
             OPENSSL_memdup(s->s3->alpn_selected, s->s3->alpn_selected_len);
         if (s->session->ext.alpn_selected == NULL) {
+            s->session->ext.alpn_selected_len = 0;
             SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_F_TLS_PARSE_STOC_ALPN,
                      ERR_R_INTERNAL_ERROR);
             return 0;
@@ -1912,6 +1964,18 @@ int tls_parse_stoc_early_data(SSL *s, PACKET *pkt, unsigned int context,
             return 0;
         }
 
+#ifndef OPENSSL_NO_QUIC
+        /*
+         * QUIC server must send 0xFFFFFFFF or it's a PROTOCOL_VIOLATION
+         * per draft-ietf-quic-tls-27 S4.5
+         */
+        if (s->quic_method != NULL && max_early_data != 0xFFFFFFFF) {
+            SSLfatal(s, SSL_AD_ILLEGAL_PARAMETER, SSL_F_TLS_PARSE_STOC_EARLY_DATA,
+                     SSL_R_INVALID_MAX_EARLY_DATA);
+            return 0;
+        }
+#endif
+
         s->session->ext.max_early_data = max_early_data;
 
         return 1;
@@ -1999,3 +2063,40 @@ int tls_parse_stoc_psk(SSL *s, PACKET *pkt, unsigned int context, X509 *x,
 
     return 1;
 }
+#ifndef OPENSSL_NO_QUIC
+int tls_parse_stoc_quic_transport_params_draft(SSL *s, PACKET *pkt,
+                                               unsigned int context, X509 *x,
+                                               size_t chainidx)
+{
+    OPENSSL_free(s->ext.peer_quic_transport_params_draft);
+    s->ext.peer_quic_transport_params_draft = NULL;
+    s->ext.peer_quic_transport_params_draft_len = 0;
+
+    if (!PACKET_memdup(pkt,
+                       &s->ext.peer_quic_transport_params_draft,
+                       &s->ext.peer_quic_transport_params_draft_len)) {
+        SSLfatal(s, SSL_AD_INTERNAL_ERROR,
+                 SSL_F_TLS_PARSE_STOC_QUIC_TRANSPORT_PARAMS_DRAFT, ERR_R_INTERNAL_ERROR);
+        return 0;
+    }
+    return 1;
+}
+
+int tls_parse_stoc_quic_transport_params(SSL *s, PACKET *pkt, unsigned int context,
+                                         X509 *x, size_t chainidx)
+{
+    OPENSSL_free(s->ext.peer_quic_transport_params);
+    s->ext.peer_quic_transport_params = NULL;
+    s->ext.peer_quic_transport_params_len = 0;
+
+    if (!PACKET_memdup(pkt,
+                       &s->ext.peer_quic_transport_params,
+                       &s->ext.peer_quic_transport_params_len)) {
+        SSLfatal(s, SSL_AD_INTERNAL_ERROR,
+                 SSL_F_TLS_PARSE_STOC_QUIC_TRANSPORT_PARAMS,
+                 ERR_R_INTERNAL_ERROR);
+        return 0;
+    }
+    return 1;
+}
+#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -10,8 +10,8 @@
 #include <string.h>
 #include "internal/nelem.h"
 #include "internal/cryptlib.h"
-#include "../ssl_locl.h"
-#include "statem_locl.h"
+#include "../ssl_local.h"
+#include "statem_local.h"
 #include "internal/cryptlib.h"
 
 static int final_renegotiate(SSL *s, unsigned int context, int sent);
@@ -56,6 +56,11 @@ static int final_sig_algs(SSL *s, unsigned int context, int sent);
 static int final_early_data(SSL *s, unsigned int context, int sent);
 static int final_maxfragmentlen(SSL *s, unsigned int context, int sent);
 static int init_post_handshake_auth(SSL *s, unsigned int context);
+#ifndef OPENSSL_NO_QUIC
+static int init_quic_transport_params(SSL *s, unsigned int context);
+static int final_quic_transport_params_draft(SSL *s, unsigned int context, int sent);
+static int final_quic_transport_params(SSL *s, unsigned int context, int sent);
+#endif
 
 /* Structure to define a built-in extension */
 typedef struct extensions_definition_st {
@@ -94,7 +99,7 @@ typedef struct extensions_definition_st {
 /*
  * Definitions of all built-in extensions. NOTE: Changes in the number or order
  * of these extensions should be mirrored with equivalent changes to the
- * indexes ( TLSEXT_IDX_* ) defined in ssl_locl.h.
+ * indexes ( TLSEXT_IDX_* ) defined in ssl_local.h.
  * Each extension has an initialiser, a client and
  * server side parser and a finaliser. The initialiser is called (if the
  * extension is relevant to the given context) even if we did not see the
@@ -336,6 +341,8 @@ static const EXTENSION_DEFINITION ext_defs[] = {
         tls_construct_stoc_key_share, tls_construct_ctos_key_share,
         final_key_share
     },
+#else
+    INVALID_EXTENSION,
 #endif
     {
         /* Must be after key_share */
@@ -373,6 +380,28 @@ static const EXTENSION_DEFINITION ext_defs[] = {
         tls_construct_certificate_authorities,
         tls_construct_certificate_authorities, NULL,
     },
+#ifndef OPENSSL_NO_QUIC
+    {
+        TLSEXT_TYPE_quic_transport_parameters_draft,
+        SSL_EXT_CLIENT_HELLO | SSL_EXT_TLS1_3_ENCRYPTED_EXTENSIONS
+        | SSL_EXT_TLS_IMPLEMENTATION_ONLY | SSL_EXT_TLS1_3_ONLY,
+        init_quic_transport_params,
+        tls_parse_ctos_quic_transport_params_draft, tls_parse_stoc_quic_transport_params_draft,
+        tls_construct_stoc_quic_transport_params_draft, tls_construct_ctos_quic_transport_params_draft,
+        final_quic_transport_params_draft,
+    },
+    {
+        TLSEXT_TYPE_quic_transport_parameters,
+        SSL_EXT_CLIENT_HELLO | SSL_EXT_TLS1_3_ENCRYPTED_EXTENSIONS
+        | SSL_EXT_TLS_IMPLEMENTATION_ONLY | SSL_EXT_TLS1_3_ONLY,
+        init_quic_transport_params,
+        tls_parse_ctos_quic_transport_params, tls_parse_stoc_quic_transport_params,
+        tls_construct_stoc_quic_transport_params, tls_construct_ctos_quic_transport_params,
+        final_quic_transport_params,
+    },
+#else
+    INVALID_EXTENSION,
+#endif
     {
         /* Must be immediately before pre_shared_key */
         TLSEXT_TYPE_padding,
@@ -949,8 +978,7 @@ static int final_server_name(SSL *s, unsigned int context, int sent)
      * was successful.
      */
     if (s->server) {
-        /* TODO(OpenSSL1.2) revisit !sent case */
-        if (sent && ret == SSL_TLSEXT_ERR_OK && (!s->hit || SSL_IS_TLS13(s))) {
+        if (sent && ret == SSL_TLSEXT_ERR_OK && !s->hit) {
             /* Only store the hostname in the session if we accepted it. */
             OPENSSL_free(s->session->ext.hostname);
             s->session->ext.hostname = OPENSSL_strdup(s->ext.hostname);
@@ -967,7 +995,8 @@ static int final_server_name(SSL *s, unsigned int context, int sent)
      * context, to avoid the confusing situation of having sess_accept_good
      * exceed sess_accept (zero) for the new context.
      */
-    if (SSL_IS_FIRST_HANDSHAKE(s) && s->ctx != s->session_ctx) {
+    if (SSL_IS_FIRST_HANDSHAKE(s) && s->ctx != s->session_ctx
+		    && s->hello_retry_request == SSL_HRR_NONE) {
         tsan_counter(&s->ctx->stats.sess_accept);
         tsan_decr(&s->session_ctx->stats.sess_accept);
     }
@@ -1011,6 +1040,7 @@ static int final_server_name(SSL *s, unsigned int context, int sent)
         /* TLSv1.3 doesn't have warning alerts so we suppress this */
         if (!SSL_IS_TLS13(s))
             ssl3_send_alert(s, SSL3_AL_WARNING, altmp);
+        s->servername_done = 0;
         return 1;
 
     case SSL_TLSEXT_ERR_NOACK:
@@ -1136,6 +1166,7 @@ static int init_sig_algs(SSL *s, unsigned int context)
     /* Clear any signature algorithms extension received */
     OPENSSL_free(s->s3->tmp.peer_sigalgs);
     s->s3->tmp.peer_sigalgs = NULL;
+    s->s3->tmp.peer_sigalgslen = 0;
 
     return 1;
 }
@@ -1145,6 +1176,7 @@ static int init_sig_algs_cert(SSL *s, unsigned int context)
     /* Clear any signature algorithms extension received */
     OPENSSL_free(s->s3->tmp.peer_cert_sigalgs);
     s->s3->tmp.peer_cert_sigalgs = NULL;
+    s->s3->tmp.peer_cert_sigalgslen = 0;
 
     return 1;
 }
@@ -1168,14 +1200,26 @@ static int init_etm(SSL *s, unsigned int context)
 
 static int init_ems(SSL *s, unsigned int context)
 {
-    if (!s->server)
+    if (s->s3->flags & TLS1_FLAGS_RECEIVED_EXTMS) {
         s->s3->flags &= ~TLS1_FLAGS_RECEIVED_EXTMS;
+        s->s3->flags |= TLS1_FLAGS_REQUIRED_EXTMS;
+    }
 
     return 1;
 }
 
 static int final_ems(SSL *s, unsigned int context, int sent)
 {
+    /*
+     * Check extended master secret extension is not dropped on
+     * renegotiation.
+     */
+    if (!(s->s3->flags & TLS1_FLAGS_RECEIVED_EXTMS)
+        && (s->s3->flags & TLS1_FLAGS_REQUIRED_EXTMS)) {
+        SSLfatal(s, SSL_AD_HANDSHAKE_FAILURE, SSL_F_FINAL_EMS,
+                 SSL_R_INCONSISTENT_EXTMS);
+        return 0;
+    }
     if (!s->server && s->hit) {
         /*
          * Check extended master secret extension is consistent with
@@ -1449,7 +1493,7 @@ int tls_psk_do_binder(SSL *s, const EVP_MD *md, const unsigned char *msgstart,
     unsigned char finishedkey[EVP_MAX_MD_SIZE], tmpbinder[EVP_MAX_MD_SIZE];
     unsigned char *early_secret;
 #ifdef CHARSET_EBCDIC
-    static const unsigned char resumption_label[] = { 0x72, 0x65, 0x64, 0x20, 0x62, 0x69, 0x6E, 0x64, 0x65, 0x72, 0x00 };
+    static const unsigned char resumption_label[] = { 0x72, 0x65, 0x73, 0x20, 0x62, 0x69, 0x6E, 0x64, 0x65, 0x72, 0x00 };
     static const unsigned char external_label[]   = { 0x65, 0x78, 0x74, 0x20, 0x62, 0x69, 0x6E, 0x64, 0x65, 0x72, 0x00 };
 #else
     static const unsigned char resumption_label[] = "res binder";
@@ -1701,3 +1745,45 @@ static int init_post_handshake_auth(SSL *s, unsigned int context)
 
     return 1;
 }
+
+#ifndef OPENSSL_NO_QUIC
+static int init_quic_transport_params(SSL *s, unsigned int context)
+{
+    return 1;
+}
+
+static int final_quic_transport_params_draft(SSL *s, unsigned int context,
+                                             int sent)
+{
+    return 1;
+}
+
+static int final_quic_transport_params(SSL *s, unsigned int context, int sent)
+{
+    /* called after final_quic_transport_params_draft */
+    if (SSL_IS_QUIC(s)) {
+        if (s->ext.peer_quic_transport_params_len == 0
+                && s->ext.peer_quic_transport_params_draft_len == 0) {
+            SSLfatal(s, SSL_AD_MISSING_EXTENSION,
+                     SSL_F_FINAL_QUIC_TRANSPORT_PARAMS,
+                     SSL_R_MISSING_QUIC_TRANSPORT_PARAMETERS_EXTENSION);
+            return 0;
+        }
+        /* if we got both, discard the one we can't use */
+        if (s->ext.peer_quic_transport_params_len != 0
+                && s->ext.peer_quic_transport_params_draft_len != 0) {
+            if (s->quic_transport_version == TLSEXT_TYPE_quic_transport_parameters_draft) {
+                OPENSSL_free(s->ext.peer_quic_transport_params);
+                s->ext.peer_quic_transport_params = NULL;
+                s->ext.peer_quic_transport_params_len = 0;
+            } else {
+                OPENSSL_free(s->ext.peer_quic_transport_params_draft);
+                s->ext.peer_quic_transport_params_draft = NULL;
+                s->ext.peer_quic_transport_params_draft_len = 0;
+            }
+        }
+    }
+
+    return 1;
+}
+#endif

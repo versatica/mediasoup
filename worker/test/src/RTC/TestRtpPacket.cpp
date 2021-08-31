@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "helpers.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <cstring> // std::memset()
 #include <string>
 #include <vector>
@@ -130,8 +130,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		auto* clonedPacket = packet->Clone(buffer2);
 
-		delete packet;
-
 		std::memset(buffer, '0', sizeof(buffer));
 
 		REQUIRE(clonedPacket->HasMarker() == false);
@@ -166,6 +164,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
+		delete packet;
 		delete clonedPacket;
 	}
 
@@ -501,6 +500,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0x99, 0xAA, 0xBB, 0xCC,
 			0x00, 0x00, 0x00, 0x04, // 4 padding bytes
 			// Extra buffer
+			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,

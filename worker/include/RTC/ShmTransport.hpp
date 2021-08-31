@@ -1,7 +1,7 @@
 #ifndef MS_RTC_SHM_TRANSPORT_HPP
 #define MS_RTC_SHM_TRANSPORT_HPP
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include "DepLibSfuShm.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"

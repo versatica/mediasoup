@@ -26,7 +26,7 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "handles/Timer.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 
@@ -53,6 +53,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) = 0;

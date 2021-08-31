@@ -4,7 +4,6 @@
 #include "Logger.hpp"
 #include <uv.h>
 #include "Channel/ChannelNotifier.hpp"
-#include <json.hpp>
 
 /* Class variables. */
 

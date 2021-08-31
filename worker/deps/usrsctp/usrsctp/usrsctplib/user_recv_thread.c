@@ -56,8 +56,14 @@
 #endif
 #endif
 #endif
-#if defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__)
-#include <net/route.h>
+#if defined(HAVE_NET_ROUTE_H)
+# include <net/route.h>
+#elif defined(__APPLE__)
+/* Apple SDKs for iOS, tvOS, watchOS, etc. don't ship this header */
+# define RTM_NEWADDR 0xc
+# define RTM_DELADDR 0xd
+# define RTAX_IFA 5
+# define RTAX_MAX 8
 #endif
 /* local macros and datatypes used to get IP addresses system independently */
 #if !defined(IP_PKTINFO) && !defined(IP_RECVDSTADDR)

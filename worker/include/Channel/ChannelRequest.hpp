@@ -2,7 +2,7 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 
@@ -33,6 +33,7 @@ namespace Channel
 			ROUTER_CREATE_PIPE_TRANSPORT,
 			ROUTER_CREATE_SHM_TRANSPORT,
 			ROUTER_CREATE_DIRECT_TRANSPORT,
+			ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
 			ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,
 			TRANSPORT_CLOSE,
 			TRANSPORT_DUMP,

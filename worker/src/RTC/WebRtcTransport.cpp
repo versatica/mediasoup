@@ -121,6 +121,17 @@ namespace RTC
 			}
 		}
 
+		uint16_t port{ 0 };
+		auto jsonPortIt = data.find("port");
+
+		if (jsonPortIt != data.end())
+		{
+			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
+				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
+
+			port = jsonPortIt->get<uint16_t>();
+		}
+
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement{ 0 };
@@ -143,7 +154,11 @@ namespace RTC
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
-					auto* udpSocket = new RTC::UdpSocket(this, listenIp.ip);
+					RTC::UdpSocket* udpSocket;
+					if (port != 0)
+						udpSocket = new RTC::UdpSocket(this, listenIp.ip, port);
+					else
+						udpSocket = new RTC::UdpSocket(this, listenIp.ip);
 
 					this->udpSockets[udpSocket] = listenIp.announcedIp;
 
@@ -164,7 +179,11 @@ namespace RTC
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
-					auto* tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
+					RTC::TcpServer* tcpServer;
+					if (port != 0)
+						tcpServer = new RTC::TcpServer(this, this, listenIp.ip, port);
+					else
+						tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
 
 					this->tcpServers[tcpServer] = listenIp.announcedIp;
 
@@ -732,9 +751,9 @@ namespace RTC
 		}
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
-		if (!this->srtpSendSession->EncryptRtp(&data, &len))
+		if (!this->srtpSendSession->EncryptRtp(&data, &intLen))
 		{
 			if (cb)
 			{
@@ -744,6 +763,8 @@ namespace RTC
 
 			return;
 		}
+
+		auto len = static_cast<size_t>(intLen);
 
 		this->iceServer->GetSelectedTuple()->Send(data, len, cb);
 
@@ -759,7 +780,7 @@ namespace RTC
 			return;
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
@@ -769,8 +790,10 @@ namespace RTC
 			return;
 		}
 
-		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
+		if (!this->srtpSendSession->EncryptRtcp(&data, &intLen))
 			return;
+
+		auto len = static_cast<size_t>(intLen);
 
 		this->iceServer->GetSelectedTuple()->Send(data, len);
 
@@ -786,7 +809,7 @@ namespace RTC
 			return;
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
@@ -796,8 +819,10 @@ namespace RTC
 			return;
 		}
 
-		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
+		if (!this->srtpSendSession->EncryptRtcp(&data, &intLen))
 			return;
+
+		auto len = static_cast<size_t>(intLen);
 
 		this->iceServer->GetSelectedTuple()->Send(data, len);
 
@@ -965,9 +990,11 @@ namespace RTC
 		}
 
 		// Decrypt the SRTP packet.
-		if (!this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
+		auto intLen = static_cast<int>(len);
+
+		if (!this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &intLen))
 		{
-			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
 
 			if (!packet)
 			{
@@ -988,7 +1015,7 @@ namespace RTC
 			return;
 		}
 
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
 
 		if (!packet)
 		{
@@ -1034,10 +1061,12 @@ namespace RTC
 		}
 
 		// Decrypt the SRTCP packet.
-		if (!this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &len))
+		auto intLen = static_cast<int>(len);
+
+		if (!this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &intLen))
 			return;
 
-		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
+		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, static_cast<size_t>(intLen));
 
 		if (!packet)
 		{

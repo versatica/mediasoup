@@ -12,10 +12,9 @@ jobs:
           # - macos-11.0
           # - windows-2019
         node:
-          - 10
           - 12
           - 14
-          - 15
+          - 16
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -32,8 +31,6 @@ jobs:
         with:
           path: |
             ~/.npm
-            worker/deps
-            worker/out
           key: ${{ matrix.os }}-node-${{ hashFiles('**/package.json') }}
           restore-keys: |
             ${{ matrix.os }}-node-

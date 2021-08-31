@@ -9,7 +9,7 @@ import {
 	TransportTraceEventData,
 	SctpState
 } from './Transport';
-import { Consumer, ConsumerOptions } from './Consumer';
+import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 
@@ -27,6 +27,12 @@ export type PipeTransportOptions =
 	 */
 	disableOriginCheck?: boolean;
 	
+	/**
+	 * Fixed port to listen on instead of selecting automatically from Worker's port
+	 * range.
+	 */
+	port?: number;
+
 	/**
 	 * Create a SCTP association. Default false.
 	 */
@@ -96,6 +102,19 @@ export type PipeTransportStat =
 	// PipeTransport specific.
 	disableOriginCheck: boolean;
 	tuple: TransportTuple;
+}
+
+export type PipeConsumerOptions =
+{
+	/**
+	 * The id of the Producer to consume.
+	 */
+	producerId: string;
+
+	/**
+	 * Custom application data.
+	 */
+	appData?: any;
 }
 
 const logger = new Logger('PipeTransport');
@@ -267,7 +286,7 @@ export class PipeTransport extends Transport
 	 *
 	 * @override
 	 */
-	async consume({ producerId, appData = {} }: ConsumerOptions): Promise<Consumer>
+	async consume({ producerId, appData = {} }: PipeConsumerOptions): Promise<Consumer>
 	{
 		logger.debug('consume()');
 

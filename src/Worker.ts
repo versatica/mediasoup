@@ -334,7 +334,7 @@ export class Worker extends EnhancedEventEmitter
 				windowsHide : true
 			});
 
-		this._pid = this._child.pid;
+		this._pid = this._child.pid!;
 
 		this._mslog = logFile; // all msworkers share the same log file
 

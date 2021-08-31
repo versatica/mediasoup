@@ -5,7 +5,7 @@
 #include "Channel/ChannelRequest.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/SctpDictionaries.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
@@ -18,6 +18,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer,

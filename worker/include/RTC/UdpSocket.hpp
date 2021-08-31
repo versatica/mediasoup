@@ -13,12 +13,16 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnUdpSocketPacketReceived(
 			  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) = 0;
 		};
 
 	public:
 		UdpSocket(Listener* listener, std::string& ip);
+		UdpSocket(Listener* listener, std::string& ip, uint16_t port);
 		~UdpSocket() override;
 
 		/* Pure virtual methods inherited from ::UdpSocketHandler. */
@@ -28,6 +32,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		bool fixedPort{ false };
 	};
 } // namespace RTC
 

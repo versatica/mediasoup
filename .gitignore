@@ -29,6 +29,8 @@
 
 # Python generated stuff in Windows.
 /worker/scripts/configure.pyc
+# worker scripts node-modules.
+/worker/scripts/node_modules/
 
 # Vistual Studio generated Stuff.
 /worker/**/Debug/

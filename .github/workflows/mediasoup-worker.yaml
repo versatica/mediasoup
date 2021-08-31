@@ -8,12 +8,6 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - os: ubuntu-16.04
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-16.04
-            cc: clang
-            cxx: clang++
           - os: ubuntu-18.04
             cc: gcc
             cxx: g++
@@ -61,12 +55,11 @@ jobs:
         with:
           path: |
             ~/.npm
-            worker/deps
-            worker/out
           key: ${{ matrix.build.os }}-node-${{matrix.build.cc}}-${{ hashFiles('**/package.json') }}
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
       - run: npm install
+      - run: npm run install-clang-tools
       - run: npm run lint:worker
       - run: npm run test:worker

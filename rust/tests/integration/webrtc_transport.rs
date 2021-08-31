@@ -3,12 +3,13 @@ use mediasoup::data_structures::{
     AppData, DtlsFingerprint, DtlsParameters, DtlsRole, DtlsState, IceCandidateTcpType,
     IceCandidateType, IceRole, IceState, SctpState, TransportListenIp, TransportProtocol,
 };
+use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::rtp_parameters::{
     MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
 };
 use mediasoup::sctp_parameters::{NumSctpStreams, SctpParameters};
-use mediasoup::transport::{Transport, TransportGeneric, TransportTraceEventType};
+use mediasoup::transport::TransportTraceEventType;
 use mediasoup::webrtc_transport::{
     TransportListenIps, WebRtcTransportOptions, WebRtcTransportRemoteParameters,
 };
@@ -247,6 +248,29 @@ fn create_succeeds() {
                 assert_eq!(transport_dump.sctp_state, transport1.sctp_state());
             }
         }
+    });
+}
+
+#[test]
+fn create_with_fixed_port_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_webrtc_transport({
+                let mut options =
+                    WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
+                        ip: "127.0.0.1".parse().unwrap(),
+                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    }));
+                options.port = Some(60_002);
+
+                options
+            })
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        assert_eq!(transport.ice_candidates().get(0).unwrap().port, 60_002);
     });
 }
 

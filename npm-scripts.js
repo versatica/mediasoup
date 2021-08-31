@@ -4,10 +4,9 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const { version } = require('./package.json');
 
+const isFreeBSD = os.platform() === 'freebsd';
 const isWindows = os.platform() === 'win32';
 const task = process.argv.slice(2).join(' ');
-
-const GULP = process.env.GULP || 'gulp';
 
 // mediasoup mayor version.
 const MAYOR_VERSION = 3;
@@ -24,6 +23,17 @@ if (isWindows)
 	MSBUILD = process.env.MSBUILD || 'MSBuild';
 	MEDIASOUP_BUILDTYPE = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	MEDIASOUP_TEST_TAGS = process.env.MEDIASOUP_TEST_TAGS || '';
+}
+
+let MAKE;
+
+if (isFreeBSD)
+{
+	MAKE = process.env.MAKE || 'gmake';
+}
+else
+{
+	MAKE = process.env.MAKE || 'make';
 }
 
 // eslint-disable-next-line no-console
@@ -72,21 +82,21 @@ switch (task)
 	case 'lint:node':
 	{
 		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js gulpfile.js npm-scripts.js test/');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js npm-scripts.js test/ worker/scripts/gulpfile.js');
 
 		break;
 	}
 
 	case 'lint:worker':
 	{
-		execute(`${GULP} lint:worker`);
+		execute(`${MAKE} lint -C worker`);
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute(`${GULP} format:worker`);
+		execute(`${MAKE} format -C worker`);
 
 		break;
 	}
@@ -111,7 +121,7 @@ switch (task)
 	{
 		if (!isWindows)
 		{
-			execute('make test -C worker');
+			execute(`${MAKE} test -C worker`);
 		}
 		else if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
@@ -138,7 +148,7 @@ switch (task)
 		{
 			if (!isWindows)
 			{
-				execute('make -C worker');
+				execute(`${MAKE} -C worker`);
 			}
 			else
 			{
@@ -159,6 +169,13 @@ switch (task)
 		execute(`git tag -a ${version} -m '${version}'`);
 		execute(`git push origin v${MAYOR_VERSION} && git push origin --tags`);
 		execute('npm publish');
+
+		break;
+	}
+
+	case 'install-clang-tools':
+	{
+		execute('npm install --prefix worker/scripts');
 
 		break;
 	}
