@@ -242,7 +242,7 @@
     'include_dirs':
     [
       'include',
-      'deps/json/single_include/nlohmann'
+      'deps/json/single_include'
     ],
     'conditions':
     [
@@ -331,8 +331,15 @@
   'targets':
   [
     {
+      # This configuration builds mediasoup-worker with transcode functionality and need ngxshm libs to link to.
+      # How to build plain mediasoup without transcode shm dependencies:
+      #  - remove TRANSCODE from 'defines'[] array,
+      #  - comment out all C++ source and include files but src/main.cpp,
+      #  - comment out '-lffngxshm' and '-lngxshm' from 'link_settings'[] array
+      #  - make as usually
+      #  - publish: update package.json with a distinct version name (x.x.x-noshm), run 'npm run typescript:build' and 'npm publish'
       'target_name': 'mediasoup-worker',
-      'defines': [ 'MS_EXECUTABLE' ],
+      'defines': [ 'MS_EXECUTABLE'],
       'sources': [
         # C++ source files.
         'src/main.cpp'
@@ -456,8 +463,8 @@
         'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
         # C++ include files.
         'fuzzer/include/FuzzerUtils.hpp',
-        'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
+        'fuzzer/include/RTC/FuzzerStunPacket.hpp',
         'fuzzer/include/RTC/FuzzerTrendCalculator.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerBye.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackPs.hpp',
@@ -479,7 +486,7 @@
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTransport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerPacket.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerReceiverReport.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerSdesReport.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerSdes.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerSenderReport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerXr.hpp',
       ],
