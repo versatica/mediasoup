@@ -22,17 +22,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
       - name: Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: ${{ matrix.rust }}
-            override: true
-            components: rustfmt, clippy
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: rustfmt, clippy
 
       - name: Configure cache
         uses: actions/cache@v2

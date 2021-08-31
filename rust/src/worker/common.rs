@@ -6,7 +6,6 @@ use uuid::Uuid;
 
 struct EventHandlersList<F> {
     index: usize,
-    #[allow(clippy::type_complexity)]
     callbacks: HashMap<usize, F>,
 }
 

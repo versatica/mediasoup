@@ -156,7 +156,7 @@ impl Channel {
             move |handle| {
                 let mut outgoing_message_buffer = outgoing_message_buffer.lock();
                 if outgoing_message_buffer.handle.is_none() {
-                    outgoing_message_buffer.handle.insert(handle);
+                    outgoing_message_buffer.handle.replace(handle);
                 }
 
                 outgoing_message_buffer.messages.pop_front()

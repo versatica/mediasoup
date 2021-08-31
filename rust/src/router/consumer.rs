@@ -350,6 +350,7 @@ struct Handlers {
     producer_pause: Bag<Arc<dyn Fn() + Send + Sync>>,
     producer_resume: Bag<Arc<dyn Fn() + Send + Sync>>,
     score: Bag<Arc<dyn Fn(&ConsumerScore) + Send + Sync>, ConsumerScore>,
+    #[allow(clippy::type_complexity)]
     layers_change: Bag<Arc<dyn Fn(&Option<ConsumerLayers>) + Send + Sync>, Option<ConsumerLayers>>,
     trace: Bag<Arc<dyn Fn(&ConsumerTraceEventData) + Send + Sync>, ConsumerTraceEventData>,
     producer_close: BagOnce<Box<dyn FnOnce() + Send>>,

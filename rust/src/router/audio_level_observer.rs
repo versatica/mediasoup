@@ -319,14 +319,17 @@ impl AudioLevelObserver {
                     Ok(notification) => match notification {
                         Notification::Volumes(volumes) => {
                             let volumes = volumes
-                                .into_iter()
+                                .iter()
                                 .filter_map(|notification| {
                                     let VolumeNotification {
                                         producer_id,
                                         volume,
                                     } = notification;
-                                    router.get_producer(&producer_id).map(|producer| {
-                                        AudioLevelObserverVolume { producer, volume }
+                                    router.get_producer(producer_id).map(|producer| {
+                                        AudioLevelObserverVolume {
+                                            producer,
+                                            volume: *volume,
+                                        }
                                     })
                                 })
                                 .collect::<Vec<_>>();
