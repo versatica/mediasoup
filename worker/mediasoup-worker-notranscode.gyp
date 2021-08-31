@@ -43,6 +43,7 @@
       'src/PayloadChannel/PayloadChannelNotifier.cpp',
       'src/PayloadChannel/PayloadChannelRequest.cpp',
       'src/PayloadChannel/PayloadChannelSocket.cpp',
+      'src/RTC/ActiveSpeakerObserver.cpp',
       'src/RTC/AudioLevelObserver.cpp',
       'src/RTC/Consumer.cpp',
       'src/RTC/DataConsumer.cpp',
@@ -156,6 +157,7 @@
       'include/PayloadChannel/PayloadChannelRequest.hpp',
       'include/PayloadChannel/PayloadChannelSocket.hpp',
       'include/RTC/BweType.hpp',
+      'include/RTC/ActiveSpeakerObserver.hpp',
       'include/RTC/AudioLevelObserver.hpp',
       'include/RTC/Consumer.hpp',
       'include/RTC/DataConsumer.hpp',
@@ -329,13 +331,6 @@
   'targets':
   [
     {
-      # This configuration builds mediasoup-worker with transcode functionality and need ngxshm libs to link to.
-      # How to build plain mediasoup without transcode shm dependencies:
-      #  - remove TRANSCODE from 'defines'[] array,
-      #  - comment out all C++ source and include files but src/main.cpp,
-      #  - comment out '-lffngxshm' and '-lngxshm' from 'link_settings'[] array
-      #  - make as usually
-      #  - publish: update package.json with a distinct version name (x.x.x-noshm), run 'npm run typescript:build' and 'npm publish'
       'target_name': 'mediasoup-worker',
       'defines': [ 'MS_EXECUTABLE' ],
       'sources': [
@@ -412,7 +407,7 @@
       'include_dirs':
       [
         'test/include',
-        'deps/catch/single_include/catch2'
+        'deps/catch2/single_include'
       ],
       'xcode_settings':
       {
