@@ -12,6 +12,7 @@ jobs:
         os:
           - ubuntu-20.04
           - macos-10.15
+          - windows-2019
         rust:
           - stable
           # - nightly
@@ -19,6 +20,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Add MSVC compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+
+      # This is needed as a workaround for GNU linker being first in PATH and thus preventing Meson from finding MSVC
+      # linker.
+      - name: Remove GNU linker for MSVC
+        shell: bash
+        run: rm /usr/bin/link
+        if: runner.os == 'Windows'
+
       - name: Checkout
         uses: actions/checkout@v2
 
