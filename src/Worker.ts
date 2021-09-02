@@ -334,7 +334,7 @@ export class Worker extends EnhancedEventEmitter
 				windowsHide : true
 			});
 
-		this._pid = this._child.pid;
+		this._pid = this._child.pid!;
 
 		// each worker writes into its own log file: insert pid before file extension
 		this._mslog = path.format(

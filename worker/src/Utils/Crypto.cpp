@@ -11,7 +11,7 @@ namespace Utils
 
 	thread_local uint32_t Crypto::seed;
 	thread_local HMAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
-	thread_local uint8_t Crypto::hmacSha1Buffer[20]; // SHA-1 result is 20 bytes long.
+	thread_local uint8_t Crypto::hmacSha1Buffer[SHA_DIGEST_LENGTH];
 	// clang-format off
 	const uint32_t Crypto::crc32Table[] =
 	{
@@ -56,7 +56,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		// Init the vrypto seed with a random number taken from the address
+		// Init the crypto seed with a random number taken from the address
 		// of the seed variable itself (which is random).
 		Crypto::seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed)));
 
@@ -72,7 +72,7 @@ namespace Utils
 			HMAC_CTX_free(Crypto::hmacSha1Ctx);
 	}
 
-	const uint8_t* Crypto::GetHmacShA1(const std::string& key, const uint8_t* data, size_t len)
+	const uint8_t* Crypto::GetHmacSha1(const std::string& key, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -96,7 +96,8 @@ namespace Utils
 
 		MS_ASSERT(
 		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key.c_str(), len);
-		MS_ASSERT(resultLen == 20, "OpenSSL HMAC_Final() resultLen is %u instead of 20", resultLen);
+		MS_ASSERT(
+		  resultLen == SHA_DIGEST_LENGTH, "OpenSSL HMAC_Final() resultLen is %u instead of 20", resultLen);
 
 		return Crypto::hmacSha1Buffer;
 	}

@@ -1,8 +1,9 @@
 #include "common.hpp"
+#include "DepLibUV.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <vector>
 
 using namespace RTC;
@@ -200,6 +201,9 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		listener.shouldTriggerFIR = false;
 		rtpStream.ReceivePacket(packet);
 	}
+
+	// Must run the loop to wait for UV timers and close them.
+	DepLibUV::RunLoop();
 
 	delete packet;
 }

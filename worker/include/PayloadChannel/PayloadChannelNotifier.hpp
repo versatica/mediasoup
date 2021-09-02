@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 
 namespace PayloadChannel

@@ -51,6 +51,7 @@ B<openssl> B<ca>
 [B<-engine id>]
 [B<-subj arg>]
 [B<-utf8>]
+[B<-sigopt nm:v>]
 [B<-create_serial>]
 [B<-rand_serial>]
 [B<-multivalue-rdn>]
@@ -134,6 +135,11 @@ The private key to sign requests with.
 The format of the data in the private key file.
 The default is PEM.
 
+=item B<-sigopt nm:v>
+
+Pass options to the signature algorithm during sign or verify operations.
+Names and values of these options are algorithm-specific.
+
 =item B<-key password>
 
 The password used to encrypt the private key. Since on some
@@ -157,7 +163,7 @@ self-signed certificate.
 =item B<-passin arg>
 
 The key password source. For more information about the format of B<arg>
-see the B<PASS PHRASE ARGUMENTS> section in L<openssl(1)>.
+see L<openssl(1)/Pass Phrase Options>.
 
 =item B<-notext>
 
@@ -213,7 +219,7 @@ DNs match the order of the request. This is not needed for Xenroll.
 =item B<-noemailDN>
 
 The DN of a certificate can contain the EMAIL field if present in the
-request DN, however it is good policy just having the e-mail set into
+request DN, however, it is good policy just having the e-mail set into
 the altName extension of the certificate. When this option is set the
 EMAIL field is removed from the certificate' subject and set only in
 the, eventually present, extensions. The B<email_in_dn> keyword can be
@@ -753,7 +759,7 @@ L<config(5)>, L<x509v3_config(5)>
 
 =head1 COPYRIGHT
 
-Copyright 2000-2019 The OpenSSL Project Authors. All Rights Reserved.
+Copyright 2000-2021 The OpenSSL Project Authors. All Rights Reserved.
 
 Licensed under the OpenSSL license (the "License").  You may not use
 this file except in compliance with the License.  You can obtain a copy

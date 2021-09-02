@@ -95,6 +95,8 @@ impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
 pub struct WebRtcTransportOptions {
     /// Listening IP address or addresses in order of preference (first one is the preferred one).
     pub listen_ips: TransportListenIps,
+    /// Fixed port to listen on instead of selecting automatically from Worker's port range.
+    pub port: Option<u16>,
     /// Listen in UDP. Default true.
     pub enable_udp: bool,
     /// Listen in TCP.
@@ -130,6 +132,7 @@ impl WebRtcTransportOptions {
     pub fn new(listen_ips: TransportListenIps) -> Self {
         Self {
             listen_ips,
+            port: None,
             enable_udp: true,
             enable_tcp: false,
             prefer_udp: false,

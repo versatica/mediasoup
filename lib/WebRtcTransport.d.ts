@@ -8,6 +8,11 @@ export declare type WebRtcTransportOptions = {
      */
     listenIps: (TransportListenIp | string)[];
     /**
+     * Fixed port to listen on instead of selecting automatically from Worker's port
+     * range.
+     */
+    port?: number;
+    /**
      * Listen in UDP. Default true.
      */
     enableUdp?: boolean;

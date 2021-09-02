@@ -1,10 +1,10 @@
 use async_io::Timer;
 use futures_lite::future;
 use mediasoup::consumer::{
-    ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerStats,
-    ConsumerType,
+    ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType,
 };
 use mediasoup::data_structures::{AppData, TransportListenIp};
+use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::rtp_parameters::{
@@ -14,7 +14,8 @@ use mediasoup::rtp_parameters::{
     RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
     RtpParameters,
 };
-use mediasoup::transport::{ConsumeError, Transport, TransportGeneric};
+use mediasoup::scalability_modes::ScalabilityMode;
+use mediasoup::transport::ConsumeError;
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -224,63 +225,62 @@ fn consumer_device_capabilities() -> RtpCapabilities {
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::RtpStreamId,
                 preferred_id: 2,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::VideoOrientation,
                 preferred_id: 11,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TimeOffset,
                 preferred_id: 12,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
         ],
-        fec_mechanisms: vec![],
     }
 }
 
@@ -655,6 +655,59 @@ fn consume_succeeds() {
 }
 
 #[test]
+fn consumer_with_user_defined_mid() {
+    future::block_on(async move {
+        let (_worker, _router, transport_1, transport_2) = init().await;
+
+        let producer_1 = transport_1
+            .produce(audio_producer_options())
+            .await
+            .expect("Failed to produce audio");
+
+        let consumer_2_1 = transport_2
+            .consume(ConsumerOptions::new(
+                producer_1.id(),
+                consumer_device_capabilities(),
+            ))
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_1.rtp_parameters().mid,
+            Some("0".to_string()),
+            "MID automatically assigned to sequential number"
+        );
+
+        let consumer_2_2 = transport_2
+            .consume({
+                let mut options =
+                    ConsumerOptions::new(producer_1.id(), consumer_device_capabilities());
+                options.mid = Some("custom-mid".to_owned());
+                options
+            })
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_2.rtp_parameters().mid,
+            Some("custom-mid".to_string()),
+            "MID is assigned to user-provided value"
+        );
+
+        let consumer_2_3 = transport_2
+            .consume(ConsumerOptions::new(
+                producer_1.id(),
+                consumer_device_capabilities(),
+            ))
+            .await
+            .expect("Failed to consume audio");
+        assert_eq!(
+            consumer_2_3.rtp_parameters().mid,
+            Some("1".to_string()),
+            "MID automatically assigned to next sequential number"
+        );
+    })
+}
+
+#[test]
 fn weak() {
     future::block_on(async move {
         let (_worker, _router, transport_1, transport_2) = init().await;
@@ -705,7 +758,6 @@ fn consume_incompatible_rtp_capabilities() {
                     rtcp_feedback: vec![],
                 }],
                 header_extensions: vec![],
-                fec_mechanisms: vec![],
             };
 
             assert_eq!(
@@ -728,7 +780,6 @@ fn consume_incompatible_rtp_capabilities() {
             let invalid_device_capabilities = RtpCapabilities {
                 codecs: vec![],
                 header_extensions: vec![],
-                fec_mechanisms: vec![],
             };
 
             assert_eq!(
@@ -830,7 +881,7 @@ fn dump_succeeds() {
                     codec_payload_type: Some(100),
                     rtx: None,
                     dtx: None,
-                    scalability_mode: None,
+                    scalability_mode: ScalabilityMode::None,
                     scale_resolution_down_by: None,
                     ssrc: audio_consumer
                         .rtp_parameters()
@@ -857,7 +908,7 @@ fn dump_succeeds() {
                         max_bitrate: None,
                         max_framerate: None,
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         spatial_layers: None,
                         temporal_layers: None,
                         ksvc: None
@@ -958,7 +1009,7 @@ fn dump_succeeds() {
                         .unwrap()
                         .rtx,
                     dtx: None,
-                    scalability_mode: Some("S4T1".to_string()),
+                    scalability_mode: "S4T1".parse().unwrap(),
                     scale_resolution_down_by: None,
                     rid: None,
                     max_bitrate: None,
@@ -979,7 +1030,7 @@ fn dump_succeeds() {
                         max_bitrate: None,
                         max_framerate: None,
                         dtx: None,
-                        scalability_mode: None,
+                        scalability_mode: ScalabilityMode::None,
                         spatial_layers: None,
                         temporal_layers: None,
                         ksvc: None,
@@ -1020,10 +1071,7 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Audio consumer get_stats failed");
 
-            let consumer_stat = match stats {
-                ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
-                ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
-            };
+            let consumer_stat = stats.consumer_stats();
 
             assert_eq!(consumer_stat.kind, MediaKind::Audio);
             assert_eq!(
@@ -1072,10 +1120,7 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Video consumer get_stats failed");
 
-            let consumer_stat = match stats {
-                ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
-                ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
-            };
+            let consumer_stat = stats.consumer_stats();
 
             assert_eq!(consumer_stat.kind, MediaKind::Video);
             assert_eq!(
@@ -1355,44 +1400,5 @@ fn close_event() {
             assert_eq!(dump.producer_ids, vec![]);
             assert_eq!(dump.consumer_ids, vec![]);
         }
-    });
-}
-
-#[test]
-fn producer_close_event() {
-    future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
-
-        let audio_producer = transport_1
-            .produce(audio_producer_options())
-            .await
-            .expect("Failed to produce audio");
-
-        let audio_consumer = transport_2
-            .consume(ConsumerOptions::new(
-                audio_producer.id(),
-                consumer_device_capabilities(),
-            ))
-            .await
-            .expect("Failed to consume audio");
-
-        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_consumer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (mut producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_consumer.on_producer_close(move || {
-            let _ = producer_close_tx.send(());
-        });
-        drop(audio_producer);
-
-        producer_close_rx
-            .await
-            .expect("Failed to receive producer_close event");
-
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(audio_consumer.closed(), true);
     });
 }

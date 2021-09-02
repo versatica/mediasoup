@@ -44,6 +44,7 @@
       'src/PayloadChannel/PayloadChannelNotifier.cpp',
       'src/PayloadChannel/PayloadChannelRequest.cpp',
       'src/PayloadChannel/PayloadChannelSocket.cpp',
+      'src/RTC/ActiveSpeakerObserver.cpp',
       'src/RTC/AudioLevelObserver.cpp',
       'src/RTC/Consumer.cpp',
       'src/RTC/DataConsumer.cpp',
@@ -159,6 +160,7 @@
       'include/PayloadChannel/PayloadChannelRequest.hpp',
       'include/PayloadChannel/PayloadChannelSocket.hpp',
       'include/RTC/BweType.hpp',
+      'include/RTC/ActiveSpeakerObserver.hpp',
       'include/RTC/AudioLevelObserver.hpp',
       'include/RTC/Consumer.hpp',
       'include/RTC/DataConsumer.hpp',
@@ -243,7 +245,7 @@
     'include_dirs':
     [
       'include',
-      'deps/json/single_include/nlohmann'
+      'deps/json/single_include'
     ],
     'conditions':
     [
@@ -340,7 +342,7 @@
       #  - make as usually
       #  - publish: update package.json with a distinct version name (x.x.x-noshm), run 'npm run typescript:build' and 'npm publish'
       'target_name': 'mediasoup-worker',
-      'defines': [ 'MS_EXECUTABLE' ],
+      'defines': [ 'MS_EXECUTABLE'],
       'sources': [
         # C++ source files.
         'src/main.cpp'
@@ -415,7 +417,7 @@
       'include_dirs':
       [
         'test/include',
-        'deps/catch/single_include/catch2'
+        'deps/catch2/single_include'
       ],
       'xcode_settings':
       {
@@ -464,8 +466,8 @@
         'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
         # C++ include files.
         'fuzzer/include/FuzzerUtils.hpp',
-        'fuzzer/include/RTC/FuzzerStunMessage.hpp',
         'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
+        'fuzzer/include/RTC/FuzzerStunPacket.hpp',
         'fuzzer/include/RTC/FuzzerTrendCalculator.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerBye.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackPs.hpp',
@@ -487,7 +489,7 @@
         'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTransport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerPacket.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerReceiverReport.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerSdesReport.hpp',
+        'fuzzer/include/RTC/RTCP/FuzzerSdes.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerSenderReport.hpp',
         'fuzzer/include/RTC/RTCP/FuzzerXr.hpp',
       ],

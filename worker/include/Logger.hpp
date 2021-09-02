@@ -87,7 +87,7 @@
 #define MS_LOGGER_HPP
 
 #include "common.hpp"
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Channel/ChannelSocket.hpp"

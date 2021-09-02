@@ -16,6 +16,7 @@ import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
 import { DataConsumer } from './DataConsumer';
 import { RtpObserver } from './RtpObserver';
+import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpeakerObserver';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
@@ -341,6 +342,7 @@ export class Router extends EnhancedEventEmitter
 	async createWebRtcTransport(
 		{
 			listenIps,
+			port,
 			enableUdp = true,
 			enableTcp = false,
 			preferUdp = false,
@@ -383,6 +385,7 @@ export class Router extends EnhancedEventEmitter
 		const internal = { ...this._internal, transportId: uuidv4() };
 		const reqData = {
 			listenIps,
+			port,
 			enableUdp,
 			enableTcp,
 			preferUdp,
@@ -437,6 +440,7 @@ export class Router extends EnhancedEventEmitter
 	async createPlainTransport(
 		{
 			listenIp,
+			port,
 			rtcpMux = true,
 			comedia = false,
 			disableOriginCheck = false,
@@ -477,6 +481,7 @@ export class Router extends EnhancedEventEmitter
 		const internal = { ...this._internal, transportId: uuidv4() };
 		const reqData = {
 			listenIp,
+			port,
 			rtcpMux,
 			comedia,
 			disableOriginCheck,
@@ -545,6 +550,7 @@ export class Router extends EnhancedEventEmitter
 		{
 			listenIp,
 			disableOriginCheck = false,
+			port,
 			enableSctp = false,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 268435456,
@@ -583,6 +589,7 @@ export class Router extends EnhancedEventEmitter
 		const reqData = {
 			listenIp,
 			disableOriginCheck,
+			port,
 			enableSctp,
 			numSctpStreams,
 			maxSctpMessageSize,
@@ -1029,6 +1036,49 @@ export class Router extends EnhancedEventEmitter
 		{
 			throw new Error('internal error');
 		}
+	}
+
+	/**
+	 * Create an ActiveSpeakerObserver
+	 */
+	async createActiveSpeakerObserver(
+		{
+			interval = 300,
+			appData = {}
+		}: ActiveSpeakerObserverOptions = {}
+	): Promise<ActiveSpeakerObserver>
+	{
+		logger.debug('createActiveSpeakerObserver()');
+
+		if (appData && typeof appData !== 'object')
+			throw new TypeError('if given, appData must be an object');
+		
+		const internal = { ...this._internal, rtpObserverId: uuidv4() };
+		const reqData = { interval };
+
+		await this._channel.request('router.createActiveSpeakerObserver', internal, reqData);
+
+		const activeSpeakerObserver = new ActiveSpeakerObserver(
+			{
+				internal,
+				channel         : this._channel,
+				payloadChannel  : this._payloadChannel,
+				appData,
+				getProducerById : (producerId: string): Producer | undefined => (
+					this._producers.get(producerId)
+				)
+			});
+		
+		this._rtpObservers.set(activeSpeakerObserver.id, activeSpeakerObserver);
+		activeSpeakerObserver.on('@close', () =>
+		{
+			this._rtpObservers.delete(activeSpeakerObserver.id);
+		});
+
+		// Emit observer event.
+		this._observer.safeEmit('newrtpobserver', activeSpeakerObserver);
+
+		return activeSpeakerObserver;
 	}
 
 	/**

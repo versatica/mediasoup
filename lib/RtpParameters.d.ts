@@ -11,10 +11,6 @@ export declare type RtpCapabilities = {
      * Supported RTP header extensions.
      */
     headerExtensions?: RtpHeaderExtension[];
-    /**
-     * Supported FEC mechanisms.
-     */
-    fecMechanisms?: string[];
 };
 /**
  * Media kind ('audio' or 'video').
@@ -86,10 +82,9 @@ export declare type RtpHeaderExtensionDirection = 'sendrecv' | 'sendonly' | 'rec
  */
 export declare type RtpHeaderExtension = {
     /**
-     * Media kind. If empty string, it's valid for all kinds.
-     * Default any media kind.
+     * Media kind.
      */
-    kind?: MediaKind | '';
+    kind: MediaKind;
     uri: string;
     /**
      * The preferred numeric identifier that goes in the RTP packet. Must be

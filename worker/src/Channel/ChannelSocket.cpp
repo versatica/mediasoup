@@ -34,11 +34,19 @@ namespace Channel
 		MS_TRACE_STD();
 
 		std::free(this->writeBuffer);
+
+		if (!this->closed)
+			Close();
 	}
 
 	void ChannelSocket::Close()
 	{
 		MS_TRACE_STD();
+
+		if (this->closed)
+			return;
+
+		this->closed = true;
 
 		this->consumerSocket.Close();
 		this->producerSocket.Close();
@@ -55,7 +63,7 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		if (this->producerSocket.IsClosed())
+		if (this->closed)
 			return;
 
 		std::string message = jsonMessage.dump();
@@ -74,7 +82,7 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		if (this->producerSocket.IsClosed())
+		if (this->closed)
 			return;
 
 		if (messageLen > NsPayloadMaxLen)
