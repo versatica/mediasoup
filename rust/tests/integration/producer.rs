@@ -1,5 +1,6 @@
 use async_io::Timer;
 use futures_lite::future;
+use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::data_structures::{AppData, TransportListenIp};
 use mediasoup::prelude::*;
 use mediasoup::producer::{ProducerOptions, ProducerTraceEventType, ProducerType};
@@ -14,7 +15,6 @@ use mediasoup::transport::ProduceError;
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
-use std::collections::{HashMap, HashSet};
 use std::env;
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -266,11 +266,14 @@ fn produce_succeeds() {
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
-                map.insert(audio_producer.id(), HashSet::new());
+                let mut map = HashedMap::default();
+                map.insert(audio_producer.id(), HashedSet::default());
                 map
             });
-            assert_eq!(router_dump.map_consumer_id_producer_id, HashMap::new());
+            assert_eq!(
+                router_dump.map_consumer_id_producer_id,
+                HashedMap::default()
+            );
 
             let transport_1_dump = transport_1
                 .dump()
@@ -338,11 +341,14 @@ fn produce_succeeds() {
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
-                map.insert(video_producer.id(), HashSet::new());
+                let mut map = HashedMap::default();
+                map.insert(video_producer.id(), HashedSet::default());
                 map
             });
-            assert_eq!(router_dump.map_consumer_id_producer_id, HashMap::new());
+            assert_eq!(
+                router_dump.map_consumer_id_producer_id,
+                HashedMap::default()
+            );
 
             let transport_2_dump = transport_2
                 .dump()
@@ -916,8 +922,8 @@ fn close_event() {
         {
             let dump = router.dump().await.expect("Failed to dump router");
 
-            assert_eq!(dump.map_producer_id_consumer_ids, HashMap::new());
-            assert_eq!(dump.map_consumer_id_producer_id, HashMap::new());
+            assert_eq!(dump.map_producer_id_consumer_ids, HashedMap::default());
+            assert_eq!(dump.map_consumer_id_producer_id, HashedMap::default());
         }
 
         {

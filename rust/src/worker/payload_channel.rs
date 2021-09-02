@@ -5,10 +5,11 @@ use crate::worker::{utils, RequestError, SubscriptionHandler};
 use futures_lite::future;
 use log::{debug, error, trace, warn};
 use mediasoup_sys::UvAsyncT;
+use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
@@ -68,7 +69,7 @@ type Response<T> = Result<Option<T>, ResponseError>;
 #[derive(Default)]
 struct RequestsContainer {
     next_id: u32,
-    handlers: HashMap<u32, async_oneshot::Sender<Response<Value>>>,
+    handlers: IntMap<u32, async_oneshot::Sender<Response<Value>>>,
 }
 
 struct OutgoingMessageBuffer {

@@ -59,10 +59,10 @@ use async_executor::Executor;
 use async_lock::Mutex as AsyncMutex;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::future;
+use hash_hasher::{HashedMap, HashedSet};
 use log::{debug, error};
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -270,13 +270,14 @@ impl From<ProduceDataError> for PipeDataProducerToRouterError {
 #[non_exhaustive]
 pub struct RouterDump {
     pub id: RouterId,
-    pub map_consumer_id_producer_id: HashMap<ConsumerId, ProducerId>,
-    pub map_data_consumer_id_data_producer_id: HashMap<DataConsumerId, DataProducerId>,
-    pub map_data_producer_id_data_consumer_ids: HashMap<DataProducerId, HashSet<DataConsumerId>>,
-    pub map_producer_id_consumer_ids: HashMap<ProducerId, HashSet<ConsumerId>>,
-    pub map_producer_id_observer_ids: HashMap<ProducerId, HashSet<RtpObserverId>>,
-    pub rtp_observer_ids: HashSet<RtpObserverId>,
-    pub transport_ids: HashSet<TransportId>,
+    pub map_consumer_id_producer_id: HashedMap<ConsumerId, ProducerId>,
+    pub map_data_consumer_id_data_producer_id: HashedMap<DataConsumerId, DataProducerId>,
+    pub map_data_producer_id_data_consumer_ids:
+        HashedMap<DataProducerId, HashedSet<DataConsumerId>>,
+    pub map_producer_id_consumer_ids: HashedMap<ProducerId, HashedSet<ConsumerId>>,
+    pub map_producer_id_observer_ids: HashedMap<ProducerId, HashedSet<RtpObserverId>>,
+    pub rtp_observer_ids: HashedSet<RtpObserverId>,
+    pub transport_ids: HashedSet<TransportId>,
 }
 
 /// New transport that was just created.
@@ -369,11 +370,11 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    producers: Arc<RwLock<HashMap<ProducerId, WeakProducer>>>,
-    data_producers: Arc<RwLock<HashMap<DataProducerId, WeakDataProducer>>>,
+    producers: Arc<RwLock<HashedMap<ProducerId, WeakProducer>>>,
+    data_producers: Arc<RwLock<HashedMap<DataProducerId, WeakDataProducer>>>,
     #[allow(clippy::type_complexity)]
     mapped_pipe_transports:
-        Arc<Mutex<HashMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>>,
+        Arc<Mutex<HashedMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped
     worker: Option<Worker>,
     closed: AtomicBool,
@@ -452,10 +453,10 @@ impl Router {
     ) -> Self {
         debug!("new()");
 
-        let producers = Arc::<RwLock<HashMap<ProducerId, WeakProducer>>>::default();
-        let data_producers = Arc::<RwLock<HashMap<DataProducerId, WeakDataProducer>>>::default();
+        let producers = Arc::<RwLock<HashedMap<ProducerId, WeakProducer>>>::default();
+        let data_producers = Arc::<RwLock<HashedMap<DataProducerId, WeakDataProducer>>>::default();
         let mapped_pipe_transports = Arc::<
-            Mutex<HashMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>,
+            Mutex<HashedMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>,
         >::default();
         let handlers = Arc::<Handlers>::default();
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
@@ -1354,7 +1355,7 @@ impl Router {
         // destination Routers. We just want to keep a PipeTransport pair for each
         // pair of Routers. Since this operation is async, it may happen that two
         // simultaneous calls piping to the same router would end up generating two pairs of
-        // `PipeTransport`. To prevent that, we have `HashMap` with mapping behind `Mutex` and
+        // `PipeTransport`. To prevent that, we have `HashedMap` with mapping behind `Mutex` and
         // another `Mutex` on the pair of `PipeTransport`.
 
         let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock();

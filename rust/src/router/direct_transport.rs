@@ -22,9 +22,9 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
+use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
@@ -59,8 +59,8 @@ pub struct DirectTransportDump {
     pub direct: bool,
     pub producer_ids: Vec<ProducerId>,
     pub consumer_ids: Vec<ConsumerId>,
-    pub map_ssrc_consumer_id: HashMap<u32, ConsumerId>,
-    pub map_rtx_ssrc_consumer_id: HashMap<u32, ConsumerId>,
+    pub map_ssrc_consumer_id: IntMap<u32, ConsumerId>,
+    pub map_rtx_ssrc_consumer_id: IntMap<u32, ConsumerId>,
     pub data_producer_ids: Vec<DataProducerId>,
     pub data_consumer_ids: Vec<DataConsumerId>,
     pub recv_rtp_header_extensions: RecvRtpHeaderExtensions,
@@ -136,7 +136,7 @@ enum PayloadNotification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    used_sctp_stream_ids: Mutex<HashMap<u16, bool>>,
+    used_sctp_stream_ids: Mutex<IntMap<u16, bool>>,
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -434,7 +434,7 @@ impl TransportImpl for DirectTransport {
         &self.inner.next_mid_for_consumers
     }
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<HashMap<u16, bool>> {
+    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
         &self.inner.used_sctp_stream_ids
     }
 
@@ -493,7 +493,7 @@ impl DirectTransport {
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
-        let used_sctp_stream_ids = Mutex::new(HashMap::new());
+        let used_sctp_stream_ids = Mutex::new(IntMap::default());
         let cname_for_producers = Mutex::new(None);
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_router_close_handler = router.on_close({

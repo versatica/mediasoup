@@ -17,11 +17,11 @@ use crate::worker::{
 };
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
+use hash_hasher::HashedMap;
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -100,7 +100,7 @@ pub struct RtpStreamRecv {
     pub packet_count: usize,
     pub byte_count: usize,
     pub bitrate: u32,
-    pub bitrate_by_layer: Option<HashMap<String, u32>>,
+    pub bitrate_by_layer: Option<HashedMap<String, u32>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -201,7 +201,7 @@ pub struct ProducerStat {
     pub rtx_packets_discarded: Option<u32>,
     // RtpStreamRecv specific.
     pub jitter: u32,
-    pub bitrate_by_layer: Option<HashMap<String, u32>>,
+    pub bitrate_by_layer: Option<HashedMap<String, u32>>,
 }
 
 /// 'trace' event data.

@@ -1,31 +1,32 @@
+use hash_hasher::HashedMap;
+use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 use uuid::Uuid;
 
 struct EventHandlersList<F> {
     index: usize,
-    callbacks: HashMap<usize, F>,
+    callbacks: IntMap<usize, F>,
 }
 
 impl<F> Default for EventHandlersList<F> {
     fn default() -> Self {
         Self {
             index: 0,
-            callbacks: HashMap::new(),
+            callbacks: IntMap::default(),
         }
     }
 }
 
 #[derive(Clone)]
 pub(super) struct EventHandlers<F> {
-    handlers: Arc<Mutex<HashMap<SubscriptionTarget, EventHandlersList<F>>>>,
+    handlers: Arc<Mutex<HashedMap<SubscriptionTarget, EventHandlersList<F>>>>,
 }
 
 impl<F: Sized + Send + Sync + 'static> EventHandlers<F> {
     pub(super) fn new() -> Self {
-        let handlers = Arc::<Mutex<HashMap<SubscriptionTarget, EventHandlersList<F>>>>::default();
+        let handlers = Arc::<Mutex<HashedMap<SubscriptionTarget, EventHandlersList<F>>>>::default();
         Self { handlers }
     }
 
@@ -111,7 +112,7 @@ impl<V1: ?Sized, V2: ?Sized> EventHandlers<Arc<dyn Fn(&V1, &V2) + Send + Sync + 
 
 #[derive(Clone)]
 pub(super) struct WeakEventHandlers<F> {
-    handlers: Weak<Mutex<HashMap<SubscriptionTarget, EventHandlersList<F>>>>,
+    handlers: Weak<Mutex<HashedMap<SubscriptionTarget, EventHandlersList<F>>>>,
 }
 
 impl<F> WeakEventHandlers<F> {

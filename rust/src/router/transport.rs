@@ -23,12 +23,13 @@ use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
+use hash_hasher::HashedMap;
 use log::{error, warn};
+use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -103,11 +104,11 @@ pub enum TransportTraceEventType {
 #[doc(hidden)]
 pub struct RtpListener {
     /// Map from Ssrc (as string) to producer ID
-    pub mid_table: HashMap<String, ProducerId>,
+    pub mid_table: HashedMap<String, ProducerId>,
     /// Map from Ssrc (as string) to producer ID
-    pub rid_table: HashMap<String, ProducerId>,
+    pub rid_table: HashedMap<String, ProducerId>,
     /// Map from Ssrc (as string) to producer ID
-    pub ssrc_table: HashMap<String, ProducerId>,
+    pub ssrc_table: HashedMap<String, ProducerId>,
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
@@ -126,7 +127,7 @@ pub struct RecvRtpHeaderExtensions {
 #[doc(hidden)]
 pub struct SctpListener {
     /// Map from stream ID (as string) to data producer ID
-    stream_id_table: HashMap<String, DataProducerId>,
+    stream_id_table: HashedMap<String, DataProducerId>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -371,7 +372,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
     fn next_mid_for_consumers(&self) -> &AtomicUsize;
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<HashMap<u16, bool>>;
+    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>>;
 
     fn cname_for_producers(&self) -> &Mutex<Option<String>>;
 

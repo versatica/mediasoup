@@ -4,13 +4,14 @@ use crate::worker::utils;
 use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
 use crate::worker::{RequestError, SubscriptionHandler};
 use futures_lite::future;
+use hash_hasher::HashedMap;
 use log::{debug, error, trace, warn};
 use lru::LruCache;
 use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
@@ -37,7 +38,7 @@ pub(super) enum InternalMessage {
 
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
-    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
+    buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
     event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
 }
 
@@ -108,7 +109,7 @@ type Response<T> = Result<Option<T>, ResponseError>;
 #[derive(Default)]
 struct RequestsContainer {
     next_id: u32,
-    handlers: HashMap<u32, async_oneshot::Sender<Response<Value>>>,
+    handlers: HashedMap<u32, async_oneshot::Sender<Response<Value>>>,
 }
 
 struct OutgoingMessageBuffer {
@@ -120,7 +121,7 @@ struct Inner {
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
-    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
+    buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
     event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
 }
 
@@ -144,7 +145,7 @@ impl Channel {
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
         let buffered_notifications_for =
-            Arc::<Mutex<HashMap<SubscriptionTarget, Vec<Vec<u8>>>>>::default();
+            Arc::<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>::default();
         let event_handlers = EventHandlers::new();
         let event_handlers_weak = event_handlers.downgrade();
 

@@ -1,4 +1,5 @@
 use futures_lite::future;
+use hash_hasher::HashedSet;
 use mediasoup::data_consumer::DataConsumerOptions;
 use mediasoup::data_producer::{DataProducer, DataProducerOptions};
 use mediasoup::data_structures::{AppData, WebRtcMessage};
@@ -9,7 +10,6 @@ use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
 use std::borrow::Cow;
-use std::collections::HashSet;
 use std::env;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -56,7 +56,7 @@ fn create_succeeds() {
             let dump = router.dump().await.expect("Failed to dump router");
 
             assert_eq!(dump.transport_ids, {
-                let mut set = HashSet::new();
+                let mut set = HashedSet::default();
                 set.insert(transport.id());
                 set
             });
