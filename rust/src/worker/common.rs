@@ -86,19 +86,8 @@ impl<V: ?Sized> EventHandlers<Arc<dyn Fn(&V) + Send + Sync + 'static>> {
     ) {
         let handlers = self.handlers.lock();
         if let Some(list) = handlers.get(target_id) {
-            // Tiny optimization that avoids cloning `value` unless necessary
-            if list.callbacks.len() == 1 {
-                let callback = list.callbacks.values().next().cloned().unwrap();
-                // Drop mutex guard before running callbacks to avoid deadlocks
-                drop(handlers);
+            for callback in list.callbacks.values() {
                 callback(value);
-            } else {
-                let callbacks = list.callbacks.values().cloned().collect::<Vec<_>>();
-                // Drop mutex guard before running callbacks to avoid deadlocks
-                drop(handlers);
-                for callback in callbacks {
-                    callback(value);
-                }
             }
         }
     }
@@ -113,19 +102,8 @@ impl<V1: ?Sized, V2: ?Sized> EventHandlers<Arc<dyn Fn(&V1, &V2) + Send + Sync + 
     ) {
         let handlers = self.handlers.lock();
         if let Some(list) = handlers.get(target_id) {
-            // Tiny optimization that avoids cloning `value` unless necessary
-            if list.callbacks.len() == 1 {
-                let callback = list.callbacks.values().next().cloned().unwrap();
-                // Drop mutex guard before running callbacks to avoid deadlocks
-                drop(handlers);
+            for callback in list.callbacks.values() {
                 callback(value1, value2);
-            } else {
-                let callbacks = list.callbacks.values().cloned().collect::<Vec<_>>();
-                // Drop mutex guard before running callbacks to avoid deadlocks
-                drop(handlers);
-                for callback in callbacks {
-                    callback(value1, value2);
-                }
             }
         }
     }
