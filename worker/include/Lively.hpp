@@ -16,6 +16,8 @@ namespace Lively
   public:
     AppData() = default;
     AppData(const AppData& d) : callId(d.callId), peerId(d.peerId), mirrorId(d.mirrorId), streamKey(d.streamKey) {}
+    
+    AppData& operator=(const AppData& d) { callId = d.callId; peerId = d.peerId; mirrorId = d.mirrorId; streamKey = d.streamKey; return *this; }
 
     std::string ToStr() const;
   };

@@ -1,5 +1,5 @@
 #include "Lively.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include "LivelyAppDataToJson.hpp"
 
 using json = nlohmann::json;

@@ -1,7 +1,7 @@
 #ifndef MS_LIVELY_APPDATA_TO_JSON_HPP
 #define MS_LIVELY_APPDATA_TO_JSON_HPP
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include "Lively.hpp"
 
