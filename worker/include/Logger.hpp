@@ -143,6 +143,7 @@ public:
 	static const size_t bufferSize {50000};
 	thread_local static char buffer[];
 	thread_local static std::string backupBuffer;
+	thread_local static std::string appdataBuffer;
 
 	static std::string logfilename;
 	static std::FILE*  logfd;
@@ -153,16 +154,21 @@ public:
 
 #define _MS_LOG_SEPARATOR_CHAR_STD "\n"
 
-#ifdef MS_LOG_FILE_LINE
-	#define _MS_LOG_STR "%ld: %s:%d | %s::%s()"
-	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
-	#define _MS_FILE (std::strchr(__FILE__, '/') ? std::strchr(__FILE__, '/') + 1 : __FILE__)
-	#define _MS_LOG_ARG Logger::pid, _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
-#else
+// TBD: disabled file line option as we really don't need it much, for ease of code changes
+//#ifdef MS_LOG_FILE_LINE
+//	#define _MS_LOG_STR "%ld: %s:%d | %s::%s()"
+//	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
+//	#define _MS_FILE (std::strchr(__FILE__, '/') ? std::strchr(__FILE__, '/') + 1 : __FILE__)
+//	#define _MS_LOG_ARG Logger::pid, _MS_FILE, __LINE__, MS_CLASS, __FUNCTION__
+//#else
 	#define _MS_LOG_STR  "%s level=\"%s\" pid=\"%ld\" message=\"%s::%s()"
 	#define _MS_LOG_STR_DESC _MS_LOG_STR " | "
 	#define _MS_LOG_ARG Utils::Time::currentStdTimestamp().c_str(), Logger::levelPrefix.c_str(), Logger::pid, MS_CLASS, __FUNCTION__
-#endif
+	
+	#define _MS_LOG_STR_LIVELYAPP "%s level=\"%s\" pid=\"%ld\" %s message=\"%s::%s()"
+	#define _MS_LOG_STR_DESC_LIVELYAPP _MS_LOG_STR_LIVELYAPP " | "
+	#define _MS_LOG_ARG_LIVELYAPP Utils::Time::currentStdTimestamp().c_str(), Logger::levelPrefix.c_str(), Logger::pid, Logger::appdataBuffer.c_str(), MS_CLASS, __FUNCTION__
+//#endif
 
 
 #define MS_TRACE() \
@@ -196,6 +202,19 @@ public:
 #define MS_HAS_WARN_TAG(tag) \
 	(Settings::configuration.logLevel >= LogLevel::LOG_WARN && _MS_TAG_ENABLED(tag))
 
+
+#define MS_DEBUG_TAG_LIVELYAPP(tag, appdatastr, desc, ...) \
+	do \
+	{ \
+		if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG && _MS_TAG_ENABLED(tag)) \
+		{ \
+			Logger::levelPrefix = "debug"; \
+			Logger::appdataBuffer.assign(appdatastr); \
+			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, _MS_LOG_STR_DESC_LIVELYAPP desc, _MS_LOG_ARG_LIVELYAPP, ##__VA_ARGS__); \
+			Logger::MSlogwrite(loggerWritten); \
+		} \
+	} \
+	while (false)
 
 #define MS_DEBUG_TAG(tag, desc, ...) \
 	do \

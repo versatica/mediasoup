@@ -12,6 +12,7 @@ std::string Logger::levelPrefix;
 const int64_t Logger::pid{ static_cast<int64_t>(uv_os_getpid()) };
 thread_local char Logger::buffer[Logger::bufferSize];
 thread_local std::string Logger::backupBuffer;
+thread_local std::string Logger::appdataBuffer;
 std::string Logger::logfilename = "";
 std::FILE* Logger::logfd {nullptr};
 bool Logger::openLogFile {false};

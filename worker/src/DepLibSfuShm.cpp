@@ -174,9 +174,6 @@ namespace DepLibSfuShm {
       // drain video frames queue
       if (videoPktBuffer.size() > 0)
       {
-        auto firstIt = this->videoPktBuffer.begin();
-        auto lastIt = this->videoPktBuffer.rend();
-
         MS_DEBUG_TAG(xcode, "shm[%s] start draining video buffer qsize=%zu", this->stream_name.c_str(), videoPktBuffer.size());
 
         this->Dequeue();
@@ -325,6 +322,8 @@ namespace DepLibSfuShm {
     bool endFound = false;
     bool frameTsExpired = (lastItemTs > frameTs) && (lastItemTs - frameTs > this->maxVideoPktDelay);
 
+    // TODO: only when we are dequeueing and ready to write whatever we have of a frame, we can finally set beginpicture and endpicture flags.
+    // TODO: we can detect gaps in seqids; we can have identical timestamps and seqids
     while(it != this->videoPktBuffer.end() && frameTs == it->ts)
     {
       if (it->seqid > prevseqid + 1)
@@ -506,8 +505,8 @@ namespace DepLibSfuShm {
 
     if ( ts - this->videoPktBuffer.begin()->ts > this->maxVideoPktDelay || tsIncrement > 0)
     {
-      MS_DEBUG_DEV("shm [%s] Dequeue [ %" PRIu64 " - %" PRIu64 " ] age=%" PRIu64 " incr=%" PRIu64, 
-        this->stream_name.c_str(), this->videoPktBuffer.begin()->seqid, this->videoPktBuffer.rbegin()->seqid, ts - this->videoPktBuffer.begin()->ts, tsIncrement);
+//      MS_DEBUG_DEV("shm [%s] Dequeue [ %" PRIu64 " - %" PRIu64 " ] age=%" PRIu64 " incr=%" PRIu64, 
+//        this->stream_name.c_str(), this->videoPktBuffer.begin()->seqid, this->videoPktBuffer.rbegin()->seqid, ts - this->videoPktBuffer.begin()->ts, tsIncrement);
       this->Dequeue();
     }
   }

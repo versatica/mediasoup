@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "LivelyAppDataToJson.hpp"
 
 namespace RTC
 {
@@ -30,8 +31,17 @@ namespace RTC
 				}
 			}
 		*/
-
-		MS_DEBUG_TAG(xcode, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
+		// Optional appData
+		auto jsonAppDataIt = data.find("appData");
+		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		{
+			this->appData = jsonAppDataIt->get<Lively::AppData>();
+			MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData.ToStr(), "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
+		}
+		else
+		{
+			MS_DEBUG_TAG(xcode, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
+		}
 
 		// Read shm.name
 		std::string shm;

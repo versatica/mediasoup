@@ -9,6 +9,7 @@
 #include "RTC/Codecs/Tools.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RtpStreamRecv.hpp"
+#include "LivelyAppDataToJson.hpp"
 
 
 namespace RTC
@@ -66,7 +67,17 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("%s codec not supported for shm", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		MS_DEBUG_TAG(rtp, "ShmConsumer ctor() data [%s] media codec [%s]", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
+		// Optional appData
+		auto jsonAppDataIt = data.find("appData");
+		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		{
+			this->appData = jsonAppDataIt->get<Lively::AppData>();
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData.ToStr(), "ShmConsumer ctor() data [%s] media codec [%s]", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
+		}
+		else
+		{
+			MS_DEBUG_TAG(rtp, "ShmConsumer ctor() data [%s] media codec [%s]", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
+		}	
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
