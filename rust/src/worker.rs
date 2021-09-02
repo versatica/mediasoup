@@ -39,18 +39,12 @@ uuid_based_wrapper_type!(
     WorkerId
 );
 
-/// Error that caused request to mediasoup-worker thread to fail.
+/// Error that caused request to mediasoup-worker request to fail.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RequestError {
     /// Channel already closed.
     #[error("Channel already closed")]
     ChannelClosed,
-    /// Message is too long.
-    #[error("Message is too long")]
-    MessageTooLong,
-    /// Payload is too long.
-    #[error("Payload is too long")]
-    PayloadTooLong,
     /// Request timed out.
     #[error("Request timed out")]
     TimedOut,

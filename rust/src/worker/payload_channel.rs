@@ -14,8 +14,6 @@ use std::sync::{Arc, Weak};
 use std::time::Duration;
 use thiserror::Error;
 
-const PAYLOAD_MAX_LEN: usize = 4_194_304;
-
 #[derive(Debug)]
 pub(super) enum InternalMessage {
     /// Unknown data
@@ -59,8 +57,6 @@ fn deserialize_message(bytes: &[u8]) -> PayloadChannelReceiveMessage {
 pub enum NotificationError {
     #[error("Channel already closed")]
     ChannelClosed,
-    #[error("Payload is too long")]
-    PayloadTooLong,
 }
 
 struct ResponseError {
@@ -224,17 +220,6 @@ impl PayloadChannel {
 
         debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
-        if payload.len() > PAYLOAD_MAX_LEN {
-            self.inner
-                .requests_container_weak
-                .upgrade()
-                .ok_or(RequestError::ChannelClosed)?
-                .lock()
-                .handlers
-                .remove(&id);
-            return Err(RequestError::PayloadTooLong);
-        }
-
         {
             #[derive(Debug, Serialize)]
             struct RequestMessagePrivate<'a, R> {
@@ -317,10 +302,6 @@ impl PayloadChannel {
         N: Notification,
     {
         debug!("notify() [event:{}]", notification.as_event());
-
-        if payload.len() > PAYLOAD_MAX_LEN {
-            return Err(NotificationError::PayloadTooLong);
-        }
 
         {
             #[derive(Debug, Serialize)]

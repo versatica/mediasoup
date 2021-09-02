@@ -15,8 +15,6 @@ use std::fmt::Debug;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
-const PAYLOAD_MAX_LEN: usize = 4_194_304;
-
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub(super) enum InternalMessage {
@@ -303,17 +301,6 @@ impl Channel {
             request: &request,
         })
         .unwrap();
-
-        if message.len() > PAYLOAD_MAX_LEN {
-            self.inner
-                .requests_container_weak
-                .upgrade()
-                .ok_or(RequestError::ChannelClosed)?
-                .lock()
-                .handlers
-                .remove(&id);
-            return Err(RequestError::MessageTooLong);
-        }
 
         {
             let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
