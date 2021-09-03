@@ -7,6 +7,12 @@ fn main() {
         return;
     }
 
+    let build_type = if cfg!(debug_assertions) {
+        "Debug"
+    } else {
+        "Release"
+    };
+
     let current_dir = std::env::current_dir()
         .unwrap()
         .into_os_string()
@@ -84,6 +90,7 @@ fn main() {
         // Build
         if !Command::new("make")
             .arg("libmediasoup-worker")
+            .env("MEDIASOUP_BUILDTYPE", &build_type)
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .spawn()
             .expect("Failed to start")
@@ -106,13 +113,13 @@ fn main() {
             "libgetopt.a",
         ] {
             std::fs::copy(
-                format!("{}/out/Release/{}", current_dir, file),
+                format!("{}/out/{}/{}", current_dir, build_type, file),
                 format!("{}/{}", out_dir, file),
             )
             .unwrap_or_else(|_| {
                 panic!(
-                    "Failed to copy static library from {}/out/Release/{} to {}/{}",
-                    current_dir, file, out_dir, file
+                    "Failed to copy static library from {}/out/{}/{} to {}/{}",
+                    current_dir, build_type, file, out_dir, file
                 )
             });
         }
