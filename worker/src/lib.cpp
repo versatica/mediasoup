@@ -23,8 +23,8 @@
 #include <csignal>  // sigaction()
 #include <cstdlib>  // std::_Exit(), std::genenv()
 #include <iostream> // std::cerr, std::endl
-#include <map>
 #include <string>
+#include <unordered_map>
 
 void IgnoreSignals();
 
@@ -210,7 +210,7 @@ void IgnoreSignals()
 	struct sigaction act; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	// clang-format off
-	std::map<std::string, int> ignoredSignals =
+	std::unordered_map<std::string, int> ignoredSignals =
 	{
 		{ "PIPE", SIGPIPE },
 		{ "HUP",  SIGHUP  },

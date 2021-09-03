@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackItem.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include <unordered_map>
 
 namespace RTC
 {
@@ -27,7 +28,7 @@ namespace RTC
 			static const std::string& MessageType2String(typename T::MessageType type);
 
 		private:
-			static std::map<typename T::MessageType, std::string> type2String;
+			static std::unordered_map<typename T::MessageType, std::string> type2String;
 
 		public:
 			typename T::MessageType GetMessageType() const

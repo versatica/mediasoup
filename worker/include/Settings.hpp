@@ -4,8 +4,8 @@
 #include "common.hpp"
 #include "LogLevel.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class Settings
@@ -54,8 +54,8 @@ public:
 	thread_local static struct Configuration configuration;
 
 private:
-	static std::map<std::string, LogLevel> string2LogLevel;
-	static std::map<LogLevel, std::string> logLevel2String;
+	static std::unordered_map<std::string, LogLevel> string2LogLevel;
+	static std::unordered_map<LogLevel, std::string> logLevel2String;
 };
 
 #endif

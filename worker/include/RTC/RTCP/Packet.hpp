@@ -2,8 +2,8 @@
 #define MS_RTC_RTCP_PACKET_HPP
 
 #include "common.hpp"
-#include <map>
 #include <string>
+#include <unordered_map>
 
 namespace RTC
 {
@@ -72,7 +72,7 @@ namespace RTC
 			static const std::string& Type2String(Type type);
 
 		private:
-			static std::map<Type, std::string> type2String;
+			static std::unordered_map<Type, std::string> type2String;
 
 		public:
 			explicit Packet(Type type) : type(type)
