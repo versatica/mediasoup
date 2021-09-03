@@ -17,7 +17,7 @@ namespace RTC
 		{ "audio", Media::Kind::AUDIO },
 		{ "video", Media::Kind::VIDEO }
 	};
-	std::map<Media::Kind, std::string> Media::kind2String =
+	std::unordered_map<Media::Kind, std::string> Media::kind2String =
 	{
 		{ Media::Kind::ALL,   ""      },
 		{ Media::Kind::AUDIO, "audio" },

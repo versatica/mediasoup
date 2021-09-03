@@ -19,7 +19,7 @@ namespace RTC
 		{ "svc",       RtpParameters::Type::SVC       },
 		{ "pipe",      RtpParameters::Type::PIPE      }
 	};
-	std::map<RtpParameters::Type, std::string> RtpParameters::type2String =
+	std::unordered_map<RtpParameters::Type, std::string> RtpParameters::type2String =
 	{
 		{ RtpParameters::Type::NONE,      "none"      },
 		{ RtpParameters::Type::SIMPLE,    "simple"    },

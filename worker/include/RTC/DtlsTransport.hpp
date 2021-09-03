@@ -7,8 +7,8 @@
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace RTC
@@ -144,9 +144,9 @@ namespace RTC
 		thread_local static EVP_PKEY* privateKey;
 		thread_local static SSL_CTX* sslCtx;
 		thread_local static uint8_t sslReadBuffer[];
-		static std::map<std::string, Role> string2Role;
-		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
-		static std::map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
+		static std::unordered_map<std::string, Role> string2Role;
+		static std::unordered_map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
+		static std::unordered_map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
 		thread_local static std::vector<Fingerprint> localFingerprints;
 		static std::vector<SrtpCryptoSuiteMapEntry> srtpCryptoSuites;
 

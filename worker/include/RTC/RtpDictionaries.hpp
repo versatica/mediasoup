@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/Parameters.hpp"
-#include <map>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
@@ -30,7 +29,7 @@ namespace RTC
 
 	private:
 		static std::unordered_map<std::string, Kind> string2Kind;
-		static std::map<Kind, std::string> kind2String;
+		static std::unordered_map<Kind, std::string> kind2String;
 	};
 
 	class RtpCodecMimeType
@@ -76,9 +75,9 @@ namespace RTC
 
 	public:
 		static std::unordered_map<std::string, Type> string2Type;
-		static std::map<Type, std::string> type2String;
+		static std::unordered_map<Type, std::string> type2String;
 		static std::unordered_map<std::string, Subtype> string2Subtype;
-		static std::map<Subtype, std::string> subtype2String;
+		static std::unordered_map<Subtype, std::string> subtype2String;
 
 	public:
 		RtpCodecMimeType() = default;
@@ -269,7 +268,7 @@ namespace RTC
 
 	private:
 		static std::unordered_map<std::string, Type> string2Type;
-		static std::map<Type, std::string> type2String;
+		static std::unordered_map<Type, std::string> type2String;
 
 	public:
 		RtpParameters() = default;

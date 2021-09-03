@@ -16,7 +16,7 @@ namespace RTC
 		{ "audio", RtpCodecMimeType::Type::AUDIO },
 		{ "video", RtpCodecMimeType::Type::VIDEO }
 	};
-	std::map<RtpCodecMimeType::Type, std::string> RtpCodecMimeType::type2String =
+	std::unordered_map<RtpCodecMimeType::Type, std::string> RtpCodecMimeType::type2String =
 	{
 		{ RtpCodecMimeType::Type::AUDIO, "audio" },
 		{ RtpCodecMimeType::Type::VIDEO, "video" }
@@ -48,7 +48,7 @@ namespace RTC
 		{ "x-ulpfecuc",      RtpCodecMimeType::Subtype::X_ULPFECUC      },
 		{ "red",             RtpCodecMimeType::Subtype::RED             }
 	};
-	std::map<RtpCodecMimeType::Subtype, std::string> RtpCodecMimeType::subtype2String =
+	std::unordered_map<RtpCodecMimeType::Subtype, std::string> RtpCodecMimeType::subtype2String =
 	{
 		// Audio codecs:
 		{ RtpCodecMimeType::Subtype::OPUS,            "opus"            },
