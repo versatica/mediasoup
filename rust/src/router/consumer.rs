@@ -239,7 +239,7 @@ pub struct ConsumerStat {
     pub packet_count: usize,
     pub byte_count: usize,
     pub bitrate: u32,
-    pub round_trip_time: Option<u32>,
+    pub round_trip_time: Option<f64>,
 }
 
 /// RTC statistics of the consumer, may or may not include producer statistics.
