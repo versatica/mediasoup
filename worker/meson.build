@@ -196,6 +196,7 @@ libwebrtc_include_directories = include_directories('include')
 subdir('deps/libwebrtc')
 
 dependencies = [
+  abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
   nlohmann_json_proj.get_variable('nlohmann_json_dep'),
   libuv_proj.get_variable('libuv_dep'),
@@ -205,6 +206,7 @@ dependencies = [
 ]
 
 link_whole = [
+  abseil_cpp_proj.get_variable('absl_container_lib'),
   openssl_proj.get_variable('libcrypto_lib'),
   openssl_proj.get_variable('libssl_lib'),
   libuv_proj.get_variable('libuv'),

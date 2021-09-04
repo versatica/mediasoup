@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include "handles/Timer.hpp"
-#include <unordered_map>
+#include <absl/container/flat_hash_map.h>
 
 class DepUsrSCTP
 {
@@ -42,7 +42,7 @@ private:
 	thread_local static Checker* checker;
 	static uint64_t numSctpAssociations;
 	static uintptr_t nextSctpAssociationId;
-	static std::unordered_map<uintptr_t, RTC::SctpAssociation*> mapIdSctpAssociation;
+	static absl::flat_hash_map<uintptr_t, RTC::SctpAssociation*> mapIdSctpAssociation;
 };
 
 #endif

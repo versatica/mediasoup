@@ -54,7 +54,7 @@ namespace RTC
 	private:
 		struct RtpMapping
 		{
-			std::unordered_map<uint8_t, uint8_t> codecs;
+			absl::flat_hash_map<uint8_t, uint8_t> codecs;
 			std::vector<RtpEncodingMapping> encodings;
 		};
 
@@ -112,7 +112,7 @@ namespace RTC
 		{
 			return this->paused;
 		}
-		const std::unordered_map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
+		const absl::flat_hash_map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
 		{
 			return this->mapRtpStreamMappedSsrc;
 		}
@@ -160,7 +160,7 @@ namespace RTC
 		// Passed by argument.
 		RTC::Producer::Listener* listener{ nullptr };
 		// Allocated by this.
-		std::unordered_map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
+		absl::flat_hash_map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
 		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
 		RTC::Media::Kind kind;
@@ -169,9 +169,9 @@ namespace RTC
 		struct RtpMapping rtpMapping;
 		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::vector<uint8_t> rtpStreamScores;
-		std::unordered_map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
-		std::unordered_map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
-		std::unordered_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		absl::flat_hash_map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
+		absl::flat_hash_map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
+		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
 		RTC::RtpPacket* currentRtpPacket{ nullptr };

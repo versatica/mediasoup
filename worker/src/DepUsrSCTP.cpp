@@ -55,7 +55,7 @@ inline static void sctpDebug(const char* format, ...)
 thread_local DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
 uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
 uintptr_t DepUsrSCTP::nextSctpAssociationId{ 0u };
-std::unordered_map<uintptr_t, RTC::SctpAssociation*> DepUsrSCTP::mapIdSctpAssociation;
+absl::flat_hash_map<uintptr_t, RTC::SctpAssociation*> DepUsrSCTP::mapIdSctpAssociation;
 
 /* Static methods. */
 

@@ -11,6 +11,7 @@
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
+#include <absl/container/inlined_vector.h>
 #include <cstring>  // std::memcpy()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream

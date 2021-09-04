@@ -10,7 +10,7 @@ namespace RTC
 	/* Class variables. */
 
 	// clang-format off
-	std::unordered_map<std::string, RtpHeaderExtensionUri::Type> RtpHeaderExtensionUri::string2Type =
+	absl::flat_hash_map<std::string, RtpHeaderExtensionUri::Type> RtpHeaderExtensionUri::string2Type =
 	{
 		{ "urn:ietf:params:rtp-hdrext:sdes:mid",                                       RtpHeaderExtensionUri::Type::MID                    },
 		{ "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",                             RtpHeaderExtensionUri::Type::RTP_STREAM_ID          },

@@ -23,14 +23,14 @@ static std::mutex globalSyncMutex;
 
 thread_local struct Settings::Configuration Settings::configuration;
 // clang-format off
-std::unordered_map<std::string, LogLevel> Settings::string2LogLevel =
+absl::flat_hash_map<std::string, LogLevel> Settings::string2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
 	{ "error", LogLevel::LOG_ERROR },
 	{ "none",  LogLevel::LOG_NONE  }
 };
-std::unordered_map<LogLevel, std::string> Settings::logLevel2String =
+absl::flat_hash_map<LogLevel, std::string> Settings::logLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },
