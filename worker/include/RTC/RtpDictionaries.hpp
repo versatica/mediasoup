@@ -3,9 +3,9 @@
 
 #include "common.hpp"
 #include "RTC/Parameters.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 using json = nlohmann::json;
@@ -28,8 +28,8 @@ namespace RTC
 		static const std::string& GetString(Kind kind);
 
 	private:
-		static std::unordered_map<std::string, Kind> string2Kind;
-		static std::unordered_map<Kind, std::string> kind2String;
+		static absl::flat_hash_map<std::string, Kind> string2Kind;
+		static absl::flat_hash_map<Kind, std::string> kind2String;
 	};
 
 	class RtpCodecMimeType
@@ -74,10 +74,10 @@ namespace RTC
 		};
 
 	public:
-		static std::unordered_map<std::string, Type> string2Type;
-		static std::unordered_map<Type, std::string> type2String;
-		static std::unordered_map<std::string, Subtype> string2Subtype;
-		static std::unordered_map<Subtype, std::string> subtype2String;
+		static absl::flat_hash_map<std::string, Type> string2Type;
+		static absl::flat_hash_map<Type, std::string> type2String;
+		static absl::flat_hash_map<std::string, Subtype> string2Subtype;
+		static absl::flat_hash_map<Subtype, std::string> subtype2String;
 
 	public:
 		RtpCodecMimeType() = default;
@@ -144,7 +144,7 @@ namespace RTC
 		};
 
 	private:
-		static std::unordered_map<std::string, Type> string2Type;
+		static absl::flat_hash_map<std::string, Type> string2Type;
 
 	public:
 		static Type GetType(std::string& uri);
@@ -268,8 +268,8 @@ namespace RTC
 		static std::string& GetTypeString(Type type);
 
 	private:
-		static std::unordered_map<std::string, Type> string2Type;
-		static std::unordered_map<Type, std::string> type2String;
+		static absl::flat_hash_map<std::string, Type> string2Type;
+		static absl::flat_hash_map<Type, std::string> type2String;
 
 	public:
 		RtpParameters() = default;

@@ -13,9 +13,9 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/Transport.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 
 using json = nlohmann::json;
@@ -93,16 +93,17 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		std::unordered_map<std::string, RTC::Transport*> mapTransports;
-		std::unordered_map<std::string, RTC::RtpObserver*> mapRtpObservers;
+		absl::flat_hash_map<std::string, RTC::Transport*> mapTransports;
+		absl::flat_hash_map<std::string, RTC::RtpObserver*> mapRtpObservers;
 		// Others.
-		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
-		std::unordered_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
-		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::RtpObserver*>> mapProducerRtpObservers;
-		std::unordered_map<std::string, RTC::Producer*> mapProducers;
-		std::unordered_map<RTC::DataProducer*, std::unordered_set<RTC::DataConsumer*>> mapDataProducerDataConsumers;
-		std::unordered_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
-		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;
+		absl::flat_hash_map<RTC::Producer*, absl::flat_hash_set<RTC::Consumer*>> mapProducerConsumers;
+		absl::flat_hash_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
+		absl::flat_hash_map<RTC::Producer*, absl::flat_hash_set<RTC::RtpObserver*>> mapProducerRtpObservers;
+		absl::flat_hash_map<std::string, RTC::Producer*> mapProducers;
+		absl::flat_hash_map<RTC::DataProducer*, absl::flat_hash_set<RTC::DataConsumer*>>
+		  mapDataProducerDataConsumers;
+		absl::flat_hash_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
+		absl::flat_hash_map<std::string, RTC::DataProducer*> mapDataProducers;
 	};
 } // namespace RTC
 

@@ -2,9 +2,9 @@
 #define MS_PAYLOAD_CHANNEL_NOTIFICATION_HPP
 
 #include "common.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -24,7 +24,7 @@ namespace PayloadChannel
 		static bool IsNotification(json& jsonNotification);
 
 	private:
-		static std::unordered_map<std::string, EventId> string2EventId;
+		static absl::flat_hash_map<std::string, EventId> string2EventId;
 
 	public:
 		explicit Notification(json& jsonNotification);

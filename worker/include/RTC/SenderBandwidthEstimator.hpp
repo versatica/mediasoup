@@ -102,7 +102,7 @@ namespace RTC
 		uint32_t initialAvailableBitrate{ 0u };
 		uint32_t availableBitrate{ 0u };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
-		std::map<uint16_t, SentInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> sentInfos;
+		absl::btree_map<uint16_t, SentInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> sentInfos;
 		float rtt{ 0 }; // Round trip time in ms.
 		CummulativeResult cummulativeResult;
 		CummulativeResult probationCummulativeResult;

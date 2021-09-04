@@ -26,9 +26,9 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "handles/Timer.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -273,12 +273,12 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		std::unordered_map<std::string, RTC::Producer*> mapProducers;
-		std::unordered_map<std::string, RTC::Consumer*> mapConsumers;
-		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;
-		std::unordered_map<std::string, RTC::DataConsumer*> mapDataConsumers;
-		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
-		std::unordered_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
+		absl::flat_hash_map<std::string, RTC::Producer*> mapProducers;
+		absl::flat_hash_map<std::string, RTC::Consumer*> mapConsumers;
+		absl::flat_hash_map<std::string, RTC::DataProducer*> mapDataProducers;
+		absl::flat_hash_map<std::string, RTC::DataConsumer*> mapDataConsumers;
+		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
+		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		Timer* rtcpTimer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
