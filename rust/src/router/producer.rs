@@ -198,7 +198,7 @@ pub struct ProducerStat {
     pub packet_count: usize,
     pub byte_count: usize,
     pub bitrate: u32,
-    pub round_trip_time: Option<f64>,
+    pub round_trip_time: Option<f32>,
     pub rtx_packets_discarded: Option<u32>,
     // RtpStreamRecv specific.
     pub jitter: u32,
