@@ -198,11 +198,11 @@ pub struct ProducerStat {
     pub packet_count: usize,
     pub byte_count: usize,
     pub bitrate: u32,
-    pub round_trip_time: Option<u32>,
+    pub round_trip_time: Option<f32>,
     pub rtx_packets_discarded: Option<u32>,
     // RtpStreamRecv specific.
     pub jitter: u32,
-    pub bitrate_by_layer: HashMap<String, u32>,
+    pub bitrate_by_layer: Option<HashMap<String, u32>>,
 }
 
 /// 'trace' event data.
