@@ -698,16 +698,16 @@ export class Router extends EnhancedEventEmitter
 			listenIp,
 			shm,
 			log,
-			appData = {}
+			appData = ''
 		} : ShmTransportOptions
 	): Promise<ShmTransport>
 	{
-		logger.debug('createShmTransport() [shm:%o]', shm);
+		logger.debug('createShmTransport() [shm:%o data:%s]', shm, appData);
 
 		if (!listenIp)
 			throw new TypeError('missing listenIp');
-		else if (appData && typeof appData !== 'object')
-			throw new TypeError('if given, appData must be an object');
+		else if (appData && typeof appData !== 'string')
+			throw new TypeError('if given, appData must be a string');
 
 		if (typeof listenIp === 'string')
 		{
