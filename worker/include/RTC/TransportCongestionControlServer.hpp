@@ -7,6 +7,7 @@
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "handles/Timer.hpp"
+#include <deque>
 #include <libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h>
 
 namespace RTC
@@ -86,7 +87,7 @@ namespace RTC
 		uint32_t maxIncomingBitrate{ 0u };
 		uint64_t limitationRembSentAtMs{ 0u };
 		uint8_t unlimitedRembCounter{ 0u };
-		std::vector<double> packetLossHistory;
+		std::deque<double> packetLossHistory;
 		double packetLoss{ 0 };
 	};
 } // namespace RTC

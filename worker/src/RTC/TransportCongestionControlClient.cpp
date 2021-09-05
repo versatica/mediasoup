@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
@@ -181,7 +181,7 @@ namespace RTC
 	{
 		// Add the score into the histogram.
 		if (this->packetLossHistory.size() == PacketLossHistogramLength)
-			this->packetLossHistory.erase(this->packetLossHistory.begin());
+			this->packetLossHistory.pop_front();
 
 		this->packetLossHistory.push_back(packetLoss);
 
@@ -208,7 +208,6 @@ namespace RTC
 			totalPacketLoss += weight * packetLossEntry;
 		}
 
-		[[maybe_unused]] double previousPacketLoss = this->packetLoss;
 		// clang-tidy "thinks" that this can lead to division by zero but we are
 		// smarter.
 		// NOLINTNEXTLINE(clang-analyzer-core.DivideZero)

@@ -9,6 +9,7 @@
 #include "RTC/RtpProbationGenerator.hpp"
 #include "RTC/TrendCalculator.hpp"
 #include "handles/Timer.hpp"
+#include <deque>
 #include <libwebrtc/api/transport/goog_cc_factory.h>
 #include <libwebrtc/api/transport/network_types.h>
 #include <libwebrtc/call/rtp_transport_controller_send.h>
@@ -115,7 +116,7 @@ namespace RTC
 		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		RTC::TrendCalculator desiredBitrateTrend;
-		std::vector<double> packetLossHistory;
+		std::deque<double> packetLossHistory;
 		double packetLoss{ 0 };
 	};
 } // namespace RTC
