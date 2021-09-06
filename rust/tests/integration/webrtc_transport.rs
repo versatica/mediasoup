@@ -360,6 +360,8 @@ fn get_stats_succeeds() {
         assert_eq!(stats[0].probation_send_bitrate, 0);
         assert_eq!(stats[0].ice_selected_tuple, None);
         assert_eq!(stats[0].max_incoming_bitrate, None);
+        assert_eq!(stats[0].rtp_packet_loss_received, None);
+        assert_eq!(stats[0].rtp_packet_loss_sent, None);
     });
 }
 
