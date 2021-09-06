@@ -166,7 +166,7 @@ namespace RTC
 
 		// Update packet loss history
 		size_t expected_packets = feedback->GetPacketStatusCount();
-		size_t lost_packets = 0;
+		size_t lost_packets     = 0;
 		for (const auto& result : feedback->GetPacketResults())
 		{
 			if (!result.received)

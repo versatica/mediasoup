@@ -127,7 +127,7 @@ namespace RTC
 				this->transportCcFeedbackMediaSsrc  = packet->GetSsrc();
 
 				this->transportCcFeedbackPacket->SetSenderSsrc(0u);
-				this->transportCcFeedbackPacket->SetMediaSsrc(this->transportCcFeedbackMediaSsrc );
+				this->transportCcFeedbackPacket->SetMediaSsrc(this->transportCcFeedbackMediaSsrc);
 
 				// Provide the feedback packet with the RTP packet info. If it fails,
 				// send current feedback and add the packet info to a new one.
@@ -233,7 +233,7 @@ namespace RTC
 
 		// Update packet loss history
 		size_t expected_packets = this->transportCcFeedbackPacket->GetPacketStatusCount();
-		size_t lost_packets = 0;
+		size_t lost_packets     = 0;
 		for (const auto& result : this->transportCcFeedbackPacket->GetPacketResults())
 		{
 			if (!result.received)
