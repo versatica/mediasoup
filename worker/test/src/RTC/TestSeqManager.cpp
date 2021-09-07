@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/SeqManager.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <string>
 #include <vector>
 
@@ -417,7 +417,7 @@ SCENARIO("SeqManager", "[rtc]")
 			{     0,  5, false, false },
 			{     1,  6, false, false },
 			{     2,  7, false, false },
-			{     3,  8, false, false }	
+			{     3,  8, false, false }
 		};
 		// clang-format on
 

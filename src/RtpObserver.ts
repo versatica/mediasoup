@@ -225,9 +225,9 @@ export class RtpObserver extends EnhancedEventEmitter
 		logger.debug('addProducer()');
 
 		const producer = this._getProducerById(producerId);
-		const internal = { ...this._internal, producerId };
+		const reqData = { producerId };
 
-		await this._channel.request('rtpObserver.addProducer', internal);
+		await this._channel.request('rtpObserver.addProducer', this._internal, reqData);
 
 		// Emit observer event.
 		this._observer.safeEmit('addproducer', producer);
@@ -241,9 +241,9 @@ export class RtpObserver extends EnhancedEventEmitter
 		logger.debug('removeProducer()');
 
 		const producer = this._getProducerById(producerId);
-		const internal = { ...this._internal, producerId };
+		const reqData = { producerId };
 
-		await this._channel.request('rtpObserver.removeProducer', internal);
+		await this._channel.request('rtpObserver.removeProducer', this._internal, reqData);
 
 		// Emit observer event.
 		this._observer.safeEmit('removeproducer', producer);

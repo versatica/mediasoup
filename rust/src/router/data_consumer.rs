@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_producer::DataProducerId;
+use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
@@ -206,7 +206,8 @@ struct Inner {
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Box<dyn Transport>,
-    closed: AtomicBool,
+    weak_data_producer: WeakDataProducer,
+    closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
     _subscription_handlers: Vec<Option<SubscriptionHandler>>,
     _on_transport_close_handler: Mutex<HandlerId>,
@@ -237,13 +238,18 @@ impl Inner {
                         data_producer_id: self.data_producer_id,
                     },
                 };
+                let data_producer = self.weak_data_producer.upgrade();
                 let transport = self.transport.clone();
+
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
-                            error!("consumer closing failed on drop: {}", error);
+                        if data_producer.is_some() {
+                            if let Err(error) = channel.request(request).await {
+                                error!("consumer closing failed on drop: {}", error);
+                            }
                         }
 
+                        drop(data_producer);
                         drop(transport);
                     })
                     .detach();
@@ -344,7 +350,7 @@ impl DataConsumer {
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
-        data_producer_id: DataProducerId,
+        data_producer: DataProducer,
         executor: Arc<Executor<'static>>,
         channel: Channel,
         payload_channel: PayloadChannel,
@@ -355,20 +361,25 @@ impl DataConsumer {
         debug!("new()");
 
         let handlers = Arc::<Handlers>::default();
+        let closed = Arc::new(AtomicBool::new(false));
 
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
+            let closed = Arc::clone(&closed);
             let inner_weak = Arc::clone(&inner_weak);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
                 match serde_json::from_value::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::DataProducerClose => {
-                            handlers.data_producer_close.call_simple();
-                            if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade)
-                            {
-                                inner.close(false);
+                            if !closed.load(Ordering::SeqCst) {
+                                handlers.data_producer_close.call_simple();
+                                if let Some(inner) =
+                                    inner_weak.lock().as_ref().and_then(Weak::upgrade)
+                                {
+                                    inner.close(false);
+                                }
                             }
                         }
                         Notification::SctpSendBufferFull => {
@@ -430,7 +441,7 @@ impl DataConsumer {
             sctp_stream_parameters,
             label,
             protocol,
-            data_producer_id,
+            data_producer_id: data_producer.id(),
             direct,
             executor,
             channel,
@@ -438,7 +449,8 @@ impl DataConsumer {
             handlers,
             app_data,
             transport,
-            closed: AtomicBool::new(false),
+            weak_data_producer: data_producer.downgrade(),
+            closed,
             _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
@@ -640,7 +652,7 @@ impl DataConsumer {
     #[must_use]
     pub fn downgrade(&self) -> WeakDataConsumer {
         WeakDataConsumer {
-            inner: Arc::downgrade(&self.inner()),
+            inner: Arc::downgrade(self.inner()),
         }
     }
 

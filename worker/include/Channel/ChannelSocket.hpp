@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 namespace Channel
 {
@@ -13,6 +13,9 @@ namespace Channel
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
 			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) = 0;
@@ -53,6 +56,9 @@ namespace Channel
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnChannelRequest(
 			  Channel::ChannelSocket* channel, Channel::ChannelRequest* request) = 0;
 			virtual void OnChannelClosed(Channel::ChannelSocket* channel)        = 0;
@@ -80,6 +86,7 @@ namespace Channel
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Others.
+		bool closed{ false };
 		ConsumerSocket consumerSocket;
 		ProducerSocket producerSocket;
 		uint8_t* writeBuffer;

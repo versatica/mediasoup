@@ -3,6 +3,7 @@
 
 #include "Worker.hpp"
 #include "DepLibUV.hpp"
+#include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -32,6 +33,9 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 	}
 #endif
 
+	// Create the Checker instance in DepUsrSCTP.
+	DepUsrSCTP::CreateChecker();
+
 	// Tell the Node process that we are running.
 	Channel::ChannelNotifier::Emit(std::to_string(Logger::pid), "running");
 
@@ -43,12 +47,6 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 Worker::~Worker()
 {
 	MS_TRACE();
-
-	// Delete the Channel.
-	delete this->channel;
-
-	// Delete the PayloadChannel.
-	delete this->payloadChannel;
 
 	if (!this->closed)
 		Close();
@@ -77,6 +75,9 @@ void Worker::Close()
 		delete router;
 	}
 	this->mapRouters.clear();
+
+	// Close the Checker instance in DepUsrSCTP.
+	DepUsrSCTP::CloseChecker();
 
 	// Close the Channel.
 	this->channel->Close();
@@ -270,8 +271,14 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 		{
 			std::string routerId;
 
-			// This may throw.
-			SetNewRouterIdFromInternal(request->internal, routerId);
+			try
+			{
+				SetNewRouterIdFromInternal(request->internal, routerId);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+			}
 
 			auto* router = new RTC::Router(routerId);
 
@@ -286,8 +293,16 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 
 		case Channel::ChannelRequest::MethodId::ROUTER_CLOSE:
 		{
-			// This may throw.
-			RTC::Router* router = GetRouterFromInternal(request->internal);
+			RTC::Router* router{ nullptr };
+
+			try
+			{
+				router = GetRouterFromInternal(request->internal);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+			}
 
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);
@@ -303,10 +318,20 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 		// Any other request must be delivered to the corresponding Router.
 		default:
 		{
-			// This may throw.
-			RTC::Router* router = GetRouterFromInternal(request->internal);
+			try
+			{
+				RTC::Router* router = GetRouterFromInternal(request->internal);
 
-			router->HandleRequest(request);
+				router->HandleRequest(request);
+			}
+			catch (const MediaSoupTypeError& error)
+			{
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+			}
 
 			break;
 		}
@@ -334,10 +359,20 @@ inline void Worker::OnPayloadChannelNotification(
 
 	MS_DEBUG_DEV("PayloadChannel notification received [event:%s]", notification->event.c_str());
 
-	// This may throw.
-	RTC::Router* router = GetRouterFromInternal(notification->internal);
+	try
+	{
+		RTC::Router* router = GetRouterFromInternal(notification->internal);
 
-	router->HandleNotification(notification);
+		router->HandleNotification(notification);
+	}
+	catch (const MediaSoupTypeError& error)
+	{
+		MS_THROW_TYPE_ERROR("%s [event:%s]", error.buffer, notification->event.c_str());
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_THROW_ERROR("%s [method:%s]", error.buffer, notification->event.c_str());
+	}
 }
 
 inline void Worker::OnPayloadChannelRequest(
@@ -351,10 +386,20 @@ inline void Worker::OnPayloadChannelRequest(
 	  request->method.c_str(),
 	  request->id);
 
-	// This may throw.
-	RTC::Router* router = GetRouterFromInternal(request->internal);
+	try
+	{
+		RTC::Router* router = GetRouterFromInternal(request->internal);
 
-	router->HandleRequest(request);
+		router->HandleRequest(request);
+	}
+	catch (const MediaSoupTypeError& error)
+	{
+		MS_THROW_TYPE_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+	}
 }
 
 inline void Worker::OnPayloadChannelClosed(PayloadChannel::PayloadChannelSocket* /*payloadChannel*/)

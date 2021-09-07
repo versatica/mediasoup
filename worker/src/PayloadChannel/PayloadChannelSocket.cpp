@@ -36,11 +36,19 @@ namespace PayloadChannel
 
 		std::free(this->writeBuffer);
 		delete this->ongoingNotification;
+
+		if (!this->closed)
+			Close();
 	}
 
 	void PayloadChannelSocket::Close()
 	{
 		MS_TRACE_STD();
+
+		if (this->closed)
+			return;
+
+		this->closed = true;
 
 		this->consumerSocket.Close();
 		this->producerSocket.Close();
@@ -57,7 +65,7 @@ namespace PayloadChannel
 	{
 		MS_TRACE();
 
-		if (this->producerSocket.IsClosed())
+		if (this->closed)
 			return;
 
 		std::string message = jsonMessage.dump();
@@ -83,7 +91,7 @@ namespace PayloadChannel
 	{
 		MS_TRACE_STD();
 
-		if (this->consumerSocket.IsClosed())
+		if (this->closed)
 			return;
 
 		std::string message = jsonMessage.dump();

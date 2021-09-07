@@ -221,20 +221,20 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             RtpEncodingParameters {
                 ssrc: Some(11111111),
                 rtx: Some(RtpEncodingParametersRtx { ssrc: 11111112 }),
-                scalability_mode: Some("L1T3".to_string()),
+                scalability_mode: ScalabilityMode::L1T3,
                 max_bitrate: Some(111111),
                 ..RtpEncodingParameters::default()
             },
             RtpEncodingParameters {
                 ssrc: Some(21111111),
                 rtx: Some(RtpEncodingParametersRtx { ssrc: 21111112 }),
-                scalability_mode: Some("L1T3".to_string()),
+                scalability_mode: ScalabilityMode::L1T3,
                 max_bitrate: Some(222222),
                 ..RtpEncodingParameters::default()
             },
             RtpEncodingParameters {
                 rid: Some("high".to_string()),
-                scalability_mode: Some("L1T3".to_string()),
+                scalability_mode: ScalabilityMode::L1T3,
                 max_bitrate: Some(333333),
                 ..RtpEncodingParameters::default()
             },
@@ -328,7 +328,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(0)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
     assert_eq!(
         consumable_rtp_parameters.encodings.get(1).unwrap().ssrc,
@@ -348,7 +348,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(1)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
     assert_eq!(
         consumable_rtp_parameters.encodings.get(2).unwrap().ssrc,
@@ -368,7 +368,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(2)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
 
     assert_eq!(
@@ -415,49 +415,48 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         ],
         header_extensions: vec![
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::Mid,
                 preferred_id: 1,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::RtpStreamId,
                 preferred_id: 2,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Audio),
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AudioLevel,
                 preferred_id: 8,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::VideoOrientation,
                 preferred_id: 11,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: Some(MediaKind::Video),
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TimeOffset,
                 preferred_id: 12,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
         ],
-        fec_mechanisms: vec![],
     };
 
     let consumer_rtp_parameters =
@@ -511,7 +510,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(0)
             .unwrap()
             .scalability_mode,
-        Some("S3T3".to_string()),
+        ScalabilityMode::S3T3,
     );
     assert_eq!(
         consumer_rtp_parameters
@@ -595,7 +594,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(0)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
     assert!(pipe_consumer_rtp_parameters
         .encodings
@@ -621,7 +620,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(1)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
     assert!(pipe_consumer_rtp_parameters
         .encodings
@@ -647,7 +646,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(2)
             .unwrap()
             .scalability_mode,
-        Some("L1T3".to_string()),
+        ScalabilityMode::L1T3,
     );
 
     assert_eq!(

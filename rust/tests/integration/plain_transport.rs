@@ -3,13 +3,13 @@ use mediasoup::data_structures::{
     AppData, SctpState, TransportListenIp, TransportProtocol, TransportTuple,
 };
 use mediasoup::plain_transport::{PlainTransportOptions, PlainTransportRemoteParameters};
+use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::rtp_parameters::{
     MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
 };
 use mediasoup::sctp_parameters::SctpParameters;
 use mediasoup::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
-use mediasoup::transport::{Transport, TransportGeneric};
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use std::collections::HashSet;
@@ -243,6 +243,28 @@ fn create_succeeds() {
                 assert_eq!(transport_dump.sctp_state, transport2.sctp_state());
             }
         }
+    });
+}
+
+#[test]
+fn create_with_fixed_port_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_plain_transport({
+                let mut plain_transport_options = PlainTransportOptions::new(TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                });
+                plain_transport_options.port = Some(60_001);
+
+                plain_transport_options
+            })
+            .await
+            .expect("Failed to create Plain transport");
+
+        assert_eq!(transport.tuple().local_port(), 60_001);
     });
 }
 

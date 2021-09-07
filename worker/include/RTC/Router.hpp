@@ -13,7 +13,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/Transport.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -39,7 +39,7 @@ namespace RTC
 		RTC::Transport* GetTransportFromInternal(json& internal) const;
 		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
 		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
-		RTC::Producer* GetProducerFromInternal(json& internal) const;
+		RTC::Producer* GetProducerFromData(json& data) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:

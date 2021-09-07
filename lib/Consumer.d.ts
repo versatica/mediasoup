@@ -11,7 +11,7 @@ export declare type ConsumerOptions = {
     /**
      * RTP capabilities of the consuming endpoint.
      */
-    rtpCapabilities?: RtpCapabilities;
+    rtpCapabilities: RtpCapabilities;
     /**
      * Whether the Consumer must start in paused mode. Default false.
      *
@@ -27,6 +27,11 @@ export declare type ConsumerOptions = {
      * by itself.
      */
     paused?: boolean;
+    /**
+     * The MID for the Consumer. If not specified, a sequentially growing
+     * number will be assigned.
+     */
+    mid?: string;
     /**
      * Preferred spatial and temporal layer for simulcast or SVC media sources.
      * If unset, the highest ones are selected.

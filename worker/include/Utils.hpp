@@ -2,10 +2,10 @@
 #define MS_UTILS_HPP
 
 #include "common.hpp"
-#include <json.hpp>
 #include <openssl/hmac.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
+#include <nlohmann/json.hpp>
 #include <string>
 #include <chrono>
 #include <ctime>
@@ -255,7 +255,7 @@ namespace Utils
 			return crc ^ ~0U;
 		}
 
-		static const uint8_t* GetHmacShA1(const std::string& key, const uint8_t* data, size_t len);
+		static const uint8_t* GetHmacSha1(const std::string& key, const uint8_t* data, size_t len);
 
 	private:
 		thread_local static uint32_t seed;

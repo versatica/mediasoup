@@ -5,9 +5,9 @@ use mediasoup::data_producer::{DataProducer, DataProducerOptions};
 use mediasoup::data_structures::{AppData, TransportListenIp};
 use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
+use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::sctp_parameters::SctpStreamParameters;
-use mediasoup::transport::{Transport, TransportGeneric};
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -491,59 +491,5 @@ fn close_event() {
             assert_eq!(dump.data_producer_ids, vec![]);
             assert_eq!(dump.data_consumer_ids, vec![]);
         }
-    });
-}
-
-#[test]
-fn data_producer_close_event() {
-    future::block_on(async move {
-        let (_worker, router, _transport1, data_producer) = init().await;
-
-        let transport2 = router
-            .create_plain_transport({
-                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
-                    announced_ip: None,
-                });
-
-                transport_options.enable_sctp = true;
-
-                transport_options
-            })
-            .await
-            .expect("Failed to create transport1");
-
-        let data_consumer = transport2
-            .consume_data({
-                let mut options = DataConsumerOptions::new_sctp_unordered_with_life_time(
-                    data_producer.id(),
-                    4000,
-                );
-
-                options.app_data = AppData::new(CustomAppData { baz: "LOL" });
-
-                options
-            })
-            .await
-            .expect("Failed to consume data");
-
-        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_consumer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (mut data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_consumer.on_data_producer_close(move || {
-            let _ = data_producer_close_tx.send(());
-        });
-        drop(data_producer);
-
-        data_producer_close_rx
-            .await
-            .expect("Failed to receive data_producer_close event");
-
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(data_consumer.closed(), true);
     });
 }

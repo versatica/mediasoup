@@ -10,6 +10,7 @@ import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
 import { DataConsumer } from './DataConsumer';
+import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpeakerObserver';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
@@ -147,11 +148,11 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a WebRtcTransport.
      */
-    createWebRtcTransport({ listenIps, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
+    createWebRtcTransport({ listenIps, port, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
     /**
      * Create a PlainTransport.
      */
-    createPlainTransport({ listenIp, rtcpMux, comedia, disableOriginCheck, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
+    createPlainTransport({ listenIp, port, rtcpMux, comedia, disableOriginCheck, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
     /**
      * DEPRECATED: Use createPlainTransport().
      */
@@ -159,7 +160,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a PipeTransport.
      */
-    createPipeTransport({ listenIp, disableOriginCheck, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
+    createPipeTransport({ listenIp, disableOriginCheck, port, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
     /**
      * Create a DirectTransport.
      */
@@ -180,6 +181,10 @@ export declare class Router extends EnhancedEventEmitter {
      * Pipes the given Producer or DataProducer into another Router in same host.
      */
     pipeToRouter({ producerId, dataProducerId, router, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }: PipeToRouterOptions): Promise<PipeToRouterResult>;
+    /**
+     * Create an ActiveSpeakerObserver
+     */
+    createActiveSpeakerObserver({ interval, appData }?: ActiveSpeakerObserverOptions): Promise<ActiveSpeakerObserver>;
     /**
      * Create an AudioLevelObserver.
      */

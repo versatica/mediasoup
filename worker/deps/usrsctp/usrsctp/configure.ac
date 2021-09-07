@@ -143,6 +143,7 @@ AC_CHECK_HEADERS(sys/queue.h)
 AC_CHECK_HEADERS(linux/if_addr.h, [], [], [#include <sys/socket.h>])
 AC_CHECK_HEADERS(linux/rtnetlink.h, [], [], [#include <sys/socket.h>])
 AC_CHECK_HEADERS(netinet/ip_icmp.h, [], [], [#include <netinet/ip.h>])
+AC_CHECK_HEADERS(net/route.h)
 
 AC_CHECK_MEMBER(struct sockaddr.sa_len,
                 AC_DEFINE(HAVE_SA_LEN, 1, [Define this if your stack has sa_len in sockaddr struct.]),,

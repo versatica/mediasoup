@@ -7533,7 +7533,7 @@ sctp_load_addresses_from_init(struct sctp_tcb *stcb, struct mbuf *m,
 			break;
 		}
 		phdr = sctp_get_next_param(m, offset, &param_buf,
-					   sizeof(param_buf));
+		                           sizeof(param_buf));
 	}
 	/* Now check to see if we need to purge any addresses */
 	TAILQ_FOREACH_SAFE(net, &stcb->asoc.nets, sctp_next, nnet) {
@@ -7543,11 +7543,15 @@ sctp_load_addresses_from_init(struct sctp_tcb *stcb, struct mbuf *m,
 			/* remove and free it */
 			stcb->asoc.numnets--;
 			TAILQ_REMOVE(&stcb->asoc.nets, net, sctp_next);
-			sctp_free_remote_addr(net);
+			if (net == stcb->asoc.alternate) {
+				sctp_free_remote_addr(stcb->asoc.alternate);
+				stcb->asoc.alternate = NULL;
+			}
 			if (net == stcb->asoc.primary_destination) {
 				stcb->asoc.primary_destination = NULL;
 				sctp_select_primary_destination(stcb);
 			}
+			sctp_free_remote_addr(net);
 		}
 	}
 	if ((stcb->asoc.ecn_supported == 1) &&

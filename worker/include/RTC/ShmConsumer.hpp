@@ -1,7 +1,7 @@
 #ifndef MS_RTC_SHM_CONSUMER_HPP
 #define MS_RTC_SHM_CONSUMER_HPP
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include "DepLibSfuShm.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"

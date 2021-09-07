@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/ActiveSpeakerObserver.hpp"
 #include "RTC/AudioLevelObserver.hpp"
 #include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
@@ -296,6 +297,25 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER:
+			{
+				std::string rtpObserverId;
+
+				// This may throw.
+				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
+
+				auto* activeSpeakerObserver = new RTC::ActiveSpeakerObserver(rtpObserverId, request->data);
+
+				// Insert into the map.
+				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
+
+				MS_DEBUG_DEV("ActiveSpeakerObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
 			{
 				std::string rtpObserverId;
@@ -391,7 +411,7 @@ namespace RTC
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::Producer* producer       = GetProducerFromInternal(request->internal);
+				RTC::Producer* producer       = GetProducerFromData(request->data);
 
 				rtpObserver->AddProducer(producer);
 
@@ -407,7 +427,7 @@ namespace RTC
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::Producer* producer       = GetProducerFromInternal(request->internal);
+				RTC::Producer* producer       = GetProducerFromData(request->data);
 
 				rtpObserver->RemoveProducer(producer);
 
@@ -520,14 +540,14 @@ namespace RTC
 		return rtpObserver;
 	}
 
-	RTC::Producer* Router::GetProducerFromInternal(json& internal) const
+	RTC::Producer* Router::GetProducerFromData(json& data) const
 	{
 		MS_TRACE();
 
-		auto jsonProducerIdIt = internal.find("producerId");
+		auto jsonProducerIdIt = data.find("producerId");
 
-		if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.producerId");
+		if (jsonProducerIdIt == data.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("missing data.producerId");
 
 		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
 

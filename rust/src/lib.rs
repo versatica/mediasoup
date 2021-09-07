@@ -51,8 +51,9 @@
 pub mod data_structures;
 mod macros;
 mod messages;
-// TODO: Check public items in this module
-mod ortc;
+#[doc(hidden)]
+pub mod ortc;
+pub mod prelude;
 pub mod router;
 pub mod rtp_parameters;
 pub mod scalability_modes;
@@ -62,11 +63,16 @@ pub mod supported_rtp_capabilities;
 pub mod worker;
 pub mod worker_manager;
 
-// TODO: The mess below is because of https://github.com/rust-lang/rust/issues/59368
 pub mod audio_level_observer {
     //! An audio level observer monitors the volume of the selected audio producers.
 
     pub use crate::router::audio_level_observer::*;
+}
+
+pub mod active_speaker_observer {
+    //! An active speaker observer monitors the speaking activity of the selected audio producers.
+
+    pub use crate::router::active_speaker_observer::*;
 }
 
 pub mod consumer {

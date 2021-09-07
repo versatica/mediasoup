@@ -13,11 +13,6 @@ export type RtpCapabilities =
 	 * Supported RTP header extensions.
 	 */
 	headerExtensions?: RtpHeaderExtension[];
-
-	/**
-	 * Supported FEC mechanisms.
-	 */
-	fecMechanisms?: string[];
 }
 
 /**
@@ -101,10 +96,9 @@ export type RtpHeaderExtensionDirection = 'sendrecv' | 'sendonly' | 'recvonly' |
 export type RtpHeaderExtension =
 {
 	/**
-	 * Media kind. If empty string, it's valid for all kinds.
-	 * Default any media kind.
+	 * Media kind.
 	 */
-	kind?: MediaKind | '';
+	kind: MediaKind;
 
 	/*
 	 * The URI of the RTP header extension, as defined in RFC 5285.

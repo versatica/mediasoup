@@ -1,8 +1,9 @@
 #include "common.hpp"
+#include "DepLibUV.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/NackGenerator.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <vector>
 
 using namespace RTC;
@@ -278,4 +279,7 @@ SCENARIO("NACK generator", "[rtp][rtcp]")
 
 		validate(inputs);
 	}
+
+	// Must run the loop to wait for UV timers and close them.
+	DepLibUV::RunLoop();
 }

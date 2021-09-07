@@ -107,7 +107,7 @@ namespace RTC
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (newoldestTime > this->newestItemStartTime)
 		{
-			Reset(nowMs);
+			Reset();
 
 			return;
 		}
