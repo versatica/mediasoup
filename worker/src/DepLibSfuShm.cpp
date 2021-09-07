@@ -75,7 +75,7 @@ namespace DepLibSfuShm {
   }
 
 
-  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, std::string appData)
+  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, std::string shmAppData)
   {
     MS_TRACE();
 
@@ -96,9 +96,9 @@ namespace DepLibSfuShm {
 
     // application data. This is an opaque string that is stored in the shared
     // memory for application level usage e.g. xcode internal controller
-    if (appData.length() > 0) {
-        wrt_init.app_data = const_cast<char*>(appData.c_str());
-        wrt_init.conf.app_data_sz = appData.length() + 1; // reserve space for null terminator
+    if (shmAppData.length() > 0) {
+        wrt_init.app_data = const_cast<char*>(shmAppData.c_str());
+        wrt_init.conf.app_data_sz = shmAppData.length() + 1; // reserve space for null terminator
     }
     
     // TODO: if needed, target_kbps may be passed as config param instead

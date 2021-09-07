@@ -702,12 +702,12 @@ export class Router extends EnhancedEventEmitter
 		} : ShmTransportOptions
 	): Promise<ShmTransport>
 	{
-		logger.debug('createShmTransport() [shm:%o data:%s]', shm, appData);
+		logger.debug('createShmTransport() [shm:%o]', shm);
 
 		if (!listenIp)
 			throw new TypeError('missing listenIp');
-		else if (appData && typeof appData !== 'string')
-			throw new TypeError('if given, appData must be a string');
+		else if (appData && typeof appData !== 'object')
+			throw new TypeError('if given, appData must be an object');
 
 		if (typeof listenIp === 'string')
 		{
@@ -740,7 +740,8 @@ export class Router extends EnhancedEventEmitter
 			shm: {
 				name: "...",
 				log: "...",
-				status: "..."
+				status: "...",
+				shmAppData: "..."
 			}
 		}
 		*/
