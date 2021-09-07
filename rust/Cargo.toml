@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup"
-version = "0.8.4"
+version = "0.8.5"
 description = "Cutting Edge WebRTC Video Conferencing in Rust"
 categories = ["api-bindings", "multimedia", "network-programming"]
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
@@ -45,7 +45,7 @@ version = "0.6.5"
 
 [dependencies.mediasoup-sys]
 path = "../worker"
-version = "0.2.4"
+version = "0.2.5"
 
 [dependencies.parking_lot]
 version = "0.11.1"
