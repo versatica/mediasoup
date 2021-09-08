@@ -514,22 +514,26 @@ namespace RTC
 			
 			// Picture begins when timestamp is incremented. Different from the first fragment of pic data. For example:
 			// RTP STAP-A pkt contains SPS and PPS NALUs, followed by RTP pkts each containing a fragment of the actual frame. ALl pkts have the same Ts.
-			// In this case, SPS NALU begins the picture (0x00000001 is added in front), the rest of NALUs have shorter 0x000001 AnnexB headers,
-			// even the first fragmented piece.
+			// In this case, SPS NALU begins the picture (full AnexB header 0x00000001 is added in front), the rest of NALUs have shorter 0x000001 AnnexB headers,
+			// including the first fragmented piece of frame content.
+
+			// Only if RTP packet arrived in order, we can tell if this is the beginning of a picture
 			bool tsIncremented = (shmCtx->IsLastVideoSeqNotSet() || (ts > shmCtx->LastVideoTs()));
+			bool seqIncremented = (shmCtx->IsLastVideoSeqNotSet() || (seq > shmCtx->LastVideoSeq()));
 
 			// Single NALU packet
 			if (nal >= 1 && nal <= 23)
 			{
 				if (len >= 1)
 				{
-					MS_DEBUG_DEV("shm[%s] single NALU=%d LEN=%zu ts %" PRIu64 " seq %" PRIu64 " keyframe=%d newpic=%d marker=%d lastTs=%" PRIu64,
+					MS_DEBUG_DEV("shm[%s] single nal=%d len=%zu ts %" PRIu64 " seq %" PRIu64 " keyframe=%d newpic=%d marker=%d lastTs=%" PRIu64,
 						this->shmCtx->StreamName().c_str(), nal, len, ts, seq, keyframe, tsIncremented, marker, shmCtx->LastVideoTs());
 
 					shmCtx->WriteVideoRtpDataToShm( data, len, seq, ts, nal,
 																					false, // not a fragment
-																					true,   // is first fragment? n/a 
-																					tsIncremented, // picture beginning
+																					true,  // is first fragment? n/a for complete NALU
+																					true,  // is last fragment? n/a
+																					(tsIncremented && seqIncremented), // picture beginning
 																					(marker != 0), // picture ending
 																					keyframe);
 				}
@@ -565,6 +569,7 @@ namespace RTC
 					case 24:
 					{
 						size_t offset{ 1 }; // Skip over STAP-A NAL header
+						bool beginpicture = (tsIncremented && seqIncremented);
 
 						// Iterate NAL units.
 						while (offset < len - 3) // 2 bytes of NALU size and min 1 byte of NALU data
@@ -579,31 +584,21 @@ namespace RTC
 
 							offset += 2; // skip over NALU size
 							uint8_t subnal = *(data + offset) & 0x1F; // actual NAL type
-							
 							uint16_t chunksize = naluSize;
-							bool beginpicture, endpicture;
 
-							endpicture = (marker != 0);
-
-							if (tsIncremented) {
-								beginpicture = 1;
-								tsIncremented = 0; // all NALUs in aggregated pkt have same rtp ts
-							}
-							else {
-								beginpicture = 0;
-							}
-
-							MS_DEBUG_DEV("shm[%s] STAP-A: NAL=%" PRIu8 " seq=%" PRIu64 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
-								this->shmCtx->StreamName().c_str(), subnal, seq, len, naluSize, chunksize, ts,
-								shmCtx->LastVideoTs(), keyframe, beginpicture, endpicture);
+							MS_DEBUG_DEV("shm[%s] STAP-A: nal=%" PRIu8 " seq=%" PRIu64 " payloadlen=%" PRIu64 " nalulen=%" PRIu16 " chunklen=%" PRIu32 " ts=%" PRIu64 " lastTs=%" PRIu64 " keyframe=%d beginpicture=%d endpicture=%d",
+														this->shmCtx->StreamName().c_str(), subnal, seq, len, naluSize, chunksize, ts,
+														shmCtx->LastVideoTs(), keyframe, beginpicture, (marker != 0));
 
 							shmCtx->WriteVideoRtpDataToShm(data + offset, chunksize, seq, ts, subnal,
 																							false, // non-fragmented
 																							true, // is first fragment? n/a
+																							true, // is end fragment? n/a
 																							beginpicture,
-																							endpicture,
+																							(marker != 0),
 																							keyframe);
 							offset += chunksize;
+							beginpicture = 0; // all NALUs in aggregated pkt have same rtp ts, first one may be pic beginning, the rest certainly will not be
 						}
 						break;
 					}
@@ -633,7 +628,7 @@ namespace RTC
 						uint8_t startBit = *(data + 1) & 0x80; // 1st bit indicates the starting fragment
 						uint8_t endBit   = *(data + 1) & 0x40; // 2nd bit indicates the ending fragment
 						uint8_t fuInd    = *(data) & 0xE0;     // 3 first bytes of FU indicator, use to compose NAL header for the beginning fragment 
-						bool beginpicture, endpicture, startfragment;
+						bool beginpicture, endpicture, startfragment, endfragment;
 						
 						// Last 5 bits in FU header subtype of FU unit, use to compose NAL header for the beginning fragment.
 						// Sometimes packet->IsKeyFrame() may be 0 even if actually we have a key frame, so if (subnal == 5 (i.e. IDR) and startBit == 128) then this is a key frame
@@ -645,15 +640,15 @@ namespace RTC
 						size_t chunksize = len - 1;
 						data += 1;
 						
-						beginpicture = (startBit == 128) && tsIncremented; // if right after SPS and PPS then this is the first fragment but NOT the beginning of the picture i.e. 3 bytes of AnnexB
-						startfragment = (startBit == 128); 
-						endpicture = (endBit && marker) ? 1 : 0; // If endBit is true, then marker is also always true. TBD, if this is ever incorrect, then need to differentiate btw last fragment and ending frame data piece
+						beginpicture = (startBit == 128) && tsIncremented && seqIncremented; // if right after SPS and PPS then this is the first fragment but NOT the beginning of the picture i.e. 3 bytes of AnnexB
+						startfragment = (startBit == 128);
+						endfragment = (endBit == 64);
+						endpicture = (endBit && marker) ? 1 : 0; // If endBit is true, marker is also true. TBD, if this is ever incorrect, then need to differentiate btw last fragment and ending frame data piece
 
 						if (startBit == 128)
 						{
 							// Put NAL header in place of FU header
 							data[0] = fuInd + subnal;
-							//tsIncremented = 0;
 						}
 						else {
 							// If not the beginning fragment, skip over FU header byte
@@ -661,9 +656,15 @@ namespace RTC
 							data += 1;
 						}
 
-						MS_DEBUG_DEV("shm[%s] FU-A NAL=%" PRIu8 " seq=%" PRIu64 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
+						MS_DEBUG_DEV("shm[%s] FU-A nal=%" PRIu8 " seq=%" PRIu64 " len=%" PRIu64 " ts=%" PRIu64 " prev_ts=%" PRIu64 " keyframe=%d startBit=%" PRIu8 " endBit=%" PRIu8 " marker=%" PRIu8 " beginpicture=%d endpicture=%d",
 							this->shmCtx->StreamName().c_str(), subnal, seq, chunksize, ts, shmCtx->LastVideoTs(), keyframe, startBit, endBit, marker, beginpicture, endpicture);
-						shmCtx->WriteVideoRtpDataToShm(data, chunksize, seq, ts, subnal, true, startfragment, beginpicture, endpicture, keyframe);
+						shmCtx->WriteVideoRtpDataToShm(data, chunksize, seq, ts, subnal, 
+																						true, 
+																						startfragment, 
+																						endfragment, 
+																						beginpicture, 
+																						endpicture,
+																						keyframe);
 						break;
 					}
 					case 25: // STAB-B
@@ -671,13 +672,13 @@ namespace RTC
 					case 27: // MTAP-24
 					case 29: // FU-B
 					{
-						MS_WARN_TAG(xcode, "shm[%s] Unsupported NAL unit type %u in video packet",
+						MS_WARN_TAG(xcode, "shm[%s] Unsupported NALU type %u in video packet",
 							this->shmCtx->StreamName().c_str(), nal);
 						break;
 					}
 					default: // ignore the rest
 					{
-						MS_WARN_TAG(xcode, "shm[%s] unknown NAL unit type %u in video packet",
+						MS_WARN_TAG(xcode, "shm[%s] unknown NALU type %u in video packet",
 							this->shmCtx->StreamName().c_str(), nal);
 						break;
 					}
