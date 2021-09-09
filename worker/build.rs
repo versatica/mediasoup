@@ -67,7 +67,6 @@ fn main() {
                 .trim()
         );
         println!("cargo:rustc-link-search={}", libpath);
-        println!("cargo:rustc-cdylib-link-arg=-stdlib=libc++");
         println!("cargo:rustc-link-lib=dylib=c++");
         println!("cargo:rustc-link-lib=dylib=c++abi");
     }
