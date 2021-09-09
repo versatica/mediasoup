@@ -134,6 +134,8 @@ namespace RTC
 
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
+		static void ReturnIntoPool(RtpPacket* packet);
+
 	private:
 		RtpPacket(
 		  Header* header,
@@ -143,9 +145,10 @@ namespace RTC
 		  uint8_t payloadPadding,
 		  size_t size);
 
-	public:
+		// Use `RtpPacket::ReturnIntoPool()` instead
 		~RtpPacket();
 
+	public:
 		void Dump() const;
 
 		void FillJson(json& jsonObject) const;

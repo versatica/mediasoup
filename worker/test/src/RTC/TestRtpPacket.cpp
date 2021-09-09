@@ -48,7 +48,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadRid(rid) == false);
 		REQUIRE(rid == "");
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 
 	SECTION("parse packet2.raw")
@@ -74,7 +74,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 
 	SECTION("parse packet3.raw")
@@ -164,8 +164,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		delete packet;
-		delete clonedPacket;
+		RtpPacket::ReturnIntoPool(packet);
+		RtpPacket::ReturnIntoPool(clonedPacket);
 	}
 
 	SECTION("create RtpPacket without header extension")
@@ -193,7 +193,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetSsrc() == 5);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 
 	SECTION("create RtpPacket with One-Byte header extension")
@@ -234,7 +234,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadLength() == 1000);
 		REQUIRE(packet->GetSize() == 1028);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 
 	SECTION("create RtpPacket with Two-Bytes header extension")
@@ -300,7 +300,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 
 	SECTION("rtx encryption-decryption")
@@ -343,7 +343,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		auto rtxPacket = packet->Clone(RtxBuffer);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 
 		std::memset(buffer, '0', sizeof(buffer));
 
@@ -373,7 +373,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->HasOneByteExtensions() == false);
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
 
-		delete rtxPacket;
+		RtpPacket::ReturnIntoPool(rtxPacket);
 	}
 
 	SECTION("create RtpPacket and apply payload shift to it")
@@ -484,7 +484,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadPadding() == 0);
 		REQUIRE(packet->GetSize() == 1028);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 
 	SECTION("set One-Byte header extensions")
@@ -648,7 +648,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue[2] == 0x03);
 		REQUIRE(extenValue[3] == 0x00);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 
 	SECTION("set Two-Bytes header extensions")
@@ -793,7 +793,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasExtension(24) == true);
 		REQUIRE(extenLen == 4);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 
 	SECTION("read frame-marking extension")
@@ -843,6 +843,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(frameMarking->lid == 1);
 		REQUIRE(frameMarking->tl0picidx == 5);
 
-		delete packet;
+		RtpPacket::ReturnIntoPool(packet);
 	}
 }

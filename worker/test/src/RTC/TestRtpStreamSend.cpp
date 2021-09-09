@@ -143,11 +143,11 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(rtxPacket4->GetTimestamp() == packet5->GetTimestamp());
 
 		// Clean stuff.
-		delete packet1;
-		delete packet2;
-		delete packet3;
-		delete packet4;
-		delete packet5;
+		RtpPacket::ReturnIntoPool(packet1);
+		RtpPacket::ReturnIntoPool(packet2);
+		RtpPacket::ReturnIntoPool(packet3);
+		RtpPacket::ReturnIntoPool(packet4);
+		RtpPacket::ReturnIntoPool(packet5);
 		delete stream;
 	}
 }

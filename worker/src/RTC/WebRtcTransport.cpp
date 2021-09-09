@@ -1009,7 +1009,7 @@ namespace RTC
 				  packet->GetPayloadType(),
 				  packet->GetSequenceNumber());
 
-				delete packet;
+				RTC::RtpPacket::ReturnIntoPool(packet);
 			}
 
 			return;

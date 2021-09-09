@@ -9,6 +9,8 @@
 
 namespace RTC
 {
+	thread_local static Utils::ObjectPool<RtpPacket> RtpPacketPool;
+
 	/* Class methods. */
 
 	RtpPacket* RtpPacket::Parse(const uint8_t* data, size_t len)
@@ -117,8 +119,8 @@ namespace RTC
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
-		auto* packet =
-		  new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
+		auto* packet = RtpPacketPool.Allocate();
+		new (packet) RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
 
 		return packet;
 	}
@@ -142,6 +144,13 @@ namespace RTC
 
 		// Parse RFC 5285 header extension.
 		ParseExtensions();
+	}
+
+	// Return packet into object pool for future reuse of memory allocation
+	void RtpPacket::ReturnIntoPool(RtpPacket* packet)
+	{
+		packet->~RtpPacket();
+		RtpPacketPool.Return(packet);
 	}
 
 	RtpPacket::~RtpPacket()
@@ -691,7 +700,8 @@ namespace RTC
 		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
 
 		// Create the new RtpPacket instance and return it.
-		auto* packet = new RtpPacket(
+		auto* packet = RtpPacketPool.Allocate();
+		new (packet) RtpPacket(
 		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Keep already set extension ids.

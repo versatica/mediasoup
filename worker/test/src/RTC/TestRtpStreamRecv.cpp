@@ -205,5 +205,5 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	// Must run the loop to wait for UV timers and close them.
 	DepLibUV::RunLoop();
 
-	delete packet;
+	RTC::RtpPacket::ReturnIntoPool(packet);
 }

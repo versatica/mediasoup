@@ -43,7 +43,7 @@ namespace RTC
 			ctx->senderBwe->RtpPacketSent(ctx->sentInfo);
 		}
 
-		TransportOnSendCallbackCtxPool.Put(ctx);
+		TransportOnSendCallbackCtxPool.Return(ctx);
 	}
 #else
 	void Transport::OnSendCallback(bool sent, OnSendCallbackCtx* ctx)
@@ -51,7 +51,7 @@ namespace RTC
 		if (sent)
 			ctx->tccClient->PacketSent(ctx->packetInfo, DepLibUV::GetTimeMsInt64());
 
-		TransportOnSendCallbackCtxPool.Put(ctx);
+		TransportOnSendCallbackCtxPool.Return(ctx);
 	}
 #endif
 
@@ -1705,7 +1705,7 @@ namespace RTC
 			// Tell the child class to remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
 
-			delete packet;
+			RTC::RtpPacket::ReturnIntoPool(packet);
 
 			return;
 		}
@@ -1734,7 +1734,7 @@ namespace RTC
 			default:;
 		}
 
-		delete packet;
+		RTC::RtpPacket::ReturnIntoPool(packet);
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
@@ -2606,7 +2606,7 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			auto* ctx = TransportOnSendCallbackCtxPool.Get();
+			auto* ctx = TransportOnSendCallbackCtxPool.Allocate();
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			auto* senderBwe = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
@@ -2663,7 +2663,7 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			auto* ctx = TransportOnSendCallbackCtxPool.Get();
+			auto* ctx = TransportOnSendCallbackCtxPool.Allocate();
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			auto* senderBwe = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
@@ -2987,7 +2987,7 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			auto* ctx = TransportOnSendCallbackCtxPool.Get();
+			auto* ctx = TransportOnSendCallbackCtxPool.Allocate();
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			auto* senderBwe = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;

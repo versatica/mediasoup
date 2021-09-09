@@ -130,7 +130,7 @@ namespace RTC
 		delete[] this->probationPacketBuffer;
 
 		// Delete the probation RTP packet.
-		delete this->probationPacket;
+		RTC::RtpPacket::ReturnIntoPool(this->probationPacket);
 	}
 
 	RTC::RtpPacket* RtpProbationGenerator::GetNextPacket(size_t size)

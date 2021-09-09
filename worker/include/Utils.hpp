@@ -362,9 +362,9 @@ namespace Utils
 			}
 		}
 
-		// Get pointer to allocated memory. This can be newly allocated memory or re-use of previously returned object.
-		// Object is not initialized and shouldn't be considered to be in a valid state.
-		T* Get()
+		// Get pointer to allocated memory. This can be newly allocated memory or re-use of previously
+		// returned object. Object is not initialized and shouldn't be considered to be in a valid state.
+		T* Allocate()
 		{
 			if (this->pool.empty())
 			{
@@ -377,9 +377,9 @@ namespace Utils
 			return ptr;
 		}
 
-		// Put allocated memory into internal pool for future use, make sure to run destructor before returning memory,
-		// ObjectPool will only de-allocate memory on exit.
-		void Put(T* ptr)
+		// Return allocated memory into internal pool for future use, make sure to run destructor before
+		// returning memory, ObjectPool will only de-allocate memory on exit.
+		void Return(T* ptr)
 		{
 			this->pool.push_back(ptr);
 		}
