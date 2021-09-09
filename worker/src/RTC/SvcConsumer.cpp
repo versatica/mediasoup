@@ -654,20 +654,21 @@ namespace RTC
 		packet->RestorePayload();
 	}
 
-	void SvcConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
+	RTC::RTCP::CompoundPacket* SvcConsumer::GetRtcp(RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
 
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
-			return;
+			return nullptr;
 
 		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
 
 		if (!report)
-			return;
+			return nullptr;
+
+		auto* packet = RTC::RTCP::CompoundPacket::Create();
 
 		packet->AddSenderReport(report);
 
@@ -677,6 +678,8 @@ namespace RTC
 		packet->AddSdesChunk(sdesChunk);
 
 		this->lastRtcpSentTime = nowMs;
+
+		return packet;
 	}
 
 	void SvcConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)

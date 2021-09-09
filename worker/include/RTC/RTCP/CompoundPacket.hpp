@@ -15,7 +15,8 @@ namespace RTC
 		class CompoundPacket
 		{
 		public:
-			CompoundPacket() = default;
+			static CompoundPacket* Create();
+			static void ReturnIntoPool(CompoundPacket* packet);
 
 		public:
 			const uint8_t* GetData() const
@@ -51,6 +52,12 @@ namespace RTC
 				  });
 			}
 			void Serialize(uint8_t* data);
+
+		private:
+			// Use `CompoundPacket::Create()` instead
+			CompoundPacket() = default;
+			// Use `CompoundPacket::ReturnIntoPool()` instead
+			~CompoundPacket() = default;
 
 		private:
 			uint8_t* header{ nullptr };

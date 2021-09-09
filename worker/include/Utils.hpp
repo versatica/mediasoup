@@ -381,7 +381,8 @@ namespace Utils
 		// returning memory, ObjectPool will only de-allocate memory on exit.
 		void Return(T* ptr)
 		{
-			this->pool.push_back(ptr);
+			if (ptr)
+				this->pool.push_back(ptr);
 		}
 		// TODO
 	private:

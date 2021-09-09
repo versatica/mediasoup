@@ -149,8 +149,11 @@ namespace RTC
 	// Return packet into object pool for future reuse of memory allocation
 	void RtpPacket::ReturnIntoPool(RtpPacket* packet)
 	{
-		packet->~RtpPacket();
-		RtpPacketPool.Return(packet);
+		if (packet)
+		{
+			packet->~RtpPacket();
+			RtpPacketPool.Return(packet);
+		}
 	}
 
 	RtpPacket::~RtpPacket()

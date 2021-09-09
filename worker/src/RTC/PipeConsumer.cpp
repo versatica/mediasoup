@@ -279,8 +279,7 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-	void PipeConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
+	RTC::RTCP::CompoundPacket* PipeConsumer::GetRtcp(RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -297,13 +296,15 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			return;
+			return nullptr;
 		}
 
 		auto* report = rtpStream->GetRtcpSenderReport(nowMs);
 
 		if (!report)
-			return;
+			return nullptr;
+
+		auto* packet = RTC::RTCP::CompoundPacket::Create();
 
 		packet->AddSenderReport(report);
 
@@ -313,6 +314,8 @@ namespace RTC
 		packet->AddSdesChunk(sdesChunk);
 
 		this->lastRtcpSentTime = nowMs;
+
+		return packet;
 	}
 
 	void PipeConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)

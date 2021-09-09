@@ -2310,53 +2310,56 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ nullptr };
+		RTC::RTCP::CompoundPacket* packet{ nullptr };
 
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
 
-			for (auto* rtpStream : consumer->GetRtpStreams())
+			for (const auto& rtpStream : consumer->GetRtpStreams())
 			{
-				// Reset the Compound packet.
-				packet.reset(new RTC::RTCP::CompoundPacket());
-
-				consumer->GetRtcp(packet.get(), rtpStream, nowMs);
+				RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
+				packet = consumer->GetRtcp(rtpStream, nowMs);
 
 				// Send the RTCP compound packet if there is a sender report.
-				if (packet->HasSenderReport())
+				if (packet != nullptr && packet->HasSenderReport())
 				{
 					packet->Serialize(RTC::RTCP::Buffer);
-					SendRtcpCompoundPacket(packet.get());
+					SendRtcpCompoundPacket(packet);
 				}
 			}
 		}
 
 		// Reset the Compound packet.
-		packet.reset(new RTC::RTCP::CompoundPacket());
+		RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
+		packet = nullptr;
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
 
-			producer->GetRtcp(packet.get(), nowMs);
+			RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
+			packet = producer->GetRtcp(nowMs);
 
 			// One more RR would exceed the MTU, send the compound packet now.
-			if (packet->GetSize() + sizeof(RTCP::ReceiverReport::Header) > RTC::MtuSize)
+			if (packet != nullptr && packet->GetSize() + sizeof(RTCP::ReceiverReport::Header) > RTC::MtuSize)
 			{
 				packet->Serialize(RTC::RTCP::Buffer);
-				SendRtcpCompoundPacket(packet.get());
+				SendRtcpCompoundPacket(packet);
 
 				// Reset the Compound packet.
-				packet.reset(new RTC::RTCP::CompoundPacket());
+				RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
+				packet = nullptr;
 			}
 		}
 
-		if (packet->GetReceiverReportCount() != 0u)
+		if (packet != nullptr && packet->GetReceiverReportCount() != 0u)
 		{
 			packet->Serialize(RTC::RTCP::Buffer);
-			SendRtcpCompoundPacket(packet.get());
+			SendRtcpCompoundPacket(packet);
 		}
+
+		RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
 	}
 
 	void Transport::DistributeAvailableOutgoingBitrate()
