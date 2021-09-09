@@ -6,6 +6,7 @@
 #include "RTC/RateCalculator.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/TrendCalculator.hpp"
+#include <absl/container/btree_map.h>
 #include <map>
 
 namespace RTC
