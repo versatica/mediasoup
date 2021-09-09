@@ -55,14 +55,17 @@ fn main() {
     #[cfg(target_os = "macos")]
     {
         let path = Command::new("xcrun")
-            .args(&[
-                "--show-sdk-path"
-            ])
+            .args(&["--show-sdk-path"])
             .output()
             .expect("Failed to start")
             .stdout;
 
-        let libpath = format!("{}/usr/lib", String::from_utf8(path).expect("Failed to decode path").trim());
+        let libpath = format!(
+            "{}/usr/lib",
+            String::from_utf8(path)
+                .expect("Failed to decode path")
+                .trim()
+        );
         println!("cargo:rustc-link-search={}", libpath);
         println!("cargo:rustc-cdylib-link-arg=-stdlib=libc++");
         println!("cargo:rustc-link-lib=dylib=c++");
