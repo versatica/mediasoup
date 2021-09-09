@@ -2,6 +2,7 @@
 #define MS_TCP_CONNECTION_HPP
 
 #include "common.hpp"
+#include "RTC/Transport.hpp"
 #include <uv.h>
 #include <string>
 
@@ -35,12 +36,12 @@ public:
 		~UvWriteData()
 		{
 			delete[] this->store;
-			delete this->cb;
 		}
 
 		uv_write_t req;
 		uint8_t* store{ nullptr };
-		TcpConnectionHandler::onSendCallback* cb{ nullptr };
+		RTC::Transport::onSendCallback* cb{ nullptr };
+		RTC::Transport::OnSendCallbackCtx* ctx{ nullptr };
 	};
 
 public:
@@ -71,7 +72,8 @@ public:
 	  size_t len1,
 	  const uint8_t* data2,
 	  size_t len2,
-	  TcpConnectionHandler::onSendCallback* cb);
+	  RTC::Transport::onSendCallback* cb,
+	  RTC::Transport::OnSendCallbackCtx* ctx);
 	void ErrorReceiving();
 	const struct sockaddr* GetLocalAddress() const
 	{
@@ -117,7 +119,7 @@ private:
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-	void OnUvWrite(int status, onSendCallback* cb);
+	void OnUvWrite(int status, RTC::Transport::onSendCallback* cb, RTC::Transport::OnSendCallbackCtx* ctx);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

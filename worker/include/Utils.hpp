@@ -349,6 +349,45 @@ namespace Utils
 				return false;
 		}
 	};
+
+	template<typename T>
+	class ObjectPool
+	{
+	public:
+		~ObjectPool()
+		{
+			for (auto ptr : this->pool)
+			{
+				std::free(ptr);
+			}
+		}
+
+		// Get pointer to allocated memory. This can be newly allocated memory or re-use of previously returned object.
+		// Object is not initialized and shouldn't be considered to be in a valid state.
+		T* Get()
+		{
+			if (this->pool.empty())
+			{
+				return static_cast<T*>(std::malloc(sizeof(T)));
+			}
+
+			T* ptr = this->pool.back();
+			this->pool.pop_back();
+
+			return ptr;
+		}
+
+		// Put allocated memory into internal pool for future use, make sure to run destructor before returning memory,
+		// ObjectPool will only de-allocate memory on exit.
+		void Put(T* ptr)
+		{
+			this->pool.push_back(ptr);
+		}
+		// TODO
+	private:
+		std::vector<T*> pool;
+	};
+
 } // namespace Utils
 
 #endif

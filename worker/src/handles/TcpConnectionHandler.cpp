@@ -32,11 +32,14 @@ inline static void onWrite(uv_write_t* req, int status)
 	auto* handle     = req->handle;
 	auto* connection = static_cast<TcpConnectionHandler*>(handle->data);
 	auto* cb         = writeData->cb;
+	auto* ctx        = writeData->ctx;
 
 	if (connection)
-		connection->OnUvWrite(status, cb);
+		connection->OnUvWrite(status, cb, ctx);
+	else if (cb)
+		(*cb)(false, ctx);
 
-	// Delete the UvWriteData struct and the cb.
+	// Delete the UvWriteData struct.
 	delete writeData;
 }
 
@@ -179,7 +182,8 @@ void TcpConnectionHandler::Write(
   size_t len1,
   const uint8_t* data2,
   size_t len2,
-  TcpConnectionHandler::onSendCallback* cb)
+  RTC::Transport::onSendCallback* cb,
+  RTC::Transport::OnSendCallbackCtx* ctx)
 {
 	MS_TRACE();
 
@@ -187,8 +191,7 @@ void TcpConnectionHandler::Write(
 	{
 		if (cb)
 		{
-			(*cb)(false);
-			delete cb;
+			(*cb)(false, ctx);
 		}
 
 		return;
@@ -198,8 +201,7 @@ void TcpConnectionHandler::Write(
 	{
 		if (cb)
 		{
-			(*cb)(false);
-			delete cb;
+			(*cb)(false, ctx);
 		}
 
 		return;
@@ -225,8 +227,7 @@ void TcpConnectionHandler::Write(
 
 		if (cb)
 		{
-			(*cb)(true);
-			delete cb;
+			(*cb)(true, ctx);
 		}
 
 		return;
@@ -267,7 +268,8 @@ void TcpConnectionHandler::Write(
 		  len2 - (static_cast<size_t>(written) - len1));
 	}
 
-	writeData->cb = cb;
+	writeData->cb  = cb;
+	writeData->ctx = ctx;
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
@@ -283,9 +285,9 @@ void TcpConnectionHandler::Write(
 		MS_WARN_DEV("uv_write() failed: %s", uv_strerror(err));
 
 		if (cb)
-			(*cb)(false);
+			(*cb)(false, ctx);
 
-		// Delete the UvWriteData struct (it will delete the store and cb too).
+		// Delete the UvWriteData struct (it will delete the store too).
 		delete writeData;
 	}
 	else
@@ -399,16 +401,15 @@ inline void TcpConnectionHandler::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*
 	}
 }
 
-inline void TcpConnectionHandler::OnUvWrite(int status, TcpConnectionHandler::onSendCallback* cb)
+inline void TcpConnectionHandler::OnUvWrite(
+  int status, RTC::Transport::onSendCallback* cb, RTC::Transport::OnSendCallbackCtx* ctx)
 {
 	MS_TRACE();
-
-	// NOTE: Do not delete cb here since it will be delete in onWrite() above.
 
 	if (status == 0)
 	{
 		if (cb)
-			(*cb)(true);
+			(*cb)(true, ctx);
 	}
 	else
 	{
@@ -418,7 +419,7 @@ inline void TcpConnectionHandler::OnUvWrite(int status, TcpConnectionHandler::on
 		MS_WARN_DEV("write error, closing the connection: %s", uv_strerror(status));
 
 		if (cb)
-			(*cb)(false);
+			(*cb)(false, ctx);
 
 		Close();
 
