@@ -54,56 +54,19 @@ fn main() {
     }
     #[cfg(target_os = "macos")]
     {
-        let clang_llvm_version = "clang+llvm-12.0.0-x86_64-apple-darwin";
-        let status = Command::new("curl")
+        let path = Command::new("xcrun")
             .args(&[
-                "-L",
-                "-s",
-                "-O",
-                &format!("https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/{}.tar.xz", clang_llvm_version),
+                "--show-sdk-path"
             ])
-            .current_dir(&out_dir)
-            .status()
-            .expect("Failed to start");
+            .output()
+            .expect("Failed to start")
+            .stdout;
 
-        if !status.success() {
-            panic!("Failed to download libc++");
-        }
-
-        let status = Command::new("tar")
-            .args(&[
-                "-xf",
-                &format!("{}.tar.xz", clang_llvm_version),
-                &format!("{}/lib/libc++.a", clang_llvm_version),
-                &format!("{}/lib/libc++abi.a", clang_llvm_version),
-            ])
-            .current_dir(&out_dir)
-            .status()
-            .expect("Failed to start");
-        if !status.success() {
-            panic!("Failed to download libc++");
-        }
-
-        for file in &["libc++.a", "libc++abi.a"] {
-            std::fs::copy(
-                format!("{}/{}/lib/{}", out_dir, clang_llvm_version, file),
-                format!("{}/{}", out_dir, file),
-            )
-            .unwrap_or_else(|_| {
-                panic!(
-                    "Failed to copy static library from {}/{}/lib/{} to {}/{}",
-                    out_dir, clang_llvm_version, file, out_dir, file
-                )
-            });
-        }
-
-        std::fs::remove_file(format!("{}/{}.tar.xz", out_dir, clang_llvm_version))
-            .expect("Failed to remove downloaded clang+llvm archive");
-        std::fs::remove_dir_all(format!("{}/{}", out_dir, clang_llvm_version))
-            .expect("Failed to remove extracted clang+llvm files");
-
-        println!("cargo:rustc-link-lib=static=c++");
-        println!("cargo:rustc-link-lib=static=c++abi");
+        let libpath = format!("{}/usr/lib", String::from_utf8(path).expect("Failed to decode path").trim());
+        println!("cargo:rustc-link-search={}", libpath);
+        println!("cargo:rustc-cdylib-link-arg=-stdlib=libc++");
+        println!("cargo:rustc-link-lib=dylib=c++");
+        println!("cargo:rustc-link-lib=dylib=c++abi");
     }
     #[cfg(target_os = "windows")]
     {
