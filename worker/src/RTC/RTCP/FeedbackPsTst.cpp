@@ -14,11 +14,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->raw    = new uint8_t[sizeof(Header)];
+			this->raw    = new uint8_t[HeaderSize];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
 			// Set reserved bits to zero.
-			std::memset(this->header, 0, sizeof(Header));
+			std::memset(this->header, 0, HeaderSize);
 
 			this->header->ssrc           = uint32_t{ htonl(ssrc) };
 			this->header->sequenceNumber = sequenceNumber;
@@ -30,9 +30,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::memcpy(buffer, this->header, sizeof(Header));
+			std::memcpy(buffer, this->header, HeaderSize);
 
-			return sizeof(Header);
+			return HeaderSize;
 		}
 
 		template<typename T>

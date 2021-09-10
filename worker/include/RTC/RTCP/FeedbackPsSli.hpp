@@ -26,6 +26,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize{ 4 };
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::SLI };
 
 		public:
@@ -65,7 +66,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{
-				return sizeof(Header);
+				return FeedbackPsSliItem::HeaderSize;
 			}
 
 		private:

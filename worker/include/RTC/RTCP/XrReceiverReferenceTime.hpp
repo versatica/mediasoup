@@ -31,6 +31,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t BodySize{ 8 };
 			static ReceiverReferenceTime* Parse(const uint8_t* data, size_t len);
 
 		public:
@@ -73,14 +74,14 @@ namespace RTC
 			{
 				size_t size{ 4 }; // Common header.
 
-				size += sizeof(Body);
+				size += BodySize;
 
 				return size;
 			}
 
 		private:
 			Body* body{ nullptr };
-			uint8_t raw[sizeof(Body)] = { 0 };
+			uint8_t raw[BodySize] = { 0 };
 		};
 	} // namespace RTCP
 } // namespace RTC

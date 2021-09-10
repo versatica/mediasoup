@@ -14,7 +14,7 @@ namespace RTC
 			static Item* Parse(const uint8_t* data, size_t len)
 			{
 				// data size must be >= header.
-				if (sizeof(typename Item::Header) > len)
+				if (Item::HeaderSize > len)
 					return nullptr;
 
 				auto* header =
