@@ -71,8 +71,8 @@ namespace DepLibSfuShm
     bool     fragment{ false };      // If this is a picture's fragment (can be whole NALU or NALU's fragment)
     bool     firstfragment{ false }; // Only makes sense if fragment == true, fragment with start bit set; means the first picture frame's fragment in case when SPS and PPS were just sent (then SPS begins the picture)
     bool     endfragment{ false };   // Only makes sense if fragment == true; fragment that had end bit set
-	  bool     beginpicture{ false };  // The first (or only) picture's fragment
-		bool     endpicture{ false };    // Picture's last (or only) fragment
+    bool     beginpicture{ false };  // The first (or only) picture's fragment
+    bool     endpicture{ false };    // Picture's last (or only) fragment
     bool     keyframe{ false };      // This item belongs to key frame
 
     ShmQueueItem() = default;

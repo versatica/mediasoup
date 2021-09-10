@@ -18,10 +18,11 @@ namespace RTC
 			{ 
 				"listenIp": '127.0.0.1',
 				"shm": {
-					"name": "shmtest",
+					"name": "...",
 					"queueAge": 100,
-					"testNack": 3000,
+					"testNack": 0,
 					"reverseIt": 0,
+					"shmAppData": "..."
 				},
 				"log": {
 					"name": /var/log/sg/nginx/test_sfu_shm.log",
