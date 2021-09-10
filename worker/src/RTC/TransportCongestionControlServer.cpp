@@ -231,7 +231,7 @@ namespace RTC
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(
 		  this, this->transportCcFeedbackPacket.get());
 
-		// Update packet loss history
+		// Update packet loss history.
 		size_t expected_packets = this->transportCcFeedbackPacket->GetPacketStatusCount();
 		size_t lost_packets     = 0;
 		for (const auto& result : this->transportCcFeedbackPacket->GetPacketResults())

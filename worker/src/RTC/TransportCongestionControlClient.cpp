@@ -164,7 +164,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Update packet loss history
+		// Update packet loss history.
 		size_t expected_packets = feedback->GetPacketStatusCount();
 		size_t lost_packets     = 0;
 		for (const auto& result : feedback->GetPacketResults())
