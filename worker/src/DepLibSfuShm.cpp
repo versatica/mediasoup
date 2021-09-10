@@ -75,7 +75,7 @@ namespace DepLibSfuShm {
   }
 
 
-  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level)
+  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, std::string shmAppData)
   {
     MS_TRACE();
 
@@ -93,6 +93,13 @@ namespace DepLibSfuShm {
     wrt_init.conf.log_file_name = log_name.c_str();
     wrt_init.conf.log_level = level;
     wrt_init.conf.redirect_stdio = false;
+
+    // application data. This is an opaque string that is stored in the shared
+    // memory for application level usage e.g. xcode internal controller
+    if (shmAppData.length() > 0) {
+        wrt_init.app_data = const_cast<char*>(shmAppData.c_str());
+        wrt_init.conf.app_data_sz = shmAppData.length() + 1; // reserve space for null terminator
+    }
     
     // TODO: if needed, target_kbps may be passed as config param instead
     // and codec_id, sample_rate may be read from ShmConsumer in the same way as in ShmConsumer::CreateRtpStream()

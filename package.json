@@ -1,6 +1,6 @@
 {
   "name": "@livelyvideo/mediasoup",
-  "version": "3.8.3-lv2-shmbug2",
+  "version": "3.8.3-lv2-shmbug3",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -76,4 +76,3 @@
     "typescript": "~3.8.3"
   }
 }
-

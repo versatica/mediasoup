@@ -705,7 +705,7 @@ export class Router extends EnhancedEventEmitter
 			listenIp,
 			shm,
 			log,
-			appData = {}
+			appData = ''
 		} : ShmTransportOptions
 	): Promise<ShmTransport>
 	{
@@ -747,7 +747,8 @@ export class Router extends EnhancedEventEmitter
 			shm: {
 				name: "...",
 				log: "...",
-				status: "..."
+				status: "...",
+				shmAppData: "..."
 			}
 		}
 		*/
