@@ -75,7 +75,7 @@ namespace DepLibSfuShm {
   }
 
 
-  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level)
+  void ShmCtx::InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, std::string shmAppData)
   {
     MS_TRACE();
 
@@ -93,6 +93,13 @@ namespace DepLibSfuShm {
     wrt_init.conf.log_file_name = log_name.c_str();
     wrt_init.conf.log_level = level;
     wrt_init.conf.redirect_stdio = false;
+
+    // application data. This is an opaque string that is stored in the shared
+    // memory for application level usage e.g. xcode internal controller
+    if (shmAppData.length() > 0) {
+        wrt_init.app_data = const_cast<char*>(shmAppData.c_str());
+        wrt_init.conf.app_data_sz = shmAppData.length() + 1; // reserve space for null terminator
+    }
     
     // TODO: if needed, target_kbps may be passed as config param instead
     // and codec_id, sample_rate may be read from ShmConsumer in the same way as in ShmConsumer::CreateRtpStream()
@@ -192,8 +199,8 @@ namespace DepLibSfuShm {
   }
 
 
-  ShmQueueItem::ShmQueueItem(uint8_t* dataptr, size_t datalen, uint64_t seq, uint64_t timestamp, uint8_t nalu, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe)
-    : len(datalen), seqid(seq), ts(timestamp), nal(nalu), fragment(isfragment), firstfragment(isfirstfrag), beginpicture(isbeginpicture), endpicture(isendpicture), keyframe(iskeyframe)
+  ShmQueueItem::ShmQueueItem(uint8_t* dataptr, size_t datalen, uint64_t seq, uint64_t timestamp, uint8_t nalu, bool isfragment, bool isfirstfrag, bool isendfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe)
+    : len(datalen), seqid(seq), ts(timestamp), nal(nalu), fragment(isfragment), firstfragment(isfirstfrag), endfragment(isendfrag), beginpicture(isbeginpicture), endpicture(isendpicture), keyframe(iskeyframe)
   {
     //space for Annex B header, will grab 3 or 4 bytes
     this->store[0] = 0x00;
@@ -217,6 +224,7 @@ namespace DepLibSfuShm {
     uint8_t nal,
     bool isfragment,
     bool isfirstfrag,
+    bool isendfrag,
     bool isbeginpicture,
     bool isendpicture,
     bool iskeyframe)
@@ -236,7 +244,7 @@ namespace DepLibSfuShm {
       // If the first item into empty queue, or should be placed at the end
       if (this->videoPktBuffer.empty() || seqid >= this->videoPktBuffer.rbegin()->seqid)
       {
-        this->videoPktBuffer.emplace(this->videoPktBuffer.end(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+        this->videoPktBuffer.emplace(this->videoPktBuffer.end(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isendfrag, isbeginpicture, isendpicture, iskeyframe);
         /* TODO: replace with sliding average and maybe deviation
         auto endTime = std::chrono::system_clock::now();
         bin_log_record.v_last_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
@@ -248,7 +256,7 @@ namespace DepLibSfuShm {
       auto prevIt = it;
       it++;
       for (; it != this->videoPktBuffer.rend() && seqid < it->seqid; it++, prevIt++) {}
-      this->videoPktBuffer.emplace(prevIt.base(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+      this->videoPktBuffer.emplace(prevIt.base(), data, len, seqid, ts, nal, isfragment, isfirstfrag, isendfrag, isbeginpicture, isendpicture, iskeyframe);
       /* TODO: replace with sliding average
       auto endTime2 = std::chrono::system_clock::now();
       bin_log_record.v_last_enqueue_dur = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime2 - startTime).count();
@@ -267,7 +275,7 @@ namespace DepLibSfuShm {
         bin_log_record.v_enqueue_out_of_order += 1;
       }
 
-      this->videoPktBuffer.emplace(it, data, len, seqid, ts, nal, isfragment, isfirstfrag, isbeginpicture, isendpicture, iskeyframe);
+      this->videoPktBuffer.emplace(it, data, len, seqid, ts, nal, isfragment, isfirstfrag, isendfrag, isbeginpicture, isendpicture, iskeyframe);
 
       /* TODO: replace with sliding average
       auto endTime = std::chrono::system_clock::now();
@@ -287,26 +295,24 @@ namespace DepLibSfuShm {
     if (this->videoPktBuffer.empty())
       return;
 
-    bool gaps = false; // has missing seqIds
-    bool complete = false; // both start and end of pic found
+    bool gaps = false; // picture frame has missing chunks
 
     std::list<ShmQueueItem>::iterator firstIt, lastIt;
     firstIt = lastIt = this->videoPktBuffer.begin();
 
     // See if a frame is ready to be written i.e. either it has expired, or all chunks are present.
-    // We have to iterate over all fragments of a frame in order to tell to shm-writer if it is complete, or some chunks are missing. TBD: perf hit?
-    while(GetNextFrame(firstIt, lastIt, gaps, complete)) 
+    while(GetNextFrame(firstIt, lastIt, gaps))
     {
-      MS_DEBUG_TAG(xcode, "shm[%s] got frame [%" PRIu64 " - %" PRIu64 "](%" PRIu64 ") ts=%" PRIu64 " gaps=%d complete=%d  qsize=%zu", 
-        this->stream_name.c_str(), firstIt->seqid, lastIt->seqid, this->media[1].rtp_seq_offset, firstIt->ts, gaps, complete, videoPktBuffer.size());
-      WriteFrame(firstIt, lastIt, gaps || !complete);
+      MS_DEBUG_TAG(xcode, "shm[%s] got frame [%" PRIu64 " - %" PRIu64 "](%" PRIu64 ") ts=%" PRIu64 " gaps=%d qsize=%zu", 
+        this->stream_name.c_str(), firstIt->seqid, lastIt->seqid, this->media[1].rtp_seq_offset, firstIt->ts, gaps, videoPktBuffer.size());
+      WriteFrame(firstIt, lastIt, gaps);
     }
   }
 
 
   bool ShmCtx::GetNextFrame(std::list<ShmQueueItem>::iterator& firstIt, 
                             std::list<ShmQueueItem>::iterator& lastIt,
-                            bool& gaps, bool& complete)
+                            bool& gaps)
   {
     MS_TRACE();
     
@@ -318,38 +324,76 @@ namespace DepLibSfuShm {
     uint64_t prevseqid = it->seqid - 1;
     uint64_t frameTs = it->ts;
     uint64_t lastItemTs = this->videoPktBuffer.rbegin()->ts;
-    bool beginFound = false;
-    bool endFound = false;
     bool frameTsExpired = (lastItemTs > frameTs) && (lastItemTs - frameTs > this->maxVideoPktDelay);
+    bool keyframe = false;
 
     while(it != this->videoPktBuffer.end() && frameTs == it->ts)
     {
+      if (it->keyframe)
+        keyframe = true;
+      
       if (it->seqid > prevseqid + 1)
       {
         MS_DEBUG_TAG(xcode, "shm[%s] gap [seq=%" PRIu64 " prev=%" PRIu64 " ts=%" PRIu64 " expired=%d] qsize=%zu",
           this->stream_name.c_str(), it->seqid, prevseqid, frameTs, frameTsExpired, videoPktBuffer.size());
         if (!frameTsExpired)
         {
-          return false; // let's wait
+          return false; // have time, let's wait for more pkts
         }
         else
         {
-          gaps = true; // don't wait
+          gaps = true;
         }
       }
-
-      if (it->beginpicture)
-        beginFound = true;
-
-      if(it->endpicture)
-        endFound = true;
 
       prevseqid = it->seqid;
       lastIt = it;
       ++it;
+    } // while
+
+    // Missing pic end: wait if we can
+    if(!lastIt->endpicture)
+    {
+      if (!frameTsExpired)
+        return false; // can wait
+      else
+        gaps = true;
     }
-    complete = beginFound && endFound;
-    return ((complete && !gaps) || frameTsExpired);
+
+    // Missing pic begin: wait, then try to repair, ShmConsumer cannot correctly label out of order pkts
+    if (!firstIt->beginpicture)
+    {
+      if (!frameTsExpired)
+      {
+        return false; // can wait
+      }
+      else
+      {
+        if (firstIt->fragment && firstIt->firstfragment)
+        {
+          // a pic fragment is likely a pic begin if its start bit is set, and it is the first in the queue
+          firstIt->beginpicture = true;
+          MS_DEBUG_TAG(xcode, "shm[%s] beginpic fixed [seq=%" PRIu64 " ts=%" PRIu64 " nal=%" PRIu8 "]",
+            this->stream_name.c_str(), firstIt->seqid, frameTs, firstIt->nal);
+        }
+        else if (keyframe)
+        {
+          // special guess for kf: pic begin can be SPS or PPS, they are usually not fragmented
+          if (firstIt->nal == 7 || firstIt->nal == 8)
+          {
+            firstIt->beginpicture = true;
+            MS_DEBUG_TAG(xcode, "shm[%s] kf beginpic fixed [seq=%" PRIu64 " ts=%" PRIu64 " nal=%" PRIu8 "]",
+              this->stream_name.c_str(), firstIt->seqid, frameTs, firstIt->nal);
+          }
+        }
+        else
+        {
+          gaps = true;
+        }
+      }
+    }
+    
+    return (!gaps || frameTsExpired); // tell the caller if the frame can be written out, otherwise caller will wait
   }
 
 
@@ -372,7 +416,7 @@ namespace DepLibSfuShm {
         keyframe = true;
       
       ShmQueueItem &item = *chunkIt;
-      this->WriteVideoChunk(&item, invalid); // TODO: shm writer should respect "invalid" setting and does not throw errors
+      this->WriteVideoChunk(&item, invalid); // TODO: shm writer should ack explicit "invalid" setting and not throw errors
       
       bool end = (chunkIt == lastIt); // before erasing an item check if it is the last one in the frame
       chunkIt = this->videoPktBuffer.erase(chunkIt); //move to next item
@@ -473,6 +517,7 @@ namespace DepLibSfuShm {
     uint8_t nal,
     bool isfragment,
     bool isfirstfragment,
+    bool isendfragment,
     bool ispicturebegin,
     bool ispictureend,
     bool iskeyframe)
@@ -493,6 +538,7 @@ namespace DepLibSfuShm {
                                               nal,
                                               isfragment,
                                               isfirstfragment,
+                                              isendfragment,
                                               ispicturebegin,
                                               ispictureend,
                                               iskeyframe))
@@ -508,7 +554,7 @@ namespace DepLibSfuShm {
       this->Dequeue();
     }
   }
-  
+
 
   void ShmCtx::WriteVideoChunk(ShmQueueItem* item, bool invalid)
   {

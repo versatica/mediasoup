@@ -18,10 +18,11 @@ namespace RTC
 			{ 
 				"listenIp": '127.0.0.1',
 				"shm": {
-					"name": "shmtest",
+					"name": "...",
 					"queueAge": 100,
-					"testNack": 3000,
+					"testNack": 0,
 					"reverseIt": 0,
+					"shmAppData": "..."
 				},
 				"log": {
 					"name": /var/log/sg/nginx/test_sfu_shm.log",
@@ -79,6 +80,13 @@ namespace RTC
 			useReverse = (jsonReverseIt->get<int>() != 0) ? true : false;
 		}
 		
+        // Read shmAppData
+        std::string shmAppData;
+        auto shmAppDataIt = jsonShmIt->find("shmAppData");
+        if (shmAppDataIt != jsonShmIt->end() && shmAppDataIt->is_string()) {
+            shmAppData.assign(shmAppDataIt->get<std::string>());
+        }
+
 		// ngxshm log name and level
 		auto jsonLogIt = data.find("log");
 		if (jsonLogIt == data.end())
@@ -134,7 +142,7 @@ namespace RTC
 			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 		}
 
- 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname /* + "." + shm + "." + this->id */, loglevel);
+ 	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname /* + "." + shm + "." + this->id */, loglevel, shmAppData);
 	}
 
 	ShmTransport::~ShmTransport()
