@@ -3,6 +3,7 @@
 
 ### 3.8.4 (WIP)
 
+* Fix big endian issues (PR #639).
 * Update NPM deps.
 
 
