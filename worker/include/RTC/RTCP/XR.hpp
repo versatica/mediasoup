@@ -46,7 +46,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t CommonHeaderSize = 4;
+			static const size_t CommonHeaderSize{ 4 };
 			static ExtendedReportBlock* Parse(const uint8_t* data, size_t len);
 
 		public:

@@ -114,7 +114,7 @@ namespace RTC
 		};
 
 	public:
-		static const size_t HeaderSize = 12;
+		static const size_t HeaderSize{ 12 };
 		static bool IsRtp(const uint8_t* data, size_t len)
 		{
 			// NOTE: RtcpPacket::IsRtcp() must always be called before this method.

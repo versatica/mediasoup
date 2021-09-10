@@ -24,7 +24,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t HeaderSize = 24;
+			static const size_t HeaderSize{ 24 };
 			static SenderReport* Parse(const uint8_t* data, size_t len);
 
 		public:

@@ -31,7 +31,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t BodySize = 8;
+			static const size_t BodySize{ 8 };
 			static ReceiverReferenceTime* Parse(const uint8_t* data, size_t len);
 
 		public:

@@ -36,7 +36,7 @@ namespace RTC
 			class SsrcInfo
 			{
 			public:
-				static const size_t BodySize = 12;
+				static const size_t BodySize{ 12 };
 				static SsrcInfo* Parse(const uint8_t* data, size_t len);
 
 			public:
