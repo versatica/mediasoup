@@ -33,8 +33,7 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamSend(
-		  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
+		RtpStreamSend(RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, bool useNack);
 		~RtpStreamSend() override;
 
 		void FillJsonStats(json& jsonObject) override;
@@ -58,7 +57,6 @@ namespace RTC
 	private:
 		void StorePacket(RTC::RtpPacket* packet);
 		void ClearBuffer();
-		void UpdateBufferStartIdx();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
@@ -66,9 +64,8 @@ namespace RTC
 		uint32_t lostPriorScore{ 0u }; // Packets lost at last interval for score calculation.
 		uint32_t sentPriorScore{ 0u }; // Packets sent at last interval for score calculation.
 		std::vector<StorageItem*> buffer;
-		uint16_t bufferStartIdx{ 0u };
-		size_t bufferSize{ 0u };
-		std::vector<StorageItem> storage;
+		uint16_t bufferStartSeq{ 0u };
+		bool firstPacket{ true };
 		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;
 	};
