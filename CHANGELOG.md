@@ -3,6 +3,7 @@
 
 ### 3.8.4 (WIP)
 
+* OPUS multi-channel (Surround sound) support (PR #647).
 * Fix big endian issues (PR #639).
 * Update NPM deps.
 
