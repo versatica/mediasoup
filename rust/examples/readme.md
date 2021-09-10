@@ -20,3 +20,15 @@ other participants, resulting in a simple video conferencing setup. Frontend par
 
 Check WebSocket messages in browser DevTools for better understanding of what is happening under the hood, also source
 code has a bunch of comments about what is happening and where changes would be needed for production use.
+
+# Multiopus
+Demonstration of surround sound in WebRTC using Chromium-specific "multiopus" audio.
+
+This one is very simple in a sense that it only supports one participant playing back sample audio and nothing else.
+
+NOTE: This requires GStreamer 1.20, which at the moment of writing isn't released yet. On Linux
+`docker run --rm -it --net=host restreamio/gstreamer:latest-prod-dbg` can be used to enter environment with working
+GStreamer version, or you can compile one from upstream sources.
+
+Check WebSocket messages in browser DevTools for better understanding of what is happening under the hood, also source
+code has a bunch of comments about what is happening and where changes would be needed for production use.

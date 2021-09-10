@@ -3,6 +3,7 @@ use actix_web::web::{Data, Payload};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
 use mediasoup::prelude::*;
+use mediasoup::rtp_parameters::{RtpCodecParameters, RtpEncodingParameters};
 use mediasoup::worker::{WorkerLogLevel, WorkerLogTag};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,29 +11,19 @@ use std::num::{NonZeroU32, NonZeroU8};
 
 /// List of codecs that SFU will accept from clients
 fn media_codecs() -> Vec<RtpCodecCapability> {
-    vec![
-        RtpCodecCapability::Audio {
-            mime_type: MimeTypeAudio::Opus,
-            preferred_payload_type: None,
-            clock_rate: NonZeroU32::new(48000).unwrap(),
-            channels: NonZeroU8::new(2).unwrap(),
-            parameters: RtpCodecParametersParameters::from([("useinbandfec", 1_u32.into())]),
-            rtcp_feedback: vec![RtcpFeedback::TransportCc],
-        },
-        RtpCodecCapability::Video {
-            mime_type: MimeTypeVideo::Vp8,
-            preferred_payload_type: None,
-            clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::default(),
-            rtcp_feedback: vec![
-                RtcpFeedback::Nack,
-                RtcpFeedback::NackPli,
-                RtcpFeedback::CcmFir,
-                RtcpFeedback::GoogRemb,
-                RtcpFeedback::TransportCc,
-            ],
-        },
-    ]
+    vec![RtpCodecCapability::Audio {
+        mime_type: MimeTypeAudio::MultiChannelOpus,
+        preferred_payload_type: None,
+        clock_rate: NonZeroU32::new(48000).unwrap(),
+        channels: NonZeroU8::new(6).unwrap(),
+        parameters: RtpCodecParametersParameters::from([
+            ("useinbandfec", 1_u32.into()),
+            ("channel_mapping", "0,4,1,2,3,5".into()),
+            ("num_streams", 4_u32.into()),
+            ("coupled_streams", 2_u32.into()),
+        ]),
+        rtcp_feedback: vec![RtcpFeedback::TransportCc],
+    }]
 }
 
 /// Data structure containing all the necessary information about transport options required from
@@ -51,21 +42,14 @@ struct TransportOptions {
 #[serde(tag = "action")]
 #[rtype(result = "()")]
 enum ServerMessage {
-    /// Initialization message with consumer/producer transport options and Router's RTP
+    /// Initialization message with consumer transport options and Router's RTP
     /// capabilities necessary to establish WebRTC transport connection client-side
     #[serde(rename_all = "camelCase")]
     Init {
         consumer_transport_options: TransportOptions,
-        producer_transport_options: TransportOptions,
         router_rtp_capabilities: RtpCapabilitiesFinalized,
+        rtp_producer_id: ProducerId,
     },
-    /// Notification that producer transport was connected successfully (in case of error connection
-    /// is just dropped, in real-world application you probably want to handle it better)
-    ConnectedProducerTransport,
-    /// Notification that producer was created on the server, in this simple example client will try
-    /// to consume it right away, hence `echo` example
-    #[serde(rename_all = "camelCase")]
-    Produced { id: ProducerId },
     /// Notification that consumer transport was connected successfully (in case of error connection
     /// is just dropped, in real-world application you probably want to handle it better)
     ConnectedConsumerTransport,
@@ -89,42 +73,22 @@ enum ClientMessage {
     /// match server Router's RTP capabilities
     #[serde(rename_all = "camelCase")]
     Init { rtp_capabilities: RtpCapabilities },
-    /// Request to connect producer transport with client-side DTLS parameters
-    #[serde(rename_all = "camelCase")]
-    ConnectProducerTransport { dtls_parameters: DtlsParameters },
-    /// Request to produce a new audio or video track with specified RTP parameters
-    #[serde(rename_all = "camelCase")]
-    Produce {
-        kind: MediaKind,
-        rtp_parameters: RtpParameters,
-    },
     /// Request to connect consumer transport with client-side DTLS parameters
     #[serde(rename_all = "camelCase")]
     ConnectConsumerTransport { dtls_parameters: DtlsParameters },
     /// Request to consume specified producer
     #[serde(rename_all = "camelCase")]
     Consume { producer_id: ProducerId },
-    /// Request to resume consumer that was previously created
-    #[serde(rename_all = "camelCase")]
-    ConsumerResume { id: ConsumerId },
 }
 
 /// Internal actor messages for convenience
 #[derive(Message)]
 #[rtype(result = "()")]
 enum InternalMessage {
-    /// Save producer in connection-specific hashmap to prevent it from being destroyed
-    SaveProducer(Producer),
     /// Save consumer in connection-specific hashmap to prevent it from being destroyed
     SaveConsumer(Consumer),
     /// Stop/close the WebSocket connection
     Stop,
-}
-
-/// Consumer/producer transports pair for the client
-struct Transports {
-    consumer: WebRtcTransport,
-    producer: WebRtcTransport,
 }
 
 /// Actor that will represent WebSocket connection from the client, it will handle inbound and
@@ -136,12 +100,13 @@ struct EchoConnection {
     client_rtp_capabilities: Option<RtpCapabilities>,
     /// Consumers associated with this client, preventing them from being destroyed
     consumers: HashMap<ConsumerId, Consumer>,
-    /// Producers associated with this client, preventing them from being destroyed
-    producers: Vec<Producer>,
+    /// RTP producer associated with this client, preventing it from being destroyed and useful to
+    /// get its ID later
+    rtp_producer: Producer,
     /// Router associated with this client, useful to get its RTP capabilities later
     router: Router,
-    /// Consumer and producer transports associated with this client
-    transports: Transports,
+    /// Consumer transport associated with this client
+    consumer_transport: WebRtcTransport,
 }
 
 impl EchoConnection {
@@ -176,33 +141,104 @@ impl EchoConnection {
             .await
             .map_err(|error| format!("Failed to create router: {}", error))?;
 
-        // We know that for echo example we'll need 2 transports, so we can create both right away.
-        // This may not be the case for real-world applications or you may create this at a
-        // different time and/or in different order.
-        let transport_options =
-            WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                ip: "127.0.0.1".parse().unwrap(),
-                announced_ip: None,
-            }));
-        let producer_transport = router
-            .create_webrtc_transport(transport_options.clone())
-            .await
-            .map_err(|error| format!("Failed to create producer transport: {}", error))?;
+        // For simplicity we will create plain transport for audio producer right away
+        let plain_transport = router
+            .create_plain_transport({
+                let mut options = PlainTransportOptions::new(TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: None,
+                });
 
+                options.comedia = true;
+                options.rtcp_mux = false;
+
+                options
+            })
+            .await
+            .map_err(|error| format!("Failed to create plain transport: {}", error))?;
+
+        // And creating audio producer that will be consumed over WebRTC later
+        let rtp_producer = plain_transport
+            .produce(ProducerOptions::new(
+                MediaKind::Audio,
+                RtpParameters {
+                    mid: Some("AUDIO".to_string()),
+                    codecs: vec![RtpCodecParameters::Audio {
+                        mime_type: MimeTypeAudio::MultiChannelOpus,
+                        payload_type: 100,
+                        clock_rate: NonZeroU32::new(48000).unwrap(),
+                        channels: NonZeroU8::new(6).unwrap(),
+                        parameters: RtpCodecParametersParameters::from([
+                            ("useinbandfec", 1_u32.into()),
+                            ("channel_mapping", "0,1,4,5,2,3".into()),
+                            ("num_streams", 4_u32.into()),
+                            ("coupled_streams", 2_u32.into()),
+                        ]),
+                        rtcp_feedback: vec![],
+                    }],
+                    encodings: vec![RtpEncodingParameters {
+                        ssrc: Some(1111),
+                        ..RtpEncodingParameters::default()
+                    }],
+                    ..RtpParameters::default()
+                },
+            ))
+            .await
+            .map_err(|error| format!("Failed to create audio producer: {}", error))?;
+
+        println!(
+            "Plain transport created:\n  \
+            RTP listening on {}:{}\n  \
+            RTCP listening on {}:{}\n  \
+            PT=100\n  \
+            SSRC=1111",
+            plain_transport.tuple().local_ip(),
+            plain_transport.tuple().local_port(),
+            plain_transport.rtcp_tuple().unwrap().local_ip(),
+            plain_transport.rtcp_tuple().unwrap().local_port(),
+        );
+
+        println!(
+            "Use following command with GStreamer (1.20+) to play a sample audio:\n\
+              gst-launch-1.0 \\\n  \
+                rtpbin name=rtpbin \\\n  \
+                souphttpsrc location=https://www2.iis.fraunhofer.de/AAC/ChID-BLITS-EBU-Narration.mp4 ! \\\n  \
+                queue ! \\\n  \
+                decodebin ! \\\n  \
+                audioresample ! \\\n  \
+                audioconvert ! \\\n  \
+                opusenc inband-fec=true ! \\\n  \
+                queue ! \\\n  \
+                clocksync ! \\\n  \
+                rtpopuspay pt=100 ssrc=1111 ! \\\n  \
+                rtpbin.send_rtp_sink_0 \\\n  \
+                rtpbin.send_rtp_src_0 ! udpsink host={} port={} sync=false async=false \\\n  \
+                rtpbin.send_rtcp_src_0 ! udpsink host={} port={} sync=false async=false",
+                plain_transport.tuple().local_ip(),
+                plain_transport.tuple().local_port(),
+                plain_transport.rtcp_tuple().unwrap().local_ip(),
+                plain_transport.rtcp_tuple().unwrap().local_port(),
+        );
+
+        // We know that for multiopus example we'll need just consumer transport, so we can create
+        // it right away. This may not be the case for real-world applications or you may create
+        // this at a different time and/or in different order.
         let consumer_transport = router
-            .create_webrtc_transport(transport_options)
+            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                TransportListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: None,
+                },
+            )))
             .await
             .map_err(|error| format!("Failed to create consumer transport: {}", error))?;
 
         Ok(Self {
             client_rtp_capabilities: None,
             consumers: HashMap::new(),
-            producers: vec![],
+            rtp_producer,
             router,
-            transports: Transports {
-                consumer: consumer_transport,
-                producer: producer_transport,
-            },
+            consumer_transport,
         })
     }
 }
@@ -213,23 +249,18 @@ impl Actor for EchoConnection {
     fn started(&mut self, ctx: &mut Self::Context) {
         println!("WebSocket connection created");
 
-        // We know that both consumer and producer transports will be used, so we sent server
-        // information about both in an initialization message alongside with router capabilities
-        // to the client right after WebSocket connection is established
+        // We know that only consumer transport will be used, so we sent server information about it
+        // in an initialization message alongside with router capabilities to the client right after
+        // WebSocket connection is established
         let server_init_message = ServerMessage::Init {
             consumer_transport_options: TransportOptions {
-                id: self.transports.consumer.id(),
-                dtls_parameters: self.transports.consumer.dtls_parameters(),
-                ice_candidates: self.transports.consumer.ice_candidates().clone(),
-                ice_parameters: self.transports.consumer.ice_parameters().clone(),
-            },
-            producer_transport_options: TransportOptions {
-                id: self.transports.producer.id(),
-                dtls_parameters: self.transports.producer.dtls_parameters(),
-                ice_candidates: self.transports.producer.ice_candidates().clone(),
-                ice_parameters: self.transports.producer.ice_parameters().clone(),
+                id: self.consumer_transport.id(),
+                dtls_parameters: self.consumer_transport.dtls_parameters(),
+                ice_candidates: self.consumer_transport.ice_candidates().clone(),
+                ice_parameters: self.consumer_transport.ice_parameters().clone(),
             },
             router_rtp_capabilities: self.router.rtp_capabilities().clone(),
+            rtp_producer_id: self.rtp_producer.id(),
         };
 
         ctx.address().do_send(server_init_message);
@@ -283,59 +314,9 @@ impl Handler<ClientMessage> for EchoConnection {
                 // message and are stored in connection struct for future use
                 self.client_rtp_capabilities.replace(rtp_capabilities);
             }
-            ClientMessage::ConnectProducerTransport { dtls_parameters } => {
-                let address = ctx.address();
-                let transport = self.transports.producer.clone();
-                // Establish connection for producer transport using DTLS parameters received
-                // from the client, but doing so in a background task since this handler is
-                // synchronous
-                actix::spawn(async move {
-                    match transport
-                        .connect(WebRtcTransportRemoteParameters { dtls_parameters })
-                        .await
-                    {
-                        Ok(_) => {
-                            address.do_send(ServerMessage::ConnectedProducerTransport);
-                            println!("Producer transport connected");
-                        }
-                        Err(error) => {
-                            eprintln!("Failed to connect producer transport: {}", error);
-                            address.do_send(InternalMessage::Stop);
-                        }
-                    }
-                });
-            }
-            ClientMessage::Produce {
-                kind,
-                rtp_parameters,
-            } => {
-                let address = ctx.address();
-                let transport = self.transports.producer.clone();
-                // Use producer transport to create a new producer on the server with given RTP
-                // parameters
-                actix::spawn(async move {
-                    match transport
-                        .produce(ProducerOptions::new(kind, rtp_parameters))
-                        .await
-                    {
-                        Ok(producer) => {
-                            let id = producer.id();
-                            address.do_send(ServerMessage::Produced { id });
-                            // Producer is stored in a hashmap since if we don't do it, it will get
-                            // destroyed as soon as its instance goes out out scope
-                            address.do_send(InternalMessage::SaveProducer(producer));
-                            println!("{:?} producer created: {}", kind, id);
-                        }
-                        Err(error) => {
-                            eprintln!("Failed to create {:?} producer: {}", kind, error);
-                            address.do_send(InternalMessage::Stop);
-                        }
-                    }
-                });
-            }
             ClientMessage::ConnectConsumerTransport { dtls_parameters } => {
                 let address = ctx.address();
-                let transport = self.transports.consumer.clone();
+                let transport = self.consumer_transport.clone();
                 // The same as producer transport, but for consumer transport
                 actix::spawn(async move {
                     match transport
@@ -355,7 +336,7 @@ impl Handler<ClientMessage> for EchoConnection {
             }
             ClientMessage::Consume { producer_id } => {
                 let address = ctx.address();
-                let transport = self.transports.consumer.clone();
+                let transport = self.consumer_transport.clone();
                 let rtp_capabilities = match self.client_rtp_capabilities.clone() {
                     Some(rtp_capabilities) => rtp_capabilities,
                     None => {
@@ -366,10 +347,10 @@ impl Handler<ClientMessage> for EchoConnection {
                 // Create consumer for given producer ID, while first making sure that RTP
                 // capabilities were sent by the client prior to that
                 actix::spawn(async move {
-                    let mut options = ConsumerOptions::new(producer_id, rtp_capabilities);
-                    options.paused = true;
-
-                    match transport.consume(options).await {
+                    match transport
+                        .consume(ConsumerOptions::new(producer_id, rtp_capabilities))
+                        .await
+                    {
                         Ok(consumer) => {
                             let id = consumer.id();
                             let kind = consumer.kind();
@@ -391,29 +372,6 @@ impl Handler<ClientMessage> for EchoConnection {
                         }
                     }
                 });
-            }
-            ClientMessage::ConsumerResume { id } => {
-                if let Some(consumer) = self.consumers.get(&id).cloned() {
-                    actix::spawn(async move {
-                        match consumer.resume().await {
-                            Ok(_) => {
-                                println!(
-                                    "Successfully resumed {:?} consumer {}",
-                                    consumer.kind(),
-                                    consumer.id(),
-                                );
-                            }
-                            Err(error) => {
-                                println!(
-                                    "Failed to resume {:?} consumer {}: {}",
-                                    consumer.kind(),
-                                    consumer.id(),
-                                    error,
-                                );
-                            }
-                        }
-                    });
-                }
             }
         }
     }
@@ -439,10 +397,6 @@ impl Handler<InternalMessage> for EchoConnection {
         match message {
             InternalMessage::Stop => {
                 ctx.stop();
-            }
-            InternalMessage::SaveProducer(producer) => {
-                // Retain producer to prevent it from being destroyed
-                self.producers.push(producer);
             }
             InternalMessage::SaveConsumer(consumer) => {
                 self.consumers.insert(consumer.id(), consumer);
