@@ -1,0 +1,40 @@
+<!doctype html>
+<style>
+    body {
+        margin: 0;
+    }
+
+    #container {
+        display: flex;
+    }
+
+    button {
+        display: none;
+    }
+
+    figure {
+        margin: 0;
+        width: 50vw;
+    }
+
+    audio {
+        max-width: 100%;
+    }
+
+    #container[waiting-for-click] button {
+        display: block;
+    }
+
+    #container[waiting-for-click] figure {
+        display: none;
+    }
+</style>
+<div id="container" waiting-for-click>
+    <button id="connect">Connect</button>
+    <figure>
+        <audio id="preview-receive" controls></audio>
+        <figcaption>Receive preview (see server-side example logs for sending audio instructions)</figcaption>
+    </figure>
+</div>
+<script src="dist/bundle.js">
+</script>
