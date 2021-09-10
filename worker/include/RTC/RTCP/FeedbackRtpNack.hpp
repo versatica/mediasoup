@@ -28,7 +28,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t HeaderSize = 4;
+			static const size_t HeaderSize{ 4 };
 			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::NACK };
 
 		public:

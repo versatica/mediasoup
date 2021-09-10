@@ -26,7 +26,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t HeaderSize = 4;
+			static const size_t HeaderSize{ 4 };
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::PSLEI };
 
 		public:
